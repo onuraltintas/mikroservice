@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 import { vi } from 'vitest';
 import {
@@ -34,7 +35,7 @@ describe('TeacherStudentsComponent', () => {
     service = { getTeacherStudents: vi.fn(() => of(page)) };
     TestBed.configureTestingModule({
       imports: [TeacherStudentsComponent],
-      providers: [{ provide: CoachingPortalService, useValue: service }]
+      providers: [provideRouter([]), { provide: CoachingPortalService, useValue: service }]
     });
     fixture = TestBed.createComponent(TeacherStudentsComponent);
     fixture.detectChanges();

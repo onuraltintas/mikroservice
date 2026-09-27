@@ -90,6 +90,8 @@ public sealed class AdminTeacherAnalyticsController(
             : teacherAccess.GetStudentScopeAsync(
                 viewerUserId.Value,
                 teacherId,
+                User.IsInRole("SystemAdmin"),
+                User.IsInRole("InstitutionAdmin") || User.IsInRole("InstitutionOwner"),
                 cancellationToken);
     }
 

@@ -39,7 +39,7 @@ public class DeleteAssignmentCommandHandler : IRequestHandler<DeleteAssignmentCo
         if (assignment == null)
             throw new InvalidOperationException($"Assignment {command.AssignmentId} not found");
 
-        _accessPolicy.RequireTeacher(assignment.TeacherId);
+        _accessPolicy.RequireTeacher(assignment.TeacherId, command.IsInstitutionAdminOperation);
 
         var attachments = assignment.AssignedStudents
             .SelectMany(student => student.SubmissionAttachments)

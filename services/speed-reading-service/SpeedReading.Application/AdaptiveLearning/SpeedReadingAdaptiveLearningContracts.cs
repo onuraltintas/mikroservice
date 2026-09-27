@@ -1,5 +1,16 @@
 namespace SpeedReading.Application.AdaptiveLearning;
 
+public sealed record AdaptiveProfileSetupStatus(bool HasAgeGroupConfiguration);
+
+public sealed record AdaptiveProfileSettings(
+    Guid? AgeGroupConfigurationId,
+    DateTime? DateOfBirth,
+    string? LearningStyle,
+    int CurrentLevel,
+    int TargetWPM,
+    decimal TargetComprehension,
+    int DailyGoalMinutes);
+
 public sealed record AdaptiveProfileSummary(
     Guid Id,
     Guid StudentId,
@@ -89,10 +100,14 @@ public sealed record UpdateAdaptiveProfileSettingsRequest(
     int TargetWPM,
     decimal TargetComprehension,
     int DailyGoalMinutes,
-    Guid? AgeGroupConfigurationId);
+    Guid? AgeGroupConfigurationId,
+    DateTime? DateOfBirth = null,
+    string? LearningStyle = null);
 
 public interface ISpeedReadingAdaptiveLearning
 {
+    Task<AdaptiveProfileSetupStatus> GetProfileSetupStatusAsync(Guid userId, CancellationToken cancellationToken = default);
+    Task<AdaptiveProfileSettings> GetProfileSettingsAsync(Guid userId, CancellationToken cancellationToken = default);
     Task<AdaptiveProfileSummary> GetProfileAsync(Guid userId, CancellationToken cancellationToken = default);
     Task UpdateProfileSettingsAsync(
         Guid userId,

@@ -237,3 +237,16 @@
   .material-icons { font-size: 16px; }
   &:hover { background: var(--sp-surface-3); color: var(--sp-primary); }
 }
+
+.aw-learning-path {
+  margin-top: 18px;
+  padding: 18px;
+  border: 1px solid var(--sp-border-strong);
+  border-radius: var(--sp-radius-lg);
+  background: var(--sp-surface-1);
+
+  h4 { margin: 0 0 8px; color: var(--sp-primary); font-size: .9rem; }
+  p { margin: 4px 0 10px; color: var(--sp-text-2); font-size: .8rem; line-height: 1.45; }
+  strong { display: block; margin-bottom: 8px; color: var(--sp-text-1); }
+  .aw-view-all { margin-top: 14px; }
+}

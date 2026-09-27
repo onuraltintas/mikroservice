@@ -1,4 +1,7 @@
 using Coaching.Application.Queries.GetStudentProgress;
+using Coaching.Application.Queries.GetTeacherStudentHistory;
+using Coaching.Application.Interfaces;
+using Coaching.Application.Queries;
 using EduPlatform.Shared.Kernel.Exceptions;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -23,6 +26,28 @@ public sealed class ReportsController(IMediator mediator) : ControllerBase
         try
         {
             return Ok(await mediator.Send(new GetStudentProgressQuery(studentId), cancellationToken));
+        }
+        catch (BusinessRuleException ex) when (ex.Code.StartsWith("Authorization.", StringComparison.OrdinalIgnoreCase))
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { error = ex.Message });
+        }
+    }
+
+    [HttpGet("student/{studentId:guid}/history")]
+    [ProducesResponseType(typeof(PagedResponse<CoachingAdminStudentHistoryItemDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> GetStudentHistory(
+        Guid studentId,
+        [FromQuery] CoachingStudentHistoryType type = CoachingStudentHistoryType.Assignments,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 25,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return Ok(await mediator.Send(
+                new GetTeacherStudentHistoryQuery(studentId, type, pageNumber, pageSize),
+                cancellationToken));
         }
         catch (BusinessRuleException ex) when (ex.Code.StartsWith("Authorization.", StringComparison.OrdinalIgnoreCase))
         {

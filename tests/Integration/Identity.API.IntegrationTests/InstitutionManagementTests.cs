@@ -80,7 +80,7 @@ public sealed class InstitutionManagementTests
             student,
             parent,
             unrelatedUser,
-            InstitutionAdmin.Create(administrator.Id, institution.Id, InstitutionAdminRole.Admin),
+            InstitutionAdmin.Create(administrator.Id, institution.Id, InstitutionAdminRole.Admin, PlatformProduct.Coaching),
             TeacherProfile.Create(teacher.Id, "Tenant", "Teacher", institution.Id),
             StudentProfile.Create(student.Id, "Tenant", "Student", institution.Id, parent.Id));
         await context.SaveChangesAsync();
@@ -121,7 +121,7 @@ public sealed class InstitutionManagementTests
                 new InstitutionRepository(context)));
 
         var result = await handler.Handle(
-            new AssignInstitutionAdminCommand(institution.Id, user.Id, InstitutionAdminRole.Admin),
+            new AssignInstitutionAdminCommand(institution.Id, user.Id, InstitutionAdminRole.Admin, PlatformProduct.Coaching),
             CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
@@ -135,8 +135,9 @@ public sealed class InstitutionManagementTests
         var institution = Institution.Create("Test School", InstitutionType.School);
         var role = Role.Create(Identity.Domain.Enums.UserRole.InstitutionAdmin.ToString(), "Institution admin", isSystemRole: true);
         var user = User.Create(Guid.NewGuid(), "manager@test.local", "Test", "Manager");
-        user.AddRole(new Identity.Domain.Entities.UserRole(user.Id, role.Id));
-        var refreshToken = RefreshToken.Create(user.Id, "institution-admin-refresh", DateTime.UtcNow.AddDays(1), "127.0.0.1");
+        user.AddRole(new Identity.Domain.Entities.UserRole(user.Id, role.Id, PlatformProduct.Coaching));
+        user.GrantProductAccess(PlatformProduct.Coaching, Identity.Domain.Enums.UserProductAccessSource.Admin, null, DateTimeOffset.UtcNow);
+        var refreshToken = RefreshToken.Create(user.Id, "institution-admin-refresh", DateTime.UtcNow.AddDays(1), "127.0.0.1", product: PlatformProduct.Coaching);
         user.AddRefreshToken(refreshToken);
         context.AddRange(institution, role, user);
         await context.SaveChangesAsync();
@@ -150,7 +151,7 @@ public sealed class InstitutionManagementTests
             new InstitutionManagementAuthorization(
                 new StubCurrentUserService(Guid.NewGuid(), "SystemAdmin"),
                 repository)).Handle(
-                new AssignInstitutionAdminCommand(institution.Id, user.Id, InstitutionAdminRole.Admin),
+                new AssignInstitutionAdminCommand(institution.Id, user.Id, InstitutionAdminRole.Admin, PlatformProduct.Coaching),
                 CancellationToken.None);
 
         assignResult.IsSuccess.Should().BeTrue();
@@ -161,12 +162,51 @@ public sealed class InstitutionManagementTests
                 new InstitutionManagementAuthorization(
                     new StubCurrentUserService(Guid.NewGuid(), "SystemAdmin"),
                     repository))
-            .Handle(new SetInstitutionAdminActiveCommand(institution.Id, user.Id, false), CancellationToken.None);
+            .Handle(new SetInstitutionAdminActiveCommand(institution.Id, user.Id, false, PlatformProduct.Coaching), CancellationToken.None);
 
         deactivateResult.IsSuccess.Should().BeTrue();
-        (await repository.GetAdminsAsync(institution.Id, CancellationToken.None))
+        (await repository.GetAdminsAsync(institution.Id, PlatformProduct.Coaching, CancellationToken.None))
             .Should().ContainSingle(item => item.UserId == user.Id && !item.IsActive);
         (await context.RefreshTokens.SingleAsync(token => token.Id == refreshToken.Id)).IsRevoked.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task InstitutionAdminMemberships_AreIndependentPerProduct()
+    {
+        await using var context = CreateContext();
+        var institution = Institution.Create("Product Scope School", InstitutionType.School);
+        var role = Role.Create(Identity.Domain.Enums.UserRole.InstitutionAdmin.ToString(), "Institution admin", isSystemRole: true);
+        var user = User.Create(Guid.NewGuid(), "manager@product-scope.test", "Product", "Manager");
+        user.AddRole(new Identity.Domain.Entities.UserRole(user.Id, role.Id, PlatformProduct.Coaching));
+        user.AddRole(new Identity.Domain.Entities.UserRole(user.Id, role.Id, PlatformProduct.SpeedReading));
+        user.GrantProductAccess(PlatformProduct.Coaching, Identity.Domain.Enums.UserProductAccessSource.Admin, null, DateTimeOffset.UtcNow);
+        user.GrantProductAccess(PlatformProduct.SpeedReading, Identity.Domain.Enums.UserProductAccessSource.Admin, null, DateTimeOffset.UtcNow);
+        context.AddRange(institution, role, user);
+        await context.SaveChangesAsync();
+
+        var repository = new InstitutionRepository(context);
+        var unitOfWork = new UnitOfWork(context);
+
+        foreach (var product in new[] { PlatformProduct.Coaching, PlatformProduct.SpeedReading })
+        {
+            var result = await new AssignInstitutionAdminCommandHandler(
+                    repository,
+                    new UserRepository(context),
+                    unitOfWork,
+                    new InstitutionManagementAuthorization(
+                        new StubCurrentUserService(Guid.NewGuid(), "SystemAdmin"),
+                        repository))
+                .Handle(
+                    new AssignInstitutionAdminCommand(institution.Id, user.Id, InstitutionAdminRole.Admin, product),
+                    CancellationToken.None);
+
+            result.IsSuccess.Should().BeTrue();
+        }
+
+        (await repository.GetAdminsAsync(institution.Id, PlatformProduct.Coaching, CancellationToken.None))
+            .Should().ContainSingle(admin => admin.UserId == user.Id);
+        (await repository.GetAdminsAsync(institution.Id, PlatformProduct.SpeedReading, CancellationToken.None))
+            .Should().ContainSingle(admin => admin.UserId == user.Id);
     }
 
     [Fact]
@@ -176,8 +216,9 @@ public sealed class InstitutionManagementTests
         var institution = Institution.Create("Reactivation School", InstitutionType.School);
         var role = Role.Create(Identity.Domain.Enums.UserRole.InstitutionAdmin.ToString(), "Institution admin", isSystemRole: true);
         var user = User.Create(Guid.NewGuid(), "reactivate@test.local", "Reactivation", "Manager");
-        user.AddRole(new Identity.Domain.Entities.UserRole(user.Id, role.Id));
-        var membership = InstitutionAdmin.Create(user.Id, institution.Id, InstitutionAdminRole.Admin);
+        user.AddRole(new Identity.Domain.Entities.UserRole(user.Id, role.Id, PlatformProduct.Coaching));
+        user.GrantProductAccess(PlatformProduct.Coaching, Identity.Domain.Enums.UserProductAccessSource.Admin, null, DateTimeOffset.UtcNow);
+        var membership = InstitutionAdmin.Create(user.Id, institution.Id, InstitutionAdminRole.Admin, PlatformProduct.Coaching);
         membership.Deactivate();
         context.AddRange(institution, role, user, membership);
         await context.SaveChangesAsync();
@@ -190,10 +231,10 @@ public sealed class InstitutionManagementTests
                 new InstitutionManagementAuthorization(
                     new StubCurrentUserService(Guid.NewGuid(), "SystemAdmin"),
                     repository))
-            .Handle(new AssignInstitutionAdminCommand(institution.Id, user.Id, InstitutionAdminRole.Owner), CancellationToken.None);
+            .Handle(new AssignInstitutionAdminCommand(institution.Id, user.Id, InstitutionAdminRole.Owner, PlatformProduct.Coaching), CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
-        var admins = await repository.GetAdminsAsync(institution.Id, CancellationToken.None);
+        var admins = await repository.GetAdminsAsync(institution.Id, PlatformProduct.Coaching, CancellationToken.None);
         admins.Should().HaveCount(1);
         admins.Should().ContainSingle(item =>
             item.UserId == user.Id

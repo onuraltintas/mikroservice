@@ -12,6 +12,18 @@
         </div>
     </div>
 
+    @if (!loading && !availability?.isAvailable && !error) {
+    <div class="sp-card empty-state"><div class="sp-card-content">
+        <span class="material-icons">lock_clock</span>
+        <h2>İlk haftanı tamamla</h2>
+        <p>Kişisel öğrenme yolu, ana programında 7 gün tamamlandıktan sonra açılır. Şu ana kadar {{ availability?.completedProgramDays ?? 0 }} gün tamamladın.</p>
+    </div></div>
+    }
+    @if (!loading && error) {
+    <div class="sp-card empty-state"><div class="sp-card-content"><p>Öğrenme yolu şu anda yüklenemedi. Daha sonra tekrar dene.</p></div></div>
+    }
+
+    @if (availability?.isAvailable) {
     <!-- Progress Summary -->
     @if (progressSummary) {
     <div class="sp-card progress-summary-card">
@@ -65,26 +77,6 @@
     </div>
     }
 
-    <!-- Filters -->
-    <div class="sp-card filters-card">
-        <div class="sp-card-content">
-            <div class="sp-tab-bar">
-                <button type="button" class="sp-tab-btn" role="tab" [attr.aria-selected]="selectedTabIndex === 0" [class.active]="selectedTabIndex === 0" (click)="onTabChange(0)">
-                    <span class="material-icons" aria-hidden="true">pending</span>
-                    Tamamlanacaklar ({{ progressSummary?.remainingItems || 0 }})
-                </button>
-                <button type="button" class="sp-tab-btn" role="tab" [attr.aria-selected]="selectedTabIndex === 1" [class.active]="selectedTabIndex === 1" (click)="onTabChange(1)">
-                    <span class="material-icons" aria-hidden="true">check_circle</span>
-                    Tamamlananlar ({{ progressSummary?.completedItems || 0 }})
-                </button>
-                <button type="button" class="sp-tab-btn" role="tab" [attr.aria-selected]="selectedTabIndex === 2" [class.active]="selectedTabIndex === 2" (click)="onTabChange(2)">
-                    <span class="material-icons" aria-hidden="true">list</span>
-                    Tümü ({{ progressSummary?.totalItems || 0 }})
-                </button>
-            </div>
-        </div>
-    </div>
-
     <!-- Loading State -->
     @if (loading) {
     <div class="loading-container" role="status" aria-live="polite">
@@ -105,7 +97,7 @@
         @if (learningPath.items && learningPath.items.length > 0) {
         <div class="items-grid">
             @for (item of learningPath.items; track item.id) {
-            <div class="sp-card path-item-card" role="button" tabindex="0" [attr.aria-label]="item.contentTitle" [class.completed]="item.isCompleted" [class.current]="isCurrentItem(item)"
+            <div class="sp-card path-item-card" role="button" [attr.tabindex]="item.isUnlocked && !item.isCompleted ? 0 : -1" [attr.aria-disabled]="!item.isUnlocked || item.isCompleted" [attr.aria-label]="item.contentTitle" [class.completed]="item.isCompleted" [class.current]="isCurrentItem(item)"
                 (click)="navigateToItem(item)" (keydown.enter)="navigateToItem(item)" (keydown.space)="$event.preventDefault(); navigateToItem(item)">
 
                 <div class="item-header">
@@ -194,7 +186,7 @@
                 @if (progressSummary?.totalItems === 0 && !generating) {
                 <button type="button" class="sp-btn sp-btn--primary generate-path-button" (click)="generatePath()">
                     <span class="material-icons">auto_awesome</span>
-                    Öğrenme Yolumu Oluştur
+                    Önerileri Kontrol Et
                 </button>
                 }
                 @if (generating) {
@@ -207,5 +199,6 @@
         </div>
         }
     </div>
+    }
     }
 </div>

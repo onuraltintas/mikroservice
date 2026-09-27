@@ -26,6 +26,10 @@ export class TeacherAcademicComponent implements OnInit {
   readonly exams = signal<TeacherExam[]>([]);
   readonly goals = signal<TeacherGoal[]>([]);
   readonly students = signal<TeacherStudent[]>([]);
+  studentSearchTerm = '';
+  readonly studentPageNumber = signal(1);
+  readonly studentTotalPages = signal(1);
+  readonly isLoadingStudents = signal(false);
   readonly examPageNumber = signal(1);
   readonly examTotalPages = signal(1);
   readonly goalPageNumber = signal(1);
@@ -44,6 +48,7 @@ export class TeacherAcademicComponent implements OnInit {
   readonly selectedExam = signal<TeacherExam | null>(null);
   readonly examDetail = signal<TeacherExamDetail | null>(null);
   readonly editingExamResultId = signal<string | null>(null);
+  private studentSearchRequestId = 0;
 
   readonly examTypes = [
     { value: 1, key: 'Mock', label: 'Deneme' },
@@ -76,24 +81,86 @@ export class TeacherAcademicComponent implements OnInit {
     }
     this.loadExams();
     this.loadGoals();
-    this.coachingService.getTeacherStudents(1, 100).subscribe({
-      next: page => this.students.set(page.items),
-      error: () => this.errorMessage.set('Öğrenci listesi yüklenemedi.')
-    });
+    this.loadStudents();
   }
 
   loadExams(append = false) {
     const teacherId = this.authService.userProfile()?.id;
-    if (!teacherId) return;
+    if (!teacherId) {
+      this.isLoading.set(false);
+      return;
+    }
     const pageNumber = append ? this.examPageNumber() + 1 : 1;
-    this.coachingService.getTeacherExams(teacherId, pageNumber, 25).subscribe({
+    this.isLoading.set(true);
+    this.coachingService.getTeacherExams(teacherId, pageNumber, 25).pipe(
+      finalize(() => this.isLoading.set(false))
+    ).subscribe({
       next: page => {
         this.exams.update(items => append ? [...items, ...page.items] : page.items);
         this.examPageNumber.set(page.pageNumber);
         this.examTotalPages.set(page.totalPages ?? Math.max(1, Math.ceil(page.totalCount / page.pageSize)));
       },
-      error: () => this.errorMessage.set('Sınavlar yüklenemedi.'),
-      complete: () => this.isLoading.set(false)
+      error: () => this.errorMessage.set('Sınavlar yüklenemedi.')
+    });
+  }
+
+  searchStudents(searchTerm = this.studentSearchTerm) {
+    this.studentSearchTerm = searchTerm.trim();
+    this.studentPageNumber.set(1);
+    this.loadStudents();
+  }
+
+  loadMoreStudents() {
+    if (this.isLoadingStudents() || this.studentPageNumber() >= this.studentTotalPages()) return;
+    this.loadStudents(true);
+  }
+
+  private loadStudents(append = false) {
+    const requestId = ++this.studentSearchRequestId;
+    const pageNumber = append ? this.studentPageNumber() + 1 : 1;
+    this.isLoadingStudents.set(true);
+    const studentsRequest = this.studentSearchTerm
+      ? this.coachingService.getTeacherStudents(pageNumber, 100, this.studentSearchTerm)
+      : this.coachingService.getTeacherStudents(pageNumber, 100);
+    studentsRequest.pipe(
+      finalize(() => {
+        if (requestId === this.studentSearchRequestId) this.isLoadingStudents.set(false);
+      })
+    ).subscribe({
+      next: page => {
+        if (requestId !== this.studentSearchRequestId) return;
+        const selectedIds = new Set(this.selectedStudentIds());
+        const retainedStudents = append
+          ? this.students()
+          : this.students().filter(student => selectedIds.has(student.userId));
+        const studentsById = new Map<string, TeacherStudent>();
+        for (const student of [...retainedStudents, ...page.items]) studentsById.set(student.userId, student);
+        this.students.set([...studentsById.values()]);
+        this.studentPageNumber.set(page.pageNumber);
+        this.studentTotalPages.set(page.totalPages ?? Math.max(1, Math.ceil(page.totalCount / page.pageSize)));
+      },
+      error: () => {
+        if (requestId === this.studentSearchRequestId) this.errorMessage.set('Öğrenci listesi yüklenemedi.');
+      }
+    });
+  }
+
+  private selectedStudentIds() {
+    return [...new Set([this.goalForm.studentId, this.resultForm.studentId].filter(Boolean))];
+  }
+
+  private ensureStudentOption(studentId: string) {
+    if (!studentId || this.students().some(student => student.userId === studentId)) return;
+    this.coachingService.getTeacherStudents(1, 1, undefined, [studentId]).subscribe({
+      next: page => {
+        const student = page.items.find(item => item.userId === studentId);
+        if (student) {
+          this.students.update(items => items.some(item => item.userId === studentId) ? items : [...items, student]);
+        } else {
+          this.errorMessage.set('Bu öğrenci artık aktif öğrenci listenizde bulunmuyor.');
+        }
+      },
+      error: () => this.errorMessage.set('Öğrenci bilgisi yüklenemedi.')
     });
   }
 
@@ -197,6 +264,7 @@ export class TeacherAcademicComponent implements OnInit {
 
   editExamResult(result: TeacherExamResult) {
     this.editingExamResultId.set(result.id);
+    this.ensureStudentOption(result.studentId);
     this.resultForm = {
       studentId: result.studentId,
       score: result.score,
@@ -309,6 +377,7 @@ export class TeacherAcademicComponent implements OnInit {
 
   editGoal(goal: TeacherGoal) {
     this.editingGoalId.set(goal.id);
+    this.ensureStudentOption(goal.studentId);
     this.goalForm = {
       studentId: goal.studentId,
       title: goal.title,

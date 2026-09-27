@@ -20,7 +20,7 @@ import {
   GoogleIdentityService,
   GoogleIdentityResponse
 } from '../../../core/services/google-identity.service';
-import { resolveAuthDestination } from '../auth-role-routing';
+import { resolveAuthDestination, resolveInvitationReturnUrl } from '../auth-role-routing';
 
 @Component({
   selector: 'app-login',
@@ -69,6 +69,10 @@ export class LoginComponent implements AfterViewInit, OnDestroy, OnInit {
   mfaCode = '';
   mfaRecoveryCode = '';
   mfaUsingRecoveryCode = false;
+
+  get invitationReturnUrl(): string | null {
+    return resolveInvitationReturnUrl(this.route.snapshot.queryParamMap.get('returnUrl'));
+  }
 
   constructor() {
     this.loginForm = this.fb.group({
@@ -193,18 +197,19 @@ export class LoginComponent implements AfterViewInit, OnDestroy, OnInit {
             this.error = 'E-posta adresiniz doğrulanmamış. Lütfen e-postanızdaki doğrulama linkine tıklayın.';
           } else {
             // Backend'den gelen hata mesajını göster
+            let message: string;
             if (err.error?.Message) {
-              this.error = err.error.Message;
+              message = err.error.Message;
             } else if (err.error?.message) {
-              this.error = err.error.message;
+              message = err.error.message;
             } else if (err.error?.title) {
-              this.error = err.error.title;
+              message = err.error.title;
             } else if (typeof err.error === 'string') {
-              this.error = err.error;
+              message = err.error;
             } else {
-              this.error = 'Giriş başarısız. Lütfen bilgilerinizi kontrol edin.';
+              message = 'Giriş başarısız. Lütfen bilgilerinizi kontrol edin.';
             }
-            this.toaster.error(this.error, 5000);
+            this.toaster.error(message, 5000);
           }
         }
       });
@@ -363,13 +368,8 @@ export class LoginComponent implements AfterViewInit, OnDestroy, OnInit {
   }
 
   private navigateStudent(): void {
-    if (!this.authService.hasCompletedProfile()) {
-      this.router.navigate(['/student/profile-setup']);
-      return;
-    }
-    // The dashboard guard decides between the free assessment and the paid
-    // module. Do not perform a second, pre-guard subscription check here;
-    // otherwise a new student is sent to no-access before the assessment.
+    // The route guard reads Speed Reading's own profile setup state, not the
+    // shared Identity profile. It sends new students to profile setup when needed.
     this.router.navigate(['/student/dashboard']);
   }
 

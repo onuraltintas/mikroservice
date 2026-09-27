@@ -39,7 +39,9 @@ public sealed class GetCoachingAdminGoalQueryHandler(
             return null;
 
         if (request.InstitutionId.HasValue
-            && (request.ScopedStudentIds is null || !request.ScopedStudentIds.Contains(goal.StudentId)))
+            && (goal.InstitutionId != request.InstitutionId
+                || request.ScopedStudentIds is null
+                || !request.ScopedStudentIds.Contains(goal.StudentId)))
         {
             return null;
         }

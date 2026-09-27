@@ -77,7 +77,7 @@ export class TeacherRegisterComponent implements OnInit {
             branch: formData.branch
         };
 
-        this.http.post(`${environment.apiUrl}/auth/register-teacher`, payload).subscribe({
+        this.http.post(`${environment.apiUrl}/auth/coaching/register/teacher`, payload).subscribe({
             next: () => {
                 this.toaster.success('Kayıt işleminiz başarıyla tamamlandı. E-posta adresinizi doğrulamak için size gönderdiğimiz onay linkine tıklayın.', 'Doğrulama Gerekli');
                 this.router.navigate(['/auth/login'], { queryParams: { registered: 'true', role: 'teacher' } });

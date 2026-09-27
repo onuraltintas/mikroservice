@@ -63,7 +63,7 @@ public sealed class CoachingAdminManagementMetadataTests
             .Cast<AuthorizeAttribute>()
             .Should()
             .Contain(attribute => attribute.Policy == "MfaRequired")
-            .And.Contain(attribute => attribute.Roles == "SystemAdmin");
+            .And.Contain(attribute => attribute.Roles == "SystemAdmin,InstitutionAdmin,InstitutionOwner");
     }
 
     [Fact]

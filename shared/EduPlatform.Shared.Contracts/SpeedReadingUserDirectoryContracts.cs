@@ -20,3 +20,10 @@ public sealed record SpeedReadingUserAudienceRequest(
 
 public sealed record SpeedReadingUserAudienceResponse(
     IReadOnlyList<Guid> UserIds);
+
+public sealed record SpeedReadingMemberEligibilityRequest(
+    Guid UserId,
+    string Role);
+
+public sealed record SpeedReadingMemberEligibilityResponse(
+    bool IsEligible);

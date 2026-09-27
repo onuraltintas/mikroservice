@@ -26,7 +26,8 @@ public sealed record GetTeacherStudentsQuery(
     int PageSize = 25,
     string? SearchTerm = null,
     int? GradeLevel = null,
-    bool? IsActive = null) : IRequest<Result<PagedList<TeacherStudentDto>>>;
+    bool? IsActive = null,
+    IReadOnlyCollection<Guid>? StudentUserIds = null) : IRequest<Result<PagedList<TeacherStudentDto>>>;
 
 public sealed class GetTeacherStudentsQueryHandler(
     ITeacherRepository teacherRepository,
@@ -66,6 +67,7 @@ public sealed class GetTeacherStudentsQueryHandler(
             searchTerm,
             gradeLevel,
             request.IsActive,
+            request.StudentUserIds,
             cancellationToken);
 
         return Result.Success(students);

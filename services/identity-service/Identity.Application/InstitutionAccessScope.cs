@@ -3,7 +3,7 @@ using Identity.Domain.Enums;
 
 namespace Identity.Application.Authorization;
 
-public sealed record InstitutionAccessScope(Guid? InstitutionId)
+public sealed record InstitutionAccessScope(Guid? InstitutionId, Identity.Domain.Enums.PlatformProduct? Product = null)
 {
     public bool IsGlobal => InstitutionId is null;
 }

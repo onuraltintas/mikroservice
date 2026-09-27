@@ -17,5 +17,6 @@ public record UpdateUserCommand(
     DateTime? StudentBirthDate = null,
     Identity.Domain.Enums.LearningStyle? StudentLearningStyle = null,
     Guid? InstitutionId = null,
-    bool UpdateRoleProfile = false
+    bool UpdateRoleProfile = false,
+    Identity.Domain.Enums.PlatformProduct? Product = null
 ) : IRequest<Result>;

@@ -2,13 +2,14 @@ using EduPlatform.Shared.Kernel.Results;
 using EduPlatform.Shared.Security.Interfaces;
 using Identity.Application.Authorization;
 using Identity.Application.Interfaces;
+using Identity.Domain.Enums;
 using MediatR;
 
 namespace Identity.Application.Queries.GetAllUsers;
 
 public sealed record UserSummaryDto(int TotalUsers, int ActiveUsers, int InactiveUsers);
 
-public sealed record GetUserSummaryQuery : IRequest<Result<UserSummaryDto>>;
+public sealed record GetUserSummaryQuery(PlatformProduct? Product = null) : IRequest<Result<UserSummaryDto>>;
 
 public sealed class GetUserSummaryQueryHandler
     : IRequestHandler<GetUserSummaryQuery, Result<UserSummaryDto>>
@@ -32,7 +33,10 @@ public sealed class GetUserSummaryQueryHandler
         CancellationToken cancellationToken)
     {
         var institutionId = _currentUserService.UserId is { } userId
-            ? await _institutionRepository.GetPrimaryInstitutionIdByUserIdAsync(userId, cancellationToken)
+            ? await _institutionRepository.GetPrimaryInstitutionIdByUserIdAsync(
+                userId,
+                request.Product ?? PlatformProduct.Coaching,
+                cancellationToken)
             : null;
         var scope = InstitutionAccessScopeResolver.Resolve(
             _currentUserService.UserId,
@@ -46,6 +50,7 @@ public sealed class GetUserSummaryQueryHandler
 
         return Result.Success(await _userRepository.GetSummaryAsync(
             scope.Value.InstitutionId,
-            cancellationToken));
+            cancellationToken,
+            request.Product));
     }
 }

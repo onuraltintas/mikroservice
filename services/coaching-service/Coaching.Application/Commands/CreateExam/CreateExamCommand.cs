@@ -1,6 +1,7 @@
 using Coaching.Domain.Enums;
 
 using MediatR;
+using System.Text.Json.Serialization;
 
 namespace Coaching.Application.Commands.CreateExam;
 
@@ -13,6 +14,10 @@ public record CreateExamCommand(
     Guid? InstitutionId,
     string? Description,
     string? IdempotencyKey = null
-) : IRequest<CreateExamResponse>;
+) : IRequest<CreateExamResponse>
+{
+    [JsonIgnore]
+    public bool IsInstitutionAdminOperation { get; init; }
+}
 
 public record CreateExamResponse(Guid ExamId);

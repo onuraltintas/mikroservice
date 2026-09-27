@@ -1,0 +1,50 @@
+<section class="space-y-6">
+  <a routerLink="/coaching-portal/teacher/students" class="inline-flex text-sm font-medium text-indigo-600 hover:underline dark:text-indigo-300">← Öğrenci listesine dön</a>
+
+  <div *ngIf="isLoading()" role="status" class="rounded-xl border border-slate-200 bg-white p-6 text-sm text-slate-500 dark:border-slate-800 dark:bg-slate-900">Öğrenci raporu yükleniyor…</div>
+  <div *ngIf="errorMessage()" role="alert" class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-200">{{ errorMessage() }}</div>
+
+  <ng-container *ngIf="student() as currentStudent">
+    <header class="rounded-2xl border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
+      <p class="text-sm font-medium text-indigo-600 dark:text-indigo-300">Öğrenci raporu · tüm koçluk geçmişi</p>
+      <h1 class="mt-1 text-2xl font-bold tracking-tight">{{ currentStudent.fullName }}</h1>
+      <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">
+        {{ currentStudent.gradeLevel ? currentStudent.gradeLevel + '. sınıf' : 'Sınıf bilgisi yok' }}
+        <span *ngIf="currentStudent.institutionName"> · {{ currentStudent.institutionName }}</span>
+        <span *ngIf="currentStudent.subject"> · {{ currentStudent.subject }}</span>
+      </p>
+    </header>
+
+    <div *ngIf="progress() as summary" class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <article class="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900"><p class="text-sm text-slate-500">Ödevler</p><p class="mt-1 text-xl font-bold">{{ summary.submittedAssignments }} / {{ summary.totalAssignments }} teslim</p><p class="mt-1 text-xs text-slate-500">{{ summary.gradedAssignments }} değerlendirildi<span *ngIf="summary.averageAssignmentPercentage != null"> · ort. %{{ summary.averageAssignmentPercentage }}</span></p></article>
+      <article class="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900"><p class="text-sm text-slate-500">Sınavlar</p><p class="mt-1 text-xl font-bold">{{ summary.totalExams }}</p><p class="mt-1 text-xs text-slate-500">Ortalama: {{ summary.averageExamPercentage == null ? '—' : '%' + summary.averageExamPercentage }}</p></article>
+      <article class="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900"><p class="text-sm text-slate-500">Hedefler</p><p class="mt-1 text-xl font-bold">{{ summary.completedGoals }} / {{ summary.totalGoals }} tamamlandı</p><p class="mt-1 text-xs text-slate-500">Ortalama ilerleme: %{{ summary.averageGoalProgress }}</p></article>
+      <article class="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900"><p class="text-sm text-slate-500">Seanslar</p><p class="mt-1 text-xl font-bold">{{ summary.attendedSessions }} / {{ summary.totalSessions }} katılım</p><p class="mt-1 text-xs text-slate-500">{{ summary.upcomingSessions }} yaklaşan<span *ngIf="summary.attendancePercentage != null"> · katılım %{{ summary.attendancePercentage }}</span></p></article>
+    </div>
+
+    <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+      <div class="border-b border-slate-200 p-5 dark:border-slate-800">
+        <h2 class="font-semibold">Geçmiş kayıtlar</h2>
+        <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Öğrencinin kurum değişikliklerinden önceki kayıtları da kapsanır.</p>
+        <div class="mt-4 flex flex-wrap gap-2" role="tablist" aria-label="Geçmiş kategorisi">
+          <button *ngFor="let type of historyTypes" type="button" role="tab" [attr.aria-selected]="historyType() === type" (click)="selectHistoryType(type)" class="rounded-lg border px-3 py-2 text-sm" [class.border-indigo-600]="historyType() === type" [class.bg-indigo-600]="historyType() === type" [class.text-white]="historyType() === type" [class.border-slate-300]="historyType() !== type" [class.dark:border-slate-700]="historyType() !== type">{{ historyLabel(type) }}</button>
+        </div>
+      </div>
+      <p *ngIf="historyError()" role="alert" class="m-5 rounded-lg bg-red-50 p-3 text-sm text-red-700 dark:bg-red-950/30 dark:text-red-200">{{ historyError() }}</p>
+      <p *ngIf="isHistoryLoading()" role="status" class="p-5 text-sm text-slate-500">Kayıtlar yükleniyor…</p>
+      <p *ngIf="!isHistoryLoading() && !historyError() && history().length === 0" class="p-6 text-center text-sm text-slate-500">Bu kategoride kayıt bulunmuyor.</p>
+      <div *ngIf="!isHistoryLoading() && history().length > 0" class="divide-y divide-slate-100 dark:divide-slate-800">
+        <article *ngFor="let item of history(); trackBy: trackById" class="flex flex-col gap-2 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div><h3 class="font-medium">{{ item.title }}</h3><p class="mt-1 text-sm text-slate-500">{{ item.eventDate | date:'d MMM y, HH:mm' }} · {{ item.status }}<span *ngIf="item.category"> · {{ item.category }}</span></p></div>
+          <p *ngIf="item.score != null" class="text-sm font-semibold">{{ item.score }}<span *ngIf="item.maxScore != null"> / {{ item.maxScore }}</span></p>
+          <p *ngIf="item.progress != null" class="text-sm font-semibold">%{{ item.progress }}</p>
+        </article>
+      </div>
+      <div *ngIf="!isHistoryLoading() && historyTotalPages() > 1" class="flex items-center justify-between border-t border-slate-200 px-4 py-3 dark:border-slate-800">
+        <button type="button" (click)="previousHistoryPage()" [disabled]="historyPage() === 1" class="rounded-lg border border-slate-300 px-3 py-2 text-sm disabled:opacity-40 dark:border-slate-700">Önceki</button>
+        <span class="text-sm text-slate-500">Sayfa {{ historyPage() }} / {{ historyTotalPages() }}</span>
+        <button type="button" (click)="nextHistoryPage()" [disabled]="historyPage() >= historyTotalPages()" class="rounded-lg border border-slate-300 px-3 py-2 text-sm disabled:opacity-40 dark:border-slate-700">Sonraki</button>
+      </div>
+    </section>
+  </ng-container>
+</section>

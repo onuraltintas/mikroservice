@@ -39,11 +39,16 @@ public sealed class GetTeacherGoalsQueryHandler
 {
     private readonly IAcademicGoalRepository _repository;
     private readonly ICoachingAccessPolicy _accessPolicy;
+    private readonly ICoachingIdentityAuthorizationClient _identityAuthorizationClient;
 
-    public GetTeacherGoalsQueryHandler(IAcademicGoalRepository repository, ICoachingAccessPolicy accessPolicy)
+    public GetTeacherGoalsQueryHandler(
+        IAcademicGoalRepository repository,
+        ICoachingAccessPolicy accessPolicy,
+        ICoachingIdentityAuthorizationClient identityAuthorizationClient)
     {
         _repository = repository;
         _accessPolicy = accessPolicy;
+        _identityAuthorizationClient = identityAuthorizationClient;
     }
 
     public async Task<PagedResponse<TeacherGoalDto>> Handle(
@@ -51,11 +56,20 @@ public sealed class GetTeacherGoalsQueryHandler
         CancellationToken cancellationToken)
     {
         _accessPolicy.RequireTeacher(query.TeacherId);
+        var studentIds = await _repository.GetStudentIdsByTeacherIdAsync(
+            query.TeacherId,
+            cancellationToken);
+        var authorizedStudentIds = await CoachingStudentReadAuthorization.GetAuthorizedStudentIdsAsync(
+            _accessPolicy,
+            _identityAuthorizationClient,
+            studentIds,
+            cancellationToken);
         var page = await _repository.GetByTeacherIdAsync(
             query.TeacherId,
             query.PageNumber,
             query.PageSize,
-            cancellationToken);
+            cancellationToken,
+            authorizedStudentIds);
 
         var goals = page.Items.Select(goal => new TeacherGoalDto(
             goal.Id,

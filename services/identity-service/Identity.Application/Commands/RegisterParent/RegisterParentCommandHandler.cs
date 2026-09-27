@@ -1,6 +1,7 @@
 using EduPlatform.Shared.Kernel.Results;
 using Identity.Application.Interfaces;
 using Identity.Domain.Entities;
+using Identity.Domain.Enums;
 using MediatR;
 using MassTransit;
 using EduPlatform.Shared.Contracts.Events.Identity;
@@ -34,6 +35,11 @@ public class RegisterParentCommandHandler : IRequestHandler<RegisterParentComman
 
     public async Task<Result<Guid>> Handle(RegisterParentCommand request, CancellationToken cancellationToken)
     {
+        if (request.Product != PlatformProduct.Coaching)
+        {
+            return Result.Failure<Guid>(new Error("Auth.ProductRoleNotSupported", "Veli kaydı Koçluk platformunda yapılabilir."));
+        }
+
         // Global Registration Switch Check
         var allowRegistration = await _configurationService.GetConfigurationValueAsync("auth.allowregistration", cancellationToken);
         if (!string.Equals(allowRegistration, "true", StringComparison.OrdinalIgnoreCase))
@@ -56,7 +62,12 @@ public class RegisterParentCommandHandler : IRequestHandler<RegisterParentComman
         var userId = identityResult.Value;
 
         // Assign Role
-        var roleResult = await _identityService.AssignRoleAsync(userId, Identity.Domain.Enums.UserRole.Parent.ToString(), cancellationToken);
+        var roleResult = await _identityService.AssignRoleForProductAsync(
+            userId,
+            Identity.Domain.Enums.UserRole.Parent.ToString(),
+            PlatformProduct.Coaching,
+            cancellationToken,
+            UserProductAccessSource.SelfRegistration);
         if (roleResult.IsFailure)
         {
              await _identityService.DeleteUserAsync(userId, cancellationToken);
@@ -69,11 +80,25 @@ public class RegisterParentCommandHandler : IRequestHandler<RegisterParentComman
         try
         {
             var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
-            if (user != null) 
+            if (user is null)
             {
-                if (request.PhoneNumber != null) user.SetPhoneNumber(request.PhoneNumber);
-                user.GenerateEmailVerificationToken();
+                await _identityService.DeleteUserAsync(userId, cancellationToken);
+                return Result.Failure<Guid>(new Error("Registration.Failed", "Hesap kaydı tamamlanamadı."));
             }
+
+            if (user.GrantProductAccess(
+                PlatformProduct.Coaching,
+                UserProductAccessSource.SelfRegistration,
+                grantedByUserId: null,
+                DateTimeOffset.UtcNow))
+            {
+                _userRepository.TrackProductAccessIfNew(user, PlatformProduct.Coaching);
+            }
+            if (request.PhoneNumber != null)
+            {
+                user.SetPhoneNumber(request.PhoneNumber);
+            }
+            user.GenerateEmailVerificationToken();
 
             await _parentRepository.AddAsync(parent, cancellationToken);
 

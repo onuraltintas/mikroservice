@@ -44,7 +44,24 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, R
         if (existingRefreshToken == null || !existingRefreshToken.IsActive)
              return Result.Failure<RefreshTokenResponse>(new Error("Auth.InvalidToken", "Oturum süresi dolmuş veya geçersiz."));
 
-        var isPrivilegedAdministrator = user.Roles.Any(role =>
+        var productRoles = user.GetRolesForProductScope(existingRefreshToken.Product).ToArray();
+        var isSystemAdministrator = productRoles.Any(role =>
+            role.Role is not null
+            && string.Equals(role.Role.Name, "SystemAdmin", StringComparison.OrdinalIgnoreCase));
+        if (!isSystemAdministrator
+            && (existingRefreshToken.Product is not { } product || !user.HasProductAccess(product)))
+        {
+            await _userRepository.RevokeRefreshTokenAsync(
+                request.RefreshToken,
+                "system",
+                "product access is missing or revoked",
+                cancellationToken);
+            return Result.Failure<RefreshTokenResponse>(new Error(
+                "Auth.ProductAccessDenied",
+                "Bu platform için oturum erişiminiz yok. Lütfen yeniden giriş yapın."));
+        }
+
+        var isPrivilegedAdministrator = productRoles.Any(role =>
             role.Role is not null
             && (string.Equals(role.Role.Name, "SystemAdmin", StringComparison.OrdinalIgnoreCase)
                 || string.Equals(role.Role.Name, "InstitutionAdmin", StringComparison.OrdinalIgnoreCase)
@@ -69,12 +86,16 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, R
         }
 
         // Generate the replacement before atomically revoking the old token.
-        var newAccessToken = await _tokenService.GenerateAccessTokenAsync(user, existingRefreshToken.MfaVerifiedAt);
+        var newAccessToken = await _tokenService.GenerateAccessTokenAsync(
+            user,
+            existingRefreshToken.MfaVerifiedAt,
+            existingRefreshToken.Product);
         var newRefreshToken = _tokenService.GenerateRefreshToken(
             user.Id,
             "0.0.0.0",
             existingRefreshToken.IsPersistent,
-            existingRefreshToken.MfaVerifiedAt);
+            existingRefreshToken.MfaVerifiedAt,
+            existingRefreshToken.Product);
         
         var rotated = await _userRepository.RotateRefreshTokenAsync(
             request.RefreshToken,

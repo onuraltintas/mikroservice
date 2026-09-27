@@ -59,7 +59,7 @@ describe('AuthService browser session security', () => {
       'Correct-Password-1!',
       false);
 
-    const request = http.expectOne(req => req.url.endsWith('/auth/login'));
+        const request = http.expectOne(req => req.url.endsWith('/auth/coaching/login'));
     expect(request.request.withCredentials).toBe(true);
     request.flush({
       accessToken: createToken('user-a'),
@@ -72,6 +72,26 @@ describe('AuthService browser session security', () => {
     expect(localStorage.getItem('access_token')).toBeNull();
     expect(localStorage.getItem('refresh_token')).toBeNull();
     expect(localStorage.getItem('expires_at')).toBeNull();
+  });
+
+  it('uses the coaching-scoped Google login endpoint', async () => {
+    const service = TestBed.inject(AuthService);
+    http.expectOne(req => req.url.endsWith('/auth/refresh-token')).flush(
+      { error: 'no session' },
+      { status: 401, statusText: 'Unauthorized' });
+
+    const loginPromise = service.loginWithGoogle('google-id-token');
+    const request = http.expectOne(req => req.url.endsWith('/auth/coaching/google-login'));
+    expect(request.request.withCredentials).toBe(true);
+    expect(request.request.body).toEqual({ idToken: 'google-id-token' });
+    request.flush({
+      accessToken: createToken('coaching-user'),
+      tokenType: 'Bearer',
+      expiresInMinutes: 15
+    });
+
+    const result = await loginPromise;
+    expect(result.authenticated).toBe(true);
   });
 
   it('restores an access token from the HttpOnly refresh cookie on startup', async () => {
@@ -97,7 +117,7 @@ describe('AuthService browser session security', () => {
       { status: 401, statusText: 'Unauthorized' });
 
     const loginPromise = service.loginWithPassword('admin@example.test', 'password', true);
-    http.expectOne(req => req.url.endsWith('/auth/login')).flush({
+    http.expectOne(req => req.url.endsWith('/auth/coaching/login')).flush({
       requiresMfa: true,
       mfaEnrollmentRequired: true,
       mfaChallengeToken: 'challenge'

@@ -96,6 +96,8 @@ export class MotionPathEngine implements BaseEngine {
     private peripheralInputBuffer = '';
     private totalPeripheralTests = 0;
     private correctPeripheralTests = 0;
+    private serverAuthoritativeFixation = false;
+    private pendingServerAnswer = false;
 
     // Audio/Metronome Support
     private audioContext: AudioContext | null = null;
@@ -116,12 +118,13 @@ export class MotionPathEngine implements BaseEngine {
     // Feedback State
     private lastFeedback: { isCorrect: boolean; userInput: string; correctChars: string } | null = null;
     private showingFeedback = false;
-    private fixationPhase: 'idle' | 'transition' | 'holding' | 'awaitingInput' | 'feedback' = 'idle';
+    private fixationPhase: 'idle' | 'transition' | 'cue' | 'holding' | 'awaitingInput' | 'feedback' = 'idle';
     private phaseStartedAt = 0;
     private phaseDuration = 0;
     private phaseRemaining = 0;
     private pendingTargetX = 50;
     private pendingTargetY = 50;
+    private pendingPeripheralStimuli: string[] | null = null;
 
     // Track last used chars to avoid repetition
     private lastUsedChars: string[] = [];
@@ -212,6 +215,9 @@ export class MotionPathEngine implements BaseEngine {
             this.state.totalSteps = points;
         }
         this.configuredTotalSteps = this.state.totalSteps;
+        this.serverAuthoritativeFixation = backendConfig.serverAuthoritative === true
+            && Number(backendConfig.fixationPeripheralCount) > 0
+            && mode === 'fixation' && (this.config.fixation?.peripheralCount || 0) > 0;
     }
 
     private generateSaccadeTargets(content: any): void {
@@ -385,11 +391,18 @@ export class MotionPathEngine implements BaseEngine {
 
         // Clear previous peripheral chars and prepare for new point
         this.peripheralChars = [];
+        this.pendingPeripheralStimuli = null;
+        this.fixationPhase = 'idle';
+        this.callbacks.onStateChange({ ...this.state });
 
         // Calculate new position
         this.pendingTargetX = 15 + Math.random() * 70;
         this.pendingTargetY = 20 + Math.random() * 60;
-        this.scheduleFixationTransition(150);
+        if (this.serverAuthoritativeFixation) {
+            this.callbacks.onAction({ action: 'fixation_present', timestamp: new Date() });
+        } else {
+            this.scheduleFixationTransition(150);
+        }
     }
 
     private scheduleFixationTransition(delayMs: number): void {
@@ -400,17 +413,29 @@ export class MotionPathEngine implements BaseEngine {
             // Set new target position
             this.targetX = this.pendingTargetX;
             this.targetY = this.pendingTargetY;
+            this.fixationProgress = 0;
 
-            // Generate peripheral chars at new position
+            this.scheduleFixationCue(200);
+            this.callbacks.onStateChange({ ...this.state });
+        }, delayMs);
+    }
+
+    private scheduleFixationCue(delayMs: number): void {
+        this.setFixationPhase('cue', delayMs);
+        this.transitionTimeout = setTimeout(() => {
+            if (!this.state.isRunning || this.state.isPaused) return;
             this.generatePeripheralChars();
-
-            // Start fixation timer
+            if (this.pendingPeripheralStimuli) {
+                this.peripheralChars = this.peripheralChars.map((item, index) => ({
+                    ...item, char: this.pendingPeripheralStimuli![index]
+                }));
+                this.pendingPeripheralStimuli = null;
+            }
             this.fixationStartTime = Date.now();
             this.fixationProgress = 0;
-            this.callbacks.onStateChange({ ...this.state });
-
             const holdMs = this.config.movement?.fixationTimeMs || 2000;
             this.scheduleFixationHold(holdMs);
+            this.callbacks.onStateChange({ ...this.state });
         }, delayMs);
     }
 
@@ -673,7 +698,7 @@ export class MotionPathEngine implements BaseEngine {
         }
         if (this.transitionTimeout) clearTimeout(this.transitionTimeout);
         if (this.feedbackTimeout) clearTimeout(this.feedbackTimeout);
-        if (this.currentMode === 'fixation' && ['transition', 'holding', 'feedback'].includes(this.fixationPhase)) {
+        if (this.currentMode === 'fixation' && ['transition', 'cue', 'holding', 'feedback'].includes(this.fixationPhase)) {
             this.phaseRemaining = Math.max(0, this.phaseDuration - (Date.now() - this.phaseStartedAt));
         }
         this.callbacks.onPause();
@@ -693,6 +718,7 @@ export class MotionPathEngine implements BaseEngine {
         // Resume mode-specific logic
         if (this.currentMode === 'fixation') {
             if (this.fixationPhase === 'transition') this.scheduleFixationTransition(this.phaseRemaining);
+            else if (this.fixationPhase === 'cue') this.scheduleFixationCue(this.phaseRemaining);
             else if (this.fixationPhase === 'holding') this.scheduleFixationHold(this.phaseRemaining);
             else if (this.fixationPhase === 'feedback') this.scheduleFeedback(this.phaseRemaining);
 
@@ -752,7 +778,9 @@ export class MotionPathEngine implements BaseEngine {
         this.saccadeInputLocked = false;
         this.lastFeedback = null;
         this.showingFeedback = false;
+        this.pendingServerAnswer = false;
         this.fixationPhase = 'idle';
+        this.pendingPeripheralStimuli = null;
         this.resetPosition();
         this.callbacks.onStateChange({ ...this.state });
     }
@@ -768,13 +796,16 @@ export class MotionPathEngine implements BaseEngine {
         if (this.awaitingPeripheralInput && input.type === 'keypress') {
             const key = input.key?.toUpperCase();
             if (key && key.length === 1 && /[A-Z]/.test(key)) {
-                this.peripheralInputBuffer += key;
-
-                // Check if we have enough characters
-                if (this.peripheralInputBuffer.length >= this.currentCorrectChars.length) {
-                    this.submitPeripheralInput();
-                }
+                this.peripheralInputBuffer = (this.peripheralInputBuffer + key)
+                    .slice(0, this.currentCorrectChars.length);
             }
+            return;
+        }
+
+        if (this.awaitingPeripheralInput && input.type === 'text') {
+            this.peripheralInputBuffer = String(input.value || '').toUpperCase()
+                .replace(/[^A-Z]/g, '')
+                .slice(0, this.currentCorrectChars.length);
             return;
         }
 
@@ -793,6 +824,40 @@ export class MotionPathEngine implements BaseEngine {
     }
 
     private submitPeripheralInput(): void {
+        if (this.serverAuthoritativeFixation) {
+            if (this.pendingServerAnswer) return;
+            this.pendingServerAnswer = true;
+            this.callbacks.onAction({
+                action: 'fixation_answer',
+                answers: this.peripheralInputBuffer.split(''),
+                timestamp: new Date()
+            });
+            return;
+        }
+        this.finishPeripheralInput();
+    }
+
+    reconcileServerResponse(action: any, response: any): void {
+        if (!response?.isValid) {
+            this.pendingServerAnswer = false;
+            this.callbacks.onError(response?.message || 'Sabitleme yanıtı doğrulanamadı.');
+            return;
+        }
+        if (action?.action === 'fixation_present') {
+            const stimuli = response?.feedbackData?.stimuli;
+            if (!Array.isArray(stimuli) || stimuli.length !== this.config.fixation?.peripheralCount) {
+                this.callbacks.onError('Sabitleme harfleri sunucudan alınamadı.');
+                return;
+            }
+            this.pendingPeripheralStimuli = stimuli.map((item: unknown) => String(item));
+            this.scheduleFixationTransition(150);
+        } else if (action?.action === 'fixation_answer') {
+            this.pendingServerAnswer = false;
+            this.finishPeripheralInput(response?.isCorrect);
+        }
+    }
+
+    private finishPeripheralInput(serverCorrect?: boolean | null): void {
         const userInput = this.peripheralInputBuffer.toUpperCase();
         const correctChars = this.currentCorrectChars.toUpperCase();
 
@@ -808,7 +873,9 @@ export class MotionPathEngine implements BaseEngine {
                 remainingChars.splice(matchIndex, 1);
             }
         }
-        const accuracy = correctChars.length > 0 ? (matchCount / correctChars.length) * 100 : 100;
+        const accuracy = serverCorrect == null
+            ? correctChars.length > 0 ? (matchCount / correctChars.length) * 100 : 100
+            : serverCorrect ? 100 : 0;
         const isCorrect = accuracy === 100;
 
         if (isCorrect) {
@@ -911,7 +978,7 @@ export class MotionPathEngine implements BaseEngine {
     }
 
     getIncorrectCount(): number {
-        return this.totalPeripheralTests - this.correctPeripheralTests;
+        return this.fixationResults.filter(item => item.correctChars && item.accuracy < 100).length;
     }
 
     private complete(reason: string = 'unknown'): void {
@@ -920,7 +987,7 @@ export class MotionPathEngine implements BaseEngine {
         const accuracy = this.totalPeripheralTests > 0
             ? Math.round(completedAccuracy / this.totalPeripheralTests)
             : 100;
-        const errors = this.getIncorrectCount();
+        const errors = this.getIncorrectCount() + (this.awaitingPeripheralInput ? 1 : 0);
         this.state.score = accuracy;
         this.state.accuracy = accuracy;
         this.state.errors = errors;
@@ -936,7 +1003,8 @@ export class MotionPathEngine implements BaseEngine {
             completedSteps: this.state.currentStep,
             errors,
             details: {
-                fixationResults: this.fixationResults
+                fixationResults: this.fixationResults,
+                serverValidatedFixation: this.serverAuthoritativeFixation
             }
         };
 
@@ -958,7 +1026,7 @@ export class MotionPathEngine implements BaseEngine {
         return undefined;
     }
 
-    private setFixationPhase(phase: 'transition' | 'holding' | 'feedback', durationMs: number): void {
+    private setFixationPhase(phase: 'transition' | 'cue' | 'holding' | 'feedback', durationMs: number): void {
         this.fixationPhase = phase;
         this.phaseStartedAt = Date.now();
         this.phaseDuration = durationMs;
@@ -977,7 +1045,9 @@ export class MotionPathEngine implements BaseEngine {
     getFixationResults() { return this.fixationResults; }
     getFixationProgress() { return this.fixationProgress; }
     getPeripheralChars() { return this.peripheralChars; }
+    isFixationTargetVisible() { return this.currentMode !== 'fixation' || this.fixationPhase === 'cue' || this.fixationPhase === 'holding'; }
     getPointSize() { return this.currentPointSize; }
     getCurrentValue() { return this.state.currentValue; }
     getFixationDuration() { return this.config.movement?.fixationTimeMs || 0; }
+    getMode() { return this.currentMode; }
 }

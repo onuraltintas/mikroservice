@@ -12,7 +12,12 @@ namespace Coaching.Application.Interfaces;
 public interface IAssignmentRepository
 {
     Task<Assignment?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
-    Task<PagedRepositoryResult<Assignment>> GetByTeacherIdAsync(Guid teacherId, int pageNumber, int pageSize, CancellationToken cancellationToken = default);
+    Task<PagedRepositoryResult<Assignment>> GetByTeacherIdAsync(
+        Guid teacherId,
+        int pageNumber,
+        int pageSize,
+        CancellationToken cancellationToken = default,
+        AssignmentStatus? status = null);
     Task<PagedRepositoryResult<Assignment>> GetByStudentIdAsync(Guid studentId, int pageNumber, int pageSize, CancellationToken cancellationToken = default);
     Task<Assignment> AddAsync(Assignment assignment, CancellationToken cancellationToken = default);
     Task UpdateAsync(Assignment assignment, CancellationToken cancellationToken = default);
@@ -23,7 +28,13 @@ public interface IExamRepository
 {
     Task<Exam?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
     Task<Exam?> GetMetadataByIdAsync(Guid id, CancellationToken cancellationToken = default);
-    Task<PagedRepositoryResult<ExamResult>> GetResultsByExamIdAsync(Guid examId, int pageNumber, int pageSize, CancellationToken cancellationToken = default);
+    Task<IReadOnlyCollection<Guid>> GetResultStudentIdsByExamIdAsync(Guid examId, CancellationToken cancellationToken = default);
+    Task<PagedRepositoryResult<ExamResult>> GetResultsByExamIdAsync(
+        Guid examId,
+        int pageNumber,
+        int pageSize,
+        CancellationToken cancellationToken = default,
+        IReadOnlyCollection<Guid>? scopedStudentIds = null);
     Task<List<Exam>> GetByInstitutionIdAsync(Guid institutionId, CancellationToken cancellationToken = default);
     Task<PagedRepositoryResult<Exam>> GetByTeacherIdAsync(Guid teacherId, int pageNumber, int pageSize, CancellationToken cancellationToken = default);
     Task<PagedRepositoryResult<Exam>> GetByStudentIdAsync(Guid studentId, int pageNumber, int pageSize, CancellationToken cancellationToken = default);
@@ -47,7 +58,13 @@ public interface ICoachingSessionRepository
 public interface IAcademicGoalRepository
 {
     Task<AcademicGoal?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
-    Task<PagedRepositoryResult<AcademicGoal>> GetByTeacherIdAsync(Guid teacherId, int pageNumber, int pageSize, CancellationToken cancellationToken = default);
+    Task<IReadOnlyCollection<Guid>> GetStudentIdsByTeacherIdAsync(Guid teacherId, CancellationToken cancellationToken = default);
+    Task<PagedRepositoryResult<AcademicGoal>> GetByTeacherIdAsync(
+        Guid teacherId,
+        int pageNumber,
+        int pageSize,
+        CancellationToken cancellationToken = default,
+        IReadOnlyCollection<Guid>? scopedStudentIds = null);
     Task<PagedRepositoryResult<AcademicGoal>> GetByStudentIdAsync(Guid studentId, int pageNumber, int pageSize, CancellationToken cancellationToken = default);
     Task<AcademicGoal> AddAsync(AcademicGoal goal, CancellationToken cancellationToken = default);
     Task UpdateAsync(AcademicGoal goal, CancellationToken cancellationToken = default);
@@ -115,6 +132,24 @@ public interface ICoachingComparativeReportRepository
 
 public sealed record PagedRepositoryResult<T>(IReadOnlyList<T> Items, int TotalCount);
 
+public enum CoachingStudentHistoryType
+{
+    Assignments,
+    Exams,
+    Sessions,
+    Goals
+}
+
+public interface ICoachingStudentHistoryRepository
+{
+    Task<PagedRepositoryResult<CoachingAdminStudentHistoryItemDto>> GetStudentHistoryAsync(
+        Guid studentId,
+        CoachingStudentHistoryType type,
+        int pageNumber,
+        int pageSize,
+        CancellationToken cancellationToken = default);
+}
+
 public interface IIdempotencyRepository
 {
     Task<IdempotencyRecord?> GetAsync(
@@ -127,11 +162,10 @@ public interface IIdempotencyRepository
         CancellationToken cancellationToken = default);
 }
 
-public interface ICoachingAdminRepository
+public interface ICoachingAdminRepository : ICoachingStudentHistoryRepository
 {
     Task<CoachingAdminStudentDetailDto> GetStudentDetailAsync(
         Guid studentId,
-        Guid? institutionId,
         CancellationToken cancellationToken = default);
 
     Task<TeacherCoachingAnalyticsDto> GetTeacherAnalyticsAsync(
@@ -202,6 +236,17 @@ public sealed record CoachingAdminStudentAssignmentDto(
 
 public sealed record CoachingAdminStudentExamDto(
     Guid Id, string Title, decimal Score, decimal MaxScore, DateTime ExamDate);
+
+public sealed record CoachingAdminStudentHistoryItemDto(
+    Guid Id,
+    string Type,
+    string Title,
+    DateTime EventDate,
+    string Status,
+    decimal? Score = null,
+    decimal? MaxScore = null,
+    int? Progress = null,
+    string? Category = null);
 
 public sealed record TeacherCoachingAnalyticsDto(
     Guid TeacherId,

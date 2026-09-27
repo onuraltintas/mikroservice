@@ -102,7 +102,8 @@ public sealed record DailyProgressSummary(
     DateTime AssignedDate,
     decimal CurrentReadingSpeed,
     decimal InitialReadingSpeed,
-    decimal AverageSuccessRate);
+    decimal AverageSuccessRate,
+    int CurrentWeek);
 
 public sealed record WeeklyProgressSummary(
     int TotalExercises,
@@ -156,6 +157,26 @@ public interface ISpeedReadingDailyProgress
 
 public static class SpeedReadingDailyProgressRules
 {
+    public static int GetCalendarAvailableDay(DateTime assignedAt, DateTime now)
+    {
+        var zone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Istanbul");
+        var start = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(assignedAt, zone));
+        var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(now, zone));
+        return Math.Max(1, today.DayNumber - start.DayNumber + 1);
+    }
+
+    public static int CountCompletedScheduledDays(
+        IEnumerable<(int Week, int Day, Guid ExerciseId)> scheduled,
+        IEnumerable<(int Week, int Day, Guid ExerciseId)> completed,
+        int maximumDay)
+    {
+        var completedSlots = completed.ToHashSet();
+        return scheduled
+            .Where(slot => ((slot.Week - 1) * 7) + slot.Day <= maximumDay)
+            .GroupBy(slot => (slot.Week, slot.Day))
+            .Count(day => day.All(slot => completedSlots.Contains(slot)));
+    }
+
     public static string ValidateIdempotencyKey(string? key)
     {
         var normalized = key?.Trim() ?? string.Empty;

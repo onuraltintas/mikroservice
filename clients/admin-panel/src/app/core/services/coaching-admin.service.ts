@@ -82,6 +82,25 @@ export interface CoachingAdminStudentDetail {
   exams: { id: string; title: string; score: number; maxScore: number; examDate: string }[];
 }
 
+export type CoachingStudentHistoryType = 'Assignments' | 'Exams' | 'Sessions' | 'Goals';
+
+export interface CoachingAdminStudentHistoryItem {
+  id: string;
+  type: CoachingStudentHistoryType;
+  title: string;
+  eventDate: string;
+  status: string;
+  score?: number | null;
+  maxScore?: number | null;
+  progress?: number | null;
+  category?: string | null;
+}
+
+export interface CoachingAdminStudentHistoryPage {
+  items: CoachingAdminStudentHistoryItem[];
+  totalCount: number;
+}
+
 export interface TeacherCoachingAnalytics {
   teacherId: string;
   currentPeriod: { assignments: number; exams: number; sessions: number };
@@ -447,10 +466,11 @@ export class CoachingAdminService {
     return this.http.get<CoachingAdminReadScope>(`${this.url}/scope`);
   }
 
-  getStudentRoster(institutionId: string, pageNumber = 1, search = '', teacherUserId?: string) {
+  getStudentRoster(institutionId: string, pageNumber = 1, search = '', teacherUserId?: string, gradeLevel?: number | null) {
     let params = new HttpParams().set('pageNumber', pageNumber).set('pageSize', 25);
     if (search.trim()) params = params.set('search', search.trim());
     if (teacherUserId) params = params.set('teacherUserId', teacherUserId);
+    if (gradeLevel !== undefined && gradeLevel !== null) params = params.set('gradeLevel', gradeLevel);
     return this.http.get<CoachingStudentRosterPage>(
       `${this.url}/institutions/${encodeURIComponent(institutionId)}/students`, { params });
   }
@@ -465,6 +485,20 @@ export class CoachingAdminService {
   getStudentDetail(studentId: string) {
     return this.http.get<CoachingAdminStudentDetail>(
       `${this.url}/students/${encodeURIComponent(studentId)}/detail`);
+  }
+
+  getStudentHistory(
+    studentId: string,
+    type: CoachingStudentHistoryType,
+    pageNumber = 1,
+    pageSize = 25
+  ) {
+    const params = new HttpParams()
+      .set('type', type)
+      .set('pageNumber', pageNumber)
+      .set('pageSize', pageSize);
+    return this.http.get<CoachingAdminStudentHistoryPage>(
+      `${this.url}/students/${encodeURIComponent(studentId)}/history`, { params });
   }
 
   getTeacherAnalytics(teacherId: string) {

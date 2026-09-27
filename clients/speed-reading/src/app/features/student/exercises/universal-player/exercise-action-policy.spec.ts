@@ -1,6 +1,11 @@
 import { shouldForwardExerciseAction } from './exercise-action-policy';
 
 describe('exercise action forwarding policy', () => {
+  it('forwards only validated fixation actions from motion path', () => {
+    expect(shouldForwardExerciseAction('motion_path', 'fixation', 'fixation_present')).toBeTrue();
+    expect(shouldForwardExerciseAction('motion_path', 'fixation', 'fixation_answer')).toBeTrue();
+    expect(shouldForwardExerciseAction('motion_path', 'tracking', 'fixation_answer')).toBeFalse();
+  });
   it('forwards regression comprehension answers to the server', () => {
     expect(shouldForwardExerciseAction('regression_reduction', undefined, 'answer_question'))
       .toBeTrue();

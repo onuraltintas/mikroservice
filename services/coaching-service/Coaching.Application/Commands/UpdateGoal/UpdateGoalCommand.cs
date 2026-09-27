@@ -4,6 +4,7 @@ using Coaching.Domain.Enums;
 using EduPlatform.Shared.Contracts.Events.Coaching;
 using FluentValidation;
 using MediatR;
+using System.Text.Json.Serialization;
 
 namespace Coaching.Application.Commands.UpdateGoal;
 
@@ -16,7 +17,11 @@ public record UpdateGoalCommand(
     decimal? TargetScore,
     ExamType? TargetExamType,
     string? TargetSubject
-) : IRequest<UpdateGoalResponse>;
+) : IRequest<UpdateGoalResponse>
+{
+    [JsonIgnore]
+    public bool IsInstitutionAdminOperation { get; init; }
+}
 
 public record UpdateGoalResponse(Guid GoalId, string Title);
 
@@ -70,11 +75,11 @@ public sealed class UpdateGoalCommandHandler
 
         if (goal.SetByTeacherId.HasValue)
         {
-            _accessPolicy.RequireTeacher(goal.SetByTeacherId.Value);
+            _accessPolicy.RequireTeacher(goal.SetByTeacherId.Value, command.IsInstitutionAdminOperation);
         }
         else
         {
-            _accessPolicy.RequireStudent(goal.StudentId);
+            _accessPolicy.RequireStudent(goal.StudentId, command.IsInstitutionAdminOperation);
         }
 
         goal.UpdateEditableDetails(

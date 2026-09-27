@@ -375,6 +375,8 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
                 "focus_step" => AdvanceFocus(session, state, request, now),
                 "visual_expansion_present" => PresentVisualExpansion(session, state, now),
                 "visual_expansion_answer" => AnswerVisualExpansion(session, state, request, now),
+                "fixation_present" => PresentFixation(session, state, now),
+                "fixation_answer" => AnswerFixation(session, state, request),
                 "answer_question" => AnswerQuestion(session, state, request),
                 "position_match" => ValidateFocusMatch(session, state, request, "position", now),
                 "word_match" => ValidateFocusMatch(session, state, request, "word", now),
@@ -466,7 +468,7 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
             throw IncompleteSession("All grid targets must be completed before the session can be completed.");
         if (IsFocusExercise(state) && !state.FocusCompleted)
         {
-            if (IsObservationOnlyMotionPath(state))
+            if (IsObservationOnlyMotionPath(state) && state.FixationPeripheralCount == 0)
             {
                 // motion_path is a timed, observation-only exercise. It has
                 // no server stimulus/response sequence to validate, so its
@@ -482,11 +484,17 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         if (IsVisualExpansionExercise(state)
             && state.VisualExpansionRound < state.TotalSteps)
             throw IncompleteSession("All visual expansion rounds must be validated before completion.");
+        if (IsValidatedFixation(state) && !state.FocusCompleted)
+            throw IncompleteSession("All fixation rounds must be validated before completion.");
         if (state.VocabularyWords.Count > 0
             && state.VocabularyWords.Any(word => state.Answers.All(answer => answer.QuestionId != word.Id)))
             throw IncompleteSession("All vocabulary rounds must be reviewed before completion.");
         if (IsAdaptiveFluency(state) && !state.AdaptiveCompleted)
             throw IncompleteSession("The adaptive fluency flow must be completed before the session can be completed.");
+
+        // Sessions started before this rule may still contain reading-text questions.
+        if (string.Equals(state.ExerciseTypeName, "Tachistoscope", StringComparison.OrdinalIgnoreCase))
+            state.Questions.Clear();
 
         var answers = ResolveAnswers(session, state, request.QuestionAnswers);
         PersistSessionAnswers(session);
@@ -528,7 +536,8 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
             session.CorrectCount,
             session.IncorrectCount,
             hasValidWpm: (rawWpmCandidate.HasValue && SupportsServerReadingMeasurement(state))
-                || (IsFocusExercise(state) && state.FocusCompleted && HasFocusStimulus(state)));
+                || (IsFocusExercise(state) && state.FocusCompleted && HasFocusStimulus(state))
+                || (IsValidatedFixation(state) && state.FocusCompleted && session.CurrentStep > 0));
         var rawWpm = measurementStatus == SpeedReadingMeasurementStatus.Measured
             ? rawWpmCandidate
             : null;
@@ -1213,6 +1222,11 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
                 .ToList();
         }
 
+        if (!ExerciseConfigurationRules.ShouldIncludeComprehensionQuestions(
+                exerciseTypeName, exerciseEngineType,
+                ReadString(effectiveConfig, "mode") ?? ReadString(config, "mode")))
+            state.Questions.Clear();
+
         if (state.AdaptiveEnabled)
         {
             state.AdaptivePrimaryQuestions = state.Questions.Select(CloneQuestion).ToList();
@@ -1281,6 +1295,7 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         var gridSize = !state.AdaptiveEnabled && IsGridExercise(exerciseTypeName, config)
             ? Math.Clamp(
                 ReadPositiveInt(effectiveConfig, "gridSize")
+                    ?? ReadPositiveInt(ReadObject(effectiveConfig, "grid"), "rows")
                     ?? ReadPositiveInt(config, "gridSize")
                     ?? difficultyLevel + 2,
                 3,
@@ -1320,6 +1335,26 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
 
         if (IsFocusExercise(exerciseTypeName) || IsFocusEngineType(exerciseEngineType))
         {
+            var needsWords = state.FocusMode.Equals("word", StringComparison.OrdinalIgnoreCase)
+                || state.FocusMode.Equals("dual", StringComparison.OrdinalIgnoreCase);
+            var needsPositions = !state.FocusMode.Equals("word", StringComparison.OrdinalIgnoreCase);
+            if (!IsEngineType(exerciseEngineType, "motion_path")
+                && (needsWords && state.WordSequence.Length == 0
+                    || needsPositions && state.PositionSequence.Length == 0))
+            {
+                var sequenceLength = Math.Max(
+                    Math.Max(state.TotalSteps > 1 ? state.TotalSteps : 20,
+                        Math.Max(state.PositionSequence.Length, state.WordSequence.Length)),
+                    state.FocusNLevel + 1);
+                state.TotalSteps = Math.Clamp(sequenceLength, 1, 500);
+                if (needsWords && state.WordSequence.Length == 0)
+                    state.WordSequence = CreateFocusWordSequence(
+                        state.TotalSteps, state.FocusNLevel, state.WordTargetIndices);
+                if (needsPositions && state.PositionSequence.Length == 0)
+                    state.PositionSequence = CreateFocusPositionSequence(
+                        state.TotalSteps, state.FocusNLevel, state.GridSize, state.PositionTargetIndices);
+            }
+
             state.TotalSteps = Math.Max(
                 state.TotalSteps,
                 Math.Max(state.PositionSequence.Length, state.WordSequence.Length));
@@ -1329,6 +1364,26 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         if (IsVisualExpansionExercise(exerciseTypeName)
             || IsEngineType(exerciseEngineType, "visual_expansion"))
             state.TotalSteps = Math.Clamp(state.TotalSteps, 1, 100);
+
+        if (IsEngineType(exerciseEngineType, "motion_path")
+            && string.Equals(ReadString(effectiveConfig, "mode") ?? ReadString(config, "mode") ?? "fixation",
+                "fixation", StringComparison.OrdinalIgnoreCase))
+        {
+            var content = ReadObject(effectiveConfig, "content");
+            var fixation = ReadObject(effectiveConfig, "fixation");
+            var timing = ReadObject(effectiveConfig, "timing");
+            state.FixationPeripheralCount = Math.Clamp(
+                ReadPositiveInt(content, "peripheralCount")
+                    ?? ReadPositiveInt(fixation, "peripheralCount") ?? 0, 0, 4);
+            state.FixationHoldMs = Math.Clamp(
+                ReadPositiveInt(timing, "holdMs")
+                    ?? ReadPositiveInt(ReadObject(effectiveConfig, "movement"), "fixationTimeMs") ?? 2_000,
+                50, 10_000);
+            state.TotalSteps = Math.Clamp(
+                ReadPositiveInt(content, "points")
+                    ?? ReadPositiveInt(fixation, "points")
+                    ?? state.TotalSteps, 1, 500);
+        }
 
         if (exerciseTypeName.Equals("RSVP", StringComparison.OrdinalIgnoreCase) && state.Words.Length > 0)
             state.TotalSteps = state.Words.Length;
@@ -1575,9 +1630,13 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
 
         session.Advance(result.IsCorrect);
         state.VisualExpansionRound++;
-        state.VisualExpansionCurrentDegrees = CalculateVisualExpansionDegrees(
-            state,
-            state.VisualExpansionRound);
+        var nextDifficulty = VisualExpansionRoundRules.AdvanceDifficulty(
+            state.VisualExpansionCurrentDegrees,
+            state.VisualExpansionTargetDegrees,
+            state.VisualExpansionDisplayDurationMs,
+            result.IsCorrect);
+        state.VisualExpansionCurrentDegrees = nextDifficulty.Degrees;
+        state.VisualExpansionDisplayDurationMs = nextDifficulty.DisplayDurationMs;
         state.VisualExpansionExpectedStimuli = [];
         state.VisualExpansionPresentedAt = null;
         return Valid(
@@ -1585,6 +1644,49 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
             state.VisualExpansionRound,
             isCompleted: state.VisualExpansionRound >= state.TotalSteps,
             isCorrect: session.AssessmentAttemptId.HasValue ? null : result.IsCorrect);
+    }
+
+    private static ExerciseActionValidationResponse PresentFixation(
+        ExerciseSession session, SessionState state, DateTime now)
+    {
+        if (!IsValidatedFixation(state))
+            return Invalid("Fixation presentation is not valid for this exercise.");
+        if (state.FixationRound >= state.TotalSteps)
+            return Invalid("All fixation rounds are complete.");
+        if (state.FixationExpectedStimuli.Length == 0)
+        {
+            state.FixationExpectedStimuli = VisualExpansionRoundRules.CreateStimuli(
+                session.Id.GetHashCode(), state.FixationRound, "letter", state.FixationPeripheralCount).ToArray();
+            state.FixationPresentedAt = now.ToUniversalTime();
+        }
+
+        var feedback = JsonSerializer.SerializeToElement(new
+        {
+            round = state.FixationRound,
+            stimuli = state.FixationExpectedStimuli,
+            holdMs = state.FixationHoldMs
+        }, JsonOptions);
+        return Valid("Sabitleme uyaranı hazır.", state.FixationRound, feedbackData: feedback);
+    }
+
+    private static ExerciseActionValidationResponse AnswerFixation(
+        ExerciseSession session, SessionState state, ExerciseActionRequest request)
+    {
+        if (!IsValidatedFixation(state) || state.FixationExpectedStimuli.Length == 0
+            || !state.FixationPresentedAt.HasValue)
+            return Invalid("No fixation round is awaiting an answer.");
+
+        var expected = state.FixationExpectedStimuli.Select(item => item.Trim().ToUpperInvariant()).Order().ToArray();
+        var submitted = (request.Answers ?? []).Select(item => item.Trim().ToUpperInvariant()).Order().ToArray();
+        var isCorrect = expected.SequenceEqual(submitted);
+        session.Advance(isCorrect);
+        state.FixationRound++;
+        state.FixationExpectedStimuli = [];
+        state.FixationPresentedAt = null;
+        state.FocusCompleted = state.FixationRound >= state.TotalSteps;
+        return Valid("Sabitleme yanıtı kaydedildi.", state.FixationRound,
+            isCompleted: state.FocusCompleted,
+            isCorrect: session.AssessmentAttemptId.HasValue ? null : isCorrect);
     }
 
     private static int CalculateVisualExpansionDegrees(SessionState state, int round)
@@ -2007,6 +2109,78 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
             feedbackData: session.AssessmentAttemptId.HasValue ? null : BuildFocusFeedback(state));
     }
 
+    private static string[] CreateFocusWordSequence(
+        int totalSteps,
+        int nLevel,
+        IReadOnlyCollection<int> configuredTargetIndices)
+    {
+        var wordPool = new[]
+        {
+            "kitap", "kalem", "masa", "bulut", "deniz", "orman", "şehir", "bardak",
+            "çiçek", "güneş", "anahtar", "köprü", "tren", "elma", "kedi", "kuş",
+            "dağ", "pencere", "çanta", "yıldız", "nehir", "ekmek", "saat", "top",
+            "kapı", "telefon", "ağaç", "yol", "ay", "su"
+        };
+        var targetIndices = configuredTargetIndices.ToHashSet();
+        var hasConfiguredTargets = targetIndices.Count > 0;
+        var sequence = new string[totalSteps];
+
+        for (var index = 0; index < sequence.Length; index++)
+        {
+            var isTarget = index >= nLevel
+                && (hasConfiguredTargets
+                    ? targetIndices.Contains(index)
+                    : index == nLevel || Random.Shared.Next(4) == 0);
+            if (isTarget)
+            {
+                sequence[index] = sequence[index - nLevel];
+                continue;
+            }
+
+            var nextWord = wordPool[Random.Shared.Next(wordPool.Length)];
+            while (index >= nLevel
+                && string.Equals(nextWord, sequence[index - nLevel], StringComparison.OrdinalIgnoreCase))
+            {
+                nextWord = wordPool[Random.Shared.Next(wordPool.Length)];
+            }
+            sequence[index] = nextWord;
+        }
+
+        return sequence;
+    }
+
+    private static int[] CreateFocusPositionSequence(
+        int totalSteps,
+        int nLevel,
+        int gridSize,
+        IReadOnlyCollection<int> configuredTargetIndices)
+    {
+        var targetIndices = configuredTargetIndices.ToHashSet();
+        var hasConfiguredTargets = targetIndices.Count > 0;
+        var sequence = new int[totalSteps];
+        var positionCount = gridSize * gridSize;
+
+        for (var index = 0; index < sequence.Length; index++)
+        {
+            var isTarget = index >= nLevel
+                && (hasConfiguredTargets
+                    ? targetIndices.Contains(index)
+                    : index == nLevel || Random.Shared.Next(4) == 0);
+            if (isTarget)
+            {
+                sequence[index] = sequence[index - nLevel];
+                continue;
+            }
+
+            var nextPosition = Random.Shared.Next(1, positionCount + 1);
+            while (index >= nLevel && nextPosition == sequence[index - nLevel])
+                nextPosition = Random.Shared.Next(1, positionCount + 1);
+            sequence[index] = nextPosition;
+        }
+
+        return sequence;
+    }
+
     private static bool IsFocusTarget(SessionState state, string channel, int index)
     {
         var configuredTargets = channel == "position"
@@ -2097,6 +2271,9 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
 
     private static bool IsObservationOnlyMotionPath(SessionState state) =>
         IsEngineType(state.EngineType, "motion_path");
+
+    private static bool IsValidatedFixation(SessionState state) =>
+        IsEngineType(state.EngineType, "motion_path") && state.FixationPeripheralCount > 0;
 
     private static bool IsEngineType(string engineType, string expectedEngineType)
     {
@@ -2856,6 +3033,11 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         public string[] VisualExpansionExpectedStimuli { get; set; } = [];
         public DateTime? VisualExpansionPresentedAt { get; set; }
         public int VisualExpansionPausedSecondsAtPresentation { get; set; }
+        public int FixationPeripheralCount { get; set; }
+        public int FixationHoldMs { get; set; } = 2_000;
+        public int FixationRound { get; set; }
+        public string[] FixationExpectedStimuli { get; set; } = [];
+        public DateTime? FixationPresentedAt { get; set; }
         public List<SessionQuestion> Questions { get; set; } = [];
         public List<SessionAnswer> Answers { get; set; } = [];
         public List<VisualizationSceneState> VisualizationScenes { get; set; } = [];

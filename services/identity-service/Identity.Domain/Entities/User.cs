@@ -1,4 +1,5 @@
 using EduPlatform.Shared.Kernel.Primitives;
+using Identity.Domain.Enums;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Security.Cryptography;
 using System.Text;
@@ -46,6 +47,9 @@ public class User : AggregateRoot
     // Navigation properties
     private readonly List<UserRole> _roles = new();
     public IReadOnlyCollection<UserRole> Roles => _roles.AsReadOnly();
+
+    private readonly List<UserProductAccess> _productAccesses = new();
+    public IReadOnlyCollection<UserProductAccess> ProductAccesses => _productAccesses.AsReadOnly();
     
     private readonly List<RefreshToken> _refreshTokens = new();
     public IReadOnlyCollection<RefreshToken> RefreshTokens => _refreshTokens.AsReadOnly();
@@ -301,15 +305,51 @@ public class User : AggregateRoot
 
     public void AddRole(UserRole userRole)
     {
-        if (!_roles.Any(r => r.RoleId == userRole.RoleId))
+        if (!_roles.Any(r => r.RoleId == userRole.RoleId && r.Product == userRole.Product))
         {
             _roles.Add(userRole);
         }
     }
 
-    public void RemoveRole(Guid roleId)
+    public bool HasProductAccess(PlatformProduct product) =>
+        _productAccesses.Any(access => access.Product == product && access.IsActive);
+
+    public IEnumerable<UserRole> GetRolesForProductScope(PlatformProduct? product) => product is null
+        ? _roles.Where(userRole => userRole.Product is null)
+        : _roles.Where(userRole => userRole.Product == product
+            || userRole.Product is null
+            && string.Equals(
+                userRole.Role?.Name,
+                Identity.Domain.Enums.UserRole.SystemAdmin.ToString(),
+                StringComparison.OrdinalIgnoreCase));
+
+    public bool GrantProductAccess(
+        PlatformProduct product,
+        UserProductAccessSource source,
+        Guid? grantedByUserId,
+        DateTimeOffset grantedAt)
     {
-        var role = _roles.FirstOrDefault(r => r.RoleId == roleId);
+        var access = _productAccesses.FirstOrDefault(candidate => candidate.Product == product);
+        if (access is null)
+        {
+            _productAccesses.Add(UserProductAccess.Create(Id, product, source, grantedByUserId, grantedAt));
+            return true;
+        }
+
+        if (!access.IsActive)
+            access.Reactivate(source, grantedByUserId, grantedAt);
+
+        return false;
+    }
+
+    public void RevokeProductAccess(PlatformProduct product, DateTimeOffset revokedAt)
+    {
+        _productAccesses.FirstOrDefault(access => access.Product == product)?.Revoke(revokedAt);
+    }
+
+    public void RemoveRole(Guid roleId, PlatformProduct? product = null)
+    {
+        var role = _roles.FirstOrDefault(r => r.RoleId == roleId && r.Product == product);
         if (role != null)
         {
             _roles.Remove(role);
@@ -327,12 +367,17 @@ public class UserRole : Entity<Guid>
 
     public Guid RoleId { get; private set; }
     public Role Role { get; private set; } = null!;
+    public PlatformProduct? Product { get; private set; }
 
     private UserRole() { }
 
-    public UserRole(Guid userId, Guid roleId)
+    public UserRole(Guid userId, Guid roleId, PlatformProduct? product = null)
     {
+        if (product.HasValue && !Enum.IsDefined(product.Value))
+            throw new ArgumentOutOfRangeException(nameof(product));
+
         UserId = userId;
         RoleId = roleId;
+        Product = product;
     }
 }

@@ -3,6 +3,7 @@ using System.Text;
 using System.Text.Json;
 using EduPlatform.Shared.Kernel.Results;
 using Identity.Application.Interfaces;
+using Identity.Domain.Enums;
 using Microsoft.AspNetCore.DataProtection;
 
 namespace Identity.Infrastructure.Security;
@@ -28,12 +29,13 @@ public sealed class MultiFactorService : IMultiFactorService
         _secretProtector = dataProtectionProvider.CreateProtector("Identity.Mfa.Secret.v1");
     }
 
-    public string CreateChallenge(Guid userId, bool rememberMe)
+    public string CreateChallenge(Guid userId, bool rememberMe, PlatformProduct? product = null)
     {
         var payload = new MfaChallengePayload(
             userId,
             rememberMe,
-            _timeProvider.GetUtcNow().Add(ChallengeLifetime));
+            _timeProvider.GetUtcNow().Add(ChallengeLifetime),
+            product);
         return Protect(_challengeProtector, payload);
     }
 

@@ -109,6 +109,17 @@ describe('LoginComponent', () => {
     expect(component.unverifiedEmail).toBe('student@example.com');
   });
 
+  it('shows an invalid password error only in the toast', () => {
+    const toaster = TestBed.inject(ToasterService) as jasmine.SpyObj<ToasterService>;
+    authService.login.and.returnValue(throwError(() => ({ error: { message: 'E-posta veya şifre hatalı.' } })));
+    component.loginForm.setValue({ email: 'student@example.com', password: 'Wrong1!', rememberMe: false });
+
+    component.onSubmit();
+
+    expect(toaster.error).toHaveBeenCalledWith('E-posta veya şifre hatalı.', jasmine.any(Number));
+    expect(component.error).toBe('');
+  });
+
   it('keeps admin preview users on Master when a legacy admin return URL is present', () => {
     (component as any).handleAuthenticatedResponse.and.callThrough();
     route.snapshot.queryParamMap.get.and.returnValue('/admin');

@@ -7,11 +7,7 @@
         <div class="header-actions">
             <button mat-raised-button color="accent" (click)="linkStudent()" [disabled]="loading()">
                 <mat-icon>link</mat-icon>
-                {{ isInstitutionAdmin() ? 'Mevcut Öğrenciyi Davet Et' : 'Öğrenciyi Davet Et' }}
-            </button>
-            <button *ngIf="isInstitutionAdmin()" mat-raised-button color="primary" (click)="openStudentDialog()">
-                <mat-icon>person_add</mat-icon>
-                Yeni Öğrenci Ekle
+                Öğrenciyi Davet Et
             </button>
         </div>
     </div>
@@ -108,8 +104,8 @@
                 <ng-container matColumnDef="level">
                     <th mat-header-cell *matHeaderCellDef mat-sort-header>Sınıf</th>
                     <td mat-cell *matCellDef="let student">
-                        <span class="level-badge level-{{student.currentLevel}}">
-                            {{ student.currentLevel }}. sınıf
+                        <span class="level-badge level-{{student.gradeLevel ?? 'unspecified'}}">
+                            {{ student.gradeLevel ? (student.gradeLevel + '. sınıf') : 'Sınıf belirtilmedi' }}
                         </span>
                     </td>
                 </ng-container>
@@ -177,9 +173,9 @@
                                 <mat-icon>more_vert</mat-icon>
                             </button>
                             <mat-menu #menu="matMenu">
-                                <button mat-menu-item *ngIf="isInstitutionAdmin()" (click)="openStudentDialog(student)">
+                                <button mat-menu-item *ngIf="isInstitutionAdmin()" (click)="editStudent(student)">
                                     <mat-icon>edit</mat-icon>
-                                    <span>Düzenle</span>
+                                    <span>Öğrenciyi düzenle</span>
                                 </button>
                                 <button mat-menu-item *ngIf="isInstitutionAdmin() && hasInstitutionAccess(student)" (click)="changeInstitutionAccess(student, true)">
                                     <mat-icon>pause_circle</mat-icon>

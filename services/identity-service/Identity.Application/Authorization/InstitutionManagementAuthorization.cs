@@ -26,6 +26,15 @@ public sealed class InstitutionManagementAuthorization
     public bool IsSystemAdministrator => _currentUserService.Roles.Any(role =>
         string.Equals(role, UserRole.SystemAdmin.ToString(), StringComparison.OrdinalIgnoreCase));
 
+    public PlatformProduct? CurrentProduct
+    {
+        get
+        {
+            var value = _currentUserService.User?.FindFirst("platform_product")?.Value;
+            return PlatformProductExtensions.TryParseRouteValue(value, out var product) ? product : null;
+        }
+    }
+
     public async Task<Result<InstitutionAccessScope>> ResolveScopeAsync(
         CancellationToken cancellationToken)
     {
@@ -40,11 +49,18 @@ public sealed class InstitutionManagementAuthorization
             return Result.Success(new InstitutionAccessScope(null));
         }
 
+        if (CurrentProduct is not { } product)
+        {
+            return Result.Failure<InstitutionAccessScope>(
+                Error.Forbidden("Etkin ürün kapsamı bulunamadı."));
+        }
+
         var institutionId = await _institutionRepository.GetPrimaryInstitutionIdByUserIdAsync(
             userId,
+            product,
             cancellationToken);
         return institutionId.HasValue
-            ? Result.Success(new InstitutionAccessScope(institutionId))
+            ? Result.Success(new InstitutionAccessScope(institutionId, product))
             : Result.Failure<InstitutionAccessScope>(
                 Error.Forbidden("Kullanıcının erişebileceği aktif bir kurum bulunamadı."));
     }
@@ -86,9 +102,15 @@ public sealed class InstitutionManagementAuthorization
             return Result.Success();
         }
 
+        if (scope.Value.Product is not { } product)
+        {
+            return Result.Failure(Error.Forbidden("Etkin ürün kapsamı bulunamadı."));
+        }
+
         return await _institutionRepository.IsUserInInstitutionAsync(
             userId,
             scope.Value.InstitutionId!.Value,
+            product,
             cancellationToken)
             ? Result.Success()
             : Result.Failure(Error.Forbidden("Hedef kullanıcı bu kurumun aktif üyesi değil."));

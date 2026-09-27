@@ -307,12 +307,10 @@ export class VisualExpansionEngine implements BaseEngine {
 
         if (isFullyCorrect) {
             this.correctAnswers++;
-
-            // Her iki doğru cevapta bir açıyı (zorluğu) genişlet
-            if (this.correctAnswers > 0 && this.correctAnswers % 2 === 0) {
-                // Maksimum 60 dereceye kadar genişlet
-                this.currentDegrees = Math.min(60, this.currentDegrees + 1.5);
-            }
+            this.currentDegrees = Math.min(this.targetDegrees, this.currentDegrees + 2);
+            this.config.timing.durationMs = Math.max(
+                100,
+                Math.round(this.config.timing.durationMs * 0.95));
 
             this.successStreak++;
             this.failStreak = 0;
@@ -369,11 +367,10 @@ export class VisualExpansionEngine implements BaseEngine {
             const degrees = Number(response?.feedbackData?.degrees);
             if (Number.isFinite(degrees) && degrees > 0) {
                 this.currentDegrees = Math.max(2, Math.min(60, degrees));
-            } else {
-                const round = Number(response?.feedbackData?.round);
-                if (Number.isFinite(round)) {
-                    this.currentDegrees = this.getDegreesForRound(round);
-                }
+            }
+            const displayDurationMs = Number(response?.feedbackData?.displayDurationMs);
+            if (Number.isFinite(displayDurationMs) && displayDurationMs >= 100) {
+                this.config.timing.durationMs = displayDurationMs;
             }
             this.currentStimuli = this.positionStimuli(stimuli.map(String));
             this.isStimulusVisible = true;
@@ -435,12 +432,6 @@ export class VisualExpansionEngine implements BaseEngine {
             return contents.map((content, index) => ({ content, x: positions[index][0], y: positions[index][1] }));
         }
         return contents.map((content, index) => ({ content, x: index === 0 ? 50 - x : 50 + x, y: 50 }));
-    }
-
-    private getDegreesForRound(round: number): number {
-        if (this.state.totalSteps <= 1) return this.startDegrees;
-        const progress = Math.max(0, Math.min(1, round / (this.state.totalSteps - 1)));
-        return Math.round(this.startDegrees + ((this.targetDegrees - this.startDegrees) * progress));
     }
 
     /**
@@ -646,5 +637,9 @@ export class VisualExpansionEngine implements BaseEngine {
 
     getExpectedAnswerCount(): number {
         return this.lastShownStimuli.length;
+    }
+
+    getCurrentDisplayDurationMs(): number {
+        return this.config.timing.durationMs;
     }
 }

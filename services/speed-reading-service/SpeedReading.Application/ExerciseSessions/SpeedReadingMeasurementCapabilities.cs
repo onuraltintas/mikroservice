@@ -13,6 +13,7 @@ public static class SpeedReadingMeasurementCapabilities
     [
         new("reading", "Sunucu zamanlı okuma", "ServerTimedReading", true, "Sunucu başlangıç/bitiş zamanı, WPM ve varsa kavrama"),
         new("visual_expansion", "Görsel genişleme", "ValidatedInteraction", true, "Sunucu uyaranı, tur sırası, cevap ve tepki penceresi"),
+        new("fixation", "Göz sabitleme", "ValidatedInteraction", true, "Sunucu harfleri, tur sırası ve doğrulanan yanıt"),
         new("focus", "Odak ve dikkat", "ValidatedInteraction", true, "Sunucu uyaran akışı, N-back hedefi ve cevap penceresi"),
         new("schulte", "Schulte ve grid", "ValidatedInteraction", true, "Sunucu yerleşimi ve beklenen tıklama sırası"),
         new("visualization", "Görselleştirme", "ValidatedQuestion", true, "Sunucu soru bankası ve cevap anahtarı"),
@@ -26,7 +27,9 @@ public static class SpeedReadingMeasurementCapabilities
         // Fixation / eye-tracking exercises are observation-only in the
         // browser. They must not be counted as a validated assessment score
         // merely because their catalog name contains "focus" or "attention".
-        if (Contains(typeName, "motionpath", "motion path", "eyetracking", "eye tracking", "fixation", "saccade"))
+        if (Contains(typeName, "fixation", "sabitleme"))
+            return true;
+        if (Contains(typeName, "motionpath", "motion path", "eyetracking", "eye tracking", "saccade"))
             return false;
 
         return Contains(typeName, "speedreading", "rsvp", "tachistoscope", "comprehension", "reading", "free",

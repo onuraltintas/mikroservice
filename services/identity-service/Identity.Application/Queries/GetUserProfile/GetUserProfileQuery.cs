@@ -1,4 +1,5 @@
 using EduPlatform.Shared.Kernel.Results;
+using Identity.Domain.Enums;
 using MediatR;
 
 namespace Identity.Application.Queries.GetUserProfile;
@@ -23,6 +24,8 @@ public class UserProfileDto
     public string? PhoneNumber { get; set; }
     public List<string> Roles { get; set; } = new();
     public List<string> Permissions { get; set; } = new();
+    public List<UserProductAccessDto> ProductAccesses { get; set; } = new();
+    public List<UserProductRoleDto> ProductRoles { get; set; } = new();
 
     // Conditional fields based on role
     public TeacherDetailsDto? TeacherDetails { get; set; }
@@ -51,4 +54,7 @@ public class StudentDetailsDto
     public bool ShareProgressWithTeachers { get; set; } = true;
 }
 
-public record GetUserProfileQuery(Guid UserId) : IRequest<Result<UserProfileDto>>;
+public record UserProductAccessDto(string Product, bool IsActive);
+public record UserProductRoleDto(string Role, string? Product);
+
+public record GetUserProfileQuery(Guid UserId, PlatformProduct? Product = null) : IRequest<Result<UserProfileDto>>;

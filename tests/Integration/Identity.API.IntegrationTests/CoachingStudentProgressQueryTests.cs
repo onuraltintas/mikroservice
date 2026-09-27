@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Coaching.Application.Authorization;
 using Coaching.Application.Interfaces;
 using Coaching.Application.Queries.GetStudentProgress;
+using Coaching.Application.Queries.GetTeacherStudentHistory;
 using EduPlatform.Shared.Kernel.Exceptions;
 using EduPlatform.Shared.Security.Interfaces;
 using FluentAssertions;
@@ -41,6 +42,21 @@ public sealed class CoachingStudentProgressQueryTests
             .Where(exception => exception.Code == "Authorization.Forbidden");
     }
 
+    [Fact]
+    public async Task TeacherHistoryQuery_ShouldRejectViewerWithoutCurrentTeacherRole()
+    {
+        var handler = new GetTeacherStudentHistoryQueryHandler(
+            new UnusedStudentHistoryRepository(),
+            CreatePolicy(Guid.NewGuid(), "Student"),
+            new StubIdentityAuthorizationClient([]));
+
+        var action = () => handler.Handle(
+            new GetTeacherStudentHistoryQuery(Guid.NewGuid()),
+            CancellationToken.None);
+
+        await action.Should().ThrowAsync<BusinessRuleException>();
+    }
+
     private static ICoachingAccessPolicy CreatePolicy(Guid userId, params string[] roles) =>
         new CoachingAccessPolicy(new StubCurrentUserService(userId, roles));
 
@@ -51,6 +67,17 @@ public sealed class CoachingStudentProgressQueryTests
             Guid studentId,
             CancellationToken cancellationToken = default) =>
             Task.FromResult(summary ?? throw new InvalidOperationException("Not expected"));
+    }
+
+    private sealed class UnusedStudentHistoryRepository : ICoachingStudentHistoryRepository
+    {
+        public Task<PagedRepositoryResult<CoachingAdminStudentHistoryItemDto>> GetStudentHistoryAsync(
+            Guid studentId,
+            CoachingStudentHistoryType type,
+            int pageNumber,
+            int pageSize,
+            CancellationToken cancellationToken = default) =>
+            throw new InvalidOperationException("Not expected");
     }
 
     private sealed class StubIdentityAuthorizationClient(

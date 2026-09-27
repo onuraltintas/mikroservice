@@ -73,14 +73,17 @@ export class DailyExercisesComponent extends BaseComponent implements OnInit {
         this.progress.set(prog);
 
         // Geçmiş günleri hesapla (bugünden önceki tüm günler)
-        if (prog && prog.currentDay > 1) {
-          const days = Array.from({ length: prog.currentDay - 1 }, (_, i) => i + 1);
+        const cumulativeDay = prog ? ((prog.currentWeek - 1) * 7) + prog.currentDay : 0;
+        if (cumulativeDay > 1) {
+          const days = Array.from({ length: cumulativeDay - 1 }, (_, i) => i + 1);
           this.availableHistoricalDays.set(days);
 
           // Eğer history tab açıksa, ilk günü yükle
           if (this.activeTab() === 'history' && days.length > 0) {
             this.loadHistoricalDay(days[days.length - 1]);
           }
+        } else {
+          this.availableHistoricalDays.set([]);
         }
 
         // Egzersizleri progress yüklendikten sonra yükle
@@ -123,11 +126,14 @@ export class DailyExercisesComponent extends BaseComponent implements OnInit {
     // First get current day from progress, then load exercises for that day
     const currentProgress = this.progress();
     if (currentProgress) {
-      const currentDay = currentProgress.currentDay;
+      const currentDay = ((currentProgress.currentWeek - 1) * 7) + currentProgress.currentDay;
       this.exerciseService.getExercisesByDay(currentDay).subscribe({
         next: (data) => {
           if (data && data.length > 0) {
             this.exercises.set(data.sort((a, b) => a.order - b.order));
+            if (data.every(item => item.isCompleted)) {
+              this.availableHistoricalDays.update(days => days.includes(currentDay) ? days : [...days, currentDay]);
+            }
           } else {
             console.warn('No exercises returned for day', currentDay);
             this.exercises.set([]);
@@ -155,6 +161,7 @@ export class DailyExercisesComponent extends BaseComponent implements OnInit {
       {
         state: {
           fromDailyExercises: true,
+          practiceMode: exercise.isCompleted,
           exercise: exercise,
           difficultyLevel: exercise.difficultyLevel
         }

@@ -31,7 +31,10 @@ public class RemoveTeacherFromInstitutionCommandHandler : IRequestHandler<Remove
             return Result.Failure(new Error("Auth.Unauthorized", "User is not authenticated"));
 
         var adminUserId = _currentUserService.UserId.Value;
-        var institutionId = await _institutionRepository.GetInstitutionIdByAdminIdAsync(adminUserId, cancellationToken);
+        var institutionId = await _institutionRepository.GetInstitutionIdByAdminIdAsync(
+            adminUserId,
+            Identity.Domain.Enums.PlatformProduct.Coaching,
+            cancellationToken);
         
         if (institutionId == null)
             return Result.Failure(new Error("Forbidden", "You are not an institution admin"));

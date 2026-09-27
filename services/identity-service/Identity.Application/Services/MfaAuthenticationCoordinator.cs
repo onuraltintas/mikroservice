@@ -2,6 +2,7 @@ using EduPlatform.Shared.Kernel.Results;
 using Identity.Application.Commands.Login;
 using Identity.Application.Interfaces;
 using Identity.Domain.Entities;
+using Identity.Domain.Enums;
 using EduPlatform.Shared.Security.Interfaces;
 
 namespace Identity.Application.Services;
@@ -13,7 +14,8 @@ public interface IAuthenticationSessionIssuer
         bool rememberMe,
         string ipAddress,
         DateTimeOffset? mfaVerifiedAt,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken,
+        PlatformProduct? product = null);
 }
 
 public sealed record MfaCompletionResponse(
@@ -73,7 +75,8 @@ public sealed class MfaAuthenticationCoordinator
     public async Task<Result<MfaSetupResponse>> StartAuthenticatedSetupAsync(
         Guid userId,
         string currentPassword,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        PlatformProduct? product = null)
     {
         var user = await _users.GetByIdAsync(userId, cancellationToken);
         if (user is null || !user.IsActive)
@@ -98,7 +101,7 @@ public sealed class MfaAuthenticationCoordinator
 
         // MFA kurulumu için üretilen geçici challenge, kullanıcının mevcut
         // oturum tercihinden bağımsız olarak kalıcı oturum oluşturmamalıdır.
-        var challengeToken = _multiFactor.CreateChallenge(user.Id, rememberMe: false);
+        var challengeToken = _multiFactor.CreateChallenge(user.Id, rememberMe: false, product);
         var setup = _multiFactor.CreateSetup(user.Id, user.Email);
         return Result.Success(setup with { ChallengeToken = challengeToken });
     }
@@ -146,7 +149,8 @@ public sealed class MfaAuthenticationCoordinator
             context.Value.Challenge.RememberMe,
             ipAddress,
             _timeProvider.GetUtcNow(),
-            cancellationToken);
+            cancellationToken,
+            context.Value.Challenge.Product);
         return session.IsSuccess
             ? Result.Success(new MfaCompletionResponse(session.Value, recoveryCodes))
             : Result.Failure<MfaCompletionResponse>(session.Error);
@@ -201,7 +205,8 @@ public sealed class MfaAuthenticationCoordinator
             context.Value.Challenge.RememberMe,
             ipAddress,
             now,
-            cancellationToken);
+            cancellationToken,
+            context.Value.Challenge.Product);
         return session.IsSuccess
             ? Result.Success(new MfaCompletionResponse(session.Value))
             : Result.Failure<MfaCompletionResponse>(session.Error);

@@ -99,10 +99,15 @@ public class InstitutionAdminConfiguration : IEntityTypeConfiguration<Institutio
             .HasConversion<string>()
             .HasMaxLength(50);
 
+        builder.Property(a => a.Product)
+            .HasConversion<string>()
+            .HasMaxLength(32)
+            .IsRequired(false);
+
         builder.Property(a => a.Permissions)
             .HasColumnType("jsonb");
 
-        builder.HasIndex(a => new { a.UserId, a.InstitutionId })
+        builder.HasIndex(a => new { a.UserId, a.InstitutionId, a.Product })
             .IsUnique();
 
         builder.HasIndex(a => a.InstitutionId);

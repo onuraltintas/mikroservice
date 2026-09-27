@@ -470,6 +470,39 @@ describe('ReportsService', () => {
     expect(report.activeStudentsDataAvailable).toBeFalse();
   });
 
+  it('loads the institution-wide class overview from the institution-scoped analytics route', () => {
+    const institutionId = 'institution-1';
+    const startDate = new Date('2026-01-01T00:00:00.000Z');
+    const endDate = new Date('2026-01-31T00:00:00.000Z');
+    let report: any;
+
+    service.getInstitutionClassOverviewReport(institutionId, startDate, endDate)
+      .subscribe(value => report = value);
+
+    const request = http.expectOne(
+      candidate => candidate.url === `/api/speed-reading/analytics/institutions/${institutionId}/class-overview`);
+    expect(request.request.params.get('dateFrom')).toBe(startDate.toISOString());
+    expect(request.request.params.get('dateTo')).toBe(endDate.toISOString());
+    request.flush({
+      dateFrom: startDate.toISOString(),
+      dateTo: endDate.toISOString(),
+      totalStudents: 7,
+      activeStudents: 3,
+      activeStudentsDataAvailable: true,
+      classAverageWpm: 280,
+      classAverageComprehension: 82,
+      totalActivitiesCompleted: 12,
+      studentsAboveAverage: 1,
+      studentsAtAverage: 1,
+      studentsBelowAverage: 1,
+      topPerformers: [],
+      studentsNeedingSupport: []
+    });
+
+    expect(report.totalStudents).toBe(7);
+    expect(report.activeStudents).toBe(3);
+  });
+
   it('loads teacher assignment report from the central endpoint and preserves unavailable state', () => {
     const startDate = new Date('2026-01-01T00:00:00.000Z');
     const endDate = new Date('2026-01-31T00:00:00.000Z');
@@ -497,6 +530,70 @@ describe('ReportsService', () => {
     expect(report.dataAvailable).toBeFalse();
     expect(report.unavailableReason).toContain('Atama');
     expect(report.studentBreakdown).toEqual([]);
+  });
+
+  it('preserves period assignment summary and unknown completion times without fabricating a single assignment', () => {
+    const startDate = new Date('2026-01-01T00:00:00.000Z');
+    const endDate = new Date('2026-01-31T00:00:00.000Z');
+    let report: any;
+
+    service.getTeacherAssignmentReport('ignored-teacher-id', startDate, endDate)
+      .subscribe(value => report = value);
+
+    const request = http.expectOne(
+      candidate => candidate.url === '/api/speed-reading/analytics/teacher/assignments');
+    request.flush({
+      dateFrom: startDate.toISOString(),
+      dateTo: endDate.toISOString(),
+      dataAvailable: true,
+      assignmentCount: 4,
+      assignmentInfo: null,
+      completionStats: { totalStudents: 3, completed: 1, inProgress: 1, notStarted: 1, completionRate: 40 },
+      performanceStats: null,
+      scoreDistribution: [],
+      studentBreakdown: [],
+      timeStats: null
+    });
+
+    expect(report.assignmentCount).toBe(4);
+    expect(report.assignmentInfo).toBeNull();
+    expect(report.timeStats).toBeNull();
+  });
+
+  it('loads institution assignment summary from the institution-scoped analytics endpoint', () => {
+    const startDate = new Date('2026-01-01T00:00:00.000Z');
+    const endDate = new Date('2026-01-31T23:59:59.999Z');
+    let report: any;
+
+    service.getInstitutionAssignmentReport('institution-1', startDate, endDate)
+      .subscribe(value => report = value);
+
+    const request = http.expectOne(
+      candidate => candidate.url === '/api/speed-reading/analytics/institutions/institution-1/assignments');
+    expect(request.request.params.get('dateFrom')).toBe(startDate.toISOString());
+    expect(request.request.params.get('dateTo')).toBe(endDate.toISOString());
+    request.flush({ dateFrom: startDate.toISOString(), dateTo: endDate.toISOString(), dataAvailable: false,
+      unavailableReason: 'Ödev yok', assignmentCount: 0, scoreDistribution: [], studentBreakdown: [] });
+
+    expect(report.metadata.reportType).toBe('Institution');
+    expect(report.assignmentCount).toBe(0);
+  });
+
+  it('loads a selected teacher assignment summary through the authorized admin-teacher endpoint', () => {
+    const startDate = new Date('2026-01-01T00:00:00.000Z');
+    const endDate = new Date('2026-01-31T23:59:59.999Z');
+    let report: any;
+
+    service.getAdminTeacherAssignmentReport('teacher-1', startDate, endDate)
+      .subscribe(value => report = value);
+
+    const request = http.expectOne(
+      candidate => candidate.url === '/api/speed-reading/analytics/admin/teachers/teacher-1/assignments');
+    request.flush({ dateFrom: startDate.toISOString(), dateTo: endDate.toISOString(), dataAvailable: true,
+      assignmentCount: 2, scoreDistribution: [], studentBreakdown: [] });
+
+    expect(report.metadata.reportType).toBe('AdminTeacher');
+    expect(report.assignmentCount).toBe(2);
   });
 
   it('loads teacher content analysis from the central endpoint', () => {

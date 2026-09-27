@@ -1,7 +1,7 @@
 import { AfterViewInit, Component, inject, OnDestroy, PLATFORM_ID } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -20,6 +20,7 @@ import {
 } from '../../../core/services/google-identity.service';
 import { strongPasswordValidator } from '../../../shared/validators/password.validator';
 import { getErrorMessage } from '../../../core/utils/error-message';
+import { resolveInvitationReturnUrl } from '../auth-role-routing';
 
 @Component({
   selector: 'app-register-teacher',
@@ -44,6 +45,7 @@ export class RegisterTeacherComponent implements AfterViewInit, OnDestroy {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   private platformId = inject(PLATFORM_ID);
   private toaster = inject(ToasterService);
   private googleIdentity = inject(GoogleIdentityService);
@@ -98,7 +100,12 @@ export class RegisterTeacherComponent implements AfterViewInit, OnDestroy {
       next: (authResponse) => {
         this.successMessage = 'Google ile giriş başarılı! Yönlendiriliyorsunuz...';
         setTimeout(() => {
-          this.router.navigate(['/teacher/dashboard']);
+          const invitationReturnUrl = resolveInvitationReturnUrl(this.route.snapshot.queryParamMap.get('returnUrl'));
+          if (invitationReturnUrl) {
+            this.router.navigateByUrl(invitationReturnUrl);
+          } else {
+            this.router.navigate(['/teacher/dashboard']);
+          }
         }, 1500);
       },
       error: (err) => {
@@ -149,7 +156,10 @@ export class RegisterTeacherComponent implements AfterViewInit, OnDestroy {
           this.router.navigate(['/auth/login'], {
             queryParams: {
               registered: 'true',
-              message: 'Kayıt oluşturuldu. Lütfen e-posta adresinizi onaylayıp giriş yapın.'
+              message: 'Kayıt oluşturuldu. Lütfen e-posta adresinizi onaylayıp giriş yapın.',
+              ...(resolveInvitationReturnUrl(this.route.snapshot.queryParamMap.get('returnUrl'))
+                ? { returnUrl: resolveInvitationReturnUrl(this.route.snapshot.queryParamMap.get('returnUrl')) }
+                : {})
             }
           });
         }, 2000);

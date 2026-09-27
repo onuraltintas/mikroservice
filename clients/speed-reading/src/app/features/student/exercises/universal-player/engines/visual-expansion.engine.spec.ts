@@ -3,6 +3,43 @@ import { VisualExpansionEngine } from './visual-expansion.engine';
 import { visualAngleToAxisOffsetPercent, visualAngleToOffsetPercent } from './visual-expansion-position';
 
 describe('VisualExpansionEngine server protocol', () => {
+  it('increases angle and speed only after a correct local answer', fakeAsync(() => {
+    const engine = new VisualExpansionEngine();
+    engine.initialize({
+      rounds: 2,
+      startDegrees: 4,
+      targetDegrees: 30,
+      expansion: { level: 1, pattern: 'horizontal', stimulusType: 'letter', symmetry: true },
+      timing: { durationMs: 400, intervalMs: 1 },
+      visuals: { centerPoint: 'cross', stimulusSize: '2rem' }
+    } as any, {
+      onStart: () => undefined,
+      onPause: () => undefined,
+      onResume: () => undefined,
+      onComplete: () => undefined,
+      onError: () => undefined,
+      onStateChange: () => undefined,
+      onStepComplete: () => undefined,
+      onAction: () => undefined
+    });
+
+    engine.start();
+    tick(1);
+    const answers = engine.getCurrentStimuli().map(item => item.content);
+    tick(400);
+    engine.handleInput({ answers });
+
+    expect(engine.currentDegrees).toBe(6);
+    expect(engine.getCurrentDisplayDurationMs()).toBe(380);
+
+    tick(1);
+    tick(380);
+    engine.handleInput({ answers: ['?', '?'] });
+
+    expect(engine.currentDegrees).toBe(6);
+    expect(engine.getCurrentDisplayDurationMs()).toBe(380);
+  }));
+
   it('requests a server stimulus and submits answers without scoring locally', fakeAsync(() => {
     const actions: any[] = [];
     const engine = new VisualExpansionEngine();
@@ -109,12 +146,16 @@ describe('VisualExpansionEngine server protocol', () => {
     expect(maximumOffset).toBe(45);
   });
 
+  it('starts a configured sixteen-degree exercise near the centre instead of at the viewport edge', () => {
+    expect(visualAngleToOffsetPercent(16, 950)).toBeLessThan(20);
+  });
+
   it('uses the exercise container dimensions and preserves radial distance', () => {
     const horizontal = visualAngleToAxisOffsetPercent(12, 950, false);
     const radial = visualAngleToAxisOffsetPercent(12, 950, true);
 
     expect(radial).toBeCloseTo(horizontal / Math.SQRT2, 8);
     expect(visualAngleToOffsetPercent(12, 950))
-      .toBeGreaterThan(visualAngleToOffsetPercent(12, 1440));
+      .toBe(visualAngleToOffsetPercent(12, 1440));
   });
 });

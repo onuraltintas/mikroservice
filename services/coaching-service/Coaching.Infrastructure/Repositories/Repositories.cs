@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Coaching.Domain.Entities;
+using Coaching.Domain.Enums;
 using Coaching.Application.Interfaces;
 using Coaching.Application.Queries;
 using Coaching.Application.Queries.GetStudentProgress;
@@ -48,12 +49,18 @@ public class AssignmentRepository : IAssignmentRepository
             .FirstOrDefaultAsync(a => a.Id == id, cancellationToken);
     }
 
-    public async Task<PagedRepositoryResult<Assignment>> GetByTeacherIdAsync(Guid teacherId, int pageNumber, int pageSize, CancellationToken cancellationToken = default)
+    public async Task<PagedRepositoryResult<Assignment>> GetByTeacherIdAsync(
+        Guid teacherId,
+        int pageNumber,
+        int pageSize,
+        CancellationToken cancellationToken = default,
+        AssignmentStatus? status = null)
     {
         var query = _context.Assignments
             .Include(a => a.AssignedStudents)
                 .ThenInclude(student => student.SubmissionAttachments)
-            .Where(a => a.TeacherId == teacherId)
+            .Where(a => a.TeacherId == teacherId
+                && (!status.HasValue || a.Status == status.Value))
             .OrderByDescending(a => a.CreatedAt)
             .ThenByDescending(a => a.Id);
 
@@ -131,11 +138,13 @@ public class ExamRepository : IExamRepository
         Guid examId,
         int pageNumber,
         int pageSize,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        IReadOnlyCollection<Guid>? scopedStudentIds = null)
     {
         var query = _context.ExamResults
             .AsNoTracking()
-            .Where(result => result.ExamId == examId)
+            .Where(result => result.ExamId == examId
+                && (scopedStudentIds == null || scopedStudentIds.Contains(result.StudentId)))
             .OrderBy(result => result.StudentId)
             .ThenBy(result => result.Id);
         var totalCount = await query.CountAsync(cancellationToken);
@@ -146,6 +155,16 @@ public class ExamRepository : IExamRepository
 
         return new PagedRepositoryResult<ExamResult>(items, totalCount);
     }
+
+    public async Task<IReadOnlyCollection<Guid>> GetResultStudentIdsByExamIdAsync(
+        Guid examId,
+        CancellationToken cancellationToken = default) =>
+        await _context.ExamResults
+            .AsNoTracking()
+            .Where(result => result.ExamId == examId)
+            .Select(result => result.StudentId)
+            .Distinct()
+            .ToListAsync(cancellationToken);
 
     public async Task<List<Exam>> GetByInstitutionIdAsync(Guid institutionId, CancellationToken cancellationToken = default)
     {
@@ -427,10 +446,12 @@ public class AcademicGoalRepository : IAcademicGoalRepository
         Guid teacherId,
         int pageNumber,
         int pageSize,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        IReadOnlyCollection<Guid>? scopedStudentIds = null)
     {
         var query = _context.AcademicGoals
-            .Where(goal => goal.SetByTeacherId == teacherId)
+            .Where(goal => goal.SetByTeacherId == teacherId
+                && (scopedStudentIds == null || scopedStudentIds.Contains(goal.StudentId)))
             .OrderByDescending(goal => goal.CreatedAt)
             .ThenByDescending(goal => goal.Id);
 
@@ -442,6 +463,16 @@ public class AcademicGoalRepository : IAcademicGoalRepository
 
         return new PagedRepositoryResult<AcademicGoal>(items, totalCount);
     }
+
+    public async Task<IReadOnlyCollection<Guid>> GetStudentIdsByTeacherIdAsync(
+        Guid teacherId,
+        CancellationToken cancellationToken = default) =>
+        await _context.AcademicGoals
+            .AsNoTracking()
+            .Where(goal => goal.SetByTeacherId == teacherId)
+            .Select(goal => goal.StudentId)
+            .Distinct()
+            .ToListAsync(cancellationToken);
 
     public async Task<AcademicGoal> AddAsync(AcademicGoal goal, CancellationToken cancellationToken = default)
     {
@@ -628,6 +659,7 @@ public sealed class CoachingComparativeReportRepository(CoachingDbContext contex
         var goals = await context.AcademicGoals
             .AsNoTracking()
             .Where(item => studentIdList.Contains(item.StudentId)
+                && item.InstitutionId == institutionId
                 && item.CreatedAt >= fromDate
                 && item.CreatedAt <= toDate)
             .Select(item => new { item.CurrentProgress, item.IsCompleted })
@@ -784,6 +816,7 @@ public sealed class CoachingEarlyWarningRepository(CoachingDbContext context)
         var goalRows = await context.AcademicGoals
             .AsNoTracking()
             .Where(item => studentIdList.Contains(item.StudentId)
+                && item.InstitutionId == institutionId
                 && item.CreatedAt >= fromDate
                 && item.CreatedAt <= toDate)
             .Select(item => new
@@ -861,7 +894,6 @@ public sealed class CoachingAdminRepository : ICoachingAdminRepository
 
     public async Task<CoachingAdminStudentDetailDto> GetStudentDetailAsync(
         Guid studentId,
-        Guid? institutionId,
         CancellationToken cancellationToken = default)
     {
         var assignments = _context.AssignmentStudents.AsNoTracking()
@@ -872,12 +904,6 @@ public sealed class CoachingAdminRepository : ICoachingAdminRepository
         var sessions = _context.SessionAttendances.AsNoTracking()
             .Where(item => item.StudentId == studentId
                 && item.Session.Status != Domain.Enums.SessionStatus.Cancelled);
-        if (institutionId.HasValue)
-        {
-            assignments = assignments.Where(item => item.Assignment.InstitutionId == institutionId.Value);
-            exams = exams.Where(item => item.Exam.InstitutionId == institutionId.Value);
-            sessions = sessions.Where(item => item.Session.InstitutionId == institutionId.Value);
-        }
 
         var assignmentItems = await assignments
             .OrderByDescending(item => item.Assignment.DueDate)
@@ -897,10 +923,126 @@ public sealed class CoachingAdminRepository : ICoachingAdminRepository
             await assignments.CountAsync(item => item.SubmittedAt.HasValue, cancellationToken),
             await exams.CountAsync(cancellationToken),
             await sessions.CountAsync(cancellationToken),
-            institutionId.HasValue ? 0 : await _context.AcademicGoals.AsNoTracking()
+            await _context.AcademicGoals.AsNoTracking()
                 .CountAsync(item => item.StudentId == studentId, cancellationToken),
             assignmentItems,
             examItems);
+    }
+
+    public async Task<PagedRepositoryResult<CoachingAdminStudentHistoryItemDto>> GetStudentHistoryAsync(
+        Guid studentId,
+        CoachingStudentHistoryType type,
+        int pageNumber,
+        int pageSize,
+        CancellationToken cancellationToken = default)
+    {
+        if (studentId == Guid.Empty)
+            throw new ArgumentException("Student ID is required.", nameof(studentId));
+        if (pageNumber is < 1 or > 1000)
+            throw new ArgumentOutOfRangeException(nameof(pageNumber));
+        if (pageSize is < 1 or > 100)
+            throw new ArgumentOutOfRangeException(nameof(pageSize));
+
+        var skip = (pageNumber - 1) * pageSize;
+        var typeName = type.ToString();
+        int totalCount;
+        IReadOnlyList<CoachingAdminStudentHistoryItemDto> items;
+
+        switch (type)
+        {
+            case CoachingStudentHistoryType.Assignments:
+            {
+                var query = _context.AssignmentStudents.AsNoTracking()
+                    .Where(item => item.StudentId == studentId);
+                totalCount = await query.CountAsync(cancellationToken);
+                items = await query
+                    .OrderByDescending(item => item.CreatedAt)
+                    .ThenByDescending(item => item.AssignmentId)
+                    .Skip(skip)
+                    .Take(pageSize)
+                    .Select(item => new CoachingAdminStudentHistoryItemDto(
+                        item.AssignmentId,
+                        typeName,
+                        item.Assignment.Title,
+                        item.CreatedAt,
+                        item.Assignment.Status == Domain.Enums.AssignmentStatus.Cancelled
+                            ? "Cancelled"
+                            : item.Status.ToString(),
+                        item.Score,
+                        item.Assignment.MaxScore))
+                    .ToListAsync(cancellationToken);
+                break;
+            }
+            case CoachingStudentHistoryType.Exams:
+            {
+                var query = _context.ExamResults.AsNoTracking()
+                    .Where(item => item.StudentId == studentId);
+                totalCount = await query.CountAsync(cancellationToken);
+                items = await query
+                    .OrderByDescending(item => item.Exam.ExamDate)
+                    .ThenByDescending(item => item.ExamId)
+                    .Skip(skip)
+                    .Take(pageSize)
+                    .Select(item => new CoachingAdminStudentHistoryItemDto(
+                        item.ExamId,
+                        typeName,
+                        item.Exam.Title,
+                        item.Exam.ExamDate,
+                        "Result",
+                        item.Score,
+                        item.Exam.MaxScore))
+                    .ToListAsync(cancellationToken);
+                break;
+            }
+            case CoachingStudentHistoryType.Sessions:
+            {
+                var query = _context.SessionAttendances.AsNoTracking()
+                    .Where(item => item.StudentId == studentId);
+                totalCount = await query.CountAsync(cancellationToken);
+                items = await query
+                    .OrderByDescending(item => item.Session.ScheduledDate)
+                    .ThenByDescending(item => item.SessionId)
+                    .Skip(skip)
+                    .Take(pageSize)
+                    .Select(item => new CoachingAdminStudentHistoryItemDto(
+                        item.SessionId,
+                        typeName,
+                        item.Session.Title,
+                        item.Session.ScheduledDate,
+                        item.Session.Status == Domain.Enums.SessionStatus.Cancelled
+                            ? "Cancelled"
+                            : item.AttendanceStatus.ToString()))
+                    .ToListAsync(cancellationToken);
+                break;
+            }
+            case CoachingStudentHistoryType.Goals:
+            {
+                var query = _context.AcademicGoals.AsNoTracking()
+                    .Where(item => item.StudentId == studentId);
+                totalCount = await query.CountAsync(cancellationToken);
+                items = await query
+                    .OrderByDescending(item => item.CreatedAt)
+                    .ThenByDescending(item => item.Id)
+                    .Skip(skip)
+                    .Take(pageSize)
+                    .Select(item => new CoachingAdminStudentHistoryItemDto(
+                        item.Id,
+                        typeName,
+                        item.Title,
+                        item.CreatedAt,
+                        item.IsCompleted ? "Completed" : "InProgress",
+                        null,
+                        null,
+                        item.CurrentProgress,
+                        item.Category.ToString()))
+                    .ToListAsync(cancellationToken);
+                break;
+            }
+            default:
+                throw new ArgumentOutOfRangeException(nameof(type));
+        }
+
+        return new PagedRepositoryResult<CoachingAdminStudentHistoryItemDto>(items, totalCount);
     }
 
     public async Task<TeacherCoachingAnalyticsDto> GetTeacherAnalyticsAsync(
@@ -995,7 +1137,8 @@ public sealed class CoachingAdminRepository : ICoachingAdminRepository
 
             goals = scopedStudentIds is null
                 ? goals.Where(_ => false)
-                : goals.Where(item => scopedStudentIds.Contains(item.StudentId));
+                : goals.Where(item => item.InstitutionId == institutionId.Value
+                    && scopedStudentIds.Contains(item.StudentId));
         }
 
         var assignmentIds = assignments.Select(item => item.Id);
@@ -1240,7 +1383,8 @@ public sealed class CoachingAdminRepository : ICoachingAdminRepository
         {
             query = scopedStudentIds is null
                 ? query.Where(_ => false)
-                : query.Where(goal => scopedStudentIds.Contains(goal.StudentId));
+                : query.Where(goal => goal.InstitutionId == institutionId.Value
+                    && scopedStudentIds.Contains(goal.StudentId));
         }
 
         if (completed.HasValue)

@@ -14,6 +14,7 @@ using SpeedReading.Application.ContentFeedback;
 using SpeedReading.Application.DailyProgress;
 using SpeedReading.Application.ExerciseSessions;
 using SpeedReading.Application.Gamification;
+using SpeedReading.Application.Institutions;
 using SpeedReading.Application.Notifications;
 using SpeedReading.Application.Progress;
 using SpeedReading.Application.QuestionBank;
@@ -108,6 +109,10 @@ public static class DependencyInjection
         services.AddScoped<ISpeedReadingProgressWriter, OwnedSpeedReadingProgressWriter>();
         services.AddScoped<ISpeedReadingExerciseSessions, OwnedSpeedReadingExerciseSessions>();
         services.AddScoped<ISpeedReadingAssignments, OwnedSpeedReadingAssignments>();
+        services.AddScoped<ISpeedReadingInstitutionMemberships, OwnedSpeedReadingInstitutionMemberships>();
+        services.AddScoped<ISpeedReadingInstitutionStudentManagement, OwnedSpeedReadingInstitutionStudentManagement>();
+        services.AddScoped<ISpeedReadingTeacherStudentAssignments, OwnedSpeedReadingTeacherStudentAssignments>();
+        services.AddScoped<ISpeedReadingInvitations, OwnedSpeedReadingInvitations>();
         services.AddScoped<ILegacySpeedReadingPrograms, OwnedSpeedReadingPrograms>();
         services.AddScoped<ISpeedReadingProgramAdminWriter, OwnedSpeedReadingProgramAdminWriter>();
         services.AddScoped<ISpeedReadingDailyProgress, OwnedSpeedReadingDailyProgress>();
@@ -133,10 +138,7 @@ public static class DependencyInjection
         services.AddScoped<ISpeedReadingAdaptiveLearning, OwnedSpeedReadingAdaptiveLearning>();
         services.AddScoped<ISpeedReadingAdaptiveText, OwnedSpeedReadingAdaptiveText>();
 
-        services.AddHttpClient<ISpeedReadingTeacherAccess, IdentityTeacherAccessClient>(client =>
-        {
-            client.Timeout = TimeSpan.FromSeconds(5);
-        }).AddCorrelationIdPropagation();
+        services.AddScoped<ISpeedReadingTeacherAccess, OwnedSpeedReadingTeacherAccess>();
         services.AddHttpClient<ISpeedReadingProgressAccess, IdentityProgressAccessClient>(client =>
         {
             client.Timeout = TimeSpan.FromSeconds(5);
@@ -146,6 +148,14 @@ public static class DependencyInjection
             client.Timeout = TimeSpan.FromSeconds(5);
         }).AddCorrelationIdPropagation();
         services.AddHttpClient<ISpeedReadingInstitutionDirectory, IdentityInstitutionDirectoryClient>(client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(5);
+        }).AddCorrelationIdPropagation();
+        services.AddHttpClient<ISpeedReadingInstitutionMemberEligibility, IdentitySpeedReadingMemberEligibilityClient>(client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(5);
+        }).AddCorrelationIdPropagation();
+        services.AddHttpClient<ISpeedReadingInstitutionAdministrationAuthorization, IdentitySpeedReadingMemberEligibilityClient>(client =>
         {
             client.Timeout = TimeSpan.FromSeconds(5);
         }).AddCorrelationIdPropagation();

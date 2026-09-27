@@ -1,4 +1,5 @@
 using EduPlatform.Shared.Kernel.Results;
+using Identity.Domain.Enums;
 using MediatR;
 
 namespace Identity.Application.Commands.Login;
@@ -6,7 +7,8 @@ namespace Identity.Application.Commands.Login;
 public record LoginCommand(
     string Email,
     string Password,
-    bool RememberMe = true) : IRequest<Result<LoginResponse>>;
+    bool RememberMe = true,
+    PlatformProduct? Product = null) : IRequest<Result<LoginResponse>>;
 
 public record LoginResponse(
     string? AccessToken,

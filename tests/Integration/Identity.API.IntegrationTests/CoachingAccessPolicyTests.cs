@@ -56,6 +56,36 @@ public sealed class CoachingAccessPolicyTests
         policy.Invoking(value => value.RequireStudent(Guid.NewGuid())).Should().NotThrow();
     }
 
+    [Theory]
+    [InlineData("InstitutionAdmin")]
+    [InlineData("InstitutionOwner")]
+    public void InstitutionAdmin_ShouldAccessTeacherResourcesOnlyForAnExplicitAdministrativeOperation(string role)
+    {
+        var policy = CreatePolicy(Guid.NewGuid(), role);
+        var teacherId = Guid.NewGuid();
+
+        policy.Invoking(value => value.RequireTeacher(teacherId, institutionAdminOperation: false))
+            .Should().Throw<BusinessRuleException>()
+            .Which.Code.Should().Be("Authorization.Forbidden");
+        policy.Invoking(value => value.RequireTeacher(teacherId, institutionAdminOperation: true))
+            .Should().NotThrow();
+    }
+
+    [Theory]
+    [InlineData("InstitutionAdmin")]
+    [InlineData("InstitutionOwner")]
+    public void InstitutionAdmin_ShouldAccessStudentResourcesOnlyForAnExplicitAdministrativeOperation(string role)
+    {
+        var policy = CreatePolicy(Guid.NewGuid(), role);
+        var studentId = Guid.NewGuid();
+
+        policy.Invoking(value => value.RequireStudent(studentId, institutionAdminOperation: false))
+            .Should().Throw<BusinessRuleException>()
+            .Which.Code.Should().Be("Authorization.Forbidden");
+        policy.Invoking(value => value.RequireStudent(studentId, institutionAdminOperation: true))
+            .Should().NotThrow();
+    }
+
     private static ICoachingAccessPolicy CreatePolicy(Guid userId, params string[] roles) =>
         new CoachingAccessPolicy(new StubCurrentUserService(userId, roles));
 

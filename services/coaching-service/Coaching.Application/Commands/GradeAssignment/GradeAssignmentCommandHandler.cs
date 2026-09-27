@@ -38,7 +38,7 @@ public class GradeAssignmentCommandHandler : IRequestHandler<GradeAssignmentComm
         if (assignment == null)
             throw new InvalidOperationException($"Assignment {command.AssignmentId} not found");
 
-        _accessPolicy.RequireTeacher(assignment.TeacherId);
+        _accessPolicy.RequireTeacher(assignment.TeacherId, command.IsInstitutionAdminOperation);
 
         // Grade assignment (domain logic)
         assignment.GradeAssignment(

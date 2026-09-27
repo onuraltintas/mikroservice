@@ -504,6 +504,10 @@ namespace Identity.Infrastructure.Persistence.Migrations
                     b.Property<string>("Permissions")
                         .HasColumnType("jsonb");
 
+                    b.Property<string>("Product")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
                     b.Property<string>("Role")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -522,7 +526,7 @@ namespace Identity.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("InstitutionId");
 
-                    b.HasIndex("UserId", "InstitutionId")
+                    b.HasIndex("UserId", "InstitutionId", "Product")
                         .IsUnique();
 
                     b.ToTable("institution_admins", "identity");
@@ -853,6 +857,10 @@ namespace Identity.Infrastructure.Persistence.Migrations
 
                     b.Property<DateTimeOffset?>("MfaVerifiedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Product")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
 
                     b.Property<string>("ReasonRevoked")
                         .HasMaxLength(250)
@@ -1414,6 +1422,59 @@ namespace Identity.Infrastructure.Persistence.Migrations
                     b.ToTable("UserLogins", "identity");
                 });
 
+            modelBuilder.Entity("Identity.Domain.Entities.UserProductAccess", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("GrantedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("GrantedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Product")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<DateTimeOffset?>("RevokedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Product", "IsActive");
+
+                    b.HasIndex("UserId", "Product")
+                        .IsUnique();
+
+                    b.ToTable("UserProductAccesses", "identity");
+                });
+
             modelBuilder.Entity("Identity.Domain.Entities.UserRole", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1425,6 +1486,10 @@ namespace Identity.Infrastructure.Persistence.Migrations
 
                     b.Property<string>("CreatedBy")
                         .HasColumnType("text");
+
+                    b.Property<string>("Product")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
 
                     b.Property<Guid>("RoleId")
                         .HasColumnType("uuid");
@@ -1794,6 +1859,15 @@ namespace Identity.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Identity.Domain.Entities.UserProductAccess", b =>
+                {
+                    b.HasOne("Identity.Domain.Entities.User", null)
+                        .WithMany("ProductAccesses")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Identity.Domain.Entities.UserRole", b =>
                 {
                     b.HasOne("Identity.Domain.Entities.Role", "Role")
@@ -1857,6 +1931,8 @@ namespace Identity.Infrastructure.Persistence.Migrations
                     b.Navigation("Logins");
 
                     b.Navigation("ParentProfile");
+
+                    b.Navigation("ProductAccesses");
 
                     b.Navigation("RefreshTokens");
 

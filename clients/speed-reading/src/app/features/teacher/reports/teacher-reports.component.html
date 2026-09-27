@@ -1,13 +1,33 @@
 <div class="reports-container">
     <div class="teacher-selector-bar" *ngIf="showDropdown()">
+        <mat-form-field appearance="outline" class="teacher-search">
+            <mat-label>Öğretmen ara</mat-label>
+            <input matInput [value]="teacherSearchTerm()"
+                (input)="onTeacherSearchChange($any($event.target).value)" autocomplete="off">
+        </mat-form-field>
         <mat-form-field appearance="outline" class="teacher-select">
             <mat-label>Öğretmen Seçin</mat-label>
-            <mat-select [value]="selectedTeacherId()" (selectionChange)="onTeacherSelect($event.value)">
+            <mat-select [value]="selectedTeacherId()" [disabled]="teacherLoading()"
+                (selectionChange)="onTeacherSelect($event.value)">
+                <mat-option *ngIf="selectedTeacher() && !selectedTeacherIsOnCurrentPage()"
+                    [value]="selectedTeacher()!.id">
+                    {{ selectedTeacher()!.firstName }} {{ selectedTeacher()!.lastName }} (seçili)
+                </mat-option>
                 <mat-option *ngFor="let teacher of teachers()" [value]="teacher.id">
                     {{ teacher.firstName }} {{ teacher.lastName }}
                 </mat-option>
+                <mat-option *ngIf="!teacherLoading() && teacherLoadError()" disabled>
+                    {{ teacherLoadError() }}
+                </mat-option>
+                <mat-option *ngIf="!teacherLoading() && !teacherLoadError() && teachers().length === 0" disabled>
+                    Eşleşen öğretmen bulunamadı.
+                </mat-option>
             </mat-select>
         </mat-form-field>
+        <mat-paginator [length]="teacherTotalCount()" [pageSize]="teacherPageSize()"
+            [pageIndex]="teacherPageIndex()" [pageSizeOptions]="[10, 25, 50]"
+            (page)="onTeacherPageChange($event)" aria-label="Öğretmen raporu sayfaları">
+        </mat-paginator>
     </div>
 
     <div class="report-selection-empty" *ngIf="!reportsReady()">
@@ -18,6 +38,11 @@
 
     <ng-container *ngIf="reportsReady()">
         <nav mat-tab-nav-bar [tabPanel]="tabPanel">
+            <a mat-tab-link routerLink="assignments" queryParamsHandling="merge" routerLinkActive
+                #rla0="routerLinkActive" [active]="rla0.isActive">
+                <mat-icon class="tab-icon">assignment_turned_in</mat-icon>
+                Ödevler
+            </a>
             <a mat-tab-link routerLink="class-overview" queryParamsHandling="merge" routerLinkActive
                 #rla1="routerLinkActive" [active]="rla1.isActive">
                 <mat-icon class="tab-icon">groups</mat-icon>

@@ -12,7 +12,19 @@ public interface ICoachingAccessPolicy
     bool IsCurrentStudent(Guid studentId);
     Guid RequireCurrentTeacher();
     void RequireTeacher(Guid teacherId);
+    void RequireTeacher(Guid teacherId, bool institutionAdminOperation)
+    {
+        if (institutionAdminOperation && IsInstitutionAdministrator)
+            return;
+        RequireTeacher(teacherId);
+    }
     void RequireStudent(Guid studentId);
+    void RequireStudent(Guid studentId, bool institutionAdminOperation)
+    {
+        if (institutionAdminOperation && IsInstitutionAdministrator)
+            return;
+        RequireStudent(studentId);
+    }
     void RequireTeacherOrStudent(Guid teacherId, Guid studentId);
     void RequireTeacherOrAssignedStudent(Guid teacherId, IEnumerable<Guid> studentIds);
 }
@@ -47,8 +59,16 @@ public sealed class CoachingAccessPolicy : ICoachingAccessPolicy
     }
 
     public void RequireTeacher(Guid teacherId)
+        => RequireTeacher(teacherId, institutionAdminOperation: false);
+
+    public void RequireTeacher(Guid teacherId, bool institutionAdminOperation)
     {
         if (IsSystemAdmin())
+        {
+            return;
+        }
+
+        if (institutionAdminOperation && IsInstitutionAdministrator)
         {
             return;
         }
@@ -58,8 +78,16 @@ public sealed class CoachingAccessPolicy : ICoachingAccessPolicy
     }
 
     public void RequireStudent(Guid studentId)
+        => RequireStudent(studentId, institutionAdminOperation: false);
+
+    public void RequireStudent(Guid studentId, bool institutionAdminOperation)
     {
         if (IsSystemAdmin())
+        {
+            return;
+        }
+
+        if (institutionAdminOperation && IsInstitutionAdministrator)
         {
             return;
         }

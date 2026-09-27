@@ -3,6 +3,7 @@ using EduPlatform.Shared.Security.Authorization;
 using EduPlatform.Shared.Security.Interfaces;
 using Identity.Application.Interfaces;
 using Identity.Domain.Entities;
+using Identity.Domain.Enums;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
@@ -68,14 +69,28 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<LoginRes
         }
 
         // 4. Check Email Confirmation & IsAdmin Check
-        var isAdmin = user.Roles.Any(r => 
+        var productRoles = user.GetRolesForProductScope(request.Product).ToArray();
+        var isAdmin = productRoles.Any(r => 
             r.Role.Name == "SystemAdmin" || 
             r.Role.Name == "InstitutionAdmin" || 
             r.Role.Name == "InstitutionOwner" ||
             r.Role.Name == "Editor");
 
-        var isSystemAdministrator = user.Roles.Any(role =>
+        var isSystemAdministrator = productRoles.Any(role =>
             string.Equals(role.Role.Name, "SystemAdmin", StringComparison.OrdinalIgnoreCase));
+
+        if (request.Product.HasValue && !Enum.IsDefined(request.Product.Value))
+        {
+            return Result.Failure<LoginResponse>(new Error("Auth.InvalidProduct", "Geçersiz platform."));
+        }
+
+        if (!isSystemAdministrator
+            && (request.Product is not { } product || !user.HasProductAccess(product)))
+        {
+            return Result.Failure<LoginResponse>(new Error(
+                "Auth.ProductAccessDenied",
+                "Bu platform için hesabınıza erişim yetkisi tanımlı değil."));
+        }
 
         if (!user.EmailConfirmed && !isSystemAdministrator)
         {
@@ -111,15 +126,19 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<LoginRes
             }
 
             return Result.Success(LoginResponse.RequireMfa(
-                _multiFactorService.CreateChallenge(user.Id, request.RememberMe),
+                _multiFactorService.CreateChallenge(user.Id, request.RememberMe, request.Product),
                 enrollmentRequired: !user.MfaEnabled));
         }
 
         // 6. Generate Tokens
-        var accessToken = await _tokenService.GenerateAccessTokenAsync(user);
+        var accessToken = await _tokenService.GenerateAccessTokenAsync(user, product: request.Product);
         
         var ipAddress = "0.0.0.0"; // Should be passed in command but defaulting here
-        var refreshToken = _tokenService.GenerateRefreshToken(user.Id, ipAddress, request.RememberMe);
+        var refreshToken = _tokenService.GenerateRefreshToken(
+            user.Id,
+            ipAddress,
+            request.RememberMe,
+            product: request.Product);
         
         // 7. Save Refresh Token (Securely bypassing concurrency checks on User)
         var saveTokenResult = await _identityService.SaveRefreshTokenAsync(user.Id, refreshToken, cancellationToken);

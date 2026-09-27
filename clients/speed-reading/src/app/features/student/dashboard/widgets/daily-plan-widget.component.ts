@@ -76,7 +76,7 @@ export class DailyPlanWidgetComponent implements OnInit {
           return;
         }
 
-        const currentDay = progressData.currentDay || 1;
+        const currentDay = ((progressData.currentWeek || 1) - 1) * 7 + (progressData.currentDay || 1);
 
         // Now fetch exercises for the current program day
         this.http.get<any>(`${this.apiUrl}/day/${currentDay}`, {

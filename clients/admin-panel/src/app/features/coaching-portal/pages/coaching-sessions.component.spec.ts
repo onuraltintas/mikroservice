@@ -72,6 +72,10 @@ describe('CoachingSessionsComponent', () => {
     };
     const service = {
       getTeacherSessions: vi.fn(() => of({ items: [session], pageNumber: 1, pageSize: 100, totalCount: 1, totalPages: 1 })),
+      getTeacherStudents: vi.fn(() => of({
+        items: [{ userId: 'student-1', fullName: 'Ada Yılmaz' }],
+        pageNumber: 1, pageSize: 100, totalCount: 1, totalPages: 1
+      })),
       calendarFeedUrl: vi.fn(() => '/api/calendar/teacher.ics')
     };
 
@@ -87,6 +91,7 @@ describe('CoachingSessionsComponent', () => {
     fixture.detectChanges();
 
     expect(fixture.nativeElement.textContent).toContain('Öğrenci yansımaları');
+    expect(fixture.nativeElement.textContent).toContain('Ada Yılmaz');
     expect(fixture.nativeElement.textContent).toContain('Bu hafta deneme analizini tamamladım.');
     expect(fixture.nativeElement.querySelector('textarea')).toBeNull();
   });
@@ -135,6 +140,7 @@ describe('CoachingSessionsComponent', () => {
     };
     const service = {
       getTeacherSessions: vi.fn(() => of({ items: [session], pageNumber: 1, pageSize: 100, totalCount: 1, totalPages: 1 })),
+      getTeacherStudents: vi.fn(() => of({ items: [], pageNumber: 1, pageSize: 100, totalCount: 0, totalPages: 0 })),
       updateSessionAttendance: vi.fn(() => of({ message: 'Attendance updated successfully' }))
     };
 
@@ -154,6 +160,40 @@ describe('CoachingSessionsComponent', () => {
     expect(session.studentReflections?.[0].attendanceStatus).toBe('Absent');
   });
 
+  it('shows attendance controls even when the student has not submitted a reflection', () => {
+    const profile = signal<UserProfile | null>(user('Teacher'));
+    const session: CoachingSession = {
+      id: 'session-no-note', studentId: 'student-no-note', startTime: '2030-01-01T10:00:00Z',
+      endTime: '2030-01-01T11:00:00Z', durationMinutes: 60, status: 'Scheduled', type: 'Group',
+      studentIds: ['student-no-note'],
+      studentReflections: [{ studentId: 'student-no-note', note: null, attendanceStatus: 'Pending' }]
+    };
+    const service = {
+      getTeacherSessions: vi.fn(() => of({ items: [session], pageNumber: 1, pageSize: 25, totalCount: 1, totalPages: 1 })),
+      getTeacherStudents: vi.fn(() => of({
+        items: [{ userId: 'student-no-note', fullName: 'Deniz Öğrenci' }],
+        pageNumber: 1, pageSize: 1, totalCount: 1, totalPages: 1
+      })),
+      updateSessionAttendance: vi.fn(() => of({ message: 'Attendance updated successfully' }))
+    };
+
+    TestBed.configureTestingModule({
+      imports: [CoachingSessionsComponent],
+      providers: [
+        { provide: AuthService, useValue: { userProfile: profile } },
+        { provide: CoachingPortalService, useValue: service },
+        { provide: ActivatedRoute, useValue: {} }
+      ]
+    });
+    const fixture = TestBed.createComponent(CoachingSessionsComponent);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Deniz Öğrenci');
+    expect(fixture.nativeElement.textContent).toContain('Henüz yansıma paylaşılmadı');
+    expect(fixture.nativeElement.textContent).toContain('Katıldı');
+    expect(fixture.nativeElement.textContent).toContain('Katılmadı');
+  });
+
   it('lets a teacher cancel a scheduled session and updates the local status', () => {
     const profile = signal<UserProfile | null>(user('Teacher'));
     const session: CoachingSession = {
@@ -168,6 +208,7 @@ describe('CoachingSessionsComponent', () => {
     };
     const service = {
       getTeacherSessions: vi.fn(() => of({ items: [session], pageNumber: 1, pageSize: 100, totalCount: 1, totalPages: 1 })),
+      getTeacherStudents: vi.fn(() => of({ items: [], pageNumber: 1, pageSize: 100, totalCount: 0, totalPages: 0 })),
       cancelTeacherSession: vi.fn(() => of({ message: 'Session cancelled successfully' }))
     };
 
@@ -201,6 +242,7 @@ describe('CoachingSessionsComponent', () => {
     };
     const service = {
       getTeacherSessions: vi.fn(() => of({ items: [session], pageNumber: 1, pageSize: 100, totalCount: 1, totalPages: 1 })),
+      getTeacherStudents: vi.fn(() => of({ items: [], pageNumber: 1, pageSize: 100, totalCount: 0, totalPages: 0 })),
       cancelTeacherSession: vi.fn(() => throwError(() => new Error('conflict')))
     };
 
@@ -227,7 +269,8 @@ describe('CoachingSessionsComponent', () => {
     const service = {
       getTeacherSessions: vi.fn()
         .mockReturnValueOnce(of({ items: [firstSession], pageNumber: 1, pageSize: 1, totalCount: 2, totalPages: 2 }))
-        .mockReturnValueOnce(of({ items: [secondSession], pageNumber: 2, pageSize: 1, totalCount: 2, totalPages: 2 }))
+        .mockReturnValueOnce(of({ items: [secondSession], pageNumber: 2, pageSize: 1, totalCount: 2, totalPages: 2 })),
+      getTeacherStudents: vi.fn(() => of({ items: [], pageNumber: 1, pageSize: 100, totalCount: 0, totalPages: 0 }))
     };
 
     TestBed.configureTestingModule({

@@ -43,17 +43,18 @@ export class StreakWidgetComponent implements OnInit {
     return Array.from({ length: 5 - Math.min(this.currentStreak(), 5) }, (_, i) => i);
   }
 
-  /** Son 7 günlük aktivite grid'i — streak sayısından yaklaşık hesaplar */
+  /** Pazartesi–pazar takvim haftası; etkinlik streak sayısından yaklaşık hesaplanır. */
   getLast7Days(): { label: string; active: boolean; isToday: boolean }[] {
     const today = new Date();
     const streak = this.currentStreak();
+    const mondayOffset = (today.getDay() + 6) % 7;
     return Array.from({ length: 7 }, (_, i) => {
       const date = new Date(today);
-      date.setDate(today.getDate() - (6 - i));
-      const daysAgo = 6 - i;
+      date.setDate(today.getDate() - mondayOffset + i);
+      const daysAgo = mondayOffset - i;
       return {
         label: new Intl.DateTimeFormat('tr-TR', { weekday: 'narrow' }).format(date),
-        active: daysAgo < streak,
+        active: daysAgo >= 0 && daysAgo < streak,
         isToday: daysAgo === 0
       };
     });

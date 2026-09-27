@@ -10,6 +10,31 @@ namespace SpeedReading.Infrastructure.Persistence;
 internal sealed class OwnedSpeedReadingAdaptiveLearning(OwnedSpeedReadingDbContext db)
     : ISpeedReadingAdaptiveLearning
 {
+    public async Task<AdaptiveProfileSetupStatus> GetProfileSetupStatusAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default) =>
+        new(await db.UserProfiles.AsNoTracking().AnyAsync(
+            item => item.UserId == userId && item.AgeGroupConfigurationId != null,
+            cancellationToken));
+
+    public async Task<AdaptiveProfileSettings> GetProfileSettingsAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        var profile = await db.UserProfiles.AsNoTracking()
+            .SingleOrDefaultAsync(item => item.UserId == userId, cancellationToken);
+        return profile is null
+            ? new AdaptiveProfileSettings(null, null, null, 1, 150, 70, 30)
+            : new AdaptiveProfileSettings(
+                profile.AgeGroupConfigurationId,
+                profile.DateOfBirth,
+                profile.LearningStyle,
+                profile.CurrentLevel,
+                profile.TargetWPM,
+                profile.TargetComprehension,
+                profile.DailyGoalMinutes);
+    }
+
     public async Task<AdaptiveProfileSummary> GetProfileAsync(Guid userId, CancellationToken cancellationToken = default) =>
         BuildProfile(await LoadSnapshotAsync(userId, cancellationToken));
 
@@ -39,7 +64,9 @@ internal sealed class OwnedSpeedReadingAdaptiveLearning(OwnedSpeedReadingDbConte
             request.DailyGoalMinutes,
             request.AgeGroupConfigurationId,
             userId,
-            DateTime.UtcNow);
+            DateTime.UtcNow,
+            request.DateOfBirth,
+            request.LearningStyle);
         await db.SaveChangesAsync(cancellationToken);
     }
 

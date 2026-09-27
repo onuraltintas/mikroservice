@@ -1,4 +1,5 @@
 using MediatR;
+using System.Text.Json.Serialization;
 
 namespace Coaching.Application.Commands.GradeAssignment;
 
@@ -10,7 +11,11 @@ public record GradeAssignmentCommand(
     Guid StudentId,
     decimal Score,
     string? TeacherFeedback
-) : IRequest<GradeAssignmentResponse>;
+) : IRequest<GradeAssignmentResponse>
+{
+    [JsonIgnore]
+    public bool IsInstitutionAdminOperation { get; init; }
+}
 
 public record GradeAssignmentResponse(
     Guid AssignmentId,

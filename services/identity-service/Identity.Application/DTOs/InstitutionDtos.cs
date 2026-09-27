@@ -26,7 +26,10 @@ public sealed record InstitutionDto(
     int AdminCount,
     DateTime CreatedAt);
 
-public sealed record AssignInstitutionAdminRequest(Guid UserId, InstitutionAdminRole Role);
+public sealed record AssignInstitutionAdminRequest(
+    Guid UserId,
+    InstitutionAdminRole Role,
+    PlatformProduct? Product = null);
 
 public sealed record InstitutionAdminDto(
     Guid UserId,

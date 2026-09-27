@@ -20,12 +20,13 @@ export class StudentAssignmentsComponent implements OnInit {
   readonly errorMessage = signal<string | null>(null);
   readonly pageNumber = signal(1);
   readonly totalPages = signal(1);
-  readonly filter = signal<'all' | 'pending' | 'submitted' | 'overdue'>('all');
+  readonly filter = signal<'all' | 'pending' | 'submitted' | 'overdue' | 'cancelled'>('all');
   readonly filters = [
     { label: 'Tümü', value: 'all' as const },
     { label: 'Bekleyen', value: 'pending' as const },
     { label: 'Teslim', value: 'submitted' as const },
-    { label: 'Geciken', value: 'overdue' as const }
+    { label: 'Geciken', value: 'overdue' as const },
+    { label: 'İptal edilen', value: 'cancelled' as const }
   ];
 
   ngOnInit() {
@@ -58,14 +59,21 @@ export class StudentAssignmentsComponent implements OnInit {
   visibleAssignments() {
     const currentFilter = this.filter();
     return this.assignments().filter(assignment => {
-      if (currentFilter === 'overdue') return assignment.isOverdue;
+      if (currentFilter === 'cancelled') return assignment.assignmentStatus === 'Cancelled';
+      if (currentFilter === 'overdue') return (!assignment.assignmentStatus || assignment.assignmentStatus === 'Active') && assignment.isOverdue;
       if (currentFilter === 'submitted') return !!assignment.submittedAt;
-      if (currentFilter === 'pending') return !assignment.submittedAt;
+      if (currentFilter === 'pending') return (!assignment.assignmentStatus || assignment.assignmentStatus === 'Active') && !assignment.submittedAt && !assignment.isOverdue;
       return true;
     });
   }
 
-  setFilter(value: 'all' | 'pending' | 'submitted' | 'overdue') {
+  assignmentStatusLabel(assignment: StudentAssignment) {
+    if (assignment.assignmentStatus === 'Cancelled') return 'İptal edildi';
+    if (assignment.assignmentStatus === 'Completed') return 'Tamamlandı';
+    return assignment.isOverdue ? 'Gecikti' : assignment.status;
+  }
+
+  setFilter(value: 'all' | 'pending' | 'submitted' | 'overdue' | 'cancelled') {
     this.filter.set(value);
   }
 

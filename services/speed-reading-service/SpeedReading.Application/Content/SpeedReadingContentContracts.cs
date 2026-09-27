@@ -290,6 +290,11 @@ public interface ILegacySpeedReadingPrograms
         Guid progressId,
         CancellationToken cancellationToken = default);
 
+    Task<Guid?> GetStudentUserIdForProgressAsync(
+        SpeedReadingProgressAccessScope accessScope,
+        Guid progressId,
+        CancellationToken cancellationToken = default);
+
     Task<bool> ResetStudentProgressAsync(
         SpeedReadingProgressAccessScope accessScope,
         Guid progressId,
@@ -437,6 +442,11 @@ public sealed record PersonalizedLearningPathProgressSummary(
     int CurrentIndex,
     PersonalizedLearningPathItemSummary? NextItem);
 
+public sealed record PersonalizedPathAvailability(
+    bool IsAvailable,
+    int CompletedProgramDays,
+    int RequiredProgramDays);
+
 public sealed record StartLearningPathRequest(Guid TemplateId);
 
 public sealed record CompleteLearningPathNodeRequest(
@@ -444,10 +454,13 @@ public sealed record CompleteLearningPathNodeRequest(
     int? TimeSpentMinutes,
     IReadOnlyList<Guid>? CompletedContentIds);
 
-public sealed record CompletePersonalizedPathItemRequest(decimal? AchievedScore);
+public sealed record CompletePersonalizedPathItemRequest(Guid SessionId);
 
 public interface ILegacySpeedReadingLearningPaths
 {
+    Task<PersonalizedPathAvailability> GetPersonalizedAvailabilityAsync(
+        Guid studentId,
+        CancellationToken cancellationToken = default);
     Task<IReadOnlyList<LearningPathTemplateSummary>> GetTemplatesAsync(
         CancellationToken cancellationToken = default);
 
@@ -496,7 +509,7 @@ public interface ILegacySpeedReadingLearningPaths
     Task CompletePersonalizedPathItemAsync(
         Guid studentId,
         Guid pathItemId,
-        decimal? achievedScore,
+        Guid sessionId,
         CancellationToken cancellationToken = default);
 
     Task<bool> RefreshAdaptiveProgressionAsync(

@@ -78,7 +78,7 @@ export class InstitutionRegisterComponent implements OnInit {
             password: formData.password
         };
 
-        this.http.post(`${environment.apiUrl}/auth/register-institution`, payload).subscribe({
+        this.http.post(`${environment.apiUrl}/auth/coaching/register/institution`, payload).subscribe({
             next: () => {
                 this.toaster.success('Kayıt işleminiz başarıyla tamamlandı. E-posta adresinizi doğrulamak için size gönderdiğimiz onay linkine tıklayın.', 'Doğrulama Gerekli');
                 this.router.navigate(['/auth/login'], { queryParams: { registered: 'true', role: 'institution' } });

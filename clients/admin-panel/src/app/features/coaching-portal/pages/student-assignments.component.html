@@ -36,7 +36,7 @@
         <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">Son tarih: {{ assignment.dueDate | date:'d MMMM y, HH:mm' }}</p>
       </div>
       <div class="flex items-center gap-3 sm:justify-end">
-        <span class="rounded-full px-3 py-1 text-xs font-semibold" [ngClass]="assignment.isOverdue ? 'bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-200' : assignment.submittedAt ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-200' : 'bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-200'">{{ assignment.isOverdue ? 'Gecikti' : assignment.status }}</span>
+        <span class="rounded-full px-3 py-1 text-xs font-semibold" [ngClass]="assignment.assignmentStatus === 'Cancelled' || assignment.assignmentStatus === 'Completed' ? 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300' : assignment.isOverdue ? 'bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-200' : assignment.submittedAt ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-200' : 'bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-200'">{{ assignmentStatusLabel(assignment) }}</span>
         <span class="text-slate-400" aria-hidden="true">→</span>
       </div>
     </a>

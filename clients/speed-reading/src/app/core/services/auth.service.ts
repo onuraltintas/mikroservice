@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpContext } from '@angular/common/http';
+import { HttpClient, HttpContext, HttpErrorResponse } from '@angular/common/http';
 import { BehaviorSubject, Observable, catchError, finalize, firstValueFrom, map, of, shareReplay, switchMap, tap } from 'rxjs';
 import { Router } from '@angular/router';
 import {
@@ -79,8 +79,10 @@ export class AuthService {
     }
 
     return this.refreshToken().pipe(
-      catchError(() => {
-        this.clearLocalSession();
+      catchError((error: unknown) => {
+        if (error instanceof HttpErrorResponse && [400, 401, 403].includes(error.status)) {
+          this.clearLocalSession();
+        }
         return of(null);
       })
     );
@@ -117,7 +119,8 @@ export class AuthService {
    */
   hasCompletedProfile(): boolean {
     const user = this.currentUserValue;
-    return !!(user && user.dateOfBirth);
+    if (!user) return false;
+    return user.hasCompletedProfile ?? !!user.dateOfBirth;
   }
 
   /**
@@ -126,7 +129,7 @@ export class AuthService {
    * Service receives: AuthResponse (auto-unwrapped)
    */
   login(credentials: LoginRequest): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.AUTH_URL}/login`, credentials, { withCredentials: true }).pipe(
+    return this.http.post<AuthResponse>(`${this.AUTH_URL}/speed-reading/login`, credentials, { withCredentials: true }).pipe(
       map(response => this.normalizeAuthResponse(response)),
       switchMap(response => this.persistAndHydrateProfile(response))
     );
@@ -134,21 +137,21 @@ export class AuthService {
 
   /** Registers an independent student. Registration requires a later login. */
   register(data: RegisterRequest): Observable<RegistrationResponse> {
-    return this.http.post<RegistrationResponse>(`${this.AUTH_URL}/register/student`, data, { withCredentials: true });
+    return this.http.post<RegistrationResponse>(`${this.AUTH_URL}/speed-reading/register/student`, data, { withCredentials: true });
   }
 
   /**
    * Register new institution
    */
   registerInstitution(data: RegisterInstitutionRequest): Observable<RegistrationResponse> {
-    return this.http.post<RegistrationResponse>(`${this.AUTH_URL}/register-institution`, data, { withCredentials: true });
+    return this.http.post<RegistrationResponse>(`${this.AUTH_URL}/speed-reading/register/institution`, data, { withCredentials: true });
   }
 
   /**
    * Register new teacher
    */
   registerTeacher(data: RegisterTeacherRequest): Observable<RegistrationResponse> {
-    return this.http.post<RegistrationResponse>(`${this.AUTH_URL}/register-teacher`, data, { withCredentials: true });
+    return this.http.post<RegistrationResponse>(`${this.AUTH_URL}/speed-reading/register/teacher`, data, { withCredentials: true });
   }
 
   registerCoach(data: any): Observable<void> {
@@ -229,7 +232,7 @@ export class AuthService {
     if (role) {
       payload.role = role;
     }
-    return this.http.post<AuthResponse>(`${this.AUTH_URL}/google-login`, payload, { withCredentials: true }).pipe(
+    return this.http.post<AuthResponse>(`${this.AUTH_URL}/speed-reading/google-login`, payload, { withCredentials: true }).pipe(
       map(response => this.normalizeAuthResponse(response)),
       switchMap(response => this.persistAndHydrateProfile(response))
     );
@@ -342,12 +345,61 @@ export class AuthService {
       map(profileResponse => this.mergeProfileIntoAuthResponse(
         response,
         profileResponse?.data ?? profileResponse)),
-      tap(enrichedResponse => this.setUser(enrichedResponse)),
       catchError(error => {
-        // Authentication must remain usable if the optional profile read is
-        // temporarily unavailable; the next refresh will retry it.
+        // Authentication must remain usable if the optional Identity profile
+        // read is temporarily unavailable.
         console.warn('Authenticated profile could not be hydrated:', error);
         return of(response);
+      }),
+      switchMap(enrichedResponse => this.hydrateSpeedReadingProfile(enrichedResponse)),
+      tap(enrichedResponse => this.setUser(enrichedResponse)),
+      catchError(error => {
+        console.warn('Speed Reading profile could not be hydrated:', error);
+        return of(response);
+      })
+    );
+  }
+
+  private hydrateSpeedReadingProfile(response: AuthResponse): Observable<AuthResponse> {
+    const roles = response.roles ?? [];
+    if (!roles.some(role => ['Student', 'Teacher', 'InstitutionAdmin', 'InstitutionOwner', 'Coach'].includes(role))) {
+      return of(response);
+    }
+
+    return this.http.get<{
+      ageGroupConfigurationId?: string | null;
+      dateOfBirth?: string | null;
+      learningStyle?: string | null;
+      institutionId?: string | null;
+      currentLevel?: number;
+      targetWPM?: number;
+      targetComprehension?: number;
+      dailyGoalMinutes?: number;
+    }>(`${this.API_URL}/speed-reading/adaptive-learning/profile/settings`, {
+      headers: { 'X-Skip-Error-Toast': 'true' },
+      context: new HttpContext().set(SKIP_AUTH_REFRESH, true)
+    }).pipe(
+      map(settings => ({
+        ...response,
+        dateOfBirth: settings.dateOfBirth ?? null,
+        learningStyle: settings.learningStyle ?? undefined,
+        ageGroupId: settings.ageGroupConfigurationId ?? null,
+        institutionId: settings.institutionId ?? undefined,
+        currentLevel: settings.currentLevel,
+        targetWPM: settings.targetWPM,
+        targetComprehension: settings.targetComprehension,
+        dailyGoalMinutes: settings.dailyGoalMinutes,
+        hasCompletedProfile: roles.includes('Student') && !!settings.ageGroupConfigurationId
+      })),
+      catchError(error => {
+        console.warn('Speed Reading profile could not be hydrated:', error);
+        return of({
+          ...response,
+          dateOfBirth: null,
+          learningStyle: undefined,
+          ageGroupId: null,
+          hasCompletedProfile: roles.includes('Student') ? false : response.hasCompletedProfile
+        });
       })
     );
   }
@@ -368,39 +420,15 @@ export class AuthService {
       return response;
     }
 
-    const studentDetails = profile.studentDetails ?? profile.StudentDetails;
-    const teacherDetails = profile.teacherDetails ?? profile.TeacherDetails;
-    const birthDate = studentDetails?.birthDate
-      ?? studentDetails?.BirthDate
-      ?? profile.birthDate
-      ?? profile.BirthDate
-      ?? profile.dateOfBirth
-      ?? profile.DateOfBirth;
-    const learningStyle = studentDetails?.learningStyle
-      ?? studentDetails?.LearningStyle
-      ?? profile.learningStyle
-      ?? profile.LearningStyle;
-    const institutionId = studentDetails?.institutionId
-      ?? studentDetails?.InstitutionId
-      ?? teacherDetails?.institutionId
-      ?? teacherDetails?.InstitutionId
-      ?? profile.institutionId
-      ?? profile.InstitutionId;
-    const institutionName = studentDetails?.institutionName
-      ?? studentDetails?.InstitutionName
-      ?? teacherDetails?.institutionName
-      ?? teacherDetails?.InstitutionName
-      ?? profile.institutionName
-      ?? profile.InstitutionName;
-
     return {
       ...response,
       firstName: response.firstName || profile.firstName || profile.FirstName || '',
       lastName: response.lastName || profile.lastName || profile.LastName || '',
-      dateOfBirth: response.dateOfBirth ?? birthDate ?? null,
-      learningStyle: response.learningStyle ?? learningStyle,
-      institutionId: response.institutionId ?? institutionId,
-      institutionName: response.institutionName ?? institutionName
+      dateOfBirth: null,
+      learningStyle: undefined,
+      ageGroupId: null,
+      institutionId: undefined,
+      institutionName: undefined
     };
   }
 

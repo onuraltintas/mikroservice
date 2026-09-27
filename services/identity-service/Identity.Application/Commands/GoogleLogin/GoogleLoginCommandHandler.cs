@@ -3,6 +3,7 @@ using EduPlatform.Shared.Security.Authorization;
 using Identity.Application.Commands.Login;
 using Identity.Application.Interfaces;
 using Identity.Domain.Entities;
+using Identity.Domain.Enums;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
@@ -63,6 +64,16 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
         if (user is null)
         {
             user = await _userRepository.GetByEmailAsync(googleUser.Email, cancellationToken);
+        }
+
+        if (user is null)
+        {
+            if (request.Product is null)
+                return ProductAccessDenied();
+        }
+        else if (!HasSystemAdminRole(user) && !HasRequestedProductAccess(user, request.Product))
+        {
+            return ProductAccessDenied();
         }
         
         if (user == null)
@@ -126,7 +137,23 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
             // 2b-bis. Post-Creation Setup (Only if we have a user now)
             if (user != null)
             {
-                if (!createdNewUser && GoogleAuthenticationRules.RequiresExplicitLink(user))
+                if (createdNewUser)
+                {
+                    if (user.GrantProductAccess(
+                        request.Product!.Value,
+                        UserProductAccessSource.GoogleRegistration,
+                        grantedByUserId: null,
+                        DateTimeOffset.UtcNow))
+                    {
+                        _userRepository.TrackProductAccessIfNew(user, request.Product.Value);
+                    }
+                }
+                else if (!HasSystemAdminRole(user) && !HasRequestedProductAccess(user, request.Product))
+                {
+                    return ProductAccessDenied();
+                }
+
+                if (!createdNewUser && GoogleAuthenticationRules.RequiresExplicitLink(user, request.Product))
                 {
                     return Result.Failure<LoginResponse>(new Error(
                         "Auth.ExternalLoginLinkRequired",
@@ -212,10 +239,12 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
                     _logger.LogInformation("Google Login: Setting up profile/roles for new user {UserId}", userId);
                     
                     // Assign Role: Student (Default)
-                    var roleResult = await _identityService.AssignRoleAsync(
+                    var roleResult = await _identityService.AssignRoleForProductAsync(
                         userId,
                         Identity.Domain.Enums.UserRole.Student.ToString(),
-                        cancellationToken);
+                        request.Product!.Value,
+                        cancellationToken,
+                        UserProductAccessSource.GoogleRegistration);
                     if (roleResult.IsFailure)
                     {
                         _logger.LogError("Google login could not assign the default Student role for {UserId}.", userId);
@@ -223,35 +252,44 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
                         return Result.Failure<LoginResponse>(roleResult.Error);
                     }
                     
-                    // Create Student Profile
-                    try
+                    // Coaching profiles belong to Identity; Speed Reading creates its
+                    // own profile in the Speed Reading database during onboarding.
+                    if (request.Product == PlatformProduct.Coaching)
                     {
-                        var student = StudentProfile.Create(userId, googleUser.FirstName, googleUser.LastName);
-                        if (!string.IsNullOrEmpty(googleUser.PictureUrl)) student.SetAvatar(googleUser.PictureUrl);
+                        try
+                        {
+                            var student = StudentProfile.Create(userId, googleUser.FirstName, googleUser.LastName);
+                            if (!string.IsNullOrEmpty(googleUser.PictureUrl)) student.SetAvatar(googleUser.PictureUrl);
 
-                        await _studentRepository.AddAsync(student, cancellationToken);
-                        await _unitOfWork.SaveChangesAsync(cancellationToken);
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, "Google login could not create the Student profile for {UserId}.", userId);
-                        await CompensateProvisionedUserAsync(userId);
-                        return Result.Failure<LoginResponse>(new Error(
-                            "Auth.UserProvisioningFailed",
-                            "Google hesabı için öğrenci profili oluşturulamadı."));
+                            await _studentRepository.AddAsync(student, cancellationToken);
+                            await _unitOfWork.SaveChangesAsync(cancellationToken);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, "Google login could not create the Student profile for {UserId}.", userId);
+                            await CompensateProvisionedUserAsync(userId);
+                            return Result.Failure<LoginResponse>(new Error(
+                                "Auth.UserProvisioningFailed",
+                                "Google hesabı için öğrenci profili oluşturulamadı."));
+                        }
                     }
                 }
             }
         } 
         else
         {
+            if (!HasSystemAdminRole(user) && !HasRequestedProductAccess(user, request.Product))
+            {
+                return ProductAccessDenied();
+            }
+
             if (!user.IsActive)
             {
                 _logger.LogWarning("Google login rejected an inactive account.");
                 return Result.Failure<LoginResponse>(new Error("Auth.UserInactive", "User account is inactive."));
             }
 
-            if (!userWasLinkedByGoogleSubject && GoogleAuthenticationRules.RequiresExplicitLink(user))
+            if (!userWasLinkedByGoogleSubject && GoogleAuthenticationRules.RequiresExplicitLink(user, request.Product))
             {
                 return Result.Failure<LoginResponse>(new Error(
                     "Auth.ExternalLoginLinkRequired",
@@ -309,7 +347,8 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
         }
 
         // MAINTENANCE MODE CHECK (Google users can be logged in now, check roles)
-        var isAdmin = user.Roles.Any(r => 
+        var productRoles = user.GetRolesForProductScope(request.Product).ToArray();
+        var isAdmin = productRoles.Any(r => 
             r.Role.Name == "SystemAdmin" || 
             r.Role.Name == "InstitutionAdmin" || 
             r.Role.Name == "InstitutionOwner" ||
@@ -327,18 +366,26 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
             }
         }
 
+        if (!HasSystemAdminRole(user) && !HasRequestedProductAccess(user, request.Product))
+        {
+            return ProductAccessDenied();
+        }
+
         if (isAdmin
             && user.MfaEnabled
             && await IsPrivilegedMfaRequiredAsync(cancellationToken))
         {
             return Result.Success(LoginResponse.RequireMfa(
-                _multiFactorService.CreateChallenge(user.Id, rememberMe: true),
+                _multiFactorService.CreateChallenge(user.Id, rememberMe: true, request.Product),
                 enrollmentRequired: !user.MfaEnabled));
         }
 
         // 3. Generate Tokens
-        var accessToken = await _tokenService.GenerateAccessTokenAsync(user);
-        var refreshToken = _tokenService.GenerateRefreshToken(user.Id, request.IpAddress);
+        var accessToken = await _tokenService.GenerateAccessTokenAsync(user, product: request.Product);
+        var refreshToken = _tokenService.GenerateRefreshToken(
+            user.Id,
+            request.IpAddress,
+            product: request.Product);
 
         // 4. Save Refresh Token (Using Safe Method)
         var saveTokenResult = await _identityService.SaveRefreshTokenAsync(user.Id, refreshToken, cancellationToken);
@@ -387,6 +434,20 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
             return true;
         }
     }
+
+    private static bool HasRequestedProductAccess(User user, PlatformProduct? product) =>
+        product is { } requestedProduct && user.HasProductAccess(requestedProduct);
+
+    private static bool HasSystemAdminRole(User user) =>
+        user.Roles.Any(userRole => string.Equals(
+            userRole.Role.Name,
+            Identity.Domain.Enums.UserRole.SystemAdmin.ToString(),
+            StringComparison.OrdinalIgnoreCase));
+
+    private static Result<LoginResponse> ProductAccessDenied() =>
+        Result.Failure<LoginResponse>(new Error(
+            "Auth.ProductAccessDenied",
+            "Bu hesap seçilen platforma kayıtlı değil."));
 
     private async Task CompensateProvisionedUserAsync(Guid userId)
     {

@@ -3,6 +3,8 @@ using EduPlatform.Shared.Kernel.Exceptions;
 using Microsoft.EntityFrameworkCore;
 using SpeedReading.Application.Assignments;
 using SpeedReading.Application.Analytics;
+using SpeedReading.Domain.Institutions;
+using SpeedReading.Domain.Sessions;
 
 namespace SpeedReading.Infrastructure.Persistence;
 
@@ -99,24 +101,220 @@ internal sealed class OwnedSpeedReadingTeacherReports(
             support.Select(item => ToStudentPerformance(item, names, "support")).ToList());
     }
 
-    public Task<TeacherAssignmentAnalytics> GetAssignmentsAsync(
+    public async Task<TeacherAssignmentAnalytics> GetAssignmentsAsync(
         SpeedReadingTeacherStudentScopeResponse scope,
         DateTime? dateFrom,
         DateTime? dateTo,
         CancellationToken cancellationToken = default)
     {
         var (start, end) = NormalizeRange(dateFrom, dateTo);
-        return Task.FromResult(new TeacherAssignmentAnalytics(
+        var studentIds = await ScopedStudentIdsAsync(scope, cancellationToken);
+        if (studentIds.Count == 0)
+            return UnavailableAssignments(start, end, "Bu rapor kapsamına bağlı öğrenci bulunamadı.");
+
+        var assignments = db.Assignments.AsNoTracking()
+            .Where(item => item.IsActive && item.CreatedAt >= start && item.CreatedAt <= end);
+        if (scope.InstitutionIds.Count > 0)
+        {
+            var institutionIds = scope.InstitutionIds.Where(item => item != Guid.Empty).ToHashSet();
+            var teacherIds = await db.InstitutionMemberships.AsNoTracking()
+                .Where(item => item.IsActive
+                    && item.Role == SpeedReadingInstitutionMemberRole.Teacher
+                    && institutionIds.Contains(item.InstitutionId))
+                .Select(item => item.UserId)
+                .Distinct()
+                .ToListAsync(cancellationToken);
+            if (teacherIds.Count == 0)
+                return UnavailableAssignments(start, end, "Kurumda aktif hızlı okuma öğretmeni bulunamadı.");
+
+            var teacherIdSet = teacherIds.ToHashSet();
+            assignments = assignments.Where(item => teacherIdSet.Contains(item.TeacherId));
+        }
+        else if (scope.ReportingTeacherUserId is { } teacherId && teacherId != Guid.Empty)
+        {
+            assignments = assignments.Where(item => item.TeacherId == teacherId);
+        }
+        else
+        {
+            return UnavailableAssignments(start, end, "Öğretmen rapor kapsamı doğrulanamadı.");
+        }
+
+        var rows = await (
+            from assignment in assignments
+            join studentAssignment in db.StudentAssignments.AsNoTracking()
+                on assignment.Id equals studentAssignment.AssignmentId
+            where studentAssignment.IsActive && studentIds.Contains(studentAssignment.StudentId)
+            select new AssignmentReportRow(
+                assignment.Id,
+                studentAssignment.Id,
+                studentAssignment.StudentId,
+                studentAssignment.IsCompleted
+                    && studentAssignment.CompletionDate.HasValue
+                    && studentAssignment.CompletionDate.Value <= end,
+                studentAssignment.IsCompleted
+                    && studentAssignment.CompletionDate.HasValue
+                    && studentAssignment.CompletionDate.Value <= end
+                    ? studentAssignment.Score
+                    : null,
+                studentAssignment.IsCompleted
+                    && studentAssignment.CompletionDate.HasValue
+                    && studentAssignment.CompletionDate.Value <= end
+                    ? studentAssignment.CompletionDate
+                    : null,
+                studentAssignment.IsCompleted
+                    && studentAssignment.CompletionDate.HasValue
+                    && studentAssignment.CompletionDate.Value <= end
+                    ? studentAssignment.ResultId
+                    : null))
+            .ToListAsync(cancellationToken);
+        var assignmentCount = rows.Select(item => item.AssignmentId).Distinct().Count();
+        if (assignmentCount == 0)
+            return UnavailableAssignments(start, end, "Seçili dönemde bu kapsama ait aktif ödev bulunamadı.");
+
+        var scoreRows = rows.Where(item => item.IsCompleted && item.Score.HasValue)
+            .Select(item => item.Score!.Value)
+            .ToArray();
+        var durationByResultId = await GetAssignmentDurationsAsync(rows, end, cancellationToken);
+        var studentGroups = rows.GroupBy(item => item.StudentId).ToArray();
+        var completedStudents = studentGroups.Count(group => group.All(item => item.IsCompleted));
+        var inProgressStudents = studentGroups.Count(group => group.Any(item => item.IsCompleted)
+            && group.Any(item => !item.IsCompleted));
+        var notStartedStudents = studentGroups.Length - completedStudents - inProgressStudents;
+        var completedAssignments = rows.Count(item => item.IsCompleted);
+        var completionRate = rows.Count == 0
+            ? 0
+            : Math.Round((decimal)completedAssignments / rows.Count * 100, 2);
+        var scoresByStudent = rows.GroupBy(item => item.StudentId)
+            .ToDictionary(
+                group => group.Key,
+                group => group.Where(item => item.IsCompleted && item.Score.HasValue)
+                    .Select(item => item.Score!.Value)
+                    .ToArray());
+        var durationsByStudent = rows.GroupBy(item => item.StudentId)
+            .ToDictionary(
+                group => group.Key,
+                group => group.Where(item => item.ResultId.HasValue)
+                    .Where(item => durationByResultId.ContainsKey(item.ResultId!.Value))
+                    .Select(item => durationByResultId[item.ResultId!.Value])
+                    .ToArray());
+        var names = await GetNamesAsync(studentGroups.Select(group => group.Key), cancellationToken);
+        var studentBreakdown = studentGroups
+            .Select(group =>
+            {
+                var studentId = group.Key;
+                var completedCount = group.Count(item => item.IsCompleted);
+                var status = completedCount == group.Count()
+                    ? "completed"
+                    : completedCount > 0
+                        ? "in-progress"
+                        : "not-started";
+                var studentScores = scoresByStudent[studentId];
+                var durations = durationsByStudent[studentId];
+                var submittedAt = group.Where(item => item.CompletionDate.HasValue)
+                    .Select(item => item.CompletionDate)
+                    .Max();
+                return new TeacherAssignmentStudentBreakdown(
+                    studentId,
+                    DisplayName(studentId, names),
+                    status,
+                    studentScores.Length == 0 ? null : Math.Round(studentScores.Average(), 2),
+                    durations.Length == 0 ? null : (int?)Math.Round(durations.Average()),
+                    submittedAt);
+            })
+            .OrderBy(item => item.StudentName, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(item => item.StudentId)
+            .ToArray();
+        var allDurations = durationByResultId.Values.ToArray();
+
+        return new TeacherAssignmentAnalytics(
             start,
             end,
-            false,
-            "Atama verisi hızlı okuma bounded context'inde bulunmuyor.",
+            true,
             null,
             null,
-            null,
-            [],
-            [],
-            null));
+            new TeacherAssignmentCompletionStats(
+                studentGroups.Length,
+                completedStudents,
+                inProgressStudents,
+                notStartedStudents,
+                completionRate),
+            scoreRows.Length == 0 ? null : CalculateAssignmentPerformance(scoreRows),
+            scoreRows.Length == 0 ? [] : BuildScoreDistribution(scoreRows),
+            studentBreakdown,
+            allDurations.Length == 0 ? null : CalculateAssignmentTimeStats(allDurations),
+            assignmentCount);
+    }
+
+    private async Task<IReadOnlyDictionary<Guid, int>> GetAssignmentDurationsAsync(
+        IReadOnlyCollection<AssignmentReportRow> rows,
+        DateTime end,
+        CancellationToken cancellationToken)
+    {
+        var expectedOwners = rows.Where(item => item.IsCompleted && item.ResultId.HasValue)
+            .ToDictionary(item => item.ResultId!.Value, item => item.StudentId);
+        var resultIds = expectedOwners.Keys.ToHashSet();
+        if (resultIds.Count == 0)
+            return new Dictionary<Guid, int>();
+
+        var durations = await db.ExerciseSessionResults.AsNoTracking()
+            .Where(item => resultIds.Contains(item.Id) && item.CompletedAt <= end)
+            .Select(item => new { item.Id, item.StudentId, item.TimeSpentSeconds })
+            .ToListAsync(cancellationToken);
+        return durations
+            .Where(item => expectedOwners.TryGetValue(item.Id, out var ownerId) && ownerId == item.StudentId)
+            .ToDictionary(item => item.Id, item => item.TimeSpentSeconds);
+    }
+
+    private static TeacherAssignmentAnalytics UnavailableAssignments(
+        DateTime start,
+        DateTime end,
+        string reason) =>
+        new(start, end, false, reason, null, null, null, [], [], null);
+
+    private static TeacherAssignmentPerformanceStats CalculateAssignmentPerformance(decimal[] values)
+    {
+        var ordered = values.Order().ToArray();
+        var average = ordered.Average();
+        var middle = ordered.Length / 2;
+        var median = ordered.Length % 2 == 0
+            ? (ordered[middle - 1] + ordered[middle]) / 2
+            : ordered[middle];
+        var variance = ordered.Average(value => (value - average) * (value - average));
+        return new TeacherAssignmentPerformanceStats(
+            Math.Round(average, 2),
+            Math.Round(median, 2),
+            ordered[^1],
+            ordered[0],
+            Math.Round((decimal)Math.Sqrt((double)variance), 2));
+    }
+
+    private static IReadOnlyList<AdminAnalyticsChartData> BuildScoreDistribution(decimal[] scores) =>
+        Enumerable.Range(0, 11)
+            .Select(index =>
+            {
+                var lowerBound = index * 10;
+                var upperBound = index == 10 ? 100 : lowerBound + 9;
+                var count = scores.Count(score => score >= lowerBound
+                    && (index == 10 ? score <= upperBound : score < lowerBound + 10));
+                var label = index == 10 ? "100" : $"{lowerBound}-{upperBound}";
+                return new AdminAnalyticsChartData(
+                    label,
+                    [new AdminAnalyticsChartSeries("Ödev sayısı", count)]);
+            })
+            .ToArray();
+
+    private static TeacherAssignmentTimeStats CalculateAssignmentTimeStats(int[] values)
+    {
+        var ordered = values.Order().ToArray();
+        var middle = ordered.Length / 2;
+        var median = ordered.Length % 2 == 0
+            ? (ordered[middle - 1] + ordered[middle]) / 2m
+            : ordered[middle];
+        return new TeacherAssignmentTimeStats(
+            Math.Round((decimal)ordered.Average(), 2),
+            Math.Round(median, 2),
+            ordered[0],
+            ordered[^1]);
     }
 
     public async Task<TeacherContentAnalysisAnalytics> GetContentAnalysisAsync(
@@ -252,8 +450,10 @@ internal sealed class OwnedSpeedReadingTeacherReports(
         var ids = scope.StudentUserIds.Where(item => item != Guid.Empty).ToHashSet();
         if (scope.InstitutionIds.Count > 0)
         {
-            var institutionIds = await db.UserProfiles.AsNoTracking()
-                .Where(item => item.IsActive && item.InstitutionId.HasValue && scope.InstitutionIds.Contains(item.InstitutionId.Value))
+            var institutionIds = await db.InstitutionMemberships.AsNoTracking()
+                .Where(item => item.IsActive
+                    && item.Role == SpeedReadingInstitutionMemberRole.Student
+                    && scope.InstitutionIds.Contains(item.InstitutionId))
                 .Select(item => item.UserId)
                 .ToListAsync(cancellationToken);
             ids.UnionWith(institutionIds);
@@ -359,4 +559,12 @@ internal sealed class OwnedSpeedReadingTeacherReports(
         decimal Score,
         bool IsReading,
         bool HasComprehension);
+    private sealed record AssignmentReportRow(
+        Guid AssignmentId,
+        Guid StudentAssignmentId,
+        Guid StudentId,
+        bool IsCompleted,
+        decimal? Score,
+        DateTime? CompletionDate,
+        Guid? ResultId);
 }

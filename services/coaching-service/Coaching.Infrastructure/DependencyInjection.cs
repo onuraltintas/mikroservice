@@ -112,6 +112,8 @@ public static class DependencyInjection
         services.AddScoped<ICoachingComparativeReportRepository, CoachingComparativeReportRepository>();
         services.AddScoped<ICoachingEarlyWarningRepository, CoachingEarlyWarningRepository>();
         services.AddScoped<ICoachingAdminRepository, CoachingAdminRepository>();
+        services.AddScoped<ICoachingStudentHistoryRepository>(provider =>
+            provider.GetRequiredService<ICoachingAdminRepository>());
         services.AddScoped<ICoachingAgreementRepository, CoachingAgreementRepository>();
         services.AddScoped<ICoachingDataExportRepository, CoachingDataExportRepository>();
         services.AddScoped<ICoachingErasureAssessmentService, CoachingErasureAssessmentService>();

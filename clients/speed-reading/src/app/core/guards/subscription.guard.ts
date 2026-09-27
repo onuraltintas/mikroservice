@@ -13,15 +13,24 @@ import { AssessmentService } from '../../services/assessment.service';
  *
  * Kullanım: canActivate: [authGuard, profileSetupGuard, subscriptionGuard]
  */
-export const subscriptionGuard: CanActivateFn = (_route, state) => {
+export const subscriptionGuard: CanActivateFn = (route, state) => {
   const authService         = inject(AuthService);
   const subscriptionService = inject(SubscriptionService);
   const assessmentService   = inject(AssessmentService);
   const router              = inject(Router);
 
   // Student dışındaki roller abonelik kontrolüne takılmaz
-  const studentOnly = ['Teacher', 'Editor', 'Coach', 'InstitutionAdmin'];
-  if (studentOnly.some(r => authService.hasRole(r))) return of(true);
+  const staffRoles = ['Admin', 'SystemAdmin', 'Teacher', 'Editor', 'Coach', 'InstitutionAdmin', 'InstitutionOwner'];
+  if (staffRoles.some(r => authService.hasRole(r))) return of(true);
+
+  // The server verifies that the attempt belongs to this student and exercise.
+  const assessmentAttemptId = route.queryParamMap.get('assessmentAttemptId');
+  if (state.url.startsWith('/student/exercises/universal-player/')
+      && route.queryParamMap.get('assessmentMode') === 'true'
+      && assessmentAttemptId
+      && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(assessmentAttemptId)) {
+    return of(true);
+  }
 
   const subscriptionCheck = (): Observable<boolean> => subscriptionService.getMyModules().pipe(
     map(modules => {
@@ -29,7 +38,10 @@ export const subscriptionGuard: CanActivateFn = (_route, state) => {
       router.navigate(['/no-access']);
       return false;
     }),
-    catchError(() => of(true)) // API hatasında engelleme
+    catchError(() => {
+      router.navigate(['/error/500']);
+      return of(false);
+    })
   );
 
   // The initial assessment is the free entry point. A student must be able

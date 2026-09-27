@@ -43,7 +43,7 @@ public class CreateAssignmentCommandHandler : IRequestHandler<CreateAssignmentCo
 
     public async Task<CreateAssignmentResponse> Handle(CreateAssignmentCommand request, CancellationToken cancellationToken)
     {
-        _accessPolicy.RequireTeacher(request.TeacherId);
+        _accessPolicy.RequireTeacher(request.TeacherId, request.IsInstitutionAdminOperation);
 
         var key = request.IdempotencyKey?.Trim();
         if (string.IsNullOrWhiteSpace(key))

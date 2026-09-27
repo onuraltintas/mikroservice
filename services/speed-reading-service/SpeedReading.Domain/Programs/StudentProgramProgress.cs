@@ -24,6 +24,7 @@ public sealed class StudentProgramProgress : AggregateRoot
     public int CurrentWeek { get; private set; }
     public int CurrentDifficultyLevel { get; private set; }
     public int AdaptiveDifficultyOffset { get; private set; }
+    public string? ScheduleJson { get; private set; }
     public int DaysCompleted { get; private set; }
     public int ExercisesCompleted { get; private set; }
     public DateTime? LastCompletionDate { get; private set; }
@@ -155,6 +156,18 @@ public sealed class StudentProgramProgress : AggregateRoot
         UpdatedBy = actorId.ToString();
     }
 
+    public void SetSchedule(string scheduleJson, Guid actorId, DateTime at)
+    {
+        if (string.IsNullOrWhiteSpace(scheduleJson) || actorId == Guid.Empty)
+            throw new ArgumentException("A program schedule and actor are required.");
+        if (ScheduleJson is not null)
+            return;
+
+        ScheduleJson = scheduleJson;
+        UpdatedAt = EnsureUtc(at);
+        UpdatedBy = actorId.ToString();
+    }
+
     public bool ApplyAdaptiveDifficultyAdjustment(
         int difficultyAdjustment,
         ProgramTemplate template,
@@ -192,7 +205,8 @@ public sealed class StudentProgramProgress : AggregateRoot
         int expectedCount,
         ProgramTemplate template,
         Guid actorId,
-        DateTime at)
+        DateTime at,
+        int? assignedTotalDays = null)
     {
         if (actorId == Guid.Empty)
             throw new ArgumentException("Completion actor is required.", nameof(actorId));
@@ -231,7 +245,8 @@ public sealed class StudentProgramProgress : AggregateRoot
             var completedCumulativeDay = ((CurrentWeek - 1) * 7) + CurrentDay;
             CurrentDay++;
 
-            if (template.TotalDays > 0 && completedCumulativeDay >= template.TotalDays)
+            if ((assignedTotalDays ?? template.TotalDays) > 0
+                && completedCumulativeDay >= (assignedTotalDays ?? template.TotalDays))
             {
                 programCompleted = true;
                 CompletedDate = now;

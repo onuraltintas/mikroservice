@@ -49,13 +49,16 @@ public sealed class CoachingAdminController : ControllerBase
 {
     private readonly IMediator _mediator;
     private readonly ICoachingAdminScopeAuthorization _adminScopeAuthorization;
+    private readonly ICoachingIdentityAuthorizationClient _identityAuthorizationClient;
 
     public CoachingAdminController(
         IMediator mediator,
-        ICoachingAdminScopeAuthorization adminScopeAuthorization)
+        ICoachingAdminScopeAuthorization adminScopeAuthorization,
+        ICoachingIdentityAuthorizationClient identityAuthorizationClient)
     {
         _mediator = mediator;
         _adminScopeAuthorization = adminScopeAuthorization;
+        _identityAuthorizationClient = identityAuthorizationClient;
     }
 
     /// <summary>
@@ -113,7 +116,35 @@ public sealed class CoachingAdminController : ControllerBase
             return NotFound();
         }
 
-        return Ok(await repository.GetStudentDetailAsync(studentId, scope.InstitutionId, cancellationToken));
+        return Ok(await repository.GetStudentDetailAsync(studentId, cancellationToken));
+    }
+
+    [HttpGet("students/{studentId:guid}/history")]
+    [ProducesResponseType(typeof(PagedRepositoryResult<CoachingAdminStudentHistoryItemDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetStudentHistory(
+        Guid studentId,
+        [FromServices] ICoachingAdminRepository repository,
+        [FromQuery] CoachingStudentHistoryType type = CoachingStudentHistoryType.Assignments,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 25,
+        CancellationToken cancellationToken = default)
+    {
+        var scope = await _adminScopeAuthorization.RequireReadScopeAsync(cancellationToken);
+        if (!scope.IsGlobal && scope.StudentIds?.Contains(studentId) != true)
+        {
+            return NotFound();
+        }
+
+        if (studentId == Guid.Empty || !Enum.IsDefined(type)
+            || pageNumber is < 1 or > 1000 || pageSize is < 1 or > 100)
+        {
+            return BadRequest();
+        }
+
+        return Ok(await repository.GetStudentHistoryAsync(
+            studentId, type, pageNumber, pageSize, cancellationToken));
     }
 
     [HttpGet("institutions/{institutionId:guid}/students")]
@@ -126,15 +157,16 @@ public sealed class CoachingAdminController : ControllerBase
         [FromQuery] int pageSize = 25,
         [FromQuery] string? search = null,
         [FromQuery] Guid? teacherUserId = null,
+        [FromQuery] int? gradeLevel = null,
         CancellationToken cancellationToken = default)
     {
         var scope = await _adminScopeAuthorization.RequireReadScopeAsync(cancellationToken);
         if (!scope.IsGlobal && scope.InstitutionId != institutionId) return NotFound();
         if (pageNumber is < 1 or > 1000 || pageSize is < 1 or > 100
-            || search?.Length > 100 || teacherUserId == Guid.Empty)
+            || search?.Length > 100 || teacherUserId == Guid.Empty || gradeLevel is < 1 or > 12)
             return BadRequest();
         return Ok(await reportClient.GetActiveStudentPageAsync(
-            currentUser.UserId!.Value, institutionId, null, pageNumber, pageSize,
+            currentUser.UserId!.Value, institutionId, gradeLevel, pageNumber, pageSize,
             cancellationToken, search, teacherUserId));
     }
 
@@ -254,7 +286,7 @@ public sealed class CoachingAdminController : ControllerBase
     /// The command handler remains the single source of truth for tenant and target validation.
     /// </summary>
     [HttpPost("assignments")]
-    [Authorize(Roles = "SystemAdmin")]
+    [Authorize(Roles = "SystemAdmin,InstitutionAdmin,InstitutionOwner")]
     [Authorize(Policy = "MfaRequired")]
     [HasPermission(PlatformPermissions.Coaching.Manage)]
     public async Task<ActionResult<CreateAssignmentResponse>> CreateAssignment(
@@ -263,9 +295,20 @@ public sealed class CoachingAdminController : ControllerBase
     {
         try
         {
+            var scope = await _adminScopeAuthorization.RequireReadScopeAsync(cancellationToken);
+            if (!await IsTeacherTargetScopeAuthorizedAsync(scope, command.TeacherId, command.StudentIds, cancellationToken))
+            {
+                return Forbid();
+            }
+
             var idempotencyKey = Request.Headers["Idempotency-Key"].ToString();
             var result = await _mediator.Send(
-                command with { IdempotencyKey = idempotencyKey },
+                command with
+                {
+                    InstitutionId = scope.IsGlobal ? command.InstitutionId : scope.InstitutionId,
+                    IsInstitutionAdminOperation = !scope.IsGlobal,
+                    IdempotencyKey = idempotencyKey
+                },
                 cancellationToken);
 
             return CreatedAtAction(nameof(GetAssignment), new { id = result.AssignmentId }, result);
@@ -286,14 +329,19 @@ public sealed class CoachingAdminController : ControllerBase
 
     /// <summary>Soft-cancels an assignment on behalf of a system administrator.</summary>
     [HttpPost("assignments/{id:guid}/cancel")]
-    [Authorize(Roles = "SystemAdmin")]
+    [Authorize(Roles = "SystemAdmin,InstitutionAdmin,InstitutionOwner")]
     [Authorize(Policy = "MfaRequired")]
     [HasPermission(PlatformPermissions.Coaching.Manage)]
     public async Task<IActionResult> CancelAssignment(Guid id, CancellationToken cancellationToken)
     {
         try
         {
-            await _mediator.Send(new CancelAssignmentCommand(id), cancellationToken);
+            var scope = await _adminScopeAuthorization.RequireReadScopeAsync(cancellationToken);
+            if (!await AssignmentExistsInScopeAsync(id, scope, cancellationToken)) return NotFound();
+            await _mediator.Send(new CancelAssignmentCommand(id)
+            {
+                IsInstitutionAdminOperation = !scope.IsGlobal
+            }, cancellationToken);
             return Ok(new { message = "Assignment cancelled successfully" });
         }
         catch (InvalidOperationException ex)
@@ -308,14 +356,19 @@ public sealed class CoachingAdminController : ControllerBase
 
     /// <summary>Hard-deletes an assignment on behalf of a system administrator.</summary>
     [HttpDelete("assignments/{id:guid}")]
-    [Authorize(Roles = "SystemAdmin")]
+    [Authorize(Roles = "SystemAdmin,InstitutionAdmin,InstitutionOwner")]
     [Authorize(Policy = "MfaRequired")]
     [HasPermission(PlatformPermissions.Coaching.Manage)]
     public async Task<IActionResult> DeleteAssignment(Guid id, CancellationToken cancellationToken)
     {
         try
         {
-            await _mediator.Send(new DeleteAssignmentCommand(id), cancellationToken);
+            var scope = await _adminScopeAuthorization.RequireReadScopeAsync(cancellationToken);
+            if (!await AssignmentExistsInScopeAsync(id, scope, cancellationToken)) return NotFound();
+            await _mediator.Send(new DeleteAssignmentCommand(id)
+            {
+                IsInstitutionAdminOperation = !scope.IsGlobal
+            }, cancellationToken);
             return NoContent();
         }
         catch (InvalidOperationException ex)
@@ -330,7 +383,7 @@ public sealed class CoachingAdminController : ControllerBase
 
     /// <summary>Grades an assigned student's work on behalf of a system administrator.</summary>
     [HttpPost("assignments/{id:guid}/grade")]
-    [Authorize(Roles = "SystemAdmin")]
+    [Authorize(Roles = "SystemAdmin,InstitutionAdmin,InstitutionOwner")]
     [Authorize(Policy = "MfaRequired")]
     [HasPermission(PlatformPermissions.Coaching.Manage)]
     public async Task<ActionResult<GradeAssignmentResponse>> GradeAssignment(
@@ -345,7 +398,19 @@ public sealed class CoachingAdminController : ControllerBase
 
         try
         {
-            return Ok(await _mediator.Send(command, cancellationToken));
+            var scope = await _adminScopeAuthorization.RequireReadScopeAsync(cancellationToken);
+            var assignment = await GetAssignmentInScopeAsync(id, scope, cancellationToken);
+            if (assignment is null) return NotFound();
+            if (!scope.IsGlobal
+                && !await IsTeacherTargetScopeAuthorizedAsync(scope, assignment.TeacherId, [command.StudentId], cancellationToken))
+            {
+                return Forbid();
+            }
+
+            return Ok(await _mediator.Send(command with
+            {
+                IsInstitutionAdminOperation = !scope.IsGlobal
+            }, cancellationToken));
         }
         catch (InvalidOperationException ex)
         {
@@ -362,7 +427,7 @@ public sealed class CoachingAdminController : ControllerBase
     }
 
     [HttpPut("assignments/{id:guid}")]
-    [Authorize(Roles = "SystemAdmin")]
+    [Authorize(Roles = "SystemAdmin,InstitutionAdmin,InstitutionOwner")]
     [Authorize(Policy = "MfaRequired")]
     [HasPermission(PlatformPermissions.Coaching.Manage)]
     public async Task<ActionResult<UpdateAssignmentResponse>> UpdateAssignment(
@@ -375,7 +440,19 @@ public sealed class CoachingAdminController : ControllerBase
 
         try
         {
-            return Ok(await _mediator.Send(command, cancellationToken));
+            var scope = await _adminScopeAuthorization.RequireReadScopeAsync(cancellationToken);
+            var assignment = await GetAssignmentInScopeAsync(id, scope, cancellationToken);
+            if (assignment is null) return NotFound();
+            if (!scope.IsGlobal && command.StudentIds is not null
+                && !await IsTeacherTargetScopeAuthorizedAsync(scope, assignment.TeacherId, command.StudentIds, cancellationToken))
+            {
+                return Forbid();
+            }
+
+            return Ok(await _mediator.Send(command with
+            {
+                IsInstitutionAdminOperation = !scope.IsGlobal
+            }, cancellationToken));
         }
         catch (InvalidOperationException ex)
         {
@@ -400,7 +477,7 @@ public sealed class CoachingAdminController : ControllerBase
     }
 
     [HttpPost("sessions")]
-    [Authorize(Roles = "SystemAdmin")]
+    [Authorize(Roles = "SystemAdmin,InstitutionAdmin,InstitutionOwner")]
     [Authorize(Policy = "MfaRequired")]
     [HasPermission(PlatformPermissions.Coaching.Manage)]
     public async Task<ActionResult<CreateSessionResponse>> CreateSession(
@@ -409,9 +486,23 @@ public sealed class CoachingAdminController : ControllerBase
     {
         try
         {
+            var scope = await _adminScopeAuthorization.RequireReadScopeAsync(cancellationToken);
+            var studentIds = command.Type == Coaching.Domain.Enums.SessionType.Group
+                ? command.StudentIds?.Where(studentId => studentId != Guid.Empty).Distinct().ToArray() ?? []
+                : [command.StudentId];
+            if (!await IsTeacherTargetScopeAuthorizedAsync(scope, command.TeacherId, studentIds, cancellationToken))
+            {
+                return Forbid();
+            }
+
             var idempotencyKey = Request.Headers["Idempotency-Key"].ToString();
             var result = await _mediator.Send(
-                command with { IdempotencyKey = idempotencyKey },
+                command with
+                {
+                    InstitutionId = scope.IsGlobal ? command.InstitutionId : scope.InstitutionId,
+                    IsInstitutionAdminOperation = !scope.IsGlobal,
+                    IdempotencyKey = idempotencyKey
+                },
                 cancellationToken);
             return StatusCode(StatusCodes.Status201Created, result);
         }
@@ -430,7 +521,7 @@ public sealed class CoachingAdminController : ControllerBase
     }
 
     [HttpPost("sessions/{id:guid}/attendance")]
-    [Authorize(Roles = "SystemAdmin")]
+    [Authorize(Roles = "SystemAdmin,InstitutionAdmin,InstitutionOwner")]
     [Authorize(Policy = "MfaRequired")]
     [HasPermission(PlatformPermissions.Coaching.Manage)]
     public async Task<IActionResult> UpdateSessionAttendance(
@@ -445,7 +536,20 @@ public sealed class CoachingAdminController : ControllerBase
 
         try
         {
-            await _mediator.Send(command, cancellationToken);
+            var scope = await _adminScopeAuthorization.RequireReadScopeAsync(cancellationToken);
+            var session = await GetSessionInScopeAsync(id, scope, cancellationToken);
+            if (session is null) return NotFound();
+            if (!scope.IsGlobal
+                && (!command.StudentId.HasValue
+                    || !session.Attendances.Any(attendance => attendance.StudentId == command.StudentId.Value)))
+            {
+                return Forbid();
+            }
+
+            await _mediator.Send(command with
+            {
+                IsInstitutionAdminOperation = !scope.IsGlobal
+            }, cancellationToken);
             return Ok(new { message = "Attendance updated successfully" });
         }
         catch (InvalidOperationException ex)
@@ -463,7 +567,7 @@ public sealed class CoachingAdminController : ControllerBase
     }
 
     [HttpPut("sessions/{id:guid}")]
-    [Authorize(Roles = "SystemAdmin")]
+    [Authorize(Roles = "SystemAdmin,InstitutionAdmin,InstitutionOwner")]
     [Authorize(Policy = "MfaRequired")]
     [HasPermission(PlatformPermissions.Coaching.Manage)]
     public async Task<ActionResult<UpdateSessionResponse>> UpdateSession(
@@ -476,7 +580,12 @@ public sealed class CoachingAdminController : ControllerBase
 
         try
         {
-            return Ok(await _mediator.Send(command, cancellationToken));
+            var scope = await _adminScopeAuthorization.RequireReadScopeAsync(cancellationToken);
+            if (await GetSessionInScopeAsync(id, scope, cancellationToken) is null) return NotFound();
+            return Ok(await _mediator.Send(command with
+            {
+                IsInstitutionAdminOperation = !scope.IsGlobal
+            }, cancellationToken));
         }
         catch (InvalidOperationException ex)
         {
@@ -497,14 +606,19 @@ public sealed class CoachingAdminController : ControllerBase
     }
 
     [HttpPost("sessions/{id:guid}/cancel")]
-    [Authorize(Roles = "SystemAdmin")]
+    [Authorize(Roles = "SystemAdmin,InstitutionAdmin,InstitutionOwner")]
     [Authorize(Policy = "MfaRequired")]
     [HasPermission(PlatformPermissions.Coaching.Manage)]
     public async Task<IActionResult> CancelSession(Guid id, CancellationToken cancellationToken)
     {
         try
         {
-            await _mediator.Send(new CancelSessionCommand(id), cancellationToken);
+            var scope = await _adminScopeAuthorization.RequireReadScopeAsync(cancellationToken);
+            if (await GetSessionInScopeAsync(id, scope, cancellationToken) is null) return NotFound();
+            await _mediator.Send(new CancelSessionCommand(id)
+            {
+                IsInstitutionAdminOperation = !scope.IsGlobal
+            }, cancellationToken);
             return Ok(new { message = "Session cancelled successfully" });
         }
         catch (InvalidOperationException ex)
@@ -518,14 +632,19 @@ public sealed class CoachingAdminController : ControllerBase
     }
 
     [HttpDelete("sessions/{id:guid}")]
-    [Authorize(Roles = "SystemAdmin")]
+    [Authorize(Roles = "SystemAdmin,InstitutionAdmin,InstitutionOwner")]
     [Authorize(Policy = "MfaRequired")]
     [HasPermission(PlatformPermissions.Coaching.Manage)]
     public async Task<IActionResult> DeleteSession(Guid id, CancellationToken cancellationToken)
     {
         try
         {
-            await _mediator.Send(new DeleteSessionCommand(id), cancellationToken);
+            var scope = await _adminScopeAuthorization.RequireReadScopeAsync(cancellationToken);
+            if (await GetSessionInScopeAsync(id, scope, cancellationToken) is null) return NotFound();
+            await _mediator.Send(new DeleteSessionCommand(id)
+            {
+                IsInstitutionAdminOperation = !scope.IsGlobal
+            }, cancellationToken);
             return NoContent();
         }
         catch (InvalidOperationException ex)
@@ -539,7 +658,7 @@ public sealed class CoachingAdminController : ControllerBase
     }
 
     [HttpPost("exams")]
-    [Authorize(Roles = "SystemAdmin")]
+    [Authorize(Roles = "SystemAdmin,InstitutionAdmin,InstitutionOwner")]
     [Authorize(Policy = "MfaRequired")]
     [HasPermission(PlatformPermissions.Coaching.Manage)]
     public async Task<ActionResult<CreateExamResponse>> CreateExam(
@@ -548,9 +667,20 @@ public sealed class CoachingAdminController : ControllerBase
     {
         try
         {
+            var scope = await _adminScopeAuthorization.RequireReadScopeAsync(cancellationToken);
+            if (!await IsTeacherTargetScopeAuthorizedAsync(scope, command.TeacherId, [], cancellationToken))
+            {
+                return Forbid();
+            }
+
             var idempotencyKey = Request.Headers["Idempotency-Key"].ToString();
             var result = await _mediator.Send(
-                command with { IdempotencyKey = idempotencyKey },
+                command with
+                {
+                    InstitutionId = scope.IsGlobal ? command.InstitutionId : scope.InstitutionId,
+                    IsInstitutionAdminOperation = !scope.IsGlobal,
+                    IdempotencyKey = idempotencyKey
+                },
                 cancellationToken);
             return StatusCode(StatusCodes.Status201Created, result);
         }
@@ -569,7 +699,7 @@ public sealed class CoachingAdminController : ControllerBase
     }
 
     [HttpPost("exams/{id:guid}/results")]
-    [Authorize(Roles = "SystemAdmin")]
+    [Authorize(Roles = "SystemAdmin,InstitutionAdmin,InstitutionOwner")]
     [Authorize(Policy = "MfaRequired")]
     [HasPermission(PlatformPermissions.Coaching.Manage)]
     public async Task<IActionResult> AddExamResult(
@@ -584,8 +714,21 @@ public sealed class CoachingAdminController : ControllerBase
 
         try
         {
+            var scope = await _adminScopeAuthorization.RequireReadScopeAsync(cancellationToken);
+            var exam = await GetExamInScopeAsync(id, scope, cancellationToken);
+            if (exam is null) return NotFound();
+            if (!scope.IsGlobal
+                && !await IsTeacherTargetScopeAuthorizedAsync(scope, exam.CreatedByTeacherId, [command.StudentId], cancellationToken))
+            {
+                return Forbid();
+            }
+
             var idempotencyKey = Request.Headers["Idempotency-Key"].ToString();
-            await _mediator.Send(command with { IdempotencyKey = idempotencyKey }, cancellationToken);
+            await _mediator.Send(command with
+            {
+                IsInstitutionAdminOperation = !scope.IsGlobal,
+                IdempotencyKey = idempotencyKey
+            }, cancellationToken);
             return Ok(new { message = "Result added successfully" });
         }
         catch (InvalidOperationException ex)
@@ -607,7 +750,7 @@ public sealed class CoachingAdminController : ControllerBase
     }
 
     [HttpPut("exams/{id:guid}")]
-    [Authorize(Roles = "SystemAdmin")]
+    [Authorize(Roles = "SystemAdmin,InstitutionAdmin,InstitutionOwner")]
     [Authorize(Policy = "MfaRequired")]
     [HasPermission(PlatformPermissions.Coaching.Manage)]
     public async Task<ActionResult<UpdateExamResponse>> UpdateExam(
@@ -620,7 +763,12 @@ public sealed class CoachingAdminController : ControllerBase
 
         try
         {
-            return Ok(await _mediator.Send(command, cancellationToken));
+            var scope = await _adminScopeAuthorization.RequireReadScopeAsync(cancellationToken);
+            if (await GetExamInScopeAsync(id, scope, cancellationToken) is null) return NotFound();
+            return Ok(await _mediator.Send(command with
+            {
+                IsInstitutionAdminOperation = !scope.IsGlobal
+            }, cancellationToken));
         }
         catch (InvalidOperationException ex)
         {
@@ -645,7 +793,7 @@ public sealed class CoachingAdminController : ControllerBase
     }
 
     [HttpPut("exams/{id:guid}/results/{resultId:guid}")]
-    [Authorize(Roles = "SystemAdmin")]
+    [Authorize(Roles = "SystemAdmin,InstitutionAdmin,InstitutionOwner")]
     [Authorize(Policy = "MfaRequired")]
     [HasPermission(PlatformPermissions.Coaching.Manage)]
     public async Task<ActionResult<UpdateExamResultResponse>> UpdateExamResult(
@@ -659,7 +807,14 @@ public sealed class CoachingAdminController : ControllerBase
 
         try
         {
-            return Ok(await _mediator.Send(command, cancellationToken));
+            var scope = await _adminScopeAuthorization.RequireReadScopeAsync(cancellationToken);
+            var exam = await GetExamInScopeAsync(id, scope, cancellationToken);
+            if (exam is null) return NotFound();
+            if (!scope.IsGlobal && !exam.Results.Any(result => result.Id == resultId)) return NotFound();
+            return Ok(await _mediator.Send(command with
+            {
+                IsInstitutionAdminOperation = !scope.IsGlobal
+            }, cancellationToken));
         }
         catch (InvalidOperationException ex)
         {
@@ -684,7 +839,7 @@ public sealed class CoachingAdminController : ControllerBase
     }
 
     [HttpDelete("exams/{id:guid}/results/{resultId:guid}")]
-    [Authorize(Roles = "SystemAdmin")]
+    [Authorize(Roles = "SystemAdmin,InstitutionAdmin,InstitutionOwner")]
     [Authorize(Policy = "MfaRequired")]
     [HasPermission(PlatformPermissions.Coaching.Manage)]
     public async Task<IActionResult> DeleteExamResult(
@@ -694,7 +849,14 @@ public sealed class CoachingAdminController : ControllerBase
     {
         try
         {
-            await _mediator.Send(new DeleteExamResultCommand(id, resultId), cancellationToken);
+            var scope = await _adminScopeAuthorization.RequireReadScopeAsync(cancellationToken);
+            var exam = await GetExamInScopeAsync(id, scope, cancellationToken);
+            if (exam is null) return NotFound();
+            if (!scope.IsGlobal && !exam.Results.Any(result => result.Id == resultId)) return NotFound();
+            await _mediator.Send(new DeleteExamResultCommand(id, resultId)
+            {
+                IsInstitutionAdminOperation = !scope.IsGlobal
+            }, cancellationToken);
             return NoContent();
         }
         catch (InvalidOperationException ex)
@@ -708,14 +870,19 @@ public sealed class CoachingAdminController : ControllerBase
     }
 
     [HttpDelete("exams/{id:guid}")]
-    [Authorize(Roles = "SystemAdmin")]
+    [Authorize(Roles = "SystemAdmin,InstitutionAdmin,InstitutionOwner")]
     [Authorize(Policy = "MfaRequired")]
     [HasPermission(PlatformPermissions.Coaching.Manage)]
     public async Task<IActionResult> DeleteExam(Guid id, CancellationToken cancellationToken)
     {
         try
         {
-            await _mediator.Send(new DeleteExamCommand(id), cancellationToken);
+            var scope = await _adminScopeAuthorization.RequireReadScopeAsync(cancellationToken);
+            if (await GetExamInScopeAsync(id, scope, cancellationToken) is null) return NotFound();
+            await _mediator.Send(new DeleteExamCommand(id)
+            {
+                IsInstitutionAdminOperation = !scope.IsGlobal
+            }, cancellationToken);
             return NoContent();
         }
         catch (InvalidOperationException ex)
@@ -729,7 +896,7 @@ public sealed class CoachingAdminController : ControllerBase
     }
 
     [HttpPost("goals")]
-    [Authorize(Roles = "SystemAdmin")]
+    [Authorize(Roles = "SystemAdmin,InstitutionAdmin,InstitutionOwner")]
     [Authorize(Policy = "MfaRequired")]
     [HasPermission(PlatformPermissions.Coaching.Manage)]
     public async Task<ActionResult<CreateGoalResponse>> CreateGoal(
@@ -738,9 +905,23 @@ public sealed class CoachingAdminController : ControllerBase
     {
         try
         {
+            var scope = await _adminScopeAuthorization.RequireReadScopeAsync(cancellationToken);
+            if (!scope.IsGlobal
+                && (command.TeacherId.HasValue
+                    ? !await IsTeacherTargetScopeAuthorizedAsync(scope, command.TeacherId.Value, [command.StudentId], cancellationToken)
+                    : scope.StudentIds?.Contains(command.StudentId) != true))
+            {
+                return Forbid();
+            }
+
             var idempotencyKey = Request.Headers["Idempotency-Key"].ToString();
             var result = await _mediator.Send(
-                command with { IdempotencyKey = idempotencyKey },
+                command with
+                {
+                    IsInstitutionAdminOperation = !scope.IsGlobal,
+                    InstitutionId = scope.IsGlobal ? null : scope.InstitutionId,
+                    IdempotencyKey = idempotencyKey
+                },
                 cancellationToken);
             return StatusCode(StatusCodes.Status201Created, result);
         }
@@ -759,7 +940,7 @@ public sealed class CoachingAdminController : ControllerBase
     }
 
     [HttpPut("goals/{id:guid}/progress")]
-    [Authorize(Roles = "SystemAdmin")]
+    [Authorize(Roles = "SystemAdmin,InstitutionAdmin,InstitutionOwner")]
     [Authorize(Policy = "MfaRequired")]
     [HasPermission(PlatformPermissions.Coaching.Manage)]
     public async Task<IActionResult> UpdateGoalProgress(
@@ -774,7 +955,12 @@ public sealed class CoachingAdminController : ControllerBase
 
         try
         {
-            await _mediator.Send(command, cancellationToken);
+            var scope = await _adminScopeAuthorization.RequireReadScopeAsync(cancellationToken);
+            if (await GetGoalInScopeAsync(id, scope, cancellationToken) is null) return NotFound();
+            await _mediator.Send(command with
+            {
+                IsInstitutionAdminOperation = !scope.IsGlobal
+            }, cancellationToken);
             return Ok(new { message = "Goal progress updated successfully" });
         }
         catch (InvalidOperationException ex)
@@ -792,7 +978,7 @@ public sealed class CoachingAdminController : ControllerBase
     }
 
     [HttpPut("goals/{id:guid}")]
-    [Authorize(Roles = "SystemAdmin")]
+    [Authorize(Roles = "SystemAdmin,InstitutionAdmin,InstitutionOwner")]
     [Authorize(Policy = "MfaRequired")]
     [HasPermission(PlatformPermissions.Coaching.Manage)]
     public async Task<ActionResult<UpdateGoalResponse>> UpdateGoal(
@@ -805,7 +991,12 @@ public sealed class CoachingAdminController : ControllerBase
 
         try
         {
-            return Ok(await _mediator.Send(command, cancellationToken));
+            var scope = await _adminScopeAuthorization.RequireReadScopeAsync(cancellationToken);
+            if (await GetGoalInScopeAsync(id, scope, cancellationToken) is null) return NotFound();
+            return Ok(await _mediator.Send(command with
+            {
+                IsInstitutionAdminOperation = !scope.IsGlobal
+            }, cancellationToken));
         }
         catch (InvalidOperationException ex)
         {
@@ -830,14 +1021,19 @@ public sealed class CoachingAdminController : ControllerBase
     }
 
     [HttpDelete("goals/{id:guid}")]
-    [Authorize(Roles = "SystemAdmin")]
+    [Authorize(Roles = "SystemAdmin,InstitutionAdmin,InstitutionOwner")]
     [Authorize(Policy = "MfaRequired")]
     [HasPermission(PlatformPermissions.Coaching.Manage)]
     public async Task<IActionResult> DeleteGoal(Guid id, CancellationToken cancellationToken)
     {
         try
         {
-            await _mediator.Send(new DeleteGoalCommand(id), cancellationToken);
+            var scope = await _adminScopeAuthorization.RequireReadScopeAsync(cancellationToken);
+            if (await GetGoalInScopeAsync(id, scope, cancellationToken) is null) return NotFound();
+            await _mediator.Send(new DeleteGoalCommand(id)
+            {
+                IsInstitutionAdminOperation = !scope.IsGlobal
+            }, cancellationToken);
             return NoContent();
         }
         catch (InvalidOperationException ex)
@@ -930,6 +1126,86 @@ public sealed class CoachingAdminController : ControllerBase
                 ScopedStudentIds: scope.StudentIds),
             cancellationToken);
         return goal is null ? NotFound() : Ok(goal);
+    }
+
+    private async Task<AssignmentResponse?> GetAssignmentInScopeAsync(
+        Guid assignmentId,
+        CoachingAdminScope scope,
+        CancellationToken cancellationToken) =>
+        await _mediator.Send(
+            new GetAssignmentQuery(
+                assignmentId,
+                scope.InstitutionId,
+                AdministrativeScope: true,
+                ScopedStudentIds: scope.StudentIds),
+            cancellationToken);
+
+    private async Task<CoachingAdminSessionDetailDto?> GetSessionInScopeAsync(
+        Guid sessionId,
+        CoachingAdminScope scope,
+        CancellationToken cancellationToken) =>
+        await _mediator.Send(
+            new GetCoachingAdminSessionQuery(
+                sessionId,
+                scope.InstitutionId,
+                AdministrativeScope: true,
+                ScopedStudentIds: scope.StudentIds),
+            cancellationToken);
+
+    private async Task<CoachingAdminExamDetailDto?> GetExamInScopeAsync(
+        Guid examId,
+        CoachingAdminScope scope,
+        CancellationToken cancellationToken) =>
+        await _mediator.Send(
+            new GetCoachingAdminExamQuery(
+                examId,
+                scope.InstitutionId,
+                AdministrativeScope: true,
+                ScopedStudentIds: scope.StudentIds),
+            cancellationToken);
+
+    private async Task<CoachingAdminGoalDetailDto?> GetGoalInScopeAsync(
+        Guid goalId,
+        CoachingAdminScope scope,
+        CancellationToken cancellationToken) =>
+        await _mediator.Send(
+            new GetCoachingAdminGoalQuery(
+                goalId,
+                scope.InstitutionId,
+                AdministrativeScope: true,
+                ScopedStudentIds: scope.StudentIds),
+            cancellationToken);
+
+    private async Task<bool> AssignmentExistsInScopeAsync(
+        Guid assignmentId,
+        CoachingAdminScope scope,
+        CancellationToken cancellationToken) =>
+        await GetAssignmentInScopeAsync(assignmentId, scope, cancellationToken) is not null;
+
+    private async Task<bool> IsTeacherTargetScopeAuthorizedAsync(
+        CoachingAdminScope scope,
+        Guid teacherId,
+        IReadOnlyCollection<Guid> studentIds,
+        CancellationToken cancellationToken)
+    {
+        if (scope.IsGlobal)
+        {
+            return true;
+        }
+
+        if (scope.InstitutionId is not { } institutionId)
+        {
+            return false;
+        }
+
+        var authorizedInstitutionId = await _identityAuthorizationClient.AuthorizeTeacherTargetsAsync(
+            teacherId,
+            studentIds,
+            institutionId,
+            isSystemAdministrator: false,
+            cancellationToken);
+
+        return authorizedInstitutionId == institutionId;
     }
 }
 

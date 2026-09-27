@@ -83,6 +83,21 @@ import { getAdminErrorMessage } from '../../../../core/auth/admin-error-message'
                   </div>
                 </div>
 
+                <div class="pt-6 border-t border-gray-100 dark:border-gray-700">
+                  <h5 class="text-sm font-bold text-gray-900 dark:text-white mb-3 uppercase tracking-wider">Platform Erişimleri</h5>
+                  <div class="flex flex-wrap gap-2">
+                    @for (access of user()?.productAccesses; track access.product) {
+                      <span class="inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-xs font-semibold"
+                        [ngClass]="access.isActive ? 'border-green-200 bg-green-50 text-green-800 dark:border-green-800 dark:bg-green-900/20 dark:text-green-300' : 'border-gray-200 bg-gray-50 text-gray-600 dark:border-gray-700 dark:bg-gray-900/20 dark:text-gray-400'">
+                        {{ access.product === 'coaching' ? 'Koçluk' : access.product === 'speed-reading' ? 'Hızlı Okuma' : access.product }}
+                        <span>{{ access.isActive ? 'Aktif' : 'Pasif' }}</span>
+                      </span>
+                    } @empty {
+                      <span class="text-sm text-gray-500 dark:text-gray-400">Platform erişimi tanımlanmamış.</span>
+                    }
+                  </div>
+                </div>
+
                 @if (hasAccessPermission() && !isMfaVerified()) {
                 <div class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-200">
                   MFA doğrulaması gerekiyor. Bu oturumda erişim yönetimi işlemleri kullanılamaz.
@@ -143,10 +158,16 @@ import { getAdminErrorMessage } from '../../../../core/auth/admin-error-message'
                   <div>
                     <h5 class="text-sm font-bold text-gray-900 dark:text-white mb-3 uppercase tracking-wider">Roller</h5>
                     <div class="flex flex-wrap gap-2">
-                      @for (role of user()?.roles; track role) {
+                      @for (role of user()?.productRoles; track role.role + ':' + (role.product || 'global')) {
                         <span class="px-3 py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-lg text-xs font-bold border border-blue-100 dark:border-blue-800 shadow-sm">
-                          {{ role }}
+                          {{ role.role }} · {{ productLabel(role.product) }}
                         </span>
+                      } @empty {
+                        @for (role of user()?.roles; track role) {
+                          <span class="px-3 py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-lg text-xs font-bold border border-blue-100 dark:border-blue-800 shadow-sm">
+                            {{ role }}
+                          </span>
+                        }
                       }
                     </div>
                   </div>
@@ -363,6 +384,10 @@ export class UserDetailsModalComponent implements OnInit {
 
   canManageAccess(): boolean {
     return this.hasAccessPermission() && this.isMfaVerified();
+  }
+
+  productLabel(product: string | null | undefined): string {
+    return product === 'coaching' ? 'Koçluk' : product === 'speed-reading' ? 'Hızlı Okuma' : 'Genel';
   }
 
   closeModal() {

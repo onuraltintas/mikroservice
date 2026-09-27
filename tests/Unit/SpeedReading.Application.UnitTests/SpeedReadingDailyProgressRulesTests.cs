@@ -79,6 +79,30 @@ public sealed class SpeedReadingDailyProgressRulesTests
     }
 
     [Fact]
+    public void Unlocks_days_by_istanbul_calendar_without_unlocking_tomorrow_early()
+    {
+        var assigned = new DateTime(2026, 9, 22, 20, 30, 0, DateTimeKind.Utc);
+
+        SpeedReadingDailyProgressRules.GetCalendarAvailableDay(
+            assigned, new DateTime(2026, 9, 22, 20, 59, 0, DateTimeKind.Utc)).Should().Be(1);
+        SpeedReadingDailyProgressRules.GetCalendarAvailableDay(
+            assigned, new DateTime(2026, 9, 22, 21, 0, 0, DateTimeKind.Utc)).Should().Be(2);
+    }
+
+    [Fact]
+    public void Counts_only_fully_completed_scheduled_days_without_double_counting_replays()
+    {
+        var first = Guid.NewGuid();
+        var second = Guid.NewGuid();
+        var third = Guid.NewGuid();
+        var scheduled = new[] { (1, 1, first), (1, 1, second), (1, 2, third) };
+        var completed = new[] { (1, 1, first), (1, 1, first), (1, 2, third) };
+
+        SpeedReadingDailyProgressRules.CountCompletedScheduledDays(scheduled, completed, 7)
+            .Should().Be(1);
+    }
+
+    [Fact]
     public void Never_repeats_the_same_exercise_to_fill_a_daily_slot()
     {
         SpeedReadingDailyProgressRules.TakeUnique(["exercise-1", "exercise-2"], 4)

@@ -2,6 +2,7 @@ using EduPlatform.Shared.Kernel.Results;
 using Identity.Application.Commands.Login;
 using Identity.Application.Interfaces;
 using Identity.Domain.Entities;
+using Identity.Domain.Enums;
 using Microsoft.Extensions.Logging;
 
 namespace Identity.Application.Services;
@@ -30,10 +31,11 @@ public sealed class AuthenticationSessionIssuer : IAuthenticationSessionIssuer
         bool rememberMe,
         string ipAddress,
         DateTimeOffset? mfaVerifiedAt,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        PlatformProduct? product = null)
     {
-        var accessToken = await _tokens.GenerateAccessTokenAsync(user, mfaVerifiedAt);
-        var refreshToken = _tokens.GenerateRefreshToken(user.Id, ipAddress, rememberMe, mfaVerifiedAt);
+        var accessToken = await _tokens.GenerateAccessTokenAsync(user, mfaVerifiedAt, product);
+        var refreshToken = _tokens.GenerateRefreshToken(user.Id, ipAddress, rememberMe, mfaVerifiedAt, product);
         var persisted = await _identity.SaveRefreshTokenAsync(user.Id, refreshToken, cancellationToken);
         if (persisted.IsFailure)
         {

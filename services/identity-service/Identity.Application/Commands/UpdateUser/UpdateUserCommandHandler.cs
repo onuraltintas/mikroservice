@@ -54,7 +54,9 @@ public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, Resul
                 return Result.Failure(new Error("Institution.NotFound", "Aktif kurum bulunamadı."));
             }
 
-            var roles = user.Roles
+            var roles = (request.Product == Identity.Domain.Enums.PlatformProduct.Coaching
+                    ? user.GetRolesForProductScope(request.Product)
+                    : [])
                 .Where(userRole => userRole.Role is not null && !userRole.Role.IsDeleted)
                 .Select(userRole => userRole.Role.Name);
 

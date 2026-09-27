@@ -15,7 +15,7 @@ import {
   StudentProgressSummary
 } from '../../../core/services/coaching-portal.service';
 
-type ParentAssignmentFilter = 'all' | 'pending' | 'submitted' | 'overdue';
+type ParentAssignmentFilter = 'all' | 'pending' | 'submitted' | 'overdue' | 'cancelled';
 type ParentCollection = 'assignments' | 'goals' | 'sessions' | 'exams';
 
 @Component({
@@ -278,9 +278,10 @@ export class ParentChildrenComponent implements OnInit {
 
   visibleAssignments(): StudentAssignment[] {
     const filter = this.assignmentFilter();
+    if (filter === 'cancelled') return this.assignments().filter(assignment => assignment.assignmentStatus === 'Cancelled');
     if (filter === 'submitted') return this.assignments().filter(assignment => !!assignment.submittedAt);
-    if (filter === 'overdue') return this.assignments().filter(assignment => assignment.isOverdue && !assignment.submittedAt);
-    if (filter === 'pending') return this.assignments().filter(assignment => !assignment.submittedAt && !assignment.isOverdue);
+    if (filter === 'overdue') return this.assignments().filter(assignment => (!assignment.assignmentStatus || assignment.assignmentStatus === 'Active') && assignment.isOverdue && !assignment.submittedAt);
+    if (filter === 'pending') return this.assignments().filter(assignment => (!assignment.assignmentStatus || assignment.assignmentStatus === 'Active') && !assignment.submittedAt && !assignment.isOverdue);
     return this.assignments();
   }
 

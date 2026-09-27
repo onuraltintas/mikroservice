@@ -89,6 +89,9 @@
           <mat-checkbox formControlName="acceptKVKK" color="primary">
             <a routerLink="/legal/kvkk" target="_blank">KVKK Metni</a>'ni okudum.
           </mat-checkbox>
+          @if (consentHint) {
+          <p class="consent-hint" role="status">{{ consentHint }}</p>
+          }
         </div>
 
         @if (error) {

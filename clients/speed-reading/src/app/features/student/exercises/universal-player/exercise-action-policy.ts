@@ -23,6 +23,11 @@ export function shouldForwardExerciseAction(
 
   if (!normalizedAction) return false;
 
+  if (normalizedType === 'motion_path') {
+    return normalizedMode === 'fixation'
+      && (normalizedAction === 'fixation_present' || normalizedAction === 'fixation_answer');
+  }
+
   if (normalizedType === 'visualization') {
     return normalizedAction === 'answer_question';
   }

@@ -53,13 +53,16 @@ public sealed class GetTeacherExamDetailQueryHandler
 {
     private readonly IExamRepository _repository;
     private readonly ICoachingAccessPolicy _accessPolicy;
+    private readonly ICoachingIdentityAuthorizationClient _identityAuthorizationClient;
 
     public GetTeacherExamDetailQueryHandler(
         IExamRepository repository,
-        ICoachingAccessPolicy accessPolicy)
+        ICoachingAccessPolicy accessPolicy,
+        ICoachingIdentityAuthorizationClient identityAuthorizationClient)
     {
         _repository = repository;
         _accessPolicy = accessPolicy;
+        _identityAuthorizationClient = identityAuthorizationClient;
     }
 
     public async Task<TeacherExamDetailDto?> Handle(
@@ -71,11 +74,18 @@ public sealed class GetTeacherExamDetailQueryHandler
             return null;
 
         _accessPolicy.RequireTeacher(exam.CreatedByTeacherId);
+        var studentIds = await _repository.GetResultStudentIdsByExamIdAsync(query.ExamId, cancellationToken);
+        var authorizedStudentIds = await CoachingStudentReadAuthorization.GetAuthorizedStudentIdsAsync(
+            _accessPolicy,
+            _identityAuthorizationClient,
+            studentIds,
+            cancellationToken);
         var resultPage = await _repository.GetResultsByExamIdAsync(
             query.ExamId,
             query.PageNumber,
             query.PageSize,
-            cancellationToken);
+            cancellationToken,
+            authorizedStudentIds);
 
         return new TeacherExamDetailDto(
             exam.Id,

@@ -49,10 +49,31 @@ public sealed class CoachingEarlyWarningRepositoryTests
         session.AddStudent(studentId);
         session.RecordAttendance(studentId, attended: true);
 
-        var goal = AcademicGoal.Create(studentId, "Hedef", GoalCategory.ExamPreparation);
+        var goal = AcademicGoal.Create(
+            studentId,
+            "Hedef",
+            GoalCategory.ExamPreparation,
+            institutionId: institutionId);
         goal.UpdateProgress(40);
+        var previousInstitutionGoal = AcademicGoal.Create(
+            studentId,
+            "Önceki kurum hedefi",
+            GoalCategory.ExamPreparation,
+            institutionId: otherInstitutionId);
+        previousInstitutionGoal.UpdateProgress(100);
+        var unscopedGoal = AcademicGoal.Create(
+            studentId,
+            "Kurumsuz hedef",
+            GoalCategory.ExamPreparation);
+        unscopedGoal.UpdateProgress(0);
 
-        context.AddRange(assignment, otherAssignment, session, goal);
+        context.AddRange(
+            assignment,
+            otherAssignment,
+            session,
+            goal,
+            previousInstitutionGoal,
+            unscopedGoal);
         await context.SaveChangesAsync();
 
         var result = await new CoachingEarlyWarningRepository(context)

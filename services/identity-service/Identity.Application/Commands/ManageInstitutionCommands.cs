@@ -77,12 +77,28 @@ public sealed record SetInstitutionActiveCommand(Guid Id, bool IsActive) : IRequ
 public sealed record AssignInstitutionAdminCommand(
     Guid InstitutionId,
     Guid UserId,
-    InstitutionAdminRole Role) : IRequest<Result>;
+    InstitutionAdminRole Role,
+    PlatformProduct? Product = null) : IRequest<Result>;
+
+public sealed class AssignInstitutionAdminCommandValidator : AbstractValidator<AssignInstitutionAdminCommand>
+{
+    public AssignInstitutionAdminCommandValidator()
+    {
+        RuleFor(command => command.InstitutionId).NotEmpty();
+        RuleFor(command => command.UserId).NotEmpty();
+        RuleFor(command => command.Role).IsInEnum();
+        RuleFor(command => command.Product)
+            .NotNull()
+            .Must(product => product.HasValue && Enum.IsDefined(product.Value))
+            .WithMessage("Ürün kapsamı zorunludur ve geçerli olmalıdır.");
+    }
+}
 
 public sealed record SetInstitutionAdminActiveCommand(
     Guid InstitutionId,
     Guid UserId,
-    bool IsActive) : IRequest<Result>;
+    bool IsActive,
+    PlatformProduct? Product = null) : IRequest<Result>;
 
 public sealed class CreateInstitutionCommandHandler : IRequestHandler<CreateInstitutionCommand, Result<Guid>>
 {
@@ -355,6 +371,16 @@ public sealed class AssignInstitutionAdminCommandHandler : IRequestHandler<Assig
 
     public async Task<Result> Handle(AssignInstitutionAdminCommand request, CancellationToken cancellationToken)
     {
+        if (request.Product is not { } product || !Enum.IsDefined(product))
+        {
+            return Result.Failure(new Error("InstitutionAdmin.ProductRequired", "Kurum yöneticisi için ürün kapsamı zorunludur."));
+        }
+
+        if (!_authorization.IsSystemAdministrator && _authorization.CurrentProduct != product)
+        {
+            return Result.Failure(Error.Forbidden("Kurum yöneticisi yalnızca etkin ürün kapsamında atanabilir."));
+        }
+
         var access = await _authorization.EnsureInstitutionAccessAsync(request.InstitutionId, cancellationToken);
         if (access.IsFailure)
         {
@@ -385,8 +411,9 @@ public sealed class AssignInstitutionAdminCommandHandler : IRequestHandler<Assig
         }
 
         var canManageInstitution = user.Roles.Any(role =>
-            string.Equals(role.Role?.Name, Identity.Domain.Enums.UserRole.InstitutionAdmin.ToString(), StringComparison.OrdinalIgnoreCase)
-            || string.Equals(role.Role?.Name, Identity.Domain.Enums.UserRole.InstitutionOwner.ToString(), StringComparison.OrdinalIgnoreCase));
+            role.Product == product
+            && (string.Equals(role.Role?.Name, Identity.Domain.Enums.UserRole.InstitutionAdmin.ToString(), StringComparison.OrdinalIgnoreCase)
+                || string.Equals(role.Role?.Name, Identity.Domain.Enums.UserRole.InstitutionOwner.ToString(), StringComparison.OrdinalIgnoreCase)));
         if (!canManageInstitution)
         {
             return Result.Failure(new Error(
@@ -394,9 +421,17 @@ public sealed class AssignInstitutionAdminCommandHandler : IRequestHandler<Assig
                 "Kurum yöneticisi atanacak kullanıcı InstitutionAdmin veya InstitutionOwner rolüne sahip olmalıdır."));
         }
 
+        if (!user.HasProductAccess(product))
+        {
+            return Result.Failure(new Error(
+                "User.ProductAccessRequired",
+                "Kullanıcının seçilen ürüne erişimi bulunmuyor."));
+        }
+
         var existingAdmin = await _repository.GetAdminAsync(
             request.InstitutionId,
             request.UserId,
+            product,
             cancellationToken);
         if (existingAdmin?.IsActive == true)
         {
@@ -412,7 +447,7 @@ public sealed class AssignInstitutionAdminCommandHandler : IRequestHandler<Assig
         }
 
         await _repository.AddAdminAsync(
-            InstitutionAdmin.Create(request.UserId, request.InstitutionId, request.Role),
+            InstitutionAdmin.Create(request.UserId, request.InstitutionId, request.Role, product),
             cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
         return Result.Success();
@@ -443,6 +478,16 @@ public sealed class SetInstitutionAdminActiveCommandHandler
         SetInstitutionAdminActiveCommand request,
         CancellationToken cancellationToken)
     {
+        if (request.Product is not { } product || !Enum.IsDefined(product))
+        {
+            return Result.Failure(new Error("InstitutionAdmin.ProductRequired", "Kurum yöneticisi için ürün kapsamı zorunludur."));
+        }
+
+        if (!_authorization.IsSystemAdministrator && _authorization.CurrentProduct != product)
+        {
+            return Result.Failure(Error.Forbidden("Kurum yöneticisi yalnızca etkin ürün kapsamında değiştirilebilir."));
+        }
+
         var access = await _authorization.EnsureInstitutionAccessAsync(request.InstitutionId, cancellationToken);
         if (access.IsFailure)
         {
@@ -452,6 +497,7 @@ public sealed class SetInstitutionAdminActiveCommandHandler
         var admin = await _repository.GetAdminAsync(
             request.InstitutionId,
             request.UserId,
+            product,
             cancellationToken);
         if (admin is null)
         {
@@ -462,8 +508,9 @@ public sealed class SetInstitutionAdminActiveCommandHandler
         else
         {
             admin.Deactivate();
-            await _userRepository.RevokeActiveRefreshTokensAsync(
+            await _userRepository.RevokeActiveRefreshTokensForProductAsync(
                 request.UserId,
+                product,
                 "security-sensitive institution membership change",
                 cancellationToken);
         }

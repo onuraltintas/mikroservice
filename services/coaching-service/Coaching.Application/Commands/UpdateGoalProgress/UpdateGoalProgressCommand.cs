@@ -1,9 +1,14 @@
 using FluentValidation;
 using MediatR;
+using System.Text.Json.Serialization;
 
 namespace Coaching.Application.Commands.UpdateGoalProgress;
 
-public record UpdateGoalProgressCommand(Guid GoalId, int Progress) : IRequest;
+public record UpdateGoalProgressCommand(Guid GoalId, int Progress) : IRequest
+{
+    [JsonIgnore]
+    public bool IsInstitutionAdminOperation { get; init; }
+}
 
 public sealed class UpdateGoalProgressCommandValidator : AbstractValidator<UpdateGoalProgressCommand>
 {

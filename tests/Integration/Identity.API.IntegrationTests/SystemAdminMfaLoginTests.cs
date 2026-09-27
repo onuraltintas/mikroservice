@@ -9,16 +9,91 @@ using Identity.Application.Commands.RefreshToken;
 using Identity.Application.DTOs.Settings;
 using Identity.Application.Interfaces;
 using Identity.Domain.Entities;
+using PlatformProduct = Identity.Domain.Enums.PlatformProduct;
+using UserProductAccessSource = Identity.Domain.Enums.UserProductAccessSource;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Identity.API.IntegrationTests;
 
 public sealed class SystemAdminMfaLoginTests
 {
+    [Theory]
+    [InlineData(null)]
+    [InlineData(PlatformProduct.SpeedReading)]
+    public async Task PasswordLogin_WhenProductScopeIsMissingOrDifferent_ShouldRejectBeforeIssuingTokens(
+        PlatformProduct? requestedProduct)
+    {
+        var user = CreateUserWithRole("Student");
+        user.ConfirmEmail();
+        user.GrantProductAccess(
+            PlatformProduct.Coaching,
+            UserProductAccessSource.SelfRegistration,
+            grantedByUserId: null,
+            DateTimeOffset.UtcNow);
+        var tokenService = new RejectingTokenService();
+        var handler = new LoginCommandHandler(
+            new StubUserRepository(user),
+            new AcceptingPasswordHasher(),
+            tokenService,
+            new StubUnitOfWork(),
+            new RejectingIdentityService(allowRefreshToken: true),
+            new StubConfigurationService(),
+            new StubMfaService(user.Id),
+            NullLogger<LoginCommandHandler>.Instance);
+
+        var result = await handler.Handle(
+            new LoginCommand(user.Email, "correct-password", RememberMe: false, Product: requestedProduct),
+            CancellationToken.None);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("Auth.ProductAccessDenied");
+        tokenService.AccessTokenRequested.Should().BeFalse();
+        tokenService.RefreshTokenRequested.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task PasswordLogin_WithMatchingProductAccess_ShouldIssueProductScopedSession()
+    {
+        var user = CreateUserWithRole("Student");
+        user.ConfirmEmail();
+        user.GrantProductAccess(
+            PlatformProduct.Coaching,
+            UserProductAccessSource.SelfRegistration,
+            grantedByUserId: null,
+            DateTimeOffset.UtcNow);
+        var tokenService = new IssuingTokenService();
+        var handler = new LoginCommandHandler(
+            new StubUserRepository(user),
+            new AcceptingPasswordHasher(),
+            tokenService,
+            new StubUnitOfWork(),
+            new RejectingIdentityService(allowRefreshToken: true),
+            new StubConfigurationService(),
+            new StubMfaService(user.Id),
+            NullLogger<LoginCommandHandler>.Instance);
+
+        var result = await handler.Handle(
+            new LoginCommand(
+                user.Email,
+                "correct-password",
+                RememberMe: false,
+                Product: PlatformProduct.Coaching),
+            CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        tokenService.AccessTokenProduct.Should().Be(PlatformProduct.Coaching);
+        tokenService.RefreshTokenProduct.Should().Be(PlatformProduct.Coaching);
+    }
+
     [Fact]
     public async Task PasswordLogin_WhenInstitutionOwnerEmailIsNotConfirmed_ShouldRejectLogin()
     {
         var user = CreateUserWithRole("InstitutionOwner");
+        user.GrantProductAccess(
+            PlatformProduct.Coaching,
+            UserProductAccessSource.Admin,
+            grantedByUserId: null,
+            DateTimeOffset.UtcNow);
         var handler = new LoginCommandHandler(
             new StubUserRepository(user),
             new AcceptingPasswordHasher(),
@@ -30,7 +105,7 @@ public sealed class SystemAdminMfaLoginTests
             NullLogger<LoginCommandHandler>.Instance);
 
         var result = await handler.Handle(
-            new LoginCommand(user.Email, "correct-password", RememberMe: false),
+            new LoginCommand(user.Email, "correct-password", RememberMe: false, Product: PlatformProduct.Coaching),
             CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
@@ -126,7 +201,12 @@ public sealed class SystemAdminMfaLoginTests
     [InlineData("Editor")]
     public async Task PrivilegedAdminPasswordLogin_WhenMfaIsEnabled_ShouldReturnMfaChallenge(string roleName)
     {
-        var user = CreateUserWithRole(roleName);
+        var user = CreateUserWithRole(roleName, PlatformProduct.Coaching);
+        user.GrantProductAccess(
+            PlatformProduct.Coaching,
+            UserProductAccessSource.Admin,
+            grantedByUserId: null,
+            DateTimeOffset.UtcNow);
         user.ConfirmEmail();
         user.EnableMfa("protected-secret", ["recovery-hash"], DateTimeOffset.UtcNow);
         var tokenService = new RejectingTokenService();
@@ -142,7 +222,11 @@ public sealed class SystemAdminMfaLoginTests
             NullLogger<LoginCommandHandler>.Instance);
 
         var result = await handler.Handle(
-            new LoginCommand(user.Email, "correct-password", RememberMe: true),
+            new LoginCommand(
+                user.Email,
+                "correct-password",
+                RememberMe: true,
+                Product: PlatformProduct.Coaching),
             CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
@@ -245,6 +329,11 @@ public sealed class SystemAdminMfaLoginTests
     {
         var user = User.Create(Guid.NewGuid(), "student@example.com");
         user.AddLogin(UserLogin.Create(user.Id, "Google", "google-id", "Google"));
+        user.GrantProductAccess(
+            PlatformProduct.Coaching,
+            UserProductAccessSource.SelfRegistration,
+            grantedByUserId: null,
+            DateTimeOffset.UtcNow);
         var handler = new GoogleLoginCommandHandler(
             new StubGoogleAuthService(user.Email),
             new StubUserRepository(user),
@@ -257,12 +346,80 @@ public sealed class SystemAdminMfaLoginTests
             NullLogger<GoogleLoginCommandHandler>.Instance);
 
         var result = await handler.Handle(
-            new GoogleLoginCommand("google-token", "127.0.0.1"),
+            new GoogleLoginCommand("google-token", "127.0.0.1", PlatformProduct.Coaching),
             CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
         result.Value.RequiresMfa.Should().BeFalse();
         user.LastLoginAt.Should().NotBeNull();
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData(PlatformProduct.SpeedReading)]
+    public async Task GoogleLogin_WhenProductScopeIsMissingOrDifferent_ShouldRejectBeforeIssuingTokens(
+        PlatformProduct? requestedProduct)
+    {
+        var user = CreateUserWithRole("Student");
+        user.ConfirmEmail();
+        user.AddLogin(UserLogin.Create(user.Id, "Google", "google-id", "Google"));
+        user.GrantProductAccess(
+            PlatformProduct.Coaching,
+            UserProductAccessSource.SelfRegistration,
+            grantedByUserId: null,
+            DateTimeOffset.UtcNow);
+        var tokenService = new IssuingTokenService();
+        var handler = new GoogleLoginCommandHandler(
+            new StubGoogleAuthService(user.Email),
+            new StubUserRepository(user),
+            tokenService,
+            new StubUnitOfWork(),
+            new RejectingIdentityService(allowRefreshToken: true),
+            new RejectingStudentRepository(),
+            new StubConfigurationService(),
+            new StubMfaService(user.Id),
+            NullLogger<GoogleLoginCommandHandler>.Instance);
+
+        var result = await handler.Handle(
+            new GoogleLoginCommand("google-token", "127.0.0.1", requestedProduct),
+            CancellationToken.None);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("Auth.ProductAccessDenied");
+        tokenService.AccessTokenRequested.Should().BeFalse();
+        tokenService.RefreshTokenRequested.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task GoogleLogin_WithMatchingProductAccess_ShouldIssueProductScopedSession()
+    {
+        var user = CreateUserWithRole("Student");
+        user.ConfirmEmail();
+        user.AddLogin(UserLogin.Create(user.Id, "Google", "google-id", "Google"));
+        user.GrantProductAccess(
+            PlatformProduct.SpeedReading,
+            UserProductAccessSource.SelfRegistration,
+            grantedByUserId: null,
+            DateTimeOffset.UtcNow);
+        var tokenService = new IssuingTokenService();
+        var handler = new GoogleLoginCommandHandler(
+            new StubGoogleAuthService(user.Email),
+            new StubUserRepository(user),
+            tokenService,
+            new StubUnitOfWork(),
+            new RejectingIdentityService(allowRefreshToken: true),
+            new RejectingStudentRepository(),
+            new StubConfigurationService(),
+            new StubMfaService(user.Id),
+            NullLogger<GoogleLoginCommandHandler>.Instance);
+
+        var result = await handler.Handle(
+            new GoogleLoginCommand("google-token", "127.0.0.1", PlatformProduct.SpeedReading),
+            CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        tokenService.AccessTokenProduct.Should().Be(PlatformProduct.SpeedReading);
+        tokenService.RefreshTokenProduct.Should().Be(PlatformProduct.SpeedReading);
     }
 
     [Fact]
@@ -341,7 +498,7 @@ public sealed class SystemAdminMfaLoginTests
             NullLogger<GoogleLoginCommandHandler>.Instance);
 
         var result = await handler.Handle(
-            new GoogleLoginCommand("google-token", "127.0.0.1"),
+            new GoogleLoginCommand("google-token", "127.0.0.1", PlatformProduct.Coaching),
             CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
@@ -489,6 +646,74 @@ public sealed class SystemAdminMfaLoginTests
     }
 
     [Fact]
+    public async Task RefreshToken_ShouldKeepProductScopeOnRotatedSession()
+    {
+        var user = CreateUserWithRole("Student");
+        user.GrantProductAccess(
+            PlatformProduct.Coaching,
+            UserProductAccessSource.SelfRegistration,
+            grantedByUserId: null,
+            DateTimeOffset.UtcNow);
+        var refreshToken = RefreshToken.Create(
+            user.Id,
+            "coaching-refresh-token",
+            DateTime.UtcNow.AddDays(1),
+            "127.0.0.1",
+            product: PlatformProduct.Coaching);
+        user.AddRefreshToken(refreshToken);
+        var tokenService = new IssuingTokenService();
+        var handler = new RefreshTokenCommandHandler(
+            new StubUserRepository(user),
+            tokenService,
+            new StubConfigurationService(),
+            NullLogger<RefreshTokenCommandHandler>.Instance);
+
+        var result = await handler.Handle(
+            new RefreshTokenCommand(refreshToken.Token),
+            CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        tokenService.AccessTokenProduct.Should().Be(PlatformProduct.Coaching);
+        tokenService.RefreshTokenProduct.Should().Be(PlatformProduct.Coaching);
+        user.RefreshTokens.Should().ContainSingle(token =>
+            token.IsActive && token.Product == PlatformProduct.Coaching);
+    }
+
+    [Fact]
+    public async Task RefreshToken_WhenProductAccessWasRevoked_ShouldRevokeSession()
+    {
+        var user = CreateUserWithRole("Student");
+        var now = DateTimeOffset.UtcNow;
+        user.GrantProductAccess(
+            PlatformProduct.Coaching,
+            UserProductAccessSource.SelfRegistration,
+            grantedByUserId: null,
+            now);
+        var refreshToken = RefreshToken.Create(
+            user.Id,
+            "revoked-product-refresh-token",
+            DateTime.UtcNow.AddDays(1),
+            "127.0.0.1",
+            product: PlatformProduct.Coaching);
+        user.AddRefreshToken(refreshToken);
+        user.RevokeProductAccess(PlatformProduct.Coaching, now.AddMinutes(1));
+
+        var handler = new RefreshTokenCommandHandler(
+            new StubUserRepository(user),
+            new IssuingTokenService(),
+            new StubConfigurationService(),
+            NullLogger<RefreshTokenCommandHandler>.Instance);
+
+        var result = await handler.Handle(
+            new RefreshTokenCommand(refreshToken.Token),
+            CancellationToken.None);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("Auth.ProductAccessDenied");
+        refreshToken.IsRevoked.Should().BeTrue();
+    }
+
+    [Fact]
     public async Task RefreshToken_WhenConcurrentRotationOccurs_ShouldReturnInvalidTokenFailure()
     {
         var user = CreateSystemAdministrator();
@@ -525,11 +750,11 @@ public sealed class SystemAdminMfaLoginTests
         return user;
     }
 
-    private static User CreateUserWithRole(string roleName)
+    private static User CreateUserWithRole(string roleName, PlatformProduct? product = null)
     {
         var user = User.Create(Guid.NewGuid(), "institution-owner@example.com");
         var role = Role.Create(roleName, roleName);
-        var userRole = new UserRole(user.Id, role.Id);
+        var userRole = new UserRole(user.Id, role.Id, product);
         typeof(UserRole).GetProperty(nameof(UserRole.Role))!.SetValue(userRole, role);
         user.AddRole(userRole);
         return user;
@@ -579,6 +804,7 @@ public sealed class SystemAdminMfaLoginTests
         }
 
         public Task AddAsync(User value, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public void TrackProductAccessIfNew(User value, PlatformProduct product) => throw new NotSupportedException();
         public Task<User?> GetByIdAsync(Guid id, CancellationToken cancellationToken) => Task.FromResult<User?>(user);
         public Task<IReadOnlyList<SpeedReadingUserDirectoryItem>> GetSpeedReadingDirectoryAsync(
             IReadOnlyCollection<Guid> userIds,
@@ -587,8 +813,8 @@ public sealed class SystemAdminMfaLoginTests
             string? role,
             CancellationToken cancellationToken) => Task.FromResult<IReadOnlyList<Guid>>([]);
         public void Delete(User value) => throw new NotSupportedException();
-        public Task<Identity.Application.Queries.GetAllUsers.PagedList<Identity.Application.Queries.GetUserProfile.UserProfileDto>> GetAllAsync(int page, int pageSize, string? searchTerm, string? role, bool? isActive, Guid? institutionId, CancellationToken cancellationToken) => throw new NotSupportedException();
-        public Task<Identity.Application.Queries.GetAllUsers.UserSummaryDto> GetSummaryAsync(Guid? institutionId, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<Identity.Application.Queries.GetAllUsers.PagedList<Identity.Application.Queries.GetUserProfile.UserProfileDto>> GetAllAsync(int page, int pageSize, string? searchTerm, string? role, bool? isActive, Guid? institutionId, CancellationToken cancellationToken, PlatformProduct? product = null) => throw new NotSupportedException();
+        public Task<Identity.Application.Queries.GetAllUsers.UserSummaryDto> GetSummaryAsync(Guid? institutionId, CancellationToken cancellationToken, PlatformProduct? product = null) => throw new NotSupportedException();
         public Task<User?> GetByRefreshTokenAsync(string refreshToken, CancellationToken cancellationToken) =>
             Task.FromResult(_refreshResults.Count > 0 ? _refreshResults.Dequeue() : user);
         public Task<bool> RevokeRefreshTokenAsync(
@@ -621,6 +847,7 @@ public sealed class SystemAdminMfaLoginTests
             return Task.FromResult(true);
         }
         public Task RevokeActiveRefreshTokensAsync(Guid userId, string reason, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task RevokeActiveRefreshTokensForProductAsync(Guid userId, PlatformProduct product, string reason, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task RevokeActiveRefreshTokensForInstitutionAsync(Guid institutionId, string reason, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<List<User>> GetUsersByRolesAsync(List<string> roleNames, CancellationToken cancellationToken) => throw new NotSupportedException();
     }
@@ -637,12 +864,20 @@ public sealed class SystemAdminMfaLoginTests
         public bool AccessTokenRequested { get; private set; }
         public bool RefreshTokenRequested { get; private set; }
         public Task<int> GetAccessTokenLifetimeMinutesAsync() => Task.FromResult(15);
-        public Task<string> GenerateAccessTokenAsync(User user, DateTimeOffset? mfaVerifiedAt = null)
+        public Task<string> GenerateAccessTokenAsync(
+            User user,
+            DateTimeOffset? mfaVerifiedAt = null,
+            PlatformProduct? product = null)
         {
             AccessTokenRequested = true;
             throw new InvalidOperationException("Access token must not be issued before MFA.");
         }
-        public RefreshToken GenerateRefreshToken(Guid userId, string ipAddress, bool isPersistent = true, DateTimeOffset? mfaVerifiedAt = null)
+        public RefreshToken GenerateRefreshToken(
+            Guid userId,
+            string ipAddress,
+            bool isPersistent = true,
+            DateTimeOffset? mfaVerifiedAt = null,
+            PlatformProduct? product = null)
         {
             RefreshTokenRequested = true;
             throw new InvalidOperationException("Refresh token must not be issued before MFA.");
@@ -651,26 +886,45 @@ public sealed class SystemAdminMfaLoginTests
 
     private sealed class IssuingTokenService : ITokenService
     {
-        public Task<string> GenerateAccessTokenAsync(User user, DateTimeOffset? mfaVerifiedAt = null) => Task.FromResult("access-token");
+        public bool AccessTokenRequested { get; private set; }
+        public bool RefreshTokenRequested { get; private set; }
+        public PlatformProduct? AccessTokenProduct { get; private set; }
+        public PlatformProduct? RefreshTokenProduct { get; private set; }
+
+        public Task<string> GenerateAccessTokenAsync(
+            User user,
+            DateTimeOffset? mfaVerifiedAt = null,
+            PlatformProduct? product = null)
+        {
+            AccessTokenRequested = true;
+            AccessTokenProduct = product;
+            return Task.FromResult("access-token");
+        }
         public Task<int> GetAccessTokenLifetimeMinutesAsync() => Task.FromResult(15);
         public RefreshToken GenerateRefreshToken(
             Guid userId,
             string ipAddress,
             bool isPersistent = true,
-            DateTimeOffset? mfaVerifiedAt = null) =>
-            RefreshToken.Create(
+            DateTimeOffset? mfaVerifiedAt = null,
+            PlatformProduct? product = null)
+        {
+            RefreshTokenRequested = true;
+            RefreshTokenProduct = product;
+            return RefreshToken.Create(
                 userId,
                 "refresh-token",
                 DateTime.UtcNow.AddDays(1),
                 ipAddress,
                 isPersistent,
-                mfaVerifiedAt);
+                mfaVerifiedAt,
+                product);
+        }
     }
 
     private sealed class StubMfaService(Guid expectedUserId) : IMultiFactorService
     {
         public bool? RememberMe { get; private set; }
-        public string CreateChallenge(Guid userId, bool rememberMe)
+        public string CreateChallenge(Guid userId, bool rememberMe, PlatformProduct? product = null)
         {
             userId.Should().Be(expectedUserId);
             RememberMe = rememberMe;
@@ -760,10 +1014,12 @@ public sealed class SystemAdminMfaLoginTests
         public Task<Result> DeactivateUserAsync(Guid userId, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<Result> ActivateUserAsync(Guid userId, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<Result> AssignRoleAsync(Guid userId, string roleName, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<Result> AssignRoleForProductAsync(Guid userId, string roleName, PlatformProduct product, CancellationToken cancellationToken, Identity.Domain.Enums.UserProductAccessSource accessSource = Identity.Domain.Enums.UserProductAccessSource.Admin) => throw new NotSupportedException();
         public Task<Result<ProvisionedUser>> RegisterUserWithPasswordSetupAsync(string email, string firstName, string lastName, CancellationToken cancellationToken) => throw new NotSupportedException();
-        public Task<Result<ProvisionedUser>> RegisterUserWithRoleAsync(string email, string firstName, string lastName, string roleName, string? phoneNumber, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<Result<ProvisionedUser>> RegisterUserWithRoleAsync(string email, string firstName, string lastName, string roleName, PlatformProduct? product, string? phoneNumber, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<Result> ResetPasswordAsync(Guid userId, string newPassword, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<Result> RemoveRoleAsync(Guid userId, string roleName, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<Result> RemoveRoleForProductAsync(Guid userId, string roleName, PlatformProduct product, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<Result<IEnumerable<string>>> GetAvailableRolesAsync(CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<Result> RevokeRefreshTokenAsync(string token, string ipAddress, string reason, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<Result> UpdateUserAsync(Guid userId, string firstName, string lastName, CancellationToken cancellationToken) => throw new NotSupportedException();

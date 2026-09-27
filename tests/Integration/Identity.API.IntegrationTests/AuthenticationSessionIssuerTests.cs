@@ -77,7 +77,10 @@ public sealed class AuthenticationSessionIssuerTests
 
     private sealed class StubTokenService : ITokenService
     {
-        public Task<string> GenerateAccessTokenAsync(User user, DateTimeOffset? mfaVerifiedAt = null) => Task.FromResult("access-token");
+        public Task<string> GenerateAccessTokenAsync(
+            User user,
+            DateTimeOffset? mfaVerifiedAt = null,
+            Identity.Domain.Enums.PlatformProduct? product = null) => Task.FromResult("access-token");
 
         public Task<int> GetAccessTokenLifetimeMinutesAsync() => Task.FromResult(15);
 
@@ -85,14 +88,16 @@ public sealed class AuthenticationSessionIssuerTests
             Guid userId,
             string ipAddress,
             bool isPersistent = true,
-            DateTimeOffset? mfaVerifiedAt = null) =>
+            DateTimeOffset? mfaVerifiedAt = null,
+            Identity.Domain.Enums.PlatformProduct? product = null) =>
             RefreshToken.Create(
                 userId,
                 "refresh-token",
                 DateTime.UtcNow.AddDays(1),
                 ipAddress,
                 isPersistent,
-                mfaVerifiedAt);
+                mfaVerifiedAt,
+                product);
     }
 
     private sealed class PersistingIdentityService : IIdentityService
@@ -107,6 +112,7 @@ public sealed class AuthenticationSessionIssuerTests
         public Task<Result> DeactivateUserAsync(Guid userId, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<Result> ActivateUserAsync(Guid userId, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<Result> AssignRoleAsync(Guid userId, string roleName, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<Result> AssignRoleForProductAsync(Guid userId, string roleName, Identity.Domain.Enums.PlatformProduct product, CancellationToken cancellationToken, Identity.Domain.Enums.UserProductAccessSource accessSource = Identity.Domain.Enums.UserProductAccessSource.Admin) => throw new NotSupportedException();
 
         public Task<Result<ProvisionedUser>> RegisterUserWithPasswordSetupAsync(
             string email,
@@ -119,11 +125,13 @@ public sealed class AuthenticationSessionIssuerTests
             string firstName,
             string lastName,
             string roleName,
+            Identity.Domain.Enums.PlatformProduct? product,
             string? phoneNumber,
             CancellationToken cancellationToken) => throw new NotSupportedException();
 
         public Task<Result> ResetPasswordAsync(Guid userId, string newPassword, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<Result> RemoveRoleAsync(Guid userId, string roleName, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<Result> RemoveRoleForProductAsync(Guid userId, string roleName, Identity.Domain.Enums.PlatformProduct product, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<Result<IEnumerable<string>>> GetAvailableRolesAsync(CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<Result> RevokeRefreshTokenAsync(string token, string ipAddress, string reason, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<Result> UpdateUserAsync(Guid userId, string firstName, string lastName, CancellationToken cancellationToken) => throw new NotSupportedException();

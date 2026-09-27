@@ -100,7 +100,7 @@ export class GridInteractionEngine implements BaseEngine {
 
         // Use the server-owned layout when a session supplies one. This keeps
         // the visible board and the layout validated by the API identical.
-        const serverGrid = (this.config as any).Grid || (this.config as any).grid;
+        const serverGrid = (this.config as any).serverGrid || (this.config as any).Grid || (this.config as any).grid;
         const flattenedServerGrid = Array.isArray(serverGrid)
             ? serverGrid.flat().filter((value: unknown) => typeof value === 'number' || typeof value === 'string')
             : [];
@@ -222,10 +222,6 @@ export class GridInteractionEngine implements BaseEngine {
 
             this.callbacks.onStepComplete(this.currentTarget, true);
 
-            // Tamamlandı mı?
-            if (this.currentTarget >= this.sequence.length) {
-                this.complete();
-            }
         } else {
             this.state.errors++;
             this.callbacks.onStepComplete(this.currentTarget, false);
@@ -244,6 +240,10 @@ export class GridInteractionEngine implements BaseEngine {
         this.state.accuracy = this.totalClicks > 0
             ? Math.round((this.correctClicks / this.totalClicks) * 100)
             : 100;
+
+        if (isCorrect && this.currentTarget >= this.sequence.length) {
+            this.complete();
+        }
 
         this.callbacks.onStateChange({ ...this.state });
     }

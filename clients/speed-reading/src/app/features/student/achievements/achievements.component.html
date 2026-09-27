@@ -7,6 +7,11 @@
       <p>Başarımlar yükleniyor…</p>
     </div>
 
+  } @else if (loadFailed) {
+    <div class="ach-loading" role="alert">
+      <p>Başarımlar yüklenemedi. Bağlantınızı kontrol edip tekrar deneyin.</p>
+      <button type="button" (click)="loadAchievements()">Yeniden dene</button>
+    </div>
   } @else {
     <!-- Header -->
     <div class="ach-header">

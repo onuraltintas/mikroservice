@@ -5,6 +5,19 @@ import { AuthService } from '../../../core/services/auth.service';
 import { UsersService } from '../../../core/services/users.service';
 import { ToasterService } from '../../../core/services/toaster.service';
 import { UserDto, UpdateCurrentUserProfileRequest } from '../../../core/models/user.model';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../../environments/environment';
+import { catchError, forkJoin, of, switchMap } from 'rxjs';
+
+interface SpeedReadingProfileSettings {
+    ageGroupConfigurationId: string | null;
+    dateOfBirth: string | null;
+    learningStyle: string | null;
+    currentLevel: number;
+    targetWPM: number;
+    targetComprehension: number;
+    dailyGoalMinutes: number;
+}
 
 // Register Turkish locale data
 import localeTr from '@angular/common/locales/tr';
@@ -26,6 +39,16 @@ export class ProfileComponent implements OnInit {
     private authService = inject(AuthService);
     private usersService = inject(UsersService);
     private toaster = inject(ToasterService);
+    private http = inject(HttpClient);
+    private adaptiveSettings: SpeedReadingProfileSettings = {
+        ageGroupConfigurationId: null,
+        dateOfBirth: null,
+        learningStyle: null,
+        currentLevel: 1,
+        targetWPM: 150,
+        targetComprehension: 70,
+        dailyGoalMinutes: 30
+    };
 
     profileForm: FormGroup;
     loading = signal(true);
@@ -54,15 +77,28 @@ export class ProfileComponent implements OnInit {
             return;
         }
 
-        this.usersService.getMyProfile().subscribe({
-            next: (user) => {
+        forkJoin({
+            user: this.usersService.getMyProfile(),
+            settings: this.http.get<SpeedReadingProfileSettings>(
+                `${environment.apiUrl}/speed-reading/adaptive-learning/profile/settings`
+            ).pipe(catchError(() => of(this.adaptiveSettings)))
+        }).subscribe({
+            next: ({ user, settings }) => {
+                this.adaptiveSettings = settings;
+                const dateOfBirth = settings.dateOfBirth ? new Date(settings.dateOfBirth) : undefined;
+                user = {
+                    ...user,
+                    dateOfBirth,
+                    learningStyle: settings.learningStyle ?? undefined,
+                    ageGroupId: settings.ageGroupConfigurationId ?? undefined
+                };
                 this.currentUser.set(user);
                 this.profileForm.patchValue({
                     firstName: user.firstName,
                     lastName: user.lastName,
                     email: user.email,
                     phoneNumber: user.phoneNumber,
-                    dateOfBirth: user.dateOfBirth ? new Date(user.dateOfBirth).toISOString().substring(0, 10) : null
+                    dateOfBirth: dateOfBirth ? dateOfBirth.toISOString().substring(0, 10) : null
                 });
                 this.loading.set(false);
             },
@@ -86,19 +122,36 @@ export class ProfileComponent implements OnInit {
         const updateRequest: UpdateCurrentUserProfileRequest = {
             firstName: formValue.firstName,
             lastName: formValue.lastName,
-            phoneNumber: formValue.phoneNumber,
-            birthDate: formValue.dateOfBirth ? new Date(formValue.dateOfBirth).toISOString() : null
+            phoneNumber: formValue.phoneNumber
         };
+        const dateOfBirth = formValue.dateOfBirth
+            ? new Date(`${formValue.dateOfBirth}T00:00:00.000Z`).toISOString()
+            : null;
 
-        this.usersService.updateMyProfile(updateRequest).subscribe({
+        this.usersService.updateMyProfile(updateRequest).pipe(
+            switchMap(() => this.http.put<void>(
+                `${environment.apiUrl}/speed-reading/adaptive-learning/profile`,
+                {
+                    currentLevel: this.adaptiveSettings.currentLevel,
+                    targetWPM: this.adaptiveSettings.targetWPM,
+                    targetComprehension: this.adaptiveSettings.targetComprehension,
+                    dailyGoalMinutes: this.adaptiveSettings.dailyGoalMinutes,
+                    ageGroupConfigurationId: this.adaptiveSettings.ageGroupConfigurationId,
+                    dateOfBirth,
+                    learningStyle: this.adaptiveSettings.learningStyle
+                }
+            ))
+        ).subscribe({
             next: () => {
                 this.toaster.success('Profil başarıyla güncellendi');
                 this.saving.set(false);
+                this.adaptiveSettings.dateOfBirth = dateOfBirth;
                 // Update local auth state if needed
                 this.authService.updateUser({
                     firstName: formValue.firstName,
                     lastName: formValue.lastName,
-                    dateOfBirth: formValue.dateOfBirth
+                    dateOfBirth,
+                    hasCompletedProfile: !!this.adaptiveSettings.ageGroupConfigurationId
                 });
             },
             error: (err) => {

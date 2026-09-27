@@ -42,6 +42,7 @@ public sealed class UploadAssignmentAttachmentCommandHandler(
 
         var assignment = await repository.GetByIdAsync(command.AssignmentId, cancellationToken)
             ?? throw new InvalidOperationException($"Assignment {command.AssignmentId} not found.");
+        assignment.EnsureAcceptingStudentWork();
         var studentAssignment = assignment.AssignedStudents
             .FirstOrDefault(student => student.StudentId == command.StudentId)
             ?? throw new InvalidOperationException("Student is not assigned to this assignment.");

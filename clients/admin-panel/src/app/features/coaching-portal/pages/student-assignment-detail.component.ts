@@ -2,13 +2,14 @@ import { CommonModule } from '@angular/common';
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, forkJoin } from 'rxjs';
 import { AuthService, hasRole } from '../../../core/auth/auth.service';
 import {
   AssignmentAttachment,
   AssignmentDetail,
   AssignedStudent,
-  CoachingPortalService
+  CoachingPortalService,
+  TeacherStudent
 } from '../../../core/services/coaching-portal.service';
 
 @Component({
@@ -31,6 +32,7 @@ export class StudentAssignmentDetailComponent implements OnInit {
   readonly successMessage = signal<string | null>(null);
   readonly gradingStudentId = signal<string | null>(null);
   readonly gradeDrafts = signal<Record<string, { score: number | null; feedback: string }>>({});
+  readonly assignedStudentNames = signal<Record<string, string>>({});
   readonly studentNote = signal('');
   readonly studentId = computed(() => this.authService.userProfile()?.id ?? '');
   readonly isTeacher = computed(() => hasRole(this.authService.userProfile(), 'Teacher'));
@@ -48,11 +50,25 @@ export class StudentAssignmentDetailComponent implements OnInit {
   });
   readonly canSubmit = computed(() => {
     const status = this.studentRecord()?.status.toLowerCase();
-    return this.isStudent() && !!this.studentRecord() && status !== 'submitted' && status !== 'graded';
+    const assignmentStatus = this.assignment()?.status.toLowerCase();
+    return this.isStudent()
+      && !!this.studentRecord()
+      && assignmentStatus === 'active'
+      && status !== 'submitted'
+      && status !== 'graded';
   });
 
   hasBookReference(assignment: AssignmentDetail) {
     return assignment.source === 'Book' || assignment.source === 'Mixed';
+  }
+
+  assignmentStatusLabel(status: string) {
+    switch (status) {
+      case 'Active': return 'Aktif';
+      case 'Completed': return 'Tamamlandı';
+      case 'Cancelled': return 'İptal edildi';
+      default: return status;
+    }
   }
 
   ngOnInit() {
@@ -76,6 +92,7 @@ export class StudentAssignmentDetailComponent implements OnInit {
           score: student.score ?? null,
           feedback: student.teacherFeedback ?? ''
         }])));
+        if (this.isTeacher()) this.loadAssignedStudentNames(assignment.assignedStudents);
       },
       error: error => {
         this.errorMessage.set(error.status === 404 ? 'Ödev bulunamadı.' : 'Ödev detayı yüklenemedi.');
@@ -184,9 +201,23 @@ export class StudentAssignmentDetailComponent implements OnInit {
   }
 
   downloadAttachment(attachment: AssignmentAttachment) {
-    const assignmentId = this.assignment()?.id;
     const studentId = this.studentRecord()?.studentId;
-    if (!assignmentId || !studentId) return;
+    if (!studentId) return;
+    this.downloadAttachmentForStudent(studentId, attachment);
+  }
+
+  downloadTeacherAttachment(studentId: string, attachment: AssignmentAttachment) {
+    if (!this.isTeacher() || attachment.status !== 'Clean') return;
+    this.downloadAttachmentForStudent(studentId, attachment);
+  }
+
+  assignedStudentLabel(studentId: string) {
+    return this.assignedStudentNames()[studentId] ?? 'Öğrenci bilgisi yüklenemedi';
+  }
+
+  private downloadAttachmentForStudent(studentId: string, attachment: AssignmentAttachment) {
+    const assignmentId = this.assignment()?.id;
+    if (!assignmentId || attachment.status !== 'Clean') return;
 
     this.coachingService.downloadAttachment(assignmentId, studentId, attachment.id).subscribe({
       next: blob => {
@@ -199,5 +230,26 @@ export class StudentAssignmentDetailComponent implements OnInit {
       },
       error: () => this.errorMessage.set('Ek indirilemedi veya güvenlik taraması tamamlanmadı.')
     });
+  }
+
+  private loadAssignedStudentNames(students: readonly AssignedStudent[]) {
+    const studentIds = students.map(student => student.studentId);
+    if (studentIds.length === 0) return;
+
+    const batches: string[][] = [];
+    for (let index = 0; index < studentIds.length; index += 100) {
+      batches.push(studentIds.slice(index, index + 100));
+    }
+
+    forkJoin(batches.map(ids => this.coachingService.getTeacherStudents(1, ids.length, undefined, ids)))
+      .subscribe({
+        next: pages => {
+          const names = Object.fromEntries(pages.flatMap(page =>
+            page.items.map((student: TeacherStudent) => [student.userId, student.fullName] as const)
+          ));
+          this.assignedStudentNames.set(names);
+        },
+        error: () => this.assignedStudentNames.set({})
+      });
   }
 }

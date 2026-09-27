@@ -4,6 +4,7 @@ using Coaching.Domain.Enums;
 using EduPlatform.Shared.Contracts.Events.Coaching;
 using FluentValidation;
 using MediatR;
+using System.Text.Json.Serialization;
 
 namespace Coaching.Application.Commands.UpdateSession;
 
@@ -16,7 +17,11 @@ public record UpdateSessionCommand(
     string? MeetingLink,
     string? TeacherNotes,
     CoachingNoteVisibility TeacherNotesVisibility = CoachingNoteVisibility.CoachPrivate
-) : IRequest<UpdateSessionResponse>;
+) : IRequest<UpdateSessionResponse>
+{
+    [JsonIgnore]
+    public bool IsInstitutionAdminOperation { get; init; }
+}
 
 public record UpdateSessionResponse(Guid SessionId, DateTime ScheduledDate);
 
@@ -69,7 +74,7 @@ public sealed class UpdateSessionCommandHandler
         var session = await _repository.GetByIdAsync(command.SessionId, cancellationToken)
             ?? throw new InvalidOperationException($"Session {command.SessionId} not found");
 
-        _accessPolicy.RequireTeacher(session.TeacherId);
+        _accessPolicy.RequireTeacher(session.TeacherId, command.IsInstitutionAdminOperation);
         session.UpdateEditableDetails(
             command.Title,
             command.Description,

@@ -316,6 +316,16 @@ public sealed class LearningPathsController(
         return result is null ? NotFound() : Ok(result);
     }
 
+    [HttpGet("personalized/availability")]
+    public async Task<ActionResult<PersonalizedPathAvailability>> GetPersonalizedAvailability(
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryGetCurrentUserId(out var userId))
+            return Unauthorized();
+
+        return Ok(await paths.GetPersonalizedAvailabilityAsync(userId, cancellationToken));
+    }
+
     [HttpPost("personalized/generate")]
     public async Task<ActionResult<object>> GeneratePersonalizedPath(
         CancellationToken cancellationToken = default)
@@ -343,7 +353,7 @@ public sealed class LearningPathsController(
         await paths.CompletePersonalizedPathItemAsync(
             userId,
             pathItemId,
-            request?.AchievedScore,
+            request?.SessionId ?? Guid.Empty,
             cancellationToken);
         var progress = await paths.GetPersonalizedProgressAsync(userId, cancellationToken);
         return Ok(new

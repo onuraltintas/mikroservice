@@ -30,7 +30,7 @@ public class UpdateSessionAttendanceCommandHandler : IRequestHandler<UpdateSessi
         if (session == null)
             throw new InvalidOperationException($"Session {command.SessionId} not found");
 
-        _accessPolicy.RequireTeacher(session.TeacherId);
+        _accessPolicy.RequireTeacher(session.TeacherId, command.IsInstitutionAdminOperation);
 
         var attendance = command.StudentId.HasValue
             ? session.Attendances.FirstOrDefault(item => item.StudentId == command.StudentId.Value)

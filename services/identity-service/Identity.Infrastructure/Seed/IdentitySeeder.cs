@@ -1,5 +1,6 @@
 using Identity.Application.Interfaces;
 using Identity.Domain.Entities;
+using Identity.Domain.Enums;
 using Identity.Infrastructure.Persistence;
 using EduPlatform.Shared.Security.Authorization;
 using Microsoft.EntityFrameworkCore;
@@ -97,6 +98,7 @@ public static class IdentitySeeder
                 Identity.Domain.Constants.Permissions.Institutions.View,
                 Identity.Domain.Constants.Permissions.Institutions.Manage,
                 Identity.Domain.Constants.Permissions.Coaching.View,
+                Identity.Domain.Constants.Permissions.Coaching.Manage,
                 Identity.Domain.Constants.Permissions.SpeedReading.View,
                 Identity.Domain.Constants.Permissions.SpeedReading.ProgressView,
                 Identity.Domain.Constants.Permissions.SpeedReading.ReportView,
@@ -114,11 +116,10 @@ public static class IdentitySeeder
                 Identity.Domain.Constants.Permissions.SpeedReading.ReportView
             };
 
-            // Coaching admin read access is tenant-scoped by the Coaching API and
-            // Identity membership checks. Coaching.Manage remains SystemAdmin-only.
+            // Coaching admin access is tenant-scoped by the Coaching API and
+            // Identity membership checks. System-wide operations remain SystemAdmin-only.
             var institutionRolePermissionsToRemove = new HashSet<string>(StringComparer.Ordinal)
             {
-                Identity.Domain.Constants.Permissions.Coaching.Manage,
                 Identity.Domain.Constants.Permissions.Users.Create,
                 Identity.Domain.Constants.Permissions.Users.Edit,
                 Identity.Domain.Constants.Permissions.Users.Delete,
@@ -348,7 +349,21 @@ public static class IdentitySeeder
                     var roleEntity = dbRoles.FirstOrDefault(r => r.Name == userData.RoleName);
                     if (roleEntity == null) throw new Exception($"Role {userData.RoleName} not found in DB.");
 
-                    newUser.AddRole(new UserRole(newUser.Id, roleEntity.Id));
+                    PlatformProduct? product = string.Equals(
+                        userData.RoleName,
+                        Identity.Domain.Enums.UserRole.SystemAdmin.ToString(),
+                        StringComparison.OrdinalIgnoreCase)
+                            ? null
+                            : PlatformProduct.Coaching;
+                    newUser.AddRole(new Identity.Domain.Entities.UserRole(newUser.Id, roleEntity.Id, product));
+                    if (product is { } seededProduct)
+                    {
+                        newUser.GrantProductAccess(
+                            seededProduct,
+                            UserProductAccessSource.Migration,
+                            grantedByUserId: null,
+                            DateTimeOffset.UtcNow);
+                    }
 
                     // If Institution Owner, create Institution
                     if (userData.RoleName == Identity.Domain.Enums.UserRole.InstitutionOwner.ToString())
@@ -364,7 +379,8 @@ public static class IdentitySeeder
                          var adminRel = InstitutionAdmin.Create(
                              newUser.Id,
                              institution.Id,
-                             Identity.Domain.Enums.InstitutionAdminRole.Admin
+                             Identity.Domain.Enums.InstitutionAdminRole.Admin,
+                             PlatformProduct.Coaching
                          );
                          await instRepo.AddAdminAsync(adminRel, CancellationToken.None);
                     }
@@ -534,7 +550,7 @@ public static class IdentitySeeder
         user.ConfirmEmail();
         passwordHasher.CreatePasswordHash(password, out var passwordHash, out var passwordSalt);
         user.SetPassword(passwordHash, passwordSalt);
-        user.AddRole(new UserRole(user.Id, systemAdminRole.Id));
+        user.AddRole(new Identity.Domain.Entities.UserRole(user.Id, systemAdminRole.Id));
 
         await userRepository.AddAsync(user, CancellationToken.None);
         await unitOfWork.SaveChangesAsync(CancellationToken.None);

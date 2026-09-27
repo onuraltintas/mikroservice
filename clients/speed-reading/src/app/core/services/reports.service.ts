@@ -124,6 +124,16 @@ export class ReportsService {
       .pipe(map(value => this.toTeacherClassOverviewReport(value)));
   }
 
+  getInstitutionClassOverviewReport(institutionId: string, startDate: Date, endDate: Date): Observable<TeacherClassOverviewReport> {
+    const params = new HttpParams()
+      .set('dateFrom', this.normalizeAnalyticsStart(startDate, endDate).toISOString())
+      .set('dateTo', endDate.toISOString());
+    return this.http.get<TeacherClassOverviewAnalytics>(
+      `${this.speedReadingApiUrl}/institutions/${institutionId}/class-overview`,
+      { params })
+      .pipe(map(value => this.toTeacherClassOverviewReport(value)));
+  }
+
   getTeacherStudentDetailReport(teacherId: string, studentId: string, startDate: Date, endDate: Date): Observable<TeacherStudentDetailReport> {
     let params = new HttpParams()
       .set('dateFrom', this.normalizeAnalyticsStart(startDate, endDate).toISOString())
@@ -133,6 +143,28 @@ export class ReportsService {
     }
 
     const baseUrl = `${this.speedReadingApiUrl}/teacher/students/${studentId}`;
+    return this.loadTeacherStudentDetailReport(baseUrl, studentId, params, 'Teacher');
+  }
+
+  getInstitutionStudentDetailReport(
+    institutionId: string,
+    studentId: string,
+    startDate: Date,
+    endDate: Date
+  ): Observable<TeacherStudentDetailReport> {
+    const params = new HttpParams()
+      .set('dateFrom', this.normalizeAnalyticsStart(startDate, endDate).toISOString())
+      .set('dateTo', endDate.toISOString());
+    const baseUrl = `${this.speedReadingApiUrl}/institutions/${institutionId}/students/${studentId}`;
+    return this.loadTeacherStudentDetailReport(baseUrl, studentId, params, 'Institution');
+  }
+
+  private loadTeacherStudentDetailReport(
+    baseUrl: string,
+    studentId: string,
+    params: HttpParams,
+    generatedFor: string
+  ): Observable<TeacherStudentDetailReport> {
     return forkJoin({
       dashboard: this.http.get<StudentAnalyticsSummary>(`${baseUrl}/summary`, { params }),
       readingSpeed: this.http.get<StudentReadingSpeedAnalytics>(`${baseUrl}/reading-speed`, { params }),
@@ -147,7 +179,7 @@ export class ReportsService {
       const activity = this.toStudentActivityReport(value.activity);
 
       return {
-        metadata: this.toReportMetadata('teacher-student-detail', value.dashboard.dateFrom, value.dashboard.dateTo, 'Teacher'),
+        metadata: this.toReportMetadata('teacher-student-detail', value.dashboard.dateFrom, value.dashboard.dateTo, generatedFor),
         studentInfo: {
           studentId,
           studentName: '',
@@ -172,14 +204,40 @@ export class ReportsService {
   }
 
   getTeacherAssignmentReport(teacherId: string, startDate: Date, endDate: Date): Observable<TeacherAssignmentReport> {
+    void teacherId;
+    return this.loadTeacherAssignmentReport(
+      `${this.speedReadingApiUrl}/teacher/assignments`, startDate, endDate, 'Teacher');
+  }
+
+  getAdminTeacherAssignmentReport(
+    teacherId: string,
+    startDate: Date,
+    endDate: Date
+  ): Observable<TeacherAssignmentReport> {
+    return this.loadTeacherAssignmentReport(
+      `${this.speedReadingApiUrl}/admin/teachers/${teacherId}/assignments`, startDate, endDate, 'AdminTeacher');
+  }
+
+  getInstitutionAssignmentReport(
+    institutionId: string,
+    startDate: Date,
+    endDate: Date
+  ): Observable<TeacherAssignmentReport> {
+    return this.loadTeacherAssignmentReport(
+      `${this.speedReadingApiUrl}/institutions/${institutionId}/assignments`, startDate, endDate, 'Institution');
+  }
+
+  private loadTeacherAssignmentReport(
+    url: string,
+    startDate: Date,
+    endDate: Date,
+    generatedFor: string
+  ): Observable<TeacherAssignmentReport> {
     const params = new HttpParams()
       .set('dateFrom', this.normalizeAnalyticsStart(startDate, endDate).toISOString())
       .set('dateTo', endDate.toISOString());
-    void teacherId;
-    return this.http.get<TeacherAssignmentAnalytics>(
-      `${this.speedReadingApiUrl}/teacher/assignments`,
-      { params })
-      .pipe(map(value => this.toTeacherAssignmentReport(value)));
+    return this.http.get<TeacherAssignmentAnalytics>(url, { params })
+      .pipe(map(value => this.toTeacherAssignmentReport(value, generatedFor)));
   }
 
   getTeacherContentAnalysisReport(teacherId: string, startDate: Date, endDate: Date): Observable<TeacherContentAnalysisReport> {
@@ -525,22 +583,23 @@ export class ReportsService {
     };
   }
 
-  private toTeacherAssignmentReport(value: TeacherAssignmentAnalytics): TeacherAssignmentReport {
+  private toTeacherAssignmentReport(value: TeacherAssignmentAnalytics, generatedFor: string): TeacherAssignmentReport {
     const assignment = value.assignmentInfo;
     const completion = value.completionStats;
     const performance = value.performanceStats;
     const time = value.timeStats;
     return {
-      metadata: this.toReportMetadata('teacher-assignments', value.dateFrom, value.dateTo, 'Teacher'),
+      metadata: this.toReportMetadata('teacher-assignments', value.dateFrom, value.dateTo, generatedFor),
       dataAvailable: value.dataAvailable,
       unavailableReason: value.unavailableReason ?? undefined,
+      assignmentCount: value.assignmentCount ?? 0,
       assignmentInfo: assignment ? {
         assignmentId: assignment.assignmentId,
         title: assignment.title,
         description: assignment.description,
         dueDate: new Date(assignment.dueDate),
         assignedDate: new Date(assignment.assignedDate)
-      } : { assignmentId: '', title: '', description: '', dueDate: new Date(0), assignedDate: new Date(0) },
+      } : null,
       completionStats: completion ?? {
         totalStudents: 0, completed: 0, inProgress: 0, notStarted: 0, completionRate: 0
       },
@@ -556,9 +615,7 @@ export class ReportsService {
         completionTime: item.completionTime ?? undefined,
         submittedAt: item.submittedAt ? new Date(item.submittedAt) : undefined
       })),
-      timeStats: time ?? {
-        averageCompletionTime: 0, medianCompletionTime: 0, fastestCompletion: 0, slowestCompletion: 0
-      }
+      timeStats: time ?? null
     };
   }
 
@@ -975,6 +1032,7 @@ interface TeacherAssignmentAnalytics {
   dateTo: string;
   dataAvailable?: boolean;
   unavailableReason?: string | null;
+  assignmentCount?: number;
   assignmentInfo: TeacherAssignmentInfoAnalytics | null;
   completionStats: TeacherAssignmentCompletionAnalytics | null;
   performanceStats: TeacherAssignmentPerformanceAnalytics | null;

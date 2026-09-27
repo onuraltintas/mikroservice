@@ -76,7 +76,7 @@ export class ParentRegisterComponent implements OnInit {
             phoneNumber: formData.phoneNumber
         };
 
-        this.http.post(`${environment.apiUrl}/auth/register-parent`, payload).subscribe({
+        this.http.post(`${environment.apiUrl}/auth/coaching/register/parent`, payload).subscribe({
             next: () => {
                 this.toaster.success('Kayıt işleminiz başarıyla tamamlandı. E-posta adresinizi doğrulamak için size gönderdiğimiz onay linkine tıklayın.', 'Doğrulama Gerekli');
                 this.router.navigate(['/auth/login'], { queryParams: { registered: 'true', role: 'parent' } });

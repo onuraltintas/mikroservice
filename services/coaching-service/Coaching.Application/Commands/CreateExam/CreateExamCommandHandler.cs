@@ -39,7 +39,7 @@ public class CreateExamCommandHandler : IRequestHandler<CreateExamCommand, Creat
 
     public async Task<CreateExamResponse> Handle(CreateExamCommand command, CancellationToken cancellationToken)
     {
-        _accessPolicy.RequireTeacher(command.TeacherId);
+        _accessPolicy.RequireTeacher(command.TeacherId, command.IsInstitutionAdminOperation);
 
         var key = command.IdempotencyKey?.Trim();
         EnsureKey(key);

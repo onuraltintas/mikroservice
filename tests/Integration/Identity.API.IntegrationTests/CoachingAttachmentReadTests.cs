@@ -85,7 +85,7 @@ public sealed class CoachingAttachmentReadTests
     {
         public Task<Assignment?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
             Task.FromResult<Assignment?>(id == assignment.Id ? assignment : null);
-        public Task<PagedRepositoryResult<Assignment>> GetByTeacherIdAsync(Guid id, int pageNumber, int pageSize, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public Task<PagedRepositoryResult<Assignment>> GetByTeacherIdAsync(Guid id, int pageNumber, int pageSize, CancellationToken cancellationToken = default, AssignmentStatus? status = null) => throw new NotSupportedException();
         public Task<PagedRepositoryResult<Assignment>> GetByStudentIdAsync(Guid id, int pageNumber, int pageSize, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task<Assignment> AddAsync(Assignment value, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task UpdateAsync(Assignment value, CancellationToken cancellationToken = default) => throw new NotSupportedException();

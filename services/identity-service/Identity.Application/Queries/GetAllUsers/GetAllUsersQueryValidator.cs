@@ -19,5 +19,9 @@ public sealed class GetAllUsersQueryValidator : AbstractValidator<GetAllUsersQue
         RuleFor(x => x.Role)
             .MaximumLength(50)
             .When(x => x.Role is not null);
+
+        RuleFor(x => x.Product)
+            .Must(product => product is null || Enum.IsDefined(product.Value))
+            .WithMessage("Geçersiz platform.");
     }
 }

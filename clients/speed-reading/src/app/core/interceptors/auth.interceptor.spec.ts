@@ -46,14 +46,20 @@ describe('authInterceptor', () => {
     request.flush({});
   });
 
-  it('does not attach a stale access token to anonymous login requests', () => {
-    client.post('/api/auth/login', { email: 'user@example.com', password: 'secret' }).subscribe();
+  for (const path of [
+    '/api/auth/login',
+    '/api/auth/coaching/login',
+    '/api/auth/speed-reading/login'
+  ]) {
+    it(`does not attach a stale access token to anonymous login requests (${path})`, () => {
+      client.post(path, { email: 'user@example.com', password: 'secret' }).subscribe();
 
-    const request = http.expectOne('/api/auth/login');
+      const request = http.expectOne(path);
 
-    expect(request.request.headers.has('Authorization')).toBeFalse();
-    request.flush({});
-  });
+      expect(request.request.headers.has('Authorization')).toBeFalse();
+      request.flush({});
+    });
+  }
 
   it('does not start a recursive refresh for a profile hydration request', () => {
     let receivedError: unknown;

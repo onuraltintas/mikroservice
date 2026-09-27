@@ -197,6 +197,25 @@ describe('TeacherReportService', () => {
     expect(report.metadata.reportType).toBe('Teacher');
   });
 
+  it('loads institution content analysis through the institution-scoped endpoint', () => {
+    let report: any;
+    const institutionId = 'institution-1';
+    const startDate = new Date('2026-01-01T00:00:00.000Z');
+    const endDate = new Date('2026-01-31T00:00:00.000Z');
+    service.getInstitutionContentAnalysisReport(institutionId, startDate, endDate)
+      .subscribe(value => report = value);
+
+    const request = http.expectOne(
+      candidate => candidate.url === `/api/speed-reading/analytics/institutions/${institutionId}/content-analysis`);
+    expect(request.request.params.get('dateFrom')).toBe(startDate.toISOString());
+    request.flush({
+      dateFrom: startDate.toISOString(), dateTo: endDate.toISOString(),
+      exerciseAnalysis: [], exerciseFrequencyChart: [], readingAnalysis: [], readingPerformanceChart: []
+    });
+
+    expect(report.exerciseAnalysis).toEqual([]);
+  });
+
   it('loads teacher time progress from the central service', () => {
     let report: any;
     const startDate = new Date('2026-01-01T00:00:00.000Z');
@@ -228,6 +247,26 @@ describe('TeacherReportService', () => {
     expect(report.weeklyProgressChart).toEqual([]);
     expect(report.improvingStudents[0].metric).toBe('comprehension');
     expect(report.metadata.reportType).toBe('Teacher');
+  });
+
+  it('loads institution time progress through the institution-scoped endpoint', () => {
+    let report: any;
+    const institutionId = 'institution-1';
+    const startDate = new Date('2026-01-01T00:00:00.000Z');
+    const endDate = new Date('2026-01-31T00:00:00.000Z');
+    service.getInstitutionTimeBasedProgressReport(institutionId, startDate, endDate)
+      .subscribe(value => report = value);
+
+    const request = http.expectOne(
+      candidate => candidate.url === `/api/speed-reading/analytics/institutions/${institutionId}/time-progress`);
+    expect(request.request.params.get('dateTo')).toBe(endDate.toISOString());
+    request.flush({
+      dateFrom: startDate.toISOString(), dateTo: endDate.toISOString(),
+      weeklyProgressChart: [], monthlyProgressChart: [], activityIntensityChart: [],
+      improvingStudents: [], decliningStudents: []
+    });
+
+    expect(report.improvingStudents).toEqual([]);
   });
 
   it('maps real activity details instead of synthesizing chart points', () => {

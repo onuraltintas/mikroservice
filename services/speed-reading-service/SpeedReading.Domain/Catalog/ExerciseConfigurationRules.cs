@@ -52,6 +52,13 @@ public static class ExerciseConfigurationRules
     public static IReadOnlyList<string> GetSupportedEngineTypes() =>
         SupportedEngines.Order(StringComparer.Ordinal).ToList();
 
+    public static bool ShouldIncludeComprehensionQuestions(
+        string exerciseTypeName, string engineType, string? textStreamMode) =>
+        !string.Equals(exerciseTypeName, "Tachistoscope", StringComparison.OrdinalIgnoreCase)
+        && (!string.Equals(engineType, "text_stream", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(exerciseTypeName, "RSVP", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(textStreamMode, "rsvp", StringComparison.OrdinalIgnoreCase));
+
     public static string NormalizeEngineType(string engineType)
     {
         if (string.IsNullOrWhiteSpace(engineType))

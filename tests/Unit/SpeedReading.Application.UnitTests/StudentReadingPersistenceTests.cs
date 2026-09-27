@@ -20,6 +20,52 @@ namespace SpeedReading.Application.UnitTests;
 
 public sealed class StudentReadingPersistenceTests
 {
+    [Theory]
+    [InlineData("word")]
+    [InlineData("position")]
+    [InlineData("dual")]
+    public async Task N_back_without_configured_sequences_starts_with_server_owned_stimuli(string mode)
+    {
+        await using var context = CreateContext();
+        var studentId = Guid.NewGuid();
+        var typeId = Guid.NewGuid();
+        var exerciseId = Guid.NewGuid();
+        context.ExerciseTypes.Add(ExerciseType.Create(typeId, "Focus", "N-Back", "focus"));
+        context.Exercises.Add(Exercise.Create(
+            "N-Back", "focus",
+            JsonSerializer.Serialize(new { engineType = "focus", engineConfig = new { mode, nLevel = 2, gridSize = 3 } }),
+            3, studentId, typeId, id: exerciseId));
+        await context.SaveChangesAsync();
+
+        var service = CreateExerciseSessionService(context);
+        var started = await service.StartAsync(
+            studentId, new StartExerciseSessionRequest { ExerciseId = exerciseId }, CancellationToken.None);
+
+        started.TotalSteps.Should().BeGreaterThan(2);
+        var data = started.InitialData;
+        data.GetProperty("wordSequence").GetArrayLength()
+            .Should().Be(mode is "word" or "dual" ? started.TotalSteps : 0);
+        data.GetProperty("positionSequence").GetArrayLength()
+            .Should().Be(mode is "position" or "dual" ? started.TotalSteps : 0);
+        if (mode is "word" or "dual")
+        {
+            var words = data.GetProperty("wordSequence").EnumerateArray()
+                .Select(item => item.GetString()).ToArray();
+            words.Should().OnlyContain(word => !string.IsNullOrWhiteSpace(word));
+            words[2].Should().Be(words[0]);
+        }
+        if (mode is "position" or "dual")
+        {
+            var positions = data.GetProperty("positionSequence").EnumerateArray()
+                .Select(item => item.GetInt32()).ToArray();
+            positions.Should().OnlyContain(position => position >= 1 && position <= 9);
+            positions[2].Should().Be(positions[0]);
+        }
+        var startedAction = await service.ValidateActionAsync(
+            studentId, started.SessionId, new ExerciseActionRequest { Action = "focus_start" }, CancellationToken.None);
+        startedAction.IsValid.Should().BeTrue();
+    }
+
     [Fact]
     public async Task Vocabulary_quiz_uses_server_owned_direction_and_word_count()
     {
@@ -288,6 +334,38 @@ public sealed class StudentReadingPersistenceTests
     }
 
     [Fact]
+    public async Task Schulte_6x6_session_uses_grid_rows_and_validates_the_visible_layout()
+    {
+        await using var context = CreateContext();
+        var studentId = Guid.NewGuid();
+        var typeId = Guid.NewGuid();
+        var exerciseId = Guid.NewGuid();
+        context.ExerciseTypes.Add(ExerciseType.Create(typeId, "Schulte", "Grid", "grid_interaction"));
+        context.Exercises.Add(Exercise.Create(
+            "Büyük Tablo 6×6",
+            "grid_interaction",
+            """{"engineType":"grid_interaction","engineConfig":{"grid":{"rows":6,"cols":6},"content":{"range":[1,36]}}}""",
+            3, studentId, typeId, id: exerciseId));
+        await context.SaveChangesAsync();
+
+        var service = CreateExerciseSessionService(context);
+        var started = await service.StartAsync(studentId,
+            new StartExerciseSessionRequest { ExerciseId = exerciseId }, CancellationToken.None);
+
+        started.TotalSteps.Should().Be(36);
+        started.InitialData.GetProperty("gridSize").GetInt32().Should().Be(6);
+        var grid = started.InitialData.GetProperty("grid");
+        grid.GetArrayLength().Should().Be(6);
+        var firstIndex = grid.EnumerateArray().SelectMany(row => row.EnumerateArray())
+            .Select((cell, index) => (cell, index)).Single(item => item.cell.GetInt32() == 1).index;
+        var action = await service.ValidateActionAsync(studentId, started.SessionId,
+            new ExerciseActionRequest { Action = "grid_click", Number = 1, Index = firstIndex },
+            CancellationToken.None);
+        action.IsValid.Should().BeTrue();
+        action.NextStep.Should().Be(1);
+    }
+
+    [Fact]
     public async Task Focus_session_uses_nested_then_root_configuration_fallbacks()
     {
         await using var context = CreateContext();
@@ -407,6 +485,57 @@ public sealed class StudentReadingPersistenceTests
             new ExerciseActionRequest { Action = "visual_expansion_present" },
             CancellationToken.None);
         presented.IsValid.Should().BeTrue(presented.Message);
+    }
+
+    [Fact]
+    public async Task Fixation_answers_are_validated_and_saved_as_measured_results()
+    {
+        await using var context = CreateContext();
+        var studentId = Guid.NewGuid();
+        var typeId = Guid.NewGuid();
+        var exerciseId = Guid.NewGuid();
+        context.ExerciseTypes.Add(ExerciseType.Create(typeId, "Göz Sabitleme", "Harf takibi", "motion_path"));
+        context.Exercises.Add(Exercise.Create(
+            "Göz Sabitleme", "motion_path",
+            """{"engineType":"motion_path","mode":"fixation","content":{"points":2,"peripheralCount":2},"timing":{"holdMs":50}}""",
+            1, studentId, typeId, id: exerciseId));
+        await context.SaveChangesAsync();
+
+        var service = CreateExerciseSessionService(context);
+        var started = await service.StartAsync(studentId,
+            new StartExerciseSessionRequest { ExerciseId = exerciseId }, CancellationToken.None);
+        var first = await service.ValidateActionAsync(studentId, started.SessionId,
+            new ExerciseActionRequest { Action = "fixation_present" }, CancellationToken.None);
+        first.IsValid.Should().BeTrue(first.Message);
+        var stimuli = first.FeedbackData!.Value.GetProperty("stimuli")
+            .EnumerateArray().Select(item => item.GetString()!).ToList();
+        var retry = await service.ValidateActionAsync(studentId, started.SessionId,
+            new ExerciseActionRequest { Action = "fixation_present" }, CancellationToken.None);
+        retry.FeedbackData!.Value.GetProperty("stimuli").EnumerateArray()
+            .Select(item => item.GetString()!).Should().Equal(stimuli);
+        var prematureCompletion = () => service.CompleteAsync(studentId, started.SessionId,
+            new CompleteExerciseSessionRequest(), CancellationToken.None);
+        await prematureCompletion.Should().ThrowAsync<Exception>();
+        var wrong = await service.ValidateActionAsync(studentId, started.SessionId,
+            new ExerciseActionRequest { Action = "fixation_answer", Answers = ["X", "X"] }, CancellationToken.None);
+        wrong.IsValid.Should().BeTrue(wrong.Message);
+        wrong.IsCorrect.Should().BeFalse();
+        var duplicate = await service.ValidateActionAsync(studentId, started.SessionId,
+            new ExerciseActionRequest { Action = "fixation_answer", Answers = stimuli }, CancellationToken.None);
+        duplicate.IsValid.Should().BeFalse();
+
+        var second = await service.ValidateActionAsync(studentId, started.SessionId,
+            new ExerciseActionRequest { Action = "fixation_present" }, CancellationToken.None);
+        var correctStimuli = second.FeedbackData!.Value.GetProperty("stimuli")
+            .EnumerateArray().Select(item => item.GetString()!).ToList();
+        var correct = await service.ValidateActionAsync(studentId, started.SessionId,
+            new ExerciseActionRequest { Action = "fixation_answer", Answers = correctStimuli }, CancellationToken.None);
+        correct.IsCorrect.Should().BeTrue();
+
+        var result = await service.CompleteAsync(studentId, started.SessionId,
+            new CompleteExerciseSessionRequest(), CancellationToken.None);
+        result.MeasurementStatus.Should().Be(nameof(SpeedReadingMeasurementStatus.Measured));
+        result.Accuracy.Should().Be(50);
     }
 
     [Fact]
@@ -1824,6 +1953,87 @@ public sealed class StudentReadingPersistenceTests
         profile.TotalReadingSessions.Should().Be(1);
         profile.TotalExerciseSessions.Should().Be(0);
         profile.TotalMinutesSpent.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task Profile_setup_status_requires_the_students_age_group()
+    {
+        await using var context = CreateContext();
+        var userId = Guid.NewGuid();
+        var profile = SpeedReadingUserProfile.CreateDefault(Guid.NewGuid(), userId, DateTime.UtcNow);
+        context.UserProfiles.Add(profile);
+        await context.SaveChangesAsync();
+
+        var serviceType = typeof(OwnedSpeedReadingDbContext).Assembly
+            .GetType("SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingAdaptiveLearning")!;
+        var service = (SpeedReading.Application.AdaptiveLearning.ISpeedReadingAdaptiveLearning)Activator.CreateInstance(
+            serviceType,
+            BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
+            binder: null,
+            args: [context],
+            culture: null)!;
+
+        (await service.GetProfileSetupStatusAsync(userId)).HasAgeGroupConfiguration.Should().BeFalse();
+        profile.UpdateSettings(1, 250, 75, 20, Guid.NewGuid(), userId, DateTime.UtcNow);
+        await context.SaveChangesAsync();
+        (await service.GetProfileSetupStatusAsync(userId)).HasAgeGroupConfiguration.Should().BeTrue();
+        (await service.GetProfileSetupStatusAsync(Guid.NewGuid())).HasAgeGroupConfiguration.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task Profile_settings_save_age_group_and_goals_for_a_new_student()
+    {
+        await using var context = CreateContext();
+        var userId = Guid.NewGuid();
+        var ageGroupId = Guid.NewGuid();
+        var serviceType = typeof(OwnedSpeedReadingDbContext).Assembly
+            .GetType("SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingAdaptiveLearning")!;
+        var service = (SpeedReading.Application.AdaptiveLearning.ISpeedReadingAdaptiveLearning)Activator.CreateInstance(
+            serviceType,
+            BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
+            binder: null,
+            args: [context],
+            culture: null)!;
+
+        await service.UpdateProfileSettingsAsync(userId,
+            new SpeedReading.Application.AdaptiveLearning.UpdateAdaptiveProfileSettingsRequest(
+                1, 250, 75, 20, ageGroupId));
+
+        var saved = await context.UserProfiles.AsNoTracking().SingleAsync(item => item.UserId == userId);
+        saved.AgeGroupConfigurationId.Should().Be(ageGroupId);
+        saved.TargetWPM.Should().Be(250);
+        saved.TargetComprehension.Should().Be(75);
+        saved.DailyGoalMinutes.Should().Be(20);
+        (await service.GetProfileSetupStatusAsync(userId)).HasAgeGroupConfiguration.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task Profile_settings_save_and_return_speed_reading_personal_data()
+    {
+        await using var context = CreateContext();
+        var userId = Guid.NewGuid();
+        var ageGroupId = Guid.NewGuid();
+        var dateOfBirth = new DateTime(2000, 1, 2, 0, 0, 0, DateTimeKind.Utc);
+        var serviceType = typeof(OwnedSpeedReadingDbContext).Assembly
+            .GetType("SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingAdaptiveLearning")!;
+        var service = (SpeedReading.Application.AdaptiveLearning.ISpeedReadingAdaptiveLearning)Activator.CreateInstance(
+            serviceType,
+            BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
+            binder: null,
+            args: [context],
+            culture: null)!;
+
+        await service.UpdateProfileSettingsAsync(userId,
+            new SpeedReading.Application.AdaptiveLearning.UpdateAdaptiveProfileSettingsRequest(
+                1, 250, 75, 20, ageGroupId, dateOfBirth, "visual"));
+
+        var saved = await context.UserProfiles.AsNoTracking().SingleAsync(item => item.UserId == userId);
+        saved.DateOfBirth.Should().Be(dateOfBirth);
+        saved.LearningStyle.Should().Be("visual");
+        var settings = await service.GetProfileSettingsAsync(userId);
+        settings.DateOfBirth.Should().Be(dateOfBirth);
+        settings.LearningStyle.Should().Be("visual");
+        settings.AgeGroupConfigurationId.Should().Be(ageGroupId);
     }
 
     private static OwnedSpeedReadingDbContext CreateContext(string? databaseName = null) =>

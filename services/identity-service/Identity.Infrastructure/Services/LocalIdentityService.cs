@@ -81,6 +81,7 @@ public class LocalIdentityService : IIdentityService
             firstName,
             lastName,
             roleId: null,
+            product: null,
             phoneNumber: null,
             confirmEmail: false,
             cancellationToken);
@@ -91,6 +92,7 @@ public class LocalIdentityService : IIdentityService
         string firstName,
         string lastName,
         Guid? roleId,
+        PlatformProduct? product,
         string? phoneNumber,
         bool confirmEmail,
         CancellationToken cancellationToken)
@@ -130,7 +132,7 @@ public class LocalIdentityService : IIdentityService
 
         if (roleId.HasValue)
         {
-            user.AddRole(new Identity.Domain.Entities.UserRole(userId, roleId.Value));
+            user.AddRole(new Identity.Domain.Entities.UserRole(userId, roleId.Value, product));
         }
 
         await _userRepository.AddAsync(user, cancellationToken);
@@ -154,15 +156,53 @@ public class LocalIdentityService : IIdentityService
         => Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)) + "Aa1!";
 
     public async Task<Result> AssignRoleAsync(Guid userId, string roleName, CancellationToken cancellationToken)
+        => await AssignRoleCoreAsync(
+            userId,
+            roleName,
+            product: null,
+            accessSource: UserProductAccessSource.Admin,
+            cancellationToken: cancellationToken);
+
+    public async Task<Result> AssignRoleForProductAsync(
+        Guid userId,
+        string roleName,
+        PlatformProduct product,
+        CancellationToken cancellationToken,
+        UserProductAccessSource accessSource = UserProductAccessSource.Admin)
+        => await AssignRoleCoreAsync(userId, roleName, product, accessSource, cancellationToken);
+
+    private async Task<Result> AssignRoleCoreAsync(
+        Guid userId,
+        string roleName,
+        PlatformProduct? product,
+        UserProductAccessSource accessSource,
+        CancellationToken cancellationToken)
     {
         try
         {
+            if (product is { } selectedProduct && !Enum.IsDefined(selectedProduct))
+            {
+                return Result.Failure(new Error("Auth.InvalidProduct", "Platform ürünü geçersiz."));
+            }
+            if (!Enum.IsDefined(accessSource))
+            {
+                return Result.Failure(new Error("Auth.InvalidProductAccessSource", "Platform erişim kaynağı geçersiz."));
+            }
+
             if (string.Equals(roleName, Identity.Domain.Enums.UserRole.SystemAdmin.ToString(), StringComparison.OrdinalIgnoreCase)
                 && !_currentUserService.Roles.Any(role =>
                     string.Equals(role, Identity.Domain.Enums.UserRole.SystemAdmin.ToString(), StringComparison.OrdinalIgnoreCase)))
             {
                 return Result.Failure(Error.Forbidden(
                     "SystemAdmin rolü yalnızca mevcut bir SystemAdmin tarafından atanabilir."));
+            }
+
+            if (product is null
+                && !string.Equals(roleName, Identity.Domain.Enums.UserRole.SystemAdmin.ToString(), StringComparison.OrdinalIgnoreCase))
+            {
+                return Result.Failure(new Error(
+                    "Auth.ProductRequired",
+                    "Sistem yöneticisi dışındaki roller bir platform kapsamına atanmalıdır."));
             }
 
             _logger.LogInformation("Attempting to assign role {RoleName} to user {UserId}", roleName, userId);
@@ -181,11 +221,39 @@ public class LocalIdentityService : IIdentityService
                 return Result.Failure(new Error("Identity.RoleNotFound", $"Role '{roleName}' not found."));
             }
 
-            user.AddRole(new Identity.Domain.Entities.UserRole(userId, role.Id));
-            await _userRepository.RevokeActiveRefreshTokensAsync(
-                userId,
-                SecuritySensitiveChangeReason,
-                cancellationToken);
+            var roleProduct = string.Equals(
+                role.Name,
+                Identity.Domain.Enums.UserRole.SystemAdmin.ToString(),
+                StringComparison.OrdinalIgnoreCase)
+                    ? null
+                    : product;
+            user.AddRole(new Identity.Domain.Entities.UserRole(userId, role.Id, roleProduct));
+            if (product is { } accessProduct)
+            {
+                if (user.GrantProductAccess(
+                    accessProduct,
+                    accessSource,
+                    accessSource == UserProductAccessSource.Admin ? _currentUserService.UserId : null,
+                    DateTimeOffset.UtcNow))
+                {
+                    _userRepository.TrackProductAccessIfNew(user, accessProduct);
+                }
+            }
+            if (product is { } scopedProduct)
+            {
+                await _userRepository.RevokeActiveRefreshTokensForProductAsync(
+                    userId,
+                    scopedProduct,
+                    SecuritySensitiveChangeReason,
+                    cancellationToken);
+            }
+            else
+            {
+                await _userRepository.RevokeActiveRefreshTokensAsync(
+                    userId,
+                    SecuritySensitiveChangeReason,
+                    cancellationToken);
+            }
             await _unitOfWork.SaveChangesAsync(cancellationToken);
             _logger.LogInformation("Successfully assigned role {RoleName} to user {UserId}", roleName, userId);
             return Result.Success();
@@ -276,6 +344,7 @@ public class LocalIdentityService : IIdentityService
         string firstName, 
         string lastName, 
         string roleName,
+        PlatformProduct? product,
         string? phoneNumber,
         CancellationToken cancellationToken)
     {
@@ -295,26 +364,73 @@ public class LocalIdentityService : IIdentityService
                 new Error("Identity.RoleNotFound", $"Role '{roleName}' not found."));
         }
 
+        if (product is null
+            && !string.Equals(role.Name, Identity.Domain.Enums.UserRole.SystemAdmin.ToString(), StringComparison.OrdinalIgnoreCase))
+        {
+            return Result.Failure<ProvisionedUser>(new Error(
+                "Auth.ProductRequired",
+                "Sistem yöneticisi dışındaki roller bir platform kapsamına atanmalıdır."));
+        }
+        if (product.HasValue && !Enum.IsDefined(product.Value))
+        {
+            return Result.Failure<ProvisionedUser>(new Error("Auth.InvalidProduct", "Platform ürünü geçersiz."));
+        }
+
         return await CreateProvisionedUserAsync(
             email,
             firstName,
             lastName,
             role.Id,
+            product,
             phoneNumber,
             confirmEmail: true,
             cancellationToken);
     }
-    public async Task<Result> RemoveRoleAsync(Guid userId, string roleName, CancellationToken cancellationToken)
+    public Task<Result> RemoveRoleAsync(Guid userId, string roleName, CancellationToken cancellationToken)
+        => RemoveRoleCoreAsync(userId, roleName, product: null, cancellationToken);
+
+    public Task<Result> RemoveRoleForProductAsync(
+        Guid userId,
+        string roleName,
+        PlatformProduct product,
+        CancellationToken cancellationToken)
+        => RemoveRoleCoreAsync(userId, roleName, product, cancellationToken);
+
+    private async Task<Result> RemoveRoleCoreAsync(
+        Guid userId,
+        string roleName,
+        PlatformProduct? product,
+        CancellationToken cancellationToken)
     {
         try
         {
+            if (product.HasValue && !Enum.IsDefined(product.Value))
+                return Result.Failure(new Error("Auth.InvalidProduct", "Platform ürünü geçersiz."));
+
             var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
             if (user == null) return Result.Failure(new Error("Identity.UserNotFound", "User not found."));
 
             var role = await _roleRepository.GetByNameAsync(roleName, cancellationToken);
             if (role == null || role.IsDeleted) return Result.Failure(new Error("Identity.RoleNotFound", $"Role '{roleName}' not found."));
 
-            if (string.Equals(role.Name, Identity.Domain.Enums.UserRole.SystemAdmin.ToString(), StringComparison.OrdinalIgnoreCase)
+            var isSystemAdminRole = string.Equals(
+                role.Name,
+                Identity.Domain.Enums.UserRole.SystemAdmin.ToString(),
+                StringComparison.OrdinalIgnoreCase);
+            if (product is null && !isSystemAdminRole)
+            {
+                return Result.Failure(new Error(
+                    "Auth.ProductRequired",
+                    "Sistem yöneticisi dışındaki roller platform kapsamıyla kaldırılmalıdır."));
+            }
+            if (product.HasValue && isSystemAdminRole)
+            {
+                return Result.Failure(new Error(
+                    "Auth.GlobalRoleRequiresGlobalScope",
+                    "SystemAdmin rolü platform kapsamı dışında yönetilmelidir."));
+            }
+
+            if (isSystemAdminRole
                 && await IsLastActiveSystemAdministratorAsync(user, cancellationToken))
             {
                 return Result.Failure(new Error(
@@ -322,11 +438,22 @@ public class LocalIdentityService : IIdentityService
                     "Son aktif SystemAdmin rolü kaldırılamaz."));
             }
 
-            user.RemoveRole(role.Id);
-            await _userRepository.RevokeActiveRefreshTokensAsync(
-                userId,
-                SecuritySensitiveChangeReason,
-                cancellationToken);
+            user.RemoveRole(role.Id, product);
+            if (product is { } scopedProduct)
+            {
+                await _userRepository.RevokeActiveRefreshTokensForProductAsync(
+                    userId,
+                    scopedProduct,
+                    SecuritySensitiveChangeReason,
+                    cancellationToken);
+            }
+            else
+            {
+                await _userRepository.RevokeActiveRefreshTokensAsync(
+                    userId,
+                    SecuritySensitiveChangeReason,
+                    cancellationToken);
+            }
             await _unitOfWork.SaveChangesAsync(cancellationToken);
             return Result.Success();
         }

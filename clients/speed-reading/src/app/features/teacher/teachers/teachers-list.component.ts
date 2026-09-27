@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -11,7 +11,9 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { AddTeacherDialogComponent } from './add-teacher-dialog.component';
 import { LinkTeacherDialogComponent } from './link-teacher-dialog.component';
 import { ToasterService } from '../../../core/services/toaster.service';
@@ -34,7 +36,9 @@ import { Teacher } from '../../../core/models/teacher.model';
     MatChipsModule,
     MatFormFieldModule,
     MatInputModule,
-    MatTooltipModule
+    MatSelectModule,
+    MatTooltipModule,
+    MatPaginatorModule
   ],
   template: `
     <div class="teachers-container">
@@ -59,7 +63,15 @@ import { Teacher } from '../../../core/models/teacher.model';
       <div class="filters-bar">
         <mat-form-field appearance="outline" class="search-field">
           <mat-icon matPrefix>search</mat-icon>
-          <input matInput (keyup)="applyFilter($event)" placeholder="İsim veya e-posta ile ara..." #input>
+          <input matInput (keyup)="onSearchChange($event)" placeholder="İsim veya e-posta ile ara..." #input>
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="status-field">
+          <mat-label>Durum</mat-label>
+          <mat-select [ngModel]="activeFilter" (ngModelChange)="onStatusChange($event)">
+            <mat-option [value]="null">Tüm öğretmenler</mat-option>
+            <mat-option [value]="true">Aktif</mat-option>
+            <mat-option [value]="false">Pasif</mat-option>
+          </mat-select>
         </mat-form-field>
       </div>
 
@@ -151,6 +163,15 @@ import { Teacher } from '../../../core/models/teacher.model';
                 </td>
               </tr>
             </table>
+
+            <mat-paginator
+              [length]="totalCount"
+              [pageIndex]="pageIndex"
+              [pageSize]="pageSize"
+              [pageSizeOptions]="[10, 25, 50]"
+              (page)="onPageChange($event)"
+              aria-label="Öğretmen listesi sayfaları">
+            </mat-paginator>
 
             <div *ngIf="dataSource.data.length === 0 && !input.value" class="empty-state">
               <div class="empty-icon-bg">
@@ -465,7 +486,7 @@ import { Teacher } from '../../../core/models/teacher.model';
     }
   `]
 })
-export class TeachersListComponent implements OnInit {
+export class TeachersListComponent implements OnInit, OnDestroy {
   private teachersService = inject(TeachersService);
   private dialog = inject(MatDialog);
   private toaster = inject(ToasterService);
@@ -474,19 +495,43 @@ export class TeachersListComponent implements OnInit {
   dataSource = new MatTableDataSource<Teacher>([]);
   loading = true;
   displayedColumns = ['avatar', 'name', 'studentCount', 'status', 'actions'];
+  pageIndex = 0;
+  pageSize = 25;
+  totalCount = 0;
+  activeFilter: boolean | null = null;
+  private searchTerm = '';
+  private searchTimer?: ReturnType<typeof setTimeout>;
+  private requestVersion = 0;
 
   ngOnInit(): void {
     this.loadTeachers();
   }
 
-  loadTeachers(): void {
+  ngOnDestroy(): void {
+    if (this.searchTimer) clearTimeout(this.searchTimer);
+  }
+
+  loadTeachers(pageIndex = this.pageIndex): void {
+    this.pageIndex = pageIndex;
     this.loading = true;
-    this.teachersService.getTeachers(undefined, undefined, undefined).subscribe({
-      next: (data) => {
-        this.dataSource.data = data;
+    const requestVersion = ++this.requestVersion;
+    this.teachersService.getTeachersPage(
+      this.pageIndex + 1,
+      this.pageSize,
+      this.searchTerm || undefined,
+      undefined,
+      this.activeFilter ?? undefined)
+      .subscribe({
+      next: (page) => {
+        if (requestVersion !== this.requestVersion) return;
+        this.dataSource.data = page.items;
+        this.totalCount = page.totalCount;
+        this.pageIndex = page.pageNumber - 1;
+        this.pageSize = page.pageSize;
         this.loading = false;
       },
       error: (err) => {
+        if (requestVersion !== this.requestVersion) return;
         console.error('Error loading teachers:', err);
         this.toaster.error('Öğretmenler yüklenirken hata oluştu');
         this.loading = false;
@@ -494,9 +539,20 @@ export class TeachersListComponent implements OnInit {
     });
   }
 
-  applyFilter(event: Event) {
-    const filterValue = (event.target as HTMLInputElement).value;
-    this.dataSource.filter = filterValue.trim().toLowerCase();
+  onSearchChange(event: Event): void {
+    this.searchTerm = (event.target as HTMLInputElement).value.trim();
+    if (this.searchTimer) clearTimeout(this.searchTimer);
+    this.searchTimer = setTimeout(() => this.loadTeachers(0), 300);
+  }
+
+  onStatusChange(isActive: boolean | null): void {
+    this.activeFilter = isActive;
+    this.loadTeachers(0);
+  }
+
+  onPageChange(event: PageEvent): void {
+    this.pageSize = event.pageSize;
+    this.loadTeachers(event.pageIndex);
   }
 
   openAddDialog(): void {

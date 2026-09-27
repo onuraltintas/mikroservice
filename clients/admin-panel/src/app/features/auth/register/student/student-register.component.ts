@@ -97,7 +97,7 @@ export class StudentRegisterComponent implements OnInit {
             dateOfBirth: new Date().toISOString() // İleride tarih seçici eklenirse değiştirilir
         };
 
-        this.http.post(`${environment.apiUrl}/auth/register-student`, payload).subscribe({
+        this.http.post(`${environment.apiUrl}/auth/coaching/register/student`, payload).subscribe({
             next: () => {
                 this.toaster.success('Kayıt işleminiz başarıyla tamamlandı. E-posta adresinizi doğrulamak için size gönderdiğimiz onay linkine tıklayın.', 'Doğrulama Gerekli');
                 this.router.navigate(['/auth/login'], { queryParams: { registered: 'true', role: 'student' } });

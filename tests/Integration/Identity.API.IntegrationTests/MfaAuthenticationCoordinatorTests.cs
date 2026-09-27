@@ -74,7 +74,7 @@ public sealed class MfaAuthenticationCoordinatorTests
     private sealed class StubMfaService(Guid userId) : IMultiFactorService
     {
         public bool? LastRememberMe { get; private set; }
-        public string CreateChallenge(Guid id, bool rememberMe)
+        public string CreateChallenge(Guid id, bool rememberMe, Identity.Domain.Enums.PlatformProduct? product = null)
         {
             LastRememberMe = rememberMe;
             return "challenge";
@@ -95,7 +95,13 @@ public sealed class MfaAuthenticationCoordinatorTests
     {
         public bool WasCalled { get; private set; }
         public DateTimeOffset? MfaVerifiedAt { get; private set; }
-        public Task<Result<LoginResponse>> IssueAsync(User user, bool rememberMe, string ipAddress, DateTimeOffset? mfaVerifiedAt, CancellationToken cancellationToken)
+        public Task<Result<LoginResponse>> IssueAsync(
+            User user,
+            bool rememberMe,
+            string ipAddress,
+            DateTimeOffset? mfaVerifiedAt,
+            CancellationToken cancellationToken,
+            Identity.Domain.Enums.PlatformProduct? product = null)
         {
             WasCalled = true;
             MfaVerifiedAt = mfaVerifiedAt;
@@ -114,16 +120,18 @@ public sealed class MfaAuthenticationCoordinatorTests
             string? role,
             CancellationToken cancellationToken) => Task.FromResult<IReadOnlyList<Guid>>([]);
         public Task AddAsync(User value, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public void TrackProductAccessIfNew(User value, Identity.Domain.Enums.PlatformProduct product) => throw new NotSupportedException();
         public Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<User?> GetByLoginAsync(string loginProvider, string providerKey, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<bool> TryAddLoginAsync(User value, UserLogin login, CancellationToken cancellationToken) => throw new NotSupportedException();
         public void Delete(User value) => throw new NotSupportedException();
-        public Task<Identity.Application.Queries.GetAllUsers.PagedList<Identity.Application.Queries.GetUserProfile.UserProfileDto>> GetAllAsync(int page, int pageSize, string? searchTerm, string? role, bool? isActive, Guid? institutionId, CancellationToken cancellationToken) => throw new NotSupportedException();
-        public Task<Identity.Application.Queries.GetAllUsers.UserSummaryDto> GetSummaryAsync(Guid? institutionId, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<Identity.Application.Queries.GetAllUsers.PagedList<Identity.Application.Queries.GetUserProfile.UserProfileDto>> GetAllAsync(int page, int pageSize, string? searchTerm, string? role, bool? isActive, Guid? institutionId, CancellationToken cancellationToken, Identity.Domain.Enums.PlatformProduct? product = null) => throw new NotSupportedException();
+        public Task<Identity.Application.Queries.GetAllUsers.UserSummaryDto> GetSummaryAsync(Guid? institutionId, CancellationToken cancellationToken, Identity.Domain.Enums.PlatformProduct? product = null) => throw new NotSupportedException();
         public Task<User?> GetByRefreshTokenAsync(string refreshToken, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<bool> RevokeRefreshTokenAsync(string refreshToken, string revokedByIp, string reason, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<bool> RotateRefreshTokenAsync(string refreshToken, RefreshToken replacementToken, string revokedByIp, string reason, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task RevokeActiveRefreshTokensAsync(Guid id, string reason, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task RevokeActiveRefreshTokensForProductAsync(Guid userId, Identity.Domain.Enums.PlatformProduct product, string reason, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task RevokeActiveRefreshTokensForInstitutionAsync(Guid institutionId, string reason, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<List<User>> GetUsersByRolesAsync(List<string> roleNames, CancellationToken cancellationToken) => throw new NotSupportedException();
     }

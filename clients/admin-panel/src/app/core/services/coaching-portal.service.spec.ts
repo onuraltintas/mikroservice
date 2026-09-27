@@ -66,6 +66,17 @@ describe('CoachingPortalService', () => {
     http.verify();
   });
 
+  it('filters teacher assignments by lifecycle status on the server', () => {
+    const { service, http } = setup();
+
+    service.getTeacherAssignments('teacher-1', 1, 25, 'Cancelled').subscribe();
+
+    const request = http.expectOne(candidate => candidate.url.endsWith('/assignments/teacher/teacher-1'));
+    expect(request.request.params.get('status')).toBe('Cancelled');
+    request.flush({ items: [], pageNumber: 1, pageSize: 25, totalCount: 0, totalPages: 0 });
+    http.verify();
+  });
+
   it('loads the authenticated teacher student roster with bounded search paging', () => {
     const { service, http } = setup();
 
@@ -77,6 +88,33 @@ describe('CoachingPortalService', () => {
     expect(request.request.params.get('pageSize')).toBe('100');
     expect(request.request.params.get('searchTerm')).toBe('Ada');
     request.flush({ items: [], pageNumber: 1000, pageSize: 100, totalCount: 0, totalPages: 0 });
+    http.verify();
+  });
+
+  it('scopes a teacher roster lookup to the requested active student', () => {
+    const { service, http } = setup();
+    const studentIds = ['student-123', 'student-456'];
+
+    service.getTeacherStudents(1, 2, undefined, studentIds).subscribe();
+
+    const request = http.expectOne(candidate => candidate.url.endsWith('/teachers/me/students'));
+    expect(request.request.params.getAll('studentUserIds')).toEqual(studentIds);
+    expect(request.request.params.get('pageSize')).toBe('2');
+    request.flush({ items: [], pageNumber: 1, pageSize: 2, totalCount: 0, totalPages: 0 });
+    http.verify();
+  });
+
+  it('loads a bounded page of a student history category', () => {
+    const { service, http } = setup();
+
+    service.getTeacherStudentHistory('student/1', 'Exams', 3, 10).subscribe();
+
+    const request = http.expectOne(candidate => candidate.url.endsWith('/reports/student/student%2F1/history'));
+    expect(request.request.method).toBe('GET');
+    expect(request.request.params.get('type')).toBe('Exams');
+    expect(request.request.params.get('pageNumber')).toBe('3');
+    expect(request.request.params.get('pageSize')).toBe('10');
+    request.flush({ items: [], pageNumber: 3, pageSize: 10, totalCount: 0, totalPages: 0 });
     http.verify();
   });
 

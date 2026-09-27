@@ -5,92 +5,112 @@
     <p>Hazırlanıyor...</p>
   </div>
   } @else if (showResult()) {
-  <!-- MODERN RESULT SCREEN -->
-  <div class="result-screen fade-in">
-    <div class="result-header">
-      <div class="success-icon-wrapper">
-        <span class="material-icons">emoji_events</span>
+  <main class="result-screen fade-in" aria-labelledby="result-title">
+    <header class="result-hero">
+      <div class="result-heading">
+        <span class="result-eyebrow">
+          <span class="material-icons" aria-hidden="true">verified</span>
+          {{ getPhaseLabel() }} tamamlandı
+        </span>
+        <h1 id="result-title">Okuma profiliniz hazır</h1>
+        <p>Hızınız, kavrama düzeyiniz ve görsel becerileriniz birlikte değerlendirildi.</p>
       </div>
-      <h1>Tebrikler!</h1>
-      <p class="subtitle">{{ getPhaseLabel() }} ölçümünü başarıyla tamamladınız.</p>
-    </div>
+      <div class="level-badge" aria-label="Önerilen okuma seviyesi">
+        <span class="level-badge__label">Okuma seviyeniz</span>
+        <strong>{{ result()?.recommendedLevel }}</strong>
+        <span class="material-icons" aria-hidden="true">workspace_premium</span>
+      </div>
+    </header>
 
-    <div class="result-grid">
-      <!-- Main Level Card -->
-      <div class="level-card">
-        <span class="label">Önerilen Seviye</span>
-        <div class="level-value">
-          <span class="material-icons">school</span>
-          <h2>{{ result()?.recommendedLevel }}</h2>
+    <section class="result-overview" aria-label="Genel performans özeti">
+      <article class="score-summary">
+        <div class="score-ring" role="progressbar" aria-label="Ortalama başarı"
+          aria-valuemin="0" aria-valuemax="100" [attr.aria-valuenow]="result()?.averageScore"
+          [style.--score]="(result()?.averageScore || 0) + '%'">
+          <div class="score-ring__inner">
+            <strong>{{ result()?.averageScore | number:'1.0-0' }}%</strong>
+            <span>genel başarı</span>
+          </div>
         </div>
-      </div>
-
-      <!-- Average Score -->
-      <div class="score-card main-score">
-        <span class="label">Ortalama Başarı</span>
-        <div class="value">{{ result()?.averageScore | number:'1.0-0' }}%</div>
-        <div class="sp-bar"><div class="sp-bar-fill" [style.width.%]="result()?.averageScore"></div></div>
-      </div>
-
-      <!-- Detail Scores -->
-      <div class="detail-scores">
-        <div class="mini-score">
-          <span class="material-icons">menu_book</span>
-          <span class="label">Anlama</span>
-          <span class="value">{{ result()?.comprehensionScore }}%</span>
+        <div class="score-summary__copy">
+          <span class="section-kicker">Genel performans</span>
+          <h2>Dengeli bir başlangıç</h2>
+          <p>{{ result()?.message }}</p>
         </div>
-        <div class="mini-score">
-          <span class="material-icons">flash_on</span>
-          <span class="label">Takistoskop</span>
-          <span class="value">{{ result()?.tachistoscopeScore }}%</span>
-        </div>
-        <div class="mini-score">
-          <span class="material-icons">visibility</span>
-          <span class="label">Görsel</span>
-          <span class="value">{{ result()?.visualExpansionScore }}%</span>
-        </div>
-        <div class="mini-score">
-          <span class="material-icons">my_location</span>
-          <span class="label">Sabitleme</span>
-          <span class="value">{{ result()?.fixationScore }}%</span>
-        </div>
-      </div>
-    </div>
+      </article>
 
-    <div class="message-box">
-      <span class="material-icons">tips_and_updates</span>
-      <p>{{ result()?.message }}</p>
-    </div>
+      <div class="primary-metrics">
+        <article class="primary-metric primary-metric--speed">
+          <div class="metric-icon"><span class="material-icons" aria-hidden="true">speed</span></div>
+          <div>
+            <span>Okuma hızınız</span>
+            <strong>{{ result()?.averageWPM | number:'1.0-0' }}</strong>
+            <small>kelime / dakika</small>
+          </div>
+          @if (result()?.targetWPM) {
+          <span class="target-pill">Hedef hız {{ result()?.targetWPM }} k/dk</span>
+          }
+        </article>
+        <article class="primary-metric">
+          <div class="metric-icon"><span class="material-icons" aria-hidden="true">psychology_alt</span></div>
+          <div>
+            <span>Kavrama oranınız</span>
+            <strong>%{{ result()?.averageComprehension | number:'1.0-0' }}</strong>
+            <small>okuduğunu anlama</small>
+          </div>
+          @if (result()?.targetComprehension) {
+          <span class="target-pill">Hedef %{{ result()?.targetComprehension | number:'1.0-0' }}</span>
+          }
+        </article>
+      </div>
+    </section>
 
-    @if (result()?.recommendedSeriesId && result()?.recommendedProgressId) {
-    <div class="auto-assign-box">
-      <div class="icon-side">
-        <span class="material-icons">auto_awesome</span>
+    <section class="skill-breakdown" aria-labelledby="skills-title">
+      <div class="section-heading">
+        <div>
+          <span class="section-kicker">Beceri analizi</span>
+          <h2 id="skills-title">Performans dağılımınız</h2>
+        </div>
+        <span class="section-note">Her alan 100 üzerinden değerlendirilir</span>
       </div>
-      <div class="text-side">
-        <strong>{{ result()?.recommendedSeriesName }}</strong>
-        <span>Programınız otomatik olarak atandı. Hemen başlayabilirsiniz!</span>
+      <div class="skill-grid">
+        <article class="skill-card">
+          <div class="skill-card__top"><span class="material-icons">menu_book</span><span>Anlama</span><strong>%{{ result()?.comprehensionScore }}</strong></div>
+          <div class="metric-bar" role="progressbar" aria-label="Anlama puanı" aria-valuemin="0" aria-valuemax="100" [attr.aria-valuenow]="result()?.comprehensionScore"><span [style.width.%]="result()?.comprehensionScore"></span></div>
+        </article>
+        <article class="skill-card">
+          <div class="skill-card__top"><span class="material-icons">flash_on</span><span>Hızlı algı</span><strong>%{{ result()?.tachistoscopeScore }}</strong></div>
+          <div class="metric-bar" role="progressbar" aria-label="Hızlı algı puanı" aria-valuemin="0" aria-valuemax="100" [attr.aria-valuenow]="result()?.tachistoscopeScore"><span [style.width.%]="result()?.tachistoscopeScore"></span></div>
+        </article>
+        <article class="skill-card">
+          <div class="skill-card__top"><span class="material-icons">visibility</span><span>Görsel genişleme</span><strong>%{{ result()?.visualExpansionScore }}</strong></div>
+          <div class="metric-bar" role="progressbar" aria-label="Görsel genişleme puanı" aria-valuemin="0" aria-valuemax="100" [attr.aria-valuenow]="result()?.visualExpansionScore"><span [style.width.%]="result()?.visualExpansionScore"></span></div>
+        </article>
+        <article class="skill-card">
+          <div class="skill-card__top"><span class="material-icons">my_location</span><span>Göz sabitleme</span><strong>%{{ result()?.fixationScore }}</strong></div>
+          <div class="metric-bar" role="progressbar" aria-label="Göz sabitleme puanı" aria-valuemin="0" aria-valuemax="100" [attr.aria-valuenow]="result()?.fixationScore"><span [style.width.%]="result()?.fixationScore"></span></div>
+        </article>
       </div>
-    </div>
-    } @else {
-    <div class="auto-assign-box">
-      <div class="icon-side">
-        <span class="material-icons">pending_actions</span>
-      </div>
-      <div class="text-side">
-        <strong>Program hazırlanıyor</strong>
-        <span>Uygun bir program şablonu bulunduğunda günlük planınız otomatik olarak açılacaktır.</span>
-      </div>
-    </div>
-    }
+    </section>
 
-    <div class="actions">
-      <button type="button" class="sp-btn" (click)="goToDashboard()">
-        <span class="material-icons">dashboard</span>
-        Panele Git
+    <section class="next-step-card" aria-labelledby="next-step-title">
+      <div class="next-step-card__icon"><span class="material-icons" aria-hidden="true">route</span></div>
+      <div class="next-step-card__content">
+        <span class="section-kicker">Sonraki adım</span>
+        @if (result()?.recommendedSeriesId && result()?.recommendedProgressId) {
+        <h2 id="next-step-title">{{ result()?.recommendedSeriesName }}</h2>
+        <p>Size uygun program atandı. Günlük çalışmalarınız bu ölçüm sonuçlarına göre başlayacak.</p>
+        } @else {
+        <h2 id="next-step-title">Programınız hazırlanıyor</h2>
+        <p>Uygun program şablonu bulunduğunda günlük planınız otomatik olarak açılacak.</p>
+        }
+      </div>
+      <button type="button" class="sp-btn result-cta" (click)="goToDashboard()">
+        Panele git
+        <span class="material-icons" aria-hidden="true">arrow_forward</span>
       </button>
-    </div>
-  </div>
+    </section>
+  </main>
 
   } @else {
   <!-- MAIN EXERCISE LIST (MODERN) -->

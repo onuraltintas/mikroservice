@@ -10,7 +10,7 @@ namespace Identity.API.IntegrationTests;
 public sealed class CoachingAdminOverviewTests
 {
     [Fact]
-    public async Task StudentDetail_OnlyReturnsRecordsFromSelectedInstitution()
+    public async Task StudentDetail_ReturnsAllStudentHistoryAfterTenantAuthorization()
     {
         await using var context = CreateContext();
         var studentId = Guid.NewGuid();
@@ -22,18 +22,28 @@ public sealed class CoachingAdminOverviewTests
             assignment.AssignToStudent(studentId);
             var exam = Exam.Create(Guid.NewGuid(), institutionId.ToString(), ExamType.Mock, DateTime.UtcNow, 100, institutionId);
             exam.AddResult(ExamResult.Create(exam.Id, studentId, 80));
-            context.AddRange(assignment, exam);
+            var session = CoachingSession.Create(
+                Guid.NewGuid(), institutionId.ToString(), DateTime.UtcNow.AddDays(1), SessionType.OneOnOne,
+                institutionId: institutionId);
+            session.AddStudent(studentId);
+            context.AddRange(assignment, exam, session);
         }
+        context.AcademicGoals.AddRange(
+            AcademicGoal.Create(studentId, "Current institution goal", GoalCategory.ExamPreparation, institutionId: ownInstitution),
+            AcademicGoal.Create(studentId, "Previous institution goal", GoalCategory.ExamPreparation, institutionId: otherInstitution));
         await context.SaveChangesAsync();
 
         var detail = await new CoachingAdminRepository(context)
-            .GetStudentDetailAsync(studentId, ownInstitution, CancellationToken.None);
+            .GetStudentDetailAsync(studentId, CancellationToken.None);
 
-        detail.TotalAssignments.Should().Be(1);
-        detail.TotalExams.Should().Be(1);
-        detail.Assignments.Should().ContainSingle(item => item.Title == ownInstitution.ToString());
-        detail.Exams.Should().ContainSingle(item => item.Title == ownInstitution.ToString());
-        detail.TotalGoals.Should().Be(0);
+        detail.TotalAssignments.Should().Be(2);
+        detail.TotalExams.Should().Be(2);
+        detail.TotalSessions.Should().Be(2);
+        detail.TotalGoals.Should().Be(2);
+        detail.Assignments.Should().Contain(item => item.Title == ownInstitution.ToString());
+        detail.Assignments.Should().Contain(item => item.Title == otherInstitution.ToString());
+        detail.Exams.Should().Contain(item => item.Title == ownInstitution.ToString());
+        detail.Exams.Should().Contain(item => item.Title == otherInstitution.ToString());
     }
 
     [Fact]
@@ -189,8 +199,12 @@ public sealed class CoachingAdminOverviewTests
             DateTime.UtcNow.AddDays(1),
             SessionType.OneOnOne,
             institutionId: otherInstitutionId);
-        var inScopeGoal = AcademicGoal.Create(inScopeStudentId, "Kurum hedefi", GoalCategory.ExamPreparation);
-        var otherGoal = AcademicGoal.Create(otherStudentId, "Diğer kurum hedefi", GoalCategory.ExamPreparation);
+        var inScopeGoal = AcademicGoal.Create(
+            inScopeStudentId, "Kurum hedefi", GoalCategory.ExamPreparation, institutionId: institutionId);
+        var otherInstitutionGoal = AcademicGoal.Create(
+            inScopeStudentId, "Diğer kurum hedefi", GoalCategory.ExamPreparation, institutionId: otherInstitutionId);
+        var unrosteredGoal = AcademicGoal.Create(
+            otherStudentId, "Kurum dışı öğrenci hedefi", GoalCategory.ExamPreparation, institutionId: institutionId);
 
         context.AddRange(
             inScopeAssignment,
@@ -200,7 +214,8 @@ public sealed class CoachingAdminOverviewTests
             inScopeSession,
             otherSession,
             inScopeGoal,
-            otherGoal);
+            otherInstitutionGoal,
+            unrosteredGoal);
         await context.SaveChangesAsync();
 
         var result = await new CoachingAdminRepository(context)
@@ -215,6 +230,33 @@ public sealed class CoachingAdminOverviewTests
         result.TotalSessions.Should().Be(1);
         result.TotalGoals.Should().Be(1);
         result.RecentAssignments.Should().ContainSingle(item => item.InstitutionId == institutionId);
+    }
+
+    [Fact]
+    public async Task InstitutionGoalList_OnlyIncludesGoalsCreatedForThatInstitution()
+    {
+        await using var context = CreateContext();
+        var institutionId = Guid.NewGuid();
+        var previousInstitutionId = Guid.NewGuid();
+        var studentId = Guid.NewGuid();
+        context.AcademicGoals.AddRange(
+            AcademicGoal.Create(studentId, "Current institution goal", GoalCategory.ExamPreparation, institutionId: institutionId),
+            AcademicGoal.Create(studentId, "Previous institution goal", GoalCategory.ExamPreparation, institutionId: previousInstitutionId),
+            AcademicGoal.Create(studentId, "Student-owned unscoped goal", GoalCategory.StudyHabits),
+            AcademicGoal.Create(Guid.NewGuid(), "Unrostered institution goal", GoalCategory.ExamPreparation, institutionId: institutionId));
+        await context.SaveChangesAsync();
+
+        var result = await new CoachingAdminRepository(context).GetGoalsAsync(
+            1,
+            25,
+            null,
+            null,
+            CancellationToken.None,
+            institutionId,
+            [studentId]);
+
+        result.TotalCount.Should().Be(1);
+        result.Items.Should().ContainSingle().Which.Title.Should().Be("Current institution goal");
     }
 
     private static CoachingDbContext CreateContext()

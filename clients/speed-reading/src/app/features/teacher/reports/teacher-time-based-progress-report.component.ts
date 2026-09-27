@@ -145,10 +145,20 @@ export class TeacherTimeBasedProgressReportComponent implements OnInit {
     this.error.set(null);
 
     const { startDate, endDate } = this.calculateDateRange();
+    const institutionViewer = this.authService.hasRole('InstitutionAdmin')
+      || this.authService.hasRole('InstitutionOwner');
+    const institutionId = this.authService.currentUserValue?.institutionId;
+    if (institutionViewer && !this.route.snapshot.queryParamMap.has('teacherId') && !institutionId) {
+      this.error.set('Kurum bilgisi bulunamadı. Lütfen yeniden giriş yapın.');
+      this.loading.set(false);
+      return;
+    }
 
     const reportRequest = this.route.snapshot.queryParamMap.has('teacherId')
       ? this.teacherReportService.getAdminTimeBasedProgressReport(teacherId, startDate, endDate)
-      : this.teacherReportService.getTimeBasedProgressReport(teacherId, startDate, endDate);
+      : institutionViewer
+        ? this.teacherReportService.getInstitutionTimeBasedProgressReport(institutionId!, startDate, endDate)
+        : this.teacherReportService.getTimeBasedProgressReport(teacherId, startDate, endDate);
 
     reportRequest
       .subscribe({

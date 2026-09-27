@@ -1,6 +1,7 @@
 using EduPlatform.Shared.Kernel.Results;
 using Identity.Application.Interfaces;
 using Identity.Domain.Entities;
+using Identity.Domain.Enums;
 using MediatR;
 using MassTransit;
 using EduPlatform.Shared.Contracts.Events.Identity;
@@ -80,6 +81,7 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, Resul
             request.FirstName,
             request.LastName,
             roleName,
+            userRole == UserRoleType.SystemAdmin ? null : PlatformProduct.Coaching,
             request.PhoneNumber,
             cancellationToken);
 
@@ -92,6 +94,24 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, Resul
         // 4. Create Profile based on Role
         try 
         {
+            if (userRole != UserRoleType.SystemAdmin)
+            {
+                var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
+                if (user is null)
+                {
+                    throw new InvalidOperationException("Provisioned user was not found in the Identity database.");
+                }
+
+                if (user.GrantProductAccess(
+                    PlatformProduct.Coaching,
+                    UserProductAccessSource.Admin,
+                    _currentUserService.UserId,
+                    DateTimeOffset.UtcNow))
+                {
+                    _userRepository.TrackProductAccessIfNew(user, PlatformProduct.Coaching);
+                }
+            }
+
             switch (userRole)
             {
                 case Identity.Domain.Enums.UserRole.Student:

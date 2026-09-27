@@ -5,7 +5,7 @@
 	# dedicated loopback listener. Trust only the staging Docker gateway
 	# when consuming forwarded client/protocol headers.
 	servers {
-		trusted_proxies static 127.0.0.1/32 172.30.0.1/32
+		trusted_proxies static 127.0.0.1/32 172.29.0.1/32
 	}
 }
 

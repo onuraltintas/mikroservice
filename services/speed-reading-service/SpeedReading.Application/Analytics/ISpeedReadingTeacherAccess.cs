@@ -18,10 +18,27 @@ public interface ISpeedReadingTeacherAccess
         Guid viewerUserId,
         Guid studentUserId,
         Guid? targetTeacherUserId = null,
+        bool isSystemAdmin = false,
+        bool isInstitutionAdmin = false,
         CancellationToken cancellationToken = default);
 
     Task<SpeedReadingTeacherStudentScopeResponse?> GetStudentScopeAsync(
         Guid viewerUserId,
         Guid? targetTeacherUserId = null,
+        bool isSystemAdmin = false,
+        bool isInstitutionAdmin = false,
+        CancellationToken cancellationToken = default);
+
+    Task<SpeedReadingTeacherStudentScopeResponse?> GetInstitutionStudentScopeAsync(
+        Guid viewerUserId,
+        Guid institutionId,
+        bool isSystemAdmin = false,
+        CancellationToken cancellationToken = default);
+
+    Task<bool> CanReadInstitutionStudentAsync(
+        Guid viewerUserId,
+        Guid institutionId,
+        Guid studentUserId,
+        bool isSystemAdmin = false,
         CancellationToken cancellationToken = default);
 }

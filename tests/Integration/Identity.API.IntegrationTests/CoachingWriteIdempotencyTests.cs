@@ -43,6 +43,7 @@ public sealed class CoachingWriteIdempotencyTests
 
         replay.Should().Be(first);
         repository.Items.Should().ContainSingle();
+        repository.Items.Single().InstitutionId.Should().Be(command.InstitutionId);
         unitOfWork.SaveCount.Should().Be(1);
         publisher.Messages.Should().ContainSingle();
     }
@@ -85,11 +86,12 @@ public sealed class CoachingWriteIdempotencyTests
         var repository = new InMemoryGoalRepository();
         var unitOfWork = new CountingUnitOfWork();
         var publisher = new NoopCoachingEventPublisher();
+        var identityAuthorizationClient = new AllowIdentityAuthorizationClient();
         var handler = new CreateGoalCommandHandler(
             repository,
             unitOfWork,
             new AllowTeacherPolicy(),
-            new AllowIdentityAuthorizationClient(),
+            identityAuthorizationClient,
             new InMemoryIdempotencyRepository(),
             publisher);
         var command = new CreateGoalCommand(
@@ -100,7 +102,10 @@ public sealed class CoachingWriteIdempotencyTests
             "Prepare weekly",
             DateTime.UtcNow.AddDays(10),
             80,
-            "goal-key-20260820");
+            "goal-key-20260820")
+        {
+            InstitutionId = Guid.NewGuid()
+        };
 
         var first = await handler.Handle(command, CancellationToken.None);
         var replay = await handler.Handle(command, CancellationToken.None);
@@ -109,6 +114,79 @@ public sealed class CoachingWriteIdempotencyTests
         repository.Items.Should().ContainSingle();
         unitOfWork.SaveCount.Should().Be(1);
         publisher.Messages.Should().ContainSingle();
+        identityAuthorizationClient.RequestedInstitutions.Should().OnlyContain(
+            institutionId => institutionId == command.InstitutionId);
+    }
+
+    [Fact]
+    public async Task CreateGoal_StoresInstitutionReturnedByIdentityForTeacherCreatedGoals()
+    {
+        var institutionId = Guid.NewGuid();
+        var repository = new InMemoryGoalRepository();
+        var identityAuthorizationClient = new AllowIdentityAuthorizationClient
+        {
+            AuthorizationResult = _ => institutionId
+        };
+        var handler = new CreateGoalCommandHandler(
+            repository,
+            new CountingUnitOfWork(),
+            new AllowTeacherPolicy(),
+            identityAuthorizationClient,
+            new InMemoryIdempotencyRepository(),
+            new NoopCoachingEventPublisher());
+        var command = new CreateGoalCommand(
+            Guid.NewGuid(),
+            "Teacher-created goal",
+            GoalCategory.ExamPreparation,
+            Guid.NewGuid(),
+            null,
+            null,
+            null,
+            "teacher-goal-1");
+
+        await handler.Handle(command, CancellationToken.None);
+
+        repository.Items.Should().ContainSingle().Which.InstitutionId.Should().Be(institutionId);
+        identityAuthorizationClient.RequestedInstitutions.Should().ContainSingle()
+            .Which.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task CreateGoal_RejectsTeacherAndStudentOutsideRequestedInstitution()
+    {
+        var repository = new InMemoryGoalRepository();
+        var identityAuthorizationClient = new AllowIdentityAuthorizationClient
+        {
+            AuthorizationResult = _ => Guid.NewGuid()
+        };
+        var handler = new CreateGoalCommandHandler(
+            repository,
+            new CountingUnitOfWork(),
+            new AllowTeacherPolicy(),
+            identityAuthorizationClient,
+            new InMemoryIdempotencyRepository(),
+            new NoopCoachingEventPublisher());
+        var command = new CreateGoalCommand(
+            Guid.NewGuid(),
+            "Institution scoped goal",
+            GoalCategory.ExamPreparation,
+            Guid.NewGuid(),
+            null,
+            null,
+            null,
+            "institution-goal-1")
+        {
+            IsInstitutionAdminOperation = true,
+            InstitutionId = Guid.NewGuid()
+        };
+
+        var action = () => handler.Handle(command, CancellationToken.None);
+
+        await action.Should().ThrowAsync<EduPlatform.Shared.Kernel.Exceptions.BusinessRuleException>()
+            .Where(exception => exception.Code == "Authorization.Forbidden");
+        repository.Items.Should().BeEmpty();
+        identityAuthorizationClient.RequestedInstitutions.Should().ContainSingle()
+            .Which.Should().Be(command.InstitutionId);
     }
 
     [Fact]
@@ -208,10 +286,16 @@ public sealed class CoachingWriteIdempotencyTests
         public Task<Exam?> GetMetadataByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
             Task.FromResult(Items.SingleOrDefault(item => item.Id == id));
 
-        public Task<PagedRepositoryResult<ExamResult>> GetResultsByExamIdAsync(Guid examId, int pageNumber, int pageSize, CancellationToken cancellationToken = default)
+        public Task<IReadOnlyCollection<Guid>> GetResultStudentIdsByExamIdAsync(Guid examId, CancellationToken cancellationToken = default)
         {
             var exam = Items.SingleOrDefault(item => item.Id == examId);
-            var results = exam?.Results ?? [];
+            return Task.FromResult<IReadOnlyCollection<Guid>>(exam?.Results.Select(result => result.StudentId).Distinct().ToArray() ?? []);
+        }
+
+        public Task<PagedRepositoryResult<ExamResult>> GetResultsByExamIdAsync(Guid examId, int pageNumber, int pageSize, CancellationToken cancellationToken = default, IReadOnlyCollection<Guid>? scopedStudentIds = null)
+        {
+            var exam = Items.SingleOrDefault(item => item.Id == examId);
+            var results = (exam?.Results ?? []).Where(result => scopedStudentIds == null || scopedStudentIds.Contains(result.StudentId)).ToList();
             var page = results.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToList();
             return Task.FromResult(new PagedRepositoryResult<ExamResult>(page, results.Count));
         }
@@ -332,13 +416,18 @@ public sealed class CoachingWriteIdempotencyTests
         public Task<AcademicGoal?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
             Task.FromResult(Items.SingleOrDefault(item => item.Id == id));
 
+        public Task<IReadOnlyCollection<Guid>> GetStudentIdsByTeacherIdAsync(Guid teacherId, CancellationToken cancellationToken = default) =>
+            Task.FromResult<IReadOnlyCollection<Guid>>(Items.Where(item => item.SetByTeacherId == teacherId).Select(item => item.StudentId).Distinct().ToArray());
+
         public Task<PagedRepositoryResult<AcademicGoal>> GetByTeacherIdAsync(
             Guid teacherId,
             int pageNumber,
             int pageSize,
-            CancellationToken cancellationToken = default)
+            CancellationToken cancellationToken = default,
+            IReadOnlyCollection<Guid>? scopedStudentIds = null)
         {
-            var filtered = Items.Where(item => item.SetByTeacherId == teacherId).ToList();
+            var filtered = Items.Where(item => item.SetByTeacherId == teacherId
+                && (scopedStudentIds == null || scopedStudentIds.Contains(item.StudentId))).ToList();
             var page = filtered.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToList();
             return Task.FromResult(new PagedRepositoryResult<AcademicGoal>(page, filtered.Count));
         }
@@ -386,6 +475,9 @@ public sealed class CoachingWriteIdempotencyTests
 
     private sealed class AllowIdentityAuthorizationClient : ICoachingIdentityAuthorizationClient
     {
+        public List<Guid?> RequestedInstitutions { get; } = [];
+        public Func<Guid?, Guid?> AuthorizationResult { get; init; } = requestedInstitutionId => requestedInstitutionId;
+
         public Task<CoachingAdminAccessScope?> AuthorizeCoachingAdminAsync(Guid viewerUserId, CancellationToken cancellationToken) =>
             Task.FromResult<CoachingAdminAccessScope?>(null);
 
@@ -394,8 +486,11 @@ public sealed class CoachingWriteIdempotencyTests
             IReadOnlyCollection<Guid> studentIds,
             Guid? requestedInstitutionId,
             bool isSystemAdministrator,
-            CancellationToken cancellationToken) =>
-            Task.FromResult(requestedInstitutionId);
+            CancellationToken cancellationToken)
+        {
+            RequestedInstitutions.Add(requestedInstitutionId);
+            return Task.FromResult(AuthorizationResult(requestedInstitutionId));
+        }
 
         public Task<IReadOnlyCollection<Guid>> AuthorizeStudentReadAsync(
             Guid viewerUserId,

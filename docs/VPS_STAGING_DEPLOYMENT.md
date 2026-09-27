@@ -83,14 +83,14 @@ ATTACHMENT_SCANNER_PROVIDER=ClamAv
 STAGING_DOMAIN=staging.onuraltintas.net
 TLS_ACME_EMAIL=onuraltintas@gmail.com
 FORWARDED_HEADERS_FORWARD_LIMIT=1
-FORWARDED_HEADERS_KNOWN_NETWORKS=172.30.0.0/16
+FORWARDED_HEADERS_KNOWN_NETWORKS=172.29.0.0/16
 ```
 
 `GOOGLE_CLIENT_ID`, `POSTGRES_*` ve observability
 admin şifresi de staging'e özel olmalıdır. `TEST_ADMIN_PASSWORD` ve
 `TEST_DEFAULT_PASSWORD` boş bırakılmalıdır; gerektiğinde yalnızca disposable
 E2E ortamında geçici olarak set edilir. Her altyapı bileşeni için farklı parola
-kullanın. Staging overlay Docker ağına `172.30.0.0/16` sabit subnet'i verir;
+kullanın. Staging overlay Docker ağına `172.29.0.0/16` sabit subnet'i verir;
 bu nedenle VPS host ağınızla çakışmadığını kontrol edin. `.env.staging` Git'e
 commit edilmez.
 

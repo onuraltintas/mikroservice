@@ -47,6 +47,10 @@ export const teacherRoutes: Routes = [
             pathMatch: 'full'
           },
           {
+            path: 'assignments',
+            loadComponent: () => import('./reports/teacher-assignment-report.component').then(m => m.TeacherAssignmentReportComponent)
+          },
+          {
             path: 'class-overview',
             loadComponent: () => import('./reports/teacher-class-overview-report.component').then(m => m.TeacherClassOverviewReportComponent)
           },

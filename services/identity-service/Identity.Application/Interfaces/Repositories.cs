@@ -12,6 +12,7 @@ namespace Identity.Application.Interfaces;
 public interface IUserRepository
 {
     Task AddAsync(User user, CancellationToken cancellationToken);
+    void TrackProductAccessIfNew(User user, PlatformProduct product);
     Task<User?> GetByIdAsync(Guid id, CancellationToken cancellationToken);
     Task<IReadOnlyList<SpeedReadingUserDirectoryItem>> GetSpeedReadingDirectoryAsync(
         IReadOnlyCollection<Guid> userIds,
@@ -19,12 +20,16 @@ public interface IUserRepository
     Task<IReadOnlyList<Guid>> GetSpeedReadingAudienceUserIdsAsync(
         string? role,
         CancellationToken cancellationToken);
+    Task<bool> IsSpeedReadingMembershipEligibleAsync(
+        Guid userId,
+        string role,
+        CancellationToken cancellationToken) => Task.FromResult(false);
     Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken);
     Task<User?> GetByLoginAsync(string loginProvider, string providerKey, CancellationToken cancellationToken);
     Task<bool> TryAddLoginAsync(User user, UserLogin login, CancellationToken cancellationToken);
     void Delete(User user);
-    Task<PagedList<UserProfileDto>> GetAllAsync(int page, int pageSize, string? searchTerm, string? role, bool? isActive, Guid? institutionId, CancellationToken cancellationToken);
-    Task<UserSummaryDto> GetSummaryAsync(Guid? institutionId, CancellationToken cancellationToken);
+      Task<PagedList<UserProfileDto>> GetAllAsync(int page, int pageSize, string? searchTerm, string? role, bool? isActive, Guid? institutionId, CancellationToken cancellationToken, PlatformProduct? product = null);
+      Task<UserSummaryDto> GetSummaryAsync(Guid? institutionId, CancellationToken cancellationToken, PlatformProduct? product = null);
     Task<User?> GetByRefreshTokenAsync(string refreshToken, CancellationToken cancellationToken);
     Task<bool> RevokeRefreshTokenAsync(
         string refreshToken,
@@ -38,6 +43,11 @@ public interface IUserRepository
         string reason,
         CancellationToken cancellationToken);
     Task RevokeActiveRefreshTokensAsync(Guid userId, string reason, CancellationToken cancellationToken);
+    Task RevokeActiveRefreshTokensForProductAsync(
+        Guid userId,
+        PlatformProduct product,
+        string reason,
+        CancellationToken cancellationToken);
     Task RevokeActiveRefreshTokensForInstitutionAsync(Guid institutionId, string reason, CancellationToken cancellationToken);
     Task<List<User>> GetUsersByRolesAsync(List<string> roleNames, CancellationToken cancellationToken);
 }
@@ -72,12 +82,16 @@ public interface IInstitutionRepository
     Task<PagedList<InstitutionDto>> GetAllAsync(int page, int pageSize, string? searchTerm, bool? isActive, Guid? institutionId, CancellationToken cancellationToken);
     Task<InstitutionDto?> GetDtoByIdAsync(Guid id, CancellationToken cancellationToken);
     Task<Institution?> GetByIdAsync(Guid id, CancellationToken cancellationToken);
-    Task<bool> HasAdminAsync(Guid institutionId, Guid userId, CancellationToken cancellationToken);
-    Task<IReadOnlyList<InstitutionAdminDto>> GetAdminsAsync(Guid institutionId, CancellationToken cancellationToken);
-    Task<InstitutionAdmin?> GetAdminAsync(Guid institutionId, Guid userId, CancellationToken cancellationToken);
-    Task<Guid?> GetInstitutionIdByAdminIdAsync(Guid adminUserId, CancellationToken cancellationToken);
-    Task<Guid?> GetPrimaryInstitutionIdByUserIdAsync(Guid userId, CancellationToken cancellationToken);
-    Task<bool> IsUserInInstitutionAsync(Guid userId, Guid institutionId, CancellationToken cancellationToken);
+    Task<bool> HasAdminAsync(Guid institutionId, Guid userId, PlatformProduct product, CancellationToken cancellationToken);
+    Task<bool> CanManageSpeedReadingInstitutionAsync(
+        Guid userId,
+        Guid institutionId,
+        CancellationToken cancellationToken);
+    Task<IReadOnlyList<InstitutionAdminDto>> GetAdminsAsync(Guid institutionId, PlatformProduct product, CancellationToken cancellationToken);
+    Task<InstitutionAdmin?> GetAdminAsync(Guid institutionId, Guid userId, PlatformProduct product, CancellationToken cancellationToken);
+    Task<Guid?> GetInstitutionIdByAdminIdAsync(Guid adminUserId, PlatformProduct product, CancellationToken cancellationToken);
+    Task<Guid?> GetPrimaryInstitutionIdByUserIdAsync(Guid userId, PlatformProduct product, CancellationToken cancellationToken);
+    Task<bool> IsUserInInstitutionAsync(Guid userId, Guid institutionId, PlatformProduct product, CancellationToken cancellationToken);
     Task<PagedList<InstitutionStudentRosterItem>> GetStudentRosterAsync(
         Guid institutionId,
         int pageNumber,
@@ -204,10 +218,7 @@ public interface ITeacherRepository
         string? searchTerm,
         int? gradeLevel,
         bool? isActive,
-        CancellationToken cancellationToken);
-    Task<SpeedReadingTeacherStudentScopeResponse?> GetSpeedReadingTeacherStudentScopeAsync(
-        Guid viewerUserId,
-        Guid? targetTeacherUserId,
+        IReadOnlyCollection<Guid>? studentUserIds,
         CancellationToken cancellationToken);
     Task AddStudentAssignmentAsync(TeacherStudentAssignment assignment, CancellationToken cancellationToken);
     Task<TeacherStudentAssignment?> GetAssignmentAsync(Guid teacherId, Guid studentId, CancellationToken cancellationToken);

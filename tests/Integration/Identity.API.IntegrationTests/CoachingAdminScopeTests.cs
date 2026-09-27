@@ -15,7 +15,7 @@ public sealed class CoachingAdminScopeTests
     {
         var institutionId = Guid.NewGuid();
         var controller = new CoachingAdminController(null!, new FixedScopeAuthorization(
-            new CoachingAdminScope(false, institutionId, [Guid.NewGuid()])));
+            new CoachingAdminScope(false, institutionId, [Guid.NewGuid()])), null!);
 
         var result = await controller.GetScope(CancellationToken.None);
 

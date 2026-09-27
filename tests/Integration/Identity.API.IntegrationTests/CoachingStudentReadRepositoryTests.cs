@@ -153,7 +153,8 @@ public sealed class CoachingStudentReadRepositoryTests : IAsyncLifetime
         _dbContext.InstitutionAdmins.Add(InstitutionAdmin.Create(
             administrator.Id,
             institutionA.Id,
-            InstitutionAdminRole.Admin));
+            InstitutionAdminRole.Admin,
+            PlatformProduct.Coaching));
         _dbContext.StudentProfiles.AddRange(
             StudentProfile.Create(studentA.Id, "Student", "A", institutionA.Id),
             StudentProfile.Create(studentB.Id, "Student", "B", institutionB.Id),
@@ -294,6 +295,7 @@ public sealed class CoachingStudentReadRepositoryTests : IAsyncLifetime
             searchTerm: null,
             gradeLevel: null,
             isActive: null,
+            studentUserIds: null,
             CancellationToken.None);
 
         result.TotalCount.Should().Be(1);
@@ -340,7 +342,7 @@ public sealed class CoachingStudentReadRepositoryTests : IAsyncLifetime
         await _dbContext.SaveChangesAsync();
 
         var activeResult = await TeacherRepository().GetStudentsByTeacherUserIdAsync(
-            teacher.Id, 1, 25, null, null, null, CancellationToken.None);
+            teacher.Id, 1, 25, null, null, null, null, CancellationToken.None);
 
         activeResult.Items.Should().ContainSingle(student => student.UserId == sameInstitutionStudent.Id);
 
@@ -348,7 +350,7 @@ public sealed class CoachingStudentReadRepositoryTests : IAsyncLifetime
         await _dbContext.SaveChangesAsync();
 
         var inactiveInstitutionResult = await TeacherRepository().GetStudentsByTeacherUserIdAsync(
-            teacher.Id, 1, 25, null, null, null, CancellationToken.None);
+            teacher.Id, 1, 25, null, null, null, null, CancellationToken.None);
 
         inactiveInstitutionResult.TotalCount.Should().Be(0);
     }
@@ -380,11 +382,17 @@ public sealed class CoachingStudentReadRepositoryTests : IAsyncLifetime
         await _dbContext.SaveChangesAsync();
 
         var result = await TeacherRepository().GetStudentsByTeacherUserIdAsync(
-            teacher.Id, 1, 25, null, null, null, CancellationToken.None);
+            teacher.Id, 1, 25, null, null, null, null, CancellationToken.None);
 
         result.Items.Select(student => student.UserId)
             .Should().Equal(new[] { firstStudent.Id, secondStudent.Id }.OrderBy(id => id));
         result.Items.Single(student => student.UserId == firstStudent.Id).Subject.Should().Be("Matematik");
+
+        var selectedStudent = await TeacherRepository().GetStudentsByTeacherUserIdAsync(
+            teacher.Id, 1, 1, null, null, null, new[] { firstStudent.Id }, CancellationToken.None);
+
+        selectedStudent.TotalCount.Should().Be(1);
+        selectedStudent.Items.Should().ContainSingle(student => student.UserId == firstStudent.Id);
     }
 
     [Fact]
@@ -481,7 +489,8 @@ public sealed class CoachingStudentReadRepositoryTests : IAsyncLifetime
         _dbContext.InstitutionAdmins.Add(InstitutionAdmin.Create(
             administrator.Id,
             institutionA.Id,
-            InstitutionAdminRole.Admin));
+            InstitutionAdminRole.Admin,
+            PlatformProduct.Coaching));
         _dbContext.StudentProfiles.AddRange(
             gradeEightProfile,
             gradeNineProfile,
@@ -523,7 +532,8 @@ public sealed class CoachingStudentReadRepositoryTests : IAsyncLifetime
         _dbContext.InstitutionAdmins.Add(InstitutionAdmin.Create(
             administrator.Id,
             institution.Id,
-            InstitutionAdminRole.Admin));
+            InstitutionAdminRole.Admin,
+            PlatformProduct.Coaching));
         await _dbContext.SaveChangesAsync();
 
         var result = await Repository().GetCoachingReportStudentPageAsync(
@@ -553,7 +563,7 @@ public sealed class CoachingStudentReadRepositoryTests : IAsyncLifetime
         AddRole(administrator, "InstitutionAdmin");
         _dbContext!.Institutions.Add(institution);
         _dbContext.Users.Add(administrator);
-        _dbContext.InstitutionAdmins.Add(InstitutionAdmin.Create(administrator.Id, institution.Id, InstitutionAdminRole.Admin));
+        _dbContext.InstitutionAdmins.Add(InstitutionAdmin.Create(administrator.Id, institution.Id, InstitutionAdminRole.Admin, PlatformProduct.Coaching));
         foreach (var name in new[] { "Ali", "Ayşe", "Zeynep" })
         {
             var student = User.Create(Guid.NewGuid(), $"{name.ToLowerInvariant()}@example.test");
@@ -579,7 +589,7 @@ public sealed class CoachingStudentReadRepositoryTests : IAsyncLifetime
         AddRole(administrator, "InstitutionAdmin");
         _dbContext!.Institutions.AddRange(own, outside);
         _dbContext.Users.Add(administrator);
-        _dbContext.InstitutionAdmins.Add(InstitutionAdmin.Create(administrator.Id, own.Id, InstitutionAdminRole.Admin));
+        _dbContext.InstitutionAdmins.Add(InstitutionAdmin.Create(administrator.Id, own.Id, InstitutionAdminRole.Admin, PlatformProduct.Coaching));
         foreach (var (name, institutionId) in new[] { ("Ayşe", own.Id), ("Zeynep", outside.Id) })
         {
             var user = User.Create(Guid.NewGuid(), $"{name.ToLowerInvariant()}-teacher@example.test");
@@ -612,7 +622,7 @@ public sealed class CoachingStudentReadRepositoryTests : IAsyncLifetime
         _dbContext.Users.AddRange(administrator, teacher, student);
         _dbContext.TeacherProfiles.Add(teacherProfile);
         _dbContext.StudentProfiles.Add(studentProfile);
-        _dbContext.InstitutionAdmins.Add(InstitutionAdmin.Create(administrator.Id, institution.Id, InstitutionAdminRole.Admin));
+        _dbContext.InstitutionAdmins.Add(InstitutionAdmin.Create(administrator.Id, institution.Id, InstitutionAdminRole.Admin, PlatformProduct.Coaching));
         _dbContext.TeacherStudentAssignments.Add(TeacherStudentAssignment.Create(teacherProfile.Id, studentProfile.Id, institution.Id));
         await _dbContext.SaveChangesAsync();
 

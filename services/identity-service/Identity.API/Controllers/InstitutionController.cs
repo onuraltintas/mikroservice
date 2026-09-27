@@ -117,8 +117,6 @@ public class InstitutionController : ControllerBase
     {
         var result = await _mediator.Send(new Identity.Application.Commands.UpdateInstitutionStudent.UpdateInstitutionStudentCommand(
             studentId,
-            request.FirstName,
-            request.LastName,
             request.GradeLevel,
             request.TeacherUserId));
 
@@ -213,8 +211,6 @@ public class InstitutionController : ControllerBase
     }
 
     public sealed record UpdateInstitutionStudentRequest(
-        string FirstName,
-        string LastName,
         int GradeLevel,
         Guid? TeacherUserId);
 }

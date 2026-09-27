@@ -158,6 +158,16 @@ export class TeacherReportService {
         ).pipe(map(value => this.toTeacherContentAnalysisReport(value)));
     }
 
+    getInstitutionContentAnalysisReport(institutionId: string, startDate?: Date, endDate?: Date): Observable<TeacherContentAnalysisReport> {
+        let params = new HttpParams();
+        if (startDate) params = params.set('dateFrom', startDate.toISOString());
+        if (endDate) params = params.set('dateTo', endDate.toISOString());
+        return this.http.get<TeacherContentAnalysisAnalytics>(
+            `${environment.speedReadingApiUrl}/analytics/institutions/${institutionId}/content-analysis`,
+            { params }
+        ).pipe(map(value => this.toTeacherContentAnalysisReport(value)));
+    }
+
     getTimeBasedProgressReport(teacherId: string, startDate?: Date, endDate?: Date): Observable<TeacherTimeBasedProgressReport> {
         let params = new HttpParams();
         if (startDate) params = params.set('dateFrom', startDate.toISOString());
@@ -175,6 +185,16 @@ export class TeacherReportService {
         if (endDate) params = params.set('dateTo', endDate.toISOString());
         return this.http.get<TeacherTimeProgressAnalytics>(
             `${environment.speedReadingApiUrl}/analytics/admin/teachers/${teacherId}/time-progress`,
+            { params }
+        ).pipe(map(value => this.toTeacherTimeProgressReport(value)));
+    }
+
+    getInstitutionTimeBasedProgressReport(institutionId: string, startDate?: Date, endDate?: Date): Observable<TeacherTimeBasedProgressReport> {
+        let params = new HttpParams();
+        if (startDate) params = params.set('dateFrom', startDate.toISOString());
+        if (endDate) params = params.set('dateTo', endDate.toISOString());
+        return this.http.get<TeacherTimeProgressAnalytics>(
+            `${environment.speedReadingApiUrl}/analytics/institutions/${institutionId}/time-progress`,
             { params }
         ).pipe(map(value => this.toTeacherTimeProgressReport(value)));
     }

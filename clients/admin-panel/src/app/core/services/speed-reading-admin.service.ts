@@ -2202,6 +2202,11 @@ export class SpeedReadingAdminService {
     return this.http.post<void>(`${this.url}/student-progress/${progressId}/reset`, {});
   }
 
+  deleteStudentSpeedReadingData(progressId: string) {
+    return this.http.delete<{ deletedRecordCount: number }>(
+      `${this.url}/student-progress/${encodeURIComponent(progressId)}/student-data`);
+  }
+
   getExerciseTypes(pageNumber = 1, pageSize = 20) {
     const params = new HttpParams()
       .set('pageNumber', pageNumber)

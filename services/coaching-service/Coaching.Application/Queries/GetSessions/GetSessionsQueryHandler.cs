@@ -120,12 +120,11 @@ public class GetSessionsQueryHandler :
                 : null;
             var studentReflections = includeStudentReflections && visibleStudentIds is not null
                 ? s.Attendances
-                    .Where(attendance => visibleStudentIds.Contains(attendance.StudentId)
-                        && !string.IsNullOrWhiteSpace(attendance.StudentNote))
+                    .Where(attendance => visibleStudentIds.Contains(attendance.StudentId))
                     .OrderBy(attendance => attendance.StudentId)
                     .Select(attendance => new SessionStudentReflectionDto(
                         attendance.StudentId,
-                        attendance.StudentNote!,
+                        attendance.StudentNote,
                         attendance.AttendanceStatus.ToString()))
                     .ToArray()
                 : Array.Empty<SessionStudentReflectionDto>();

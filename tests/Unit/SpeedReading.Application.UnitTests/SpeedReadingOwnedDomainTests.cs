@@ -2,6 +2,8 @@ using FluentAssertions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Metadata;
 using EduPlatform.Shared.Infrastructure.Middleware;
 using SpeedReading.Application.Assessment;
@@ -338,6 +340,19 @@ public sealed class SpeedReadingOwnedDomainTests
         var action = () => ExerciseConfigurationRules.ValidateActiveConfiguration(configuration, "focus");
 
         action.Should().Throw<ArgumentException>();
+    }
+
+    [Theory]
+    [InlineData("Tachistoscope", "text_stream", "flash", false)]
+    [InlineData("Tachistoscope", "text_stream", "rsvp", false)]
+    [InlineData("RSVP", "text_stream", "rsvp", true)]
+    [InlineData("RSVP", "text_stream", "", true)]
+    [InlineData("Comprehension", "reading_comprehension", "", true)]
+    public void Comprehension_questions_follow_exercise_mode(
+        string exerciseType, string engineType, string mode, bool expected)
+    {
+        ExerciseConfigurationRules.ShouldIncludeComprehensionQuestions(exerciseType, engineType, mode)
+            .Should().Be(expected);
     }
 
     [Theory]
@@ -1313,6 +1328,25 @@ public sealed class SpeedReadingOwnedDomainTests
             .And.Contain("20260827157000_AddOwnedAdaptiveText")
             .And.Contain("20260827158000_AddOwnedReports")
             .And.Contain("20260827162000_AddOwnedNotificationAuditFields");
+    }
+
+    [Fact]
+    public void Personal_profile_migration_only_adds_speed_reading_profile_fields()
+    {
+        using var context = new OwnedSpeedReadingDbContext(
+            new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>()
+                .UseNpgsql("Host=localhost;Database=unused;Username=unused;Password=unused")
+                .Options);
+
+        var script = context.GetService<IMigrator>().GenerateScript(
+            "20260923120000_RetireLegacyPersonalizedRecommendations",
+            "20260925090023_AddSpeedReadingProfilePersonalData");
+
+        script.Should()
+            .Contain("ALTER TABLE speed_reading.user_profiles ADD \"DateOfBirth\" date;")
+            .And.Contain("ALTER TABLE speed_reading.user_profiles ADD \"LearningStyle\" character varying(20);")
+            .And.NotContain("CREATE TABLE")
+            .And.NotContain("DROP TABLE");
     }
 
     [Fact]

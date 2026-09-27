@@ -13,6 +13,7 @@ import {
   NodeProgress,
   PersonalizedLearningPathDto,
   LearningPathProgressDto,
+  PersonalizedPathAvailabilityDto,
   CompletePathItemRequest,
   CompletePathItemResponse,
   NodeStatus
@@ -274,12 +275,16 @@ export class LearningPathService {
    * Personalized learning path progress getir (summary)
    */
   getPersonalizedLearningPathProgress(): Observable<LearningPathProgressDto> {
-    return this.getPersonalizedLearningPath(1, 100).pipe(
-      map(path => toPersonalizedProgress(path)),
+    return this.http.get<SpeedReadingPersonalizedProgress>(`${this.apiUrl}/personalized/progress`).pipe(
+      map(progress => toPersonalizedProgress(progress)),
       tap(progress => {
         this.personalizedPathSubject.next(progress);
       })
     );
+  }
+
+  getPersonalizedPathAvailability(): Observable<PersonalizedPathAvailabilityDto> {
+    return this.http.get<PersonalizedPathAvailabilityDto>(`${this.apiUrl}/personalized/availability`);
   }
 
   /**
@@ -293,9 +298,7 @@ export class LearningPathService {
    * Personalized path auto-generate (ilk kez kullanımda)
    */
   generatePersonalizedPath(): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/personalized/generate`, {}).pipe(
-      tap(() => this.getPersonalizedLearningPathProgress().subscribe())
-    );
+    return this.http.post<any>(`${this.apiUrl}/personalized/generate`, {});
   }
 
   /**
@@ -303,9 +306,9 @@ export class LearningPathService {
    */
   completePersonalizedPathItem(
     pathItemId: string,
-    achievedScore?: number
+    sessionId: string
   ): Observable<CompletePathItemResponse> {
-    const request: CompletePathItemRequest = { achievedScore };
+    const request: CompletePathItemRequest = { sessionId };
 
     return this.http.post<CompletePathItemResponse>(
       `${this.apiUrl}/personalized/${pathItemId}/complete`,
@@ -385,6 +388,15 @@ interface SpeedReadingPersonalizedItem {
   isUnlocked: boolean;
 }
 
+interface SpeedReadingPersonalizedProgress {
+  totalItems: number;
+  completedItems: number;
+  remainingItems: number;
+  completionPercentage: number;
+  currentIndex: number;
+  nextItem: SpeedReadingPersonalizedItem | null;
+}
+
 function toPathProgress(progress: SpeedReadingLearningPathProgress): PathProgress {
   const progressByNode = new Map(progress.nodeProgress.map(item => [item.nodeId, item]));
   const nodes = progress.nodes.map(node => {
@@ -462,7 +474,7 @@ function toPersonalizedPath(page: SpeedReadingPage<SpeedReadingPersonalizedItem>
   };
 }
 
-function toPersonalizedProgress(path: PersonalizedLearningPathDto): LearningPathProgressDto {
+function toPersonalizedProgress(path: SpeedReadingPersonalizedProgress): LearningPathProgressDto {
   return {
     totalItems: path.totalItems,
     completedItems: path.completedItems,
@@ -472,11 +484,11 @@ function toPersonalizedProgress(path: PersonalizedLearningPathDto): LearningPath
     nextItem: path.nextItem ? {
       id: path.nextItem.id,
       contentType: path.nextItem.contentType,
-      contentId: path.nextItem.contentId,
+      contentId: path.nextItem.contentId ?? '',
       contentTitle: path.nextItem.contentTitle,
       difficultyLevel: path.nextItem.difficultyLevel,
       estimatedDurationMinutes: path.nextItem.estimatedDurationMinutes,
-      recommendationReason: path.nextItem.recommendationReason
+      recommendationReason: path.nextItem.recommendationReason ?? null
     } : null
   };
 }

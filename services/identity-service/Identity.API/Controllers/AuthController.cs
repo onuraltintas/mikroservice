@@ -17,6 +17,7 @@ using System.ComponentModel.DataAnnotations;
 using Identity.API.Security;
 using Identity.Application.Services;
 using EduPlatform.Shared.Security.Interfaces;
+using Identity.Domain.Enums;
 
 namespace Identity.API.Controllers;
 
@@ -40,6 +41,25 @@ public class AuthController : ControllerBase
     [AllowAnonymous]
     public async Task<IActionResult> Login([FromBody] LoginCommand command)
     {
+        return await LoginAsync(command with { Product = null });
+    }
+
+    [HttpPost("{product:regex(coaching|speed-reading)}/login")]
+    [AllowAnonymous]
+    public async Task<IActionResult> LoginForProduct(
+        [FromRoute] string product,
+        [FromBody] LoginCommand command)
+    {
+        if (!PlatformProductExtensions.TryParseRouteValue(product, out var platformProduct))
+        {
+            return BadRequest(new Error("Auth.InvalidProduct", "Geçersiz platform."));
+        }
+
+        return await LoginAsync(command with { Product = platformProduct });
+    }
+
+    private async Task<IActionResult> LoginAsync(LoginCommand command)
+    {
         var result = await _mediator.Send(command);
         if (result.IsFailure)
         {
@@ -55,12 +75,18 @@ public class AuthController : ControllerBase
             UseSecureSessionCookie));
     }
 
-    [HttpPost("register/student")]
-    [HttpPost("register-student")]
+    [HttpPost("{product:regex(coaching|speed-reading)}/register/student")]
     [AllowAnonymous]
-    public async Task<IActionResult> RegisterStudent([FromBody] RegisterStudentCommand command)
+    public async Task<IActionResult> RegisterStudent(
+        [FromRoute] string product,
+        [FromBody] RegisterStudentCommand command)
     {
-        var result = await _mediator.Send(command);
+        if (!TryResolveProduct(product, out var platformProduct))
+        {
+            return BadRequest(new Error("Auth.InvalidProduct", "Geçersiz platform."));
+        }
+
+        var result = await _mediator.Send(command with { Product = platformProduct });
         if (result.IsFailure)
         {
             return RegistrationFailure(result);
@@ -68,12 +94,18 @@ public class AuthController : ControllerBase
         return Ok(new { UserId = result.Value });
     }
 
-    [HttpPost("register/teacher")]
-    [HttpPost("register-teacher")]
+    [HttpPost("{product:regex(coaching|speed-reading)}/register/teacher")]
     [AllowAnonymous]
-    public async Task<IActionResult> RegisterTeacher([FromBody] RegisterTeacherCommand command)
+    public async Task<IActionResult> RegisterTeacher(
+        [FromRoute] string product,
+        [FromBody] RegisterTeacherCommand command)
     {
-        var result = await _mediator.Send(command);
+        if (!TryResolveProduct(product, out var platformProduct))
+        {
+            return BadRequest(new Error("Auth.InvalidProduct", "Geçersiz platform."));
+        }
+
+        var result = await _mediator.Send(command with { Product = platformProduct });
         if (result.IsFailure)
         {
             return RegistrationFailure(result);
@@ -81,12 +113,18 @@ public class AuthController : ControllerBase
         return Ok(new { UserId = result.Value });
     }
 
-    [HttpPost("register/institution")]
-    [HttpPost("register-institution")]
+    [HttpPost("{product:regex(coaching|speed-reading)}/register/institution")]
     [AllowAnonymous]
-    public async Task<IActionResult> RegisterInstitution([FromBody] RegisterInstitutionCommand command)
+    public async Task<IActionResult> RegisterInstitution(
+        [FromRoute] string product,
+        [FromBody] RegisterInstitutionCommand command)
     {
-        var result = await _mediator.Send(command);
+        if (!TryResolveProduct(product, out var platformProduct))
+        {
+            return BadRequest(new Error("Auth.InvalidProduct", "Geçersiz platform."));
+        }
+
+        var result = await _mediator.Send(command with { Product = platformProduct });
         if (result.IsFailure)
         {
             return RegistrationFailure(result);
@@ -94,12 +132,18 @@ public class AuthController : ControllerBase
         return Ok(new { UserId = result.Value });
     }
 
-    [HttpPost("register/parent")]
-    [HttpPost("register-parent")]
+    [HttpPost("{product:regex(coaching|speed-reading)}/register/parent")]
     [AllowAnonymous]
-    public async Task<IActionResult> RegisterParent([FromBody] RegisterParentCommand command)
+    public async Task<IActionResult> RegisterParent(
+        [FromRoute] string product,
+        [FromBody] RegisterParentCommand command)
     {
-        var result = await _mediator.Send(command);
+        if (!TryResolveProduct(product, out var platformProduct))
+        {
+            return BadRequest(new Error("Auth.InvalidProduct", "Geçersiz platform."));
+        }
+
+        var result = await _mediator.Send(command with { Product = platformProduct });
         if (result.IsFailure)
         {
             return RegistrationFailure(result);
@@ -162,6 +206,26 @@ public class AuthController : ControllerBase
     [HttpPost("google")]
     [AllowAnonymous]
     public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginRequest? request)
+        => await GoogleLoginAsync(request, product: null);
+
+    [HttpPost("{product:regex(coaching|speed-reading)}/google-login")]
+    [HttpPost("{product:regex(coaching|speed-reading)}/google")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GoogleLoginForProduct(
+        [FromRoute] string product,
+        [FromBody] GoogleLoginRequest? request)
+    {
+        if (!TryResolveProduct(product, out var platformProduct))
+        {
+            return BadRequest(new Error("Auth.InvalidProduct", "Geçersiz platform."));
+        }
+
+        return await GoogleLoginAsync(request, platformProduct);
+    }
+
+    private async Task<IActionResult> GoogleLoginAsync(
+        GoogleLoginRequest? request,
+        PlatformProduct? product)
     {
         if (request is null || string.IsNullOrWhiteSpace(request.IdToken))
         {
@@ -169,7 +233,10 @@ public class AuthController : ControllerBase
         }
 
         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "0.0.0.0";
-        var command = new Identity.Application.Commands.GoogleLogin.GoogleLoginCommand(request.IdToken!, ipAddress);
+        var command = new Identity.Application.Commands.GoogleLogin.GoogleLoginCommand(
+            request.IdToken!,
+            ipAddress,
+            product);
         var result = await _mediator.Send(command);
 
         if (result.IsFailure)
@@ -230,7 +297,8 @@ public class AuthController : ControllerBase
         var result = await coordinator.StartAuthenticatedSetupAsync(
             currentUser.UserId.Value,
             request.CurrentPassword,
-            cancellationToken);
+            cancellationToken,
+            GetAuthenticatedProduct());
         return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
     }
 
@@ -350,10 +418,21 @@ public class AuthController : ControllerBase
     private string GetClientIpAddress() =>
         HttpContext.Connection.RemoteIpAddress?.ToString() ?? "0.0.0.0";
 
+    private PlatformProduct? GetAuthenticatedProduct()
+    {
+        var value = User.FindFirst("platform_product")?.Value;
+        return PlatformProductExtensions.TryParseRouteValue(value, out var product)
+            ? product
+            : null;
+    }
+
     private static IActionResult RegistrationFailure<T>(Result<T> result) =>
         result.Error.Code == "Identity.UserExists"
             ? new ConflictObjectResult(result.Error)
             : new BadRequestObjectResult(result.Error);
+
+    private static bool TryResolveProduct(string product, out PlatformProduct platformProduct)
+        => PlatformProductExtensions.TryParseRouteValue(product, out platformProduct);
 
     private static bool IsSixDigitCode(string code) =>
         code.Length == 6 && code.All(char.IsAsciiDigit);

@@ -3,6 +3,7 @@ using EduPlatform.Shared.Security.Interfaces;
 using Identity.Application.Authorization;
 using Identity.Application.Interfaces;
 using Identity.Application.Queries.GetUserProfile;
+using Identity.Domain.Enums;
 using MediatR;
 
 namespace Identity.Application.Queries.GetAllUsers;
@@ -26,7 +27,10 @@ public class GetAllUsersQueryHandler : IRequestHandler<GetAllUsersQuery, Result<
     public async Task<Result<PagedList<UserProfileDto>>> Handle(GetAllUsersQuery request, CancellationToken cancellationToken)
     {
         var institutionId = _currentUserService.UserId is { } userId
-            ? await _institutionRepository.GetPrimaryInstitutionIdByUserIdAsync(userId, cancellationToken)
+            ? await _institutionRepository.GetPrimaryInstitutionIdByUserIdAsync(
+                userId,
+                request.Product ?? PlatformProduct.Coaching,
+                cancellationToken)
             : null;
         var scope = InstitutionAccessScopeResolver.Resolve(
             _currentUserService.UserId,
@@ -45,7 +49,8 @@ public class GetAllUsersQueryHandler : IRequestHandler<GetAllUsersQuery, Result<
             request.Role,
             request.IsActive,
             scope.Value.InstitutionId,
-            cancellationToken);
+            cancellationToken,
+            request.Product);
         return Result.Success(pagedDtos);
     }
 }

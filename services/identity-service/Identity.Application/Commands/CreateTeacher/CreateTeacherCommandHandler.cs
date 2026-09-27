@@ -2,6 +2,7 @@ using EduPlatform.Shared.Kernel.Results;
 using EduPlatform.Shared.Security.Interfaces;
 using Identity.Application.Interfaces;
 using Identity.Domain.Entities;
+using Identity.Domain.Enums;
 using MediatR;
 
 using MassTransit;
@@ -52,7 +53,10 @@ public class CreateTeacherCommandHandler : IRequestHandler<CreateTeacherCommand,
         var adminUserId = _currentUserService.UserId.Value;
 
         // 2. Find Institution for this admin
-        var institutionId = await _institutionRepository.GetInstitutionIdByAdminIdAsync(adminUserId, cancellationToken);
+        var institutionId = await _institutionRepository.GetInstitutionIdByAdminIdAsync(
+            adminUserId,
+            PlatformProduct.Coaching,
+            cancellationToken);
         if (institutionId == null)
         {
              return Result.Failure<CreateTeacherResult>(new Error("CreateTeacher.Forbidden", "You are not an admin of any institution."));
@@ -71,7 +75,11 @@ public class CreateTeacherCommandHandler : IRequestHandler<CreateTeacherCommand,
         var teacherUserId = provisionedUser.UserId;
 
         // Assign Role
-        var roleResult = await _identityService.AssignRoleAsync(teacherUserId, Identity.Domain.Enums.UserRole.Teacher.ToString(), cancellationToken);
+        var roleResult = await _identityService.AssignRoleForProductAsync(
+            teacherUserId,
+            Identity.Domain.Enums.UserRole.Teacher.ToString(),
+            PlatformProduct.Coaching,
+            cancellationToken);
         if (roleResult.IsFailure)
         {
              await _identityService.DeleteUserAsync(teacherUserId, cancellationToken);

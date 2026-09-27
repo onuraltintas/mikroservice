@@ -1,4 +1,5 @@
 using EduPlatform.Shared.Kernel.Primitives;
+using Identity.Domain.Enums;
 
 namespace Identity.Domain.Entities;
 
@@ -16,6 +17,7 @@ public class RefreshToken : Entity
     public string? ReasonRevoked { get; private set; }
     public bool IsPersistent { get; private set; }
     public DateTimeOffset? MfaVerifiedAt { get; private set; }
+    public PlatformProduct? Product { get; private set; }
     
     // Computed Properties
     public bool IsExpired => DateTime.UtcNow >= ExpiresAt;
@@ -30,8 +32,12 @@ public class RefreshToken : Entity
         DateTime expiresAt,
         string? createdByIp,
         bool isPersistent = true,
-        DateTimeOffset? mfaVerifiedAt = null)
+        DateTimeOffset? mfaVerifiedAt = null,
+        PlatformProduct? product = null)
     {
+        if (product.HasValue && !Enum.IsDefined(product.Value))
+            throw new ArgumentOutOfRangeException(nameof(product));
+
         return new RefreshToken
         {
             Id = Guid.NewGuid(),
@@ -41,7 +47,8 @@ public class RefreshToken : Entity
             CreatedAt = DateTime.UtcNow,
             CreatedByIp = createdByIp,
             IsPersistent = isPersistent,
-            MfaVerifiedAt = mfaVerifiedAt
+            MfaVerifiedAt = mfaVerifiedAt,
+            Product = product
         };
     }
 

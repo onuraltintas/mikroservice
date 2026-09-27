@@ -18,7 +18,7 @@ describe('UserDetailsModalComponent access management', () => {
   };
   const auth = { userProfile: signal<UserProfile | null>(systemAdminProfile) };
   const identity = {
-    getUserById: vi.fn(() => of({ userId: 'user-1', email: 'user@example.com', fullName: 'User', role: 'Student', isActive: true, emailConfirmed: true, roles: [], permissions: [] })),
+    getUserById: vi.fn(() => of({ userId: 'user-1', email: 'user@example.com', fullName: 'User', role: 'Student', isActive: true, emailConfirmed: true, roles: ['Student'], permissions: [], productAccesses: [{ product: 'coaching', isActive: true }], productRoles: [{ role: 'Student', product: 'coaching' }] })),
     getUserSessions: vi.fn(() => of([{ id: 'session-1', createdAt: '2026-01-01T00:00:00Z', expiresAt: '2026-01-02T00:00:00Z', isPersistent: true }])),
     revokeUserSession: vi.fn(() => of(void 0)),
     revokeAllUserSessions: vi.fn(() => of(void 0)),
@@ -46,6 +46,20 @@ describe('UserDetailsModalComponent access management', () => {
     fixture.detectChanges();
     expect(identity.getUserSessions).toHaveBeenCalledWith('user-1');
     expect(component.sessions().length).toBe(1);
+  });
+
+  it('shows the user’s active platform access separately from their roles', () => {
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Platform Erişimleri');
+    expect(fixture.nativeElement.textContent).toContain('Koçluk');
+    expect(fixture.nativeElement.textContent).toContain('Aktif');
+  });
+
+  it('shows which platform each role is assigned to', () => {
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Student · Koçluk');
   });
 
   it('revokes a selected session and refreshes the local list', async () => {

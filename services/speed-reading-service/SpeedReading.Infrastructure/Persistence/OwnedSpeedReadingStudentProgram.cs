@@ -69,6 +69,10 @@ internal sealed class OwnedSpeedReadingStudentProgram(OwnedSpeedReadingDbContext
                     previous?.LongestStreak ?? 0,
                     userId,
                     now);
+                progress.SetSchedule(
+                    await OwnedSpeedReadingProgramSchedule.BuildAsync(db, template, null, cancellationToken),
+                    userId,
+                    now);
                 db.StudentProgramProgresses.Add(progress);
                 await db.SaveChangesAsync(cancellationToken);
                 if (transaction is not null)
@@ -90,12 +94,16 @@ internal sealed class OwnedSpeedReadingStudentProgram(OwnedSpeedReadingDbContext
             on template.TargetAgeGroupConfigurationId equals ageGroup.Id into ageGroups
         from ageGroup in ageGroups.DefaultIfEmpty()
         where progress.UserId == userId
-            && !template.IsDeleted
         select new StudentProgramRow(progress, template, ageGroup == null ? "Bilinmiyor" : ageGroup.DisplayName);
 
     private static StudentProgramInfo ToInfo(StudentProgramRow row)
     {
         var programTypeName = row.Template.ProgramType == 1 ? "Sınav Hazırlık" : "Standart Program";
+        var visibleDay = row.Progress.IsActive && !row.Progress.CompletedDate.HasValue
+            ? Math.Min(((row.Progress.CurrentWeek - 1) * 7) + row.Progress.CurrentDay,
+                SpeedReading.Application.DailyProgress.SpeedReadingDailyProgressRules.GetCalendarAvailableDay(row.Progress.AssignedDate, DateTime.UtcNow))
+            : ((row.Progress.CurrentWeek - 1) * 7) + row.Progress.CurrentDay;
+        var (week, day) = SpeedReading.Application.DailyProgress.SpeedReadingDailyProgressRules.GetWeekAndDay(Math.Max(visibleDay, 1));
         return new StudentProgramInfo(
             row.Progress.Id,
             row.Progress.ProgramTemplateId,
@@ -108,8 +116,8 @@ internal sealed class OwnedSpeedReadingStudentProgram(OwnedSpeedReadingDbContext
             row.AgeGroupName,
             row.Template.MinAssessmentScore,
             row.Template.MaxAssessmentScore,
-            row.Progress.CurrentWeek,
-            row.Progress.CurrentDay,
+            week,
+            day,
             row.Progress.CurrentDifficultyLevel,
             row.Template.MaxDifficultyLevel,
             row.Progress.DaysCompleted,

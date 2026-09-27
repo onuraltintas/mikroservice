@@ -87,9 +87,19 @@ public class UserRepository : IUserRepository
         await _context.Users.AddAsync(user, cancellationToken);
     }
 
+    public void TrackProductAccessIfNew(User user, PlatformProduct product)
+    {
+        var access = user.ProductAccesses.SingleOrDefault(candidate => candidate.Product == product);
+        if (access is not null)
+        {
+            _context.Entry(access).State = EntityState.Added;
+        }
+    }
+
     public async Task<User?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
     {
         return await _context.Users
+            .Include(u => u.ProductAccesses)
             .Include(u => u.Roles)
                 .ThenInclude(ur => ur.Role)
                     .ThenInclude(r => r.Permissions)
@@ -110,6 +120,8 @@ public class UserRepository : IUserRepository
         return await _context.Users
             .AsNoTracking()
             .Where(user => Enumerable.Contains(ids, user.Id))
+            .Where(user => user.ProductAccesses.Any(access =>
+                access.Product == PlatformProduct.SpeedReading && access.IsActive))
             .Select(user => new SpeedReadingUserDirectoryItem(
                 user.Id,
                 user.FirstName,
@@ -127,7 +139,9 @@ public class UserRepository : IUserRepository
     {
         var query = _context.Users
             .AsNoTracking()
-            .Where(user => user.IsActive);
+            .Where(user => user.IsActive
+                && user.ProductAccesses.Any(access =>
+                    access.Product == PlatformProduct.SpeedReading && access.IsActive));
 
         if (!string.IsNullOrWhiteSpace(role))
         {
@@ -142,10 +156,40 @@ public class UserRepository : IUserRepository
             .ToListAsync(cancellationToken);
     }
 
+    public Task<bool> IsSpeedReadingMembershipEligibleAsync(
+        Guid userId,
+        string role,
+        CancellationToken cancellationToken)
+    {
+        var normalizedRole = role.Trim();
+        if (userId == Guid.Empty
+            || !(string.Equals(normalizedRole, "Student", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(normalizedRole, "Teacher", StringComparison.OrdinalIgnoreCase)))
+        {
+            return Task.FromResult(false);
+        }
+
+        var canonicalRole = string.Equals(normalizedRole, "Student", StringComparison.OrdinalIgnoreCase)
+            ? "Student"
+            : "Teacher";
+
+        return _context.Users.AsNoTracking().AnyAsync(user =>
+                user.Id == userId
+                && user.IsActive
+                && user.ProductAccesses.Any(access =>
+                    access.Product == PlatformProduct.SpeedReading && access.IsActive)
+                && user.Roles.Any(userRole =>
+                    userRole.Product == PlatformProduct.SpeedReading
+                    && !userRole.Role.IsDeleted
+                    && userRole.Role.Name == canonicalRole),
+            cancellationToken);
+    }
+
     public async Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken)
     {
         var normalizedEmail = email.ToLowerInvariant();
         return await _context.Users
+            .Include(u => u.ProductAccesses)
             .Include(u => u.Roles)
                 .ThenInclude(ur => ur.Role)
                     .ThenInclude(r => r.Permissions)
@@ -159,6 +203,7 @@ public class UserRepository : IUserRepository
     {
         return await _context.Users
             .Include(u => u.Logins)
+            .Include(u => u.ProductAccesses)
             .Include(u => u.Roles)
                 .ThenInclude(ur => ur.Role)
                     .ThenInclude(r => r.Permissions)
@@ -227,7 +272,8 @@ public class UserRepository : IUserRepository
                 token.UserId,
                 token.ExpiresAt,
                 token.IsPersistent,
-                token.MfaVerifiedAt
+                token.MfaVerifiedAt,
+                token.Product
             })
             .FirstOrDefaultAsync(cancellationToken);
 
@@ -236,6 +282,7 @@ public class UserRepository : IUserRepository
 
         var user = await _context.Users
             .AsNoTracking()
+            .Include(u => u.ProductAccesses)
             .Include(u => u.Roles)
                 .ThenInclude(userRole => userRole.Role)
                     .ThenInclude(role => role.Permissions)
@@ -250,7 +297,8 @@ public class UserRepository : IUserRepository
             matchedToken.ExpiresAt,
             createdByIp: null,
             matchedToken.IsPersistent,
-            matchedToken.MfaVerifiedAt));
+            matchedToken.MfaVerifiedAt,
+            matchedToken.Product));
         return user;
     }
 
@@ -326,6 +374,26 @@ public class UserRepository : IUserRepository
         }
     }
 
+    public async Task RevokeActiveRefreshTokensForProductAsync(
+        Guid userId,
+        PlatformProduct product,
+        string reason,
+        CancellationToken cancellationToken)
+    {
+        var now = DateTime.UtcNow;
+        var activeTokens = await _context.RefreshTokens
+            .Where(token => token.UserId == userId
+                && token.Product == product
+                && token.RevokedAt == null
+                && token.ExpiresAt > now)
+            .ToListAsync(cancellationToken);
+
+        foreach (var token in activeTokens)
+        {
+            token.Revoke("system", reason);
+        }
+    }
+
     public async Task RevokeActiveRefreshTokensForInstitutionAsync(
         Guid institutionId,
         string reason,
@@ -351,7 +419,7 @@ public class UserRepository : IUserRepository
         }
     }
 
-    public async Task<PagedList<UserProfileDto>> GetAllAsync(int page, int pageSize, string? searchTerm, string? role, bool? isActive, Guid? institutionId, CancellationToken cancellationToken)
+    public async Task<PagedList<UserProfileDto>> GetAllAsync(int page, int pageSize, string? searchTerm, string? role, bool? isActive, Guid? institutionId, CancellationToken cancellationToken, PlatformProduct? product = null)
     {
         if (page is < 1 or > GetAllUsersQuery.MaxPageNumber)
         {
@@ -366,6 +434,12 @@ public class UserRepository : IUserRepository
         var query = _context.Users
             .AsNoTracking()
             .AsQueryable();
+
+        if (product is { } scopedProduct)
+        {
+            query = query.Where(user => user.ProductAccesses.Any(access =>
+                access.Product == scopedProduct && access.IsActive));
+        }
 
         if (institutionId.HasValue)
         {
@@ -413,7 +487,12 @@ public class UserRepository : IUserRepository
 
         if (!string.IsNullOrWhiteSpace(role))
         {
-            query = query.Where(u => u.Roles.Any(r => r.Role.Name == role));
+            query = query.Where(user => user.Roles.Any(userRole =>
+                userRole.Role.Name == role
+                && (product == null
+                    || userRole.Product == product
+                    || userRole.Product == null
+                    && userRole.Role.Name == Identity.Domain.Enums.UserRole.SystemAdmin.ToString())));
         }
 
         var totalCount = await query.CountAsync(cancellationToken);
@@ -422,6 +501,7 @@ public class UserRepository : IUserRepository
             .OrderByDescending(u => u.CreatedAt)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
+            .Include(u => u.ProductAccesses)
             .Include(u => u.Roles)
             .ThenInclude(ur => ur.Role)
             .ToListAsync(cancellationToken);
@@ -455,7 +535,7 @@ public class UserRepository : IUserRepository
         {
             UserId = u.Id,
             Email = u.Email,
-            Role = u.Roles.FirstOrDefault()?.Role?.Name ?? "Unknown",
+            Role = GetVisibleRoles(u, product).FirstOrDefault()?.Role?.Name ?? "Unknown",
             FirstName = u.FirstName,
             LastName = u.LastName,
             FullName = (string.IsNullOrWhiteSpace(u.FirstName) && string.IsNullOrWhiteSpace(u.LastName)) 
@@ -468,7 +548,15 @@ public class UserRepository : IUserRepository
             LastLoginAt = u.LastLoginAt,
             CreatedAt = u.CreatedAt,
             StudentCount = teacherStudentCounts.TryGetValue(u.Id, out var studentCount) ? studentCount : null,
-            Roles = u.Roles.Select(ur => ur.Role.Name).ToList(),
+            Roles = GetVisibleRoles(u, product).Select(userRole => userRole.Role.Name).ToList(),
+            ProductRoles = GetVisibleRoles(u, product)
+                .Select(userRole => new UserProductRoleDto(
+                    userRole.Role.Name,
+                    userRole.Product?.ToRouteValue()))
+                .ToList(),
+            ProductAccesses = u.ProductAccesses
+                .Select(access => new UserProductAccessDto(access.Product.ToRouteValue(), access.IsActive))
+                .ToList(),
             TeacherDetails = teacherProfiles.TryGetValue(u.Id, out var teacher)
                 ? new TeacherDetailsDto
                 {
@@ -498,9 +586,15 @@ public class UserRepository : IUserRepository
 
     public async Task<UserSummaryDto> GetSummaryAsync(
         Guid? institutionId,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        PlatformProduct? product = null)
     {
         var query = _context.Users.AsNoTracking().AsQueryable();
+        if (product is { } scopedProduct)
+        {
+            query = query.Where(user => user.ProductAccesses.Any(access =>
+                access.Product == scopedProduct && access.IsActive));
+        }
         if (institutionId.HasValue)
         {
             var scopedInstitutionId = institutionId.Value;
@@ -526,6 +620,14 @@ public class UserRepository : IUserRepository
             .Where(u => u.Roles.Any(r => Enumerable.Contains(roleNames, r.Role.Name)))
             .ToListAsync(cancellationToken);
     }
+
+    private static IEnumerable<Identity.Domain.Entities.UserRole> GetVisibleRoles(
+        User user,
+        PlatformProduct? product) => product is null
+        ? user.Roles
+        : user.Roles.Where(userRole => userRole.Product == product
+            || userRole.Product is null
+            && userRole.Role.Name == Identity.Domain.Enums.UserRole.SystemAdmin.ToString());
 }
 
 public class InstitutionRepository : IInstitutionRepository
@@ -561,14 +663,15 @@ public class InstitutionRepository : IInstitutionRepository
     {
         return await _context.Institutions
             .AsNoTracking()
+            .Where(institution => institution.Admins.Any(admin =>
+                admin.Product == PlatformProduct.SpeedReading
+                && admin.IsActive
+                && admin.User.IsActive))
             .OrderBy(institution => institution.Id)
             .Select(institution => new SpeedReadingInstitutionScopeItem(
                 institution.Id,
                 institution.Name,
-                institution.IsActive,
-                institution.Students.Count(student => student.IsActive && student.User.IsActive),
-                institution.Teachers.Count(teacher => teacher.IsActive && teacher.User.IsActive),
-                institution.Admins.Count(admin => admin.IsActive && admin.User.IsActive)))
+                institution.IsActive))
             .ToListAsync(cancellationToken);
     }
 
@@ -672,20 +775,47 @@ public class InstitutionRepository : IInstitutionRepository
             .FirstOrDefaultAsync(cancellationToken);
     }
 
-    public Task<bool> HasAdminAsync(Guid institutionId, Guid userId, CancellationToken cancellationToken)
+    public Task<bool> HasAdminAsync(Guid institutionId, Guid userId, PlatformProduct product, CancellationToken cancellationToken)
     {
         return _context.InstitutionAdmins.AnyAsync(admin =>
-            admin.InstitutionId == institutionId && admin.UserId == userId && admin.IsActive,
+            admin.InstitutionId == institutionId && admin.UserId == userId
+            && admin.Product == product && admin.IsActive,
+            cancellationToken);
+    }
+
+    public Task<bool> CanManageSpeedReadingInstitutionAsync(
+        Guid userId,
+        Guid institutionId,
+        CancellationToken cancellationToken)
+    {
+        if (userId == Guid.Empty || institutionId == Guid.Empty)
+            return Task.FromResult(false);
+
+        return _context.InstitutionAdmins.AsNoTracking().AnyAsync(admin =>
+            admin.UserId == userId
+            && admin.InstitutionId == institutionId
+            && admin.Product == PlatformProduct.SpeedReading
+            && admin.IsActive
+            && admin.User.IsActive
+            && admin.User.ProductAccesses.Any(access =>
+                access.Product == PlatformProduct.SpeedReading && access.IsActive)
+            && admin.User.Roles.Any(userRole =>
+                userRole.Product == PlatformProduct.SpeedReading
+                && !userRole.Role.IsDeleted
+                && (userRole.Role.Name == Identity.Domain.Enums.UserRole.InstitutionAdmin.ToString()
+                    || userRole.Role.Name == Identity.Domain.Enums.UserRole.InstitutionOwner.ToString()))
+            && admin.Institution.IsActive,
             cancellationToken);
     }
 
     public async Task<IReadOnlyList<InstitutionAdminDto>> GetAdminsAsync(
         Guid institutionId,
+        PlatformProduct product,
         CancellationToken cancellationToken)
     {
         return await _context.InstitutionAdmins
             .AsNoTracking()
-            .Where(admin => admin.InstitutionId == institutionId)
+            .Where(admin => admin.InstitutionId == institutionId && admin.Product == product)
             .OrderByDescending(admin => admin.IsActive)
             .ThenBy(admin => admin.User.Email)
             .Select(admin => new InstitutionAdminDto(
@@ -701,19 +831,23 @@ public class InstitutionRepository : IInstitutionRepository
     public Task<InstitutionAdmin?> GetAdminAsync(
         Guid institutionId,
         Guid userId,
+        PlatformProduct product,
         CancellationToken cancellationToken)
     {
         return _context.InstitutionAdmins.FirstOrDefaultAsync(
-            admin => admin.InstitutionId == institutionId && admin.UserId == userId,
+            admin => admin.InstitutionId == institutionId
+                && admin.UserId == userId
+                && admin.Product == product,
             cancellationToken);
     }
 
-    public async Task<Guid?> GetInstitutionIdByAdminIdAsync(Guid adminUserId, CancellationToken cancellationToken)
+    public async Task<Guid?> GetInstitutionIdByAdminIdAsync(Guid adminUserId, PlatformProduct product, CancellationToken cancellationToken)
     {
         var admin = await _context.InstitutionAdmins
             .AsNoTracking()
             .FirstOrDefaultAsync(a =>
                 a.UserId == adminUserId
+                && a.Product == product
                 && a.IsActive
                 && a.User.IsActive
                 && a.Institution.IsActive,
@@ -721,11 +855,12 @@ public class InstitutionRepository : IInstitutionRepository
         return admin?.InstitutionId;
     }
 
-    public async Task<Guid?> GetPrimaryInstitutionIdByUserIdAsync(Guid userId, CancellationToken cancellationToken)
+    public async Task<Guid?> GetPrimaryInstitutionIdByUserIdAsync(Guid userId, PlatformProduct product, CancellationToken cancellationToken)
     {
         var adminInstitutionId = await _context.InstitutionAdmins
             .AsNoTracking()
             .Where(a => a.UserId == userId
+                && a.Product == product
                 && a.IsActive
                 && a.User.IsActive
                 && a.Institution.IsActive)
@@ -737,6 +872,11 @@ public class InstitutionRepository : IInstitutionRepository
         if (adminInstitutionId.HasValue)
         {
             return adminInstitutionId;
+        }
+
+        if (product != PlatformProduct.Coaching)
+        {
+            return null;
         }
 
         var teacherInstitutionId = await _context.TeacherProfiles
@@ -789,16 +929,17 @@ public class InstitutionRepository : IInstitutionRepository
             .FirstOrDefaultAsync(cancellationToken);
     }
 
-    public async Task<bool> IsUserInInstitutionAsync(Guid userId, Guid institutionId, CancellationToken cancellationToken)
+    public async Task<bool> IsUserInInstitutionAsync(Guid userId, Guid institutionId, PlatformProduct product, CancellationToken cancellationToken)
     {
         return await _context.InstitutionAdmins.AnyAsync(a =>
                    a.UserId == userId
                    && a.InstitutionId == institutionId
+                   && a.Product == product
                    && a.IsActive
                    && a.User.IsActive
                    && a.Institution.IsActive,
                    cancellationToken)
-            || await _context.TeacherProfiles.AnyAsync(t =>
+            || product == PlatformProduct.Coaching && await _context.TeacherProfiles.AnyAsync(t =>
                    t.UserId == userId
                    && t.InstitutionId == institutionId
                    && t.IsActive
@@ -806,7 +947,7 @@ public class InstitutionRepository : IInstitutionRepository
                    && t.Institution != null
                    && t.Institution.IsActive,
                    cancellationToken)
-            || await _context.StudentProfiles.AnyAsync(s =>
+            || product == PlatformProduct.Coaching && await _context.StudentProfiles.AnyAsync(s =>
                    s.UserId == userId
                    && s.InstitutionId == institutionId
                    && s.IsActive
@@ -814,7 +955,7 @@ public class InstitutionRepository : IInstitutionRepository
                    && s.Institution != null
                    && s.Institution.IsActive,
                    cancellationToken)
-            || await _context.StudentProfiles.AnyAsync(s =>
+            || product == PlatformProduct.Coaching && await _context.StudentProfiles.AnyAsync(s =>
                    s.ParentId == userId
                    && s.InstitutionId == institutionId
                    && s.IsActive
@@ -1856,6 +1997,7 @@ public class TeacherRepository : ITeacherRepository
         string? searchTerm,
         int? gradeLevel,
         bool? isActive,
+        IReadOnlyCollection<Guid>? studentUserIds,
         CancellationToken cancellationToken)
     {
         var query =
@@ -1879,6 +2021,7 @@ public class TeacherRepository : ITeacherRepository
                 && (!gradeLevel.HasValue || student.GradeLevel == gradeLevel.Value)
                 && (!isActive.HasValue
                     || (student.IsActive == isActive.Value && student.User.IsActive == isActive.Value))
+                && (studentUserIds == null || studentUserIds.Contains(student.UserId))
             select new
             {
                 student.UserId,
@@ -2001,6 +2144,7 @@ public class TeacherRepository : ITeacherRepository
                 && assignment.IsActive)
             .ToListAsync(cancellationToken);
     }
+
 }
 
 public class StudentRepository : IStudentRepository

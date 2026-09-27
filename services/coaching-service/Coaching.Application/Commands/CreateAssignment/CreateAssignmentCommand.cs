@@ -1,4 +1,5 @@
 using MediatR;
+using System.Text.Json.Serialization;
 
 namespace Coaching.Application.Commands.CreateAssignment;
 
@@ -35,6 +36,9 @@ public record CreateAssignmentCommand : IRequest<CreateAssignmentResponse>
     
     public List<Guid> StudentIds { get; init; } = new();
     public string? IdempotencyKey { get; init; }
+
+    [JsonIgnore]
+    public bool IsInstitutionAdminOperation { get; init; }
 }
 
 public record CreateAssignmentResponse(

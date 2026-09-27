@@ -4,6 +4,7 @@ using Coaching.Domain.Enums;
 using EduPlatform.Shared.Contracts.Events.Coaching;
 using FluentValidation;
 using MediatR;
+using System.Text.Json.Serialization;
 
 namespace Coaching.Application.Commands.UpdateExam;
 
@@ -17,7 +18,11 @@ public record UpdateExamCommand(
     int? DurationMinutes,
     decimal MaxScore,
     int? TargetGradeLevel
-) : IRequest<UpdateExamResponse>;
+) : IRequest<UpdateExamResponse>
+{
+    [JsonIgnore]
+    public bool IsInstitutionAdminOperation { get; init; }
+}
 
 public record UpdateExamResponse(Guid ExamId, DateTime ExamDate, decimal MaxScore);
 
@@ -31,7 +36,11 @@ public record UpdateExamResultCommand(
     Dictionary<string, decimal>? SubjectScores,
     int? Ranking,
     string? Notes
-) : IRequest<UpdateExamResultResponse>;
+) : IRequest<UpdateExamResultResponse>
+{
+    [JsonIgnore]
+    public bool IsInstitutionAdminOperation { get; init; }
+}
 
 public record UpdateExamResultResponse(Guid ExamId, Guid ResultId, decimal Score);
 
@@ -97,7 +106,7 @@ public sealed class UpdateExamCommandHandler
         var exam = await _repository.GetByIdAsync(command.ExamId, cancellationToken)
             ?? throw new InvalidOperationException($"Exam {command.ExamId} not found");
 
-        _accessPolicy.RequireTeacher(exam.CreatedByTeacherId);
+        _accessPolicy.RequireTeacher(exam.CreatedByTeacherId, command.IsInstitutionAdminOperation);
         exam.UpdateEditableDetails(
             command.Title,
             command.Type,
@@ -152,7 +161,7 @@ public sealed class UpdateExamResultCommandHandler
         var exam = await _repository.GetByIdAsync(command.ExamId, cancellationToken)
             ?? throw new InvalidOperationException($"Exam {command.ExamId} not found");
 
-        _accessPolicy.RequireTeacher(exam.CreatedByTeacherId);
+        _accessPolicy.RequireTeacher(exam.CreatedByTeacherId, command.IsInstitutionAdminOperation);
         exam.UpdateResult(
             command.ResultId,
             command.Score,

@@ -5,8 +5,16 @@ public sealed record VisualExpansionRoundResult(
     bool IsCorrect,
     int ResponseTimeMs);
 
+public sealed record VisualExpansionDifficulty(
+    int Degrees,
+    int DisplayDurationMs);
+
 public static class VisualExpansionRoundRules
 {
+    private const int AngleIncreaseDegrees = 2;
+    private const decimal DisplayDurationMultiplier = 0.95m;
+    private const int MinimumDisplayDurationMs = 100;
+
     private static readonly string[] Letters = "ABCDEFGHKLMNPRSTUVYZ"
         .Select(character => character.ToString())
         .ToArray();
@@ -54,6 +62,25 @@ public static class VisualExpansionRoundRules
             && expectedAnswers.Select(Normalize).SequenceEqual(submittedAnswers.Select(Normalize));
 
         return new VisualExpansionRoundResult(true, isCorrect, responseTimeMs);
+    }
+
+    public static VisualExpansionDifficulty AdvanceDifficulty(
+        int currentDegrees,
+        int targetDegrees,
+        int currentDisplayDurationMs,
+        bool isCorrect)
+    {
+        var degrees = Math.Clamp(currentDegrees, 2, 60);
+        var target = Math.Clamp(targetDegrees, degrees, 60);
+        var duration = Math.Clamp(currentDisplayDurationMs, MinimumDisplayDurationMs, 5_000);
+        if (!isCorrect)
+            return new VisualExpansionDifficulty(degrees, duration);
+
+        return new VisualExpansionDifficulty(
+            Math.Min(target, degrees + AngleIncreaseDegrees),
+            Math.Max(
+                MinimumDisplayDurationMs,
+                (int)Math.Round(duration * DisplayDurationMultiplier, MidpointRounding.AwayFromZero)));
     }
 
     private static string Normalize(string value) => value.Trim().ToUpperInvariant();

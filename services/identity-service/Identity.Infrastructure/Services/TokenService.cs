@@ -5,6 +5,7 @@ using System.Text;
 using EduPlatform.Shared.Security.Configuration;
 using Identity.Application.Interfaces;
 using Identity.Domain.Entities;
+using Identity.Domain.Enums;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 
@@ -21,7 +22,10 @@ public class TokenService : ITokenService
         _configService = configService;
     }
 
-    public async Task<string> GenerateAccessTokenAsync(User user, DateTimeOffset? mfaVerifiedAt = null)
+    public async Task<string> GenerateAccessTokenAsync(
+        User user,
+        DateTimeOffset? mfaVerifiedAt = null,
+        PlatformProduct? product = null)
     {
         try 
         {
@@ -51,6 +55,11 @@ public class TokenService : ITokenService
                 new Claim(JwtRegisteredClaimNames.Iat, new DateTimeOffset(issuedAt).ToUnixTimeSeconds().ToString(System.Globalization.CultureInfo.InvariantCulture), ClaimValueTypes.Integer64)
             };
 
+            if (product.HasValue)
+            {
+                claims.Add(new Claim("platform_product", product.Value.ToRouteValue()));
+            }
+
             if (mfaVerifiedAt.HasValue)
             {
                 claims.Add(new Claim("amr", "mfa"));
@@ -59,7 +68,7 @@ public class TokenService : ITokenService
 
             if (user.Roles != null)
             {
-                foreach (var userRole in user.Roles)
+                foreach (var userRole in user.GetRolesForProductScope(product))
                 {
                     // Skip deleted roles
                     if (userRole.Role != null && !userRole.Role.IsDeleted)
@@ -71,11 +80,21 @@ public class TokenService : ITokenService
                             Identity.Domain.Enums.UserRole.SystemAdmin.ToString(),
                             StringComparison.OrdinalIgnoreCase)
                                 ? Identity.Domain.Constants.Permissions.GetAll()
+                                    .Concat(userRole.Role.Permissions?.Select(permission => permission.Permission) ?? [])
                                 : userRole.Role.Permissions?.Select(permission => permission.Permission)
                                     ?? [];
 
                         foreach (var permission in permissions)
                         {
+                            if (!string.Equals(
+                                    userRole.Role.Name,
+                                    Identity.Domain.Enums.UserRole.SystemAdmin.ToString(),
+                                    StringComparison.OrdinalIgnoreCase)
+                                && !PlatformPermissionScope.IsAllowed(permission, product))
+                            {
+                                continue;
+                            }
+
                             if (!claims.Any(c => c.Type == "permission" && c.Value == permission))
                             {
                                 claims.Add(new Claim("permission", permission));
@@ -123,7 +142,8 @@ public class TokenService : ITokenService
         Guid userId,
         string ipAddress,
         bool isPersistent = true,
-        DateTimeOffset? mfaVerifiedAt = null)
+        DateTimeOffset? mfaVerifiedAt = null,
+        PlatformProduct? product = null)
     {
         var expiryDaysStr = Environment.GetEnvironmentVariable("JWT_REFRESH_TOKEN_EXPIRY_DAYS")
                             ?? _configuration["JWT_REFRESH_TOKEN_EXPIRY_DAYS"]
@@ -142,7 +162,8 @@ public class TokenService : ITokenService
             DateTime.UtcNow.AddDays(expiryDays), 
             ipAddress,
             isPersistent,
-            mfaVerifiedAt
+            mfaVerifiedAt,
+            product
         );
     }
 }

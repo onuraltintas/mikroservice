@@ -1,4 +1,5 @@
 using EduPlatform.Shared.Kernel.Results;
+using Identity.Domain.Enums;
 using MediatR;
 
 namespace Identity.Application.Commands.UpdateUserProfile;
@@ -16,5 +17,6 @@ public record UpdateUserProfileCommand(
     int? GradeLevel,
     DateTime? BirthDate,
     Identity.Domain.Enums.LearningStyle? LearningStyle,
-    bool? ShareProgressWithTeachers = null
+    bool? ShareProgressWithTeachers = null,
+    PlatformProduct? Product = null
 ) : IRequest<Result>;

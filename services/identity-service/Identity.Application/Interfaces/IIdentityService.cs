@@ -1,5 +1,6 @@
 using EduPlatform.Shared.Kernel.Results;
 using Identity.Domain.Entities;
+using Identity.Domain.Enums;
 
 namespace Identity.Application.Interfaces;
 
@@ -35,6 +36,12 @@ public interface IIdentityService
     /// Assigns a role to a user.
     /// </summary>
     Task<Result> AssignRoleAsync(Guid userId, string roleName, CancellationToken cancellationToken);
+    Task<Result> AssignRoleForProductAsync(
+        Guid userId,
+        string roleName,
+        PlatformProduct product,
+        CancellationToken cancellationToken,
+        UserProductAccessSource accessSource = UserProductAccessSource.Admin);
 
     /// <summary>
     /// Creates a user with an unusable internal password and a one-time password setup token.
@@ -51,6 +58,7 @@ public interface IIdentityService
         string firstName, 
         string lastName, 
         string roleName,
+        PlatformProduct? product,
         string? phoneNumber,
         CancellationToken cancellationToken);
 
@@ -63,6 +71,11 @@ public interface IIdentityService
     /// Removes a role from a user.
     /// </summary>
     Task<Result> RemoveRoleAsync(Guid userId, string roleName, CancellationToken cancellationToken);
+    Task<Result> RemoveRoleForProductAsync(
+        Guid userId,
+        string roleName,
+        PlatformProduct product,
+        CancellationToken cancellationToken);
 
     /// <summary>
     /// Gets all available role names.

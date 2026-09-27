@@ -31,7 +31,7 @@ public class SessionDeleteHandlers :
         var session = await _repository.GetByIdAsync(command.SessionId, cancellationToken);
         if (session == null) throw new InvalidOperationException("Session not found");
 
-        _accessPolicy.RequireTeacher(session.TeacherId);
+        _accessPolicy.RequireTeacher(session.TeacherId, command.IsInstitutionAdminOperation);
 
         session.Cancel();
 
@@ -53,7 +53,7 @@ public class SessionDeleteHandlers :
         var session = await _repository.GetByIdAsync(command.SessionId, cancellationToken);
         if (session == null) throw new InvalidOperationException("Session not found");
 
-        _accessPolicy.RequireTeacher(session.TeacherId);
+        _accessPolicy.RequireTeacher(session.TeacherId, command.IsInstitutionAdminOperation);
 
         await _repository.DeleteAsync(session, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);

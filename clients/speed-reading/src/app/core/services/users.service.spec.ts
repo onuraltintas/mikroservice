@@ -130,9 +130,17 @@ describe('UsersService', () => {
   it('sends role assignments using the identity command shape', () => {
     service.assignRole('user-1', { roleName: 'Teacher' }).subscribe();
 
-    const request = http.expectOne('/api/v1/users/user-1/roles');
+    const request = http.expectOne('/api/v1/users/user-1/products/speed-reading/roles');
     expect(request.request.method).toBe('POST');
     expect(request.request.body).toEqual({ roleName: 'Teacher' });
+    request.flush(null);
+  });
+
+  it('sends role removals within the Speed Reading product boundary', () => {
+    service.removeRole('user-1', 'Teacher').subscribe();
+
+    const request = http.expectOne('/api/v1/users/user-1/products/speed-reading/roles/Teacher');
+    expect(request.request.method).toBe('DELETE');
     request.flush(null);
   });
 

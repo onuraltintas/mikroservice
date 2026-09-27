@@ -225,6 +225,8 @@ public sealed class TeacherAnalyticsController(
                 viewerUserId.Value,
                 studentId,
                 targetTeacherUserId,
+                User.IsInRole("SystemAdmin"),
+                User.IsInRole("InstitutionAdmin") || User.IsInRole("InstitutionOwner"),
                 cancellationToken));
     }
 

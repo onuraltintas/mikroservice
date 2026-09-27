@@ -14,6 +14,7 @@ using Coaching.Application.Queries.GetTeacherAssignments;
 using Coaching.Application.Queries.GetStudentAssignments;
 using Coaching.Application.Queries.GetAssignmentAttachment;
 using Coaching.Application.Queries;
+using Coaching.Domain.Enums;
 using MediatR;
 using EduPlatform.Shared.Kernel.Exceptions;
 
@@ -453,12 +454,13 @@ public class AssignmentsController : ControllerBase
         Guid teacherId,
         CancellationToken cancellationToken,
         [FromQuery] int pageNumber = CoachingPaging.DefaultPageNumber,
-        [FromQuery] int pageSize = CoachingPaging.DefaultPageSize)
+        [FromQuery] int pageSize = CoachingPaging.DefaultPageSize,
+        [FromQuery] AssignmentStatus? status = null)
     {
         _logger.LogInformation("Getting assignments for teacher: {TeacherId}", teacherId);
 
         var result = await _mediator.Send(
-            new GetTeacherAssignmentsQuery(teacherId, pageNumber, pageSize),
+            new GetTeacherAssignmentsQuery(teacherId, pageNumber, pageSize, status),
             cancellationToken);
 
         return Ok(result);

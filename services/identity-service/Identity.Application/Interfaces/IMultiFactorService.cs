@@ -1,10 +1,11 @@
 using EduPlatform.Shared.Kernel.Results;
+using Identity.Domain.Enums;
 
 namespace Identity.Application.Interfaces;
 
 public interface IMultiFactorService
 {
-    string CreateChallenge(Guid userId, bool rememberMe);
+    string CreateChallenge(Guid userId, bool rememberMe, PlatformProduct? product = null);
     Result<MfaChallengePayload> ReadChallenge(string token);
     MfaSetupResponse CreateSetup(Guid userId, string email);
     Result<MfaSetupPayload> ReadSetupToken(string token);
@@ -23,7 +24,8 @@ public interface IMfaExpiringPayload
 public sealed record MfaChallengePayload(
     Guid UserId,
     bool RememberMe,
-    DateTimeOffset ExpiresAt) : IMfaExpiringPayload;
+    DateTimeOffset ExpiresAt,
+    PlatformProduct? Product = null) : IMfaExpiringPayload;
 
 public sealed record MfaSetupPayload(
     Guid UserId,

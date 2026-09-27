@@ -8,7 +8,6 @@ import { ToasterService } from '../../../core/services/toaster.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { AgeGroupConfigurationService } from '../../../core/services/age-group-configuration.service';
 import { AgeGroupConfiguration } from '../../../core/models/age-group-configuration.model';
-import { switchMap } from 'rxjs/operators';
 
 @Component({
   selector: 'app-profile-setup',
@@ -180,32 +179,31 @@ export class ProfileSetupComponent {
     const birthDate = new Date(
       `${this.basicInfoForm.value.dateOfBirth}T00:00:00.000Z`
     ).toISOString();
-    const identityProfile = {
-      birthDate,
-      learningStyle: this.basicInfoForm.value.learningStyle
-    };
     const speedReadingProfile = {
       currentLevel: 1,
       targetWPM: this.goalsForm.value.targetWPM,
       targetComprehension: this.goalsForm.value.targetComprehension,
       dailyGoalMinutes: this.goalsForm.value.dailyGoalMinutes,
-      ageGroupConfigurationId: this.calculatedAgeGroup
+      ageGroupConfigurationId: this.calculatedAgeGroup,
+      dateOfBirth: birthDate,
+      learningStyle: this.basicInfoForm.value.learningStyle
     };
 
-    this.http.put(`${environment.apiUrl}/users/me`, identityProfile).pipe(
-      switchMap(() => this.http.put(
-        `${environment.apiUrl}/speed-reading/adaptive-learning/profile`,
-        speedReadingProfile
-      ))
-    ).subscribe({
+    this.http.put(`${environment.apiUrl}/speed-reading/adaptive-learning/profile`, speedReadingProfile).subscribe({
       next: (response) => {
         this.saving = false;
 
         // Update currentUser with dateOfBirth and ageGroup for assessment
         this.authService.updateUser({
-          dateOfBirth: this.basicInfoForm.value.dateOfBirth,
+          dateOfBirth: birthDate,
+          learningStyle: this.basicInfoForm.value.learningStyle,
           ageGroupId: this.calculatedAgeGroup,
-          ageGroupName: this.calculatedAgeGroupText
+          ageGroupName: this.calculatedAgeGroupText,
+          hasCompletedProfile: true,
+          currentLevel: speedReadingProfile.currentLevel,
+          targetWPM: speedReadingProfile.targetWPM,
+          targetComprehension: speedReadingProfile.targetComprehension,
+          dailyGoalMinutes: speedReadingProfile.dailyGoalMinutes
         });
 
 

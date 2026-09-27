@@ -3,6 +3,8 @@
 **/dist
 **/.angular
 **/.tmp-ng
+**/.tmp
+**/.codex-staging-tmp
 **/coverage
 **/*.log
 **/.env

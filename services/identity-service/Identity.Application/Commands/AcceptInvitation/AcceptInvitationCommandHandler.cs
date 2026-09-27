@@ -69,6 +69,20 @@ public class AcceptInvitationCommandHandler : IRequestHandler<AcceptInvitationCo
         // 5. Accept invitation and perform the assignment
         try
         {
+            var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
+            if (user is null)
+            {
+                return Result.Failure(new Error("Auth.UserNotFound", "Kullanıcı bulunamadı."));
+            }
+
+            if (user.GrantProductAccess(
+                PlatformProduct.Coaching,
+                UserProductAccessSource.Invitation,
+                invitation.InviterId,
+                DateTimeOffset.UtcNow))
+            {
+                _userRepository.TrackProductAccessIfNew(user, PlatformProduct.Coaching);
+            }
             invitation.Accept(userId);
 
             // Perform different actions based on invitation type

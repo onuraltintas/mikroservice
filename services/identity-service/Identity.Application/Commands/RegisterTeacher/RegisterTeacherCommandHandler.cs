@@ -2,6 +2,7 @@ using EduPlatform.Shared.Kernel.Results;
 using EduPlatform.Shared.Security.Interfaces;
 using Identity.Application.Interfaces;
 using Identity.Domain.Entities;
+using Identity.Domain.Enums;
 using MediatR;
 using MassTransit;
 using EduPlatform.Shared.Contracts.Events.Identity;
@@ -35,6 +36,11 @@ public class RegisterTeacherCommandHandler : IRequestHandler<RegisterTeacherComm
 
     public async Task<Result<Guid>> Handle(RegisterTeacherCommand request, CancellationToken cancellationToken)
     {
+        if (request.Product is not { } product || !Enum.IsDefined(product))
+        {
+            return Result.Failure<Guid>(new Error("Auth.ProductRequired", "Kayıt yapılacak platform belirtilmelidir."));
+        }
+
         // Global Registration Switch Check
         var allowRegistration = await _configurationService.GetConfigurationValueAsync("auth.allowregistration", cancellationToken);
         if (!string.Equals(allowRegistration, "true", StringComparison.OrdinalIgnoreCase))
@@ -57,23 +63,47 @@ public class RegisterTeacherCommandHandler : IRequestHandler<RegisterTeacherComm
         var userId = identityResult.Value;
 
         // Assign Role
-        await _identityService.AssignRoleAsync(userId, Identity.Domain.Enums.UserRole.Teacher.ToString(), cancellationToken);
+        var roleResult = await _identityService.AssignRoleForProductAsync(
+            userId,
+            Identity.Domain.Enums.UserRole.Teacher.ToString(),
+            product,
+            cancellationToken,
+            UserProductAccessSource.SelfRegistration);
+        if (roleResult.IsFailure)
+        {
+            await _identityService.DeleteUserAsync(userId, cancellationToken);
+            return Result.Failure<Guid>(roleResult.Error);
+        }
 
         // Update Phone if needed
         var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
-        if (user != null) 
+        if (user is null)
         {
-            if (request.Phone != null) user.SetPhoneNumber(request.Phone);
-            user.GenerateEmailVerificationToken();
+            await _identityService.DeleteUserAsync(userId, cancellationToken);
+            return Result.Failure<Guid>(new Error("Registration.Failed", "Hesap kaydı tamamlanamadı."));
         }
 
-        // Independent Teacher
-        var teacher = TeacherProfile.Create(userId, request.FirstName, request.LastName, null, true);
+        if (user.GrantProductAccess(
+            product,
+            UserProductAccessSource.SelfRegistration,
+            grantedByUserId: null,
+            DateTimeOffset.UtcNow))
+        {
+            _userRepository.TrackProductAccessIfNew(user, product);
+        }
+        if (request.Phone != null)
+        {
+            user.SetPhoneNumber(request.Phone);
+        }
+        user.GenerateEmailVerificationToken();
 
         try
         {
-            // await _userRepository.AddAsync(user, cancellationToken); // Removed
-            await _teacherRepository.AddAsync(teacher, cancellationToken);
+            if (product == PlatformProduct.Coaching)
+            {
+                var teacher = TeacherProfile.Create(userId, request.FirstName, request.LastName, null, true);
+                await _teacherRepository.AddAsync(teacher, cancellationToken);
+            }
 
             // Publish Event for Notification Service (Verification)
             await _publishEndpoint.Publish(new UserRegisteredEvent(

@@ -10,6 +10,16 @@ namespace SpeedReading.API.Controllers;
 [Authorize]
 public sealed class AdaptiveLearningController(ISpeedReadingAdaptiveLearning adaptiveLearning) : ControllerBase
 {
+    [HttpGet("profile/status")]
+    public async Task<ActionResult<AdaptiveProfileSetupStatus>> GetProfileSetupStatus(
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryGetCurrentUserId(out var userId))
+            return Unauthorized();
+
+        return Ok(await adaptiveLearning.GetProfileSetupStatusAsync(userId, cancellationToken));
+    }
+
     [HttpGet("profile")]
     public async Task<ActionResult<AdaptiveProfileSummary>> GetProfile(
         CancellationToken cancellationToken = default)
@@ -20,6 +30,18 @@ public sealed class AdaptiveLearningController(ISpeedReadingAdaptiveLearning ada
         }
 
         return Ok(await adaptiveLearning.GetProfileAsync(userId, cancellationToken));
+    }
+
+    [HttpGet("profile/settings")]
+    public async Task<ActionResult<AdaptiveProfileSettings>> GetProfileSettings(
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryGetCurrentUserId(out var userId))
+        {
+            return Unauthorized();
+        }
+
+        return Ok(await adaptiveLearning.GetProfileSettingsAsync(userId, cancellationToken));
     }
 
     [HttpPut("profile")]
@@ -35,7 +57,9 @@ public sealed class AdaptiveLearningController(ISpeedReadingAdaptiveLearning ada
         if (request.CurrentLevel < 1
             || request.TargetWPM < 0
             || request.TargetComprehension is < 0 or > 100
-            || request.DailyGoalMinutes is < 5 or > 480)
+            || request.DailyGoalMinutes is < 5 or > 480
+            || request.DateOfBirth.HasValue && request.DateOfBirth.Value.Date > DateTime.UtcNow.Date
+            || request.LearningStyle is not null && !IsSupportedLearningStyle(request.LearningStyle))
         {
             return BadRequest("Profile settings are outside the allowed range.");
         }
@@ -43,6 +67,11 @@ public sealed class AdaptiveLearningController(ISpeedReadingAdaptiveLearning ada
         await adaptiveLearning.UpdateProfileSettingsAsync(userId, request, cancellationToken);
         return NoContent();
     }
+
+    private static bool IsSupportedLearningStyle(string learningStyle) =>
+        learningStyle.Equals("visual", StringComparison.OrdinalIgnoreCase)
+        || learningStyle.Equals("auditory", StringComparison.OrdinalIgnoreCase)
+        || learningStyle.Equals("kinesthetic", StringComparison.OrdinalIgnoreCase);
 
     [HttpGet("dashboard")]
     public async Task<ActionResult<AdaptiveDashboardSummary>> GetDashboard(

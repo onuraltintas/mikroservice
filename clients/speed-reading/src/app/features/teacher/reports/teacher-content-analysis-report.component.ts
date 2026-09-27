@@ -135,10 +135,20 @@ export class TeacherContentAnalysisReportComponent implements OnInit {
     this.error.set(null);
 
     const { startDate, endDate } = this.calculateDateRange();
+    const institutionViewer = this.authService.hasRole('InstitutionAdmin')
+      || this.authService.hasRole('InstitutionOwner');
+    const institutionId = this.authService.currentUserValue?.institutionId;
+    if (institutionViewer && !this.route.snapshot.queryParamMap.has('teacherId') && !institutionId) {
+      this.error.set('Kurum bilgisi bulunamadı. Lütfen yeniden giriş yapın.');
+      this.loading.set(false);
+      return;
+    }
 
     const reportRequest = this.route.snapshot.queryParamMap.has('teacherId')
       ? this.teacherReportService.getAdminContentAnalysisReport(teacherId, startDate, endDate)
-      : this.teacherReportService.getContentAnalysisReport(teacherId, startDate, endDate);
+      : institutionViewer
+        ? this.teacherReportService.getInstitutionContentAnalysisReport(institutionId!, startDate, endDate)
+        : this.teacherReportService.getContentAnalysisReport(teacherId, startDate, endDate);
 
     reportRequest
       .subscribe({

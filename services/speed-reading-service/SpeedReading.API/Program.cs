@@ -8,6 +8,7 @@ using EduPlatform.Shared.Infrastructure.Logging;
 using EduPlatform.Shared.Infrastructure.Middleware;
 using EduPlatform.Shared.Infrastructure.Observability;
 using EduPlatform.Shared.Security.Extensions;
+using EduPlatform.Shared.Security.Middleware;
 using EduPlatform.Shared.Security.Services;
 using Microsoft.EntityFrameworkCore;
 using MassTransit;
@@ -230,7 +231,10 @@ var app = builder.Build();
 app.UseRequestLogging();
 app.UseExceptionHandler();
 app.UseAuthentication();
+app.UseMiddleware<ProductScopeMiddleware>("speed-reading");
+app.UseMiddleware<SpeedReading.API.Security.ExercisePreviewMiddleware>();
 app.UseRateLimiter();
+app.UseMiddleware<SpeedReading.API.Security.SpeedReadingSubscriptionAccessMiddleware>();
 app.UseMiddleware<EduPlatform.Shared.Infrastructure.Middleware.AdminAuditMiddleware>();
 app.UseAuthorization();
 

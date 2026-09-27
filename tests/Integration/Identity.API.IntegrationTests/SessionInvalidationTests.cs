@@ -30,12 +30,16 @@ public sealed class SessionInvalidationTests
             user.Id,
             $"refresh-{Guid.NewGuid():N}",
             DateTime.UtcNow.AddDays(7),
-            "127.0.0.1");
+            "127.0.0.1",
+            product: Identity.Domain.Enums.PlatformProduct.SpeedReading);
         user.AddRefreshToken(refreshToken);
+        RefreshToken? otherProductToken = null;
+        if (operation is "assign-role" or "remove-role")
+            otherProductToken = AddRefreshToken(user, Identity.Domain.Enums.PlatformProduct.Coaching);
 
         if (operation == "remove-role")
         {
-            user.AddRole(new UserRole(user.Id, role.Id));
+            user.AddRole(new UserRole(user.Id, role.Id, Identity.Domain.Enums.PlatformProduct.SpeedReading));
         }
 
         context.Users.Add(user);
@@ -48,17 +52,21 @@ public sealed class SessionInvalidationTests
             "reset-password" => await service.ResetPasswordAsync(
                 user.Id, "Replacement-Password-1!", CancellationToken.None),
             "deactivate" => await service.DeactivateUserAsync(user.Id, CancellationToken.None),
-            "assign-role" => await service.AssignRoleAsync(user.Id, role.Name, CancellationToken.None),
-            "remove-role" => await service.RemoveRoleAsync(user.Id, role.Name, CancellationToken.None),
+            "assign-role" => await service.AssignRoleForProductAsync(user.Id, role.Name, Identity.Domain.Enums.PlatformProduct.SpeedReading, CancellationToken.None),
+            "remove-role" => await service.RemoveRoleForProductAsync(user.Id, role.Name, Identity.Domain.Enums.PlatformProduct.SpeedReading, CancellationToken.None),
             _ => throw new InvalidOperationException($"Unknown operation: {operation}")
         };
 
-        result.IsSuccess.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue(result.IsFailure
+            ? $"{result.Error.Code}: {result.Error.Description}"
+            : null);
         var storedToken = await context.RefreshTokens
             .AsNoTracking()
             .SingleAsync(token => token.Id == refreshToken.Id);
         storedToken.IsRevoked.Should().BeTrue();
         storedToken.ReasonRevoked.Should().Contain("security-sensitive");
+        if (otherProductToken is not null)
+            (await ReadTokenAsync(context, otherProductToken.Id)).IsRevoked.Should().BeFalse();
     }
 
     [Fact]
@@ -181,13 +189,16 @@ public sealed class SessionInvalidationTests
         (await context.Users.AnyAsync(candidate => candidate.Id == user.Id)).Should().BeTrue();
     }
 
-    private static RefreshToken AddRefreshToken(User user)
+    private static RefreshToken AddRefreshToken(
+        User user,
+        Identity.Domain.Enums.PlatformProduct? product = null)
     {
         var refreshToken = RefreshToken.Create(
             user.Id,
             $"refresh-{Guid.NewGuid():N}",
             DateTime.UtcNow.AddDays(7),
-            "127.0.0.1");
+            "127.0.0.1",
+            product: product);
         user.AddRefreshToken(refreshToken);
         return refreshToken;
     }
@@ -220,20 +231,25 @@ public sealed class SessionInvalidationTests
     private sealed class StubTokenService : ITokenService
     {
         public Task<int> GetAccessTokenLifetimeMinutesAsync() => Task.FromResult(15);
-        public Task<string> GenerateAccessTokenAsync(User user, DateTimeOffset? mfaVerifiedAt = null) => Task.FromResult("unused");
+        public Task<string> GenerateAccessTokenAsync(
+            User user,
+            DateTimeOffset? mfaVerifiedAt = null,
+            Identity.Domain.Enums.PlatformProduct? product = null) => Task.FromResult("unused");
 
         public RefreshToken GenerateRefreshToken(
             Guid userId,
             string ipAddress,
             bool isPersistent = true,
-            DateTimeOffset? mfaVerifiedAt = null) =>
+            DateTimeOffset? mfaVerifiedAt = null,
+            Identity.Domain.Enums.PlatformProduct? product = null) =>
             RefreshToken.Create(
                 userId,
                 "unused",
                 DateTime.UtcNow.AddDays(1),
                 ipAddress,
                 isPersistent,
-                mfaVerifiedAt);
+                mfaVerifiedAt,
+                product);
     }
 
     private sealed class SystemAdminCurrentUser(Guid? userId = null) : ICurrentUserService

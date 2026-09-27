@@ -1,4 +1,5 @@
 using MediatR;
+using System.Text.Json.Serialization;
 
 namespace Coaching.Application.Commands.AddExamResult;
 
@@ -13,4 +14,8 @@ public record AddExamResultCommand(
     string? Notes,
     string? IdempotencyKey = null,
     int? Ranking = null
-) : IRequest;
+) : IRequest
+{
+    [JsonIgnore]
+    public bool IsInstitutionAdminOperation { get; init; }
+}

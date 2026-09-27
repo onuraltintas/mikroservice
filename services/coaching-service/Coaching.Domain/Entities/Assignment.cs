@@ -277,12 +277,24 @@ public class Assignment : AggregateRoot
 
     public void SubmitAssignment(Guid studentId, string? studentNote = null)
     {
+        EnsureAcceptingStudentWork();
+
         var studentAssignment = _assignedStudents.FirstOrDefault(s => s.StudentId == studentId);
         if (studentAssignment == null)
             throw new InvalidOperationException($"Student {studentId} is not assigned to this assignment.");
 
         studentAssignment.Submit(studentNote);
         UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void EnsureAcceptingStudentWork()
+    {
+        if (Status != AssignmentStatus.Active)
+        {
+            throw new BusinessRuleException(
+                "Assignment.NotAcceptingStudentWork",
+                "İptal edilmiş veya tamamlanmış ödeve yeni çalışma gönderilemez.");
+        }
     }
 
     public void GradeAssignment(Guid studentId, decimal score, string? feedback = null)

@@ -1,4 +1,4 @@
-import { resolveAuthDestination } from './auth-role-routing';
+import { resolveAuthDestination, resolveInvitationReturnUrl } from './auth-role-routing';
 
 describe('resolveAuthDestination', () => {
   it('routes each supported role to its own workspace', () => {
@@ -19,5 +19,16 @@ describe('resolveAuthDestination', () => {
   it('returns null when no supported role is present', () => {
     expect(resolveAuthDestination([])).toBeNull();
     expect(resolveAuthDestination(undefined)).toBeNull();
+  });
+});
+
+describe('resolveInvitationReturnUrl', () => {
+  it('preserves only the local invitation acceptance route and query', () => {
+    expect(resolveInvitationReturnUrl('/auth/accept-invitation?id=invite-1'))
+      .toBe('/auth/accept-invitation?id=invite-1');
+    expect(resolveInvitationReturnUrl('/auth/login')).toBeNull();
+    expect(resolveInvitationReturnUrl('https://attacker.example/auth/accept-invitation?id=invite-1')).toBeNull();
+    expect(resolveInvitationReturnUrl('//attacker.example/auth/accept-invitation')).toBeNull();
+    expect(resolveInvitationReturnUrl('/auth/accept-invitation-elsewhere')).toBeNull();
   });
 });

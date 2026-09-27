@@ -38,11 +38,11 @@ internal sealed class OwnedSpeedReadingDailyProgress(
             return [];
 
         var (week, day) = SpeedReadingDailyProgressRules.GetWeekAndDay(
-            ((program.Value.Progress.CurrentWeek - 1) * 7) + program.Value.Progress.CurrentDay);
+            Math.Min(((program.Value.Progress.CurrentWeek - 1) * 7) + program.Value.Progress.CurrentDay,
+                SpeedReadingDailyProgressRules.GetCalendarAvailableDay(program.Value.Progress.AssignedDate, DateTime.UtcNow)));
         return await BuildExercisesAsync(
             userId,
             program.Value.Progress,
-            program.Value.Template,
             week,
             day,
             cancellationToken);
@@ -53,15 +53,22 @@ internal sealed class OwnedSpeedReadingDailyProgress(
         int dayNumber,
         CancellationToken cancellationToken = default)
     {
-        var program = await GetActiveProgramAsync(userId, cancellationToken);
+        var program = await GetActiveOrLatestProgramAsync(userId, cancellationToken);
         if (program is null)
+            return [];
+
+        var currentProgramDay = ((program.Value.Progress.CurrentWeek - 1) * 7) + program.Value.Progress.CurrentDay;
+        var visibleDay = program.Value.Progress.IsActive
+            ? Math.Min(currentProgramDay,
+                SpeedReadingDailyProgressRules.GetCalendarAvailableDay(program.Value.Progress.AssignedDate, DateTime.UtcNow))
+            : currentProgramDay;
+        if (dayNumber > visibleDay)
             return [];
 
         var (week, day) = SpeedReadingDailyProgressRules.GetWeekAndDay(dayNumber);
         return await BuildExercisesAsync(
             userId,
             program.Value.Progress,
-            program.Value.Template,
             week,
             day,
             cancellationToken);
@@ -92,6 +99,9 @@ internal sealed class OwnedSpeedReadingDailyProgress(
         var template = program.Template;
         db.StudentProgramProgresses.Attach(progress);
         var now = DateTime.UtcNow;
+        if (((progress.CurrentWeek - 1) * 7) + progress.CurrentDay
+            > SpeedReadingDailyProgressRules.GetCalendarAvailableDay(progress.AssignedDate, now))
+            throw new BusinessRuleException("DailyProgress.DayLocked", "Sonraki program günü yarın açılacak.");
         var (week, day) = SpeedReadingDailyProgressRules.GetWeekAndDay(
             ((progress.CurrentWeek - 1) * 7) + progress.CurrentDay);
 
@@ -116,7 +126,6 @@ internal sealed class OwnedSpeedReadingDailyProgress(
         var scheduledExercises = await BuildExercisesAsync(
             userId,
             progress,
-            template,
             week,
             day,
             cancellationToken);
@@ -279,14 +288,15 @@ internal sealed class OwnedSpeedReadingDailyProgress(
         var averageSuccessRate = measuredScores.Count > 0
             ? measuredScores.Average()
             : progress.AverageSuccessRate;
-        var expectedCount = await CountExpectedExercisesAsync(
-            progress,
-            template,
-            week,
-            day,
-            cancellationToken);
-        var completedCount = allLogs
+        var scheduledIds = OwnedSpeedReadingProgramSchedule.Parse(progress.ScheduleJson)
             .Where(item => item.WeekNumber == week && item.DayNumber == day)
+            .Select(item => item.ExerciseId)
+            .ToHashSet();
+        var expectedCount = scheduledIds.Count;
+        var completedCount = allLogs
+            .Where(item => item.WeekNumber == week
+                && item.DayNumber == day
+                && scheduledIds.Contains(item.ExerciseId))
             .Select(item => item.ExerciseId)
             .Distinct()
             .Count();
@@ -297,7 +307,11 @@ internal sealed class OwnedSpeedReadingDailyProgress(
             expectedCount,
             template,
             userId,
-            now);
+            now,
+            assignedTotalDays: OwnedSpeedReadingProgramSchedule.Parse(progress.ScheduleJson)
+                .Select(item => ((item.WeekNumber - 1) * 7) + item.DayNumber)
+                .DefaultIfEmpty(template.TotalDays)
+                .Max());
         var adaptivePlanUpdated = isMeasured
             && await learningPaths.RefreshAdaptiveProgressionAsync(userId, cancellationToken);
 
@@ -540,7 +554,9 @@ internal sealed class OwnedSpeedReadingDailyProgress(
 
         return new DailyProgressSummary(
             program.Value.Progress.Id,
-            program.Value.Progress.CurrentDay,
+            SpeedReadingDailyProgressRules.GetWeekAndDay(Math.Min(
+                ((program.Value.Progress.CurrentWeek - 1) * 7) + program.Value.Progress.CurrentDay,
+                SpeedReadingDailyProgressRules.GetCalendarAvailableDay(program.Value.Progress.AssignedDate, DateTime.UtcNow))).Day,
             program.Value.Progress.DaysCompleted,
             program.Value.Progress.ExercisesCompleted,
             logs.Count,
@@ -548,7 +564,10 @@ internal sealed class OwnedSpeedReadingDailyProgress(
             program.Value.Progress.AssignedDate,
             wpmResults.Count == 0 ? 0 : wpmResults.TakeLast(5).Average(item => item.RawWpm),
             wpmResults.Count == 0 ? 0 : wpmResults.Take(5).Average(item => item.RawWpm),
-            results.Count == 0 ? 0 : results.Average(item => item.ComprehensionScore));
+            results.Count == 0 ? 0 : results.Average(item => item.ComprehensionScore),
+            SpeedReadingDailyProgressRules.GetWeekAndDay(Math.Min(
+                ((program.Value.Progress.CurrentWeek - 1) * 7) + program.Value.Progress.CurrentDay,
+                SpeedReadingDailyProgressRules.GetCalendarAvailableDay(program.Value.Progress.AssignedDate, DateTime.UtcNow))).Week);
     }
 
     public async Task<WeeklyProgressSummary> GetWeeklyStatsAsync(
@@ -618,7 +637,6 @@ internal sealed class OwnedSpeedReadingDailyProgress(
         CancellationToken cancellationToken)
     {
         var progress = await db.StudentProgramProgresses
-            .AsNoTracking()
             .Where(item => item.UserId == userId && item.IsActive && item.CompletedDate == null)
             .OrderByDescending(item => item.AssignedDate)
             .FirstOrDefaultAsync(cancellationToken);
@@ -627,8 +645,20 @@ internal sealed class OwnedSpeedReadingDailyProgress(
 
         var template = await db.ProgramTemplates
             .AsNoTracking()
-            .SingleOrDefaultAsync(item => item.Id == progress.ProgramTemplateId && !item.IsDeleted, cancellationToken);
-        return template is null ? null : (progress, template);
+            .SingleOrDefaultAsync(item => item.Id == progress.ProgramTemplateId, cancellationToken);
+        if (template is null)
+            return null;
+
+        if (progress.ScheduleJson is null)
+        {
+            progress.SetSchedule(
+                await OwnedSpeedReadingProgramSchedule.BuildAsync(db, template, progress.Id, cancellationToken),
+                userId,
+                DateTime.UtcNow);
+            await db.SaveChangesAsync(cancellationToken);
+        }
+
+        return (progress, template);
     }
 
     private async Task<(StudentProgramProgress Progress, ProgramTemplate Template)?> GetActiveOrLatestProgramAsync(
@@ -646,186 +676,65 @@ internal sealed class OwnedSpeedReadingDailyProgress(
 
         var template = await db.ProgramTemplates
             .AsNoTracking()
-            .SingleOrDefaultAsync(item => item.Id == progress.ProgramTemplateId && !item.IsDeleted, cancellationToken);
+            .SingleOrDefaultAsync(item => item.Id == progress.ProgramTemplateId, cancellationToken);
         return template is null ? null : (progress, template);
     }
 
     private async Task<List<DailyExerciseSummary>> BuildExercisesAsync(
         Guid userId,
         StudentProgramProgress progress,
-        ProgramTemplate template,
         int week,
         int day,
         CancellationToken cancellationToken)
     {
-        var patterns = GetPatterns(template.WeeklyPatternJson, week, day);
-        if (patterns.Count == 0)
+        var slots = OwnedSpeedReadingProgramSchedule.Parse(progress.ScheduleJson)
+            .Where(item => item.WeekNumber == week && item.DayNumber == day)
+            .OrderBy(item => item.Order)
+            .ToList();
+        if (slots.Count == 0)
             return [];
 
+        var exerciseIds = slots.Select(item => item.ExerciseId).ToList();
+        var exercises = await db.Exercises.AsNoTracking()
+            .Where(item => exerciseIds.Contains(item.Id))
+            .ToDictionaryAsync(item => item.Id, cancellationToken);
+        var typeIds = exercises.Values.Select(item => item.ExerciseTypeId).Distinct().ToList();
+        var types = await db.ExerciseTypes.AsNoTracking()
+            .Where(item => typeIds.Contains(item.Id))
+            .ToDictionaryAsync(item => item.Id, cancellationToken);
         var completedLogs = await db.DailyExerciseLogs
             .AsNoTracking()
             .Where(item => item.UserId == userId
                 && item.StudentProgramProgressId == progress.Id
                 && item.WeekNumber == week
                 && item.DayNumber == day)
-            .OrderBy(item => item.CompletedDate)
-            .ThenBy(item => item.Id)
             .ToListAsync(cancellationToken);
         var completedByExercise = completedLogs
             .GroupBy(item => item.ExerciseId)
-            .ToDictionary(group => group.Key, group => new Queue<DailyExerciseLog>(group));
+            .ToDictionary(group => group.Key, group => group.OrderBy(item => item.CompletedDate).First());
 
         var result = new List<DailyExerciseSummary>();
-        var order = 1;
-        foreach (var pattern in patterns)
+        foreach (var slot in slots)
         {
-            if (string.IsNullOrWhiteSpace(pattern.Type) || pattern.Count <= 0)
-                continue;
+            if (!exercises.TryGetValue(slot.ExerciseId, out var exercise)
+                || !types.TryGetValue(exercise.ExerciseTypeId, out var exerciseType))
+                throw new BusinessRuleException("Program.ContentMissing", "Atanmış program içeriği bulunamadı.");
 
-            var exerciseType = await db.ExerciseTypes
-                .AsNoTracking()
-                .SingleOrDefaultAsync(item => item.Name == pattern.Type
-                    && item.IsActive
-                    && !item.IsDeleted,
-                    cancellationToken);
-            if (exerciseType is null)
-                continue;
-
-            var candidates = await FindCandidatesAsync(
+            completedByExercise.TryGetValue(exercise.Id, out var completed);
+            result.Add(new DailyExerciseSummary(
+                exercise.Id,
                 exerciseType.Id,
-                SpeedReadingDailyProgressRules.ResolveExerciseDifficulty(
-                    pattern.Difficulty,
-                    template.InitialDifficultyLevel + progress.AdaptiveDifficultyOffset,
-                    template.InitialDifficultyLevel,
-                    template.MaxDifficultyLevel),
-                template,
-                pattern.Count,
-                cancellationToken);
-            foreach (var exercise in candidates)
-            {
-                completedByExercise.TryGetValue(exercise.Id, out var queue);
-                var completed = queue is not null && queue.Count > 0 ? queue.Dequeue() : null;
-                result.Add(new DailyExerciseSummary(
-                    exercise.Id,
-                    exerciseType.Id,
-                    exerciseType.Name,
-                    exercise.Title,
-                    exercise.Description,
-                    exercise.DifficultyLevel,
-                    5,
-                    completed is not null,
-                    completed?.CompletedDate,
-                    order++,
-                    SpeedReadingContentSecurity.SanitizeExerciseConfiguration(exercise.ConfigurationJson)));
-            }
+                exerciseType.Name,
+                exercise.Title,
+                exercise.Description,
+                exercise.DifficultyLevel,
+                5,
+                completed is not null,
+                completed?.CompletedDate,
+                slot.Order,
+                SpeedReadingContentSecurity.SanitizeExerciseConfiguration(exercise.ConfigurationJson)));
         }
 
         return result;
-    }
-
-    private async Task<int> CountExpectedExercisesAsync(
-        StudentProgramProgress progress,
-        ProgramTemplate template,
-        int week,
-        int day,
-        CancellationToken cancellationToken)
-    {
-        var patterns = GetPatterns(template.WeeklyPatternJson, week, day);
-        var count = 0;
-        foreach (var pattern in patterns)
-        {
-            if (string.IsNullOrWhiteSpace(pattern.Type) || pattern.Count <= 0)
-                continue;
-
-            var typeId = await db.ExerciseTypes
-                .AsNoTracking()
-                .Where(item => item.Name == pattern.Type && item.IsActive && !item.IsDeleted)
-                .Select(item => (Guid?)item.Id)
-                .SingleOrDefaultAsync(cancellationToken);
-            if (!typeId.HasValue)
-                continue;
-
-            var candidates = await FindCandidatesAsync(
-                typeId.Value,
-                SpeedReadingDailyProgressRules.ResolveExerciseDifficulty(
-                    pattern.Difficulty,
-                    template.InitialDifficultyLevel + progress.AdaptiveDifficultyOffset,
-                    template.InitialDifficultyLevel,
-                    template.MaxDifficultyLevel),
-                template,
-                pattern.Count,
-                cancellationToken);
-            count += candidates.Count;
-        }
-
-        return count;
-    }
-
-    private async Task<List<Exercise>> FindCandidatesAsync(
-        Guid exerciseTypeId,
-        int difficulty,
-        ProgramTemplate template,
-        int requestedCount,
-        CancellationToken cancellationToken)
-    {
-        var candidates = await db.Exercises
-            .AsNoTracking()
-            .Where(item => item.ExerciseTypeId == exerciseTypeId
-                && item.DifficultyLevel == difficulty
-                && (item.TargetAgeGroupId == null
-                    || item.TargetAgeGroupId == template.TargetAgeGroupConfigurationId)
-                && item.IsActive
-                && !item.IsDeleted)
-            .OrderBy(item => item.Id)
-            .ToListAsync(cancellationToken);
-
-        if (candidates.Count == 0)
-        {
-            for (var fallbackDifficulty = difficulty - 1;
-                fallbackDifficulty >= 0 && candidates.Count == 0;
-                fallbackDifficulty--)
-            {
-                candidates = await db.Exercises
-                    .AsNoTracking()
-                    .Where(item => item.ExerciseTypeId == exerciseTypeId
-                        && item.DifficultyLevel == fallbackDifficulty
-                        && (item.TargetAgeGroupId == null
-                            || item.TargetAgeGroupId == template.TargetAgeGroupConfigurationId)
-                        && item.IsActive
-                        && !item.IsDeleted)
-                    .OrderBy(item => item.Id)
-                    .ToListAsync(cancellationToken);
-            }
-        }
-
-        if (candidates.Count == 0)
-            return [];
-
-        return SpeedReadingDailyProgressRules
-            .TakeUnique(candidates, requestedCount)
-            .ToList();
-    }
-
-    private static List<ExercisePattern> GetPatterns(string json, int week, int day)
-    {
-        var patternJson = SpeedReadingDailyProgressRules.GetDailyPatternJson(json, week, day);
-        if (patternJson is null)
-            return [];
-
-        try
-        {
-            return JsonSerializer.Deserialize<List<ExercisePattern>>(patternJson, JsonOptions) ?? [];
-        }
-        catch (JsonException)
-        {
-            return [];
-        }
-    }
-
-    private sealed class ExercisePattern
-    {
-        public string Type { get; set; } = string.Empty;
-        public int Count { get; set; }
-        public int Difficulty { get; set; }
     }
 }

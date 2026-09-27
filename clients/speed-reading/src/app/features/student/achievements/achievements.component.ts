@@ -1,6 +1,6 @@
-import { Component, inject, OnInit, OnDestroy } from '@angular/core';
+import { ChangeDetectorRef, Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Subject, takeUntil, forkJoin } from 'rxjs';
+import { Subject, takeUntil, forkJoin, timeout } from 'rxjs';
 import { GamificationService } from '../../../core/services/gamification.service';
 import { Achievement, UserAchievement } from '../../../core/models/gamification.model';
 import { BadgeCardComponent } from '../../../shared/components/gamification/badge-card.component';
@@ -18,10 +18,12 @@ interface AchievementWithStatus extends Achievement {
 })
 export class AchievementsComponent implements OnInit, OnDestroy {
   private readonly gamificationService = inject(GamificationService);
+  private readonly changeDetector = inject(ChangeDetectorRef);
   private destroy$ = new Subject<void>();
 
   achievements: AchievementWithStatus[] = [];
   loading = true;
+  loadFailed = false;
   selectedCategory: string = 'All';
 
   categories = [
@@ -45,11 +47,12 @@ export class AchievementsComponent implements OnInit, OnDestroy {
 
   loadAchievements(): void {
     this.loading = true;
+    this.loadFailed = false;
     forkJoin({
       allAchievements: this.gamificationService.getAllAchievements(),
       userAchievements: this.gamificationService.getUserAchievements()
     })
-      .pipe(takeUntil(this.destroy$))
+      .pipe(timeout({ first: 15000 }), takeUntil(this.destroy$))
       .subscribe({
         next: ({ allAchievements, userAchievements }) => {
           const achList = Array.isArray(allAchievements) ? allAchievements : [];
@@ -90,10 +93,13 @@ export class AchievementsComponent implements OnInit, OnDestroy {
             return 0;
           });
           this.loading = false;
+          this.changeDetector.detectChanges();
         },
         error: (err) => {
           console.error('Error loading achievements:', err);
+          this.loadFailed = true;
           this.loading = false;
+          this.changeDetector.detectChanges();
         }
       });
   }

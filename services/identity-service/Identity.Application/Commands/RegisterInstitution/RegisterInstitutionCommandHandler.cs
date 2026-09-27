@@ -38,6 +38,11 @@ public class RegisterInstitutionCommandHandler : IRequestHandler<RegisterInstitu
 
     public async Task<Result<Guid>> Handle(RegisterInstitutionCommand request, CancellationToken cancellationToken)
     {
+        if (request.Product is not { } product || !Enum.IsDefined(product))
+        {
+            return Result.Failure<Guid>(new Error("Auth.ProductRequired", "Kayıt yapılacak platform belirtilmelidir."));
+        }
+
         // Global Registration Switch Check
         var allowRegistration = await _configurationService.GetConfigurationValueAsync("auth.allowregistration", cancellationToken);
         if (!string.Equals(allowRegistration, "true", StringComparison.OrdinalIgnoreCase))
@@ -73,17 +78,46 @@ public class RegisterInstitutionCommandHandler : IRequestHandler<RegisterInstitu
 
         // 2. Create Domain Entities
         // 2. Assign Roles
-        await _identityService.AssignRoleAsync(userId, Identity.Domain.Enums.UserRole.InstitutionAdmin.ToString(), cancellationToken);
-        await _identityService.AssignRoleAsync(userId, Identity.Domain.Enums.UserRole.InstitutionOwner.ToString(), cancellationToken);
+        var adminRoleResult = await _identityService.AssignRoleForProductAsync(
+            userId,
+            Identity.Domain.Enums.UserRole.InstitutionAdmin.ToString(),
+            product,
+            cancellationToken,
+            UserProductAccessSource.SelfRegistration);
+        var ownerRoleResult = await _identityService.AssignRoleForProductAsync(
+            userId,
+            Identity.Domain.Enums.UserRole.InstitutionOwner.ToString(),
+            product,
+            cancellationToken,
+            UserProductAccessSource.SelfRegistration);
+        if (adminRoleResult.IsFailure || ownerRoleResult.IsFailure)
+        {
+            await _identityService.DeleteUserAsync(userId, cancellationToken);
+            return Result.Failure<Guid>(adminRoleResult.IsFailure ? adminRoleResult.Error : ownerRoleResult.Error);
+        }
 
         // 3. Create Domain Entities
         // Update Phone if needed
         var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
-        if (user != null) 
+        if (user is null)
         {
-            if (request.Phone != null) user.SetPhoneNumber(request.Phone);
-            user.GenerateEmailVerificationToken();
+            await _identityService.DeleteUserAsync(userId, cancellationToken);
+            return Result.Failure<Guid>(new Error("Registration.Failed", "Hesap kaydı tamamlanamadı."));
         }
+
+        if (user.GrantProductAccess(
+            product,
+            UserProductAccessSource.SelfRegistration,
+            grantedByUserId: null,
+            DateTimeOffset.UtcNow))
+        {
+            _userRepository.TrackProductAccessIfNew(user, product);
+        }
+        if (request.Phone != null)
+        {
+            user.SetPhoneNumber(request.Phone);
+        }
+        user.GenerateEmailVerificationToken();
 
         var institution = Institution.Create(
             request.InstitutionName,
@@ -94,7 +128,8 @@ public class RegisterInstitutionCommandHandler : IRequestHandler<RegisterInstitu
         var admin = InstitutionAdmin.Create(
             userId,
             institution.Id,
-            InstitutionAdminRole.Owner);
+            InstitutionAdminRole.Owner,
+            product);
 
         // 4. Save to Database (Transactional)
         try

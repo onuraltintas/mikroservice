@@ -3,6 +3,7 @@ using Coaching.Application.Commands.CreateAssignment;
 using Coaching.Application.Interfaces;
 using Coaching.Application.Queries;
 using Coaching.Domain.Entities;
+using Coaching.Domain.Enums;
 using EduPlatform.Shared.Kernel.Exceptions;
 using FluentAssertions;
 
@@ -68,9 +69,11 @@ public sealed class CoachingAssignmentIdempotencyTests
             Guid teacherId,
             int pageNumber,
             int pageSize,
-            CancellationToken cancellationToken = default)
+            CancellationToken cancellationToken = default,
+            AssignmentStatus? status = null)
         {
-            var filtered = Items.Where(item => item.TeacherId == teacherId).ToList();
+            var filtered = Items.Where(item => item.TeacherId == teacherId
+                && (!status.HasValue || item.Status == status.Value)).ToList();
             var page = filtered.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToList();
             return Task.FromResult(new PagedRepositoryResult<Assignment>(page, filtered.Count));
         }

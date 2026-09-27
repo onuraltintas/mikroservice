@@ -15,8 +15,20 @@ export interface UserDto {
     lastLoginAt?: string;
     roles: string[];
     permissions: string[];
+    productAccesses?: UserProductAccessDto[];
+    productRoles?: UserProductRoleDto[];
     teacherDetails?: TeacherDetailsDto;
     studentDetails?: StudentDetailsDto;
+}
+
+export interface UserProductAccessDto {
+    product: string;
+    isActive: boolean;
+}
+
+export interface UserProductRoleDto {
+    role: string;
+    product: string | null;
 }
 
 export interface SpeedReadingTeacherDirectoryItem {
@@ -237,7 +249,7 @@ export class IdentityService {
             {});
     }
 
-    getAllUsers(page: number, pageSize: number, search: string = '', role?: string, isActive?: boolean) {
+    getAllUsers(page: number, pageSize: number, search: string = '', role?: string, isActive?: boolean, product?: number) {
         let params = new HttpParams()
             .set('page', page)
             .set('pageSize', pageSize);
@@ -245,6 +257,7 @@ export class IdentityService {
         if (search) params = params.set('search', search);
         if (role) params = params.set('role', role);
         if (isActive !== undefined && isActive !== null) params = params.set('isActive', isActive);
+        if (product !== undefined) params = params.set('product', product);
 
         return this.http.get<PagedResult<UserDto>>(this.baseUrl, { params });
     }
@@ -317,7 +330,7 @@ export class IdentityService {
 
     assignBulkRole(userIds: string[], roleName: string, removeExistingRoles = false) {
         const request: BulkRoleAssignmentRequest = { userIds, roleName, removeExistingRoles };
-        return this.http.post<BulkUserOperationResult>(`${this.baseUrl}/bulk/role`, request);
+        return this.http.post<BulkUserOperationResult>(`${this.baseUrl}/bulk/coaching/role`, request);
     }
 
     deleteUser(userId: string, permanent: boolean = false) {
@@ -403,11 +416,11 @@ export class IdentityService {
     }
 
     assignRole(userId: string, roleName: string) {
-        return this.http.post(`${this.baseUrl}/${userId}/roles`, { roleName });
+        return this.http.post(`${this.baseUrl}/${userId}/products/coaching/roles`, { roleName });
     }
 
-    removeRole(userId: string, roleName: string) {
-        return this.http.delete(`${this.baseUrl}/${userId}/roles/${roleName}`);
+    removeRole(userId: string, roleName: string, product: 'coaching' | 'speed-reading' = 'coaching') {
+        return this.http.delete(`${this.baseUrl}/${userId}/products/${product}/roles/${roleName}`);
     }
 
     // Permission Methods

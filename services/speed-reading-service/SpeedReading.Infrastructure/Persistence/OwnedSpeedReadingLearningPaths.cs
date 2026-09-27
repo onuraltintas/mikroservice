@@ -1,7 +1,9 @@
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using EduPlatform.Shared.Kernel.Exceptions;
 using SpeedReading.Application.AdaptiveLearning;
 using SpeedReading.Application.Content;
+using SpeedReading.Application.DailyProgress;
 using SpeedReading.Domain.LearningPaths;
 
 namespace SpeedReading.Infrastructure.Persistence;
@@ -9,6 +11,41 @@ namespace SpeedReading.Infrastructure.Persistence;
 internal sealed class OwnedSpeedReadingLearningPaths(OwnedSpeedReadingDbContext db)
     : ILegacySpeedReadingLearningPaths
 {
+    public async Task<PersonalizedPathAvailability> GetPersonalizedAvailabilityAsync(
+        Guid studentId,
+        CancellationToken cancellationToken = default)
+    {
+        var progress = await db.StudentProgramProgresses
+            .AsNoTracking()
+            .Where(item => item.UserId == studentId)
+            .OrderByDescending(item => item.IsActive)
+            .ThenByDescending(item => item.AssignedDate)
+            .FirstOrDefaultAsync(cancellationToken);
+        if (progress is null)
+            return new PersonalizedPathAvailability(false, 0, 7);
+
+        var scheduled = OwnedSpeedReadingProgramSchedule.Parse(progress.ScheduleJson)
+            .Select(item => (item.WeekNumber, item.DayNumber, item.ExerciseId))
+            .ToList();
+        var completed = await db.DailyExerciseLogs.AsNoTracking()
+            .Where(item => item.StudentProgramProgressId == progress.Id
+                && item.WeekNumber == 1 && item.DayNumber <= 7)
+            .Select(item => new { item.WeekNumber, item.DayNumber, item.ExerciseId })
+            .ToListAsync(cancellationToken);
+        var verifiedDays = SpeedReadingDailyProgressRules.CountCompletedScheduledDays(
+            scheduled,
+            completed.Select(item => (item.WeekNumber, item.DayNumber, item.ExerciseId)),
+            7);
+        var completedDays = Math.Max(progress.DaysCompleted, verifiedDays);
+        return new PersonalizedPathAvailability(completedDays >= 7, completedDays, 7);
+    }
+
+    private async Task EnsurePersonalizedPathAvailableAsync(Guid studentId, CancellationToken cancellationToken)
+    {
+        if (!(await GetPersonalizedAvailabilityAsync(studentId, cancellationToken)).IsAvailable)
+            throw new BusinessRuleException("LearningPath.FirstWeekIncomplete", "Kişisel öğrenme yolu, ana programın ilk 7 günü tamamlandıktan sonra açılır.");
+    }
+
     public async Task<IReadOnlyList<LearningPathTemplateSummary>> GetTemplatesAsync(
         CancellationToken cancellationToken = default) =>
         await db.LearningPathTemplates
@@ -57,7 +94,7 @@ internal sealed class OwnedSpeedReadingLearningPaths(OwnedSpeedReadingDbContext 
             .OrderBy(item => item.Order)
             .ThenBy(item => item.Title)
             .ToListAsync(cancellationToken);
-        var nodeIds = nodes.Select(item => item.Id).ToArray();
+        var nodeIds = nodes.Select(item => item.Id).ToList();
         var contents = await db.LearningPathNodeContents
             .AsNoTracking()
             .Where(item => nodeIds.Contains(item.NodeId) && !item.IsDeleted)
@@ -98,7 +135,7 @@ internal sealed class OwnedSpeedReadingLearningPaths(OwnedSpeedReadingDbContext 
             .Where(item => item.TemplateId == progress.TemplateId && !item.IsDeleted)
             .OrderBy(item => item.Order)
             .ToListAsync(cancellationToken);
-        var nodeIds = nodes.Select(item => item.Id).ToArray();
+        var nodeIds = nodes.Select(item => item.Id).ToList();
         var contents = await db.LearningPathNodeContents
             .AsNoTracking()
             .Where(item => nodeIds.Contains(item.NodeId) && !item.IsDeleted)
@@ -137,6 +174,8 @@ internal sealed class OwnedSpeedReadingLearningPaths(OwnedSpeedReadingDbContext 
         CancellationToken cancellationToken = default)
     {
         var (page, size) = NormalizePage(pageNumber, pageSize);
+        if (!(await GetPersonalizedAvailabilityAsync(studentId, cancellationToken)).IsAvailable)
+            return new SpeedReadingPage<PersonalizedLearningPathItemSummary>([], page, size, 0);
         var query = db.PersonalizedLearningPathItems
             .AsNoTracking()
             .Where(item => item.StudentId == studentId && !item.IsDeleted);
@@ -163,10 +202,13 @@ internal sealed class OwnedSpeedReadingLearningPaths(OwnedSpeedReadingDbContext 
         return new SpeedReadingPage<PersonalizedLearningPathItemSummary>(items, page, size, totalCount);
     }
 
-    public Task<PersonalizedLearningPathItemSummary?> GetNextPersonalizedPathItemAsync(
+    public async Task<PersonalizedLearningPathItemSummary?> GetNextPersonalizedPathItemAsync(
         Guid studentId,
-        CancellationToken cancellationToken = default) =>
-        db.PersonalizedLearningPathItems
+        CancellationToken cancellationToken = default)
+    {
+        if (!(await GetPersonalizedAvailabilityAsync(studentId, cancellationToken)).IsAvailable)
+            return null;
+        return await db.PersonalizedLearningPathItems
             .AsNoTracking()
             .Where(item => item.StudentId == studentId
                 && !item.IsDeleted
@@ -187,6 +229,7 @@ internal sealed class OwnedSpeedReadingLearningPaths(OwnedSpeedReadingDbContext 
                 item.RecommendationReason,
                 item.IsUnlocked))
             .FirstOrDefaultAsync(cancellationToken);
+    }
 
     public async Task<Guid> StartPathAsync(
         Guid studentId,
@@ -380,6 +423,7 @@ internal sealed class OwnedSpeedReadingLearningPaths(OwnedSpeedReadingDbContext 
         Guid studentId,
         CancellationToken cancellationToken = default)
     {
+        await EnsurePersonalizedPathAvailableAsync(studentId, cancellationToken);
         var hasPendingPath = await db.PersonalizedLearningPathItems
             .AsNoTracking()
             .AnyAsync(item => item.StudentId == studentId && !item.IsDeleted && !item.IsCompleted, cancellationToken);
@@ -387,6 +431,11 @@ internal sealed class OwnedSpeedReadingLearningPaths(OwnedSpeedReadingDbContext 
         {
             return 0;
         }
+
+        var policy = await ResolveProgressionPolicyAsync(studentId, cancellationToken);
+        var decision = await EvaluateProgressionAsync(studentId, [], policy, cancellationToken);
+        if (decision.Kind != AdaptiveProgressionDecisionKind.Support)
+            return 0;
 
         var userLevel = await db.UserProfiles
             .AsNoTracking()
@@ -396,8 +445,9 @@ internal sealed class OwnedSpeedReadingLearningPaths(OwnedSpeedReadingDbContext 
         return await CreatePersonalizedPathAsync(
             studentId,
             userLevel,
-            "Başlangıç seviyesi ve yaş grubuna uygun çalışma yolu.",
-            cancellationToken);
+            "Son ölçümlerde destek ihtiyacı görüldü.",
+            cancellationToken,
+            await GetWeakBloomLevelsAsync(studentId, cancellationToken));
     }
 
     private async Task<int> CreatePersonalizedPathAsync(
@@ -417,6 +467,10 @@ internal sealed class OwnedSpeedReadingLearningPaths(OwnedSpeedReadingDbContext 
             .ToListAsync(cancellationToken);
         var minDifficulty = Math.Max(1, userLevel - 1);
         var maxDifficulty = userLevel + 2;
+        var ageGroupId = await db.UserProfiles.AsNoTracking()
+            .Where(profile => profile.UserId == studentId && profile.IsActive)
+            .Select(profile => profile.AgeGroupConfigurationId)
+            .SingleOrDefaultAsync(cancellationToken);
         var supportTextIds = supportBloomLevels is { Count: > 0 }
             ? await db.ReadingQuestions
                 .AsNoTracking()
@@ -426,39 +480,53 @@ internal sealed class OwnedSpeedReadingLearningPaths(OwnedSpeedReadingDbContext 
                 .Distinct()
                 .ToListAsync(cancellationToken)
             : [];
-        var supportExerciseIds = supportTextIds.Count == 0
-            ? []
-            : await db.ReadingTexts
-                .AsNoTracking()
-                .Where(text => supportTextIds.Contains(text.Id) && text.ExerciseId.HasValue)
-                .Select(text => text.ExerciseId!.Value)
-                .Distinct()
-                .ToListAsync(cancellationToken);
+        var recentWeakExerciseResults = supportTextIds.Count == 0
+            ? await db.ExerciseSessionResults.AsNoTracking()
+                .Where(result => result.StudentId == studentId && result.IsMeasured && !result.IsAssessmentMode)
+                .OrderByDescending(result => result.CompletedAt)
+                .Take(3)
+                .Select(result => new { result.ExerciseId, result.Score })
+                .ToListAsync(cancellationToken)
+            : [];
+        var weakExerciseId = recentWeakExerciseResults
+            .OrderBy(result => result.Score)
+            .Select(result => (Guid?)result.ExerciseId)
+            .FirstOrDefault();
+        var weakTypeCode = weakExerciseId.HasValue
+            ? await db.Exercises.AsNoTracking()
+                .Where(exercise => exercise.Id == weakExerciseId.Value)
+                .Select(exercise => exercise.TypeCode)
+                .FirstOrDefaultAsync(cancellationToken)
+            : null;
         var exercisesQuery = db.Exercises
             .AsNoTracking()
             .Where(item => !item.IsDeleted
                 && item.IsActive
                 && !completedContentIds.Contains(item.Id)
+                && (item.TargetAgeGroupId == null || item.TargetAgeGroupId == ageGroupId)
                 && item.DifficultyLevel >= minDifficulty
-                && item.DifficultyLevel <= maxDifficulty);
+                && item.DifficultyLevel <= maxDifficulty
+                && supportTextIds.Count == 0
+                && weakTypeCode != null
+                && item.TypeCode == weakTypeCode);
         var exercises = await exercisesQuery
-            .OrderBy(item => supportExerciseIds.Count > 0 && supportExerciseIds.Contains(item.Id) ? 0 : 1)
-            .ThenBy(item => item.DifficultyLevel)
+            .OrderBy(item => item.DifficultyLevel)
             .ThenBy(item => item.Id)
-            .Take(20)
+            .Take(3)
             .ToListAsync(cancellationToken);
         var readingTextsQuery = db.ReadingTexts
             .AsNoTracking()
             .Where(item => !item.IsDeleted
                 && item.IsActive
                 && !completedContentIds.Contains(item.Id)
+                && (item.TargetAgeGroupId == null || item.TargetAgeGroupId == ageGroupId)
                 && item.DifficultyLevel >= minDifficulty
-                && item.DifficultyLevel <= maxDifficulty);
+                && item.DifficultyLevel <= maxDifficulty
+                && supportTextIds.Contains(item.Id));
         var readingTexts = await readingTextsQuery
-            .OrderBy(item => supportTextIds.Count > 0 && supportTextIds.Contains(item.Id) ? 0 : 1)
-            .ThenBy(item => item.DifficultyLevel)
+            .OrderBy(item => item.DifficultyLevel)
             .ThenBy(item => item.Id)
-            .Take(10)
+            .Take(2)
             .ToListAsync(cancellationToken);
 
         var pathItems = new List<PersonalizedLearningPathItem>();
@@ -540,15 +608,12 @@ internal sealed class OwnedSpeedReadingLearningPaths(OwnedSpeedReadingDbContext 
     public async Task CompletePersonalizedPathItemAsync(
         Guid studentId,
         Guid pathItemId,
-        decimal? achievedScore,
+        Guid sessionId,
         CancellationToken cancellationToken = default)
     {
-        if (achievedScore is < 0 or > 100)
-        {
-            throw new ArgumentOutOfRangeException(
-                nameof(achievedScore),
-                "AchievedScore must be between 0 and 100.");
-        }
+        await EnsurePersonalizedPathAvailableAsync(studentId, cancellationToken);
+        if (sessionId == Guid.Empty)
+            throw new ArgumentException("Completed session is required.", nameof(sessionId));
 
         var item = await db.PersonalizedLearningPathItems
             .SingleOrDefaultAsync(path => path.Id == pathItemId
@@ -556,9 +621,40 @@ internal sealed class OwnedSpeedReadingLearningPaths(OwnedSpeedReadingDbContext 
                 && !path.IsDeleted, cancellationToken)
             ?? throw new KeyNotFoundException("Personalized path item not found.");
         if (item.IsCompleted)
-        {
             return;
+        if (!item.IsUnlocked || !item.ContentId.HasValue)
+            throw new BusinessRuleException("LearningPath.ItemLocked", "Öğrenme yolu çalışması henüz açık değil.");
+
+        decimal? achievedScore;
+        if (item.ContentType == "Exercise")
+        {
+            var result = await db.ExerciseSessionResults.AsNoTracking()
+                .SingleOrDefaultAsync(row => row.SessionId == sessionId
+                    && row.StudentId == studentId
+                    && row.ExerciseId == item.ContentId.Value
+                    && !row.IsAssessmentMode,
+                    cancellationToken)
+                ?? throw new BusinessRuleException(
+                    "LearningPath.SessionMismatch", "Bu çalışma için tamamlanmış egzersiz oturumu bulunamadı.");
+            if (result.CompletedAt < item.CreatedAt)
+                throw new BusinessRuleException("LearningPath.SessionTooOld", "Eski bir oturum bu öneriyi tamamlayamaz.");
+            achievedScore = result.IsMeasured ? result.Score : null;
         }
+        else if (item.ContentType == "ReadingText")
+        {
+            var result = await db.ReadingSessions.AsNoTracking()
+                .SingleOrDefaultAsync(row => row.Id == sessionId
+                    && row.UserId == studentId
+                    && row.ReadingTextId == item.ContentId.Value,
+                    cancellationToken)
+                ?? throw new BusinessRuleException(
+                    "LearningPath.SessionMismatch", "Bu çalışma için tamamlanmış okuma oturumu bulunamadı.");
+            if (result.CompletedAt < item.CreatedAt)
+                throw new BusinessRuleException("LearningPath.SessionTooOld", "Eski bir oturum bu öneriyi tamamlayamaz.");
+            achievedScore = result.IsMeasured ? result.ComprehensionRate : null;
+        }
+        else
+            throw new BusinessRuleException("LearningPath.ContentUnsupported", "Önerilen içerik türü desteklenmiyor.");
 
         var now = DateTime.UtcNow;
         item.Complete(achievedScore, studentId, now);
@@ -574,6 +670,8 @@ internal sealed class OwnedSpeedReadingLearningPaths(OwnedSpeedReadingDbContext 
         Guid studentId,
         CancellationToken cancellationToken = default)
     {
+        if (!(await GetPersonalizedAvailabilityAsync(studentId, cancellationToken)).IsAvailable)
+            return false;
         var policy = await ResolveProgressionPolicyAsync(studentId, cancellationToken);
         var measuredSessionCount = await db.ExerciseSessionResults
             .AsNoTracking()
@@ -588,7 +686,11 @@ internal sealed class OwnedSpeedReadingLearningPaths(OwnedSpeedReadingDbContext 
         }
 
         var decision = await EvaluateProgressionAsync(studentId, [], policy, cancellationToken);
-        if (decision.Kind is not (AdaptiveProgressionDecisionKind.Advance or AdaptiveProgressionDecisionKind.Support))
+        if (decision.Kind != AdaptiveProgressionDecisionKind.Support)
+            return false;
+
+        if (await db.PersonalizedLearningPathItems.AsNoTracking()
+            .AnyAsync(path => path.StudentId == studentId && !path.IsDeleted && !path.IsCompleted, cancellationToken))
             return false;
 
         var profile = await db.UserProfiles
@@ -596,53 +698,13 @@ internal sealed class OwnedSpeedReadingLearningPaths(OwnedSpeedReadingDbContext 
         if (profile is null)
             return false;
 
-        var now = DateTime.UtcNow;
-        profile.ApplyAdaptiveLevel(profile.CurrentLevel + decision.DifficultyAdjustment, studentId, now);
-        await ApplyAdaptiveProgramDifficultyAsync(
-            studentId,
-            decision.DifficultyAdjustment,
-            now,
-            cancellationToken);
-
-        var activeItems = await db.PersonalizedLearningPathItems
-            .Where(path => path.StudentId == studentId && !path.IsDeleted)
-            .OrderBy(path => path.PathIndex)
-            .ToListAsync(cancellationToken);
-        foreach (var pending in activeItems.Where(path => !path.IsCompleted))
-            pending.Retire(studentId, now);
-
-        var reason = decision.Kind == AdaptiveProgressionDecisionKind.Support
-            ? "Son ölçümlerde destek ihtiyacı görüldü; anlama odaklı telafi paketi oluşturuldu."
-            : "Son ölçümlerde yeterli başarı görüldü; bir sonraki zorluk seviyesi açıldı.";
-        var weakBloomLevels = decision.Kind == AdaptiveProgressionDecisionKind.Support
-            ? await GetWeakBloomLevelsAsync(studentId, cancellationToken)
-            : [];
-        await CreatePersonalizedPathAsync(
+        var created = await CreatePersonalizedPathAsync(
             studentId,
             profile.CurrentLevel,
-            reason,
+            "Son ölçümlerde destek ihtiyacı görüldü.",
             cancellationToken,
-            weakBloomLevels);
-        return true;
-    }
-
-    private async Task ApplyAdaptiveProgramDifficultyAsync(
-        Guid studentId,
-        int difficultyAdjustment,
-        DateTime at,
-        CancellationToken cancellationToken)
-    {
-        var progress = await db.StudentProgramProgresses
-            .SingleOrDefaultAsync(item => item.UserId == studentId && item.IsActive, cancellationToken);
-        if (progress is null)
-            return;
-
-        var template = await db.ProgramTemplates
-            .SingleOrDefaultAsync(item => item.Id == progress.ProgramTemplateId && !item.IsDeleted, cancellationToken);
-        if (template is null)
-            return;
-
-        progress.ApplyAdaptiveDifficultyAdjustment(difficultyAdjustment, template, studentId, at);
+            await GetWeakBloomLevelsAsync(studentId, cancellationToken));
+        return created > 0;
     }
 
     private async Task<AdaptiveProgressionDecision> EvaluateProgressionAsync(
@@ -807,6 +869,8 @@ internal sealed class OwnedSpeedReadingLearningPaths(OwnedSpeedReadingDbContext 
         Guid studentId,
         CancellationToken cancellationToken = default)
     {
+        if (!(await GetPersonalizedAvailabilityAsync(studentId, cancellationToken)).IsAvailable)
+            return new PersonalizedLearningPathProgressSummary(0, 0, 0, 0, 0, null);
         var items = await db.PersonalizedLearningPathItems
             .AsNoTracking()
             .Where(item => item.StudentId == studentId && !item.IsDeleted)

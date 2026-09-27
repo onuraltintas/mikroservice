@@ -1,4 +1,5 @@
 using EduPlatform.Shared.Kernel.Results;
+using Identity.Domain.Enums;
 using MediatR;
 
 namespace Identity.Application.Commands.RegisterStudent;
@@ -8,5 +9,6 @@ public record RegisterStudentCommand(
     string Password,
     string FirstName,
     string LastName,
-    string? Phone
+    string? Phone,
+    PlatformProduct? Product = null
 ) : IRequest<Result<Guid>>;

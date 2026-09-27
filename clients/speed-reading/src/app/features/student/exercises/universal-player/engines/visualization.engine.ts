@@ -429,7 +429,7 @@ export class VisualizationEngine implements BaseEngine {
             this.callbacks.onAction({
                 action: 'answer_question',
                 questionId: question.questionId,
-                answer,
+                answer: this.toOptionLetter(question, answer),
                 customData: { sceneId: scene.sceneId },
                 timestamp: new Date()
             });
@@ -485,6 +485,13 @@ export class VisualizationEngine implements BaseEngine {
             currentSceneIndex: this.currentSceneIndex,
             currentQuestionIndex: this.currentQuestionIndex
         } as any);
+    }
+
+    private toOptionLetter(question: VisualizationQuestion, answer: string): string {
+        const optionIndex = question.options.indexOf(answer);
+        return optionIndex >= 0 && optionIndex < 4
+            ? ['A', 'B', 'C', 'D'][optionIndex]
+            : answer;
     }
 
     // Called when user clicks "Next Question" button

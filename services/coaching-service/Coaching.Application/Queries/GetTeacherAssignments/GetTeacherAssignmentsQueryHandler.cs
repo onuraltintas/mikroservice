@@ -29,7 +29,8 @@ public class GetTeacherAssignmentsQueryHandler : IRequestHandler<GetTeacherAssig
             query.TeacherId,
             query.PageNumber,
             query.PageSize,
-            cancellationToken);
+            cancellationToken,
+            query.Status);
 
         var dtos = page.Items.Select(a => new TeacherAssignmentDto(
             Id: a.Id,

@@ -125,6 +125,34 @@ public sealed class CoachingStudentSessionsQueryTests
         identityClient.RequestedStudentIds.Should().Contain(new[] { allowedStudentId, revokedStudentId });
     }
 
+    [Fact]
+    public async Task TeacherSessionQuery_ShouldIncludeAuthorizedStudentsWithoutReflectionsForAttendance()
+    {
+        var teacherId = Guid.NewGuid();
+        var studentWithNoteId = Guid.NewGuid();
+        var studentWithoutNoteId = Guid.NewGuid();
+        var session = CoachingSession.Create(
+            teacherId,
+            "Yoklama alınacak seans",
+            DateTime.UtcNow.AddDays(1),
+            SessionType.Group);
+        session.AddStudents([studentWithNoteId, studentWithoutNoteId]);
+        session.Attendances.Single(item => item.StudentId == studentWithNoteId)
+            .AddStudentNote("Bugünkü hedefimi tamamladım.");
+
+        var handler = new GetSessionsQueryHandler(
+            new StubSessionRepository(session),
+            CreatePolicy(teacherId, "Teacher"),
+            new StubIdentityAuthorizationClient([studentWithNoteId, studentWithoutNoteId]));
+
+        var result = await handler.Handle(new GetTeacherSessionsQuery(teacherId), CancellationToken.None);
+
+        result.Items.Single().StudentReflections.Should().HaveCount(2);
+        result.Items.Single().StudentReflections!
+            .Single(reflection => reflection.StudentId == studentWithoutNoteId)
+            .Note.Should().BeNull();
+    }
+
     [Theory]
     [InlineData(CoachingNoteVisibility.CoachPrivate, false)]
     [InlineData(CoachingNoteVisibility.InstitutionVisible, true)]

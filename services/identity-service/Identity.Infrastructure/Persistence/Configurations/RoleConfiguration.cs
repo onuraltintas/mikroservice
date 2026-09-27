@@ -34,6 +34,10 @@ public class UserRoleConfiguration : IEntityTypeConfiguration<UserRole>
             
         builder.ToTable("UserRoles");
 
+        builder.Property(userRole => userRole.Product)
+            .HasConversion<string>()
+            .HasMaxLength(32);
+
         builder.HasOne<User>()
             .WithMany(u => u.Roles)
             .HasForeignKey(ur => ur.UserId)

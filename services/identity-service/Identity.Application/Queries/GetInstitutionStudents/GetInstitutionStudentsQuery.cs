@@ -37,7 +37,10 @@ public sealed class GetInstitutionStudentsQueryHandler : IRequestHandler<GetInst
                 new Error("Auth.Unauthorized", "User is not authenticated"));
         }
 
-        var institutionId = await _institutionRepository.GetInstitutionIdByAdminIdAsync(userId, cancellationToken);
+        var institutionId = await _institutionRepository.GetInstitutionIdByAdminIdAsync(
+            userId,
+            Identity.Domain.Enums.PlatformProduct.Coaching,
+            cancellationToken);
         if (institutionId is null)
         {
             return Result.Failure<PagedList<InstitutionStudentRosterItem>>(

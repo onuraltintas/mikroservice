@@ -5,6 +5,39 @@ namespace SpeedReading.Application.UnitTests;
 
 public sealed class VisualExpansionRoundRulesTests
 {
+    [Fact]
+    public void Correct_answer_expands_angle_and_shortens_display_time()
+    {
+        VisualExpansionRoundRules.AdvanceDifficulty(
+            currentDegrees: 4,
+            targetDegrees: 30,
+            currentDisplayDurationMs: 400,
+            isCorrect: true)
+            .Should().Be(new VisualExpansionDifficulty(6, 380));
+    }
+
+    [Fact]
+    public void Incorrect_answer_keeps_angle_and_display_time_unchanged()
+    {
+        VisualExpansionRoundRules.AdvanceDifficulty(
+            currentDegrees: 8,
+            targetDegrees: 30,
+            currentDisplayDurationMs: 300,
+            isCorrect: false)
+            .Should().Be(new VisualExpansionDifficulty(8, 300));
+    }
+
+    [Fact]
+    public void Difficulty_progression_stops_at_safe_limits()
+    {
+        VisualExpansionRoundRules.AdvanceDifficulty(
+            currentDegrees: 29,
+            targetDegrees: 30,
+            currentDisplayDurationMs: 105,
+            isCorrect: true)
+            .Should().Be(new VisualExpansionDifficulty(30, 100));
+    }
+
     [Theory]
     [InlineData("letter")]
     [InlineData("number")]

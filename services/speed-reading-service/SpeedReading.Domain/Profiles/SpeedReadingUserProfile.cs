@@ -10,10 +10,13 @@ public sealed class SpeedReadingUserProfile : AggregateRoot
 
     public Guid UserId { get; private set; }
     public int CurrentLevel { get; private set; }
+    public int? GradeLevel { get; private set; }
     public int TargetWPM { get; private set; }
     public decimal TargetComprehension { get; private set; }
     public int DailyGoalMinutes { get; private set; }
     public Guid? AgeGroupConfigurationId { get; private set; }
+    public DateTime? DateOfBirth { get; private set; }
+    public string? LearningStyle { get; private set; }
     public Guid? InstitutionId { get; private set; }
     public bool IsActive { get; private set; }
     public string? HistoricalDisplayName { get; private set; }
@@ -58,10 +61,15 @@ public sealed class SpeedReadingUserProfile : AggregateRoot
         DateTime? updatedAt,
         string? updatedBy,
         string? historicalDisplayName = null,
-        string? historicalEmail = null)
+        string? historicalEmail = null,
+        DateTime? dateOfBirth = null,
+        string? learningStyle = null,
+        int? gradeLevel = null)
     {
+        ValidateGradeLevel(gradeLevel);
         var profile = CreateDefault(id, userId, createdAt, createdBy, targetWpm, targetComprehension);
         profile.CurrentLevel = Math.Max(currentLevel, 1);
+        profile.GradeLevel = gradeLevel;
         profile.DailyGoalMinutes = Math.Max(dailyGoalMinutes, 0);
         profile.AgeGroupConfigurationId = ageGroupConfigurationId;
         profile.InstitutionId = institutionId;
@@ -69,7 +77,20 @@ public sealed class SpeedReadingUserProfile : AggregateRoot
         profile.UpdatedAt = updatedAt.HasValue ? EnsureUtc(updatedAt.Value) : null;
         profile.UpdatedBy = updatedBy;
         profile.RefreshHistoricalDisplay(historicalDisplayName, historicalEmail);
+        profile.DateOfBirth = dateOfBirth.HasValue ? EnsureUtc(dateOfBirth.Value) : null;
+        profile.LearningStyle = NormalizeLearningStyle(learningStyle);
         return profile;
+    }
+
+    public void SetGradeLevel(int? gradeLevel, Guid actorId, DateTime at)
+    {
+        if (actorId == Guid.Empty)
+            throw new ArgumentException("Profile actor is required.", nameof(actorId));
+        ValidateGradeLevel(gradeLevel);
+
+        GradeLevel = gradeLevel;
+        UpdatedAt = EnsureUtc(at);
+        UpdatedBy = actorId.ToString();
     }
 
     public void RefreshHistoricalDisplay(string? displayName, string? email)
@@ -121,12 +142,20 @@ public sealed class SpeedReadingUserProfile : AggregateRoot
         int dailyGoalMinutes,
         Guid? ageGroupConfigurationId,
         Guid actorId,
-        DateTime at)
+        DateTime at,
+        DateTime? dateOfBirth = null,
+        string? learningStyle = null)
     {
         if (actorId == Guid.Empty)
             throw new ArgumentException("Profile actor is required.", nameof(actorId));
         if (dailyGoalMinutes is < 5 or > 480)
             throw new ArgumentOutOfRangeException(nameof(dailyGoalMinutes), "Daily goal must be between 5 and 480 minutes");
+
+        var normalizedAt = EnsureUtc(at);
+        var normalizedBirthDate = dateOfBirth.HasValue ? EnsureUtc(dateOfBirth.Value) : (DateTime?)null;
+        if (normalizedBirthDate.HasValue && normalizedBirthDate.Value.Date > normalizedAt.Date)
+            throw new ArgumentOutOfRangeException(nameof(dateOfBirth), "Date of birth cannot be in the future.");
+        var normalizedLearningStyle = NormalizeLearningStyle(learningStyle);
 
         CurrentLevel = Math.Max(currentLevel, 1);
         TargetWPM = Math.Max(targetWpm, 0);
@@ -134,8 +163,29 @@ public sealed class SpeedReadingUserProfile : AggregateRoot
         DailyGoalMinutes = dailyGoalMinutes;
         if (ageGroupConfigurationId.HasValue)
             AgeGroupConfigurationId = ageGroupConfigurationId;
-        UpdatedAt = EnsureUtc(at);
+        if (normalizedBirthDate.HasValue)
+            DateOfBirth = normalizedBirthDate;
+        if (normalizedLearningStyle is not null)
+            LearningStyle = normalizedLearningStyle;
+        UpdatedAt = normalizedAt;
         UpdatedBy = actorId.ToString();
+    }
+
+    private static string? NormalizeLearningStyle(string? value)
+    {
+        if (value is null)
+            return null;
+
+        var normalized = value.Trim().ToLowerInvariant();
+        return normalized is "visual" or "auditory" or "kinesthetic"
+            ? normalized
+            : throw new ArgumentException("Learning style is not supported.", nameof(value));
+    }
+
+    private static void ValidateGradeLevel(int? gradeLevel)
+    {
+        if (gradeLevel is < 1 or > 12)
+            throw new ArgumentOutOfRangeException(nameof(gradeLevel), "School grade must be between 1 and 12.");
     }
 
     private static DateTime EnsureUtc(DateTime value) =>

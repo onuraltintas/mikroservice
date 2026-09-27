@@ -46,7 +46,7 @@
           <p class="truncate font-medium">{{ assignment.title }}</p>
           <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Son tarih: {{ assignment.dueDate | date:'d MMM y' }}</p>
         </div>
-        <span class="rounded-full px-2.5 py-1 text-xs font-semibold" [ngClass]="assignment.isOverdue ? 'bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-200' : 'bg-indigo-100 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-200'">{{ assignment.status }}</span>
+        <span class="rounded-full px-2.5 py-1 text-xs font-semibold" [ngClass]="assignment.assignmentStatus === 'Cancelled' || assignment.assignmentStatus === 'Completed' ? 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300' : assignment.isOverdue ? 'bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-200' : 'bg-indigo-100 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-200'">{{ assignment.assignmentStatus === 'Cancelled' ? 'İptal edildi' : assignment.assignmentStatus === 'Completed' ? 'Tamamlandı' : assignment.status }}</span>
       </a>
     </div>
   </ng-container>
@@ -54,12 +54,12 @@
   <ng-container *ngIf="!isLoading() && isTeacher()">
     <div class="grid gap-4 sm:grid-cols-3">
       <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-        <p class="text-sm text-slate-500 dark:text-slate-400">Aktif ödevler</p>
-        <p class="mt-2 text-3xl font-bold text-slate-950 dark:text-white">{{ teacherAssignments().length }}</p>
+        <p class="text-sm text-slate-500 dark:text-slate-400">Toplam ödev</p>
+        <p class="mt-2 text-3xl font-bold text-slate-950 dark:text-white">{{ teacherAssignmentCount() }}</p>
       </div>
       <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <p class="text-sm text-slate-500 dark:text-slate-400">Toplam öğrenci</p>
-        <p class="mt-2 text-3xl font-bold text-slate-950 dark:text-white">{{ teacherAssignments().reduce(sumStudents, 0) }}</p>
+        <p class="mt-2 text-3xl font-bold text-slate-950 dark:text-white">{{ teacherStudentCount() }}</p>
       </div>
       <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <a routerLink="/coaching-portal/teacher/assignments" class="text-sm font-semibold text-indigo-600 dark:text-indigo-300">Ödev yönetimine git →</a>

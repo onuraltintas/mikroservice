@@ -2,6 +2,7 @@ using EduPlatform.Shared.Kernel.Results;
 using EduPlatform.Shared.Security.Interfaces;
 using Identity.Application.Interfaces;
 using Identity.Domain.Entities;
+using Identity.Domain.Enums;
 using MediatR;
 
 namespace Identity.Application.Commands.UpdateUserProfile;
@@ -58,7 +59,11 @@ public class UpdateUserProfileCommandHandler : IRequestHandler<UpdateUserProfile
         }
 
         // 2. Update Profile Specifics
-        var userRoles = user.Roles.Select(r => r.Role.Name).ToList();
+        var userRoles = (request.Product == PlatformProduct.Coaching
+                ? user.GetRolesForProductScope(request.Product)
+                : [])
+            .Select(userRole => userRole.Role.Name)
+            .ToList();
 
         if (userRoles.Contains(Identity.Domain.Enums.UserRole.Teacher.ToString()))
         {

@@ -1,12 +1,10 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { Observable, of, throwError } from 'rxjs';
+import { map, switchMap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import {
   Student,
-  CreateStudentRequest,
-  UpdateStudentRequest,
   StudentExerciseResult,
   StudentDashboard,
   ReadingText,
@@ -14,6 +12,8 @@ import {
   LevelUpResult
 } from '../models/student.model';
 import { PagedResult } from '../models/user.model';
+import { AuthService } from './auth.service';
+import { UsersService } from './users.service';
 
 /**
  * Students Service - Refactored for ApiResponse<T> compatibility
@@ -29,33 +29,10 @@ import { PagedResult } from '../models/user.model';
 })
 export class StudentsService {
   private readonly http = inject(HttpClient);
+  private readonly authService = inject(AuthService);
+  private readonly usersService = inject(UsersService);
   private readonly API_URL = `${environment.apiUrl}/v1/students`;
-  private readonly identityApiUrl = environment.apiUrl;
-
-  /**
-   * Get all students with optional filters
-   * Backend returns: ApiResponse<Student[]>
-   * Service receives: Student[] (auto-unwrapped by interceptor)
-   */
-  getStudents(
-    searchTerm?: string,
-    _institutionId?: string,
-    _currentLevel?: number,
-    isActive?: boolean,
-    _teacherId?: string
-  ): Observable<Student[]> {
-    let params = new HttpParams().set('pageSize', '100').set('role', 'Student');
-
-    if (searchTerm) {
-      params = params.set('search', searchTerm);
-    }
-    if (isActive !== undefined) {
-      params = params.set('isActive', isActive.toString());
-    }
-    return this.http.get<any>(`${this.identityApiUrl}/users`, { params }).pipe(
-      map(result => (Array.isArray(result) ? result : (result?.items ?? [])).map((student: any) => this.toStudent(student)))
-    );
-  }
+  private readonly speedReadingApiUrl = `${environment.apiUrl}/speed-reading`;
 
   getInstitutionStudents(
     searchTerm?: string,
@@ -67,38 +44,49 @@ export class StudentsService {
       .pipe(map(page => page.items));
   }
 
+  getInstitutionStudentById(studentUserId: string, teacherUserId?: string): Observable<Student | null> {
+    return this.getInstitutionStudentsPage(1, 1, undefined, undefined, undefined, teacherUserId, undefined, studentUserId)
+      .pipe(map(page => page.items[0] ?? null));
+  }
+
   getInstitutionStudentsPage(
     page = 1,
     pageSize = 25,
     searchTerm?: string,
     gradeLevel?: number,
     isActive?: boolean,
-    teacherUserId?: string
+    teacherUserId?: string,
+    institutionId?: string,
+    memberUserId?: string
   ): Observable<PagedResult<Student>> {
     let params = new HttpParams()
-      .set('page', page.toString())
+      .set('pageNumber', page.toString())
       .set('pageSize', pageSize.toString());
-    if (searchTerm) params = params.set('search', searchTerm);
+    params = params.set('role', 'Student');
+    if (searchTerm?.trim()) params = params.set('searchTerm', searchTerm.trim());
     if (gradeLevel !== undefined) params = params.set('gradeLevel', gradeLevel.toString());
     if (isActive !== undefined) params = params.set('isActive', isActive.toString());
     if (teacherUserId) params = params.set('teacherUserId', teacherUserId);
+    if (memberUserId) params = params.set('memberUserId', memberUserId);
 
-    return this.http.get<any>(`${this.identityApiUrl}/institution/students`, { params }).pipe(
+    return this.resolveInstitutionId(institutionId).pipe(
+      switchMap(scopedInstitutionId => this.http.get<any>(
+        `${this.speedReadingApiUrl}/institutions/${scopedInstitutionId}/members`, { params })),
       map(result => {
-        const rows = Array.isArray(result) ? result : (result?.items ?? []);
-        const resultPage = result?.pageNumber ?? page;
-        const resultSize = result?.pageSize ?? pageSize;
-        const totalCount = result?.totalCount ?? rows.length;
-        return {
-          items: rows.map((student: any) => this.toStudent(student)),
-          totalCount,
-          pageNumber: resultPage,
-          pageSize: resultSize,
-          totalPages: Math.max(1, Math.ceil(totalCount / resultSize)),
-          hasPreviousPage: resultPage > 1,
-          hasNextPage: resultPage < Math.ceil(totalCount / resultSize)
-        };
-      })
+          const rows = Array.isArray(result) ? result : (result?.items ?? []);
+          const resultPage = result?.pageNumber ?? page;
+          const resultSize = result?.pageSize ?? pageSize;
+          const totalCount = result?.totalCount ?? rows.length;
+          return {
+            items: rows.map((student: any) => this.toStudent(student)),
+            totalCount,
+            pageNumber: resultPage,
+            pageSize: resultSize,
+            totalPages: Math.max(1, Math.ceil(totalCount / resultSize)),
+            hasPreviousPage: resultPage > 1,
+            hasNextPage: resultPage < Math.ceil(totalCount / resultSize)
+          };
+        })
     );
   }
 
@@ -112,38 +100,28 @@ export class StudentsService {
   }
 
   /**
-   * Create new student
-   * Backend returns: ApiResponse<Student>
-   * Service receives: Student (auto-unwrapped)
-   */
-  createStudent(request: CreateStudentRequest): Observable<Student> {
-    return this.http.post<Student>(`${this.identityApiUrl}/institution/students`, request);
-  }
-
-  /**
-   * Update existing student
-   * Backend returns: ApiResponse<Student>
-   * Service receives: Student (auto-unwrapped)
-   */
-  updateStudent(id: string, request: UpdateStudentRequest): Observable<Student> {
-    return this.http.put<Student>(`${this.identityApiUrl}/institution/students/${id}`, request);
-  }
-
-  /**
-   * Delete student
-   * Backend returns: ApiResponse<void>
-   * Service receives: void (auto-unwrapped)
-   */
-  deleteStudent(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.identityApiUrl}/institution/students/${id}`);
-  }
-
-  /**
    * Unlink student from institution (Admin only)
    * Backend returns: ApiResponse<void>
    */
-  unlinkStudentFromInstitution(id: string): Observable<void> {
-    return this.deleteStudent(id);
+  unlinkStudentFromInstitution(id: string, institutionId?: string): Observable<void> {
+    return this.resolveInstitutionId(institutionId).pipe(
+      switchMap(scopedInstitutionId => this.http.put<void>(
+        `${this.speedReadingApiUrl}/institutions/${scopedInstitutionId}/members/${id}`,
+        { role: 1, isActive: false }))
+    );
+  }
+
+  updateInstitutionStudent(
+    id: string,
+    gradeLevel: number | null,
+    teacherUserId: string | null,
+    institutionId?: string
+  ): Observable<void> {
+    return this.resolveInstitutionId(institutionId).pipe(
+      switchMap(scopedInstitutionId => this.http.put<void>(
+        `${this.speedReadingApiUrl}/institutions/${scopedInstitutionId}/members/${id}/student-profile`,
+        { gradeLevel, teacherUserId }))
+    );
   }
 
   /**
@@ -230,11 +208,25 @@ export class StudentsService {
     );
   }
 
-  linkStudent(email: string, teacherId?: string | null): Observable<any> {
-    return this.http.post<any>(`${this.identityApiUrl}/institution/invite-student`, {
-      studentEmail: email,
-      teacherUserId: teacherId
-    });
+  linkStudent(email: string, institutionId?: string, teacherId?: string | null): Observable<any> {
+    return this.resolveInstitutionId(institutionId).pipe(
+      switchMap(scopedInstitutionId => this.http.post<any>(
+        `${this.speedReadingApiUrl}/invitations/institutions/${scopedInstitutionId}`,
+        { email, role: 1, teacherUserId: teacherId },
+        { headers: { 'X-Skip-Error-Toast': 'true' } }))
+    );
+  }
+
+  private resolveInstitutionId(institutionId?: string): Observable<string> {
+    const currentInstitutionId = institutionId ?? this.authService.currentUserValue?.institutionId;
+    if (currentInstitutionId) return of(currentInstitutionId);
+
+    return this.usersService.getMyProfile().pipe(
+      map(profile => profile.institutionId),
+      switchMap(resolvedInstitutionId => resolvedInstitutionId
+        ? of(resolvedInstitutionId)
+        : throwError(() => new Error('Hızlı Okuma kurum kapsamı bulunamadı.')))
+    );
   }
 
   private toStudent(student: any): Student {
@@ -243,13 +235,14 @@ export class StudentsService {
       firstName: student.firstName ?? '',
       lastName: student.lastName ?? '',
       email: student.email ?? '',
-      institutionId: student.institutionId ?? student.studentDetails?.institutionId ?? undefined,
-      institutionName: student.institutionName ?? student.studentDetails?.institutionName ?? undefined,
-      currentLevel: student.gradeLevel ?? student.currentLevel ?? student.studentDetails?.gradeLevel ?? 0,
-      targetWPM: student.targetWPM ?? student.studentDetails?.targetWPM ?? null,
-      targetComprehension: student.targetComprehension ?? student.studentDetails?.targetComprehension ?? null,
-      dailyGoalMinutes: student.dailyGoalMinutes ?? student.studentDetails?.dailyGoalMinutes ?? null,
-      learningStyle: student.learningStyle ?? student.studentDetails?.learningStyle ?? 'Belirtilmedi',
+      institutionId: student.institutionId ?? undefined,
+      institutionName: student.institutionName ?? undefined,
+      gradeLevel: student.gradeLevel ?? null,
+      currentLevel: student.currentLevel ?? 0,
+      targetWPM: student.targetWpm ?? student.targetWPM ?? null,
+      targetComprehension: student.targetComprehension ?? null,
+      dailyGoalMinutes: student.dailyGoalMinutes ?? null,
+      learningStyle: student.learningStyle ?? 'Belirtilmedi',
       lastLoginAt: student.lastLoginAt ? new Date(student.lastLoginAt) : undefined,
       isActive: student.isActive ?? true,
       createdAt: student.createdAt ? new Date(student.createdAt) : new Date(),

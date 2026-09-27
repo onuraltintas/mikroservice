@@ -12,16 +12,13 @@ namespace Identity.API.Controllers;
 public sealed class InternalReportingController : ControllerBase
 {
     private readonly IInstitutionRepository institutionRepository;
-    private readonly ITeacherRepository teacherRepository;
     private readonly IUserRepository userRepository;
 
     public InternalReportingController(
         IInstitutionRepository institutionRepository,
-        ITeacherRepository teacherRepository,
         IUserRepository userRepository)
     {
         this.institutionRepository = institutionRepository;
-        this.teacherRepository = teacherRepository;
         this.userRepository = userRepository;
     }
 
@@ -33,26 +30,6 @@ public sealed class InternalReportingController : ControllerBase
     {
         var institutions = await institutionRepository.GetSpeedReadingInstitutionScopeAsync(cancellationToken);
         return Ok(new SpeedReadingInstitutionScopeResponse(institutions));
-    }
-
-    [HttpPost("speed-reading/teacher-students")]
-    [AllowAnonymous]
-    [InternalServiceKey]
-    [RequestSizeLimit(16_384)]
-    public async Task<ActionResult<SpeedReadingTeacherStudentScopeResponse>> GetSpeedReadingTeacherStudents(
-        [FromBody] SpeedReadingTeacherStudentScopeRequest request,
-        CancellationToken cancellationToken)
-    {
-        if (request.ViewerUserId == Guid.Empty)
-        {
-            return BadRequest("Teacher scope viewer is invalid.");
-        }
-
-        var scope = await teacherRepository.GetSpeedReadingTeacherStudentScopeAsync(
-            request.ViewerUserId,
-            request.TargetTeacherUserId,
-            cancellationToken);
-        return scope is null ? Forbid() : Ok(scope);
     }
 
     [HttpPost("speed-reading/users")]
@@ -94,5 +71,47 @@ public sealed class InternalReportingController : ControllerBase
             request?.Role,
             cancellationToken);
         return Ok(new SpeedReadingUserAudienceResponse(userIds));
+    }
+
+    [HttpPost("speed-reading/member-eligibility")]
+    [AllowAnonymous]
+    [InternalServiceKey]
+    [RequestSizeLimit(4_096)]
+    public async Task<ActionResult<SpeedReadingMemberEligibilityResponse>> CheckSpeedReadingMemberEligibility(
+        [FromBody] SpeedReadingMemberEligibilityRequest? request,
+        CancellationToken cancellationToken)
+    {
+        if (request is null
+            || request.UserId == Guid.Empty
+            || !(string.Equals(request.Role, "Student", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(request.Role, "Teacher", StringComparison.OrdinalIgnoreCase)))
+        {
+            return BadRequest("An eligible user and Speed Reading role are required.");
+        }
+
+        var isEligible = await userRepository.IsSpeedReadingMembershipEligibleAsync(
+            request.UserId,
+            request.Role,
+            cancellationToken);
+        return Ok(new SpeedReadingMemberEligibilityResponse(isEligible));
+    }
+
+    [HttpPost("speed-reading/institution-manager-authorization")]
+    [AllowAnonymous]
+    [InternalServiceKey]
+    [RequestSizeLimit(4_096)]
+    public async Task<ActionResult<SpeedReadingInstitutionManagerAuthorizationResponse>>
+        CheckSpeedReadingInstitutionManagerAuthorization(
+            [FromBody] SpeedReadingInstitutionManagerAuthorizationRequest? request,
+            CancellationToken cancellationToken)
+    {
+        if (request is null || request.UserId == Guid.Empty || request.InstitutionId == Guid.Empty)
+            return BadRequest("An active user and institution are required.");
+
+        var canManage = await institutionRepository.CanManageSpeedReadingInstitutionAsync(
+            request.UserId,
+            request.InstitutionId,
+            cancellationToken);
+        return Ok(new SpeedReadingInstitutionManagerAuthorizationResponse(canManage));
     }
 }

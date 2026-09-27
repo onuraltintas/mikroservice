@@ -5,6 +5,7 @@ export interface Student {
   email: string;
   institutionId?: string;
   institutionName?: string;
+  gradeLevel?: number | null;
   currentLevel: number;
   targetWPM?: number | null;
   targetComprehension?: number | null;
@@ -15,21 +16,6 @@ export interface Student {
   createdAt: Date;
   teacherId?: string;
   teacherName?: string;
-}
-
-export interface CreateStudentRequest {
-  firstName: string;
-  lastName: string;
-  email: string;
-  gradeLevel: number;
-  teacherUserId?: string | null;
-}
-
-export interface UpdateStudentRequest {
-  firstName: string;
-  lastName: string;
-  gradeLevel: number;
-  teacherUserId?: string | null;
 }
 
 export interface StudentExerciseResult {

@@ -1,4 +1,5 @@
 using MediatR;
+using System.Text.Json.Serialization;
 
 namespace Coaching.Application.Commands.UpdateSessionAttendance;
 
@@ -7,4 +8,8 @@ public record UpdateSessionAttendanceCommand(
     bool Attended,
     string? Notes,
     Guid? StudentId = null
-) : IRequest;
+) : IRequest
+{
+    [JsonIgnore]
+    public bool IsInstitutionAdminOperation { get; init; }
+}

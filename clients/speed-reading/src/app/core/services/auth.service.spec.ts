@@ -83,11 +83,40 @@ describe('AuthService', () => {
   it('uses the canonical auth endpoint for login and sends the session cookie', () => {
     service.login({ email: 'admin@example.com', password: 'Password1!', rememberMe: true }).subscribe();
 
-    const request = http.expectOne('/api/auth/login');
+    const request = http.expectOne('/api/auth/speed-reading/login');
     expect(request.request.withCredentials).toBeTrue();
     request.flush({
       accessToken: '',
       roles: []
+    });
+  });
+
+  it('uses the speed-reading-scoped Google login endpoint', () => {
+    const accessToken = 'eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJzdHVkZW50Iiwicm9sZSI6IlN0dWRlbnQiLCJleHAiOjQxMDI0NDQ4MDB9.';
+    service.googleAuth('google-id-token').subscribe();
+
+    const request = http.expectOne('/api/auth/speed-reading/google-login');
+    expect(request.request.withCredentials).toBeTrue();
+    expect(request.request.body).toEqual({ idToken: 'google-id-token' });
+    request.flush({ accessToken, roles: [] });
+
+    const profileRequest = http.expectOne('/api/v1/users/me');
+    profileRequest.flush({
+      userId: 'student',
+      email: 'student@example.com',
+      firstName: 'Test',
+      lastName: 'Student',
+      roles: ['Student'],
+      isActive: true,
+      emailConfirmed: true,
+      studentDetails: { birthDate: '2000-01-01T00:00:00.000Z' }
+    });
+
+    const speedReadingProfileRequest = http.expectOne('/api/speed-reading/adaptive-learning/profile/settings');
+    speedReadingProfileRequest.flush({
+      dateOfBirth: '2000-01-01T00:00:00.000Z',
+      learningStyle: 'visual',
+      ageGroupConfigurationId: 'age-group-id'
     });
   });
 
@@ -98,7 +127,7 @@ describe('AuthService', () => {
     service.login({ email: 'student@example.com', password: 'Password1!', rememberMe: true })
       .subscribe(value => response = value);
 
-    const loginRequest = http.expectOne('/api/auth/login');
+    const loginRequest = http.expectOne('/api/auth/speed-reading/login');
     loginRequest.flush({ accessToken, roles: [] });
 
     const profileRequest = http.expectOne('/api/v1/users/me');
@@ -118,8 +147,15 @@ describe('AuthService', () => {
       }
     });
 
+    const speedReadingProfileRequest = http.expectOne('/api/speed-reading/adaptive-learning/profile/settings');
+    speedReadingProfileRequest.flush({
+      dateOfBirth: '2000-01-01T00:00:00.000Z',
+      learningStyle: 'visual',
+      ageGroupConfigurationId: 'age-group-id'
+    });
+
     expect(response?.dateOfBirth).toBe('2000-01-01T00:00:00.000Z');
-    expect(response?.learningStyle).toBe('Visual');
+    expect(response?.learningStyle).toBe('visual');
     expect(service.hasCompletedProfile()).toBeTrue();
   });
 
@@ -147,6 +183,12 @@ describe('AuthService', () => {
       studentDetails: { birthDate: '2000-01-01T00:00:00.000Z' }
     });
 
+    const speedReadingProfileRequest = http.expectOne('/api/speed-reading/adaptive-learning/profile/settings');
+    speedReadingProfileRequest.flush({
+      dateOfBirth: '2000-01-01T00:00:00.000Z',
+      ageGroupConfigurationId: 'age-group-id'
+    });
+
     expect(response?.id).toBe('callback-student');
     expect(service.hasCompletedProfile()).toBeTrue();
   });
@@ -159,7 +201,7 @@ describe('AuthService', () => {
       password: 'Password1!'
     }).subscribe();
 
-    const request = http.expectOne('/api/auth/register/student');
+    const request = http.expectOne('/api/auth/speed-reading/register/student');
     expect(request.request.withCredentials).toBeTrue();
     request.flush({ userId: 'student-id' });
 
@@ -179,7 +221,7 @@ describe('AuthService', () => {
     let response: AuthResponse | undefined;
     service.login({ email: 'admin@example.com', password: 'Password1!', rememberMe: true }).subscribe(value => response = value);
 
-    const request = http.expectOne('/api/auth/login');
+    const request = http.expectOne('/api/auth/speed-reading/login');
     request.flush({
       requiresMfa: true,
       mfaEnrollmentRequired: false,
@@ -263,7 +305,7 @@ describe('AuthService', () => {
     const accessToken = 'eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJ1c2VyIiwicm9sZSI6IlN5c3RlbUFkbWluIiwiZXhwIjo0MTAyNDQ0ODAwfQ.';
     service.login({ email: 'admin@example.com', password: 'Password1!', rememberMe: true }).subscribe();
 
-    const request = http.expectOne('/api/auth/login');
+    const request = http.expectOne('/api/auth/speed-reading/login');
     request.flush({
       accessToken,
       roles: ['SystemAdmin']
@@ -288,6 +330,30 @@ describe('AuthService', () => {
     expect(service.isAuthenticated).toBeTrue();
     expect(localStorage.getItem('token')).toBeNull();
     expect(JSON.parse(localStorage.getItem('currentUser') || '{}').token).toBeUndefined();
+  });
+
+  it('keeps the local session marker when refresh temporarily times out', () => {
+    localStorage.setItem('currentUser', JSON.stringify({ id: 'stored-user' }));
+    service.initializeSession().subscribe(user => expect(user).toBeNull());
+
+    http.expectOne('/api/auth/refresh-token').flush(null, {
+      status: 504,
+      statusText: 'Gateway Timeout'
+    });
+
+    expect(localStorage.getItem('currentUser')).not.toBeNull();
+  });
+
+  it('clears the local session marker when the refresh token is invalid', () => {
+    localStorage.setItem('currentUser', JSON.stringify({ id: 'stored-user' }));
+    service.initializeSession().subscribe(user => expect(user).toBeNull());
+
+    http.expectOne('/api/auth/refresh-token').flush(null, {
+      status: 401,
+      statusText: 'Unauthorized'
+    });
+
+    expect(localStorage.getItem('currentUser')).toBeNull();
   });
 
   it('does not probe the refresh endpoint for an anonymous browser session', () => {

@@ -16,6 +16,125 @@ function callbacks(onComplete: (result: EngineResult) => void): EngineCallbacks 
 }
 
 describe('MotionPathEngine', () => {
+  it('shows a new fixation point before letters and hides both during the answer', fakeAsync(() => {
+    const engine = new MotionPathEngine();
+    engine.initialize({ mode: 'fixation', content: { points: 2, peripheralCount: 1 }, timing: { holdMs: 50 } }, callbacks(() => undefined));
+    engine.start();
+    expect(engine.getPeripheralChars()).toEqual([]);
+    expect(engine.isFixationTargetVisible()).toBeFalse();
+    tick(150);
+    expect(engine.getPeripheralChars()).toEqual([]);
+    expect(engine.isFixationTargetVisible()).toBeTrue();
+    tick(200);
+    expect(engine.getPeripheralChars().length).toBe(1);
+    tick(50);
+    expect(engine.isAwaitingInput()).toBeTrue();
+    expect(engine.getPeripheralChars()).toEqual([]);
+    expect(engine.isFixationTargetVisible()).toBeFalse();
+    engine.handleInput({ type: 'keypress', key: 'A' });
+    engine.handleInput({ type: 'enter', key: 'Enter' });
+    expect(engine.isFixationTargetVisible()).toBeFalse();
+    tick(1200);
+    expect(engine.getPeripheralChars()).toEqual([]);
+  }));
+
+  it('keeps server letters hidden until the new point has been shown', fakeAsync(() => {
+    const actions: any[] = [];
+    const engine = new MotionPathEngine();
+    const handlers = callbacks(() => undefined);
+    handlers.onAction = action => actions.push(action);
+    engine.initialize({ serverAuthoritative: true, mode: 'fixation', fixationPeripheralCount: 2,
+      content: { points: 1, peripheralCount: 2 }, timing: { holdMs: 50 } }, handlers);
+    engine.start();
+    engine.reconcileServerResponse(actions.at(-1), { isValid: true, feedbackData: { stimuli: ['A', 'B'] } });
+    expect(engine.getPeripheralChars()).toEqual([]);
+    expect(engine.isFixationTargetVisible()).toBeFalse();
+    tick(150);
+    expect(engine.getPeripheralChars()).toEqual([]);
+    expect(engine.isFixationTargetVisible()).toBeTrue();
+    tick(200);
+    expect(engine.getPeripheralChars().map(item => item.char)).toEqual(['A', 'B']);
+  }));
+
+  it('pauses and resumes the fixation cue without revealing letters early', fakeAsync(() => {
+    const engine = new MotionPathEngine();
+    engine.initialize({ mode: 'fixation', content: { points: 1, peripheralCount: 1 }, timing: { holdMs: 50 } }, callbacks(() => undefined));
+    engine.start();
+    tick(150);
+    engine.pause();
+    tick(500);
+    expect(engine.getPeripheralChars()).toEqual([]);
+    engine.resume();
+    tick(200);
+    expect(engine.getPeripheralChars().length).toBe(1);
+  }));
+
+  it('uses server-presented fixation letters and waits for validated answers', fakeAsync(() => {
+    const actions: any[] = [];
+    const engine = new MotionPathEngine();
+    const handlers = callbacks(() => undefined);
+    handlers.onAction = action => actions.push(action);
+    engine.initialize({
+      serverAuthoritative: true,
+      fixationPeripheralCount: 2,
+      mode: 'fixation',
+      content: { points: 1, peripheralCount: 2 },
+      timing: { holdMs: 50 }
+    }, handlers);
+
+    engine.start();
+    expect(actions.at(-1)?.action).toBe('fixation_present');
+    engine.reconcileServerResponse(actions.at(-1), {
+      isValid: true, feedbackData: { stimuli: ['A', 'B'], holdMs: 50 }
+    });
+    expect(engine.getPeripheralChars()).toEqual([]);
+    tick(150);
+    expect(engine.getPeripheralChars()).toEqual([]);
+    tick(200);
+    expect(engine.getPeripheralChars().map(item => item.char)).toEqual(['A', 'B']);
+    tick(50);
+    engine.handleInput({ type: 'keypress', key: 'A' });
+    engine.handleInput({ type: 'keypress', key: 'B' });
+    engine.handleInput({ type: 'enter', key: 'Enter' });
+    expect(actions.at(-1)?.action).toBe('fixation_answer');
+    expect(engine.getCorrectCount()).toBe(0);
+    engine.reconcileServerResponse(actions.at(-1), { isValid: true, isCorrect: true });
+    expect(engine.getCorrectCount()).toBe(1);
+  }));
+
+  it('does not count an unanswered fixation prompt as incorrect', fakeAsync(() => {
+    const engine = new MotionPathEngine();
+    engine.initialize({ mode: 'fixation', content: { points: 1, peripheralCount: 1 }, timing: { holdMs: 50 } }, callbacks(() => undefined));
+    engine.start();
+    tick(350);
+    const answer = engine.getPeripheralChars()[0]?.char;
+    tick(50);
+    expect(engine.isAwaitingInput()).toBeTrue();
+    expect(engine.getIncorrectCount()).toBe(0);
+    engine.handleInput({ type: 'keypress', key: answer });
+    engine.handleInput({ type: 'enter', key: 'Enter' });
+    expect(engine.getCorrectCount()).toBe(1);
+    expect(engine.getIncorrectCount()).toBe(0);
+  }));
+
+  it('waits for explicit submission before scoring a complete fixation answer', fakeAsync(() => {
+    const engine = new MotionPathEngine();
+    engine.initialize({ mode: 'fixation', content: { points: 1, peripheralCount: 1 }, timing: { holdMs: 50 } }, callbacks(() => undefined));
+    engine.start();
+    tick(350);
+    const answer = engine.getPeripheralChars()[0].char;
+    tick(50);
+
+    engine.handleInput({ type: 'keypress', key: answer });
+    expect(engine.isAwaitingInput()).toBeTrue();
+    expect(engine.getCorrectCount()).toBe(0);
+    expect(engine.getIncorrectCount()).toBe(0);
+
+    engine.handleInput({ type: 'enter', key: 'Enter' });
+    expect(engine.getCorrectCount()).toBe(1);
+    expect(engine.getIncorrectCount()).toBe(0);
+  }));
+
   it('accepts a saccade click with flattened engine configuration', () => {
     let result: EngineResult | undefined;
     const engine = new MotionPathEngine();
@@ -41,11 +160,12 @@ describe('MotionPathEngine', () => {
     }, callbacks(value => result = value));
 
     engine.start();
-    tick(200);
+    tick(400);
     const expected = engine.getPeripheralChars()[0]?.char;
     const wrong = expected === 'A' ? 'B' : 'A';
     tick(50);
     engine.handleInput({ type: 'keypress', key: wrong });
+    engine.handleInput({ type: 'enter', key: 'Enter' });
     tick(1200);
 
     expect(result).toEqual(jasmine.objectContaining({ score: 0, accuracy: 0, errors: 1 }));
@@ -110,11 +230,12 @@ describe('MotionPathEngine', () => {
     }, callbacks(value => result = value));
 
     engine.start();
-    tick(199);
+    tick(399);
     const first = engine.getPeripheralChars()[0].char;
     tick(1);
     engine.handleInput({ type: 'keypress', key: first });
     engine.handleInput({ type: 'keypress', key: first });
+    engine.handleInput({ type: 'enter', key: 'Enter' });
     tick(1200);
 
     expect(result?.accuracy).toBe(50);
@@ -135,7 +256,7 @@ describe('MotionPathEngine', () => {
 
     engine.start();
     engine.start();
-    tick(250);
+    tick(450);
 
     expect(starts).toBe(1);
     expect(completions).toBe(1);
@@ -150,7 +271,7 @@ describe('MotionPathEngine', () => {
     }, callbacks(() => undefined));
 
     engine.start();
-    tick(250);
+    tick(450);
     engine.handleInput({ type: 'keypress', key: 'A' });
     engine.reset();
     tick(1200);
@@ -206,7 +327,7 @@ describe('MotionPathEngine', () => {
     engine.resume();
     tick(60);
     expect(result).toBeUndefined();
-    tick(140);
+    tick(340);
     expect(result?.completedSteps).toBe(1);
   }));
 
@@ -240,10 +361,11 @@ describe('MotionPathEngine', () => {
     }, callbacks(value => result = value));
 
     engine.start();
-    tick(199);
+    tick(399);
     const answer = engine.getPeripheralChars()[0].char;
     tick(1);
     engine.handleInput({ type: 'keypress', key: answer });
+    engine.handleInput({ type: 'enter', key: 'Enter' });
     engine.pause();
     tick(1200);
     expect(engine.state.currentStep).toBe(0);

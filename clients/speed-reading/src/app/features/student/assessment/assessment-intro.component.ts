@@ -33,9 +33,6 @@ export class AssessmentIntroComponent {
       error: (err) => {
         console.error('❌ Error skipping assessment:', err);
         this.loading = false;
-        
-        // Navigate to dashboard anyway
-        this.router.navigate(['/student/dashboard']);
       }
     });
   }

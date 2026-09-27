@@ -11,6 +11,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Identity.Domain.Constants;
+using Identity.Domain.Enums;
 using EduPlatform.Shared.Security.Authorization;
 
 namespace Identity.API.Controllers;
@@ -46,7 +47,9 @@ public class UserController : ControllerBase
         if (_currentUserService.UserId == null)
             return Unauthorized();
 
-        var query = new GetUserProfileQuery(_currentUserService.UserId.Value);
+        var query = new GetUserProfileQuery(
+            _currentUserService.UserId.Value,
+            GetCurrentProductScope());
         var result = await _mediator.Send(query);
 
         if (result.IsSuccess)
@@ -71,7 +74,7 @@ public class UserController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> UpdateProfile([FromBody] Identity.Application.Commands.UpdateUserProfile.UpdateUserProfileCommand command)
     {
-        var result = await _mediator.Send(command);
+        var result = await _mediator.Send(command with { Product = GetClaimedProductScope() });
 
         if (result.IsSuccess)
         {
@@ -92,9 +95,35 @@ public class UserController : ControllerBase
         [FromQuery] int pageSize = 10, 
         [FromQuery] string? search = null,
         [FromQuery] string? role = null,
-        [FromQuery] bool? isActive = null)
+        [FromQuery] bool? isActive = null,
+        [FromQuery] string? product = null)
     {
-        var query = new Identity.Application.Queries.GetAllUsers.GetAllUsersQuery(page, pageSize, search, role, isActive);
+        PlatformProduct? requestedProduct = null;
+        if (!string.IsNullOrWhiteSpace(product))
+        {
+            if (!TryParseProductParameter(product, out var parsedProduct))
+            {
+                return BadRequest(new { Error = "Geçerli ürün kapsamı zorunludur." });
+            }
+
+            requestedProduct = parsedProduct;
+        }
+
+        var claimedProduct = GetCurrentProductScope();
+        if (!IsSystemAdministrator()
+            && requestedProduct.HasValue
+            && requestedProduct != claimedProduct)
+        {
+            return Forbid();
+        }
+
+        var query = new Identity.Application.Queries.GetAllUsers.GetAllUsersQuery(
+            page,
+            pageSize,
+            search,
+            role,
+            isActive,
+            requestedProduct ?? claimedProduct);
         var result = await _mediator.Send(query);
 
         if (result.IsSuccess)
@@ -131,7 +160,7 @@ public class UserController : ControllerBase
     [MfaCategory(MfaOperationCategories.Users)]
     public async Task<IActionResult> GetUserById(Guid id)
     {
-        var query = new GetUserProfileQuery(id);
+        var query = new GetUserProfileQuery(id, GetCurrentProductScope());
         var result = await _mediator.Send(query);
 
         if (result.IsSuccess)
@@ -154,7 +183,19 @@ public class UserController : ControllerBase
         [FromQuery] int pageSize = 100,
         [FromQuery] string? search = null)
     {
-        var result = await _mediator.Send(new GetAllUsersQuery(page, pageSize, search, "Teacher", true));
+        if (!IsSystemAdministrator()
+            && !HasProductScope(PlatformProduct.SpeedReading))
+        {
+            return Forbid();
+        }
+
+        var result = await _mediator.Send(new GetAllUsersQuery(
+            page,
+            pageSize,
+            search,
+            "Teacher",
+            true,
+            PlatformProduct.SpeedReading));
         if (result.IsFailure)
         {
             if (result.Error.Code == "Error.Unauthorized") return Unauthorized();
@@ -208,7 +249,7 @@ public class UserController : ControllerBase
     [MfaCategory(MfaOperationCategories.Users)]
     public async Task<IActionResult> GetSummary(CancellationToken cancellationToken)
     {
-        var result = await _mediator.Send(new GetUserSummaryQuery(), cancellationToken);
+        var result = await _mediator.Send(new GetUserSummaryQuery(GetCurrentProductScope()), cancellationToken);
         if (result.IsSuccess)
         {
             return Ok(result.Value);
@@ -386,15 +427,24 @@ public class UserController : ControllerBase
     /// <summary>
     /// Kullanıcıya rol atar.
     /// </summary>
-    [HttpPost("{id:guid}/roles")]
+    [HttpPost("{id:guid}/products/{product:regex(coaching|speed-reading)}/roles")]
     [HasPermission(Permissions.Users.Edit)]
     [Authorize(Roles = "SystemAdmin")]
     [Authorize(Policy = "MfaRequired")]
     [MfaCategory(MfaOperationCategories.Users)]
-    public async Task<IActionResult> AssignRole(Guid id, [FromBody] RoleRequest request, CancellationToken cancellationToken)
+    public async Task<IActionResult> AssignRole(
+        Guid id,
+        string product,
+        [FromBody] RoleRequest request,
+        CancellationToken cancellationToken)
     {
+        if (!PlatformProductExtensions.TryParseRouteValue(product, out var platformProduct))
+        {
+            return BadRequest(new Error("Auth.InvalidProduct", "Geçersiz platform."));
+        }
+
         var identityService = HttpContext.RequestServices.GetRequiredService<IIdentityService>();
-        var result = await identityService.AssignRoleAsync(id, request.RoleName, cancellationToken);
+        var result = await identityService.AssignRoleForProductAsync(id, request.RoleName, platformProduct, cancellationToken);
         if (result.IsSuccess) return Ok();
         return BadRequest(result.Error);
     }
@@ -423,7 +473,8 @@ public class UserController : ControllerBase
             request.StudentBirthDate,
             request.StudentLearningStyle,
             request.InstitutionId,
-            UpdateRoleProfile: true);
+            UpdateRoleProfile: true,
+            Product: GetClaimedProductScope());
 
         var result = await _mediator.Send(command);
 
@@ -445,6 +496,32 @@ public class UserController : ControllerBase
     {
         var identityService = HttpContext.RequestServices.GetRequiredService<IIdentityService>();
         var result = await identityService.RemoveRoleAsync(id, roleName, cancellationToken);
+        if (result.IsSuccess) return Ok();
+        return BadRequest(result.Error);
+    }
+
+    [HttpDelete("{id:guid}/products/{product:regex(coaching|speed-reading)}/roles/{roleName}")]
+    [HasPermission(Permissions.Users.Edit)]
+    [Authorize(Roles = "SystemAdmin")]
+    [Authorize(Policy = "MfaRequired")]
+    [MfaCategory(MfaOperationCategories.Users)]
+    public async Task<IActionResult> RemoveProductRole(
+        Guid id,
+        string product,
+        string roleName,
+        CancellationToken cancellationToken)
+    {
+        if (!PlatformProductExtensions.TryParseRouteValue(product, out var platformProduct))
+        {
+            return BadRequest(new Error("Auth.InvalidProduct", "Geçersiz platform."));
+        }
+
+        var identityService = HttpContext.RequestServices.GetRequiredService<IIdentityService>();
+        var result = await identityService.RemoveRoleForProductAsync(
+            id,
+            roleName,
+            platformProduct,
+            cancellationToken);
         if (result.IsSuccess) return Ok();
         return BadRequest(result.Error);
     }
@@ -516,5 +593,46 @@ public class UserController : ControllerBase
         var result = await _accessManagement.ResetMfaAsync(
             id, HttpContext.Connection.RemoteIpAddress?.ToString(), cancellationToken);
         return result.IsSuccess ? NoContent() : NotFound(new { Error = result.Error });
+    }
+
+    private PlatformProduct? GetCurrentProductScope()
+    {
+        if (IsSystemAdministrator())
+        {
+            return null;
+        }
+
+        var value = _currentUserService.User?.FindFirst("platform_product")?.Value;
+        return PlatformProductExtensions.TryParseRouteValue(value, out var product) ? product : null;
+    }
+
+    private PlatformProduct? GetClaimedProductScope()
+    {
+        var value = _currentUserService.User?.FindFirst("platform_product")?.Value;
+        return PlatformProductExtensions.TryParseRouteValue(value, out var product) ? product : null;
+    }
+
+    private bool HasProductScope(PlatformProduct product)
+    {
+        var value = _currentUserService.User?.FindFirst("platform_product")?.Value;
+        return PlatformProductExtensions.TryParseRouteValue(value, out var scopedProduct)
+            && scopedProduct == product;
+    }
+
+    private bool IsSystemAdministrator() => _currentUserService.Roles.Any(role =>
+        string.Equals(
+            role,
+            Identity.Domain.Enums.UserRole.SystemAdmin.ToString(),
+            StringComparison.OrdinalIgnoreCase));
+
+    private static bool TryParseProductParameter(string value, out PlatformProduct product)
+    {
+        if (PlatformProductExtensions.TryParseRouteValue(value, out product))
+        {
+            return true;
+        }
+
+        return Enum.TryParse(value, ignoreCase: true, out product)
+            && Enum.IsDefined(product);
     }
 }

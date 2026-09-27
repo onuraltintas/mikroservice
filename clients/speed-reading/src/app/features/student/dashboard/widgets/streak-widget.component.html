@@ -30,9 +30,9 @@
     </div>
   </div>
 
-  <!-- Son 7 gün aktivite grid'i -->
-  <div class="sw-week" aria-label="Son 7 günlük aktivite">
-    @for (day of getLast7Days(); track day.label) {
+  <!-- Pazartesi–pazar takvim haftası -->
+  <div class="sw-week" aria-label="Bu haftanın aktivitesi">
+    @for (day of getLast7Days(); track $index) {
       <div class="sw-week__day">
         <div class="sw-week__dot"
           [class.sw-week__dot--active]="day.active"

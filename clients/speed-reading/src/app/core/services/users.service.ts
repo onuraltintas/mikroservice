@@ -167,7 +167,7 @@ export class UsersService {
    * Service receives: void (auto-unwrapped)
    */
   assignRole(userId: string, request: AssignRoleRequest): Observable<void> {
-    return this.http.post<void>(`${this.API_URL}/${userId}/roles`, request);
+    return this.http.post<void>(`${this.API_URL}/${userId}/products/speed-reading/roles`, request);
   }
 
   /**
@@ -176,7 +176,7 @@ export class UsersService {
    * Service receives: void (auto-unwrapped)
    */
   removeRole(userId: string, roleName: string): Observable<void> {
-    return this.http.delete<void>(`${this.API_URL}/${userId}/roles/${roleName}`);
+    return this.http.delete<void>(`${this.API_URL}/${userId}/products/speed-reading/roles/${roleName}`);
   }
 
   /**

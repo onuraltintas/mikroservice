@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { forkJoin } from 'rxjs';
 import { AuthService, hasRole } from '../../../core/auth/auth.service';
 import { CoachingPortalService, StudentAssignment, TeacherAssignment } from '../../../core/services/coaching-portal.service';
 
@@ -21,9 +22,10 @@ export class CoachingPortalHomeComponent implements OnInit {
   readonly isParent = signal(false);
   readonly assignments = signal<StudentAssignment[]>([]);
   readonly teacherAssignments = signal<TeacherAssignment[]>([]);
+  readonly teacherAssignmentCount = signal(0);
+  readonly teacherStudentCount = signal(0);
   readonly isLoading = signal(true);
   readonly errorMessage = signal<string | null>(null);
-  readonly sumStudents = (total: number, item: TeacherAssignment) => total + item.totalStudents;
 
   ngOnInit() {
     const profile = this.user();
@@ -50,10 +52,17 @@ export class CoachingPortalHomeComponent implements OnInit {
     }
 
     if (this.isTeacher()) {
-      this.coachingService.getTeacherAssignments(profile.id, 1, 5).subscribe({
-        next: page => this.teacherAssignments.set(page.items),
+      forkJoin({
+        assignments: this.coachingService.getTeacherAssignments(profile.id, 1, 5),
+        students: this.coachingService.getTeacherStudents(1, 1)
+      }).subscribe({
+        next: result => {
+          this.teacherAssignments.set(result.assignments.items);
+          this.teacherAssignmentCount.set(result.assignments.totalCount);
+          this.teacherStudentCount.set(result.students.totalCount);
+        },
         error: () => {
-          this.errorMessage.set('Ödevler şu anda yüklenemedi.');
+          this.errorMessage.set('Öğretmen paneli verileri şu anda yüklenemedi.');
           this.isLoading.set(false);
         },
         complete: () => this.isLoading.set(false)

@@ -5,6 +5,7 @@ using Identity.Application.Commands.CreateUser;
 using Identity.Application.Interfaces;
 using Identity.Application.Queries.GetAllUsers;
 using Identity.Domain.Constants;
+using Identity.Domain.Enums;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.Features;
@@ -147,7 +148,13 @@ public sealed class BulkUsersController : ControllerBase
         while (users.Count < MaxExportRows)
         {
             var result = await _mediator.Send(
-                new GetAllUsersQuery(pageNumber, ExportPageSize, search, role, isActive),
+                new GetAllUsersQuery(
+                    pageNumber,
+                    ExportPageSize,
+                    search,
+                    role,
+                    isActive,
+                    GetCurrentProductScope()),
                 cancellationToken);
             if (result.IsFailure)
                 return BadRequest(new { Error = result.Error });
@@ -173,16 +180,22 @@ public sealed class BulkUsersController : ControllerBase
         return File(bytes, "text/csv; charset=utf-8", $"users-{DateTime.UtcNow:yyyyMMdd-HHmmss}.csv");
     }
 
-    [HttpPost("role")]
+    [HttpPost("{product:regex(coaching|speed-reading)}/role")]
     [HasPermission(Permissions.Users.Edit)]
     [Authorize(Roles = "SystemAdmin")]
     [Authorize(Policy = "MfaRequired")]
     [MfaCategory(MfaOperationCategories.Users)]
     [ProducesResponseType(typeof(BulkUserOperationResult), StatusCodes.Status200OK)]
     public async Task<IActionResult> AssignRole(
+        string product,
         [FromBody] BulkRoleAssignmentRequest request,
         CancellationToken cancellationToken)
     {
+        if (!PlatformProductExtensions.TryParseRouteValue(product, out var platformProduct))
+        {
+            return BadRequest(new { Error = new { Code = "Auth.InvalidProduct", Description = "Geçersiz platform." } });
+        }
+
         var userIds = request.UserIds?
             .Where(id => id != Guid.Empty)
             .Distinct()
@@ -218,7 +231,8 @@ public sealed class BulkUsersController : ControllerBase
                 }
 
                 var existingRoles = user.Roles
-                    .Where(userRole => userRole.Role is not null)
+                    .Where(userRole => userRole.Role is not null
+                        && userRole.Product == platformProduct)
                     .Select(userRole => userRole.Role.Name)
                     .ToArray();
                 if (request.RemoveExistingRoles)
@@ -226,7 +240,11 @@ public sealed class BulkUsersController : ControllerBase
                     foreach (var existingRole in existingRoles.Where(existingRole =>
                                  !string.Equals(existingRole, roleName, StringComparison.OrdinalIgnoreCase)))
                     {
-                        var removeResult = await _identityService.RemoveRoleAsync(userId, existingRole, cancellationToken);
+                        var removeResult = await _identityService.RemoveRoleForProductAsync(
+                            userId,
+                            existingRole,
+                            platformProduct,
+                            cancellationToken);
                         if (removeResult.IsFailure)
                         {
                             errors.Add($"{userId}: {removeResult.Error.Description}");
@@ -235,7 +253,11 @@ public sealed class BulkUsersController : ControllerBase
                     }
                 }
 
-                var assignResult = await _identityService.AssignRoleAsync(userId, roleName, cancellationToken);
+                var assignResult = await _identityService.AssignRoleForProductAsync(
+                    userId,
+                    roleName,
+                    platformProduct,
+                    cancellationToken);
                 if (assignResult.IsFailure)
                 {
                     errors.Add($"{userId}: {assignResult.Error.Description}");
@@ -266,4 +288,15 @@ public sealed class BulkUsersController : ControllerBase
         int Succeeded,
         int Failed,
         IReadOnlyList<string> Errors);
+
+    private PlatformProduct? GetCurrentProductScope()
+    {
+        if (User.IsInRole(Identity.Domain.Enums.UserRole.SystemAdmin.ToString()))
+        {
+            return null;
+        }
+
+        var value = User.FindFirst("platform_product")?.Value;
+        return PlatformProductExtensions.TryParseRouteValue(value, out var product) ? product : null;
+    }
 }

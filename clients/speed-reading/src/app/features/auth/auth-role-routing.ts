@@ -20,3 +20,16 @@ export function resolveAuthDestination(roles: readonly string[] | null | undefin
     supportedRoles.some(role => normalizedRoles.has(role))
   )?.[0] ?? null;
 }
+
+export function resolveInvitationReturnUrl(value: string | null | undefined): string | null {
+  if (!value) return null;
+
+  try {
+    const baseUrl = 'https://speed-reading.invalid';
+    const parsed = new URL(value, baseUrl);
+    if (parsed.origin !== baseUrl || parsed.pathname !== '/auth/accept-invitation') return null;
+    return `${parsed.pathname}${parsed.search}`;
+  } catch {
+    return null;
+  }
+}

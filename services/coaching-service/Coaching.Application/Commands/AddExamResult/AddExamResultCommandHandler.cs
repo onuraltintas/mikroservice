@@ -44,7 +44,7 @@ public class AddExamResultCommandHandler : IRequestHandler<AddExamResultCommand>
         if (exam == null)
             throw new InvalidOperationException($"Exam {command.ExamId} not found");
 
-        _accessPolicy.RequireTeacher(exam.CreatedByTeacherId);
+        _accessPolicy.RequireTeacher(exam.CreatedByTeacherId, command.IsInstitutionAdminOperation);
         await _identityAuthorizationClient.AuthorizeTeacherTargetsAsync(
             exam.CreatedByTeacherId,
             new[] { command.StudentId },

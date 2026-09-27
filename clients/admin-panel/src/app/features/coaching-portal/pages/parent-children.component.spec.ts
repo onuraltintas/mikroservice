@@ -65,15 +65,18 @@ describe('ParentChildrenComponent', () => {
     component.assignments.set([
       { id: 'pending', title: 'Bekleyen', dueDate: '2026-09-01', status: 'Assigned', isOverdue: false },
       { id: 'submitted', title: 'Teslim', dueDate: '2026-08-01', status: 'Submitted', submittedAt: '2026-08-01', isOverdue: false },
-      { id: 'overdue', title: 'Geciken', dueDate: '2026-07-01', status: 'Assigned', isOverdue: true }
+      { id: 'overdue', title: 'Geciken', dueDate: '2026-07-01', status: 'Assigned', isOverdue: true },
+      { id: 'cancelled', title: 'İptal', dueDate: '2026-06-01', status: 'Assigned', assignmentStatus: 'Cancelled', isOverdue: true }
     ]);
 
-    expect(component.visibleAssignments()).toHaveLength(3);
+    expect(component.visibleAssignments()).toHaveLength(4);
     component.setAssignmentFilter('overdue');
     expect(component.visibleAssignments().map(item => item.id)).toEqual(['overdue']);
     component.setAssignmentFilter('submitted');
     expect(component.visibleAssignments().map(item => item.id)).toEqual(['submitted']);
-    expect(component.assignments()).toHaveLength(3);
+    component.setAssignmentFilter('cancelled');
+    expect(component.visibleAssignments().map(item => item.id)).toEqual(['cancelled']);
+    expect(component.assignments()).toHaveLength(4);
   });
 
   it('loads the selected child progress summary with the scoped coaching data', () => {

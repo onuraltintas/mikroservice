@@ -1,5 +1,6 @@
 using Coaching.Domain.Enums;
 using MediatR;
+using System.Text.Json.Serialization;
 
 namespace Coaching.Application.Commands.CreateSession;
 
@@ -15,6 +16,13 @@ public record CreateSessionCommand(
     IReadOnlyCollection<Guid>? StudentIds = null,
     string? MeetingLink = null,
     CoachingNoteVisibility TeacherNotesVisibility = CoachingNoteVisibility.CoachPrivate
-) : IRequest<CreateSessionResponse>;
+) : IRequest<CreateSessionResponse>
+{
+    [JsonIgnore]
+    public bool IsInstitutionAdminOperation { get; init; }
+
+    [JsonIgnore]
+    public Guid? InstitutionId { get; init; }
+}
 
 public record CreateSessionResponse(Guid SessionId);

@@ -4,6 +4,7 @@ using EduPlatform.Shared.Security.Interfaces;
 using Identity.Application.Authorization;
 using Identity.Application.Interfaces;
 using Identity.Domain.Entities;
+using Identity.Domain.Enums;
 using MediatR;
 
 namespace Identity.Application.Queries.GetUserProfile;
@@ -43,7 +44,10 @@ public class GetUserProfileQueryHandler : IRequestHandler<GetUserProfileQuery, R
         if (currentUserId != request.UserId)
         {
             var institutionId = await _institutionRepository
-                .GetPrimaryInstitutionIdByUserIdAsync(currentUserId.Value, cancellationToken);
+                .GetPrimaryInstitutionIdByUserIdAsync(
+                    currentUserId.Value,
+                    request.Product ?? PlatformProduct.Coaching,
+                    cancellationToken);
             var scope = InstitutionAccessScopeResolver.Resolve(
                 currentUserId,
                 _currentUserService.Roles,
@@ -59,6 +63,7 @@ public class GetUserProfileQueryHandler : IRequestHandler<GetUserProfileQuery, R
             if (!scope.Value.IsGlobal && !await _institutionRepository.IsUserInInstitutionAsync(
                     request.UserId,
                     scope.Value.InstitutionId!.Value,
+                    request.Product ?? PlatformProduct.Coaching,
                     cancellationToken))
             {
                 return Result.Failure<UserProfileDto>(
@@ -72,6 +77,24 @@ public class GetUserProfileQueryHandler : IRequestHandler<GetUserProfileQuery, R
             throw new NotFoundException("User", request.UserId);
         }
 
+        var isSystemAdmin = _currentUserService.Roles.Any(role =>
+            string.Equals(
+                role,
+                Identity.Domain.Enums.UserRole.SystemAdmin.ToString(),
+                StringComparison.OrdinalIgnoreCase));
+        if (request.Product is { } product
+            && !isSystemAdmin
+            && !user.HasProductAccess(product))
+        {
+            return Result.Failure<UserProfileDto>(
+                Error.Forbidden("Bu kullanıcı seçilen platforma kayıtlı değil."));
+        }
+
+        var visibleRoles = isSystemAdmin && request.Product is null
+            ? user.Roles.ToArray()
+            : user.GetRolesForProductScope(request.Product).ToArray();
+        var coachingProfileVisible = request.Product is null or PlatformProduct.Coaching;
+
         var profile = new UserProfileDto
         {
             UserId = user.Id,
@@ -84,19 +107,39 @@ public class GetUserProfileQueryHandler : IRequestHandler<GetUserProfileQuery, R
             IsActive = user.IsActive,
             EmailConfirmed = user.EmailConfirmed,
             MfaEnabled = user.MfaEnabled,
-            Role = user.Roles.FirstOrDefault()?.Role?.Name ?? "Unknown",
-            Roles = user.Roles.Select(r => r.Role?.Name ?? "Unknown").ToList(),
-            Permissions = user.Roles
+            Role = visibleRoles.FirstOrDefault()?.Role?.Name ?? "Unknown",
+            Roles = visibleRoles.Select(r => r.Role?.Name ?? "Unknown").ToList(),
+            ProductRoles = visibleRoles
+                .Select(userRole => new UserProductRoleDto(
+                    userRole.Role?.Name ?? "Unknown",
+                    userRole.Product?.ToRouteValue()))
+                .ToList(),
+            ProductAccesses = isSystemAdmin
+                ? user.ProductAccesses
+                .Select(access => new UserProductAccessDto(access.Product.ToRouteValue(), access.IsActive))
+                .ToList()
+                : request.Product is { } requestedProduct
+                    ? user.ProductAccesses
+                        .Where(access => access.Product == requestedProduct)
+                        .Select(access => new UserProductAccessDto(access.Product.ToRouteValue(), access.IsActive))
+                        .ToList()
+                    : [],
+            Permissions = visibleRoles
                 .SelectMany(r => r.Role?.Permissions ?? new List<RolePermission>())
+                .Where(permission => (!isSystemAdmin && request.Product is { } product)
+                    ? PlatformPermissionScope.IsAllowed(permission.Permission, product)
+                    : true)
                 .Select(p => p.Permission)
                 .Distinct()
                 .ToList()
         };
 
         // Determine Role and Fetch Details
-        var userRoles = user.Roles.Select(r => r.Role.Name).ToList();
+        var userRoles = visibleRoles
+            .Select(r => r.Role.Name)
+            .ToList();
 
-        if (userRoles.Contains(Identity.Domain.Enums.UserRole.Teacher.ToString()))
+        if (coachingProfileVisible && userRoles.Contains(Identity.Domain.Enums.UserRole.Teacher.ToString()))
         {
             var teacher = await _teacherRepository.GetByUserIdAsync(
                 request.UserId,
@@ -117,7 +160,7 @@ public class GetUserProfileQueryHandler : IRequestHandler<GetUserProfileQuery, R
                 };
             }
         }
-        if (userRoles.Contains(Identity.Domain.Enums.UserRole.Student.ToString()))
+        if (coachingProfileVisible && userRoles.Contains(Identity.Domain.Enums.UserRole.Student.ToString()))
         {
             var student = await _studentRepository.GetByUserIdAsync(
                 request.UserId,

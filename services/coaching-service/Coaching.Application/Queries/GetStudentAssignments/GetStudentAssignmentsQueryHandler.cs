@@ -53,7 +53,9 @@ public class GetStudentAssignmentsQueryHandler : IRequestHandler<GetStudentAssig
                 MaxScore: a.MaxScore,
                 TeacherFeedback: studentAssignment.TeacherFeedback,
                 IsOverdue: a.DueDate < DateTime.UtcNow && 
-                          studentAssignment.Status == StudentAssignmentStatus.Assigned
+                          a.Status == AssignmentStatus.Active
+                          && studentAssignment.Status == StudentAssignmentStatus.Assigned,
+                AssignmentStatus: a.Status.ToString()
             );
         }).ToList();
 

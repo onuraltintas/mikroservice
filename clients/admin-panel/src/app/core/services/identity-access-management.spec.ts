@@ -61,6 +61,27 @@ describe('IdentityService user access management', () => {
     request.flush(null);
   });
 
+  it('assigns roles within the coaching product boundary', () => {
+    const service = TestBed.inject(IdentityService);
+
+    service.assignRole('user-1', 'Teacher').subscribe();
+
+    const request = http.expectOne('/api/users/user-1/products/coaching/roles');
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual({ roleName: 'Teacher' });
+    request.flush(null);
+  });
+
+  it('removes roles within the selected product boundary', () => {
+    const service = TestBed.inject(IdentityService);
+
+    service.removeRole('user-1', 'Teacher', 'coaching').subscribe();
+
+    const request = http.expectOne('/api/users/user-1/products/coaching/roles/Teacher');
+    expect(request.request.method).toBe('DELETE');
+    request.flush(null);
+  });
+
   it('uses the server-side bulk user contracts for template, import, export and role assignment', () => {
     const service = TestBed.inject(IdentityService);
     const file = new File(['firstName,lastName,email,phoneNumber,role\nAda,Lovelace,ada@example.com,,Editor\n'], 'users.csv', { type: 'text/csv' });
@@ -81,7 +102,7 @@ describe('IdentityService user access management', () => {
     expect(exportRequest.request.params.get('isActive')).toBe('true');
 
     service.assignBulkRole(['user-1'], 'Editor', true).subscribe();
-    const roleRequest = http.expectOne('/api/users/bulk/role');
+    const roleRequest = http.expectOne('/api/users/bulk/coaching/role');
     expect(roleRequest.request.method).toBe('POST');
     expect(roleRequest.request.body).toEqual({ userIds: ['user-1'], roleName: 'Editor', removeExistingRoles: true });
 

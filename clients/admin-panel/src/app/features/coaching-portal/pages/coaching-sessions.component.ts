@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { finalize } from 'rxjs';
+import { finalize, forkJoin } from 'rxjs';
 import { AuthService, hasRole } from '../../../core/auth/auth.service';
 import { CoachingPortalService, CoachingSession, CoachingStudentReflection } from '../../../core/services/coaching-portal.service';
 
@@ -17,6 +17,8 @@ export class CoachingSessionsComponent implements OnInit {
   private readonly coachingService = inject(CoachingPortalService);
 
   readonly sessions = signal<CoachingSession[]>([]);
+  readonly studentNames = signal<Record<string, string>>({});
+  readonly studentNameLookupFailed = signal(false);
   readonly isTeacher = signal(false);
   readonly isStudent = signal(false);
   readonly isLoading = signal(true);
@@ -51,6 +53,7 @@ export class CoachingSessionsComponent implements OnInit {
         this.totalCount.set(page.totalCount);
         this.totalPages.set(page.totalPages ?? Math.max(1, Math.ceil(page.totalCount / page.pageSize)));
         this.noteDrafts.set(Object.fromEntries(page.items.map(session => [session.id, session.studentNote ?? ''])));
+        this.loadStudentNames(page.items);
       },
       error: () => {
         this.errorMessage.set('Seanslar yüklenemedi. Lütfen tekrar deneyin.');
@@ -79,6 +82,7 @@ export class CoachingSessionsComponent implements OnInit {
           ...notes,
           ...Object.fromEntries(page.items.map(session => [session.id, session.studentNote ?? '']))
         }));
+        this.loadStudentNames(page.items);
       },
       error: () => this.errorMessage.set('Daha fazla seans yüklenemedi.')
     });
@@ -101,7 +105,33 @@ export class CoachingSessionsComponent implements OnInit {
   }
 
   studentLabel(studentId: string) {
-    return studentId.length > 12 ? `…${studentId.slice(-8)}` : studentId;
+    return this.studentNames()[studentId]
+      ?? (this.studentNameLookupFailed() ? 'Öğrenci adı yüklenemedi' : 'Öğrenci adı yükleniyor');
+  }
+
+  private loadStudentNames(sessions: readonly CoachingSession[]) {
+    if (!this.isTeacher()) return;
+
+    const missingIds = [...new Set(sessions.flatMap(session => session.studentIds))]
+      .filter(studentId => !this.studentNames()[studentId]);
+    if (missingIds.length === 0) return;
+
+    const batches: string[][] = [];
+    for (let index = 0; index < missingIds.length; index += 100) {
+      batches.push(missingIds.slice(index, index + 100));
+    }
+
+    forkJoin(batches.map(ids =>
+      this.coachingService.getTeacherStudents(1, ids.length, undefined, ids)
+    )).subscribe({
+      next: pages => {
+        const names = Object.fromEntries(pages.flatMap(page =>
+          page.items.map(student => [student.userId, student.fullName] as const)
+        ));
+        this.studentNames.update(current => ({ ...current, ...names }));
+      },
+      error: () => this.studentNameLookupFailed.set(true)
+    });
   }
 
   exportCalendar() {

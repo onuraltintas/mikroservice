@@ -123,6 +123,9 @@ services:
       ASPNETCORE_ENVIRONMENT: Production
       ConnectionStrings__SpeedReadingOwned: ${SPEED_READING_OWNED_CONNECTION_STRING:-}
       SpeedReading__Mode: ${SPEED_READING_MODE:-Standalone}
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:?RABBITMQ_DEFAULT_USER must be set for speed-reading}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:?RABBITMQ_DEFAULT_PASS must be set for speed-reading}
       SpeedReading__CoachingIntegrationEnabled: ${SPEED_READING_COACHING_INTEGRATION_ENABLED:-false}
       SpeedReading__NotificationIntegrationEnabled: ${SPEED_READING_NOTIFICATION_INTEGRATION_ENABLED:-false}
       SpeedReading__SubscriptionIntegrationEnabled: ${SPEED_READING_SUBSCRIPTION_INTEGRATION_ENABLED:-false}

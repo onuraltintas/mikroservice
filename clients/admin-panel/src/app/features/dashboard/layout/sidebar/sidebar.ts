@@ -150,11 +150,11 @@ export class SidebarComponent {
         icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.75c-2.485 0-4.5 1.007-4.5 2.25s2.015 2.25 4.5 2.25 4.5-1.007 4.5-2.25S14.485 6.75 12 6.75Zm0 0V3.75m0 7.5v3m0 3v3m-6.75-7.5c0 1.243 3.022 2.25 6.75 2.25s6.75-1.007 6.75-2.25m-13.5 0v4.5c0 1.243 3.022 2.25 6.75 2.25s6.75-1.007 6.75-2.25v-4.5" /></svg>',
         children: [
           {
-            label: 'Koçluk Özeti',
-            route: '/dashboard/coaching',
-            permission: ADMIN_PERMISSIONS.coachingView,
-            icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v18h18M7.5 15l3-3 2.25 2.25 4.5-6" /></svg>'
-          },
+              label: 'Koçluk Özeti',
+              route: '/dashboard/coaching',
+              permission: ADMIN_PERMISSIONS.coachingView,
+              icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v18h18M7.5 15l3-3 2.25 2.25 4.5-6" /></svg>'
+            },
           {
             label: 'Ödevler ve teslimler',
             route: '/dashboard/coaching/assignments',
@@ -245,7 +245,7 @@ export class SidebarComponent {
               label: 'Programlar ve öğrenme yolları',
               route: '/dashboard/speed-reading/programs',
               permission: ADMIN_PERMISSIONS.speedReadingProgramManage,
-              icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5" /></svg>'
+              icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5" /></svg>'
             },
             {
               label: 'Görselleştirme sahneleri',
@@ -317,7 +317,7 @@ export class SidebarComponent {
       '/dashboard/identity/privacy-requests': ADMIN_PERMISSIONS.privacyView,
       '/dashboard/notifications/support': ADMIN_PERMISSIONS.supportView,
       '/dashboard/notifications/email-templates': ADMIN_PERMISSIONS.notificationTemplates,
-      '/dashboard/coaching': ADMIN_PERMISSIONS.coachingView,
+        '/dashboard/coaching': ADMIN_PERMISSIONS.coachingView,
       '/dashboard/coaching/assignments': ADMIN_PERMISSIONS.coachingView,
       '/dashboard/coaching/assignments/new': ADMIN_PERMISSIONS.coachingManage,
       '/dashboard/coaching/operations': ADMIN_PERMISSIONS.coachingView,

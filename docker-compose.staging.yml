@@ -3,18 +3,22 @@
 # exposes only Caddy on ports 80/443. Use a separate .env.staging file.
 services:
   postgres:
+    container_name: eduivme-staging-postgres
     ports: !reset []
     restart: unless-stopped
 
   redis:
+    container_name: eduivme-staging-redis
     ports: !reset []
     restart: unless-stopped
 
   rabbitmq:
+    container_name: eduivme-staging-rabbitmq
     ports: !reset []
     restart: unless-stopped
 
   mailcatcher:
+    container_name: eduivme-staging-mailcatcher
     ports: !reset []
     restart: unless-stopped
 
@@ -31,6 +35,7 @@ services:
       retries: 10
 
   identity-service:
+    image: eduivme-staging/identity-service:${STAGING_RELEASE_TAG:-snapshot}
     environment:
       ASPNETCORE_ENVIRONMENT: Staging
     restart: unless-stopped
@@ -43,9 +48,7 @@ services:
         condition: service_healthy
 
   identity-migrations:
-    build:
-      context: .
-      dockerfile: services/identity-service/Dockerfile
+    image: eduivme-staging/identity-service:${STAGING_RELEASE_TAG:-snapshot}
     command: ["--migrate-only"]
     restart: "no"
     environment:
@@ -58,6 +61,7 @@ services:
       - edu-network
 
   coaching-service:
+    image: eduivme-staging/coaching-service:${STAGING_RELEASE_TAG:-snapshot}
     environment:
       ASPNETCORE_ENVIRONMENT: Staging
       Coaching__Attachments__Provider: Local
@@ -77,9 +81,7 @@ services:
         condition: service_healthy
 
   coaching-migrations:
-    build:
-      context: .
-      dockerfile: services/coaching-service/Dockerfile
+    image: eduivme-staging/coaching-service:${STAGING_RELEASE_TAG:-snapshot}
     command: ["--migrate-only"]
     restart: "no"
     environment:
@@ -93,6 +95,7 @@ services:
 
   speed-reading-service:
     profiles: !reset []
+    image: eduivme-staging/speed-reading-service:${STAGING_RELEASE_TAG:-snapshot}
     environment:
       ASPNETCORE_ENVIRONMENT: Staging
       ConnectionStrings__SpeedReadingOwned: ${SPEED_READING_OWNED_CONNECTION_STRING:-}
@@ -120,9 +123,8 @@ services:
 
   speed-reading-migrations:
     profiles: !reset []
-    build:
-      context: .
-      dockerfile: services/speed-reading-service/Dockerfile
+    image: eduivme-staging/speed-reading-service:${STAGING_RELEASE_TAG:-snapshot}
+    build: !reset null
     command: ["--migrate-only"]
     restart: "no"
     environment:
@@ -136,9 +138,10 @@ services:
 
   speed-reading-frontend:
     profiles: !reset []
+    image: eduivme-staging/speed-reading-frontend:${STAGING_RELEASE_TAG:-snapshot}
     build:
-      context: ./clients/speed-reading
-      dockerfile: Dockerfile
+      context: ./clients
+      dockerfile: speed-reading/Dockerfile
     environment:
       NODE_ENV: production
     expose:
@@ -151,6 +154,7 @@ services:
       - edu-network
 
   notification-service:
+    image: eduivme-staging/notification-service:${STAGING_RELEASE_TAG:-snapshot}
     environment:
       ASPNETCORE_ENVIRONMENT: Staging
     restart: unless-stopped
@@ -165,9 +169,7 @@ services:
         condition: service_healthy
 
   notification-migrations:
-    build:
-      context: .
-      dockerfile: services/notification-service/Dockerfile
+    image: eduivme-staging/notification-service:${STAGING_RELEASE_TAG:-snapshot}
     command: ["--migrate-only"]
     restart: "no"
     environment:
@@ -180,6 +182,7 @@ services:
       - edu-network
 
   api-gateway:
+    image: eduivme-staging/api-gateway:${STAGING_RELEASE_TAG:-snapshot}
     environment:
       ASPNETCORE_ENVIRONMENT: Staging
     ports: !reset []
@@ -195,12 +198,14 @@ services:
         condition: service_started
 
   admin-panel:
+    image: eduivme-staging/admin-panel:${STAGING_RELEASE_TAG:-snapshot}
     build:
-      context: ./clients/admin-panel
-      dockerfile: Dockerfile
+      context: ./clients
+      dockerfile: admin-panel/Dockerfile
     environment:
       NODE_ENV: production
       PORT: 4000
+      ADMIN_PANEL_ADDITIONAL_ALLOWED_HOSTS: staging.onuraltintas.net
     expose:
       - "4000"
     healthcheck:
@@ -244,4 +249,4 @@ networks:
   edu-network:
     ipam:
       config:
-        - subnet: 172.30.0.0/16
+        - subnet: 172.29.0.0/16

@@ -159,7 +159,7 @@ export function measurementStatusLabel(status: string): string {
       }
 
   @if (selectedTab() === 'progress') {
-        <section class="space-y-4" aria-labelledby="progress-title"><div class="flex flex-col justify-between gap-3 sm:flex-row sm:items-end"><div><h2 id="progress-title" class="text-lg font-semibold text-gray-900 dark:text-white">Öğrenci program ilerlemeleri</h2><p class="muted">Öğrencinin programdaki konumunu, tamamladığı çalışmaları ve son etkinliklerini inceleyin. Sıfırlama işlemi yalnızca ProgramManage yetkisi olan yöneticilere açıktır.</p></div><label class="text-sm font-medium text-gray-700 dark:text-gray-200">Öğrenci ara<input [(ngModel)]="progressSearch" (ngModelChange)="searchProgress()" name="progressSearch" maxlength="100" placeholder="Ad, e-posta veya program" class="mt-1 block rounded-lg border border-gray-300 bg-transparent px-3 py-2 text-sm dark:border-gray-600" /></label></div><div class="data-card"><div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Öğrenci</th><th>Program</th><th>Gün</th><th>Tamamlanan gün</th><th>Egzersiz</th><th>Atanma</th><th></th></tr></thead><tbody>@for (item of progressPage()?.items; track item.id) {<tr><td><div class="font-medium">{{ progressStudentLabel(item) }}</div>@if (item.studentEmail) {<div class="muted">{{ item.studentEmail }}</div>}</td><td>{{ item.programTemplateName || 'Program bilgisi yok' }}</td><td>{{ item.currentDay }}</td><td>{{ item.daysCompleted }}</td><td>{{ item.exercisesCompleted }}</td><td>{{ item.assignedDate | date:'dd.MM.yyyy' }}</td><td class="flex gap-2"><button type="button" (click)="openProgress(item)" class="rounded-md border px-2 py-1 text-xs">Detay</button>@if (canResetProgress()) {<button type="button" (click)="resetProgress(item)" [disabled]="loading()" class="rounded-md border border-amber-300 px-2 py-1 text-xs text-amber-700">Sıfırla</button>}</td></tr>} @empty {<tr><td colspan="7" class="empty">{{ loading() ? 'Yükleniyor…' : 'İlerleme kaydı bulunamadı.' }}</td></tr>}</tbody></table></div><div class="mt-3 flex items-center justify-between text-xs text-gray-500"><span>Toplam {{ progressPage()?.totalCount ?? 0 }} kayıt</span><div class="flex gap-2"><button type="button" (click)="changeProgressPage(progressPageNumber - 1)" [disabled]="progressPageNumber <= 1 || loading()" class="rounded border px-2 py-1 disabled:opacity-40">Önceki</button><button type="button" (click)="changeProgressPage(progressPageNumber + 1)" [disabled]="!progressPage() || progressPageNumber >= progressTotalPages() || loading()" class="rounded border px-2 py-1 disabled:opacity-40">Sonraki</button></div></div></div>
+        <section class="space-y-4" aria-labelledby="progress-title"><div class="flex flex-col justify-between gap-3 sm:flex-row sm:items-end"><div><h2 id="progress-title" class="text-lg font-semibold text-gray-900 dark:text-white">Öğrenci program ilerlemeleri</h2><p class="muted">Öğrencinin programdaki konumunu, tamamladığı çalışmaları ve son etkinliklerini inceleyin. Sıfırlama işlemi yalnızca ProgramManage yetkisi olan yöneticilere açıktır.</p></div><label class="text-sm font-medium text-gray-700 dark:text-gray-200">Öğrenci ara<input [(ngModel)]="progressSearch" (ngModelChange)="searchProgress()" name="progressSearch" maxlength="100" placeholder="Ad, e-posta veya program" class="mt-1 block rounded-lg border border-gray-300 bg-transparent px-3 py-2 text-sm dark:border-gray-600" /></label></div><div class="data-card"><div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Öğrenci</th><th>Program</th><th>Gün</th><th>Tamamlanan gün</th><th>Egzersiz</th><th>Atanma</th><th></th></tr></thead><tbody>@for (item of progressPage()?.items; track item.id) {<tr><td><div class="font-medium">{{ progressStudentLabel(item) }}</div>@if (item.studentEmail) {<div class="muted">{{ item.studentEmail }}</div>}</td><td>{{ item.programTemplateName || 'Program bilgisi yok' }}</td><td>{{ item.currentDay }}</td><td>{{ item.daysCompleted }}</td><td>{{ item.exercisesCompleted }}</td><td>{{ item.assignedDate | date:'dd.MM.yyyy' }}</td><td class="flex gap-2"><button type="button" (click)="openProgress(item)" class="rounded-md border px-2 py-1 text-xs">Detay</button>@if (canResetProgress()) {<button type="button" (click)="resetProgress(item)" [disabled]="loading()" class="rounded-md border border-amber-300 px-2 py-1 text-xs text-amber-700">Sıfırla</button>}@if (canDeleteStudentData()) {<button type="button" (click)="deleteStudentData(item)" [disabled]="loading()" class="rounded-md border border-red-400 px-2 py-1 text-xs text-red-700">Kalıcı sil</button>}</td></tr>} @empty {<tr><td colspan="7" class="empty">{{ loading() ? 'Yükleniyor…' : 'İlerleme kaydı bulunamadı.' }}</td></tr>}</tbody></table></div><div class="mt-3 flex items-center justify-between text-xs text-gray-500"><span>Toplam {{ progressPage()?.totalCount ?? 0 }} kayıt</span><div class="flex gap-2"><button type="button" (click)="changeProgressPage(progressPageNumber - 1)" [disabled]="progressPageNumber <= 1 || loading()" class="rounded border px-2 py-1 disabled:opacity-40">Önceki</button><button type="button" (click)="changeProgressPage(progressPageNumber + 1)" [disabled]="!progressPage() || progressPageNumber >= progressTotalPages() || loading()" class="rounded border px-2 py-1 disabled:opacity-40">Sonraki</button></div></div></div>
         @if (progressDetails(); as details) {
           <div class="dialog-backdrop" (click)="closeProgressDetails()" aria-hidden="true"></div>
           <section class="progress-dialog" role="dialog" aria-modal="true" aria-labelledby="progress-detail-title" cdkTrapFocus cdkTrapFocusAutoCapture>
@@ -272,6 +272,9 @@ export class SpeedReadingAnalyticsComponent implements OnInit, OnDestroy {
   readonly canPlatformAnalytics = computed(() => this.authService.hasPermission(ADMIN_PERMISSIONS.speedReadingPlatformAnalytics));
   readonly canProgress = computed(() => this.authService.hasPermission(ADMIN_PERMISSIONS.speedReadingProgressView));
   readonly canResetProgress = computed(() => this.authService.hasPermission(ADMIN_PERMISSIONS.speedReadingProgramManage));
+  readonly canDeleteStudentData = computed(() =>
+    this.authService.userProfile?.()?.roles.includes('SystemAdmin') === true &&
+    this.authService.hasPermission(ADMIN_PERMISSIONS.privacyManage));
   readonly canTeacherAnalytics = computed(() => this.authService.hasPermission(ADMIN_PERMISSIONS.speedReadingReportView));
   readonly tabs: ReadonlyArray<{ value: SpeedReadingAnalyticsTab; label: string; visible: () => boolean }> = [
     { value: 'platform', label: 'Platform kullanımı', visible: () => this.canPlatformAnalytics() },
@@ -503,6 +506,27 @@ export class SpeedReadingAnalyticsComponent implements OnInit, OnDestroy {
     }).pipe(finalize(() => this.loading.set(false))).subscribe({
       next: result => { this.teacherClassOverview.set(result.overview); this.teacherAssignmentAnalytics.set(result.assignments); this.teacherContentAnalysis.set(result.content); this.teacherTimeProgress.set(result.time); },
       error: () => this.error.set('Öğretmen analitik verisi yüklenemedi; öğretmenin yetki kapsamınızda olduğunu kontrol edin.')
+    });
+  }
+
+  async deleteStudentData(item: AdminStudentProgressSummary): Promise<void> {
+    if (!this.canDeleteStudentData() || !await this.toaster.confirm(
+      `${progressStudentLabel(item)} öğrencisinin tüm hızlı okuma profili, egzersizleri ve sonuçları kalıcı olarak silinsin mi? Kimlik hesabı silinmeyecek.`,
+      { title: 'Hızlı okuma verilerini kalıcı sil' })) return;
+
+    this.loading.set(true);
+    this.error.set('');
+    this.service.deleteStudentSpeedReadingData(item.id).subscribe({
+      next: result => {
+        this.selectedProgress.set(null);
+        this.progressDetails.set(null);
+        this.toaster.success(`${result.deletedRecordCount} hızlı okuma kaydı silindi.`);
+        this.loadProgress();
+      },
+      error: () => {
+        this.loading.set(false);
+        this.error.set('Hızlı okuma verileri silinemedi. Hukuki saklama engeli veya sunucu hatasını kontrol edin.');
+      }
     });
   }
 

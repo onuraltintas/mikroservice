@@ -77,11 +77,11 @@
 
           <section class="register-options" aria-label="Kayıt seçenekleri">
             <p>Hesabınız yok mu? Size uygun kayıt türünü seçin.</p>
-            <a routerLink="/auth/register" class="register-option">
+            <a routerLink="/auth/register" [queryParams]="invitationReturnUrl ? { returnUrl: invitationReturnUrl } : null" class="register-option">
               <span><strong>Öğrenci kaydı</strong><small>Bireysel erişim için</small></span>
               <mat-icon aria-hidden="true">arrow_forward</mat-icon>
             </a>
-            <a routerLink="/auth/register-teacher" class="register-option">
+            <a routerLink="/auth/register-teacher" [queryParams]="invitationReturnUrl ? { returnUrl: invitationReturnUrl } : null" class="register-option">
               <span><strong>Öğretmen kaydı</strong><small>Öğrencilerinizle çalışmak için</small></span>
               <mat-icon aria-hidden="true">arrow_forward</mat-icon>
             </a>

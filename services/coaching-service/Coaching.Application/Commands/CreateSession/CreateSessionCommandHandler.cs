@@ -40,7 +40,7 @@ public class CreateSessionCommandHandler : IRequestHandler<CreateSessionCommand,
         CreateSessionCommand command,
         CancellationToken cancellationToken)
     {
-        _accessPolicy.RequireTeacher(command.TeacherId);
+        _accessPolicy.RequireTeacher(command.TeacherId, command.IsInstitutionAdminOperation);
 
         var studentIds = command.Type == Coaching.Domain.Enums.SessionType.Group
             ? command.StudentIds?.Where(studentId => studentId != Guid.Empty).Distinct().ToArray()
@@ -58,6 +58,7 @@ public class CreateSessionCommandHandler : IRequestHandler<CreateSessionCommand,
         EnsureKey(key);
         var requestHash = IdempotencyRequestHasher.Create(
             IdempotencyRequestHasher.Format(command.TeacherId),
+            IdempotencyRequestHasher.Format(command.InstitutionId),
             string.Join(',', studentIds.Select(IdempotencyRequestHasher.Format)),
             IdempotencyRequestHasher.Format(command.StartTime),
             command.DurationMinutes.ToString(),
@@ -78,7 +79,7 @@ public class CreateSessionCommandHandler : IRequestHandler<CreateSessionCommand,
         var institutionId = await _identityAuthorizationClient.AuthorizeTeacherTargetsAsync(
             command.TeacherId,
             studentIds,
-            null,
+            command.InstitutionId,
             _accessPolicy.IsSystemAdministrator,
             cancellationToken);
 

@@ -34,9 +34,14 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
 
           case 403:
             // Modal-level access management can handle this response locally.
-            errorMessage = 'Bu işlem için yetkiniz yok';
-            if (!req.headers.has('X-Skip-Forbidden-Redirect')) {
-              router.navigate(['/error/403']);
+            if (error.error?.code === 'SubscriptionRequired') {
+              errorMessage = 'Aboneliğiniz sona erdi.';
+              router.navigate(['/no-access']);
+            } else {
+              errorMessage = 'Bu işlem için yetkiniz yok';
+              if (!req.headers.has('X-Skip-Forbidden-Redirect')) {
+                router.navigate(['/error/403']);
+              }
             }
             break;
 

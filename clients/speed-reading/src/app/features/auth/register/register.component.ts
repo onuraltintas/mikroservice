@@ -1,7 +1,7 @@
 import { AfterViewInit, Component, inject, OnDestroy, PLATFORM_ID } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -18,7 +18,7 @@ import {
   GoogleIdentityResponse
 } from '../../../core/services/google-identity.service';
 import { strongPasswordValidator, PASSWORD_ERROR_MESSAGES } from '../../../shared/validators/password.validator';
-import { resolveAuthDestination } from '../auth-role-routing';
+import { resolveAuthDestination, resolveInvitationReturnUrl } from '../auth-role-routing';
 import { getErrorMessage } from '../../../core/utils/error-message';
 
 @Component({
@@ -44,6 +44,7 @@ export class RegisterComponent implements AfterViewInit, OnDestroy {
   private readonly fb = inject(FormBuilder);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly platformId = inject(PLATFORM_ID);
   private readonly googleIdentity = inject(GoogleIdentityService);
   private readonly googleCallback: GoogleIdentityCallback = (response: GoogleIdentityResponse) =>
@@ -55,6 +56,15 @@ export class RegisterComponent implements AfterViewInit, OnDestroy {
   passwordErrorMessages = PASSWORD_ERROR_MESSAGES;
   hidePassword = true; // Added visibility toggle state
   hideConfirmPassword = true;
+
+  get consentHint(): string {
+    const termsMissing = this.registerForm.get('acceptTerms')?.invalid;
+    const kvkkMissing = this.registerForm.get('acceptKVKK')?.invalid;
+    if (termsMissing && kvkkMissing) return 'Kayıt için Kullanım Koşulları ve KVKK Metni onayları gereklidir.';
+    if (termsMissing) return 'Kayıt için Kullanım Koşulları onayı gereklidir.';
+    if (kvkkMissing) return 'Kayıt için KVKK Metni onayı gereklidir.';
+    return '';
+  }
 
   constructor() {
     this.registerForm = this.fb.group({
@@ -111,6 +121,12 @@ export class RegisterComponent implements AfterViewInit, OnDestroy {
 
     this.authService.googleAuth(response.credential).subscribe({
       next: (authResponse) => {
+        const invitationReturnUrl = this.getInvitationReturnUrl();
+        if (invitationReturnUrl) {
+          this.router.navigateByUrl(invitationReturnUrl);
+          return;
+        }
+
         const destination = resolveAuthDestination(authResponse.roles);
         if (destination === 'student') {
           this.router.navigate(['/student/dashboard']);
@@ -152,7 +168,8 @@ export class RegisterComponent implements AfterViewInit, OnDestroy {
         this.router.navigate(['/auth/login'], {
           queryParams: {
             registered: 'true',
-            message: 'Kayıt başarılı! Lütfen e-posta adresinizi onaylayın ve giriş yapın.'
+            message: 'Kayıt başarılı! Lütfen e-posta adresinizi onaylayın ve giriş yapın.',
+            ...(this.getInvitationReturnUrl() ? { returnUrl: this.getInvitationReturnUrl() } : {})
           }
         });
       },
@@ -161,5 +178,9 @@ export class RegisterComponent implements AfterViewInit, OnDestroy {
         this.loading = false;
       }
     });
+  }
+
+  private getInvitationReturnUrl(): string | null {
+    return resolveInvitationReturnUrl(this.route.snapshot.queryParamMap.get('returnUrl'));
   }
 }

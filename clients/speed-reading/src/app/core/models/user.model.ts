@@ -14,6 +14,7 @@ export interface AuthResponse {
   targetComprehension?: number;
   dailyGoalMinutes?: number;
   learningStyle?: string;
+  hasCompletedProfile?: boolean;
   shareProgressWithTeachers?: boolean;
   institutionId?: string;
   institutionName?: string;

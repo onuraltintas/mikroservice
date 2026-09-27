@@ -24,8 +24,8 @@ import { TeachersService } from '../../../core/services/teachers.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { Student } from '../../../core/models/student.model';
 import { BaseComponent } from '../../../core/components/base.component';
-import { StudentDialogComponent } from './student-dialog.component';
 import { LinkStudentDialogComponent } from './link-student-dialog.component';
+import { StudentManagementDialogComponent } from './student-management-dialog.component';
 import { ConfirmationDialogComponent, ConfirmationDialogData } from '../../../shared/components/confirmation-dialog/confirmation-dialog.component';
 import { SubscriptionService } from '../../../core/services/subscription.service';
 
@@ -278,18 +278,14 @@ export class StudentsListComponent extends BaseComponent implements OnInit, Afte
     return colors[index];
   }
 
-  openStudentDialog(student?: Student): void {
+  editStudent(student: Student): void {
     if (!this.isInstitutionAdmin()) return;
-
-    const dialogRef = this.dialog.open(StudentDialogComponent, {
+    const dialogRef = this.dialog.open(StudentManagementDialogComponent, {
       width: '500px',
       data: { student }
     });
-
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.refreshData(); // Changed from loadStudents() to refreshData()
-      }
+    dialogRef.afterClosed().subscribe(updated => {
+      if (updated) this.refreshData();
     });
   }
 
@@ -326,7 +322,7 @@ export class StudentsListComponent extends BaseComponent implements OnInit, Afte
             }
           });
         } else {
-          this.teachersService.unlinkStudent(student.id).subscribe({
+          this.teachersService.unlinkStudent(student.id, student.institutionId).subscribe({
             next: () => {
               this.toaster.success('Öğrenci sınıfınızdan çıkarıldı.');
               this.refreshData();

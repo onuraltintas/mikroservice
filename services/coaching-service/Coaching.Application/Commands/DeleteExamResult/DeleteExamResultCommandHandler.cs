@@ -25,7 +25,7 @@ public sealed class DeleteExamResultCommandHandler : IRequestHandler<DeleteExamR
         var exam = await _repository.GetByIdAsync(command.ExamId, cancellationToken)
             ?? throw new InvalidOperationException($"Exam {command.ExamId} not found");
 
-        _accessPolicy.RequireTeacher(exam.CreatedByTeacherId);
+        _accessPolicy.RequireTeacher(exam.CreatedByTeacherId, command.IsInstitutionAdminOperation);
         exam.RemoveResult(command.ResultId);
 
         await _repository.UpdateAsync(exam, cancellationToken);

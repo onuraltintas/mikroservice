@@ -17,6 +17,7 @@ export interface StudentAssignment {
   subject?: string;
   dueDate: string;
   status: string;
+  assignmentStatus?: string;
   submittedAt?: string;
   score?: number;
   maxScore?: number;
@@ -156,6 +157,20 @@ export interface StudentProgressSummary {
   upcomingSessions: number;
   attendedSessions: number;
   attendancePercentage?: number;
+}
+
+export type CoachingStudentHistoryType = 'Assignments' | 'Exams' | 'Sessions' | 'Goals';
+
+export interface CoachingStudentHistoryItem {
+  id: string;
+  type: string;
+  title: string;
+  eventDate: string;
+  status: string;
+  score?: number;
+  maxScore?: number;
+  progress?: number;
+  category?: string;
 }
 
 export interface ExamResult {
@@ -298,7 +313,7 @@ export type CoachingNoteVisibility = 'CoachPrivate' | 'StudentVisible' | 'Guardi
 
 export interface CoachingStudentReflection {
   studentId: string;
-  note: string;
+  note: string | null;
   attendanceStatus: string;
 }
 
@@ -451,11 +466,14 @@ export class CoachingPortalService {
   getTeacherAssignments(
     teacherId: string,
     pageNumber = 1,
-    pageSize = 25
+    pageSize = 25,
+    status?: string
   ): Observable<PagedResponse<TeacherAssignment>> {
+    let params = this.paging(pageNumber, pageSize);
+    if (status) params = params.set('status', status);
     return this.http.get<PagedResponse<TeacherAssignment>>(
       `${this.url}/teacher/${this.id(teacherId)}`,
-      { params: this.paging(pageNumber, pageSize) }
+      { params }
     );
   }
 
@@ -493,12 +511,16 @@ export class CoachingPortalService {
   getTeacherStudents(
     pageNumber = 1,
     pageSize = 25,
-    searchTerm?: string
+    searchTerm?: string,
+    studentUserIds?: readonly string[]
   ): Observable<PagedResponse<TeacherStudent>> {
     let params = this.paging(pageNumber, pageSize);
     const search = searchTerm?.trim();
     if (search) {
       params = params.set('searchTerm', search);
+    }
+    for (const studentUserId of studentUserIds ?? []) {
+      params = params.append('studentUserIds', studentUserId);
     }
 
     return this.http.get<PagedResponse<TeacherStudent>>(
@@ -608,6 +630,18 @@ export class CoachingPortalService {
   getStudentProgress(studentId: string): Observable<StudentProgressSummary> {
     return this.http.get<StudentProgressSummary>(
       `${environment.apiUrl}/reports/student/${this.id(studentId)}/progress`
+    );
+  }
+
+  getTeacherStudentHistory(
+    studentId: string,
+    type: CoachingStudentHistoryType,
+    pageNumber = 1,
+    pageSize = 10
+  ): Observable<PagedResponse<CoachingStudentHistoryItem>> {
+    return this.http.get<PagedResponse<CoachingStudentHistoryItem>>(
+      `${environment.apiUrl}/reports/student/${this.id(studentId)}/history`,
+      { params: this.paging(pageNumber, pageSize).set('type', type) }
     );
   }
 

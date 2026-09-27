@@ -28,7 +28,7 @@ public class UpdateGoalProgressCommandHandler : IRequestHandler<UpdateGoalProgre
         if (goal == null)
             throw new InvalidOperationException($"Goal {command.GoalId} not found");
 
-        _accessPolicy.RequireStudent(goal.StudentId);
+        _accessPolicy.RequireStudent(goal.StudentId, command.IsInstitutionAdminOperation);
 
         goal.UpdateProgress(command.Progress);
 

@@ -6,13 +6,13 @@ import {
 } from '@angular/ssr/node';
 import express from 'express';
 import { join } from 'node:path';
-import { serverAllowedHosts, serverTrustProxyHeaders } from './server-config';
+import { resolveServerAllowedHosts, serverTrustProxyHeaders } from './server-config';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
 
 const app = express();
 const angularApp = new AngularNodeAppEngine({
-  allowedHosts: serverAllowedHosts,
+  allowedHosts: resolveServerAllowedHosts(process.env['ADMIN_PANEL_ADDITIONAL_ALLOWED_HOSTS']),
   trustProxyHeaders: serverTrustProxyHeaders,
 });
 

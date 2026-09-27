@@ -1,11 +1,12 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { CoachingPortalService, TeacherStudent } from '../../../core/services/coaching-portal.service';
 
 @Component({
   selector: 'app-teacher-students',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterLink],
   templateUrl: './teacher-students.component.html',
   styleUrl: './teacher-students.component.scss'
 })

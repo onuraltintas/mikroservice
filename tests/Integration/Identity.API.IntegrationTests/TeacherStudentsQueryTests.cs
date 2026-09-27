@@ -87,6 +87,24 @@ public sealed class TeacherStudentsQueryTests
         repository.CapturedIsActive.Should().BeFalse();
     }
 
+    [Fact]
+    public async Task Handle_ShouldPassStudentUserIdsFilterToRepository()
+    {
+        var teacherId = Guid.NewGuid();
+        var studentIds = new[] { Guid.NewGuid(), Guid.NewGuid() };
+        var repository = new CapturingTeacherRepository();
+        var handler = new GetTeacherStudentsQueryHandler(
+            repository,
+            new StubCurrentUserService(teacherId, ["Teacher"]));
+
+        var result = await handler.Handle(
+            new GetTeacherStudentsQuery(StudentUserIds: studentIds),
+            CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        repository.CapturedStudentUserIds.Should().BeEquivalentTo(studentIds);
+    }
+
     private sealed class StubTeacherRepository(PagedList<TeacherStudentDto> result) : ITeacherRepository
     {
         public Task<PagedList<TeacherStudentDto>> GetStudentsByTeacherUserIdAsync(
@@ -96,6 +114,7 @@ public sealed class TeacherStudentsQueryTests
             string? searchTerm,
             int? gradeLevel,
             bool? isActive,
+            IReadOnlyCollection<Guid>? studentUserIds,
             CancellationToken cancellationToken) => Task.FromResult(result);
 
         public Task AddAsync(TeacherProfile teacher, CancellationToken cancellationToken) => throw new NotSupportedException();
@@ -120,6 +139,7 @@ public sealed class TeacherStudentsQueryTests
         public string? CapturedSearchTerm { get; private set; }
         public int? CapturedGradeLevel { get; private set; }
         public bool? CapturedIsActive { get; private set; }
+        public IReadOnlyCollection<Guid>? CapturedStudentUserIds { get; private set; }
 
         public Task<PagedList<TeacherStudentDto>> GetStudentsByTeacherUserIdAsync(
             Guid teacherUserId,
@@ -128,6 +148,7 @@ public sealed class TeacherStudentsQueryTests
             string? searchTerm,
             int? gradeLevel,
             bool? isActive,
+            IReadOnlyCollection<Guid>? studentUserIds,
             CancellationToken cancellationToken)
         {
             CapturedTeacherUserId = teacherUserId;
@@ -136,6 +157,7 @@ public sealed class TeacherStudentsQueryTests
             CapturedSearchTerm = searchTerm;
             CapturedGradeLevel = gradeLevel;
             CapturedIsActive = isActive;
+            CapturedStudentUserIds = studentUserIds;
             return Task.FromResult(new PagedList<TeacherStudentDto>([], 0, pageNumber, pageSize));
         }
 

@@ -1,22 +1,23 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { MatAutocompleteModule, MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
 import { MatDialogRef, MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
 import { TeachersService } from '../../../core/services/teachers.service';
 import { StudentsService } from '../../../core/services/students.service';
 import { ToasterService } from '../../../core/services/toaster.service';
 import { AuthService } from '../../../core/services/auth.service';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { Teacher } from '../../../core/models/teacher.model';
+import { catchError, debounceTime, distinctUntilChanged, map, startWith, switchMap } from 'rxjs/operators';
 
 @Component({
   selector: 'app-link-student-dialog',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, MatDialogModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatSelectModule],
+  imports: [CommonModule, ReactiveFormsModule, MatDialogModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatAutocompleteModule],
   template: `
     <h2 mat-dialog-title>{{ isInstitutionAdmin ? 'Mevcut Öğrenciyi Davet Et' : 'Öğrenciyi Davet Et' }}</h2>
     <form [formGroup]="linkForm" (ngSubmit)="onSubmit()">
@@ -35,12 +36,14 @@ import { Teacher } from '../../../core/models/teacher.model';
         </mat-form-field>
         <mat-form-field *ngIf="isInstitutionAdmin" appearance="outline" class="full-width">
           <mat-label>Sınıf öğretmeni</mat-label>
-          <mat-select formControlName="teacherUserId">
+          <input matInput [formControl]="teacherSearchControl" [matAutocomplete]="teacherOptions" autocomplete="off">
+          <mat-autocomplete #teacherOptions="matAutocomplete" [displayWith]="displayTeacher" (optionSelected)="onTeacherSelected($event)">
             <mat-option [value]="null">Şimdilik atama yapma</mat-option>
-            <mat-option *ngFor="let teacher of teachers$ | async" [value]="teacher.id">
-              {{ teacher.firstName }} {{ teacher.lastName }}
+            <mat-option *ngFor="let teacher of teachers$ | async" [value]="teacher">
+              {{ teacher.firstName }} {{ teacher.lastName }}<ng-container *ngIf="teacher.email"> · {{ teacher.email }}</ng-container>
             </mat-option>
-          </mat-select>
+          </mat-autocomplete>
+          <mat-hint>{{ teacherSearchError() || 'İsme veya e-postaya göre arayın; yalnızca aktif öğretmenler gösterilir.' }}</mat-hint>
         </mat-form-field>
       </mat-dialog-content>
       <mat-dialog-actions align="end">
@@ -57,6 +60,8 @@ export class LinkStudentDialogComponent implements OnInit {
   readonly isInstitutionAdmin: boolean;
   linkForm: FormGroup;
   teachers$!: Observable<Teacher[]>;
+  readonly teacherSearchControl = new FormControl<string | Teacher | null>('');
+  readonly teacherSearchError = signal<string | null>(null);
   loading = false;
 
   constructor(
@@ -75,23 +80,61 @@ export class LinkStudentDialogComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    if (this.isInstitutionAdmin) this.teachers$ = this.teachersService.getTeachers(undefined, undefined, true);
+    if (!this.isInstitutionAdmin) return;
+
+    const institutionId = this.authService.currentUserValue?.institutionId;
+    this.teachers$ = this.teacherSearchControl.valueChanges.pipe(
+      startWith(this.teacherSearchControl.value),
+      map(value => typeof value === 'string' ? value.trim() : ''),
+      debounceTime(250),
+      distinctUntilChanged(),
+      switchMap(searchTerm => {
+        this.teacherSearchError.set(null);
+        return this.teachersService.getTeachersPage(1, 25, searchTerm || undefined, institutionId, true).pipe(
+          map(page => page.items),
+          catchError(() => {
+            this.teacherSearchError.set('Öğretmen listesi yüklenemedi. Aramanızı daraltıp yeniden deneyin.');
+            return of([]);
+          })
+        );
+      })
+    );
+  }
+
+  displayTeacher(value: string | Teacher | null): string {
+    return typeof value === 'string' || value === null
+      ? value ?? ''
+      : `${value.firstName} ${value.lastName}`.trim();
+  }
+
+  onTeacherSelected(event: MatAutocompleteSelectedEvent): void {
+    const teacher = event.option.value as Teacher | null;
+    this.linkForm.get('teacherUserId')?.setValue(teacher?.id ?? null);
   }
 
   onSubmit(): void {
     if (this.linkForm.invalid) return;
     this.loading = true;
     const value = this.linkForm.value;
-    const request = this.isInstitutionAdmin
-      ? this.studentsService.linkStudent(value.email.trim(), value.teacherUserId || undefined)
-      : this.teachersService.linkStudent(value.email.trim());
+    let request: Observable<any>;
+    if (this.isInstitutionAdmin) {
+      request = this.studentsService.linkStudent(
+        value.email.trim(),
+        this.authService.currentUserValue?.institutionId,
+        value.teacherUserId || undefined);
+    } else {
+      request = this.teachersService.linkStudent(value.email.trim());
+    }
 
     request.subscribe({
       next: () => {
         this.toaster.success('Davet gönderildi. Öğrenci kabul ettiğinde liste güncellenecek.');
         this.dialogRef.close(true);
       },
-      error: () => this.loading = false
+      error: error => {
+        this.loading = false;
+        this.toaster.error(error?.error?.message || error?.message || 'Davet gönderilemedi. Kurum bilgilerinizi kontrol edip yeniden deneyin.');
+      }
     });
   }
 }

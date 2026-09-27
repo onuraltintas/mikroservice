@@ -5,6 +5,7 @@ using EduPlatform.Shared.Infrastructure.Logging;
 using EduPlatform.Shared.Infrastructure.Middleware;
 using EduPlatform.Shared.Infrastructure.Observability;
 using EduPlatform.Shared.Security.Extensions;
+using EduPlatform.Shared.Security.Middleware;
 using EduPlatform.Shared.Security.Services;
 using Serilog;
 using MassTransit;
@@ -204,6 +205,7 @@ if (app.Environment.IsDevelopment())
 app.UseRouting();
 
 app.UseAuthentication();
+app.UseMiddleware<ProductScopeMiddleware>("coaching");
 app.UseMiddleware<AdminAuditMiddleware>();
 app.UseAuthorization();
 

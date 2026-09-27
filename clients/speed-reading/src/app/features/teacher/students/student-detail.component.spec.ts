@@ -29,6 +29,7 @@ describe('StudentDetailComponent', () => {
       firstName: 'Ada',
       lastName: 'Yılmaz',
       email: 'ada@example.test',
+      gradeLevel: 7,
       currentLevel: 5,
       learningStyle: 'balanced',
       isActive: true,
@@ -49,10 +50,12 @@ describe('StudentDetailComponent', () => {
       { name: '2026-09-01', value: 240 },
       { name: '2026-09-02', value: 280 }
     ] }]);
+    expect(component.getSchoolGradeLabel(component.student.gradeLevel)).toBe('7. sınıf');
+    expect(component.student.currentLevel).toBe(5);
   });
 
   it('uses institution scope for an institution administrator detail report', () => {
-    const reportRequest = jasmine.createSpy('getTeacherStudentDetailReport').and.returnValue(of(null));
+    const reportRequest = jasmine.createSpy('getInstitutionStudentDetailReport').and.returnValue(of(null));
     const student = {
       id: 'student-1',
       firstName: 'Ada',
@@ -69,10 +72,10 @@ describe('StudentDetailComponent', () => {
       providers: [
         { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => 'student-1' }, queryParamMap: { get: () => null } } } },
         { provide: Router, useValue: { navigate: jasmine.createSpy('navigate') } },
-        { provide: AuthService, useValue: { currentUserValue: { id: 'institution-admin-1' }, hasRole: (role: string) => role === 'InstitutionAdmin' } },
-        { provide: ReportsService, useValue: { getTeacherStudentDetailReport: reportRequest } },
+        { provide: AuthService, useValue: { currentUserValue: { id: 'institution-admin-1', institutionId: 'institution-1' }, hasRole: (role: string) => role === 'InstitutionAdmin' } },
+        { provide: ReportsService, useValue: { getInstitutionStudentDetailReport: reportRequest } },
         { provide: TeachersService, useValue: { getMyStudents: () => of([]) } },
-        { provide: StudentsService, useValue: { getInstitutionStudents: () => of([student]) } },
+        { provide: StudentsService, useValue: { getInstitutionStudentById: () => of(student) } },
         { provide: ToasterService, useValue: { error: jasmine.createSpy('error'), success: jasmine.createSpy('success') } }
       ]
     });
@@ -81,6 +84,6 @@ describe('StudentDetailComponent', () => {
     component.loadStudentData('student-1');
 
     expect(reportRequest).toHaveBeenCalled();
-    expect(reportRequest.calls.mostRecent().args[0]).toBe('');
+    expect(reportRequest.calls.mostRecent().args[0]).toBe('institution-1');
   });
 });

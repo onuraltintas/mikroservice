@@ -1,14 +1,13 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { HttpClient } from '@angular/common/http';
 import { MatDialogRef, MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { environment } from '../../../../environments/environment';
+import { TeachersService } from '../../../core/services/teachers.service';
 import { ToasterService } from '../../../core/services/toaster.service';
 
 @Component({
@@ -102,7 +101,7 @@ import { ToasterService } from '../../../core/services/toaster.service';
 })
 export class LinkTeacherDialogComponent {
     private fb = inject(FormBuilder);
-    private http = inject(HttpClient);
+    private teachersService = inject(TeachersService);
     private dialogRef = inject(MatDialogRef<LinkTeacherDialogComponent>);
     private toaster = inject(ToasterService);
 
@@ -126,7 +125,7 @@ export class LinkTeacherDialogComponent {
 
         const payload = { email: this.form.get('email')?.value };
 
-        this.http.post(`${environment.apiUrl}/institution/invite-teacher`, { teacherEmail: payload.email }).subscribe({
+        this.teachersService.inviteTeacher(payload.email.trim()).subscribe({
             next: () => {
                 this.success = 'Öğretmene kurum daveti gönderildi.';
                 this.loading = false;

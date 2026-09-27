@@ -6,6 +6,8 @@
 !.env.example
 .build-temp
 .npm-temp
+.codex-staging-*
+.tmp-*
 **/bin
 **/obj
 **/node_modules

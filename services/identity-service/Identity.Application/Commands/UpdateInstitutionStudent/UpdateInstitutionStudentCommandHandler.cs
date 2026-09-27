@@ -9,7 +9,6 @@ namespace Identity.Application.Commands.UpdateInstitutionStudent;
 public sealed class UpdateInstitutionStudentCommandHandler : IRequestHandler<UpdateInstitutionStudentCommand, Result>
 {
     private readonly IInstitutionRepository _institutionRepository;
-    private readonly IUserRepository _userRepository;
     private readonly IStudentRepository _studentRepository;
     private readonly ITeacherRepository _teacherRepository;
     private readonly IUnitOfWork _unitOfWork;
@@ -17,14 +16,12 @@ public sealed class UpdateInstitutionStudentCommandHandler : IRequestHandler<Upd
 
     public UpdateInstitutionStudentCommandHandler(
         IInstitutionRepository institutionRepository,
-        IUserRepository userRepository,
         IStudentRepository studentRepository,
         ITeacherRepository teacherRepository,
         IUnitOfWork unitOfWork,
         ICurrentUserService currentUserService)
     {
         _institutionRepository = institutionRepository;
-        _userRepository = userRepository;
         _studentRepository = studentRepository;
         _teacherRepository = teacherRepository;
         _unitOfWork = unitOfWork;
@@ -43,15 +40,17 @@ public sealed class UpdateInstitutionStudentCommandHandler : IRequestHandler<Upd
             return Result.Failure(new Error("Student.InvalidGradeLevel", "Grade level must be between 1 and 12"));
         }
 
-        var institutionId = await _institutionRepository.GetInstitutionIdByAdminIdAsync(adminUserId, cancellationToken);
+        var institutionId = await _institutionRepository.GetInstitutionIdByAdminIdAsync(
+            adminUserId,
+            Identity.Domain.Enums.PlatformProduct.Coaching,
+            cancellationToken);
         if (institutionId is null)
         {
             return Result.Failure(new Error("Institution.Forbidden", "You are not an administrator of an institution"));
         }
 
         var student = await _studentRepository.GetByUserIdAsync(request.StudentUserId, institutionId, cancellationToken);
-        var user = await _userRepository.GetByIdAsync(request.StudentUserId, cancellationToken);
-        if (student is null || user is null)
+        if (student is null)
         {
             return Result.Failure(new Error("Student.NotFound", "Student not found"));
         }
@@ -66,9 +65,7 @@ public sealed class UpdateInstitutionStudentCommandHandler : IRequestHandler<Upd
             }
         }
 
-        student.UpdatePersonalInfo(request.FirstName.Trim(), request.LastName.Trim());
         student.UpdateEducationInfo(request.GradeLevel);
-        user.UpdateName(request.FirstName.Trim(), request.LastName.Trim());
 
         var activeAssignments = await _teacherRepository.GetActiveAssignmentsForStudentAsync(
             student.Id,

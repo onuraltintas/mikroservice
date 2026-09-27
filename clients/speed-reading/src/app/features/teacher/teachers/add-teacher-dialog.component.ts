@@ -1,15 +1,14 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { HttpClient } from '@angular/common/http';
 import { MatDialogRef, MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { environment } from '../../../../environments/environment';
 import { ToasterService } from '../../../core/services/toaster.service';
+import { TeachersService } from '../../../core/services/teachers.service';
 
 @Component({
   selector: 'app-add-teacher-dialog',
@@ -28,20 +27,6 @@ import { ToasterService } from '../../../core/services/toaster.service';
     <h2 mat-dialog-title>Yeni Öğretmen Ekle</h2>
     <mat-dialog-content>
       <form [formGroup]="form" class="teacher-form">
-        <div class="form-row">
-          <mat-form-field appearance="outline">
-            <mat-label>Ad</mat-label>
-            <input matInput formControlName="firstName">
-            <mat-error *ngIf="form.get('firstName')?.hasError('required')">Zorunlu alan</mat-error>
-          </mat-form-field>
-
-          <mat-form-field appearance="outline">
-            <mat-label>Soyad</mat-label>
-            <input matInput formControlName="lastName">
-            <mat-error *ngIf="form.get('lastName')?.hasError('required')">Zorunlu alan</mat-error>
-          </mat-form-field>
-        </div>
-
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>E-posta</mat-label>
           <input matInput formControlName="email" type="email">
@@ -49,7 +34,7 @@ import { ToasterService } from '../../../core/services/toaster.service';
           <mat-error *ngIf="form.get('email')?.hasError('email')">Geçerli bir e-posta giriniz</mat-error>
         </mat-form-field>
 
-        <p class="info-text">Öğretmene parolasını oluşturabileceği güvenli davet e-postası gönderilir.</p>
+        <p class="info-text">Öğretmene Hızlı Okuma kurum daveti gönderilir. Henüz hesabı yoksa davet bağlantısından Hızlı Okuma’ya kaydolabilir.</p>
 
         <div *ngIf="error" class="error-message">
           <mat-icon>error</mat-icon>
@@ -97,7 +82,7 @@ import { ToasterService } from '../../../core/services/toaster.service';
 })
 export class AddTeacherDialogComponent {
   private fb = inject(FormBuilder);
-  private http = inject(HttpClient);
+  private teachersService = inject(TeachersService);
   private dialogRef = inject(MatDialogRef<AddTeacherDialogComponent>);
   private toaster = inject(ToasterService);
 
@@ -107,8 +92,6 @@ export class AddTeacherDialogComponent {
 
   constructor() {
     this.form = this.fb.group({
-      firstName: ['', Validators.required],
-      lastName: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]]
     });
   }
@@ -120,15 +103,9 @@ export class AddTeacherDialogComponent {
     this.error = '';
 
     const value = this.form.value;
-    this.http.post(`${environment.apiUrl}/institution/teachers`, {
-      email: value.email,
-      firstName: value.firstName,
-      lastName: value.lastName,
-      title: null,
-      subjects: []
-    }).subscribe({
+    this.teachersService.inviteTeacher(value.email.trim()).subscribe({
       next: () => {
-        this.toaster.success('Öğretmen oluşturuldu; parola oluşturma e-postası gönderildi.');
+        this.toaster.success('Hızlı Okuma öğretmen daveti gönderildi.');
         this.dialogRef.close(true);
       },
       error: (err) => {

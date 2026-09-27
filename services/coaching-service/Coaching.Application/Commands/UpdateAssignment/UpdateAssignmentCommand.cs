@@ -4,6 +4,7 @@ using Coaching.Domain.Enums;
 using EduPlatform.Shared.Contracts.Events.Coaching;
 using FluentValidation;
 using MediatR;
+using System.Text.Json.Serialization;
 
 namespace Coaching.Application.Commands.UpdateAssignment;
 
@@ -27,7 +28,11 @@ public record UpdateAssignmentCommand(
     decimal? MaxScore,
     decimal? PassingScore,
     IReadOnlyCollection<Guid>? StudentIds = null
-) : IRequest<UpdateAssignmentResponse>;
+) : IRequest<UpdateAssignmentResponse>
+{
+    [JsonIgnore]
+    public bool IsInstitutionAdminOperation { get; init; }
+}
 
 public record UpdateAssignmentResponse(
     Guid AssignmentId,
@@ -138,7 +143,7 @@ public sealed class UpdateAssignmentCommandHandler
         var assignment = await _repository.GetByIdAsync(command.AssignmentId, cancellationToken)
             ?? throw new InvalidOperationException($"Assignment {command.AssignmentId} not found");
 
-        _accessPolicy.RequireTeacher(assignment.TeacherId);
+        _accessPolicy.RequireTeacher(assignment.TeacherId, command.IsInstitutionAdminOperation);
         assignment.UpdateEditableDetails(
             command.Title,
             command.Description,

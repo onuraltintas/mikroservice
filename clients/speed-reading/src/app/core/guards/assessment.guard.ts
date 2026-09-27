@@ -14,8 +14,8 @@ export const assessmentGuard: CanActivateFn = (route, state) => {
 
   const authService = inject(AuthService);
 
-  // Teachers bypass the student assessment flow.
-  if (authService.hasRole('Teacher')) {
+  // Staff exercise previews do not require a student assessment.
+  if (authService.hasRole('Teacher') || authService.hasAdminAccess() || authService.hasRole('Editor')) {
     return true;
   }
 

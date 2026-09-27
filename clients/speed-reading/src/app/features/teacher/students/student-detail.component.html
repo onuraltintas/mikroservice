@@ -22,7 +22,8 @@
                             <h2>{{ student.firstName }} {{ student.lastName }}</h2>
                             <p class="email">{{ student.email }}</p>
                             <div class="badges">
-                                <mat-chip color="primary">Sınıf {{ student.currentLevel }}</mat-chip>
+                                <mat-chip color="primary">{{ getSchoolGradeLabel(student.gradeLevel) }}</mat-chip>
+                                <mat-chip *ngIf="student.currentLevel > 0">Okuma seviyesi {{ student.currentLevel }}</mat-chip>
                                 <mat-chip [color]="student.isActive ? 'primary' : 'default'">
                                     {{ student.isActive ? 'Aktif' : 'Pasif' }}
                                 </mat-chip>

@@ -210,6 +210,12 @@ export interface LearningPathProgressDto {
   nextItem: LearningPathNextItemDto | null;
 }
 
+export interface PersonalizedPathAvailabilityDto {
+  isAvailable: boolean;
+  completedProgramDays: number;
+  requiredDays: number;
+}
+
 export interface LearningPathNextItemDto {
   id: string;
   contentType: string;
@@ -221,7 +227,7 @@ export interface LearningPathNextItemDto {
 }
 
 export interface CompletePathItemRequest {
-  achievedScore?: number;
+  sessionId: string;
 }
 
 export interface CompletePathItemResponse {
@@ -312,9 +318,9 @@ export class PersonalizedLearningPathHelper {
   static getContentRoute(contentType: string, contentId: string): string[] {
     switch (contentType) {
       case 'ReadingText':
-        return ['/student/reading', contentId];
+        return ['/student/reading/activity', contentId];
       case 'Exercise':
-        return ['/student/exercises', contentId];
+        return ['/student/exercises/universal-player', contentId];
       case 'ProgramTemplate':
         return ['/student/daily-exercises'];
       default:

@@ -45,6 +45,41 @@ describe('CoachingAdminService', () => {
     http.verify();
   });
 
+  it('forwards grade level to the tenant-scoped student roster endpoint', () => {
+    TestBed.configureTestingModule({
+      providers: [CoachingAdminService, provideHttpClient(), provideHttpClientTesting()]
+    });
+    const service = TestBed.inject(CoachingAdminService);
+    const http = TestBed.inject(HttpTestingController);
+
+    Reflect.apply(service.getStudentRoster, service, ['institution-1', 1, '', undefined, 8]).subscribe();
+
+    const request = http.expectOne(candidate => candidate.url.endsWith('/coaching-admin/institutions/institution-1/students'));
+    expect(request.request.params.get('gradeLevel')).toBe('8');
+    request.flush({ students: [], totalCount: 0 });
+    http.verify();
+  });
+
+  it('requests a bounded page of a student history category', () => {
+    TestBed.configureTestingModule({
+      providers: [CoachingAdminService, provideHttpClient(), provideHttpClientTesting()]
+    });
+    const service = TestBed.inject(CoachingAdminService);
+    const http = TestBed.inject(HttpTestingController);
+    const getHistory = (service as unknown as {
+      getStudentHistory: (...args: unknown[]) => { subscribe: () => void }
+    }).getStudentHistory;
+
+    Reflect.apply(getHistory, service, ['student-1', 'Sessions', 2, 25]).subscribe();
+
+    const request = http.expectOne(candidate => candidate.url.endsWith('/coaching-admin/students/student-1/history'));
+    expect(request.request.params.get('type')).toBe('Sessions');
+    expect(request.request.params.get('pageNumber')).toBe('2');
+    expect(request.request.params.get('pageSize')).toBe('25');
+    request.flush({ items: [], totalCount: 0 });
+    http.verify();
+  });
+
   it('requests teacher metrics from the scoped coaching endpoint', () => {
     TestBed.configureTestingModule({
       providers: [CoachingAdminService, provideHttpClient(), provideHttpClientTesting()]

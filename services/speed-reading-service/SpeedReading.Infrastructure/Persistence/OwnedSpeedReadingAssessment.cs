@@ -53,6 +53,12 @@ internal sealed class OwnedSpeedReadingAssessment(
         {
             throw new ArgumentException("The selected age group is not active.", nameof(request));
         }
+        var templateEntries = await GetAssessmentTemplateEntriesAsync(
+            ageGroupConfigurationId,
+            cancellationToken);
+        var assessmentExerciseCount = templateEntries.Count > 0
+            ? templateEntries.Count
+            : ServerAssessmentExerciseCount;
         var now = DateTime.UtcNow;
         if (AssessmentAttemptPhaseRules.TryGetPrerequisite(request.Phase, out var prerequisitePhase))
         {
@@ -103,13 +109,13 @@ internal sealed class OwnedSpeedReadingAssessment(
                 })
                 .ToListAsync(cancellationToken);
 
-            // An old pinned form can contain an observation-only eye exercise.
-            // It cannot produce a validated placement result, so replace that
-            // in-progress attempt with a fresh server-measurable form.
-            if (existing.ExpectedExerciseCount != ServerAssessmentExerciseCount
-                || existingFormTypes.Count != ServerAssessmentExerciseCount
-                || existingFormTypes.Any(item =>
-                    !IsServerMeasuredExerciseType(item.TypeName, item.EngineType)))
+            // Replace an in-progress form when the active template's exercise
+            // count changed. Catalog fallback forms must also remain measurable.
+            if (existing.ExpectedExerciseCount != assessmentExerciseCount
+                || existingFormTypes.Count != assessmentExerciseCount
+                || (templateEntries.Count == 0
+                    && existingFormTypes.Any(item =>
+                        !IsServerMeasuredExerciseType(item.TypeName, item.EngineType))))
             {
                 existing.Abandon(now);
                 await db.SaveChangesAsync(cancellationToken);
@@ -135,7 +141,7 @@ internal sealed class OwnedSpeedReadingAssessment(
             formVersion,
             request.Language,
             ageGroupConfigurationId,
-            ServerAssessmentExerciseCount,
+            assessmentExerciseCount,
             now,
             userId.ToString(),
             activeLevelCatalog.Version,
@@ -144,7 +150,7 @@ internal sealed class OwnedSpeedReadingAssessment(
             studyEnrollment?.CohortCode);
         var formItems = await BuildPinnedFormItemsAsync(
             attempt.Id,
-            ServerAssessmentExerciseCount,
+            assessmentExerciseCount,
             attempt.Phase,
             attempt.FormVersion,
             attempt.AgeGroupConfigurationId,
@@ -596,7 +602,7 @@ internal sealed class OwnedSpeedReadingAssessment(
                         typeName,
                         expectedEngineTypes.GetValueOrDefault(item)))
                 .ToHashSet();
-            if (expectedExerciseIds.Count != ServerAssessmentExerciseCount
+            if (expectedExerciseIds.Count != attempt.ExpectedExerciseCount
                 || serverMeasuredExerciseIds.Count == 0
                 || serverMeasuredExerciseIds.Any(item =>
                     !measuredResults.Any(result => result.ExerciseId == item
@@ -939,6 +945,10 @@ internal sealed class OwnedSpeedReadingAssessment(
             previousProgress?.LongestStreak ?? 0,
             userId,
             assignedAt);
+        progress.SetSchedule(
+            await OwnedSpeedReadingProgramSchedule.BuildAsync(db, template, null, cancellationToken),
+            userId,
+            assignedAt);
         db.StudentProgramProgresses.Add(progress);
         return new BaselineProgramAssignment(progress.Id, template.Id, template.Name);
     }
@@ -1154,6 +1164,25 @@ internal sealed class OwnedSpeedReadingAssessment(
         await db.SaveChangesAsync(cancellationToken);
     }
 
+    private async Task<IReadOnlyList<TemplateExerciseEntry>> GetAssessmentTemplateEntriesAsync(
+        Guid? ageGroupConfigurationId,
+        CancellationToken cancellationToken)
+    {
+        if (!ageGroupConfigurationId.HasValue)
+            return [];
+
+        var assessmentPattern = await db.ProgramTemplates
+            .AsNoTracking()
+            .Where(item => item.IsActive
+                && !item.IsDeleted
+                && item.IsAssessment
+                && item.TargetAgeGroupConfigurationId == ageGroupConfigurationId.Value)
+            .OrderBy(item => item.DisplayOrder)
+            .Select(item => item.WeeklyPatternJson)
+            .FirstOrDefaultAsync(cancellationToken);
+        return ParseExerciseEntries(assessmentPattern);
+    }
+
     private async Task<IReadOnlyList<AssessmentAttemptExercise>> BuildPinnedFormItemsAsync(
         Guid attemptId,
         int expectedExerciseCount,
@@ -1186,18 +1215,9 @@ internal sealed class OwnedSpeedReadingAssessment(
                 exerciseType.EngineType))
             .ToListAsync(cancellationToken);
 
-        var assessmentPattern = ageGroupConfigurationId.HasValue
-            ? await db.ProgramTemplates
-                .AsNoTracking()
-                .Where(item => item.IsActive
-                    && !item.IsDeleted
-                    && item.IsAssessment
-                    && item.TargetAgeGroupConfigurationId == ageGroupConfigurationId.Value)
-                .OrderBy(item => item.DisplayOrder)
-                .Select(item => item.WeeklyPatternJson)
-                .FirstOrDefaultAsync(cancellationToken)
-            : null;
-        var templateEntries = ParseExerciseEntries(assessmentPattern);
+        var templateEntries = await GetAssessmentTemplateEntriesAsync(
+            ageGroupConfigurationId,
+            cancellationToken);
         var candidatePool = candidates;
         if (templateEntries.Count > 0)
         {
@@ -1211,33 +1231,27 @@ internal sealed class OwnedSpeedReadingAssessment(
                 .ThenBy(item => item.DifficultyLevel)
                 .ThenBy(item => item.Title)
                 .ToList();
-            if (candidatePool.Count < expectedExerciseCount)
+            if (candidatePool.Count != expectedExerciseCount)
             {
                 throw new InvalidOperationException(
-                    "The active age-group assessment template does not contain enough active exercises.");
+                    "Every exercise in the active age-group assessment template must be active and available.");
             }
         }
 
         var measurableCandidatePool = candidatePool
             .Where(IsServerMeasuredCandidate)
             .ToList();
-        if (measurableCandidatePool.Count < expectedExerciseCount)
-        {
-            // Keep older/incorrect templates from pinning an observation-only
-            // motion_path exercise. Use the active age-filtered catalog as a
-            // safe fallback before refusing to create an unscorable form.
-            measurableCandidatePool = candidates
-                .Where(IsServerMeasuredCandidate)
-                .ToList();
-        }
-
-        if (measurableCandidatePool.Count < expectedExerciseCount)
+        if (templateEntries.Count == 0 && measurableCandidatePool.Count < expectedExerciseCount)
         {
             throw new InvalidOperationException(
                 "The assessment form must contain at least three server-measurable exercises.");
         }
 
-        var selected = SelectFormCandidates(measurableCandidatePool, expectedExerciseCount, phase, formVersion);
+        var selected = templateEntries.Count > 0
+            ? candidatePool
+                .Select(candidate => (candidate, ResolveAssessmentRole(candidate.TypeName, candidate.EngineType)))
+                .ToList()
+            : SelectFormCandidates(measurableCandidatePool, expectedExerciseCount, phase, formVersion);
         var readingTexts = await (
             from readingText in db.ReadingTexts.AsNoTracking()
             where readingText.IsActive
@@ -1296,10 +1310,11 @@ internal sealed class OwnedSpeedReadingAssessment(
             Guid? readingTextId = null;
             AssessmentReadingTextSnapshot? readingTextSnapshot = null;
             IReadOnlyList<AssessmentQuestionSnapshot> questionSnapshots = [];
-            if (role == "comprehension")
+            if (RequiresAssessmentReadingText(role, candidate.TypeName, candidate.EngineType))
             {
+                var requiresQuestions = role == "comprehension";
                 var text = readingTexts
-                    .Where(item => item.HasQuestions
+                    .Where(item => (!requiresQuestions || item.HasQuestions)
                         && !usedReadingTextIds.Contains(item.Id)
                         && (item.ExerciseId == candidate.ExerciseId || item.ExerciseId is null))
                     .OrderBy(item => item.ExerciseId == candidate.ExerciseId ? 0 : 1)
@@ -1316,9 +1331,12 @@ internal sealed class OwnedSpeedReadingAssessment(
                     text.Title,
                     text.Content,
                     text.WordCount > 0 ? text.WordCount : CountWords(text.Content));
-                questionSnapshots = questions
-                    .Where(item => item.ReadingTextId == text.Id)
-                    .ToList();
+                if (requiresQuestions)
+                {
+                    questionSnapshots = questions
+                        .Where(item => item.ReadingTextId == text.Id)
+                        .ToList();
+                }
             }
 
             var snapshot = new AssessmentContentSnapshot(
@@ -1573,19 +1591,40 @@ internal sealed class OwnedSpeedReadingAssessment(
     private static int CountWords(string content) =>
         content.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries).Length;
 
-    private static string ResolveAssessmentRole(string typeName)
+    private static string ResolveAssessmentRole(string typeName, string? engineType = null)
     {
         if (IsType(typeName, "comprehension", "reading", "free")) return "comprehension";
         if (IsType(typeName, "visual", "expansion", "vision")) return "visual";
-        if (IsType(typeName, "focus", "fixation", "attention", "schulte")) return "focus";
+        if (IsType(typeName, "focus", "fixation", "sabitleme", "attention", "schulte")) return "focus";
         if (IsType(typeName, "rsvp", "tachistoscope")) return "tachistoscope";
+        if (!string.IsNullOrWhiteSpace(engineType))
+            return ResolveAssessmentRole(engineType);
         return "supplementary";
     }
+
+    private static bool RequiresAssessmentReadingText(
+        string role,
+        string typeName,
+        string engineType) =>
+        role is "comprehension" or "tachistoscope"
+        || IsType(typeName, "reading", "rsvp", "tachistoscope", "comprehension")
+        || IsType(engineType,
+            "reading_comprehension",
+            "text_stream",
+            "text_fade",
+            "word_highlight",
+            "free_reading",
+            "rsvp",
+            "exam_simulation");
 
     private static bool IsServerMeasuredExerciseType(string? typeName, string? engineType = null)
     {
         if (!SpeedReadingMeasurementCapabilities.IsAssessmentEligible(typeName))
             return false;
+
+        if (IsType(typeName ?? string.Empty, "fixation", "sabitleme")
+            && IsType(engineType ?? string.Empty, "motion_path", "motionpath"))
+            return true;
 
         // A display/type name such as "Attention" can still be backed by the
         // observation-only motion_path engine. Both layers must therefore be
@@ -1594,8 +1633,29 @@ internal sealed class OwnedSpeedReadingAssessment(
             || SpeedReadingMeasurementCapabilities.IsAssessmentEligible(engineType);
     }
 
-    private static bool IsServerMeasuredCandidate(AssessmentFormCandidate candidate) =>
-        IsServerMeasuredExerciseType(candidate.TypeName, candidate.EngineType);
+    private static bool IsServerMeasuredCandidate(AssessmentFormCandidate candidate)
+    {
+        if (!IsServerMeasuredExerciseType(candidate.TypeName, candidate.EngineType))
+            return false;
+
+        if (!IsType(candidate.TypeName, "fixation", "sabitleme")
+            || !IsType(candidate.EngineType, "motion_path", "motionpath"))
+            return true;
+
+        try
+        {
+            using var document = JsonDocument.Parse(candidate.ConfigurationJson);
+            var config = document.RootElement;
+            if (TryGetProperty(config, "engineConfig", out var engineConfig))
+                config = engineConfig;
+            return TryGetProperty(config, "content", out var content)
+                && (GetInt(content, "peripheralCount") ?? 0) > 0;
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
+    }
 
     private static bool IsValidAssessmentMeasurement(
         decimal rawWpm,

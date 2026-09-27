@@ -4,6 +4,7 @@ using Identity.Application.DTOs.Institutions;
 using Identity.Application.Interfaces;
 using Identity.Application.Queries.GetInstitutions;
 using Identity.Domain.Constants;
+using Identity.Domain.Enums;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -119,21 +120,28 @@ public sealed class InstitutionsController : ControllerBase
         CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(
-            new AssignInstitutionAdminCommand(id, request.UserId, request.Role),
+            new AssignInstitutionAdminCommand(id, request.UserId, request.Role, request.Product),
             cancellationToken);
         return result.IsSuccess ? NoContent() : BadRequest(new { Error = result.Error });
     }
 
     [HttpGet("{id:guid}/admins")]
-    public async Task<IActionResult> GetAdmins(Guid id, CancellationToken cancellationToken)
+    public async Task<IActionResult> GetAdmins(
+        Guid id,
+        [FromQuery] PlatformProduct? product,
+        CancellationToken cancellationToken)
     {
+        var productScope = ResolveProductScope(product, out var productMismatch);
+        if (productMismatch) return Forbid();
+        if (productScope is not { } scopedProduct) return BadRequest(new { Error = "Geçerli ürün kapsamı zorunludur." });
+
         var institution = await _mediator.Send(new GetInstitutionByIdQuery(id), cancellationToken);
         if (institution.IsFailure)
         {
             return NotFound();
         }
 
-        return Ok(await _institutionRepository.GetAdminsAsync(id, cancellationToken));
+        return Ok(await _institutionRepository.GetAdminsAsync(id, scopedProduct, cancellationToken));
     }
 
     [HttpPost("{id:guid}/admins/{userId:guid}/active")]
@@ -141,16 +149,17 @@ public sealed class InstitutionsController : ControllerBase
     public async Task<IActionResult> SetAdminActive(
         Guid id,
         Guid userId,
-        [FromBody] SetInstitutionActiveRequest request,
+        [FromBody] SetInstitutionAdminActiveRequest request,
         CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(
-            new SetInstitutionAdminActiveCommand(id, userId, request.IsActive),
+            new SetInstitutionAdminActiveCommand(id, userId, request.IsActive, request.Product),
             cancellationToken);
         return result.IsSuccess ? NoContent() : BadRequest(new { Error = result.Error });
     }
 
     public sealed record SetInstitutionActiveRequest(bool IsActive);
+    public sealed record SetInstitutionAdminActiveRequest(bool IsActive, PlatformProduct? Product);
 
     public sealed record UpdateInstitutionRequest(
         string? Name,
@@ -164,4 +173,22 @@ public sealed class InstitutionsController : ControllerBase
         int? MaxStudents,
         int? MaxTeachers,
         DateTime? SubscriptionEndDate);
+
+    private PlatformProduct? ResolveProductScope(PlatformProduct? requestedProduct, out bool mismatch)
+    {
+        mismatch = false;
+        if (User.IsInRole("SystemAdmin"))
+        {
+            return requestedProduct;
+        }
+
+        var claimValue = User.FindFirst("platform_product")?.Value;
+        if (!PlatformProductExtensions.TryParseRouteValue(claimValue, out var claimedProduct))
+        {
+            return null;
+        }
+
+        mismatch = requestedProduct.HasValue && requestedProduct.Value != claimedProduct;
+        return claimedProduct;
+    }
 }

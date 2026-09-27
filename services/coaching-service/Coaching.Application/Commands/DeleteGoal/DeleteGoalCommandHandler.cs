@@ -28,11 +28,11 @@ public class DeleteGoalCommandHandler : IRequestHandler<DeleteGoalCommand>
 
         if (goal.SetByTeacherId.HasValue)
         {
-            _accessPolicy.RequireTeacher(goal.SetByTeacherId.Value);
+            _accessPolicy.RequireTeacher(goal.SetByTeacherId.Value, command.IsInstitutionAdminOperation);
         }
         else
         {
-            _accessPolicy.RequireStudent(goal.StudentId);
+            _accessPolicy.RequireStudent(goal.StudentId, command.IsInstitutionAdminOperation);
         }
 
         await _repository.DeleteAsync(goal, cancellationToken);

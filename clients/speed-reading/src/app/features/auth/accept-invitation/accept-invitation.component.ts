@@ -53,7 +53,7 @@ export class AcceptInvitationComponent implements OnInit {
       return;
     }
 
-    this.http.post(`${environment.apiUrl}/invitations/${invitationId}/accept`, {}).subscribe({
+    this.http.post(`${environment.apiUrl}/speed-reading/invitations/${invitationId}/accept`, {}).subscribe({
       next: () => this.loading = false,
       error: error => {
         this.loading = false;

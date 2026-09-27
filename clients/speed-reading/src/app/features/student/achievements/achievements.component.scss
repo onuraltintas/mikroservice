@@ -14,6 +14,17 @@
   color: var(--sp-text-2);
   font-size: 0.875rem;
 }
+.ach-loading button {
+  border: 0;
+  border-radius: 0.75rem;
+  padding: 0.7rem 1.1rem;
+  background: var(--sp-primary);
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.ach-loading button:focus-visible { outline: 2px solid var(--sp-primary); outline-offset: 3px; }
 .ach-spinner {
   width: 36px;
   height: 36px;

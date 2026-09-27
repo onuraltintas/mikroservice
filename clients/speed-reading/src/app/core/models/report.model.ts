@@ -382,13 +382,14 @@ export interface TeacherAssignmentReport {
   metadata: ReportMetadata;
   dataAvailable?: boolean;
   unavailableReason?: string;
+  assignmentCount: number;
   assignmentInfo: {
     assignmentId: string;
     title: string;
     description: string;
     dueDate: Date;
     assignedDate: Date;
-  };
+  } | null;
   completionStats: {
     totalStudents: number;
     completed: number;
@@ -410,7 +411,7 @@ export interface TeacherAssignmentReport {
     medianCompletionTime: number;
     fastestCompletion: number;
     slowestCompletion: number;
-  };
+  } | null;
 }
 
 export interface ScoreDistributionChart {

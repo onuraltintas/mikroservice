@@ -34,6 +34,10 @@ public sealed record TeacherAssignmentInfo(
     DateTime DueDate,
     DateTime AssignedDate);
 
+/// <summary>
+/// Counts are student-level period states; CompletionRate is completed active student-assignment rows
+/// divided by all active student-assignment rows in the selected period.
+/// </summary>
 public sealed record TeacherAssignmentCompletionStats(
     int TotalStudents,
     int Completed,
@@ -72,7 +76,8 @@ public sealed record TeacherAssignmentAnalytics(
     TeacherAssignmentPerformanceStats? PerformanceStats,
     IReadOnlyList<AdminAnalyticsChartData> ScoreDistribution,
     IReadOnlyList<TeacherAssignmentStudentBreakdown> StudentBreakdown,
-    TeacherAssignmentTimeStats? TimeStats);
+    TeacherAssignmentTimeStats? TimeStats,
+    int AssignmentCount = 0);
 
 public sealed record TeacherContentAnalysisAnalytics(
     DateTime DateFrom,

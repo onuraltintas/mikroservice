@@ -22,7 +22,7 @@ public record GetSessionQuery(Guid SessionId) : IRequest<SessionDto>;
 
 public sealed record SessionStudentReflectionDto(
     Guid StudentId,
-    string Note,
+    string? Note,
     string AttendanceStatus);
 
 public sealed class GetTeacherSessionsQueryValidator : PagedQueryValidator<GetTeacherSessionsQuery>

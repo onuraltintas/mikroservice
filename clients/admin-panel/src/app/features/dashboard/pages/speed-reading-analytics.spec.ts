@@ -44,6 +44,35 @@ describe('measurementStatusLabel', () => {
 });
 
 describe('SpeedReadingAnalyticsComponent progress management', () => {
+  it('deletes only the selected student speed-reading data after one confirmation', async () => {
+    const service = {
+      deleteStudentSpeedReadingData: vi.fn(() => of({ deletedRecordCount: 12 })),
+      getStudentProgress: vi.fn(() => of({ items: [], totalCount: 0, pageNumber: 1, pageSize: 25 }))
+    };
+    const toaster = { confirm: vi.fn(async () => true), success: vi.fn() };
+    TestBed.configureTestingModule({
+      imports: [SpeedReadingAnalyticsComponent],
+      providers: [
+        { provide: PLATFORM_ID, useValue: 'browser' },
+        { provide: ActivatedRoute, useValue: { snapshot: { data: {} } } },
+        { provide: AuthService, useValue: {
+          userProfile: () => ({ roles: ['SystemAdmin'] }),
+          hasPermission: (permission: string) => permission === ADMIN_PERMISSIONS.privacyManage
+        } },
+        { provide: SpeedReadingAdminService, useValue: service },
+        { provide: IdentityService, useValue: {} },
+        { provide: ToasterService, useValue: toaster }
+      ]
+    });
+
+    const component = TestBed.createComponent(SpeedReadingAnalyticsComponent).componentInstance;
+    await component.deleteStudentData({ id: 'progress-1', studentName: 'Ada' } as AdminStudentProgressSummary);
+
+    expect(service.deleteStudentSpeedReadingData).toHaveBeenCalledWith('progress-1');
+    expect(toaster.confirm).toHaveBeenCalledOnce();
+    expect(toaster.success).toHaveBeenCalledWith('12 hızlı okuma kaydı silindi.');
+  });
+
   it('clears the selected progress detail when its dialog is closed', () => {
     const service = {};
     TestBed.configureTestingModule({

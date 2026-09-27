@@ -56,6 +56,8 @@ internal sealed class OwnedSpeedReadingProgramAdminWriter(OwnedSpeedReadingDbCon
             request.IsAssessment,
             actorId,
             now);
+        if (template.IsActive && !template.IsAssessment)
+            await OwnedSpeedReadingProgramSchedule.BuildAsync(db, template, null, cancellationToken);
         db.ProgramTemplates.Add(template);
         db.IdempotencyRecords.Add(CreateLedger(CreateScope, key, requestHash, template.Id, now));
 
@@ -113,6 +115,8 @@ internal sealed class OwnedSpeedReadingProgramAdminWriter(OwnedSpeedReadingDbCon
             request.IsAssessment,
             actorId,
             now);
+        if (template.IsActive && !template.IsAssessment)
+            await OwnedSpeedReadingProgramSchedule.BuildAsync(db, template, null, cancellationToken);
         db.IdempotencyRecords.Add(CreateLedger(UpdateScope, key, requestHash, template.Id, now));
 
         try

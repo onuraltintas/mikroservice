@@ -10,6 +10,7 @@ public class AcademicGoal : AggregateRoot
 {
     public Guid StudentId { get; private set; }
     public Guid? SetByTeacherId { get; private set; }
+    public Guid? InstitutionId { get; private set; }
 
     public string Title { get; private set; } = string.Empty;
     public string? Description { get; private set; }
@@ -31,7 +32,8 @@ public class AcademicGoal : AggregateRoot
         Guid studentId,
         string title,
         GoalCategory category,
-        Guid? setByTeacherId = null)
+        Guid? setByTeacherId = null,
+        Guid? institutionId = null)
     {
         var goal = new AcademicGoal
         {
@@ -39,6 +41,7 @@ public class AcademicGoal : AggregateRoot
             Title = title ?? throw new ArgumentNullException(nameof(title)),
             Category = category,
             SetByTeacherId = setByTeacherId,
+            InstitutionId = institutionId,
             CurrentProgress = 0,
             IsCompleted = false
         };

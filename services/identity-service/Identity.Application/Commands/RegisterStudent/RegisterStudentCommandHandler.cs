@@ -2,6 +2,7 @@ using EduPlatform.Shared.Kernel.Results;
 using EduPlatform.Shared.Security.Interfaces;
 using Identity.Application.Interfaces;
 using Identity.Domain.Entities;
+using Identity.Domain.Enums;
 using MediatR;
 using MassTransit;
 using EduPlatform.Shared.Contracts.Events.Identity;
@@ -35,6 +36,11 @@ public class RegisterStudentCommandHandler : IRequestHandler<RegisterStudentComm
 
     public async Task<Result<Guid>> Handle(RegisterStudentCommand request, CancellationToken cancellationToken)
     {
+        if (request.Product is not { } product || !Enum.IsDefined(product))
+        {
+            return Result.Failure<Guid>(new Error("Auth.ProductRequired", "Kayıt yapılacak platform belirtilmelidir."));
+        }
+
         // Global Registration Switch Check
         var allowRegistration = await _configurationService.GetConfigurationValueAsync("auth.allowregistration", cancellationToken);
         if (!string.Equals(allowRegistration, "true", StringComparison.OrdinalIgnoreCase))
@@ -56,7 +62,9 @@ public class RegisterStudentCommandHandler : IRequestHandler<RegisterStudentComm
                 // Check local DB if user exists but inactive (Soft Deleted)
                 var existingUser = await _userRepository.GetByEmailAsync(request.Email, cancellationToken);
         
-                if (existingUser != null && !existingUser.IsActive)
+                if (existingUser != null
+                    && !existingUser.IsActive
+                    && existingUser.HasProductAccess(product))
                 {
                     // Reactivate Case
                     existingUser.Activate();
@@ -75,27 +83,47 @@ public class RegisterStudentCommandHandler : IRequestHandler<RegisterStudentComm
         var userId = identityResult.Value;
 
         // Assign Role
-        var roleResult = await _identityService.AssignRoleAsync(userId, Identity.Domain.Enums.UserRole.Student.ToString(), cancellationToken);
+        var roleResult = await _identityService.AssignRoleForProductAsync(
+            userId,
+            Identity.Domain.Enums.UserRole.Student.ToString(),
+            product,
+            cancellationToken,
+            UserProductAccessSource.SelfRegistration);
         if (roleResult.IsFailure)
         {
              await _identityService.DeleteUserAsync(userId, cancellationToken);
              return Result.Failure<Guid>(roleResult.Error);
         }
 
-        // Create Student Profile
-        var student = StudentProfile.Create(userId, request.FirstName, request.LastName, null, null);
-
         try
         {
             var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
-            if (user != null) 
+            if (user is null)
             {
-                if (request.Phone != null) user.SetPhoneNumber(request.Phone);
-                user.GenerateEmailVerificationToken();
+                await _identityService.DeleteUserAsync(userId, cancellationToken);
+                return Result.Failure<Guid>(new Error("Registration.Failed", "Hesap kaydı tamamlanamadı."));
             }
 
+            if (user.GrantProductAccess(
+                product,
+                UserProductAccessSource.SelfRegistration,
+                grantedByUserId: null,
+                DateTimeOffset.UtcNow))
+            {
+                _userRepository.TrackProductAccessIfNew(user, product);
+            }
+            if (request.Phone != null)
+            {
+                user.SetPhoneNumber(request.Phone);
+            }
+            user.GenerateEmailVerificationToken();
+
             // await _userRepository.AddAsync(user, cancellationToken); // REMOVED: User already exists
-            await _studentRepository.AddAsync(student, cancellationToken);
+            if (product == PlatformProduct.Coaching)
+            {
+                var student = StudentProfile.Create(userId, request.FirstName, request.LastName, null, null);
+                await _studentRepository.AddAsync(student, cancellationToken);
+            }
 
             // Publish Event for Notification Service (Verification)
             await _publishEndpoint.Publish(new UserRegisteredEvent(

@@ -96,11 +96,17 @@ export class TeacherClassOverviewReportComponent implements OnInit {
   loadReport(): void {
     const user = this.authService.currentUserValue;
     const teacherIdParam = this.route.snapshot.queryParamMap.get('teacherId');
-
-    // A teacherId query parameter is used by the institution-scoped selector.
+    const institutionViewer = this.authService.hasRole('InstitutionAdmin')
+      || this.authService.hasRole('InstitutionOwner');
+    const institutionId = user?.institutionId;
     const teacherId = teacherIdParam || user?.id;
 
-    if (!teacherId) {
+    if (institutionViewer && !teacherIdParam && !institutionId) {
+      this.error.set('Kurum bilgisi bulunamadı. Lütfen yeniden giriş yapın.');
+      this.loading.set(false);
+      return;
+    }
+    if (!institutionViewer && !teacherId) {
       this.error.set('Öğretmen bilgisi bulunamadı');
       this.loading.set(false);
       return;
@@ -111,8 +117,10 @@ export class TeacherClassOverviewReportComponent implements OnInit {
     this.error.set(null);
 
     const reportRequest = teacherIdParam
-      ? this.reportsService.getAdminTeacherClassOverviewReport(teacherId, startDate, endDate)
-      : this.reportsService.getTeacherClassOverviewReport(teacherId, startDate, endDate);
+      ? this.reportsService.getAdminTeacherClassOverviewReport(teacherId!, startDate, endDate)
+      : institutionViewer
+        ? this.reportsService.getInstitutionClassOverviewReport(institutionId!, startDate, endDate)
+        : this.reportsService.getTeacherClassOverviewReport(teacherId!, startDate, endDate);
 
     reportRequest
       .pipe(finalize(() => this.loading.set(false)))

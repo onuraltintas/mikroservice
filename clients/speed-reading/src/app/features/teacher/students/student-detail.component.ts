@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -122,15 +122,13 @@ export class StudentDetailComponent extends BaseComponent implements OnInit, OnD
     // Institution managers use the institution scope unless they explicitly
     // opened the student from a selected teacher's roster. A manager's own
     // user id is not a teacher id and must never be sent as one.
-    const reportTeacherId = selectedTeacherId || (institutionViewer ? '' : viewerId);
     this.privacyRestricted.set(false);
 
-    const roster$ = this.isInstitutionViewer()
-      ? this.studentsService.getInstitutionStudents()
-      : this.teachersService.getMyStudents();
+    const student$ = institutionViewer
+      ? this.studentsService.getInstitutionStudentById(studentId, selectedTeacherId ?? undefined)
+      : this.teachersService.getMyStudentById(studentId);
 
-    roster$.pipe(
-      map(students => students.find(student => student.id === studentId) ?? null),
+    student$.pipe(
       switchMap(student => {
         if (!student) {
           this.student = null;
@@ -138,7 +136,19 @@ export class StudentDetailComponent extends BaseComponent implements OnInit, OnD
         }
 
         this.student = student;
-        return this.reportsService.getTeacherStudentDetailReport(reportTeacherId, studentId, startDate, endDate);
+        if (institutionViewer && !selectedTeacherId) {
+          const institutionId = this.authService.currentUserValue?.institutionId;
+          if (!institutionId) {
+            return throwError(() => new Error('Kurum bilgisi bulunamadı.'));
+          }
+          return this.reportsService.getInstitutionStudentDetailReport(institutionId, studentId, startDate, endDate);
+        }
+
+        return this.reportsService.getTeacherStudentDetailReport(
+          selectedTeacherId || viewerId,
+          studentId,
+          startDate,
+          endDate);
       }),
       takeUntil(this.destroy$),
       finalize(() => this.loading.set(false))
@@ -161,6 +171,12 @@ export class StudentDetailComponent extends BaseComponent implements OnInit, OnD
 
   private isInstitutionViewer(): boolean {
     return this.authService.hasRole('InstitutionAdmin') || this.authService.hasRole('InstitutionOwner');
+  }
+
+  getSchoolGradeLabel(gradeLevel?: number | null): string {
+    return gradeLevel && gradeLevel >= 1 && gradeLevel <= 12
+      ? `${gradeLevel}. sınıf`
+      : 'Sınıf belirtilmedi';
   }
 
   private applyReport(report: any): void {

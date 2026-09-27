@@ -7,7 +7,8 @@ import {
   PersonalizedLearningPathDto,
   PersonalizedLearningPathItemDto,
   PersonalizedLearningPathHelper,
-  LearningPathProgressDto
+  LearningPathProgressDto,
+  PersonalizedPathAvailabilityDto
 } from '../../../core/models/learning-path.model';
 
 @Component({
@@ -26,10 +27,11 @@ export class LearningPathPageComponent implements OnInit, OnDestroy {
   learningPath: PersonalizedLearningPathDto | null = null;
   progressSummary: LearningPathProgressDto | null = null;
   loading = true;
+  availability: PersonalizedPathAvailabilityDto | null = null;
+  error = false;
 
-  selectedTabIndex = 0; // 0: incomplete, 1: completed, 2: all
   currentPage = 0;
-  pageSize = 20;
+  pageSize = 5;
   totalItems = 0;
   generating = false;
 
@@ -39,8 +41,23 @@ export class LearningPathPageComponent implements OnInit, OnDestroy {
   ) { }
 
   ngOnInit(): void {
-    this.loadProgressSummary();
-    this.loadLearningPath();
+    this.learningPathService.getPersonalizedPathAvailability()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: availability => {
+          this.availability = availability;
+          if (!availability.isAvailable) {
+            this.loading = false;
+            return;
+          }
+          this.loadProgressSummary();
+          this.loadLearningPath();
+        },
+        error: () => {
+          this.error = true;
+          this.loading = false;
+        }
+      });
   }
 
   ngOnDestroy(): void {
@@ -64,23 +81,12 @@ export class LearningPathPageComponent implements OnInit, OnDestroy {
   loadLearningPath(): void {
     this.loading = true;
     const pageNumber = this.currentPage + 1; // Backend 1-indexed
-    const onlyCompleted = this.selectedTabIndex === 1;
-
     this.learningPathService.getPersonalizedLearningPath(pageNumber, this.pageSize)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (path) => {
-          // Client-side incomplete/completed filtering
-          if (onlyCompleted) {
-            path.items = path.items?.filter(item => item.isCompleted) ?? [];
-          } else if (this.selectedTabIndex === 0) {
-            path.items = path.items?.filter(item => !item.isCompleted) ?? [];
-          }
-
           this.learningPath = path;
-          this.totalItems = this.selectedTabIndex === 0 ? (path.remainingItems ?? path.items?.length ?? 0) :
-            onlyCompleted ? (path.completedItems ?? path.items?.length ?? 0) :
-              (path.totalItems ?? 0);
+          this.totalItems = path.totalItems ?? 0;
           this.loading = false;
         },
         error: (err) => {
@@ -88,12 +94,6 @@ export class LearningPathPageComponent implements OnInit, OnDestroy {
           this.loading = false;
         }
       });
-  }
-
-  onTabChange(index: number): void {
-    this.selectedTabIndex = index;
-    this.currentPage = 0;
-    this.loadLearningPath();
   }
 
   onPageChange(pageIndex: number, pageSize: number): void {
@@ -108,6 +108,7 @@ export class LearningPathPageComponent implements OnInit, OnDestroy {
   }
 
   navigateToItem(item: PersonalizedLearningPathItemDto): void {
+    if (!item.isUnlocked || item.isCompleted) return;
     const route = PersonalizedLearningPathHelper.getContentRoute(
       item.contentType,
       item.contentId
@@ -156,22 +157,15 @@ export class LearningPathPageComponent implements OnInit, OnDestroy {
   }
 
   getEmptyStateTitle(): string {
-    if (this.selectedTabIndex === 0) return 'Harika İş!';
-    if (this.selectedTabIndex === 1) return 'Henüz Tamamlanmış İçerik Yok';
-    return 'Öğrenme Yolu Bulunamadı';
+    return 'Şu an ek çalışma önerilmiyor';
   }
 
   getEmptyStateMessage(): string {
-    if (this.selectedTabIndex === 0) {
-      return 'Tüm içerikleri tamamladın! Yeni içerikler yakında eklenecek.';
-    }
-    if (this.selectedTabIndex === 1) {
-      return 'Henüz hiç içerik tamamlamadın. İlk adımını atmaya hazır mısın?';
-    }
-    return 'Öğrenme yolun oluşturulmadı. Lütfen profilini tamamla.';
+    return 'Ana programına devam et. Ölçümlerinde destek ihtiyacı görülürse burada kısa, hedefli öneriler belirecek.';
   }
 
   generatePath(): void {
+    if (!this.availability?.isAvailable) return;
     this.generating = true;
     this.learningPathService.generatePersonalizedPath()
       .pipe(takeUntil(this.destroy$))

@@ -134,7 +134,7 @@ export class AuthService implements OnDestroy {
 
     async loginWithGoogle(idToken: string): Promise<AuthLoginResult> {
         const response = await firstValueFrom(this.httpClient.post<AuthLoginResponse>(
-            `${environment.apiUrl}/auth/google-login`,
+            `${environment.apiUrl}/auth/coaching/google-login`,
             { idToken },
             { withCredentials: true }));
         return this.handleLoginResponse(response);
@@ -152,7 +152,7 @@ export class AuthService implements OnDestroy {
         pass: string,
         rememberMe: boolean = true): Promise<AuthLoginResult> {
         const response = await firstValueFrom(this.httpClient.post<AuthLoginResponse>(
-            `${environment.apiUrl}/auth/login`,
+            `${environment.apiUrl}/auth/coaching/login`,
             { email, password: pass, rememberMe },
             { withCredentials: true }));
         return this.handleLoginResponse(response);

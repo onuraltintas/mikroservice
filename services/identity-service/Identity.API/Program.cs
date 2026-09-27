@@ -15,6 +15,7 @@ using DotNetEnv;
 using EduPlatform.Shared.Security.Services;
 using EduPlatform.Shared.Security.Authorization;
 using Identity.Infrastructure.Services;
+using Identity.API.Security;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
 // Load .env file from solution root
@@ -222,6 +223,7 @@ app.UseRouting();
 app.UseCors("AllowAll");
 
 app.UseAuthentication();
+app.UseMiddleware<IdentityProductScopeMiddleware>();
 app.UseMiddleware<AdminAuditMiddleware>();
 app.UseAuthorization();
 

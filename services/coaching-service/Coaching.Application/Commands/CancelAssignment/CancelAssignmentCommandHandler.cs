@@ -28,7 +28,7 @@ public class CancelAssignmentCommandHandler : IRequestHandler<CancelAssignmentCo
         if (assignment == null)
             throw new InvalidOperationException($"Assignment {command.AssignmentId} not found");
 
-        _accessPolicy.RequireTeacher(assignment.TeacherId);
+        _accessPolicy.RequireTeacher(assignment.TeacherId, command.IsInstitutionAdminOperation);
 
         // Domain logic: Cancel (Soft delete logic)
         assignment.Cancel();

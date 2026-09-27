@@ -128,14 +128,19 @@ internal sealed class OwnedSpeedReadingSeriesAccess(OwnedSpeedReadingDbContext d
                 foreach (var activeProgram in activePrograms)
                     activeProgram.Deactivate(userId, now);
 
-                db.StudentProgramProgresses.Add(StudentProgramProgress.Start(
+                var progress = StudentProgramProgress.Start(
                     Guid.NewGuid(),
                     userId,
                     template,
                     previous?.CurrentStreak ?? 0,
                     previous?.LongestStreak ?? 0,
                     userId,
-                    now));
+                    now);
+                progress.SetSchedule(
+                    await OwnedSpeedReadingProgramSchedule.BuildAsync(db, template, null, cancellationToken),
+                    userId,
+                    now);
+                db.StudentProgramProgresses.Add(progress);
                 await db.SaveChangesAsync(cancellationToken);
                 if (transaction is not null)
                     await transaction.CommitAsync(cancellationToken);

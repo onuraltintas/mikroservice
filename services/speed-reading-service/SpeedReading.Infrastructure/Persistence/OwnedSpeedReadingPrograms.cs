@@ -48,14 +48,24 @@ internal sealed class OwnedSpeedReadingPrograms(
 
     public async Task<IReadOnlyList<StudentProgramProgressSummary>> GetStudentProgressAsync(
         Guid userId,
-        CancellationToken cancellationToken = default) =>
-        await db.StudentProgramProgresses
+        CancellationToken cancellationToken = default)
+    {
+        var rows = await db.StudentProgramProgresses
             .AsNoTracking()
             .Where(item => item.UserId == userId)
             .OrderByDescending(item => item.IsActive)
             .ThenByDescending(item => item.AssignedDate)
             .Select(ToProgressSummary())
             .ToListAsync(cancellationToken);
+        return rows.Select(item =>
+        {
+            if (!item.IsActive || item.CompletedDate.HasValue) return item;
+            var visibleDay = Math.Min(((item.CurrentWeek - 1) * 7) + item.CurrentDay,
+                SpeedReading.Application.DailyProgress.SpeedReadingDailyProgressRules.GetCalendarAvailableDay(item.AssignedDate, DateTime.UtcNow));
+            var (week, day) = SpeedReading.Application.DailyProgress.SpeedReadingDailyProgressRules.GetWeekAndDay(visibleDay);
+            return item with { CurrentWeek = week, CurrentDay = day };
+        }).ToList();
+    }
 
     public async Task<SpeedReadingPage<AdminStudentProgressSummary>> GetAdminStudentProgressAsync(
         SpeedReadingProgressAccessScope accessScope,
@@ -148,6 +158,16 @@ internal sealed class OwnedSpeedReadingPrograms(
             size,
             searchTotalCount);
     }
+
+    public Task<Guid?> GetStudentUserIdForProgressAsync(
+        SpeedReadingProgressAccessScope accessScope,
+        Guid progressId,
+        CancellationToken cancellationToken = default) =>
+        db.StudentProgramProgresses.AsNoTracking()
+            .Where(item => item.Id == progressId &&
+                (accessScope.IsGlobal || accessScope.StudentUserIds.Contains(item.UserId)))
+            .Select(item => (Guid?)item.UserId)
+            .SingleOrDefaultAsync(cancellationToken);
 
     public async Task<AdminStudentProgressDetails?> GetAdminStudentProgressDetailsAsync(
         SpeedReadingProgressAccessScope accessScope,

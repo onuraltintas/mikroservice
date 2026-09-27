@@ -12,7 +12,7 @@ import { filter, take } from 'rxjs/operators';
  * private learningPathCompletion = inject(ExerciseLearningPathService);
  *
  * finishExercise() {
- *   this.learningPathCompletion.completeIfFromPath(this.performanceScore);
+ *   this.learningPathCompletion.completeIfFromPath(this.completedSessionId);
  * }
  * ```
  *
@@ -34,10 +34,10 @@ export class ExerciseLearningPathService {
    * Complete learning path item if this content was started from learning path.
    * This method reads the pathItemId from query parameters and completes the item if it exists.
    *
-   * @param achievedScore - The performance score achieved (0-100)
+   * @param sessionId - Completed server session identifier
    * @param contentType - Optional content type for logging (default: 'İçerik')
    */
-  completeIfFromPath(achievedScore: number, contentType: string = 'İçerik'): void {
+  completeIfFromPath(sessionId: string, contentType: string = 'İçerik'): void {
     this.route.queryParams
       .pipe(
         take(1), // Only take the first emission
@@ -46,7 +46,7 @@ export class ExerciseLearningPathService {
       .subscribe(params => {
         const pathItemId = params['pathItemId'];
 
-        this.learningPathService.completePersonalizedPathItem(pathItemId, achievedScore)
+        this.learningPathService.completePersonalizedPathItem(pathItemId, sessionId)
           .subscribe({
             next: (response) => {
 

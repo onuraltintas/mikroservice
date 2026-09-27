@@ -21,8 +21,8 @@ import { RadarChartComponent } from '../../../shared/components/charts/radar-cha
 import { AuthService } from '../../../core/services/auth.service';
 import { TeachersService } from '../../../core/services/teachers.service';
 import { StudentsService } from '../../../core/services/students.service';
-import { map, startWith, takeUntil } from 'rxjs/operators';
-import { Observable, Subject } from 'rxjs';
+import { catchError, debounceTime, finalize, map, startWith, switchMap, takeUntil, tap } from 'rxjs/operators';
+import { Observable, of, Subject } from 'rxjs';
 
 type DateRangePreset = '7days' | '30days' | '90days' | 'thisMonth' | 'thisSemester' | 'custom';
 
@@ -69,9 +69,10 @@ export class TeacherStudentDetailReportComponent implements OnInit, OnDestroy {
   loading = signal(false);
   loadingStudents = signal(false);
   privacyRestricted = signal(false);
+  reportError = signal<string | null>(null);
 
   // Student autocomplete
-  studentSearchControl = new FormControl('');
+  studentSearchControl = new FormControl<string | StudentOption>('');
   selectedStudentId = signal<string | null>(null);
   students: StudentOption[] = [];
   filteredStudents$!: Observable<StudentOption[]>;
@@ -96,7 +97,11 @@ export class TeacherStudentDetailReportComponent implements OnInit, OnDestroy {
     // Setup autocomplete filter
     this.filteredStudents$ = this.studentSearchControl.valueChanges.pipe(
       startWith(''),
-      map(value => this.filterStudents(value || ''))
+      debounceTime(250),
+      switchMap(value => typeof value === 'string'
+        ? this.searchStudents(value)
+        : of(value ? [value] : [])),
+      takeUntil(this.destroy$)
     );
 
     const initialStudentId = this.route.snapshot.paramMap.get('studentId')
@@ -117,7 +122,11 @@ export class TeacherStudentDetailReportComponent implements OnInit, OnDestroy {
         }
 
         if (teacherChanged) {
-          this.loadStudents();
+          if (this.selectedStudentId()) {
+            this.loadSelectedStudentOption();
+          } else {
+            this.studentSearchControl.setValue('', { emitEvent: true });
+          }
           if (this.selectedStudentId()) this.loadReport();
         } else if (studentId && this.report() === null) {
           this.loadReport();
@@ -128,14 +137,6 @@ export class TeacherStudentDetailReportComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
-  }
-
-  private filterStudents(value: string | StudentOption): StudentOption[] {
-    // Handle both string input and object (when student is selected)
-    const filterValue = typeof value === 'string'
-      ? value.toLowerCase()
-      : (value?.name || '').toLowerCase();
-    return this.students.filter(s => s.name.toLowerCase().includes(filterValue));
   }
 
   displayStudent(student: StudentOption): string {
@@ -156,35 +157,44 @@ export class TeacherStudentDetailReportComponent implements OnInit, OnDestroy {
     }
   }
 
-  loadStudents(): void {
-    this.loadingStudents.set(true);
-
+  private searchStudents(searchTerm: string): Observable<StudentOption[]> {
+    const term = searchTerm.trim();
     const selectedTeacherId = this.activeTeacherId ?? undefined;
+    const page$ = this.isInstitutionViewer()
+      ? this.studentsService.getInstitutionStudentsPage(1, 25, term || undefined, undefined, undefined, selectedTeacherId)
+      : this.teachersService.getMyStudentsPage(1, 25, term || undefined);
 
-    const roster$ = this.isInstitutionViewer()
-      ? this.studentsService.getInstitutionStudents(undefined, undefined, undefined, selectedTeacherId)
-      : this.teachersService.getMyStudents();
-    roster$.pipe(takeUntil(this.destroy$)).subscribe({
-      next: (data) => {
-        this.students = data.map(s => ({
-          id: s.id,
-          name: `${s.firstName ?? ''} ${s.lastName ?? ''}`.trim()
-        }));
-        this.loadingStudents.set(false);
-
-        // If we have a pre-selected student ID, find and set the display value
-        const preSelectedId = this.selectedStudentId();
-        if (preSelectedId) {
-          const student = this.students.find(s => s.id === preSelectedId);
-          if (student) {
-            this.studentSearchControl.setValue(student as any);
-          }
-        }
-      },
-      error: (err) => {
+    this.loadingStudents.set(true);
+    return page$.pipe(
+      map(page => page.items.map(student => ({
+        id: student.id,
+        name: `${student.firstName ?? ''} ${student.lastName ?? ''}`.trim()
+      }))),
+      tap(options => this.students = options),
+      catchError(err => {
         console.error('Error loading students:', err);
-        this.loadingStudents.set(false);
-      }
+        this.students = [];
+        return of([]);
+      }),
+      finalize(() => this.loadingStudents.set(false))
+    );
+  }
+
+  private loadSelectedStudentOption(): void {
+    const studentId = this.selectedStudentId();
+    if (!studentId) return;
+    const selectedTeacherId = this.activeTeacherId ?? undefined;
+    const student$ = this.isInstitutionViewer()
+      ? this.studentsService.getInstitutionStudentById(studentId, selectedTeacherId)
+      : this.teachersService.getMyStudentById(studentId);
+
+    this.loadingStudents.set(true);
+    student$.pipe(takeUntil(this.destroy$), finalize(() => this.loadingStudents.set(false))).subscribe({
+      next: student => {
+        this.students = student ? [{ id: student.id, name: `${student.firstName} ${student.lastName}`.trim() }] : [];
+        if (this.students.length > 0) this.studentSearchControl.setValue(this.students[0], { emitEvent: true });
+      },
+      error: err => console.error('Error loading selected student:', err)
     });
   }
 
@@ -271,9 +281,21 @@ export class TeacherStudentDetailReportComponent implements OnInit, OnDestroy {
 
     this.loading.set(true);
     this.privacyRestricted.set(false);
+    this.reportError.set(null);
     const { startDate, endDate } = this.getDateRange();
+    const institutionWide = this.isInstitutionViewer() && !selectedTeacherId;
+    const institutionId = this.authService.currentUserValue?.institutionId;
+    if (institutionWide && !institutionId) {
+      this.reportError.set('Kurum bilgisi bulunamadı. Lütfen yeniden giriş yapın.');
+      this.loading.set(false);
+      return;
+    }
 
-    this.reportsService.getTeacherStudentDetailReport(teacherId, studentId, startDate, endDate)
+    const reportRequest = institutionWide
+      ? this.reportsService.getInstitutionStudentDetailReport(institutionId!, studentId, startDate, endDate)
+      : this.reportsService.getTeacherStudentDetailReport(teacherId, studentId, startDate, endDate);
+
+    reportRequest
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (data) => {
@@ -284,6 +306,7 @@ export class TeacherStudentDetailReportComponent implements OnInit, OnDestroy {
           console.error('Error loading report:', err);
           this.report.set(null);
           this.privacyRestricted.set(err?.status === 403);
+          if (err?.status !== 403) this.reportError.set('Öğrenci raporu yüklenemedi. Lütfen tekrar deneyin.');
           this.loading.set(false);
         }
       });

@@ -165,6 +165,11 @@ export class FocusEngine implements BaseEngine {
     }
 
     start(): void {
+        if (this.sequenceLength <= 0) {
+            this.callbacks.onError('N-back uyaran dizisi alınamadı. Egzersiz yapılandırmasını kontrol edin.');
+            return;
+        }
+
         this.state.isRunning = true;
         this.state.isPaused = false;
         this.state.isCompleted = false;
@@ -192,9 +197,13 @@ export class FocusEngine implements BaseEngine {
         this.expectedTime = Date.now();
         this.calculateNextStepTime();
         this.advanceStep();
+        if (!this.state.isRunning || this.state.isCompleted) return;
 
         this.pacerInterval = setInterval(() => {
-            if (!this.state.isPaused && Date.now() >= this.nextStepTime) {
+            if (this.state.isRunning
+                && !this.state.isPaused
+                && !this.state.isCompleted
+                && Date.now() >= this.nextStepTime) {
                 this.advanceStep();
             }
         }, 50);
@@ -579,6 +588,8 @@ export class FocusEngine implements BaseEngine {
     }
 
     private complete(): void {
+        if (this.state.isCompleted) return;
+
         // Check final step misses
         if (this.currentIndex > 0) {
             this.checkMisses();

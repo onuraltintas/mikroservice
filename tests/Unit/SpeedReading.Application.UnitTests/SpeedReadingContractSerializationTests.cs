@@ -1,4 +1,5 @@
 using System.Text.Json;
+using EduPlatform.Shared.Contracts.Reporting;
 using FluentAssertions;
 using SpeedReading.Application.ExerciseSessions;
 using SpeedReading.Application.Gamification;
@@ -12,6 +13,20 @@ namespace SpeedReading.Application.UnitTests;
 
 public sealed class SpeedReadingContractSerializationTests
 {
+    [Fact]
+    public void Institution_directory_contract_contains_metadata_only()
+    {
+        var item = new SpeedReadingInstitutionScopeItem(Guid.NewGuid(), "Atatürk Ortaokulu", true);
+
+        var json = JsonSerializer.Serialize(item, JsonOptions);
+
+        json.Should().Contain("institutionId");
+        json.Should().Contain("institutionName");
+        json.Should().NotContain("totalStudents");
+        json.Should().NotContain("totalTeachers");
+        json.Should().NotContain("totalAdmins");
+    }
+
     [Fact]
     public void Institution_access_request_keeps_the_institution_and_transfer_reference()
     {
@@ -221,6 +236,18 @@ public sealed class SpeedReadingContractSerializationTests
         sanitized.ToLowerInvariant().Should().NotContain("positionsequence");
         sanitized.ToLowerInvariant().Should().NotContain("wordsequence");
         sanitized.ToLowerInvariant().Should().NotContain("positiontargetindices");
+    }
+
+    [Fact]
+    public void Fixation_payload_hides_the_pending_answer_key()
+    {
+        using var document = JsonDocument.Parse(
+            """{"fixationRound":2,"fixationExpectedStimuli":["A","B"]}""");
+
+        var sanitized = SpeedReadingContentSecurity.SanitizeFocusAssessmentJson(document.RootElement).GetRawText();
+
+        sanitized.Should().Contain("\"fixationRound\":2");
+        sanitized.ToLowerInvariant().Should().NotContain("fixationexpectedstimuli");
     }
 
     [Fact]

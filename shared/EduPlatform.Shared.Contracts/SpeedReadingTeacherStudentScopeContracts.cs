@@ -14,4 +14,5 @@ public sealed record SpeedReadingTeacherStudentScopeResponse(
     IReadOnlyList<Guid> InstitutionIds,
     IReadOnlyList<Guid> StudentUserIds,
     int TotalStudents,
-    IReadOnlyList<Guid>? RestrictedStudentUserIds = null);
+    IReadOnlyList<Guid>? RestrictedStudentUserIds = null,
+    Guid? ReportingTeacherUserId = null);

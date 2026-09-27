@@ -114,12 +114,16 @@ export interface AssessmentExercisesDto {
 
 export interface AssessmentResultDto {
   recommendedLevel: string;
+  averageWPM: number;
   averageScore: number;
+  averageComprehension: number;
   comprehensionScore: number;
   tachistoscopeScore: number;
   visualExpansionScore: number;
   fixationScore: number;
   focusScore: number; // Deprecated - kept for backward compatibility
+  targetWPM?: number | null;
+  targetComprehension?: number | null;
   recommendedSeriesId?: string;
   recommendedProgressId?: string;
   recommendedSeriesName: string;

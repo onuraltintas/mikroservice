@@ -3,6 +3,7 @@ using EduPlatform.Shared.Kernel.Exceptions;
 using Microsoft.EntityFrameworkCore;
 using SpeedReading.Application.Analytics;
 using SpeedReading.Application.Assignments;
+using SpeedReading.Domain.Institutions;
 
 namespace SpeedReading.Infrastructure.Persistence;
 
@@ -180,8 +181,10 @@ internal sealed class OwnedSpeedReadingAdminAnalytics(
         var (start, end) = NormalizeRange(dateFrom, dateTo);
         var directory = await institutionDirectory.GetInstitutionsAsync(cancellationToken);
         var activeDirectory = directory.Institutions.Where(item => item.IsActive).ToList();
-        var profiles = await db.UserProfiles.AsNoTracking().Where(item => item.IsActive && item.InstitutionId.HasValue)
-            .Select(item => new { item.UserId, InstitutionId = item.InstitutionId!.Value }).ToListAsync(cancellationToken);
+        var memberships = await db.InstitutionMemberships.AsNoTracking()
+            .Where(item => item.IsActive)
+            .Select(item => new { item.InstitutionId, item.UserId, item.Role })
+            .ToListAsync(cancellationToken);
         var reading = await db.ReadingSessions.AsNoTracking()
             .Where(item => item.CompletedAt >= start && item.CompletedAt <= end)
             .Select(item => new { item.UserId, item.CalculatedWpm, item.IsMeasured, item.TotalQuestions, item.ComprehensionRate }).ToListAsync(cancellationToken);
@@ -190,11 +193,26 @@ internal sealed class OwnedSpeedReadingAdminAnalytics(
         var comparisons = new List<AdminInstitutionComparison>();
         foreach (var institution in directory.Institutions)
         {
-            var ids = profiles.Where(item => item.InstitutionId == institution.InstitutionId).Select(item => item.UserId).ToHashSet();
-            var institutionReadings = reading.Where(item => ids.Contains(item.UserId)).ToList();
-            var activityCount = institutionReadings.Count + exercises.Count(item => ids.Contains(item.UserId));
-            var activeUsers = reading.Where(item => ids.Contains(item.UserId)).Select(item => item.UserId)
-                .Concat(exercises.Where(item => ids.Contains(item.UserId)).Select(item => item.UserId)).Distinct().Count();
+            var institutionMembers = memberships
+                .Where(item => item.InstitutionId == institution.InstitutionId)
+                .ToList();
+            var studentIds = institutionMembers
+                .Where(item => item.Role == SpeedReadingInstitutionMemberRole.Student)
+                .Select(item => item.UserId)
+                .ToHashSet();
+            var memberIds = institutionMembers.Select(item => item.UserId).ToHashSet();
+            var totalStudents = studentIds.Count;
+            var totalTeachers = institutionMembers
+                .Where(item => item.Role == SpeedReadingInstitutionMemberRole.Teacher)
+                .Select(item => item.UserId)
+                .Distinct()
+                .Count();
+            var totalUsers = totalStudents + totalTeachers;
+            var institutionReadings = reading.Where(item => studentIds.Contains(item.UserId)).ToList();
+            var activityCount = reading.Count(item => memberIds.Contains(item.UserId))
+                + exercises.Count(item => memberIds.Contains(item.UserId));
+            var activeUsers = reading.Where(item => memberIds.Contains(item.UserId)).Select(item => item.UserId)
+                .Concat(exercises.Where(item => memberIds.Contains(item.UserId)).Select(item => item.UserId)).Distinct().Count();
             var averageWpm = AverageMeasuredWpm(institutionReadings, item => item.IsMeasured, item => item.CalculatedWpm);
             var hasWpm = institutionReadings.Any(item => item.IsMeasured && item.CalculatedWpm > 0);
             var averageComprehension = AverageComprehension(institutionReadings, item => item.TotalQuestions, item => item.ComprehensionRate);
@@ -205,17 +223,17 @@ internal sealed class OwnedSpeedReadingAdminAnalytics(
             comparisons.Add(new AdminInstitutionComparison(
                 institution.InstitutionId,
                 institution.InstitutionName,
-                institution.TotalStudents + institution.TotalTeachers + institution.TotalAdmins,
+                totalUsers,
                 activeUsers,
-                institution.TotalStudents,
-                institution.TotalTeachers,
+                totalStudents,
+                totalTeachers,
                 activityCount,
                 Math.Round(averageWpm, 2),
                 hasWpm,
                 Math.Round(averageComprehension, 2),
                 hasComprehension,
                 Math.Round(averagePerformance, 2),
-                institution.TotalStudents + institution.TotalTeachers + institution.TotalAdmins == 0 ? 0 : Math.Round((decimal)activeUsers / (institution.TotalStudents + institution.TotalTeachers + institution.TotalAdmins) * 100, 2)));
+                totalUsers == 0 ? 0 : Math.Round((decimal)activeUsers / totalUsers * 100, 2)));
         }
         var comparisonChart = new AdminAnalyticsChartData("Kurumlar", comparisons.Select(item => new AdminAnalyticsChartSeries(item.InstitutionName, item.AveragePerformance)).ToList());
         var top = comparisons.OrderByDescending(item => item.AveragePerformance).Take(10)
@@ -223,9 +241,9 @@ internal sealed class OwnedSpeedReadingAdminAnalytics(
                 item.AverageComprehension, item.AverageComprehensionDataAvailable, item.TotalStudents, item.TotalStudents > 0, item.TotalActivities)).ToList();
         return new AdminInstitutionAnalytics(
             start, end, directory.Institutions.Count, activeDirectory.Count,
-            directory.Institutions.Sum(item => item.TotalStudents + item.TotalTeachers + item.TotalAdmins),
-            directory.Institutions.Sum(item => item.TotalStudents),
-            directory.Institutions.Sum(item => item.TotalTeachers),
+            comparisons.Sum(item => item.TotalUsers),
+            comparisons.Sum(item => item.TotalStudents),
+            comparisons.Sum(item => item.TotalTeachers),
             comparisons, comparisonChart, [], [], [], top);
     }
 

@@ -35,7 +35,7 @@ public sealed class CoachingPeopleRosterTests
             new DomainUserRole(teacher.Id, teacherRole.Id),
             new DomainUserRole(student.Id, studentRole.Id),
             new DomainUserRole(outsideStudent.Id, studentRole.Id));
-        context.InstitutionAdmins.Add(InstitutionAdmin.Create(admin.Id, own.Id, InstitutionAdminRole.Admin));
+        context.InstitutionAdmins.Add(InstitutionAdmin.Create(admin.Id, own.Id, InstitutionAdminRole.Admin, PlatformProduct.Coaching));
         var teacherProfile = TeacherProfile.Create(teacher.Id, "Ayşe", "Öğretmen", own.Id);
         var studentProfile = StudentProfile.Create(student.Id, "Ali", "Öğrenci", own.Id);
         context.TeacherProfiles.Add(teacherProfile);

@@ -23,7 +23,7 @@ public sealed class InstitutionAuthorizationTests
             ownInstitution,
             otherInstitution,
             admin,
-            InstitutionAdmin.Create(admin.Id, ownInstitution.Id, InstitutionAdminRole.Admin));
+            InstitutionAdmin.Create(admin.Id, ownInstitution.Id, InstitutionAdminRole.Admin, PlatformProduct.Coaching));
         await context.SaveChangesAsync();
 
         var authorization = new InstitutionManagementAuthorization(
@@ -77,6 +77,7 @@ public sealed class InstitutionAuthorizationTests
         public string? FullName => null;
         public IEnumerable<string> Roles => _roles;
         public bool IsAuthenticated => true;
-        public ClaimsPrincipal? User => null;
+        public ClaimsPrincipal? User => new(
+            new ClaimsIdentity([new Claim("platform_product", "coaching")]));
     }
 }

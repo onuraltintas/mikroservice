@@ -13,5 +13,6 @@ public record RegisterInstitutionCommand(
     InstitutionType InstitutionType,
     string? Phone,
     string ProvinceId,
-    string DistrictId
+    string DistrictId,
+    PlatformProduct? Product = null
 ) : IRequest<Result<Guid>>;

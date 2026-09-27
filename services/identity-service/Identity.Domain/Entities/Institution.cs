@@ -153,6 +153,9 @@ public class InstitutionAdmin : Entity
     
     public Guid InstitutionId { get; private set; }
     public Institution Institution { get; private set; } = null!;
+
+    // Nullable for historical rows whose product cannot be inferred safely.
+    public PlatformProduct? Product { get; private set; }
     
     public InstitutionAdminRole Role { get; private set; }
     public string? Permissions { get; private set; } // JSON
@@ -160,13 +163,23 @@ public class InstitutionAdmin : Entity
 
     private InstitutionAdmin() { }
 
-    public static InstitutionAdmin Create(Guid userId, Guid institutionId, InstitutionAdminRole role)
+    public static InstitutionAdmin Create(
+        Guid userId,
+        Guid institutionId,
+        InstitutionAdminRole role,
+        PlatformProduct product)
     {
+        if (!Enum.IsDefined(product))
+        {
+            throw new ArgumentOutOfRangeException(nameof(product));
+        }
+
         return new InstitutionAdmin
         {
             UserId = userId,
             InstitutionId = institutionId,
-            Role = role
+            Role = role,
+            Product = product
         };
     }
 

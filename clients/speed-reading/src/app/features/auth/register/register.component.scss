@@ -34,11 +34,13 @@ form { display: flex; flex-direction: column; gap: 0.7rem; }
 .form-row { display: flex; gap: 0.75rem; }
 .half-width { flex: 1; min-width: 0; }
 .full-width { width: 100%; }
+input[matInput]:focus-visible { outline: none; box-shadow: none; }
 .password-hint { margin-top: -0.3rem; color: #9a6700; font-size: 0.75rem; }
 .consents-wrapper { display: grid; gap: 0.4rem; padding: 0.7rem; border: 1px solid #e1ebea; border-radius: 0.75rem; background: #f8fbfa; }
 .consents-wrapper mat-checkbox { font-size: 0.8rem; }
 .consents-wrapper a, .login-redirect a { color: #0f766e; font-weight: 700; text-decoration: none; }
 .consents-wrapper a:hover, .login-redirect a:hover { text-decoration: underline; }
+.consent-hint { margin: 0; color: #8a4b0a; font-size: 0.78rem; line-height: 1.4; }
 .error-message { display: flex; gap: 0.45rem; align-items: center; padding: 0.65rem; border-radius: 0.7rem; color: #b42318; background: #fff1f0; font-size: 0.82rem; }
 .submit-btn { min-height: 3rem; border-radius: 0.75rem; background: #0f766e !important; color: #fff !important; font-weight: 800; box-shadow: 0 0.5rem 1rem rgba(15, 118, 110, 0.2); }
 .submit-btn:hover:not(:disabled) { background: #0b5e58 !important; }
