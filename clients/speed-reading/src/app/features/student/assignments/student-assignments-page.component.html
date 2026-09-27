@@ -33,7 +33,7 @@
                     <span class="material-icons">stars</span>
                 </div>
                 <div class="stat-info">
-                    <span class="value">%{{ stats.averageScore }}</span>
+                    <span class="value">{{ stats.averageScore === null ? 'Henüz puan yok' : '%' + stats.averageScore }}</span>
                     <span class="label">Ort. Başarı</span>
                 </div>
             </div>

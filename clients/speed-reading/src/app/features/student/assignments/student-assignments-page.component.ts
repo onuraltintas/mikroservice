@@ -31,7 +31,7 @@ export class StudentAssignmentsPageComponent implements OnInit {
     stats = {
         pending: 0,
         completed: 0,
-        averageScore: 0
+        averageScore: null as number | null
     };
 
     ngOnInit() {
@@ -71,9 +71,12 @@ export class StudentAssignmentsPageComponent implements OnInit {
         this.stats.pending = this.assignments.filter(a => !a.isCompleted).length;
         this.stats.completed = this.assignments.filter(a => a.isCompleted).length;
 
-        // Mock score calc - in real app would come from assignment result if available
-        // Assuming backend might add score to DTO later
-        this.stats.averageScore = 0;
+        const scores = this.assignments
+            .filter(a => a.isCompleted && a.score != null && Number.isFinite(a.score))
+            .map(a => a.score as number);
+        this.stats.averageScore = scores.length > 0
+            ? Math.round(scores.reduce((sum, score) => sum + score, 0) / scores.length * 10) / 10
+            : null;
     }
 
     filterAssignments() {
