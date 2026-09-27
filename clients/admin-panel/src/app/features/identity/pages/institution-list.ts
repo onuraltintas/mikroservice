@@ -1,4 +1,5 @@
 import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { Component, inject, PLATFORM_ID, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { computed } from '@angular/core';
@@ -11,7 +12,7 @@ import { DistrictOption, LocationService, ProvinceOption } from '../../../core/s
 @Component({
   selector: 'app-institution-list',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   template: `
     <section class="space-y-6">
       <header class="flex flex-wrap items-center justify-between gap-3">
@@ -57,6 +58,7 @@ import { DistrictOption, LocationService, ProvinceOption } from '../../../core/s
       @if (adminInstitution(); as institution) {
         <form class="grid gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4 shadow-sm dark:border-emerald-900 dark:bg-emerald-950/30 md:grid-cols-4" (ngSubmit)="assignAdmin()">
           <div class="md:col-span-4 font-semibold text-gray-900 dark:text-white">{{ institution.name }} kurumuna yönetici ata</div>
+          <select class="rounded-lg border p-2 dark:bg-gray-900" name="adminProduct" [(ngModel)]="adminDraft.product" (ngModelChange)="onAdminProductChange()" aria-label="Ürün seçin">@for (product of adminProducts; track product.value) { <option [ngValue]="product.value">{{ product.label }}</option> }</select>
           <div class="relative md:col-span-2"><label class="sr-only" for="institution-admin-search">Kurum yöneticisi ara</label><input id="institution-admin-search" class="w-full rounded-lg border p-2 dark:bg-gray-900" name="adminUserSearch" [(ngModel)]="adminUserSearch" (ngModelChange)="searchAdminCandidates($event)" placeholder="Yönetici adı veya e-postası ara" autocomplete="off" required>@if (adminCandidates().length > 0) {<div class="absolute z-10 mt-1 w-full overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-900" role="listbox" aria-label="Yönetici adayları">@for (candidate of adminCandidates(); track candidate.userId) {<button type="button" role="option" class="block w-full border-b px-3 py-2 text-left text-sm last:border-0 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800" (click)="selectAdminCandidate(candidate)"><strong>{{ candidate.fullName }}</strong><span class="block text-xs text-gray-500">{{ candidate.email }} · {{ candidate.roles.join(', ') }}</span></button>}</div>}</div>
           <select class="rounded-lg border p-2 dark:bg-gray-900" name="adminRole" [(ngModel)]="adminDraft.role">@for (role of adminRoles; track role.value) { <option [ngValue]="role.value">{{ role.label }}</option> }</select>
           <div class="flex gap-2"><button class="rounded-lg bg-emerald-600 px-4 py-2 text-white" [disabled]="saving()">Ata</button><button type="button" class="rounded-lg border px-4 py-2" (click)="adminInstitution.set(null)">Vazgeç</button></div>
@@ -77,7 +79,7 @@ import { DistrictOption, LocationService, ProvinceOption } from '../../../core/s
         <table class="min-w-full text-left text-sm"><thead class="border-b bg-gray-50 text-gray-500 dark:border-gray-700 dark:bg-gray-900"><tr><th class="p-3">Kurum</th><th class="p-3">Tür</th><th class="p-3">Kullanım</th><th class="p-3">Lisans</th><th class="p-3">Durum</th><th class="p-3">İşlem</th></tr></thead>
           <tbody>
             @for (institution of institutions(); track institution.id) {
-              <tr class="border-b last:border-0 dark:border-gray-700"><td class="p-3"><div class="font-semibold">{{ institution.name }}</div><div class="text-xs text-gray-500">{{ institution.city || 'Şehir yok' }} · {{ institution.email || 'E-posta yok' }}</div></td><td class="p-3">{{ typeName(institution.type) }}</td><td class="p-3">{{ institution.studentCount }}/{{ institution.maxStudents }} öğrenci<br>{{ institution.teacherCount }}/{{ institution.maxTeachers }} öğretmen</td><td class="p-3">{{ licenseName(institution.licenseType) }}</td><td class="p-3"><span [class]="institution.isActive ? 'text-emerald-600' : 'text-gray-500'">{{ institution.isActive ? 'Aktif' : 'Pasif' }}</span></td><td class="p-3"><div class="flex flex-wrap gap-2">@if (canManage()) { <button class="rounded border px-3 py-1" (click)="edit(institution)">Düzenle</button><button class="rounded border px-3 py-1" (click)="openAdmin(institution)">Yönetici ata</button> } @if (canChangeTenantSettings()) { <button class="rounded border px-3 py-1" (click)="toggle(institution)">{{ institution.isActive ? 'Pasifleştir' : 'Aktifleştir' }}</button> }</div></td></tr>
+              <tr class="border-b last:border-0 dark:border-gray-700"><td class="p-3"><div class="font-semibold">{{ institution.name }}</div><div class="text-xs text-gray-500">{{ institution.city || 'Şehir yok' }} · {{ institution.email || 'E-posta yok' }}</div></td><td class="p-3">{{ typeName(institution.type) }}</td><td class="p-3">{{ institution.studentCount }}/{{ institution.maxStudents }} öğrenci<br>{{ institution.teacherCount }}/{{ institution.maxTeachers }} öğretmen</td><td class="p-3">{{ licenseName(institution.licenseType) }}</td><td class="p-3"><span [class]="institution.isActive ? 'text-emerald-600' : 'text-gray-500'">{{ institution.isActive ? 'Aktif' : 'Pasif' }}</span></td><td class="p-3"><div class="flex flex-wrap gap-2">@if (canManage()) { <button class="rounded border px-3 py-1" (click)="edit(institution)">Düzenle</button><button class="rounded border px-3 py-1" (click)="openAdmin(institution)">Yönetici ata</button><a class="rounded border px-3 py-1" [routerLink]="['/dashboard/speed-reading/institutions', institution.id]">Hızlı Okuma üyeleri</a> } @if (canChangeTenantSettings()) { <button class="rounded border px-3 py-1" (click)="toggle(institution)">{{ institution.isActive ? 'Pasifleştir' : 'Aktifleştir' }}</button> }</div></td></tr>
             } @empty { <tr><td colspan="6" class="p-8 text-center text-gray-500">Kurum bulunamadı.</td></tr> }
           </tbody>
         </table>
@@ -115,11 +117,12 @@ export class InstitutionListComponent {
   activeFilter: boolean | undefined = true;
   draft = { name: '', type: 1, provinceId: '', districtId: '', email: '' };
   editDraft = { name: '', provinceId: '', districtId: '', phone: '', email: '', website: '', licenseType: 1, maxStudents: 50, maxTeachers: 5 };
-  adminDraft = { userId: '', role: 2 };
+  adminDraft = { userId: '', role: 2, product: 1 };
   adminUserSearch = '';
   institutionTypes = [{ value: 1, label: 'Okul' }, { value: 2, label: 'Dershane' }, { value: 3, label: 'Etüt Merkezi' }, { value: 4, label: 'Online Platform' }];
   licenseTypes = [{ value: 1, label: 'Deneme' }, { value: 2, label: 'Basic' }, { value: 3, label: 'Premium' }, { value: 4, label: 'Enterprise' }];
   adminRoles = [{ value: 1, label: 'Kurum sahibi' }, { value: 2, label: 'Yönetici' }, { value: 3, label: 'Müdür' }];
+  adminProducts = [{ value: 1, label: 'Koçluk' }, { value: 2, label: 'Hızlı Okuma' }];
 
   constructor() {
     if (isPlatformBrowser(this.platformId)) {
@@ -219,14 +222,26 @@ export class InstitutionListComponent {
     });
   }
 
-  openAdmin(institution: InstitutionDto) {
+  openAdmin(institution: InstitutionDto, product = 1) {
     this.editing.set(null);
     this.adminInstitution.set(institution);
-    this.adminDraft = { userId: '', role: 2 };
+    this.adminDraft = { userId: '', role: 2, product };
     this.adminUserSearch = '';
     this.adminCandidates.set([]);
     this.admins.set([]);
-    this.service.getAdmins(institution.id).subscribe({
+    this.loadInstitutionAdmins(institution.id);
+  }
+
+  onAdminProductChange() {
+    this.adminDraft.userId = '';
+    this.adminUserSearch = '';
+    this.adminCandidates.set([]);
+    const institution = this.adminInstitution();
+    if (institution) this.loadInstitutionAdmins(institution.id);
+  }
+
+  private loadInstitutionAdmins(institutionId: string) {
+    this.service.getAdmins(institutionId, this.adminDraft.product).subscribe({
       next: admins => this.admins.set(admins),
       error: () => this.error.set('Kurum yöneticileri yüklenemedi.')
     });
@@ -240,7 +255,7 @@ export class InstitutionListComponent {
       return;
     }
 
-    this.identityService.getAllUsers(1, 20, term, undefined, true).subscribe({
+    this.identityService.getAllUsers(1, 20, term, undefined, true, this.adminDraft.product).subscribe({
       next: result => this.adminCandidates.set(result.items.filter(user =>
         user.roles.includes('InstitutionAdmin') || user.roles.includes('InstitutionOwner'))),
       error: () => { this.adminCandidates.set([]); this.error.set('Yönetici adayları yüklenemedi.'); }
@@ -260,7 +275,7 @@ export class InstitutionListComponent {
       return;
     }
     this.saving.set(true);
-    this.service.assignAdmin(institution.id, this.adminDraft.userId.trim(), this.adminDraft.role).subscribe({
+    this.service.assignAdmin(institution.id, this.adminDraft.userId.trim(), this.adminDraft.role, this.adminDraft.product).subscribe({
       next: () => { this.saving.set(false); this.adminInstitution.set(null); this.load(); },
       error: () => { this.saving.set(false); this.error.set('Kurum yöneticisi atanamadı. Kullanıcı rolünü kontrol edin.'); }
     });
@@ -269,8 +284,8 @@ export class InstitutionListComponent {
   toggleAdmin(admin: InstitutionAdminDto) {
     const institution = this.adminInstitution();
     if (!institution) return;
-    this.service.setAdminActive(institution.id, admin.userId, !admin.isActive).subscribe({
-      next: () => this.openAdmin(institution),
+    this.service.setAdminActive(institution.id, admin.userId, !admin.isActive, this.adminDraft.product).subscribe({
+      next: () => this.openAdmin(institution, this.adminDraft.product),
       error: () => this.error.set('Kurum yöneticisi durumu güncellenemedi.')
     });
   }

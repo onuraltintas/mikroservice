@@ -30,6 +30,12 @@ export const DASHBOARD_ROUTES: Routes = [
         loadComponent: () => import('./pages/coaching-assignments').then(m => m.CoachingAssignmentsComponent)
     },
     {
+        path: 'speed-reading/institutions/:institutionId',
+        canActivate: [permissionGuard],
+        data: { permission: ADMIN_PERMISSIONS.institutionsManage },
+        loadComponent: () => import('./pages/speed-reading-institution-roster').then(m => m.SpeedReadingInstitutionRosterComponent)
+    },
+    {
         path: 'speed-reading/analytics',
         canActivate: [permissionGuard],
         data: { permission: ADMIN_PERMISSIONS.speedReadingPlatformAnalytics, defaultTab: 'platform' },

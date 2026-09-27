@@ -54,6 +54,10 @@ export class InstitutionService {
     return this.http.get<PagedInstitutions>(this.url, { params });
   }
 
+  getById(id: string) {
+    return this.http.get<InstitutionDto>(`${this.url}/${id}`);
+  }
+
   create(request: { name: string; type: number; provinceId?: string; districtId?: string; email?: string }) {
     const idempotencyKey = globalThis.crypto?.randomUUID?.()
       ?? `institution-${Date.now()}-${Math.random().toString(36).slice(2)}`;
@@ -70,15 +74,17 @@ export class InstitutionService {
     return this.http.post<void>(`${this.url}/${id}/active`, { isActive });
   }
 
-  assignAdmin(id: string, userId: string, role: number) {
-    return this.http.post<void>(`${this.url}/${id}/admins`, { userId, role });
+  assignAdmin(id: string, userId: string, role: number, product: number) {
+    return this.http.post<void>(`${this.url}/${id}/admins`, { userId, role, product });
   }
 
-  getAdmins(id: string) {
-    return this.http.get<InstitutionAdminDto[]>(`${this.url}/${id}/admins`);
+  getAdmins(id: string, product: number) {
+    return this.http.get<InstitutionAdminDto[]>(`${this.url}/${id}/admins`, {
+      params: new HttpParams().set('product', product)
+    });
   }
 
-  setAdminActive(id: string, userId: string, isActive: boolean) {
-    return this.http.post<void>(`${this.url}/${id}/admins/${userId}/active`, { isActive });
+  setAdminActive(id: string, userId: string, isActive: boolean, product: number) {
+    return this.http.post<void>(`${this.url}/${id}/admins/${userId}/active`, { isActive, product });
   }
 }
