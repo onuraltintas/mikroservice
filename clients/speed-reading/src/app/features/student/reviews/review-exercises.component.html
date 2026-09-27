@@ -42,6 +42,26 @@
         </div>
     </div>
 
+    <section class="sp-card content-section" *ngIf="history() !== null" aria-label="Tekrar geçmişi">
+        <div class="sp-card-header">
+            <h2 class="sp-card-title">{{ historyTitle() }} - Tekrar Geçmişi</h2>
+            <button type="button" class="sp-btn" (click)="history.set(null)" aria-label="Tekrar geçmişini kapat">Kapat</button>
+        </div>
+        <div class="sp-card-content">
+            <p *ngIf="history()!.length === 0">Bu egzersiz için henüz tamamlanmış tekrar yok.</p>
+            <table *ngIf="history()!.length > 0">
+                <thead><tr><th>Tarih</th><th>Puan</th><th>Sonraki aralık</th></tr></thead>
+                <tbody>
+                    <tr *ngFor="let item of history()">
+                        <td>{{ item.reviewedAt | date:'dd.MM.yyyy HH:mm' }}</td>
+                        <td>{{ item.score }}%</td>
+                        <td>{{ item.intervalDays }} gün</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
     <!-- Tabs -->
     <div class="sp-card content-section">
         <!-- Tab Buttons -->

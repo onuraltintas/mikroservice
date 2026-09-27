@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { ReviewService } from '../../../services/review.service';
 import { ToasterService } from '../../../core/services/toaster.service';
-import { ReviewExerciseDto } from '../../../models/student-panel.model';
+import { ReviewExerciseDto, ReviewHistoryDto } from '../../../models/student-panel.model';
 
 @Component({
   selector: 'app-review-exercises',
@@ -22,6 +22,8 @@ export class ReviewExercisesComponent implements OnInit {
   dueReviews = this.reviewService.dueReviews;
   statistics = this.reviewService.statistics;
   loading = signal(false);
+  history = signal<ReviewHistoryDto[] | null>(null);
+  historyTitle = signal('');
   activeTab = 0;
 
   ngOnInit() {
@@ -57,11 +59,13 @@ export class ReviewExercisesComponent implements OnInit {
 
   viewHistory(review: ReviewExerciseDto) {
     this.reviewService.getReviewHistory(review.exerciseId).subscribe({
-      next: () => {
-        this.toaster.info('Geçmiş görüntüleme özelliği yakında!', 2000);
+      next: (items) => {
+        this.historyTitle.set(review.exerciseTitle);
+        this.history.set(items);
       },
       error: (error) => {
         console.error('Error loading history:', error);
+        this.history.set(null);
         this.toaster.error('Geçmiş yüklenirken hata oluştu', 3000);
       }
     });
