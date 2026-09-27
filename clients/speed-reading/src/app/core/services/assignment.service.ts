@@ -29,6 +29,8 @@ export interface AssignmentDto {
 
 export interface TeacherAssignmentDto {
     id: string;
+    teacherId?: string;
+    teacherName?: string | null;
     title: string;
     description: string;
     exerciseTitle: string;

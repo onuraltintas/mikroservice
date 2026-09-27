@@ -65,8 +65,12 @@ export class AssignmentsComponent implements OnInit {
   institutionId: string | null = null;
   teachers: Teacher[] = [];
   teacherControl = new FormControl<string | null>(null);
+  teacherSearchControl = new FormControl('');
+  private teacherSearchRequestId = 0;
 
-  displayedColumns: string[] = ['title', 'exercise', 'dueDate', 'createdAt', 'stats', 'actions'];
+  displayedColumns: string[] = this.institutionMode
+    ? ['title', 'teacher', 'exercise', 'dueDate', 'createdAt', 'stats', 'actions']
+    : ['title', 'exercise', 'dueDate', 'createdAt', 'stats', 'actions'];
   assignments: TeacherAssignmentDto[] = [];
   exerciseTypes: any[] = [];
 
@@ -98,11 +102,22 @@ export class AssignmentsComponent implements OnInit {
 
   private setInstitution(institutionId: string): void {
     this.institutionId = institutionId;
-    this.teachersService.getTeachersPage(1, 100, undefined, institutionId, true).subscribe({
-      next: page => this.teachers = page.items,
+    this.searchTeachers('');
+    this.loadAssignments();
+  }
+
+  private searchTeachers(term: string): void {
+    if (!this.institutionId) return;
+    const requestId = ++this.teacherSearchRequestId;
+    this.teachersService.getTeachersPage(1, 100, term || undefined, this.institutionId, true).subscribe({
+      next: page => {
+        if (requestId !== this.teacherSearchRequestId) return;
+        const selected = this.teachers.find(teacher => teacher.id === this.teacherControl.value);
+        this.teachers = selected && !page.items.some(teacher => teacher.id === selected.id)
+          ? [selected, ...page.items] : page.items;
+      },
       error: () => this.toaster.error('Kurum öğretmenleri yüklenemedi.')
     });
-    this.loadAssignments();
   }
 
   loadExerciseTypes() {
@@ -136,6 +151,8 @@ export class AssignmentsComponent implements OnInit {
       this.pageIndex = 0;
       this.loadAssignments();
     });
+    this.teacherSearchControl.valueChanges.pipe(debounceTime(300), distinctUntilChanged())
+      .subscribe(term => this.searchTeachers(term || ''));
   }
 
   getTurkishTypeName(type: any): string {

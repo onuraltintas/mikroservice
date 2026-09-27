@@ -1,9 +1,11 @@
 using System.Security.Claims;
 using EduPlatform.Shared.Contracts.Authorization;
+using EduPlatform.Shared.Contracts.Reporting;
 using EduPlatform.Shared.Security.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SpeedReading.Application.Assignments;
+using SpeedReading.Application.Analytics;
 using SpeedReading.Application.Institutions;
 
 namespace SpeedReading.API.Controllers;
@@ -15,7 +17,8 @@ namespace SpeedReading.API.Controllers;
 [MfaCategory(MfaOperationCategories.SpeedReading)]
 public sealed class InstitutionAssignmentsController(
     ISpeedReadingAssignments assignments,
-    ISpeedReadingInstitutionAdministrationAuthorization authorization) : ControllerBase
+    ISpeedReadingInstitutionAdministrationAuthorization authorization,
+    ISpeedReadingUserDirectory userDirectory) : ControllerBase
 {
     [HttpGet]
     public async Task<IActionResult> Get(
@@ -30,9 +33,27 @@ public sealed class InstitutionAssignmentsController(
     {
         if (!await CanManageAsync(institutionId, cancellationToken)) return Forbid();
         if (pageNumber < 1 || pageSize is < 1 or > 100) return BadRequest("Invalid page.");
-        return Ok(await assignments.GetInstitutionAssignmentsAsync(
+        var page = await assignments.GetInstitutionAssignmentsAsync(
             institutionId, pageNumber, pageSize, searchTerm, isActive,
-            exerciseTypeId, teacherId, cancellationToken));
+            exerciseTypeId, teacherId, cancellationToken);
+        var teacherIds = page.Items.Select(item => item.TeacherId).Distinct().ToArray();
+        var users = teacherIds.Length == 0
+            ? new Dictionary<Guid, SpeedReadingUserDirectoryItem>()
+            : (await userDirectory.GetUsersAsync(teacherIds, cancellationToken))
+                .Users.ToDictionary(item => item.UserId);
+        return Ok(new
+        {
+            items = page.Items.Select(item => new
+            {
+                item.Id, item.TeacherId,
+                teacherName = users.TryGetValue(item.TeacherId, out var teacher)
+                    ? $"{teacher.FirstName} {teacher.LastName}".Trim() : null,
+                item.ExerciseId, item.ReadingTextId, item.Title, item.Description,
+                item.ExerciseTitle, item.ExerciseTypeName, item.ReadingTextTitle,
+                item.DueDate, item.IsActive, item.CreatedAt, item.StudentCount, item.CompletedCount
+            }),
+            page.TotalCount, page.PageNumber, page.PageSize
+        });
     }
 
     [HttpPost]
