@@ -181,7 +181,7 @@
     <!-- Exercise Running - Motion Path (Eye Tracking / Fixation) -->
     <div *ngIf="engine && engineState.isRunning && engine.engineType === 'motion_path'"
         class="game-container motion-path-container">
-        <div class="game-header">
+        <div class="game-header motion-path-header">
             <div class="timer" [class.countdown]="hasTimeLimit() || isSaccadeMode()"
                 [class.urgent]="isTimeUrgent() || engineState.isLastTenSeconds"
                 [class.last-ten-seconds]="engineState.isLastTenSeconds">
@@ -198,7 +198,6 @@
                 <!-- Saccade mode: show target count instead of time-based progress -->
                 <ng-container *ngIf="isSaccadeMode(); else normalProgress">
                     <span class="target-counter">
-                        <span class="material-icons" class="target-icon">track_changes</span>
                         {{ engineState.targetCount || 0 }} hedef
                     </span>
                 </ng-container>
@@ -207,12 +206,32 @@
                     <div class="ep-progress-bar"><div class="ep-progress-bar__fill" [style.width.%]="getProgressPercent()"></div></div>
                 </ng-template>
             </div>
-            <button class="ep-btn ep-btn--icon" (click)="togglePause()">
-                <span class="material-icons">{{ engineState.isPaused ? 'play_arrow' : 'pause' }}</span>
-            </button>
-                    <button class="ep-btn ep-btn--icon ep-btn--warn ep-back-button" (click)="goBack()">
-                <span class="material-icons">close</span>
-            </button>
+            <div class="game-stats motion-path-stats" *ngIf="!isSaccadeMode()" aria-label="Egzersiz istatistikleri">
+                <div class="stat" *ngIf="!isFixationMode()">
+                    <span class="label">Satır</span>
+                    <span class="value">{{ engineState.currentStep }}</span>
+                </div>
+                <div class="stat">
+                    <span class="label">Görünme</span>
+                    <span class="value">{{ getMotionPathFixationDuration() }} ms</span>
+                </div>
+                <div class="stat" *ngIf="isFixationMode()">
+                    <span class="label">Doğru</span>
+                    <span class="value correct-count">{{ getCorrectCount() }}</span>
+                </div>
+                <div class="stat" *ngIf="isFixationMode()">
+                    <span class="label">Yanlış</span>
+                    <span class="value incorrect-count">{{ getIncorrectCount() }}</span>
+                </div>
+            </div>
+            <div class="motion-path-actions">
+                <button class="ep-btn ep-btn--icon" (click)="togglePause()" [attr.aria-label]="engineState.isPaused ? 'Devam et' : 'Duraklat'">
+                    <span class="material-icons">{{ engineState.isPaused ? 'play_arrow' : 'pause' }}</span>
+                </button>
+                <button class="ep-btn ep-btn--icon ep-btn--warn ep-back-button" (click)="goBack()" aria-label="Egzersizden çık">
+                    <span class="material-icons">close</span>
+                </button>
+            </div>
         </div>
 
         <div class="eye-tracking-area">
@@ -232,7 +251,7 @@
                 </ng-container>
 
                 <!-- Target Dot Container -->
-                <div class="target-container" [style.left.%]="getTargetX()" [style.top.%]="getTargetY()">
+                <div *ngIf="!isFixationMode() || isFixationTargetVisible()" class="target-container" [style.left.%]="getTargetX()" [style.top.%]="getTargetY()">
                     <!-- Countdown Circle (Fixation & Saccade) -->
                     <svg *ngIf="isFixationMode() || isSaccadeMode()" class="fixation-progress-svg"
                         [attr.width]="getFixationPointSize() * 2.2" [attr.height]="getFixationPointSize() * 2.2"
@@ -298,28 +317,6 @@
             </div>
         </div>
 
-        <div class="game-stats">
-            <div class="stat" *ngIf="isSaccadeMode()">
-                <span class="label">Hedefler</span>
-                <span class="value">{{ engineState.targetCount || 0 }}</span>
-            </div>
-            <div class="stat" *ngIf="!isSaccadeMode() && !isFixationMode()">
-                <span class="label">Satır</span>
-                <span class="value">{{ engineState.currentStep }}</span>
-            </div>
-            <div class="stat" *ngIf="!isSaccadeMode()">
-                <span class="label">Görünme</span>
-                <span class="value">{{ getMotionPathFixationDuration() }} ms</span>
-            </div>
-            <div class="stat" *ngIf="isFixationMode()">
-                <span class="label">Doğru</span>
-                <span class="value correct-count">{{ getCorrectCount() }}</span>
-            </div>
-            <div class="stat" *ngIf="isFixationMode()">
-                <span class="label">Yanlış</span>
-                <span class="value incorrect-count">{{ getIncorrectCount() }}</span>
-            </div>
-        </div>
     </div>
 
     <!-- Exercise Running - Text Stream (Tachistoscope/RSVP) -->
@@ -1505,21 +1502,87 @@
     <!-- Exercise Completed -->
     <div *ngIf="(engineState.isCompleted && exercisePhase !== 'questions') || exercisePhase === 'completed'"
         class="completed-state">
-        <div class="result-card-new">
+        <div class="result-card-new" [class.result-card-new--schulte]="engine?.engineType === 'grid_interaction'">
+            <section class="schulte-summary" *ngIf="engine?.engineType === 'grid_interaction'">
+                <div class="schulte-summary__heading">
+                    <div>
+                        <span class="schulte-summary__eyebrow">SCHULTE TABLOSU · {{ result?.details?.gridSize || 5 }}×{{ result?.details?.gridSize || 5 }}</span>
+                        <h2>Tablo tamamlandı</h2>
+                        <p>Bakış ritminiz ve sayı bulma süreleriniz</p>
+                    </div>
+                    <span class="schulte-summary__level">{{ result?.details?.performanceLevel || 'Tamamlandı' }}</span>
+                </div>
+
+                <div class="schulte-summary__body">
+                    <div class="schulte-summary__metrics">
+                        <div class="schulte-summary__time">
+                            <span>Toplam süre</span>
+                            <strong>{{ formatTime(result?.totalTime || 0) }}</strong>
+                            <small *ngIf="result?.details?.benchmarks">Hedef {{ formatTime(result?.details?.benchmarks?.intermediate || 0) }}</small>
+                        </div>
+                        <div class="schulte-summary__stat-grid">
+                            <div><strong>{{ result?.score }}</strong><span>Skor</span></div>
+                            <div><strong>{{ result?.accuracy | number:'1.0-0' }}%</strong><span>Doğruluk</span></div>
+                            <div><strong>{{ result?.errors }}</strong><span>Hata</span></div>
+                        </div>
+                        <div class="schulte-summary__rewards" *ngIf="sessionResult?.xpGained || sessionResult?.leveledUp">
+                            <span *ngIf="sessionResult?.xpGained">+{{ sessionResult?.xpGained }} XP</span>
+                            <span *ngIf="sessionResult?.leveledUp">Seviye {{ sessionResult?.newLevel }}</span>
+                        </div>
+                    </div>
+
+                    <div class="schulte-summary__map" *ngIf="result?.details?.heatmapData?.length">
+                        <div class="schulte-summary__map-title">
+                            <strong>Performans haritası</strong>
+                            <span>Sayıların göreli bulma süresi</span>
+                        </div>
+                        <div class="heatmap-grid-new"
+                            [style.grid-template-columns]="'repeat(' + (result?.details?.gridSize || 5) + ', 1fr)'">
+                            <div *ngFor="let value of result?.details?.heatmapData; let i = index; trackBy: trackByIdx"
+                                class="heatmap-cell-new" [style.background]="getHeatmapColor(value)"
+                                [attr.aria-label]="(i + 1) + '. sayı'">{{ i + 1 }}</div>
+                        </div>
+                        <div class="schulte-summary__legend"><span>● Hızlı</span><span>● Yavaş</span></div>
+                    </div>
+                </div>
+
+                <div class="schulte-summary__save" [class.schulte-summary__save--failed]="resultSaveStatus === 'failed'"
+                    role="status" aria-live="polite">
+                    <span class="material-icons">{{ resultSaveStatus === 'saved' ? 'check_circle' : resultSaveStatus === 'failed' ? 'error_outline' : resultSaveStatus === 'preview' ? 'visibility' : 'sync' }}</span>
+                    <span>{{ resultSaveStatus === 'saved' ? 'Sonuç kaydedildi' : resultSaveStatus === 'failed' ? 'Sonuç kaydedilemedi' : resultSaveStatus === 'preview' ? 'Önizleme sonucu — kaydedilmedi' : 'Sonuç kaydediliyor' }}</span>
+                    <button *ngIf="resultSaveStatus === 'failed'" type="button" (click)="retrySaveResult()">Tekrar dene</button>
+                </div>
+            </section>
             <!-- Success Badge -->
-            <div class="success-badge">
+            <div class="success-badge" *ngIf="engine?.engineType !== 'grid_interaction'">
                 <div class="badge-icon">
                     <span class="material-icons">emoji_events</span>
                 </div>
                 <div class="badge-text">
-                    <span class="level-text">{{ result?.details?.performanceLevel || 'Tamamlandı!' }}</span>
+                    <span class="result-eyebrow">EGZERSİZ SONUCU</span>
+                    <span class="level-text">{{ engine?.engineType === 'grid_interaction' && resultSaveStatus !== 'saved' && resultSaveStatus !== 'preview'
+                        ? 'Tablo tamamlandı' : (result?.details?.performanceLevel || 'Tamamlandı!') }}</span>
                     <span class="time-text" *ngIf="engine?.engineType !== 'exam_simulation'">{{
                         formatTime(result?.totalTime || 0) }}</span>
                 </div>
             </div>
 
+            <div class="grid-save-status" *ngIf="engine?.engineType !== 'grid_interaction' && resultSaveStatus !== 'idle'"
+                [class.grid-save-status--failed]="resultSaveStatus === 'failed'" role="status" aria-live="polite">
+                <span class="material-icons">{{ resultSaveStatus === 'preview' ? 'visibility' : resultSaveStatus === 'saved' ? 'check_circle' : resultSaveStatus === 'failed' ? 'error_outline' : 'sync' }}</span>
+                <span>{{ resultSaveStatus === 'preview' ? 'Önizleme sonucu — kaydedilmedi.' : resultSaveStatus === 'saved' ? 'Sonuç kaydedildi.' : resultSaveStatus === 'failed' ? 'Sonuç kaydedilemedi.' : 'Sonuç kaydediliyor…' }}</span>
+                <button *ngIf="resultSaveStatus === 'failed'" type="button" class="ep-btn ep-btn--primary"
+                    (click)="retrySaveResult()">Tekrar dene</button>
+            </div>
+            <div class="grid-save-status" *ngIf="reviewItemId && reviewSaveStatus !== 'idle'"
+                [class.grid-save-status--failed]="reviewSaveStatus === 'failed'" role="status" aria-live="polite">
+                <span>{{ reviewSaveStatus === 'saved' ? 'Tekrar planı güncellendi.' : reviewSaveStatus === 'failed' ? 'Tekrar planı güncellenemedi.' : 'Tekrar planı güncelleniyor…' }}</span>
+                <button *ngIf="reviewSaveStatus === 'failed'" type="button" class="ep-btn ep-btn--primary"
+                    (click)="retryReviewSubmission()">Tekrar dene</button>
+            </div>
+
             <!-- Exercise Info Badges -->
-            <div class="exercise-info-badges">
+            <div class="exercise-info-badges" *ngIf="engine?.engineType !== 'grid_interaction'">
                 <div class="info-tag age-tag" *ngIf="getAgeGroupLabel()">
                     <span class="material-icons">people</span>
                     <span>{{ getAgeGroupLabel() }}</span>
@@ -1533,7 +1596,7 @@
 
 
             <!-- Main Stats Row - Hide for exam_simulation and reading exercises -->
-            <div class="stats-row" *ngIf="!result?.details?.wpm && result?.details?.measurementStatus !== 'NotMeasured' && engine?.engineType !== 'exam_simulation'">
+            <div class="stats-row" *ngIf="!result?.details?.wpm && result?.details?.measurementStatus !== 'NotMeasured' && engine?.engineType !== 'exam_simulation' && engine?.engineType !== 'grid_interaction'">
                 <div class="stat-card primary">
                     <div class="stat-value">{{ result?.score }}</div>
                     <div class="stat-label">Skor</div>
@@ -1553,12 +1616,18 @@
             </div>
 
             <div class="measurement-not-available" *ngIf="result?.details?.measurementStatus === 'NotMeasured'">
-                Bu egzersizde doğrulanabilir performans ölçümü alınmadı. Tamamlama kaydedildi; skor ve WPM
-                istatistiklerine dahil edilmedi.
+                Egzersiz tamamlandı ve kaydedildi. Bu egzersizdeki harf yanıtları sunucuda doğrulanmadığı için
+                seviye tespit puanına dahil edilmez; WPM ölçülmez.
+            </div>
+
+            <div class="stats-row" *ngIf="engine?.engineType === 'motion_path' && result?.details?.fixationResults?.length">
+                <div class="stat-card"><div class="stat-value">{{ getCorrectCount() }}</div><div class="stat-label">Doğru yanıt</div></div>
+                <div class="stat-card"><div class="stat-value">{{ getIncorrectCount() }}</div><div class="stat-label">Yanlış yanıt</div></div>
+                <div class="stat-card"><div class="stat-value">{{ result?.details?.fixationResults?.length }}</div><div class="stat-label">Tamamlanan tur</div></div>
             </div>
 
             <!-- XP and Level Row -->
-            <div class="rewards-row" *ngIf="sessionResult?.xpGained || sessionResult?.leveledUp">
+            <div class="rewards-row" *ngIf="engine?.engineType !== 'grid_interaction' && (sessionResult?.xpGained || sessionResult?.leveledUp)">
                 <div class="xp-earned" *ngIf="sessionResult?.xpGained">
                     <span class="material-icons">bolt</span>
                     <span>+{{ sessionResult?.xpGained }} XP Kazandınız!</span>
@@ -1600,6 +1669,15 @@
                     <span class="material-icons">timer_off</span>
                     <div class="result-value">{{ result?.details?.timeoutCount }}</div>
                     <div class="result-label">Süre Dolan</div>
+                </div>
+            </div>
+
+            <!-- Free Reading Results (WPM) -->
+            <div class="speed-reading-results" *ngIf="engine?.engineType === 'free_reading' && result?.details?.wpm !== null && result?.details?.wpm !== undefined">
+                <div class="result-box wpm-box">
+                    <span class="material-icons">speed</span>
+                    <div class="result-value">{{ result?.details?.wpm }} WPM</div>
+                    <div class="result-label">Dakikada Kelime</div>
                 </div>
             </div>
 
@@ -1763,34 +1841,6 @@
                 </div>
             </div>
 
-            <!-- Heatmap Section (Schulte only) -->
-            <div class="heatmap-section" *ngIf="result?.details?.heatmapData">
-                <div class="section-header">
-                    <span class="material-icons">grid_view</span>
-                    <span>Performans Haritası</span>
-                    <span class="section-hint">Hangi sayıları bulmakta zorlandınız?</span>
-                </div>
-                <div class="heatmap-wrapper">
-                    <div class="heatmap-grid-new"
-                        [style.grid-template-columns]="'repeat(' + (result?.details?.gridSize || 5) + ', 1fr)'">
-                        <div *ngFor="let value of result?.details?.heatmapData; let i = index; trackBy: trackByIdx"
-                            class="heatmap-cell-new" [style.background]="getHeatmapColor(value)">
-                            {{ i + 1 }}
-                        </div>
-                    </div>
-                    <div class="heatmap-info">
-                        <div class="legend-row">
-                            <span class="legend-item fast">● Hızlı</span>
-                            <span class="legend-item slow">● Yavaş</span>
-                        </div>
-                        <div class="benchmark-info" *ngIf="result?.details?.benchmarks">
-                            <div>Hedef süre: <strong>{{ formatTime(result?.details?.benchmarks?.intermediate || 0)
-                                    }}</strong></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
             <!-- Action Buttons -->
             <div class="action-row">
                 <button class="btn-primary" (click)="goBack()">
@@ -1808,7 +1858,7 @@
     <!-- Exit Confirmation Overlay -->
     <div class="exit-confirm-overlay" *ngIf="showExitConfirm">
         <div class="exit-confirm-card">
-            <span class="material-icons" class="exit-icon">warning</span>
+            <span class="material-icons exit-icon">warning</span>
             <h3>Egzersizden Çıkmak İstiyor musunuz?</h3>
             <p>İlerlemeniz kaydedilmeyecek.</p>
             <div class="exit-actions">

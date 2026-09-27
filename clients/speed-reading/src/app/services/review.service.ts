@@ -50,6 +50,12 @@ export class ReviewService {
     );
   }
 
+  getAllReviews(): Observable<ReviewExerciseDto[]> {
+    return this.http.get<any>(`${this.apiUrl}/items`).pipe(
+      map(response => Array.isArray(response) ? response : (response?.data ?? []))
+    );
+  }
+
   /**
    * Gets review statistics for the current student
    */
@@ -75,8 +81,8 @@ export class ReviewService {
   /**
    * Submits a review result
    */
-  submitReview(reviewItemId: string, score: number): Observable<SubmitReviewResult> {
-    return this.http.post<any>(`${this.apiUrl}/${reviewItemId}/submit`, { score }).pipe(
+  submitReview(reviewItemId: string, sessionId: string): Observable<SubmitReviewResult> {
+    return this.http.post<any>(`${this.apiUrl}/${reviewItemId}/submit`, { sessionId }).pipe(
       map(response => response?.data ?? response),
       tap({
         next: () => {

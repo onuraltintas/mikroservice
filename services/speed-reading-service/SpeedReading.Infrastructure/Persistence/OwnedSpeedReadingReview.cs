@@ -11,6 +11,18 @@ internal sealed class OwnedSpeedReadingReview(OwnedSpeedReadingDbContext db) : I
     public async Task<IReadOnlyList<ReviewExerciseSummary>> GetDueAsync(
         Guid userId,
         Guid? seriesId,
+        CancellationToken cancellationToken) =>
+        await GetReviewsAsync(userId, seriesId, dueOnly: true, cancellationToken);
+
+    public async Task<IReadOnlyList<ReviewExerciseSummary>> GetAllAsync(
+        Guid userId,
+        CancellationToken cancellationToken) =>
+        await GetReviewsAsync(userId, null, dueOnly: false, cancellationToken);
+
+    private async Task<IReadOnlyList<ReviewExerciseSummary>> GetReviewsAsync(
+        Guid userId,
+        Guid? seriesId,
+        bool dueOnly,
         CancellationToken cancellationToken)
     {
         var now = DateTime.UtcNow;
@@ -25,8 +37,7 @@ internal sealed class OwnedSpeedReadingReview(OwnedSpeedReadingDbContext db) : I
                     from template in templates.DefaultIfEmpty()
                     where item.UserId == userId
                         && !item.IsDeleted
-                        && !item.IsMastered
-                        && item.NextReviewDate <= now
+                        && (!dueOnly || (!item.IsMastered && item.NextReviewDate <= now))
                         && !exercise.IsDeleted
                         && (seriesId == null || item.ProgramTemplateId == seriesId)
                     orderby item.NextReviewDate
@@ -39,7 +50,14 @@ internal sealed class OwnedSpeedReadingReview(OwnedSpeedReadingDbContext db) : I
                     };
 
         var rows = await query.ToListAsync(cancellationToken);
-        return rows.Select(row => ToSummary(row.Item, row.Exercise, row.ExerciseType, row.Template, now)).ToList();
+        var itemIds = rows.Select(row => row.Item.Id).ToList();
+        var scoresByItem = await db.ReviewCompletions.AsNoTracking()
+            .Where(item => itemIds.Contains(item.ReviewItemId))
+            .GroupBy(item => item.ReviewItemId)
+            .Select(group => new { Id = group.Key, Average = group.Average(item => item.Score) })
+            .ToDictionaryAsync(item => item.Id, item => item.Average, cancellationToken);
+        return rows.Select(row => ToSummary(row.Item, row.Exercise, row.ExerciseType, row.Template,
+            now, scoresByItem.GetValueOrDefault(row.Item.Id))).ToList();
     }
 
     public async Task<ReviewStatisticsSummary> GetStatisticsAsync(
@@ -58,7 +76,11 @@ internal sealed class OwnedSpeedReadingReview(OwnedSpeedReadingDbContext db) : I
         var todayEnd = now.Date.AddDays(1);
         var dueToday = items.Count(item => !item.IsMastered && item.NextReviewDate <= todayEnd);
         var overdue = items.Count(item => !item.IsMastered && item.NextReviewDate < now);
-        var scores = items.Where(item => item.LastScore.HasValue).Select(item => item.LastScore!.Value).ToList();
+        var completions = await db.ReviewCompletions.AsNoTracking()
+            .Where(item => item.UserId == userId && (!seriesId.HasValue || db.ReviewItems
+                .Any(reviewItem => reviewItem.Id == item.ReviewItemId && reviewItem.ProgramTemplateId == seriesId)))
+            .ToListAsync(cancellationToken);
+        var scores = completions.Select(item => item.Score).ToList();
 
         return new ReviewStatisticsSummary(
             items.Count,
@@ -71,7 +93,7 @@ internal sealed class OwnedSpeedReadingReview(OwnedSpeedReadingDbContext db) : I
             Math.Round(scores.DefaultIfEmpty(0).Average(), 1),
             Math.Round(items.Count == 0 ? 0 : items.Average(item => item.IntervalDays), 1),
             0,
-            items.Sum(item => item.ReviewCount),
+            completions.Count,
             items.Where(item => !item.IsMastered)
                 .OrderBy(item => item.NextReviewDate)
                 .Select(item => (DateTime?)item.NextReviewDate)
@@ -85,7 +107,7 @@ internal sealed class OwnedSpeedReadingReview(OwnedSpeedReadingDbContext db) : I
     public async Task<SubmitReviewResult?> SubmitAsync(
         Guid userId,
         Guid reviewItemId,
-        double score,
+        Guid sessionId,
         CancellationToken cancellationToken)
     {
         var item = await db.ReviewItems
@@ -93,38 +115,49 @@ internal sealed class OwnedSpeedReadingReview(OwnedSpeedReadingDbContext db) : I
         if (item is null)
             return null;
 
-        item.ApplyReview(score, DateTime.UtcNow, userId);
+        var existing = await db.ReviewCompletions.AsNoTracking()
+            .AnyAsync(completion => completion.SessionId == sessionId && completion.ReviewItemId == reviewItemId, cancellationToken);
+        if (existing)
+            return ToSubmitResult(item);
+
+        var result = await db.ExerciseSessionResults.AsNoTracking()
+            .SingleOrDefaultAsync(result => result.SessionId == sessionId
+                && result.StudentId == userId
+                && result.ExerciseId == item.ExerciseId
+                && !result.IsAssessmentMode, cancellationToken);
+        if (result is null || result.CompletedAt < item.NextReviewDate)
+            return null;
+
+        item.ApplyReview((double)result.Score, result.CompletedAt, userId);
+        var reviewNumber = await db.ReviewCompletions
+            .CountAsync(completion => completion.ReviewItemId == reviewItemId, cancellationToken) + 1;
+        db.ReviewCompletions.Add(ReviewCompletion.Record(
+            sessionId, reviewItemId, userId, item.ExerciseId, result.CompletedAt,
+            item.LastScore ?? 0, item.IntervalDays, reviewNumber));
         await db.SaveChangesAsync(cancellationToken);
 
-        return new SubmitReviewResult(
+        return ToSubmitResult(item);
+    }
+
+    private static SubmitReviewResult ToSubmitResult(ReviewItem item) => new(
             true,
             item.IsMastered ? "Tebrikler! Bu egzersizi ustalaştırdınız." : "Tekrar planlandı.",
             item.NextReviewDate,
             item.IntervalDays,
             item.IsMastered,
             item.EasinessFactor);
-    }
 
     public async Task<IReadOnlyList<ReviewHistoryItem>> GetHistoryAsync(
         Guid userId,
         Guid exerciseId,
         CancellationToken cancellationToken)
     {
-        var item = await db.ReviewItems
-            .AsNoTracking()
-            .Where(item => item.ExerciseId == exerciseId && item.UserId == userId && !item.IsDeleted)
-            .OrderByDescending(item => item.UpdatedAt)
-            .FirstOrDefaultAsync(cancellationToken);
-        if (item is null)
-            return [];
-
-        return Enumerable.Range(1, Math.Max(0, item.ReviewCount))
-            .Select(number => new ReviewHistoryItem(
-                item.UpdatedAt ?? item.CreatedAt,
-                item.LastScore ?? 0,
-                item.IntervalDays,
-                number))
-            .ToList();
+        return await db.ReviewCompletions.AsNoTracking()
+            .Where(item => item.ExerciseId == exerciseId && item.UserId == userId)
+            .OrderByDescending(item => item.ReviewedAt)
+            .Select(item => new ReviewHistoryItem(
+                item.ReviewedAt, item.Score, item.IntervalDays, item.ReviewNumber))
+            .ToListAsync(cancellationToken);
     }
 
     public async Task<Guid?> AddAsync(
@@ -170,7 +203,8 @@ internal sealed class OwnedSpeedReadingReview(OwnedSpeedReadingDbContext db) : I
         Exercise exercise,
         ExerciseType? exerciseType,
         ProgramTemplate? template,
-        DateTime now)
+        DateTime now,
+        double averageScore)
     {
         var daysOverdue = item.NextReviewDate < now
             ? (int)(now - item.NextReviewDate).TotalDays
@@ -193,7 +227,7 @@ internal sealed class OwnedSpeedReadingReview(OwnedSpeedReadingDbContext db) : I
             item.EasinessFactor,
             daysOverdue,
             score,
-            score,
+            averageScore,
             item.IsMastered,
             daysOverdue > 0);
     }

@@ -13,7 +13,7 @@ describe('ReviewExercisesComponent', () => {
         { provide: Router, useValue: { navigate } },
         { provide: ReviewService, useValue: {
           dueReviews: () => [], statistics: () => null,
-          getDueReviews: () => of([]), getStatistics: () => of(null)
+          getDueReviews: () => of([]), getStatistics: () => of(null), getAllReviews: () => of([])
         } },
         { provide: ToasterService, useValue: jasmine.createSpyObj('ToasterService', ['error', 'info']) }
       ]
@@ -35,7 +35,7 @@ describe('ReviewExercisesComponent', () => {
         { provide: Router, useValue: { navigate: jasmine.createSpy('navigate') } },
         { provide: ReviewService, useValue: {
           dueReviews: () => [], statistics: () => null,
-          getDueReviews: () => of([]), getStatistics: () => of(null),
+          getDueReviews: () => of([]), getStatistics: () => of(null), getAllReviews: () => of([]),
           getReviewHistory: () => of([
             { reviewedAt: new Date('2026-09-26T10:00:00Z'), score: 82, intervalDays: 6, reviewNumber: 1 }
           ])

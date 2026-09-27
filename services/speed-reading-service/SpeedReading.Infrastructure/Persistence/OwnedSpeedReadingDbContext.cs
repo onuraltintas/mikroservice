@@ -6,6 +6,7 @@ using SpeedReading.Domain.AgeGroups;
 using SpeedReading.Domain.Assessment;
 using SpeedReading.Domain.Catalog;
 using SpeedReading.Domain.LearningPaths;
+using SpeedReading.Domain.Institutions;
 using SpeedReading.Domain.Gamification;
 using SpeedReading.Domain.QuestionBank;
 using SpeedReading.Domain.Visualization;
@@ -44,6 +45,9 @@ public sealed class OwnedSpeedReadingDbContext(
     public DbSet<StudentProgramProgress> StudentProgramProgresses => Set<StudentProgramProgress>();
     public DbSet<DailyExerciseLog> DailyExerciseLogs => Set<DailyExerciseLog>();
     public DbSet<SpeedReadingUserProfile> UserProfiles => Set<SpeedReadingUserProfile>();
+    public DbSet<SpeedReadingInstitutionMembership> InstitutionMemberships => Set<SpeedReadingInstitutionMembership>();
+    public DbSet<SpeedReadingTeacherStudentAssignment> TeacherStudentAssignments => Set<SpeedReadingTeacherStudentAssignment>();
+    public DbSet<SpeedReadingInvitation> Invitations => Set<SpeedReadingInvitation>();
     public DbSet<LearningPathTemplate> LearningPathTemplates => Set<LearningPathTemplate>();
     public DbSet<LearningPathNode> LearningPathNodes => Set<LearningPathNode>();
     public DbSet<LearningPathNodeContent> LearningPathNodeContents => Set<LearningPathNodeContent>();
@@ -61,6 +65,7 @@ public sealed class OwnedSpeedReadingDbContext(
     public DbSet<VocabularyItem> VocabularyItems => Set<VocabularyItem>();
     public DbSet<UserVocabularyProgress> UserVocabularyProgresses => Set<UserVocabularyProgress>();
     public DbSet<ReviewItem> ReviewItems => Set<ReviewItem>();
+    public DbSet<ReviewCompletion> ReviewCompletions => Set<ReviewCompletion>();
     public DbSet<AssessmentAttempt> AssessmentAttempts => Set<AssessmentAttempt>();
     public DbSet<AssessmentAttemptExercise> AssessmentAttemptExercises => Set<AssessmentAttemptExercise>();
     public DbSet<AssessmentLevelCatalog> AssessmentLevelCatalogs => Set<AssessmentLevelCatalog>();
@@ -195,6 +200,80 @@ public sealed class OwnedSpeedReadingDbContext(
         ConfigureEntity(modelBuilder.Entity<StudentProgramProgress>());
         ConfigureEntity(modelBuilder.Entity<DailyExerciseLog>());
         ConfigureEntity(modelBuilder.Entity<SpeedReadingUserProfile>());
+        ConfigureEntity(modelBuilder.Entity<SpeedReadingInstitutionMembership>());
+        modelBuilder.Entity<SpeedReadingInstitutionMembership>(entity =>
+        {
+            entity.ToTable("institution_memberships");
+            entity.Property(item => item.InstitutionId).HasColumnName("institution_id").IsRequired();
+            entity.Property(item => item.UserId).HasColumnName("user_id").IsRequired();
+            entity.Property(item => item.Role)
+                .HasColumnName("role")
+                .HasConversion<string>()
+                .HasMaxLength(24)
+                .IsRequired();
+            entity.Property(item => item.IsActive).HasColumnName("is_active").IsRequired();
+            entity.HasIndex(item => new { item.InstitutionId, item.UserId, item.Role })
+                .IsUnique()
+                .HasDatabaseName("ux_sra_institution_member_role");
+            entity.HasIndex(item => new { item.InstitutionId, item.Role, item.IsActive });
+            entity.HasIndex(item => new { item.UserId, item.IsActive });
+        });
+        ConfigureEntity(modelBuilder.Entity<SpeedReadingTeacherStudentAssignment>());
+        modelBuilder.Entity<SpeedReadingTeacherStudentAssignment>(entity =>
+        {
+            entity.ToTable("teacher_student_assignments");
+            entity.Property(item => item.InstitutionId).HasColumnName("institution_id").IsRequired(false);
+            entity.Property(item => item.TeacherUserId).HasColumnName("teacher_user_id").IsRequired();
+            entity.Property(item => item.StudentUserId).HasColumnName("student_user_id").IsRequired();
+            entity.Property(item => item.IsActive).HasColumnName("is_active").IsRequired();
+            entity.HasIndex(item => new { item.InstitutionId, item.TeacherUserId, item.StudentUserId })
+                .IsUnique()
+                .HasFilter("institution_id IS NOT NULL")
+                .HasDatabaseName("ux_sra_institution_teacher_student");
+            entity.HasIndex(item => new { item.InstitutionId, item.StudentUserId })
+                .IsUnique()
+                .HasFilter("institution_id IS NOT NULL AND is_active = true")
+                .HasDatabaseName("ux_sra_institution_active_student_teacher");
+            entity.HasIndex(item => new { item.TeacherUserId, item.StudentUserId })
+                .IsUnique()
+                .HasFilter("institution_id IS NULL")
+                .HasDatabaseName("ux_sra_standalone_teacher_student");
+            entity.HasIndex(item => new { item.InstitutionId, item.TeacherUserId, item.IsActive })
+                .HasFilter("institution_id IS NOT NULL")
+                .HasDatabaseName("ix_sra_institution_teacher_active");
+            entity.HasIndex(item => new { item.StudentUserId, item.IsActive });
+        });
+        ConfigureEntity(modelBuilder.Entity<SpeedReadingInvitation>());
+        modelBuilder.Entity<SpeedReadingInvitation>(entity =>
+        {
+            entity.ToTable("invitations");
+            entity.Property(item => item.NormalizedEmail).HasColumnName("normalized_email").HasMaxLength(320).IsRequired();
+            entity.Property(item => item.DeduplicationKey).HasColumnName("deduplication_key").HasMaxLength(64).IsRequired();
+            entity.Property(item => item.Role)
+                .HasColumnName("role")
+                .HasConversion<string>()
+                .HasMaxLength(24)
+                .IsRequired();
+            entity.Property(item => item.InstitutionId).HasColumnName("institution_id");
+            entity.Property(item => item.TeacherUserId).HasColumnName("teacher_user_id");
+            entity.Property(item => item.InvitedByUserId).HasColumnName("invited_by_user_id").IsRequired();
+            entity.Property(item => item.Status)
+                .HasColumnName("status")
+                .HasConversion<string>()
+                .HasMaxLength(24)
+                .IsRequired();
+            entity.Property(item => item.ExpiresAt).HasColumnName("expires_at").IsRequired();
+            entity.Property(item => item.AcceptedByUserId).HasColumnName("accepted_by_user_id");
+            entity.Property(item => item.AcceptedAt).HasColumnName("accepted_at");
+            entity.HasIndex(item => item.DeduplicationKey)
+                .IsUnique()
+                .HasFilter("status = 'Pending'")
+                .HasDatabaseName("ux_sra_invitations_pending_deduplication");
+            entity.HasIndex(item => new { item.InstitutionId, item.Status, item.ExpiresAt })
+                .HasDatabaseName("ix_sra_invitations_institution_status_expiry");
+            entity.HasIndex(item => new { item.InvitedByUserId, item.CreatedAt })
+                .HasDatabaseName("ix_sra_invitations_inviter_created");
+        });
         ConfigureEntity(modelBuilder.Entity<LearningPathTemplate>());
         ConfigureEntity(modelBuilder.Entity<LearningPathNode>());
         ConfigureEntity(modelBuilder.Entity<LearningPathNodeContent>());
@@ -407,6 +486,22 @@ public sealed class OwnedSpeedReadingDbContext(
                 .OnDelete(DeleteBehavior.Restrict);
             entity.HasOne<ProgramTemplate>().WithMany().HasForeignKey(item => item.ProgramTemplateId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+        modelBuilder.Entity<ReviewCompletion>(entity =>
+        {
+            entity.ToTable("review_completions");
+            entity.HasKey(item => item.SessionId);
+            entity.Property(item => item.SessionId).HasColumnName("session_id");
+            entity.Property(item => item.ReviewItemId).HasColumnName("review_item_id");
+            entity.Property(item => item.UserId).HasColumnName("user_id");
+            entity.Property(item => item.ExerciseId).HasColumnName("exercise_id");
+            entity.Property(item => item.ReviewedAt).HasColumnName("reviewed_at");
+            entity.Property(item => item.Score).HasColumnName("score");
+            entity.Property(item => item.IntervalDays).HasColumnName("interval_days");
+            entity.Property(item => item.ReviewNumber).HasColumnName("review_number");
+            entity.HasIndex(item => new { item.UserId, item.ExerciseId, item.ReviewedAt });
+            entity.HasOne<ReviewItem>().WithMany().HasForeignKey(item => item.ReviewItemId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
         modelBuilder.Entity<LegacyUserContentFeedback>(entity =>
         {
@@ -1358,6 +1453,7 @@ public sealed class OwnedSpeedReadingDbContext(
         modelBuilder.Entity<StudentProgramProgress>(entity =>
         {
             entity.ToTable("student_program_progress");
+            entity.Property(item => item.ScheduleJson).HasColumnType("jsonb");
             entity.Property(item => item.AverageSuccessRate).HasPrecision(5, 2);
             entity.HasIndex(item => new { item.UserId, item.IsActive, item.AssignedDate });
             entity.HasIndex(item => item.UserId)
@@ -1528,9 +1624,12 @@ public sealed class OwnedSpeedReadingDbContext(
         {
             entity.ToTable("user_profiles");
             entity.Property(item => item.TargetComprehension).HasPrecision(5, 2);
+            entity.Property(item => item.DateOfBirth).HasColumnType("date");
             entity.Property(item => item.HistoricalDisplayName).HasMaxLength(200);
             entity.Property(item => item.HistoricalEmail).HasMaxLength(320);
+            entity.Property(item => item.LearningStyle).HasMaxLength(20);
             entity.HasIndex(item => item.UserId).IsUnique();
+            entity.HasIndex(item => item.GradeLevel);
             entity.HasIndex(item => item.AgeGroupConfigurationId);
             entity.HasOne<AgeGroupConfiguration>()
                 .WithMany()

@@ -44,7 +44,7 @@ public sealed record SubmitReviewResult(
     bool IsMastered,
     double EasinessFactor);
 
-public sealed record SubmitReviewRequest(double Score);
+public sealed record SubmitReviewRequest(Guid SessionId);
 
 public sealed record ReviewHistoryItem(
     DateTime ReviewedAt,
@@ -57,8 +57,9 @@ public sealed record AddReviewRequest(Guid ExerciseId, string? TrainingSeriesId)
 public interface ISpeedReadingReview
 {
     Task<IReadOnlyList<ReviewExerciseSummary>> GetDueAsync(Guid userId, Guid? seriesId, CancellationToken cancellationToken);
+    Task<IReadOnlyList<ReviewExerciseSummary>> GetAllAsync(Guid userId, CancellationToken cancellationToken);
     Task<ReviewStatisticsSummary> GetStatisticsAsync(Guid userId, Guid? seriesId, CancellationToken cancellationToken);
-    Task<SubmitReviewResult?> SubmitAsync(Guid userId, Guid reviewItemId, double score, CancellationToken cancellationToken);
+    Task<SubmitReviewResult?> SubmitAsync(Guid userId, Guid reviewItemId, Guid sessionId, CancellationToken cancellationToken);
     Task<IReadOnlyList<ReviewHistoryItem>> GetHistoryAsync(Guid userId, Guid exerciseId, CancellationToken cancellationToken);
     Task<Guid?> AddAsync(Guid userId, AddReviewRequest request, CancellationToken cancellationToken);
     Task<bool> UpdateDailyProgressAsync(Guid userId, Guid dailyProgressId, CancellationToken cancellationToken);

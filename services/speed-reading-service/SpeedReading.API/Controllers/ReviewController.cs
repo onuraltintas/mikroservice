@@ -30,6 +30,14 @@ public sealed class ReviewController(ISpeedReadingReview review) : ControllerBas
             : Ok(await review.GetStatisticsAsync(userId, seriesId, cancellationToken));
     }
 
+    [HttpGet("items")]
+    public async Task<IActionResult> GetAll(CancellationToken cancellationToken = default)
+    {
+        return !TryGetUserId(out var userId)
+            ? Unauthorized()
+            : Ok(await review.GetAllAsync(userId, cancellationToken));
+    }
+
     [HttpPost("{reviewItemId:guid}/submit")]
     public async Task<IActionResult> Submit(
         Guid reviewItemId,
@@ -37,7 +45,8 @@ public sealed class ReviewController(ISpeedReadingReview review) : ControllerBas
         CancellationToken cancellationToken = default)
     {
         if (!TryGetUserId(out var userId)) return Unauthorized();
-        var result = await review.SubmitAsync(userId, reviewItemId, request.Score, cancellationToken);
+        if (request.SessionId == Guid.Empty) return BadRequest("Completed session is required.");
+        var result = await review.SubmitAsync(userId, reviewItemId, request.SessionId, cancellationToken);
         return result is null ? NotFound("Review item not found.") : Ok(result);
     }
 

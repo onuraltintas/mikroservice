@@ -75,6 +75,10 @@
                 <span class="material-icons" aria-hidden="true">analytics</span>
                 İstatistikler
             </button>
+            <button type="button" class="sp-tab-btn" role="tab" [attr.aria-selected]="activeTab === 2" [class.active]="activeTab === 2" (click)="activeTab = 2">
+                <span class="material-icons" aria-hidden="true">history</span>
+                Geçmiş
+            </button>
         </div>
 
         <!-- Due Reviews Tab -->
@@ -162,6 +166,25 @@
                 </div>
                 <h2>Tebrikler!</h2>
                 <p>Bugün için yapılacak tekrar egzersizi yok. Yeni içerikler öğrenmeye devam edebilirsiniz.</p>
+            </div>
+        </div>
+
+        <!-- Statistics Tab -->
+        <div class="tab-content" *ngIf="activeTab === 2">
+            <p *ngIf="allReviews().length === 0">Tekrar kuyruğunda henüz egzersiz bulunmuyor.</p>
+            <div class="reviews-grid" *ngIf="allReviews().length > 0">
+                <div *ngFor="let review of allReviews()" class="sp-card review-card">
+                    <div class="sp-card-header">
+                        <div class="sp-card-title">{{ review.exerciseTitle }}</div>
+                    </div>
+                    <div class="sp-card-content">
+                        <p>Son puan: {{ review.lastReviewScore }}%</p>
+                        <p>Son tekrar: {{ review.lastReviewedAt ? (review.lastReviewedAt | date:'dd.MM.yyyy HH:mm') : 'Henüz yok' }}</p>
+                    </div>
+                    <div class="sp-card-actions">
+                        <button type="button" class="sp-btn" (click)="viewHistory(review)">Geçmişi Gör</button>
+                    </div>
+                </div>
             </div>
         </div>
 

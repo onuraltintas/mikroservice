@@ -14,6 +14,7 @@ import { AuthService } from '../../../../core/services/auth.service';
 
 import { EngineFactory, EngineType } from './engines/engine-factory';
 import { shouldForwardExerciseAction } from './exercise-action-policy';
+import { shouldShowReadingQuestions } from './reading-question-flow';
 import {
   createActionFailureState,
   finishAfterPendingActions,
@@ -29,6 +30,7 @@ import { TextStreamEngine } from './engines/text-stream.engine';
 import { TextFadeEngine } from './engines/text-fade.engine';
 import { WordHighlightEngine } from './engines/word-highlight.engine';
 import { VisualExpansionEngine } from './engines/visual-expansion.engine';
+import { MotionPathEngine } from './engines/motion-path.engine';
 import { ScanFindEngine } from './engines/scan-find.engine';
 import { RegressionReductionEngine } from './engines/regression-reduction.engine';
 import { SubvocalizationReductionEngine } from './engines/subvocalization-reduction.engine';
@@ -38,7 +40,9 @@ import { ExerciseService } from '../../../../core/services/exercise.service';
 import { ExerciseSessionService } from '../../../../core/services/exercise-session.service';
 import { ExerciseProgramService, CompleteExerciseRequest } from '../../../../core/services/exercise-program.service';
 import { StudentProgramService } from '../../../../core/services/student-program.service'; // INJECTED
+import { LearningPathService } from '../../../../core/services/learning-path.service';
 import { ToasterService } from '../../../../core/services/toaster.service';
+import { ReviewService } from '../../../../services/review.service';
 import {
   ActionData,
   StartSessionRequest,
@@ -80,7 +84,9 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   private readonly exerciseService = inject(ExerciseService); // Explicit injection if not already present
   private readonly exerciseProgramService = inject(ExerciseProgramService);
   private readonly studentProgramService = inject(StudentProgramService); // INJECTED
+  private readonly learningPathService = inject(LearningPathService);
   private readonly sessionService = inject(ExerciseSessionService);
+  private readonly reviewService = inject(ReviewService);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
@@ -254,6 +260,9 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   };
 
   result: EngineResult | null = null;
+  resultSaveStatus: 'idle' | 'saving' | 'saved' | 'failed' | 'preview' = 'idle';
+  reviewSaveStatus: 'idle' | 'saving' | 'saved' | 'failed' = 'idle';
+  reviewItemId: string | null = null;
 
   // Grid interaction specific
   clickedCells = new Set<number>();
@@ -355,6 +364,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   constructor() { }
 
   assignmentId: string | null = null;
+  pathItemId: string | null = null;
 
   ngOnInit(): void {
     // Scroll to top immediately and after a short delay to ensure it works
@@ -368,6 +378,8 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     // Check assignment and assessment context from query params so the flow survives refreshes.
     this.route.queryParams.subscribe(params => {
       this.assignmentId = params['assignmentId'];
+      this.reviewItemId = params['mode'] === 'review' ? params['reviewItemId'] || null : null;
+      this.pathItemId = params['pathItemId'] || null;
       this.isAssessmentMode = state?.assessmentMode === true || params['assessmentMode'] === 'true';
       this.assessmentAttemptId = state?.assessmentAttemptId || params['assessmentAttemptId'] || null;
       const phase = Number(state?.assessmentPhase || params['assessmentPhase']);
@@ -558,7 +570,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     // results out of progress tables, this also prevents gamification and
     // adaptive-learning side effects. Reading text content is still loaded
     // from the catalogue so a preview uses the same material as a student.
-    if (this.authService.canPreviewExercises()) {
+    if (this.isPreviewSession()) {
       this.startPreviewSession();
       return;
     }
@@ -584,28 +596,28 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
           // configuration can never replace the attempt's text.
           this.backendSessionConfig = this.normalizeSessionConfiguration(configuration, initialData);
 
-          if (this.isAssessmentMode
-            && this.isReadingAssessmentEngine(this.backendSessionConfig)
-            && !this.backendSessionConfig.readingTextContent) {
-            throw new Error('Seviye tespit metni sunucudan alınamadı. Lütfen değerlendirmeyi yeniden başlatın.');
-          }
-
-          // Assessment questions are part of the sanitized initial session
-          // state; configuration is reserved for engine settings.
-          const questionSources = [this.backendSessionConfig, initialData];
-          const questions = questionSources.map(source =>
-            source?.Questions ||
-            source?.questions ||
-            source?.Content?.Questions ||
-            source?.content?.questions
-          ).find(candidate => Array.isArray(candidate));
-          if (questions && Array.isArray(questions)) {
-            this.comprehensionQuestions = questions;
-          }
-
-          this.restoreAssessmentQuestionProgress(this.backendSessionConfig);
-
           try {
+            if (this.isAssessmentMode
+              && this.isReadingAssessmentEngine(this.backendSessionConfig)
+              && !this.backendSessionConfig.readingTextContent) {
+              throw new Error('Seviye tespit metni sunucudan alınamadı. Lütfen değerlendirmeyi yeniden başlatın.');
+            }
+
+            // Assessment questions are part of the sanitized initial session
+            // state; configuration is reserved for engine settings.
+            const questionSources = [this.backendSessionConfig, initialData];
+            const questions = questionSources.map(source =>
+              source?.Questions ||
+              source?.questions ||
+              source?.Content?.Questions ||
+              source?.content?.questions
+            ).find(candidate => Array.isArray(candidate));
+            if (questions && Array.isArray(questions)) {
+              this.comprehensionQuestions = questions;
+            }
+
+            this.restoreAssessmentQuestionProgress(this.backendSessionConfig);
+
             this.initializeEngine();
             this.resumeAssessmentSession(this.backendSessionConfig);
           } catch (error) {
@@ -704,7 +716,12 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
         items: words
       },
       Questions: questions,
-      questions
+      questions,
+      adaptivePrimaryQuestions: questions,
+      adaptiveTransferContent: content,
+      adaptiveTransferTitle: title,
+      adaptiveTransferWordCount: wordCount,
+      adaptiveTransferQuestions: questions
     };
   }
 
@@ -970,7 +987,11 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
           const finalizeCompletion = () => {
 
           // For word_highlight or reading_comprehension with questions, go to question phase
-          const hasQuestions = this.comprehensionQuestions.length > 0;
+          const hasQuestions = shouldShowReadingQuestions(
+            this.engine?.engineType,
+            this.engine?.engineType === 'text_stream' ? (this.engine as TextStreamEngine).getMode() : undefined,
+            this.comprehensionQuestions.length,
+            this.exercise?.exerciseTypeName);
           const isReadingEngine =
             this.engine?.engineType === 'word_highlight' ||
             this.engine?.engineType === 'reading_comprehension' ||
@@ -1085,7 +1106,11 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
           // Pasif gözlem/okuma bazlı egzersizlerde her adımda validation yapma
           // Bu egzersizler completion'da topluca değerlendirilir (rate limit + performans)
           const engineType = this.parsedConfig?.engineType || this.engine?.engineType;
-          const engineMode = this.parsedConfig?.engineConfig?.['mode'];
+          const engineMode = this.engine?.engineType === 'motion_path'
+            ? (this.engine as MotionPathEngine).getMode()
+            : this.parsedConfig?.engineConfig?.['mode']
+            || this.parsedConfig?.['mode']
+            || this.backendSessionConfig?.['mode'];
 
           if (engineType === 'vocabulary_builder') {
             const vocabularyItemId = (action as any).wordId;
@@ -1146,6 +1171,9 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
               : engineType === 'visual_expansion'
                 ? (response: ValidationResponse) =>
                   (this.engine as VisualExpansionEngine).reconcileServerResponse(action, response)
+              : engineType === 'motion_path'
+                ? (response: ValidationResponse) =>
+                  (this.engine as MotionPathEngine).reconcileServerResponse(action, response)
               : undefined;
           void this.enqueueAction(action as ActionData, onResponse).catch(() => undefined);
         }
@@ -1159,16 +1187,21 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
         ...(this.backendSessionConfig?.EngineConfig || {}),
         ...(this.backendSessionConfig?.engineConfig || {}),
         // Extract gridSize from legacy root property or new unified engineConfig.grid.rows
-        gridSize: this.parsedConfig?.['gridSize'] ||
-          this.parsedConfig?.['engineConfig']?.['grid']?.['rows'] ||
-          this.backendSessionConfig?.['gridSize'] ||
-          this.backendSessionConfig?.['engineConfig']?.['grid']?.['rows'] || 5,
+        gridSize: this.backendSessionConfig?.['gridSize'] ||
+          this.backendSessionConfig?.['engineConfig']?.['grid']?.['rows'] ||
+          this.parsedConfig?.['gridSize'] ||
+          this.parsedConfig?.['engineConfig']?.['grid']?.['rows'] || 5,
+        serverGrid: engineType === 'grid_interaction'
+          ? this.backendSessionConfig?.['grid']
+          : undefined,
         sequenceType: 'numeric',
         exerciseTypeName: this.exercise?.exerciseTypeName,
-        mode: this.backendSessionConfig?.FocusMode
-          || this.backendSessionConfig?.focusMode
-          || this.backendSessionConfig?.mode
-          || this.parsedConfig?.engineConfig?.['mode'],
+        mode: engineType === 'motion_path'
+          ? (this.parsedConfig?.engineConfig?.['mode'] || this.parsedConfig?.['mode'] || 'fixation')
+          : (this.backendSessionConfig?.FocusMode
+            || this.backendSessionConfig?.focusMode
+            || this.backendSessionConfig?.mode
+            || this.parsedConfig?.engineConfig?.['mode']),
         NLevel: this.backendSessionConfig?.FocusNLevel
           || this.backendSessionConfig?.focusNLevel
           || this.backendSessionConfig?.NLevel
@@ -1249,7 +1282,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   private shouldTrackReading(): boolean {
     return !!this.sessionId
       && this.sessionId !== 'preview-mode'
-      && !this.authService.canPreviewExercises()
+      && !this.isPreviewSession()
       && [
         'word_highlight',
         'reading_comprehension',
@@ -2528,6 +2561,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   getFixationPointSize(): number { return (this.engine as any)?.getPointSize() || 36; }
   getFixationProgress(): number { return (this.engine as any)?.getFixationProgress() || 0; }
   getPeripheralChars(): any[] { return (this.engine as any)?.getPeripheralChars() || []; }
+  isFixationTargetVisible(): boolean { return (this.engine as MotionPathEngine)?.isFixationTargetVisible() ?? false; }
   getMotionPathFixationDuration(): number { return (this.engine as any)?.getFixationDuration() || 0; }
 
   trackPeripheralChar(index: number, char: any): string {
@@ -2535,12 +2569,14 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   }
 
   isFixationMode(): boolean {
-    const mode = this.parsedConfig?.engineConfig?.['mode'];
-    return mode === 'fixation' || !mode;
+    return this.engine?.engineType === 'motion_path'
+      ? (this.engine as MotionPathEngine).getMode() === 'fixation'
+      : false;
   }
 
   isSaccadeMode(): boolean {
-    return this.parsedConfig?.engineConfig?.['mode'] === 'saccade';
+    return this.engine?.engineType === 'motion_path'
+      && (this.engine as MotionPathEngine).getMode() === 'saccade';
   }
 
   getFixationLastChars(): string {
@@ -2607,28 +2643,13 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     if (!this.engine || this.engine.engineType !== 'motion_path') return;
 
     const input = event.target as HTMLInputElement;
-    const value = input.value.toUpperCase();
+    const value = input.value.toUpperCase().replace(/[^A-Z]/g, '');
 
     // Update the model value (force uppercase)
     this.peripheralInputValue = value;
     input.value = value;
 
-    // Get expected character count from engine
-    const expectedCount = (this.engine as any)?.getExpectedCharCount?.() ||
-      (this.engine as any)?.config?.fixation?.peripheralCount || 2;
-
-    // Send each new character to the engine
-    if (value.length > 0) {
-      const lastChar = value[value.length - 1];
-      if (/[A-Z]/.test(lastChar)) {
-        this.engine.handleInput({ type: 'keypress', key: lastChar });
-      }
-    }
-
-    // Auto-submit when all characters are entered
-    if (value.length >= expectedCount) {
-      setTimeout(() => this.submitPeripheralInput(), 100);
-    }
+    this.engine.handleInput({ type: 'text', value });
 
     this.cdr.detectChanges();
   }
@@ -2909,6 +2930,8 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   }
 
   private isMeasuredClientResult(result: EngineResult): boolean {
+    if (this.engine?.engineType === 'motion_path' && result.details?.serverValidatedFixation)
+      return true;
     if (this.questionAnswers.length > 0
       || result.details?.totalQuestions > 0
       || result.details?.totalAnswers > 0
@@ -2984,7 +3007,8 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
 
   private saveResult(result: EngineResult): void {
     // Preview mode is intentionally local-only for every preview role.
-    if (this.authService.canPreviewExercises() || this.sessionId === 'preview-mode') {
+    if (this.isPreviewSession() || this.sessionId === 'preview-mode') {
+      this.resultSaveStatus = 'preview';
       this.showToast('Önizleme modu - Sonuçlar kaydedilmedi.', 'info', 3000);
       return;
     }
@@ -2994,6 +3018,8 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       this.showToast('Oturum bulunamadı, sonuç kaydedilemedi.', 'error', 3000);
       return;
     }
+
+    this.resultSaveStatus = 'saving';
 
     const isMeasured = this.isMeasuredClientResult(result);
     const customData = {
@@ -3024,6 +3050,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       isAssessmentMode
     )).subscribe({
       next: (sessionResult: SessionResult) => {
+        this.resultSaveStatus = 'saved';
         this.sessionResult = sessionResult;
         this.result = {
           ...(this.result || result),
@@ -3053,18 +3080,66 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
 
         this.showToast(msg, 'info', 5000);
 
-        if (!isAssessmentMode && !isPracticeMode && this.exercise?.id) {
+        if (this.reviewItemId) {
+          this.submitReviewResult(sessionResult.sessionId);
+        }
+
+        if (!isAssessmentMode && this.pathItemId && this.sessionId) {
+          this.learningPathService.completePersonalizedPathItem(this.pathItemId, this.sessionId)
+            .subscribe({
+              error: (error) => {
+                console.error('Learning path completion failed:', error);
+                this.showToast('Öğrenme yolu ilerlemesi kaydedilemedi. Lütfen tekrar deneyin.', 'error', 5000);
+              }
+            });
+        } else if (!isAssessmentMode && !isPracticeMode && this.exercise?.id) {
           this.completeDailyProgress(result, customData, isMeasured);
         }
       },
       error: (err) => {
+        this.resultSaveStatus = 'failed';
         console.error('Session completion failed:', err);
-        this.showToast('Sonuç kaydedilirken hata oluştu', 'error', 3000);
+        this.showToast('Sonuç kaydedilemedi. Sonuç ekranından tekrar deneyebilirsiniz.', 'error', 5000);
+        this.cdr.detectChanges();
       }
     });
 
 
 
+  }
+
+  retrySaveResult(): void {
+    if (this.result && this.resultSaveStatus === 'failed') {
+      this.saveResult(this.result);
+    }
+  }
+
+  private isPreviewSession(): boolean {
+    return this.authService.canPreviewExercises()
+      && !(this.reviewItemId && this.authService.hasRole('Student'));
+  }
+
+  private submitReviewResult(sessionId: string): void {
+    if (!this.reviewItemId) return;
+    this.reviewSaveStatus = 'saving';
+    this.reviewService.submitReview(this.reviewItemId, sessionId).subscribe({
+      next: () => {
+        this.reviewSaveStatus = 'saved';
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Review submission failed:', error);
+        this.reviewSaveStatus = 'failed';
+        this.showToast('Egzersiz kaydedildi fakat tekrar planı güncellenemedi. Tekrar deneyin.', 'error', 5000);
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  retryReviewSubmission(): void {
+    if (this.reviewSaveStatus === 'failed' && this.sessionResult?.sessionId) {
+      this.submitReviewResult(this.sessionResult.sessionId);
+    }
   }
 
   private completeDailyProgress(
@@ -3122,14 +3197,14 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   private readingScrollProgress = 0;
 
   getComprehensionText(): string {
-    if (this.engine?.engineType === 'reading_comprehension' || this.engine?.engineType === 'exam_simulation' || this.engine?.engineType === 'adaptive_fluency') {
+    if (this.engine?.engineType === 'reading_comprehension' || this.engine?.engineType === 'free_reading' || this.engine?.engineType === 'exam_simulation' || this.engine?.engineType === 'adaptive_fluency') {
       return (this.engine as any).getText?.() || '';
     }
     return '';
   }
 
   getComprehensionWordCount(): number {
-    if (this.engine?.engineType === 'reading_comprehension' || this.engine?.engineType === 'exam_simulation' || this.engine?.engineType === 'adaptive_fluency') {
+    if (this.engine?.engineType === 'reading_comprehension' || this.engine?.engineType === 'free_reading' || this.engine?.engineType === 'exam_simulation' || this.engine?.engineType === 'adaptive_fluency') {
       return (this.engine as any).getWordCount?.() || 0;
     }
     return 0;
@@ -3189,6 +3264,24 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   }
 
   private handleAdaptiveReadingCompleted(result: EngineResult): void {
+    if (this.sessionId === 'preview-mode') {
+      const engine = this.engine as AdaptiveFluencyEngine;
+      this.readingWpm = Number(result.details?.wpm ?? 0);
+      const questions = engine.getQuestions();
+      if (questions.length > 0) {
+        this.comprehensionQuestions = questions;
+        this.currentQuestionIndex = 0;
+        this.questionAnswers = [];
+        this.selectedAnswer = null;
+        this.questionFeedback = null;
+        this.exercisePhase = 'questions';
+        this.startQuestionTimer();
+        this.cdr.detectChanges();
+      } else {
+        this.advanceAdaptiveStage();
+      }
+      return;
+    }
     this.waitForPendingActions(() => this.finishReadingTracking(response => {
       if (!response?.isValid) {
         this.showToast(response?.message || 'Okuma aşaması doğrulanamadı.', 'error');
@@ -3217,7 +3310,40 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   }
 
   private advanceAdaptiveStage(): void {
-    if (!this.sessionId || this.sessionId === 'preview-mode') return;
+    if (this.sessionId === 'preview-mode') {
+      const engine = this.engine as AdaptiveFluencyEngine;
+      if (engine.getStage() === 3) {
+        const correct = this.questionAnswers.filter(answer => answer.isCorrect).length;
+        const total = this.questionAnswers.length;
+        const comprehension = total ? Math.round(correct / total * 100) : 0;
+        this.result = {
+          score: comprehension,
+          accuracy: comprehension,
+          totalTime: this.engineState.timeElapsed,
+          totalSteps: 4,
+          completedSteps: 4,
+          errors: total - correct,
+          details: { wpm: this.readingWpm, comprehensionScore: comprehension,
+            performanceLevel: 'Önizleme tamamlandı', answers: [...this.adaptiveQuestionHistory] }
+        };
+        this.exercisePhase = 'completed';
+        this.engineState.isCompleted = true;
+        this.saveResult(this.result);
+      } else {
+        engine.applyStage({ stage: engine.getStage() + 1 });
+        this.questionAnswers = [];
+        this.selectedAnswer = null;
+        this.questionFeedback = null;
+        this.readingTrackingStarted = false;
+        this.readingTrackingStartCompleted = false;
+        this.readingTrackingFinished = false;
+        this.exercisePhase = 'reading';
+        engine.start();
+      }
+      this.cdr.detectChanges();
+      return;
+    }
+    if (!this.sessionId) return;
     this.enqueueAction({ action: 'adaptive_next_stage', timestamp: new Date() } as ActionData, response => {
       if (!response.isValid) {
         this.showToast(response.message || 'Sonraki aşamaya geçilemedi.', 'error');

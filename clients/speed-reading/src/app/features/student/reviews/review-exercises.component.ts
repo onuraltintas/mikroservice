@@ -20,6 +20,7 @@ export class ReviewExercisesComponent implements OnInit {
   private router = inject(Router);
 
   dueReviews = this.reviewService.dueReviews;
+  allReviews = signal<ReviewExerciseDto[]>([]);
   statistics = this.reviewService.statistics;
   loading = signal(false);
   history = signal<ReviewHistoryDto[] | null>(null);
@@ -32,6 +33,10 @@ export class ReviewExercisesComponent implements OnInit {
 
   loadData() {
     this.loading.set(true);
+    this.reviewService.getAllReviews().subscribe({
+      next: items => this.allReviews.set(items),
+      error: () => this.toaster.error('Tekrar geçmişi yüklenemedi. Lütfen yeniden deneyin.', 3000)
+    });
     this.reviewService.getDueReviews().subscribe({
       next: () => {
         this.reviewService.getStatistics().subscribe({
