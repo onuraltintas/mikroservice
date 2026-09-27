@@ -5,6 +5,7 @@ import { environment } from '../../../environments/environment';
 import { PagedResult } from '../models/paged-result.model';
 
 export interface CreateAssignmentRequest {
+    teacherId?: string;
     exerciseId: string;
     readingTextId?: string | null;
     studentIds: string[];
@@ -71,6 +72,35 @@ export class AssignmentService {
 
     createAssignment(request: CreateAssignmentRequest): Observable<string> {
         return this.http.post<string>(this.apiUrl, request);
+    }
+
+    private institutionUrl(institutionId: string): string {
+        return `${environment.speedReadingApiUrl}/institutions/${institutionId}/assignments`;
+    }
+
+    createInstitutionAssignment(institutionId: string, request: CreateAssignmentRequest): Observable<string> {
+        return this.http.post<string>(this.institutionUrl(institutionId), request);
+    }
+
+    getInstitutionAssignments(
+        institutionId: string, pageNumber = 1, pageSize = 10,
+        searchTerm?: string, isActive?: boolean, exerciseTypeId?: string,
+        teacherId?: string
+    ): Observable<PagedResult<TeacherAssignmentDto>> {
+        let params = new HttpParams().set('pageNumber', pageNumber).set('pageSize', pageSize);
+        if (searchTerm) params = params.set('searchTerm', searchTerm);
+        if (isActive !== undefined) params = params.set('isActive', isActive);
+        if (exerciseTypeId) params = params.set('exerciseTypeId', exerciseTypeId);
+        if (teacherId) params = params.set('teacherId', teacherId);
+        return this.http.get<PagedResult<TeacherAssignmentDto>>(this.institutionUrl(institutionId), { params });
+    }
+
+    getInstitutionAssignmentDetails(institutionId: string, id: string): Observable<AssignmentDetailDto> {
+        return this.http.get<AssignmentDetailDto>(`${this.institutionUrl(institutionId)}/${id}/details`);
+    }
+
+    deleteInstitutionAssignment(institutionId: string, id: string): Observable<void> {
+        return this.http.delete<void>(`${this.institutionUrl(institutionId)}/${id}`);
     }
 
     getMyAssignments(): Observable<AssignmentDto[]> {

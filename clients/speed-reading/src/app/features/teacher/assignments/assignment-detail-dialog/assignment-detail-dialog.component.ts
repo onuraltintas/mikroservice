@@ -74,7 +74,7 @@ export class AssignmentDetailDialogComponent implements OnInit {
 
   constructor(
     public dialogRef: MatDialogRef<AssignmentDetailDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: { id: string }
+    @Inject(MAT_DIALOG_DATA) public data: { id: string; institutionId?: string | null }
   ) {
     // Setup Filter Logic
     this.filteredStudents$ = combineLatest([
@@ -97,13 +97,15 @@ export class AssignmentDetailDialogComponent implements OnInit {
 
   loadData() {
     this.loading = true;
-    const loadDetails$ = this.assignmentService.getAssignmentDetails(this.data.id);
+    const loadDetails$ = this.data.institutionId
+      ? this.assignmentService.getInstitutionAssignmentDetails(this.data.institutionId, this.data.id)
+      : this.assignmentService.getAssignmentDetails(this.data.id);
 
     // ForkJoin or nested? Nested allows separate error handling.
     loadDetails$.subscribe({
       next: (details) => {
         this.assignment = details;
-        if (details.teacherId) {
+        if (details.teacherId && !this.data.institutionId) {
           this.teachersService.getMyStudents()
             .pipe(finalize(() => this.loading = false))
             .subscribe({

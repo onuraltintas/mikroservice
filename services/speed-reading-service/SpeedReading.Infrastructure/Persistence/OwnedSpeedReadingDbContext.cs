@@ -1395,9 +1395,11 @@ public sealed class OwnedSpeedReadingDbContext(
         modelBuilder.Entity<Assignment>(entity =>
         {
             entity.ToTable("assignments");
+            entity.Property(item => item.InstitutionId).HasColumnName("institution_id");
             entity.Property(item => item.Title).HasMaxLength(200).IsRequired();
             entity.Property(item => item.Description).HasMaxLength(2_000).IsRequired();
             entity.HasIndex(item => new { item.TeacherId, item.CreatedAt });
+            entity.HasIndex(item => new { item.InstitutionId, item.CreatedAt });
             entity.HasIndex(item => new { item.ExerciseId, item.IsActive });
             entity.HasOne<Exercise>()
                 .WithMany()

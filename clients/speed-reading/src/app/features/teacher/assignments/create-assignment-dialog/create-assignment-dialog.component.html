@@ -71,6 +71,16 @@
             <div class="form-section">
                 <h3 class="section-title">Hedef & Zamanlama</h3>
 
+                <mat-form-field *ngIf="data?.institutionId" appearance="outline" class="w-full">
+                    <mat-label>Öğretmen</mat-label>
+                    <mat-select formControlName="teacherId" (selectionChange)="onTeacherChange($event.value)">
+                        <mat-option *ngFor="let teacher of teachers" [value]="teacher.id">
+                            {{ teacher.firstName }} {{ teacher.lastName }}
+                        </mat-option>
+                    </mat-select>
+                    <mat-error>Öğretmen seçimi zorunludur</mat-error>
+                </mat-form-field>
+
                 <div class="grid-row">
                     <div class="w-half student-select-wrapper">
                         <mat-form-field appearance="outline" class="w-full">

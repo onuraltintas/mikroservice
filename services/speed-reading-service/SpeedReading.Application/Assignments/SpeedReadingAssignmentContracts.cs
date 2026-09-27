@@ -71,6 +71,21 @@ public enum AssignmentStudentMutationStatus
 
 public interface ISpeedReadingAssignments
 {
+    Task<Guid?> CreateForInstitutionAsync(
+        Guid institutionId, Guid teacherId, Guid actorId, CreateAssignmentRequest request,
+        CancellationToken cancellationToken = default);
+
+    Task<SpeedReadingPage<AssignmentSummary>> GetInstitutionAssignmentsAsync(
+        Guid institutionId, int pageNumber, int pageSize, string? searchTerm,
+        bool? isActive, Guid? exerciseTypeId, Guid? teacherId,
+        CancellationToken cancellationToken = default);
+
+    Task<AssignmentDetails?> GetInstitutionDetailsAsync(
+        Guid institutionId, Guid assignmentId, CancellationToken cancellationToken = default);
+
+    Task<bool> DeleteInstitutionAsync(
+        Guid institutionId, Guid assignmentId, CancellationToken cancellationToken = default);
+
     Task<Guid?> CreateAsync(
         Guid teacherId,
         CreateAssignmentRequest request,

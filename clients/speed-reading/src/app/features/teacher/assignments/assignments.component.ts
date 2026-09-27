@@ -22,6 +22,11 @@ import { MatCardModule } from '@angular/material/card';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { ConfirmationDialogComponent } from '../../../shared/components/confirmation-dialog/confirmation-dialog.component';
 import { AssignmentDetailDialogComponent } from './assignment-detail-dialog/assignment-detail-dialog.component';
+import { AuthService } from '../../../core/services/auth.service';
+import { UsersService } from '../../../core/services/users.service';
+import { TeachersService } from '../../../core/services/teachers.service';
+import { Teacher } from '../../../core/models/teacher.model';
+import { ToasterService } from '../../../core/services/toaster.service';
 
 @Component({
   selector: 'app-teacher-assignments',
@@ -51,6 +56,15 @@ export class AssignmentsComponent implements OnInit {
   private dialog = inject(MatDialog);
   private assignmentService = inject(AssignmentService);
   private exerciseService = inject(ExerciseService);
+  private authService = inject(AuthService);
+  private usersService = inject(UsersService);
+  private teachersService = inject(TeachersService);
+  private toaster = inject(ToasterService);
+
+  institutionMode = this.authService.hasRole('InstitutionAdmin') || this.authService.hasRole('InstitutionOwner');
+  institutionId: string | null = null;
+  teachers: Teacher[] = [];
+  teacherControl = new FormControl<string | null>(null);
 
   displayedColumns: string[] = ['title', 'exercise', 'dueDate', 'createdAt', 'stats', 'actions'];
   assignments: TeacherAssignmentDto[] = [];
@@ -70,6 +84,24 @@ export class AssignmentsComponent implements OnInit {
   ngOnInit() {
     this.loadExerciseTypes();
     this.setupFilters();
+    if (this.institutionMode) {
+      const institutionId = this.authService.currentUserValue?.institutionId;
+      if (institutionId) this.setInstitution(institutionId);
+      else this.usersService.getMyProfile().subscribe({
+        next: profile => profile.institutionId
+          ? this.setInstitution(profile.institutionId)
+          : this.toaster.error('Hızlı Okuma kurum kapsamı bulunamadı.'),
+        error: () => this.toaster.error('Kurum bilgisi yüklenemedi.')
+      });
+    } else this.loadAssignments();
+  }
+
+  private setInstitution(institutionId: string): void {
+    this.institutionId = institutionId;
+    this.teachersService.getTeachersPage(1, 100, undefined, institutionId, true).subscribe({
+      next: page => this.teachers = page.items,
+      error: () => this.toaster.error('Kurum öğretmenleri yüklenemedi.')
+    });
     this.loadAssignments();
   }
 
@@ -100,6 +132,10 @@ export class AssignmentsComponent implements OnInit {
       this.pageIndex = 0;
       this.loadAssignments();
     });
+    this.teacherControl.valueChanges.subscribe(() => {
+      this.pageIndex = 0;
+      this.loadAssignments();
+    });
   }
 
   getTurkishTypeName(type: any): string {
@@ -125,30 +161,39 @@ export class AssignmentsComponent implements OnInit {
     this.searchControl.setValue('', { emitEvent: false });
     this.statusControl.setValue(null, { emitEvent: false });
     this.exerciseTypeControl.setValue(null, { emitEvent: false });
+    this.teacherControl.setValue(null, { emitEvent: false });
     this.pageIndex = 0;
     this.loadAssignments();
   }
 
   loadAssignments() {
+    if (this.institutionMode && !this.institutionId) return;
     this.loading = true;
     const searchTerm = this.searchControl.value || undefined;
     const isActive = this.statusControl.value === null ? undefined : this.statusControl.value;
     const exerciseTypeId = this.exerciseTypeControl.value || undefined;
 
-    this.assignmentService.getTeacherAssignments(
+    (this.institutionMode
+      ? this.assignmentService.getInstitutionAssignments(
+          this.institutionId!, this.pageIndex + 1, this.pageSize, searchTerm,
+          isActive, exerciseTypeId, this.teacherControl.value || undefined)
+      : this.assignmentService.getTeacherAssignments(
       this.pageIndex + 1,
       this.pageSize,
       searchTerm,
       isActive,
       exerciseTypeId
-    )
+    ))
       .pipe(finalize(() => this.loading = false))
       .subscribe({
         next: (res: PagedResult<TeacherAssignmentDto>) => {
           this.assignments = res.items;
           this.totalCount = res.totalCount;
         },
-        error: (err: any) => console.error('Error loading assignments', err)
+        error: (err: any) => {
+          console.error('Error loading assignments', err);
+          this.toaster.error('Ödevler yüklenemedi. Lütfen yeniden deneyin.');
+        }
       });
   }
 
@@ -159,10 +204,12 @@ export class AssignmentsComponent implements OnInit {
   }
 
   openCreateDialog() {
+    if (this.institutionMode && !this.institutionId) return;
     this.dialog.open(CreateAssignmentDialogComponent, {
       width: '800px',
       maxWidth: '95vw',
-      disableClose: true
+      disableClose: true,
+      data: this.institutionMode ? { institutionId: this.institutionId } : null
     }).afterClosed().subscribe(result => {
       if (result) {
         this.loadAssignments();
@@ -194,13 +241,18 @@ export class AssignmentsComponent implements OnInit {
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
         this.loading = true;
-        this.assignmentService.deleteAssignment(assignment.id)
+        (this.institutionMode
+          ? this.assignmentService.deleteInstitutionAssignment(this.institutionId!, assignment.id)
+          : this.assignmentService.deleteAssignment(assignment.id))
           .pipe(finalize(() => this.loading = false))
           .subscribe({
             next: () => {
               this.loadAssignments();
             },
-            error: (err: any) => console.error('Error deleting assignment', err)
+            error: (err: any) => {
+              console.error('Error deleting assignment', err);
+              this.toaster.error('Ödev silinemedi. Lütfen yeniden deneyin.');
+            }
           });
       }
     });
@@ -211,7 +263,7 @@ export class AssignmentsComponent implements OnInit {
       width: '800px',
       maxWidth: '95vw',
       maxHeight: '90vh',
-      data: { id: assignment.id },
+      data: { id: assignment.id, institutionId: this.institutionMode ? this.institutionId : null },
       autoFocus: false
     });
   }

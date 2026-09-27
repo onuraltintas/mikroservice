@@ -14,6 +14,7 @@ public sealed class Assignment : AggregateRoot
     }
 
     public Guid TeacherId { get; private set; }
+    public Guid? InstitutionId { get; private set; }
     public Guid ExerciseId { get; private set; }
     public Guid? ReadingTextId { get; private set; }
     public string Title { get; private set; } = string.Empty;
@@ -30,12 +31,15 @@ public sealed class Assignment : AggregateRoot
         DateTime dueDate,
         Guid? id = null,
         DateTime? createdAt = null,
-        string? createdBy = null)
+        string? createdBy = null,
+        Guid? institutionId = null)
     {
         if (teacherId == Guid.Empty)
             throw new ArgumentException("Assignment teacher is required.", nameof(teacherId));
         if (exerciseId == Guid.Empty)
             throw new ArgumentException("Assignment exercise is required.", nameof(exerciseId));
+        if (institutionId == Guid.Empty)
+            throw new ArgumentException("Institution cannot be empty.", nameof(institutionId));
         if (string.IsNullOrWhiteSpace(title))
             throw new ArgumentException("Assignment title is required.", nameof(title));
 
@@ -43,6 +47,7 @@ public sealed class Assignment : AggregateRoot
         {
             Id = id.GetValueOrDefault(Guid.NewGuid()),
             TeacherId = teacherId,
+            InstitutionId = institutionId,
             ExerciseId = exerciseId,
             ReadingTextId = readingTextId,
             Title = title.Trim(),
@@ -66,7 +71,8 @@ public sealed class Assignment : AggregateRoot
         DateTime createdAt,
         string? createdBy,
         DateTime? updatedAt,
-        string? updatedBy)
+        string? updatedBy,
+        Guid? institutionId = null)
     {
         var assignment = Create(
             teacherId,
@@ -77,7 +83,8 @@ public sealed class Assignment : AggregateRoot
             dueDate,
             id,
             createdAt,
-            createdBy);
+            createdBy,
+            institutionId);
         assignment.IsActive = isActive;
         assignment.CreatedAt = EnsureUtc(createdAt);
         assignment.CreatedBy = createdBy;

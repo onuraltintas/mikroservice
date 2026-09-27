@@ -1,7 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { MatDialogRef, MatDialogModule } from '@angular/material/dialog';
+import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -19,6 +19,8 @@ import { TeachersService } from '../../../../core/services/teachers.service';
 import { ToasterService } from '../../../../core/services/toaster.service';
 import { AssignmentService } from '../../../../core/services/assignment.service';
 import { Student } from '../../../../core/models/student.model';
+import { StudentsService } from '../../../../core/services/students.service';
+import { Teacher } from '../../../../core/models/teacher.model';
 
 @Component({
   selector: 'app-create-assignment-dialog',
@@ -46,6 +48,8 @@ export class CreateAssignmentDialogComponent implements OnInit {
   private exerciseTypeService = inject(ExerciseTypeService);
   private ageGroupService = inject(AgeGroupConfigurationService);
   private teachersService = inject(TeachersService);
+  private studentsService = inject(StudentsService);
+  readonly data = inject<{ institutionId: string } | null>(MAT_DIALOG_DATA, { optional: true });
   private assignmentService = inject(AssignmentService);
   private toaster = inject(ToasterService);
   private dialogRef = inject(MatDialogRef<CreateAssignmentDialogComponent>);
@@ -55,6 +59,7 @@ export class CreateAssignmentDialogComponent implements OnInit {
   exerciseTypes: { id: string; name: string }[] = [];
   ageGroupMap = new Map<string, string>();
   students: Student[] = [];
+  teachers: Teacher[] = [];
   loading = false;
   loadingExercises = false;
   selectedTypeId: string | null = null;
@@ -67,6 +72,7 @@ export class CreateAssignmentDialogComponent implements OnInit {
       title: ['', [Validators.required, Validators.maxLength(200)]],
       description: [''],
       exerciseId: [{ value: '', disabled: true }, Validators.required],
+      teacherId: [null],
       studentIds: [[], Validators.required],
       readingTextId: [null],
       dueDate: [new Date(new Date().setDate(new Date().getDate() + 7)), Validators.required]
@@ -74,6 +80,17 @@ export class CreateAssignmentDialogComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.studentSearchControl.valueChanges.subscribe(val => {
+      const query = (val || '').toLowerCase();
+      this.filteredStudents = this.students.filter(s =>
+        s.firstName.toLowerCase().includes(query) ||
+        s.lastName.toLowerCase().includes(query)
+      );
+    });
+    if (this.data?.institutionId) {
+      this.form.get('teacherId')?.addValidators(Validators.required);
+      this.form.get('teacherId')?.updateValueAndValidity();
+    }
     this.loadData();
   }
 
@@ -98,23 +115,40 @@ export class CreateAssignmentDialogComponent implements OnInit {
       error: (err) => console.error('Error loading exercise types', err)
     });
 
-    // Load Students
+    if (this.data?.institutionId) {
+      this.teachersService.getTeachersPage(1, 100, undefined, this.data.institutionId, true).subscribe({
+        next: page => this.teachers = page.items,
+        error: () => this.toaster.error('Kurum öğretmenleri yüklenemedi.')
+      });
+    } else this.loadStudents();
+  }
+
+  onTeacherChange(teacherId: string): void {
+    this.form.patchValue({ studentIds: [] });
+    this.students = [];
+    this.filteredStudents = [];
+    if (this.data?.institutionId && teacherId) {
+      this.studentsService.getInstitutionStudentsPage(
+        1, 100, undefined, undefined, true, teacherId, this.data.institutionId)
+        .subscribe({
+          next: page => this.setStudents(page.items),
+          error: () => this.toaster.error('Öğretmenin öğrencileri yüklenemedi.')
+        });
+    }
+  }
+
+  private loadStudents(): void {
     this.teachersService.getMyStudents().subscribe({
       next: (res) => {
-        this.students = res;
-        this.filteredStudents = res;
-
-        // Setup search filter
-        this.studentSearchControl.valueChanges.subscribe(val => {
-          const query = (val || '').toLowerCase();
-          this.filteredStudents = this.students.filter(s =>
-            s.firstName.toLowerCase().includes(query) ||
-            s.lastName.toLowerCase().includes(query)
-          );
-        });
+        this.setStudents(res);
       },
-      error: (err) => console.error('Error loading students', err)
+      error: () => this.toaster.error('Öğrenciler yüklenemedi.')
     });
+  }
+
+  private setStudents(students: Student[]): void {
+    this.students = students;
+    this.filteredStudents = students;
   }
 
   getAgeGroupName(exercise: any): string {
@@ -173,7 +207,9 @@ export class CreateAssignmentDialogComponent implements OnInit {
       dueDate: val.dueDate.toISOString()
     };
 
-    this.assignmentService.createAssignment(request).subscribe({
+    (this.data?.institutionId
+      ? this.assignmentService.createInstitutionAssignment(this.data.institutionId, request)
+      : this.assignmentService.createAssignment(request)).subscribe({
       next: () => {
         this.toaster.success('Ödev başarıyla atandı!');
         this.dialogRef.close(true);

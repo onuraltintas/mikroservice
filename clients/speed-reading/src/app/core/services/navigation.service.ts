@@ -134,6 +134,11 @@ export class NavigationService {
         icon: 'people',
         route: '/teacher/students'
       },
+      {
+        label: 'Kurum Ödevleri',
+        icon: 'assignment',
+        route: '/teacher/assignments'
+      },
 
       {
         label: 'Raporlar',
