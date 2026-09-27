@@ -47,7 +47,7 @@ export class ReviewExercisesComponent implements OnInit {
 
   startReview(review: ReviewExerciseDto) {
     // Navigate to exercise player
-    this.router.navigate(['/student/exercise-player', review.exerciseId], {
+    this.router.navigate(['/student/exercises/universal-player', review.exerciseId], {
       queryParams: {
         reviewItemId: review.reviewItemId,
         mode: 'review'
