@@ -1,6 +1,6 @@
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 import { AuthService, UserProfile } from '../../../core/auth/auth.service';
 import { CoachingPortalService, ExamResult, Goal } from '../../../core/services/coaching-portal.service';
@@ -59,6 +59,40 @@ describe('CoachingPortalProgressComponent', () => {
       expect.any(String)
     );
     expect(component.showGoalForm()).toBe(false);
+  });
+
+  it('unlocks goal progress after a failed update so the student can retry', () => {
+    const component = TestBed.createComponent(CoachingPortalProgressComponent).componentInstance;
+    const goal: Goal = { id: 'goal-1', title: 'Matematik', category: 'SubjectMastery', progress: 20, isCompleted: false };
+    service.updateGoalProgress.mockReturnValue(throwError(() => new Error('offline')));
+    const input = document.createElement('input');
+    input.value = '75';
+    component.updateProgress(goal, { target: input } as unknown as Event);
+    expect(component.updatingGoalId()).toBeNull();
+    expect(input.value).toBe('20');
+  });
+
+  it('does not present a partial exam page as the overall average after summary failure', () => {
+    const component = TestBed.createComponent(CoachingPortalProgressComponent).componentInstance;
+    service.getStudentProgress.mockReturnValue(throwError(() => new Error('offline')));
+    service.getStudentExamResults.mockReturnValue(of({ items: [{ examId: 'exam', score: 80, maxScore: 100 }], pageNumber: 1, pageSize: 25, totalCount: 50, totalPages: 2 }));
+    component.ngOnInit();
+    expect(component.averageScore()).toBeNull();
+    expect(component.summaryError()).toBeTruthy();
+    service.getStudentProgress.mockReturnValue(of({ averageExamPercentage: 60 }));
+    component.retrySummary();
+    expect(component.averageScore()).toBe(60);
+    expect(component.summaryError()).toBeNull();
+  });
+
+  it('loads the next goal page without losing previously loaded goals', () => {
+    const component = TestBed.createComponent(CoachingPortalProgressComponent).componentInstance;
+    service.getStudentGoals.mockReturnValueOnce(of({ items: [{ id: 'first' }], pageNumber: 1, pageSize: 100, totalCount: 101, totalPages: 2 }))
+      .mockReturnValueOnce(of({ items: [{ id: 'last' }], pageNumber: 2, pageSize: 100, totalCount: 101, totalPages: 2 }));
+    component.ngOnInit();
+    component.loadMoreGoals();
+    expect(service.getStudentGoals).toHaveBeenLastCalledWith('user-1', 2, 100);
+    expect(component.goals().map(goal => goal.id)).toEqual(['first', 'last']);
   });
 
   it('updates only the selected goal progress after a successful save', () => {
