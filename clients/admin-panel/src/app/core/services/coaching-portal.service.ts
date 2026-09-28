@@ -637,11 +637,17 @@ export class CoachingPortalService {
     studentId: string,
     type: CoachingStudentHistoryType,
     pageNumber = 1,
-    pageSize = 10
+    pageSize = 10,
+    filter?: { fromDate?: string; toDate?: string; status?: string; search?: string }
   ): Observable<PagedResponse<CoachingStudentHistoryItem>> {
+    let params = this.paging(pageNumber, pageSize).set('type', type);
+    if (filter?.fromDate) params = params.set('fromDate', filter.fromDate);
+    if (filter?.toDate) params = params.set('toDate', filter.toDate);
+    if (filter?.status) params = params.set('status', filter.status);
+    if (filter?.search?.trim()) params = params.set('search', filter.search.trim());
     return this.http.get<PagedResponse<CoachingStudentHistoryItem>>(
       `${environment.apiUrl}/reports/student/${this.id(studentId)}/history`,
-      { params: this.paging(pageNumber, pageSize).set('type', type) }
+      { params }
     );
   }
 

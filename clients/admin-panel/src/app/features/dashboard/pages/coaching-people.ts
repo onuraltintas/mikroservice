@@ -89,6 +89,13 @@ import { ToasterService } from '../../../core/services/toaster.service';
                   </select>
                 </label>
               </div>
+              <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+                <label class="text-sm">Başlangıç<input type="date" [(ngModel)]="studentHistoryFromDate" class="mt-1 block w-full rounded border px-2 py-2"></label>
+                <label class="text-sm">Bitiş<input type="date" [(ngModel)]="studentHistoryToDate" class="mt-1 block w-full rounded border px-2 py-2"></label>
+                <label class="text-sm">Durum<select [(ngModel)]="studentHistoryStatus" class="mt-1 block w-full rounded border px-2 py-2"><option value="">Tümü</option>@for (option of historyStatusOptions[studentHistoryType]; track option.value) { <option [value]="option.value">{{ option.label }}</option> }</select></label>
+                <label class="text-sm">Başlık ara<input type="search" [(ngModel)]="studentHistorySearch" maxlength="100" (keyup.enter)="applyStudentHistoryFilters()" class="mt-1 block w-full rounded border px-2 py-2"></label>
+                <button type="button" (click)="applyStudentHistoryFilters()" [disabled]="studentHistoryLoading()" class="self-end rounded bg-indigo-600 px-3 py-2 text-sm text-white disabled:opacity-50">Filtrele</button>
+              </div>
               @if (studentHistoryLoading()) { <p role="status">Geçmiş yükleniyor…</p> }
               @if (studentHistory(); as history) {
                 <div class="divide-y text-sm">
@@ -220,6 +227,12 @@ export class CoachingPeopleComponent implements OnInit {
     { value: 'Sessions', label: 'Seanslar' },
     { value: 'Goals', label: 'Hedefler' }
   ];
+  readonly historyStatusOptions: Record<CoachingStudentHistoryType, { value: string; label: string }[]> = {
+    Assignments: [{ value: 'Assigned', label: 'Atandı' }, { value: 'InProgress', label: 'Devam ediyor' }, { value: 'Submitted', label: 'Teslim edildi' }, { value: 'Graded', label: 'Değerlendirildi' }, { value: 'Cancelled', label: 'İptal edildi' }],
+    Exams: [{ value: 'Result', label: 'Sonuç kaydı' }],
+    Sessions: [{ value: 'NotRecorded', label: 'Katılım işlenmedi' }, { value: 'Present', label: 'Katıldı' }, { value: 'Absent', label: 'Katılmadı' }, { value: 'Late', label: 'Geç katıldı' }, { value: 'Excused', label: 'Mazeretli' }, { value: 'Cancelled', label: 'İptal edildi' }],
+    Goals: [{ value: 'InProgress', label: 'Devam ediyor' }, { value: 'Completed', label: 'Tamamlandı' }]
+  };
   readonly teacherAnalytics = signal<TeacherCoachingAnalytics | null>(null);
   readonly teacherStudents = signal<CoachingStudentRosterPage | null>(null);
   readonly teacherLookupResults = signal<CoachingTeacherRosterItem[]>([]);
@@ -251,6 +264,10 @@ export class CoachingPeopleComponent implements OnInit {
   teacherStudentPage = 1;
   studentHistoryType: CoachingStudentHistoryType = 'Assignments';
   studentHistoryPage = 1;
+  studentHistoryFromDate = '';
+  studentHistoryToDate = '';
+  studentHistoryStatus = '';
+  studentHistorySearch = '';
 
   ngOnInit(): void {
     if (!isPlatformBrowser(this.platformId)) return;
@@ -560,6 +577,15 @@ export class CoachingPeopleComponent implements OnInit {
 
   selectStudentHistoryType(type: CoachingStudentHistoryType): void {
     this.studentHistoryType = type;
+    this.studentHistoryStatus = '';
+    this.loadStudentHistory(1);
+  }
+
+  applyStudentHistoryFilters(): void {
+    if (this.studentHistoryFromDate && this.studentHistoryToDate && this.studentHistoryFromDate > this.studentHistoryToDate) {
+      this.error.set('Başlangıç tarihi bitiş tarihinden sonra olamaz.');
+      return;
+    }
     this.loadStudentHistory(1);
   }
 
@@ -569,7 +595,16 @@ export class CoachingPeopleComponent implements OnInit {
     this.studentHistory.set(null);
     this.studentHistoryLoading.set(true);
     this.error.set(null);
-    this.service.getStudentHistory(this.detailId, this.studentHistoryType, page, 25).subscribe({
+    const filter = {
+      ...(this.studentHistoryFromDate ? { fromDate: `${this.studentHistoryFromDate}T00:00:00.000Z` } : {}),
+      ...(this.studentHistoryToDate ? { toDate: `${this.studentHistoryToDate}T23:59:59.999Z` } : {}),
+      ...(this.studentHistoryStatus ? { status: this.studentHistoryStatus } : {}),
+      ...(this.studentHistorySearch.trim() ? { search: this.studentHistorySearch.trim() } : {})
+    };
+    const request = Object.keys(filter).length
+      ? this.service.getStudentHistory(this.detailId, this.studentHistoryType, page, 25, filter)
+      : this.service.getStudentHistory(this.detailId, this.studentHistoryType, page, 25);
+    request.subscribe({
       next: result => {
         if (requestId !== this.studentHistoryRequestId) return;
         this.studentHistoryPage = page;

@@ -41,12 +41,17 @@ public sealed class ReportsController(IMediator mediator) : ControllerBase
         [FromQuery] CoachingStudentHistoryType type = CoachingStudentHistoryType.Assignments,
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 25,
+        [FromQuery] DateTime? fromDate = null,
+        [FromQuery] DateTime? toDate = null,
+        [FromQuery] string? status = null,
+        [FromQuery] string? search = null,
         CancellationToken cancellationToken = default)
     {
         try
         {
             return Ok(await mediator.Send(
-                new GetTeacherStudentHistoryQuery(studentId, type, pageNumber, pageSize),
+                new GetTeacherStudentHistoryQuery(studentId, type, pageNumber, pageSize)
+                { Filter = new CoachingStudentHistoryFilter(fromDate, toDate, status, search) },
                 cancellationToken));
         }
         catch (BusinessRuleException ex) when (ex.Code.StartsWith("Authorization.", StringComparison.OrdinalIgnoreCase))

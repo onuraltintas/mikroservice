@@ -1,4 +1,5 @@
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
@@ -14,7 +15,7 @@ import {
 @Component({
   selector: 'app-teacher-student-detail',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './teacher-student-detail.component.html'
 })
 export class TeacherStudentDetailComponent implements OnInit {
@@ -25,6 +26,12 @@ export class TeacherStudentDetailComponent implements OnInit {
   readonly progress = signal<StudentProgressSummary | null>(null);
   readonly history = signal<CoachingStudentHistoryItem[]>([]);
   readonly historyTypes: CoachingStudentHistoryType[] = ['Assignments', 'Exams', 'Sessions', 'Goals'];
+  readonly statusOptions: Record<CoachingStudentHistoryType, { value: string; label: string }[]> = {
+    Assignments: [{ value: 'Assigned', label: 'Atandı' }, { value: 'InProgress', label: 'Devam ediyor' }, { value: 'Submitted', label: 'Teslim edildi' }, { value: 'Graded', label: 'Değerlendirildi' }, { value: 'Cancelled', label: 'İptal edildi' }],
+    Exams: [{ value: 'Result', label: 'Sonuç kaydı' }],
+    Sessions: [{ value: 'NotRecorded', label: 'Katılım işlenmedi' }, { value: 'Present', label: 'Katıldı' }, { value: 'Absent', label: 'Katılmadı' }, { value: 'Late', label: 'Geç katıldı' }, { value: 'Excused', label: 'Mazeretli' }, { value: 'Cancelled', label: 'İptal edildi' }],
+    Goals: [{ value: 'InProgress', label: 'Devam ediyor' }, { value: 'Completed', label: 'Tamamlandı' }]
+  };
   readonly historyType = signal<CoachingStudentHistoryType>('Assignments');
   readonly historyPage = signal(1);
   readonly historyTotalPages = signal(0);
@@ -32,6 +39,10 @@ export class TeacherStudentDetailComponent implements OnInit {
   readonly isHistoryLoading = signal(false);
   readonly errorMessage = signal<string | null>(null);
   readonly historyError = signal<string | null>(null);
+  historySearch = '';
+  historyStatus = '';
+  historyFromDate = '';
+  historyToDate = '';
   private historyRequestId = 0;
 
   ngOnInit() {
@@ -65,7 +76,16 @@ export class TeacherStudentDetailComponent implements OnInit {
 
   selectHistoryType(type: CoachingStudentHistoryType) {
     this.historyType.set(type);
+    this.historyStatus = '';
     this.loadHistory(type, 1);
+  }
+
+  applyHistoryFilters() {
+    if (this.historyFromDate && this.historyToDate && this.historyFromDate > this.historyToDate) {
+      this.historyError.set('Başlangıç tarihi bitiş tarihinden sonra olamaz.');
+      return;
+    }
+    this.loadHistory(this.historyType(), 1);
   }
 
   previousHistoryPage() {
@@ -94,7 +114,16 @@ export class TeacherStudentDetailComponent implements OnInit {
     this.isHistoryLoading.set(true);
     this.historyError.set(null);
     this.history.set([]);
-    this.coachingService.getTeacherStudentHistory(studentId, type, pageNumber, 10).pipe(
+    const filter = {
+      ...(this.historyFromDate ? { fromDate: `${this.historyFromDate}T00:00:00.000Z` } : {}),
+      ...(this.historyToDate ? { toDate: `${this.historyToDate}T23:59:59.999Z` } : {}),
+      ...(this.historyStatus ? { status: this.historyStatus } : {}),
+      ...(this.historySearch.trim() ? { search: this.historySearch.trim() } : {})
+    };
+    const request = Object.keys(filter).length
+      ? this.coachingService.getTeacherStudentHistory(studentId, type, pageNumber, 10, filter)
+      : this.coachingService.getTeacherStudentHistory(studentId, type, pageNumber, 10);
+    request.pipe(
       finalize(() => { if (requestId === this.historyRequestId) this.isHistoryLoading.set(false); })
     ).subscribe({
       next: (page: PagedResponse<CoachingStudentHistoryItem>) => {

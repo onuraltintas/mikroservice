@@ -491,12 +491,17 @@ export class CoachingAdminService {
     studentId: string,
     type: CoachingStudentHistoryType,
     pageNumber = 1,
-    pageSize = 25
+    pageSize = 25,
+    filter?: { fromDate?: string; toDate?: string; status?: string; search?: string }
   ) {
-    const params = new HttpParams()
+    let params = new HttpParams()
       .set('type', type)
       .set('pageNumber', pageNumber)
       .set('pageSize', pageSize);
+    if (filter?.fromDate) params = params.set('fromDate', filter.fromDate);
+    if (filter?.toDate) params = params.set('toDate', filter.toDate);
+    if (filter?.status) params = params.set('status', filter.status);
+    if (filter?.search?.trim()) params = params.set('search', filter.search.trim());
     return this.http.get<CoachingAdminStudentHistoryPage>(
       `${this.url}/students/${encodeURIComponent(studentId)}/history`, { params });
   }

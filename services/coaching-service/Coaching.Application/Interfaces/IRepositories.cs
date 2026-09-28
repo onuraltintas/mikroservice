@@ -140,6 +140,8 @@ public enum CoachingStudentHistoryType
     Goals
 }
 
+public sealed record CoachingStudentHistoryFilter(DateTime? FromDate, DateTime? ToDate, string? Status, string? Search);
+
 public interface ICoachingStudentHistoryRepository
 {
     Task<PagedRepositoryResult<CoachingAdminStudentHistoryItemDto>> GetStudentHistoryAsync(
@@ -147,7 +149,8 @@ public interface ICoachingStudentHistoryRepository
         CoachingStudentHistoryType type,
         int pageNumber,
         int pageSize,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default,
+        CoachingStudentHistoryFilter? filter = null);
 }
 
 public interface IIdempotencyRepository

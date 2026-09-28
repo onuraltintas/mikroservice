@@ -934,7 +934,8 @@ public sealed class CoachingAdminRepository : ICoachingAdminRepository
         CoachingStudentHistoryType type,
         int pageNumber,
         int pageSize,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        CoachingStudentHistoryFilter? filter = null)
     {
         if (studentId == Guid.Empty)
             throw new ArgumentException("Student ID is required.", nameof(studentId));
@@ -942,9 +943,13 @@ public sealed class CoachingAdminRepository : ICoachingAdminRepository
             throw new ArgumentOutOfRangeException(nameof(pageNumber));
         if (pageSize is < 1 or > 100)
             throw new ArgumentOutOfRangeException(nameof(pageSize));
+        if (filter?.FromDate > filter?.ToDate)
+            throw new ArgumentException("History date range is invalid.", nameof(filter));
 
         var skip = (pageNumber - 1) * pageSize;
         var typeName = type.ToString();
+        var search = filter?.Search?.Trim().ToLowerInvariant();
+        var status = filter?.Status?.Trim();
         int totalCount;
         IReadOnlyList<CoachingAdminStudentHistoryItemDto> items;
 
@@ -954,6 +959,17 @@ public sealed class CoachingAdminRepository : ICoachingAdminRepository
             {
                 var query = _context.AssignmentStudents.AsNoTracking()
                     .Where(item => item.StudentId == studentId);
+                if (filter?.FromDate is { } assignmentFrom) query = query.Where(item => item.CreatedAt >= assignmentFrom);
+                if (filter?.ToDate is { } assignmentTo) query = query.Where(item => item.CreatedAt <= assignmentTo);
+                if (!string.IsNullOrWhiteSpace(search)) query = query.Where(item => item.Assignment.Title.ToLower().Contains(search));
+                if (!string.IsNullOrWhiteSpace(status))
+                {
+                    if (status.Equals("Cancelled", StringComparison.OrdinalIgnoreCase))
+                        query = query.Where(item => item.Assignment.Status == Domain.Enums.AssignmentStatus.Cancelled);
+                    else if (Enum.TryParse<Domain.Enums.StudentAssignmentStatus>(status, true, out var assignmentStatus))
+                        query = query.Where(item => item.Assignment.Status != Domain.Enums.AssignmentStatus.Cancelled && item.Status == assignmentStatus);
+                    else query = query.Where(_ => false);
+                }
                 totalCount = await query.CountAsync(cancellationToken);
                 items = await query
                     .OrderByDescending(item => item.CreatedAt)
@@ -977,6 +993,10 @@ public sealed class CoachingAdminRepository : ICoachingAdminRepository
             {
                 var query = _context.ExamResults.AsNoTracking()
                     .Where(item => item.StudentId == studentId);
+                if (filter?.FromDate is { } examFrom) query = query.Where(item => item.Exam.ExamDate >= examFrom);
+                if (filter?.ToDate is { } examTo) query = query.Where(item => item.Exam.ExamDate <= examTo);
+                if (!string.IsNullOrWhiteSpace(search)) query = query.Where(item => item.Exam.Title.ToLower().Contains(search));
+                if (!string.IsNullOrWhiteSpace(status) && !status.Equals("Result", StringComparison.OrdinalIgnoreCase)) query = query.Where(_ => false);
                 totalCount = await query.CountAsync(cancellationToken);
                 items = await query
                     .OrderByDescending(item => item.Exam.ExamDate)
@@ -998,6 +1018,17 @@ public sealed class CoachingAdminRepository : ICoachingAdminRepository
             {
                 var query = _context.SessionAttendances.AsNoTracking()
                     .Where(item => item.StudentId == studentId);
+                if (filter?.FromDate is { } sessionFrom) query = query.Where(item => item.Session.ScheduledDate >= sessionFrom);
+                if (filter?.ToDate is { } sessionTo) query = query.Where(item => item.Session.ScheduledDate <= sessionTo);
+                if (!string.IsNullOrWhiteSpace(search)) query = query.Where(item => item.Session.Title.ToLower().Contains(search));
+                if (!string.IsNullOrWhiteSpace(status))
+                {
+                    if (status.Equals("Cancelled", StringComparison.OrdinalIgnoreCase))
+                        query = query.Where(item => item.Session.Status == Domain.Enums.SessionStatus.Cancelled);
+                    else if (Enum.TryParse<Domain.Enums.AttendanceStatus>(status, true, out var attendanceStatus))
+                        query = query.Where(item => item.Session.Status != Domain.Enums.SessionStatus.Cancelled && item.AttendanceStatus == attendanceStatus);
+                    else query = query.Where(_ => false);
+                }
                 totalCount = await query.CountAsync(cancellationToken);
                 items = await query
                     .OrderByDescending(item => item.Session.ScheduledDate)
@@ -1019,6 +1050,15 @@ public sealed class CoachingAdminRepository : ICoachingAdminRepository
             {
                 var query = _context.AcademicGoals.AsNoTracking()
                     .Where(item => item.StudentId == studentId);
+                if (filter?.FromDate is { } goalFrom) query = query.Where(item => item.CreatedAt >= goalFrom);
+                if (filter?.ToDate is { } goalTo) query = query.Where(item => item.CreatedAt <= goalTo);
+                if (!string.IsNullOrWhiteSpace(search)) query = query.Where(item => item.Title.ToLower().Contains(search));
+                if (!string.IsNullOrWhiteSpace(status))
+                {
+                    if (status.Equals("Completed", StringComparison.OrdinalIgnoreCase)) query = query.Where(item => item.IsCompleted);
+                    else if (status.Equals("InProgress", StringComparison.OrdinalIgnoreCase)) query = query.Where(item => !item.IsCompleted);
+                    else query = query.Where(_ => false);
+                }
                 totalCount = await query.CountAsync(cancellationToken);
                 items = await query
                     .OrderByDescending(item => item.CreatedAt)

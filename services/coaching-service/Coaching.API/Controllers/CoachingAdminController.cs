@@ -129,6 +129,10 @@ public sealed class CoachingAdminController : ControllerBase
         [FromQuery] CoachingStudentHistoryType type = CoachingStudentHistoryType.Assignments,
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 25,
+        [FromQuery] DateTime? fromDate = null,
+        [FromQuery] DateTime? toDate = null,
+        [FromQuery] string? status = null,
+        [FromQuery] string? search = null,
         CancellationToken cancellationToken = default)
     {
         var scope = await _adminScopeAuthorization.RequireReadScopeAsync(cancellationToken);
@@ -138,13 +142,15 @@ public sealed class CoachingAdminController : ControllerBase
         }
 
         if (studentId == Guid.Empty || !Enum.IsDefined(type)
-            || pageNumber is < 1 or > 1000 || pageSize is < 1 or > 100)
+            || pageNumber is < 1 or > 1000 || pageSize is < 1 or > 100
+            || fromDate > toDate || search?.Length > 100)
         {
             return BadRequest();
         }
 
         return Ok(await repository.GetStudentHistoryAsync(
-            studentId, type, pageNumber, pageSize, cancellationToken));
+            studentId, type, pageNumber, pageSize, cancellationToken,
+            new CoachingStudentHistoryFilter(fromDate, toDate, status, search)));
     }
 
     [HttpGet("institutions/{institutionId:guid}/students")]

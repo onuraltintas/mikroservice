@@ -76,6 +76,19 @@ public sealed class CoachingAdminStudentHistoryTests
         firstPage.Items[0].Id.Should().NotBe(secondPage.Items[0].Id);
         firstPage.Items[0].Type.Should().Be(type.ToString());
         secondPage.Items[0].Type.Should().Be(type.ToString());
+
+        var search = type == CoachingStudentHistoryType.Goals ? "Previous" : previousInstitutionId.ToString();
+        var status = type switch
+        {
+            CoachingStudentHistoryType.Assignments => "Assigned",
+            CoachingStudentHistoryType.Exams => "Result",
+            CoachingStudentHistoryType.Sessions => "NotRecorded",
+            _ => "InProgress"
+        };
+        var filtered = await repository.GetStudentHistoryAsync(studentId, type, 1, 25, CancellationToken.None,
+            new CoachingStudentHistoryFilter(null, null, status, search));
+        filtered.TotalCount.Should().Be(1);
+        filtered.Items.Should().ContainSingle().Which.Title.Should().Contain(search);
     }
 
     [Fact]
