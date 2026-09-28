@@ -18,6 +18,11 @@ export class CoachingPortalProgressComponent implements OnInit {
   private readonly formBuilder = inject(FormBuilder);
 
   readonly goals = signal<Goal[]>([]);
+  readonly goalPageNumber = signal(1);
+  readonly goalTotalPages = signal(1);
+  readonly loadingMoreGoals = signal(false);
+  readonly summaryError = signal<string | null>(null);
+  readonly loadingSummary = signal(false);
   readonly examResults = signal<ExamResult[]>([]);
   readonly examPageNumber = signal(1);
   readonly examTotalPages = signal(1);
@@ -55,13 +60,18 @@ export class CoachingPortalProgressComponent implements OnInit {
     }
 
     forkJoin({
-      summary: this.coachingService.getStudentProgress(studentId).pipe(catchError(() => of(null))),
+      summary: this.coachingService.getStudentProgress(studentId).pipe(catchError(() => {
+        this.summaryError.set('İlerleme özeti yüklenemedi. Genel istatistikler şu anda gösterilemiyor.');
+        return of(null);
+      })),
       goals: this.coachingService.getStudentGoals(studentId, 1, 100),
       exams: this.coachingService.getStudentExamResults(studentId, 1, 25)
     }).subscribe({
       next: result => {
         this.summary.set(result.summary);
         this.goals.set(result.goals.items);
+        this.goalPageNumber.set(result.goals.pageNumber);
+        this.goalTotalPages.set(result.goals.totalPages ?? Math.max(1, Math.ceil(result.goals.totalCount / result.goals.pageSize)));
         this.examResults.set(result.exams.items);
         this.examPageNumber.set(result.exams.pageNumber);
         this.examTotalPages.set(result.exams.totalPages ?? Math.max(1, Math.ceil(result.exams.totalCount / result.exams.pageSize)));
@@ -126,7 +136,9 @@ export class CoachingPortalProgressComponent implements OnInit {
     if (!Number.isFinite(progress) || progress === goal.progress) return;
 
     this.updatingGoalId.set(goal.id);
-    this.coachingService.updateGoalProgress(goal.id, progress).subscribe({
+    this.coachingService.updateGoalProgress(goal.id, progress).pipe(
+      finalize(() => this.updatingGoalId.set(null))
+    ).subscribe({
       next: () => {
         this.goals.update(items => items.map(item => item.id === goal.id
           ? { ...item, progress, isCompleted: progress === 100 }
@@ -135,8 +147,7 @@ export class CoachingPortalProgressComponent implements OnInit {
       error: () => {
         this.goalFormError.set('Hedef ilerlemesi güncellenemedi.');
         input.value = String(goal.progress);
-      },
-      complete: () => this.updatingGoalId.set(null)
+      }
     });
   }
 
@@ -146,7 +157,11 @@ export class CoachingPortalProgressComponent implements OnInit {
 
   private loadGoals(studentId: string) {
     this.coachingService.getStudentGoals(studentId, 1, 100).subscribe({
-      next: page => this.goals.set(page.items),
+      next: page => {
+        this.goals.set(page.items);
+        this.goalPageNumber.set(page.pageNumber);
+        this.goalTotalPages.set(page.totalPages ?? Math.max(1, Math.ceil(page.totalCount / page.pageSize)));
+      },
       error: () => this.goalFormError.set('Hedef listesi yenilenemedi.')
     });
   }
@@ -158,10 +173,32 @@ export class CoachingPortalProgressComponent implements OnInit {
   averageScore() {
     const summary = this.summary();
     if (summary?.averageExamPercentage !== undefined) return Math.round(summary.averageExamPercentage);
-    const results = this.examResults();
-    if (results.length === 0) return null;
-    const percentage = results.reduce((total, result) => total + (result.maxScore > 0 ? result.score / result.maxScore : 0), 0) / results.length;
-    return Math.round(percentage * 100);
+    return null;
+  }
+
+  retrySummary() {
+    const studentId = this.authService.userProfile()?.id;
+    if (!studentId || this.loadingSummary()) return;
+    this.loadingSummary.set(true);
+    this.coachingService.getStudentProgress(studentId).pipe(finalize(() => this.loadingSummary.set(false))).subscribe({
+      next: summary => { this.summary.set(summary); this.summaryError.set(null); },
+      error: () => this.summaryError.set('İlerleme özeti yüklenemedi. Yeniden deneyebilirsiniz.')
+    });
+  }
+
+  loadMoreGoals() {
+    const studentId = this.authService.userProfile()?.id;
+    if (!studentId || this.goalPageNumber() >= this.goalTotalPages() || this.loadingMoreGoals()) return;
+    this.loadingMoreGoals.set(true);
+    this.coachingService.getStudentGoals(studentId, this.goalPageNumber() + 1, 100).pipe(
+      finalize(() => this.loadingMoreGoals.set(false))
+    ).subscribe({
+      next: page => {
+        this.goals.update(items => [...items, ...page.items]);
+        this.goalPageNumber.set(page.pageNumber);
+      },
+      error: () => this.goalFormError.set('Hedeflerin devamı yüklenemedi. Yeniden deneyebilirsiniz.')
+    });
   }
 
   assignmentCompletion() {

@@ -11,6 +11,10 @@
   <div *ngIf="goalFormError()" role="alert" class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-100">
     {{ goalFormError() }}
   </div>
+  <div *ngIf="summaryError()" role="alert" class="rounded-xl border border-amber-200 p-4 text-sm">
+    {{ summaryError() }}
+    <button type="button" (click)="retrySummary()" [disabled]="loadingSummary()" class="ml-3 underline disabled:opacity-50">Özeti yeniden yükle</button>
+  </div>
 
   <div *ngIf="isLoading()" class="grid gap-4 sm:grid-cols-3">
     <div *ngFor="let item of [1,2,3]" class="h-28 animate-pulse rounded-2xl bg-slate-200 dark:bg-slate-800"></div>
@@ -20,7 +24,7 @@
     <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
       <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <p class="text-sm text-slate-500">Tamamlanan hedef</p>
-        <p class="mt-2 text-3xl font-bold">{{ summary()?.completedGoals ?? goals().filter(goal => goal.isCompleted).length }}<span class="text-base font-medium text-slate-400"> / {{ summary()?.totalGoals ?? goals().length }}</span></p>
+        <p class="mt-2 text-3xl font-bold">{{ summary()?.completedGoals ?? '—' }}<span class="text-base font-medium text-slate-400"> / {{ summary()?.totalGoals ?? '—' }}</span></p>
       </div>
       <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <p class="text-sm text-slate-500">Ortalama başarı</p>
@@ -28,7 +32,7 @@
       </div>
       <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <p class="text-sm text-slate-500">Sınav sayısı</p>
-        <p class="mt-2 text-3xl font-bold">{{ summary()?.totalExams ?? examResults().length }}</p>
+        <p class="mt-2 text-3xl font-bold">{{ summary()?.totalExams ?? '—' }}</p>
       </div>
       <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <p class="text-sm text-slate-500">Ödev teslim oranı</p>
@@ -110,6 +114,9 @@
       </div>
     </div>
 
+    <div *ngIf="goalPageNumber() < goalTotalPages()" class="text-center">
+      <button type="button" (click)="loadMoreGoals()" [disabled]="loadingMoreGoals()" class="rounded-lg border px-4 py-2 text-sm disabled:opacity-50">{{ loadingMoreGoals() ? 'Yükleniyor…' : 'Daha fazla hedef göster' }}</button>
+    </div>
     <div class="rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
       <div class="border-b border-slate-200 px-5 py-4 dark:border-slate-800"><h2 class="font-semibold">Sınav sonuçlarım</h2></div>
       <div *ngIf="examResults().length === 0" class="p-5 text-sm text-slate-500">Henüz sınav sonucu bulunmuyor.</div>
