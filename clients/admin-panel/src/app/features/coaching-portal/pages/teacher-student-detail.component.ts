@@ -32,6 +32,7 @@ export class TeacherStudentDetailComponent implements OnInit {
   readonly isHistoryLoading = signal(false);
   readonly errorMessage = signal<string | null>(null);
   readonly historyError = signal<string | null>(null);
+  private historyRequestId = 0;
 
   ngOnInit() {
     const studentId = this.route.snapshot.paramMap.get('studentId');
@@ -88,18 +89,21 @@ export class TeacherStudentDetailComponent implements OnInit {
   private loadHistory(type: CoachingStudentHistoryType, pageNumber: number) {
     const studentId = this.student()?.userId;
     if (!studentId) return;
+    const requestId = ++this.historyRequestId;
 
     this.isHistoryLoading.set(true);
     this.historyError.set(null);
+    this.history.set([]);
     this.coachingService.getTeacherStudentHistory(studentId, type, pageNumber, 10).pipe(
-      finalize(() => this.isHistoryLoading.set(false))
+      finalize(() => { if (requestId === this.historyRequestId) this.isHistoryLoading.set(false); })
     ).subscribe({
       next: (page: PagedResponse<CoachingStudentHistoryItem>) => {
+        if (requestId !== this.historyRequestId) return;
         this.history.set(page.items);
         this.historyPage.set(page.pageNumber);
         this.historyTotalPages.set(page.totalPages ?? Math.ceil(page.totalCount / page.pageSize));
       },
-      error: () => this.historyError.set(`${this.historyLabel(type)} geçmişi yüklenemedi.`)
+      error: () => { if (requestId === this.historyRequestId) this.historyError.set(`${this.historyLabel(type)} geçmişi yüklenemedi.`); }
     });
   }
 }
