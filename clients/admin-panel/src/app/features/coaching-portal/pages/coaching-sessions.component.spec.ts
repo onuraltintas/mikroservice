@@ -6,8 +6,26 @@ import { vi } from 'vitest';
 import { AuthService, UserProfile } from '../../../core/auth/auth.service';
 import { CoachingPortalService, CoachingSession } from '../../../core/services/coaching-portal.service';
 import { CoachingSessionsComponent } from './coaching-sessions.component';
+import { CoachingPortalViewService } from '../coaching-portal-view.service';
 
 describe('CoachingSessionsComponent', () => {
+  it('loads own sessions rather than teacher sessions in the selected student view', () => {
+    const profile = signal<UserProfile | null>({ ...user('Teacher'), roles: ['Teacher', 'Student'] });
+    const service = {
+      getStudentSessions: vi.fn(() => of({ items: [], pageNumber: 1, pageSize: 25, totalCount: 0, totalPages: 0 })),
+      getTeacherSessions: vi.fn(() => of({ items: [], pageNumber: 1, pageSize: 25, totalCount: 0, totalPages: 0 }))
+    };
+    TestBed.configureTestingModule({ imports: [CoachingSessionsComponent], providers: [
+      { provide: AuthService, useValue: { userProfile: profile } },
+      { provide: CoachingPortalService, useValue: service },
+      { provide: ActivatedRoute, useValue: {} }
+    ] });
+    TestBed.inject(CoachingPortalViewService).select('Student');
+    const component = TestBed.createComponent(CoachingSessionsComponent).componentInstance;
+    component.ngOnInit();
+    expect(service.getStudentSessions).toHaveBeenCalledWith('user-1', 1, 25);
+    expect(service.getTeacherSessions).not.toHaveBeenCalled();
+  });
   it('loads a student session and saves the student reflection', () => {
     const profile = signal<UserProfile | null>(user('Student'));
     const session: CoachingSession = {

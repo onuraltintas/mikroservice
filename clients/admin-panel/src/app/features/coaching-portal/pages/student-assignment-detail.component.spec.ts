@@ -6,6 +6,7 @@ import { vi } from 'vitest';
 import { AuthService, UserProfile } from '../../../core/auth/auth.service';
 import { AssignmentDetail, CoachingPortalService } from '../../../core/services/coaching-portal.service';
 import { StudentAssignmentDetailComponent } from './student-assignment-detail.component';
+import { CoachingPortalViewService } from '../coaching-portal-view.service';
 
 describe('StudentAssignmentDetailComponent navigation', () => {
   const profile = signal<UserProfile | null>(null);
@@ -59,6 +60,16 @@ describe('StudentAssignmentDetailComponent navigation', () => {
     expect(component.isTeacher()).toBe(true);
     expect(component.isStudent()).toBe(false);
     expect(component.backRoute()).toBe('/coaching-portal/teacher/assignments');
+  });
+
+  it('lets a dual-role user submit their own assignment in student view', () => {
+    profile.set({ ...user('Teacher'), roles: ['Teacher', 'Student'] });
+    const view = TestBed.inject(CoachingPortalViewService);
+    view.select('Student');
+    const component = TestBed.createComponent(StudentAssignmentDetailComponent).componentInstance;
+    expect(component.isStudent()).toBe(true);
+    expect(component.isTeacher()).toBe(false);
+    expect(component.backRoute()).toBe('/coaching-portal/assignments');
   });
 });
 
