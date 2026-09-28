@@ -4,26 +4,28 @@ import { COACHING_PORTAL_ROUTES } from '../../features/coaching-portal/coaching-
 
 describe('hasCoachingPortalRole', () => {
   it('allows student, teacher and parent identities', () => {
-    expect(hasCoachingPortalRole({ roles: ['Student'] })).toBe(true);
-    expect(hasCoachingPortalRole({ roles: ['Teacher'] })).toBe(true);
-    expect(hasCoachingPortalRole({ roles: ['Parent'] })).toBe(true);
+    expect(hasCoachingPortalRole({ roles: ['Student'], product: 'coaching' })).toBe(true);
+    expect(hasCoachingPortalRole({ roles: ['Teacher'], product: 'coaching' })).toBe(true);
+    expect(hasCoachingPortalRole({ roles: ['Parent'], product: 'coaching' })).toBe(true);
   });
 
   it('does not allow management-only identities', () => {
     expect(hasCoachingPortalRole({ roles: ['SystemAdmin'] })).toBe(false);
     expect(hasCoachingPortalRole({ roles: ['InstitutionAdmin'] })).toBe(false);
+    expect(hasCoachingPortalRole({ roles: ['Teacher'], product: 'speed-reading' })).toBe(false);
     expect(hasCoachingPortalRole(null)).toBe(false);
   });
 });
 
 describe('hasRequiredCoachingRole', () => {
   it('matches one of the roles required by a child portal route', () => {
-    expect(hasRequiredCoachingRole({ roles: ['Teacher'] }, ['Teacher'])).toBe(true);
-    expect(hasRequiredCoachingRole({ roles: ['Parent'] }, ['Teacher', 'Parent'])).toBe(true);
+    expect(hasRequiredCoachingRole({ roles: ['Teacher'], product: 'coaching' }, ['Teacher'])).toBe(true);
+    expect(hasRequiredCoachingRole({ roles: ['Parent'], product: 'coaching' }, ['Teacher', 'Parent'])).toBe(true);
   });
 
   it('rejects a role outside the child route allow-list', () => {
     expect(hasRequiredCoachingRole({ roles: ['Student'] }, ['Teacher'])).toBe(false);
+    expect(hasRequiredCoachingRole({ roles: ['Teacher'], product: 'speed-reading' }, ['Teacher'])).toBe(false);
     expect(hasRequiredCoachingRole(null, ['Teacher'])).toBe(false);
   });
 });

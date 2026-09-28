@@ -26,6 +26,7 @@
       <div class="border-b border-slate-200 p-5 dark:border-slate-800">
         <h2 class="font-semibold">Geçmiş kayıtlar</h2>
         <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Öğrencinin kurum değişikliklerinden önceki kayıtları da kapsanır.</p>
+        <button type="button" (click)="exportHistory()" [disabled]="isExporting() || isHistoryLoading()" class="mt-3 rounded-lg border border-slate-300 px-3 py-2 text-sm disabled:opacity-40 dark:border-slate-700">{{ isExporting() ? 'Tam rapor hazırlanıyor…' : 'Filtreli tam raporu CSV indir' }}</button>
         <div class="mt-4 flex flex-wrap gap-2" role="tablist" aria-label="Geçmiş kategorisi">
           <button *ngFor="let type of historyTypes" type="button" role="tab" [attr.aria-selected]="historyType() === type" (click)="selectHistoryType(type)" class="rounded-lg border px-3 py-2 text-sm" [class.border-indigo-600]="historyType() === type" [class.bg-indigo-600]="historyType() === type" [class.text-white]="historyType() === type" [class.border-slate-300]="historyType() !== type" [class.dark:border-slate-700]="historyType() !== type">{{ historyLabel(type) }}</button>
         </div>

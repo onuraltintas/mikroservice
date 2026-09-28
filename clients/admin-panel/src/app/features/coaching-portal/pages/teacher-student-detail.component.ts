@@ -11,6 +11,7 @@ import {
   StudentProgressSummary,
   TeacherStudent
 } from '../../../core/services/coaching-portal.service';
+import { collectCoachingHistory, coachingHistoryCsv, downloadCoachingHistoryCsv } from '../coaching-history-export';
 
 @Component({
   selector: 'app-teacher-student-detail',
@@ -37,6 +38,7 @@ export class TeacherStudentDetailComponent implements OnInit {
   readonly historyTotalPages = signal(0);
   readonly isLoading = signal(true);
   readonly isHistoryLoading = signal(false);
+  readonly isExporting = signal(false);
   readonly errorMessage = signal<string | null>(null);
   readonly historyError = signal<string | null>(null);
   historySearch = '';
@@ -106,6 +108,37 @@ export class TeacherStudentDetailComponent implements OnInit {
     return `${item.type}:${item.id}`;
   }
 
+  async exportHistory(): Promise<void> {
+    const studentId = this.student()?.userId;
+    if (!studentId || this.isExporting()) return;
+    if (this.historyFromDate && this.historyToDate && this.historyFromDate > this.historyToDate) {
+      this.historyError.set('Başlangıç tarihi bitiş tarihinden sonra olamaz.');
+      return;
+    }
+    const type = this.historyType();
+    const filter = this.historyFilter();
+    this.isExporting.set(true);
+    this.historyError.set(null);
+    try {
+      const records = await collectCoachingHistory((page, pageSize) =>
+        this.coachingService.getTeacherStudentHistory(studentId, type, page, pageSize, filter));
+      downloadCoachingHistoryCsv(coachingHistoryCsv(records), `kocluk-${studentId}-${type.toLowerCase()}.csv`);
+    } catch {
+      this.historyError.set('Tam rapor indirilemedi. Kayıtlar değişmiş veya bağlantı kesilmiş olabilir; yeniden deneyin.');
+    } finally {
+      this.isExporting.set(false);
+    }
+  }
+
+  private historyFilter() {
+    return {
+      ...(this.historyFromDate ? { fromDate: `${this.historyFromDate}T00:00:00.000Z` } : {}),
+      ...(this.historyToDate ? { toDate: `${this.historyToDate}T23:59:59.999Z` } : {}),
+      ...(this.historyStatus ? { status: this.historyStatus } : {}),
+      ...(this.historySearch.trim() ? { search: this.historySearch.trim() } : {})
+    };
+  }
+
   private loadHistory(type: CoachingStudentHistoryType, pageNumber: number) {
     const studentId = this.student()?.userId;
     if (!studentId) return;
@@ -114,12 +147,7 @@ export class TeacherStudentDetailComponent implements OnInit {
     this.isHistoryLoading.set(true);
     this.historyError.set(null);
     this.history.set([]);
-    const filter = {
-      ...(this.historyFromDate ? { fromDate: `${this.historyFromDate}T00:00:00.000Z` } : {}),
-      ...(this.historyToDate ? { toDate: `${this.historyToDate}T23:59:59.999Z` } : {}),
-      ...(this.historyStatus ? { status: this.historyStatus } : {}),
-      ...(this.historySearch.trim() ? { search: this.historySearch.trim() } : {})
-    };
+    const filter = this.historyFilter();
     const request = Object.keys(filter).length
       ? this.coachingService.getTeacherStudentHistory(studentId, type, pageNumber, 10, filter)
       : this.coachingService.getTeacherStudentHistory(studentId, type, pageNumber, 10);

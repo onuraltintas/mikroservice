@@ -148,6 +148,7 @@ function user(role: string): UserProfile {
     lastName: 'User',
     username: 'user@example.test',
     roles: [role],
+    product: 'coaching',
     role,
     permissions: []
   };

@@ -10,7 +10,7 @@ import { CoachingPortalViewService } from '../coaching-portal-view.service';
 
 describe('CoachingPortalHomeComponent teacher metrics', () => {
   it('loads the own-student summary when a dual-role user selects student view', () => {
-    const profile = signal<UserProfile | null>({ id: 'user-1', email: 'a@test', firstName: 'Ada', lastName: 'Test', username: 'a@test', roles: ['Teacher', 'Student'], role: 'Teacher', permissions: [] });
+    const profile = signal<UserProfile | null>({ id: 'user-1', email: 'a@test', firstName: 'Ada', lastName: 'Test', username: 'a@test', roles: ['Teacher', 'Student'], role: 'Teacher', permissions: [], product: 'coaching' });
     const service = {
       getStudentAssignments: vi.fn(() => of({ items: [], pageNumber: 1, pageSize: 5, totalCount: 0, totalPages: 0 })),
       getTeacherAssignments: vi.fn(),
@@ -30,7 +30,7 @@ describe('CoachingPortalHomeComponent teacher metrics', () => {
   it('shows unique active roster count and full assignment total, not counts from a preview page', () => {
     const profile = signal<UserProfile | null>({
       id: 'teacher-1', email: 'teacher@example.test', firstName: 'Ada', lastName: 'Koç',
-      username: 'teacher@example.test', roles: ['Teacher'], role: 'Teacher', permissions: []
+      username: 'teacher@example.test', roles: ['Teacher'], role: 'Teacher', permissions: [], product: 'coaching'
     });
     const service = {
       getTeacherAssignments: vi.fn(() => of({

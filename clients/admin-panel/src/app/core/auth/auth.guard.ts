@@ -5,15 +5,15 @@ import { AuthService, hasRequiredRole } from './auth.service';
 
 export const COACHING_PORTAL_ROLES = ['Student', 'Teacher', 'Parent'] as const;
 
-export function hasCoachingPortalRole(user: { roles: string[] } | null): boolean {
-    return !!user && COACHING_PORTAL_ROLES.some(role => user.roles.includes(role));
+export function hasCoachingPortalRole(user: { roles: string[]; product?: string } | null): boolean {
+    return user?.product === 'coaching' && COACHING_PORTAL_ROLES.some(role => user.roles.includes(role));
 }
 
 export function hasRequiredCoachingRole(
-    user: { roles: string[] } | null,
+    user: { roles: string[]; product?: string } | null,
     requiredRoles: readonly string[]
 ): boolean {
-    return !!user && requiredRoles.some(role => user.roles.includes(role));
+    return user?.product === 'coaching' && requiredRoles.some(role => user.roles.includes(role));
 }
 
 export const authGuard: CanActivateFn = async (_route, state) => {

@@ -13,6 +13,7 @@ import {
 import { CoachingInstitutionMembershipService } from '../../../core/services/coaching-institution-membership.service';
 import { InstitutionDto, InstitutionService } from '../../../core/services/institution.service';
 import { ToasterService } from '../../../core/services/toaster.service';
+import { collectCoachingHistory, coachingHistoryCsv, downloadCoachingHistoryCsv } from '../../coaching-portal/coaching-history-export';
 
 @Component({
   selector: 'app-coaching-people',
@@ -83,6 +84,7 @@ import { ToasterService } from '../../../core/services/toaster.service';
             <section class="space-y-3 rounded-xl border bg-white p-5 dark:border-gray-700 dark:bg-gray-800" aria-labelledby="student-history-heading">
               <div class="flex flex-wrap items-end justify-between gap-3">
                 <div><h3 id="student-history-heading" class="font-semibold">Tüm koçluk geçmişi</h3><p class="text-xs text-gray-500">Kurum değişikliği öncesi kayıtlar da dâhil, sayfalı geçmiş.</p></div>
+                <button type="button" (click)="exportStudentHistory()" [disabled]="studentHistoryExporting() || studentHistoryLoading()" class="rounded border px-3 py-2 text-sm disabled:opacity-50">{{ studentHistoryExporting() ? 'Tam rapor hazırlanıyor…' : 'Filtreli tam raporu CSV indir' }}</button>
                 <label class="text-sm">Kayıt türü
                   <select [ngModel]="studentHistoryType" (ngModelChange)="selectStudentHistoryType($event)" class="mt-1 rounded border px-3 py-2 dark:bg-gray-900">
                     @for (option of historyTypeOptions; track option.value) { <option [ngValue]="option.value">{{ option.label }}</option> }
@@ -221,6 +223,7 @@ export class CoachingPeopleComponent implements OnInit {
   readonly studentDetail = signal<CoachingAdminStudentDetail | null>(null);
   readonly studentHistory = signal<CoachingAdminStudentHistoryPage | null>(null);
   readonly studentHistoryLoading = signal(false);
+  readonly studentHistoryExporting = signal(false);
   readonly historyTypeOptions: { value: CoachingStudentHistoryType; label: string }[] = [
     { value: 'Assignments', label: 'Ödevler' },
     { value: 'Exams', label: 'Sınavlar' },
@@ -589,18 +592,44 @@ export class CoachingPeopleComponent implements OnInit {
     this.loadStudentHistory(1);
   }
 
+  async exportStudentHistory(): Promise<void> {
+    const studentId = this.detailId;
+    if (!studentId || !this.selectedStudent() || this.studentHistoryExporting()) return;
+    if (this.studentHistoryFromDate && this.studentHistoryToDate && this.studentHistoryFromDate > this.studentHistoryToDate) {
+      this.error.set('Başlangıç tarihi bitiş tarihinden sonra olamaz.');
+      return;
+    }
+    const type = this.studentHistoryType;
+    const filter = this.studentHistoryFilter();
+    this.studentHistoryExporting.set(true);
+    this.error.set(null);
+    try {
+      const records = await collectCoachingHistory((page, pageSize) =>
+        this.service.getStudentHistory(studentId, type, page, pageSize, filter));
+      downloadCoachingHistoryCsv(coachingHistoryCsv(records), `kocluk-${studentId}-${type.toLowerCase()}.csv`);
+    } catch {
+      this.error.set('Tam rapor indirilemedi. Kayıtlar değişmiş veya bağlantı kesilmiş olabilir; yeniden deneyin.');
+    } finally {
+      this.studentHistoryExporting.set(false);
+    }
+  }
+
+  private studentHistoryFilter() {
+    return {
+      ...(this.studentHistoryFromDate ? { fromDate: `${this.studentHistoryFromDate}T00:00:00.000Z` } : {}),
+      ...(this.studentHistoryToDate ? { toDate: `${this.studentHistoryToDate}T23:59:59.999Z` } : {}),
+      ...(this.studentHistoryStatus ? { status: this.studentHistoryStatus } : {}),
+      ...(this.studentHistorySearch.trim() ? { search: this.studentHistorySearch.trim() } : {})
+    };
+  }
+
   loadStudentHistory(page: number): void {
     if (!this.institutionId || !this.detailId || !this.selectedStudent()) return;
     const requestId = ++this.studentHistoryRequestId;
     this.studentHistory.set(null);
     this.studentHistoryLoading.set(true);
     this.error.set(null);
-    const filter = {
-      ...(this.studentHistoryFromDate ? { fromDate: `${this.studentHistoryFromDate}T00:00:00.000Z` } : {}),
-      ...(this.studentHistoryToDate ? { toDate: `${this.studentHistoryToDate}T23:59:59.999Z` } : {}),
-      ...(this.studentHistoryStatus ? { status: this.studentHistoryStatus } : {}),
-      ...(this.studentHistorySearch.trim() ? { search: this.studentHistorySearch.trim() } : {})
-    };
+    const filter = this.studentHistoryFilter();
     const request = Object.keys(filter).length
       ? this.service.getStudentHistory(this.detailId, this.studentHistoryType, page, 25, filter)
       : this.service.getStudentHistory(this.detailId, this.studentHistoryType, page, 25);

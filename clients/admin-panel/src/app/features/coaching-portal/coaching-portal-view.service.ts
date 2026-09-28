@@ -10,6 +10,7 @@ export class CoachingPortalViewService {
 
   readonly current = computed<CoachingPortalView | null>(() => {
     const profile = this.auth.userProfile();
+    if (profile?.product !== 'coaching') return null;
     const preferred = this.preferred();
     if (preferred && hasRole(profile, preferred)) return preferred;
     if (hasRole(profile, 'Teacher')) return 'Teacher';
@@ -19,7 +20,8 @@ export class CoachingPortalViewService {
   });
 
   canSelect(view: CoachingPortalView): boolean {
-    return hasRole(this.auth.userProfile(), view);
+    const profile = this.auth.userProfile();
+    return profile?.product === 'coaching' && hasRole(profile, view);
   }
 
   select(view: CoachingPortalView): void {

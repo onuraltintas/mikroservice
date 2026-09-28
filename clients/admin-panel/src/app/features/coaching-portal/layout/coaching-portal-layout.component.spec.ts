@@ -8,7 +8,7 @@ import { CoachingPortalLayoutComponent } from './coaching-portal-layout.componen
 
 describe('CoachingPortalLayoutComponent multi-role view', () => {
   it('offers only authorized views and opens the student section for a dual-role account', () => {
-    const profile = signal<any>({ roles: ['Student', 'Teacher'], firstName: 'Ada' });
+    const profile = signal<any>({ roles: ['Student', 'Teacher'], product: 'coaching', firstName: 'Ada' });
     TestBed.configureTestingModule({ imports: [CoachingPortalLayoutComponent], providers: [
       provideRouter([]),
       { provide: AuthService, useValue: { userProfile: profile } }

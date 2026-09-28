@@ -17,6 +17,7 @@ export interface UserProfile {
     roles: string[];
     role: string;
     permissions: string[];
+    product?: string;
     mfaVerified?: boolean;
 }
 
@@ -343,6 +344,7 @@ export class AuthService implements OnDestroy {
             roles: rolesArray,
             role: mainRole,
             permissions: permissionsArray,
+            product: parsedToken.platform_product,
             mfaVerified: authenticationMethods.includes('mfa')
         });
     }

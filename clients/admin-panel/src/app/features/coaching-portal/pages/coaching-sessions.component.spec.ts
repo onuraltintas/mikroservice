@@ -330,6 +330,7 @@ function user(role: string): UserProfile {
     lastName: 'Student',
     username: 'student@example.test',
     roles: [role],
+    product: 'coaching',
     role,
     permissions: []
   };
