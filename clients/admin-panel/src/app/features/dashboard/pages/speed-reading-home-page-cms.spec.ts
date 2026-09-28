@@ -56,6 +56,18 @@ describe('Speed Reading home page CMS mapping', () => {
     expect(config.visibility.testimonials).toBe(DEFAULT_HOME_PAGE_DRAFT.testimonialsVisible);
   });
 
+  it('limits FAQ and testimonial lists to the eight entries the public page renders', () => {
+    const faqItems = Array.from({ length: 9 }, (_, index) => ({ question: `Soru ${index}`, answer: `Yanıt ${index}`, category: 'Genel' }));
+    const testimonials = Array.from({ length: 9 }, (_, index) => ({ name: `Kullanıcı ${index}`, role: 'Öğrenci', rating: 5, text: `Yorum ${index}` }));
+    const content = hydrateHomePageDraft([{ key: 'home_page_config', value: JSON.stringify({ faq: { items: faqItems }, testimonials: { items: testimonials } }) }]);
+    const config = buildHomePageConfig(content.draft, { ...content.cards, faqItems, testimonials });
+
+    expect(content.cards.faqItems).toHaveLength(8);
+    expect(content.cards.testimonials).toHaveLength(8);
+    expect(config.faq.items).toHaveLength(8);
+    expect(config.testimonials.items).toHaveLength(8);
+  });
+
   it('falls back safely when legacy JSON is malformed', () => {
     const content = hydrateHomePageDraft([
       { key: 'faq_items', value: '{broken' },

@@ -9,6 +9,7 @@ export interface HomeHeroContent {
   title: string;
   subtitle: string;
   primaryActionLabel: string;
+  primaryActionUrl: string;
   secondaryActionLabel: string;
   trustPoints: string[];
 }
@@ -25,10 +26,24 @@ export interface HomeApproachContent {
   description: string;
 }
 
+export interface HomeFaqItem {
+  question: string;
+  answer: string;
+  category: string;
+}
+
+export interface HomeTestimonialItem {
+  name: string;
+  role: string;
+  rating: number;
+  text: string;
+}
+
 export interface HomeSectionHeading {
   title: string;
   subtitle: string;
   actionLabel?: string;
+  actionUrl?: string;
   smallText?: string;
 }
 
@@ -40,85 +55,145 @@ export interface HomePageContent {
   pricing: HomeSectionHeading;
   blog: HomeSectionHeading;
   newsletter: HomeSectionHeading & { benefits: string[] };
-  faq: HomeSectionHeading;
+  faq: HomeSectionHeading & { items: HomeFaqItem[] };
+  testimonials: HomeSectionHeading & { items: HomeTestimonialItem[] };
   cta: HomeSectionHeading;
-  visibility: Record<'features' | 'approach' | 'stats' | 'pricing' | 'blog' | 'newsletter' | 'faq' | 'cta', boolean>;
+  visibility: Record<'features' | 'approach' | 'stats' | 'pricing' | 'blog' | 'newsletter' | 'faq' | 'testimonials' | 'cta', boolean>;
 }
 
 export const DEFAULT_HOME_PAGE_CONTENT: HomePageContent = {
   seo: {
-    title: 'Master Hızlı Okuma | Hız ve Anlamayı Birlikte Geliştirin',
-    description: 'Başlangıç düzeyinizi ölçün, size uygun çalışmaları takip edin ve gelişiminizi hız ile anlama verileriyle görün.',
+    title: 'Master Hızlı Okuma | Okuma Hızı ve Anlama Takibi',
+    description: 'Başlangıç ölçümünüzü yapın; okuma sürenizi ve anlama yanıtlarınızı ayrı ayrı izleyin.',
     keywords: 'hızlı okuma, okuduğunu anlama, okuma egzersizleri, kişisel öğrenme planı',
     ogImage: ''
   },
   hero: {
-    title: 'Hız ve anlamayı birlikte geliştirin',
-    subtitle: 'Başlangıç ölçümünüzden sonra size uygun çalışmalarla ilerleyin; gelişiminizi düzenli verilerle görün.',
+    title: 'Hız ve anlamayı birlikte takip edin',
+    subtitle: 'Başlangıç ölçümünüzü yapın; okuma sürenizi ve anlama yanıtlarınızı ayrı ayrı izleyin.',
     primaryActionLabel: 'Seviyeni belirle',
+    primaryActionUrl: '/auth/register',
     secondaryActionLabel: 'Nasıl çalışır?',
     trustPoints: ['Başlangıç ölçümü', 'Hız ve anlama birlikte', 'Kişisel çalışma akışı']
   },
   features: {
     title: 'Çalışma akışında neler var?',
-    subtitle: 'Odak, akıcılık ve anlama çalışmalarını aynı öğrenme yolunda birleştirin.',
+    subtitle: 'Odak, okuma akıcılığı ve anlama çalışmalarını aynı öğrenme alanında keşfedin.',
     items: [
-      { icon: 'speed', title: 'Akıcılık çalışmaları', description: 'Metin takibi ve kelime gruplama ile daha akıcı okuyun.' },
-      { icon: 'quiz', title: 'Anlama kontrolü', description: 'Her çalışmada anlama sonucunu ayrı olarak görün.' },
-      { icon: 'route', title: 'Kişisel sıradaki adım', description: 'Ölçüm geçmişinize göre uygun içerikle devam edin.' },
-      { icon: 'insights', title: 'İlerleme görünümü', description: 'Hız, anlama ve düzenli çalışma eğilimini izleyin.' }
+      { icon: 'speed', title: 'Akıcılık çalışmaları', description: 'Metin takibi ve kelime gruplama alıştırmalarını deneyin.' },
+      { icon: 'quiz', title: 'Anlama kontrolü', description: 'Okuma sonrasında anlama sorularını ve yanıtlarınızı gözden geçirin.' },
+      { icon: 'route', title: 'Çalışma akışı', description: 'Çalışma adımlarınızı ve tamamladığınız içerikleri takip edin.' },
+      { icon: 'insights', title: 'İlerleme görünümü', description: 'Okuma hızı ve anlama sonuçlarınızı ayrı ayrı inceleyin.' }
     ]
   },
   approach: {
     title: 'Ölçerek ilerleyen bir çalışma düzeni',
-    subtitle: 'Program, tek bir hız hedefine değil, sürdürülebilir gelişime odaklanır.',
+    subtitle: 'Tek bir hız hedefine bağlanmadan, okuma süresi ve anlama sonuçlarını birlikte izleyin.',
     items: [
-      { title: 'Başlangıcı görün', role: 'Ölçüm', description: 'Çalışma yolunuz başlangıç ölçümünüzle netleşir.' },
-      { title: 'Dengeli ilerleyin', role: 'Hız + anlama', description: 'Zorluk, sonuçlarınıza göre dengelenir.' },
-      { title: 'Geri bildirimi kullanın', role: 'İzleme', description: 'Güçlü yönlerinizi ve destek ihtiyacını görün.' }
+      { title: 'Başlangıcı görün', role: 'Ölçüm', description: 'Başlangıç ölçümünde okuma sürenizi ve anlama yanıtlarınızı görün.' },
+      { title: 'İki sonucu birlikte izleyin', role: 'Hız + anlama', description: 'Her çalışmada okuma hızı ve anlama sonuçlarını birlikte değerlendirin.' },
+      { title: 'Çalışma geçmişinizi inceleyin', role: 'İzleme', description: 'Önceki sonuçlarınızı gözden geçirip sonraki çalışma alanınızı seçin.' }
     ]
   },
   pricing: { title: 'Size uygun erişimi seçin', subtitle: 'Bireysel veya kurumsal erişim seçeneklerini inceleyin.' },
-  blog: { title: 'Kaynaklar ve çalışma ipuçları', subtitle: 'Okuma, öğrenme ve düzenli çalışma üzerine içerikleri keşfedin.', actionLabel: 'Tüm yazıları gör' },
+  blog: { title: 'Kaynaklar ve çalışma ipuçları', subtitle: 'Okuma, anlama ve düzenli çalışma üzerine içerikleri keşfedin.', actionLabel: 'Tüm yazıları gör' },
   newsletter: {
     title: 'Çalışma ipuçları e-postanıza gelsin',
     subtitle: 'Yeni içeriklerden ve yararlı çalışma önerilerinden haberdar olun.',
     benefits: ['Yeni çalışma önerileri', 'Güncel içerikler', 'İstediğiniz zaman abonelikten çıkma özgürlüğü']
   },
-  faq: { title: 'Sık sorulan sorular', subtitle: 'Platform ve çalışma düzeni hakkında kısa yanıtlar.', actionLabel: 'Tüm soruları gör' },
+  faq: { title: 'Sık sorulan sorular', subtitle: 'Platform ve çalışma düzeni hakkında kısa yanıtlar.', actionLabel: 'Tüm soruları gör', items: [] },
+  testimonials: { title: 'Katılımcı deneyimleri', subtitle: 'Platform hakkındaki yayımlanmış geri bildirimler.', items: [] },
   cta: {
-    title: 'Çalışma yolunuzu görmek ister misiniz?',
-    subtitle: 'Seviyenizi belirleyip size uygun ilk adımı görün.',
+    title: 'Okuma çalışma düzeninizi keşfedin',
+    subtitle: 'Başlangıç ölçümünüzü yapın ve okuma sonuçlarınızı ayrı ayrı inceleyin.',
     actionLabel: 'Başla',
-    smallText: 'Sonuçlar başlangıç düzeyine ve düzenli çalışmaya göre değişir.'
+    smallText: 'Sonuçlar metin türüne, zorluğuna ve çalışma koşullarına göre değişebilir.'
   },
-  visibility: { features: true, approach: true, stats: true, pricing: true, blog: true, newsletter: true, faq: true, cta: true }
+  visibility: { features: true, approach: true, stats: true, pricing: true, blog: true, newsletter: true, faq: true, testimonials: false, cta: true }
 };
 
 type CmsValue = Record<string, unknown>;
 
 export function parseHomePageContent(blocks: Record<string, string>): HomePageContent {
+  const legacyContent = parseLegacyHomePageContent(blocks);
   const raw = blocks['home_page_config'];
-  if (!raw) return DEFAULT_HOME_PAGE_CONTENT;
+  if (!raw) return legacyContent;
 
   try {
     const parsed = JSON.parse(raw) as CmsValue;
-    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return DEFAULT_HOME_PAGE_CONTENT;
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return legacyContent;
+    const parsedHero = mergeObject(legacyContent.hero, parsed['hero']);
+    const parsedCta = mergeObject(legacyContent.cta, parsed['cta']);
     return {
-      seo: mergeObject(DEFAULT_HOME_PAGE_CONTENT.seo, parsed['seo']),
-      hero: { ...mergeObject(DEFAULT_HOME_PAGE_CONTENT.hero, parsed['hero']), trustPoints: mergeStrings(DEFAULT_HOME_PAGE_CONTENT.hero.trustPoints, objectValue(parsed['hero'])?.['trustPoints']) },
-      features: { ...mergeObject(DEFAULT_HOME_PAGE_CONTENT.features, parsed['features']), items: mergeFeatures(objectValue(parsed['features'])?.['items']) },
-      approach: { ...mergeObject(DEFAULT_HOME_PAGE_CONTENT.approach, parsed['approach']), items: mergeApproach(objectValue(parsed['approach'])?.['items']) },
-      pricing: mergeObject(DEFAULT_HOME_PAGE_CONTENT.pricing, parsed['pricing']),
-      blog: mergeObject(DEFAULT_HOME_PAGE_CONTENT.blog, parsed['blog']),
-      newsletter: { ...mergeObject(DEFAULT_HOME_PAGE_CONTENT.newsletter, parsed['newsletter']), benefits: mergeStrings(DEFAULT_HOME_PAGE_CONTENT.newsletter.benefits, objectValue(parsed['newsletter'])?.['benefits']) },
-      faq: mergeObject(DEFAULT_HOME_PAGE_CONTENT.faq, parsed['faq']),
-      cta: mergeObject(DEFAULT_HOME_PAGE_CONTENT.cta, parsed['cta']),
-      visibility: mergeVisibility(parsed['visibility'])
+      seo: mergeObject(legacyContent.seo, parsed['seo']),
+      hero: {
+        ...parsedHero,
+        primaryActionUrl: internalRoute(parsedHero.primaryActionUrl, legacyContent.hero.primaryActionUrl),
+        trustPoints: mergeStrings(legacyContent.hero.trustPoints, objectValue(parsed['hero'])?.['trustPoints'])
+      },
+      features: { ...mergeObject(legacyContent.features, parsed['features']), items: mergeFeatures(objectValue(parsed['features'])?.['items'], legacyContent.features.items) },
+      approach: { ...mergeObject(legacyContent.approach, parsed['approach']), items: mergeApproach(objectValue(parsed['approach'])?.['items'], legacyContent.approach.items) },
+      pricing: mergeObject(legacyContent.pricing, parsed['pricing']),
+      blog: mergeObject(legacyContent.blog, parsed['blog']),
+      newsletter: { ...mergeObject(legacyContent.newsletter, parsed['newsletter']), benefits: mergeStrings(legacyContent.newsletter.benefits, objectValue(parsed['newsletter'])?.['benefits']) },
+      faq: { ...mergeObject(legacyContent.faq, parsed['faq']), items: mergeFaqItems(objectValue(parsed['faq'])?.['items'], legacyContent.faq.items) },
+      testimonials: { ...mergeObject(legacyContent.testimonials, parsed['testimonials']), items: mergeTestimonials(objectValue(parsed['testimonials'])?.['items'], legacyContent.testimonials.items) },
+      cta: { ...parsedCta, actionUrl: internalRoute(parsedCta.actionUrl, '/auth/register') },
+      visibility: mergeVisibility(parsed['visibility'], legacyContent.visibility)
     };
   } catch {
-    return DEFAULT_HOME_PAGE_CONTENT;
+    return legacyContent;
   }
+}
+
+function parseLegacyHomePageContent(blocks: Record<string, string>): HomePageContent {
+  const defaults = DEFAULT_HOME_PAGE_CONTENT;
+  const hero = { ...defaults.hero };
+  hero.title = stringValue(blocks['hero_title'], hero.title);
+  hero.subtitle = stringValue(blocks['hero_subtitle'], hero.subtitle);
+  hero.primaryActionLabel = stringValue(blocks['hero_cta_text'], hero.primaryActionLabel);
+  hero.primaryActionUrl = internalRoute(blocks['hero_cta_link'], hero.primaryActionUrl);
+
+  const features = {
+    ...defaults.features,
+    title: stringValue(blocks['features_title'], defaults.features.title),
+    subtitle: stringValue(blocks['features_subtitle'], defaults.features.subtitle),
+    items: mergeFeatures(parseJsonValue(blocks['features_list']), defaults.features.items)
+  };
+  const faqItems = mergeFaqItems(parseJsonValue(blocks['faq_items'] ?? blocks['faq_list']), defaults.faq.items);
+  const testimonialItems = mergeTestimonials(parseJsonValue(blocks['testimonials_list']), defaults.testimonials.items);
+
+  return {
+    ...defaults,
+    hero,
+    features,
+    pricing: {
+      ...defaults.pricing,
+      title: stringValue(blocks['pricing_title'], defaults.pricing.title),
+      subtitle: stringValue(blocks['pricing_subtitle'], defaults.pricing.subtitle)
+    },
+    faq: {
+      ...defaults.faq,
+      title: stringValue(blocks['faq_title'], defaults.faq.title),
+      subtitle: stringValue(blocks['faq_subtitle'], defaults.faq.subtitle),
+      items: faqItems
+    },
+    testimonials: {
+      ...defaults.testimonials,
+      title: stringValue(blocks['testimonials_title'], defaults.testimonials.title),
+      subtitle: stringValue(blocks['testimonials_subtitle'], defaults.testimonials.subtitle),
+      items: testimonialItems
+    },
+    cta: {
+      ...defaults.cta,
+      title: stringValue(blocks['cta_title'], defaults.cta.title),
+      subtitle: stringValue(blocks['cta_description'], defaults.cta.subtitle),
+      actionLabel: stringValue(blocks['cta_button_text'], defaults.cta.actionLabel ?? 'Başla'),
+      actionUrl: internalRoute(blocks['cta_button_link'], '/auth/register')
+    },
+    visibility: { ...defaults.visibility, testimonials: testimonialItems.length > 0 }
+  };
 }
 
 function objectValue(value: unknown): CmsValue | null {
@@ -144,30 +219,71 @@ function mergeStrings(defaults: string[], value: unknown): string[] {
   return items.length ? items : [...defaults];
 }
 
-function mergeFeatures(value: unknown): HomeFeatureContent[] {
-  if (!Array.isArray(value)) return DEFAULT_HOME_PAGE_CONTENT.features.items.map(item => ({ ...item }));
+function mergeFeatures(value: unknown, defaults = DEFAULT_HOME_PAGE_CONTENT.features.items): HomeFeatureContent[] {
+  if (!Array.isArray(value)) return defaults.map(item => ({ ...item }));
   const items = value.map(objectValue).filter((item): item is CmsValue => item !== null).map(item => ({
-    icon: stringValue(item['icon'], 'auto_awesome'), title: stringValue(item['title']), description: stringValue(item['description'])
+    icon: safeIcon(item['icon']), title: stringValue(item['title']), description: stringValue(item['description'])
   })).filter(item => item.title && item.description && isSafePublicCopy(item.title) && isSafePublicCopy(item.description)).slice(0, 8);
-  return items.length ? items : DEFAULT_HOME_PAGE_CONTENT.features.items.map(item => ({ ...item }));
+  return items.length ? items : defaults.map(item => ({ ...item }));
 }
 
-function mergeApproach(value: unknown): HomeApproachContent[] {
-  if (!Array.isArray(value)) return DEFAULT_HOME_PAGE_CONTENT.approach.items.map(item => ({ ...item }));
+function mergeApproach(value: unknown, defaults = DEFAULT_HOME_PAGE_CONTENT.approach.items): HomeApproachContent[] {
+  if (!Array.isArray(value)) return defaults.map(item => ({ ...item }));
   const items = value.map(objectValue).filter((item): item is CmsValue => item !== null).map(item => ({
     title: stringValue(item['title']), role: stringValue(item['role']), description: stringValue(item['description'])
   })).filter(item => item.title && item.description && isSafePublicCopy(item.title) && isSafePublicCopy(item.description)).slice(0, 6);
-  return items.length ? items : DEFAULT_HOME_PAGE_CONTENT.approach.items.map(item => ({ ...item }));
+  return items.length ? items : defaults.map(item => ({ ...item }));
 }
 
-function mergeVisibility(value: unknown): HomePageContent['visibility'] {
+function mergeFaqItems(value: unknown, defaults = DEFAULT_HOME_PAGE_CONTENT.faq.items): HomeFaqItem[] {
+  if (!Array.isArray(value)) return defaults.map(item => ({ ...item }));
+  if (value.length === 0) return [];
+  const items = value.map(objectValue).filter((item): item is CmsValue => item !== null).map(item => ({
+    question: stringValue(item['question']), answer: stringValue(item['answer']), category: stringValue(item['category'])
+  })).filter(item => item.question && item.answer).slice(0, 8);
+  return items.length ? items : defaults.map(item => ({ ...item }));
+}
+
+function mergeTestimonials(value: unknown, defaults = DEFAULT_HOME_PAGE_CONTENT.testimonials.items): HomeTestimonialItem[] {
+  if (!Array.isArray(value)) return defaults.map(item => ({ ...item }));
+  if (value.length === 0) return [];
+  const items = value.map(objectValue).filter((item): item is CmsValue => item !== null).map(item => ({
+    name: stringValue(item['name']), role: stringValue(item['role']),
+    rating: typeof item['rating'] === 'number' && Number.isFinite(item['rating']) && item['rating'] >= 1 && item['rating'] <= 5 ? Math.round(item['rating']) : 0,
+    text: stringValue(item['text'])
+  })).filter(item => item.name && item.text).slice(0, 8);
+  return items.length ? items : defaults.map(item => ({ ...item }));
+}
+
+function mergeVisibility(value: unknown, defaults = DEFAULT_HOME_PAGE_CONTENT.visibility): HomePageContent['visibility'] {
   const source = objectValue(value);
-  return Object.fromEntries(Object.entries(DEFAULT_HOME_PAGE_CONTENT.visibility).map(([key, fallback]) => [key, typeof source?.[key] === 'boolean' ? source[key] : fallback])) as HomePageContent['visibility'];
+  return Object.fromEntries(Object.entries(defaults).map(([key, fallback]) => [key, typeof source?.[key] === 'boolean' ? source[key] : fallback])) as HomePageContent['visibility'];
 }
 
 function stringValue(value: unknown, fallback = ''): string {
   const candidate = typeof value === 'string' ? value.trim() : '';
   return isSafePublicCopy(candidate) ? candidate || fallback : fallback;
+}
+
+function parseJsonValue(value: string | undefined): unknown {
+  if (!value) return undefined;
+  try { return JSON.parse(value) as unknown; } catch { return undefined; }
+}
+
+function safeIcon(value: unknown): string {
+  const icon = typeof value === 'string' ? value.trim() : '';
+  return /^[a-z0-9_]+$/i.test(icon) ? icon : 'auto_awesome';
+}
+
+function internalRoute(value: string | undefined, fallback: string): string {
+  const candidate = value?.trim() ?? '';
+  if (!candidate.startsWith('/') || candidate.startsWith('//') || candidate.includes('\\')) return fallback;
+  try {
+    const parsed = new URL(candidate, 'https://internal.invalid');
+    return parsed.origin === 'https://internal.invalid' ? candidate : fallback;
+  } catch {
+    return fallback;
+  }
 }
 
 /** Public marketing copy must not publish unverified outcome guarantees or speed claims. */
@@ -180,6 +296,8 @@ function isSafePublicCopy(value: string): boolean {
     /(?:\b\d{1,3}\s*%|%\s*\d{1,3}\b)/i,
     /(?:\byüzde\s+\d{1,3}\b|\b\d{1,3}\s+yüzde\b)/i,
     /\bkesin\w*\b/i,
-    /\bgaranti\w*\b/i
+    /\bgaranti\w*\b/i,
+    /bilimsel\s+yöntemlerle/i,
+    /akademik\s+başarı\w*\s+(?:yükselt|artır)/i
   ].some(pattern => pattern.test(value));
 }

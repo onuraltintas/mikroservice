@@ -35,29 +35,17 @@ import {
   SpeedReadingBulkNotificationRequest,
   SpeedReadingBulkNotificationResult
 } from '../../../core/services/speed-reading-admin.service';
+import {
+  buildHomePageConfig,
+  DEFAULT_HOME_PAGE_CARDS,
+  DEFAULT_HOME_PAGE_DRAFT,
+  HomeCardsDraft,
+  HomePageDraft,
+  hydrateHomePageDraft
+} from './speed-reading-home-page-cms';
 
 type CommunicationTab = 'cms' | 'announcements' | 'email-templates' | 'campaigns' | 'notifications';
-type CmsTab = 'homepage' | 'blocks' | 'evidence' | 'pages' | 'blog' | 'media' | 'navigation' | 'contacts' | 'subscribers';
-
-interface HomePageDraft {
-  seoTitle: string; seoDescription: string; seoKeywords: string; seoOgImage: string;
-  heroTitle: string; heroSubtitle: string; primaryActionLabel: string; secondaryActionLabel: string;
-  featuresTitle: string; featuresSubtitle: string; approachTitle: string; approachSubtitle: string;
-  pricingTitle: string; pricingSubtitle: string; blogTitle: string; blogSubtitle: string;
-  newsletterTitle: string; newsletterSubtitle: string; faqTitle: string; faqSubtitle: string;
-  ctaTitle: string; ctaSubtitle: string; ctaActionLabel: string; ctaSmallText: string;
-  featuresVisible: boolean; approachVisible: boolean; statsVisible: boolean; pricingVisible: boolean;
-  blogVisible: boolean; newsletterVisible: boolean; faqVisible: boolean; ctaVisible: boolean;
-}
-
-interface HomeFeatureDraft { icon: string; title: string; description: string; }
-interface HomeApproachDraft { title: string; role: string; description: string; }
-interface HomeCardsDraft {
-  trustPoints: string[];
-  features: HomeFeatureDraft[];
-  approach: HomeApproachDraft[];
-  benefits: string[];
-}
+type CmsTab = 'homepage' | 'evidence' | 'pages' | 'blog' | 'media' | 'navigation' | 'contacts' | 'subscribers';
 
 interface EvidenceMetricDraft {
   title: string;
@@ -98,14 +86,142 @@ const evidenceMetricIcons = ['insights', 'groups', 'quiz', 'speed', 'trending_up
 
       @if (selectedTab() === 'cms') {
         <section class="space-y-4" aria-labelledby="cms-title">
-          <div class="flex flex-wrap items-end justify-between gap-3"><div><h2 id="cms-title" class="text-lg font-semibold text-gray-900 dark:text-white">CMS</h2><p class="muted">Ana sayfa, içerik sayfaları, blog, medya, menüler, iletişim mesajları ve bülten aboneleri.</p></div><button type="button" class="primary" (click)="startCmsCreate()">{{ cmsTab() === 'homepage' ? 'Ana sayfayı düzenle' : cmsTab() === 'blocks' ? 'Yeni blok' : cmsTab() === 'evidence' ? 'Yeni kanıtlı istatistik' : cmsTab() === 'pages' ? 'Yeni sayfa' : cmsTab() === 'blog' ? 'Yeni blog yazısı' : cmsTab() === 'media' ? 'Medya yükle' : cmsTab() === 'navigation' ? 'Yeni menü öğesi' : 'Yenile' }}</button></div>
-          <nav class="ui-tab-list flex flex-wrap gap-2" aria-label="CMS sekmeleri">@for (tab of cmsTabs; track tab.value) {<button type="button" class="ui-tab secondary" [attr.aria-pressed]="cmsTab() === tab.value" [class.bg-gray-100]="cmsTab() === tab.value" (click)="selectCmsTab(tab.value)">{{ tab.label }}</button>}</nav>
+          <div class="flex flex-wrap items-end justify-between gap-3"><div><h2 id="cms-title" class="text-lg font-semibold text-gray-900 dark:text-white">CMS</h2><p class="muted">Ana sayfa, içerik sayfaları, blog, medya, menüler, iletişim mesajları ve bülten aboneleri.</p></div><button type="button" class="primary" (click)="startCmsCreate()" [disabled]="loading() || saving()">{{ loading() ? 'İçerik yükleniyor…' : cmsTab() === 'homepage' ? 'Ana sayfayı düzenle' : cmsTab() === 'evidence' ? 'Yeni kanıtlı istatistik' : cmsTab() === 'pages' ? 'Yeni sayfa' : cmsTab() === 'blog' ? 'Yeni blog yazısı' : cmsTab() === 'media' ? 'Medya yükle' : cmsTab() === 'navigation' ? 'Yeni menü öğesi' : 'Yenile' }}</button></div>
+          <nav class="ui-tab-list flex flex-wrap gap-2" aria-label="CMS sekmeleri">@for (tab of cmsTabs; track tab.value) {<button type="button" class="ui-tab secondary" [disabled]="loading()" [attr.aria-pressed]="cmsTab() === tab.value" [class.bg-gray-100]="cmsTab() === tab.value" (click)="selectCmsTab(tab.value)">{{ tab.label }}</button>}</nav>
 
           @if (cmsTab() === 'homepage') {
-            @if (homePageEditing()) {<div class="dialog-backdrop-shield" aria-hidden="true"></div><form class="form-card dialog-form" role="dialog" aria-modal="true" aria-label="Ana sayfa düzenleme formu" cdkTrapFocus [cdkTrapFocusAutoCapture]="true" (ngSubmit)="saveHomePage()"><h3>Ana sayfa içeriği</h3><p class="muted">Bu alanlar canlı ana sayfadaki metni, görünürlüğü ve arama motoru bilgisini yönetir. Rakam içeren başarı iddialarını yalnız doğrulanmış kanıtlı istatistikler sekmesinde yayımlayın.</p><div class="form-grid"><label>SEO başlığı<input [(ngModel)]="homePageDraft.seoTitle" name="homeSeoTitle" required maxlength="60" /></label><label>SEO açıklaması<input [(ngModel)]="homePageDraft.seoDescription" name="homeSeoDescription" required maxlength="160" /></label><label class="wide">Anahtar kelimeler<input [(ngModel)]="homePageDraft.seoKeywords" name="homeSeoKeywords" maxlength="250" /></label><label class="wide">OpenGraph görsel URL<input [(ngModel)]="homePageDraft.seoOgImage" name="homeSeoImage" maxlength="1000" placeholder="https://..." /></label><label>Ana başlık<input [(ngModel)]="homePageDraft.heroTitle" name="homeHeroTitle" required maxlength="90" /></label><label class="wide">Ana açıklama<textarea [(ngModel)]="homePageDraft.heroSubtitle" name="homeHeroSubtitle" required maxlength="220"></textarea></label><label>Birincil buton<input [(ngModel)]="homePageDraft.primaryActionLabel" name="homePrimaryAction" required maxlength="40" /></label><label>İkincil buton<input [(ngModel)]="homePageDraft.secondaryActionLabel" name="homeSecondaryAction" required maxlength="40" /></label><label>Özellikler başlığı<input [(ngModel)]="homePageDraft.featuresTitle" name="homeFeaturesTitle" required maxlength="90" /></label><label>Özellikler açıklaması<input [(ngModel)]="homePageDraft.featuresSubtitle" name="homeFeaturesSubtitle" required maxlength="220" /></label><label>Yaklaşım başlığı<input [(ngModel)]="homePageDraft.approachTitle" name="homeApproachTitle" required maxlength="90" /></label><label>Yaklaşım açıklaması<input [(ngModel)]="homePageDraft.approachSubtitle" name="homeApproachSubtitle" required maxlength="220" /></label><label>Fiyatlandırma başlığı<input [(ngModel)]="homePageDraft.pricingTitle" name="homePricingTitle" required maxlength="90" /></label><label>Fiyatlandırma açıklaması<input [(ngModel)]="homePageDraft.pricingSubtitle" name="homePricingSubtitle" required maxlength="220" /></label><label>Blog başlığı<input [(ngModel)]="homePageDraft.blogTitle" name="homeBlogTitle" required maxlength="90" /></label><label>Blog açıklaması<input [(ngModel)]="homePageDraft.blogSubtitle" name="homeBlogSubtitle" required maxlength="220" /></label><label>Bülten başlığı<input [(ngModel)]="homePageDraft.newsletterTitle" name="homeNewsletterTitle" required maxlength="90" /></label><label>Bülten açıklaması<input [(ngModel)]="homePageDraft.newsletterSubtitle" name="homeNewsletterSubtitle" required maxlength="220" /></label><label>SSS başlığı<input [(ngModel)]="homePageDraft.faqTitle" name="homeFaqTitle" required maxlength="90" /></label><label>SSS açıklaması<input [(ngModel)]="homePageDraft.faqSubtitle" name="homeFaqSubtitle" required maxlength="220" /></label><label>Son çağrı başlığı<input [(ngModel)]="homePageDraft.ctaTitle" name="homeCtaTitle" required maxlength="90" /></label><label>Son çağrı açıklaması<input [(ngModel)]="homePageDraft.ctaSubtitle" name="homeCtaSubtitle" required maxlength="220" /></label><label>Son çağrı butonu<input [(ngModel)]="homePageDraft.ctaActionLabel" name="homeCtaAction" required maxlength="40" /></label><label>Alt açıklama<input [(ngModel)]="homePageDraft.ctaSmallText" name="homeCtaSmall" maxlength="180" /></label><fieldset class="wide"><legend>Bölümler</legend><div class="flex flex-wrap gap-4"><label class="check"><input type="checkbox" [(ngModel)]="homePageDraft.featuresVisible" name="homeFeaturesVisible" /> Özellikler</label><label class="check"><input type="checkbox" [(ngModel)]="homePageDraft.approachVisible" name="homeApproachVisible" /> Yaklaşım</label><label class="check"><input type="checkbox" [(ngModel)]="homePageDraft.statsVisible" name="homeStatsVisible" /> Kanıtlı istatistik</label><label class="check"><input type="checkbox" [(ngModel)]="homePageDraft.pricingVisible" name="homePricingVisible" /> Fiyatlandırma</label><label class="check"><input type="checkbox" [(ngModel)]="homePageDraft.blogVisible" name="homeBlogVisible" /> Blog</label><label class="check"><input type="checkbox" [(ngModel)]="homePageDraft.newsletterVisible" name="homeNewsletterVisible" /> Bülten</label><label class="check"><input type="checkbox" [(ngModel)]="homePageDraft.faqVisible" name="homeFaqVisible" /> SSS</label><label class="check"><input type="checkbox" [(ngModel)]="homePageDraft.ctaVisible" name="homeCtaVisible" /> Son çağrı</label></div></fieldset><fieldset class="wide content-collection"><legend>Güven noktaları</legend><p class="muted">Ana başlığın altında kısa ve somut ifadeler olarak görünür.</p>@for (point of homePageCards.trustPoints; track $index) {<div class="collection-row"><input [(ngModel)]="homePageCards.trustPoints[$index]" [name]="'trustPoint' + $index" maxlength="100" required /><button type="button" class="danger" (click)="removeHomeTrustPoint($index)">Kaldır</button></div>}<button type="button" class="secondary" (click)="addHomeTrustPoint()">Güven noktası ekle</button></fieldset><fieldset class="wide content-collection"><legend>Özellik kartları</legend><p class="muted">Her kart öğrenciye sunduğunuz somut faydayı kısa biçimde anlatır.</p>@for (item of homePageCards.features; track $index) {<div class="collection-card"><div class="form-grid"><label>İkon<input [(ngModel)]="item.icon" [name]="'featureIcon' + $index" maxlength="50" placeholder="speed" /></label><label>Başlık<input [(ngModel)]="item.title" [name]="'featureTitle' + $index" maxlength="90" required /></label><label class="wide">Açıklama<textarea [(ngModel)]="item.description" [name]="'featureDescription' + $index" maxlength="220" required></textarea></label></div><button type="button" class="danger" (click)="removeHomeFeature($index)">Kartı kaldır</button></div>}<button type="button" class="secondary" (click)="addHomeFeature()">Özellik kartı ekle</button></fieldset><fieldset class="wide content-collection"><legend>Nasıl çalışır adımları</legend><p class="muted">Öğrencinin programdaki yolculuğunu üç kısa adımda anlatın.</p>@for (item of homePageCards.approach; track $index) {<div class="collection-card"><div class="form-grid"><label>Başlık<input [(ngModel)]="item.title" [name]="'approachTitle' + $index" maxlength="90" required /></label><label>Üst etiket<input [(ngModel)]="item.role" [name]="'approachRole' + $index" maxlength="50" /></label><label class="wide">Açıklama<textarea [(ngModel)]="item.description" [name]="'approachDescription' + $index" maxlength="220" required></textarea></label></div><button type="button" class="danger" (click)="removeHomeApproach($index)">Adımı kaldır</button></div>}<button type="button" class="secondary" (click)="addHomeApproach()">Adım ekle</button></fieldset><fieldset class="wide content-collection"><legend>Bülten faydaları</legend><p class="muted">Kayıt alanının yanında gösterilen kısa maddeler.</p>@for (benefit of homePageCards.benefits; track $index) {<div class="collection-row"><input [(ngModel)]="homePageCards.benefits[$index]" [name]="'newsletterBenefit' + $index" maxlength="120" required /><button type="button" class="danger" (click)="removeHomeBenefit($index)">Kaldır</button></div>}<button type="button" class="secondary" (click)="addHomeBenefit()">Fayda ekle</button></fieldset></div><div class="form-actions"><button type="button" class="secondary" (click)="homePageEditing.set(false)">İptal</button><button class="primary" type="submit" [disabled]="saving()">Yayına kaydet</button></div></form>} @else {<div class="data-card"><h3 class="font-semibold">Ana sayfa</h3><p class="muted">Ana sayfa metni, arama motoru bilgisi ve bölüm görünürlüğü tek kayıtta yönetilir. Kartlar form üzerinden düzenlenir; kanıtlı sayılar ayrı sekmede kaynak bilgisiyle yayınlanır.</p><button type="button" class="primary" (click)="editHomePage()">Ana sayfayı düzenle</button></div>}
+            @if (homePageEditing()) {
+              <div class="dialog-backdrop-shield" aria-hidden="true"></div>
+              <form class="form-card dialog-form" role="dialog" aria-modal="true" aria-label="Ana sayfa düzenleme formu" cdkTrapFocus [cdkTrapFocusAutoCapture]="true" (ngSubmit)="saveHomePage()">
+                <h3>Ana sayfa içeriği</h3>
+                <p class="muted">Ana sayfa değişiklikleri kaydedildiğinde yayımlanır. Sayısal başarı iddialarını yalnız kaynak bilgisi ve doğrulaması olan istatistiklerde kullanın. Yorumlarda yayımlama iznini doğrulayın.</p>
+                <div class="form-grid">
+                  <label>SEO başlığı<input [(ngModel)]="homePageDraft.seoTitle" name="homeSeoTitle" required maxlength="60" /></label>
+                  <label>SEO açıklaması<input [(ngModel)]="homePageDraft.seoDescription" name="homeSeoDescription" required maxlength="160" /></label>
+                  <label class="wide">Anahtar kelimeler<input [(ngModel)]="homePageDraft.seoKeywords" name="homeSeoKeywords" maxlength="250" /></label>
+                  <label class="wide">OpenGraph görsel URL<input [(ngModel)]="homePageDraft.seoOgImage" name="homeSeoImage" maxlength="1000" placeholder="https://..." /></label>
+                  <label>Ana başlık<input [(ngModel)]="homePageDraft.heroTitle" name="homeHeroTitle" required maxlength="90" /></label>
+                  <label class="wide">Ana açıklama<textarea [(ngModel)]="homePageDraft.heroSubtitle" name="homeHeroSubtitle" required maxlength="220"></textarea></label>
+                  <label>Birincil buton<input [(ngModel)]="homePageDraft.primaryActionLabel" name="homePrimaryAction" required maxlength="40" /></label>
+                  <label>İkincil buton<input [(ngModel)]="homePageDraft.secondaryActionLabel" name="homeSecondaryAction" required maxlength="40" /></label>
+                  <label>Özellikler başlığı<input [(ngModel)]="homePageDraft.featuresTitle" name="homeFeaturesTitle" required maxlength="90" /></label>
+                  <label>Özellikler açıklaması<input [(ngModel)]="homePageDraft.featuresSubtitle" name="homeFeaturesSubtitle" required maxlength="220" /></label>
+                  <label>Yaklaşım başlığı<input [(ngModel)]="homePageDraft.approachTitle" name="homeApproachTitle" required maxlength="90" /></label>
+                  <label>Yaklaşım açıklaması<input [(ngModel)]="homePageDraft.approachSubtitle" name="homeApproachSubtitle" required maxlength="220" /></label>
+                  <label>Fiyatlandırma başlığı<input [(ngModel)]="homePageDraft.pricingTitle" name="homePricingTitle" required maxlength="90" /></label>
+                  <label>Fiyatlandırma açıklaması<input [(ngModel)]="homePageDraft.pricingSubtitle" name="homePricingSubtitle" required maxlength="220" /></label>
+                  <label>Blog başlığı<input [(ngModel)]="homePageDraft.blogTitle" name="homeBlogTitle" required maxlength="90" /></label>
+                  <label>Blog açıklaması<input [(ngModel)]="homePageDraft.blogSubtitle" name="homeBlogSubtitle" required maxlength="220" /></label>
+                  <label>Bülten başlığı<input [(ngModel)]="homePageDraft.newsletterTitle" name="homeNewsletterTitle" required maxlength="90" /></label>
+                  <label>Bülten açıklaması<input [(ngModel)]="homePageDraft.newsletterSubtitle" name="homeNewsletterSubtitle" required maxlength="220" /></label>
+                  <label>SSS başlığı<input [(ngModel)]="homePageDraft.faqTitle" name="homeFaqTitle" required maxlength="90" /></label>
+                  <label>SSS açıklaması<input [(ngModel)]="homePageDraft.faqSubtitle" name="homeFaqSubtitle" required maxlength="220" /></label>
+                  <label>Yorumlar başlığı<input [(ngModel)]="homePageDraft.testimonialsTitle" name="homeTestimonialsTitle" required maxlength="90" /></label>
+                  <label>Yorumlar açıklaması<input [(ngModel)]="homePageDraft.testimonialsSubtitle" name="homeTestimonialsSubtitle" required maxlength="220" /></label>
+                  <label>Son çağrı başlığı<input [(ngModel)]="homePageDraft.ctaTitle" name="homeCtaTitle" required maxlength="90" /></label>
+                  <label>Son çağrı açıklaması<input [(ngModel)]="homePageDraft.ctaSubtitle" name="homeCtaSubtitle" required maxlength="220" /></label>
+                  <label>Son çağrı butonu<input [(ngModel)]="homePageDraft.ctaActionLabel" name="homeCtaAction" required maxlength="40" /></label>
+                  <label>Alt açıklama<input [(ngModel)]="homePageDraft.ctaSmallText" name="homeCtaSmall" maxlength="180" /></label>
+                  <fieldset class="wide">
+                    <legend>Bölümler</legend>
+                    <div class="flex flex-wrap gap-4">
+                      <label class="check"><input type="checkbox" [(ngModel)]="homePageDraft.featuresVisible" name="homeFeaturesVisible" /> Özellikler</label>
+                      <label class="check"><input type="checkbox" [(ngModel)]="homePageDraft.approachVisible" name="homeApproachVisible" /> Yaklaşım</label>
+                      <label class="check"><input type="checkbox" [(ngModel)]="homePageDraft.statsVisible" name="homeStatsVisible" /> Kanıtlı istatistik</label>
+                      <label class="check"><input type="checkbox" [(ngModel)]="homePageDraft.pricingVisible" name="homePricingVisible" /> Fiyatlandırma</label>
+                      <label class="check"><input type="checkbox" [(ngModel)]="homePageDraft.blogVisible" name="homeBlogVisible" /> Blog</label>
+                      <label class="check"><input type="checkbox" [(ngModel)]="homePageDraft.newsletterVisible" name="homeNewsletterVisible" /> Bülten</label>
+                      <label class="check"><input type="checkbox" [(ngModel)]="homePageDraft.faqVisible" name="homeFaqVisible" /> SSS</label>
+                      <label class="check"><input type="checkbox" [(ngModel)]="homePageDraft.testimonialsVisible" name="homeTestimonialsVisible" /> Yorumlar</label>
+                      <label class="check"><input type="checkbox" [(ngModel)]="homePageDraft.ctaVisible" name="homeCtaVisible" /> Son çağrı</label>
+                    </div>
+                  </fieldset>
+                  <fieldset class="wide content-collection">
+                    <legend>Güven noktaları</legend>
+                    <p class="muted">Ana başlığın altında kısa ve somut ifadeler olarak görünür.</p>
+                    @for (point of homePageCards.trustPoints; track $index) {
+                      <div class="collection-row">
+                        <input [(ngModel)]="homePageCards.trustPoints[$index]" [name]="'trustPoint' + $index" maxlength="100" required />
+                        <button type="button" class="danger" (click)="removeHomeTrustPoint($index)">Kaldır</button>
+                      </div>
+                    }
+                    <button type="button" class="secondary" (click)="addHomeTrustPoint()">Güven noktası ekle</button>
+                  </fieldset>
+                  <fieldset class="wide content-collection">
+                    <legend>Özellik kartları</legend>
+                    <p class="muted">Kartlarda ölçülebilir ve doğrulanabilir ürün özelliklerini anlatın.</p>
+                    @for (item of homePageCards.features; track $index) {
+                      <div class="collection-card"><div class="form-grid">
+                        <label>İkon<input [(ngModel)]="item.icon" [name]="'featureIcon' + $index" maxlength="50" placeholder="speed" /></label>
+                        <label>Başlık<input [(ngModel)]="item.title" [name]="'featureTitle' + $index" maxlength="90" required /></label>
+                        <label class="wide">Açıklama<textarea [(ngModel)]="item.description" [name]="'featureDescription' + $index" maxlength="220" required></textarea></label>
+                      </div><button type="button" class="danger" (click)="removeHomeFeature($index)">Kartı kaldır</button></div>
+                    }
+                    <button type="button" class="secondary" (click)="addHomeFeature()">Özellik kartı ekle</button>
+                  </fieldset>
+                  <fieldset class="wide content-collection">
+                    <legend>Nasıl çalışır adımları</legend>
+                    <p class="muted">Öğrencinin programdaki yolculuğunu kısa adımlarla anlatın.</p>
+                    @for (item of homePageCards.approach; track $index) {
+                      <div class="collection-card"><div class="form-grid">
+                        <label>Başlık<input [(ngModel)]="item.title" [name]="'approachTitle' + $index" maxlength="90" required /></label>
+                        <label>Üst etiket<input [(ngModel)]="item.role" [name]="'approachRole' + $index" maxlength="50" /></label>
+                        <label class="wide">Açıklama<textarea [(ngModel)]="item.description" [name]="'approachDescription' + $index" maxlength="220" required></textarea></label>
+                      </div><button type="button" class="danger" (click)="removeHomeApproach($index)">Adımı kaldır</button></div>
+                    }
+                    <button type="button" class="secondary" (click)="addHomeApproach()">Adım ekle</button>
+                  </fieldset>
+                  <fieldset class="wide content-collection">
+                    <legend>Sık sorulan sorular</legend>
+                    <p class="muted">Sorular bu sırayla ana sayfada görünür; en fazla sekiz soru yayımlanır.</p>
+                    @for (item of homePageCards.faqItems; track $index) {
+                      <div class="collection-card"><div class="form-grid">
+                        <label>Kategori<input [(ngModel)]="item.category" [name]="'faqCategory' + $index" maxlength="50" /></label>
+                        <label class="wide">Soru<input [(ngModel)]="item.question" [name]="'faqQuestion' + $index" maxlength="180" required /></label>
+                        <label class="wide">Yanıt<textarea [(ngModel)]="item.answer" [name]="'faqAnswer' + $index" maxlength="2000" required></textarea></label>
+                      </div><button type="button" class="danger" (click)="removeHomeFaq($index)">Soruyu kaldır</button></div>
+                    }
+                    <button type="button" class="secondary" (click)="addHomeFaq()" [disabled]="homePageCards.faqItems.length >= 8">Soru ekle</button>
+                  </fieldset>
+                  <fieldset class="wide content-collection">
+                    <legend>Katılımcı yorumları</legend>
+                    <p class="muted">Yalnızca yayımlama izni doğrulanmış yorumları ekleyin; en fazla sekiz yorum yayımlanır.</p>
+                    @for (item of homePageCards.testimonials; track $index) {
+                      <div class="collection-card"><div class="form-grid">
+                        <label>Ad<input [(ngModel)]="item.name" [name]="'testimonialName' + $index" maxlength="120" required /></label>
+                        <label>Rol / ilişki<input [(ngModel)]="item.role" [name]="'testimonialRole' + $index" maxlength="100" /></label>
+                        <label>Puan (isteğe bağlı)<input type="number" [(ngModel)]="item.rating" [name]="'testimonialRating' + $index" min="0" max="5" step="1" /></label>
+                        <label class="wide">Yorum<textarea [(ngModel)]="item.text" [name]="'testimonialText' + $index" maxlength="1500" required></textarea></label>
+                      </div><button type="button" class="danger" (click)="removeHomeTestimonial($index)">Yorumu kaldır</button></div>
+                    }
+                    <button type="button" class="secondary" (click)="addHomeTestimonial()" [disabled]="homePageCards.testimonials.length >= 8">Yorum ekle</button>
+                  </fieldset>
+                  <fieldset class="wide content-collection">
+                    <legend>Bülten faydaları</legend>
+                    <p class="muted">Kayıt alanının yanında gösterilen kısa maddeler.</p>
+                    @for (benefit of homePageCards.benefits; track $index) {
+                      <div class="collection-row">
+                        <input [(ngModel)]="homePageCards.benefits[$index]" [name]="'newsletterBenefit' + $index" maxlength="120" required />
+                        <button type="button" class="danger" (click)="removeHomeBenefit($index)">Kaldır</button>
+                      </div>
+                    }
+                    <button type="button" class="secondary" (click)="addHomeBenefit()">Fayda ekle</button>
+                  </fieldset>
+                </div>
+                <div class="form-actions">
+                  <button type="button" class="secondary" (click)="homePageEditing.set(false)">İptal</button>
+                  <button class="primary" type="submit" [disabled]="saving()">Yayına kaydet</button>
+                </div>
+              </form>
+            } @else {
+              <div class="data-card">
+                <h3 class="font-semibold">Ana sayfa</h3>
+                <p class="muted">Metinler, listeler, bölüm görünürlüğü ve arama motoru bilgisi tek formdan yönetilir. Kaydedilen yapılandırma canlı ana sayfada yayımlanır.</p>
+                <button type="button" class="primary" (click)="editHomePage()">Ana sayfayı düzenle</button>
+              </div>
+            }
           }
 
-          @if (cmsTab() === 'blocks') {@if (blockEditing()) {<div class="dialog-backdrop-shield" aria-hidden="true"></div><form class="form-card dialog-form" role="dialog" aria-modal="true" aria-label="Düzenleme formu" cdkTrapFocus [cdkTrapFocusAutoCapture]="true" (ngSubmit)="saveCmsBlock()"><h3>{{ blockEditingId ? 'Bloğu düzenle' : 'Landing içerik bloğu' }}</h3><div class="form-grid"><label>Anahtar<input [(ngModel)]="blockDraft.key" name="blockKey" required maxlength="150" /></label><label>Grup<input [(ngModel)]="blockDraft.group" name="blockGroup" required maxlength="100" /></label><label>Etiket<input [(ngModel)]="blockDraft.label" name="blockLabel" maxlength="150" /></label><label>Tür<input type="number" [(ngModel)]="blockDraft.type" name="blockType" min="0" max="20" /></label><label class="wide">Değer<textarea [(ngModel)]="blockDraft.value" name="blockValue" required maxlength="100000"></textarea></label></div><div class="form-actions"><button type="button" class="secondary" (click)="cancelCmsEdit()">İptal</button><button class="primary" type="submit" [disabled]="saving()">Kaydet</button></div></form>}<div class="data-card"><div class="inline-filter"><input [(ngModel)]="cmsGroup" name="cmsGroup" placeholder="Grup (HomePage)" maxlength="100" /><button type="button" class="secondary" (click)="loadBlocks()">Filtrele</button><button type="button" class="secondary" (click)="saveLanding()">Grubu landing olarak kaydet</button></div><table class="data-table"><thead><tr><th>Grup</th><th>Anahtar</th><th>Etiket</th><th>Değer</th><th></th></tr></thead><tbody>@for (block of blocks(); track block.id) {<tr><td>{{ block.group }}</td><td class="font-mono">{{ block.key }}</td><td>{{ block.label || '—' }}</td><td class="max-w-xl whitespace-pre-wrap">{{ block.value }}</td><td class="actions"><button type="button" (click)="editBlock(block)">Düzenle</button><button type="button" class="danger" (click)="deleteBlock(block)">Sil</button></td></tr>} @empty {<tr><td colspan="5" class="empty">İçerik bloğu bulunamadı.</td></tr>}</tbody></table></div>}
 
           @if (cmsTab() === 'evidence') {
             @if (evidenceEditing()) {
@@ -211,12 +327,11 @@ export class SpeedReadingCommunicationsComponent implements OnInit {
   readonly canManageCommunications = computed(() => this.authService.hasPermission(ADMIN_PERMISSIONS.speedReadingCommunicationsManage));
   readonly visibleTabs = computed(() => this.tabs.filter(tab => tab.value === 'cms' ? this.canManageContent() : this.canManageCommunications()));
   readonly cmsTabs: { value: CmsTab; label: string }[] = [
-    { value: 'homepage', label: 'Ana sayfa' }, { value: 'blocks', label: 'Landing blokları' }, { value: 'evidence', label: 'Kanıtlı istatistikler' }, { value: 'pages', label: 'Sayfalar' }, { value: 'blog', label: 'Blog' }, { value: 'media', label: 'Medya' }, { value: 'navigation', label: 'Menü' }, { value: 'contacts', label: 'İletişim' }, { value: 'subscribers', label: 'Bülten aboneleri' }
+    { value: 'homepage', label: 'Ana sayfa' }, { value: 'evidence', label: 'Kanıtlı istatistikler' }, { value: 'pages', label: 'Sayfalar' }, { value: 'blog', label: 'Blog' }, { value: 'media', label: 'Medya' }, { value: 'navigation', label: 'Menü' }, { value: 'contacts', label: 'İletişim' }, { value: 'subscribers', label: 'Bülten aboneleri' }
   ];
   readonly selectedTab = signal<CommunicationTab>('cms');
-  readonly cmsTab = signal<CmsTab>('blocks');
+  readonly cmsTab = signal<CmsTab>('homepage');
   readonly loading = signal(false); readonly saving = signal(false); readonly error = signal('');
-  readonly blocks = signal<SpeedReadingCmsContentBlock[]>([]);
   readonly evidenceMetrics = signal<EvidenceMetric[]>([]);
   readonly pages = signal<{ items: SpeedReadingCmsPage[]; totalCount: number; pageNumber: number; pageSize: number }>({ items: [], totalCount: 0, pageNumber: 1, pageSize: 25 });
   readonly blogPosts = signal<{ items: SpeedReadingCmsBlogPost[]; totalCount: number; pageNumber: number; pageSize: number }>({ items: [], totalCount: 0, pageNumber: 1, pageSize: 25 });
@@ -232,17 +347,17 @@ export class SpeedReadingCommunicationsComponent implements OnInit {
   readonly campaigns = signal<SpeedReadingEmailCampaign[]>([]); readonly campaignStats = signal<SpeedReadingEmailCampaignStats | null>(null);
   readonly notifications = signal<SpeedReadingAdminNotificationPage>({ items: [], totalCount: 0, pageNumber: 1, pageSize: 25 }); readonly unreadContacts = signal(0);
 
-  cmsGroup = 'HomePage'; cmsPageNumber = 1; cmsBlogPageNumber = 1; cmsMediaPageNumber = 1; notificationPage = 1; notificationSearch = '';
+  cmsPageNumber = 1; cmsBlogPageNumber = 1; cmsMediaPageNumber = 1; notificationPage = 1; notificationSearch = '';
   navigationMenu = 'Main';
   includeInactiveSubscribers = false;
   mediaFile: File | null = null; mediaAltText = '';
   contactReadFilter = ''; contactReplyFilter = ''; announcementActiveFilter = ''; announcementIncludeExpired = false;
-  blockEditingId: string | null = null; cmsPageEditingId: string | null = null; cmsBlogEditingId: string | null = null;
+  cmsPageEditingId: string | null = null; cmsBlogEditingId: string | null = null;
   evidenceEditingId: string | null = null;
   navigationEditingId: string | null = null;
   announcementEditingId: string | null = null; emailTemplateEditingId: string | null = null; campaignEditingId: string | null = null;
-  blockDraft: SpeedReadingCmsContentBlockRequest = this.emptyBlock(); pageDraft: SpeedReadingCmsPageRequest = this.emptyPage(); blogDraft: SpeedReadingCmsBlogPostRequest = this.emptyBlog();
-  homePageDraft: HomePageDraft = this.emptyHomePage(); homePageCards: HomeCardsDraft = this.emptyHomeCards();
+  pageDraft: SpeedReadingCmsPageRequest = this.emptyPage(); blogDraft: SpeedReadingCmsBlogPostRequest = this.emptyBlog();
+  homePageDraft: HomePageDraft = { ...DEFAULT_HOME_PAGE_DRAFT }; homePageCards: HomeCardsDraft = { ...DEFAULT_HOME_PAGE_CARDS };
   evidenceDraft: EvidenceMetricDraft = this.emptyEvidenceMetric();
   navigationDraft: SpeedReadingCmsNavigationItemRequest = this.emptyNavigation();
   blogTags = '';
@@ -271,7 +386,7 @@ export class SpeedReadingCommunicationsComponent implements OnInit {
     else if (this.emailPreview()) this.emailPreview.set(null);
     else if (this.campaignStats()) this.campaignStats.set(null);
     else if (this.homePageEditing()) this.homePageEditing.set(false);
-    else if (this.blockEditing() || this.cmsPageEditing() || this.cmsBlogEditing() || this.mediaEditing() || this.navigationEditing()) this.cancelCmsEdit();
+    else if (this.cmsPageEditing() || this.cmsBlogEditing() || this.mediaEditing() || this.navigationEditing()) this.cancelCmsEdit();
     else if (this.evidenceEditing()) this.cancelEvidenceEdit();
     else if (this.announcementEditing()) this.announcementEditing.set(false);
     else if (this.emailTemplateEditing()) this.emailTemplateEditing.set(false);
@@ -289,12 +404,12 @@ export class SpeedReadingCommunicationsComponent implements OnInit {
       case 'notifications': if (this.canManageCommunications()) this.loadNotifications(); break;
     }
   }
-  selectCmsTab(tab: CmsTab): void { this.closeAllDialogs(); this.cmsTab.set(tab); this.loadCmsTab(); }
-  startCmsCreate(): void { if (this.cmsTab() === 'homepage') { this.editHomePage(); } else if (this.cmsTab() === 'blocks') { this.blockEditingId = null; this.blockDraft = this.emptyBlock(); this.blockEditing.set(true); } else if (this.cmsTab() === 'evidence') { this.evidenceEditingId = null; this.evidenceDraft = this.emptyEvidenceMetric(); this.evidenceEditing.set(true); } else if (this.cmsTab() === 'pages') { this.cmsPageEditingId = null; this.pageDraft = this.emptyPage(); this.cmsPageEditing.set(true); } else if (this.cmsTab() === 'blog') { this.cmsBlogEditingId = null; this.blogDraft = this.emptyBlog(); this.blogTags = ''; this.cmsBlogEditing.set(true); } else if (this.cmsTab() === 'media') { this.mediaFile = null; this.mediaAltText = ''; this.mediaEditing.set(true); } else if (this.cmsTab() === 'navigation') { this.navigationEditingId = null; this.navigationDraft = this.emptyNavigation(); this.navigationEditing.set(true); } else { this.loadCmsTab(); } }
-  private loadCmsTab(): void { if (this.cmsTab() === 'homepage') this.loadHomePage(); if (this.cmsTab() === 'blocks') this.loadBlocks(); if (this.cmsTab() === 'evidence') this.loadEvidenceMetrics(); if (this.cmsTab() === 'pages') this.loadPages(); if (this.cmsTab() === 'blog') this.loadBlogPosts(); if (this.cmsTab() === 'media') this.loadMedia(); if (this.cmsTab() === 'navigation') this.loadNavigation(); if (this.cmsTab() === 'contacts') this.loadContacts(); if (this.cmsTab() === 'subscribers') this.loadSubscribers(); }
-  loadHomePage(): void { this.service.getCmsBlocks('HomePage').subscribe({ next: blocks => this.loadHomePageDraft(blocks.find(block => block.key === 'home_page_config')?.value), error: () => this.error.set('Ana sayfa içeriği yüklenemedi.') }); }
-  editHomePage(): void { this.loadHomePage(); this.homePageEditing.set(true); }
-  saveHomePage(): void { const cards = this.homePageCards; const config = { seo: { title: this.homePageDraft.seoTitle, description: this.homePageDraft.seoDescription, keywords: this.homePageDraft.seoKeywords, ogImage: this.homePageDraft.seoOgImage }, hero: { title: this.homePageDraft.heroTitle, subtitle: this.homePageDraft.heroSubtitle, primaryActionLabel: this.homePageDraft.primaryActionLabel, secondaryActionLabel: this.homePageDraft.secondaryActionLabel, trustPoints: cards.trustPoints.map(item => item.trim()).filter(Boolean) }, features: { title: this.homePageDraft.featuresTitle, subtitle: this.homePageDraft.featuresSubtitle, items: cards.features.map(item => ({ icon: item.icon.trim(), title: item.title.trim(), description: item.description.trim() })).filter(item => item.title && item.description) }, approach: { title: this.homePageDraft.approachTitle, subtitle: this.homePageDraft.approachSubtitle, items: cards.approach.map(item => ({ title: item.title.trim(), role: item.role.trim(), description: item.description.trim() })).filter(item => item.title && item.description) }, pricing: { title: this.homePageDraft.pricingTitle, subtitle: this.homePageDraft.pricingSubtitle }, blog: { title: this.homePageDraft.blogTitle, subtitle: this.homePageDraft.blogSubtitle }, newsletter: { title: this.homePageDraft.newsletterTitle, subtitle: this.homePageDraft.newsletterSubtitle, benefits: cards.benefits.map(item => item.trim()).filter(Boolean) }, faq: { title: this.homePageDraft.faqTitle, subtitle: this.homePageDraft.faqSubtitle }, cta: { title: this.homePageDraft.ctaTitle, subtitle: this.homePageDraft.ctaSubtitle, actionLabel: this.homePageDraft.ctaActionLabel, smallText: this.homePageDraft.ctaSmallText }, visibility: { features: this.homePageDraft.featuresVisible, approach: this.homePageDraft.approachVisible, stats: this.homePageDraft.statsVisible, pricing: this.homePageDraft.pricingVisible, blog: this.homePageDraft.blogVisible, newsletter: this.homePageDraft.newsletterVisible, faq: this.homePageDraft.faqVisible, cta: this.homePageDraft.ctaVisible } }; this.run(this.service.updateCmsLanding({ group: 'HomePage', blocks: { home_page_config: JSON.stringify(config) } }), () => { this.homePageEditing.set(false); this.loadHomePage(); }, 'Ana sayfa içeriği kaydedilemedi.'); }
+  selectCmsTab(tab: CmsTab): void { if (this.loading()) return; this.closeAllDialogs(); this.cmsTab.set(tab); this.loadCmsTab(); }
+  startCmsCreate(): void { if (this.loading() || this.saving()) return; if (this.cmsTab() === 'homepage') { this.editHomePage(); } else if (this.cmsTab() === 'evidence') { this.evidenceEditingId = null; this.evidenceDraft = this.emptyEvidenceMetric(); this.evidenceEditing.set(true); } else if (this.cmsTab() === 'pages') { this.cmsPageEditingId = null; this.pageDraft = this.emptyPage(); this.cmsPageEditing.set(true); } else if (this.cmsTab() === 'blog') { this.cmsBlogEditingId = null; this.blogDraft = this.emptyBlog(); this.blogTags = ''; this.cmsBlogEditing.set(true); } else if (this.cmsTab() === 'media') { this.mediaFile = null; this.mediaAltText = ''; this.mediaEditing.set(true); } else if (this.cmsTab() === 'navigation') { this.navigationEditingId = null; this.navigationDraft = this.emptyNavigation(); this.navigationEditing.set(true); } else { this.loadCmsTab(); } }
+  private loadCmsTab(): void { if (this.cmsTab() === 'homepage') this.loadHomePage(); if (this.cmsTab() === 'evidence') this.loadEvidenceMetrics(); if (this.cmsTab() === 'pages') this.loadPages(); if (this.cmsTab() === 'blog') this.loadBlogPosts(); if (this.cmsTab() === 'media') this.loadMedia(); if (this.cmsTab() === 'navigation') this.loadNavigation(); if (this.cmsTab() === 'contacts') this.loadContacts(); if (this.cmsTab() === 'subscribers') this.loadSubscribers(); }
+  loadHomePage(onLoaded?: () => void): void { this.loading.set(true); this.service.getCmsBlocks('HomePage').pipe(finalize(() => this.loading.set(false))).subscribe({ next: blocks => { const content = hydrateHomePageDraft(blocks); this.homePageDraft = content.draft; this.homePageCards = content.cards; onLoaded?.(); }, error: () => this.error.set('Ana sayfa içeriği yüklenemedi.') }); }
+  editHomePage(): void { this.loadHomePage(() => this.homePageEditing.set(true)); }
+  saveHomePage(): void { const config = buildHomePageConfig(this.homePageDraft, this.homePageCards); this.run(this.service.updateCmsLanding({ group: 'HomePage', blocks: { home_page_config: JSON.stringify(config) } }), () => { this.homePageEditing.set(false); this.loadHomePage(); }, 'Ana sayfa içeriği kaydedilemedi.'); }
   addHomeTrustPoint(): void { this.homePageCards = { ...this.homePageCards, trustPoints: [...this.homePageCards.trustPoints, ''] }; }
   removeHomeTrustPoint(index: number): void { this.homePageCards = { ...this.homePageCards, trustPoints: this.homePageCards.trustPoints.filter((_, itemIndex) => itemIndex !== index) }; }
   addHomeFeature(): void { this.homePageCards = { ...this.homePageCards, features: [...this.homePageCards.features, { icon: 'insights', title: '', description: '' }] }; }
@@ -303,12 +418,11 @@ export class SpeedReadingCommunicationsComponent implements OnInit {
   removeHomeApproach(index: number): void { this.homePageCards = { ...this.homePageCards, approach: this.homePageCards.approach.filter((_, itemIndex) => itemIndex !== index) }; }
   addHomeBenefit(): void { this.homePageCards = { ...this.homePageCards, benefits: [...this.homePageCards.benefits, ''] }; }
   removeHomeBenefit(index: number): void { this.homePageCards = { ...this.homePageCards, benefits: this.homePageCards.benefits.filter((_, itemIndex) => itemIndex !== index) }; }
-  readonly blockEditing = signal(false); readonly cmsPageEditing = signal(false); readonly cmsBlogEditing = signal(false); readonly mediaEditing = signal(false); readonly navigationEditing = signal(false); readonly announcementEditing = signal(false); readonly emailTemplateEditing = signal(false); readonly campaignEditing = signal(false); readonly bulkEditing = signal(false);
-  loadBlocks(): void { this.service.getCmsBlocks(this.cmsGroup).subscribe({ next: value => this.blocks.set(value), error: () => this.error.set('CMS blokları yüklenemedi.') }); }
-  saveLanding(): void { const blocks = Object.fromEntries(this.blocks().filter(block => block.group === this.cmsGroup).map(block => [block.key, block.value])); this.run(this.service.updateCmsLanding({ group: this.cmsGroup, blocks }), () => this.loadBlocks(), 'Landing içeriği kaydedilemedi.'); }
-  editBlock(block: SpeedReadingCmsContentBlock): void { this.blockEditingId = block.id; this.blockDraft = { key: block.key, group: block.group, label: block.label, type: block.type, value: block.value }; this.blockEditing.set(true); }
-  saveCmsBlock(): void { const request = this.blockEditingId ? this.service.updateCmsBlock(this.blockEditingId, this.blockDraft) : this.service.createCmsBlock(this.blockDraft); this.run(request, () => { this.blockEditingId = null; this.blockDraft = this.emptyBlock(); this.blockEditing.set(false); this.loadBlocks(); }, 'CMS bloğu kaydedilemedi.'); }
-  async deleteBlock(block: SpeedReadingCmsContentBlock): Promise<void> { if (!await this.toaster.confirm('Bu CMS bloğu silinsin mi?', { title: 'CMS bloğunu sil' })) return; this.run(this.service.deleteCmsBlock(block.id), () => this.loadBlocks(), 'CMS bloğu silinemedi.'); }
+  addHomeFaq(): void { this.homePageCards = { ...this.homePageCards, faqItems: [...this.homePageCards.faqItems, { question: '', answer: '', category: '' }] }; }
+  removeHomeFaq(index: number): void { this.homePageCards = { ...this.homePageCards, faqItems: this.homePageCards.faqItems.filter((_, itemIndex) => itemIndex !== index) }; }
+  addHomeTestimonial(): void { this.homePageCards = { ...this.homePageCards, testimonials: [...this.homePageCards.testimonials, { name: '', role: '', rating: 0, text: '' }] }; }
+  removeHomeTestimonial(index: number): void { this.homePageCards = { ...this.homePageCards, testimonials: this.homePageCards.testimonials.filter((_, itemIndex) => itemIndex !== index) }; }
+  readonly cmsPageEditing = signal(false); readonly cmsBlogEditing = signal(false); readonly mediaEditing = signal(false); readonly navigationEditing = signal(false); readonly announcementEditing = signal(false); readonly emailTemplateEditing = signal(false); readonly campaignEditing = signal(false); readonly bulkEditing = signal(false);
 
   loadEvidenceMetrics(): void {
     this.service.getCmsBlocks(evidenceMetricsGroup).subscribe({
@@ -422,14 +536,10 @@ export class SpeedReadingCommunicationsComponent implements OnInit {
   cmsTotalPages(page: { totalCount: number; pageSize: number }): number { return Math.max(1, Math.ceil(page.totalCount / page.pageSize)); }
   nowIso(): string { return new Date().toISOString(); }
 
-  cancelCmsEdit(): void { this.blockEditingId = null; this.cmsPageEditingId = null; this.cmsBlogEditingId = null; this.navigationEditingId = null; this.blockEditing.set(false); this.cmsPageEditing.set(false); this.cmsBlogEditing.set(false); this.mediaEditing.set(false); this.navigationEditing.set(false); this.homePageEditing.set(false); }
+  cancelCmsEdit(): void { this.cmsPageEditingId = null; this.cmsBlogEditingId = null; this.navigationEditingId = null; this.cmsPageEditing.set(false); this.cmsBlogEditing.set(false); this.mediaEditing.set(false); this.navigationEditing.set(false); this.homePageEditing.set(false); }
   private closeAllDialogs(): void { this.cancelCmsEdit(); this.cancelEvidenceEdit(); this.announcementEditing.set(false); this.emailTemplateEditing.set(false); this.campaignEditing.set(false); this.bulkEditing.set(false); this.selectedContact.set(null); this.cmsPreview.set(null); this.cmsRevisions.set([]); this.announcementStats.set(null); this.emailPreview.set(null); this.campaignStats.set(null); }
   private run(request: Observable<unknown>, onSuccess: () => void, errorMessage: string): void { this.saving.set(true); this.error.set(''); request.pipe(finalize(() => this.saving.set(false))).subscribe({ next: onSuccess, error: err => this.error.set(getAdminErrorMessage(err, errorMessage)) }); }
   private emptySeo(): SpeedReadingCmsSeoSettings { return { metaTitle: null, metaDescription: null, metaKeywords: null, canonicalUrl: null, ogTitle: null, ogDescription: null, ogImage: null, noIndex: false }; }
-  private emptyHomePage(): HomePageDraft { return { seoTitle: 'Master Hızlı Okuma | Hız ve Anlamayı Birlikte Geliştirin', seoDescription: 'Başlangıç düzeyinizi ölçün, size uygun çalışmaları takip edin ve gelişiminizi hız ile anlama verileriyle görün.', seoKeywords: 'hızlı okuma, okuduğunu anlama, okuma egzersizleri, kişisel öğrenme planı', seoOgImage: '', heroTitle: 'Hız ve anlamayı birlikte geliştirin', heroSubtitle: 'Başlangıç ölçümünüzden sonra size uygun çalışmalarla ilerleyin; gelişiminizi düzenli verilerle görün.', primaryActionLabel: 'Seviyeni belirle', secondaryActionLabel: 'Nasıl çalışır?', featuresTitle: 'Çalışma akışında neler var?', featuresSubtitle: 'Odak, akıcılık ve anlama çalışmalarını aynı öğrenme yolunda birleştirin.', approachTitle: 'Ölçerek ilerleyen bir çalışma düzeni', approachSubtitle: 'Program, tek bir hız hedefine değil, sürdürülebilir gelişime odaklanır.', pricingTitle: 'Size uygun erişimi seçin', pricingSubtitle: 'Bireysel veya kurumsal erişim seçeneklerini inceleyin.', blogTitle: 'Kaynaklar ve çalışma ipuçları', blogSubtitle: 'Okuma, öğrenme ve düzenli çalışma üzerine içerikleri keşfedin.', newsletterTitle: 'Çalışma ipuçları e-postanıza gelsin', newsletterSubtitle: 'Yeni içeriklerden ve yararlı çalışma önerilerinden haberdar olun.', faqTitle: 'Sık sorulan sorular', faqSubtitle: 'Platform ve çalışma düzeni hakkında kısa yanıtlar.', ctaTitle: 'Çalışma yolunuzu görmek ister misiniz?', ctaSubtitle: 'Seviyenizi belirleyip size uygun ilk adımı görün.', ctaActionLabel: 'Başla', ctaSmallText: 'Sonuçlar başlangıç düzeyine ve düzenli çalışmaya göre değişir.', featuresVisible: true, approachVisible: true, statsVisible: true, pricingVisible: true, blogVisible: true, newsletterVisible: true, faqVisible: true, ctaVisible: true }; }
-  private emptyHomeCards(): HomeCardsDraft { return { trustPoints: ['Başlangıç ölçümü', 'Hız ve anlama birlikte', 'Kişisel çalışma akışı'], features: [{ icon: 'speed', title: 'Akıcılık çalışmaları', description: 'Metin takibi ve kelime gruplama ile daha akıcı okuyun.' }, { icon: 'quiz', title: 'Anlama kontrolü', description: 'Her çalışmada anlama sonucunu ayrı olarak görün.' }, { icon: 'route', title: 'Kişisel sıradaki adım', description: 'Ölçüm geçmişinize göre uygun içerikle devam edin.' }, { icon: 'insights', title: 'İlerleme görünümü', description: 'Hız, anlama ve düzenli çalışma eğilimini izleyin.' }], approach: [{ title: 'Başlangıcı görün', role: 'Ölçüm', description: 'Çalışma yolunuz başlangıç ölçümünüzle netleşir.' }, { title: 'Dengeli ilerleyin', role: 'Hız + anlama', description: 'Zorluk, sonuçlarınıza göre dengelenir.' }, { title: 'Geri bildirimi kullanın', role: 'İzleme', description: 'Güçlü yönlerinizi ve destek ihtiyacını görün.' }], benefits: ['Yeni çalışma önerileri', 'Güncel içerikler', 'İstediğiniz zaman abonelikten çıkma özgürlüğü'] }; }
-  private loadHomePageDraft(raw?: string): void { const defaults = this.emptyHomePage(); const defaultCards = this.emptyHomeCards(); if (!raw) { this.homePageDraft = defaults; this.homePageCards = defaultCards; return; } try { const config = JSON.parse(raw) as Record<string, any>; const section = (name: string) => config[name] && typeof config[name] === 'object' ? config[name] : {}; const seo = section('seo'); const hero = section('hero'); const features = section('features'); const approach = section('approach'); const pricing = section('pricing'); const blog = section('blog'); const newsletter = section('newsletter'); const faq = section('faq'); const cta = section('cta'); const visibility = section('visibility'); this.homePageDraft = { ...defaults, seoTitle: seo.title || defaults.seoTitle, seoDescription: seo.description || defaults.seoDescription, seoKeywords: seo.keywords || defaults.seoKeywords, seoOgImage: seo.ogImage || '', heroTitle: hero.title || defaults.heroTitle, heroSubtitle: hero.subtitle || defaults.heroSubtitle, primaryActionLabel: hero.primaryActionLabel || defaults.primaryActionLabel, secondaryActionLabel: hero.secondaryActionLabel || defaults.secondaryActionLabel, featuresTitle: features.title || defaults.featuresTitle, featuresSubtitle: features.subtitle || defaults.featuresSubtitle, approachTitle: approach.title || defaults.approachTitle, approachSubtitle: approach.subtitle || defaults.approachSubtitle, pricingTitle: pricing.title || defaults.pricingTitle, pricingSubtitle: pricing.subtitle || defaults.pricingSubtitle, blogTitle: blog.title || defaults.blogTitle, blogSubtitle: blog.subtitle || defaults.blogSubtitle, newsletterTitle: newsletter.title || defaults.newsletterTitle, newsletterSubtitle: newsletter.subtitle || defaults.newsletterSubtitle, faqTitle: faq.title || defaults.faqTitle, faqSubtitle: faq.subtitle || defaults.faqSubtitle, ctaTitle: cta.title || defaults.ctaTitle, ctaSubtitle: cta.subtitle || defaults.ctaSubtitle, ctaActionLabel: cta.actionLabel || defaults.ctaActionLabel, ctaSmallText: cta.smallText || defaults.ctaSmallText, featuresVisible: typeof visibility.features === 'boolean' ? visibility.features : defaults.featuresVisible, approachVisible: typeof visibility.approach === 'boolean' ? visibility.approach : defaults.approachVisible, statsVisible: typeof visibility.stats === 'boolean' ? visibility.stats : defaults.statsVisible, pricingVisible: typeof visibility.pricing === 'boolean' ? visibility.pricing : defaults.pricingVisible, blogVisible: typeof visibility.blog === 'boolean' ? visibility.blog : defaults.blogVisible, newsletterVisible: typeof visibility.newsletter === 'boolean' ? visibility.newsletter : defaults.newsletterVisible, faqVisible: typeof visibility.faq === 'boolean' ? visibility.faq : defaults.faqVisible, ctaVisible: typeof visibility.cta === 'boolean' ? visibility.cta : defaults.ctaVisible }; this.homePageCards = { trustPoints: Array.isArray(hero.trustPoints) ? hero.trustPoints.filter((item: unknown): item is string => typeof item === 'string') : defaultCards.trustPoints, features: Array.isArray(features.items) ? features.items.filter((item: unknown) => item && typeof item === 'object').map((item: any) => ({ icon: typeof item.icon === 'string' ? item.icon : 'insights', title: typeof item.title === 'string' ? item.title : '', description: typeof item.description === 'string' ? item.description : '' })) : defaultCards.features, approach: Array.isArray(approach.items) ? approach.items.filter((item: unknown) => item && typeof item === 'object').map((item: any) => ({ title: typeof item.title === 'string' ? item.title : '', role: typeof item.role === 'string' ? item.role : '', description: typeof item.description === 'string' ? item.description : '' })) : defaultCards.approach, benefits: Array.isArray(newsletter.benefits) ? newsletter.benefits.filter((item: unknown): item is string => typeof item === 'string') : defaultCards.benefits }; } catch { this.homePageDraft = defaults; this.homePageCards = defaultCards; this.error.set('Ana sayfa kaydı okunamadı; güvenli varsayılanlar yüklendi.'); } }
-  private emptyBlock(): SpeedReadingCmsContentBlockRequest { return { key: '', group: 'HomePage', label: null, type: 0, value: '' }; }
   private emptyEvidenceMetric(): EvidenceMetricDraft { return { title: '', value: '', description: '', source: '', period: '', sampleSize: null, icon: 'insights', isVisible: false, verified: false }; }
   private toEvidenceMetric(block: SpeedReadingCmsContentBlock): EvidenceMetric | null {
     try {
