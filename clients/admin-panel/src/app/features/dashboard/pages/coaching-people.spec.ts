@@ -11,6 +11,12 @@ import { ToasterService } from '../../../core/services/toaster.service';
 import { CoachingPeopleComponent } from './coaching-people';
 
 describe('CoachingPeopleComponent', () => {
+  it('allows the global system admin to manage the explicitly selected institution', () => {
+    const { component } = create('students', undefined, 'server', ['SystemAdmin']);
+    component.scope.set({ isGlobal: true, institutionId: null });
+    component.institutionId = 'institution-1';
+    expect(component.canManageMemberships()).toBe(true);
+  });
   function create(kind: 'students' | 'teachers', id?: string, platform = 'server', roles = ['InstitutionAdmin']) {
     const service = {
       getReadScope: vi.fn(() => of({ isGlobal: false, institutionId: 'own-institution' })),

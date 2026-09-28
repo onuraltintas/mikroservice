@@ -12,6 +12,16 @@ namespace Identity.API.IntegrationTests;
 
 public sealed class CoachingMembershipAdministrationTests
 {
+    [Fact]
+    public void Administrative_membership_endpoint_requires_system_admin_and_manage_permission()
+    {
+        var controller = typeof(Identity.API.Controllers.CoachingInstitutionMembersController);
+        controller.GetCustomAttributes(typeof(Microsoft.AspNetCore.Authorization.AuthorizeAttribute), true)
+            .Cast<Microsoft.AspNetCore.Authorization.AuthorizeAttribute>()
+            .Should().Contain(attribute => attribute.Roles == "SystemAdmin");
+        controller.GetCustomAttributes(typeof(EduPlatform.Shared.Security.Authorization.HasPermissionAttribute), true)
+            .Should().NotBeEmpty();
+    }
     [Theory]
     [InlineData("SystemAdmin", true)]
     [InlineData("InstitutionAdmin", false)]
@@ -21,8 +31,9 @@ public sealed class CoachingMembershipAdministrationTests
         await using var db = new IdentityDbContext(new DbContextOptionsBuilder<IdentityDbContext>()
             .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
         var institution = Institution.Create("School", InstitutionType.School);
-        var student = StudentProfile.Create(Guid.NewGuid(), "Test", "Student", institution.Id);
-        db.AddRange(institution, student);
+        var user = User.Create(Guid.NewGuid(), "student@test.local", "Test", "Student");
+        var student = StudentProfile.Create(user.Id, "Test", "Student", institution.Id);
+        db.AddRange(institution, user, student);
         await db.SaveChangesAsync();
         var handler = new UpdateInstitutionStudentCommandHandler(new InstitutionRepository(db),
             new StudentRepository(db), new TeacherRepository(db), new UnitOfWork(db), new Actor(role));
@@ -40,8 +51,10 @@ public sealed class CoachingMembershipAdministrationTests
         await using var db = new IdentityDbContext(new DbContextOptionsBuilder<IdentityDbContext>()
             .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
         var institution = Institution.Create("School", InstitutionType.School);
-        var student = StudentProfile.Create(Guid.NewGuid(), "Test", "Student", Guid.NewGuid());
-        db.AddRange(institution, student);
+        var otherInstitution = Institution.Create("Other", InstitutionType.School);
+        var user = User.Create(Guid.NewGuid(), "student@test.local", "Test", "Student");
+        var student = StudentProfile.Create(user.Id, "Test", "Student", otherInstitution.Id);
+        db.AddRange(institution, otherInstitution, user, student);
         await db.SaveChangesAsync();
         var handler = new UpdateInstitutionStudentCommandHandler(new InstitutionRepository(db),
             new StudentRepository(db), new TeacherRepository(db), new UnitOfWork(db), new Actor("SystemAdmin"));

@@ -17,6 +17,15 @@ describe('CoachingInstitutionMembershipService', () => {
 
   afterEach(() => http.verify());
 
+  it('targets the selected coaching institution for system admin operations', () => {
+    service.inviteTeacher({ teacherEmail: 'teacher@example.com' }, 'school-1').subscribe();
+    http.expectOne('/api/institutions/school-1/coaching/invite-teacher').flush({ invitationId: 'invite' });
+    service.updateStudent('student-1', { gradeLevel: 8, teacherUserId: null }, 'school-1').subscribe();
+    http.expectOne('/api/institutions/school-1/coaching/students/student-1').flush(null);
+    service.removeTeacher('teacher-1', 'school-1').subscribe();
+    http.expectOne('/api/institutions/school-1/coaching/teachers/teacher-1').flush(null);
+  });
+
   it('invites coaching teachers through the authenticated institution endpoint', () => {
     service.inviteTeacher({ teacherEmail: 'teacher@example.com', message: 'Hoş geldiniz' }).subscribe();
 
