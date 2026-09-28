@@ -59,6 +59,7 @@ import { ToasterService } from '../../../core/services/toaster.service';
                     <span class="mt-1 flex gap-2"><input [(ngModel)]="teacherLookupSearch" maxlength="100" [disabled]="savingMembership()" class="w-full rounded border px-3 py-2 dark:bg-gray-800" placeholder="Ad veya e-posta" /><button type="button" class="rounded border px-3" [disabled]="teacherLookupLoading() || savingMembership()" (click)="searchInstitutionTeachers()">{{ teacherLookupLoading() ? 'Aranıyor…' : 'Ara' }}</button></span>
                   </label>
                   @if (teacherLookupError()) { <p role="alert" class="text-red-700">{{ teacherLookupError() }}</p> }
+                  @if (teacherLookupPage() * 25 < teacherLookupTotalCount()) { <button type="button" class="text-sm text-indigo-700 underline disabled:opacity-50" [disabled]="teacherLookupLoading()" (click)="nextTeacherLookupPage()">Sonraki öğretmenler</button> }
                   <label class="block">Atanan öğretmen
                     <select [(ngModel)]="editingTeacherUserId" name="editingTeacherUserId" [disabled]="savingMembership()" class="mt-1 w-full rounded border px-3 py-2 dark:bg-gray-800">
                       <option value="">Öğretmen atama</option>
@@ -150,6 +151,7 @@ import { ToasterService } from '../../../core/services/toaster.service';
                 <span class="mt-1 flex gap-2"><input [(ngModel)]="teacherLookupSearch" maxlength="100" class="w-full rounded border px-3 py-2 dark:bg-gray-900" placeholder="Ad veya e-posta" /><button type="button" class="rounded border px-3" [disabled]="teacherLookupLoading()" (click)="searchInstitutionTeachers()">{{ teacherLookupLoading() ? 'Aranıyor…' : 'Ara' }}</button></span>
               </label>
               @if (teacherLookupError()) { <p role="alert" class="text-sm text-red-700">{{ teacherLookupError() }}</p> }
+              @if (teacherLookupPage() * 25 < teacherLookupTotalCount()) { <button type="button" class="text-sm text-indigo-700 underline disabled:opacity-50" [disabled]="teacherLookupLoading()" (click)="nextTeacherLookupPage()">Sonraki öğretmenler</button> }
               <p class="text-xs text-gray-500">Öğrenci daveti kabul edildikten sonra kurum listesinde görünür. Davet mevcut hesabı silmez veya değiştirmez.</p>
             </section>
           }
@@ -174,6 +176,7 @@ import { ToasterService } from '../../../core/services/toaster.service';
                 </select>
               </label>
               @if (teacherLookupError()) { <p role="alert" class="mt-2 text-sm text-red-700">{{ teacherLookupError() }}</p> }
+              @if (teacherLookupPage() * 25 < teacherLookupTotalCount()) { <button type="button" class="mt-2 text-sm text-indigo-700 underline disabled:opacity-50" [disabled]="teacherLookupLoading()" (click)="nextTeacherLookupPage()">Sonraki öğretmenler</button> }
             }
             @if (loading()) { <p role="status" class="mt-3">Yükleniyor…</p> }
             @if (error()) { <p role="alert" class="mt-3 text-red-700">{{ error() }}</p> }
@@ -220,6 +223,8 @@ export class CoachingPeopleComponent implements OnInit {
   readonly teacherAnalytics = signal<TeacherCoachingAnalytics | null>(null);
   readonly teacherStudents = signal<CoachingStudentRosterPage | null>(null);
   readonly teacherLookupResults = signal<CoachingTeacherRosterItem[]>([]);
+  readonly teacherLookupPage = signal(1);
+  readonly teacherLookupTotalCount = signal(0);
   readonly teacherLookupLoading = signal(false);
   readonly teacherLookupError = signal<string | null>(null);
   readonly savingMembership = signal(false);
@@ -293,6 +298,8 @@ export class CoachingPeopleComponent implements OnInit {
     this.teacherAnalytics.set(null);
     this.teacherStudents.set(null);
     this.teacherLookupResults.set([]);
+    this.teacherLookupPage.set(1);
+    this.teacherLookupTotalCount.set(0);
     this.teacherLookupError.set(null);
     this.teacherLookupLoading.set(false);
     this.teacherLookupSearch = '';
@@ -401,13 +408,13 @@ export class CoachingPeopleComponent implements OnInit {
     return this.scope()?.isGlobal ? this.institutionId : undefined;
   }
 
-  searchInstitutionTeachers(): void {
+  searchInstitutionTeachers(page = 1): void {
     if (!this.institutionId) return;
     const requestId = ++this.teacherLookupRequestId;
     this.teacherLookupLoading.set(true);
     this.teacherLookupError.set(null);
-    this.service.getTeacherRoster(this.institutionId, 1, this.teacherLookupSearch.trim()).subscribe({
-      next: page => {
+    this.service.getTeacherRoster(this.institutionId, page, this.teacherLookupSearch.trim()).subscribe({
+      next: response => {
         if (requestId !== this.teacherLookupRequestId) return;
         const selectedTeacherIds = new Set([
           this.editingTeacherUserId,
@@ -416,8 +423,10 @@ export class CoachingPeopleComponent implements OnInit {
         ].filter(Boolean));
         const previouslySelected = this.teacherLookupResults().filter(teacher =>
           selectedTeacherIds.has(teacher.userId)
-          && !page.teachers.some(result => result.userId === teacher.userId));
-        this.teacherLookupResults.set([...previouslySelected, ...page.teachers]);
+          && !response.teachers.some(result => result.userId === teacher.userId));
+        this.teacherLookupResults.set([...previouslySelected, ...response.teachers]);
+        this.teacherLookupPage.set(page);
+        this.teacherLookupTotalCount.set(response.totalCount);
         this.teacherLookupLoading.set(false);
       },
       error: () => {
@@ -426,6 +435,11 @@ export class CoachingPeopleComponent implements OnInit {
         this.teacherLookupLoading.set(false);
       }
     });
+  }
+
+  nextTeacherLookupPage(): void {
+    if (this.teacherLookupLoading() || this.teacherLookupPage() * 25 >= this.teacherLookupTotalCount()) return;
+    this.searchInstitutionTeachers(this.teacherLookupPage() + 1);
   }
 
   hasTeacherLookupResult(teacherUserId: string): boolean {
