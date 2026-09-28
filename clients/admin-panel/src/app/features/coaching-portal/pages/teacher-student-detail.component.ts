@@ -11,7 +11,7 @@ import {
   StudentProgressSummary,
   TeacherStudent
 } from '../../../core/services/coaching-portal.service';
-import { collectCoachingHistory, coachingHistoryCsv, downloadCoachingHistoryCsv } from '../coaching-history-export';
+import { collectCoachingHistory, coachingHistoryCsv, downloadCoachingHistoryCsv, renderCoachingHistoryPrint } from '../coaching-history-export';
 
 @Component({
   selector: 'app-teacher-student-detail',
@@ -46,8 +46,25 @@ export class TeacherStudentDetailComponent implements OnInit {
   historyFromDate = '';
   historyToDate = '';
   private historyRequestId = 0;
+  private reportRequestId = 0;
 
   ngOnInit() {
+    this.loadReport();
+  }
+
+  reload(): void {
+    ++this.historyRequestId;
+    this.student.set(null);
+    this.progress.set(null);
+    this.history.set([]);
+    this.errorMessage.set(null);
+    this.historyError.set(null);
+    this.isLoading.set(true);
+    this.loadReport();
+  }
+
+  private loadReport(): void {
+    const requestId = ++this.reportRequestId;
     const studentId = this.route.snapshot.paramMap.get('studentId');
     if (!studentId) {
       this.errorMessage.set('Öğrenci bilgisi bulunamadı.');
@@ -56,9 +73,10 @@ export class TeacherStudentDetailComponent implements OnInit {
     }
 
     this.coachingService.getTeacherStudents(1, 1, undefined, [studentId]).pipe(
-      finalize(() => this.isLoading.set(false))
+      finalize(() => { if (requestId === this.reportRequestId) this.isLoading.set(false); })
     ).subscribe({
       next: page => {
+        if (requestId !== this.reportRequestId) return;
         const student = page.items.find(item => item.userId === studentId);
         if (!student) {
           this.errorMessage.set('Bu öğrenci artık aktif öğrenci listenizde değil.');
@@ -67,12 +85,12 @@ export class TeacherStudentDetailComponent implements OnInit {
 
         this.student.set(student);
         this.coachingService.getStudentProgress(studentId).subscribe({
-          next: summary => this.progress.set(summary),
-          error: () => this.errorMessage.set('Öğrenci ilerleme özeti yüklenemedi.')
+          next: summary => { if (requestId === this.reportRequestId) this.progress.set(summary); },
+          error: () => { if (requestId === this.reportRequestId) this.errorMessage.set('Öğrenci ilerleme özeti yüklenemedi.'); }
         });
         this.loadHistory('Assignments', 1);
       },
-      error: () => this.errorMessage.set('Öğrenci bilgisi yüklenemedi. Lütfen tekrar deneyin.')
+      error: () => { if (requestId === this.reportRequestId) this.errorMessage.set('Öğrenci bilgisi yüklenemedi. Lütfen tekrar deneyin.'); }
     });
   }
 
@@ -125,6 +143,35 @@ export class TeacherStudentDetailComponent implements OnInit {
       downloadCoachingHistoryCsv(coachingHistoryCsv(records), `kocluk-${studentId}-${type.toLowerCase()}.csv`);
     } catch {
       this.historyError.set('Tam rapor indirilemedi. Kayıtlar değişmiş veya bağlantı kesilmiş olabilir; yeniden deneyin.');
+    } finally {
+      this.isExporting.set(false);
+    }
+  }
+
+  async printHistory(): Promise<void> {
+    const student = this.student();
+    if (!student || this.isExporting()) return;
+    if (this.historyFromDate && this.historyToDate && this.historyFromDate > this.historyToDate) {
+      this.historyError.set('Başlangıç tarihi bitiş tarihinden sonra olamaz.');
+      return;
+    }
+    const target = window.open('', '_blank');
+    if (!target) {
+      this.historyError.set('Yazdırma penceresi açılamadı. Tarayıcınızın açılır pencere iznini kontrol edin.');
+      return;
+    }
+    target.opener = null;
+    const type = this.historyType();
+    const filter = this.historyFilter();
+    this.isExporting.set(true);
+    this.historyError.set(null);
+    try {
+      const records = await collectCoachingHistory((page, pageSize) =>
+        this.coachingService.getTeacherStudentHistory(student.userId, type, page, pageSize, filter));
+      renderCoachingHistoryPrint(target, records, `${student.fullName} · ${this.historyLabel(type)} · Koçluk geçmişi`);
+    } catch {
+      target.close();
+      this.historyError.set('Tam rapor yazdırılamadı. Kayıtlar değişmiş veya bağlantı kesilmiş olabilir; yeniden deneyin.');
     } finally {
       this.isExporting.set(false);
     }

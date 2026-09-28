@@ -16,6 +16,14 @@ export async function collectCoachingHistory<T extends CoachingHistoryExportItem
   fetchPage: (page: number, pageSize: number) => Observable<{ items: T[]; totalCount: number }>,
   pageSize = 100
 ): Promise<T[]> {
+  return collectCoachingReportPages(fetchPage, item => item.id, pageSize);
+}
+
+export async function collectCoachingReportPages<T>(
+  fetchPage: (page: number, pageSize: number) => Observable<{ items: T[]; totalCount: number }>,
+  key: (item: T) => string,
+  pageSize = 100
+): Promise<T[]> {
   const records: T[] = [];
   const seenIds = new Set<string>();
   let expectedCount: number | null = null;
@@ -26,8 +34,9 @@ export async function collectCoachingHistory<T extends CoachingHistoryExportItem
       throw new Error('Report incomplete: records changed or a page is missing.');
     }
     for (const item of result.items) {
-      if (seenIds.has(item.id)) throw new Error('Report incomplete: duplicate records across pages.');
-      seenIds.add(item.id);
+      const id = key(item);
+      if (seenIds.has(id)) throw new Error('Report incomplete: duplicate records across pages.');
+      seenIds.add(id);
     }
     records.push(...result.items);
     if (records.length === expectedCount) return records;
@@ -43,10 +52,16 @@ function csvCell(value: string | number | null | undefined): string {
 }
 
 export function coachingHistoryCsv(records: CoachingHistoryExportItem[]): string {
-  const header = 'Tür;Başlık;Tarih;Durum;Kategori;Puan;Azami Puan;İlerleme';
-  const rows = records.map(item => [item.type, item.title, item.eventDate, item.status,
-    item.category, item.score, item.maxScore, item.progress].map(csvCell).join(';'));
-  return `\uFEFF${[header, ...rows].join('\r\n')}\r\n`;
+  return coachingReportCsv(
+    ['Tür', 'Başlık', 'Tarih', 'Durum', 'Kategori', 'Puan', 'Azami Puan', 'İlerleme'],
+    records.map(item => [item.type, item.title, item.eventDate, item.status,
+      item.category, item.score, item.maxScore, item.progress]));
+}
+
+export function coachingReportCsv(
+  columns: string[], rows: (string | number | null | undefined)[][]
+): string {
+  return `\uFEFF${[columns.join(';'), ...rows.map(row => row.map(csvCell).join(';'))].join('\r\n')}\r\n`;
 }
 
 export function downloadCoachingHistoryCsv(csv: string, filename: string): void {
@@ -54,6 +69,56 @@ export function downloadCoachingHistoryCsv(csv: string, filename: string): void 
   const anchor = document.createElement('a');
   anchor.href = url;
   anchor.download = filename;
+  document.body.append(anchor);
   anchor.click();
-  URL.revokeObjectURL(url);
+  anchor.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 0);
+}
+
+export function renderCoachingHistoryPrint(
+  target: Window,
+  records: CoachingHistoryExportItem[],
+  title: string
+): void {
+  renderCoachingReportPrint(target, title,
+    ['Tür', 'Başlık', 'Tarih', 'Durum', 'Kategori', 'Puan', 'Azami Puan', 'İlerleme'],
+    records.map(item => [item.type, item.title, item.eventDate, item.status,
+      item.category, item.score, item.maxScore, item.progress]));
+}
+
+export function renderCoachingReportPrint(
+  target: Window,
+  title: string,
+  columns: string[],
+  rows: (string | number | null | undefined)[][]
+): void {
+  const doc = target.document;
+  doc.title = title;
+  const style = doc.createElement('style');
+  style.textContent = 'body{font:14px Arial,sans-serif;margin:24px}table{border-collapse:collapse;width:100%}th,td{border:1px solid #bbb;padding:6px;text-align:left}h1{font-size:20px}';
+  const heading = doc.createElement('h1');
+  heading.textContent = title;
+  const count = doc.createElement('p');
+  count.textContent = `${rows.length} satır`;
+  const table = doc.createElement('table');
+  const header = doc.createElement('tr');
+  for (const name of columns) {
+    const cell = doc.createElement('th');
+    cell.textContent = name;
+    header.append(cell);
+  }
+  table.append(header);
+  for (const values of rows) {
+    const row = doc.createElement('tr');
+    for (const value of values) {
+      const cell = doc.createElement('td');
+      cell.textContent = String(value ?? '');
+      row.append(cell);
+    }
+    table.append(row);
+  }
+  doc.head.append(style);
+  doc.body.replaceChildren(heading, count, table);
+  target.focus();
+  target.print();
 }

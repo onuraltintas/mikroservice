@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
-import { of, Subject } from 'rxjs';
+import { of, Subject, throwError } from 'rxjs';
 import { vi } from 'vitest';
 import { provideRouter } from '@angular/router';
 import { CoachingAdminService } from '../../../core/services/coaching-admin.service';
@@ -78,6 +78,50 @@ describe('CoachingOverviewComponent', () => {
     component.loadInstitutions();
 
     expect(institutions.getAll).toHaveBeenCalledWith(1, 100, 'Örnek', true);
+  });
+
+  it('exports the loaded institution summary metadata rather than changed form fields', () => {
+    TestBed.configureTestingModule({
+      imports: [CoachingOverviewComponent],
+      providers: [
+        { provide: CoachingAdminService, useValue: { getOverview: () => of(null) } },
+        { provide: InstitutionService, useValue: { getAll: () => of({ items: [] }) } }
+      ]
+    });
+    const component = TestBed.createComponent(CoachingOverviewComponent).componentInstance;
+    component.fromDate = '2030-01-01';
+    component.toDate = '2030-02-01';
+    const rows = component.comparisonRows({ institutionId: 'institution-1', gradeLevel: 8,
+      fromDate: '2029-01-01', toDate: '2029-02-01', studentCount: 12,
+      assignedAssignmentCount: 5, submittedAssignmentCount: 3, gradedAssignmentCount: 2,
+      examResultCount: 4, sessionCount: 6, attendanceRecordedCount: 5,
+      goalCount: 7, completedGoalCount: 2, averageGoalProgress: 25 } as never);
+    expect(rows).toContainEqual(['Başlangıç', '2029-01-01']);
+    expect(rows).toContainEqual(['Aktif öğrenci', 12]);
+    expect(rows).not.toContainEqual(['Başlangıç', '2030-01-01']);
+  });
+
+  it('uses loaded early-warning scope and reports a failed full export', async () => {
+    const coaching = {
+      getOverview: () => of(null),
+      getInstitutionEarlyWarnings: vi.fn(() => throwError(() => new Error('offline')))
+    };
+    TestBed.configureTestingModule({
+      imports: [CoachingOverviewComponent],
+      providers: [
+        { provide: CoachingAdminService, useValue: coaching },
+        { provide: InstitutionService, useValue: { getAll: () => of({ items: [] }) } }
+      ]
+    });
+    const component = TestBed.createComponent(CoachingOverviewComponent).componentInstance;
+    component.selectedInstitutionId = 'another-institution';
+    await component.exportEarlyWarnings({ institutionId: 'institution-1', gradeLevel: 7,
+      fromDate: '2029-01-01', toDate: '2029-02-01', items: [], totalCount: 2 } as never);
+    expect(coaching.getInstitutionEarlyWarnings).toHaveBeenCalledWith('institution-1', {
+      pageNumber: 1, pageSize: 100, gradeLevel: 7,
+      fromDate: '2029-01-01', toDate: '2029-02-01'
+    });
+    expect(component.earlyWarningsError()).toContain('Tam uyarı raporu indirilemedi');
   });
 
   it('opens tenant-scoped teacher coaching totals from a named roster row', () => {

@@ -335,4 +335,25 @@ describe('CoachingPeopleComponent', () => {
     pending.complete();
     expect(component.studentPage()?.students).toEqual([]);
   });
+
+  it('uses the scoped history endpoint and reports a failed full export', async () => {
+    const { component, service } = create('students', 'student-1');
+    component.selectedStudent.set({ userId: 'student-1', firstName: 'Ayşe', lastName: 'Yılmaz' } as never);
+    component.studentHistorySearch = 'Ödev';
+    service.getStudentHistory.mockReturnValueOnce(throwError(() => new Error('offline')));
+
+    await component.exportStudentHistory();
+
+    expect(service.getStudentHistory).toHaveBeenLastCalledWith('student-1', 'Assignments', 1, 100, { search: 'Ödev' });
+    expect(component.error()).toContain('Tam rapor indirilemedi');
+    expect(component.studentHistoryExporting()).toBe(false);
+  });
+
+  it('retries the currently selected student detail after a load failure', () => {
+    const { component, service } = create('students', 'student-1');
+    component.error.set('Ayrıntılar yüklenemedi.');
+    component.retryCurrent();
+    expect(service.getStudentDetail).toHaveBeenCalledWith('student-1');
+    expect(component.error()).toBeNull();
+  });
 });

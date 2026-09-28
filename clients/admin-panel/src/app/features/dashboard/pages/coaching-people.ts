@@ -13,7 +13,7 @@ import {
 import { CoachingInstitutionMembershipService } from '../../../core/services/coaching-institution-membership.service';
 import { InstitutionDto, InstitutionService } from '../../../core/services/institution.service';
 import { ToasterService } from '../../../core/services/toaster.service';
-import { collectCoachingHistory, coachingHistoryCsv, downloadCoachingHistoryCsv } from '../../coaching-portal/coaching-history-export';
+import { collectCoachingHistory, coachingHistoryCsv, downloadCoachingHistoryCsv, renderCoachingHistoryPrint } from '../../coaching-portal/coaching-history-export';
 
 @Component({
   selector: 'app-coaching-people',
@@ -43,7 +43,7 @@ import { collectCoachingHistory, coachingHistoryCsv, downloadCoachingHistoryCsv 
         @if (detailId) {
           <button type="button" class="rounded border px-3 py-2 text-sm" (click)="backToList()">← Listeye dön</button>
           @if (loading()) { <p role="status">Ayrıntılar yükleniyor…</p> }
-          @if (error()) { <p role="alert" class="text-red-700">{{ error() }}</p> }
+          @if (error()) { <p role="alert" class="text-red-700">{{ error() }} <button type="button" class="ml-2 underline" [disabled]="loading()" (click)="retryCurrent()">Yeniden dene</button></p> }
           @if (kind === 'students' && selectedStudent(); as student) {
             <article class="space-y-4 rounded-xl border bg-white p-5 dark:border-gray-700 dark:bg-gray-800">
               <div><h2 class="text-lg font-semibold">{{ student.firstName }} {{ student.lastName }}</h2><p class="text-sm text-gray-500">{{ student.email }} · {{ student.gradeLevel ? student.gradeLevel + '. sınıf' : 'Sınıf yok' }} · {{ student.teacherName || 'Öğretmen atanmamış' }}</p></div>
@@ -85,6 +85,7 @@ import { collectCoachingHistory, coachingHistoryCsv, downloadCoachingHistoryCsv 
               <div class="flex flex-wrap items-end justify-between gap-3">
                 <div><h3 id="student-history-heading" class="font-semibold">Tüm koçluk geçmişi</h3><p class="text-xs text-gray-500">Kurum değişikliği öncesi kayıtlar da dâhil, sayfalı geçmiş.</p></div>
                 <button type="button" (click)="exportStudentHistory()" [disabled]="studentHistoryExporting() || studentHistoryLoading()" class="rounded border px-3 py-2 text-sm disabled:opacity-50">{{ studentHistoryExporting() ? 'Tam rapor hazırlanıyor…' : 'Filtreli tam raporu CSV indir' }}</button>
+                <button type="button" (click)="printStudentHistory()" [disabled]="studentHistoryExporting() || studentHistoryLoading()" class="rounded border px-3 py-2 text-sm disabled:opacity-50">Filtreli tam raporu yazdır</button>
                 <label class="text-sm">Kayıt türü
                   <select [ngModel]="studentHistoryType" (ngModelChange)="selectStudentHistoryType($event)" class="mt-1 rounded border px-3 py-2 dark:bg-gray-900">
                     @for (option of historyTypeOptions; track option.value) { <option [ngValue]="option.value">{{ option.label }}</option> }
@@ -188,7 +189,7 @@ import { collectCoachingHistory, coachingHistoryCsv, downloadCoachingHistoryCsv 
               @if (teacherLookupPage() * 25 < teacherLookupTotalCount()) { <button type="button" class="mt-2 text-sm text-indigo-700 underline disabled:opacity-50" [disabled]="teacherLookupLoading()" (click)="nextTeacherLookupPage()">Sonraki öğretmenler</button> }
             }
             @if (loading()) { <p role="status" class="mt-3">Yükleniyor…</p> }
-            @if (error()) { <p role="alert" class="mt-3 text-red-700">{{ error() }}</p> }
+            @if (error()) { <p role="alert" class="mt-3 text-red-700">{{ error() }} <button type="button" class="ml-2 underline" [disabled]="loading()" (click)="retryCurrent()">Yeniden dene</button></p> }
             <div class="mt-4 overflow-x-auto"><table class="min-w-full text-left text-sm"><thead><tr><th class="py-2">Ad</th><th>E-posta</th><th>{{ kind === 'students' ? 'Öğretmen' : 'Kurum' }}</th><th></th></tr></thead><tbody>
               @if (kind === 'students') {
                 @for (student of studentPage()?.students; track student.userId) { <tr class="border-t"><td class="py-2">{{ student.firstName }} {{ student.lastName }}</td><td>{{ student.email }}</td><td>{{ student.teacherName || 'Atanmamış' }}</td><td class="space-x-3"><button type="button" class="text-indigo-700 underline" (click)="openDetail(student.userId)">Ayrıntı</button>@if (canManageMemberships()) { <button type="button" class="text-red-700 underline disabled:opacity-50" [disabled]="savingMembership()" (click)="removeStudentFromInstitution(student)">Kurumdan çıkar</button> }</td></tr> }
@@ -333,6 +334,11 @@ export class CoachingPeopleComponent implements OnInit {
     this.error.set(null);
     if (this.detailId) this.backToList();
     else if (this.institutionId) this.loadPage();
+  }
+
+  retryCurrent(): void {
+    if (this.detailId) this.loadDetail(this.detailId);
+    else this.loadPage(this.pageNumber);
   }
 
   loadPage(page = 1): void {
@@ -609,6 +615,36 @@ export class CoachingPeopleComponent implements OnInit {
       downloadCoachingHistoryCsv(coachingHistoryCsv(records), `kocluk-${studentId}-${type.toLowerCase()}.csv`);
     } catch {
       this.error.set('Tam rapor indirilemedi. Kayıtlar değişmiş veya bağlantı kesilmiş olabilir; yeniden deneyin.');
+    } finally {
+      this.studentHistoryExporting.set(false);
+    }
+  }
+
+  async printStudentHistory(): Promise<void> {
+    const student = this.selectedStudent();
+    if (!this.detailId || !student || this.studentHistoryExporting()) return;
+    if (this.studentHistoryFromDate && this.studentHistoryToDate && this.studentHistoryFromDate > this.studentHistoryToDate) {
+      this.error.set('Başlangıç tarihi bitiş tarihinden sonra olamaz.');
+      return;
+    }
+    const target = window.open('', '_blank');
+    if (!target) {
+      this.error.set('Yazdırma penceresi açılamadı. Tarayıcınızın açılır pencere iznini kontrol edin.');
+      return;
+    }
+    target.opener = null;
+    const type = this.studentHistoryType;
+    const filter = this.studentHistoryFilter();
+    this.studentHistoryExporting.set(true);
+    this.error.set(null);
+    try {
+      const records = await collectCoachingHistory((page, pageSize) =>
+        this.service.getStudentHistory(student.userId, type, page, pageSize, filter));
+      const label = this.historyTypeOptions.find(option => option.value === type)?.label ?? type;
+      renderCoachingHistoryPrint(target, records, `${student.firstName} ${student.lastName} · ${label} · Koçluk geçmişi`);
+    } catch {
+      target.close();
+      this.error.set('Tam rapor yazdırılamadı. Kayıtlar değişmiş veya bağlantı kesilmiş olabilir; yeniden deneyin.');
     } finally {
       this.studentHistoryExporting.set(false);
     }

@@ -20,6 +20,7 @@ import {
   StudentAssignment,
   StudentProgressSummary
 } from '../../../core/services/coaching-portal.service';
+import { coachingReportCsv, collectCoachingReportPages, downloadCoachingHistoryCsv, renderCoachingReportPrint } from '../../coaching-portal/coaching-history-export';
 
 @Component({
   selector: 'app-coaching-overview',
@@ -90,6 +91,10 @@ import {
           <button type="button" (click)="loadComparison()" [disabled]="comparisonLoading() || !selectedInstitutionId" class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50">{{ comparisonLoading() ? 'Rapor hazırlanıyor…' : 'Karşılaştırmayı getir' }}</button>
           @if (comparisonError()) { <div class="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{{ comparisonError() }}</div> }
           @if (comparison(); as report) {
+            <div class="flex flex-wrap gap-2">
+              <button type="button" (click)="exportComparison(report)" class="rounded border px-3 py-2 text-sm">Getirilen kurum özetini CSV indir</button>
+              <button type="button" (click)="printComparison(report)" class="rounded border px-3 py-2 text-sm">Getirilen kurum özetini yazdır</button>
+            </div>
             <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               <div class="rounded-lg bg-gray-50 p-4 dark:bg-gray-900/50"><p class="text-xs text-gray-500">Aktif öğrenci</p><p class="mt-1 text-2xl font-bold">{{ report.studentCount }}</p></div>
               <div class="rounded-lg bg-gray-50 p-4 dark:bg-gray-900/50"><p class="text-xs text-gray-500">Ödev teslim oranı</p><p class="mt-1 text-2xl font-bold">{{ percentage(report.submittedAssignmentCount, report.assignedAssignmentCount) }}</p></div>
@@ -116,6 +121,10 @@ import {
           </div>
           @if (earlyWarningsError()) { <div class="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{{ earlyWarningsError() }}</div> }
           @if (earlyWarnings(); as warnings) {
+            <div class="flex flex-wrap gap-2">
+              <button type="button" (click)="exportEarlyWarnings(warnings)" [disabled]="earlyWarningsExporting()" class="rounded border px-3 py-2 text-sm disabled:opacity-50">{{ earlyWarningsExporting() ? 'Tam rapor hazırlanıyor…' : 'Filtreli tüm uyarıları CSV indir' }}</button>
+              <button type="button" (click)="printEarlyWarnings(warnings)" [disabled]="earlyWarningsExporting()" class="rounded border px-3 py-2 text-sm disabled:opacity-50">Filtreli tüm uyarıları yazdır</button>
+            </div>
             <div class="flex flex-wrap items-center justify-between gap-3 text-sm text-gray-500 dark:text-gray-400">
               <span>{{ warnings.totalCount }} aktif öğrenci · {{ warnings.pageNumber }}/{{ warnings.totalPages || 1 }}. sayfa</span>
               <div class="flex gap-2">
@@ -225,6 +234,7 @@ export class CoachingOverviewComponent implements OnInit {
   private comparisonRequestId = 0;
   readonly earlyWarnings = signal<InstitutionEarlyWarningReport | null>(null);
   readonly earlyWarningsLoading = signal(false);
+  readonly earlyWarningsExporting = signal(false);
   readonly earlyWarningsError = signal<string | null>(null);
   private earlyWarningRequestId = 0;
   readonly selectedStudent = signal<StudentEarlyWarning | null>(null);
@@ -301,6 +311,103 @@ export class CoachingOverviewComponent implements OnInit {
       next: report => { if (requestId === this.comparisonRequestId) this.comparison.set(report); },
       error: () => { if (requestId === this.comparisonRequestId) this.comparisonError.set('Karşılaştırmalı rapor yüklenemedi.'); }
     });
+  }
+
+  exportComparison(report: InstitutionCoachingComparison): void {
+    downloadCoachingHistoryCsv(coachingReportCsv(['Gösterge', 'Değer'], this.comparisonRows(report)),
+      `kocluk-kurum-${report.institutionId}-ozet.csv`);
+  }
+
+  printComparison(report: InstitutionCoachingComparison): void {
+    const target = window.open('', '_blank');
+    if (!target) {
+      this.comparisonError.set('Yazdırma penceresi açılamadı. Tarayıcınızın açılır pencere iznini kontrol edin.');
+      return;
+    }
+    target.opener = null;
+    renderCoachingReportPrint(target, 'Kurum koçluk özeti', ['Gösterge', 'Değer'], this.comparisonRows(report));
+  }
+
+  comparisonRows(report: InstitutionCoachingComparison): (string | number | null | undefined)[][] {
+    return [
+      ['Kurum kimliği', report.institutionId],
+      ['Sınıf', report.gradeLevel ?? 'Tümü'],
+      ['Başlangıç', report.fromDate],
+      ['Bitiş', report.toDate],
+      ['Aktif öğrenci', report.studentCount],
+      ['Atanan ödev', report.assignedAssignmentCount],
+      ['Teslim edilen ödev', report.submittedAssignmentCount],
+      ['Değerlendirilen ödev', report.gradedAssignmentCount],
+      ['Ödev ortalaması (%)', report.averageAssignmentPercentage],
+      ['Sınav sonucu', report.examResultCount],
+      ['Sınav ortalaması (%)', report.averageExamPercentage],
+      ['Seans', report.sessionCount],
+      ['Kaydedilen katılım', report.attendanceRecordedCount],
+      ['Katılım oranı (%)', report.attendancePercentage],
+      ['Hedef', report.goalCount],
+      ['Tamamlanan hedef', report.completedGoalCount],
+      ['Hedef ilerlemesi (%)', report.averageGoalProgress]
+    ];
+  }
+
+  async exportEarlyWarnings(report: InstitutionEarlyWarningReport): Promise<void> {
+    if (this.earlyWarningsExporting()) return;
+    this.earlyWarningsExporting.set(true);
+    this.earlyWarningsError.set(null);
+    try {
+      const students = await this.collectEarlyWarnings(report);
+      downloadCoachingHistoryCsv(coachingReportCsv(this.earlyWarningColumns(), this.earlyWarningRows(report, students)),
+        `kocluk-kurum-${report.institutionId}-erken-uyarilar.csv`);
+    } catch {
+      this.earlyWarningsError.set('Tam uyarı raporu indirilemedi. Kayıtlar değişmiş veya bağlantı kesilmiş olabilir; yeniden deneyin.');
+    } finally {
+      this.earlyWarningsExporting.set(false);
+    }
+  }
+
+  async printEarlyWarnings(report: InstitutionEarlyWarningReport): Promise<void> {
+    if (this.earlyWarningsExporting()) return;
+    const target = window.open('', '_blank');
+    if (!target) {
+      this.earlyWarningsError.set('Yazdırma penceresi açılamadı. Tarayıcınızın açılır pencere iznini kontrol edin.');
+      return;
+    }
+    target.opener = null;
+    this.earlyWarningsExporting.set(true);
+    this.earlyWarningsError.set(null);
+    try {
+      const students = await this.collectEarlyWarnings(report);
+      renderCoachingReportPrint(target, 'Kurum koçluk erken uyarıları',
+        this.earlyWarningColumns(), this.earlyWarningRows(report, students));
+    } catch {
+      target.close();
+      this.earlyWarningsError.set('Tam uyarı raporu yazdırılamadı. Kayıtlar değişmiş veya bağlantı kesilmiş olabilir; yeniden deneyin.');
+    } finally {
+      this.earlyWarningsExporting.set(false);
+    }
+  }
+
+  private collectEarlyWarnings(report: InstitutionEarlyWarningReport): Promise<StudentEarlyWarning[]> {
+    return collectCoachingReportPages((pageNumber, pageSize) =>
+      this.service.getInstitutionEarlyWarnings(report.institutionId, {
+        pageNumber, pageSize, gradeLevel: report.gradeLevel,
+        fromDate: report.fromDate, toDate: report.toDate
+      }), student => student.studentId);
+  }
+
+  private earlyWarningColumns(): string[] {
+    return ['Kurum', 'Başlangıç', 'Bitiş', 'Sınıf', 'Öğrenci', 'E-posta', 'Öğretmen', 'Risk', 'Puan', 'Sinyaller', 'Ödev', 'Katılım (%)', 'Hedef (%)'];
+  }
+
+  private earlyWarningRows(report: InstitutionEarlyWarningReport, students: StudentEarlyWarning[]): (string | number | null | undefined)[][] {
+    if (students.length === 0) {
+      return [[report.institutionId, report.fromDate, report.toDate, report.gradeLevel ?? 'Tümü']];
+    }
+    return students.map(student => [report.institutionId, report.fromDate, report.toDate,
+      report.gradeLevel ?? 'Tümü', student.studentName, student.studentEmail,
+      student.teacherName, student.riskLevel, student.riskScore,
+      student.reasonCodes.join(', '), `${student.submittedAssignmentCount}/${student.assignmentCount}`,
+      student.attendancePercentage, student.averageGoalProgress]);
   }
 
   loadEarlyWarnings(pageNumber = 1) {

@@ -13,6 +13,7 @@ describe('hasCoachingPortalRole', () => {
     expect(hasCoachingPortalRole({ roles: ['SystemAdmin'] })).toBe(false);
     expect(hasCoachingPortalRole({ roles: ['InstitutionAdmin'] })).toBe(false);
     expect(hasCoachingPortalRole({ roles: ['Teacher'], product: 'speed-reading' })).toBe(false);
+    expect(hasCoachingPortalRole({ roles: ['Teacher'] })).toBe(false);
     expect(hasCoachingPortalRole(null)).toBe(false);
   });
 });
@@ -26,6 +27,7 @@ describe('hasRequiredCoachingRole', () => {
   it('rejects a role outside the child route allow-list', () => {
     expect(hasRequiredCoachingRole({ roles: ['Student'] }, ['Teacher'])).toBe(false);
     expect(hasRequiredCoachingRole({ roles: ['Teacher'], product: 'speed-reading' }, ['Teacher'])).toBe(false);
+    expect(hasRequiredCoachingRole({ roles: ['Teacher'] }, ['Teacher'])).toBe(false);
     expect(hasRequiredCoachingRole(null, ['Teacher'])).toBe(false);
   });
 });

@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, provideRouter } from '@angular/router';
-import { of, Subject } from 'rxjs';
+import { of, Subject, throwError } from 'rxjs';
 import { vi } from 'vitest';
 import { CoachingPortalService } from '../../../core/services/coaching-portal.service';
 import { TeacherStudentDetailComponent } from './teacher-student-detail.component';
@@ -91,5 +91,33 @@ describe('TeacherStudentDetailComponent', () => {
     expect(service.getTeacherStudentHistory).toHaveBeenLastCalledWith('student-1', 'Assignments', 1, 10, {
       fromDate: '2030-01-01T00:00:00.000Z', toDate: '2030-01-31T23:59:59.999Z', status: 'Graded', search: 'Math'
     });
+  });
+
+  it('reports a failed full export without offering a partial download', async () => {
+    service.getTeacherStudentHistory.mockReturnValueOnce(throwError(() => new Error('offline')));
+    const component = fixture.componentInstance;
+    component.historySearch = 'Math';
+
+    await component.exportHistory();
+
+    expect(service.getTeacherStudentHistory).toHaveBeenLastCalledWith('student-1', 'Assignments', 1, 100, { search: 'Math' });
+    expect(component.historyError()).toContain('Tam rapor indirilemedi');
+    expect(component.isExporting()).toBe(false);
+  });
+
+  it('can retry a failed student report without preserving the old error', () => {
+    const studentPage = (service.getTeacherStudents.getMockImplementation() as () => unknown)();
+    service.getTeacherStudents.mockReturnValueOnce(throwError(() => new Error('offline')))
+      .mockReturnValueOnce(studentPage);
+    fixture.destroy();
+    fixture = TestBed.createComponent(TeacherStudentDetailComponent);
+    fixture.detectChanges();
+    expect(fixture.componentInstance.errorMessage()).toContain('yüklenemedi');
+
+    fixture.componentInstance.reload();
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.errorMessage()).toBeNull();
+    expect(fixture.nativeElement.textContent).toContain('Ada Yılmaz');
   });
 });
