@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, provideRouter } from '@angular/router';
-import { of } from 'rxjs';
+import { of, Subject } from 'rxjs';
 import { vi } from 'vitest';
 import { CoachingPortalService } from '../../../core/services/coaching-portal.service';
 import { TeacherStudentDetailComponent } from './teacher-student-detail.component';
@@ -66,5 +66,18 @@ describe('TeacherStudentDetailComponent', () => {
 
     expect(service.getStudentProgress).not.toHaveBeenCalled();
     expect(fixture.nativeElement.textContent).toContain('aktif öğrenci listenizde değil');
+  });
+
+  it('ignores a stale history response after switching categories', () => {
+    const pending = new Subject<any>();
+    service.getTeacherStudentHistory.mockReturnValueOnce(pending.asObservable())
+      .mockReturnValueOnce(of({ items: [{ id: 'new', type: 'Exams', title: 'Yeni sınav', eventDate: '2030-01-01', status: 'Completed' }], pageNumber: 1, pageSize: 10, totalCount: 1, totalPages: 1 }));
+    fixture.destroy();
+    fixture = TestBed.createComponent(TeacherStudentDetailComponent);
+    fixture.detectChanges();
+    const component = fixture.componentInstance;
+    component.selectHistoryType('Exams');
+    pending.next({ items: [{ id: 'old', type: 'Assignments', title: 'Eski ödev', eventDate: '2030-01-01', status: 'Completed' }], pageNumber: 1, pageSize: 10, totalCount: 1, totalPages: 1 });
+    expect(component.history().map(item => item.id)).toEqual(['new']);
   });
 });
