@@ -3,7 +3,8 @@ import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { firstValueFrom, forkJoin } from 'rxjs';
-import { AuthService, hasRole } from '../../../core/auth/auth.service';
+import { AuthService } from '../../../core/auth/auth.service';
+import { CoachingPortalViewService } from '../coaching-portal-view.service';
 import {
   AssignmentAttachment,
   AssignmentDetail,
@@ -21,6 +22,7 @@ import {
 })
 export class StudentAssignmentDetailComponent implements OnInit {
   private readonly authService = inject(AuthService);
+  private readonly views = inject(CoachingPortalViewService);
   private readonly coachingService = inject(CoachingPortalService);
   private readonly route = inject(ActivatedRoute);
 
@@ -35,9 +37,9 @@ export class StudentAssignmentDetailComponent implements OnInit {
   readonly assignedStudentNames = signal<Record<string, string>>({});
   readonly studentNote = signal('');
   readonly studentId = computed(() => this.authService.userProfile()?.id ?? '');
-  readonly isTeacher = computed(() => hasRole(this.authService.userProfile(), 'Teacher'));
-  readonly isStudent = computed(() => !this.isTeacher() && hasRole(this.authService.userProfile(), 'Student'));
-  readonly isParent = computed(() => !this.isTeacher() && !this.isStudent() && hasRole(this.authService.userProfile(), 'Parent'));
+  readonly isTeacher = computed(() => this.views.current() === 'Teacher');
+  readonly isStudent = computed(() => this.views.current() === 'Student');
+  readonly isParent = computed(() => this.views.current() === 'Parent');
   readonly backRoute = computed(() => {
     if (this.isTeacher()) return '/coaching-portal/teacher/assignments';
     if (this.isParent()) return '/coaching-portal/children';

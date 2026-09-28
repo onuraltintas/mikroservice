@@ -2,7 +2,8 @@ import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { finalize, forkJoin } from 'rxjs';
-import { AuthService, hasRole } from '../../../core/auth/auth.service';
+import { AuthService } from '../../../core/auth/auth.service';
+import { CoachingPortalViewService } from '../coaching-portal-view.service';
 import { CoachingPortalService, CoachingSession, CoachingStudentReflection } from '../../../core/services/coaching-portal.service';
 
 @Component({
@@ -14,6 +15,7 @@ import { CoachingPortalService, CoachingSession, CoachingStudentReflection } fro
 })
 export class CoachingSessionsComponent implements OnInit {
   private readonly authService = inject(AuthService);
+  private readonly views = inject(CoachingPortalViewService);
   private readonly coachingService = inject(CoachingPortalService);
 
   readonly sessions = signal<CoachingSession[]>([]);
@@ -34,8 +36,8 @@ export class CoachingSessionsComponent implements OnInit {
 
   ngOnInit() {
     const profile = this.authService.userProfile();
-    this.isTeacher.set(hasRole(profile, 'Teacher'));
-    this.isStudent.set(!this.isTeacher() && hasRole(profile, 'Student'));
+    this.isTeacher.set(this.views.current() === 'Teacher');
+    this.isStudent.set(this.views.current() === 'Student');
     if (!profile?.id || (!this.isStudent() && !this.isTeacher())) {
       this.isLoading.set(false);
       this.errorMessage.set('Seans bilgisi için öğrenci veya öğretmen profili bulunamadı.');

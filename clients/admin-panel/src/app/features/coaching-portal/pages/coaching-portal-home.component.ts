@@ -2,7 +2,8 @@ import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
-import { AuthService, hasRole } from '../../../core/auth/auth.service';
+import { AuthService } from '../../../core/auth/auth.service';
+import { CoachingPortalViewService } from '../coaching-portal-view.service';
 import { CoachingPortalService, StudentAssignment, TeacherAssignment } from '../../../core/services/coaching-portal.service';
 
 @Component({
@@ -14,6 +15,7 @@ import { CoachingPortalService, StudentAssignment, TeacherAssignment } from '../
 })
 export class CoachingPortalHomeComponent implements OnInit {
   private readonly authService = inject(AuthService);
+  private readonly views = inject(CoachingPortalViewService);
   private readonly coachingService = inject(CoachingPortalService);
 
   readonly user = this.authService.userProfile;
@@ -29,9 +31,9 @@ export class CoachingPortalHomeComponent implements OnInit {
 
   ngOnInit() {
     const profile = this.user();
-    this.isTeacher.set(hasRole(profile, 'Teacher'));
-    this.isStudent.set(!this.isTeacher() && hasRole(profile, 'Student'));
-    this.isParent.set(!this.isTeacher() && !this.isStudent() && hasRole(profile, 'Parent'));
+    this.isTeacher.set(this.views.current() === 'Teacher');
+    this.isStudent.set(this.views.current() === 'Student');
+    this.isParent.set(this.views.current() === 'Parent');
 
     if (!profile?.id) {
       this.isLoading.set(false);
