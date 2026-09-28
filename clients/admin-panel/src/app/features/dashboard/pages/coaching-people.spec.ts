@@ -75,6 +75,18 @@ describe('CoachingPeopleComponent', () => {
     expect(component.studentPage()?.students[0].firstName).toBe('Ayşe');
   });
 
+  it('pages teacher choices beyond the first 25 and preserves the selected teacher', () => {
+    const { component, service } = create('students');
+    component.institutionId = 'institution-1';
+    component.editingTeacherUserId = 'teacher-1';
+    service.getTeacherRoster.mockReturnValueOnce(of({ teachers: [{ userId: 'teacher-1', firstName: 'Ali', lastName: 'Bir', email: 'a@test' }], totalCount: 26 }))
+      .mockReturnValueOnce(of({ teachers: [{ userId: 'teacher-26', firstName: 'Deniz', lastName: 'Son', email: 'd@test' }], totalCount: 26 }));
+    component.searchInstitutionTeachers();
+    component.nextTeacherLookupPage();
+    expect(service.getTeacherRoster).toHaveBeenLastCalledWith('institution-1', 2, '');
+    expect(component.teacherLookupResults().map(teacher => teacher.userId)).toEqual(['teacher-1', 'teacher-26']);
+  });
+
   it('applies the selected grade filter to the institution student roster', () => {
     const { component, service } = create('students');
     component.institutionId = 'institution-1';
