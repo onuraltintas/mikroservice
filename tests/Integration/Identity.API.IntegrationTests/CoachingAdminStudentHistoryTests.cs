@@ -79,6 +79,31 @@ public sealed class CoachingAdminStudentHistoryTests
     }
 
     [Fact]
+    public async Task AssignmentHistory_filters_before_paging_and_keeps_previous_institution_records()
+    {
+        await using var context = CreateContext();
+        var studentId = Guid.NewGuid();
+        var old = Assignment.Create(Guid.NewGuid(), "Math older", DateTime.UtcNow.AddDays(1), institutionId: Guid.NewGuid());
+        var current = Assignment.Create(Guid.NewGuid(), "Math current", DateTime.UtcNow.AddDays(1), institutionId: Guid.NewGuid());
+        var unrelated = Assignment.Create(Guid.NewGuid(), "Reading", DateTime.UtcNow.AddDays(1), institutionId: Guid.NewGuid());
+        old.AssignToStudent(studentId);
+        current.AssignToStudent(studentId);
+        unrelated.AssignToStudent(studentId);
+        SetCreatedAt(old.AssignedStudents.Single(), DateTime.UtcNow.AddDays(-10));
+        SetCreatedAt(current.AssignedStudents.Single(), DateTime.UtcNow.AddDays(-1));
+        SetCreatedAt(unrelated.AssignedStudents.Single(), DateTime.UtcNow.AddDays(-1));
+        context.Assignments.AddRange(old, current, unrelated);
+        await context.SaveChangesAsync();
+
+        var page = await new CoachingAdminRepository(context).GetStudentHistoryAsync(
+            studentId, CoachingStudentHistoryType.Assignments, 1, 1, CancellationToken.None,
+            new CoachingStudentHistoryFilter(DateTime.UtcNow.AddDays(-20), DateTime.UtcNow.AddDays(-5), "Assigned", "Math"));
+
+        page.TotalCount.Should().Be(1);
+        page.Items.Should().ContainSingle().Which.Id.Should().Be(old.Id);
+    }
+
+    [Fact]
     public async Task AssignmentHistory_UsesWhenTheStudentWasAssignedRatherThanWhenTheAssignmentWasCreated()
     {
         await using var context = CreateContext();
