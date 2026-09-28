@@ -85,6 +85,16 @@ describe('CoachingPortalProgressComponent', () => {
     expect(component.summaryError()).toBeNull();
   });
 
+  it('does not label loaded-page counts as global totals after summary failure', () => {
+    service.getStudentProgress.mockReturnValue(throwError(() => new Error('offline')));
+    service.getStudentGoals.mockReturnValue(of({ items: [], pageNumber: 1, pageSize: 100, totalCount: 200, totalPages: 2 }));
+    const fixture = TestBed.createComponent(CoachingPortalProgressComponent);
+    fixture.detectChanges();
+    const cards = fixture.nativeElement.querySelectorAll('.text-3xl');
+    expect(cards[0].textContent.trim()).toBe('— / —');
+    expect(cards[2].textContent.trim()).toBe('—');
+  });
+
   it('loads the next goal page without losing previously loaded goals', () => {
     const component = TestBed.createComponent(CoachingPortalProgressComponent).componentInstance;
     service.getStudentGoals.mockReturnValueOnce(of({ items: [{ id: 'first' }], pageNumber: 1, pageSize: 100, totalCount: 101, totalPages: 2 }))
