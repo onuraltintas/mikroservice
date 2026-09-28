@@ -80,4 +80,16 @@ describe('TeacherStudentDetailComponent', () => {
     pending.next({ items: [{ id: 'old', type: 'Assignments', title: 'Eski ödev', eventDate: '2030-01-01', status: 'Completed' }], pageNumber: 1, pageSize: 10, totalCount: 1, totalPages: 1 });
     expect(component.history().map(item => item.id)).toEqual(['new']);
   });
+
+  it('applies history filters at the server and starts from the first page', () => {
+    const component = fixture.componentInstance;
+    component.historySearch = 'Math';
+    component.historyStatus = 'Graded';
+    component.historyFromDate = '2030-01-01';
+    component.historyToDate = '2030-01-31';
+    component.applyHistoryFilters();
+    expect(service.getTeacherStudentHistory).toHaveBeenLastCalledWith('student-1', 'Assignments', 1, 10, {
+      fromDate: '2030-01-01T00:00:00.000Z', toDate: '2030-01-31T23:59:59.999Z', status: 'Graded', search: 'Math'
+    });
+  });
 });

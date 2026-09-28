@@ -129,6 +129,18 @@ describe('CoachingPeopleComponent', () => {
     expect(component.studentHistory()?.items[0].title).toBe('Ödev');
   });
 
+  it('filters institution student history before paging', () => {
+    const { component, service } = create('students', 'student-1');
+    component.institutionId = 'institution-1';
+    component.selectedStudent.set({ userId: 'student-1', firstName: 'Ayşe', lastName: 'Yılmaz', email: 'a@test' });
+    component.studentHistorySearch = 'Math';
+    component.studentHistoryFromDate = '2030-01-01';
+    component.applyStudentHistoryFilters();
+    expect(service.getStudentHistory).toHaveBeenCalledWith('student-1', 'Assignments', 1, 25, {
+      fromDate: '2030-01-01T00:00:00.000Z', search: 'Math'
+    });
+  });
+
   it('does not keep the previous history category visible when the next request fails', () => {
     const { component, service } = create('students', 'student-1');
     component.institutionId = 'institution-1';

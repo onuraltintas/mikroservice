@@ -76,7 +76,8 @@ public sealed class CoachingStudentProgressQueryTests
             CoachingStudentHistoryType type,
             int pageNumber,
             int pageSize,
-            CancellationToken cancellationToken = default) =>
+            CancellationToken cancellationToken = default,
+            CoachingStudentHistoryFilter? filter = null) =>
             throw new InvalidOperationException("Not expected");
     }
 

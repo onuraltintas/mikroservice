@@ -4,6 +4,19 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { CoachingPortalService } from './coaching-portal.service';
 
 describe('CoachingPortalService', () => {
+  it('sends teacher history filters to the server before pagination', () => {
+    const { service, http } = setup();
+    service.getTeacherStudentHistory('student-1', 'Assignments', 2, 10, {
+      fromDate: '2030-01-01T00:00:00.000Z', toDate: '2030-01-31T23:59:59.999Z', status: 'Graded', search: 'Math'
+    }).subscribe();
+    const request = http.expectOne(candidate => candidate.url.endsWith('/reports/student/student-1/history'));
+    expect(request.request.params.get('pageNumber')).toBe('2');
+    expect(request.request.params.get('fromDate')).toBe('2030-01-01T00:00:00.000Z');
+    expect(request.request.params.get('status')).toBe('Graded');
+    expect(request.request.params.get('search')).toBe('Math');
+    request.flush({ items: [], pageNumber: 2, pageSize: 10, totalCount: 0 });
+    http.verify();
+  });
   function setup() {
     TestBed.configureTestingModule({
       providers: [CoachingPortalService, provideHttpClient(), provideHttpClientTesting()]

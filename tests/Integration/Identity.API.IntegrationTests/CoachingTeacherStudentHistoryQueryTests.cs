@@ -35,6 +35,18 @@ public sealed class CoachingTeacherStudentHistoryQueryTests
     }
 
     [Fact]
+    public async Task Handle_ForwardsHistoryFiltersAfterCheckingTeacherAccess()
+    {
+        var studentId = Guid.NewGuid();
+        var repository = new CapturingStudentHistoryRepository([]);
+        var handler = new GetTeacherStudentHistoryQueryHandler(repository,
+            CreatePolicy(Guid.NewGuid(), "Teacher"), new StubIdentityAuthorizationClient([studentId]));
+        var filter = new CoachingStudentHistoryFilter(DateTime.UtcNow.AddDays(-7), DateTime.UtcNow, "Graded", "Math");
+        await handler.Handle(new GetTeacherStudentHistoryQuery(studentId) { Filter = filter }, CancellationToken.None);
+        repository.Filter.Should().Be(filter);
+    }
+
+    [Fact]
     public async Task Handle_ShouldNotQueryHistoryAfterTeacherAccessWasRevoked()
     {
         var repository = new CapturingStudentHistoryRepository([]);
@@ -63,15 +75,18 @@ public sealed class CoachingTeacherStudentHistoryQueryTests
         public int PageNumber { get; private set; }
         public int PageSize { get; private set; }
         public bool WasQueried { get; private set; }
+        public CoachingStudentHistoryFilter? Filter { get; private set; }
 
         public Task<PagedRepositoryResult<CoachingAdminStudentHistoryItemDto>> GetStudentHistoryAsync(
             Guid studentId,
             CoachingStudentHistoryType type,
             int pageNumber,
             int pageSize,
-            CancellationToken cancellationToken = default)
+            CancellationToken cancellationToken = default,
+            CoachingStudentHistoryFilter? filter = null)
         {
             WasQueried = true;
+            Filter = filter;
             StudentId = studentId;
             Type = type;
             PageNumber = pageNumber;
