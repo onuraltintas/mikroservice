@@ -392,8 +392,13 @@ export class CoachingPeopleComponent implements OnInit {
 
   canManageMemberships(): boolean {
     const user = this.authService.userProfile();
+    if (this.scope()?.isGlobal === true) return !!this.institutionId && user?.roles.includes('SystemAdmin') === true;
     return this.scope()?.isGlobal === false
       && (user?.roles.includes('InstitutionAdmin') === true || user?.roles.includes('InstitutionOwner') === true);
+  }
+
+  private membershipInstitutionId(): string | undefined {
+    return this.scope()?.isGlobal ? this.institutionId : undefined;
   }
 
   searchInstitutionTeachers(): void {
@@ -431,7 +436,7 @@ export class CoachingPeopleComponent implements OnInit {
     const teacherEmail = this.teacherInviteEmail.trim();
     if (!this.canManageMemberships() || !teacherEmail || this.savingMembership()) return;
     this.savingMembership.set(true);
-    this.membershipService.inviteTeacher({ teacherEmail }).subscribe({
+    this.membershipService.inviteTeacher({ teacherEmail }, this.membershipInstitutionId()).subscribe({
       next: () => {
         this.savingMembership.set(false);
         if (this.teacherInviteEmail.trim() === teacherEmail) this.teacherInviteEmail = '';
@@ -450,7 +455,7 @@ export class CoachingPeopleComponent implements OnInit {
     if (!this.canManageMemberships() || !studentEmail || this.savingMembership()) return;
     const teacherUserId = this.studentInviteTeacherUserId || undefined;
     this.savingMembership.set(true);
-    this.membershipService.inviteStudent({ studentEmail, ...(teacherUserId ? { teacherUserId } : {}) }).subscribe({
+    this.membershipService.inviteStudent({ studentEmail, ...(teacherUserId ? { teacherUserId } : {}) }, this.membershipInstitutionId()).subscribe({
       next: () => {
         this.savingMembership.set(false);
         if (this.studentInviteEmail.trim() === studentEmail) this.studentInviteEmail = '';
@@ -475,7 +480,7 @@ export class CoachingPeopleComponent implements OnInit {
     this.membershipService.updateStudent(student.userId, {
       gradeLevel,
       teacherUserId
-    }).subscribe({
+    }, this.membershipInstitutionId()).subscribe({
       next: () => {
         this.savingMembership.set(false);
         const teacher = this.teacherLookupResults().find(item => item.userId === teacherUserId);
@@ -503,7 +508,7 @@ export class CoachingPeopleComponent implements OnInit {
     );
     if (!confirmed || this.savingMembership()) return;
     this.savingMembership.set(true);
-    this.membershipService.removeStudent(student.userId).subscribe({
+    this.membershipService.removeStudent(student.userId, this.membershipInstitutionId()).subscribe({
       next: () => {
         this.savingMembership.set(false);
         this.toaster.success('Öğrenci kurum üyeliğinden çıkarıldı; hesabı ve koçluk geçmişi korunuyor.');
@@ -525,7 +530,7 @@ export class CoachingPeopleComponent implements OnInit {
     );
     if (!confirmed || this.savingMembership()) return;
     this.savingMembership.set(true);
-    this.membershipService.removeTeacher(teacher.userId).subscribe({
+    this.membershipService.removeTeacher(teacher.userId, this.membershipInstitutionId()).subscribe({
       next: () => {
         this.savingMembership.set(false);
         this.toaster.success('Öğretmen kurum üyeliğinden çıkarıldı; hesabı ve koçluk geçmişi korunuyor.');

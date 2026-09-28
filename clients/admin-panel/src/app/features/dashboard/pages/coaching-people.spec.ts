@@ -12,10 +12,13 @@ import { CoachingPeopleComponent } from './coaching-people';
 
 describe('CoachingPeopleComponent', () => {
   it('allows the global system admin to manage the explicitly selected institution', () => {
-    const { component } = create('students', undefined, 'server', ['SystemAdmin']);
+    const { component, memberships } = create('students', undefined, 'server', ['SystemAdmin']);
     component.scope.set({ isGlobal: true, institutionId: null });
     component.institutionId = 'institution-1';
     expect(component.canManageMemberships()).toBe(true);
+    component.teacherInviteEmail = 'teacher@example.com';
+    component.sendTeacherInvitation();
+    expect(memberships.inviteTeacher).toHaveBeenCalledWith({ teacherEmail: 'teacher@example.com' }, 'institution-1');
   });
   function create(kind: 'students' | 'teachers', id?: string, platform = 'server', roles = ['InstitutionAdmin']) {
     const service = {
@@ -136,7 +139,7 @@ describe('CoachingPeopleComponent', () => {
 
     component.sendTeacherInvitation();
 
-    expect(memberships.inviteTeacher).toHaveBeenCalledWith({ teacherEmail: 'teacher@example.com' });
+    expect(memberships.inviteTeacher).toHaveBeenCalledWith({ teacherEmail: 'teacher@example.com' }, undefined);
     expect(toaster.success).toHaveBeenCalled();
     expect(component.teacherInviteEmail).toBe('');
     expect(service.getTeacherRoster).toHaveBeenCalledWith('own-institution', 1, '');
@@ -167,7 +170,7 @@ describe('CoachingPeopleComponent', () => {
 
     expect(memberships.inviteStudent).toHaveBeenCalledWith({
       studentEmail: 'student@example.com', teacherUserId: 'teacher-1'
-    });
+    }, undefined);
     expect(toaster.success).toHaveBeenCalled();
     expect(component.studentInviteEmail).toBe('');
   });
@@ -203,7 +206,7 @@ describe('CoachingPeopleComponent', () => {
 
     expect(memberships.updateStudent).toHaveBeenCalledWith('student-1', {
       gradeLevel: 8, teacherUserId: 'teacher-1'
-    });
+    }, undefined);
     expect(component.selectedStudent()?.gradeLevel).toBe(8);
     expect(component.selectedStudent()?.teacherUserId).toBe('teacher-1');
     expect(toaster.success).toHaveBeenCalled();
@@ -252,13 +255,13 @@ describe('CoachingPeopleComponent', () => {
     await component.removeStudentFromInstitution(student);
 
     expect(toaster.confirm.mock.calls[0][0]).toContain('Hesabı veya koçluk geçmişi silinmez');
-    expect(memberships.removeStudent).toHaveBeenCalledWith('student-1');
+    expect(memberships.removeStudent).toHaveBeenCalledWith('student-1', undefined);
   });
 
-  it('does not expose tenant membership mutations to a global admin or a non-institution role', () => {
+  it('does not expose global membership mutations without a selected institution', () => {
     const { component, memberships } = create('teachers', undefined, 'server', ['SystemAdmin']);
     component.scope.set({ isGlobal: true, institutionId: null });
-    component.institutionId = 'institution-1';
+    component.institutionId = '';
     component.teacherInviteEmail = 'teacher@example.com';
 
     expect(component.canManageMemberships()).toBe(false);

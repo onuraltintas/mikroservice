@@ -7,4 +7,7 @@ public record InviteStudentCommand(
     string StudentEmail,
     string? Message = null,
     Guid? TeacherUserId = null
-) : IRequest<Result<Guid>>;
+) : IRequest<Result<Guid>>
+{
+    public Guid? InstitutionId { get; init; }
+}

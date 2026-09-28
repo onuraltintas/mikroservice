@@ -23,23 +23,27 @@ export class CoachingInstitutionMembershipService {
   private readonly http = inject(HttpClient);
   private readonly url = `${environment.apiUrl}/institution`;
 
-  inviteTeacher(request: CoachingTeacherInvitation) {
-    return this.http.post<{ invitationId: string }>(`${this.url}/invite-teacher`, request);
+  private endpoint(institutionId?: string) {
+    return institutionId ? `${environment.apiUrl}/institutions/${encodeURIComponent(institutionId)}/coaching` : this.url;
   }
 
-  inviteStudent(request: CoachingStudentInvitation) {
-    return this.http.post<{ invitationId: string }>(`${this.url}/invite-student`, request);
+  inviteTeacher(request: CoachingTeacherInvitation, institutionId?: string) {
+    return this.http.post<{ invitationId: string }>(`${this.endpoint(institutionId)}/invite-teacher`, request);
   }
 
-  updateStudent(studentUserId: string, request: CoachingInstitutionStudentUpdate) {
-    return this.http.put<void>(`${this.url}/students/${encodeURIComponent(studentUserId)}`, request);
+  inviteStudent(request: CoachingStudentInvitation, institutionId?: string) {
+    return this.http.post<{ invitationId: string }>(`${this.endpoint(institutionId)}/invite-student`, request);
   }
 
-  removeTeacher(teacherUserId: string) {
-    return this.http.delete<void>(`${this.url}/teachers/${encodeURIComponent(teacherUserId)}`);
+  updateStudent(studentUserId: string, request: CoachingInstitutionStudentUpdate, institutionId?: string) {
+    return this.http.put<void>(`${this.endpoint(institutionId)}/students/${encodeURIComponent(studentUserId)}`, request);
   }
 
-  removeStudent(studentUserId: string) {
-    return this.http.delete<void>(`${this.url}/students/${encodeURIComponent(studentUserId)}`);
+  removeTeacher(teacherUserId: string, institutionId?: string) {
+    return this.http.delete<void>(`${this.endpoint(institutionId)}/teachers/${encodeURIComponent(teacherUserId)}`);
+  }
+
+  removeStudent(studentUserId: string, institutionId?: string) {
+    return this.http.delete<void>(`${this.endpoint(institutionId)}/students/${encodeURIComponent(studentUserId)}`);
   }
 }

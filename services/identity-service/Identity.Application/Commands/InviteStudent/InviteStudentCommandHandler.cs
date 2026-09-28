@@ -51,10 +51,8 @@ public class InviteStudentCommandHandler : IRequestHandler<InviteStudentCommand,
         }
 
         var adminUserId = _currentUserService.UserId.Value;
-        var institutionId = await _institutionRepository.GetInstitutionIdByAdminIdAsync(
-            adminUserId,
-            Identity.Domain.Enums.PlatformProduct.Coaching,
-            cancellationToken);
+        var institutionId = await Identity.Application.Authorization.CoachingMembershipScope.ResolveAsync(
+            _currentUserService, _institutionRepository, request.InstitutionId, cancellationToken);
         
         if (institutionId == null)
         {

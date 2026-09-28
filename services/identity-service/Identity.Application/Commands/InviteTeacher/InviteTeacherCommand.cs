@@ -6,4 +6,7 @@ namespace Identity.Application.Commands.InviteTeacher;
 public record InviteTeacherCommand(
     string TeacherEmail,
     string? Message
-) : IRequest<Result<Guid>>;
+) : IRequest<Result<Guid>>
+{
+    public Guid? InstitutionId { get; init; }
+}

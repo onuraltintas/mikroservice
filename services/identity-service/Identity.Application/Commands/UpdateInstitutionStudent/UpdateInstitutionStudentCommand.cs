@@ -6,4 +6,7 @@ namespace Identity.Application.Commands.UpdateInstitutionStudent;
 public sealed record UpdateInstitutionStudentCommand(
     Guid StudentUserId,
     int GradeLevel,
-    Guid? TeacherUserId) : IRequest<Result>;
+    Guid? TeacherUserId) : IRequest<Result>
+{
+    public Guid? InstitutionId { get; init; }
+}

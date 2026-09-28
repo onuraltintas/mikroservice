@@ -40,10 +40,8 @@ public sealed class UpdateInstitutionStudentCommandHandler : IRequestHandler<Upd
             return Result.Failure(new Error("Student.InvalidGradeLevel", "Grade level must be between 1 and 12"));
         }
 
-        var institutionId = await _institutionRepository.GetInstitutionIdByAdminIdAsync(
-            adminUserId,
-            Identity.Domain.Enums.PlatformProduct.Coaching,
-            cancellationToken);
+        var institutionId = await Identity.Application.Authorization.CoachingMembershipScope.ResolveAsync(
+            _currentUserService, _institutionRepository, request.InstitutionId, cancellationToken);
         if (institutionId is null)
         {
             return Result.Failure(new Error("Institution.Forbidden", "You are not an administrator of an institution"));
