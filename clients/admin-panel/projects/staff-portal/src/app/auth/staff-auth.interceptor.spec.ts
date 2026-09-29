@@ -22,6 +22,18 @@ describe('staffAuthInterceptor', () => {
     expect(forwarded?.withCredentials).toBe(true);
   });
 
+  it('does not send the bearer token to paths that only share the API prefix', async () => {
+    const forward = vi.fn((request: HttpRequest<unknown>) =>
+      of(new HttpResponse({ status: 200, body: request })));
+    const request = new HttpRequest('GET', '/api-private/collect');
+    const response = await lastValueFrom(TestBed.runInInjectionContext(() =>
+      staffAuthInterceptor(request, forward)));
+
+    const forwarded = (response as HttpResponse<HttpRequest<unknown>>).body;
+    expect(forwarded?.headers.has('Authorization')).toBe(false);
+    expect(forwarded?.withCredentials).toBe(false);
+  });
+
   it('refreshes once and retries an expired API request with the rotated token', async () => {
     const forward = vi.fn((request: HttpRequest<unknown>) =>
       forward.mock.calls.length === 1
