@@ -5,13 +5,14 @@ import { StaffAuthService } from './auth/staff-auth.service';
 import { StaffProduct } from './auth/staff-auth.models';
 import { CoachingTeacherWorkspaceComponent } from './features/coaching/coaching-teacher-workspace.component';
 import { CoachingInstitutionWorkspaceComponent } from './features/coaching/coaching-institution-workspace.component';
+import { SpeedReadingTeacherWorkspaceComponent } from './features/speed-reading/speed-reading-teacher-workspace.component';
 
 type StaffWorkspaceRole = 'teacher' | 'institution';
 
 @Component({
   selector: 'staff-root',
   standalone: true,
-  imports: [FormsModule, CoachingTeacherWorkspaceComponent, CoachingInstitutionWorkspaceComponent],
+  imports: [FormsModule, CoachingTeacherWorkspaceComponent, CoachingInstitutionWorkspaceComponent, SpeedReadingTeacherWorkspaceComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
@@ -66,6 +67,10 @@ export class AppComponent {
 
   get isInstitutionWorkspaceSelected(): boolean {
     return this.auth.activeProduct() === 'coaching' && this.activeWorkspaceRole === 'institution';
+  }
+
+  get isSpeedReadingTeacherWorkspaceSelected(): boolean {
+    return this.auth.activeProduct() === 'speed-reading' && this.activeWorkspaceRole === 'teacher';
   }
 
   selectWorkspaceRole(role: StaffWorkspaceRole): void {

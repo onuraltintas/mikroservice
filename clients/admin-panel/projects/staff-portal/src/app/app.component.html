@@ -106,13 +106,21 @@
           }
         }
 
-        @if (auth.activeProduct() === 'speed-reading') {
+        @if (isSpeedReadingTeacherWorkspaceSelected) {
+          @defer (on immediate) {
+            <staff-speed-reading-teacher-workspace />
+          } @placeholder {
+            <p class="migration-note" role="status">Hızlı Okuma öğretmen alanı hazırlanıyor…</p>
+          }
+        }
+
+        @if (auth.activeProduct() === 'speed-reading' && activeWorkspaceRole !== 'teacher') {
           <section class="migration-note" aria-labelledby="reading-migration-title">
             <div class="migration-icon" aria-hidden="true">↗</div>
             <div>
-              <p class="eyebrow">HIZLI OKUMA · PERSONEL ÇALIŞMA ALANI</p>
-              <h2 id="reading-migration-title">Hızlı Okuma ekranları sıradaki taşıma adımında.</h2>
-              <p>Bu ürünün öğretmen ve kurum işlevleri kendi Hızlı Okuma API’si ile taşınacak; Koçluk verileri ve yetkileri ayrı kalacak.</p>
+              <p class="eyebrow">HIZLI OKUMA · KURUM YÖNETİMİ</p>
+              <h2 id="reading-migration-title">Kurum yöneticisi ekranları sıradaki taşıma adımında.</h2>
+              <p>Öğretmen ekranları Hızlı Okuma’nın kendi API’sine bağlandı. Kurum yönetimi ayrı kurum yetkisiyle taşınacak; Koçluk verileri ve yetkileri ayrı kalacak.</p>
             </div>
             <span class="migration-status">Hazırlanıyor</span>
           </section>

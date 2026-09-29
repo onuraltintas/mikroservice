@@ -19,7 +19,9 @@ describe('SpeedReadingTeacherService', () => {
   afterEach(() => http.verify());
 
   it('loads a paged teacher-scoped roster with normalized filters', async () => {
-    const response = firstValueFrom(service.getMyStudents(2, 10, '  Elif  ', 7, false));
+    const response = firstValueFrom(service.getMyStudents(2, 10, {
+      searchTerm: '  Elif  ', gradeLevel: 7, isActive: false
+    }));
     const request = http.expectOne(candidate =>
       candidate.url === '/api/speed-reading/teachers/me/students'
         && candidate.params.get('pageNumber') === '2'
@@ -34,7 +36,7 @@ describe('SpeedReadingTeacherService', () => {
   });
 
   it('clamps pagination and omits empty filters', async () => {
-    const response = firstValueFrom(service.getMyStudents(0, 1000, '   '));
+    const response = firstValueFrom(service.getMyStudents(0, 1000, { searchTerm: '   ' }));
     const request = http.expectOne('/api/speed-reading/teachers/me/students?pageNumber=1&pageSize=100');
     request.flush({ items: [], totalCount: 0, pageNumber: 1, pageSize: 100 });
 
