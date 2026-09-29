@@ -5,9 +5,9 @@ import { CoachingInstitutionService, CoachingInstitutionStudent, CoachingInstitu
 import { CoachingInstitutionWorkspaceComponent } from './coaching-institution-workspace.component';
 
 describe('CoachingInstitutionWorkspaceComponent', () => {
-  it('uses the authenticated institution scope and loads an operational overview', () => {
+  it('uses the authenticated institution scope and loads an operational overview', async () => {
     const service = institutionService();
-    const fixture = createFixture(service);
+    const fixture = await createFixture(service);
     fixture.detectChanges();
 
     expect(service.getReadScope).toHaveBeenCalledOnce();
@@ -16,10 +16,10 @@ describe('CoachingInstitutionWorkspaceComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('12');
   });
 
-  it('loads institution-scoped student data only after selecting the student roster', () => {
+  it('loads institution-scoped student data only after selecting the student roster', async () => {
     const students = [student('student-1')];
     const service = institutionService({ students });
-    const fixture = createFixture(service);
+    const fixture = await createFixture(service);
     fixture.detectChanges();
     expect(service.getStudentRoster).not.toHaveBeenCalled();
 
@@ -31,14 +31,29 @@ describe('CoachingInstitutionWorkspaceComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Ayşe Demir');
   });
 
-  it('applies search, teacher, and grade filters on the server and supports paging', () => {
+  it('opens a student report from the institution roster without changing the server authority scope', async () => {
+    const service = institutionService({ students: [student('student-1')] });
+    const fixture = await createFixture(service);
+    fixture.detectChanges();
+    fixture.componentInstance.selectSection('students');
+    fixture.detectChanges();
+
+    (fixture.nativeElement.querySelector('[data-testid="student-report-student-1"]') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(fixture.componentInstance.selectedStudent()?.userId).toBe('student-1');
+    expect(service.getStudentDetail).toHaveBeenCalledWith('student-1');
+  });
+
+  it('applies search, teacher, and grade filters on the server and supports paging', async () => {
     const service = institutionService();
     service.getStudentRoster.mockReturnValueOnce(of(studentPage([student('student-1')], 1, 2)))
       .mockReturnValueOnce(of(studentPage([student('student-1')], 1, 2)))
       .mockReturnValueOnce(of(studentPage([student('student-1')], 1, 2)))
       .mockReturnValueOnce(of(studentPage([student('student-1')], 1, 2)))
       .mockReturnValueOnce(of(studentPage([student('student-2')], 2, 2)));
-    const fixture = createFixture(service);
+    const fixture = await createFixture(service);
     fixture.detectChanges();
     const component = fixture.componentInstance;
     component.selectSection('students');
@@ -52,9 +67,9 @@ describe('CoachingInstitutionWorkspaceComponent', () => {
     expect(component.students().map(item => item.userId)).toEqual(['student-1', 'student-2']);
   });
 
-  it('searches and pages teachers within the active institution', () => {
+  it('searches and pages teachers within the active institution', async () => {
     const service = institutionService({ teachers: [teacher('teacher-1')] });
-    const fixture = createFixture(service);
+    const fixture = await createFixture(service);
     fixture.detectChanges();
     fixture.componentInstance.selectSection('teachers');
     fixture.componentInstance.searchTeachers('Zeynep');
@@ -64,10 +79,10 @@ describe('CoachingInstitutionWorkspaceComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Zeynep Koç');
   });
 
-  it('pages the institution teacher filter options for large teacher rosters', () => {
+  it('pages the institution teacher filter options for large teacher rosters', async () => {
     const service = institutionService();
     service.getTeacherRoster.mockReturnValue(of(teacherPage([], 101)));
-    const fixture = createFixture(service);
+    const fixture = await createFixture(service);
     fixture.detectChanges();
     fixture.componentInstance.selectSection('students');
     expect(fixture.componentInstance.teacherFilterTotalPages()).toBe(2);
@@ -77,10 +92,10 @@ describe('CoachingInstitutionWorkspaceComponent', () => {
     expect(service.getTeacherRoster).toHaveBeenLastCalledWith('institution-1', 2, '', 100);
   });
 
-  it('does not request institutional data when the server returns no institution scope', () => {
+  it('does not request institutional data when the server returns no institution scope', async () => {
     const service = institutionService();
     service.getReadScope.mockReturnValue(of({ isGlobal: false, institutionId: null as string | null }));
-    const fixture = createFixture(service);
+    const fixture = await createFixture(service);
     fixture.detectChanges();
 
     expect(service.getOverview).not.toHaveBeenCalled();
@@ -88,21 +103,22 @@ describe('CoachingInstitutionWorkspaceComponent', () => {
     expect(fixture.componentInstance.errorMessage()).toContain('aktif kurum kapsamı');
   });
 
-  it('shows a recoverable message when overview loading fails', () => {
+  it('shows a recoverable message when overview loading fails', async () => {
     const service = institutionService();
     service.getOverview.mockReturnValue(throwError(() => new Error('offline')));
-    const fixture = createFixture(service);
+    const fixture = await createFixture(service);
     fixture.detectChanges();
 
     expect(fixture.componentInstance.errorMessage()).toContain('özet');
   });
 });
 
-function createFixture(service = institutionService()) {
+async function createFixture(service = institutionService()) {
   TestBed.configureTestingModule({
     imports: [CoachingInstitutionWorkspaceComponent],
     providers: [{ provide: CoachingInstitutionService, useValue: service }]
   });
+  await TestBed.compileComponents();
   return TestBed.createComponent(CoachingInstitutionWorkspaceComponent);
 }
 
@@ -116,7 +132,12 @@ function institutionService(options: { students?: CoachingInstitutionStudent[]; 
       recentAssignments: [{ id: 'assignment-1', teacherId: 'teacher-1', title: 'Haftalık tekrar', status: 'Active', dueDate: '2030-01-05T10:00:00Z', studentCount: 6, submittedStudentCount: 4, createdAt: '2030-01-01T10:00:00Z' }]
     })),
     getStudentRoster: vi.fn(() => of(studentPage(options.students ?? [], 1))),
-    getTeacherRoster: vi.fn(() => of(teacherPage(options.teachers ?? [teacher('teacher-1')], 1)))
+    getTeacherRoster: vi.fn(() => of(teacherPage(options.teachers ?? [teacher('teacher-1')], 1))),
+    getStudentDetail: vi.fn(() => of({
+      studentId: 'student-1', totalAssignments: 0, submittedAssignments: 0,
+      totalExams: 0, totalSessions: 0, totalGoals: 0, assignments: [], exams: []
+    })),
+    getStudentHistory: vi.fn(() => of({ items: [], totalCount: 0 }))
   };
 }
 

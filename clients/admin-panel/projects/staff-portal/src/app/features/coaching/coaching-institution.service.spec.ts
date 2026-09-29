@@ -42,4 +42,31 @@ describe('CoachingInstitutionService', () => {
     expect(request.request.method).toBe('GET');
     request.flush({ teachers: [], totalCount: 0 });
   });
+
+  it('loads student details through the institution-scoped coaching admin API', () => {
+    service.getStudentDetail('student-1').subscribe();
+    const request = http.expectOne('/api/coaching-admin/students/student-1/detail');
+    expect(request.request.method).toBe('GET');
+    request.flush({
+      studentId: 'student-1', totalAssignments: 4, submittedAssignments: 3,
+      totalExams: 2, totalSessions: 5, totalGoals: 1, assignments: [], exams: []
+    });
+  });
+
+  it('requests filtered student history with bounded pagination and encoded filters', () => {
+    service.getStudentHistory('student-1', 'Goals', {
+      pageNumber: 2, pageSize: 25, fromDate: '2026-01-01T00:00:00.000Z',
+      toDate: '2026-01-31T23:59:59.999Z', status: 'Completed', search: '  çalışma  '
+    }).subscribe();
+    const request = http.expectOne('/api/coaching-admin/students/student-1/history?type=Goals&pageNumber=2&pageSize=25&fromDate=2026-01-01T00:00:00.000Z&toDate=2026-01-31T23:59:59.999Z&status=Completed&search=%C3%A7al%C4%B1%C5%9Fma');
+    expect(request.request.method).toBe('GET');
+    request.flush({ items: [], totalCount: 0 });
+  });
+
+  it('omits empty student history filters and bounds page values', () => {
+    service.getStudentHistory('student-1', 'Assignments', { pageNumber: 5000, pageSize: 500, search: '  ' }).subscribe();
+    const request = http.expectOne('/api/coaching-admin/students/student-1/history?type=Assignments&pageNumber=1000&pageSize=100');
+    expect(request.request.method).toBe('GET');
+    request.flush({ items: [], totalCount: 0 });
+  });
 });

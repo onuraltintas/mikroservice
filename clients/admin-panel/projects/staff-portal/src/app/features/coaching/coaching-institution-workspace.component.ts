@@ -7,13 +7,14 @@ import {
   CoachingInstitutionStudent,
   CoachingInstitutionTeacher
 } from './coaching-institution.service';
+import { CoachingInstitutionStudentReportComponent } from './coaching-institution-student-report.component';
 
 type InstitutionSection = 'overview' | 'students' | 'teachers';
 
 @Component({
   selector: 'staff-coaching-institution-workspace',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, CoachingInstitutionStudentReportComponent],
   templateUrl: './coaching-institution-workspace.component.html',
   styleUrl: './coaching-institution-workspace.component.scss'
 })
@@ -28,6 +29,7 @@ export class CoachingInstitutionWorkspaceComponent implements OnInit {
   readonly students = signal<CoachingInstitutionStudent[]>([]);
   readonly teachers = signal<CoachingInstitutionTeacher[]>([]);
   readonly teacherFilterOptions = signal<CoachingInstitutionTeacher[]>([]);
+  readonly selectedStudent = signal<CoachingInstitutionStudent | null>(null);
   readonly activeSection = signal<InstitutionSection>('overview');
   readonly isLoadingScope = signal(true);
   readonly isLoadingOverview = signal(false);
@@ -56,12 +58,21 @@ export class CoachingInstitutionWorkspaceComponent implements OnInit {
 
   selectSection(section: InstitutionSection): void {
     this.activeSection.set(section);
+    if (section !== 'students') this.selectedStudent.set(null);
     if (section === 'students' && this.studentPageNumber() === 1 && this.students().length === 0) {
       this.loadStudents();
       this.loadTeacherFilterOptions();
     } else if (section === 'teachers' && this.teacherPageNumber() === 1 && this.teachers().length === 0) {
       this.loadTeachers();
     }
+  }
+
+  openStudentReport(student: CoachingInstitutionStudent): void {
+    this.selectedStudent.set(student);
+  }
+
+  closeStudentReport(): void {
+    this.selectedStudent.set(null);
   }
 
   loadScope(): void {

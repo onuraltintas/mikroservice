@@ -35,7 +35,13 @@
         [class.active]="activeSection() === 'teachers'" (click)="selectSection('teachers')">Öğretmenler</button>
     </nav>
 
-    @if (activeSection() === 'overview') {
+    @if (selectedStudent(); as reportStudent) {
+      @defer (on immediate) {
+        <staff-coaching-institution-student-report [student]="reportStudent" (back)="closeStudentReport()" />
+      } @placeholder {
+        <p class="workspace-state" role="status">Öğrenci raporu hazırlanıyor…</p>
+      }
+    } @else if (activeSection() === 'overview') {
       <section class="overview-section" aria-labelledby="institution-overview-title">
         <div class="section-heading">
           <div><h3 id="institution-overview-title">Kurumunuzun Koçluk özeti</h3><p>Sunucu tarafından kurum kapsamınıza göre hesaplanan güncel operasyon özeti.</p></div>
@@ -91,10 +97,10 @@
         } @else {
           <div class="table-scroll">
             <table>
-              <thead><tr><th>Öğrenci</th><th>Sınıf</th><th>Öğretmen</th><th>E-posta</th></tr></thead>
+              <thead><tr><th>Öğrenci</th><th>Sınıf</th><th>Öğretmen</th><th>E-posta</th><th>Rapor</th></tr></thead>
               <tbody>
                 @for (student of students(); track student.userId) {
-                  <tr><td class="primary-cell">{{ student.firstName }} {{ student.lastName }}</td><td>{{ student.gradeLevel ? student.gradeLevel + '. sınıf' : '—' }}</td><td>{{ student.teacherName || 'Atanmamış' }}</td><td>{{ student.email }}</td></tr>
+                  <tr><td class="primary-cell">{{ student.firstName }} {{ student.lastName }}</td><td>{{ student.gradeLevel ? student.gradeLevel + '. sınıf' : '—' }}</td><td>{{ student.teacherName || 'Atanmamış' }}</td><td>{{ student.email }}</td><td><button type="button" class="report-button" [attr.data-testid]="'student-report-' + student.userId" (click)="openStudentReport(student)">Raporu incele</button></td></tr>
                 }
               </tbody>
             </table>

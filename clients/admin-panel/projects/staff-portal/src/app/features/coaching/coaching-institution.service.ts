@@ -51,6 +51,45 @@ export interface CoachingInstitutionStudentPage {
   totalCount: number;
 }
 
+export interface CoachingInstitutionStudentDetail {
+  studentId: string;
+  totalAssignments: number;
+  submittedAssignments: number;
+  totalExams: number;
+  totalSessions: number;
+  totalGoals: number;
+  assignments: { id: string; title: string; status: string; dueDate: string; score?: number | null }[];
+  exams: { id: string; title: string; score: number; maxScore: number; examDate: string }[];
+}
+
+export type CoachingInstitutionHistoryType = 'Assignments' | 'Exams' | 'Sessions' | 'Goals';
+
+export interface CoachingInstitutionStudentHistoryItem {
+  id: string;
+  type: CoachingInstitutionHistoryType;
+  title: string;
+  eventDate: string;
+  status: string;
+  score?: number | null;
+  maxScore?: number | null;
+  progress?: number | null;
+  category?: string | null;
+}
+
+export interface CoachingInstitutionStudentHistoryPage {
+  items: CoachingInstitutionStudentHistoryItem[];
+  totalCount: number;
+}
+
+export interface CoachingInstitutionHistoryFilter {
+  pageNumber?: number;
+  pageSize?: number;
+  fromDate?: string;
+  toDate?: string;
+  status?: string;
+  search?: string;
+}
+
 export interface CoachingInstitutionTeacher {
   userId: string;
   firstName: string;
@@ -110,6 +149,31 @@ export class CoachingInstitutionService {
     if (search.trim()) params = params.set('search', search.trim());
     return this.http.get<CoachingInstitutionTeacherPage>(
       `${this.url}/institutions/${encodeURIComponent(institutionId)}/teachers`, { params }
+    );
+  }
+
+  getStudentDetail(studentId: string): Observable<CoachingInstitutionStudentDetail> {
+    return this.http.get<CoachingInstitutionStudentDetail>(
+      `${this.url}/students/${encodeURIComponent(studentId)}/detail`
+    );
+  }
+
+  getStudentHistory(
+    studentId: string,
+    type: CoachingInstitutionHistoryType,
+    filter: CoachingInstitutionHistoryFilter = {}
+  ): Observable<CoachingInstitutionStudentHistoryPage> {
+    let params = new HttpParams()
+      .set('type', type)
+      .set('pageNumber', this.boundedInteger(filter.pageNumber ?? 1, 1, 1_000, 1))
+      .set('pageSize', this.boundedInteger(filter.pageSize ?? 25, 1, 100, 25));
+    if (filter.fromDate) params = params.set('fromDate', filter.fromDate);
+    if (filter.toDate) params = params.set('toDate', filter.toDate);
+    if (filter.status?.trim()) params = params.set('status', filter.status.trim());
+    const search = filter.search?.trim().slice(0, 100);
+    if (search) params = params.set('search', search);
+    return this.http.get<CoachingInstitutionStudentHistoryPage>(
+      `${this.url}/students/${encodeURIComponent(studentId)}/history`, { params }
     );
   }
 

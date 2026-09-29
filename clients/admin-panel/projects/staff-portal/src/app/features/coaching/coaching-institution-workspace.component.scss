@@ -21,6 +21,8 @@
 .outline-button, .load-more { min-height: 2.35rem; padding: .45rem .75rem; border: 1px solid #d5ded4; border-radius: .6rem; background: white; color: #31574a; font: inherit; font-size: .75rem; font-weight: 750; cursor: pointer; }
 .outline-button:disabled, .load-more:disabled { cursor: wait; opacity: .55; }
 .link-button { border: 0; background: transparent; color: #3d6f57; font: inherit; font-size: .75rem; font-weight: 750; cursor: pointer; }
+.report-button { min-height: 2rem; padding: .35rem .58rem; border: 1px solid #d5ded4; border-radius: .55rem; background: white; color: #31574a; font: inherit; font-size: .7rem; font-weight: 750; cursor: pointer; }
+.report-button:hover { background: #f3f7f1; }
 .workspace-alert { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .75rem .9rem; border-radius: .7rem; }
 .workspace-alert p { margin: 0; font-size: .8rem; }
 .workspace-alert.error { border: 1px solid #fecaca; background: #fff1f2; color: #9f1239; }
