@@ -577,6 +577,7 @@
         <div class="role-tabs" role="group" aria-label="Kurum üye türü">
           <button
             type="button"
+            data-testid="institution-role-students"
             [class.selected]="selectedRole() === 'Student'"
             [attr.aria-pressed]="selectedRole() === 'Student'"
             (click)="selectRole('Student')"
@@ -585,6 +586,7 @@
           </button>
           <button
             type="button"
+            data-testid="institution-role-teachers"
             [class.selected]="selectedRole() === 'Teacher'"
             [attr.aria-pressed]="selectedRole() === 'Teacher'"
             (click)="selectRole('Teacher')"
@@ -593,6 +595,21 @@
           </button>
         </div>
       </div>
+
+      <form class="roster-filters invitation-form" (ngSubmit)="sendInvitation()" aria-label="Hızlı Okuma kurum daveti">
+        <label class="search-field">
+          <span>{{ selectedRole() === 'Student' ? 'Öğrenci e-posta adresi' : 'Öğretmen e-posta adresi' }}</span>
+          <input data-testid="institution-member-invite-email" name="institutionInviteEmail" type="email" autocomplete="email" maxlength="320" [(ngModel)]="invitationEmail" required placeholder="ornek@okul.com" />
+        </label>
+        <div class="filter-actions">
+          <button data-testid="send-institution-member-invite" class="apply-button" type="submit" [disabled]="isInvitationSending() || !invitationEmail.trim()">
+            {{ isInvitationSending() ? 'Gönderiliyor…' : (selectedRole() === 'Student' ? 'Öğrenci davet et' : 'Öğretmen davet et') }}
+          </button>
+        </div>
+      </form>
+      @if (invitationErrorMessage()) { <div class="inline-error" role="alert">{{ invitationErrorMessage() }}</div> }
+      @if (invitationSuccessMessage()) { <p class="invitation-success" role="status">{{ invitationSuccessMessage() }}</p> }
+      <p class="invitation-note">Davet Hızlı Okuma üyeliği içindir. Davet edilen kişi aynı e-posta adresiyle Hızlı Okuma hesabı açıp e-postadaki bağlantıyı kabul etmelidir.</p>
 
       <form class="roster-filters" (ngSubmit)="applyFilters()">
         <label class="search-field">

@@ -65,6 +65,7 @@ export class SpeedReadingInstitutionWorkspaceComponent implements OnInit {
   readonly isTeacherSearchLoading = signal(false);
   readonly isStudentProfileSaving = signal(false);
   readonly isMemberStatusSaving = signal(false);
+  readonly isInvitationSending = signal(false);
   readonly teacherSearchErrorMessage = signal<string | null>(null);
   readonly studentProfileErrorMessage = signal<string | null>(null);
   readonly memberStatusErrorMessage = signal<string | null>(null);
@@ -75,8 +76,11 @@ export class SpeedReadingInstitutionWorkspaceComponent implements OnInit {
   readonly progressReport = signal<SpeedReadingInstitutionProgressReport | null>(null);
   readonly isInstitutionReportLoading = signal(false);
   readonly institutionReportErrorMessage = signal<string | null>(null);
+  readonly invitationErrorMessage = signal<string | null>(null);
+  readonly invitationSuccessMessage = signal<string | null>(null);
 
   searchInput = '';
+  invitationEmail = '';
   teacherSearchInput = '';
   reportDateFrom = utcDateInput(29);
   reportDateTo = utcDateInput(0);
@@ -112,6 +116,8 @@ export class SpeedReadingInstitutionWorkspaceComponent implements OnInit {
   selectRole(role: SpeedReadingInstitutionMemberRole): void {
     if (this.selectedRole() === role) return;
     this.selectedRole.set(role);
+    this.invitationErrorMessage.set(null);
+    this.invitationSuccessMessage.set(null);
     this.pageNumber.set(1);
     this.editingStudent.set(null);
     this.teacherOptions.set([]);
@@ -178,6 +184,35 @@ export class SpeedReadingInstitutionWorkspaceComponent implements OnInit {
       complete: () => {
         if (requestVersion === this.overviewRequestVersion) this.isOverviewLoading.set(false);
       },
+    });
+  }
+
+  sendInvitation(): void {
+    const institution = this.institution();
+    const email = this.invitationEmail.trim();
+    const role = this.selectedRole();
+    if (!institution || !email || this.isInvitationSending()) return;
+
+    this.isInvitationSending.set(true);
+    this.invitationErrorMessage.set(null);
+    this.invitationSuccessMessage.set(null);
+    this.service.inviteMember(institution.institutionId, email, role).subscribe({
+      next: () => {
+        if (this.invitationEmail.trim() === email) this.invitationEmail = '';
+        this.invitationSuccessMessage.set(
+          `${role === 'Student' ? 'Öğrenci' : 'Öğretmen'} daveti gönderildi. Davet edilen kişi aynı e-posta adresiyle Hızlı Okuma hesabı oluşturup daveti kabul edebilir.`,
+        );
+      },
+      error: (error) => {
+        this.invitationErrorMessage.set(
+          this.getApiMessage(
+            error,
+            `${role === 'Student' ? 'Öğrenci' : 'Öğretmen'} daveti gönderilemedi. E-posta adresini ve Hızlı Okuma kurum yetkinizi kontrol edip yeniden deneyin.`,
+          ),
+        );
+        this.isInvitationSending.set(false);
+      },
+      complete: () => this.isInvitationSending.set(false),
     });
   }
 

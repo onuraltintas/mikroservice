@@ -1,5 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
+import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
 import {
   CoachingInstitutionOverview,
@@ -15,7 +17,7 @@ type InstitutionSection = 'overview' | 'students' | 'teachers';
 @Component({
   selector: 'staff-coaching-institution-workspace',
   standalone: true,
-  imports: [CommonModule, CoachingInstitutionStudentReportComponent, CoachingInstitutionTeacherReportComponent],
+  imports: [CommonModule, FormsModule, CoachingInstitutionStudentReportComponent, CoachingInstitutionTeacherReportComponent],
   templateUrl: './coaching-institution-workspace.component.html',
   styleUrl: './coaching-institution-workspace.component.scss'
 })
@@ -30,6 +32,11 @@ export class CoachingInstitutionWorkspaceComponent implements OnInit {
   readonly students = signal<CoachingInstitutionStudent[]>([]);
   readonly teachers = signal<CoachingInstitutionTeacher[]>([]);
   readonly teacherFilterOptions = signal<CoachingInstitutionTeacher[]>([]);
+  readonly isInvitationSending = signal(false);
+  readonly teacherInvitationError = signal<string | null>(null);
+  readonly teacherInvitationSuccess = signal<string | null>(null);
+  readonly studentInvitationError = signal<string | null>(null);
+  readonly studentInvitationSuccess = signal<string | null>(null);
   readonly selectedStudent = signal<CoachingInstitutionStudent | null>(null);
   readonly selectedTeacher = signal<CoachingInstitutionTeacher | null>(null);
   readonly activeSection = signal<InstitutionSection>('overview');
@@ -53,6 +60,9 @@ export class CoachingInstitutionWorkspaceComponent implements OnInit {
   readonly teacherTotalCount = signal(0);
   readonly teacherFilterPageNumber = signal(1);
   readonly teacherFilterTotalPages = signal(1);
+  teacherInviteEmail = '';
+  studentInviteEmail = '';
+  studentInviteTeacherUserId = '';
 
   ngOnInit(): void {
     this.loadScope();
@@ -62,6 +72,8 @@ export class CoachingInstitutionWorkspaceComponent implements OnInit {
     this.activeSection.set(section);
     this.selectedStudent.set(null);
     this.selectedTeacher.set(null);
+    this.teacherInvitationError.set(null);
+    this.studentInvitationError.set(null);
     if (section === 'students' && this.studentPageNumber() === 1 && this.students().length === 0) {
       this.loadStudents();
       this.loadTeacherFilterOptions();
@@ -211,6 +223,48 @@ export class CoachingInstitutionWorkspaceComponent implements OnInit {
     }
   }
 
+  sendTeacherInvitation(): void {
+    const email = this.teacherInviteEmail.trim();
+    if (!email || this.isInvitationSending()) return;
+    this.isInvitationSending.set(true);
+    this.teacherInvitationError.set(null);
+    this.teacherInvitationSuccess.set(null);
+    this.institutionService.inviteTeacher(email).subscribe({
+      next: () => {
+        if (this.teacherInviteEmail.trim() === email) this.teacherInviteEmail = '';
+        this.teacherInvitationSuccess.set('Öğretmen daveti gönderildi. Kabul edildiğinde öğretmen kurum listenizde görünür.');
+      },
+      error: error => {
+        this.teacherInvitationError.set(this.getInvitationError(error, 'Öğretmen daveti gönderilemedi. E-posta adresini ve kurum yetkinizi kontrol edip yeniden deneyin.'));
+        this.isInvitationSending.set(false);
+      },
+      complete: () => this.isInvitationSending.set(false)
+    });
+  }
+
+  sendStudentInvitation(): void {
+    const email = this.studentInviteEmail.trim();
+    if (!email || this.isInvitationSending()) return;
+    const teacherUserId = this.studentInviteTeacherUserId || undefined;
+    this.isInvitationSending.set(true);
+    this.studentInvitationError.set(null);
+    this.studentInvitationSuccess.set(null);
+    this.institutionService.inviteStudent(email, teacherUserId).subscribe({
+      next: () => {
+        if (this.studentInviteEmail.trim() === email) {
+          this.studentInviteEmail = '';
+          this.studentInviteTeacherUserId = '';
+        }
+        this.studentInvitationSuccess.set('Öğrenci daveti gönderildi. Kabul edildiğinde öğrenci kurum listenizde görünür.');
+      },
+      error: error => {
+        this.studentInvitationError.set(this.getInvitationError(error, 'Öğrenci daveti gönderilemedi. E-posta adresini ve kurum yetkinizi kontrol edip yeniden deneyin.'));
+        this.isInvitationSending.set(false);
+      },
+      complete: () => this.isInvitationSending.set(false)
+    });
+  }
+
   retry(): void {
     if (!this.institutionId()) this.loadScope();
     else if (this.activeSection() === 'students') this.loadStudents();
@@ -243,5 +297,19 @@ export class CoachingInstitutionWorkspaceComponent implements OnInit {
         if (requestId === this.filterTeacherRequestId) this.errorMessage.set('Öğretmen filtresi yüklenemedi. Öğrencileri aramaya devam edebilirsiniz.');
       }
     });
+  }
+
+  private getInvitationError(error: unknown, fallback: string): string {
+    if (!(error instanceof HttpErrorResponse) || !error.error || typeof error.error !== 'object') return fallback;
+    const body = error.error as Record<string, unknown>;
+    const candidates = [body, body['error'], body['Error']];
+    for (const candidate of candidates) {
+      if (!candidate || typeof candidate !== 'object') continue;
+      const payload = candidate as Record<string, unknown>;
+      for (const key of ['message', 'description', 'Message', 'Description']) {
+        if (typeof payload[key] === 'string') return payload[key] as string;
+      }
+    }
+    return fallback;
   }
 }

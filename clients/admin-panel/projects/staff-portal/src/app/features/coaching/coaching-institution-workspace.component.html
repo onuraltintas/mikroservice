@@ -91,6 +91,19 @@
           <button type="button" class="outline-button" (click)="loadStudents()" [disabled]="isLoadingStudents()">Yenile</button>
         </div>
 
+        <form class="filter-row invitation-form" (ngSubmit)="sendStudentInvitation()" aria-label="Koçluk öğrencisi davet et">
+          <label class="filter-field"><span>Öğrenci e-posta adresi</span><input data-testid="institution-student-invite-email" name="studentInviteEmail" type="email" autocomplete="email" maxlength="320" [(ngModel)]="studentInviteEmail" required placeholder="ogrenci@ornek.com" /></label>
+          <label class="filter-field"><span>Davet sırasında öğretmen ata (isteğe bağlı)</span>
+            <select data-testid="institution-student-invite-teacher" name="studentInviteTeacherUserId" [(ngModel)]="studentInviteTeacherUserId" [disabled]="isInvitationSending()">
+              <option value="">Şimdilik öğretmen atama</option>
+              @for (teacher of teacherFilterOptions(); track teacher.userId) { <option [value]="teacher.userId">{{ teacher.firstName }} {{ teacher.lastName }} · {{ teacher.email }}</option> }
+            </select>
+          </label>
+          <button data-testid="send-institution-student-invite" class="report-button" type="submit" [disabled]="isInvitationSending() || !studentInviteEmail.trim()">{{ isInvitationSending() ? 'Gönderiliyor…' : 'Öğrenci davet et' }}</button>
+        </form>
+        @if (studentInvitationError()) { <p class="workspace-alert error" role="alert">{{ studentInvitationError() }}</p> }
+        @if (studentInvitationSuccess()) { <p class="workspace-alert success" role="status">{{ studentInvitationSuccess() }}</p> }
+
         <div class="filter-row" aria-label="Öğrenci filtreleri">
           <label class="filter-field search-field"><span>Öğrenci ara</span><input #studentSearch type="search" [value]="studentSearchTerm()" (change)="searchStudents(studentSearch.value)" (keydown.enter)="$event.preventDefault(); searchStudents(studentSearch.value)" placeholder="Ad, soyad veya e-posta" /></label>
           <label class="filter-field"><span>Öğretmen</span><select [value]="studentTeacherFilter()" [disabled]="isLoadingTeacherFilter()" (change)="setTeacherFilter($any($event.target).value)"><option value="">Tüm öğretmenler</option>@for (teacher of teacherFilterOptions(); track teacher.userId) { <option [value]="teacher.userId">{{ teacher.firstName }} {{ teacher.lastName }}</option> }</select></label>
@@ -121,6 +134,12 @@
           <div><h3 id="institution-teachers-title">Kurum öğretmenleri</h3><p>{{ teacherTotalCount() }} öğretmen · kurumunuza bağlı aktif öğretmenler</p></div>
           <button type="button" class="outline-button" (click)="loadTeachers()" [disabled]="isLoadingTeachers()">Yenile</button>
         </div>
+        <form class="filter-row invitation-form" (ngSubmit)="sendTeacherInvitation()" aria-label="Koçluk öğretmeni davet et">
+          <label class="filter-field"><span>Öğretmen e-posta adresi</span><input data-testid="institution-teacher-invite-email" name="teacherInviteEmail" type="email" autocomplete="email" maxlength="320" [(ngModel)]="teacherInviteEmail" required placeholder="ogretmen@ornek.com" /></label>
+          <button data-testid="send-institution-teacher-invite" class="report-button" type="submit" [disabled]="isInvitationSending() || !teacherInviteEmail.trim()">{{ isInvitationSending() ? 'Gönderiliyor…' : 'Öğretmen davet et' }}</button>
+        </form>
+        @if (teacherInvitationError()) { <p class="workspace-alert error" role="alert">{{ teacherInvitationError() }}</p> }
+        @if (teacherInvitationSuccess()) { <p class="workspace-alert success" role="status">{{ teacherInvitationSuccess() }}</p> }
         <label class="filter-field teacher-search"><span>Öğretmen ara</span><input #teacherSearch type="search" [value]="teacherSearchTerm()" (change)="searchTeachers(teacherSearch.value)" (keydown.enter)="$event.preventDefault(); searchTeachers(teacherSearch.value)" placeholder="Ad, soyad veya e-posta" /></label>
         @if (isLoadingTeachers()) {
           <p class="workspace-state" role="status">Öğretmenler yükleniyor…</p>

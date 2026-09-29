@@ -27,6 +27,8 @@
 .workspace-alert { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .75rem .9rem; border-radius: .7rem; }
 .workspace-alert p { margin: 0; font-size: .8rem; }
 .workspace-alert.error { border: 1px solid #fecaca; background: #fff1f2; color: #9f1239; }
+.workspace-alert.success { border: 1px solid #bbdec6; background: #f0faf2; color: #27623b; font-size: .8rem; }
+.invitation-form { align-items: end; padding: .85rem; border: 1px solid #e2e8df; border-radius: .75rem; background: #f8faf6; }
 .workspace-state { margin: 0; padding: 1.3rem; border-radius: .7rem; background: #f5f7f2; color: #71807a; font-size: .83rem; text-align: center; }
 .table-scroll { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; text-align: left; font-size: .78rem; }
