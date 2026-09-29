@@ -1,0 +1,138 @@
+<section class="reading-workspace" aria-labelledby="reading-institution-title">
+  @if (isInstitutionLoading()) {
+    <p class="loading" role="status">Kurum alanı yükleniyor…</p>
+  } @else if (institutionErrorMessage()) {
+    <div class="inline-error" role="alert">
+      <span>{{ institutionErrorMessage() }}</span>
+      <button type="button" (click)="loadInstitution()">Tekrar dene</button>
+    </div>
+  } @else if (institution(); as currentInstitution) {
+    <header class="workspace-heading">
+      <div>
+        <p class="workspace-eyebrow">Hızlı Okuma · Kurum</p>
+        <h2 id="reading-institution-title">{{ currentInstitution.institutionName }}</h2>
+        <p>Kurumunuza bağlı öğretmenleri, öğrencileri ve son 30 günlük öğrenme özetini inceleyin.</p>
+      </div>
+      <span class="member-count">{{ totalCount() }} {{ selectedRole() === 'Student' ? 'öğrenci' : 'öğretmen' }}</span>
+    </header>
+
+    <section class="overview-section" aria-labelledby="institution-overview-title">
+      <div class="section-heading">
+        <div>
+          <p class="workspace-eyebrow">SON 30 GÜN</p>
+          <h3 id="institution-overview-title">Kurum özeti</h3>
+        </div>
+        <button type="button" class="text-button" (click)="loadOverview()">Yenile</button>
+      </div>
+      @if (overviewErrorMessage()) {
+        <div class="inline-error" role="alert">
+          <span>{{ overviewErrorMessage() }}</span>
+          <button type="button" (click)="loadOverview()">Tekrar dene</button>
+        </div>
+      } @else if (isOverviewLoading()) {
+        <p class="loading" role="status">Kurum özeti yükleniyor…</p>
+      } @else if (overview(); as summary) {
+        <div class="overview-grid">
+          <article class="metric-card"><span>Öğrenci</span><strong>{{ formatNumber(summary.totalStudents) }}</strong></article>
+          <article class="metric-card"><span>Aktif öğrenci</span><strong>{{ summary.activeStudentsDataAvailable ? formatNumber(summary.activeStudents) : 'Veri yok' }}</strong></article>
+          <article class="metric-card"><span>Ortalama hız · WPM</span><strong>{{ summary.classAverageWpmDataAvailable ? formatNumber(summary.classAverageWpm) : 'Veri yok' }}</strong></article>
+          <article class="metric-card"><span>Anlama ortalaması</span><strong>{{ summary.classAverageComprehensionDataAvailable ? formatNumber(summary.classAverageComprehension) + '%' : 'Veri yok' }}</strong></article>
+          <article class="metric-card"><span>Tamamlanan etkinlik</span><strong>{{ formatNumber(summary.totalActivitiesCompleted) }}</strong></article>
+        </div>
+      }
+    </section>
+
+    <section class="roster-section" aria-labelledby="institution-roster-title">
+      <div class="section-heading roster-heading">
+        <div>
+          <p class="workspace-eyebrow">HIZLI OKUMA · KURUM ÜYELERİ</p>
+          <h3 id="institution-roster-title">{{ selectedRole() === 'Student' ? 'Öğrenciler' : 'Öğretmenler' }}</h3>
+        </div>
+        <div class="role-tabs" role="group" aria-label="Kurum üye türü">
+          <button type="button" [class.selected]="selectedRole() === 'Student'" [attr.aria-pressed]="selectedRole() === 'Student'" (click)="selectRole('Student')">Öğrenciler</button>
+          <button type="button" [class.selected]="selectedRole() === 'Teacher'" [attr.aria-pressed]="selectedRole() === 'Teacher'" (click)="selectRole('Teacher')">Öğretmenler</button>
+        </div>
+      </div>
+
+      <form class="roster-filters" (ngSubmit)="applyFilters()">
+        <label class="search-field">
+          <span>{{ selectedRole() === 'Student' ? 'Öğrenci ara' : 'Öğretmen ara' }}</span>
+          <input name="memberSearch" type="search" [(ngModel)]="searchInput" placeholder="Ad veya e-posta" autocomplete="off">
+        </label>
+        @if (selectedRole() === 'Student') {
+          <label>
+            <span>Sınıf</span>
+            <select name="gradeLevel" [(ngModel)]="selectedGradeLevel">
+              <option value="">Tüm sınıflar</option>
+              @for (grade of gradeLevels; track grade) { <option [value]="grade">{{ grade }}. sınıf</option> }
+            </select>
+          </label>
+        }
+        <label>
+          <span>Durum</span>
+          <select name="memberStatus" [(ngModel)]="selectedStatus">
+            <option value="all">Tümü</option>
+            <option value="active">Aktif</option>
+            <option value="inactive">Pasif</option>
+          </select>
+        </label>
+        <div class="filter-actions">
+          <button class="apply-button" type="submit">Filtrele</button>
+          @if (filters().searchTerm || filters().gradeLevel || filters().isActive !== undefined) {
+            <button class="clear-button" type="button" (click)="clearFilters()">Temizle</button>
+          }
+        </div>
+      </form>
+
+      @if (errorMessage()) {
+        <div class="inline-error" role="alert">
+          <span>{{ errorMessage() }}</span>
+          <button type="button" (click)="loadMembers()">Tekrar dene</button>
+        </div>
+      } @else if (isLoading()) {
+        <div class="loading" role="status">{{ selectedRole() === 'Student' ? 'Öğrenci' : 'Öğretmen' }} listesi yükleniyor…</div>
+      } @else if (members().length === 0) {
+        <div class="empty-state">
+          <h4>{{ selectedRole() === 'Student' ? 'Öğrenci' : 'Öğretmen' }} bulunamadı</h4>
+          <p>Arama ve filtreleri kontrol edin veya üyelikler eklendiğinde tekrar bakın.</p>
+        </div>
+      } @else {
+        <div class="roster-table-wrap">
+          <table>
+            <thead>
+              @if (selectedRole() === 'Student') {
+                <tr><th>Öğrenci</th><th>Sınıf</th><th>Öğretmen</th><th>Seviye</th><th>Hedef WPM</th><th>Durum</th></tr>
+              } @else {
+                <tr><th>Öğretmen</th><th>Öğrenci sayısı</th><th>Bağlantı tarihi</th><th>Durum</th></tr>
+              }
+            </thead>
+            <tbody>
+              @for (member of members(); track trackById($index, member)) {
+                <tr>
+                  <td><strong>{{ member.firstName }} {{ member.lastName }}</strong><small>{{ member.email || 'E-posta yok' }}</small></td>
+                  @if (selectedRole() === 'Student') {
+                    <td>{{ member.gradeLevel ? member.gradeLevel + '. sınıf' : '—' }}</td>
+                    <td>{{ member.teacherName || 'Atanmamış' }}</td>
+                    <td>{{ member.currentLevel ?? '—' }}</td>
+                    <td>{{ member.targetWpm ?? '—' }}</td>
+                  } @else {
+                    <td>{{ formatNumber(member.studentCount) }}</td>
+                    <td>{{ formatDate(member.createdAt) }}</td>
+                  }
+                  <td><span class="status" [class.inactive]="!member.isActive">{{ member.isActive ? 'Aktif' : 'Pasif' }}</span></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        @if (totalPages() > 1) {
+          <nav class="pagination" aria-label="Hızlı Okuma kurum üye sayfaları">
+            <button type="button" (click)="previousPage()" [disabled]="pageNumber() === 1">Önceki</button>
+            <span>Sayfa {{ pageNumber() }} / {{ totalPages() }}</span>
+            <button type="button" (click)="nextPage()" [disabled]="pageNumber() >= totalPages()">Sonraki</button>
+          </nav>
+        }
+      }
+    </section>
+  }
+</section>

@@ -114,7 +114,15 @@
           }
         }
 
-        @if (auth.activeProduct() === 'speed-reading' && activeWorkspaceRole !== 'teacher') {
+        @if (isSpeedReadingInstitutionWorkspaceSelected) {
+          @defer (on immediate) {
+            <staff-speed-reading-institution-workspace />
+          } @placeholder {
+            <p class="migration-note" role="status">Hızlı Okuma kurum alanı hazırlanıyor…</p>
+          }
+        }
+
+        @if (auth.activeProduct() === 'speed-reading' && activeWorkspaceRole !== 'teacher' && activeWorkspaceRole !== 'institution') {
           <section class="migration-note" aria-labelledby="reading-migration-title">
             <div class="migration-icon" aria-hidden="true">↗</div>
             <div>
