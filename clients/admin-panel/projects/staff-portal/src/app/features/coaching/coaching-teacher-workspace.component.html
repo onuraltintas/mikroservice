@@ -23,13 +23,20 @@
       [class.active]="activeSection() === 'sessions'" (click)="selectSection('sessions')">
       Seanslar
     </button>
+    <button type="button" data-testid="goals-tab"
+      [attr.aria-pressed]="activeSection() === 'goals'"
+      [class.active]="activeSection() === 'goals'" (click)="selectSection('goals')">
+      Hedefler
+    </button>
   </nav>
 
   @if (activeSection() === 'students') {
     <staff-coaching-teacher-students />
   } @else if (activeSection() === 'assignments') {
     <staff-coaching-teacher-assignments />
-  } @else {
+  } @else if (activeSection() === 'sessions') {
     <staff-coaching-teacher-sessions />
+  } @else {
+    <staff-coaching-teacher-goals />
   }
 </section>

@@ -1,0 +1,56 @@
+.teacher-goals { margin-top: 18px; }
+.goals-heading { display: flex; align-items: end; justify-content: space-between; gap: 16px; margin-bottom: 15px; }
+.goals-eyebrow { margin: 0 0 7px; color: #64876e; font-size: 9px; font-weight: 800; letter-spacing: .15em; }
+.goals-heading h3 { margin: 0; color: #17333a; font-family: Georgia, 'Times New Roman', serif; font-size: 24px; font-weight: 400; letter-spacing: -.03em; }
+.goals-heading p { margin: 6px 0 0; color: #72817d; font-size: 10px; }
+.goal-count { color: #72817d; font-size: 9px; }
+.goal-form { display: grid; gap: 12px; margin-bottom: 14px; padding: 16px; border: 1px solid #dfe8d6; border-radius: 13px; background: #f7f9f1; }
+.form-heading h4 { margin: 0; color: #2b4144; font-size: 13px; }
+.form-heading p { margin: 5px 0 0; color: #72817d; font-size: 9px; }
+.goal-form label { display: grid; min-width: 0; gap: 5px; color: #526962; font-size: 10px; font-weight: 700; }
+.goal-form input, .goal-form select, .goal-form textarea { width: 100%; min-height: 36px; box-sizing: border-box; padding: 8px 9px; border: 1px solid #d9dfd7; border-radius: 8px; outline: none; color: #243e43; background: #fffefa; font: inherit; font-size: 10px; }
+.goal-form textarea { resize: vertical; }
+.goal-form input:focus, .goal-form select:focus, .goal-form textarea:focus { border-color: #779372; box-shadow: 0 0 0 3px rgb(119 147 114 / 14%); }
+.goal-form input:disabled, .goal-form select:disabled { color: #82908a; background: #f1f3eb; }
+.goal-form-grid { display: grid; gap: 10px; }
+.three-columns { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.two-columns { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.student-search { display: flex; gap: 7px; }
+.student-search input { flex: 1; min-width: 0; }
+.student-search button, .student-pagination button, .load-goals-wrap button, .goal-card footer button { min-height: 32px; padding: 0 10px; border: 1px solid #d6e0ce; border-radius: 7px; color: #355b4b; background: #f0f5e9; font: inherit; font-size: 9px; font-weight: 750; cursor: pointer; }
+.student-search button:disabled, .student-pagination button:disabled, .load-goals-wrap button:disabled, .save-goal:disabled { opacity: .5; cursor: not-allowed; }
+.student-pagination { display: flex; align-items: center; justify-content: space-between; gap: 10px; color: #72817d; font-size: 9px; }
+.edit-only-hint { margin: 0; color: #83918b; font-size: 9px; }
+.form-actions { display: flex; justify-content: flex-end; gap: 8px; }
+.form-actions button { min-height: 36px; padding: 0 12px; border: 1px solid #d9dfd7; border-radius: 8px; font: inherit; font-size: 10px; font-weight: 750; cursor: pointer; }
+.cancel-edit { color: #526962; background: #fffefa; }
+.save-goal { border-color: #355b4b !important; color: #f6f8ed; background: #355b4b; }
+.goals-list { display: grid; gap: 10px; }
+.goal-card { padding: 15px; border: 1px solid #e3e5dc; border-radius: 12px; background: #fbfaf6; }
+.goal-card-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.goal-card h4 { margin: 0; color: #2b4144; font-size: 12px; }
+.goal-card-heading p { margin: 5px 0 0; color: #72817d; font-size: 9px; }
+.goal-state { flex: 0 0 auto; padding: 6px 9px; border-radius: 999px; color: #80634d; background: #f1e9de; font-size: 9px; font-weight: 750; }
+.goal-state[data-completed='true'] { color: #4d6856; background: #e0ead6; }
+.goal-description { margin: 9px 0 0; color: #526962; font-size: 10px; line-height: 1.5; white-space: pre-line; }
+.goal-facts { display: flex; flex-wrap: wrap; gap: 7px; margin: 10px 0; }
+.goal-facts > div { display: flex; gap: 5px; padding: 6px 8px; border-radius: 7px; background: #f1f3eb; font-size: 9px; }
+.goal-facts dt { color: #83918b; }
+.goal-facts dd { margin: 0; color: #354c4d; font-weight: 750; }
+.progress-label { display: flex; justify-content: space-between; margin: 10px 0 5px; color: #72817d; font-size: 9px; }
+.progress-label strong { color: #355b4b; }
+.progress-track { height: 7px; overflow: hidden; border-radius: 999px; background: #e4e8de; }
+.progress-value { height: 100%; border-radius: inherit; background: #6d916c; transition: width .2s ease; }
+.goal-card footer { display: flex; justify-content: flex-end; margin-top: 10px; }
+.goals-empty { padding: 22px; border: 1px dashed #d7ddd3; border-radius: 12px; color: #526962; background: #fbfaf6; text-align: center; }
+.goals-empty p { margin: 6px 0 0; color: #83918b; font-size: 10px; }
+.goals-error, .goals-success { margin-bottom: 12px; padding: 11px 13px; border: 1px solid #efc7b9; border-radius: 10px; color: #873f2d; background: #fff1eb; font-size: 10px; }
+.goals-success { border-color: #cfdfc8; color: #41634b; background: #eff6e9; }
+.student-lookup-warning { margin-bottom: 12px; padding: 10px 12px; border: 1px solid #ead7ae; border-radius: 9px; color: #6e5a31; background: #fbf5e6; font-size: 9px; }
+.goals-loading { display: grid; gap: 9px; }
+.goals-loading div { height: 86px; border-radius: 12px; background: linear-gradient(90deg, #e9ebe3, #f3f3ed, #e9ebe3); background-size: 200% 100%; animation: goals-shimmer 1.4s linear infinite; }
+.load-goals-wrap { display: flex; justify-content: center; margin-top: 12px; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+@keyframes goals-shimmer { to { background-position: -200% 0; } }
+@media (max-width: 760px) { .three-columns { grid-template-columns: 1fr; } }
+@media (max-width: 560px) { .goals-heading { align-items: flex-start; flex-direction: column; } .two-columns { grid-template-columns: 1fr; } }

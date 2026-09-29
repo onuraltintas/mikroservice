@@ -1,0 +1,137 @@
+<section class="teacher-goals" aria-labelledby="teacher-goals-title">
+  <header class="goals-heading">
+    <div>
+      <p class="goals-eyebrow">KOÇLUK · AKADEMİK TAKİP</p>
+      <h3 id="teacher-goals-title">Hedeflerim</h3>
+      <p>Öğrenciye özel akademik hedefleri ve ilerlemeyi yönetin.</p>
+    </div>
+    <span class="goal-count">{{ goals().length }} hedef gösteriliyor</span>
+  </header>
+
+  @if (errorMessage()) { <div class="goals-error" role="alert">{{ errorMessage() }}</div> }
+  @if (successMessage()) { <div class="goals-success" role="status">{{ successMessage() }}</div> }
+  @if (studentNameLookupFailed()) { <div class="student-lookup-warning" role="status">Bazı öğrenci adları alınamadı; hedef verileri yine de görüntüleniyor.</div> }
+
+  <form (ngSubmit)="saveGoal()" class="goal-form">
+    <div class="form-heading">
+      <h4>{{ editingGoalId() ? 'Hedefi düzenle' : 'Yeni hedef oluştur' }}</h4>
+      <p>{{ editingGoalId() ? 'Hedef oluşturulduktan sonra öğrenci ilişkisi değiştirilemez.' : 'Öğrenci, hedef ve ölçülebilir bir sonuç belirleyin.' }}</p>
+    </div>
+
+    <label class="student-select">Öğrenci
+      <select [ngModel]="form.studentId" (ngModelChange)="setStudent($event)" name="studentId"
+        required [disabled]="!!editingGoalId()">
+        <option value="">Öğrenci seçin</option>
+        @for (student of students(); track student.userId) {
+          <option [value]="student.userId">{{ student.fullName }}</option>
+        }
+      </select>
+    </label>
+
+    @if (!editingGoalId()) {
+      <div class="student-search" role="search">
+        <label class="visually-hidden" for="goal-student-search">Öğrenci ara</label>
+        <input #studentSearch id="goal-student-search" type="search" [value]="studentSearchTerm()" maxlength="200"
+          placeholder="Öğrenci adıyla ara">
+        <button type="button" (click)="searchStudents(studentSearch.value)" [disabled]="isLoadingStudents()">
+          {{ isLoadingStudents() ? 'Aranıyor…' : 'Ara' }}
+        </button>
+      </div>
+    }
+
+    <label>Hedef başlığı
+      <input [(ngModel)]="form.title" name="goalTitle" required maxlength="200" placeholder="Örn. Haftada 3 deneme çözmek">
+    </label>
+    <div class="goal-form-grid three-columns">
+      <label>Kategori
+        <select [(ngModel)]="form.category" name="goalCategory">
+          @for (category of goalCategories; track category.value) {
+            <option [ngValue]="category.value">{{ category.label }}</option>
+          }
+        </select>
+      </label>
+      <label>Hedef tarihi (opsiyonel)
+        <input [(ngModel)]="form.targetDate" name="goalTargetDate" type="datetime-local">
+      </label>
+      <label>Hedef puan (opsiyonel)
+        <input [(ngModel)]="form.targetScore" name="goalTargetScore" type="number" min="0" max="999.99" step="0.01">
+      </label>
+    </div>
+    <label>Açıklama (opsiyonel)
+      <textarea [(ngModel)]="form.description" name="goalDescription" maxlength="2000" rows="2"></textarea>
+    </label>
+
+    @if (editingGoalId()) {
+      <div class="goal-form-grid two-columns">
+        <label>Hedef sınav
+          <select [(ngModel)]="form.targetExamType" name="goalTargetExamType">
+            <option [ngValue]="undefined">Belirtilmedi</option>
+            @for (type of examTypes; track type.value) {
+              <option [ngValue]="type.value">{{ type.label }}</option>
+            }
+          </select>
+        </label>
+        <label>Hedef ders
+          <input [(ngModel)]="form.targetSubject" name="goalTargetSubject" maxlength="200">
+        </label>
+      </div>
+    } @else {
+      <p class="edit-only-hint">Hedef sınav ve ders, hedef oluşturulduktan sonra düzenleme sırasında eklenebilir.</p>
+    }
+
+    @if (!editingGoalId() && studentTotalPages() > 1) {
+      <div class="student-pagination">
+        <span>Öğrenci listesi · {{ studentPageNumber() }} / {{ studentTotalPages() }}</span>
+        <button type="button" (click)="loadMoreStudents()" [disabled]="isLoadingStudents() || studentPageNumber() >= studentTotalPages()">
+          Daha fazla öğrenci
+        </button>
+      </div>
+    }
+
+    <div class="form-actions">
+      @if (editingGoalId()) {
+        <button type="button" class="cancel-edit" (click)="cancelGoalEdit()">Vazgeç</button>
+      }
+      <button type="submit" class="save-goal" [disabled]="isSaving()">
+        {{ isSaving() ? 'Kaydediliyor…' : (editingGoalId() ? 'Hedefi güncelle' : 'Hedef oluştur') }}
+      </button>
+    </div>
+  </form>
+
+  @if (isLoading()) {
+    <div class="goals-loading" aria-label="Hedefler yükleniyor"><div></div><div></div></div>
+  } @else if (goals().length === 0) {
+    <div class="goals-empty"><strong>Henüz hedef yok</strong><p>İlk hedefi oluşturarak öğrenci gelişimini izlemeye başlayın.</p></div>
+  } @else {
+    <div class="goals-list">
+      @for (goal of goals(); track goal.id) {
+        <article class="goal-card">
+          <header class="goal-card-heading">
+            <div>
+              <h4>{{ goal.title }}</h4>
+              <p>{{ studentLabel(goal.studentId) }} · {{ goalCategoryLabel(goal.category) }}</p>
+            </div>
+            <span class="goal-state" [attr.data-completed]="goal.isCompleted">{{ goal.isCompleted ? 'Tamamlandı' : 'Devam ediyor' }}</span>
+          </header>
+          @if (goal.description) { <p class="goal-description">{{ goal.description }}</p> }
+          <dl class="goal-facts">
+            @if (goal.targetDate) { <div><dt>Hedef tarihi</dt><dd>{{ goal.targetDate | date:'d MMM y' }}</dd></div> }
+            @if (goal.targetScore !== undefined) { <div><dt>Hedef puan</dt><dd>{{ goal.targetScore }}</dd></div> }
+            @if (goal.targetExamType) { <div><dt>Hedef sınav</dt><dd>{{ goalExamTypeLabel(goal.targetExamType) }}</dd></div> }
+            @if (goal.targetSubject) { <div><dt>Hedef ders</dt><dd>{{ goal.targetSubject }}</dd></div> }
+          </dl>
+          <div class="progress-label"><span>İlerleme</span><strong>{{ goal.progress }}%</strong></div>
+          <div class="progress-track" role="progressbar" [attr.aria-valuenow]="goal.progress" aria-valuemin="0" aria-valuemax="100">
+            <div class="progress-value" [style.width.%]="progressWidth(goal.progress)"></div>
+          </div>
+          <footer><button type="button" [attr.data-testid]="'edit-goal-' + goal.id" (click)="editGoal(goal)">Düzenle</button></footer>
+        </article>
+      }
+    </div>
+    @if (goalPageNumber() < goalTotalPages()) {
+      <div class="load-goals-wrap">
+        <button type="button" (click)="loadGoals(true)" [disabled]="isLoading()">Daha fazla hedef yükle</button>
+      </div>
+    }
+  }
+</section>

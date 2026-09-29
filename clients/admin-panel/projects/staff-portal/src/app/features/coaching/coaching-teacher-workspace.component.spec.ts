@@ -5,6 +5,7 @@ import { StaffAuthService } from '../../auth/staff-auth.service';
 import { CoachingTeacherStudentsService } from './coaching-teacher-students.service';
 import { CoachingTeacherAssignmentsService } from './coaching-teacher-assignments.service';
 import { CoachingTeacherSessionsService } from './coaching-teacher-sessions.service';
+import { CoachingTeacherGoalsService } from './coaching-teacher-goals.service';
 import { CoachingTeacherWorkspaceComponent } from './coaching-teacher-workspace.component';
 
 describe('CoachingTeacherWorkspaceComponent', () => {
@@ -28,7 +29,12 @@ describe('CoachingTeacherWorkspaceComponent', () => {
           getStudentProgress: vi.fn(),
           getStudentHistory: vi.fn()
         } },
-        { provide: CoachingTeacherAssignmentsService, useValue: assignments }
+        { provide: CoachingTeacherAssignmentsService, useValue: assignments },
+        { provide: CoachingTeacherGoalsService, useValue: {
+          getTeacherGoals: vi.fn(() => of({ items: [], pageNumber: 1, pageSize: 25, totalCount: 0, totalPages: 1 })),
+          createGoal: vi.fn(() => of({ goalId: 'goal-1' })),
+          updateGoal: vi.fn(() => of({ goalId: 'goal-1', title: 'ok' }))
+        } }
       ]
     });
     const fixture = TestBed.createComponent(CoachingTeacherWorkspaceComponent);
@@ -47,5 +53,9 @@ describe('CoachingTeacherWorkspaceComponent', () => {
     fixture.detectChanges();
 
     expect(fixture.nativeElement.textContent).toContain('Seanslarım');
+
+    (fixture.nativeElement.querySelector('[data-testid="goals-tab"]') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Hedeflerim');
   });
 });
