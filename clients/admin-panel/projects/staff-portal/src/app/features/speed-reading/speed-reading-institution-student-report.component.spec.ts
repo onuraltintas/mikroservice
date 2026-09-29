@@ -37,6 +37,28 @@ describe('SpeedReadingInstitutionStudentReportComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Akıcı okuma');
   });
 
+  it('reloads analytics when a different student is selected in the same report view', () => {
+    const fixture = TestBed.createComponent(SpeedReadingInstitutionStudentReportComponent);
+    fixture.componentRef.setInput('institutionId', 'institution-1');
+    fixture.componentRef.setInput('student', {
+      userId: 'student-1', firstName: 'Ayşe', lastName: 'Yılmaz', role: 'Student',
+      isMembershipActive: true, isActive: true, createdAt: '2026-09-04T00:00:00Z', studentCount: 0
+    });
+    fixture.detectChanges();
+    flushStudentReport(http);
+    fixture.detectChanges();
+
+    fixture.componentRef.setInput('student', {
+      userId: 'student-2', firstName: 'Selim', lastName: 'Kaya', role: 'Student',
+      isMembershipActive: true, isActive: true, createdAt: '2026-09-04T00:00:00Z', studentCount: 0
+    });
+    fixture.detectChanges();
+    flushStudentReport(http, 'student-2');
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Selim Kaya');
+  });
+
   it('shows a retry action when a scoped student analytics request fails', () => {
     const fixture = TestBed.createComponent(SpeedReadingInstitutionStudentReportComponent);
     fixture.componentRef.setInput('institutionId', 'institution-1');
@@ -46,8 +68,8 @@ describe('SpeedReadingInstitutionStudentReportComponent', () => {
     });
     fixture.detectChanges();
     const requests = expectStudentReportRequests(http);
-    requests[0].flush({}, { status: 500, statusText: 'Server Error' });
     requests.slice(1).forEach(request => request.flush({}));
+    requests[0].flush({}, { status: 500, statusText: 'Server Error' });
     fixture.detectChanges();
 
     expect(fixture.nativeElement.textContent).toContain('Öğrenci raporu yüklenemedi');
@@ -58,15 +80,15 @@ describe('SpeedReadingInstitutionStudentReportComponent', () => {
   });
 });
 
-function expectStudentReportRequests(http: HttpTestingController) {
+function expectStudentReportRequests(http: HttpTestingController, studentId = 'student-1') {
   return ['summary', 'reading-speed', 'comprehension', 'activity'].map(path =>
     http.expectOne(request =>
-      request.url === `/api/speed-reading/analytics/institutions/institution-1/students/student-1/${path}`)
+      request.url === `/api/speed-reading/analytics/institutions/institution-1/students/${studentId}/${path}`)
   );
 }
 
-function flushStudentReport(http: HttpTestingController): void {
-  expectStudentReportRequests(http).forEach((request, index) => {
+function flushStudentReport(http: HttpTestingController, studentId = 'student-1'): void {
+  expectStudentReportRequests(http, studentId).forEach((request, index) => {
     request.flush([
       {
         readingSessions: 6, averageWpm: 238, averageComprehension: 82, totalReadingMinutes: 45,
@@ -80,7 +102,7 @@ function flushStudentReport(http: HttpTestingController): void {
         improvementRate: 12, trend: [], categories: [],
         benchmark: { studentValue: 238, institutionAverage: 220, platformAverage: 210, performanceLevel: 'Başarıyla sürdürüyor' },
         sessionsBelow200Wpm: 1, sessions200To400Wpm: 5, sessionsAbove400Wpm: 0,
-        recommendations: ['Daha uzun metinlerle çalışın.']
+        recommendations: ['Özet çıkarma çalışmaları önerilir.']
       },
       {
         currentComprehension: 84, averageComprehension: 82, maxComprehension: 90,
