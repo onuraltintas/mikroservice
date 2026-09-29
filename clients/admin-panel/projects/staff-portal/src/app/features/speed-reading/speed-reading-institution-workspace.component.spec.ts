@@ -127,6 +127,23 @@ describe('SpeedReadingInstitutionWorkspaceComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('64');
   });
 
+  it('shows an institution invitation form for the currently selected member role', () => {
+    const fixture = createLoadedWorkspace();
+    expect(fixture.nativeElement.querySelector('[data-testid="institution-member-invite-email"]')).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('[data-testid="send-institution-member-invite"]')).toBeTruthy();
+
+    const teacherTab = Array.from(fixture.nativeElement.querySelectorAll('.role-tabs button'))
+      .find((button) => (button as HTMLButtonElement).textContent?.includes('Öğretmenler')) as HTMLButtonElement;
+    teacherTab.click();
+    fixture.detectChanges();
+    http.expectOne((request) => request.url.endsWith('/members') && request.params.get('role') === 'Teacher')
+      .flush({ items: [], totalCount: 0, pageNumber: 1, pageSize: 25 });
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('[data-testid="institution-member-invite-email"]')).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('[data-testid="send-institution-member-invite"]')).toBeTruthy();
+  });
+
   it('switches from students to teachers and excludes student-only grade filters', () => {
     const fixture = TestBed.createComponent(SpeedReadingInstitutionWorkspaceComponent);
     fixture.detectChanges();

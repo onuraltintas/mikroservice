@@ -98,6 +98,21 @@ describe('CoachingInstitutionWorkspaceComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Zeynep Koç');
   });
 
+  it('shows matching invitation controls on the institution teacher and student rosters', async () => {
+    const fixture = await createFixture();
+    fixture.detectChanges();
+
+    (fixture.nativeElement.querySelector('[data-testid="institution-teachers-tab"]') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[data-testid="institution-teacher-invite-email"]')).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('[data-testid="send-institution-teacher-invite"]')).toBeTruthy();
+
+    (fixture.nativeElement.querySelector('[data-testid="institution-students-tab"]') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[data-testid="institution-student-invite-email"]')).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('[data-testid="send-institution-student-invite"]')).toBeTruthy();
+  });
+
   it('pages the institution teacher filter options for large teacher rosters', async () => {
     const service = institutionService();
     service.getTeacherRoster.mockReturnValue(of(teacherPage([], 101)));
@@ -144,6 +159,8 @@ async function createFixture(service = institutionService()) {
 function institutionService(options: { students?: CoachingInstitutionStudent[]; teachers?: CoachingInstitutionTeacher[] } = {}) {
   return {
     getReadScope: vi.fn(() => of({ isGlobal: false, institutionId: 'institution-1' as string | null })),
+    inviteTeacher: vi.fn(() => of({ invitationId: 'teacher-invitation-1' })),
+    inviteStudent: vi.fn(() => of({ invitationId: 'student-invitation-1' })),
     getOverview: vi.fn(() => of({
       totalAssignments: 12, activeAssignments: 4, completedAssignments: 8, cancelledAssignments: 0,
       totalAssignmentStudents: 30, submittedAssignmentStudents: 24, totalExams: 5, totalExamResults: 21,
