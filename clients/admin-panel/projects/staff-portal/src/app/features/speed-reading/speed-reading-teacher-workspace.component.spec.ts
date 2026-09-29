@@ -16,6 +16,33 @@ describe('SpeedReadingTeacherWorkspaceComponent', () => {
 
   afterEach(() => http.verify());
 
+  it('lets a Speed Reading teacher invite a student only through the Speed Reading API', () => {
+    const fixture = TestBed.createComponent(SpeedReadingTeacherWorkspaceComponent);
+    fixture.detectChanges();
+    http.expectOne('/api/speed-reading/teachers/me/students?pageNumber=1&pageSize=25').flush({
+      items: [], totalCount: 0, pageNumber: 1, pageSize: 25,
+    });
+    http.expectOne((request) => request.url === '/api/speed-reading/analytics/teacher/class-overview').flush({
+      dateFrom: '', dateTo: '', totalStudents: 0, activeStudents: 0,
+      activeStudentsDataAvailable: false, classAverageWpmDataAvailable: false,
+      classAverageComprehensionDataAvailable: false, classAverageWpm: 0,
+      classAverageComprehension: 0, totalActivitiesCompleted: 0,
+      studentsAboveAverage: 0, studentsAtAverage: 0, studentsBelowAverage: 0,
+      topPerformers: [], studentsNeedingSupport: [],
+    });
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[data-testid="teacher-student-invite-email"]')).toBeTruthy();
+
+    fixture.componentInstance.invitationEmail = 'student@example.test';
+    fixture.componentInstance.sendStudentInvitation();
+    const request = http.expectOne('/api/speed-reading/invitations/teachers/me');
+    expect(request.request.body).toEqual({ email: 'student@example.test' });
+    request.flush({ invitationId: 'reading-invitation-1', status: 'Pending' }, { status: 202, statusText: 'Accepted' });
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Hızlı Okuma öğrenci daveti gönderildi');
+  });
+
   it('shows the teacher roster and class overview from Speed Reading data', () => {
     const fixture = TestBed.createComponent(SpeedReadingTeacherWorkspaceComponent);
     fixture.detectChanges();

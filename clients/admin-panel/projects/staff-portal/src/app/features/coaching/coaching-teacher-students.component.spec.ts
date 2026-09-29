@@ -16,6 +16,23 @@ describe('CoachingTeacherStudentsComponent', () => {
 
   afterEach(() => http.verify());
 
+  it('lets a Coaching teacher invite a student and reports the product-specific result', () => {
+    const fixture = TestBed.createComponent(CoachingTeacherStudentsComponent);
+    fixture.detectChanges();
+    http.expectOne('/api/teachers/me/students?pageNumber=1&pageSize=25').flush({
+      items: [], pageNumber: 1, pageSize: 25, totalCount: 0, totalPages: 1
+    });
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[data-testid="teacher-student-invite-email"]')).toBeTruthy();
+
+    fixture.componentInstance.studentInviteEmail = 'student@example.test';
+    fixture.componentInstance.sendStudentInvitation();
+    http.expectOne('/api/teachers/invite-student').flush({ invitationId: 'coaching-invitation-1' });
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Koçluk öğrenci daveti gönderildi');
+  });
+
   it('shows the teacher-scoped roster with grade and institution context', () => {
     const fixture = TestBed.createComponent(CoachingTeacherStudentsComponent);
     fixture.detectChanges();

@@ -18,6 +18,16 @@ describe('SpeedReadingTeacherService', () => {
 
   afterEach(() => http.verify());
 
+  it('sends a student invitation through the Speed Reading teacher API', async () => {
+    const response = firstValueFrom(service.inviteStudent('  student@example.test  '));
+    const request = http.expectOne('/api/speed-reading/invitations/teachers/me');
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual({ email: 'student@example.test' });
+    request.flush({ invitationId: 'reading-invitation-1', status: 'Pending' }, { status: 202, statusText: 'Accepted' });
+
+    await expect(response).resolves.toMatchObject({ invitationId: 'reading-invitation-1', status: 'Pending' });
+  });
+
   it('loads a paged teacher-scoped roster with normalized filters', async () => {
     const response = firstValueFrom(
       service.getMyStudents(2, 10, {

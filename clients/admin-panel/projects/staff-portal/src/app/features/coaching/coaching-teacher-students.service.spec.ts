@@ -18,6 +18,16 @@ describe('CoachingTeacherStudentsService', () => {
 
   afterEach(() => http.verify());
 
+  it('sends a Coaching student invitation through the authenticated teacher endpoint', async () => {
+    const response = firstValueFrom(service.inviteStudent('  student@example.test  '));
+    const request = http.expectOne('/api/teachers/invite-student');
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual({ studentEmail: 'student@example.test', message: null });
+    request.flush({ invitationId: 'coaching-invitation-1' });
+
+    await expect(response).resolves.toEqual({ invitationId: 'coaching-invitation-1' });
+  });
+
   it('requests a teacher-scoped page and trims the optional search term', async () => {
     const response = firstValueFrom(service.getMyStudents(2, 10, '  Ayşe  '));
     const request = http.expectOne('/api/teachers/me/students?pageNumber=2&pageSize=10&searchTerm=Ay%C5%9Fe');
