@@ -149,4 +149,34 @@ describe('SpeedReadingInstitutionService', () => {
       activity: { dataAvailable: true },
     });
   });
+
+  it('loads assignment, content and progress reports through institution-scoped routes', async () => {
+    const from = new Date('2026-09-01T00:00:00.000Z');
+    const to = new Date('2026-09-30T23:59:59.999Z');
+    const requests = [
+      firstValueFrom(service.getInstitutionAssignments('institution-1', from, to)),
+      firstValueFrom(service.getInstitutionContentAnalysis('institution-1', from, to)),
+      firstValueFrom(service.getInstitutionTimeProgress('institution-1', from, to)),
+    ];
+    const paths = ['assignments', 'content-analysis', 'time-progress'];
+    const httpRequests = paths.map((path) =>
+      http.expectOne(
+        (request) =>
+          request.url ===
+            `/api/speed-reading/analytics/institutions/institution-1/${path}` &&
+          request.params.get('dateFrom') === from.toISOString() &&
+          request.params.get('dateTo') === to.toISOString(),
+      ),
+    );
+    expect(httpRequests.every((request) => request.request.method === 'GET')).toBe(true);
+    httpRequests[0].flush({ assignmentCount: 2, dataAvailable: true });
+    httpRequests[1].flush({ exerciseAnalysis: [], readingAnalysis: [] });
+    httpRequests[2].flush({ weeklyProgressChart: [], improvingStudents: [], decliningStudents: [] });
+
+    await expect(Promise.all(requests)).resolves.toEqual([
+      expect.objectContaining({ assignmentCount: 2, dataAvailable: true }),
+      expect.objectContaining({ exerciseAnalysis: [], readingAnalysis: [] }),
+      expect.objectContaining({ weeklyProgressChart: [], improvingStudents: [], decliningStudents: [] }),
+    ]);
+  });
 });

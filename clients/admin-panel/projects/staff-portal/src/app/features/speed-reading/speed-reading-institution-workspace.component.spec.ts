@@ -565,6 +565,81 @@ describe('SpeedReadingInstitutionWorkspaceComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Öğrenci ayrıntılı raporu');
   });
 
+  it('loads assignment analytics for the selected date range in the institution report area', () => {
+    const fixture = TestBed.createComponent(SpeedReadingInstitutionWorkspaceComponent);
+    fixture.detectChanges();
+    http.expectOne('/api/institution/speed-reading/me').flush({
+      institutionId: 'institution-1',
+      institutionName: 'Örnek Kurum',
+    });
+    http
+      .expectOne(
+        (request) =>
+          request.url === '/api/speed-reading/institutions/institution-1/members' &&
+          request.params.get('role') === 'Student',
+      )
+      .flush({ items: [], totalCount: 0, pageNumber: 1, pageSize: 25 });
+    http
+      .expectOne(
+        (request) =>
+          request.url === '/api/speed-reading/analytics/institutions/institution-1/class-overview',
+      )
+      .flush({
+        dateFrom: '',
+        dateTo: '',
+        totalStudents: 0,
+        activeStudents: 0,
+        activeStudentsDataAvailable: false,
+        classAverageWpmDataAvailable: false,
+        classAverageComprehensionDataAvailable: false,
+        classAverageWpm: 0,
+        classAverageComprehension: 0,
+        totalActivitiesCompleted: 0,
+        studentsAboveAverage: 0,
+        studentsAtAverage: 0,
+        studentsBelowAverage: 0,
+        topPerformers: [],
+        studentsNeedingSupport: [],
+      });
+
+    fixture.componentInstance.reportDateFrom = '2026-09-01';
+    fixture.componentInstance.reportDateTo = '2026-09-30';
+    fixture.detectChanges();
+    const assignmentsTab = fixture.nativeElement.querySelector(
+      '[data-testid="institution-report-assignments"]',
+    ) as HTMLButtonElement | null;
+    expect(assignmentsTab).toBeTruthy();
+    if (!assignmentsTab) return;
+    assignmentsTab.click();
+
+    const request = http.expectOne(
+      (candidate) =>
+        candidate.url === '/api/speed-reading/analytics/institutions/institution-1/assignments' &&
+        candidate.params.get('dateFrom') === '2026-09-01T00:00:00.000Z' &&
+        candidate.params.get('dateTo') === '2026-09-30T23:59:59.999Z',
+    );
+    expect(request.request.method).toBe('GET');
+    request.flush({
+      dataAvailable: true,
+      assignmentCount: 2,
+      completionStats: {
+        totalStudents: 4,
+        completed: 2,
+        inProgress: 1,
+        notStarted: 1,
+        completionRate: 50,
+      },
+      performanceStats: null,
+      studentBreakdown: [],
+      scoreDistribution: [],
+    });
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Ödev raporu');
+    expect(fixture.nativeElement.textContent).toContain('Tamamlanma oranı');
+    expect(fixture.nativeElement.textContent).toContain('50%');
+  });
+
   it('does not call the Speed Reading API when Identity cannot resolve an institution', () => {
     const fixture = TestBed.createComponent(SpeedReadingInstitutionWorkspaceComponent);
     fixture.detectChanges();
