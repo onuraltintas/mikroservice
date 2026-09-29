@@ -29,6 +29,23 @@ describe('CoachingInstitutionService', () => {
     request.flush({ totalAssignments: 4, totalExams: 2, recentAssignments: [] });
   });
 
+  it('sends Coaching institution invitations through the authenticated institution endpoints', () => {
+    service.inviteTeacher('teacher@example.test').subscribe();
+    const teacherRequest = http.expectOne('/api/institution/invite-teacher');
+    expect(teacherRequest.request.method).toBe('POST');
+    expect(teacherRequest.request.body).toEqual({ teacherEmail: 'teacher@example.test' });
+    teacherRequest.flush({ invitationId: 'teacher-invitation-1' });
+
+    service.inviteStudent('student@example.test', 'teacher-1').subscribe();
+    const studentRequest = http.expectOne('/api/institution/invite-student');
+    expect(studentRequest.request.method).toBe('POST');
+    expect(studentRequest.request.body).toEqual({
+      studentEmail: 'student@example.test',
+      teacherUserId: 'teacher-1'
+    });
+    studentRequest.flush({ invitationId: 'student-invitation-1' });
+  });
+
   it('loads filtered, paged student roster without treating the client tenant id as authority', () => {
     service.getStudentRoster('institution-1', 2, 'Ada', 'teacher-1', 8).subscribe();
     const request = http.expectOne('/api/coaching-admin/institutions/institution-1/students?pageNumber=2&pageSize=25&search=Ada&teacherUserId=teacher-1&gradeLevel=8');

@@ -54,6 +54,29 @@ describe('SpeedReadingInstitutionService', () => {
     await expect(response).resolves.toMatchObject({ totalCount: 0, pageNumber: 2 });
   });
 
+  it('sends product-local institution invitations with the selected Speed Reading role', async () => {
+    const teacherResponse = firstValueFrom(
+      service.inviteMember('institution-1', 'teacher@example.test', 'Teacher'),
+    );
+    const teacherRequest = http.expectOne('/api/speed-reading/invitations/institutions/institution-1');
+    expect(teacherRequest.request.method).toBe('POST');
+    expect(teacherRequest.request.body).toEqual({ email: 'teacher@example.test', role: 2 });
+    teacherRequest.flush({ invitationId: 'teacher-invitation-1' }, { status: 202, statusText: 'Accepted' });
+
+    const studentResponse = firstValueFrom(
+      service.inviteMember('institution-1', 'student@example.test', 'Student'),
+    );
+    const studentRequest = http.expectOne('/api/speed-reading/invitations/institutions/institution-1');
+    expect(studentRequest.request.method).toBe('POST');
+    expect(studentRequest.request.body).toEqual({ email: 'student@example.test', role: 1 });
+    studentRequest.flush({ invitationId: 'student-invitation-1' }, { status: 202, statusText: 'Accepted' });
+
+    await expect(Promise.all([teacherResponse, studentResponse])).resolves.toEqual([
+      { invitationId: 'teacher-invitation-1' },
+      { invitationId: 'student-invitation-1' },
+    ]);
+  });
+
   it('loads institution analytics from the separate Speed Reading API', async () => {
     const from = new Date('2026-09-01T00:00:00.000Z');
     const to = new Date('2026-09-30T00:00:00.000Z');
