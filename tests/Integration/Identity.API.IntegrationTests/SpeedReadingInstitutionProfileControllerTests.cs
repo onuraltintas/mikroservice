@@ -72,14 +72,17 @@ public sealed class SpeedReadingInstitutionProfileControllerTests
     public void ControllerRequiresInstitutionRoleSpeedReadingPermissionAndMfaCategory()
     {
         var controller = typeof(SpeedReadingInstitutionProfileController);
+        controller.GetCustomAttribute<RouteAttribute>()?.Template
+            .Should().Be("api/institution/speed-reading");
         controller.GetCustomAttributes<AuthorizeAttribute>(inherit: true)
             .Should().Contain(attribute => attribute.Roles == "InstitutionAdmin,InstitutionOwner");
         controller.GetCustomAttributes<HasPermissionAttribute>(inherit: true)
             .Should().Contain(attribute => attribute.Policy == PlatformPermissions.Institutions.Manage);
         controller.GetCustomAttributes<MfaCategoryAttribute>(inherit: true)
             .Should().ContainSingle(attribute => attribute.Category == MfaOperationCategories.SpeedReading);
-        controller.GetMethod(nameof(SpeedReadingInstitutionProfileController.GetMe))
-            .Should().NotBeNull();
+        var getMe = controller.GetMethod(nameof(SpeedReadingInstitutionProfileController.GetMe));
+        getMe.Should().NotBeNull();
+        getMe!.GetCustomAttribute<HttpGetAttribute>()?.Template.Should().Be("me");
     }
 
     private static InstitutionDto CreateInstitution(Guid id) => new(
@@ -96,7 +99,7 @@ public sealed class SpeedReadingInstitutionProfileControllerTests
         public ClaimsPrincipal? User => new(new ClaimsIdentity([], "test"));
     }
 
-    public sealed class InstitutionRepositoryProxy : DispatchProxy
+    public class InstitutionRepositoryProxy : DispatchProxy
     {
         public Guid? ManagedInstitutionId { get; set; }
         public InstitutionDto? Institution { get; set; }
