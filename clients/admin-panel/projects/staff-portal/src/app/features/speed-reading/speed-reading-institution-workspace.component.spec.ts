@@ -129,8 +129,18 @@ describe('SpeedReadingInstitutionWorkspaceComponent', () => {
 
   it('shows an institution invitation form for the currently selected member role', () => {
     const fixture = createLoadedWorkspace();
-    expect(fixture.nativeElement.querySelector('[data-testid="institution-member-invite-email"]')).toBeTruthy();
-    expect(fixture.nativeElement.querySelector('[data-testid="send-institution-member-invite"]')).toBeTruthy();
+    const studentEmail = fixture.nativeElement.querySelector('[data-testid="institution-member-invite-email"]') as HTMLInputElement;
+    expect(studentEmail).toBeTruthy();
+    studentEmail.value = 'student@example.test';
+    studentEmail.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+    (fixture.nativeElement.querySelector('[data-testid="send-institution-member-invite"]') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    const studentRequest = http.expectOne('/api/speed-reading/invitations/institutions/institution-1');
+    expect(studentRequest.request.body).toEqual({ email: 'student@example.test', role: 1 });
+    studentRequest.flush({ invitationId: 'student-invitation-1', status: 'Pending' }, { status: 202, statusText: 'Accepted' });
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Öğrenci daveti gönderildi');
 
     const teacherTab = Array.from(fixture.nativeElement.querySelectorAll('.role-tabs button'))
       .find((button) => (button as HTMLButtonElement).textContent?.includes('Öğretmenler')) as HTMLButtonElement;
@@ -140,8 +150,18 @@ describe('SpeedReadingInstitutionWorkspaceComponent', () => {
       .flush({ items: [], totalCount: 0, pageNumber: 1, pageSize: 25 });
     fixture.detectChanges();
 
-    expect(fixture.nativeElement.querySelector('[data-testid="institution-member-invite-email"]')).toBeTruthy();
-    expect(fixture.nativeElement.querySelector('[data-testid="send-institution-member-invite"]')).toBeTruthy();
+    const teacherEmail = fixture.nativeElement.querySelector('[data-testid="institution-member-invite-email"]') as HTMLInputElement;
+    expect(teacherEmail).toBeTruthy();
+    teacherEmail.value = 'teacher@example.test';
+    teacherEmail.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+    (fixture.nativeElement.querySelector('[data-testid="send-institution-member-invite"]') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    const teacherRequest = http.expectOne('/api/speed-reading/invitations/institutions/institution-1');
+    expect(teacherRequest.request.body).toEqual({ email: 'teacher@example.test', role: 2 });
+    teacherRequest.flush({ invitationId: 'teacher-invitation-1', status: 'Pending' }, { status: 202, statusText: 'Accepted' });
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Öğretmen daveti gönderildi');
   });
 
   it('switches from students to teachers and excludes student-only grade filters', () => {

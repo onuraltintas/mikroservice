@@ -99,18 +99,37 @@ describe('CoachingInstitutionWorkspaceComponent', () => {
   });
 
   it('shows matching invitation controls on the institution teacher and student rosters', async () => {
-    const fixture = await createFixture();
+    const service = institutionService();
+    const fixture = await createFixture(service);
     fixture.detectChanges();
 
     (fixture.nativeElement.querySelector('[data-testid="institution-teachers-tab"]') as HTMLButtonElement).click();
     fixture.detectChanges();
-    expect(fixture.nativeElement.querySelector('[data-testid="institution-teacher-invite-email"]')).toBeTruthy();
-    expect(fixture.nativeElement.querySelector('[data-testid="send-institution-teacher-invite"]')).toBeTruthy();
+    const teacherEmail = fixture.nativeElement.querySelector('[data-testid="institution-teacher-invite-email"]') as HTMLInputElement;
+    expect(teacherEmail).toBeTruthy();
+    teacherEmail.value = '  teacher@example.test  ';
+    teacherEmail.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+    (fixture.nativeElement.querySelector('[data-testid="send-institution-teacher-invite"]') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    expect(service.inviteTeacher).toHaveBeenCalledWith('teacher@example.test');
+    expect(fixture.nativeElement.textContent).toContain('Öğretmen daveti gönderildi');
 
     (fixture.nativeElement.querySelector('[data-testid="institution-students-tab"]') as HTMLButtonElement).click();
     fixture.detectChanges();
-    expect(fixture.nativeElement.querySelector('[data-testid="institution-student-invite-email"]')).toBeTruthy();
-    expect(fixture.nativeElement.querySelector('[data-testid="send-institution-student-invite"]')).toBeTruthy();
+    const studentEmail = fixture.nativeElement.querySelector('[data-testid="institution-student-invite-email"]') as HTMLInputElement;
+    expect(studentEmail).toBeTruthy();
+    studentEmail.value = 'student@example.test';
+    studentEmail.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+    const teacherSelect = fixture.nativeElement.querySelector('[data-testid="institution-student-invite-teacher"]') as HTMLSelectElement;
+    teacherSelect.value = 'teacher-1';
+    teacherSelect.dispatchEvent(new Event('change'));
+    fixture.detectChanges();
+    (fixture.nativeElement.querySelector('[data-testid="send-institution-student-invite"]') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    expect(service.inviteStudent).toHaveBeenCalledWith('student@example.test', 'teacher-1');
+    expect(fixture.nativeElement.textContent).toContain('Öğrenci daveti gönderildi');
   });
 
   it('pages the institution teacher filter options for large teacher rosters', async () => {
