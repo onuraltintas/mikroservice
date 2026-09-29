@@ -126,6 +126,10 @@ export interface CoachingInstitutionTeacherAnalytics {
   highResults: number;
 }
 
+export interface CoachingInvitationResponse {
+  invitationId: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class CoachingInstitutionService {
   private readonly http = inject(HttpClient);
@@ -133,6 +137,19 @@ export class CoachingInstitutionService {
 
   getReadScope(): Observable<CoachingInstitutionReadScope> {
     return this.http.get<CoachingInstitutionReadScope>(`${this.url}/scope`);
+  }
+
+  inviteTeacher(email: string): Observable<CoachingInvitationResponse> {
+    return this.http.post<CoachingInvitationResponse>(`${environment.apiUrl}/institution/invite-teacher`, {
+      teacherEmail: email.trim()
+    });
+  }
+
+  inviteStudent(email: string, teacherUserId?: string): Observable<CoachingInvitationResponse> {
+    return this.http.post<CoachingInvitationResponse>(`${environment.apiUrl}/institution/invite-student`, {
+      studentEmail: email.trim(),
+      ...(teacherUserId ? { teacherUserId } : {})
+    });
   }
 
   getOverview(recentLimit = 10): Observable<CoachingInstitutionOverview> {

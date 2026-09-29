@@ -38,6 +38,12 @@ export interface SpeedReadingInstitutionMemberPage {
   pageSize: number;
 }
 
+export interface SpeedReadingInstitutionInvitationResponse {
+  invitationId: string;
+  status?: string;
+  message?: string;
+}
+
 export interface SpeedReadingInstitutionMemberFilters {
   searchTerm?: string;
   gradeLevel?: number;
@@ -230,6 +236,22 @@ export class SpeedReadingInstitutionService {
   getMyInstitution(): Observable<SpeedReadingInstitution> {
     return this.http.get<SpeedReadingInstitution>(
       `${environment.apiUrl}/institution/speed-reading/me`,
+    );
+  }
+
+  inviteMember(
+    institutionId: string,
+    email: string,
+    role: SpeedReadingInstitutionMemberRole,
+    teacherUserId?: string,
+  ): Observable<SpeedReadingInstitutionInvitationResponse> {
+    return this.http.post<SpeedReadingInstitutionInvitationResponse>(
+      `${this.speedReadingUrl}/invitations/institutions/${encodeURIComponent(institutionId)}`,
+      {
+        email: email.trim(),
+        role: role === 'Teacher' ? 2 : 1,
+        ...(teacherUserId ? { teacherUserId } : {}),
+      },
     );
   }
 
