@@ -95,6 +95,85 @@
           "builder": "@angular/build:unit-test"
         }
       }
+    },
+    "staff-portal": {
+      "projectType": "application",
+      "root": "projects/staff-portal",
+      "sourceRoot": "projects/staff-portal/src",
+      "prefix": "staff",
+      "architect": {
+        "build": {
+          "builder": "@angular/build:application",
+          "options": {
+            "browser": "projects/staff-portal/src/main.ts",
+            "tsConfig": "projects/staff-portal/tsconfig.app.json",
+            "inlineStyleLanguage": "scss",
+            "assets": [
+              {
+                "glob": "**/*",
+                "input": "projects/staff-portal/public"
+              }
+            ],
+            "styles": ["projects/staff-portal/src/styles.scss"]
+          },
+          "configurations": {
+            "production": {
+              "fileReplacements": [
+                {
+                  "replace": "projects/staff-portal/src/environments/environment.ts",
+                  "with": "projects/staff-portal/src/environments/environment.production.ts"
+                }
+              ],
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "500kB",
+                  "maximumError": "1MB"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "8kB",
+                  "maximumError": "12kB"
+                }
+              ],
+              "outputHashing": "all"
+            },
+            "development": {
+              "fileReplacements": [
+                {
+                  "replace": "projects/staff-portal/src/environments/environment.ts",
+                  "with": "projects/staff-portal/src/environments/environment.development.ts"
+                }
+              ],
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "serve": {
+          "builder": "@angular/build:dev-server",
+          "options": {
+            "proxyConfig": "proxy.conf.json"
+          },
+          "configurations": {
+            "production": {
+              "buildTarget": "staff-portal:build:production"
+            },
+            "development": {
+              "buildTarget": "staff-portal:build:development"
+            }
+          },
+          "defaultConfiguration": "development"
+        },
+        "test": {
+          "builder": "@angular/build:unit-test",
+          "options": {
+            "tsConfig": "projects/staff-portal/tsconfig.spec.json"
+          }
+        }
+      }
     }
   }
 }
