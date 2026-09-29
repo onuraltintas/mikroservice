@@ -6,6 +6,8 @@ import { StaffProduct } from './auth/staff-auth.models';
 import { CoachingTeacherWorkspaceComponent } from './features/coaching/coaching-teacher-workspace.component';
 import { CoachingInstitutionWorkspaceComponent } from './features/coaching/coaching-institution-workspace.component';
 
+type StaffWorkspaceRole = 'teacher' | 'institution';
+
 @Component({
   selector: 'staff-root',
   standalone: true,
@@ -31,6 +33,7 @@ export class AppComponent {
   isSubmitting = false;
   errorMessage = '';
   switchError = '';
+  private readonly selectedWorkspaceRoles: Partial<Record<StaffProduct, StaffWorkspaceRole>> = {};
 
   get activeAccess() {
     return this.auth.products().find(access => access.product === this.auth.activeProduct()) ?? null;
@@ -39,6 +42,37 @@ export class AppComponent {
   get isInstitutionManager(): boolean {
     return this.activeAccess?.roles.some(role =>
       role === 'InstitutionAdmin' || role === 'InstitutionOwner') ?? false;
+  }
+
+  get hasTeacherRole(): boolean {
+    return this.activeAccess?.roles.includes('Teacher') ?? false;
+  }
+
+  get canSwitchWorkspaceRole(): boolean {
+    return this.hasTeacherRole && this.isInstitutionManager;
+  }
+
+  get activeWorkspaceRole(): StaffWorkspaceRole | null {
+    const selectedRole = this.selectedWorkspaceRoles[this.auth.activeProduct() ?? 'coaching'];
+    if (selectedRole === 'teacher' && this.hasTeacherRole) return selectedRole;
+    if (selectedRole === 'institution' && this.isInstitutionManager) return selectedRole;
+    if (this.isInstitutionManager) return 'institution';
+    return this.hasTeacherRole ? 'teacher' : null;
+  }
+
+  get isTeacherWorkspaceSelected(): boolean {
+    return this.auth.activeProduct() === 'coaching' && this.activeWorkspaceRole === 'teacher';
+  }
+
+  get isInstitutionWorkspaceSelected(): boolean {
+    return this.auth.activeProduct() === 'coaching' && this.activeWorkspaceRole === 'institution';
+  }
+
+  selectWorkspaceRole(role: StaffWorkspaceRole): void {
+    if (role === 'teacher' && !this.hasTeacherRole) return;
+    if (role === 'institution' && !this.isInstitutionManager) return;
+    const product = this.auth.activeProduct();
+    if (product) this.selectedWorkspaceRoles[product] = role;
   }
 
   get currentProductLabel(): string {

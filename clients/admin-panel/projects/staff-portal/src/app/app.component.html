@@ -43,13 +43,21 @@
 
       <div class="content-wrap">
         <section class="welcome-block">
-          <p class="eyebrow">{{ isInstitutionManager ? 'KURUM YÖNETİMİ' : 'ÖĞRETMEN ÇALIŞMA ALANI' }}</p>
-          <h1>{{ isInstitutionManager ? 'Kurumunuz için tek çalışma alanı.' : 'Öğrencileriniz için tek çalışma alanı.' }}</h1>
+          <p class="eyebrow">{{ activeWorkspaceRole === 'institution' ? 'KURUM YÖNETİMİ' : 'ÖĞRETMEN ÇALIŞMA ALANI' }}</p>
+          <h1>{{ activeWorkspaceRole === 'institution' ? 'Kurumunuz için tek çalışma alanı.' : 'Öğrencileriniz için tek çalışma alanı.' }}</h1>
           <p class="welcome-copy">
             {{ currentProductLabel }} erişiminiz, bu üründeki rolünüze göre sınırlandırılmıştır.
             Diğer ürünler ayrı yetkiyle açılır.
           </p>
         </section>
+
+        @if (canSwitchWorkspaceRole) {
+          <div class="workspace-role-switch" role="group" [attr.aria-label]="currentProductLabel + ' çalışma alanı rolü'">
+            <span>Görünüm</span>
+            <button type="button" [class.selected]="activeWorkspaceRole === 'teacher'" [attr.aria-pressed]="activeWorkspaceRole === 'teacher'" (click)="selectWorkspaceRole('teacher')">Öğretmen</button>
+            <button type="button" [class.selected]="activeWorkspaceRole === 'institution'" [attr.aria-pressed]="activeWorkspaceRole === 'institution'" (click)="selectWorkspaceRole('institution')">Kurum yöneticisi</button>
+          </div>
+        }
 
         @if (switchError) {
           <div class="notice warning" role="alert">{{ switchError }}</div>
@@ -86,11 +94,11 @@
           </div>
         </section>
 
-        @if (auth.activeProduct() === 'coaching' && activeAccess?.roles?.includes('Teacher')) {
+        @if (isTeacherWorkspaceSelected) {
           <staff-coaching-teacher-workspace />
         }
 
-        @if (auth.activeProduct() === 'coaching' && isInstitutionManager) {
+        @if (isInstitutionWorkspaceSelected) {
           @defer (on immediate) {
             <staff-coaching-institution-workspace />
           } @placeholder {

@@ -184,6 +184,10 @@
 .welcome-block .eyebrow, .session-heading .eyebrow, .migration-note .eyebrow { color: #678b72; }
 .welcome-block h1 { margin: 0; color: #152f37; font-family: Georgia, 'Times New Roman', serif; font-size: clamp(36px, 4vw, 54px); font-weight: 400; letter-spacing: -0.05em; line-height: 1.07; }
 .welcome-copy { max-width: 580px; margin: 16px 0 0; color: #6d7e7f; font-size: 13px; line-height: 1.7; }
+.workspace-role-switch { display: flex; width: fit-content; align-items: center; gap: 5px; margin-top: 22px; padding: 5px; border: 1px solid #e1e4da; border-radius: 12px; background: #eeefe8; }
+.workspace-role-switch span { padding: 0 8px; color: #71817b; font-size: 10px; font-weight: 700; }
+.workspace-role-switch button { min-height: 34px; padding: 0 12px; border: 1px solid transparent; border-radius: 8px; color: #60716d; background: transparent; font: inherit; font-size: 10px; font-weight: 700; cursor: pointer; }
+.workspace-role-switch button.selected { border-color: #d5dec9; color: #355841; background: #fffefa; box-shadow: 0 1px 2px rgb(24 53 61 / 6%); }
 .notice { margin-top: 24px; padding: 12px 14px; border-radius: 10px; font-size: 12px; line-height: 1.5; }
 .notice.warning { border: 1px solid #e8c9a9; color: #77512c; background: #fff5e9; }
 .session-panel { margin-top: 39px; padding: clamp(21px, 3vw, 32px); border: 1px solid #e3e4dc; border-radius: 17px; background: #fbfaf6; }
