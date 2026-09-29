@@ -1,0 +1,105 @@
+<section class="teacher-sessions" aria-labelledby="teacher-sessions-title">
+  <header class="sessions-heading">
+    <div>
+      <p class="sessions-eyebrow">KOÇLUK · TAKVİM</p>
+      <h3 id="teacher-sessions-title">Seanslarım</h3>
+      <p>Planlanan ve tamamlanan görüşmeleri takip edin, katılımı kaydedin.</p>
+    </div>
+    <button type="button" data-testid="calendar-export" (click)="exportCalendar()">Takvime aktar (.ics)</button>
+  </header>
+
+  @if (errorMessage()) { <div class="sessions-error" role="alert">{{ errorMessage() }}</div> }
+  @if (isLoading()) {
+    <div class="sessions-loading" aria-label="Seanslar yükleniyor"><div></div><div></div></div>
+  } @else if (sessions().length === 0) {
+    <div class="sessions-empty">
+      <strong>Henüz seans bulunmuyor</strong>
+      <p>Planlanan koçluk görüşmeleri burada görüntülenecek.</p>
+    </div>
+  } @else {
+    <div class="session-stats" aria-label="Seans özeti">
+      <div><span>Toplam seans</span><strong>{{ totalCount() }}</strong></div>
+      <div><span>Yaklaşan (yüklenen kayıtlar)</span><strong>{{ upcomingCount() }}</strong></div>
+      <div><span>Katılımcı görünümü</span><strong>Öğrenci grupları</strong></div>
+    </div>
+
+    <div class="session-list">
+      @for (session of sessions(); track session.id) {
+        <article class="session-card">
+          <header class="session-card-heading">
+            <div>
+              <span class="session-type">{{ sessionTypeLabel(session.type) }}</span>
+              <h4>{{ session.subject || 'Koçluk seansı' }}</h4>
+            </div>
+            <span class="session-status" [attr.data-status]="session.status">{{ sessionStatusLabel(session.status) }}</span>
+          </header>
+
+          <dl class="session-facts">
+            <div><dt>Başlangıç</dt><dd>{{ session.startTime | date:'d MMMM y, HH:mm' }}</dd></div>
+            <div><dt>Süre</dt><dd>{{ session.durationMinutes }} dk</dd></div>
+            <div><dt>Katılımcı</dt><dd>{{ session.studentIds.length }} öğrenci</dd></div>
+          </dl>
+
+          @if (session.teacherNotes) {
+            <div class="teacher-notes" [attr.data-visibility]="session.teacherNotesVisibility || 'CoachPrivate'">
+              <span>Koç notu · {{ teacherNotesVisibilityLabel(session.teacherNotesVisibility) }}</span>
+              <p>{{ session.teacherNotes }}</p>
+            </div>
+          }
+
+          @if (session.meetingLink) {
+            <a class="meeting-link" [href]="session.meetingLink" target="_blank" rel="noopener noreferrer">Online görüşmeye katıl →</a>
+          }
+
+          @if (session.studentReflections?.length) {
+            <div class="student-reflections">
+              <h5>Öğrenci yansımaları ve yoklama</h5>
+              @for (reflection of session.studentReflections; track reflection.studentId) {
+                <div class="reflection-row">
+                  <div class="reflection-content">
+                    <strong>{{ studentLabel(reflection.studentId) }}</strong>
+                    <span>{{ attendanceStatusLabel(reflection.attendanceStatus) }}</span>
+                    @if (reflection.note) {
+                      <p>{{ reflection.note }}</p>
+                    } @else {
+                      <p class="no-reflection">Henüz yansıma paylaşılmadı.</p>
+                    }
+                  </div>
+                  <div class="attendance-actions">
+                    <button type="button" (click)="saveAttendance(session, reflection, true)"
+                      [disabled]="savingAttendanceKey() === attendanceKey(session.id, reflection.studentId)">Katıldı</button>
+                    <button type="button" class="absent" (click)="saveAttendance(session, reflection, false)"
+                      [disabled]="savingAttendanceKey() === attendanceKey(session.id, reflection.studentId)">Katılmadı</button>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+
+          @if (canCancel(session)) {
+            @if (pendingCancellationId() === session.id) {
+              <div class="cancel-confirmation" role="group" aria-label="Seans iptal onayı">
+                <span>Bu seansı iptal etmek istediğinizden emin misiniz?</span>
+                <button type="button" (click)="confirmCancellation(session)"
+                  [disabled]="savingCancellationId() === session.id">{{ savingCancellationId() === session.id ? 'İptal ediliyor…' : 'Evet, iptal et' }}</button>
+                <button type="button" class="dismiss" (click)="dismissCancellation()"
+                  [disabled]="savingCancellationId() === session.id">Vazgeç</button>
+              </div>
+            } @else {
+              <button type="button" class="cancel-session" [attr.data-testid]="'cancel-' + session.id"
+                (click)="requestCancellation(session.id)">Seansı iptal et</button>
+            }
+          }
+        </article>
+      }
+    </div>
+
+    @if (pageNumber() < totalPages()) {
+      <div class="load-more-wrap">
+        <button type="button" (click)="loadMore()" [disabled]="loadingMore()">
+          {{ loadingMore() ? 'Yükleniyor…' : 'Daha fazla seans yükle' }}
+        </button>
+      </div>
+    }
+  }
+</section>

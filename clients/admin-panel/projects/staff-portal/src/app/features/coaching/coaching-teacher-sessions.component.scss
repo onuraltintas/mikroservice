@@ -1,0 +1,54 @@
+.teacher-sessions { margin-top: 18px; }
+.sessions-heading { display: flex; align-items: end; justify-content: space-between; gap: 16px; margin-bottom: 15px; }
+.sessions-eyebrow { margin: 0 0 7px; color: #64876e; font-size: 9px; font-weight: 800; letter-spacing: .15em; }
+.sessions-heading h3 { margin: 0; color: #17333a; font-family: Georgia, 'Times New Roman', serif; font-size: 24px; font-weight: 400; letter-spacing: -.03em; }
+.sessions-heading p { margin: 6px 0 0; color: #72817d; font-size: 10px; }
+.sessions-heading > button, .load-more-wrap button { min-height: 36px; padding: 0 12px; border: 1px solid #d6e0ce; border-radius: 8px; color: #355b4b; background: #f0f5e9; font: inherit; font-size: 10px; font-weight: 750; cursor: pointer; }
+.session-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; margin-bottom: 13px; }
+.session-stats > div { display: grid; gap: 6px; padding: 12px 14px; border: 1px solid #e3e5dc; border-radius: 11px; background: #fbfaf6; }
+.session-stats span, .session-facts dt { color: #7a8883; font-size: 9px; }
+.session-stats strong { color: #2b4144; font-size: 15px; }
+.session-list { display: grid; gap: 12px; }
+.session-card { padding: 16px; border: 1px solid #e3e5dc; border-radius: 13px; background: #fbfaf6; }
+.session-card-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.session-type { color: #64876e; font-size: 9px; font-weight: 800; text-transform: uppercase; }
+.session-card h4 { margin: 5px 0 0; color: #2b4144; font-size: 13px; }
+.session-status { flex: 0 0 auto; padding: 6px 9px; border-radius: 999px; color: #4d6856; background: #e0ead6; font-size: 9px; font-weight: 750; }
+.session-status[data-status='Cancelled'] { color: #80634d; background: #f1e9de; }
+.session-status[data-status='Completed'] { color: #3c6470; background: #e2eff0; }
+.session-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; margin: 13px 0; }
+.session-facts > div { padding: 10px; border-radius: 9px; background: #f1f3eb; }
+.session-facts dd { margin: 5px 0 0; color: #354c4d; font-size: 10px; font-weight: 750; }
+.teacher-notes { margin: 12px 0; padding: 11px 12px; border-left: 3px solid #b8c99f; border-radius: 0 8px 8px 0; color: #526962; background: #f4f6ec; }
+.teacher-notes span { color: #7a8883; font-size: 9px; font-weight: 700; }
+.teacher-notes p { margin: 5px 0 0; font-size: 10px; line-height: 1.5; white-space: pre-line; }
+.meeting-link { display: inline-flex; margin: 0 0 12px; color: #355b4b; font-size: 10px; font-weight: 750; text-decoration: none; }
+.student-reflections { margin-top: 12px; padding-top: 12px; border-top: 1px solid #e9eae3; }
+.student-reflections h5 { margin: 0 0 8px; color: #526962; font-size: 10px; }
+.reflection-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 10px 0; border-top: 1px solid #e9eae3; }
+.reflection-content { display: grid; min-width: 0; gap: 4px; }
+.reflection-content strong { color: #354c4d; font-size: 10px; }
+.reflection-content span, .reflection-content p { margin: 0; color: #72817d; font-size: 9px; }
+.reflection-content p { color: #526962; font-size: 10px; white-space: pre-line; }
+.reflection-content .no-reflection { color: #83918b; font-style: italic; }
+.attendance-actions { display: flex; flex: 0 0 auto; gap: 6px; }
+.attendance-actions button, .cancel-session, .cancel-confirmation button { min-height: 31px; padding: 0 9px; border: 1px solid #d6e0ce; border-radius: 7px; color: #355b4b; background: #f0f5e9; font: inherit; font-size: 9px; font-weight: 750; cursor: pointer; }
+.attendance-actions .absent { border-color: #ead0c5; color: #9a4933; background: #fff6f1; }
+.cancel-session { margin-top: 12px; border-color: #ead0c5; color: #9a4933; background: #fff6f1; }
+.cancel-confirmation { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 12px; padding: 10px; border: 1px solid #ead7ae; border-radius: 9px; color: #6e5a31; background: #fbf5e6; font-size: 10px; }
+.cancel-confirmation span { flex: 1 1 220px; }
+.cancel-confirmation .dismiss { border-color: #d9dfd7; color: #526962; background: #fffefa; }
+.sessions-empty { padding: 24px; border: 1px dashed #d7ddd3; border-radius: 12px; color: #526962; background: #fbfaf6; text-align: center; }
+.sessions-empty p { margin: 6px 0 0; color: #83918b; font-size: 10px; }
+.sessions-error { margin-bottom: 12px; padding: 11px 13px; border: 1px solid #efc7b9; border-radius: 10px; color: #873f2d; background: #fff1eb; font-size: 10px; }
+.sessions-loading { display: grid; gap: 9px; }
+.sessions-loading div { height: 96px; border-radius: 12px; background: linear-gradient(90deg, #e9ebe3, #f3f3ed, #e9ebe3); background-size: 200% 100%; animation: session-shimmer 1.4s linear infinite; }
+.load-more-wrap { display: flex; justify-content: center; margin-top: 14px; }
+.load-more-wrap button:disabled, .attendance-actions button:disabled, .cancel-confirmation button:disabled { opacity: .5; cursor: not-allowed; }
+@keyframes session-shimmer { to { background-position: -200% 0; } }
+@media (max-width: 640px) {
+  .sessions-heading { align-items: flex-start; flex-direction: column; }
+  .session-stats { grid-template-columns: 1fr; }
+  .session-facts { grid-template-columns: 1fr; }
+  .reflection-row { flex-direction: column; }
+}

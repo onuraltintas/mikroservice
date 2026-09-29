@@ -18,11 +18,18 @@
       [class.active]="activeSection() === 'assignments'" (click)="selectSection('assignments')">
       Ödevler
     </button>
+    <button type="button" data-testid="sessions-tab"
+      [attr.aria-pressed]="activeSection() === 'sessions'"
+      [class.active]="activeSection() === 'sessions'" (click)="selectSection('sessions')">
+      Seanslar
+    </button>
   </nav>
 
   @if (activeSection() === 'students') {
     <staff-coaching-teacher-students />
-  } @else {
+  } @else if (activeSection() === 'assignments') {
     <staff-coaching-teacher-assignments />
+  } @else {
+    <staff-coaching-teacher-sessions />
   }
 </section>
