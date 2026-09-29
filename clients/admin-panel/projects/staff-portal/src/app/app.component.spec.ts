@@ -48,7 +48,7 @@ describe('Staff portal MFA flow', () => {
 
     await component.submitMfa();
 
-    expect(auth.enableMfa).toHaveBeenCalledWith('mfa-challenge', 'setup-token', '123456');
+    expect(auth.enableMfa).toHaveBeenCalledWith('coaching', 'mfa-challenge', 'setup-token', '123456');
     expect(state.mfaStage).toBe('recovery');
     expect(state.recoveryCodes).toEqual(['ONE-TIME-01']);
   });
@@ -68,7 +68,7 @@ describe('Staff portal MFA flow', () => {
 
     await state.submitRecoveryCode();
 
-    expect(auth.verifyMfa).toHaveBeenCalledWith('mfa-challenge', null, 'RECOVERY-01');
+    expect(auth.verifyMfa).toHaveBeenCalledWith('coaching', 'mfa-challenge', null, 'RECOVERY-01');
   });
 });
 

@@ -105,6 +105,7 @@
         "build": {
           "builder": "@angular/build:application",
           "options": {
+            "index": "projects/staff-portal/src/index.html",
             "browser": "projects/staff-portal/src/main.ts",
             "tsConfig": "projects/staff-portal/tsconfig.app.json",
             "inlineStyleLanguage": "scss",
@@ -132,8 +133,8 @@
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "8kB",
-                  "maximumError": "12kB"
+                  "maximumWarning": "14kB",
+                  "maximumError": "16kB"
                 }
               ],
               "outputHashing": "all"

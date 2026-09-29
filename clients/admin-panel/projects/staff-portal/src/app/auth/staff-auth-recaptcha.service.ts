@@ -1,0 +1,87 @@
+import { DOCUMENT, isPlatformBrowser } from '@angular/common';
+import { HttpBackend, HttpClient } from '@angular/common/http';
+import { Injectable, PLATFORM_ID, inject } from '@angular/core';
+import { firstValueFrom } from 'rxjs';
+import { environment } from '../../environments/environment';
+
+interface RecaptchaConfiguration {
+  enabled: boolean;
+  siteKey: string | null;
+}
+
+interface RecaptchaWindow extends Window {
+  grecaptcha?: {
+    ready(callback: () => void): void;
+    execute(siteKey: string, options: { action: string }): Promise<string>;
+  };
+}
+
+@Injectable({ providedIn: 'root' })
+export class StaffAuthRecaptchaService {
+  private readonly document = inject(DOCUMENT);
+  private readonly platformId = inject(PLATFORM_ID);
+  private readonly http = new HttpClient(inject(HttpBackend));
+  private configurationPromise?: Promise<RecaptchaConfiguration>;
+  private scriptPromise?: Promise<void>;
+
+  async createToken(action: string): Promise<string | null> {
+    if (!isPlatformBrowser(this.platformId)) return null;
+
+    let configuration: RecaptchaConfiguration;
+    try {
+      configuration = await (this.configurationPromise ??= this.loadConfiguration());
+    } catch (error) {
+      this.configurationPromise = undefined;
+      throw error;
+    }
+
+    if (!configuration.enabled) return null;
+    if (!configuration.siteKey) throw new Error('Güvenlik doğrulaması yapılandırması eksik.');
+
+    await this.loadScript(configuration.siteKey);
+    const token = await (window as RecaptchaWindow).grecaptcha?.execute(
+      configuration.siteKey,
+      { action }
+    );
+    if (!token) throw new Error('Güvenlik doğrulaması tamamlanamadı.');
+    return token;
+  }
+
+  private loadConfiguration(): Promise<RecaptchaConfiguration> {
+    return firstValueFrom(this.http.get<RecaptchaConfiguration>(
+      `${environment.apiUrl}/auth/captcha-config`
+    ));
+  }
+
+  private async loadScript(siteKey: string): Promise<void> {
+    const browserWindow = window as RecaptchaWindow;
+    if (!this.scriptPromise) {
+      this.scriptPromise = new Promise((resolve, reject) => {
+        const ready = () => {
+          if (browserWindow.grecaptcha) browserWindow.grecaptcha.ready(resolve);
+          else reject(new Error('Güvenlik doğrulama hizmeti başlatılamadı.'));
+        };
+
+        if (browserWindow.grecaptcha) {
+          ready();
+          return;
+        }
+
+        const script = this.document.createElement('script');
+        script.src = `https://www.google.com/recaptcha/api.js?render=${encodeURIComponent(siteKey)}`;
+        script.async = true;
+        script.defer = true;
+        script.onload = ready;
+        script.onerror = () => reject(new Error('Güvenlik doğrulama hizmetine ulaşılamadı.'));
+        this.document.head.appendChild(script);
+      });
+    }
+
+    try {
+      await this.scriptPromise;
+    } catch (error) {
+      this.scriptPromise = undefined;
+      throw error;
+    }
+  }
+}

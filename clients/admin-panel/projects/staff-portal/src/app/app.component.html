@@ -1,0 +1,203 @@
+@if (auth.isAuthenticated()) {
+  <div class="portal-shell">
+    <aside class="sidebar" aria-label="Personel portalı">
+      <a class="brand" href="/" aria-label="Eduİvme personel portalı ana sayfa">
+        <span class="brand-symbol">İ</span>
+        <span class="brand-copy"><strong>eduivme</strong><small>PERSONEL ALANI</small></span>
+      </a>
+
+      <div class="sidebar-caption">ÇALIŞMA ALANI</div>
+      <nav class="product-list" aria-label="Yetkili ürünler">
+        @for (access of auth.products(); track access.product) {
+          <button
+            class="product-choice"
+            [class.active]="auth.activeProduct() === access.product"
+            [attr.aria-current]="auth.activeProduct() === access.product ? 'page' : null"
+            type="button"
+            (click)="switchProduct(access.product)">
+            <span class="product-mark" [class.reading]="access.product === 'speed-reading'">
+              {{ access.product === 'coaching' ? 'K' : 'H' }}
+            </span>
+            <span class="product-copy">
+              <strong>{{ productLabel(access.product) }}</strong>
+              <small>{{ roleLabel(access.roles) }}</small>
+            </span>
+            <span class="product-arrow" aria-hidden="true">↗</span>
+          </button>
+        }
+      </nav>
+
+      <div class="sidebar-bottom">
+        <span class="secure-dot" aria-hidden="true"></span>
+        <div><strong>Güvenli oturum</strong><small>Ürün erişimi ayrı doğrulanır</small></div>
+      </div>
+    </aside>
+
+    <main class="main-area">
+      <header class="topbar">
+        <div class="breadcrumb"><span>Personel portalı</span><span aria-hidden="true">/</span><strong>{{ currentProductLabel }}</strong></div>
+        <button class="logout-button" type="button" (click)="logout()">
+          <span aria-hidden="true">↪</span> Güvenli çıkış
+        </button>
+      </header>
+
+      <div class="content-wrap">
+        <section class="welcome-block">
+          <p class="eyebrow">{{ isInstitutionManager ? 'KURUM YÖNETİMİ' : 'ÖĞRETMEN ÇALIŞMA ALANI' }}</p>
+          <h1>{{ isInstitutionManager ? 'Kurumunuz için tek çalışma alanı.' : 'Öğrencileriniz için tek çalışma alanı.' }}</h1>
+          <p class="welcome-copy">
+            {{ currentProductLabel }} erişiminiz, bu üründeki rolünüze göre sınırlandırılmıştır.
+            Diğer ürünler ayrı yetkiyle açılır.
+          </p>
+        </section>
+
+        @if (switchError) {
+          <div class="notice warning" role="alert">{{ switchError }}</div>
+        }
+
+        <section class="session-panel" aria-labelledby="session-title">
+          <div class="session-heading">
+            <div>
+              <p class="eyebrow">OTURUM VE YETKİ</p>
+              <h2 id="session-title">Ürün verileri birbirinden ayrı kalır</h2>
+            </div>
+            <span class="active-pill"><span></span> Aktif · {{ currentProductLabel }}</span>
+          </div>
+
+          <div class="session-grid">
+            <article class="session-item">
+              <span class="session-index">01</span>
+              <div>
+                <h3>Seçili ürünle sınırlı erişim</h3>
+                <p>Her API isteği, sunucuda seçili ürünün rolü ve kurum kapsamıyla doğrulanır.</p>
+              </div>
+            </article>
+            <article class="session-item">
+              <span class="session-index">02</span>
+              <div>
+                <h3>Yetkili ürünleriniz</h3>
+                <p>
+                  @for (access of auth.products(); track access.product; let last = $last) {
+                    <span>{{ productLabel(access.product) }} · {{ roleLabel(access.roles) }}</span>@if (!last) { <span> &nbsp;/&nbsp; </span> }
+                  }
+                </p>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section class="migration-note" aria-labelledby="migration-title">
+          <div class="migration-icon" aria-hidden="true">↗</div>
+          <div>
+            <p class="eyebrow">UYGULAMA PLANI · ADIM 1</p>
+            <h2 id="migration-title">Güvenli portal temeli hazır</h2>
+            <p>Koçluk öğretmen/kurum ekranları ve Hızlı Okuma ekranları, sonraki adımlarda bu ayrı çalışma alanına taşınacak. Mevcut servisler ve veritabanları ayrı kalır.</p>
+          </div>
+          <span class="migration-status">Ekran taşıma sırada</span>
+        </section>
+
+        <footer class="page-footer">Eduİvme · Personel çalışma alanı <span>Yetkiniz yalnızca erişim verilen ürünlerde geçerlidir.</span></footer>
+      </div>
+    </main>
+  </div>
+} @else {
+  <main class="login-page">
+    <section class="login-story" aria-label="Eduİvme personel portalı hakkında">
+      <a class="brand light-brand" href="/" aria-label="Eduİvme ana sayfa">
+        <span class="brand-symbol">İ</span>
+        <span class="brand-copy"><strong>eduivme</strong><small>PERSONEL ALANI</small></span>
+      </a>
+
+      <div class="story-content">
+        <p class="eyebrow">TEK PERSONEL PORTALI</p>
+        <h1>İki ürün.<br><em>Net yetkiler.</em></h1>
+        <p>Koçluk ve Hızlı Okuma çalışma alanlarınız tek yerde. Hangi ürüne erişebileceğinizi sistem doğrular; ürün verileri birbirine karışmaz.</p>
+        <div class="story-diagram" aria-hidden="true">
+          <span class="diagram-line"></span>
+          <span class="diagram-node node-coaching">K<span>Koçluk</span></span>
+          <span class="diagram-hub">İ</span>
+          <span class="diagram-node node-reading">H<span>Hızlı Okuma</span></span>
+        </div>
+      </div>
+      <div class="story-foot"><span>ÖĞRETMEN · KURUM</span><span>GÜVENLİ OTURUM</span></div>
+    </section>
+
+    <section class="login-side">
+      <div class="login-box">
+        @if (mfaStage === 'setup' || mfaStage === 'verify') {
+          <p class="eyebrow">İKİ ADIMLI DOĞRULAMA</p>
+          <h2>{{ mfaStage === 'setup' ? 'Güvenli girişinizi kurun.' : 'Girişinizi doğrulayın.' }}</h2>
+          <p class="form-intro">
+            {{ mfaStage === 'setup'
+              ? 'Authenticator uygulamanıza bu anahtarı ekleyin; ardından uygulamanın ürettiği kodu girin.'
+              : productLabel(selectedProduct) + ' hesabınızın doğrulama kodunu girin.' }}
+          </p>
+          @if (mfaStage === 'setup') {
+            <div class="mfa-secret-panel">
+              <span>Authenticator kurulum anahtarı</span>
+              <code>{{ mfaSecret }}</code>
+            </div>
+          }
+          <form (ngSubmit)="submitMfa()">
+            <label for="mfa-code">6 haneli doğrulama kodu</label>
+            <input id="mfa-code" name="mfaCode" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" [(ngModel)]="mfaCode" required>
+            @if (errorMessage) { <div class="form-error" role="alert">{{ errorMessage }}</div> }
+            <button class="submit-button" type="submit" [disabled]="isSubmitting || mfaCode.trim().length !== 6">
+              {{ isSubmitting ? 'Doğrulanıyor…' : (mfaStage === 'setup' ? 'Kur ve devam et' : 'Doğrula ve devam et') }}
+            </button>
+          </form>
+          @if (mfaStage === 'verify') {
+            <details class="recovery-entry">
+              <summary>Kurtarma kodu kullan</summary>
+              <form (ngSubmit)="submitRecoveryCode()">
+                <label for="mfa-recovery-code">Tek kullanımlık kurtarma kodu</label>
+                <input id="mfa-recovery-code" name="mfaRecoveryCode" type="text" autocomplete="one-time-code" [(ngModel)]="mfaRecoveryCode">
+                <button class="back-button" type="submit" [disabled]="isSubmitting || !mfaRecoveryCode.trim()">Kurtarma koduyla doğrula</button>
+              </form>
+            </details>
+          }
+          <button class="back-button" type="button" (click)="cancelMfa()">Girişe dön</button>
+        } @else if (mfaStage === 'recovery') {
+          <p class="eyebrow">KURTARMA KODLARI</p>
+          <h2>Bu kodları güvenle saklayın.</h2>
+          <p class="recovery-warning">Kodlar yalnızca şimdi gösterilir ve her biri bir kez kullanılabilir. Güvenli bir parola yöneticisine kaydedin.</p>
+          <ul class="recovery-code-list" aria-label="Tek kullanımlık kurtarma kodları">
+            @for (code of recoveryCodes; track code) { <li>{{ code }}</li> }
+          </ul>
+          <button class="submit-button" type="button" (click)="finishMfaEnrollment()">Kodları kaydettim, devam et</button>
+        } @else {
+          <p class="eyebrow">HOŞ GELDİNİZ</p>
+          <h2>Çalışma alanınıza<br>giriş yapın.</h2>
+          <p class="form-intro">Personel olarak kullandığınız ürünü seçin. Diğer yetkili ürünler girişten sonra görünür.</p>
+
+          <div class="product-selector" role="group" aria-label="Giriş yapılacak ürün">
+            <button type="button" [class.selected]="selectedProduct === 'coaching'" [attr.aria-pressed]="selectedProduct === 'coaching'" (click)="selectedProduct = 'coaching'">
+              <span class="selector-mark">K</span><span><strong>Koçluk</strong><small>Öğretmen · Kurum</small></span>
+            </button>
+            <button type="button" [class.selected]="selectedProduct === 'speed-reading'" [attr.aria-pressed]="selectedProduct === 'speed-reading'" (click)="selectedProduct = 'speed-reading'">
+              <span class="selector-mark reading-mark">H</span><span><strong>Hızlı Okuma</strong><small>Öğretmen · Kurum</small></span>
+            </button>
+          </div>
+
+          <form class="login-form" (ngSubmit)="submitLogin()">
+            <label for="email">E-posta adresi</label>
+            <input id="email" name="email" type="email" autocomplete="username" [(ngModel)]="email" placeholder="ornek@okul.com" required>
+            <div class="password-label"><label for="password">Şifre</label></div>
+            <input id="password" name="password" type="password" autocomplete="current-password" [(ngModel)]="password" placeholder="Şifrenizi girin" required>
+            <label class="remember-choice" for="remember-me">
+              <input id="remember-me" name="rememberMe" type="checkbox" [(ngModel)]="rememberMe">
+              <span>Bu cihazda oturumu açık tut</span>
+            </label>
+            @if (errorMessage) { <div class="form-error" role="alert">{{ errorMessage }}</div> }
+            <button class="submit-button" type="submit" [disabled]="isSubmitting || !email.trim() || !password">
+              {{ isSubmitting ? 'Güvenli giriş yapılıyor…' : 'Personel olarak giriş yap' }}
+              <span aria-hidden="true">→</span>
+            </button>
+          </form>
+          <p class="login-privacy">Giriş bilgileriniz yalnızca kimlik doğrulama için kullanılır. Erişim token’ı tarayıcı belleğinde tutulur.</p>
+        }
+      </div>
+      <footer class="login-footer">© {{ currentYear }} Eduİvme <span>Koçluk ve Hızlı Okuma için personel girişi</span></footer>
+    </section>
+  </main>
+}
