@@ -41,6 +41,13 @@
       } @placeholder {
         <p class="workspace-state" role="status">Öğrenci raporu hazırlanıyor…</p>
       }
+    } @else if (selectedTeacher(); as reportTeacher) {
+      @defer (on immediate) {
+        <staff-coaching-institution-teacher-report [teacher]="reportTeacher" [institutionId]="institutionId()!"
+          (back)="closeTeacherReport()" (studentSelected)="openStudentReport($event)" />
+      } @placeholder {
+        <p class="workspace-state" role="status">Öğretmen raporu hazırlanıyor…</p>
+      }
     } @else if (activeSection() === 'overview') {
       <section class="overview-section" aria-labelledby="institution-overview-title">
         <div class="section-heading">
@@ -122,7 +129,7 @@
         } @else {
           <div class="teacher-grid">
             @for (teacher of teachers(); track teacher.userId) {
-              <article class="teacher-card"><span class="avatar" aria-hidden="true">{{ teacher.firstName.slice(0, 1) }}{{ teacher.lastName.slice(0, 1) }}</span><div><strong>{{ teacher.firstName }} {{ teacher.lastName }}</strong><span>{{ teacher.email }}</span></div></article>
+              <article class="teacher-card"><span class="avatar" aria-hidden="true">{{ teacher.firstName.slice(0, 1) }}{{ teacher.lastName.slice(0, 1) }}</span><div><strong>{{ teacher.firstName }} {{ teacher.lastName }}</strong><span>{{ teacher.email }}</span></div><button type="button" class="report-button" [attr.data-testid]="'teacher-report-' + teacher.userId" (click)="openTeacherReport(teacher)">Raporu incele</button></article>
             }
           </div>
           @if (teacherPageNumber() < teacherTotalPages()) { <button type="button" class="load-more" (click)="loadMoreTeachers()" [disabled]="loadingMoreTeachers()">{{ loadingMoreTeachers() ? 'Yükleniyor…' : 'Daha fazla öğretmen yükle' }}</button> }

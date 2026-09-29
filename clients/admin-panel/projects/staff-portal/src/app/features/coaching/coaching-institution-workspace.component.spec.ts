@@ -46,6 +46,25 @@ describe('CoachingInstitutionWorkspaceComponent', () => {
     expect(service.getStudentDetail).toHaveBeenCalledWith('student-1');
   });
 
+  it('opens a teacher report and preserves its context when drilling into a student report', async () => {
+    const service = institutionService({ teachers: [teacher('teacher-1')], students: [student('student-1')] });
+    const fixture = await createFixture(service);
+    fixture.detectChanges();
+    fixture.componentInstance.selectSection('teachers');
+    fixture.detectChanges();
+
+    (fixture.nativeElement.querySelector('[data-testid="teacher-report-teacher-1"]') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(fixture.componentInstance.selectedTeacher()?.userId).toBe('teacher-1');
+    expect(service.getTeacherOverview).toHaveBeenCalledWith('teacher-1');
+
+    fixture.componentInstance.openStudentReport(student('student-1'));
+    fixture.componentInstance.closeStudentReport();
+    expect(fixture.componentInstance.selectedStudent()).toBeNull();
+    expect(fixture.componentInstance.selectedTeacher()?.userId).toBe('teacher-1');
+  });
+
   it('applies search, teacher, and grade filters on the server and supports paging', async () => {
     const service = institutionService();
     service.getStudentRoster.mockReturnValueOnce(of(studentPage([student('student-1')], 1, 2)))
@@ -133,6 +152,14 @@ function institutionService(options: { students?: CoachingInstitutionStudent[]; 
     })),
     getStudentRoster: vi.fn(() => of(studentPage(options.students ?? [], 1))),
     getTeacherRoster: vi.fn(() => of(teacherPage(options.teachers ?? [teacher('teacher-1')], 1))),
+    getTeacherOverview: vi.fn(() => of({
+      teacherId: 'teacher-1', totalAssignments: 0, totalAssignmentStudents: 0,
+      submittedAssignmentStudents: 0, totalExams: 0, totalSessions: 0
+    })),
+    getTeacherAnalytics: vi.fn(() => of({
+      teacherId: 'teacher-1', currentPeriod: { assignments: 0, exams: 0, sessions: 0 },
+      previousPeriod: { assignments: 0, exams: 0, sessions: 0 }, lowResults: 0, mediumResults: 0, highResults: 0
+    })),
     getStudentDetail: vi.fn(() => of({
       studentId: 'student-1', totalAssignments: 0, submittedAssignments: 0,
       totalExams: 0, totalSessions: 0, totalGoals: 0, assignments: [], exams: []

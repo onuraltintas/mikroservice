@@ -43,6 +43,26 @@ describe('CoachingInstitutionService', () => {
     request.flush({ teachers: [], totalCount: 0 });
   });
 
+  it('loads a teacher overview scoped by the server to the authenticated institution', () => {
+    service.getTeacherOverview('teacher-1').subscribe();
+    const request = http.expectOne('/api/coaching-admin/teachers/teacher-1/overview');
+    expect(request.request.method).toBe('GET');
+    request.flush({
+      teacherId: 'teacher-1', totalAssignments: 4, totalAssignmentStudents: 18,
+      submittedAssignmentStudents: 12, totalExams: 2, totalSessions: 5
+    });
+  });
+
+  it('loads teacher analytics for the current and previous periods', () => {
+    service.getTeacherAnalytics('teacher-1').subscribe();
+    const request = http.expectOne('/api/coaching-admin/teachers/teacher-1/analytics');
+    expect(request.request.method).toBe('GET');
+    request.flush({
+      teacherId: 'teacher-1', currentPeriod: { assignments: 2, exams: 1, sessions: 3 },
+      previousPeriod: { assignments: 1, exams: 0, sessions: 2 }, lowResults: 1, mediumResults: 2, highResults: 4
+    });
+  });
+
   it('loads student details through the institution-scoped coaching admin API', () => {
     service.getStudentDetail('student-1').subscribe();
     const request = http.expectOne('/api/coaching-admin/students/student-1/detail');

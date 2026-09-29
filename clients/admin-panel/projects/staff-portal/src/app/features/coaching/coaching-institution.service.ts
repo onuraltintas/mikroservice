@@ -102,6 +102,30 @@ export interface CoachingInstitutionTeacherPage {
   totalCount: number;
 }
 
+export interface CoachingInstitutionTeacherOverview {
+  teacherId: string;
+  totalAssignments: number;
+  totalAssignmentStudents: number;
+  submittedAssignmentStudents: number;
+  totalExams: number;
+  totalSessions: number;
+}
+
+export interface CoachingInstitutionTeacherPeriod {
+  assignments: number;
+  exams: number;
+  sessions: number;
+}
+
+export interface CoachingInstitutionTeacherAnalytics {
+  teacherId: string;
+  currentPeriod: CoachingInstitutionTeacherPeriod;
+  previousPeriod: CoachingInstitutionTeacherPeriod;
+  lowResults: number;
+  mediumResults: number;
+  highResults: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class CoachingInstitutionService {
   private readonly http = inject(HttpClient);
@@ -149,6 +173,18 @@ export class CoachingInstitutionService {
     if (search.trim()) params = params.set('search', search.trim());
     return this.http.get<CoachingInstitutionTeacherPage>(
       `${this.url}/institutions/${encodeURIComponent(institutionId)}/teachers`, { params }
+    );
+  }
+
+  getTeacherOverview(teacherId: string): Observable<CoachingInstitutionTeacherOverview> {
+    return this.http.get<CoachingInstitutionTeacherOverview>(
+      `${this.url}/teachers/${encodeURIComponent(teacherId)}/overview`
+    );
+  }
+
+  getTeacherAnalytics(teacherId: string): Observable<CoachingInstitutionTeacherAnalytics> {
+    return this.http.get<CoachingInstitutionTeacherAnalytics>(
+      `${this.url}/teachers/${encodeURIComponent(teacherId)}/analytics`
     );
   }
 

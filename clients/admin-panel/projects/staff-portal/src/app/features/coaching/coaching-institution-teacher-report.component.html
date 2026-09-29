@@ -1,0 +1,75 @@
+<section class="teacher-report" aria-labelledby="teacher-report-title">
+  <button class="back-link" type="button" data-testid="back-to-teachers" (click)="back.emit()"><span aria-hidden="true">←</span> Öğretmen listesine dön</button>
+
+  <header class="report-identity">
+    <div>
+      <p class="report-eyebrow">KOÇLUK · KURUM ÖĞRETMEN RAPORU</p>
+      <h2 id="teacher-report-title">{{ teacher.firstName }} {{ teacher.lastName }}</h2>
+      <p>{{ teacher.email }} · yalnızca bu kurumdaki işlemler ve aktif öğrenci bağlantıları</p>
+    </div>
+    <span class="teacher-avatar" aria-hidden="true">{{ teacher.firstName.charAt(0) }}{{ teacher.lastName.charAt(0) }}</span>
+  </header>
+
+  <section class="report-panel" aria-labelledby="teacher-overview-title">
+    <div class="section-heading"><div><p class="report-eyebrow">KURUM ÖZETİ</p><h3 id="teacher-overview-title">Öğretmen çalışma özeti</h3></div><button type="button" class="outline-button" (click)="retryOverview()" [disabled]="isOverviewLoading()">Yenile</button></div>
+    @if (isOverviewLoading()) {
+      <p class="inline-status" role="status">Öğretmen özeti yükleniyor…</p>
+    } @else if (overviewError()) {
+      <div class="report-error" role="alert"><span>{{ overviewError() }}</span><button type="button" (click)="retryOverview()">Tekrar dene</button></div>
+    } @else if (overview(); as summary) {
+      <div class="metric-grid">
+        <article class="metric-card accent-blue"><span>Ödev</span><strong>{{ summary.totalAssignments }}</strong><small>Bu kurumda oluşturulan</small></article>
+        <article class="metric-card accent-teal"><span>Öğrenci ödevi</span><strong>{{ summary.submittedAssignmentStudents }} / {{ summary.totalAssignmentStudents }}</strong><small>Teslim edilen / atanmış</small></article>
+        <article class="metric-card accent-violet"><span>Sınav</span><strong>{{ summary.totalExams }}</strong><small>Bu kurumdaki sınavlar</small></article>
+        <article class="metric-card accent-orange"><span>Seans</span><strong>{{ summary.totalSessions }}</strong><small>Bu kurumdaki seanslar</small></article>
+      </div>
+    }
+  </section>
+
+  <section class="report-panel" aria-labelledby="teacher-analytics-title">
+    <div class="section-heading"><div><p class="report-eyebrow">DÖNEMSEL KARŞILAŞTIRMA</p><h3 id="teacher-analytics-title">Son 30 gün ve önceki dönem</h3></div><button type="button" class="outline-button" (click)="retryAnalytics()" [disabled]="isAnalyticsLoading()">Yenile</button></div>
+    @if (isAnalyticsLoading()) {
+      <p class="inline-status" role="status">Dönem analizi yükleniyor…</p>
+    } @else if (analyticsError()) {
+      <div class="report-error" role="alert"><span>{{ analyticsError() }}</span><button type="button" (click)="retryAnalytics()">Tekrar dene</button></div>
+    } @else if (analytics(); as period) {
+      <div class="period-table-scroll">
+        <table class="period-table">
+          <thead><tr><th>Dönem</th><th>Ödev</th><th>Sınav</th><th>Seans</th></tr></thead>
+          <tbody>
+            <tr><th>Son 30 gün</th><td>{{ period.currentPeriod.assignments }}</td><td>{{ period.currentPeriod.exams }}</td><td>{{ period.currentPeriod.sessions }}</td></tr>
+            <tr><th>Önceki 30 gün</th><td>{{ period.previousPeriod.assignments }}</td><td>{{ period.previousPeriod.exams }}</td><td>{{ period.previousPeriod.sessions }}</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="result-distribution" aria-label="Son 30 gündeki sınav sonuç dağılımı">
+        <span>Sınav sonucu dağılımı</span><strong class="low-result">Düşük {{ period.lowResults }}</strong><strong class="medium-result">Orta {{ period.mediumResults }}</strong><strong class="high-result">Yüksek {{ period.highResults }}</strong>
+      </div>
+    }
+  </section>
+
+  <section class="report-panel student-panel" aria-labelledby="teacher-students-title">
+    <div class="section-heading"><div><p class="report-eyebrow">AKTİF BAĞLANTILAR</p><h3 id="teacher-students-title">Öğretmene bağlı öğrenciler</h3><p>{{ studentTotalCount() }} aktif kurum öğrencisi</p></div><button type="button" class="outline-button" (click)="retryStudents()" [disabled]="isStudentsLoading()">Yenile</button></div>
+    <div class="student-filters">
+      <label>Öğrenci ara<input #search type="search" maxlength="100" [value]="studentSearch()" (change)="searchStudents(search.value)" (keydown.enter)="$event.preventDefault(); searchStudents(search.value)" placeholder="Ad, soyad veya e-posta"></label>
+      <label>Sınıf<select [value]="gradeFilter() ?? ''" (change)="setGradeFilter($any($event.target).value)"><option value="">Tüm sınıflar</option>@for (grade of [1,2,3,4,5,6,7,8,9,10,11,12]; track grade) { <option [value]="grade">{{ grade }}. sınıf</option> }</select></label>
+    </div>
+    @if (studentsError()) {
+      <div class="report-error" role="alert"><span>{{ studentsError() }}</span><button type="button" (click)="retryStudents()">Tekrar dene</button></div>
+    } @else if (isStudentsLoading()) {
+      <p class="inline-status" role="status">Öğrenciler yükleniyor…</p>
+    } @else if (!students().length) {
+      <div class="empty-state"><strong>Öğrenci bulunamadı</strong><span>Bu öğretmenle eşleşen aktif kurum öğrencisi yok veya arama ölçütleriyle kayıt bulunamadı.</span></div>
+    } @else {
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>Öğrenci</th><th>Sınıf</th><th>E-posta</th><th>Rapor</th></tr></thead>
+          <tbody>@for (student of students(); track student.userId) {
+            <tr><td class="primary-cell">{{ student.firstName }} {{ student.lastName }}</td><td>{{ student.gradeLevel ? student.gradeLevel + '. sınıf' : '—' }}</td><td>{{ student.email }}</td><td><button class="report-link" type="button" [attr.data-testid]="'open-student-report-' + student.userId" (click)="openStudentReport(student)">Öğrenci raporu</button></td></tr>
+          }</tbody>
+        </table>
+      </div>
+      @if (studentPage() < studentTotalPages()) { <button type="button" class="load-more" data-testid="next-students-page" (click)="nextStudentsPage()" [disabled]="isLoadingMoreStudents()">{{ isLoadingMoreStudents() ? 'Yükleniyor…' : 'Daha fazla öğrenci yükle' }}</button> }
+    }
+  </section>
+</section>

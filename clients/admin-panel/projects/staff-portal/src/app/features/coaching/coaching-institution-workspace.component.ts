@@ -8,13 +8,14 @@ import {
   CoachingInstitutionTeacher
 } from './coaching-institution.service';
 import { CoachingInstitutionStudentReportComponent } from './coaching-institution-student-report.component';
+import { CoachingInstitutionTeacherReportComponent } from './coaching-institution-teacher-report.component';
 
 type InstitutionSection = 'overview' | 'students' | 'teachers';
 
 @Component({
   selector: 'staff-coaching-institution-workspace',
   standalone: true,
-  imports: [CommonModule, CoachingInstitutionStudentReportComponent],
+  imports: [CommonModule, CoachingInstitutionStudentReportComponent, CoachingInstitutionTeacherReportComponent],
   templateUrl: './coaching-institution-workspace.component.html',
   styleUrl: './coaching-institution-workspace.component.scss'
 })
@@ -30,6 +31,7 @@ export class CoachingInstitutionWorkspaceComponent implements OnInit {
   readonly teachers = signal<CoachingInstitutionTeacher[]>([]);
   readonly teacherFilterOptions = signal<CoachingInstitutionTeacher[]>([]);
   readonly selectedStudent = signal<CoachingInstitutionStudent | null>(null);
+  readonly selectedTeacher = signal<CoachingInstitutionTeacher | null>(null);
   readonly activeSection = signal<InstitutionSection>('overview');
   readonly isLoadingScope = signal(true);
   readonly isLoadingOverview = signal(false);
@@ -58,7 +60,8 @@ export class CoachingInstitutionWorkspaceComponent implements OnInit {
 
   selectSection(section: InstitutionSection): void {
     this.activeSection.set(section);
-    if (section !== 'students') this.selectedStudent.set(null);
+    this.selectedStudent.set(null);
+    this.selectedTeacher.set(null);
     if (section === 'students' && this.studentPageNumber() === 1 && this.students().length === 0) {
       this.loadStudents();
       this.loadTeacherFilterOptions();
@@ -73,6 +76,14 @@ export class CoachingInstitutionWorkspaceComponent implements OnInit {
 
   closeStudentReport(): void {
     this.selectedStudent.set(null);
+  }
+
+  openTeacherReport(teacher: CoachingInstitutionTeacher): void {
+    this.selectedTeacher.set(teacher);
+  }
+
+  closeTeacherReport(): void {
+    this.selectedTeacher.set(null);
   }
 
   loadScope(): void {
