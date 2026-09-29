@@ -63,4 +63,17 @@ describe('CoachingTeacherStudentsService', () => {
 
     await expect(response).resolves.toMatchObject({ pageNumber: 2, pageSize: 10 });
   });
+
+  it('looks up only the selected students through the current teacher scope', async () => {
+    const response = firstValueFrom(service.getMyStudents(1, 2, undefined, ['student-1', 'student-2']));
+    const request = http.expectOne(candidate =>
+      candidate.url === '/api/teachers/me/students'
+        && candidate.params.get('pageNumber') === '1'
+        && candidate.params.get('pageSize') === '2'
+        && candidate.params.getAll('studentUserIds')?.join(',') === 'student-1,student-2');
+    expect(request.request.method).toBe('GET');
+    request.flush({ items: [], pageNumber: 1, pageSize: 2, totalCount: 0, totalPages: 1 });
+
+    await response;
+  });
 });

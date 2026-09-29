@@ -83,4 +83,26 @@ describe('CoachingTeacherAssignmentsService', () => {
 
     await expect(response).resolves.toMatchObject({ assignmentId: 'assignment-1' });
   });
+
+  it('grades a student submission with normalized teacher feedback', async () => {
+    const response = firstValueFrom(service.gradeAssignment('assignment-1', 'student-1', 82, '  Güzel çalışma  '));
+    const request = http.expectOne('/api/assignments/assignment-1/grade');
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual({
+      assignmentId: 'assignment-1', studentId: 'student-1', score: 82, teacherFeedback: 'Güzel çalışma'
+    });
+    request.flush({ assignmentId: 'assignment-1', studentId: 'student-1', score: 82, status: 'Graded', gradedAt: '2030-01-03T10:00:00Z' });
+
+    await expect(response).resolves.toMatchObject({ score: 82, status: 'Graded' });
+  });
+
+  it('downloads a submission through the authenticated attachment endpoint as a blob', async () => {
+    const response = firstValueFrom(service.downloadAttachment('assignment-1', 'student-1', 'attachment-1'));
+    const request = http.expectOne('/api/assignments/assignment-1/students/student-1/attachments/attachment-1/content');
+    expect(request.request.method).toBe('GET');
+    expect(request.request.responseType).toBe('blob');
+    request.flush(new Blob(['submission'], { type: 'image/png' }));
+
+    await expect(response).resolves.toBeInstanceOf(Blob);
+  });
 });
