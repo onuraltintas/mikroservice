@@ -62,7 +62,15 @@
         <h3 id="history-title">Geçmiş kayıtlar</h3>
         <p>Öğrencinin önceki kurumlarında oluşan Koçluk kayıtları da kapsanır.</p>
       </div>
-      <span class="history-scope">Tüm Koçluk geçmişi</span>
+      <div class="history-actions">
+        <span class="history-scope">Tüm Koçluk geçmişi</span>
+        <div class="export-actions">
+          <button type="button" data-testid="export-history" (click)="exportHistory()"
+            [disabled]="isExporting() || isHistoryLoading()">{{ isExporting() ? 'Hazırlanıyor…' : 'CSV indir' }}</button>
+          <button type="button" data-testid="print-history" (click)="printHistory()"
+            [disabled]="isExporting() || isHistoryLoading()">Yazdır</button>
+        </div>
+      </div>
     </header>
 
     <nav class="history-tabs" role="tablist" aria-label="Geçmiş kayıt kategorisi">

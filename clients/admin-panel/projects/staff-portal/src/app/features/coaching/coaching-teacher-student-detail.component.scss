@@ -12,6 +12,11 @@
 .section-heading h3, .history-heading h3 { margin: 0; color: #17333a; font-family: Georgia, 'Times New Roman', serif; font-size: 22px; font-weight: 400; letter-spacing: -.025em; }
 .section-heading .report-eyebrow, .history-heading .report-eyebrow { margin-bottom: 5px; }
 .summary-caption, .history-scope { padding: 7px 10px; border: 1px solid #dfe6d8; border-radius: 99px; color: #4b6c55; background: #f1f5e9; font-size: 9px; font-weight: 750; white-space: nowrap; }
+.history-actions { display: grid; justify-items: end; gap: 8px; }
+.export-actions { display: flex; gap: 6px; }
+.export-actions button { min-height: 32px; padding: 0 10px; border: 1px solid #d9dfd7; border-radius: 8px; color: #425b56; background: #fffefa; font: inherit; font-size: 9px; font-weight: 750; cursor: pointer; }
+.export-actions button:hover { border-color: #a8b99c; background: #f0f5e9; }
+.export-actions button:disabled { opacity: .5; cursor: wait; }
 .summary-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 9px; padding: 0 12px 12px; }
 .summary-card { display: grid; min-height: 112px; align-content: space-between; gap: 10px; padding: 14px; border: 1px solid #e8e8df; border-radius: 12px; background: #fffefa; }
 .summary-index { color: #7b8980; font-size: 8px; font-weight: 850; letter-spacing: .1em; }
@@ -48,4 +53,4 @@
 .history-pagination button { min-height: 34px; padding: 0 12px; border: 1px solid #d9dfd7; border-radius: 8px; color: #425b56; background: #fffefa; font: inherit; font-size: 10px; font-weight: 700; cursor: pointer; }
 .history-pagination button:disabled { opacity: .45; cursor: not-allowed; }
 @media (max-width: 900px) { .summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .history-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); } .filter-button { align-self: end; } }
-@media (max-width: 560px) { .student-report { gap: 15px; margin-top: 18px; } .report-identity { padding: 18px; } .section-heading, .history-heading { padding: 17px; } .summary-grid { gap: 7px; padding: 0 9px 9px; } .summary-card { min-height: 105px; padding: 11px; } .summary-card strong { font-size: 12px; } .history-tabs { padding-right: 12px; padding-left: 12px; } .history-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 12px; } .history-list { padding: 0 12px; } .report-error { align-items: flex-start; flex-direction: column; margin-right: 9px; margin-left: 9px; } }
+@media (max-width: 560px) { .student-report { gap: 15px; margin-top: 18px; } .report-identity { padding: 18px; } .section-heading, .history-heading { padding: 17px; } .history-heading { align-items: flex-start; flex-direction: column; } .history-actions { justify-items: start; } .summary-grid { gap: 7px; padding: 0 9px 9px; } .summary-card { min-height: 105px; padding: 11px; } .summary-card strong { font-size: 12px; } .history-tabs { padding-right: 12px; padding-left: 12px; } .history-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 12px; } .history-list { padding: 0 12px; } .report-error { align-items: flex-start; flex-direction: column; margin-right: 9px; margin-left: 9px; } }

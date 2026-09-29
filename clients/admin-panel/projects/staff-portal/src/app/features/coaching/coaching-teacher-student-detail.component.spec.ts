@@ -3,7 +3,6 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { TestBed } from '@angular/core/testing';
 import { CoachingTeacherStudentDetailComponent } from './coaching-teacher-student-detail.component';
 import { CoachingTeacherStudent } from './coaching-teacher-students.service';
-import * as reportExport from '../../../../../../src/app/features/coaching-portal/coaching-history-export';
 
 describe('CoachingTeacherStudentDetailComponent', () => {
   let http: HttpTestingController;
@@ -27,6 +26,7 @@ describe('CoachingTeacherStudentDetailComponent', () => {
 
   afterEach(() => http.verify());
   afterEach(() => vi.restoreAllMocks());
+  afterEach(() => vi.unstubAllGlobals());
 
   function createDetail() {
     const fixture = TestBed.createComponent(CoachingTeacherStudentDetailComponent);
@@ -166,7 +166,9 @@ describe('CoachingTeacherStudentDetailComponent', () => {
     fixture.componentInstance.historySearch = '  Fen  ';
     fixture.componentInstance.historyStatus = 'Result';
     fixture.componentInstance.historyFromDate = '2026-09-01';
-    const download = vi.spyOn(reportExport, 'downloadCoachingHistoryCsv').mockImplementation(() => undefined);
+    const createObjectURL = vi.fn(() => 'blob:coaching-history');
+    vi.stubGlobal('URL', { createObjectURL, revokeObjectURL: vi.fn() });
+    const anchorClick = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
 
     const exportPromise = fixture.componentInstance.exportHistory();
     const request = http.expectOne(candidate =>
@@ -186,7 +188,8 @@ describe('CoachingTeacherStudentDetailComponent', () => {
     });
     await exportPromise;
 
-    expect(download).toHaveBeenCalledOnce();
+    expect(createObjectURL).toHaveBeenCalledOnce();
+    expect(anchorClick).toHaveBeenCalledOnce();
     expect(fixture.componentInstance.historyError()).toBeNull();
     expect(fixture.componentInstance.isExporting()).toBe(false);
   });
@@ -194,16 +197,20 @@ describe('CoachingTeacherStudentDetailComponent', () => {
   it('does not download a partial CSV when a later report page fails', async () => {
     const fixture = createDetail();
     flushInitialReport();
-    const download = vi.spyOn(reportExport, 'downloadCoachingHistoryCsv').mockImplementation(() => undefined);
+    const createObjectURL = vi.fn(() => 'blob:coaching-history');
+    vi.stubGlobal('URL', { createObjectURL, revokeObjectURL: vi.fn() });
+    const anchorClick = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
 
     const exportPromise = fixture.componentInstance.exportHistory();
     http.expectOne(request => request.url.endsWith('/history') && request.params.get('pageNumber') === '1')
       .flush({ items: [{ id: 'assignment-2', type: 'Assignments', title: 'Ödev', eventDate: '2026-09-11T10:00:00Z', status: 'Graded' }], pageNumber: 1, pageSize: 100, totalCount: 2, totalPages: 1 });
+    await Promise.resolve();
     http.expectOne(request => request.url.endsWith('/history') && request.params.get('pageNumber') === '2')
       .flush({}, { status: 500, statusText: 'Server Error' });
     await exportPromise;
 
-    expect(download).not.toHaveBeenCalled();
+    expect(createObjectURL).not.toHaveBeenCalled();
+    expect(anchorClick).not.toHaveBeenCalled();
     expect(fixture.componentInstance.historyError()).toContain('Tam rapor indirilemedi');
     expect(fixture.componentInstance.isExporting()).toBe(false);
   });

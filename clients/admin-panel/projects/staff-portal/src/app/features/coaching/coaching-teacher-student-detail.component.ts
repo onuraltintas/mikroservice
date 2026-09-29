@@ -5,6 +5,12 @@ import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { finalize } from 'rxjs';
 import {
+  coachingHistoryCsv,
+  collectCoachingHistory,
+  downloadCoachingHistoryCsv,
+  renderCoachingHistoryPrint
+} from '../../../../../../src/app/features/coaching-portal/coaching-history-export';
+import {
   CoachingStudentHistoryFilter,
   CoachingStudentHistoryItem,
   CoachingStudentHistoryType,
@@ -56,6 +62,7 @@ export class CoachingTeacherStudentDetailComponent implements OnInit {
   readonly isProgressLoading = signal(true);
   readonly progressError = signal<string | null>(null);
   readonly isHistoryLoading = signal(false);
+  readonly isExporting = signal(false);
   readonly historyError = signal<string | null>(null);
   historySearch = '';
   historyStatus = '';
@@ -95,10 +102,7 @@ export class CoachingTeacherStudentDetailComponent implements OnInit {
   }
 
   applyFilters(): void {
-    if (this.historyFromDate && this.historyToDate && this.historyFromDate > this.historyToDate) {
-      this.historyError.set('Başlangıç tarihi bitiş tarihinden sonra olamaz.');
-      return;
-    }
+    if (!this.validateHistoryRange()) return;
     this.loadHistory(this.historyType(), 1);
   }
 
@@ -113,6 +117,45 @@ export class CoachingTeacherStudentDetailComponent implements OnInit {
   nextPage(): void {
     if (this.historyPage() < this.historyTotalPages()) {
       this.loadHistory(this.historyType(), this.historyPage() + 1);
+    }
+  }
+
+  async exportHistory(): Promise<void> {
+    if (this.isExporting() || !this.validateHistoryRange()) return;
+    const type = this.historyType();
+    this.isExporting.set(true);
+    this.historyError.set(null);
+    try {
+      const records = await collectCoachingHistory((page, pageSize) =>
+        this.studentsService.getStudentHistory(this.student.userId, type, page, pageSize, this.historyFilter()));
+      downloadCoachingHistoryCsv(coachingHistoryCsv(records), `kocluk-${this.student.userId}-${type.toLowerCase()}.csv`);
+    } catch {
+      this.historyError.set('Tam rapor indirilemedi. Kayıtlar değişmiş veya bağlantı kesilmiş olabilir; yeniden deneyin.');
+    } finally {
+      this.isExporting.set(false);
+    }
+  }
+
+  async printHistory(): Promise<void> {
+    if (this.isExporting() || !this.validateHistoryRange()) return;
+    const target = window.open('', '_blank');
+    if (!target) {
+      this.historyError.set('Yazdırma penceresi açılamadı. Tarayıcınızın açılır pencere iznini kontrol edin.');
+      return;
+    }
+    target.opener = null;
+    const type = this.historyType();
+    this.isExporting.set(true);
+    this.historyError.set(null);
+    try {
+      const records = await collectCoachingHistory((page, pageSize) =>
+        this.studentsService.getStudentHistory(this.student.userId, type, page, pageSize, this.historyFilter()));
+      renderCoachingHistoryPrint(target, records, `${this.student.fullName} · ${this.historyLabels[type]} · Koçluk geçmişi`);
+    } catch {
+      target.close();
+      this.historyError.set('Tam rapor yazdırılamadı. Kayıtlar değişmiş veya bağlantı kesilmiş olabilir; yeniden deneyin.');
+    } finally {
+      this.isExporting.set(false);
     }
   }
 
@@ -144,6 +187,14 @@ export class CoachingTeacherStudentDetailComponent implements OnInit {
       ...(this.historyStatus ? { status: this.historyStatus } : {}),
       ...(this.historySearch.trim() ? { search: this.historySearch.trim() } : {})
     };
+  }
+
+  private validateHistoryRange(): boolean {
+    if (this.historyFromDate && this.historyToDate && this.historyFromDate > this.historyToDate) {
+      this.historyError.set('Başlangıç tarihi bitiş tarihinden sonra olamaz.');
+      return false;
+    }
+    return true;
   }
 
   private loadHistory(type: CoachingStudentHistoryType, pageNumber: number): void {
