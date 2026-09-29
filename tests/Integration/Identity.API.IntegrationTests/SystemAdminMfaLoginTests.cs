@@ -760,6 +760,92 @@ public sealed class SystemAdminMfaLoginTests
         refreshToken.IsActive.Should().BeTrue();
     }
 
+    [Fact]
+    public async Task StaffProductSwitch_ToMfaProtectedInstitutionRole_ShouldKeepCurrentSessionActive()
+    {
+        var user = CreateUserWithRole("Teacher", PlatformProduct.Coaching);
+        AddRole(user, "InstitutionAdmin", PlatformProduct.SpeedReading);
+        user.EnableMfa("protected-secret", ["recovery-hash"], DateTimeOffset.UtcNow);
+        user.GrantProductAccess(
+            PlatformProduct.Coaching,
+            UserProductAccessSource.SelfRegistration,
+            grantedByUserId: null,
+            DateTimeOffset.UtcNow);
+        user.GrantProductAccess(
+            PlatformProduct.SpeedReading,
+            UserProductAccessSource.SelfRegistration,
+            grantedByUserId: null,
+            DateTimeOffset.UtcNow);
+        var refreshToken = RefreshToken.Create(
+            user.Id,
+            "teacher-session-for-admin-switch",
+            DateTime.UtcNow.AddDays(1),
+            "127.0.0.1",
+            product: PlatformProduct.Coaching);
+        user.AddRefreshToken(refreshToken);
+        var tokenService = new IssuingTokenService();
+        var repository = new StubUserRepository(user);
+        var handler = new RefreshTokenCommandHandler(
+            repository,
+            tokenService,
+            new StubConfigurationService(),
+            NullLogger<RefreshTokenCommandHandler>.Instance);
+
+        var result = await handler.Handle(
+            new RefreshTokenCommand(refreshToken.Token, PlatformProduct.SpeedReading),
+            CancellationToken.None);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("Auth.MfaRequired");
+        refreshToken.IsActive.Should().BeTrue();
+        repository.RotationCalls.Should().Be(0);
+        tokenService.AccessTokenRequested.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task StaffProductSwitch_ShouldRequireRefreshTokenToBelongToAuthenticatedUser()
+    {
+        var user = CreateUserWithRole("Teacher", PlatformProduct.Coaching);
+        AddRole(user, "Teacher", PlatformProduct.SpeedReading);
+        user.GrantProductAccess(
+            PlatformProduct.Coaching,
+            UserProductAccessSource.SelfRegistration,
+            grantedByUserId: null,
+            DateTimeOffset.UtcNow);
+        user.GrantProductAccess(
+            PlatformProduct.SpeedReading,
+            UserProductAccessSource.SelfRegistration,
+            grantedByUserId: null,
+            DateTimeOffset.UtcNow);
+        var refreshToken = RefreshToken.Create(
+            user.Id,
+            "refresh-token-from-another-account",
+            DateTime.UtcNow.AddDays(1),
+            "127.0.0.1",
+            product: PlatformProduct.Coaching);
+        user.AddRefreshToken(refreshToken);
+        var tokenService = new IssuingTokenService();
+        var repository = new StubUserRepository(user);
+        var handler = new RefreshTokenCommandHandler(
+            repository,
+            tokenService,
+            new StubConfigurationService(),
+            NullLogger<RefreshTokenCommandHandler>.Instance);
+
+        var result = await handler.Handle(
+            new RefreshTokenCommand(
+                refreshToken.Token,
+                PlatformProduct.SpeedReading,
+                Guid.NewGuid()),
+            CancellationToken.None);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("Auth.InvalidToken");
+        refreshToken.IsActive.Should().BeTrue();
+        repository.RotationCalls.Should().Be(0);
+        tokenService.AccessTokenRequested.Should().BeFalse();
+    }
+
     private static void AddRole(User user, string roleName, PlatformProduct product)
     {
         var role = Role.Create(roleName, roleName);

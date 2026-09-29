@@ -1,5 +1,6 @@
 using EduPlatform.Shared.Kernel.Results;
 using EduPlatform.Shared.Security.Authorization;
+using Identity.Application.Authorization;
 using Identity.Application.Interfaces;
 using Identity.Domain.Entities;
 using MediatR;
@@ -44,7 +45,25 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, R
         if (existingRefreshToken == null || !existingRefreshToken.IsActive)
              return Result.Failure<RefreshTokenResponse>(new Error("Auth.InvalidToken", "Oturum süresi dolmuş veya geçersiz."));
 
-        var productRoles = user.GetRolesForProductScope(existingRefreshToken.Product).ToArray();
+        if (request.ExpectedUserId is { } expectedUserId && expectedUserId != user.Id)
+        {
+            return Result.Failure<RefreshTokenResponse>(new Error(
+                "Auth.InvalidToken",
+                "Oturum anahtarı artık geçerli değil; lütfen tekrar giriş yapın."));
+        }
+
+        var requestedProduct = request.TargetProduct;
+        var targetProduct = requestedProduct ?? existingRefreshToken.Product;
+        var isProductSwitch = requestedProduct.HasValue;
+        if (requestedProduct is { } productToSwitchTo
+            && StaffProductAccessPolicy.GetStaffRoles(user, productToSwitchTo).Count == 0)
+        {
+            return Result.Failure<RefreshTokenResponse>(new Error(
+                "Auth.ProductAccessDenied",
+                "Bu platformda personel erişiminiz bulunmuyor."));
+        }
+
+        var productRoles = user.GetRolesForProductScope(targetProduct).ToArray();
         var isSystemAdministrator = productRoles.Any(role =>
             role.Role is not null
             && string.Equals(role.Role.Name, "SystemAdmin", StringComparison.OrdinalIgnoreCase));
@@ -69,33 +88,40 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, R
                 || string.Equals(role.Role.Name, "Editor", StringComparison.OrdinalIgnoreCase)));
         if (isPrivilegedAdministrator
             && user.MfaEnabled
-            && existingRefreshToken.MfaVerifiedAt is null
             && await IsPrivilegedMfaRequiredAsync(cancellationToken))
         {
-            var revoked = await _userRepository.RevokeRefreshTokenAsync(
-                request.RefreshToken,
-                "system",
-                "MFA reauthentication required",
-                cancellationToken);
-            if (!revoked)
-                return InvalidatedRefreshToken();
+            if (existingRefreshToken.MfaVerifiedAt is null)
+            {
+                if (!isProductSwitch)
+                {
+                    var revoked = await _userRepository.RevokeRefreshTokenAsync(
+                        request.RefreshToken,
+                        "system",
+                        "MFA reauthentication required",
+                        cancellationToken);
+                    if (!revoked)
+                        return InvalidatedRefreshToken();
+                }
 
-            return Result.Failure<RefreshTokenResponse>(new Error(
-                "Auth.MfaRequired",
-                "Yönetici oturumunun iki adımlı doğrulamayla yeniden açılması gerekiyor."));
+                return Result.Failure<RefreshTokenResponse>(new Error(
+                    "Auth.MfaRequired",
+                    isProductSwitch
+                        ? "Bu yönetici paneline geçmek için yeniden giriş yapıp iki adımlı doğrulamayı tamamlayın."
+                        : "Yönetici oturumunun iki adımlı doğrulamayla yeniden açılması gerekiyor."));
+            }
         }
 
         // Generate the replacement before atomically revoking the old token.
         var newAccessToken = await _tokenService.GenerateAccessTokenAsync(
             user,
             existingRefreshToken.MfaVerifiedAt,
-            existingRefreshToken.Product);
+            targetProduct);
         var newRefreshToken = _tokenService.GenerateRefreshToken(
             user.Id,
             "0.0.0.0",
             existingRefreshToken.IsPersistent,
             existingRefreshToken.MfaVerifiedAt,
-            existingRefreshToken.Product);
+            targetProduct);
         
         var rotated = await _userRepository.RotateRefreshTokenAsync(
             request.RefreshToken,

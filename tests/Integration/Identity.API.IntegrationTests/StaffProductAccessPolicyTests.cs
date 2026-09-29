@@ -7,6 +7,33 @@ namespace Identity.API.IntegrationTests;
 
 public sealed class StaffProductAccessPolicyTests
 {
+    [Fact]
+    public void GetProductAccesses_ShouldKeepStaffRolesSeparatedByProduct()
+    {
+        var user = User.Create(Guid.NewGuid(), "dual-staff@example.com");
+        AddRole(user, "Teacher", PlatformProduct.Coaching);
+        AddRole(user, "InstitutionAdmin", PlatformProduct.SpeedReading);
+        AddRole(user, "Student", PlatformProduct.Coaching);
+        user.GrantProductAccess(
+            PlatformProduct.Coaching,
+            UserProductAccessSource.Admin,
+            grantedByUserId: null,
+            DateTimeOffset.UtcNow);
+        user.GrantProductAccess(
+            PlatformProduct.SpeedReading,
+            UserProductAccessSource.Admin,
+            grantedByUserId: null,
+            DateTimeOffset.UtcNow);
+
+        var accesses = StaffProductAccessPolicy.GetProductAccesses(user);
+
+        accesses.Should().BeEquivalentTo(
+        [
+            new StaffPortalProductAccess(PlatformProduct.Coaching, ["Teacher"]),
+            new StaffPortalProductAccess(PlatformProduct.SpeedReading, ["InstitutionAdmin"])
+        ]);
+    }
+
     [Theory]
     [InlineData("SystemAdmin")]
     [InlineData("Editor")]
