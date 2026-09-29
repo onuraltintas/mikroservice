@@ -24,7 +24,7 @@ describe('StaffAuthService product-scoped sessions', () => {
     expect(loginRequest.request.body).toEqual({
       email: 'teacher@example.com',
       password: 'correct horse battery staple',
-      rememberMe: true
+      rememberMe: false
     });
     loginRequest.flush({ accessToken: 'coaching-access', expiresInMinutes: 15, tokenType: 'Bearer' });
     await Promise.resolve();
@@ -41,6 +41,18 @@ describe('StaffAuthService product-scoped sessions', () => {
       { product: 'coaching', roles: ['Teacher'] },
       { product: 'speed-reading', roles: ['InstitutionAdmin'] }
     ]);
+  });
+
+  it('honors an explicit remember-me choice', async () => {
+    const login = service.login('coaching', 'teacher@example.com', 'password', true);
+    const request = http.expectOne('/api/auth/coaching/login');
+    expect(request.request.body.rememberMe).toBe(true);
+    request.flush({ accessToken: 'coaching-access', expiresInMinutes: 15, tokenType: 'Bearer' });
+    await Promise.resolve();
+    http.expectOne('/api/auth/staff-session/products').flush([
+      { product: 'coaching', roles: ['Teacher'] }
+    ]);
+    await login;
   });
 
   it('rotates into the selected product session without persisting access tokens', async () => {
@@ -80,7 +92,7 @@ describe('StaffAuthService product-scoped sessions', () => {
   });
 
   it('enables MFA, keeps the returned session and shows authorized products', async () => {
-    const enabling = service.enableMfa('mfa-challenge', 'setup-token', '123456');
+    const enabling = service.enableMfa('coaching', 'mfa-challenge', 'setup-token', '123456');
     const request = http.expectOne('/api/auth/mfa/enable');
     expect(request.request.withCredentials).toBe(true);
     expect(request.request.body).toEqual({
@@ -105,7 +117,7 @@ describe('StaffAuthService product-scoped sessions', () => {
   });
 
   it('verifies an MFA recovery code through the shared Identity endpoint', async () => {
-    const verifying = service.verifyMfa('mfa-challenge', null, 'RECOVERY-01');
+    const verifying = service.verifyMfa('coaching', 'mfa-challenge', null, 'RECOVERY-01');
     const request = http.expectOne('/api/auth/mfa/verify');
     expect(request.request.body).toEqual({
       challengeToken: 'mfa-challenge',
