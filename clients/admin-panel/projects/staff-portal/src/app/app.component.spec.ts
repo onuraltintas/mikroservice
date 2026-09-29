@@ -1,6 +1,8 @@
+import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { vi } from 'vitest';
 import { StaffAuthService } from './auth/staff-auth.service';
+import { StaffProductAccess } from './auth/staff-auth.models';
 import { AppComponent } from './app.component';
 
 describe('Staff portal MFA flow', () => {
@@ -72,9 +74,58 @@ describe('Staff portal MFA flow', () => {
   });
 });
 
+describe('Staff portal workspace role selection', () => {
+  it('defaults dual-role coaching accounts to the institution workspace without rendering both panels', () => {
+    const component = createWorkspaceComponent();
+
+    expect(component.activeWorkspaceRole).toBe('institution');
+    expect(component.canSwitchWorkspaceRole).toBe(true);
+    expect(component.isInstitutionWorkspaceSelected).toBe(true);
+    expect(component.isTeacherWorkspaceSelected).toBe(false);
+  });
+
+  it('switches to the teacher workspace when the user selects it', () => {
+    const component = createWorkspaceComponent();
+
+    component.selectWorkspaceRole('teacher');
+
+    expect(component.activeWorkspaceRole).toBe('teacher');
+    expect(component.isTeacherWorkspaceSelected).toBe(true);
+    expect(component.isInstitutionWorkspaceSelected).toBe(false);
+  });
+
+  it('uses only roles granted for the currently active product', () => {
+    const activeProduct = signal<'coaching' | 'speed-reading'>('coaching');
+    const component = createComponent({
+      products: signal<StaffProductAccess[]>([
+        { product: 'coaching', roles: ['Teacher', 'InstitutionAdmin'] },
+        { product: 'speed-reading', roles: ['Teacher'] }
+      ]),
+      activeProduct
+    });
+
+    component.selectWorkspaceRole('teacher');
+    activeProduct.set('speed-reading');
+    expect(component.activeWorkspaceRole).toBe('teacher');
+    expect(component.canSwitchWorkspaceRole).toBe(false);
+    component.selectWorkspaceRole('institution');
+    expect(component.activeWorkspaceRole).toBe('teacher');
+
+    activeProduct.set('coaching');
+    expect(component.activeWorkspaceRole).toBe('teacher');
+  });
+});
+
 function createComponent(auth: Partial<StaffAuthService>): AppComponent {
   TestBed.configureTestingModule({
     providers: [{ provide: StaffAuthService, useValue: auth }]
   });
   return TestBed.runInInjectionContext(() => new AppComponent());
+}
+
+function createWorkspaceComponent(): AppComponent {
+  return createComponent({
+    products: signal<StaffProductAccess[]>([{ product: 'coaching', roles: ['Teacher', 'InstitutionAdmin'] }]),
+    activeProduct: signal('coaching')
+  });
 }
