@@ -34,6 +34,51 @@ describe('CoachingTeacherSessionsService', () => {
     request.flush({ message: 'Session cancelled successfully' });
   });
 
+  it('loads an authorized session detail for editing', () => {
+    service.getSession('session-1').subscribe();
+
+    const request = http.expectOne('/api/sessions/session-1');
+    expect(request.request.method).toBe('GET');
+    request.flush({ id: 'session-1' });
+  });
+
+  it('creates a session with an idempotency key and normalized participant ids', () => {
+    service.createSession({
+      teacherId: 'teacher-1', studentId: 'student-1', studentIds: ['student-1', ' student-1 '],
+      startTime: '2030-01-01T10:00:00Z', durationMinutes: 45, subject: '  Matematik  ',
+      notes: '  Not  ', type: 'OneOnOne', meetingLink: '  https://meet.example.test  ',
+      teacherNotesVisibility: 'StudentVisible'
+    }, 'idempotency-key').subscribe();
+
+    const request = http.expectOne('/api/sessions');
+    expect(request.request.method).toBe('POST');
+    expect(request.request.headers.get('Idempotency-Key')).toBe('idempotency-key');
+    expect(request.request.body).toMatchObject({
+      teacherId: 'teacher-1', studentId: 'student-1', studentIds: ['student-1'],
+      subject: 'Matematik', notes: 'Not', meetingLink: 'https://meet.example.test',
+      teacherNotesVisibility: 'StudentVisible'
+    });
+    request.flush({ sessionId: 'session-1' });
+  });
+
+  it('updates editable session details without pretending participant assignments are editable', () => {
+    service.updateSession('session-1', {
+      sessionId: 'session-1', title: '  Yeni başlık  ', description: '  Açıklama  ',
+      scheduledDate: '2030-01-02T10:00:00Z', durationMinutes: 60,
+      meetingLink: '  https://meet.example.test  ', teacherNotes: '  Koç notu  ',
+      teacherNotesVisibility: 'CoachPrivate'
+    }).subscribe();
+
+    const request = http.expectOne('/api/sessions/session-1');
+    expect(request.request.method).toBe('PUT');
+    expect(request.request.body).toMatchObject({
+      sessionId: 'session-1', title: 'Yeni başlık', description: 'Açıklama',
+      teacherNotes: 'Koç notu', meetingLink: 'https://meet.example.test'
+    });
+    expect(request.request.body['studentIds']).toBeUndefined();
+    request.flush({ sessionId: 'session-1', scheduledDate: '2030-01-02T10:00:00Z' });
+  });
+
   it('saves teacher attendance against the selected student', () => {
     service.updateAttendance('session-1', 'student-1', false).subscribe();
 

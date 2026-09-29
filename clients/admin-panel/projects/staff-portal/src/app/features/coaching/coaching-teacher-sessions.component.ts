@@ -3,16 +3,19 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { finalize, forkJoin } from 'rxjs';
 import { StaffAuthService } from '../../auth/staff-auth.service';
 import { CoachingTeacherStudentsService } from './coaching-teacher-students.service';
+import { CoachingTeacherSessionFormComponent } from './coaching-teacher-session-form.component';
 import {
   CoachingTeacherSession,
   CoachingTeacherSessionReflection,
   CoachingTeacherSessionsService
 } from './coaching-teacher-sessions.service';
 
+type SessionFormMode = { kind: 'new' } | { kind: 'edit'; id: string };
+
 @Component({
   selector: 'staff-coaching-teacher-sessions',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, CoachingTeacherSessionFormComponent],
   templateUrl: './coaching-teacher-sessions.component.html',
   styleUrl: './coaching-teacher-sessions.component.scss'
 })
@@ -26,6 +29,7 @@ export class CoachingTeacherSessionsComponent implements OnInit {
   readonly studentNameLookupFailed = signal(false);
   readonly isLoading = signal(true);
   readonly errorMessage = signal<string | null>(null);
+  readonly successMessage = signal<string | null>(null);
   readonly pageNumber = signal(1);
   readonly totalPages = signal(1);
   readonly totalCount = signal(0);
@@ -33,6 +37,7 @@ export class CoachingTeacherSessionsComponent implements OnInit {
   readonly savingAttendanceKey = signal<string | null>(null);
   readonly savingCancellationId = signal<string | null>(null);
   readonly pendingCancellationId = signal<string | null>(null);
+  readonly formMode = signal<SessionFormMode | null>(null);
 
   ngOnInit(): void {
     if (!this.authService.getCurrentUserId()) {
@@ -100,6 +105,10 @@ export class CoachingTeacherSessionsComponent implements OnInit {
   canCancel(session: CoachingTeacherSession): boolean {
     return !['Cancelled', 'Completed'].includes(session.status)
       && new Date(session.startTime).getTime() > Date.now();
+  }
+
+  canEdit(session: CoachingTeacherSession): boolean {
+    return session.status === 'Scheduled' && new Date(session.startTime).getTime() > Date.now();
   }
 
   requestCancellation(sessionId: string): void {
@@ -177,6 +186,26 @@ export class CoachingTeacherSessionsComponent implements OnInit {
       },
       error: () => this.errorMessage.set('Takvim dosyası indirilemedi. Lütfen tekrar deneyin.')
     });
+  }
+
+  createSession(): void {
+    this.successMessage.set(null);
+    this.formMode.set({ kind: 'new' });
+  }
+
+  editSession(sessionId: string): void {
+    this.successMessage.set(null);
+    this.formMode.set({ kind: 'edit', id: sessionId });
+  }
+
+  closeSessionForm(): void {
+    this.formMode.set(null);
+  }
+
+  onSessionSaved(): void {
+    this.formMode.set(null);
+    this.successMessage.set('Seans kaydedildi.');
+    this.load();
   }
 
   sessionTypeLabel(type: string): string {

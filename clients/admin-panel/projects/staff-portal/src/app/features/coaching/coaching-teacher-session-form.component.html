@@ -1,0 +1,100 @@
+<section class="session-form" aria-labelledby="session-form-title">
+  <button type="button" class="back-button" data-testid="close-session-form" (click)="closeForm()">← Seanslarıma dön</button>
+  <header class="form-heading">
+    <p class="form-eyebrow">KOÇLUK · SEANS YÖNETİMİ</p>
+    <h3 id="session-form-title">{{ isEditing ? 'Seansı düzenle' : 'Yeni seans planla' }}</h3>
+    <p>{{ isEditing ? 'Seans zamanı ve notları güncellenebilir; katılımcı listesi değiştirilemez.' : 'Yalnızca size bağlı aktif öğrencilerle seans planlayın.' }}</p>
+  </header>
+
+  @if (errorMessage()) { <div class="form-error" role="alert">{{ errorMessage() }}</div> }
+  @if (successMessage()) { <div class="form-success" role="status">{{ successMessage() }}</div> }
+  @if (isLoading()) {
+    <div class="form-loading" aria-label="Seans formu yükleniyor"><div></div></div>
+  } @else {
+    <form (ngSubmit)="submit()" class="session-form-body">
+      <div class="form-grid three-columns">
+        <label>Başlangıç
+          <input [(ngModel)]="form.startTime" name="startTime" type="datetime-local" required>
+        </label>
+        <label>Süre (dakika)
+          <input [(ngModel)]="form.durationMinutes" name="durationMinutes" type="number" min="1" max="240" required>
+        </label>
+        <label>Seans türü
+          <select [(ngModel)]="form.type" name="type" [disabled]="isEditing">
+            <option value="OneOnOne">Birebir</option>
+            <option value="Group">Grup</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="form-grid two-columns">
+        <label>Ders / konu
+          <input [(ngModel)]="form.subject" name="subject" maxlength="200" placeholder="Örn. Matematik">
+        </label>
+        <label>Görüşme bağlantısı (opsiyonel)
+          <input [(ngModel)]="form.meetingLink" name="meetingLink" type="url" maxlength="500" placeholder="https://...">
+        </label>
+      </div>
+
+      <label class="notes-field">Koç notu (opsiyonel)
+        <textarea [(ngModel)]="form.notes" name="notes" maxlength="2000" rows="3"></textarea>
+      </label>
+
+      <label class="notes-visibility">Not görünürlüğü
+        <select [(ngModel)]="form.notesVisibility" name="notesVisibility">
+          <option value="CoachPrivate">Yalnız koç</option>
+          <option value="StudentVisible">Öğrenci</option>
+          <option value="GuardianVisible">Doğrulanmış veli / vasi</option>
+          <option value="InstitutionVisible">Kurum yöneticisi</option>
+        </select>
+        <span>Not yalnız seçtiğiniz hedef kitleyle paylaşılır. Varsayılan: yalnız koç.</span>
+      </label>
+
+      @if (isEditing) {
+        <fieldset class="participants-fieldset">
+          <legend>Mevcut katılımcılar · {{ selectedStudentIds().length }}</legend>
+          <p class="read-only-participants">Katılımcılar düzenleme sırasında değiştirilemez.</p>
+          <ul class="selected-students">
+            @for (studentId of selectedStudentIds(); track studentId) {
+              <li>{{ studentLabel(studentId) }}</li>
+            }
+          </ul>
+        </fieldset>
+      } @else {
+        <fieldset class="participants-fieldset">
+          <legend>Katılımcı öğrenciler · {{ selectedStudentIds().length }} seçili</legend>
+          <div class="student-search" role="search">
+            <label class="visually-hidden" for="session-student-search">Öğrenci ara</label>
+            <input #studentSearchInput id="session-student-search" type="search" [value]="studentSearchTerm()" placeholder="Öğrenci adıyla ara">
+            <button type="button" (click)="setStudentSearch(studentSearchInput.value)">Ara</button>
+          </div>
+          <div class="student-options">
+            @for (student of students(); track student.userId) {
+              <label class="student-option">
+                <input type="checkbox" [checked]="isSelected(student.userId)" (change)="toggleStudent(student.userId)">
+                <span>{{ student.fullName }}@if (student.gradeLevel) { <small> · {{ student.gradeLevel }}. sınıf</small> }</span>
+              </label>
+            } @empty {
+              <p class="no-students">Bu aramayla eşleşen aktif öğrenci bulunamadı.</p>
+            }
+          </div>
+          @if (studentTotalPages() > 1) {
+            <div class="student-pagination">
+              <button type="button" (click)="previousStudentsPage()" [disabled]="studentPageNumber() <= 1 || isLoadingStudents()">Önceki</button>
+              <span>Sayfa {{ studentPageNumber() }} / {{ studentTotalPages() }}</span>
+              <button type="button" (click)="nextStudentsPage()" [disabled]="studentPageNumber() >= studentTotalPages() || isLoadingStudents()">Sonraki</button>
+            </div>
+          }
+          @if (form.type === 'Group') { <small class="participant-hint">Grup seansında 2–100 öğrenci seçilmelidir.</small> }
+        </fieldset>
+      }
+
+      <div class="form-actions">
+        <button type="button" class="cancel-form" (click)="closeForm()">Vazgeç</button>
+        <button type="submit" class="save-session" [disabled]="isSaving()">
+          {{ isSaving() ? 'Kaydediliyor…' : (isEditing ? 'Değişiklikleri kaydet' : 'Seansı planla') }}
+        </button>
+      </div>
+    </form>
+  }
+</section>

@@ -87,6 +87,23 @@ describe('CoachingTeacherSessionsComponent', () => {
     expect(sessions.getTeacherSessions).toHaveBeenNthCalledWith(2, 'teacher-1', 2, 25);
     expect(fixture.componentInstance.sessions().map(item => item.id)).toEqual(['session-1', 'session-2']);
   });
+
+  it('opens the create and edit forms from the teacher session list', () => {
+    const sessions = sessionService([session('session-1')]);
+    const fixture = createFixture(sessions, studentService());
+    fixture.detectChanges();
+
+    (fixture.nativeElement.querySelector('[data-testid="create-session"]') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Yeni seans planla');
+
+    (fixture.nativeElement.querySelector('[data-testid="close-session-form"]') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    (fixture.nativeElement.querySelector('[data-testid="edit-session-session-1"]') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    expect(sessions.getSession).toHaveBeenCalledWith('session-1');
+    expect(fixture.nativeElement.textContent).toContain('Seansı düzenle');
+  });
 });
 
 function createFixture(
@@ -129,6 +146,9 @@ function page(items: CoachingTeacherSession[], pageNumber = 1, totalPages = 1) {
 function sessionService(items: CoachingTeacherSession[]) {
   return {
     getTeacherSessions: vi.fn(() => of(page(items))),
+    getSession: vi.fn(() => of(session('session-1'))),
+    createSession: vi.fn(() => of({ sessionId: 'session-new' })),
+    updateSession: vi.fn(() => of({ sessionId: 'session-1', scheduledDate: '2030-01-02T10:00:00Z' })),
     cancelSession: vi.fn(() => of({ message: 'ok' })),
     updateAttendance: vi.fn(() => of({ message: 'ok' })),
     downloadCalendarFeed: vi.fn(() => of(new Blob(['BEGIN:VCALENDAR'], { type: 'text/calendar' })))

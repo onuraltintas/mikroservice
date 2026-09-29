@@ -1,4 +1,4 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
@@ -33,6 +33,32 @@ export interface PagedCoachingTeacherSessions {
   totalPages?: number;
 }
 
+export type CoachingNoteVisibility = 'CoachPrivate' | 'StudentVisible' | 'GuardianVisible' | 'InstitutionVisible';
+
+export interface CoachingTeacherSessionCreateRequest {
+  teacherId: string;
+  studentId: string;
+  startTime: string;
+  durationMinutes: number;
+  subject: string | null;
+  notes: string | null;
+  type: 'OneOnOne' | 'Group';
+  studentIds: string[];
+  meetingLink: string | null;
+  teacherNotesVisibility: CoachingNoteVisibility;
+}
+
+export interface CoachingTeacherSessionUpdateRequest {
+  sessionId: string;
+  title: string;
+  description: string | null;
+  scheduledDate: string;
+  durationMinutes: number;
+  meetingLink: string | null;
+  teacherNotes: string | null;
+  teacherNotesVisibility: CoachingNoteVisibility;
+}
+
 @Injectable({ providedIn: 'root' })
 export class CoachingTeacherSessionsService {
   private readonly http = inject(HttpClient);
@@ -50,6 +76,41 @@ export class CoachingTeacherSessionsService {
     return this.http.get<PagedCoachingTeacherSessions>(
       `${this.url}/teacher/${encodeURIComponent(teacherId)}`,
       { params }
+    );
+  }
+
+  getSession(sessionId: string): Observable<CoachingTeacherSession> {
+    return this.http.get<CoachingTeacherSession>(`${this.url}/${encodeURIComponent(sessionId)}`);
+  }
+
+  createSession(
+    request: CoachingTeacherSessionCreateRequest,
+    idempotencyKey: string
+  ): Observable<{ sessionId: string }> {
+    const headers = new HttpHeaders({ 'Idempotency-Key': idempotencyKey });
+    return this.http.post<{ sessionId: string }>(this.url, {
+      ...request,
+      subject: request.subject?.trim() || null,
+      notes: request.notes?.trim() || null,
+      meetingLink: request.meetingLink?.trim() || null,
+      studentIds: [...new Set(request.studentIds.map(studentId => studentId.trim()).filter(Boolean))]
+    }, { headers });
+  }
+
+  updateSession(
+    sessionId: string,
+    request: CoachingTeacherSessionUpdateRequest
+  ): Observable<{ sessionId: string; scheduledDate: string }> {
+    return this.http.put<{ sessionId: string; scheduledDate: string }>(
+      `${this.url}/${encodeURIComponent(sessionId)}`,
+      {
+        ...request,
+        sessionId,
+        title: request.title.trim(),
+        description: request.description?.trim() || null,
+        meetingLink: request.meetingLink?.trim() || null,
+        teacherNotes: request.teacherNotes?.trim() || null
+      }
     );
   }
 

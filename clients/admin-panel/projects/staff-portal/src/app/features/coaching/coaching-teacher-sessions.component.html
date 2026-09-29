@@ -1,15 +1,25 @@
-<section class="teacher-sessions" aria-labelledby="teacher-sessions-title">
-  <header class="sessions-heading">
-    <div>
-      <p class="sessions-eyebrow">KOÇLUK · TAKVİM</p>
-      <h3 id="teacher-sessions-title">Seanslarım</h3>
-      <p>Planlanan ve tamamlanan görüşmeleri takip edin, katılımı kaydedin.</p>
-    </div>
-    <button type="button" data-testid="calendar-export" (click)="exportCalendar()">Takvime aktar (.ics)</button>
-  </header>
+@if (formMode(); as mode) {
+  <staff-coaching-teacher-session-form
+    [sessionId]="mode.kind === 'edit' ? mode.id : null"
+    (close)="closeSessionForm()"
+    (saved)="onSessionSaved()" />
+} @else {
+  <section class="teacher-sessions" aria-labelledby="teacher-sessions-title">
+    <header class="sessions-heading">
+      <div>
+        <p class="sessions-eyebrow">KOÇLUK · TAKVİM</p>
+        <h3 id="teacher-sessions-title">Seanslarım</h3>
+        <p>Planlanan ve tamamlanan görüşmeleri takip edin, katılımı kaydedin.</p>
+      </div>
+      <div class="sessions-heading-actions">
+        <button type="button" data-testid="calendar-export" (click)="exportCalendar()">Takvime aktar (.ics)</button>
+        <button type="button" class="create-session" data-testid="create-session" (click)="createSession()">Yeni seans planla</button>
+      </div>
+    </header>
 
-  @if (errorMessage()) { <div class="sessions-error" role="alert">{{ errorMessage() }}</div> }
-  @if (isLoading()) {
+    @if (successMessage()) { <div class="sessions-success" role="status">{{ successMessage() }}</div> }
+    @if (errorMessage()) { <div class="sessions-error" role="alert">{{ errorMessage() }}</div> }
+    @if (isLoading()) {
     <div class="sessions-loading" aria-label="Seanslar yükleniyor"><div></div><div></div></div>
   } @else if (sessions().length === 0) {
     <div class="sessions-empty">
@@ -49,6 +59,11 @@
 
           @if (session.meetingLink) {
             <a class="meeting-link" [href]="session.meetingLink" target="_blank" rel="noopener noreferrer">Online görüşmeye katıl →</a>
+          }
+
+          @if (canEdit(session)) {
+            <button type="button" class="edit-session" [attr.data-testid]="'edit-session-' + session.id"
+              (click)="editSession(session.id)">Seansı düzenle</button>
           }
 
           @if (session.studentReflections?.length) {
@@ -101,5 +116,6 @@
         </button>
       </div>
     }
-  }
-</section>
+    }
+  </section>
+}
