@@ -680,6 +680,95 @@ public sealed class SystemAdminMfaLoginTests
     }
 
     [Fact]
+    public async Task StaffProductSwitch_ShouldIssueSessionScopedToTargetProduct()
+    {
+        var user = CreateUserWithRole("Teacher", PlatformProduct.Coaching);
+        AddRole(user, "Teacher", PlatformProduct.SpeedReading);
+        user.GrantProductAccess(
+            PlatformProduct.Coaching,
+            UserProductAccessSource.SelfRegistration,
+            grantedByUserId: null,
+            DateTimeOffset.UtcNow);
+        user.GrantProductAccess(
+            PlatformProduct.SpeedReading,
+            UserProductAccessSource.SelfRegistration,
+            grantedByUserId: null,
+            DateTimeOffset.UtcNow);
+        var refreshToken = RefreshToken.Create(
+            user.Id,
+            "coaching-session-for-switch",
+            DateTime.UtcNow.AddDays(1),
+            "127.0.0.1",
+            product: PlatformProduct.Coaching);
+        user.AddRefreshToken(refreshToken);
+        var tokenService = new IssuingTokenService();
+        var handler = new RefreshTokenCommandHandler(
+            new StubUserRepository(user),
+            tokenService,
+            new StubConfigurationService(),
+            NullLogger<RefreshTokenCommandHandler>.Instance);
+
+        var result = await handler.Handle(
+            new RefreshTokenCommand(refreshToken.Token, PlatformProduct.SpeedReading),
+            CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        tokenService.AccessTokenProduct.Should().Be(PlatformProduct.SpeedReading);
+        tokenService.RefreshTokenProduct.Should().Be(PlatformProduct.SpeedReading);
+        refreshToken.IsRevoked.Should().BeTrue();
+        user.RefreshTokens.Should().ContainSingle(token =>
+            token.IsActive && token.Product == PlatformProduct.SpeedReading);
+    }
+
+    [Fact]
+    public async Task StaffProductSwitch_WithoutTargetStaffRole_ShouldNotIssueOrRotateSession()
+    {
+        var user = CreateUserWithRole("Student", PlatformProduct.Coaching);
+        user.GrantProductAccess(
+            PlatformProduct.Coaching,
+            UserProductAccessSource.SelfRegistration,
+            grantedByUserId: null,
+            DateTimeOffset.UtcNow);
+        user.GrantProductAccess(
+            PlatformProduct.SpeedReading,
+            UserProductAccessSource.SelfRegistration,
+            grantedByUserId: null,
+            DateTimeOffset.UtcNow);
+        var refreshToken = RefreshToken.Create(
+            user.Id,
+            "student-session-for-switch",
+            DateTime.UtcNow.AddDays(1),
+            "127.0.0.1",
+            product: PlatformProduct.Coaching);
+        user.AddRefreshToken(refreshToken);
+        var tokenService = new IssuingTokenService();
+        var repository = new StubUserRepository(user);
+        var handler = new RefreshTokenCommandHandler(
+            repository,
+            tokenService,
+            new StubConfigurationService(),
+            NullLogger<RefreshTokenCommandHandler>.Instance);
+
+        var result = await handler.Handle(
+            new RefreshTokenCommand(refreshToken.Token, PlatformProduct.SpeedReading),
+            CancellationToken.None);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("Auth.ProductAccessDenied");
+        tokenService.AccessTokenRequested.Should().BeFalse();
+        repository.RotationCalls.Should().Be(0);
+        refreshToken.IsActive.Should().BeTrue();
+    }
+
+    private static void AddRole(User user, string roleName, PlatformProduct product)
+    {
+        var role = Role.Create(roleName, roleName);
+        var userRole = new UserRole(user.Id, role.Id, product);
+        typeof(UserRole).GetProperty(nameof(UserRole.Role))!.SetValue(userRole, role);
+        user.AddRole(userRole);
+    }
+
+    [Fact]
     public async Task RefreshToken_WhenProductAccessWasRevoked_ShouldRevokeSession()
     {
         var user = CreateUserWithRole("Student");
