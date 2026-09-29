@@ -5,9 +5,12 @@ using Coaching.Infrastructure.Repositories;
 using Coaching.Application.Authorization;
 using Coaching.Application.Interfaces;
 using Coaching.Application.Queries.GetStudentAssignments;
+using Coaching.Application.Queries.GetTeacherAssignments;
 using EduPlatform.Shared.Kernel.Exceptions;
+using EduPlatform.Shared.Security.Interfaces;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace Identity.API.IntegrationTests;
 
@@ -43,6 +46,30 @@ public sealed class CoachingTeacherAssignmentFilterTests
         page.TotalCount.Should().Be(2);
         page.Items.Should().ContainSingle().Which.Status.Should().Be(AssignmentStatus.Active);
         page.Items.Single().TeacherId.Should().Be(teacherId);
+    }
+
+    [Fact]
+    public async Task TeacherAssignmentQuery_ShouldRejectAnotherTeachersAssignments()
+    {
+        var currentTeacherId = Guid.NewGuid();
+        var otherTeacherId = Guid.NewGuid();
+        await using var context = new CoachingDbContext(
+            new DbContextOptionsBuilder<CoachingDbContext>()
+                .UseInMemoryDatabase(Guid.NewGuid().ToString())
+                .Options);
+        context.Assignments.Add(Assignment.Create(otherTeacherId, "Başka öğretmenin ödevi", DateTime.UtcNow.AddDays(1)));
+        await context.SaveChangesAsync();
+
+        var handler = new GetTeacherAssignmentsQueryHandler(
+            new AssignmentRepository(context),
+            new CoachingAccessPolicy(new TeacherCurrentUserService(currentTeacherId)));
+
+        var action = () => handler.Handle(
+            new GetTeacherAssignmentsQuery(otherTeacherId),
+            CancellationToken.None);
+
+        await action.Should().ThrowAsync<BusinessRuleException>()
+            .Where(exception => exception.Code == "Authorization.Forbidden");
     }
 
     [Fact]
@@ -119,5 +146,15 @@ public sealed class CoachingTeacherAssignmentFilterTests
             Guid viewerUserId,
             IReadOnlyCollection<Guid> studentIds,
             CancellationToken cancellationToken) => Task.FromResult(studentIds);
+    }
+
+    private sealed class TeacherCurrentUserService(Guid userId) : ICurrentUserService
+    {
+        public Guid? UserId => userId;
+        public string? Email => null;
+        public string? FullName => null;
+        public IEnumerable<string> Roles => ["Teacher"];
+        public bool IsAuthenticated => true;
+        public ClaimsPrincipal? User => null;
     }
 }

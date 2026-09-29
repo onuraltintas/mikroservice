@@ -55,6 +55,24 @@ describe('StaffAuthService product-scoped sessions', () => {
     await login;
   });
 
+  it('exposes the user id from the in-memory access token without persisting it', async () => {
+    const payload = btoa(JSON.stringify({
+      sub: 'teacher-1',
+      exp: Math.floor(Date.now() / 1000) + 900
+    }));
+    const login = service.login('coaching', 'teacher@example.com', 'password');
+    http.expectOne('/api/auth/coaching/login').flush({
+      accessToken: `e30.${payload}.signature`, expiresInMinutes: 15, tokenType: 'Bearer'
+    });
+    await Promise.resolve();
+    http.expectOne('/api/auth/staff-session/products').flush([
+      { product: 'coaching', roles: ['Teacher'] }
+    ]);
+    await login;
+
+    expect(service.getCurrentUserId()).toBe('teacher-1');
+  });
+
   it('rotates into the selected product session without persisting access tokens', async () => {
     const login = service.login('coaching', 'teacher@example.com', 'password');
     http.expectOne('/api/auth/coaching/login').flush({
