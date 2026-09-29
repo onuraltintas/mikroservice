@@ -81,6 +81,37 @@ public sealed class SpeedReadingInstitutionMembersControllerTests
         totalCount.Should().Be(2);
     }
 
+    [Fact]
+    public async Task Member_view_distinguishes_inactive_membership_from_inactive_account()
+    {
+        var institutionId = Guid.NewGuid();
+        var inactiveMembershipUser = Guid.NewGuid();
+        var inactiveAccountUser = Guid.NewGuid();
+        var now = DateTime.UtcNow;
+        var membershipStore = new StubMemberships(
+        [
+            Record(institutionId, inactiveMembershipUser, true, now, membershipActive: false),
+            Record(institutionId, inactiveAccountUser, true, now)
+        ]);
+        var userDirectory = new StubUserDirectory(
+            User(inactiveMembershipUser, true),
+            User(inactiveAccountUser, false));
+        var controller = CreateController(institutionId, membershipStore, userDirectory);
+
+        var response = await controller.GetMembers(
+            institutionId,
+            pageNumber: 1,
+            pageSize: 10,
+            role: SpeedReadingInstitutionMemberRole.Teacher);
+
+        var (items, _) = ReadPage(response);
+        items.Should().ContainSingle(item => item.UserId == inactiveMembershipUser)
+            .Which.IsMembershipActive.Should().BeFalse();
+        items.Should().ContainSingle(item => item.UserId == inactiveAccountUser)
+            .Which.IsMembershipActive.Should().BeTrue();
+        items.Should().OnlyContain(item => !item.IsActive);
+    }
+
     private static SpeedReadingInstitutionMembersController CreateController(
         Guid institutionId,
         StubMemberships memberships,
@@ -116,11 +147,12 @@ public sealed class SpeedReadingInstitutionMembersControllerTests
         Guid institutionId,
         Guid userId,
         bool profileActive,
-        DateTime createdAt) => new(
+        DateTime createdAt,
+        bool membershipActive = true) => new(
             institutionId,
             userId,
             SpeedReadingInstitutionMemberRole.Teacher,
-            true,
+            membershipActive,
             createdAt,
             null,
             null,
