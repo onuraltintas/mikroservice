@@ -9,6 +9,7 @@ import {
   SpeedReadingInstitutionService,
 } from './speed-reading-institution.service';
 import { SpeedReadingTeacherClassOverview } from './speed-reading-teacher.service';
+import { SpeedReadingInstitutionStudentReportComponent } from './speed-reading-institution-student-report.component';
 
 type MemberStatusFilter = 'all' | 'active' | 'inactive';
 type TeacherOption = { userId: string; displayName: string };
@@ -22,7 +23,7 @@ type MemberStatusChange = {
 @Component({
   selector: 'staff-speed-reading-institution-workspace',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, SpeedReadingInstitutionStudentReportComponent],
   templateUrl: './speed-reading-institution-workspace.component.html',
   styleUrl: './speed-reading-institution-workspace.component.scss',
 })
@@ -55,6 +56,7 @@ export class SpeedReadingInstitutionWorkspaceComponent implements OnInit {
   readonly teacherSearchErrorMessage = signal<string | null>(null);
   readonly studentProfileErrorMessage = signal<string | null>(null);
   readonly memberStatusErrorMessage = signal<string | null>(null);
+  readonly selectedStudentReport = signal<SpeedReadingInstitutionMember | null>(null);
 
   searchInput = '';
   teacherSearchInput = '';
@@ -94,6 +96,7 @@ export class SpeedReadingInstitutionWorkspaceComponent implements OnInit {
     this.editingStudent.set(null);
     this.teacherOptions.set([]);
     this.pendingStatusChange.set(null);
+    this.selectedStudentReport.set(null);
     this.studentProfileErrorMessage.set(null);
     this.memberStatusErrorMessage.set(null);
     this.loadMembers();
@@ -190,6 +193,7 @@ export class SpeedReadingInstitutionWorkspaceComponent implements OnInit {
     if (member.role !== 'Student' || this.isStudentProfileSaving() || this.isMemberStatusSaving())
       return;
     this.pendingStatusChange.set(null);
+    this.selectedStudentReport.set(null);
     this.memberStatusErrorMessage.set(null);
     this.editingStudent.set(member);
     this.studentGradeLevel = member.gradeLevel?.toString() ?? '';
@@ -214,6 +218,19 @@ export class SpeedReadingInstitutionWorkspaceComponent implements OnInit {
     this.editingStudent.set(null);
     this.teacherOptions.set([]);
     this.studentProfileErrorMessage.set(null);
+  }
+
+  openStudentReport(member: SpeedReadingInstitutionMember): void {
+    if (member.role !== 'Student' || this.isStudentProfileSaving() || this.isMemberStatusSaving())
+      return;
+    this.editingStudent.set(null);
+    this.pendingStatusChange.set(null);
+    this.teacherOptions.set([]);
+    this.selectedStudentReport.set(member);
+  }
+
+  closeStudentReport(): void {
+    this.selectedStudentReport.set(null);
   }
 
   searchInstitutionTeachers(): void {
@@ -306,6 +323,7 @@ export class SpeedReadingInstitutionWorkspaceComponent implements OnInit {
   requestMemberStatusChange(member: SpeedReadingInstitutionMember): void {
     if (this.isStudentProfileSaving() || this.isMemberStatusSaving()) return;
     this.editingStudent.set(null);
+    this.selectedStudentReport.set(null);
     this.teacherOptions.set([]);
     this.studentProfileErrorMessage.set(null);
     this.pendingStatusChange.set({

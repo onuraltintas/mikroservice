@@ -118,28 +118,35 @@ describe('SpeedReadingInstitutionService', () => {
   it('loads all student detail analytics through institution-scoped routes', async () => {
     const from = new Date('2026-09-01T00:00:00.000Z');
     const to = new Date('2026-09-30T00:00:00.000Z');
-    const response = firstValueFrom(service.getStudentReport('institution-1', 'student-1', from, to));
-    const paths = [
-      'summary',
-      'reading-speed',
-      'comprehension',
-      'activity'
-    ];
-    const requests = paths.map(path => http.expectOne(request =>
-      request.url === `/api/speed-reading/analytics/institutions/institution-1/students/student-1/${path}`
-        && request.params.get('dateFrom') === from.toISOString()
-        && request.params.get('dateTo') === to.toISOString()));
-    expect(requests.every(request => request.request.method === 'GET')).toBe(true);
+    const response = firstValueFrom(
+      service.getStudentReport('institution-1', 'student-1', from, to),
+    );
+    const paths = ['summary', 'reading-speed', 'comprehension', 'activity'];
+    const requests = paths.map((path) =>
+      http.expectOne(
+        (request) =>
+          request.url ===
+            `/api/speed-reading/analytics/institutions/institution-1/students/student-1/${path}` &&
+          request.params.get('dateFrom') === from.toISOString() &&
+          request.params.get('dateTo') === to.toISOString(),
+      ),
+    );
+    expect(requests.every((request) => request.request.method === 'GET')).toBe(true);
     requests[0].flush({ readingSessions: 6, averageWpm: 238 });
     requests[1].flush({ averageWpm: 238, trend: [], recommendations: [], benchmark: {} });
     requests[2].flush({ averageComprehension: 82, weakAreas: [], strongAreas: [], benchmark: {} });
-    requests[3].flush({ dataAvailable: true, recentActivities: [], currentStreak: {}, studyTime: {} });
+    requests[3].flush({
+      dataAvailable: true,
+      recentActivities: [],
+      currentStreak: {},
+      studyTime: {},
+    });
 
     await expect(response).resolves.toMatchObject({
       summary: { readingSessions: 6 },
       readingSpeed: { averageWpm: 238 },
       comprehension: { averageComprehension: 82 },
-      activity: { dataAvailable: true }
+      activity: { dataAvailable: true },
     });
   });
 });

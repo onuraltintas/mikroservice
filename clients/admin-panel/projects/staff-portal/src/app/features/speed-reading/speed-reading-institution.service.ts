@@ -1,6 +1,6 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
+import { forkJoin, Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { SpeedReadingTeacherClassOverview } from './speed-reading-teacher.service';
 
@@ -42,6 +42,76 @@ export interface SpeedReadingInstitutionMemberFilters {
   searchTerm?: string;
   gradeLevel?: number;
   isActive?: boolean;
+}
+
+export interface SpeedReadingStudentAnalyticsBenchmark {
+  studentValue: number;
+  institutionAverage: number;
+  platformAverage: number;
+  performanceLevel: string;
+}
+
+export interface SpeedReadingInstitutionStudentReport {
+  summary: {
+    readingSessions: number;
+    averageWpm: number;
+    averageComprehension: number;
+    totalReadingMinutes: number;
+    exercisesCompleted: number;
+    exercisesPassed: number;
+    averageSuccessRate: number;
+    currentLevel: number;
+    currentStreak: number;
+    longestStreak: number;
+    totalXp: number;
+    dailyGoalMinutes: number;
+    goalCompletionRate: number;
+  };
+  readingSpeed: {
+    averageWpm: number;
+    improvementRate: number;
+    benchmark: SpeedReadingStudentAnalyticsBenchmark;
+    recommendations: string[];
+  };
+  comprehension: {
+    averageComprehension: number;
+    improvementRate: number;
+    totalQuestionsAttempted: number;
+    correctAnswers: number;
+    successRate: number;
+    benchmark: SpeedReadingStudentAnalyticsBenchmark;
+    weakAreas: string[];
+    strongAreas: string[];
+  };
+  activity: {
+    dataAvailable: boolean;
+    unavailableReason: string | null;
+    currentStreak: {
+      days: number;
+      longestStreak: number;
+      lastActivityDate: string | null;
+      isActive: boolean;
+    };
+    recentActivities: {
+      completedAt: string;
+      activityType: string;
+      contentTitle: string;
+      durationSeconds: number;
+      wpm: number | null;
+      comprehension: number | null;
+      successRate: number | null;
+      isMeasured: boolean;
+      isPassed: boolean;
+    }[];
+    studyTime: {
+      totalMinutes: number;
+      averageSessionLength: number;
+      totalSessions: number;
+      mostActiveHour: number;
+      mostActiveDay: string;
+      consistency: number;
+    };
+  };
 }
 
 @Injectable({ providedIn: 'root' })
@@ -116,5 +186,39 @@ export class SpeedReadingInstitutionService {
       `${this.speedReadingUrl}/institutions/${encodeURIComponent(institutionId)}/members/${encodeURIComponent(userId)}`,
       { role, isActive },
     );
+  }
+
+  getStudentReport(
+    institutionId: string,
+    studentUserId: string,
+    dateFrom: Date,
+    dateTo: Date,
+  ): Observable<SpeedReadingInstitutionStudentReport> {
+    const baseUrl = `${this.speedReadingUrl}/analytics/institutions/${encodeURIComponent(institutionId)}/students/${encodeURIComponent(studentUserId)}`;
+    const params = new HttpParams()
+      .set('dateFrom', dateFrom.toISOString())
+      .set('dateTo', dateTo.toISOString());
+    return forkJoin({
+      summary: this.http.get<SpeedReadingInstitutionStudentReport['summary']>(
+        `${baseUrl}/summary`,
+        {
+          params,
+        },
+      ),
+      readingSpeed: this.http.get<SpeedReadingInstitutionStudentReport['readingSpeed']>(
+        `${baseUrl}/reading-speed`,
+        { params },
+      ),
+      comprehension: this.http.get<SpeedReadingInstitutionStudentReport['comprehension']>(
+        `${baseUrl}/comprehension`,
+        { params },
+      ),
+      activity: this.http.get<SpeedReadingInstitutionStudentReport['activity']>(
+        `${baseUrl}/activity`,
+        {
+          params,
+        },
+      ),
+    });
   }
 }

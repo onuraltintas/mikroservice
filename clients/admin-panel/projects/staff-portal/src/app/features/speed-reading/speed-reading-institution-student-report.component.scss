@@ -1,0 +1,238 @@
+.student-report {
+  display: grid;
+  gap: 14px;
+  margin-top: 18px;
+  padding: 20px;
+  border: 1px solid #dce5dc;
+  border-radius: 15px;
+  background: #f8faf6;
+}
+.report-heading,
+.section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+.workspace-eyebrow {
+  margin: 0 0 6px;
+  color: #47806e;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+.report-heading h3,
+.section-heading h4 {
+  margin: 0;
+  color: #1a353d;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-weight: 400;
+}
+.report-heading h3 {
+  font-size: 23px;
+}
+.report-heading p:not(.workspace-eyebrow) {
+  margin: 6px 0 0;
+  color: #72817d;
+  font-size: 10px;
+}
+.close-report,
+.inline-error button {
+  min-height: 34px;
+  padding: 0 11px;
+  border: 1px solid #d9dfd7;
+  border-radius: 8px;
+  color: #425b56;
+  background: #fffefa;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 8px;
+}
+.metric-card {
+  display: grid;
+  min-height: 74px;
+  align-content: space-between;
+  gap: 8px;
+  padding: 11px;
+  border: 1px solid #e5e8df;
+  border-radius: 9px;
+  background: #fffefa;
+}
+.metric-card span {
+  color: #75827c;
+  font-size: 9px;
+  line-height: 1.4;
+}
+.metric-card strong {
+  color: #244b43;
+  font-size: 16px;
+}
+.report-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.report-card {
+  min-width: 0;
+  padding: 15px;
+  border: 1px solid #e3e5dc;
+  border-radius: 11px;
+  background: #fffefa;
+}
+.section-heading h4 {
+  font-size: 18px;
+}
+.change-pill,
+.streak-pill,
+.no-data-pill {
+  flex: 0 0 auto;
+  padding: 6px 9px;
+  border-radius: 999px;
+  color: #396d53;
+  background: #e8f3e8;
+  font-size: 9px;
+  font-weight: 800;
+}
+.no-data-pill {
+  color: #75827c;
+  background: #eef0ec;
+}
+.benchmark-line,
+.performance-level {
+  color: #62716b;
+  font-size: 10px;
+  line-height: 1.6;
+}
+.benchmark-line strong {
+  color: #244b43;
+}
+.performance-level {
+  margin: 0;
+  color: #47806e;
+  font-weight: 800;
+}
+.report-list-block {
+  margin-top: 12px;
+}
+.report-list-block h5 {
+  margin: 0 0 5px;
+  color: #526962;
+  font-size: 10px;
+}
+.report-list-block ul {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding-left: 16px;
+  color: #6d7c77;
+  font-size: 10px;
+}
+.areas-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.activity-card {
+  grid-column: 1 / -1;
+}
+.activity-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin: 12px 0;
+  color: #72817d;
+  font-size: 10px;
+}
+.activity-summary strong {
+  color: #244b43;
+}
+.activity-table-wrap {
+  overflow: auto;
+  border: 1px solid #e4e6de;
+  border-radius: 9px;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 10px;
+}
+th {
+  padding: 9px;
+  color: #75827c;
+  background: #f2f3ec;
+  font-size: 9px;
+  white-space: nowrap;
+}
+td {
+  padding: 9px;
+  border-top: 1px solid #e9eae3;
+  color: #52645f;
+  white-space: nowrap;
+}
+.status {
+  display: inline-flex;
+  padding: 4px 7px;
+  border-radius: 999px;
+  color: #396d53;
+  background: #e8f3e8;
+  font-size: 9px;
+  font-weight: 800;
+}
+.status.inactive {
+  color: #82502b;
+  background: #f8eadc;
+}
+.empty-state,
+.loading,
+.inline-error {
+  padding: 16px;
+  border: 1px dashed #d9dfd7;
+  border-radius: 9px;
+  color: #6d7c77;
+  background: #fffefa;
+  font-size: 10px;
+}
+.inline-error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-style: solid;
+  border-color: #efc7b9;
+  color: #873f2d;
+  background: #fff1eb;
+}
+button:focus-visible {
+  outline: 3px solid #93ab73;
+  outline-offset: 2px;
+}
+@media (max-width: 900px) {
+  .summary-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (max-width: 620px) {
+  .student-report {
+    padding: 13px;
+  }
+  .report-columns {
+    grid-template-columns: 1fr;
+  }
+  .summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .areas-grid {
+    grid-template-columns: 1fr;
+  }
+  .report-heading {
+    align-items: flex-start;
+  }
+}

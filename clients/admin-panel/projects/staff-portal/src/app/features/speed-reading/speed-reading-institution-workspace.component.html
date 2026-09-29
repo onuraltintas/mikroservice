@@ -205,6 +205,15 @@
                       <button
                         type="button"
                         class="row-action"
+                        data-testid="student-report"
+                        (click)="openStudentReport(member)"
+                        [disabled]="isStudentProfileSaving() || isMemberStatusSaving()"
+                      >
+                        Rapor
+                      </button>
+                      <button
+                        type="button"
+                        class="row-action"
                         data-testid="edit-student-profile"
                         (click)="startStudentEdit(member)"
                         [disabled]="isStudentProfileSaving() || isMemberStatusSaving()"
@@ -361,6 +370,13 @@
             </button>
           </div>
         </form>
+      }
+      @if (selectedStudentReport(); as reportStudent) {
+        <staff-speed-reading-institution-student-report
+          [institutionId]="currentInstitution.institutionId"
+          [student]="reportStudent"
+          (closed)="closeStudentReport()"
+        />
       }
     </section>
   }

@@ -479,7 +479,9 @@ describe('SpeedReadingInstitutionWorkspaceComponent', () => {
       institutionName: 'Örnek Kurum',
     });
     http
-      .expectOne((request) => request.url === '/api/speed-reading/institutions/institution-1/members')
+      .expectOne(
+        (request) => request.url === '/api/speed-reading/institutions/institution-1/members',
+      )
       .flush({
         items: [
           {
@@ -499,7 +501,8 @@ describe('SpeedReadingInstitutionWorkspaceComponent', () => {
       });
     http
       .expectOne(
-        (request) => request.url === '/api/speed-reading/analytics/institutions/institution-1/class-overview',
+        (request) =>
+          request.url === '/api/speed-reading/analytics/institutions/institution-1/class-overview',
       )
       .flush({
         dateFrom: '',
@@ -531,10 +534,33 @@ describe('SpeedReadingInstitutionWorkspaceComponent', () => {
     const reportRequests = ['summary', 'reading-speed', 'comprehension', 'activity'].map((path) =>
       http.expectOne(
         (request) =>
-          request.url === `/api/speed-reading/analytics/institutions/institution-1/students/student-1/${path}`,
+          request.url ===
+          `/api/speed-reading/analytics/institutions/institution-1/students/student-1/${path}`,
       ),
     );
-    reportRequests.forEach((request) => request.flush({}));
+    reportRequests[0].flush({
+      readingSessions: 1,
+      averageWpm: 200,
+      totalReadingMinutes: 10,
+      exercisesCompleted: 1,
+      averageSuccessRate: 80,
+      currentLevel: 2,
+    });
+    reportRequests[1].flush({
+      averageWpm: 200,
+      improvementRate: 0,
+      benchmark: { institutionAverage: 190, performanceLevel: 'İyi' },
+      recommendations: [],
+    });
+    reportRequests[2].flush({
+      averageComprehension: 80,
+      improvementRate: 0,
+      totalQuestionsAttempted: 2,
+      benchmark: { institutionAverage: 75, performanceLevel: 'İyi' },
+      strongAreas: [],
+      weakAreas: [],
+    });
+    reportRequests[3].flush({ dataAvailable: false, unavailableReason: 'Veri yok' });
     fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('Öğrenci ayrıntılı raporu');
   });

@@ -1,0 +1,231 @@
+<section class="student-report" aria-labelledby="student-report-title">
+  <header class="report-heading">
+    <div>
+      <p class="workspace-eyebrow">HIZLI OKUMA · SON 30 GÜN</p>
+      <h3 id="student-report-title">Öğrenci ayrıntılı raporu</h3>
+      <p>
+        {{ student.firstName }} {{ student.lastName }} ·
+        {{ student.gradeLevel ? student.gradeLevel + '. sınıf' : 'Sınıf belirtilmemiş' }} ·
+        {{ student.teacherName || 'Öğretmen atanmamış' }}
+      </p>
+    </div>
+    <button
+      type="button"
+      class="close-report"
+      aria-label="Öğrenci raporunu kapat"
+      (click)="closed.emit()"
+    >
+      Kapat
+    </button>
+  </header>
+
+  @if (errorMessage()) {
+    <div class="inline-error" role="alert">
+      <span>{{ errorMessage() }}</span>
+      <button type="button" data-testid="retry-student-report" (click)="loadReport()">
+        Tekrar dene
+      </button>
+    </div>
+  } @else if (isLoading()) {
+    <p class="loading" role="status">Öğrenci raporu yükleniyor…</p>
+  } @else if (report(); as data) {
+    <div class="summary-grid">
+      <article class="metric-card">
+        <span>Ortalama okuma hızı</span
+        ><strong>{{
+          data.summary.readingSessions ? formatNumber(data.summary.averageWpm) + ' WPM' : 'Veri yok'
+        }}</strong>
+      </article>
+      <article class="metric-card">
+        <span>Ortalama anlama</span
+        ><strong>{{
+          data.comprehension.totalQuestionsAttempted
+            ? formatNumber(data.comprehension.averageComprehension) + '%'
+            : 'Veri yok'
+        }}</strong>
+      </article>
+      <article class="metric-card">
+        <span>Okuma oturumu</span><strong>{{ formatNumber(data.summary.readingSessions) }}</strong>
+      </article>
+      <article class="metric-card">
+        <span>Okuma süresi</span
+        ><strong>{{ formatNumber(data.summary.totalReadingMinutes) }} dk</strong>
+      </article>
+      <article class="metric-card">
+        <span>Etkinlik başarısı</span
+        ><strong>{{
+          data.summary.exercisesCompleted
+            ? formatNumber(data.summary.averageSuccessRate) + '%'
+            : 'Veri yok'
+        }}</strong>
+      </article>
+      <article class="metric-card">
+        <span>Mevcut seviye</span><strong>{{ formatNumber(data.summary.currentLevel) }}</strong>
+      </article>
+    </div>
+
+    <div class="report-columns">
+      <section class="report-card" aria-labelledby="reading-speed-report-title">
+        <div class="section-heading">
+          <div>
+            <p class="workspace-eyebrow">OKUMA AKICILIĞI</p>
+            <h4 id="reading-speed-report-title">Hız gelişimi</h4>
+          </div>
+          @if (data.summary.readingSessions > 0) {
+            <span class="change-pill"
+              >{{ data.readingSpeed.improvementRate > 0 ? '+' : ''
+              }}{{ formatNumber(data.readingSpeed.improvementRate, 1) }}%</span
+            >
+          } @else {
+            <span class="no-data-pill">Veri yok</span>
+          }
+        </div>
+        @if (data.summary.readingSessions > 0) {
+          <p class="benchmark-line">
+            Kurum ortalaması
+            <strong>{{ formatNumber(data.readingSpeed.benchmark.institutionAverage) }} WPM</strong>
+            · Öğrenci <strong>{{ formatNumber(data.readingSpeed.averageWpm) }} WPM</strong>
+          </p>
+          <p class="performance-level">{{ data.readingSpeed.benchmark.performanceLevel }}</p>
+        } @else {
+          <p class="empty-state">Bu dönemde hız gelişimini karşılaştıracak okuma oturumu yok.</p>
+        }
+        @if (data.readingSpeed.recommendations.length > 0) {
+          <div class="report-list-block">
+            <h5>Öneriler</h5>
+            <ul>
+              @for (recommendation of data.readingSpeed.recommendations; track recommendation) {
+                <li>{{ recommendation }}</li>
+              }
+            </ul>
+          </div>
+        }
+      </section>
+
+      <section class="report-card" aria-labelledby="comprehension-report-title">
+        <div class="section-heading">
+          <div>
+            <p class="workspace-eyebrow">OKUDUĞUNU ANLAMA</p>
+            <h4 id="comprehension-report-title">Anlama gelişimi</h4>
+          </div>
+          @if (data.comprehension.totalQuestionsAttempted > 0) {
+            <span class="change-pill"
+              >{{ data.comprehension.improvementRate > 0 ? '+' : ''
+              }}{{ formatNumber(data.comprehension.improvementRate, 1) }}%</span
+            >
+          } @else {
+            <span class="no-data-pill">Veri yok</span>
+          }
+        </div>
+        @if (data.comprehension.totalQuestionsAttempted > 0) {
+          <p class="benchmark-line">
+            Kurum ortalaması
+            <strong>{{ formatNumber(data.comprehension.benchmark.institutionAverage) }}%</strong> ·
+            Öğrenci <strong>{{ formatNumber(data.comprehension.averageComprehension) }}%</strong>
+          </p>
+          <p class="performance-level">{{ data.comprehension.benchmark.performanceLevel }}</p>
+          <div class="areas-grid">
+            <div class="report-list-block">
+              <h5>Güçlü alanlar</h5>
+              <ul>
+                @for (area of data.comprehension.strongAreas; track area) {
+                  <li>{{ area }}</li>
+                } @empty {
+                  <li>Henüz veri yok</li>
+                }
+              </ul>
+            </div>
+            <div class="report-list-block">
+              <h5>Gelişim alanları</h5>
+              <ul>
+                @for (area of data.comprehension.weakAreas; track area) {
+                  <li>{{ area }}</li>
+                } @empty {
+                  <li>Henüz veri yok</li>
+                }
+              </ul>
+            </div>
+          </div>
+        } @else {
+          <p class="empty-state">Bu dönem için anlama değerlendirmesi bulunmuyor.</p>
+        }
+      </section>
+    </div>
+
+    <section class="report-card activity-card" aria-labelledby="student-activity-title">
+      <div class="section-heading">
+        <div>
+          <p class="workspace-eyebrow">DÜZENLİ ÇALIŞMA</p>
+          <h4 id="student-activity-title">Etkinlik ve çalışma geçmişi</h4>
+        </div>
+        @if (data.activity.dataAvailable) {
+          <span class="streak-pill">{{ data.activity.currentStreak.days }} günlük seri</span>
+        }
+      </div>
+      @if (data.activity.dataAvailable) {
+        <div class="activity-summary">
+          <span
+            ><strong>{{ formatNumber(data.activity.studyTime.totalSessions) }}</strong> oturum</span
+          >
+          <span
+            ><strong>{{ formatNumber(data.activity.studyTime.totalMinutes) }}</strong> dakika</span
+          >
+          <span
+            ><strong>{{ formatNumber(data.activity.studyTime.consistency) }}%</strong>
+            devamlılık</span
+          >
+          <span
+            ><strong>{{ data.activity.studyTime.mostActiveDay || '—' }}</strong> en aktif gün</span
+          >
+        </div>
+        @if (data.activity.recentActivities.length > 0) {
+          <div class="activity-table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Tarih</th>
+                  <th>Etkinlik</th>
+                  <th>Hız</th>
+                  <th>Anlama</th>
+                  <th>Süre</th>
+                  <th>Sonuç</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (
+                  activity of data.activity.recentActivities;
+                  track activity.contentTitle + activity.completedAt
+                ) {
+                  <tr>
+                    <td>{{ formatDate(activity.completedAt) }}</td>
+                    <td>{{ activity.contentTitle || activity.activityType }}</td>
+                    <td>{{ activity.wpm === null ? '—' : formatNumber(activity.wpm) + ' WPM' }}</td>
+                    <td>
+                      {{
+                        activity.comprehension === null
+                          ? '—'
+                          : formatNumber(activity.comprehension) + '%'
+                      }}
+                    </td>
+                    <td>{{ formatDuration(activity.durationSeconds) }}</td>
+                    <td>
+                      <span class="status" [class.inactive]="!activity.isPassed">{{
+                        activity.isPassed ? 'Başarılı' : 'Tekrar gerekli'
+                      }}</span>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        } @else {
+          <p class="empty-state">Bu dönemde görüntülenecek etkinlik yok.</p>
+        }
+      } @else {
+        <p class="empty-state">
+          {{ data.activity.unavailableReason || 'Bu dönem için etkinlik verisi bulunmuyor.' }}
+        </p>
+      }
+    </section>
+  }
+</section>
