@@ -1,0 +1,51 @@
+.student-report { display: grid; gap: 22px; margin-top: 26px; color: #263f3d; }
+.back-link { justify-self: start; padding: 0; border: 0; color: #4e6d58; background: transparent; font: inherit; font-size: 11px; font-weight: 750; cursor: pointer; }
+.back-link span { margin-right: 5px; }
+.report-identity { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 23px 25px; border: 1px solid #e3e5dc; border-radius: 16px; background: radial-gradient(ellipse at top right, #e7eed9 0, transparent 43%), #fbfaf6; }
+.identity-copy { min-width: 0; }
+.report-eyebrow { margin: 0 0 7px; color: #64876e; font-size: 9px; font-weight: 850; letter-spacing: .15em; }
+.report-identity h2 { margin: 0; color: #17333a; font-family: Georgia, 'Times New Roman', serif; font-size: clamp(25px, 4vw, 34px); font-weight: 400; letter-spacing: -.035em; }
+.student-context { margin: 8px 0 0; color: #72817d; font-size: 11px; }
+.student-avatar { display: grid; width: 48px; height: 48px; flex: 0 0 auto; place-items: center; border: 1px solid #d4dfc7; border-radius: 16px; color: #26443f; background: #e3edcf; font-family: Georgia, serif; font-size: 14px; font-weight: 700; }
+.summary-section, .history-panel { overflow: hidden; border: 1px solid #e3e5dc; border-radius: 16px; background: #fbfaf6; }
+.section-heading, .history-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 14px; padding: 20px 22px 16px; }
+.section-heading h3, .history-heading h3 { margin: 0; color: #17333a; font-family: Georgia, 'Times New Roman', serif; font-size: 22px; font-weight: 400; letter-spacing: -.025em; }
+.section-heading .report-eyebrow, .history-heading .report-eyebrow { margin-bottom: 5px; }
+.summary-caption, .history-scope { padding: 7px 10px; border: 1px solid #dfe6d8; border-radius: 99px; color: #4b6c55; background: #f1f5e9; font-size: 9px; font-weight: 750; white-space: nowrap; }
+.summary-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 9px; padding: 0 12px 12px; }
+.summary-card { display: grid; min-height: 112px; align-content: space-between; gap: 10px; padding: 14px; border: 1px solid #e8e8df; border-radius: 12px; background: #fffefa; }
+.summary-index { color: #7b8980; font-size: 8px; font-weight: 850; letter-spacing: .1em; }
+.summary-card strong { color: #26443f; font-size: 14px; line-height: 1.4; }
+.summary-card small { color: #77847e; font-size: 10px; line-height: 1.45; }
+.assignment-card { border-top: 3px solid #6e9469; }.exam-card { border-top: 3px solid #c59460; }.goal-card { border-top: 3px solid #748d9b; }.session-card { border-top: 3px solid #bc806e; }
+.inline-status { margin: 0; padding: 18px 22px; color: #75827c; font-size: 11px; }
+.report-error { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 12px 12px; padding: 13px 15px; border: 1px solid #efc7b9; border-radius: 11px; color: #873f2d; background: #fff1eb; font-size: 11px; line-height: 1.5; }
+.report-error button { min-height: 34px; flex: 0 0 auto; padding: 0 11px; border: 1px solid #ecc5b5; border-radius: 8px; color: #873f2d; background: #fffaf7; font: inherit; font-size: 10px; font-weight: 750; cursor: pointer; }
+.history-heading { align-items: flex-start; border-bottom: 1px solid #e9eae3; }
+.history-heading p:not(.report-eyebrow) { max-width: 620px; margin: 7px 0 0; color: #78847e; font-size: 10px; line-height: 1.55; }
+.history-tabs { display: flex; gap: 6px; overflow-x: auto; padding: 13px 18px 0; }
+.history-tabs button { min-height: 35px; padding: 0 13px; border: 1px solid #dfe3d9; border-radius: 9px 9px 0 0; color: #66776f; background: #f5f4ee; font: inherit; font-size: 10px; font-weight: 700; white-space: nowrap; cursor: pointer; }
+.history-tabs button.active { border-color: #264b44; color: #f6f8ed; background: #264b44; }
+.history-filters { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)) auto; gap: 9px; padding: 15px 18px; border-top: 1px solid #e1e4da; border-bottom: 1px solid #e9eae3; background: #f6f5ef; }
+.history-filters label { display: grid; min-width: 0; gap: 5px; color: #65756d; font-size: 9px; font-weight: 700; }
+.history-filters input, .history-filters select { width: 100%; min-width: 0; height: 36px; padding: 0 9px; border: 1px solid #d9dfd7; border-radius: 8px; outline: none; color: #334a46; background: #fffefa; font: inherit; font-size: 10px; }
+.history-filters input:focus, .history-filters select:focus { border-color: #779372; box-shadow: 0 0 0 3px rgb(119 147 114 / 14%); }
+.filter-button { align-self: end; min-height: 36px; padding: 0 13px; border: 1px solid #264b44; border-radius: 8px; color: #f6f8ed; background: #264b44; font: inherit; font-size: 10px; font-weight: 750; cursor: pointer; }
+.filter-button:disabled { opacity: .55; cursor: wait; }
+.history-error { margin-top: 12px; }
+.history-empty { display: grid; gap: 6px; justify-items: center; padding: 29px 18px; color: #75827c; text-align: center; }
+.history-empty strong { color: #435b54; font-size: 11px; }
+.history-empty span { font-size: 10px; }
+.history-list { padding: 0 18px; }
+.history-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 14px 4px; border-bottom: 1px solid #e9eae3; }
+.history-row:last-child { border-bottom: 0; }
+.history-item-copy { min-width: 0; }
+.history-item-copy h4 { overflow: hidden; margin: 0; color: #2b4144; font-size: 11px; font-weight: 800; text-overflow: ellipsis; }
+.history-item-copy p { margin: 6px 0 0; color: #7a8883; font-size: 9px; }
+.history-value { flex: 0 0 auto; color: #355a4f; font-size: 11px; }
+.history-value span { color: #7c8b82; font-weight: 500; }
+.history-pagination { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 18px; border-top: 1px solid #e9eae3; color: #73817c; font-size: 10px; }
+.history-pagination button { min-height: 34px; padding: 0 12px; border: 1px solid #d9dfd7; border-radius: 8px; color: #425b56; background: #fffefa; font: inherit; font-size: 10px; font-weight: 700; cursor: pointer; }
+.history-pagination button:disabled { opacity: .45; cursor: not-allowed; }
+@media (max-width: 900px) { .summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .history-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); } .filter-button { align-self: end; } }
+@media (max-width: 560px) { .student-report { gap: 15px; margin-top: 18px; } .report-identity { padding: 18px; } .section-heading, .history-heading { padding: 17px; } .summary-grid { gap: 7px; padding: 0 9px 9px; } .summary-card { min-height: 105px; padding: 11px; } .summary-card strong { font-size: 12px; } .history-tabs { padding-right: 12px; padding-left: 12px; } .history-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 12px; } .history-list { padding: 0 12px; } .report-error { align-items: flex-start; flex-direction: column; margin-right: 9px; margin-left: 9px; } }

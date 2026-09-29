@@ -145,6 +145,7 @@ describe('CoachingTeacherStudentsComponent', () => {
 
     const openButton = fixture.nativeElement.querySelector('button[data-testid="open-student-report"]') as HTMLButtonElement;
     openButton.click();
+    fixture.detectChanges();
     http.expectOne('/api/reports/student/student-1/progress').flush({
       studentId: 'student-1', totalAssignments: 0, submittedAssignments: 0, gradedAssignments: 0,
       totalExams: 0, totalGoals: 0, completedGoals: 0, averageGoalProgress: 0,
@@ -154,7 +155,7 @@ describe('CoachingTeacherStudentsComponent', () => {
       items: [], pageNumber: 1, pageSize: 10, totalCount: 0, totalPages: 1
     });
     fixture.detectChanges();
-    expect(fixture.nativeElement.textContent).toContain('Öğrenci raporu');
+    expect(fixture.nativeElement.textContent).toContain('ÖĞRENCİ RAPORU');
 
     const backButton = fixture.nativeElement.querySelector('button[data-testid="back-to-roster"]') as HTMLButtonElement;
     backButton.click();

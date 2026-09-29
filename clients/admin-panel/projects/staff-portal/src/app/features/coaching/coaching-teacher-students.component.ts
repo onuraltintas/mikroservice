@@ -2,11 +2,12 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CoachingTeacherStudent, CoachingTeacherStudentsService } from './coaching-teacher-students.service';
+import { CoachingTeacherStudentDetailComponent } from './coaching-teacher-student-detail.component';
 
 @Component({
   selector: 'staff-coaching-teacher-students',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, CoachingTeacherStudentDetailComponent],
   templateUrl: './coaching-teacher-students.component.html',
   styleUrl: './coaching-teacher-students.component.scss'
 })
@@ -21,6 +22,7 @@ export class CoachingTeacherStudentsComponent implements OnInit {
   readonly totalPages = signal(1);
   readonly totalCount = signal(0);
   readonly searchTerm = signal('');
+  readonly selectedStudent = signal<CoachingTeacherStudent | null>(null);
   searchInput = '';
 
   ngOnInit(): void {
@@ -60,6 +62,14 @@ export class CoachingTeacherStudentsComponent implements OnInit {
   clearSearch(): void {
     this.searchInput = '';
     this.setSearchTerm('');
+  }
+
+  openReport(student: CoachingTeacherStudent): void {
+    this.selectedStudent.set(student);
+  }
+
+  backToStudents(): void {
+    this.selectedStudent.set(null);
   }
 
   previousPage(): void {

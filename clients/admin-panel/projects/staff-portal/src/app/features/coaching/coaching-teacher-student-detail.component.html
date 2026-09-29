@@ -1,0 +1,127 @@
+<section class="student-report" aria-labelledby="student-report-title">
+  <button class="back-link" type="button" data-testid="back-to-roster" (click)="back.emit()">
+    <span aria-hidden="true">←</span> Öğrenci listesine dön
+  </button>
+
+  <header class="report-identity">
+    <div class="identity-copy">
+      <p class="report-eyebrow">KOÇLUK · ÖĞRENCİ RAPORU</p>
+      <h2 id="student-report-title">{{ student.fullName }}</h2>
+      <p class="student-context">
+        {{ student.gradeLevel ? student.gradeLevel + '. sınıf' : 'Sınıf bilgisi yok' }}
+        @if (student.subject) { <span> · {{ student.subject }}</span> }
+        @if (student.institutionName) { <span> · {{ student.institutionName }}</span> }
+      </p>
+    </div>
+    <span class="student-avatar" aria-hidden="true">{{ student.firstName.charAt(0) }}{{ student.lastName.charAt(0) }}</span>
+  </header>
+
+  <section class="summary-section" aria-label="Öğrenci ilerleme özeti">
+    <div class="section-heading">
+      <div><p class="report-eyebrow">GENEL BAKIŞ</p><h3>İlerleme özeti</h3></div>
+      <span class="summary-caption">Koçluk verileri</span>
+    </div>
+
+    @if (isProgressLoading()) {
+      <p class="inline-status" role="status">İlerleme özeti yükleniyor…</p>
+    } @else if (progressError()) {
+      <div class="report-error" role="alert">
+        <span>{{ progressError() }}</span>
+        <button type="button" data-testid="retry-progress" (click)="loadProgress()">Özeti tekrar yükle</button>
+      </div>
+    } @else if (progress(); as summary) {
+      <div class="summary-grid">
+        <article class="summary-card assignment-card">
+          <span class="summary-index">01 · ÖDEV</span>
+          <strong>{{ summary.submittedAssignments }} / {{ summary.totalAssignments }} teslim</strong>
+          <small>{{ summary.gradedAssignments }} değerlendirildi@if (summary.averageAssignmentPercentage != null) { <span> · ort. %{{ summary.averageAssignmentPercentage }}</span> }</small>
+        </article>
+        <article class="summary-card exam-card">
+          <span class="summary-index">02 · SINAV</span>
+          <strong>{{ summary.totalExams }} sınav</strong>
+          <small>Ortalama: {{ summary.averageExamPercentage == null ? '—' : '%' + summary.averageExamPercentage }}</small>
+        </article>
+        <article class="summary-card goal-card">
+          <span class="summary-index">03 · HEDEF</span>
+          <strong>{{ summary.completedGoals }} / {{ summary.totalGoals }} tamamlandı</strong>
+          <small>Ortalama ilerleme: %{{ summary.averageGoalProgress }}</small>
+        </article>
+        <article class="summary-card session-card">
+          <span class="summary-index">04 · SEANS</span>
+          <strong>{{ summary.attendedSessions }} / {{ summary.totalSessions }} katılım</strong>
+          <small>{{ summary.upcomingSessions }} yaklaşan@if (summary.attendancePercentage != null) { <span> · katılım %{{ summary.attendancePercentage }}</span> }</small>
+        </article>
+      </div>
+    }
+  </section>
+
+  <section class="history-panel" aria-labelledby="history-title">
+    <header class="history-heading">
+      <div>
+        <p class="report-eyebrow">KAYIT DÖKÜMÜ</p>
+        <h3 id="history-title">Geçmiş kayıtlar</h3>
+        <p>Öğrencinin önceki kurumlarında oluşan Koçluk kayıtları da kapsanır.</p>
+      </div>
+      <span class="history-scope">Tüm Koçluk geçmişi</span>
+    </header>
+
+    <nav class="history-tabs" role="tablist" aria-label="Geçmiş kayıt kategorisi">
+      @for (type of historyTypes; track type) {
+        <button type="button" role="tab" [attr.data-history-type]="type"
+          [attr.aria-selected]="historyType() === type" [class.active]="historyType() === type"
+          (click)="selectHistoryType(type)">{{ historyLabels[type] }}</button>
+      }
+    </nav>
+
+    <form class="history-filters" (ngSubmit)="applyFilters()">
+      <label>Başlangıç tarihi<input name="historyFromDate" type="date" [(ngModel)]="historyFromDate"></label>
+      <label>Bitiş tarihi<input name="historyToDate" type="date" [(ngModel)]="historyToDate"></label>
+      <label>Durum
+        <select name="historyStatus" [(ngModel)]="historyStatus">
+          <option value="">Tüm durumlar</option>
+          @for (option of statusOptions[historyType()]; track option.value) {
+            <option [value]="option.value">{{ option.label }}</option>
+          }
+        </select>
+      </label>
+      <label class="search-filter">Başlıkta ara<input name="historySearch" type="search" maxlength="100" [(ngModel)]="historySearch" placeholder="Örn. matematik"></label>
+      <button class="filter-button" type="submit" data-testid="apply-history-filters" [disabled]="isHistoryLoading()">Filtrele</button>
+    </form>
+
+    @if (historyError()) {
+      <div class="report-error history-error" role="alert">
+        <span>{{ historyError() }}</span>
+        <button type="button" data-testid="retry-history" (click)="retryHistory()">Tekrar dene</button>
+      </div>
+    } @else if (isHistoryLoading()) {
+      <p class="inline-status" role="status">{{ historyLabels[historyType()] }} kayıtları yükleniyor…</p>
+    } @else if (history().length === 0) {
+      <div class="history-empty"><strong>Bu kategoride kayıt bulunmuyor.</strong><span>Filtreleri değiştirebilir veya başka bir kategori seçebilirsiniz.</span></div>
+    } @else {
+      <div class="history-list" role="tabpanel" [attr.aria-label]="historyLabels[historyType()] + ' geçmişi'">
+        @for (item of history(); track trackById($index, item)) {
+          <article class="history-row">
+            <div class="history-item-copy">
+              <h4>{{ item.title }}</h4>
+              <p>{{ formatDate(item.eventDate) }} <span aria-hidden="true">·</span> {{ statusLabel(item.status) }}
+                @if (item.category) { <span> · {{ item.category }}</span> }
+              </p>
+            </div>
+            @if (item.score != null) {
+              <strong class="history-value">{{ item.score }}@if (item.maxScore != null) { <span> / {{ item.maxScore }}</span> }</strong>
+            } @else if (item.progress != null) {
+              <strong class="history-value">%{{ item.progress }}</strong>
+            }
+          </article>
+        }
+      </div>
+      @if (historyTotalPages() > 1) {
+        <nav class="history-pagination" aria-label="Geçmiş kayıt sayfaları">
+          <button type="button" data-testid="previous-history-page" (click)="previousPage()" [disabled]="historyPage() === 1">Önceki</button>
+          <span>Sayfa {{ historyPage() }} / {{ historyTotalPages() }}</span>
+          <button type="button" data-testid="next-history-page" (click)="nextPage()" [disabled]="historyPage() >= historyTotalPages()">Sonraki</button>
+        </nav>
+      }
+    }
+  </section>
+</section>
