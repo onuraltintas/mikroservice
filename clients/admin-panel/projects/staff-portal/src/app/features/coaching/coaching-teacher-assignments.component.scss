@@ -23,6 +23,7 @@
 .assignment-status[data-status='Cancelled'] { color: #80634d; background: #f1e9de; }
 .cancel-button, .dismiss-button, .confirm-cancel-button, .assignments-error button, .assignments-pagination button { min-height: 34px; padding: 0 11px; border: 1px solid #d9dfd7; border-radius: 8px; color: #425b56; background: #fffefa; font: inherit; font-size: 10px; font-weight: 700; cursor: pointer; }
 .edit-button { min-height: 34px; padding: 0 10px; border: 1px solid #d6e0ce; border-radius: 8px; color: #355b4b; background: #f0f5e9; font: inherit; font-size: 10px; font-weight: 750; cursor: pointer; }
+.review-button { min-height: 34px; padding: 0 10px; border: 1px solid #d7e1d1; border-radius: 8px; color: #355b4b; background: #eef3e9; font: inherit; font-size: 10px; font-weight: 750; cursor: pointer; }
 .cancel-button { border-color: #ead0c5; color: #9a4933; background: #fff6f1; }
 .cancel-confirmation { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-top: 14px; padding: 12px 13px; border: 1px solid #ead7ae; border-radius: 10px; color: #6e5a31; background: #fbf5e6; }
 .cancel-confirmation p { margin: 0; font-size: 10px; line-height: 1.5; }

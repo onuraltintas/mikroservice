@@ -1,4 +1,6 @@
-@if (formMode(); as mode) {
+@if (detailAssignmentId(); as detailId) {
+  <staff-coaching-teacher-assignment-detail [assignmentId]="detailId" (close)="closeAssignmentDetail()" />
+} @else if (formMode(); as mode) {
   <staff-coaching-teacher-assignment-form
     [assignmentId]="mode.kind === 'edit' ? mode.id : null"
     (close)="closeEditor()" (saved)="onFormSaved($event)" />
@@ -61,6 +63,8 @@
             <div class="assignment-meta">
               <span class="delivery-count">{{ assignment.submittedCount }} / {{ assignment.totalStudents }} teslim</span>
               <span class="assignment-status" [attr.data-status]="assignment.status">{{ assignmentStatusLabel(assignment.status) }}</span>
+              <button type="button" class="review-button" [attr.data-testid]="'review-' + assignment.id"
+                (click)="reviewAssignment(assignment.id)">Teslimleri incele</button>
               <button type="button" class="edit-button" [attr.data-testid]="'edit-' + assignment.id"
                 (click)="editAssignment(assignment.id)">Düzenle</button>
               @if (assignment.status === 'Active') {

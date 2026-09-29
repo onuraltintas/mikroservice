@@ -9,6 +9,7 @@ import {
   CoachingTeacherAssignmentsService
 } from './coaching-teacher-assignments.service';
 import { CoachingTeacherAssignmentFormComponent } from './coaching-teacher-assignment-form.component';
+import { CoachingTeacherAssignmentDetailComponent } from './coaching-teacher-assignment-detail.component';
 
 type AssignmentStatusFilter = 'all' | CoachingAssignmentStatus;
 type AssignmentFormMode = { kind: 'new' } | { kind: 'edit'; id: string };
@@ -16,7 +17,7 @@ type AssignmentFormMode = { kind: 'new' } | { kind: 'edit'; id: string };
 @Component({
   selector: 'staff-coaching-teacher-assignments',
   standalone: true,
-  imports: [CommonModule, FormsModule, CoachingTeacherAssignmentFormComponent],
+  imports: [CommonModule, FormsModule, CoachingTeacherAssignmentFormComponent, CoachingTeacherAssignmentDetailComponent],
   templateUrl: './coaching-teacher-assignments.component.html',
   styleUrl: './coaching-teacher-assignments.component.scss'
 })
@@ -36,6 +37,7 @@ export class CoachingTeacherAssignmentsComponent implements OnInit {
   readonly cancelConfirmationId = signal<string | null>(null);
   readonly isCancelling = signal(false);
   readonly formMode = signal<AssignmentFormMode | null>(null);
+  readonly detailAssignmentId = signal<string | null>(null);
 
   ngOnInit(): void {
     this.load();
@@ -43,12 +45,24 @@ export class CoachingTeacherAssignmentsComponent implements OnInit {
 
   createAssignment(): void {
     this.successMessage.set(null);
+    this.detailAssignmentId.set(null);
     this.formMode.set({ kind: 'new' });
   }
 
   editAssignment(assignmentId: string): void {
     this.successMessage.set(null);
+    this.detailAssignmentId.set(null);
     this.formMode.set({ kind: 'edit', id: assignmentId });
+  }
+
+  reviewAssignment(assignmentId: string): void {
+    this.successMessage.set(null);
+    this.formMode.set(null);
+    this.detailAssignmentId.set(assignmentId);
+  }
+
+  closeAssignmentDetail(): void {
+    this.detailAssignmentId.set(null);
   }
 
   closeEditor(): void {

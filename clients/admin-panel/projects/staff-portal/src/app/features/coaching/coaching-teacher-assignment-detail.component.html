@@ -1,0 +1,104 @@
+<section class="assignment-detail" aria-labelledby="assignment-detail-title">
+  <button type="button" class="detail-back" (click)="goBack()">← Ödevlerime dön</button>
+
+  @if (errorMessage()) {
+    <div class="detail-error" role="alert">
+      <span>{{ errorMessage() }}</span>
+      @if (!isLoading()) { <button type="button" (click)="load()">Tekrar dene</button> }
+    </div>
+  }
+  @if (successMessage()) { <div class="detail-success" role="status">{{ successMessage() }}</div> }
+
+  @if (isLoading()) {
+    <div class="detail-loading" aria-label="Ödev ve teslimler yükleniyor">
+      @for (row of [1, 2, 3]; track row) { <div></div> }
+    </div>
+  } @else if (assignment(); as item) {
+    <header class="detail-header">
+      <div>
+        <p class="detail-eyebrow">KOÇLUK · ÖDEV DEĞERLENDİRMESİ</p>
+        <h2 id="assignment-detail-title">{{ item.title }}</h2>
+        <p>{{ item.subject || 'Koçluk ödevi' }} · {{ item.source }}</p>
+      </div>
+      <span class="detail-status" [attr.data-status]="item.status">{{ assignmentStatusLabel(item.status) }}</span>
+    </header>
+
+    @if (item.description) { <p class="assignment-description">{{ item.description }}</p> }
+    <dl class="assignment-facts">
+      <div><dt>Son tarih</dt><dd>{{ item.dueDate | date:'d MMM y, HH:mm' }}</dd></div>
+      <div><dt>Teslim</dt><dd>{{ item.submittedCount }} / {{ item.totalStudents }}</dd></div>
+      <div><dt>Maksimum puan</dt><dd>{{ item.maxScore ?? 'Belirtilmedi' }}</dd></div>
+    </dl>
+
+    <div class="student-submissions" aria-label="Öğrenci teslimleri">
+      <div class="submissions-heading">
+        <div>
+          <h3>Öğrenci teslimleri</h3>
+          <p>Teslimleri inceleyin, puan ve kişiye özel geri bildirim kaydedin.</p>
+        </div>
+        @if (isLoadingNames()) { <span class="student-name-loading">Öğrenci adları yükleniyor…</span> }
+      </div>
+
+      @if (item.assignedStudents.length === 0) {
+        <div class="detail-empty">Bu ödeve atanmış öğrenci bulunmuyor.</div>
+      } @else {
+        @for (student of item.assignedStudents; track student.studentId) {
+          <article class="submission-card">
+            <header class="submission-heading">
+              <div>
+                <h4>{{ studentLabel(student.studentId) }}</h4>
+                <p>{{ student.submittedAt ? (student.submittedAt | date:'d MMM y, HH:mm') : 'Henüz teslim edilmedi' }}</p>
+              </div>
+              <span class="submission-status" [attr.data-status]="student.status">{{ studentStatusLabel(student.status) }}</span>
+            </header>
+
+            <div class="grade-summary">
+              <span>Mevcut puan</span>
+              <strong>{{ student.score ?? '—' }}@if (item.maxScore != null) { <small>/ {{ item.maxScore }}</small> }</strong>
+            </div>
+
+            <div class="grade-editor">
+              <label [for]="'score-' + student.studentId">Puan
+                <input [id]="'score-' + student.studentId" [name]="'score-' + student.studentId" type="number" min="0"
+                  [max]="item.maxScore ?? null" step="0.01" [ngModel]="gradeDraft(student.studentId).score"
+                  (ngModelChange)="updateGradeDraft(student.studentId, 'score', $event)">
+              </label>
+              <label [for]="'feedback-' + student.studentId">Koça ait geri bildirim
+                <textarea [id]="'feedback-' + student.studentId" [name]="'feedback-' + student.studentId" rows="2" maxlength="2000"
+                  [ngModel]="gradeDraft(student.studentId).feedback"
+                  (ngModelChange)="updateGradeDraft(student.studentId, 'feedback', $event)"></textarea>
+              </label>
+              <button type="button" class="save-grade-button" [attr.data-testid]="'save-grade-' + student.studentId"
+                (click)="grade(student.studentId)" [disabled]="gradingStudentId() === student.studentId">
+                {{ gradingStudentId() === student.studentId ? 'Kaydediliyor…' : 'Değerlendirmeyi kaydet' }}
+              </button>
+            </div>
+
+            @if (student.teacherFeedback) {
+              <div class="saved-feedback"><span>Öğrenciye gösterilen geri bildirim</span><p>{{ student.teacherFeedback }}</p></div>
+            }
+
+            @if (student.attachments?.length) {
+              <div class="submission-attachments">
+                <h5>Öğrenci ekleri</h5>
+                @for (attachment of student.attachments; track attachment.id) {
+                  <div class="attachment-row">
+                    <div>
+                      <strong>{{ attachment.originalFileName }}</strong>
+                      <small>{{ formatFileSize(attachment.sizeBytes) }} · {{ attachmentStatusLabel(attachment.status) }}</small>
+                    </div>
+                    <button type="button" [disabled]="attachment.status !== 'Clean'"
+                      [attr.data-testid]="'download-' + attachment.id"
+                      (click)="downloadAttachment(student.studentId, attachment)">
+                      {{ attachment.status === 'Clean' ? 'İndir' : 'Taramada' }}
+                    </button>
+                  </div>
+                }
+              </div>
+            }
+          </article>
+        }
+      }
+    </div>
+  }
+</section>

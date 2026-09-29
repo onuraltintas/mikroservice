@@ -48,6 +48,9 @@ describe('CoachingTeacherAssignmentDetailComponent', () => {
   it('allows clean attachments to download and blocks attachments awaiting or failing security scans', () => {
     const assignments = assignmentService();
     const fixture = createFixture(assignments);
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
+    vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:test');
+    vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => undefined);
     fixture.detectChanges();
     const component = fixture.componentInstance;
     const attachments = fixture.componentInstance.assignment()!.assignedStudents[0].attachments!;
@@ -57,6 +60,7 @@ describe('CoachingTeacherAssignmentDetailComponent', () => {
 
     expect(assignments.downloadAttachment).toHaveBeenCalledOnce();
     expect(assignments.downloadAttachment).toHaveBeenCalledWith('assignment-1', 'student-1', 'attachment-clean');
+    expect(click).toHaveBeenCalledOnce();
   });
 
   it('returns to the assignment list when the back action is used', () => {

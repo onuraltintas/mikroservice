@@ -40,7 +40,24 @@ export interface CoachingAssignmentDetail extends CoachingTeacherAssignment {
   estimatedDurationMinutes?: number;
   maxScore?: number;
   passingScore?: number;
-  assignedStudents: Array<{ studentId: string; status: string }>;
+  assignedStudents: Array<{
+    studentId: string;
+    status: string;
+    submittedAt?: string;
+    score?: number;
+    teacherFeedback?: string;
+    attachments?: CoachingAssignmentAttachment[];
+  }>;
+}
+
+export interface CoachingAssignmentAttachment {
+  id: string;
+  originalFileName: string;
+  contentType: string;
+  sizeBytes: number;
+  status: string;
+  uploadedAt?: string;
+  scannedAt?: string;
 }
 
 interface AssignmentFields {
@@ -81,6 +98,14 @@ export interface CoachingAssignmentMutationResponse {
   title?: string;
   dueDate: string;
   assignedStudentCount: number;
+}
+
+export interface CoachingGradeResponse {
+  assignmentId: string;
+  studentId: string;
+  score: number;
+  status: string;
+  gradedAt: string;
 }
 
 export type CoachingAssignmentStatus = 'Active' | 'Completed' | 'Cancelled';
@@ -130,6 +155,30 @@ export class CoachingTeacherAssignmentsService {
     return this.http.put<CoachingAssignmentMutationResponse>(
       `${this.url}/${encodeURIComponent(assignmentId)}`,
       { ...this.normalizeRequest(request), assignmentId }
+    );
+  }
+
+  gradeAssignment(
+    assignmentId: string,
+    studentId: string,
+    score: number,
+    teacherFeedback?: string
+  ): Observable<CoachingGradeResponse> {
+    return this.http.post<CoachingGradeResponse>(
+      `${this.url}/${encodeURIComponent(assignmentId)}/grade`,
+      {
+        assignmentId,
+        studentId,
+        score,
+        teacherFeedback: teacherFeedback?.trim() || null
+      }
+    );
+  }
+
+  downloadAttachment(assignmentId: string, studentId: string, attachmentId: string): Observable<Blob> {
+    return this.http.get(
+      `${this.url}/${encodeURIComponent(assignmentId)}/students/${encodeURIComponent(studentId)}/attachments/${encodeURIComponent(attachmentId)}/content`,
+      { responseType: 'blob' }
     );
   }
 

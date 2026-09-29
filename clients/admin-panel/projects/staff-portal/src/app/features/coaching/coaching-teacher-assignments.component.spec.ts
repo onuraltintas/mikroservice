@@ -112,6 +112,19 @@ describe('CoachingTeacherAssignmentsComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Ödevi düzenle');
     expect((fixture.nativeElement.querySelector('#assignment-title') as HTMLInputElement).value).toBe('Haftalık tekrar');
   });
+
+  it('opens the teacher submission review from the assignment list', () => {
+    const service = assignmentService();
+    service.getTeacherAssignments.mockReturnValue(of(page([assignment('assignment-1')])));
+    const fixture = createFixture(service);
+    fixture.detectChanges();
+    (fixture.nativeElement.querySelector('[data-testid="review-assignment-1"]') as HTMLButtonElement).click();
+    fixture.detectChanges();
+
+    expect(service.getAssignment).toHaveBeenCalledWith('assignment-1');
+    expect(fixture.nativeElement.textContent).toContain('ÖDEV DEĞERLENDİRMESİ');
+    expect(fixture.nativeElement.textContent).toContain('Öğrenci teslimleri');
+  });
 });
 
 function createFixture(service: ReturnType<typeof assignmentService>, userId: string | null = 'teacher-1') {
@@ -138,6 +151,8 @@ function assignmentService() {
       of({ assignmentId: 'assignment-new', dueDate: '2030-01-02T10:00:00Z', assignedStudentCount: 1 })),
     updateAssignment: vi.fn((_id: string, _request: CoachingAssignmentUpdateRequest) =>
       of({ assignmentId: 'assignment-1', dueDate: '2030-01-02T10:00:00Z', assignedStudentCount: 1 })),
+    gradeAssignment: vi.fn(() => of({ assignmentId: 'assignment-1', studentId: 'student-1', score: 80, status: 'Graded', gradedAt: '2030-01-03T10:00:00Z' })),
+    downloadAttachment: vi.fn(() => of(new Blob(['file'], { type: 'image/png' }))),
     cancelAssignment: vi.fn(() => of({ message: 'Assignment cancelled successfully' }))
   };
 }
