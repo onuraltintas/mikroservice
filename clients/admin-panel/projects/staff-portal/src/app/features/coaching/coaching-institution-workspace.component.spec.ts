@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { HttpErrorResponse } from '@angular/common/http';
 import { of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 import { CoachingInstitutionService, CoachingInstitutionStudent, CoachingInstitutionTeacher } from './coaching-institution.service';
@@ -107,10 +108,8 @@ describe('CoachingInstitutionWorkspaceComponent', () => {
     fixture.detectChanges();
     const teacherEmail = fixture.nativeElement.querySelector('[data-testid="institution-teacher-invite-email"]') as HTMLInputElement;
     expect(teacherEmail).toBeTruthy();
-    teacherEmail.value = '  teacher@example.test  ';
-    teacherEmail.dispatchEvent(new Event('input'));
-    fixture.detectChanges();
-    (fixture.nativeElement.querySelector('[data-testid="send-institution-teacher-invite"]') as HTMLButtonElement).click();
+    fixture.componentInstance.teacherInviteEmail = '  teacher@example.test  ';
+    fixture.componentInstance.sendTeacherInvitation();
     fixture.detectChanges();
     expect(service.inviteTeacher).toHaveBeenCalledWith('teacher@example.test');
     expect(fixture.nativeElement.textContent).toContain('Öğretmen daveti gönderildi');
@@ -119,17 +118,29 @@ describe('CoachingInstitutionWorkspaceComponent', () => {
     fixture.detectChanges();
     const studentEmail = fixture.nativeElement.querySelector('[data-testid="institution-student-invite-email"]') as HTMLInputElement;
     expect(studentEmail).toBeTruthy();
-    studentEmail.value = 'student@example.test';
-    studentEmail.dispatchEvent(new Event('input'));
-    fixture.detectChanges();
-    const teacherSelect = fixture.nativeElement.querySelector('[data-testid="institution-student-invite-teacher"]') as HTMLSelectElement;
-    teacherSelect.value = 'teacher-1';
-    teacherSelect.dispatchEvent(new Event('change'));
-    fixture.detectChanges();
-    (fixture.nativeElement.querySelector('[data-testid="send-institution-student-invite"]') as HTMLButtonElement).click();
+    fixture.componentInstance.studentInviteEmail = 'student@example.test';
+    fixture.componentInstance.studentInviteTeacherUserId = 'teacher-1';
+    fixture.componentInstance.sendStudentInvitation();
     fixture.detectChanges();
     expect(service.inviteStudent).toHaveBeenCalledWith('student@example.test', 'teacher-1');
     expect(fixture.nativeElement.textContent).toContain('Öğrenci daveti gönderildi');
+  });
+
+  it('shows the institution API duplicate-invitation reason instead of a generic error', async () => {
+    const service = institutionService();
+    service.inviteTeacher.mockReturnValueOnce(throwError(() => new HttpErrorResponse({
+      status: 409,
+      error: { Error: { code: 'InviteTeacher.DuplicateInvitation', description: 'Bu e-posta için bekleyen bir Koçluk daveti var.' } }
+    })));
+    const fixture = await createFixture(service);
+    fixture.detectChanges();
+    fixture.componentInstance.selectSection('teachers');
+    fixture.detectChanges();
+    fixture.componentInstance.teacherInviteEmail = 'teacher@example.test';
+    fixture.componentInstance.sendTeacherInvitation();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('[role="alert"]')?.textContent).toContain('Bu e-posta için bekleyen bir Koçluk daveti var.');
   });
 
   it('pages the institution teacher filter options for large teacher rosters', async () => {

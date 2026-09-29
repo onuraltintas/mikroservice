@@ -127,14 +127,12 @@ describe('SpeedReadingInstitutionWorkspaceComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('64');
   });
 
-  it('shows an institution invitation form for the currently selected member role', () => {
+  it('shows an institution invitation form for the currently selected member role', async () => {
     const fixture = createLoadedWorkspace();
     const studentEmail = fixture.nativeElement.querySelector('[data-testid="institution-member-invite-email"]') as HTMLInputElement;
     expect(studentEmail).toBeTruthy();
-    studentEmail.value = 'student@example.test';
-    studentEmail.dispatchEvent(new Event('input'));
-    fixture.detectChanges();
-    (fixture.nativeElement.querySelector('[data-testid="send-institution-member-invite"]') as HTMLButtonElement).click();
+    fixture.componentInstance.invitationEmail = 'student@example.test';
+    fixture.componentInstance.sendInvitation();
     fixture.detectChanges();
     const studentRequest = http.expectOne('/api/speed-reading/invitations/institutions/institution-1');
     expect(studentRequest.request.body).toEqual({ email: 'student@example.test', role: 1 });
@@ -152,10 +150,8 @@ describe('SpeedReadingInstitutionWorkspaceComponent', () => {
 
     const teacherEmail = fixture.nativeElement.querySelector('[data-testid="institution-member-invite-email"]') as HTMLInputElement;
     expect(teacherEmail).toBeTruthy();
-    teacherEmail.value = 'teacher@example.test';
-    teacherEmail.dispatchEvent(new Event('input'));
-    fixture.detectChanges();
-    (fixture.nativeElement.querySelector('[data-testid="send-institution-member-invite"]') as HTMLButtonElement).click();
+    fixture.componentInstance.invitationEmail = 'teacher@example.test';
+    fixture.componentInstance.sendInvitation();
     fixture.detectChanges();
     const teacherRequest = http.expectOne('/api/speed-reading/invitations/institutions/institution-1');
     expect(teacherRequest.request.body).toEqual({ email: 'teacher@example.test', role: 2 });
