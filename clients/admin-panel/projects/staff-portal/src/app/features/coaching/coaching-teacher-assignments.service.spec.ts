@@ -36,4 +36,51 @@ describe('CoachingTeacherAssignmentsService', () => {
 
     await expect(response).resolves.toEqual({ message: 'Assignment cancelled successfully' });
   });
+
+  it('loads an assignment by its encoded id for edit authorization on the server', async () => {
+    const response = firstValueFrom(service.getAssignment('assignment/1'));
+    const request = http.expectOne('/api/assignments/assignment%2F1');
+    expect(request.request.method).toBe('GET');
+    request.flush({ id: 'assignment/1', assignedStudents: [] });
+
+    await expect(response).resolves.toMatchObject({ id: 'assignment/1' });
+  });
+
+  it('creates a normalized assignment with an idempotency key', async () => {
+    const response = firstValueFrom(service.createAssignment({
+      teacherId: 'teacher-1',
+      title: '  Haftalık tekrar  ',
+      assignmentType: 'Individual',
+      assignmentSource: 'Digital',
+      dueDate: '2030-01-02T10:00:00.000Z',
+      studentIds: ['student-1', 'student-1']
+    }, 'idempotency-key'));
+    const request = http.expectOne('/api/assignments');
+    expect(request.request.method).toBe('POST');
+    expect(request.request.headers.get('Idempotency-Key')).toBe('idempotency-key');
+    expect(request.request.body).toMatchObject({
+      teacherId: 'teacher-1',
+      title: 'Haftalık tekrar',
+      studentIds: ['student-1']
+    });
+    request.flush({ assignmentId: 'assignment-1', dueDate: '2030-01-02T10:00:00Z', assignedStudentCount: 1 });
+
+    await expect(response).resolves.toMatchObject({ assignmentId: 'assignment-1' });
+  });
+
+  it('updates the requested assignment through its matching resource route', async () => {
+    const response = firstValueFrom(service.updateAssignment('assignment-1', {
+      assignmentId: 'assignment-1',
+      title: 'Ödev güncellendi',
+      assignmentSource: 'Digital',
+      dueDate: '2030-01-02T10:00:00.000Z',
+      studentIds: ['student-1']
+    }));
+    const request = http.expectOne('/api/assignments/assignment-1');
+    expect(request.request.method).toBe('PUT');
+    expect(request.request.body).toMatchObject({ assignmentId: 'assignment-1', title: 'Ödev güncellendi' });
+    request.flush({ assignmentId: 'assignment-1', dueDate: '2030-01-02T10:00:00Z', assignedStudentCount: 1 });
+
+    await expect(response).resolves.toMatchObject({ assignmentId: 'assignment-1' });
+  });
 });
