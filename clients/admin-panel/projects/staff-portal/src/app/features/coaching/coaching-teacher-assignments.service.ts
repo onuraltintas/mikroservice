@@ -1,4 +1,4 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
@@ -20,6 +20,67 @@ export interface PagedCoachingAssignments<T> {
   pageSize: number;
   totalCount: number;
   totalPages?: number;
+}
+
+export interface CoachingAssignmentDetail extends CoachingTeacherAssignment {
+  teacherId: string;
+  institutionId?: string;
+  description?: string;
+  subject?: string;
+  source: string;
+  bookTitle?: string;
+  bookIsbn?: string;
+  bookEdition?: string;
+  bookChapter?: string;
+  bookStartPage?: number;
+  bookEndPage?: number;
+  bookStartQuestion?: number;
+  bookEndQuestion?: number;
+  targetGradeLevel?: number;
+  estimatedDurationMinutes?: number;
+  maxScore?: number;
+  passingScore?: number;
+  assignedStudents: Array<{ studentId: string; status: string }>;
+}
+
+interface AssignmentFields {
+  title: string;
+  description?: string | null;
+  subject?: string | null;
+  assignmentSource: string;
+  targetGradeLevel?: number | null;
+  bookTitle?: string | null;
+  bookIsbn?: string | null;
+  bookEdition?: string | null;
+  bookChapter?: string | null;
+  bookStartPage?: number | null;
+  bookEndPage?: number | null;
+  bookStartQuestion?: number | null;
+  bookEndQuestion?: number | null;
+  dueDate: string;
+  estimatedDurationMinutes?: number | null;
+  maxScore?: number | null;
+  passingScore?: number | null;
+  studentIds?: string[] | null;
+}
+
+export interface CoachingAssignmentCreateRequest extends AssignmentFields {
+  teacherId: string;
+  assignmentType: string;
+  assignmentSource: string;
+  studentIds: string[];
+}
+
+export interface CoachingAssignmentUpdateRequest extends AssignmentFields {
+  assignmentId: string;
+  studentIds: string[];
+}
+
+export interface CoachingAssignmentMutationResponse {
+  assignmentId: string;
+  title?: string;
+  dueDate: string;
+  assignedStudentCount: number;
 }
 
 export type CoachingAssignmentStatus = 'Active' | 'Completed' | 'Cancelled';
@@ -46,10 +107,56 @@ export class CoachingTeacherAssignmentsService {
     );
   }
 
+  getAssignment(assignmentId: string): Observable<CoachingAssignmentDetail> {
+    return this.http.get<CoachingAssignmentDetail>(`${this.url}/${encodeURIComponent(assignmentId)}`);
+  }
+
+  createAssignment(
+    request: CoachingAssignmentCreateRequest,
+    idempotencyKey: string
+  ): Observable<CoachingAssignmentMutationResponse> {
+    const headers = new HttpHeaders({ 'Idempotency-Key': idempotencyKey });
+    return this.http.post<CoachingAssignmentMutationResponse>(
+      this.url,
+      this.normalizeRequest(request),
+      { headers }
+    );
+  }
+
+  updateAssignment(
+    assignmentId: string,
+    request: CoachingAssignmentUpdateRequest
+  ): Observable<CoachingAssignmentMutationResponse> {
+    return this.http.put<CoachingAssignmentMutationResponse>(
+      `${this.url}/${encodeURIComponent(assignmentId)}`,
+      { ...this.normalizeRequest(request), assignmentId }
+    );
+  }
+
   cancelAssignment(assignmentId: string): Observable<{ message: string }> {
     return this.http.post<{ message: string }>(
       `${this.url}/${encodeURIComponent(assignmentId)}/cancel`,
       {}
     );
+  }
+
+  private normalizeRequest<T extends AssignmentFields>(request: T): Record<string, unknown> {
+    const body = {
+      ...request,
+      title: request.title.trim(),
+      description: request.description?.trim() || null,
+      subject: request.subject?.trim() || null,
+      studentIds: request.studentIds
+        ? [...new Set(request.studentIds.map(studentId => studentId.trim()).filter(Boolean))]
+        : null
+    } as unknown as Record<string, unknown>;
+
+    for (const field of ['bookTitle', 'bookIsbn', 'bookEdition', 'bookChapter']) {
+      const value = request[field as keyof AssignmentFields];
+      if (value === undefined) delete body[field];
+      else body[field] = typeof value === 'string' ? value.trim() || null : value;
+    }
+
+    return body;
   }
 }

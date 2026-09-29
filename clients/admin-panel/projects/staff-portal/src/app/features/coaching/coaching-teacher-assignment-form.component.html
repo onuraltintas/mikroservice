@@ -1,0 +1,180 @@
+<section class="assignment-editor" aria-labelledby="assignment-editor-title">
+  <header class="editor-heading">
+    <button type="button" class="editor-back" (click)="close.emit()">← Ödev listesine dön</button>
+    <p class="editor-eyebrow">KOÇLUK · ÖĞRETMEN</p>
+    <h2 id="assignment-editor-title">{{ isEditing ? 'Ödevi düzenle' : 'Yeni ödev oluştur' }}</h2>
+    <p>Ödevi, aktif öğrenci bağlantısı bulunan öğrencilerinize atayın.</p>
+  </header>
+
+  @if (errorMessage()) {
+    <div class="editor-error" role="alert">{{ errorMessage() }}</div>
+  }
+
+  @if (assignmentLoadFailed()) {
+    <div class="editor-empty">
+      <h3>Ödev bilgileri açılamadı</h3>
+      <p>Ödev bulunmamış, yetkiniz olmayabilir veya bağlantı kesilmiş olabilir. Hiçbir değişiklik gönderilmedi.</p>
+      <button type="button" class="secondary-button" (click)="close.emit()">Listeye dön</button>
+    </div>
+  } @else if (isLoading()) {
+    <div class="editor-loading" aria-label="Ödev ve öğrenciler yükleniyor">
+      @for (row of [1, 2, 3]; track row) { <div></div> }
+    </div>
+  } @else {
+    <form class="editor-form" (ngSubmit)="submit()">
+      <div class="editor-section-heading">
+        <h3>Ödev bilgileri</h3>
+        <p>Başlık ve son tarih zorunludur. Öğrenciler yalnızca sunucudaki güncel öğretmen bağlantılarından yüklenir.</p>
+      </div>
+
+      <div class="editor-grid two-columns">
+        <label for="assignment-title">Başlık <span aria-hidden="true">*</span>
+          <input id="assignment-title" name="title" [(ngModel)]="form.title" required maxlength="200" autocomplete="off">
+        </label>
+        <label for="assignment-subject">Ders
+          <input id="assignment-subject" name="subject" [(ngModel)]="form.subject" maxlength="120">
+        </label>
+      </div>
+
+      <label class="editor-full" for="assignment-description">Açıklama
+        <textarea id="assignment-description" name="description" [(ngModel)]="form.description" maxlength="2000" rows="3"></textarea>
+      </label>
+
+      <div class="editor-grid four-columns">
+        <label for="assignment-kind">Atama türü
+          <select id="assignment-kind" name="assignmentType" [(ngModel)]="form.assignmentType">
+            <option value="Individual">Bireysel</option>
+            <option value="Group">Grup</option>
+          </select>
+        </label>
+        <label for="assignment-source">Kaynak
+          <select id="assignment-source" name="assignmentSource" [(ngModel)]="form.assignmentSource">
+            <option value="Digital">Dijital</option>
+            <option value="Book">Kitap</option>
+            <option value="Mixed">Karma</option>
+          </select>
+        </label>
+        <label for="assignment-due-date">Son tarih <span aria-hidden="true">*</span>
+          <input id="assignment-due-date" name="dueDate" type="datetime-local" [(ngModel)]="form.dueDate" required>
+        </label>
+        <label for="assignment-grade">Sınıf seviyesi
+          <input id="assignment-grade" name="targetGradeLevel" type="number" min="1" max="12" [(ngModel)]="form.targetGradeLevel">
+        </label>
+      </div>
+
+      @if (form.assignmentSource !== 'Digital') {
+        <section class="book-section" aria-labelledby="book-section-title">
+          <div class="editor-section-heading">
+            <h3 id="book-section-title">Kitap ödevi ayrıntıları</h3>
+            <p>Kitap ve sayfa aralığı zorunludur. Soru aralığı isteğe bağlıdır.</p>
+          </div>
+          <div class="editor-grid two-columns">
+            <label for="book-title">Kitap adı <span aria-hidden="true">*</span>
+              <input id="book-title" name="bookTitle" [(ngModel)]="form.bookTitle" maxlength="200">
+            </label>
+            <label for="book-isbn">ISBN
+              <input id="book-isbn" name="bookIsbn" [(ngModel)]="form.bookIsbn" maxlength="32">
+            </label>
+            <label for="book-edition">Baskı
+              <input id="book-edition" name="bookEdition" [(ngModel)]="form.bookEdition" maxlength="100">
+            </label>
+            <label for="book-chapter">Ünite / bölüm
+              <input id="book-chapter" name="bookChapter" [(ngModel)]="form.bookChapter" maxlength="100">
+            </label>
+          </div>
+          <div class="editor-grid four-columns">
+            <label for="book-start-page">İlk sayfa <span aria-hidden="true">*</span>
+              <input id="book-start-page" name="bookStartPage" type="number" min="1" [(ngModel)]="form.bookStartPage">
+            </label>
+            <label for="book-end-page">Son sayfa <span aria-hidden="true">*</span>
+              <input id="book-end-page" name="bookEndPage" type="number" min="1" [(ngModel)]="form.bookEndPage">
+            </label>
+            <label for="book-start-question">İlk soru
+              <input id="book-start-question" name="bookStartQuestion" type="number" min="1" [(ngModel)]="form.bookStartQuestion">
+            </label>
+            <label for="book-end-question">Son soru
+              <input id="book-end-question" name="bookEndQuestion" type="number" min="1" [(ngModel)]="form.bookEndQuestion">
+            </label>
+          </div>
+        </section>
+      }
+
+      <div class="editor-grid three-columns">
+        <label for="assignment-duration">Tahmini süre (dakika)
+          <input id="assignment-duration" name="estimatedDurationMinutes" type="number" min="1" max="240" [(ngModel)]="form.estimatedDurationMinutes">
+        </label>
+        <label for="assignment-max-score">Maksimum puan
+          <input id="assignment-max-score" name="maxScore" type="number" min="0.01" max="999.99" step="0.01" [(ngModel)]="form.maxScore">
+        </label>
+        <label for="assignment-passing-score">Geçme puanı
+          <input id="assignment-passing-score" name="passingScore" type="number" min="0" max="999.99" step="0.01" [(ngModel)]="form.passingScore">
+        </label>
+      </div>
+
+      <fieldset class="student-picker">
+        <legend>Aktif öğrenciler <span aria-hidden="true">*</span></legend>
+        <p>Bu ödev en fazla 100 öğrenciye atanabilir. Seçimleriniz arama ve sayfalar arasında korunur.</p>
+        @if (inactiveAssignedStudentIds().length > 0) {
+          <div class="inactive-students" role="alert">
+            Bu ödevde artık aktif öğretmen bağlantısı olmayan {{ inactiveAssignedStudentIds().length }} öğrenci bulunuyor. İlişki düzeltilmeden ödev güncellenemez.
+          </div>
+        }
+        @if (isValidatingStudents()) {
+          <p class="validation-note" role="status">Mevcut öğrenci bağlantıları doğrulanıyor…</p>
+        }
+        @if (studentValidationFailed()) {
+          <div class="inactive-students" role="alert">Mevcut öğrenci bağlantıları doğrulanamadı. Güvenliğiniz için kayıt kapatıldı.</div>
+        }
+        @if (studentErrorMessage()) {
+          <div class="student-list-error" role="alert">
+            <span>{{ studentErrorMessage() }}</span>
+            <button type="button" class="secondary-button" (click)="loadStudents()">Yeniden yükle</button>
+          </div>
+        } @else {
+          <div class="student-search" role="search">
+            <label class="visually-hidden" for="assignment-student-search">Öğrencilerimde ara</label>
+            <input id="assignment-student-search" name="studentSearch" type="search"
+              [(ngModel)]="studentSearchInput" placeholder="Öğrenci adıyla ara" autocomplete="off"
+              (keydown.enter)="$event.preventDefault(); setStudentSearch(studentSearchInput)">
+            @if (studentSearchTerm()) {
+              <button type="button" class="secondary-button" (click)="clearStudentSearch()">Temizle</button>
+            }
+            <button type="button" class="search-button" (click)="setStudentSearch(studentSearchInput)">Ara</button>
+          </div>
+          @if (isLoadingStudents()) {
+            <div class="student-skeleton" aria-label="Öğrenciler yükleniyor"></div>
+          } @else if (students().length === 0) {
+            <p class="no-students">Bu aramada aktif öğrenci bulunamadı.</p>
+          } @else {
+            <div class="student-options" aria-label="Atanabilir öğrenciler">
+              @for (student of students(); track trackByStudent($index, student)) {
+                <label class="student-option">
+                  <input type="checkbox" [checked]="isSelected(student.userId)"
+                    [disabled]="!isSelected(student.userId) && selectedStudentIds.size >= 100"
+                    (change)="toggleStudent(student.userId)">
+                  <span><strong>{{ student.fullName }}</strong><small>{{ student.gradeLevel ? student.gradeLevel + '. sınıf' : 'Sınıf bilgisi yok' }}</small></span>
+                </label>
+              }
+            </div>
+            @if (studentTotalPages() > 1) {
+              <nav class="student-pagination" aria-label="Öğrenci listesi sayfaları">
+                <button type="button" (click)="previousStudentsPage()" [disabled]="studentPageNumber() === 1">Önceki</button>
+                <span>Sayfa {{ studentPageNumber() }} / {{ studentTotalPages() }}</span>
+                <button type="button" (click)="nextStudentsPage()" [disabled]="studentPageNumber() >= studentTotalPages()">Sonraki</button>
+              </nav>
+            }
+          }
+        }
+        <p class="selected-count" aria-live="polite">Seçili öğrenci: {{ selectedStudentIds.size }} / 100</p>
+      </fieldset>
+
+      <div class="editor-actions">
+        <button type="button" class="secondary-button" (click)="close.emit()">Vazgeç</button>
+        <button type="submit" class="save-button"
+          [disabled]="isSaving() || isLoading() || isValidatingStudents() || studentValidationFailed() || inactiveAssignedStudentIds().length > 0">
+          {{ isSaving() ? 'Kaydediliyor…' : (isEditing ? 'Değişiklikleri kaydet' : 'Ödevi oluştur') }}
+        </button>
+      </div>
+    </form>
+  }
+</section>

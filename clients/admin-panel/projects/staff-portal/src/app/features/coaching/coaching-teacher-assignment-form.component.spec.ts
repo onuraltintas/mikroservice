@@ -3,7 +3,11 @@ import { of } from 'rxjs';
 import { vi } from 'vitest';
 import { StaffAuthService } from '../../auth/staff-auth.service';
 import { CoachingTeacherStudentsService } from './coaching-teacher-students.service';
-import { CoachingTeacherAssignmentsService } from './coaching-teacher-assignments.service';
+import {
+  CoachingAssignmentCreateRequest,
+  CoachingAssignmentUpdateRequest,
+  CoachingTeacherAssignmentsService
+} from './coaching-teacher-assignments.service';
 import { CoachingTeacherAssignmentFormComponent } from './coaching-teacher-assignment-form.component';
 
 describe('CoachingTeacherAssignmentFormComponent', () => {
@@ -38,7 +42,7 @@ describe('CoachingTeacherAssignmentFormComponent', () => {
     fixture.componentInstance.submit();
 
     expect(assignments.createAssignment).not.toHaveBeenCalled();
-    expect(fixture.componentInstance.errorMessage()).toContain('başlık');
+    expect(fixture.componentInstance.errorMessage()).toContain('zorunlu');
   });
 
   it('validates future due date and required book page range before saving', () => {
@@ -57,8 +61,31 @@ describe('CoachingTeacherAssignmentFormComponent', () => {
     expect(component.errorMessage()).toContain('sayfa aralığı');
   });
 
-  it('does not update an assignment while one of its assigned students is no longer active', () => {
+  it('rejects zero or reversed book question ranges before sending the request', () => {
     const assignments = assignmentService();
+    const fixture = createFixture(assignments);
+    fixture.detectChanges();
+    const component = fixture.componentInstance;
+    component.form.title = 'Kitap ödevi';
+    component.form.dueDate = '2030-01-02T10:00';
+    component.form.assignmentSource = 'Book';
+    component.form.bookTitle = 'Matematik';
+    component.form.bookStartPage = 10;
+    component.form.bookEndPage = 12;
+    component.form.bookStartQuestion = 0;
+    component.form.bookEndQuestion = 0;
+    component.toggleStudent('student-1');
+
+    component.submit();
+
+    expect(assignments.createAssignment).not.toHaveBeenCalled();
+    expect(component.errorMessage()).toContain('soru aralığı');
+  });
+
+  it('does not update an assignment while one of its assigned students is no longer active', () => {
+    const assignments = assignmentService({
+      assignedStudents: [{ studentId: 'former-student', status: 'Assigned' }]
+    });
     const fixture = createFixture(assignments, 'assignment-1');
     fixture.detectChanges();
     const component = fixture.componentInstance;
@@ -67,7 +94,7 @@ describe('CoachingTeacherAssignmentFormComponent', () => {
     component.submit();
 
     expect(assignments.updateAssignment).not.toHaveBeenCalled();
-    expect(component.errorMessage()).toContain('pasif');
+    expect(component.errorMessage()).toContain('aktif olmayan');
   });
 
   it('loads an assignment, keeps its active student selected, and sends the update', () => {
@@ -136,8 +163,10 @@ function assignmentService(detail: { assignedStudents?: Array<{ studentId: strin
       assignedStudents: detail.assignedStudents ?? [],
       createdAt: '2029-12-01T10:00:00Z'
     })),
-    createAssignment: vi.fn(() => of({ assignmentId: 'assignment-new', title: 'Ödev', dueDate: '2030-01-02T10:00:00Z', assignedStudentCount: 1 })),
-    updateAssignment: vi.fn(() => of({ assignmentId: 'assignment-1', dueDate: '2030-01-02T10:00:00Z', assignedStudentCount: 1 }))
+    createAssignment: vi.fn((_request: CoachingAssignmentCreateRequest, _idempotencyKey: string) =>
+      of({ assignmentId: 'assignment-new', title: 'Ödev', dueDate: '2030-01-02T10:00:00Z', assignedStudentCount: 1 })),
+    updateAssignment: vi.fn((_assignmentId: string, _request: CoachingAssignmentUpdateRequest) =>
+      of({ assignmentId: 'assignment-1', dueDate: '2030-01-02T10:00:00Z', assignedStudentCount: 1 }))
   };
 }
 

@@ -2,7 +2,14 @@ import { TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 import { StaffAuthService } from '../../auth/staff-auth.service';
-import { CoachingTeacherAssignmentsService, CoachingTeacherAssignment } from './coaching-teacher-assignments.service';
+import {
+  CoachingAssignmentCreateRequest,
+  CoachingAssignmentDetail,
+  CoachingAssignmentUpdateRequest,
+  CoachingTeacherAssignmentsService,
+  CoachingTeacherAssignment
+} from './coaching-teacher-assignments.service';
+import { CoachingTeacherStudentsService } from './coaching-teacher-students.service';
 import { CoachingTeacherAssignmentsComponent } from './coaching-teacher-assignments.component';
 
 describe('CoachingTeacherAssignmentsComponent', () => {
@@ -75,6 +82,36 @@ describe('CoachingTeacherAssignmentsComponent', () => {
     expect(service.getTeacherAssignments).not.toHaveBeenCalled();
     expect(fixture.componentInstance.errorMessage()).toBe('Öğretmen oturumu doğrulanamadı. Lütfen yeniden giriş yapın.');
   });
+
+  it('opens the new assignment form from the teacher list and returns without navigating away', () => {
+    const service = assignmentService();
+    const fixture = createFixture(service);
+    fixture.detectChanges();
+    (fixture.nativeElement.querySelector('[data-testid="create-assignment"]') as HTMLButtonElement).click();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Yeni ödev oluştur');
+    expect(fixture.nativeElement.querySelector('#assignment-title')).not.toBeNull();
+    (fixture.nativeElement.querySelector('.editor-back') as HTMLButtonElement).click();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Ödevlerim');
+  });
+
+  it('opens the edit form for the selected assignment', async () => {
+    const service = assignmentService();
+    service.getTeacherAssignments.mockReturnValue(of(page([assignment('assignment-1')])));
+    const fixture = createFixture(service);
+    fixture.detectChanges();
+    (fixture.nativeElement.querySelector('[data-testid="edit-assignment-1"]') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(service.getAssignment).toHaveBeenCalledWith('assignment-1');
+    expect(fixture.nativeElement.textContent).toContain('Ödevi düzenle');
+    expect((fixture.nativeElement.querySelector('#assignment-title') as HTMLInputElement).value).toBe('Haftalık tekrar');
+  });
 });
 
 function createFixture(service: ReturnType<typeof assignmentService>, userId: string | null = 'teacher-1') {
@@ -82,7 +119,8 @@ function createFixture(service: ReturnType<typeof assignmentService>, userId: st
     imports: [CoachingTeacherAssignmentsComponent],
     providers: [
       { provide: StaffAuthService, useValue: { getCurrentUserId: () => userId } },
-      { provide: CoachingTeacherAssignmentsService, useValue: service }
+      { provide: CoachingTeacherAssignmentsService, useValue: service },
+      { provide: CoachingTeacherStudentsService, useValue: studentService() }
     ]
   });
   return TestBed.createComponent(CoachingTeacherAssignmentsComponent);
@@ -91,7 +129,30 @@ function createFixture(service: ReturnType<typeof assignmentService>, userId: st
 function assignmentService() {
   return {
     getTeacherAssignments: vi.fn(() => of(page([]))),
+    getAssignment: vi.fn(() => of({
+      id: 'assignment-1', teacherId: 'teacher-1', title: 'Haftalık tekrar', type: 'Individual', source: 'Digital',
+      totalStudents: 0, submittedCount: 0,
+      dueDate: '2030-01-02T10:00:00Z', status: 'Active', assignedStudents: [], createdAt: '2029-12-01T10:00:00Z'
+    } as CoachingAssignmentDetail)),
+    createAssignment: vi.fn((_request: CoachingAssignmentCreateRequest, _key: string) =>
+      of({ assignmentId: 'assignment-new', dueDate: '2030-01-02T10:00:00Z', assignedStudentCount: 1 })),
+    updateAssignment: vi.fn((_id: string, _request: CoachingAssignmentUpdateRequest) =>
+      of({ assignmentId: 'assignment-1', dueDate: '2030-01-02T10:00:00Z', assignedStudentCount: 1 })),
     cancelAssignment: vi.fn(() => of({ message: 'Assignment cancelled successfully' }))
+  };
+}
+
+function studentService() {
+  return {
+    getMyStudents: vi.fn(() => of({
+      items: [{
+        userId: 'student-1', firstName: 'Ada', lastName: 'Yılmaz', fullName: 'Ada Yılmaz',
+        gradeLevel: 8, assignmentStartDate: '2030-01-01T00:00:00Z'
+      }],
+      pageNumber: 1, pageSize: 100, totalCount: 1, totalPages: 1
+    })),
+    getStudentProgress: vi.fn(),
+    getStudentHistory: vi.fn()
   };
 }
 

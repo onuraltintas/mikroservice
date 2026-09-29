@@ -1,3 +1,8 @@
+@if (formMode(); as mode) {
+  <staff-coaching-teacher-assignment-form
+    [assignmentId]="mode.kind === 'edit' ? mode.id : null"
+    (close)="closeEditor()" (saved)="onFormSaved($event)" />
+} @else {
 <section class="assignments" aria-labelledby="assignments-title">
   <div class="assignments-heading">
     <div>
@@ -5,7 +10,10 @@
       <h2 id="assignments-title">Ödevlerim</h2>
       <p class="assignments-description">Öğrencilere verdiğiniz çalışmaları ve teslim durumlarını takip edin.</p>
     </div>
-    <span class="assignments-count">{{ totalCount() }} ödev</span>
+    <div class="assignments-heading-actions">
+      <span class="assignments-count">{{ totalCount() }} ödev</span>
+      <button type="button" class="create-assignment-button" data-testid="create-assignment" (click)="createAssignment()">Yeni ödev</button>
+    </div>
   </div>
 
   <div class="assignments-toolbar">
@@ -37,6 +45,9 @@
       <span aria-hidden="true">○</span>
       <h3>Ödev bulunamadı</h3>
       <p>{{ statusFilter() === 'all' ? 'Öğrencilere atadığınız ödevler burada listelenecek.' : 'Bu durumda bir ödev bulunmuyor.' }}</p>
+      @if (statusFilter() === 'all') {
+        <button type="button" class="create-assignment-button" (click)="createAssignment()">İlk ödevinizi oluşturun</button>
+      }
     </div>
   } @else if (!errorMessage()) {
     <div class="assignment-list" aria-label="Koçluk ödevleri">
@@ -50,6 +61,8 @@
             <div class="assignment-meta">
               <span class="delivery-count">{{ assignment.submittedCount }} / {{ assignment.totalStudents }} teslim</span>
               <span class="assignment-status" [attr.data-status]="assignment.status">{{ assignmentStatusLabel(assignment.status) }}</span>
+              <button type="button" class="edit-button" [attr.data-testid]="'edit-' + assignment.id"
+                (click)="editAssignment(assignment.id)">Düzenle</button>
               @if (assignment.status === 'Active') {
                 <button type="button" class="cancel-button" [attr.data-testid]="'cancel-' + assignment.id"
                   (click)="requestCancel(assignment.id)">İptal et</button>
@@ -82,3 +95,4 @@
     }
   }
 </section>
+}

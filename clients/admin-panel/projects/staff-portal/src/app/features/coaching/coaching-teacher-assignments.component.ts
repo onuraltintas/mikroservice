@@ -8,13 +8,15 @@ import {
   CoachingTeacherAssignment,
   CoachingTeacherAssignmentsService
 } from './coaching-teacher-assignments.service';
+import { CoachingTeacherAssignmentFormComponent } from './coaching-teacher-assignment-form.component';
 
 type AssignmentStatusFilter = 'all' | CoachingAssignmentStatus;
+type AssignmentFormMode = { kind: 'new' } | { kind: 'edit'; id: string };
 
 @Component({
   selector: 'staff-coaching-teacher-assignments',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, CoachingTeacherAssignmentFormComponent],
   templateUrl: './coaching-teacher-assignments.component.html',
   styleUrl: './coaching-teacher-assignments.component.scss'
 })
@@ -33,8 +35,29 @@ export class CoachingTeacherAssignmentsComponent implements OnInit {
   readonly statusFilter = signal<AssignmentStatusFilter>('all');
   readonly cancelConfirmationId = signal<string | null>(null);
   readonly isCancelling = signal(false);
+  readonly formMode = signal<AssignmentFormMode | null>(null);
 
   ngOnInit(): void {
+    this.load();
+  }
+
+  createAssignment(): void {
+    this.successMessage.set(null);
+    this.formMode.set({ kind: 'new' });
+  }
+
+  editAssignment(assignmentId: string): void {
+    this.successMessage.set(null);
+    this.formMode.set({ kind: 'edit', id: assignmentId });
+  }
+
+  closeEditor(): void {
+    this.formMode.set(null);
+  }
+
+  onFormSaved(result: 'created' | 'updated'): void {
+    this.formMode.set(null);
+    this.successMessage.set(result === 'created' ? 'Ödev oluşturuldu.' : 'Ödev güncellendi.');
     this.load();
   }
 

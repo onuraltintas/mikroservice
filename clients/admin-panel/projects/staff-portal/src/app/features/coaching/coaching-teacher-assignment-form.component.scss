@@ -1,0 +1,61 @@
+.assignment-editor { margin-top: 20px; padding: clamp(16px, 3vw, 26px); border: 1px solid #e3e5dc; border-radius: 16px; background: #fbfaf6; }
+.editor-heading { margin-bottom: 20px; }
+.editor-back { display: block; margin: 0 0 20px; padding: 0; border: 0; color: #4a6f5c; background: transparent; font: inherit; font-size: 10px; font-weight: 750; cursor: pointer; }
+.editor-eyebrow { margin: 0 0 8px; color: #64876e; font-size: 9px; font-weight: 800; letter-spacing: .15em; }
+.editor-heading h2 { margin: 0; color: #17333a; font-family: Georgia, 'Times New Roman', serif; font-size: 28px; font-weight: 400; letter-spacing: -.035em; }
+.editor-heading > p:last-child { margin: 7px 0 0; color: #72817d; font-size: 11px; line-height: 1.6; }
+.editor-error, .inactive-students { margin-bottom: 15px; padding: 11px 13px; border: 1px solid #efc7b9; border-radius: 10px; color: #873f2d; background: #fff1eb; font-size: 11px; line-height: 1.55; }
+.editor-empty { padding: 22px; border: 1px dashed #d9dfd7; border-radius: 13px; background: #fffefa; }
+.editor-empty h3 { margin: 0; color: #354c4d; font-size: 13px; }
+.editor-empty p { max-width: 650px; margin: 7px 0 14px; color: #72817d; font-size: 11px; line-height: 1.6; }
+.editor-loading { display: grid; gap: 9px; }
+.editor-loading div { height: 62px; border-radius: 10px; background: linear-gradient(90deg, #e9ebe3, #f3f3ed, #e9ebe3); background-size: 200% 100%; animation: assignment-form-shimmer 1.4s linear infinite; }
+.editor-form { display: grid; gap: 20px; padding: clamp(15px, 2.5vw, 24px); border: 1px solid #e3e5dc; border-radius: 14px; background: #fffefa; }
+.editor-section-heading h3 { margin: 0; color: #2b4144; font-size: 13px; font-weight: 800; }
+.editor-section-heading p { margin: 6px 0 0; color: #7a8883; font-size: 10px; line-height: 1.55; }
+.editor-grid { display: grid; gap: 14px; }
+.two-columns { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.four-columns { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.three-columns { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.editor-form label { display: grid; min-width: 0; gap: 6px; color: #526962; font-size: 10px; font-weight: 700; }
+.editor-form label > span { color: #9a4933; }
+.editor-form input:not([type='checkbox']), .editor-form select, .editor-form textarea { width: 100%; min-height: 39px; box-sizing: border-box; padding: 9px 10px; border: 1px solid #d9dfd7; border-radius: 8px; outline: none; color: #243e43; background: #fffefa; font: inherit; font-size: 11px; }
+.editor-form textarea { resize: vertical; }
+.editor-form input:focus, .editor-form select:focus, .editor-form textarea:focus { border-color: #779372; box-shadow: 0 0 0 3px rgb(119 147 114 / 14%); }
+.editor-full { display: grid; gap: 6px; color: #526962; font-size: 10px; font-weight: 700; }
+.book-section { display: grid; gap: 14px; padding: 16px; border: 1px solid #dfe7d5; border-radius: 12px; background: #f4f6ec; }
+.student-picker { min-width: 0; margin: 0; padding: 16px; border: 1px solid #e3e5dc; border-radius: 12px; }
+.student-picker legend { padding: 0 5px; color: #2b4144; font-size: 12px; font-weight: 800; }
+.student-picker legend span { color: #9a4933; }
+.student-picker > p { margin: 0 0 12px; color: #7a8883; font-size: 10px; line-height: 1.55; }
+.validation-note { color: #587647 !important; }
+.student-search { display: flex; gap: 7px; margin: 12px 0; }
+.student-search > input { flex: 1; min-width: 0; }
+.search-button, .secondary-button, .student-pagination button { min-height: 36px; padding: 0 11px; border: 1px solid #d9dfd7; border-radius: 8px; color: #425b56; background: #fffefa; font: inherit; font-size: 10px; font-weight: 700; cursor: pointer; }
+.search-button { border-color: #264b44; color: #f6f8ed; background: #264b44; }
+.student-options { display: grid; max-height: 280px; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; overflow-y: auto; padding: 8px; border: 1px solid #e3e5dc; border-radius: 10px; background: #fffefa; }
+.student-option { display: flex !important; min-height: 42px; align-items: center; gap: 9px !important; padding: 6px 8px; border-radius: 8px; cursor: pointer; }
+.student-option:hover { background: #f4f6ec; }
+.student-option input { flex: 0 0 auto; accent-color: #355b4b; }
+.student-option > span { display: grid; min-width: 0; gap: 3px; }
+.student-option strong { overflow: hidden; color: #354c4d; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.student-option small { color: #8a9690; font-size: 9px; }
+.student-pagination { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; color: #73817c; font-size: 10px; }
+.student-pagination button:disabled { opacity: .45; cursor: not-allowed; }
+.selected-count { margin: 11px 0 0 !important; color: #4b6c55 !important; font-weight: 700; }
+.student-list-error { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px; border: 1px solid #efc7b9; border-radius: 9px; color: #873f2d; font-size: 10px; }
+.no-students { margin: 0 !important; padding: 18px; border: 1px dashed #d9dfd7; border-radius: 10px; text-align: center; }
+.student-skeleton { height: 58px; border-radius: 10px; background: linear-gradient(90deg, #e9ebe3, #f3f3ed, #e9ebe3); background-size: 200% 100%; animation: assignment-form-shimmer 1.4s linear infinite; }
+.editor-actions { display: flex; justify-content: flex-end; gap: 8px; }
+.save-button { min-height: 39px; padding: 0 15px; border: 1px solid #264b44; border-radius: 8px; color: #f6f8ed; background: #264b44; font: inherit; font-size: 10px; font-weight: 800; cursor: pointer; }
+.save-button:hover { background: #1b3e38; }
+.save-button:disabled { opacity: .5; cursor: not-allowed; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; clip-path: inset(50%); }
+@keyframes assignment-form-shimmer { to { background-position: -200% 0; } }
+@media (max-width: 850px) { .four-columns { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 600px) {
+  .two-columns, .three-columns, .four-columns { grid-template-columns: 1fr; }
+  .student-options { grid-template-columns: 1fr; }
+  .student-search { flex-wrap: wrap; }
+  .student-search > input { flex-basis: 100%; }
+}
