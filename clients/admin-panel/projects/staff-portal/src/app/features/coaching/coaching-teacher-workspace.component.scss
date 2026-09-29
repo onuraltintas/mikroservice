@@ -6,3 +6,4 @@
 .workspace-tabs button { min-height: 38px; padding: 0 14px; border: 0; border-radius: 8px; color: #71807a; background: transparent; font: inherit; font-size: 10px; font-weight: 750; cursor: pointer; }
 .workspace-tabs button.active { color: #24483f; background: #fffefa; box-shadow: 0 1px 3px rgb(29 55 47 / 12%); }
 .workspace-tabs button:focus-visible { outline: 2px solid #779372; outline-offset: 2px; }
+.section-loading { margin: 0; padding: 1rem; color: #64748b; font-size: .85rem; }

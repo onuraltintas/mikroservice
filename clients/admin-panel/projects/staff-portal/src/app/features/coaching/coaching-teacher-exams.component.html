@@ -1,0 +1,226 @@
+<section class="exams-workspace" aria-labelledby="teacher-exams-title">
+  <header class="exams-heading">
+    <div>
+      <p class="eyebrow">KOÇLUK · AKADEMİK TAKİP</p>
+      <h2 id="teacher-exams-title">Sınavlarım</h2>
+      <p>Sınavları planlayın, öğrencilerinizin sonuçlarını kaydedip güncelleyin.</p>
+    </div>
+    <button type="button" class="primary-button" (click)="createExam()">Yeni sınav</button>
+  </header>
+
+  @if (errorMessage()) {
+    <p class="notice error" role="alert">{{ errorMessage() }}</p>
+  }
+  @if (successMessage()) {
+    <p class="notice success" role="status">{{ successMessage() }}</p>
+  }
+
+  @if (isExamFormVisible()) {
+    <form class="panel exam-form" (ngSubmit)="saveExam()" aria-labelledby="exam-form-title">
+      <div class="panel-heading">
+        <div>
+          <h3 id="exam-form-title">{{ editingExamId() ? 'Sınavı düzenle' : 'Yeni sınav oluştur' }}</h3>
+          <p>{{ editingExamId() ? 'Bu sınavın mevcut sonuç kayıtları korunur.' : 'Sınavı yalnızca size atanmış öğrenciler için kullanabilirsiniz.' }}</p>
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <label class="field span-two">
+          <span>Sınav başlığı</span>
+          <input [(ngModel)]="form.title" name="examTitle" required maxlength="200" autocomplete="off" />
+        </label>
+        <label class="field">
+          <span>Sınav türü</span>
+          <select [(ngModel)]="form.type" name="examType" required>
+            @for (type of examTypes; track type.value) { <option [ngValue]="type.value">{{ type.label }}</option> }
+          </select>
+        </label>
+        <label class="field">
+          <span>Tarih ve saat</span>
+          <input [(ngModel)]="form.examDate" name="examDate" type="datetime-local" required />
+        </label>
+        <label class="field">
+          <span>Maksimum puan</span>
+          <input [(ngModel)]="form.maxScore" name="examMaxScore" type="number" min="0.01" max="999.99" step="0.01" required />
+        </label>
+        @if (editingExamId()) {
+          <label class="field">
+            <span>Ders</span>
+            <input [(ngModel)]="form.subject" name="examSubject" maxlength="200" />
+          </label>
+          <label class="field">
+            <span>Süre (dakika)</span>
+            <input [(ngModel)]="form.durationMinutes" name="examDuration" type="number" min="1" max="480" step="1" />
+          </label>
+          <label class="field">
+            <span>Hedef sınıf seviyesi</span>
+            <input [(ngModel)]="form.targetGradeLevel" name="examGrade" type="number" min="1" max="12" step="1" />
+          </label>
+        }
+        <label class="field span-two">
+          <span>Açıklama</span>
+          <textarea [(ngModel)]="form.description" name="examDescription" rows="3" maxlength="2000"></textarea>
+        </label>
+      </div>
+
+      @if (!editingExamId()) {
+        <p class="field-hint">Ders, süre ve sınıf bilgileri sınav oluşturulduktan sonra düzenlenebilir.</p>
+      }
+      <div class="form-actions">
+        <button type="button" class="secondary-button" (click)="cancelExamEdit()">Vazgeç</button>
+        <button type="submit" class="primary-button" [disabled]="isSavingExam()">
+          {{ isSavingExam() ? 'Kaydediliyor…' : (editingExamId() ? 'Değişiklikleri kaydet' : 'Sınav oluştur') }}
+        </button>
+      </div>
+    </form>
+  }
+
+  <section class="panel exam-list" aria-labelledby="exam-list-title">
+    <div class="panel-heading">
+      <div>
+        <h3 id="exam-list-title">Sınav kayıtları</h3>
+        <p>{{ exams().length }} / {{ examTotalCount() }} sınav yüklenmiş durumda.</p>
+      </div>
+      <button type="button" class="secondary-button" (click)="loadExams()" [disabled]="isLoading()">Yenile</button>
+    </div>
+
+    @if (isLoading()) {
+      <p class="loading-state" role="status">Sınavlar yükleniyor…</p>
+    } @else if (!exams().length) {
+      <div class="empty-state">
+        <h4>Henüz sınav oluşturmadınız</h4>
+        <p>Öğrencilerinizin sonuçlarını takip etmek için ilk sınavınızı oluşturun.</p>
+        <button type="button" class="primary-button" (click)="createExam()">İlk sınavı oluştur</button>
+      </div>
+    } @else {
+      <div class="exam-cards">
+        @for (exam of exams(); track exam.id) {
+          <article class="exam-card">
+            <div class="exam-card-main">
+              <div class="exam-card-title">
+                <h4>{{ exam.title }}</h4>
+                <span class="type-badge">{{ examTypeLabel(exam.examType) }}</span>
+              </div>
+              <p class="exam-meta">
+                {{ exam.examDate | date:'d MMM y, HH:mm' }}
+                <span>·</span> Maks. {{ exam.maxScore }} puan
+                @if (exam.subject) { <span>·</span> {{ exam.subject }} }
+              </p>
+              @if (exam.description) { <p class="exam-description">{{ exam.description }}</p> }
+              <p class="result-count">{{ exam.resultCount }} öğrenci sonucu</p>
+            </div>
+            <div class="exam-actions">
+              <button type="button" class="text-button" (click)="openResults(exam)">Sonuçları yönet</button>
+              <button type="button" class="text-button muted" (click)="editExam(exam)">Düzenle</button>
+            </div>
+          </article>
+        }
+      </div>
+      @if (examPageNumber() < examTotalPages()) {
+        <button type="button" class="load-more" (click)="loadMoreExams()" [disabled]="loadingMoreExams()">
+          {{ loadingMoreExams() ? 'Yükleniyor…' : 'Daha fazla sınav yükle' }}
+        </button>
+      }
+    }
+  </section>
+
+  @if (selectedExam(); as exam) {
+    <section class="panel results-panel" aria-labelledby="exam-results-title">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">{{ examTypeLabel(exam.examType) }}</p>
+          <h3 id="exam-results-title">Sınav sonuçları · {{ exam.title }}</h3>
+          <p>Öğrenci sonuçlarını ekleyin veya mevcut kayıtları düzeltin.</p>
+        </div>
+        <button type="button" class="secondary-button" (click)="closeResults()">Sonuçları kapat</button>
+      </div>
+
+      @if (isLoadingResults()) {
+        <p class="loading-state" role="status">Sınav sonuçları yükleniyor…</p>
+      } @else if (examDetail(); as detail) {
+        <form class="result-form" (ngSubmit)="saveExamResult()" aria-label="Sınav sonucu formu">
+          <label class="field span-two">
+            <span>Öğrenci</span>
+            <select [(ngModel)]="resultForm.studentId" name="resultStudent" [disabled]="!!editingResultId()" required>
+              <option value="">Aktif öğrencilerinizden seçin</option>
+              @for (student of students(); track student.userId) { <option [value]="student.userId">{{ student.fullName }}</option> }
+            </select>
+            @if (editingResultId()) { <small>Kaydedilmiş sonuç başka bir öğrenciye taşınamaz.</small> }
+          </label>
+          @if (!editingResultId()) {
+            <label class="field">
+              <span>Öğrenci ara</span>
+              <input #studentSearch type="search" [value]="studentSearchTerm()" (change)="searchStudents(studentSearch.value)" (keydown.enter)="$event.preventDefault(); searchStudents(studentSearch.value)" placeholder="Ad veya soyad" />
+            </label>
+          }
+          <label class="field">
+            <span>Puan / {{ exam.maxScore }}</span>
+            <input [(ngModel)]="resultForm.score" name="resultScore" type="number" min="0" [max]="exam.maxScore" step="0.01" required />
+          </label>
+          <label class="field">
+            <span>Sıralama</span>
+            <input [(ngModel)]="resultForm.ranking" name="resultRanking" type="number" min="1" step="1" />
+          </label>
+          <label class="field">
+            <span>Doğru</span>
+            <input [(ngModel)]="resultForm.correctAnswers" name="resultCorrect" type="number" min="0" step="1" />
+          </label>
+          <label class="field">
+            <span>Yanlış</span>
+            <input [(ngModel)]="resultForm.wrongAnswers" name="resultWrong" type="number" min="0" step="1" />
+          </label>
+          <label class="field">
+            <span>Boş</span>
+            <input [(ngModel)]="resultForm.emptyAnswers" name="resultEmpty" type="number" min="0" step="1" />
+          </label>
+          <label class="field span-two">
+            <span>Ders puanları (JSON)</span>
+            <textarea [(ngModel)]="resultForm.subjectScoresText" name="resultSubjectScores" maxlength="4000" rows="2" placeholder='{"Matematik": 85}'></textarea>
+          </label>
+          <label class="field span-two">
+            <span>Öğretmen notu</span>
+            <textarea [(ngModel)]="resultForm.notes" name="resultNotes" maxlength="2000" rows="2"></textarea>
+          </label>
+          <div class="result-form-actions">
+            @if (editingResultId()) { <button type="button" class="secondary-button" (click)="cancelExamResultEdit()">Vazgeç</button> }
+            <button type="submit" class="primary-button" [disabled]="isSavingResult()">
+              {{ isSavingResult() ? 'Kaydediliyor…' : (editingResultId() ? 'Sonucu güncelle' : 'Sonuç ekle') }}
+            </button>
+          </div>
+          @if (studentPageNumber() < studentTotalPages()) {
+            <button type="button" class="load-more student-load-more" (click)="loadMoreStudents()" [disabled]="isLoadingStudents()">
+              {{ isLoadingStudents() ? 'Öğrenciler yükleniyor…' : 'Daha fazla öğrenci' }}
+            </button>
+          }
+        </form>
+
+        @if (!detail.results.length) {
+          <div class="empty-state compact"><h4>Henüz sonuç girilmemiş</h4><p>İlk öğrenci sonucunu bu formdan ekleyebilirsiniz.</p></div>
+        } @else {
+          <div class="results-table-wrap">
+            <table class="results-table">
+              <thead><tr><th>Öğrenci</th><th>Puan</th><th>Doğru / Yanlış / Boş</th><th>Sıra</th><th>Not</th><th><span class="sr-only">İşlem</span></th></tr></thead>
+              <tbody>
+                @for (result of detail.results; track result.id) {
+                  <tr>
+                    <td class="student-name">{{ studentLabel(result.studentId) }}</td>
+                    <td>{{ result.score }} / {{ detail.maxScore }}</td>
+                    <td>{{ result.correctAnswers ?? 0 }} / {{ result.wrongAnswers ?? 0 }} / {{ result.emptyAnswers ?? 0 }}</td>
+                    <td>{{ result.ranking ?? '—' }}</td>
+                    <td class="result-note">{{ result.teacherNotes || '—' }}</td>
+                    <td><button type="button" class="text-button" (click)="editExamResult(result)">Düzelt</button></td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          @if (resultPageNumber() < resultTotalPages()) {
+            <button type="button" class="load-more" (click)="loadMoreResults()" [disabled]="loadingMoreResults()">
+              {{ loadingMoreResults() ? 'Yükleniyor…' : 'Daha fazla sonuç yükle' }}
+            </button>
+          }
+        }
+      }
+    </section>
+  }
+</section>

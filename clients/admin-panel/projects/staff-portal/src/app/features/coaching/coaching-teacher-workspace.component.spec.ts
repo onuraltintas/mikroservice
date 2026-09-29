@@ -6,15 +6,16 @@ import { CoachingTeacherStudentsService } from './coaching-teacher-students.serv
 import { CoachingTeacherAssignmentsService } from './coaching-teacher-assignments.service';
 import { CoachingTeacherSessionsService } from './coaching-teacher-sessions.service';
 import { CoachingTeacherGoalsService } from './coaching-teacher-goals.service';
+import { CoachingTeacherExamsService } from './coaching-teacher-exams.service';
 import { CoachingTeacherWorkspaceComponent } from './coaching-teacher-workspace.component';
 
 describe('CoachingTeacherWorkspaceComponent', () => {
-  it('switches between student reports and teacher assignments in the Coaching workspace', () => {
+  it('switches between student reports and teacher assignments in the Coaching workspace', async () => {
     const assignments = {
       getTeacherAssignments: vi.fn(() => of({ items: [], pageNumber: 1, pageSize: 25, totalCount: 0, totalPages: 1 })),
       cancelAssignment: vi.fn(() => of({ message: 'ok' }))
     };
-    TestBed.configureTestingModule({
+    await TestBed.configureTestingModule({
       imports: [CoachingTeacherWorkspaceComponent],
       providers: [
         { provide: StaffAuthService, useValue: { getCurrentUserId: () => 'teacher-1' } },
@@ -34,9 +35,17 @@ describe('CoachingTeacherWorkspaceComponent', () => {
           getTeacherGoals: vi.fn(() => of({ items: [], pageNumber: 1, pageSize: 25, totalCount: 0, totalPages: 1 })),
           createGoal: vi.fn(() => of({ goalId: 'goal-1' })),
           updateGoal: vi.fn(() => of({ goalId: 'goal-1', title: 'ok' }))
+        } },
+        { provide: CoachingTeacherExamsService, useValue: {
+          getTeacherExams: vi.fn(() => of({ items: [], pageNumber: 1, pageSize: 25, totalCount: 0, totalPages: 1 })),
+          createExam: vi.fn(() => of({ examId: 'exam-1' })),
+          updateExam: vi.fn(() => of({ examId: 'exam-1', examDate: '2030-01-01T00:00:00Z', maxScore: 100 })),
+          getExamDetail: vi.fn(() => of({ id: 'exam-1', results: [], resultPageNumber: 1, resultPageSize: 25, resultTotalPages: 1 })),
+          addExamResult: vi.fn(() => of({ message: 'ok' })),
+          updateExamResult: vi.fn(() => of({ examId: 'exam-1', resultId: 'result-1', score: 90 }))
         } }
       ]
-    });
+    }).compileComponents();
     const fixture = TestBed.createComponent(CoachingTeacherWorkspaceComponent);
     fixture.detectChanges();
 
@@ -56,6 +65,14 @@ describe('CoachingTeacherWorkspaceComponent', () => {
 
     (fixture.nativeElement.querySelector('[data-testid="goals-tab"]') as HTMLButtonElement).click();
     fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('Hedeflerim');
+
+    (fixture.nativeElement.querySelector('[data-testid="exams-tab"]') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Sınavlarım');
   });
 });

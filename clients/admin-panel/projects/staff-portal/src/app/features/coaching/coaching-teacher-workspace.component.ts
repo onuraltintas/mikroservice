@@ -3,13 +3,14 @@ import { CoachingTeacherAssignmentsComponent } from './coaching-teacher-assignme
 import { CoachingTeacherSessionsComponent } from './coaching-teacher-sessions.component';
 import { CoachingTeacherGoalsComponent } from './coaching-teacher-goals.component';
 import { CoachingTeacherStudentsComponent } from './coaching-teacher-students.component';
+import { CoachingTeacherExamsComponent } from './coaching-teacher-exams.component';
 
-type CoachingTeacherSection = 'students' | 'assignments' | 'sessions' | 'goals';
+type CoachingTeacherSection = 'students' | 'assignments' | 'sessions' | 'goals' | 'exams';
 
 @Component({
   selector: 'staff-coaching-teacher-workspace',
   standalone: true,
-  imports: [CoachingTeacherStudentsComponent, CoachingTeacherAssignmentsComponent, CoachingTeacherSessionsComponent, CoachingTeacherGoalsComponent],
+  imports: [CoachingTeacherStudentsComponent, CoachingTeacherAssignmentsComponent, CoachingTeacherSessionsComponent, CoachingTeacherGoalsComponent, CoachingTeacherExamsComponent],
   templateUrl: './coaching-teacher-workspace.component.html',
   styleUrl: './coaching-teacher-workspace.component.scss'
 })
