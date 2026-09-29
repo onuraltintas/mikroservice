@@ -1,0 +1,63 @@
+<section class="roster" aria-labelledby="roster-title">
+  <div class="roster-heading">
+    <div>
+      <p class="roster-eyebrow">KOÇLUK · ÖĞRETMEN</p>
+      <h2 id="roster-title">Öğrencilerim</h2>
+      <p class="roster-description">Yalnızca size atanmış öğrenciler listelenir. Öğrenci ayrıntıları sonraki taşıma adımında eklenecek.</p>
+    </div>
+    <span class="roster-count">{{ totalCount() }} öğrenci</span>
+  </div>
+
+  <form class="roster-search" (ngSubmit)="setSearchTerm(searchInput)">
+    <label class="visually-hidden" for="staff-coaching-student-search">Öğrenci adıyla ara</label>
+    <input id="staff-coaching-student-search" name="studentSearch" type="search"
+      [(ngModel)]="searchInput" placeholder="Öğrenci adıyla ara" autocomplete="off">
+    @if (searchTerm()) {
+      <button class="clear-search" type="button" (click)="clearSearch()">Temizle</button>
+    }
+    <button class="search-button" type="submit">Ara</button>
+  </form>
+
+  @if (errorMessage()) {
+    <div class="roster-error" role="alert">
+      <span>{{ errorMessage() }}</span>
+      <button type="button" data-testid="retry-roster" (click)="load()">Tekrar dene</button>
+    </div>
+  } @else if (isLoading()) {
+    <div class="roster-loading" aria-label="Öğrenciler yükleniyor">
+      @for (row of [1, 2, 3]; track row) { <div class="skeleton"></div> }
+    </div>
+  } @else if (students().length === 0) {
+    <div class="roster-empty">
+      <span aria-hidden="true">○</span>
+      <h3>Öğrenci bulunamadı</h3>
+      <p>{{ searchTerm() ? 'Arama ölçütünü değiştirip tekrar deneyin.' : 'Size atanmış bir öğrenci olduğunda burada listelenecek.' }}</p>
+    </div>
+  } @else {
+    <div class="student-list" aria-label="Koçluk öğrencileri">
+      @for (student of students(); track trackById($index, student)) {
+        <article class="student-row">
+          <div class="student-identity">
+            <span class="student-avatar" aria-hidden="true">{{ student.firstName.charAt(0) }}{{ student.lastName.charAt(0) }}</span>
+            <div class="student-name-block">
+              <h3>{{ student.fullName }}</h3>
+              <p>{{ student.gradeLevel ? student.gradeLevel + '. sınıf' : 'Sınıf bilgisi yok' }}@if (student.subject) {<span> · {{ student.subject }}</span>}</p>
+            </div>
+          </div>
+          <div class="student-context">
+            <span>{{ student.institutionName || 'Bağımsız öğrenci' }}</span>
+            <small>Atama: {{ formatAssignmentDate(student.assignmentStartDate) }}</small>
+          </div>
+        </article>
+      }
+    </div>
+
+    @if (totalPages() > 1) {
+      <nav class="roster-pagination" aria-label="Öğrenci listesi sayfaları">
+        <button type="button" (click)="previousPage()" [disabled]="pageNumber() === 1">Önceki</button>
+        <span>Sayfa {{ pageNumber() }} / {{ totalPages() }}</span>
+        <button type="button" (click)="nextPage()" [disabled]="pageNumber() >= totalPages()">Sonraki</button>
+      </nav>
+    }
+  }
+</section>

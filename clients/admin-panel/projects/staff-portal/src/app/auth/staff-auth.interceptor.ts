@@ -5,7 +5,7 @@ import { environment } from '../../environments/environment';
 import { StaffAuthService } from './staff-auth.service';
 
 export const staffAuthInterceptor: HttpInterceptorFn = (request, next) => {
-  if (!request.url.startsWith(environment.apiUrl)) return next(request);
+  if (!isApiRequest(request.url)) return next(request);
 
   const auth = inject(StaffAuthService);
   const authorizedRequest = withSession(request, auth.getAccessToken());
@@ -23,6 +23,11 @@ export const staffAuthInterceptor: HttpInterceptorFn = (request, next) => {
     })
   );
 };
+
+function isApiRequest(url: string): boolean {
+  const apiBase = environment.apiUrl.replace(/\/+$/, '');
+  return url === apiBase || url.startsWith(`${apiBase}/`);
+}
 
 function withSession(request: HttpRequest<unknown>, token: string): HttpRequest<unknown> {
   return request.clone({

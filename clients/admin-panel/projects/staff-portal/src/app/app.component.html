@@ -86,15 +86,33 @@
           </div>
         </section>
 
-        <section class="migration-note" aria-labelledby="migration-title">
-          <div class="migration-icon" aria-hidden="true">↗</div>
-          <div>
-            <p class="eyebrow">UYGULAMA PLANI · ADIM 1</p>
-            <h2 id="migration-title">Güvenli portal temeli hazır</h2>
-            <p>Koçluk öğretmen/kurum ekranları ve Hızlı Okuma ekranları, sonraki adımlarda bu ayrı çalışma alanına taşınacak. Mevcut servisler ve veritabanları ayrı kalır.</p>
-          </div>
-          <span class="migration-status">Ekran taşıma sırada</span>
-        </section>
+        @if (auth.activeProduct() === 'coaching' && activeAccess?.roles?.includes('Teacher')) {
+          <staff-coaching-teacher-students />
+        }
+
+        @if (auth.activeProduct() === 'coaching' && isInstitutionManager) {
+          <section class="migration-note" aria-labelledby="institution-migration-title">
+            <div class="migration-icon" aria-hidden="true">↗</div>
+            <div>
+              <p class="eyebrow">KOÇLUK · KURUM YÖNETİMİ</p>
+              <h2 id="institution-migration-title">Kurum işlemleri sıradaki taşıma adımında.</h2>
+              <p>Öğretmen ve öğrenci listeleri, ayrıntılı raporlar ve atama işlemleri kurum yetkinize göre bu alana taşınacak. Bu ekran henüz kurum işlemlerini sunmuyor.</p>
+            </div>
+            <span class="migration-status">Hazırlanıyor</span>
+          </section>
+        }
+
+        @if (auth.activeProduct() === 'speed-reading') {
+          <section class="migration-note" aria-labelledby="reading-migration-title">
+            <div class="migration-icon" aria-hidden="true">↗</div>
+            <div>
+              <p class="eyebrow">HIZLI OKUMA · PERSONEL ÇALIŞMA ALANI</p>
+              <h2 id="reading-migration-title">Hızlı Okuma ekranları sıradaki taşıma adımında.</h2>
+              <p>Bu ürünün öğretmen ve kurum işlevleri kendi Hızlı Okuma API’si ile taşınacak; Koçluk verileri ve yetkileri ayrı kalacak.</p>
+            </div>
+            <span class="migration-status">Hazırlanıyor</span>
+          </section>
+        }
 
         <footer class="page-footer">Eduİvme · Personel çalışma alanı <span>Yetkiniz yalnızca erişim verilen ürünlerde geçerlidir.</span></footer>
       </div>
