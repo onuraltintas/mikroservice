@@ -148,6 +148,101 @@ describe('SpeedReadingInstitutionWorkspaceComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Öğrenci bulunamadı');
   });
 
+  it('edits a student using a teacher searched within the current institution', () => {
+    const fixture = TestBed.createComponent(SpeedReadingInstitutionWorkspaceComponent);
+    fixture.detectChanges();
+    http.expectOne('/api/institution/speed-reading/me').flush({
+      institutionId: 'institution-1', institutionName: 'Örnek Kurum'
+    });
+    http.expectOne(request => request.url === '/api/speed-reading/institutions/institution-1/members'
+      && request.params.get('role') === 'Student').flush({
+      items: [{
+        userId: 'student-1', firstName: 'Ayşe', lastName: 'Yılmaz', role: 'Student', isActive: true,
+        createdAt: '2026-09-04T00:00:00Z', gradeLevel: 8, teacherUserId: 'teacher-1',
+        teacherName: 'Mehmet Kaya', studentCount: 0
+      }], totalCount: 1, pageNumber: 1, pageSize: 25
+    });
+    http.expectOne(request => request.url === '/api/speed-reading/analytics/institutions/institution-1/class-overview')
+      .flush({ dateFrom: '', dateTo: '', totalStudents: 1, activeStudents: 1,
+        activeStudentsDataAvailable: true, classAverageWpmDataAvailable: false,
+        classAverageComprehensionDataAvailable: false, classAverageWpm: 0,
+        classAverageComprehension: 0, totalActivitiesCompleted: 0, studentsAboveAverage: 0,
+        studentsAtAverage: 0, studentsBelowAverage: 1, topPerformers: [], studentsNeedingSupport: [] });
+    fixture.detectChanges();
+
+    const editButton = fixture.nativeElement.querySelector('[data-testid="edit-student-profile"]') as HTMLButtonElement | null;
+    expect(editButton).toBeTruthy();
+    if (!editButton) return;
+    editButton.click();
+    fixture.detectChanges();
+
+    const gradeInput = fixture.nativeElement.querySelector('[data-testid="student-grade-level"]') as HTMLSelectElement;
+    gradeInput.value = '9';
+    gradeInput.dispatchEvent(new Event('change'));
+    const searchInput = fixture.nativeElement.querySelector('[data-testid="institution-teacher-search"]') as HTMLInputElement;
+    searchInput.value = 'Zeynep';
+    searchInput.dispatchEvent(new Event('input'));
+    fixture.nativeElement.querySelector('[data-testid="search-institution-teachers"]').click();
+    const teacherSearch = http.expectOne(request =>
+      request.url === '/api/speed-reading/institutions/institution-1/members'
+        && request.params.get('role') === 'Teacher'
+        && request.params.get('searchTerm') === 'Zeynep');
+    teacherSearch.flush({
+      items: [{
+        userId: 'teacher-2', firstName: 'Zeynep', lastName: 'Demir', role: 'Teacher', isActive: true,
+        createdAt: '2026-09-04T00:00:00Z', studentCount: 4
+      }], totalCount: 1, pageNumber: 1, pageSize: 25
+    });
+    fixture.detectChanges();
+
+    const teacherSelect = fixture.nativeElement.querySelector('[data-testid="student-teacher-assignment"]') as HTMLSelectElement;
+    teacherSelect.value = 'teacher-2';
+    teacherSelect.dispatchEvent(new Event('change'));
+    fixture.nativeElement.querySelector('[data-testid="save-student-profile"]').click();
+
+    const update = http.expectOne('/api/speed-reading/institutions/institution-1/members/student-1/student-profile');
+    expect(update.request.method).toBe('PUT');
+    expect(update.request.body).toEqual({ gradeLevel: 9, teacherUserId: 'teacher-2' });
+    update.flush(null, { status: 204, statusText: 'No Content' });
+    http.expectOne(request => request.url === '/api/speed-reading/institutions/institution-1/members'
+      && request.params.get('role') === 'Student').flush({ items: [], totalCount: 0, pageNumber: 1, pageSize: 25 });
+  });
+
+  it('requires confirmation before changing a Speed Reading institution membership', () => {
+    const fixture = TestBed.createComponent(SpeedReadingInstitutionWorkspaceComponent);
+    fixture.detectChanges();
+    http.expectOne('/api/institution/speed-reading/me').flush({
+      institutionId: 'institution-1', institutionName: 'Örnek Kurum'
+    });
+    http.expectOne(request => request.url === '/api/speed-reading/institutions/institution-1/members')
+      .flush({ items: [{
+        userId: 'student-1', firstName: 'Ayşe', lastName: 'Yılmaz', role: 'Student', isActive: true,
+        createdAt: '2026-09-04T00:00:00Z', studentCount: 0
+      }], totalCount: 1, pageNumber: 1, pageSize: 25 });
+    http.expectOne(request => request.url === '/api/speed-reading/analytics/institutions/institution-1/class-overview')
+      .flush({ dateFrom: '', dateTo: '', totalStudents: 1, activeStudents: 1,
+        activeStudentsDataAvailable: true, classAverageWpmDataAvailable: false,
+        classAverageComprehensionDataAvailable: false, classAverageWpm: 0,
+        classAverageComprehension: 0, totalActivitiesCompleted: 0, studentsAboveAverage: 0,
+        studentsAtAverage: 0, studentsBelowAverage: 1, topPerformers: [], studentsNeedingSupport: [] });
+    fixture.detectChanges();
+
+    const action = fixture.nativeElement.querySelector('[data-testid="toggle-member-status"]') as HTMLButtonElement | null;
+    expect(action).toBeTruthy();
+    if (!action) return;
+    action.click();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Üyelik durumunu değiştirmek istiyor musunuz?');
+
+    fixture.nativeElement.querySelector('[data-testid="confirm-member-status"]').click();
+    const update = http.expectOne('/api/speed-reading/institutions/institution-1/members/student-1');
+    expect(update.request.method).toBe('PUT');
+    expect(update.request.body).toEqual({ role: 'Student', isActive: false });
+    update.flush(null, { status: 204, statusText: 'No Content' });
+    http.expectOne(request => request.url === '/api/speed-reading/institutions/institution-1/members')
+      .flush({ items: [], totalCount: 0, pageNumber: 1, pageSize: 25 });
+  });
+
   it('does not call the Speed Reading API when Identity cannot resolve an institution', () => {
     const fixture = TestBed.createComponent(SpeedReadingInstitutionWorkspaceComponent);
     fixture.detectChanges();

@@ -64,4 +64,24 @@ describe('SpeedReadingInstitutionService', () => {
 
     await expect(response).resolves.toMatchObject({ totalStudents: 12, classAverageWpm: 240 });
   });
+
+  it('updates a student profile only through the scoped institution endpoint', async () => {
+    const response = firstValueFrom(service.updateStudentProfile('institution-1', 'student-1', 9, 'teacher-1'));
+    const request = http.expectOne('/api/speed-reading/institutions/institution-1/members/student-1/student-profile');
+    expect(request.request.method).toBe('PUT');
+    expect(request.request.body).toEqual({ gradeLevel: 9, teacherUserId: 'teacher-1' });
+    request.flush(null, { status: 204, statusText: 'No Content' });
+
+    await expect(response).resolves.toBeUndefined();
+  });
+
+  it('changes only the selected product membership role through the scoped endpoint', async () => {
+    const response = firstValueFrom(service.setMemberStatus('institution-1', 'teacher-1', 'Teacher', false));
+    const request = http.expectOne('/api/speed-reading/institutions/institution-1/members/teacher-1');
+    expect(request.request.method).toBe('PUT');
+    expect(request.request.body).toEqual({ role: 'Teacher', isActive: false });
+    request.flush(null, { status: 204, statusText: 'No Content' });
+
+    await expect(response).resolves.toBeUndefined();
+  });
 });
