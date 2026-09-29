@@ -16,6 +16,46 @@ describe('SpeedReadingInstitutionWorkspaceComponent', () => {
 
   afterEach(() => http.verify());
 
+  function createLoadedWorkspace() {
+    const fixture = TestBed.createComponent(SpeedReadingInstitutionWorkspaceComponent);
+    fixture.detectChanges();
+    http.expectOne('/api/institution/speed-reading/me').flush({
+      institutionId: 'institution-1',
+      institutionName: 'Örnek Kurum',
+    });
+    http
+      .expectOne(
+        (request) =>
+          request.url === '/api/speed-reading/institutions/institution-1/members' &&
+          request.params.get('role') === 'Student',
+      )
+      .flush({ items: [], totalCount: 0, pageNumber: 1, pageSize: 25 });
+    http
+      .expectOne(
+        (request) =>
+          request.url === '/api/speed-reading/analytics/institutions/institution-1/class-overview',
+      )
+      .flush({
+        dateFrom: '',
+        dateTo: '',
+        totalStudents: 0,
+        activeStudents: 0,
+        activeStudentsDataAvailable: false,
+        classAverageWpmDataAvailable: false,
+        classAverageComprehensionDataAvailable: false,
+        classAverageWpm: 0,
+        classAverageComprehension: 0,
+        totalActivitiesCompleted: 0,
+        studentsAboveAverage: 0,
+        studentsAtAverage: 0,
+        studentsBelowAverage: 0,
+        topPerformers: [],
+        studentsNeedingSupport: [],
+      });
+    fixture.detectChanges();
+    return fixture;
+  }
+
   it('loads the authenticated institution, its own roster and Speed Reading analytics', () => {
     const fixture = TestBed.createComponent(SpeedReadingInstitutionWorkspaceComponent);
     fixture.detectChanges();
@@ -638,6 +678,117 @@ describe('SpeedReadingInstitutionWorkspaceComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Ödev raporu');
     expect(fixture.nativeElement.textContent).toContain('Tamamlanma oranı');
     expect(fixture.nativeElement.textContent).toContain('50%');
+  });
+
+  it('shows content and time-progress reports from their institution-scoped endpoints', () => {
+    const fixture = createLoadedWorkspace();
+    const contentTab = fixture.nativeElement.querySelector(
+      '[data-testid="institution-report-content"]',
+    ) as HTMLButtonElement | null;
+    expect(contentTab).toBeTruthy();
+    if (!contentTab) return;
+    contentTab.click();
+    http
+      .expectOne(
+        (request) =>
+          request.url ===
+          '/api/speed-reading/analytics/institutions/institution-1/content-analysis',
+      )
+      .flush({
+        exerciseAnalysis: [
+          {
+            exerciseTypeName: 'Anlama egzersizi',
+            totalCompletions: 12,
+            activeStudents: 4,
+            averageScore: 82,
+            performanceLevel: 'İyi',
+          },
+        ],
+        exerciseFrequencyChart: [],
+        readingAnalysis: [],
+        readingPerformanceChart: [],
+      });
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('İçerik analizi');
+    expect(fixture.nativeElement.textContent).toContain('Anlama egzersizi');
+
+    const progressTab = fixture.nativeElement.querySelector(
+      '[data-testid="institution-report-progress"]',
+    ) as HTMLButtonElement | null;
+    expect(progressTab).toBeTruthy();
+    if (!progressTab) return;
+    progressTab.click();
+    http
+      .expectOne(
+        (request) =>
+          request.url === '/api/speed-reading/analytics/institutions/institution-1/time-progress',
+      )
+      .flush({
+        weeklyProgressChart: [],
+        monthlyProgressChart: [],
+        activityIntensityChart: [],
+        improvingStudents: [
+          {
+            studentId: 'student-1',
+            studentName: 'Ayşe Yılmaz',
+            previousScore: 70,
+            currentScore: 82,
+            improvement: 12,
+            trend: 'improving',
+            metric: 'Anlama',
+          },
+        ],
+        decliningStudents: [],
+      });
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Zaman ve ilerleme');
+    expect(fixture.nativeElement.textContent).toContain('Ayşe Yılmaz');
+    expect(fixture.nativeElement.textContent).toContain('İlerleme gösteren öğrenciler');
+  });
+
+  it('rejects an inverted institution report date range without requesting data', () => {
+    const fixture = createLoadedWorkspace();
+    fixture.componentInstance.reportDateFrom = '2026-09-30';
+    fixture.componentInstance.reportDateTo = '2026-09-01';
+    fixture.componentInstance.selectInstitutionReport('assignments');
+
+    http.expectNone('/api/speed-reading/analytics/institutions/institution-1/assignments');
+    expect(fixture.componentInstance.institutionReportErrorMessage()).toContain(
+      'başlangıç tarihi bitiş tarihinden sonra',
+    );
+  });
+
+  it('ignores an older report response after the selected date range becomes invalid', () => {
+    const fixture = createLoadedWorkspace();
+    fixture.componentInstance.reportDateFrom = '2026-09-01';
+    fixture.componentInstance.reportDateTo = '2026-09-30';
+    fixture.componentInstance.selectInstitutionReport('assignments');
+    const pendingReport = http.expectOne(
+      (request) =>
+        request.url === '/api/speed-reading/analytics/institutions/institution-1/assignments',
+    );
+
+    fixture.componentInstance.reportDateFrom = '2026-09-30';
+    fixture.componentInstance.reportDateTo = '2026-09-01';
+    fixture.componentInstance.applyInstitutionReportRange();
+    pendingReport.flush({
+      dataAvailable: true,
+      assignmentCount: 4,
+      completionStats: {
+        totalStudents: 3,
+        completed: 2,
+        inProgress: 1,
+        notStarted: 0,
+        completionRate: 70,
+      },
+      studentBreakdown: [],
+      scoreDistribution: [],
+    });
+
+    expect(fixture.componentInstance.assignmentReport()).toBeNull();
+    expect(fixture.componentInstance.institutionReportErrorMessage()).toContain(
+      'başlangıç tarihi bitiş tarihinden sonra',
+    );
   });
 
   it('does not call the Speed Reading API when Identity cannot resolve an institution', () => {
