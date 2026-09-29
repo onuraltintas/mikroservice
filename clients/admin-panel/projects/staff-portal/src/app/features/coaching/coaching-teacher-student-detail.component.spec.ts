@@ -3,6 +3,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { TestBed } from '@angular/core/testing';
 import { CoachingTeacherStudentDetailComponent } from './coaching-teacher-student-detail.component';
 import { CoachingTeacherStudent } from './coaching-teacher-students.service';
+import * as reportExport from '../../../../../../src/app/features/coaching-portal/coaching-history-export';
 
 describe('CoachingTeacherStudentDetailComponent', () => {
   let http: HttpTestingController;
@@ -25,6 +26,7 @@ describe('CoachingTeacherStudentDetailComponent', () => {
   });
 
   afterEach(() => http.verify());
+  afterEach(() => vi.restoreAllMocks());
 
   function createDetail() {
     const fixture = TestBed.createComponent(CoachingTeacherStudentDetailComponent);
@@ -156,6 +158,81 @@ describe('CoachingTeacherStudentDetailComponent', () => {
 
     expect(fixture.nativeElement.textContent).toContain('Oturum süreniz sona erdi');
     expect(fixture.nativeElement.textContent).toContain('Bu öğrenci raporunu görüntüleme yetkiniz bulunmuyor');
+  });
+
+  it('exports all filtered history pages before offering a CSV download', async () => {
+    const fixture = createDetail();
+    flushInitialReport();
+    fixture.componentInstance.historySearch = '  Fen  ';
+    fixture.componentInstance.historyStatus = 'Result';
+    fixture.componentInstance.historyFromDate = '2026-09-01';
+    const download = vi.spyOn(reportExport, 'downloadCoachingHistoryCsv').mockImplementation(() => undefined);
+
+    const exportPromise = fixture.componentInstance.exportHistory();
+    const request = http.expectOne(candidate =>
+      candidate.url === '/api/reports/student/student-1/history'
+        && candidate.params.get('pageNumber') === '1'
+        && candidate.params.get('pageSize') === '100'
+        && candidate.params.get('type') === 'Assignments'
+        && candidate.params.get('search') === 'Fen'
+        && candidate.params.get('status') === 'Result'
+        && candidate.params.get('fromDate') === '2026-09-01T00:00:00.000Z');
+    request.flush({
+      items: [
+        { id: 'assignment-2', type: 'Assignments', title: 'Fen çalışma', eventDate: '2026-09-11T10:00:00Z', status: 'Graded', score: 90, maxScore: 100 },
+        { id: 'assignment-3', type: 'Assignments', title: 'Fen tekrar', eventDate: '2026-09-12T10:00:00Z', status: 'Graded', score: 80, maxScore: 100 }
+      ],
+      pageNumber: 1, pageSize: 100, totalCount: 2, totalPages: 1
+    });
+    await exportPromise;
+
+    expect(download).toHaveBeenCalledOnce();
+    expect(fixture.componentInstance.historyError()).toBeNull();
+    expect(fixture.componentInstance.isExporting()).toBe(false);
+  });
+
+  it('does not download a partial CSV when a later report page fails', async () => {
+    const fixture = createDetail();
+    flushInitialReport();
+    const download = vi.spyOn(reportExport, 'downloadCoachingHistoryCsv').mockImplementation(() => undefined);
+
+    const exportPromise = fixture.componentInstance.exportHistory();
+    http.expectOne(request => request.url.endsWith('/history') && request.params.get('pageNumber') === '1')
+      .flush({ items: [{ id: 'assignment-2', type: 'Assignments', title: 'Ödev', eventDate: '2026-09-11T10:00:00Z', status: 'Graded' }], pageNumber: 1, pageSize: 100, totalCount: 2, totalPages: 1 });
+    http.expectOne(request => request.url.endsWith('/history') && request.params.get('pageNumber') === '2')
+      .flush({}, { status: 500, statusText: 'Server Error' });
+    await exportPromise;
+
+    expect(download).not.toHaveBeenCalled();
+    expect(fixture.componentInstance.historyError()).toContain('Tam rapor indirilemedi');
+    expect(fixture.componentInstance.isExporting()).toBe(false);
+  });
+
+  it('prints the complete history into a safely rendered print document', async () => {
+    const fixture = createDetail();
+    flushInitialReport();
+    const printDocument = window.document.implementation.createHTMLDocument('Student report');
+    const printWindow = {
+      document: printDocument,
+      opener: null,
+      focus: vi.fn(),
+      print: vi.fn()
+    } as unknown as Window;
+    vi.spyOn(window, 'open').mockReturnValue(printWindow);
+
+    const printPromise = fixture.componentInstance.printHistory();
+    http.expectOne(request => request.url.endsWith('/history') && request.params.get('pageSize') === '100').flush({
+      items: [{
+        id: 'assignment-2', type: 'Assignments', title: '<img src=x onerror=alert(1)>',
+        eventDate: '2026-09-11T10:00:00Z', status: 'Graded'
+      }],
+      pageNumber: 1, pageSize: 100, totalCount: 1, totalPages: 1
+    });
+    await printPromise;
+
+    expect(printDocument.querySelector('img')).toBeNull();
+    expect(printDocument.body.textContent).toContain('<img src=x onerror=alert(1)>');
+    expect(printWindow.print).toHaveBeenCalledOnce();
   });
 
   it('emits a return action to the student roster', () => {
