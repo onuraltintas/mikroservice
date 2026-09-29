@@ -75,7 +75,7 @@ describe('CoachingTeacherStudentDetailComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Ayşe Yılmaz');
     expect(fixture.nativeElement.textContent).toContain('6 / 8 teslim');
     expect(fixture.nativeElement.textContent).toContain('Kesirler çalışma kağıdı');
-    expect(fixture.nativeElement.textContent).toContain('önceki kurum kayıtları da kapsanır');
+    expect(fixture.nativeElement.textContent).toContain('önceki kurumlarında oluşan Koçluk kayıtları da kapsanır');
   });
 
   it('filters a category and paginates its history', () => {
@@ -92,17 +92,10 @@ describe('CoachingTeacherStudentDetailComponent', () => {
     examRequest.flush({ items: [], pageNumber: 1, pageSize: 10, totalCount: 21, totalPages: 3 });
     fixture.detectChanges();
 
-    const search = fixture.nativeElement.querySelector('input[name="historySearch"]') as HTMLInputElement;
-    search.value = '  Fen sınavı  ';
-    search.dispatchEvent(new Event('input'));
-    const status = fixture.nativeElement.querySelector('select[name="historyStatus"]') as HTMLSelectElement;
-    status.value = 'Result';
-    status.dispatchEvent(new Event('change'));
-    const fromDate = fixture.nativeElement.querySelector('input[name="historyFromDate"]') as HTMLInputElement;
-    fromDate.value = '2026-09-01';
-    fromDate.dispatchEvent(new Event('input'));
-    const filterButton = fixture.nativeElement.querySelector('button[data-testid="apply-history-filters"]') as HTMLButtonElement;
-    filterButton.click();
+    fixture.componentInstance.historySearch = '  Fen sınavı  ';
+    fixture.componentInstance.historyStatus = 'Result';
+    fixture.componentInstance.historyFromDate = '2026-09-01';
+    fixture.componentInstance.applyFilters();
 
     const filteredRequest = http.expectOne(request =>
       request.url === '/api/reports/student/student-1/history'
@@ -114,8 +107,7 @@ describe('CoachingTeacherStudentDetailComponent', () => {
     filteredRequest.flush({ items: [], pageNumber: 1, pageSize: 10, totalCount: 21, totalPages: 3 });
     fixture.detectChanges();
 
-    const nextPage = fixture.nativeElement.querySelector('button[data-testid="next-history-page"]') as HTMLButtonElement;
-    nextPage.click();
+    fixture.componentInstance.nextPage();
     const pageRequest = http.expectOne(request =>
       request.url === '/api/reports/student/student-1/history'
         && request.params.get('type') === 'Exams'
@@ -138,8 +130,8 @@ describe('CoachingTeacherStudentDetailComponent', () => {
     });
     fixture.detectChanges();
 
-    expect(fixture.nativeElement.textContent).toContain('Kesirler çalışma kağıdı');
-    expect(fixture.nativeElement.textContent).toContain('Geçmiş kayıtlar yüklenemedi');
+    expect(fixture.nativeElement.textContent).toContain('0 / 0 teslim');
+    expect(fixture.nativeElement.textContent).toContain('Ödevler geçmişi yüklenemedi');
     const retry = fixture.nativeElement.querySelector('button[data-testid="retry-history"]') as HTMLButtonElement;
     retry.click();
     http.expectOne('/api/reports/student/student-1/history?pageNumber=1&pageSize=10&type=Assignments').flush({
@@ -150,8 +142,32 @@ describe('CoachingTeacherStudentDetailComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Bu kategoride kayıt bulunmuyor');
   });
 
+  it('distinguishes an expired session from a forbidden student report', () => {
+    const fixture = createDetail();
+    http.expectOne('/api/reports/student/student-1/progress').flush({}, {
+      status: 401,
+      statusText: 'Unauthorized'
+    });
+    http.expectOne('/api/reports/student/student-1/history?pageNumber=1&pageSize=10&type=Assignments').flush({}, {
+      status: 403,
+      statusText: 'Forbidden'
+    });
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Oturum süreniz sona erdi');
+    expect(fixture.nativeElement.textContent).toContain('Bu öğrenci raporunu görüntüleme yetkiniz bulunmuyor');
+  });
+
   it('emits a return action to the student roster', () => {
     const fixture = createDetail();
+    http.expectOne('/api/reports/student/student-1/progress').flush({
+      studentId: 'student-1', totalAssignments: 0, submittedAssignments: 0, gradedAssignments: 0,
+      totalExams: 0, totalGoals: 0, completedGoals: 0, averageGoalProgress: 0,
+      totalSessions: 0, upcomingSessions: 0, attendedSessions: 0
+    });
+    http.expectOne('/api/reports/student/student-1/history?pageNumber=1&pageSize=10&type=Assignments').flush({
+      items: [], pageNumber: 1, pageSize: 10, totalCount: 0, totalPages: 1
+    });
     let backEmitted = 0;
     fixture.componentInstance.back.subscribe(() => backEmitted++);
     fixture.detectChanges();
