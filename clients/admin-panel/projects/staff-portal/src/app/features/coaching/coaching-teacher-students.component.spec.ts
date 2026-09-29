@@ -127,4 +127,39 @@ describe('CoachingTeacherStudentsComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Ayşe Demir');
     expect(fixture.nativeElement.textContent).not.toContain('Mehmet Kaya');
   });
+
+  it('opens the selected student report and returns to the same roster', () => {
+    const fixture = TestBed.createComponent(CoachingTeacherStudentsComponent);
+    fixture.detectChanges();
+    http.expectOne('/api/teachers/me/students?pageNumber=1&pageSize=25').flush({
+      items: [{
+        userId: 'student-1',
+        firstName: 'Ayşe',
+        lastName: 'Yılmaz',
+        fullName: 'Ayşe Yılmaz',
+        assignmentStartDate: '2026-09-01T00:00:00Z'
+      }],
+      pageNumber: 1, pageSize: 25, totalCount: 1, totalPages: 1
+    });
+    fixture.detectChanges();
+
+    const openButton = fixture.nativeElement.querySelector('button[data-testid="open-student-report"]') as HTMLButtonElement;
+    openButton.click();
+    http.expectOne('/api/reports/student/student-1/progress').flush({
+      studentId: 'student-1', totalAssignments: 0, submittedAssignments: 0, gradedAssignments: 0,
+      totalExams: 0, totalGoals: 0, completedGoals: 0, averageGoalProgress: 0,
+      totalSessions: 0, upcomingSessions: 0, attendedSessions: 0
+    });
+    http.expectOne('/api/reports/student/student-1/history?pageNumber=1&pageSize=10&type=Assignments').flush({
+      items: [], pageNumber: 1, pageSize: 10, totalCount: 0, totalPages: 1
+    });
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Öğrenci raporu');
+
+    const backButton = fixture.nativeElement.querySelector('button[data-testid="back-to-roster"]') as HTMLButtonElement;
+    backButton.click();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Öğrencilerim');
+    expect(fixture.nativeElement.textContent).toContain('Ayşe Yılmaz');
+  });
 });
