@@ -7,11 +7,13 @@ namespace Identity.API.IntegrationTests;
 
 public sealed class StaffProductAccessPolicyTests
 {
-    [Fact]
-    public void GetProductAccesses_ShouldExcludeSystemAdministratorsFromStaffSessions()
+    [Theory]
+    [InlineData("SystemAdmin")]
+    [InlineData("Editor")]
+    public void GetProductAccesses_ShouldExcludePrivilegedRolesFromStaffSessions(string privilegedRole)
     {
         var user = User.Create(Guid.NewGuid(), "admin-teacher@example.com");
-        AddRole(user, "SystemAdmin", product: null, isSystemRole: true);
+        AddRole(user, privilegedRole, PlatformProduct.SpeedReading, isSystemRole: true);
         AddRole(user, "Teacher", PlatformProduct.SpeedReading);
         user.GrantProductAccess(
             PlatformProduct.SpeedReading,
