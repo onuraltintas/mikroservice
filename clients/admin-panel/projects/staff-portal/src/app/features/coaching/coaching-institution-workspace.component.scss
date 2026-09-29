@@ -1,0 +1,58 @@
+.institution-workspace { display: grid; gap: 1rem; margin-top: 1.8rem; color: #253244; }
+.institution-heading, .section-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.institution-heading { align-items: flex-start; }
+.eyebrow { margin: 0 0 .4rem; color: #64876e; font-size: .68rem; font-weight: 800; letter-spacing: .1em; }
+.institution-heading h2, .section-heading h3 { margin: 0; color: #17333a; font-size: 1.35rem; }
+.institution-heading p:not(.eyebrow), .section-heading p { margin: .35rem 0 0; color: #72817d; font-size: .82rem; line-height: 1.55; }
+.scope-badge { display: inline-flex; align-items: center; gap: .45rem; padding: .5rem .7rem; border: 1px solid #d9e9da; border-radius: 999px; background: #f2f8f1; color: #357248; font-size: .72rem; font-weight: 750; white-space: nowrap; }
+.scope-badge span { width: .45rem; height: .45rem; border-radius: 50%; background: #48a76b; }
+.institution-tabs { display: flex; gap: .35rem; margin-top: .25rem; padding: .3rem; border: 1px solid #e0e5db; border-radius: .8rem; background: #f3f4ed; }
+.institution-tabs button { min-height: 2.35rem; padding: .45rem .85rem; border: 0; border-radius: .55rem; background: transparent; color: #71807a; font: inherit; font-size: .78rem; font-weight: 750; cursor: pointer; }
+.institution-tabs button.active { color: #24483f; background: #fffefa; box-shadow: 0 1px 3px rgb(29 55 47 / 12%); }
+.institution-tabs button:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid #779372; outline-offset: 2px; }
+.overview-section, .roster-section, .recent-panel { display: grid; gap: 1rem; }
+.metric-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .75rem; }
+.metric-card { display: grid; align-content: start; gap: .3rem; min-height: 6.3rem; padding: .9rem; border: 1px solid #e7e9e2; border-top: 3px solid #7b927d; border-radius: .85rem; background: #fffefa; }
+.metric-card span { color: #65736f; font-size: .72rem; font-weight: 750; }
+.metric-card strong { color: #18363b; font-size: 1.35rem; line-height: 1.2; }
+.metric-card small { color: #81908a; font-size: .68rem; }
+.metric-card.accent-blue { border-top-color: #5c83aa; }.metric-card.accent-violet { border-top-color: #8072b3; }.metric-card.accent-orange { border-top-color: #c28b58; }.metric-card.accent-teal { border-top-color: #568f8d; }
+.recent-panel, .roster-section { padding: 1rem; border: 1px solid #e2e8df; border-radius: .9rem; background: #fffefa; }
+.outline-button, .load-more { min-height: 2.35rem; padding: .45rem .75rem; border: 1px solid #d5ded4; border-radius: .6rem; background: white; color: #31574a; font: inherit; font-size: .75rem; font-weight: 750; cursor: pointer; }
+.outline-button:disabled, .load-more:disabled { cursor: wait; opacity: .55; }
+.link-button { border: 0; background: transparent; color: #3d6f57; font: inherit; font-size: .75rem; font-weight: 750; cursor: pointer; }
+.workspace-alert { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .75rem .9rem; border-radius: .7rem; }
+.workspace-alert p { margin: 0; font-size: .8rem; }
+.workspace-alert.error { border: 1px solid #fecaca; background: #fff1f2; color: #9f1239; }
+.workspace-state { margin: 0; padding: 1.3rem; border-radius: .7rem; background: #f5f7f2; color: #71807a; font-size: .83rem; text-align: center; }
+.table-scroll { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; text-align: left; font-size: .78rem; }
+th { padding: .65rem .7rem; background: #f5f7f2; color: #71807a; font-size: .66rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; }
+td { padding: .72rem .7rem; border-top: 1px solid #edf0e9; color: #64716d; white-space: nowrap; }
+.primary-cell { color: #243d3c; font-weight: 750; }
+.status-chip { display: inline-flex; padding: .2rem .48rem; border-radius: 999px; background: #edf4ed; color: #45654d; font-size: .68rem; font-weight: 750; }
+.empty-state { display: grid; justify-items: center; gap: .3rem; padding: 2rem .75rem; color: #52635e; text-align: center; }
+.empty-state span { color: #81908a; font-size: .76rem; }
+.filter-row { display: grid; grid-template-columns: minmax(220px, 1.5fr) repeat(2, minmax(155px, .8fr)); gap: .75rem; }
+.filter-field { display: grid; gap: .35rem; color: #596963; font-size: .71rem; font-weight: 750; }
+.filter-field input, .filter-field select { box-sizing: border-box; width: 100%; min-height: 2.5rem; padding: .55rem .7rem; border: 1px solid #d4ded4; border-radius: .6rem; background: white; color: #253b38; font: inherit; font-weight: 450; }
+.teacher-search { max-width: 24rem; }
+.teacher-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .65rem; }
+.teacher-card { display: flex; align-items: center; gap: .75rem; padding: .8rem; border: 1px solid #e8ece5; border-radius: .75rem; background: #fff; }
+.teacher-card > div { display: grid; gap: .18rem; min-width: 0; }
+.teacher-card strong { overflow: hidden; color: #263d3b; font-size: .8rem; text-overflow: ellipsis; white-space: nowrap; }
+.teacher-card > div > span { overflow: hidden; color: #81908a; font-size: .7rem; text-overflow: ellipsis; white-space: nowrap; }
+.avatar { display: grid; width: 2.25rem; height: 2.25rem; flex: 0 0 auto; place-items: center; border-radius: 50%; background: #ecf1e9; color: #47664e; font-size: .7rem; font-weight: 800; }
+.load-more { width: 100%; }
+.filter-options-more { max-width: 18rem; justify-self: end; margin-top: -.6rem; }
+
+@media (max-width: 980px) { .metric-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 680px) {
+  .institution-heading, .section-heading { align-items: flex-start; flex-direction: column; }
+  .scope-badge { align-self: flex-start; }
+  .institution-tabs { overflow-x: auto; }
+  .institution-tabs button { white-space: nowrap; }
+  .metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .filter-row, .teacher-grid { grid-template-columns: 1fr; }
+  .recent-panel, .roster-section { padding: .8rem; }
+}

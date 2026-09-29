@@ -91,15 +91,11 @@
         }
 
         @if (auth.activeProduct() === 'coaching' && isInstitutionManager) {
-          <section class="migration-note" aria-labelledby="institution-migration-title">
-            <div class="migration-icon" aria-hidden="true">↗</div>
-            <div>
-              <p class="eyebrow">KOÇLUK · KURUM YÖNETİMİ</p>
-              <h2 id="institution-migration-title">Kurum işlemleri sıradaki taşıma adımında.</h2>
-              <p>Öğretmen ve öğrenci listeleri, ayrıntılı raporlar ve atama işlemleri kurum yetkinize göre bu alana taşınacak. Bu ekran henüz kurum işlemlerini sunmuyor.</p>
-            </div>
-            <span class="migration-status">Hazırlanıyor</span>
-          </section>
+          @defer (on immediate) {
+            <staff-coaching-institution-workspace />
+          } @placeholder {
+            <p class="migration-note" role="status">Koçluk kurum alanı hazırlanıyor…</p>
+          }
         }
 
         @if (auth.activeProduct() === 'speed-reading') {

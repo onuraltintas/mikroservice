@@ -4,11 +4,12 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { StaffAuthService } from './auth/staff-auth.service';
 import { StaffProduct } from './auth/staff-auth.models';
 import { CoachingTeacherWorkspaceComponent } from './features/coaching/coaching-teacher-workspace.component';
+import { CoachingInstitutionWorkspaceComponent } from './features/coaching/coaching-institution-workspace.component';
 
 @Component({
   selector: 'staff-root',
   standalone: true,
-  imports: [FormsModule, CoachingTeacherWorkspaceComponent],
+  imports: [FormsModule, CoachingTeacherWorkspaceComponent, CoachingInstitutionWorkspaceComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })

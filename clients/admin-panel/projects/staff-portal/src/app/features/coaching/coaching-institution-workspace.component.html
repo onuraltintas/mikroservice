@@ -1,0 +1,127 @@
+<section class="institution-workspace" aria-labelledby="institution-workspace-title">
+  @if (isLoadingScope()) {
+    <p class="workspace-state" role="status">Kurum yetkiniz doğrulanıyor…</p>
+  } @else if (errorMessage() && !institutionId()) {
+    <div class="workspace-alert error" role="alert">
+      <p>{{ errorMessage() }}</p>
+      <button type="button" class="outline-button" (click)="retry()">Tekrar dene</button>
+    </div>
+  } @else if (institutionId()) {
+    <header class="institution-heading">
+      <div>
+        <p class="eyebrow">KOÇLUK · KURUM YÖNETİMİ</p>
+        <h2 id="institution-workspace-title">Kurum çalışma alanı</h2>
+        <p>Öğretmen ve öğrenci kayıtlarını kurum kapsamınızda inceleyin.</p>
+      </div>
+      <span class="scope-badge"><span aria-hidden="true"></span> Yetkili kurum kapsamı</span>
+    </header>
+
+    @if (errorMessage()) {
+      <div class="workspace-alert error" role="alert">
+        <p>{{ errorMessage() }}</p>
+        <button type="button" class="outline-button" (click)="retry()">Tekrar dene</button>
+      </div>
+    }
+
+    <nav class="institution-tabs" aria-label="Koçluk kurum işlemleri">
+      <button type="button" data-testid="institution-overview-tab"
+        [attr.aria-pressed]="activeSection() === 'overview'"
+        [class.active]="activeSection() === 'overview'" (click)="selectSection('overview')">Genel bakış</button>
+      <button type="button" data-testid="institution-students-tab"
+        [attr.aria-pressed]="activeSection() === 'students'"
+        [class.active]="activeSection() === 'students'" (click)="selectSection('students')">Öğrenciler</button>
+      <button type="button" data-testid="institution-teachers-tab"
+        [attr.aria-pressed]="activeSection() === 'teachers'"
+        [class.active]="activeSection() === 'teachers'" (click)="selectSection('teachers')">Öğretmenler</button>
+    </nav>
+
+    @if (activeSection() === 'overview') {
+      <section class="overview-section" aria-labelledby="institution-overview-title">
+        <div class="section-heading">
+          <div><h3 id="institution-overview-title">Kurumunuzun Koçluk özeti</h3><p>Sunucu tarafından kurum kapsamınıza göre hesaplanan güncel operasyon özeti.</p></div>
+          <button type="button" class="outline-button" (click)="loadOverview()" [disabled]="isLoadingOverview()">Yenile</button>
+        </div>
+        @if (isLoadingOverview()) {
+          <p class="workspace-state" role="status">Kurum özeti yükleniyor…</p>
+        } @else if (overview(); as summary) {
+          <div class="metric-grid">
+            <article class="metric-card accent-green"><span>Aktif ödev</span><strong>{{ summary.activeAssignments }}</strong><small>{{ summary.totalAssignments }} toplam ödev</small></article>
+            <article class="metric-card accent-blue"><span>Öğrenci ödevi</span><strong>{{ summary.submittedAssignmentStudents }} / {{ summary.totalAssignmentStudents }}</strong><small>Gönderim durumu</small></article>
+            <article class="metric-card accent-violet"><span>Sınav</span><strong>{{ summary.totalExams }}</strong><small>{{ summary.totalExamResults }} sonuç kaydı</small></article>
+            <article class="metric-card accent-orange"><span>Seans</span><strong>{{ summary.upcomingSessions }}</strong><small>{{ summary.totalSessions }} toplam seans · yaklaşan</small></article>
+            <article class="metric-card accent-teal"><span>Hedef</span><strong>{{ summary.completedGoals }} / {{ summary.totalGoals }}</strong><small>Tamamlanan hedef</small></article>
+          </div>
+
+          <section class="recent-panel" aria-labelledby="recent-assignments-title">
+            <div class="section-heading"><div><h3 id="recent-assignments-title">Son ödevler</h3><p>En son oluşturulan ödevler ve gönderim sayıları.</p></div><button type="button" class="link-button" (click)="selectSection('students')">Öğrenci listesini aç →</button></div>
+            @if (!summary.recentAssignments.length) {
+              <div class="empty-state"><strong>Henüz ödev verisi yok</strong><span>Kurumunuzda oluşturulan ödevler burada görünecek.</span></div>
+            } @else {
+              <div class="table-scroll">
+                <table>
+                  <thead><tr><th>Ödev</th><th>Durum</th><th>Son tarih</th><th>Gönderim</th></tr></thead>
+                  <tbody>
+                    @for (assignment of summary.recentAssignments; track assignment.id) {
+                      <tr><td class="primary-cell">{{ assignment.title }}</td><td><span class="status-chip">{{ assignment.status }}</span></td><td>{{ assignment.dueDate | date:'d MMM y' }}</td><td>{{ assignment.submittedStudentCount }} / {{ assignment.studentCount }}</td></tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+          </section>
+        }
+      </section>
+    } @else if (activeSection() === 'students') {
+      <section class="roster-section" aria-labelledby="institution-students-title">
+        <div class="section-heading">
+          <div><h3 id="institution-students-title">Kurum öğrencileri</h3><p>{{ studentTotalCount() }} öğrenci · sunucu tarafında kurum kapsamı, arama ve filtreleme</p></div>
+          <button type="button" class="outline-button" (click)="loadStudents()" [disabled]="isLoadingStudents()">Yenile</button>
+        </div>
+
+        <div class="filter-row" aria-label="Öğrenci filtreleri">
+          <label class="filter-field search-field"><span>Öğrenci ara</span><input #studentSearch type="search" [value]="studentSearchTerm()" (change)="searchStudents(studentSearch.value)" (keydown.enter)="$event.preventDefault(); searchStudents(studentSearch.value)" placeholder="Ad, soyad veya e-posta" /></label>
+          <label class="filter-field"><span>Öğretmen</span><select [value]="studentTeacherFilter()" [disabled]="isLoadingTeacherFilter()" (change)="setTeacherFilter($any($event.target).value)"><option value="">Tüm öğretmenler</option>@for (teacher of teacherFilterOptions(); track teacher.userId) { <option [value]="teacher.userId">{{ teacher.firstName }} {{ teacher.lastName }}</option> }</select></label>
+          <label class="filter-field"><span>Sınıf</span><select [value]="studentGradeFilter() ?? ''" (change)="setGradeFilter($any($event.target).value)"><option value="">Tüm sınıflar</option>@for (grade of [1,2,3,4,5,6,7,8,9,10,11,12]; track grade) { <option [value]="grade">{{ grade }}. sınıf</option> }</select></label>
+        </div>
+        @if (teacherFilterPageNumber() < teacherFilterTotalPages()) { <button type="button" class="load-more filter-options-more" (click)="loadMoreTeacherFilterOptions()" [disabled]="isLoadingTeacherFilter()">{{ isLoadingTeacherFilter() ? 'Yükleniyor…' : 'Daha fazla öğretmen seçeneği' }}</button> }
+        @if (isLoadingStudents()) {
+          <p class="workspace-state" role="status">Öğrenciler yükleniyor…</p>
+        } @else if (!students().length) {
+          <div class="empty-state"><strong>Filtrelerle eşleşen öğrenci bulunamadı</strong><span>Arama veya sınıf/öğretmen filtrelerini değiştirebilirsiniz.</span></div>
+        } @else {
+          <div class="table-scroll">
+            <table>
+              <thead><tr><th>Öğrenci</th><th>Sınıf</th><th>Öğretmen</th><th>E-posta</th></tr></thead>
+              <tbody>
+                @for (student of students(); track student.userId) {
+                  <tr><td class="primary-cell">{{ student.firstName }} {{ student.lastName }}</td><td>{{ student.gradeLevel ? student.gradeLevel + '. sınıf' : '—' }}</td><td>{{ student.teacherName || 'Atanmamış' }}</td><td>{{ student.email }}</td></tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          @if (studentPageNumber() < studentTotalPages()) { <button type="button" class="load-more" (click)="loadMoreStudents()" [disabled]="loadingMoreStudents()">{{ loadingMoreStudents() ? 'Yükleniyor…' : 'Daha fazla öğrenci yükle' }}</button> }
+        }
+      </section>
+    } @else {
+      <section class="roster-section" aria-labelledby="institution-teachers-title">
+        <div class="section-heading">
+          <div><h3 id="institution-teachers-title">Kurum öğretmenleri</h3><p>{{ teacherTotalCount() }} öğretmen · kurumunuza bağlı aktif öğretmenler</p></div>
+          <button type="button" class="outline-button" (click)="loadTeachers()" [disabled]="isLoadingTeachers()">Yenile</button>
+        </div>
+        <label class="filter-field teacher-search"><span>Öğretmen ara</span><input #teacherSearch type="search" [value]="teacherSearchTerm()" (change)="searchTeachers(teacherSearch.value)" (keydown.enter)="$event.preventDefault(); searchTeachers(teacherSearch.value)" placeholder="Ad, soyad veya e-posta" /></label>
+        @if (isLoadingTeachers()) {
+          <p class="workspace-state" role="status">Öğretmenler yükleniyor…</p>
+        } @else if (!teachers().length) {
+          <div class="empty-state"><strong>Öğretmen bulunamadı</strong><span>Arama ifadesini değiştirebilir veya listeyi yenileyebilirsiniz.</span></div>
+        } @else {
+          <div class="teacher-grid">
+            @for (teacher of teachers(); track teacher.userId) {
+              <article class="teacher-card"><span class="avatar" aria-hidden="true">{{ teacher.firstName.slice(0, 1) }}{{ teacher.lastName.slice(0, 1) }}</span><div><strong>{{ teacher.firstName }} {{ teacher.lastName }}</strong><span>{{ teacher.email }}</span></div></article>
+            }
+          </div>
+          @if (teacherPageNumber() < teacherTotalPages()) { <button type="button" class="load-more" (click)="loadMoreTeachers()" [disabled]="loadingMoreTeachers()">{{ loadingMoreTeachers() ? 'Yükleniyor…' : 'Daha fazla öğretmen yükle' }}</button> }
+        }
+      </section>
+    }
+  }
+</section>
