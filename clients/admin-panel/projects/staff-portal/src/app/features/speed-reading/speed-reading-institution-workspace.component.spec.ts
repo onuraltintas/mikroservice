@@ -471,6 +471,74 @@ describe('SpeedReadingInstitutionWorkspaceComponent', () => {
       });
   });
 
+  it('opens the detailed student report from the institution roster', () => {
+    const fixture = TestBed.createComponent(SpeedReadingInstitutionWorkspaceComponent);
+    fixture.detectChanges();
+    http.expectOne('/api/institution/speed-reading/me').flush({
+      institutionId: 'institution-1',
+      institutionName: 'Örnek Kurum',
+    });
+    http
+      .expectOne((request) => request.url === '/api/speed-reading/institutions/institution-1/members')
+      .flush({
+        items: [
+          {
+            userId: 'student-1',
+            firstName: 'Ayşe',
+            lastName: 'Yılmaz',
+            role: 'Student',
+            isMembershipActive: true,
+            isActive: true,
+            createdAt: '2026-09-04T00:00:00Z',
+            studentCount: 0,
+          },
+        ],
+        totalCount: 1,
+        pageNumber: 1,
+        pageSize: 25,
+      });
+    http
+      .expectOne(
+        (request) => request.url === '/api/speed-reading/analytics/institutions/institution-1/class-overview',
+      )
+      .flush({
+        dateFrom: '',
+        dateTo: '',
+        totalStudents: 1,
+        activeStudents: 1,
+        activeStudentsDataAvailable: true,
+        classAverageWpmDataAvailable: false,
+        classAverageComprehensionDataAvailable: false,
+        classAverageWpm: 0,
+        classAverageComprehension: 0,
+        totalActivitiesCompleted: 0,
+        studentsAboveAverage: 0,
+        studentsAtAverage: 0,
+        studentsBelowAverage: 1,
+        topPerformers: [],
+        studentsNeedingSupport: [],
+      });
+    fixture.detectChanges();
+
+    const reportButton = fixture.nativeElement.querySelector(
+      '[data-testid="student-report"]',
+    ) as HTMLButtonElement | null;
+    expect(reportButton).toBeTruthy();
+    if (!reportButton) return;
+    reportButton.click();
+    fixture.detectChanges();
+
+    const reportRequests = ['summary', 'reading-speed', 'comprehension', 'activity'].map((path) =>
+      http.expectOne(
+        (request) =>
+          request.url === `/api/speed-reading/analytics/institutions/institution-1/students/student-1/${path}`,
+      ),
+    );
+    reportRequests.forEach((request) => request.flush({}));
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Öğrenci ayrıntılı raporu');
+  });
+
   it('does not call the Speed Reading API when Identity cannot resolve an institution', () => {
     const fixture = TestBed.createComponent(SpeedReadingInstitutionWorkspaceComponent);
     fixture.detectChanges();
