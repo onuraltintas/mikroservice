@@ -758,6 +758,18 @@ describe('SpeedReadingInstitutionWorkspaceComponent', () => {
     );
   });
 
+  it('rejects an institution report date range longer than the API limit', () => {
+    const fixture = createLoadedWorkspace();
+    fixture.componentInstance.reportDateFrom = '2025-01-01';
+    fixture.componentInstance.reportDateTo = '2026-01-02';
+    fixture.componentInstance.selectInstitutionReport('content');
+
+    http.expectNone('/api/speed-reading/analytics/institutions/institution-1/content-analysis');
+    expect(fixture.componentInstance.institutionReportErrorMessage()).toBe(
+      'Rapor tarih aralığı en fazla 366 gün olabilir.',
+    );
+  });
+
   it('ignores an older report response after the selected date range becomes invalid', () => {
     const fixture = createLoadedWorkspace();
     fixture.componentInstance.reportDateFrom = '2026-09-01';

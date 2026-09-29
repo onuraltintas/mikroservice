@@ -72,6 +72,500 @@
       }
     </section>
 
+    <section class="institution-reports" aria-labelledby="institution-reports-title">
+      <div class="section-heading">
+        <div>
+          <p class="workspace-eyebrow">KURUM RAPORLARI</p>
+          <h3 id="institution-reports-title">Ödev, içerik ve ilerleme</h3>
+        </div>
+        <span class="report-scope">Yalnızca bu kurumun Hızlı Okuma verileri</span>
+      </div>
+
+      <div class="report-tabs" role="group" aria-label="Kurum raporu türü">
+        <button
+          type="button"
+          data-testid="institution-report-assignments"
+          [class.selected]="selectedInstitutionReport() === 'assignments'"
+          [attr.aria-pressed]="selectedInstitutionReport() === 'assignments'"
+          (click)="selectInstitutionReport('assignments')"
+        >
+          Ödevler
+        </button>
+        <button
+          type="button"
+          data-testid="institution-report-content"
+          [class.selected]="selectedInstitutionReport() === 'content'"
+          [attr.aria-pressed]="selectedInstitutionReport() === 'content'"
+          (click)="selectInstitutionReport('content')"
+        >
+          İçerik analizi
+        </button>
+        <button
+          type="button"
+          data-testid="institution-report-progress"
+          [class.selected]="selectedInstitutionReport() === 'progress'"
+          [attr.aria-pressed]="selectedInstitutionReport() === 'progress'"
+          (click)="selectInstitutionReport('progress')"
+        >
+          Zaman ve ilerleme
+        </button>
+      </div>
+
+      <form class="report-filters" (ngSubmit)="applyInstitutionReportRange()">
+        <label>
+          <span>Başlangıç tarihi</span>
+          <input name="reportDateFrom" type="date" [(ngModel)]="reportDateFrom" required />
+        </label>
+        <label>
+          <span>Bitiş tarihi</span>
+          <input name="reportDateTo" type="date" [(ngModel)]="reportDateTo" required />
+        </label>
+        <button
+          class="apply-button"
+          type="submit"
+          [disabled]="!selectedInstitutionReport() || isInstitutionReportLoading()"
+        >
+          Tarih aralığını uygula
+        </button>
+      </form>
+
+      @if (institutionReportErrorMessage()) {
+        <div class="inline-error report-error" role="alert">
+          <span>{{ institutionReportErrorMessage() }}</span>
+          @if (selectedInstitutionReport()) {
+            <button type="button" (click)="retryInstitutionReport()">Tekrar dene</button>
+          }
+        </div>
+      } @else if (isInstitutionReportLoading()) {
+        <p class="loading" role="status">Kurum raporu yükleniyor…</p>
+      } @else if (!selectedInstitutionReport()) {
+        <p class="report-hint">Görüntülemek istediğiniz rapor türünü seçin.</p>
+      } @else if (selectedInstitutionReport() === 'assignments' && assignmentReport(); as report) {
+        <div class="report-content" aria-labelledby="institution-assignment-report-title">
+          <h4 id="institution-assignment-report-title">Ödev raporu</h4>
+          @if (!report.dataAvailable) {
+            <p class="empty-state report-empty">
+              {{ report.unavailableReason || 'Seçili dönemde ödev verisi bulunmuyor.' }}
+            </p>
+          } @else {
+            <div class="overview-grid report-metrics">
+              <article class="metric-card">
+                <span>Ödev sayısı</span><strong>{{ formatNumber(report.assignmentCount) }}</strong>
+              </article>
+              <article class="metric-card">
+                <span>Öğrenci</span
+                ><strong>{{ report.completionStats?.totalStudents ?? 'Veri yok' }}</strong>
+              </article>
+              <article class="metric-card">
+                <span>Tamamlandı</span
+                ><strong>{{ report.completionStats?.completed ?? 'Veri yok' }}</strong>
+              </article>
+              <article class="metric-card">
+                <span>Devam ediyor</span
+                ><strong>{{ report.completionStats?.inProgress ?? 'Veri yok' }}</strong>
+              </article>
+              <article class="metric-card">
+                <span>Başlamadı</span
+                ><strong>{{ report.completionStats?.notStarted ?? 'Veri yok' }}</strong>
+              </article>
+              <article class="metric-card">
+                <span>Tamamlanma oranı</span>
+                <strong>{{
+                  report.completionStats
+                    ? formatReportNumber(report.completionStats.completionRate) + '%'
+                    : 'Veri yok'
+                }}</strong>
+              </article>
+              <article class="metric-card">
+                <span>Ortalama puan</span>
+                <strong>{{
+                  report.performanceStats
+                    ? formatReportNumber(report.performanceStats.averageScore)
+                    : 'Veri yok'
+                }}</strong>
+              </article>
+            </div>
+            @if (report.performanceStats; as performance) {
+              <h5>Ödev puanları</h5>
+              <div class="overview-grid report-metrics">
+                <article class="metric-card">
+                  <span>Medyan</span
+                  ><strong>{{ formatReportNumber(performance.medianScore) }}</strong>
+                </article>
+                <article class="metric-card">
+                  <span>En yüksek</span
+                  ><strong>{{ formatReportNumber(performance.highestScore) }}</strong>
+                </article>
+                <article class="metric-card">
+                  <span>En düşük</span
+                  ><strong>{{ formatReportNumber(performance.lowestScore) }}</strong>
+                </article>
+                <article class="metric-card">
+                  <span>Standart sapma</span
+                  ><strong>{{ formatReportNumber(performance.standardDeviation) }}</strong>
+                </article>
+              </div>
+            }
+            @if (report.timeStats; as timing) {
+              <h5>Tamamlama süresi · saniye</h5>
+              <div class="overview-grid report-metrics">
+                <article class="metric-card">
+                  <span>Ortalama</span
+                  ><strong>{{ formatNumber(timing.averageCompletionTime) }}</strong>
+                </article>
+                <article class="metric-card">
+                  <span>Medyan</span
+                  ><strong>{{ formatNumber(timing.medianCompletionTime) }}</strong>
+                </article>
+                <article class="metric-card">
+                  <span>En kısa</span><strong>{{ formatNumber(timing.fastestCompletion) }}</strong>
+                </article>
+                <article class="metric-card">
+                  <span>En uzun</span><strong>{{ formatNumber(timing.slowestCompletion) }}</strong>
+                </article>
+              </div>
+            }
+            @if (report.scoreDistribution.length > 0) {
+              <h5>Puan dağılımı</h5>
+              <div class="report-table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Puan aralığı</th>
+                      <th>Ödev sayısı</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (item of report.scoreDistribution; track item.name) {
+                      <tr>
+                        <td>{{ item.name }}</td>
+                        <td>{{ reportSeriesLabel(item.series) }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+            <h5>Öğrenci bazında ödev durumu</h5>
+            <div class="report-table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Öğrenci</th>
+                    <th>Durum</th>
+                    <th>Puan</th>
+                    <th>Süre</th>
+                    <th>Teslim</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (student of report.studentBreakdown; track student.studentId) {
+                    <tr>
+                      <td>{{ student.studentName }}</td>
+                      <td>{{ assignmentStatusLabel(student.status) }}</td>
+                      <td>
+                        {{ student.score === null ? '—' : formatReportNumber(student.score) }}
+                      </td>
+                      <td>
+                        {{
+                          student.completionTime === null
+                            ? '—'
+                            : formatNumber(student.completionTime) + ' sn'
+                        }}
+                      </td>
+                      <td>{{ student.submittedAt ? formatDate(student.submittedAt) : '—' }}</td>
+                    </tr>
+                  } @empty {
+                    <tr>
+                      <td colspan="5" class="empty-cell">Bu dönemde öğrenci ödev kaydı yok.</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        </div>
+      } @else if (selectedInstitutionReport() === 'content' && contentReport(); as report) {
+        <div class="report-content" aria-labelledby="institution-content-report-title">
+          <h4 id="institution-content-report-title">İçerik analizi</h4>
+          @if (report.exerciseAnalysis.length === 0 && report.readingAnalysis.length === 0) {
+            <p class="empty-state report-empty">Seçili dönemde içerik etkinliği bulunmuyor.</p>
+          } @else {
+            <div class="report-columns">
+              <section>
+                <h5>Egzersiz türleri</h5>
+                <div class="report-table-wrap">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Tür</th>
+                        <th>Tamamlanma</th>
+                        <th>Öğrenci</th>
+                        <th>Ortalama puan</th>
+                        <th>Düzey</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (item of report.exerciseAnalysis; track item.exerciseTypeName) {
+                        <tr>
+                          <td>{{ item.exerciseTypeName }}</td>
+                          <td>{{ formatNumber(item.totalCompletions) }}</td>
+                          <td>{{ formatNumber(item.activeStudents) }}</td>
+                          <td>{{ formatReportNumber(item.averageScore) }}%</td>
+                          <td>{{ item.performanceLevel }}</td>
+                        </tr>
+                      } @empty {
+                        <tr>
+                          <td colspan="5" class="empty-cell">Egzersiz analizi yok.</td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+              <section>
+                <h5>Okuma güçlüğü düzeyi</h5>
+                <div class="report-table-wrap">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Düzey</th>
+                        <th>Okuma</th>
+                        <th>Ortalama WPM</th>
+                        <th>Anlama</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (item of report.readingAnalysis; track item.difficultyLevel) {
+                        <tr>
+                          <td>{{ item.difficultyLevel }}</td>
+                          <td>{{ formatNumber(item.totalReads) }}</td>
+                          <td>{{ formatReportNumber(item.averageWpm) }}</td>
+                          <td>{{ formatReportNumber(item.averageComprehension) }}%</td>
+                        </tr>
+                      } @empty {
+                        <tr>
+                          <td colspan="4" class="empty-cell">Okuma analizi yok.</td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+            </div>
+            <div class="report-columns report-chart-tables">
+              <section>
+                <h5>Günlük egzersiz sıklığı</h5>
+                <div class="report-table-wrap">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Tarih</th>
+                        <th>Etkinlik</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (item of report.exerciseFrequencyChart; track item.name) {
+                        <tr>
+                          <td>{{ item.name }}</td>
+                          <td>{{ reportSeriesLabel(item.series) }}</td>
+                        </tr>
+                      } @empty {
+                        <tr>
+                          <td colspan="2" class="empty-cell">Grafik verisi yok.</td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+              <section>
+                <h5>Günlük okuma performansı</h5>
+                <div class="report-table-wrap">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Tarih</th>
+                        <th>Ölçümler</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (item of report.readingPerformanceChart; track item.name) {
+                        <tr>
+                          <td>{{ item.name }}</td>
+                          <td>{{ reportSeriesLabel(item.series) }}</td>
+                        </tr>
+                      } @empty {
+                        <tr>
+                          <td colspan="2" class="empty-cell">Grafik verisi yok.</td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+            </div>
+          }
+        </div>
+      } @else if (selectedInstitutionReport() === 'progress' && progressReport(); as report) {
+        <div class="report-content" aria-labelledby="institution-progress-report-title">
+          <h4 id="institution-progress-report-title">Zaman ve ilerleme</h4>
+          @if (
+            report.weeklyProgressChart.length === 0 &&
+            report.activityIntensityChart.length === 0 &&
+            report.improvingStudents.length === 0 &&
+            report.decliningStudents.length === 0
+          ) {
+            <p class="empty-state report-empty">
+              Seçili dönemde zaman veya ilerleme verisi bulunmuyor.
+            </p>
+          } @else {
+            <div class="report-columns">
+              <section>
+                <h5>Haftalık etkinlik</h5>
+                <div class="report-table-wrap">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Hafta</th>
+                        <th>Ölçüm</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (item of report.weeklyProgressChart; track item.name) {
+                        <tr>
+                          <td>{{ item.name }}</td>
+                          <td>{{ reportSeriesLabel(item.series) }}</td>
+                        </tr>
+                      } @empty {
+                        <tr>
+                          <td colspan="2" class="empty-cell">Haftalık veri yok.</td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+              <section>
+                <h5>Günlük çalışma süresi</h5>
+                <div class="report-table-wrap">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Tarih</th>
+                        <th>Ölçüm</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (item of report.activityIntensityChart; track item.name) {
+                        <tr>
+                          <td>{{ item.name }}</td>
+                          <td>{{ reportSeriesLabel(item.series) }}</td>
+                        </tr>
+                      } @empty {
+                        <tr>
+                          <td colspan="2" class="empty-cell">Günlük veri yok.</td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+              <section>
+                <h5>Aylık etkinlik</h5>
+                <div class="report-table-wrap">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Ay</th>
+                        <th>Ölçüm</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (item of report.monthlyProgressChart; track item.name) {
+                        <tr>
+                          <td>{{ item.name }}</td>
+                          <td>{{ reportSeriesLabel(item.series) }}</td>
+                        </tr>
+                      } @empty {
+                        <tr>
+                          <td colspan="2" class="empty-cell">Aylık veri yok.</td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+            </div>
+            <div class="report-columns">
+              <section>
+                <h5>İlerleme gösteren öğrenciler</h5>
+                <div class="report-table-wrap">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Öğrenci</th>
+                        <th>Gösterge</th>
+                        <th>Önceki</th>
+                        <th>Güncel</th>
+                        <th>Değişim</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (student of report.improvingStudents; track student.studentId) {
+                        <tr>
+                          <td>{{ student.studentName }}</td>
+                          <td>{{ student.metric }}</td>
+                          <td>{{ formatReportNumber(student.previousScore) }}</td>
+                          <td>{{ formatReportNumber(student.currentScore) }}</td>
+                          <td>{{ formatReportNumber(student.improvement) }}</td>
+                        </tr>
+                      } @empty {
+                        <tr>
+                          <td colspan="5" class="empty-cell">İlerleme kaydı yok.</td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+              <section>
+                <h5>Destek ihtiyacı olabilecek öğrenciler</h5>
+                <div class="report-table-wrap">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Öğrenci</th>
+                        <th>Gösterge</th>
+                        <th>Önceki</th>
+                        <th>Güncel</th>
+                        <th>Değişim</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (student of report.decliningStudents; track student.studentId) {
+                        <tr>
+                          <td>{{ student.studentName }}</td>
+                          <td>{{ student.metric }}</td>
+                          <td>{{ formatReportNumber(student.previousScore) }}</td>
+                          <td>{{ formatReportNumber(student.currentScore) }}</td>
+                          <td>{{ formatReportNumber(student.improvement) }}</td>
+                        </tr>
+                      } @empty {
+                        <tr>
+                          <td colspan="5" class="empty-cell">Düşüş tespit edilmedi.</td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+            </div>
+          }
+        </div>
+      }
+    </section>
+
     <section class="roster-section" aria-labelledby="institution-roster-title">
       <div class="section-heading roster-heading">
         <div>

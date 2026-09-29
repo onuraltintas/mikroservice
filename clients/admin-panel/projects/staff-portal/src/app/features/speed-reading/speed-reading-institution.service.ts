@@ -114,6 +114,106 @@ export interface SpeedReadingInstitutionStudentReport {
   };
 }
 
+export interface SpeedReadingInstitutionChartSeries {
+  name: string;
+  value: number;
+}
+
+export interface SpeedReadingInstitutionChartRow {
+  name: string;
+  series: SpeedReadingInstitutionChartSeries[];
+}
+
+export interface SpeedReadingInstitutionAssignmentReport {
+  dateFrom: string;
+  dateTo: string;
+  dataAvailable: boolean;
+  unavailableReason: string | null;
+  assignmentInfo: {
+    assignmentId: string;
+    title: string;
+    description: string;
+    dueDate: string;
+    assignedDate: string;
+  } | null;
+  completionStats: {
+    totalStudents: number;
+    completed: number;
+    inProgress: number;
+    notStarted: number;
+    completionRate: number;
+  } | null;
+  performanceStats: {
+    averageScore: number;
+    medianScore: number;
+    highestScore: number;
+    lowestScore: number;
+    standardDeviation: number;
+  } | null;
+  scoreDistribution: SpeedReadingInstitutionChartRow[];
+  studentBreakdown: {
+    studentId: string;
+    studentName: string;
+    status: string;
+    score: number | null;
+    completionTime: number | null;
+    submittedAt: string | null;
+  }[];
+  timeStats: {
+    averageCompletionTime: number;
+    medianCompletionTime: number;
+    fastestCompletion: number;
+    slowestCompletion: number;
+  } | null;
+  assignmentCount: number;
+}
+
+export interface SpeedReadingInstitutionContentReport {
+  dateFrom: string;
+  dateTo: string;
+  exerciseAnalysis: {
+    exerciseTypeName: string;
+    totalCompletions: number;
+    activeStudents: number;
+    averageScore: number;
+    performanceLevel: string;
+  }[];
+  exerciseFrequencyChart: SpeedReadingInstitutionChartRow[];
+  readingAnalysis: {
+    difficultyLevel: number;
+    totalReads: number;
+    averageWpm: number;
+    averageComprehension: number;
+  }[];
+  readingPerformanceChart: SpeedReadingInstitutionChartRow[];
+}
+
+export interface SpeedReadingInstitutionProgressReport {
+  dateFrom: string;
+  dateTo: string;
+  weeklyProgressChart: SpeedReadingInstitutionChartRow[];
+  monthlyProgressChart: SpeedReadingInstitutionChartRow[];
+  activityIntensityChart: SpeedReadingInstitutionChartRow[];
+  improvingStudents: {
+    studentId: string;
+    studentName: string;
+    previousScore: number;
+    currentScore: number;
+    improvement: number;
+    trend: string;
+    metric: string;
+  }[];
+  decliningStudents: {
+    studentId: string;
+    studentName: string;
+    previousScore: number;
+    currentScore: number;
+    improvement: number;
+    trend: string;
+    metric: string;
+  }[];
+}
+
 @Injectable({ providedIn: 'root' })
 export class SpeedReadingInstitutionService {
   private readonly http = inject(HttpClient);
@@ -162,6 +262,30 @@ export class SpeedReadingInstitutionService {
       `${this.speedReadingUrl}/analytics/institutions/${encodeURIComponent(institutionId)}/class-overview`,
       { params },
     );
+  }
+
+  getInstitutionAssignments(
+    institutionId: string,
+    dateFrom: Date,
+    dateTo: Date,
+  ): Observable<SpeedReadingInstitutionAssignmentReport> {
+    return this.getInstitutionReport(institutionId, 'assignments', dateFrom, dateTo);
+  }
+
+  getInstitutionContentAnalysis(
+    institutionId: string,
+    dateFrom: Date,
+    dateTo: Date,
+  ): Observable<SpeedReadingInstitutionContentReport> {
+    return this.getInstitutionReport(institutionId, 'content-analysis', dateFrom, dateTo);
+  }
+
+  getInstitutionTimeProgress(
+    institutionId: string,
+    dateFrom: Date,
+    dateTo: Date,
+  ): Observable<SpeedReadingInstitutionProgressReport> {
+    return this.getInstitutionReport(institutionId, 'time-progress', dateFrom, dateTo);
   }
 
   updateStudentProfile(
@@ -220,5 +344,20 @@ export class SpeedReadingInstitutionService {
         },
       ),
     });
+  }
+
+  private getInstitutionReport<T>(
+    institutionId: string,
+    report: 'assignments' | 'content-analysis' | 'time-progress',
+    dateFrom: Date,
+    dateTo: Date,
+  ): Observable<T> {
+    const params = new HttpParams()
+      .set('dateFrom', dateFrom.toISOString())
+      .set('dateTo', dateTo.toISOString());
+    return this.http.get<T>(
+      `${this.speedReadingUrl}/analytics/institutions/${encodeURIComponent(institutionId)}/${report}`,
+      { params },
+    );
   }
 }

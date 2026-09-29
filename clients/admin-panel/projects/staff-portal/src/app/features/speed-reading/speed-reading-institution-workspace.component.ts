@@ -2,10 +2,14 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
+import { Observable } from 'rxjs';
 import {
+  SpeedReadingInstitutionAssignmentReport,
+  SpeedReadingInstitutionContentReport,
   SpeedReadingInstitutionMember,
   SpeedReadingInstitutionMemberFilters,
   SpeedReadingInstitutionMemberRole,
+  SpeedReadingInstitutionProgressReport,
   SpeedReadingInstitutionService,
 } from './speed-reading-institution.service';
 import { SpeedReadingTeacherClassOverview } from './speed-reading-teacher.service';
@@ -19,6 +23,13 @@ type MemberStatusChange = {
   displayName: string;
   isActive: boolean;
 };
+type InstitutionReportTab = 'assignments' | 'content' | 'progress';
+
+function utcDateInput(daysAgo: number): string {
+  const date = new Date();
+  date.setUTCDate(date.getUTCDate() - daysAgo);
+  return date.toISOString().slice(0, 10);
+}
 
 @Component({
   selector: 'staff-speed-reading-institution-workspace',
@@ -32,6 +43,7 @@ export class SpeedReadingInstitutionWorkspaceComponent implements OnInit {
   private memberRequestVersion = 0;
   private overviewRequestVersion = 0;
   private teacherSearchVersion = 0;
+  private institutionReportRequestVersion = 0;
 
   readonly institution = signal<{ institutionId: string; institutionName: string } | null>(null);
   readonly members = signal<SpeedReadingInstitutionMember[]>([]);
@@ -57,9 +69,17 @@ export class SpeedReadingInstitutionWorkspaceComponent implements OnInit {
   readonly studentProfileErrorMessage = signal<string | null>(null);
   readonly memberStatusErrorMessage = signal<string | null>(null);
   readonly selectedStudentReport = signal<SpeedReadingInstitutionMember | null>(null);
+  readonly selectedInstitutionReport = signal<InstitutionReportTab | null>(null);
+  readonly assignmentReport = signal<SpeedReadingInstitutionAssignmentReport | null>(null);
+  readonly contentReport = signal<SpeedReadingInstitutionContentReport | null>(null);
+  readonly progressReport = signal<SpeedReadingInstitutionProgressReport | null>(null);
+  readonly isInstitutionReportLoading = signal(false);
+  readonly institutionReportErrorMessage = signal<string | null>(null);
 
   searchInput = '';
   teacherSearchInput = '';
+  reportDateFrom = utcDateInput(29);
+  reportDateTo = utcDateInput(0);
   studentGradeLevel = '';
   studentTeacherUserId = '';
   selectedGradeLevel = '';
@@ -233,6 +253,91 @@ export class SpeedReadingInstitutionWorkspaceComponent implements OnInit {
     this.selectedStudentReport.set(null);
   }
 
+  selectInstitutionReport(tab: InstitutionReportTab): void {
+    this.selectedInstitutionReport.set(tab);
+    this.loadSelectedInstitutionReport();
+  }
+
+  applyInstitutionReportRange(): void {
+    if (this.selectedInstitutionReport()) this.loadSelectedInstitutionReport();
+  }
+
+  retryInstitutionReport(): void {
+    if (this.selectedInstitutionReport()) this.loadSelectedInstitutionReport();
+  }
+
+  private loadSelectedInstitutionReport(): void {
+    const institution = this.institution();
+    const tab = this.selectedInstitutionReport();
+    if (!institution || !tab) return;
+
+    const dateFrom = this.parseUtcDate(this.reportDateFrom, false);
+    const dateTo = this.parseUtcDate(this.reportDateTo, true);
+    const dateRangeTooLarge =
+      dateFrom !== null &&
+      dateTo !== null &&
+      dateTo.getTime() - dateFrom.getTime() > 366 * 24 * 60 * 60 * 1000;
+    if (!dateFrom || !dateTo || dateFrom > dateTo || dateRangeTooLarge) {
+      this.institutionReportRequestVersion++;
+      if (tab === 'assignments') this.assignmentReport.set(null);
+      if (tab === 'content') this.contentReport.set(null);
+      if (tab === 'progress') this.progressReport.set(null);
+      this.institutionReportErrorMessage.set(
+        dateRangeTooLarge
+          ? 'Rapor tarih aralığı en fazla 366 gün olabilir.'
+          : 'Rapor tarih aralığını kontrol edin; başlangıç tarihi bitiş tarihinden sonra olamaz.',
+      );
+      this.isInstitutionReportLoading.set(false);
+      return;
+    }
+
+    this.institutionReportErrorMessage.set(null);
+    if (tab === 'assignments') {
+      this.assignmentReport.set(null);
+      this.loadReport(
+        this.service.getInstitutionAssignments(institution.institutionId, dateFrom, dateTo),
+        (report) => this.assignmentReport.set(report),
+      );
+    } else if (tab === 'content') {
+      this.contentReport.set(null);
+      this.loadReport(
+        this.service.getInstitutionContentAnalysis(institution.institutionId, dateFrom, dateTo),
+        (report) => this.contentReport.set(report),
+      );
+    } else {
+      this.progressReport.set(null);
+      this.loadReport(
+        this.service.getInstitutionTimeProgress(institution.institutionId, dateFrom, dateTo),
+        (report) => this.progressReport.set(report),
+      );
+    }
+  }
+
+  private loadReport<T>(request: Observable<T>, save: (report: T) => void): void {
+    const requestVersion = ++this.institutionReportRequestVersion;
+    this.isInstitutionReportLoading.set(true);
+    request.subscribe({
+      next: (report) => {
+        if (requestVersion === this.institutionReportRequestVersion) save(report);
+      },
+      error: () => {
+        if (requestVersion !== this.institutionReportRequestVersion) return;
+        this.institutionReportErrorMessage.set('Kurum raporu yüklenemedi. Lütfen tekrar deneyin.');
+        this.isInstitutionReportLoading.set(false);
+      },
+      complete: () => {
+        if (requestVersion === this.institutionReportRequestVersion)
+          this.isInstitutionReportLoading.set(false);
+      },
+    });
+  }
+
+  private parseUtcDate(value: string, endOfDay: boolean): Date | null {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
+    const date = new Date(`${value}T${endOfDay ? '23:59:59.999' : '00:00:00.000'}Z`);
+    return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value ? date : null;
+  }
+
   searchInstitutionTeachers(): void {
     const institution = this.institution();
     if (!institution) return;
@@ -383,6 +488,30 @@ export class SpeedReadingInstitutionWorkspaceComponent implements OnInit {
 
   formatNumber(value: number): string {
     return new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 }).format(value);
+  }
+
+  formatReportNumber(value: number): string {
+    return new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 1 }).format(value);
+  }
+
+  reportSeriesLabel(series: { name: string; value: number }[]): string {
+    return (
+      series.map((item) => `${item.name}: ${this.formatReportNumber(item.value)}`).join(' · ') ||
+      '—'
+    );
+  }
+
+  assignmentStatusLabel(status: string): string {
+    switch (status) {
+      case 'completed':
+        return 'Tamamlandı';
+      case 'in-progress':
+        return 'Devam ediyor';
+      case 'not-started':
+        return 'Başlamadı';
+      default:
+        return status || 'Bilinmiyor';
+    }
   }
 
   formatDate(value: string): string {
