@@ -11,9 +11,13 @@
       <div>
         <p class="workspace-eyebrow">Hızlı Okuma · Kurum</p>
         <h2 id="reading-institution-title">{{ currentInstitution.institutionName }}</h2>
-        <p>Kurumunuza bağlı öğretmenleri, öğrencileri ve son 30 günlük öğrenme özetini inceleyin.</p>
+        <p>
+          Kurumunuza bağlı öğretmenleri, öğrencileri ve son 30 günlük öğrenme özetini inceleyin.
+        </p>
       </div>
-      <span class="member-count">{{ totalCount() }} {{ selectedRole() === 'Student' ? 'öğrenci' : 'öğretmen' }}</span>
+      <span class="member-count"
+        >{{ totalCount() }} {{ selectedRole() === 'Student' ? 'öğrenci' : 'öğretmen' }}</span
+      >
     </header>
 
     <section class="overview-section" aria-labelledby="institution-overview-title">
@@ -33,11 +37,37 @@
         <p class="loading" role="status">Kurum özeti yükleniyor…</p>
       } @else if (overview(); as summary) {
         <div class="overview-grid">
-          <article class="metric-card"><span>Öğrenci</span><strong>{{ formatNumber(summary.totalStudents) }}</strong></article>
-          <article class="metric-card"><span>Aktif öğrenci</span><strong>{{ summary.activeStudentsDataAvailable ? formatNumber(summary.activeStudents) : 'Veri yok' }}</strong></article>
-          <article class="metric-card"><span>Ortalama hız · WPM</span><strong>{{ summary.classAverageWpmDataAvailable ? formatNumber(summary.classAverageWpm) : 'Veri yok' }}</strong></article>
-          <article class="metric-card"><span>Anlama ortalaması</span><strong>{{ summary.classAverageComprehensionDataAvailable ? formatNumber(summary.classAverageComprehension) + '%' : 'Veri yok' }}</strong></article>
-          <article class="metric-card"><span>Tamamlanan etkinlik</span><strong>{{ formatNumber(summary.totalActivitiesCompleted) }}</strong></article>
+          <article class="metric-card">
+            <span>Öğrenci</span><strong>{{ formatNumber(summary.totalStudents) }}</strong>
+          </article>
+          <article class="metric-card">
+            <span>Aktif öğrenci</span
+            ><strong>{{
+              summary.activeStudentsDataAvailable
+                ? formatNumber(summary.activeStudents)
+                : 'Veri yok'
+            }}</strong>
+          </article>
+          <article class="metric-card">
+            <span>Ortalama hız · WPM</span
+            ><strong>{{
+              summary.classAverageWpmDataAvailable
+                ? formatNumber(summary.classAverageWpm)
+                : 'Veri yok'
+            }}</strong>
+          </article>
+          <article class="metric-card">
+            <span>Anlama ortalaması</span
+            ><strong>{{
+              summary.classAverageComprehensionDataAvailable
+                ? formatNumber(summary.classAverageComprehension) + '%'
+                : 'Veri yok'
+            }}</strong>
+          </article>
+          <article class="metric-card">
+            <span>Tamamlanan etkinlik</span
+            ><strong>{{ formatNumber(summary.totalActivitiesCompleted) }}</strong>
+          </article>
         </div>
       }
     </section>
@@ -46,25 +76,49 @@
       <div class="section-heading roster-heading">
         <div>
           <p class="workspace-eyebrow">HIZLI OKUMA · KURUM ÜYELERİ</p>
-          <h3 id="institution-roster-title">{{ selectedRole() === 'Student' ? 'Öğrenciler' : 'Öğretmenler' }}</h3>
+          <h3 id="institution-roster-title">
+            {{ selectedRole() === 'Student' ? 'Öğrenciler' : 'Öğretmenler' }}
+          </h3>
         </div>
         <div class="role-tabs" role="group" aria-label="Kurum üye türü">
-          <button type="button" [class.selected]="selectedRole() === 'Student'" [attr.aria-pressed]="selectedRole() === 'Student'" (click)="selectRole('Student')">Öğrenciler</button>
-          <button type="button" [class.selected]="selectedRole() === 'Teacher'" [attr.aria-pressed]="selectedRole() === 'Teacher'" (click)="selectRole('Teacher')">Öğretmenler</button>
+          <button
+            type="button"
+            [class.selected]="selectedRole() === 'Student'"
+            [attr.aria-pressed]="selectedRole() === 'Student'"
+            (click)="selectRole('Student')"
+          >
+            Öğrenciler
+          </button>
+          <button
+            type="button"
+            [class.selected]="selectedRole() === 'Teacher'"
+            [attr.aria-pressed]="selectedRole() === 'Teacher'"
+            (click)="selectRole('Teacher')"
+          >
+            Öğretmenler
+          </button>
         </div>
       </div>
 
       <form class="roster-filters" (ngSubmit)="applyFilters()">
         <label class="search-field">
           <span>{{ selectedRole() === 'Student' ? 'Öğrenci ara' : 'Öğretmen ara' }}</span>
-          <input name="memberSearch" type="search" [(ngModel)]="searchInput" placeholder="Ad veya e-posta" autocomplete="off">
+          <input
+            name="memberSearch"
+            type="search"
+            [(ngModel)]="searchInput"
+            placeholder="Ad veya e-posta"
+            autocomplete="off"
+          />
         </label>
         @if (selectedRole() === 'Student') {
           <label>
             <span>Sınıf</span>
             <select name="gradeLevel" [(ngModel)]="selectedGradeLevel">
               <option value="">Tüm sınıflar</option>
-              @for (grade of gradeLevels; track grade) { <option [value]="grade">{{ grade }}. sınıf</option> }
+              @for (grade of gradeLevels; track grade) {
+                <option [value]="grade">{{ grade }}. sınıf</option>
+              }
             </select>
           </label>
         }
@@ -90,7 +144,9 @@
           <button type="button" (click)="loadMembers()">Tekrar dene</button>
         </div>
       } @else if (isLoading()) {
-        <div class="loading" role="status">{{ selectedRole() === 'Student' ? 'Öğrenci' : 'Öğretmen' }} listesi yükleniyor…</div>
+        <div class="loading" role="status">
+          {{ selectedRole() === 'Student' ? 'Öğrenci' : 'Öğretmen' }} listesi yükleniyor…
+        </div>
       } @else if (members().length === 0) {
         <div class="empty-state">
           <h4>{{ selectedRole() === 'Student' ? 'Öğrenci' : 'Öğretmen' }} bulunamadı</h4>
@@ -101,15 +157,32 @@
           <table>
             <thead>
               @if (selectedRole() === 'Student') {
-                <tr><th>Öğrenci</th><th>Sınıf</th><th>Öğretmen</th><th>Seviye</th><th>Hedef WPM</th><th>Durum</th></tr>
+                <tr>
+                  <th>Öğrenci</th>
+                  <th>Sınıf</th>
+                  <th>Öğretmen</th>
+                  <th>Seviye</th>
+                  <th>Hedef WPM</th>
+                  <th>Durum</th>
+                  <th>Yönetim</th>
+                </tr>
               } @else {
-                <tr><th>Öğretmen</th><th>Öğrenci sayısı</th><th>Bağlantı tarihi</th><th>Durum</th></tr>
+                <tr>
+                  <th>Öğretmen</th>
+                  <th>Öğrenci sayısı</th>
+                  <th>Bağlantı tarihi</th>
+                  <th>Durum</th>
+                  <th>Yönetim</th>
+                </tr>
               }
             </thead>
             <tbody>
               @for (member of members(); track trackById($index, member)) {
                 <tr>
-                  <td><strong>{{ member.firstName }} {{ member.lastName }}</strong><small>{{ member.email || 'E-posta yok' }}</small></td>
+                  <td>
+                    <strong>{{ member.firstName }} {{ member.lastName }}</strong
+                    ><small>{{ member.email || 'E-posta yok' }}</small>
+                  </td>
                   @if (selectedRole() === 'Student') {
                     <td>{{ member.gradeLevel ? member.gradeLevel + '. sınıf' : '—' }}</td>
                     <td>{{ member.teacherName || 'Atanmamış' }}</td>
@@ -119,7 +192,36 @@
                     <td>{{ formatNumber(member.studentCount) }}</td>
                     <td>{{ formatDate(member.createdAt) }}</td>
                   }
-                  <td><span class="status" [class.inactive]="!member.isActive">{{ member.isActive ? 'Aktif' : 'Pasif' }}</span></td>
+                  <td>
+                    <span
+                      class="status"
+                      [class.inactive]="!member.isActive"
+                      [class.membership-inactive]="!member.isMembershipActive"
+                      >{{ membershipStatusLabel(member) }}</span
+                    >
+                  </td>
+                  <td class="member-actions">
+                    @if (selectedRole() === 'Student') {
+                      <button
+                        type="button"
+                        class="row-action"
+                        data-testid="edit-student-profile"
+                        (click)="startStudentEdit(member)"
+                        [disabled]="isStudentProfileSaving() || isMemberStatusSaving()"
+                      >
+                        Düzenle
+                      </button>
+                    }
+                    <button
+                      type="button"
+                      class="row-action"
+                      data-testid="toggle-member-status"
+                      (click)="requestMemberStatusChange(member)"
+                      [disabled]="isStudentProfileSaving() || isMemberStatusSaving()"
+                    >
+                      {{ member.isMembershipActive ? 'Üyeliği kapat' : 'Üyeliği etkinleştir' }}
+                    </button>
+                  </td>
                 </tr>
               }
             </tbody>
@@ -127,11 +229,138 @@
         </div>
         @if (totalPages() > 1) {
           <nav class="pagination" aria-label="Hızlı Okuma kurum üye sayfaları">
-            <button type="button" (click)="previousPage()" [disabled]="pageNumber() === 1">Önceki</button>
+            <button type="button" (click)="previousPage()" [disabled]="pageNumber() === 1">
+              Önceki
+            </button>
             <span>Sayfa {{ pageNumber() }} / {{ totalPages() }}</span>
-            <button type="button" (click)="nextPage()" [disabled]="pageNumber() >= totalPages()">Sonraki</button>
+            <button type="button" (click)="nextPage()" [disabled]="pageNumber() >= totalPages()">
+              Sonraki
+            </button>
           </nav>
         }
+      }
+
+      @if (memberStatusErrorMessage()) {
+        <div class="inline-error management-error" role="alert">
+          {{ memberStatusErrorMessage() }}
+        </div>
+      }
+      @if (pendingStatusChange(); as change) {
+        <section class="management-confirmation" aria-labelledby="member-status-confirm-title">
+          <div>
+            <h4 id="member-status-confirm-title">Üyelik durumunu değiştirmek istiyor musunuz?</h4>
+            <p>
+              {{ change.displayName }} için Hızlı Okuma kurum erişimi
+              {{ change.isActive ? 'yeniden açılacak' : 'kapatılacak' }}.
+            </p>
+          </div>
+          <div class="management-actions">
+            <button
+              type="button"
+              class="clear-button"
+              (click)="cancelMemberStatusChange()"
+              [disabled]="isMemberStatusSaving()"
+            >
+              Vazgeç
+            </button>
+            <button
+              type="button"
+              class="apply-button"
+              data-testid="confirm-member-status"
+              (click)="confirmMemberStatusChange()"
+              [disabled]="isMemberStatusSaving()"
+            >
+              {{ isMemberStatusSaving() ? 'Kaydediliyor…' : 'Onayla' }}
+            </button>
+          </div>
+        </section>
+      }
+      @if (editingStudent(); as student) {
+        <form
+          class="student-editor"
+          (ngSubmit)="saveStudentProfile()"
+          aria-labelledby="student-editor-title"
+        >
+          <div class="section-heading">
+            <div>
+              <p class="workspace-eyebrow">ÖĞRENCİ AYARLARI</p>
+              <h3 id="student-editor-title">{{ student.firstName }} {{ student.lastName }}</h3>
+            </div>
+          </div>
+          @if (studentProfileErrorMessage()) {
+            <div class="inline-error" role="alert">{{ studentProfileErrorMessage() }}</div>
+          }
+          <div class="editor-grid">
+            <label>
+              <span>Sınıf düzeyi</span>
+              <select
+                name="studentGradeLevel"
+                data-testid="student-grade-level"
+                [(ngModel)]="studentGradeLevel"
+              >
+                <option value="">Belirtilmemiş</option>
+                @for (grade of gradeLevels; track grade) {
+                  <option [value]="grade">{{ grade }}. sınıf</option>
+                }
+              </select>
+            </label>
+            <div class="teacher-search">
+              <label for="institution-teacher-search">Kurum öğretmeni ara</label>
+              <div class="teacher-search-row">
+                <input
+                  id="institution-teacher-search"
+                  name="teacherSearch"
+                  data-testid="institution-teacher-search"
+                  type="search"
+                  [(ngModel)]="teacherSearchInput"
+                  placeholder="En az iki karakter"
+                />
+                <button
+                  type="button"
+                  class="clear-button"
+                  data-testid="search-institution-teachers"
+                  (click)="searchInstitutionTeachers()"
+                  [disabled]="isTeacherSearchLoading()"
+                >
+                  {{ isTeacherSearchLoading() ? 'Aranıyor…' : 'Ara' }}
+                </button>
+              </div>
+              @if (teacherSearchErrorMessage()) {
+                <p class="field-message" role="status">{{ teacherSearchErrorMessage() }}</p>
+              }
+              <label for="student-teacher-assignment">Öğretmen ataması</label>
+              <select
+                id="student-teacher-assignment"
+                name="studentTeacherId"
+                data-testid="student-teacher-assignment"
+                [(ngModel)]="studentTeacherUserId"
+              >
+                <option value="">Öğretmen atama / atamayı kaldır</option>
+                @for (teacher of teacherOptions(); track teacher.userId) {
+                  <option [value]="teacher.userId">{{ teacher.displayName }}</option>
+                }
+              </select>
+            </div>
+          </div>
+          <div class="management-actions">
+            <button
+              type="button"
+              class="clear-button"
+              (click)="cancelStudentEdit()"
+              [disabled]="isStudentProfileSaving()"
+            >
+              Vazgeç
+            </button>
+            <button
+              type="submit"
+              class="apply-button"
+              data-testid="save-student-profile"
+              [disabled]="isStudentProfileSaving()"
+            >
+              {{ isStudentProfileSaving() ? 'Kaydediliyor…' : 'Kaydet' }}
+            </button>
+          </div>
+        </form>
       }
     </section>
   }

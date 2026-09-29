@@ -17,6 +17,7 @@ export interface SpeedReadingInstitutionMember {
   lastName: string;
   email?: string | null;
   role: SpeedReadingInstitutionMemberRole;
+  isMembershipActive: boolean;
   isActive: boolean;
   createdAt: string;
   currentLevel?: number | null;
@@ -49,7 +50,9 @@ export class SpeedReadingInstitutionService {
   private readonly speedReadingUrl = `${environment.apiUrl}/speed-reading`;
 
   getMyInstitution(): Observable<SpeedReadingInstitution> {
-    return this.http.get<SpeedReadingInstitution>(`${environment.apiUrl}/institution/speed-reading/me`);
+    return this.http.get<SpeedReadingInstitution>(
+      `${environment.apiUrl}/institution/speed-reading/me`,
+    );
   }
 
   getMembers(
@@ -57,14 +60,14 @@ export class SpeedReadingInstitutionService {
     role: SpeedReadingInstitutionMemberRole,
     pageNumber = 1,
     pageSize = 25,
-    filters: SpeedReadingInstitutionMemberFilters = {}
+    filters: SpeedReadingInstitutionMemberFilters = {},
   ): Observable<SpeedReadingInstitutionMemberPage> {
-    const page = Math.min(1_000, Math.max(1, Math.floor(Number.isFinite(pageNumber) ? pageNumber : 1)));
+    const page = Math.min(
+      1_000,
+      Math.max(1, Math.floor(Number.isFinite(pageNumber) ? pageNumber : 1)),
+    );
     const size = Math.min(100, Math.max(1, Math.floor(Number.isFinite(pageSize) ? pageSize : 25)));
-    let params = new HttpParams()
-      .set('pageNumber', page)
-      .set('pageSize', size)
-      .set('role', role);
+    let params = new HttpParams().set('pageNumber', page).set('pageSize', size).set('role', role);
     const search = filters.searchTerm?.trim();
     if (search) params = params.set('searchTerm', search);
     if (filters.gradeLevel !== undefined && role === 'Student') {
@@ -73,21 +76,45 @@ export class SpeedReadingInstitutionService {
     if (filters.isActive !== undefined) params = params.set('isActive', filters.isActive);
     return this.http.get<SpeedReadingInstitutionMemberPage>(
       `${this.speedReadingUrl}/institutions/${encodeURIComponent(institutionId)}/members`,
-      { params }
+      { params },
     );
   }
 
   getClassOverview(
     institutionId: string,
     dateFrom: Date,
-    dateTo: Date
+    dateTo: Date,
   ): Observable<SpeedReadingTeacherClassOverview> {
     const params = new HttpParams()
       .set('dateFrom', dateFrom.toISOString())
       .set('dateTo', dateTo.toISOString());
     return this.http.get<SpeedReadingTeacherClassOverview>(
       `${this.speedReadingUrl}/analytics/institutions/${encodeURIComponent(institutionId)}/class-overview`,
-      { params }
+      { params },
+    );
+  }
+
+  updateStudentProfile(
+    institutionId: string,
+    studentUserId: string,
+    gradeLevel: number | null,
+    teacherUserId: string | null,
+  ): Observable<void> {
+    return this.http.put<void>(
+      `${this.speedReadingUrl}/institutions/${encodeURIComponent(institutionId)}/members/${encodeURIComponent(studentUserId)}/student-profile`,
+      { gradeLevel, teacherUserId },
+    );
+  }
+
+  setMemberStatus(
+    institutionId: string,
+    userId: string,
+    role: SpeedReadingInstitutionMemberRole,
+    isActive: boolean,
+  ): Observable<void> {
+    return this.http.put<void>(
+      `${this.speedReadingUrl}/institutions/${encodeURIComponent(institutionId)}/members/${encodeURIComponent(userId)}`,
+      { role, isActive },
     );
   }
 }

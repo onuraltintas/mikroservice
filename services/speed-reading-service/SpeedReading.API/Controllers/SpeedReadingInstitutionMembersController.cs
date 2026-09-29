@@ -142,6 +142,7 @@ public sealed class SpeedReadingInstitutionMembersController(
                     user?.LastName ?? string.Empty,
                     user?.Email,
                     item.Role,
+                    item.IsActive,
                     item.IsActive && user?.IsActive == true && item.IsProfileActive != false,
                     item.CreatedAt,
                     item.UpdatedAt,

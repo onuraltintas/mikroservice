@@ -25,6 +25,7 @@ public sealed record SpeedReadingInstitutionMemberView(
     string LastName,
     string? Email,
     SpeedReadingInstitutionMemberRole Role,
+    bool IsMembershipActive,
     bool IsActive,
     DateTime CreatedAt,
     DateTime? UpdatedAt,
