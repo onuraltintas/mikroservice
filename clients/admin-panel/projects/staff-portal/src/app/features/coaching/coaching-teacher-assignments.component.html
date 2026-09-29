@@ -1,0 +1,84 @@
+<section class="assignments" aria-labelledby="assignments-title">
+  <div class="assignments-heading">
+    <div>
+      <p class="assignments-eyebrow">KOÇLUK · ÖĞRETMEN</p>
+      <h2 id="assignments-title">Ödevlerim</h2>
+      <p class="assignments-description">Öğrencilere verdiğiniz çalışmaları ve teslim durumlarını takip edin.</p>
+    </div>
+    <span class="assignments-count">{{ totalCount() }} ödev</span>
+  </div>
+
+  <div class="assignments-toolbar">
+    <label for="coaching-assignment-status">Duruma göre filtrele</label>
+    <select id="coaching-assignment-status" name="assignmentStatus"
+      [ngModel]="statusFilter()" (ngModelChange)="setStatusFilter($event)">
+      <option value="all">Tüm ödevler</option>
+      <option value="Active">Aktif</option>
+      <option value="Completed">Tamamlandı</option>
+      <option value="Cancelled">İptal edildi</option>
+    </select>
+  </div>
+
+  @if (errorMessage()) {
+    <div class="assignments-error" role="alert">
+      <span>{{ errorMessage() }}</span>
+      <button type="button" data-testid="retry-assignments" (click)="load()" [disabled]="isLoading()">Tekrar dene</button>
+    </div>
+  } @else if (successMessage()) {
+    <div class="assignments-success" role="status">{{ successMessage() }}</div>
+  }
+
+  @if (isLoading()) {
+    <div class="assignments-loading" aria-label="Ödevler yükleniyor">
+      @for (row of [1, 2, 3]; track row) { <div class="assignment-skeleton"></div> }
+    </div>
+  } @else if (!errorMessage() && assignments().length === 0) {
+    <div class="assignments-empty">
+      <span aria-hidden="true">○</span>
+      <h3>Ödev bulunamadı</h3>
+      <p>{{ statusFilter() === 'all' ? 'Öğrencilere atadığınız ödevler burada listelenecek.' : 'Bu durumda bir ödev bulunmuyor.' }}</p>
+    </div>
+  } @else if (!errorMessage()) {
+    <div class="assignment-list" aria-label="Koçluk ödevleri">
+      @for (assignment of assignments(); track trackById($index, assignment)) {
+        <article class="assignment-card">
+          <div class="assignment-main">
+            <div class="assignment-title-group">
+              <h3>{{ assignment.title }}</h3>
+              <p>{{ assignment.type }} <span aria-hidden="true">·</span> Son tarih {{ assignment.dueDate | date:'d MMM y, HH:mm' }}</p>
+            </div>
+            <div class="assignment-meta">
+              <span class="delivery-count">{{ assignment.submittedCount }} / {{ assignment.totalStudents }} teslim</span>
+              <span class="assignment-status" [attr.data-status]="assignment.status">{{ assignmentStatusLabel(assignment.status) }}</span>
+              @if (assignment.status === 'Active') {
+                <button type="button" class="cancel-button" [attr.data-testid]="'cancel-' + assignment.id"
+                  (click)="requestCancel(assignment.id)">İptal et</button>
+              }
+            </div>
+          </div>
+
+          @if (cancelConfirmationId() === assignment.id) {
+            <div class="cancel-confirmation" role="group" aria-label="Ödev iptal onayı">
+              <p>Bu ödevi iptal etmek istediğinizden emin misiniz? Kayıt geçmişte korunur.</p>
+              <div>
+                <button type="button" class="dismiss-button" (click)="dismissCancel()" [disabled]="isCancelling()">Vazgeç</button>
+                <button type="button" class="confirm-cancel-button" data-testid="confirm-cancel-assignment"
+                  (click)="cancelPendingAssignment()" [disabled]="isCancelling()">
+                  {{ isCancelling() ? 'İptal ediliyor…' : 'Evet, iptal et' }}
+                </button>
+              </div>
+            </div>
+          }
+        </article>
+      }
+    </div>
+
+    @if (totalPages() > 1) {
+      <nav class="assignments-pagination" aria-label="Ödev sayfaları">
+        <button type="button" (click)="previousPage()" [disabled]="pageNumber() === 1">Önceki</button>
+        <span>Sayfa {{ pageNumber() }} / {{ totalPages() }}</span>
+        <button type="button" (click)="nextPage()" [disabled]="pageNumber() >= totalPages()">Sonraki</button>
+      </nav>
+    }
+  }
+</section>

@@ -15,6 +15,7 @@ import {
 interface AccessTokenClaims {
   exp?: number;
   platform_product?: StaffProduct;
+  sub?: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -35,6 +36,15 @@ export class StaffAuthService {
 
   getAccessToken(): string {
     return this.isAuthenticated() ? this._accessToken() : '';
+  }
+
+  getCurrentUserId(): string | null {
+    if (!this.isAuthenticated()) return null;
+    try {
+      return jwtDecode<AccessTokenClaims>(this._accessToken()).sub ?? null;
+    } catch {
+      return null;
+    }
   }
 
   async login(

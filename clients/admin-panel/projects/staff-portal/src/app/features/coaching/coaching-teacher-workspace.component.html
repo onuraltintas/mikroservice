@@ -1,0 +1,28 @@
+<section class="teacher-workspace" aria-labelledby="teacher-workspace-title">
+  <div class="workspace-heading">
+    <div>
+      <p class="workspace-eyebrow">KOÇLUK · ÖĞRETMEN ÇALIŞMA ALANI</p>
+      <h2 id="teacher-workspace-title">Öğretmen paneli</h2>
+      <p>Öğrenci gelişimini ve verdiğiniz ödevleri tek çalışma alanından yönetin.</p>
+    </div>
+  </div>
+
+  <nav class="workspace-tabs" aria-label="Koçluk öğretmen işlemleri">
+    <button type="button" data-testid="students-tab"
+      [attr.aria-pressed]="activeSection() === 'students'"
+      [class.active]="activeSection() === 'students'" (click)="selectSection('students')">
+      Öğrenciler ve raporlar
+    </button>
+    <button type="button" data-testid="assignments-tab"
+      [attr.aria-pressed]="activeSection() === 'assignments'"
+      [class.active]="activeSection() === 'assignments'" (click)="selectSection('assignments')">
+      Ödevler
+    </button>
+  </nav>
+
+  @if (activeSection() === 'students') {
+    <staff-coaching-teacher-students />
+  } @else {
+    <staff-coaching-teacher-assignments />
+  }
+</section>

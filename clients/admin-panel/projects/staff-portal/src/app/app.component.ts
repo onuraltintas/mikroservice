@@ -3,12 +3,12 @@ import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { StaffAuthService } from './auth/staff-auth.service';
 import { StaffProduct } from './auth/staff-auth.models';
-import { CoachingTeacherStudentsComponent } from './features/coaching/coaching-teacher-students.component';
+import { CoachingTeacherWorkspaceComponent } from './features/coaching/coaching-teacher-workspace.component';
 
 @Component({
   selector: 'staff-root',
   standalone: true,
-  imports: [FormsModule, CoachingTeacherStudentsComponent],
+  imports: [FormsModule, CoachingTeacherWorkspaceComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })

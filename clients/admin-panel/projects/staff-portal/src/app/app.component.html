@@ -87,7 +87,7 @@
         </section>
 
         @if (auth.activeProduct() === 'coaching' && activeAccess?.roles?.includes('Teacher')) {
-          <staff-coaching-teacher-students />
+          <staff-coaching-teacher-workspace />
         }
 
         @if (auth.activeProduct() === 'coaching' && isInstitutionManager) {
