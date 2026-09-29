@@ -115,6 +115,22 @@ describe('Staff portal workspace role selection', () => {
     activeProduct.set('coaching');
     expect(component.activeWorkspaceRole).toBe('teacher');
   });
+
+  it('selects the Speed Reading institution workspace for that product role only', () => {
+    const component = createComponent({
+      products: signal<StaffProductAccess[]>([
+        { product: 'coaching', roles: ['Teacher'] },
+        { product: 'speed-reading', roles: ['Teacher', 'InstitutionAdmin'] }
+      ]),
+      activeProduct: signal('speed-reading')
+    });
+
+    expect(component.activeWorkspaceRole).toBe('institution');
+    expect(component.isSpeedReadingInstitutionWorkspaceSelected).toBe(true);
+    component.selectWorkspaceRole('teacher');
+    expect(component.isSpeedReadingTeacherWorkspaceSelected).toBe(true);
+    expect(component.isSpeedReadingInstitutionWorkspaceSelected).toBe(false);
+  });
 });
 
 function createComponent(auth: Partial<StaffAuthService>): AppComponent {

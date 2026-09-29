@@ -1,0 +1,67 @@
+import { TestBed } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { firstValueFrom } from 'rxjs';
+import { SpeedReadingInstitutionService } from './speed-reading-institution.service';
+
+describe('SpeedReadingInstitutionService', () => {
+  let http: HttpTestingController;
+  let service: SpeedReadingInstitutionService;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      providers: [SpeedReadingInstitutionService, provideHttpClient(), provideHttpClientTesting()]
+    });
+    http = TestBed.inject(HttpTestingController);
+    service = TestBed.inject(SpeedReadingInstitutionService);
+  });
+
+  afterEach(() => http.verify());
+
+  it('resolves the current institution through the Identity route without accepting a client institution id', async () => {
+    const response = firstValueFrom(service.getMyInstitution());
+    const request = http.expectOne('/api/institution/speed-reading/me');
+    expect(request.request.method).toBe('GET');
+    request.flush({ institutionId: 'institution-1', institutionName: 'Örnek Kurum' });
+
+    await expect(response).resolves.toEqual({ institutionId: 'institution-1', institutionName: 'Örnek Kurum' });
+  });
+
+  it('requests a role-scoped institution roster with normalized filters', async () => {
+    const response = firstValueFrom(service.getMembers('institution-1', 'Student', 2, 10, {
+      searchTerm: '  Elif  ', gradeLevel: 8, isActive: false
+    }));
+    const request = http.expectOne(candidate =>
+      candidate.url === '/api/speed-reading/institutions/institution-1/members'
+        && candidate.params.get('pageNumber') === '2'
+        && candidate.params.get('pageSize') === '10'
+        && candidate.params.get('role') === 'Student'
+        && candidate.params.get('searchTerm') === 'Elif'
+        && candidate.params.get('gradeLevel') === '8'
+        && candidate.params.get('isActive') === 'false');
+    expect(request.request.method).toBe('GET');
+    request.flush({ items: [], totalCount: 0, pageNumber: 2, pageSize: 10 });
+
+    await expect(response).resolves.toMatchObject({ totalCount: 0, pageNumber: 2 });
+  });
+
+  it('loads institution analytics from the separate Speed Reading API', async () => {
+    const from = new Date('2026-09-01T00:00:00.000Z');
+    const to = new Date('2026-09-30T00:00:00.000Z');
+    const response = firstValueFrom(service.getClassOverview('institution-1', from, to));
+    const request = http.expectOne(candidate =>
+      candidate.url === '/api/speed-reading/analytics/institutions/institution-1/class-overview'
+        && candidate.params.get('dateFrom') === from.toISOString()
+        && candidate.params.get('dateTo') === to.toISOString());
+    expect(request.request.method).toBe('GET');
+    request.flush({
+      dateFrom: from.toISOString(), dateTo: to.toISOString(), totalStudents: 12, activeStudents: 9,
+      activeStudentsDataAvailable: true, classAverageWpmDataAvailable: true,
+      classAverageComprehensionDataAvailable: true, classAverageWpm: 240,
+      classAverageComprehension: 81, totalActivitiesCompleted: 64, studentsAboveAverage: 3,
+      studentsAtAverage: 5, studentsBelowAverage: 4, topPerformers: [], studentsNeedingSupport: []
+    });
+
+    await expect(response).resolves.toMatchObject({ totalStudents: 12, classAverageWpm: 240 });
+  });
+});
