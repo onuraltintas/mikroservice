@@ -107,6 +107,7 @@ describe('Staff portal workspace role selection', () => {
     component.selectWorkspaceRole('teacher');
     activeProduct.set('speed-reading');
     expect(component.activeWorkspaceRole).toBe('teacher');
+    expect(component.isSpeedReadingTeacherWorkspaceSelected).toBe(true);
     expect(component.canSwitchWorkspaceRole).toBe(false);
     component.selectWorkspaceRole('institution');
     expect(component.activeWorkspaceRole).toBe('teacher');
