@@ -83,6 +83,13 @@ export class CoachingTeacherStudentsService {
     return this.http.get<PagedCoachingResponse<CoachingTeacherStudent>>(this.url, { params });
   }
 
+  inviteStudent(email: string): Observable<{ invitationId: string }> {
+    return this.http.post<{ invitationId: string }>(`${environment.apiUrl}/teachers/invite-student`, {
+      studentEmail: email.trim(),
+      message: null
+    });
+  }
+
   getStudentProgress(studentId: string): Observable<CoachingStudentProgressSummary> {
     return this.http.get<CoachingStudentProgressSummary>(
       `${environment.apiUrl}/reports/student/${encodeURIComponent(studentId)}/progress`

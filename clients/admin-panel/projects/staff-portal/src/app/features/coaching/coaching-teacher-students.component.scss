@@ -4,6 +4,13 @@
 .roster-heading h2 { margin: 0; color: #17333a; font-family: Georgia, 'Times New Roman', serif; font-size: 28px; font-weight: 400; letter-spacing: -.035em; }
 .roster-description { margin: 8px 0 0; color: #72817d; font-size: 11px; line-height: 1.6; }
 .roster-count { flex: 0 0 auto; padding: 8px 11px; border: 1px solid #dfe6d8; border-radius: 999px; color: #4b6c55; background: #f1f5e9; font-size: 10px; font-weight: 700; }
+.student-invitation { display: flex; align-items: end; gap: 8px; margin-top: 15px; padding: 12px; border: 1px solid #e0e5dc; border-radius: 10px; background: #f7f8f2; }
+.invitation-field { display: grid; flex: 1; gap: 5px; color: #596963; font-size: 10px; font-weight: 700; }
+.invitation-field input { min-width: 0; height: 38px; padding: 0 10px; border: 1px solid #d9dfd7; border-radius: 8px; color: #243e43; background: #fffefa; font: inherit; }
+.student-invitation button { height: 38px; padding: 0 12px; border: 0; border-radius: 8px; color: #fff; background: #286250; font: inherit; font-size: 10px; font-weight: 750; cursor: pointer; }
+.student-invitation button:disabled { cursor: wait; opacity: .55; }
+.invitation-success { margin: 0; padding: 9px 11px; border: 1px solid #bbdec6; border-radius: 8px; color: #27623b; background: #f0faf2; font-size: 10px; }
+.invitation-note { margin: -5px 0 0; color: #71807a; font-size: 10px; line-height: 1.5; }
 .roster-search { display: flex; gap: 8px; margin: 22px 0 13px; }
 .roster-search input { min-width: 0; height: 42px; flex: 1; padding: 0 12px; border: 1px solid #d9dfd7; border-radius: 9px; outline: none; color: #243e43; background: #fffefa; font: inherit; font-size: 11px; }
 .roster-search input:focus { border-color: #779372; box-shadow: 0 0 0 3px rgb(119 147 114 / 14%); }

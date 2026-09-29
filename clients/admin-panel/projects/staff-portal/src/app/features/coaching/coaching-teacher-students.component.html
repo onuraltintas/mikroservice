@@ -11,6 +11,16 @@
     <span class="roster-count">{{ totalCount() }} öğrenci</span>
   </div>
 
+  <form class="student-invitation" (ngSubmit)="sendStudentInvitation()" aria-label="Koçluk öğrencisi davet et">
+    <label class="invitation-field"><span>Öğrenci e-posta adresi</span>
+      <input data-testid="teacher-student-invite-email" name="studentInviteEmail" type="email" autocomplete="email" maxlength="320" [(ngModel)]="studentInviteEmail" required placeholder="ogrenci@ornek.com" />
+    </label>
+    <button data-testid="send-teacher-student-invite" type="submit" [disabled]="isInvitationSending() || !studentInviteEmail.trim()">{{ isInvitationSending() ? 'Gönderiliyor…' : 'Öğrenci davet et' }}</button>
+  </form>
+  @if (invitationErrorMessage()) { <div class="roster-error" role="alert">{{ invitationErrorMessage() }}</div> }
+  @if (invitationSuccessMessage()) { <p class="invitation-success" role="status">{{ invitationSuccessMessage() }}</p> }
+  <p class="invitation-note">Bu davet yalnızca Koçluk öğrencisi içindir; davet e-postasındaki bağlantı kabul edilince öğrenci listenize eklenir.</p>
+
   <form class="roster-search" (ngSubmit)="setSearchTerm(searchInput)">
     <label class="visually-hidden" for="staff-coaching-student-search">Öğrenci adıyla ara</label>
     <input id="staff-coaching-student-search" name="studentSearch" type="search"

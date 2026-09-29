@@ -88,6 +88,13 @@ export class SpeedReadingTeacherService {
     });
   }
 
+  inviteStudent(email: string): Observable<{ invitationId: string; status?: string; message?: string }> {
+    return this.http.post<{ invitationId: string; status?: string; message?: string }>(
+      `${this.baseUrl}/invitations/teachers/me`,
+      { email: email.trim() },
+    );
+  }
+
   getClassOverview(dateFrom: Date, dateTo: Date): Observable<SpeedReadingTeacherClassOverview> {
     const params = new HttpParams()
       .set('dateFrom', dateFrom.toISOString())

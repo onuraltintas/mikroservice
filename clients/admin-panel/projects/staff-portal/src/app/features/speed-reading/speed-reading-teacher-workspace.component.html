@@ -66,6 +66,21 @@
       </div>
     </div>
 
+    <form class="roster-filters invitation-form" (ngSubmit)="sendStudentInvitation()" aria-label="Hızlı Okuma öğrencisi davet et">
+      <label class="search-field">
+        <span>Öğrenci e-posta adresi</span>
+        <input data-testid="teacher-student-invite-email" name="teacherInviteEmail" type="email" autocomplete="email" maxlength="320" [(ngModel)]="invitationEmail" required placeholder="ogrenci@ornek.com" />
+      </label>
+      <div class="filter-actions">
+        <button data-testid="send-teacher-student-invite" class="apply-button" type="submit" [disabled]="isInvitationSending() || !invitationEmail.trim()">
+          {{ isInvitationSending() ? 'Gönderiliyor…' : 'Öğrenci davet et' }}
+        </button>
+      </div>
+    </form>
+    @if (invitationErrorMessage()) { <div class="inline-error" role="alert">{{ invitationErrorMessage() }}</div> }
+    @if (invitationSuccessMessage()) { <p class="invitation-success" role="status">{{ invitationSuccessMessage() }}</p> }
+    <p class="invitation-note">Davet Hızlı Okuma üyeliği içindir. Davet edilen kişi aynı e-posta adresiyle Hızlı Okuma hesabı açıp e-postadaki bağlantıyı kabul etmelidir.</p>
+
     <form class="roster-filters" (ngSubmit)="applyFilters()">
       <label class="search-field">
         <span>Öğrenci ara</span>

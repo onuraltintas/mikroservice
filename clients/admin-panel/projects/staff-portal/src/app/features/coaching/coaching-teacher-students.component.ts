@@ -1,4 +1,5 @@
 import { CommonModule } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CoachingTeacherStudent, CoachingTeacherStudentsService } from './coaching-teacher-students.service';
@@ -23,6 +24,10 @@ export class CoachingTeacherStudentsComponent implements OnInit {
   readonly totalCount = signal(0);
   readonly searchTerm = signal('');
   readonly selectedStudent = signal<CoachingTeacherStudent | null>(null);
+  readonly isInvitationSending = signal(false);
+  readonly invitationErrorMessage = signal<string | null>(null);
+  readonly invitationSuccessMessage = signal<string | null>(null);
+  studentInviteEmail = '';
   searchInput = '';
 
   ngOnInit(): void {
@@ -64,6 +69,25 @@ export class CoachingTeacherStudentsComponent implements OnInit {
     this.setSearchTerm('');
   }
 
+  sendStudentInvitation(): void {
+    const email = this.studentInviteEmail.trim();
+    if (!email || this.isInvitationSending()) return;
+    this.isInvitationSending.set(true);
+    this.invitationErrorMessage.set(null);
+    this.invitationSuccessMessage.set(null);
+    this.studentsService.inviteStudent(email).subscribe({
+      next: () => {
+        if (this.studentInviteEmail.trim() === email) this.studentInviteEmail = '';
+        this.invitationSuccessMessage.set('Koçluk öğrenci daveti gönderildi. Öğrenci e-postadaki bağlantıyı kabul edince listenizde görünür.');
+      },
+      error: error => {
+        this.invitationErrorMessage.set(this.getInvitationError(error, 'Koçluk öğrenci daveti gönderilemedi. E-posta adresini ve öğretmen yetkinizi kontrol edip yeniden deneyin.'));
+        this.isInvitationSending.set(false);
+      },
+      complete: () => this.isInvitationSending.set(false)
+    });
+  }
+
   openReport(student: CoachingTeacherStudent): void {
     this.selectedStudent.set(student);
   }
@@ -96,5 +120,18 @@ export class CoachingTeacherStudentsComponent implements OnInit {
 
   trackById(_: number, student: CoachingTeacherStudent): string {
     return student.userId;
+  }
+
+  private getInvitationError(error: unknown, fallback: string): string {
+    if (!(error instanceof HttpErrorResponse) || !error.error || typeof error.error !== 'object') return fallback;
+    const body = error.error as Record<string, unknown>;
+    for (const candidate of [body, body['error'], body['Error']]) {
+      if (!candidate || typeof candidate !== 'object') continue;
+      const payload = candidate as Record<string, unknown>;
+      for (const key of ['message', 'description', 'Message', 'Description']) {
+        if (typeof payload[key] === 'string') return payload[key] as string;
+      }
+    }
+    return fallback;
   }
 }

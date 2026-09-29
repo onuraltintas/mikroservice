@@ -144,6 +144,9 @@
   color: #f6f8ed;
   background: #286250;
 }
+.invitation-form { margin-bottom: 8px; }
+.invitation-success { margin: 0; padding: 10px 12px; border: 1px solid #bbdec6; border-radius: 8px; color: #27623b; background: #f0faf2; font-size: 11px; }
+.invitation-note { margin: 0 0 14px; color: #71807a; font-size: 10px; line-height: 1.5; }
 .loading,
 .empty-state,
 .inline-error {

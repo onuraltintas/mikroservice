@@ -1,4 +1,5 @@
 import { CommonModule } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { SpeedReadingStudentReportComponent } from './speed-reading-institution-student-report.component';
@@ -35,7 +36,11 @@ export class SpeedReadingTeacherWorkspaceComponent implements OnInit {
   readonly totalCount = signal(0);
   readonly filters = signal<SpeedReadingTeacherRosterFilters>({});
   readonly selectedStudentReport = signal<SpeedReadingReportStudent | null>(null);
+  readonly isInvitationSending = signal(false);
+  readonly invitationErrorMessage = signal<string | null>(null);
+  readonly invitationSuccessMessage = signal<string | null>(null);
 
+  invitationEmail = '';
   searchInput = '';
   selectedGradeLevel = '';
   selectedStatus: StudentStatusFilter = 'all';
@@ -104,6 +109,27 @@ export class SpeedReadingTeacherWorkspaceComponent implements OnInit {
     this.loadStudents();
   }
 
+  sendStudentInvitation(): void {
+    const email = this.invitationEmail.trim();
+    if (!email || this.isInvitationSending()) return;
+    this.isInvitationSending.set(true);
+    this.invitationErrorMessage.set(null);
+    this.invitationSuccessMessage.set(null);
+    this.service.inviteStudent(email).subscribe({
+      next: () => {
+        if (this.invitationEmail.trim() === email) this.invitationEmail = '';
+        this.invitationSuccessMessage.set('Hızlı Okuma öğrenci daveti gönderildi. Öğrenci aynı e-posta adresiyle Hızlı Okuma hesabı açıp daveti kabul etmelidir.');
+      },
+      error: (error) => {
+        this.invitationErrorMessage.set(
+          this.getApiMessage(error, 'Hızlı Okuma öğrenci daveti gönderilemedi. E-posta adresini ve öğretmen yetkinizi kontrol edip yeniden deneyin.'),
+        );
+        this.isInvitationSending.set(false);
+      },
+      complete: () => this.isInvitationSending.set(false),
+    });
+  }
+
   clearFilters(): void {
     this.searchInput = '';
     this.selectedGradeLevel = '';
@@ -150,6 +176,15 @@ export class SpeedReadingTeacherWorkspaceComponent implements OnInit {
       month: 'short',
       year: 'numeric',
     }).format(date);
+  }
+
+  private getApiMessage(error: unknown, fallback: string): string {
+    if (error instanceof HttpErrorResponse && error.error && typeof error.error === 'object') {
+      const body = error.error as { message?: unknown; description?: unknown };
+      if (typeof body.message === 'string') return body.message;
+      if (typeof body.description === 'string') return body.description;
+    }
+    return fallback;
   }
 
   trackById(_: number, student: SpeedReadingTeacherStudent): string {
