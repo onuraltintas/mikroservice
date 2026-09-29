@@ -13,31 +13,38 @@ import {
 } from '@angular/core';
 import { Subscription } from 'rxjs';
 import {
-  SpeedReadingInstitutionMember,
+  SpeedReadingReportStudent,
   SpeedReadingInstitutionService,
-  SpeedReadingInstitutionStudentReport,
+  SpeedReadingStudentReport,
 } from './speed-reading-institution.service';
+import { SpeedReadingTeacherService } from './speed-reading-teacher.service';
 
 @Component({
-  selector: 'staff-speed-reading-institution-student-report',
+  selector: 'staff-speed-reading-student-report',
   standalone: true,
   imports: [CommonModule],
   templateUrl: './speed-reading-institution-student-report.component.html',
   styleUrl: './speed-reading-institution-student-report.component.scss',
 })
-export class SpeedReadingInstitutionStudentReportComponent implements OnChanges, OnDestroy {
-  @Input({ required: true }) institutionId!: string;
-  @Input({ required: true }) student!: SpeedReadingInstitutionMember;
+export class SpeedReadingStudentReportComponent implements OnChanges, OnDestroy {
+  @Input() institutionId: string | null = null;
+  @Input() teacherScoped = false;
+  @Input({ required: true }) student!: SpeedReadingReportStudent;
   @Output() closed = new EventEmitter<void>();
 
-  private readonly service = inject(SpeedReadingInstitutionService);
-  readonly report = signal<SpeedReadingInstitutionStudentReport | null>(null);
+  private readonly institutionService = inject(SpeedReadingInstitutionService);
+  private readonly teacherService = inject(SpeedReadingTeacherService);
+  readonly report = signal<SpeedReadingStudentReport | null>(null);
   readonly isLoading = signal(true);
   readonly errorMessage = signal<string | null>(null);
   private reportSubscription: Subscription | null = null;
 
   ngOnChanges(changes: SimpleChanges): void {
-    if ((changes['institutionId'] || changes['student']) && this.institutionId && this.student) {
+    if (
+      (changes['institutionId'] || changes['teacherScoped'] || changes['student']) &&
+      this.student &&
+      (this.teacherScoped || this.institutionId)
+    ) {
       this.loadReport();
     }
   }
@@ -54,16 +61,29 @@ export class SpeedReadingInstitutionStudentReportComponent implements OnChanges,
     dateFrom.setUTCHours(0, 0, 0, 0);
     this.isLoading.set(true);
     this.errorMessage.set(null);
-    this.reportSubscription = this.service
-      .getStudentReport(this.institutionId, this.student.userId, dateFrom, dateTo)
-      .subscribe({
-        next: (report) => this.report.set(report),
-        error: (error) => {
-          this.errorMessage.set(this.getErrorMessage(error));
-          this.isLoading.set(false);
-        },
-        complete: () => this.isLoading.set(false),
-      });
+    const reportRequest = this.teacherScoped
+      ? this.teacherService.getStudentReport(this.student.userId, dateFrom, dateTo)
+      : this.institutionId
+        ? this.institutionService.getStudentReport(
+            this.institutionId,
+            this.student.userId,
+            dateFrom,
+            dateTo,
+          )
+        : null;
+    if (!reportRequest) {
+      this.errorMessage.set('Öğrenci raporu için geçerli bir erişim kapsamı bulunamadı.');
+      this.isLoading.set(false);
+      return;
+    }
+    this.reportSubscription = reportRequest.subscribe({
+      next: (report) => this.report.set(report),
+      error: (error) => {
+        this.errorMessage.set(this.getErrorMessage(error));
+        this.isLoading.set(false);
+      },
+      complete: () => this.isLoading.set(false),
+    });
   }
 
   formatNumber(value: number, fractionDigits = 0): string {
@@ -96,6 +116,8 @@ export class SpeedReadingInstitutionStudentReportComponent implements OnChanges,
       if (typeof body.message === 'string') return body.message;
       if (typeof body.description === 'string') return body.description;
     }
-    return 'Öğrenci raporu yüklenemedi. Kurum kapsamını kontrol edip tekrar deneyin.';
+    return this.teacherScoped
+      ? 'Öğrenci raporu yüklenemedi. Öğretmen-öğrenci bağlantısını kontrol edip tekrar deneyin.'
+      : 'Öğrenci raporu yüklenemedi. Kurum kapsamını kontrol edip tekrar deneyin.';
   }
 }

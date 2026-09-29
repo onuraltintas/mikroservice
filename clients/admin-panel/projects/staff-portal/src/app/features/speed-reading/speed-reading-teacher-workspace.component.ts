@@ -1,11 +1,13 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { SpeedReadingStudentReportComponent } from './speed-reading-institution-student-report.component';
+import { SpeedReadingReportStudent } from './speed-reading-institution.service';
 import {
   SpeedReadingTeacherClassOverview,
   SpeedReadingTeacherRosterFilters,
   SpeedReadingTeacherStudent,
-  SpeedReadingTeacherService
+  SpeedReadingTeacherService,
 } from './speed-reading-teacher.service';
 
 type StudentStatusFilter = 'all' | 'active' | 'inactive';
@@ -13,9 +15,9 @@ type StudentStatusFilter = 'all' | 'active' | 'inactive';
 @Component({
   selector: 'staff-speed-reading-teacher-workspace',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, SpeedReadingStudentReportComponent],
   templateUrl: './speed-reading-teacher-workspace.component.html',
-  styleUrl: './speed-reading-teacher-workspace.component.scss'
+  styleUrl: './speed-reading-teacher-workspace.component.scss',
 })
 export class SpeedReadingTeacherWorkspaceComponent implements OnInit {
   private readonly service = inject(SpeedReadingTeacherService);
@@ -32,6 +34,7 @@ export class SpeedReadingTeacherWorkspaceComponent implements OnInit {
   readonly totalPages = signal(1);
   readonly totalCount = signal(0);
   readonly filters = signal<SpeedReadingTeacherRosterFilters>({});
+  readonly selectedStudentReport = signal<SpeedReadingReportStudent | null>(null);
 
   searchInput = '';
   selectedGradeLevel = '';
@@ -48,7 +51,7 @@ export class SpeedReadingTeacherWorkspaceComponent implements OnInit {
     this.isLoading.set(true);
     this.errorMessage.set(null);
     this.service.getMyStudents(this.pageNumber(), 25, this.filters()).subscribe({
-      next: page => {
+      next: (page) => {
         if (requestVersion !== this.rosterRequestVersion) return;
         this.students.set(page.items);
         this.totalCount.set(page.totalCount);
@@ -61,7 +64,7 @@ export class SpeedReadingTeacherWorkspaceComponent implements OnInit {
       },
       complete: () => {
         if (requestVersion === this.rosterRequestVersion) this.isLoading.set(false);
-      }
+      },
     });
   }
 
@@ -74,7 +77,7 @@ export class SpeedReadingTeacherWorkspaceComponent implements OnInit {
     this.isOverviewLoading.set(true);
     this.overviewErrorMessage.set(null);
     this.service.getClassOverview(dateFrom, dateTo).subscribe({
-      next: overview => {
+      next: (overview) => {
         if (requestVersion === this.overviewRequestVersion) this.overview.set(overview);
       },
       error: () => {
@@ -84,7 +87,7 @@ export class SpeedReadingTeacherWorkspaceComponent implements OnInit {
       },
       complete: () => {
         if (requestVersion === this.overviewRequestVersion) this.isOverviewLoading.set(false);
-      }
+      },
     });
   }
 
@@ -93,7 +96,8 @@ export class SpeedReadingTeacherWorkspaceComponent implements OnInit {
     const searchTerm = this.searchInput.trim();
     const gradeLevel = Number(this.selectedGradeLevel);
     if (searchTerm) filters.searchTerm = searchTerm;
-    if (Number.isInteger(gradeLevel) && gradeLevel >= 1 && gradeLevel <= 12) filters.gradeLevel = gradeLevel;
+    if (Number.isInteger(gradeLevel) && gradeLevel >= 1 && gradeLevel <= 12)
+      filters.gradeLevel = gradeLevel;
     if (this.selectedStatus !== 'all') filters.isActive = this.selectedStatus === 'active';
     this.filters.set(filters);
     this.pageNumber.set(1);
@@ -109,15 +113,28 @@ export class SpeedReadingTeacherWorkspaceComponent implements OnInit {
     this.loadStudents();
   }
 
+  openStudentReport(student: SpeedReadingTeacherStudent): void {
+    this.selectedStudentReport.set({
+      userId: student.id,
+      firstName: student.firstName,
+      lastName: student.lastName,
+      gradeLevel: student.gradeLevel,
+    });
+  }
+
+  closeStudentReport(): void {
+    this.selectedStudentReport.set(null);
+  }
+
   previousPage(): void {
     if (this.pageNumber() <= 1) return;
-    this.pageNumber.update(page => page - 1);
+    this.pageNumber.update((page) => page - 1);
     this.loadStudents();
   }
 
   nextPage(): void {
     if (this.pageNumber() >= this.totalPages()) return;
-    this.pageNumber.update(page => page + 1);
+    this.pageNumber.update((page) => page + 1);
     this.loadStudents();
   }
 
@@ -128,7 +145,11 @@ export class SpeedReadingTeacherWorkspaceComponent implements OnInit {
   formatDate(value: string): string {
     const date = new Date(value);
     if (!value || Number.isNaN(date.getTime())) return '—';
-    return new Intl.DateTimeFormat('tr-TR', { day: 'numeric', month: 'short', year: 'numeric' }).format(date);
+    return new Intl.DateTimeFormat('tr-TR', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    }).format(date);
   }
 
   trackById(_: number, student: SpeedReadingTeacherStudent): string {

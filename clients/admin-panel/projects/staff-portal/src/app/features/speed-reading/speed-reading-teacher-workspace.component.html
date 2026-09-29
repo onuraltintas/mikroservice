@@ -25,11 +25,35 @@
       <p class="loading" role="status">Sınıf özeti yükleniyor…</p>
     } @else if (overview(); as summary) {
       <div class="overview-grid">
-        <article class="metric-card"><span>Öğrenci</span><strong>{{ formatNumber(summary.totalStudents) }}</strong></article>
-        <article class="metric-card"><span>Aktif öğrenci</span><strong>{{ summary.activeStudentsDataAvailable ? formatNumber(summary.activeStudents) : 'Veri yok' }}</strong></article>
-        <article class="metric-card"><span>Sınıf ortalaması · WPM</span><strong>{{ summary.classAverageWpmDataAvailable ? formatNumber(summary.classAverageWpm) : 'Veri yok' }}</strong></article>
-        <article class="metric-card"><span>Anlama ortalaması</span><strong>{{ summary.classAverageComprehensionDataAvailable ? formatNumber(summary.classAverageComprehension) + '%' : 'Veri yok' }}</strong></article>
-        <article class="metric-card"><span>Tamamlanan etkinlik</span><strong>{{ formatNumber(summary.totalActivitiesCompleted) }}</strong></article>
+        <article class="metric-card">
+          <span>Öğrenci</span><strong>{{ formatNumber(summary.totalStudents) }}</strong>
+        </article>
+        <article class="metric-card">
+          <span>Aktif öğrenci</span
+          ><strong>{{
+            summary.activeStudentsDataAvailable ? formatNumber(summary.activeStudents) : 'Veri yok'
+          }}</strong>
+        </article>
+        <article class="metric-card">
+          <span>Sınıf ortalaması · WPM</span
+          ><strong>{{
+            summary.classAverageWpmDataAvailable
+              ? formatNumber(summary.classAverageWpm)
+              : 'Veri yok'
+          }}</strong>
+        </article>
+        <article class="metric-card">
+          <span>Anlama ortalaması</span
+          ><strong>{{
+            summary.classAverageComprehensionDataAvailable
+              ? formatNumber(summary.classAverageComprehension) + '%'
+              : 'Veri yok'
+          }}</strong>
+        </article>
+        <article class="metric-card">
+          <span>Tamamlanan etkinlik</span
+          ><strong>{{ formatNumber(summary.totalActivitiesCompleted) }}</strong>
+        </article>
       </div>
     }
   </section>
@@ -45,13 +69,21 @@
     <form class="roster-filters" (ngSubmit)="applyFilters()">
       <label class="search-field">
         <span>Öğrenci ara</span>
-        <input name="studentSearch" type="search" [(ngModel)]="searchInput" placeholder="Ad veya e-posta" autocomplete="off">
+        <input
+          name="studentSearch"
+          type="search"
+          [(ngModel)]="searchInput"
+          placeholder="Ad veya e-posta"
+          autocomplete="off"
+        />
       </label>
       <label>
         <span>Sınıf</span>
         <select name="gradeLevel" [(ngModel)]="selectedGradeLevel">
           <option value="">Tüm sınıflar</option>
-          @for (grade of gradeLevels; track grade) { <option [value]="grade">{{ grade }}. sınıf</option> }
+          @for (grade of gradeLevels; track grade) {
+            <option [value]="grade">{{ grade }}. sınıf</option>
+          }
         </select>
       </label>
       <label>
@@ -73,28 +105,62 @@
     @if (errorMessage()) {
       <div class="inline-error" role="alert">
         <span>{{ errorMessage() }}</span>
-        <button type="button" data-testid="retry-roster" (click)="loadStudents()">Tekrar dene</button>
+        <button type="button" data-testid="retry-roster" (click)="loadStudents()">
+          Tekrar dene
+        </button>
       </div>
     } @else if (isLoading()) {
       <div class="loading" role="status">Öğrenci listesi yükleniyor…</div>
     } @else if (students().length === 0) {
       <div class="empty-state">
         <h4>Öğrenci bulunamadı</h4>
-        <p>Arama ve filtreleri kontrol edin veya yeni bir öğrenci bağlantısı olduğunda tekrar bakın.</p>
+        <p>
+          Arama ve filtreleri kontrol edin veya yeni bir öğrenci bağlantısı olduğunda tekrar bakın.
+        </p>
       </div>
     } @else {
       <div class="roster-table-wrap">
         <table>
-          <thead><tr><th>Öğrenci</th><th>Sınıf / kurum</th><th>Seviye</th><th>Hedef WPM</th><th>Günlük hedef</th><th>Durum</th></tr></thead>
+          <thead>
+            <tr>
+              <th>Öğrenci</th>
+              <th>Sınıf / kurum</th>
+              <th>Seviye</th>
+              <th>Hedef WPM</th>
+              <th>Günlük hedef</th>
+              <th>Durum</th>
+              <th>Rapor</th>
+            </tr>
+          </thead>
           <tbody>
             @for (student of students(); track trackById($index, student)) {
               <tr>
-                <td><strong>{{ student.firstName }} {{ student.lastName }}</strong><small>{{ student.email }}</small></td>
-                <td>{{ student.gradeLevel ? student.gradeLevel + '. sınıf' : '—' }}<small>{{ student.institutionName || 'Bağımsız öğrenci' }}</small></td>
+                <td>
+                  <strong>{{ student.firstName }} {{ student.lastName }}</strong
+                  ><small>{{ student.email }}</small>
+                </td>
+                <td>
+                  {{ student.gradeLevel ? student.gradeLevel + '. sınıf' : '—'
+                  }}<small>{{ student.institutionName || 'Bağımsız öğrenci' }}</small>
+                </td>
                 <td>{{ student.currentLevel || '—' }}</td>
                 <td>{{ student.targetWpm ?? '—' }}</td>
                 <td>{{ student.dailyGoalMinutes ? student.dailyGoalMinutes + ' dk' : '—' }}</td>
-                <td><span class="status" [class.inactive]="!student.isActive">{{ student.isActive ? 'Aktif' : 'Pasif' }}</span></td>
+                <td>
+                  <span class="status" [class.inactive]="!student.isActive">{{
+                    student.isActive ? 'Aktif' : 'Pasif'
+                  }}</span>
+                </td>
+                <td>
+                  <button
+                    type="button"
+                    class="row-action"
+                    data-testid="teacher-student-report"
+                    (click)="openStudentReport(student)"
+                  >
+                    Ayrıntılı rapor
+                  </button>
+                </td>
               </tr>
             }
           </tbody>
@@ -102,11 +168,22 @@
       </div>
       @if (totalPages() > 1) {
         <nav class="pagination" aria-label="Hızlı Okuma öğrenci sayfaları">
-          <button type="button" (click)="previousPage()" [disabled]="pageNumber() === 1">Önceki</button>
+          <button type="button" (click)="previousPage()" [disabled]="pageNumber() === 1">
+            Önceki
+          </button>
           <span>Sayfa {{ pageNumber() }} / {{ totalPages() }}</span>
-          <button type="button" (click)="nextPage()" [disabled]="pageNumber() >= totalPages()">Sonraki</button>
+          <button type="button" (click)="nextPage()" [disabled]="pageNumber() >= totalPages()">
+            Sonraki
+          </button>
         </nav>
       }
     }
   </section>
+  @if (selectedStudentReport(); as reportStudent) {
+    <staff-speed-reading-student-report
+      [student]="reportStudent"
+      [teacherScoped]="true"
+      (closed)="closeStudentReport()"
+    />
+  }
 </section>

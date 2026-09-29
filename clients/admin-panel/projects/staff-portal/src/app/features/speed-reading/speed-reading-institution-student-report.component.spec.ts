@@ -1,14 +1,14 @@
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { SpeedReadingInstitutionStudentReportComponent } from './speed-reading-institution-student-report.component';
+import { SpeedReadingStudentReportComponent } from './speed-reading-institution-student-report.component';
 
-describe('SpeedReadingInstitutionStudentReportComponent', () => {
+describe('SpeedReadingStudentReportComponent', () => {
   let http: HttpTestingController;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [SpeedReadingInstitutionStudentReportComponent],
+      imports: [SpeedReadingStudentReportComponent],
       providers: [provideHttpClient(), provideHttpClientTesting()],
     });
     http = TestBed.inject(HttpTestingController);
@@ -17,7 +17,7 @@ describe('SpeedReadingInstitutionStudentReportComponent', () => {
   afterEach(() => http.verify());
 
   it('shows speed, comprehension, activity and recommendation details for a selected student', () => {
-    const fixture = TestBed.createComponent(SpeedReadingInstitutionStudentReportComponent);
+    const fixture = TestBed.createComponent(SpeedReadingStudentReportComponent);
     fixture.componentRef.setInput('institutionId', 'institution-1');
     fixture.componentRef.setInput('student', {
       userId: 'student-1',
@@ -45,7 +45,7 @@ describe('SpeedReadingInstitutionStudentReportComponent', () => {
   });
 
   it('reloads analytics when a different student is selected in the same report view', () => {
-    const fixture = TestBed.createComponent(SpeedReadingInstitutionStudentReportComponent);
+    const fixture = TestBed.createComponent(SpeedReadingStudentReportComponent);
     fixture.componentRef.setInput('institutionId', 'institution-1');
     fixture.componentRef.setInput('student', {
       userId: 'student-1',
@@ -79,7 +79,7 @@ describe('SpeedReadingInstitutionStudentReportComponent', () => {
   });
 
   it('shows a retry action when a scoped student analytics request fails', () => {
-    const fixture = TestBed.createComponent(SpeedReadingInstitutionStudentReportComponent);
+    const fixture = TestBed.createComponent(SpeedReadingStudentReportComponent);
     fixture.componentRef.setInput('institutionId', 'institution-1');
     fixture.componentRef.setInput('student', {
       userId: 'student-1',
@@ -102,6 +102,59 @@ describe('SpeedReadingInstitutionStudentReportComponent', () => {
     flushStudentReport(http);
     fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('Ayşe Yılmaz');
+  });
+
+  it('uses teacher-scoped report endpoints when embedded in the teacher workspace', () => {
+    const fixture = TestBed.createComponent(SpeedReadingStudentReportComponent);
+    fixture.componentRef.setInput('teacherScoped', true);
+    fixture.componentRef.setInput('student', {
+      userId: 'student-1',
+      firstName: 'Ayşe',
+      lastName: 'Yılmaz',
+      gradeLevel: 8,
+    });
+    fixture.detectChanges();
+
+    const requests = ['summary', 'reading-speed', 'comprehension', 'activity'].map((path) =>
+      http.expectOne(
+        (request) =>
+          request.url === `/api/speed-reading/analytics/teacher/students/student-1/${path}`,
+      ),
+    );
+    requests[0].flush({
+      readingSessions: 2,
+      averageWpm: 245,
+      totalReadingMinutes: 10,
+      exercisesCompleted: 2,
+      averageSuccessRate: 85,
+      currentLevel: 4,
+    });
+    requests[1].flush({
+      averageWpm: 245,
+      improvementRate: 5,
+      benchmark: { institutionAverage: 220, performanceLevel: 'İyi' },
+      recommendations: [],
+    });
+    requests[2].flush({
+      averageComprehension: 80,
+      improvementRate: 3,
+      totalQuestionsAttempted: 5,
+      benchmark: { institutionAverage: 75, performanceLevel: 'İyi' },
+      weakAreas: [],
+      strongAreas: [],
+    });
+    requests[3].flush({
+      dataAvailable: false,
+      unavailableReason: 'Etkinlik yok',
+      recentActivities: [],
+      currentStreak: {},
+      studyTime: {},
+    });
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Ayşe Yılmaz');
+    expect(fixture.nativeElement.textContent).toContain('Karşılaştırma ortalaması');
+    expect(fixture.nativeElement.textContent).not.toContain('Kurum ortalaması');
   });
 });
 

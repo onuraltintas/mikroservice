@@ -13,7 +13,7 @@ import {
   SpeedReadingInstitutionService,
 } from './speed-reading-institution.service';
 import { SpeedReadingTeacherClassOverview } from './speed-reading-teacher.service';
-import { SpeedReadingInstitutionStudentReportComponent } from './speed-reading-institution-student-report.component';
+import { SpeedReadingStudentReportComponent } from './speed-reading-institution-student-report.component';
 
 type MemberStatusFilter = 'all' | 'active' | 'inactive';
 type TeacherOption = { userId: string; displayName: string };
@@ -34,7 +34,7 @@ function utcDateInput(daysAgo: number): string {
 @Component({
   selector: 'staff-speed-reading-institution-workspace',
   standalone: true,
-  imports: [CommonModule, FormsModule, SpeedReadingInstitutionStudentReportComponent],
+  imports: [CommonModule, FormsModule, SpeedReadingStudentReportComponent],
   templateUrl: './speed-reading-institution-workspace.component.html',
   styleUrl: './speed-reading-institution-workspace.component.scss',
 })

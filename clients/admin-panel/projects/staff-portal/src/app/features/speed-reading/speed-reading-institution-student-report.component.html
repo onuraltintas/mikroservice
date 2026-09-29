@@ -6,7 +6,11 @@
       <p>
         {{ student.firstName }} {{ student.lastName }} ·
         {{ student.gradeLevel ? student.gradeLevel + '. sınıf' : 'Sınıf belirtilmemiş' }} ·
-        {{ student.teacherName || 'Öğretmen atanmamış' }}
+        @if (teacherScoped) {
+          Öğretmen öğrencisi
+        } @else {
+          {{ student.teacherName || 'Öğretmen atanmamış' }}
+        }
       </p>
     </div>
     <button
@@ -82,7 +86,7 @@
         </div>
         @if (data.summary.readingSessions > 0) {
           <p class="benchmark-line">
-            Kurum ortalaması
+            {{ teacherScoped ? 'Karşılaştırma ortalaması' : 'Kurum ortalaması' }}
             <strong>{{ formatNumber(data.readingSpeed.benchmark.institutionAverage) }} WPM</strong>
             · Öğrenci <strong>{{ formatNumber(data.readingSpeed.averageWpm) }} WPM</strong>
           </p>
@@ -119,7 +123,7 @@
         </div>
         @if (data.comprehension.totalQuestionsAttempted > 0) {
           <p class="benchmark-line">
-            Kurum ortalaması
+            {{ teacherScoped ? 'Karşılaştırma ortalaması' : 'Kurum ortalaması' }}
             <strong>{{ formatNumber(data.comprehension.benchmark.institutionAverage) }}%</strong> ·
             Öğrenci <strong>{{ formatNumber(data.comprehension.averageComprehension) }}%</strong>
           </p>

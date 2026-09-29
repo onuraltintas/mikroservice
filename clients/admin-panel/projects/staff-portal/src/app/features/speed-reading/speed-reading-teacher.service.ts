@@ -1,7 +1,8 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
+import { forkJoin, Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import type { SpeedReadingStudentReport } from './speed-reading-institution.service';
 
 export interface SpeedReadingTeacherStudent {
   id: string;
@@ -69,9 +70,12 @@ export class SpeedReadingTeacherService {
   getMyStudents(
     pageNumber = 1,
     pageSize = 25,
-    filters: SpeedReadingTeacherRosterFilters = {}
+    filters: SpeedReadingTeacherRosterFilters = {},
   ): Observable<SpeedReadingTeacherRosterPage> {
-    const page = Math.min(1_000, Math.max(1, Math.floor(Number.isFinite(pageNumber) ? pageNumber : 1)));
+    const page = Math.min(
+      1_000,
+      Math.max(1, Math.floor(Number.isFinite(pageNumber) ? pageNumber : 1)),
+    );
     const size = Math.min(100, Math.max(1, Math.floor(Number.isFinite(pageSize) ? pageSize : 25)));
     let params = new HttpParams().set('pageNumber', page).set('pageSize', size);
     const search = filters.searchTerm?.trim();
@@ -79,7 +83,9 @@ export class SpeedReadingTeacherService {
     if (filters.gradeLevel !== undefined) params = params.set('gradeLevel', filters.gradeLevel);
     if (filters.isActive !== undefined) params = params.set('isActive', filters.isActive);
 
-    return this.http.get<SpeedReadingTeacherRosterPage>(`${this.baseUrl}/teachers/me/students`, { params });
+    return this.http.get<SpeedReadingTeacherRosterPage>(`${this.baseUrl}/teachers/me/students`, {
+      params,
+    });
   }
 
   getClassOverview(dateFrom: Date, dateTo: Date): Observable<SpeedReadingTeacherClassOverview> {
@@ -88,7 +94,34 @@ export class SpeedReadingTeacherService {
       .set('dateTo', dateTo.toISOString());
     return this.http.get<SpeedReadingTeacherClassOverview>(
       `${this.baseUrl}/analytics/teacher/class-overview`,
-      { params }
+      { params },
     );
+  }
+
+  getStudentReport(
+    studentUserId: string,
+    dateFrom: Date,
+    dateTo: Date,
+  ): Observable<SpeedReadingStudentReport> {
+    const baseUrl = `${this.baseUrl}/analytics/teacher/students/${encodeURIComponent(studentUserId)}`;
+    const params = new HttpParams()
+      .set('dateFrom', dateFrom.toISOString())
+      .set('dateTo', dateTo.toISOString());
+    return forkJoin({
+      summary: this.http.get<SpeedReadingStudentReport['summary']>(`${baseUrl}/summary`, {
+        params,
+      }),
+      readingSpeed: this.http.get<SpeedReadingStudentReport['readingSpeed']>(
+        `${baseUrl}/reading-speed`,
+        { params },
+      ),
+      comprehension: this.http.get<SpeedReadingStudentReport['comprehension']>(
+        `${baseUrl}/comprehension`,
+        { params },
+      ),
+      activity: this.http.get<SpeedReadingStudentReport['activity']>(`${baseUrl}/activity`, {
+        params,
+      }),
+    });
   }
 }

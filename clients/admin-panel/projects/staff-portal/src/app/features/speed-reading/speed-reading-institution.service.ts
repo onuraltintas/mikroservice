@@ -51,7 +51,15 @@ export interface SpeedReadingStudentAnalyticsBenchmark {
   performanceLevel: string;
 }
 
-export interface SpeedReadingInstitutionStudentReport {
+export interface SpeedReadingReportStudent {
+  userId: string;
+  firstName: string;
+  lastName: string;
+  gradeLevel?: number | null;
+  teacherName?: string | null;
+}
+
+export interface SpeedReadingStudentReport {
   summary: {
     readingSessions: number;
     averageWpm: number;
@@ -317,32 +325,26 @@ export class SpeedReadingInstitutionService {
     studentUserId: string,
     dateFrom: Date,
     dateTo: Date,
-  ): Observable<SpeedReadingInstitutionStudentReport> {
+  ): Observable<SpeedReadingStudentReport> {
     const baseUrl = `${this.speedReadingUrl}/analytics/institutions/${encodeURIComponent(institutionId)}/students/${encodeURIComponent(studentUserId)}`;
     const params = new HttpParams()
       .set('dateFrom', dateFrom.toISOString())
       .set('dateTo', dateTo.toISOString());
     return forkJoin({
-      summary: this.http.get<SpeedReadingInstitutionStudentReport['summary']>(
-        `${baseUrl}/summary`,
-        {
-          params,
-        },
-      ),
-      readingSpeed: this.http.get<SpeedReadingInstitutionStudentReport['readingSpeed']>(
+      summary: this.http.get<SpeedReadingStudentReport['summary']>(`${baseUrl}/summary`, {
+        params,
+      }),
+      readingSpeed: this.http.get<SpeedReadingStudentReport['readingSpeed']>(
         `${baseUrl}/reading-speed`,
         { params },
       ),
-      comprehension: this.http.get<SpeedReadingInstitutionStudentReport['comprehension']>(
+      comprehension: this.http.get<SpeedReadingStudentReport['comprehension']>(
         `${baseUrl}/comprehension`,
         { params },
       ),
-      activity: this.http.get<SpeedReadingInstitutionStudentReport['activity']>(
-        `${baseUrl}/activity`,
-        {
-          params,
-        },
-      ),
+      activity: this.http.get<SpeedReadingStudentReport['activity']>(`${baseUrl}/activity`, {
+        params,
+      }),
     });
   }
 
