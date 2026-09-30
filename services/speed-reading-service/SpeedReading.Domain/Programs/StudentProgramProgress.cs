@@ -216,6 +216,9 @@ public sealed class StudentProgramProgress : AggregateRoot
             throw new InvalidOperationException("Program progress must have a positive day and week.");
         if (completedCount < 0 || expectedCount < 0)
             throw new ArgumentOutOfRangeException(nameof(completedCount));
+        if (CompletedDate.HasValue || !IsActive)
+            return new StudentProgramCompletionResult(false, false, false, false,
+                CurrentDay, CurrentWeek, CurrentDifficultyLevel);
 
         var now = EnsureUtc(at);
         var oldDay = CurrentDay;
@@ -243,8 +246,6 @@ public sealed class StudentProgramProgress : AggregateRoot
             LongestStreak = Math.Max(LongestStreak, CurrentStreak);
 
             var completedCumulativeDay = ((CurrentWeek - 1) * 7) + CurrentDay;
-            CurrentDay++;
-
             if ((assignedTotalDays ?? template.TotalDays) > 0
                 && completedCumulativeDay >= (assignedTotalDays ?? template.TotalDays))
             {
@@ -252,8 +253,12 @@ public sealed class StudentProgramProgress : AggregateRoot
                 CompletedDate = now;
                 IsActive = false;
             }
-            else if (CurrentDay > 7)
+            else
             {
+                CurrentDay++;
+                if (CurrentDay <= 7)
+                    return new StudentProgramCompletionResult(dayCompleted, false, false, false,
+                        oldDay, oldWeek, oldDifficultyLevel);
                 CurrentWeek++;
                 CurrentDay = 1;
                 weekChanged = true;
