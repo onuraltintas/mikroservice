@@ -317,9 +317,20 @@ internal sealed class OwnedSpeedReadingAssessment(
                 or AssessmentPhasePlanStatus.InProgress)?.Phase);
     }
 
-    private Task<bool> HasCompletedTrainingAsync(Guid userId, CancellationToken cancellationToken) =>
-        db.StudentProgramProgresses.AsNoTracking().AnyAsync(item => item.UserId == userId
-            && item.CompletedDate.HasValue && !item.IsActive, cancellationToken);
+    private async Task<bool> HasCompletedTrainingAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        if (await db.StudentProgramProgresses.AsNoTracking().AnyAsync(
+            item => item.UserId == userId && item.IsActive, cancellationToken))
+            return false;
+        var latest = await db.StudentProgramProgresses.AsNoTracking()
+            .Where(item => item.UserId == userId)
+            .OrderByDescending(item => item.AssignedDate)
+            .ThenByDescending(item => item.CreatedAt)
+            .ThenBy(item => item.Id)
+            .Select(item => new { item.CompletedDate })
+            .FirstOrDefaultAsync(cancellationToken);
+        return latest?.CompletedDate.HasValue == true;
+    }
 
     public async Task<AssessmentExercisesSummary> GetExercisesAsync(
         Guid userId,
