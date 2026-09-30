@@ -99,4 +99,12 @@ describe('student prerequisites', () => {
       queryParams: { returnUrl: state.url }
     });
   });
+
+  it('does not bypass student prerequisites for a dual student and teacher account', async () => {
+    authService.hasRole.and.callFake(role => role === 'Student' || role === 'Teacher');
+    http.get.and.returnValue(of({ hasAgeGroupConfiguration: false }));
+    assessmentService.getAssessmentStatus.and.returnValue(of({ hasCompleted: false } as any));
+    expect(await firstValueFrom(TestBed.runInInjectionContext(() => profileSetupGuard(route, state)) as Observable<boolean>)).toBe(false);
+    expect(await firstValueFrom(TestBed.runInInjectionContext(() => assessmentGuard(route, state)) as Observable<boolean>)).toBe(false);
+  });
 });
