@@ -96,6 +96,7 @@ export interface StudentProgressSummary {
   currentStreak: number;
   longestStreak: number;
   lastCompletionDate?: string;
+  completedDate?: string | null;
 
   // Program details
   templateName: string;
@@ -170,6 +171,7 @@ export class ExerciseProgramService {
           currentStreak: program?.currentStreak ?? 0,
           longestStreak: program?.longestStreak ?? 0,
           lastCompletionDate: program?.lastCompletionDate,
+          completedDate: program.completedDate,
           templateName: program.templateName,
           totalWeeks: program.totalWeeks,
           totalDays: program.totalDays,
@@ -202,6 +204,7 @@ export class ExerciseProgramService {
 }
 
 interface LegacyProgramProgress {
+  completedDate?: string | null;
   templateName: string;
   totalWeeks: number;
   totalDays: number;

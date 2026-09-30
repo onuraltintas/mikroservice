@@ -71,6 +71,17 @@
        ════════════════════════════════════════════ -->
   <div class="sp-page-enter">
 
+    @if (programCompleted()) {
+      <section class="db-onboarding__card" aria-label="Program tamamlama özeti">
+        <h2>{{ programName() }} tamamlandı</h2>
+        <p>{{ totalDays() }} günlük programda {{ completedExercises() }} egzersiz kaydedildi.
+          Gelişiminizi değerlendirmek için eğitim sonrası ölçümü tamamlayın.</p>
+        <button type="button" class="db-cta-btn" (click)="startAssessment(2)">
+          Eğitim sonrası ölçüme başla
+        </button>
+      </section>
+    }
+
     <!-- ── Hero ───────────────────────────────── -->
     <div class="db-hero">
       <div class="db-hero__inner">

@@ -61,6 +61,7 @@ export class DashboardNewComponent extends BaseComponent implements OnInit {
   totalDays = signal(0);
   completedExercises = signal(0);
   hasProgram = signal<boolean | null>(null);
+  programCompleted = signal(false);
 
   constructor(
     private authService: AuthService,
@@ -145,6 +146,7 @@ export class DashboardNewComponent extends BaseComponent implements OnInit {
       )
       .subscribe({
         next: ({ progress, allAchievements, userAchievements }) => {
+          this.programCompleted.set(!!progress?.completedDate);
           if (!progress) {
             // An authenticated student can have a valid subscription before a
             // training program is assigned. Keep that state explicit instead
@@ -243,8 +245,8 @@ export class DashboardNewComponent extends BaseComponent implements OnInit {
     this.router.navigate(['/login']);
   }
 
-  startAssessment(): void {
-    this.router.navigate(['/student/assessment']);
+  startAssessment(phase = 1): void {
+    this.router.navigate(['/student/assessment'], { queryParams: { phase } });
   }
 
   getInitials(firstName?: string, lastName?: string): string {

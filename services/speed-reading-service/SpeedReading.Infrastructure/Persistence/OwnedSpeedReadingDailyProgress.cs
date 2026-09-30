@@ -82,6 +82,30 @@ internal sealed class OwnedSpeedReadingDailyProgress(
     {
         if (userId == Guid.Empty)
             throw new ArgumentException("A valid authenticated user is required.", nameof(userId));
+        var attempt = 0;
+        return await OwnedSpeedReadingProgramAssignmentLock.ExecuteAsync(db, async () =>
+        {
+            // A rolled-back attempt may already have accepted tracked changes.
+            // Reload persisted progress and idempotency state on a retry.
+            if (attempt++ > 0)
+                db.ChangeTracker.Clear();
+            await using var transaction = await OwnedSpeedReadingProgramAssignmentLock.AcquireAsync(
+                db, userId, cancellationToken);
+            var response = await CompleteExerciseCoreAsync(userId, request, idempotencyKey, cancellationToken);
+            if (transaction is not null)
+                await transaction.CommitAsync(cancellationToken);
+            return response;
+        });
+    }
+
+    private async Task<CompleteDailyExerciseResponse> CompleteExerciseCoreAsync(
+        Guid userId,
+        CompleteDailyExerciseRequest request,
+        string idempotencyKey,
+        CancellationToken cancellationToken)
+    {
+        if (userId == Guid.Empty)
+            throw new ArgumentException("A valid authenticated user is required.", nameof(userId));
 
         idempotencyKey = SpeedReadingDailyProgressRules.ValidateIdempotencyKey(idempotencyKey);
         var requestHash = CreateCompletionHash(userId, request);
