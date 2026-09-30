@@ -15,7 +15,7 @@ public sealed class SpeedReadingSubscriptionAccessMiddleware(RequestDelegate nex
     {
         if (context.User.Identity?.IsAuthenticated != true
             || !context.User.IsInRole("Student")
-            || HasStaffRole(context.User)
+            || (HasStaffRole(context.User) && !IsStudentTrainingRequest(context.Request.Path))
             || !SpeedReadingSubscriptionAccessRules.RequiresSubscription(
                 context.Request.Path.Value ?? string.Empty,
                 context.Request.Method))
@@ -56,6 +56,20 @@ public sealed class SpeedReadingSubscriptionAccessMiddleware(RequestDelegate nex
     private static bool HasStaffRole(ClaimsPrincipal user) =>
         new[] { "Admin", "SystemAdmin", "Teacher", "Editor", "Coach", "InstitutionAdmin", "InstitutionOwner" }
             .Any(user.IsInRole);
+
+    private static bool IsStudentTrainingRequest(PathString path) =>
+        new[]
+        {
+            "/api/speed-reading/daily-progress",
+            "/api/speed-reading/progress/programs",
+            "/api/speed-reading/student-program",
+            "/api/speed-reading/exercise-sessions",
+            "/api/speed-reading/student-reading",
+            "/api/speed-reading/reviews",
+            "/api/speed-reading/review-exercises",
+            "/api/speed-reading/learning-paths/personalized",
+            "/api/speed-reading/adaptive-learning/dashboard"
+        }.Any(prefix => path.StartsWithSegments(prefix, StringComparison.OrdinalIgnoreCase));
 
     private static async Task<bool> IsAssessmentSessionAsync(
         HttpContext context,

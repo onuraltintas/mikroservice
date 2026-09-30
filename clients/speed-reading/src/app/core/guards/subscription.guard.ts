@@ -21,7 +21,7 @@ export const subscriptionGuard: CanActivateFn = (route, state) => {
 
   // Student dışındaki roller abonelik kontrolüne takılmaz
   const staffRoles = ['Admin', 'SystemAdmin', 'Teacher', 'Editor', 'Coach', 'InstitutionAdmin', 'InstitutionOwner'];
-  if (staffRoles.some(r => authService.hasRole(r))) return of(true);
+  if (!authService.hasRole('Student') && staffRoles.some(r => authService.hasRole(r))) return of(true);
 
   // The server verifies that the attempt belongs to this student and exercise.
   const assessmentAttemptId = route.queryParamMap.get('assessmentAttemptId');

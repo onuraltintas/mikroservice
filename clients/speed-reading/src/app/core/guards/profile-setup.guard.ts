@@ -16,7 +16,8 @@ export const profileSetupGuard: CanActivateFn = (route, state) => {
   const http = inject(HttpClient);
 
   // Staff exercise previews do not require a student profile.
-  if (authService.hasRole('Teacher') || authService.hasAdminAccess() || authService.hasRole('Editor')) {
+  if (!authService.hasRole('Student')
+      && (authService.hasRole('Teacher') || authService.hasAdminAccess() || authService.hasRole('Editor'))) {
     return true;
   }
 

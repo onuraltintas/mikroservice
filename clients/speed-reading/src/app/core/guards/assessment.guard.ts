@@ -15,7 +15,8 @@ export const assessmentGuard: CanActivateFn = (route, state) => {
   const authService = inject(AuthService);
 
   // Staff exercise previews do not require a student assessment.
-  if (authService.hasRole('Teacher') || authService.hasAdminAccess() || authService.hasRole('Editor')) {
+  if (!authService.hasRole('Student')
+      && (authService.hasRole('Teacher') || authService.hasAdminAccess() || authService.hasRole('Editor'))) {
     return true;
   }
 
