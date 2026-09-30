@@ -9,6 +9,25 @@ namespace SpeedReading.Application.UnitTests;
 
 public sealed class AssignedProgramScheduleTests
 {
+    [Fact]
+    public void Completed_program_cannot_be_completed_twice_and_stays_on_its_last_day()
+    {
+        var user = Guid.NewGuid();
+        var now = DateTime.UtcNow;
+        var template = ProgramTemplate.Import(Guid.NewGuid(), "Program", "", Guid.NewGuid(),
+            0, 100, "{}", 1, 2, 5, 1, 1, true, 1, 0, null, false, now, null, null, null);
+        var progress = StudentProgramProgress.Start(Guid.NewGuid(), user, template, 0, 0, user, now);
+        progress.ApplyExerciseCompletion(80, false, 1, 1, template, user, now);
+        var completedAt = progress.CompletedDate;
+        progress.ApplyExerciseCompletion(90, true, 1, 1, template, user, now.AddDays(1));
+
+        progress.DaysCompleted.Should().Be(1);
+        progress.ExercisesCompleted.Should().Be(1);
+        progress.CurrentDay.Should().Be(1);
+        progress.CompletedDate.Should().Be(completedAt);
+        progress.AverageSuccessRate.Should().Be(80);
+    }
+
     [Theory]
     [InlineData("{}", 0)]
     [InlineData("{\"week1\":{\"day1\":[{\"Type\":\"Fixation\",\"Count\":2,\"Difficulty\":1}]}}", 1)]
