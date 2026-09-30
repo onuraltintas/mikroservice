@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { HttpClient } from '@angular/common/http';
 import { ActivatedRouteSnapshot, Router, RouterStateSnapshot } from '@angular/router';
-import { Observable, firstValueFrom, isObservable, of } from 'rxjs';
+import { Observable, firstValueFrom, isObservable, of, throwError } from 'rxjs';
 import { AssessmentService } from '../../services/assessment.service';
 import { AuthService } from '../services/auth.service';
 import { assessmentGuard } from './assessment.guard';
@@ -87,6 +87,15 @@ describe('student prerequisites', () => {
     expect(isObservable(result)).toBe(true);
     expect(await firstValueFrom(result as Observable<boolean>)).toBe(false);
     expect(router.navigate).toHaveBeenCalledWith(['/student/assessment-intro'], {
+      queryParams: { returnUrl: state.url }
+    });
+  });
+
+  it('does not bypass assessment when the status API is unavailable', async () => {
+    assessmentService.getAssessmentStatus.and.returnValue(throwError(() => new Error('unavailable')));
+    const result = TestBed.runInInjectionContext(() => assessmentGuard(route, state));
+    expect(await firstValueFrom(result as Observable<boolean>)).toBe(false);
+    expect(router.navigate).toHaveBeenCalledWith(['/error/500'], {
       queryParams: { returnUrl: state.url }
     });
   });
