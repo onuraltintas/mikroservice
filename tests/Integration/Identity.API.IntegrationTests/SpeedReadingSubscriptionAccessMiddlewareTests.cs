@@ -79,6 +79,19 @@ public sealed class SpeedReadingSubscriptionAccessMiddlewareTests
         Assert.True(nextCalled);
     }
 
+    [Theory]
+    [InlineData("/api/speed-reading/daily-progress/today-exercises", 403)]
+    [InlineData("/api/speed-reading/teacher/students", 200)]
+    public async Task DualRoleKeepsStaffManagementButRequiresStudentTrainingAccess(string path, int expectedStatus)
+    {
+        using var db = CreateDb();
+        var context = CreateContext(path, "GET", "Student");
+        ((ClaimsIdentity)context.User.Identity!).AddClaim(new Claim(ClaimTypes.Role, "Teacher"));
+        var middleware = new SpeedReadingSubscriptionAccessMiddleware(_ => Task.CompletedTask);
+        await middleware.InvokeAsync(context, CreateSubscription(false), db);
+        Assert.Equal(expectedStatus, context.Response.StatusCode);
+    }
+
     private static OwnedSpeedReadingDbContext CreateDb() =>
         new(new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>()
             .UseInMemoryDatabase(Guid.NewGuid().ToString())
