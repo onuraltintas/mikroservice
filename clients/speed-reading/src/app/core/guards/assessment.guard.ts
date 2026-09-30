@@ -38,8 +38,8 @@ export const assessmentGuard: CanActivateFn = (route, state) => {
     }),
     catchError(error => {
       console.error('Error checking assessment status:', error);
-      // On error, allow access (fail open)
-      return of(true);
+      router.navigate(['/error/500'], { queryParams: { returnUrl: state.url } });
+      return of(false);
     })
   );
 };

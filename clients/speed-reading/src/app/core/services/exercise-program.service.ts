@@ -170,9 +170,9 @@ export class ExerciseProgramService {
           currentStreak: program?.currentStreak ?? 0,
           longestStreak: program?.longestStreak ?? 0,
           lastCompletionDate: program?.lastCompletionDate,
-          templateName: '',
-          totalWeeks: 0,
-          totalDays: 0,
+          templateName: program.templateName,
+          totalWeeks: program.totalWeeks,
+          totalDays: program.totalDays,
           totalExercisesCompleted: program?.exercisesCompleted ?? 0
         };
       })
@@ -202,6 +202,9 @@ export class ExerciseProgramService {
 }
 
 interface LegacyProgramProgress {
+  templateName: string;
+  totalWeeks: number;
+  totalDays: number;
   currentDay: number;
   currentWeek: number;
   currentDifficultyLevel: number;

@@ -52,6 +52,21 @@ export class NavigationService {
         route: '/student/daily-exercises'
       },
       {
+        label: 'Ödevler',
+        icon: 'assignment',
+        route: '/student/assignments'
+      },
+      {
+        label: 'Tekrar Egzersizleri',
+        icon: 'replay',
+        route: '/student/reviews'
+      },
+      {
+        label: 'Kişisel Öğrenme Yolu',
+        icon: 'route',
+        route: '/student/learning-path'
+      },
+      {
         label: 'Başarımlar',
         icon: 'emoji_events',
         route: '/student/achievements'

@@ -55,10 +55,23 @@ internal sealed class OwnedSpeedReadingPrograms(
             .Where(item => item.UserId == userId)
             .OrderByDescending(item => item.IsActive)
             .ThenByDescending(item => item.AssignedDate)
-            .Select(ToProgressSummary())
             .ToListAsync(cancellationToken);
-        return rows.Select(item =>
+        var templateIds = rows.Select(item => item.ProgramTemplateId).Distinct().ToList();
+        var templates = await db.ProgramTemplates.AsNoTracking()
+            .Where(item => templateIds.Contains(item.Id))
+            .ToDictionaryAsync(item => item.Id, cancellationToken);
+        return rows.Select(progress =>
         {
+            var item = ToProgressSummary(progress);
+            if (templates.TryGetValue(progress.ProgramTemplateId, out var template))
+            {
+                var schedule = OwnedSpeedReadingProgramSchedule.Parse(progress.ScheduleJson);
+                var days = schedule.Count > 0
+                    ? schedule.Max(slot => (slot.WeekNumber - 1) * 7 + slot.DayNumber)
+                    : template.TotalDays;
+                item = item with { TemplateName = template.Name, TotalDays = days,
+                    TotalWeeks = (days + 6) / 7 };
+            }
             if (!item.IsActive || item.CompletedDate.HasValue) return item;
             var visibleDay = Math.Min(((item.CurrentWeek - 1) * 7) + item.CurrentDay,
                 SpeedReading.Application.DailyProgress.SpeedReadingDailyProgressRules.GetCalendarAvailableDay(item.AssignedDate, DateTime.UtcNow));

@@ -339,7 +339,10 @@ public sealed record StudentProgramProgressSummary(
     DateTime? CompletedDate,
     decimal AverageSuccessRate,
     int CurrentStreak,
-    int LongestStreak);
+    int LongestStreak,
+    string TemplateName = "",
+    int TotalWeeks = 0,
+    int TotalDays = 0);
 
 public sealed record AdminStudentProgressSummary(
     Guid Id,

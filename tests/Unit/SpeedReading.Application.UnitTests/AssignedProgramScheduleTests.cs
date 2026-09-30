@@ -1,10 +1,39 @@
 using FluentAssertions;
 using SpeedReading.Domain.Programs;
+using SpeedReading.Domain.Catalog;
+using SpeedReading.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
+using System.Reflection;
 
 namespace SpeedReading.Application.UnitTests;
 
 public sealed class AssignedProgramScheduleTests
 {
+    [Theory]
+    [InlineData("{}", 0)]
+    [InlineData("{\"week1\":{\"day1\":[{\"Type\":\"Fixation\",\"Count\":2,\"Difficulty\":1}]}}", 1)]
+    public async Task Incomplete_catalog_cannot_create_an_assigned_schedule(string pattern, int available)
+    {
+        await using var db = new OwnedSpeedReadingDbContext(
+            new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>()
+                .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
+        var age = Guid.NewGuid();
+        var typeId = Guid.NewGuid();
+        db.ExerciseTypes.Add(ExerciseType.Create(typeId, "Fixation", "Fixation", "focus"));
+        for (var i = 0; i < available; i++)
+            db.Exercises.Add(Exercise.Create("Exercise", "Fixation", "{}", 1, Guid.NewGuid(), typeId));
+        await db.SaveChangesAsync();
+        var template = ProgramTemplate.Import(Guid.NewGuid(), "Program", "", age, 0, 100,
+            pattern, 1, 1, 2, 1, 1, true, 1, 0, null, false, DateTime.UtcNow, null, null, null);
+        var type = typeof(OwnedSpeedReadingDbContext).Assembly.GetType(
+            "SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingProgramSchedule")!;
+        var method = type.GetMethod("BuildAsync", BindingFlags.Static | BindingFlags.Public)!;
+        var action = async () => await (Task<string>)method.Invoke(null,
+            [db, template, null, CancellationToken.None])!;
+
+        await action.Should().ThrowAsync<EduPlatform.Shared.Kernel.Exceptions.BusinessRuleException>();
+    }
+
     [Fact]
     public void Assigned_schedule_is_immutable_and_controls_program_duration()
     {
