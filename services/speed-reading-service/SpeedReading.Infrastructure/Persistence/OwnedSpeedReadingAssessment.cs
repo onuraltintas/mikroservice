@@ -968,18 +968,17 @@ internal sealed class OwnedSpeedReadingAssessment(
             .Where(item => item.IsActive
                 && !item.IsDeleted
                 && !item.IsAssessment
+                && item.ProgramType == 0
+                && (item.ExamType == null || item.ExamType == "")
                 && item.TargetAgeGroupConfigurationId == ageGroupConfigurationId.Value);
 
         return await templates
-            .Where(item => item.MinAssessmentScore <= (int)assessmentScore
-                && item.MaxAssessmentScore >= (int)assessmentScore)
-            .OrderBy(item => item.MinAssessmentScore)
+            .Where(item => item.MinAssessmentScore <= assessmentScore
+                && item.MaxAssessmentScore >= assessmentScore)
+            .OrderByDescending(item => item.MinAssessmentScore)
             .ThenBy(item => item.DisplayOrder)
-            .FirstOrDefaultAsync(cancellationToken)
-            ?? await templates
-                .OrderBy(item => item.DisplayOrder)
-                .ThenBy(item => item.MinAssessmentScore)
-                .FirstOrDefaultAsync(cancellationToken);
+            .ThenBy(item => item.Id)
+            .FirstOrDefaultAsync(cancellationToken);
     }
 
     private sealed record BaselineProgramAssignment(
