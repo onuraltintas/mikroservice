@@ -28,5 +28,10 @@ public sealed class PostTrainingProgramGateTests
         plan.Phases.Single(item => item.Phase == AssessmentAttemptPhase.PostTraining).Status
             .Should().Be(AssessmentPhasePlanStatus.Locked);
         plan.NextPhase.Should().NotBe(AssessmentAttemptPhase.PostTraining);
+        var start = () => service.StartAttemptAsync(user, new StartAssessmentAttemptRequest
+        {
+            Phase = AssessmentAttemptPhase.PostTraining
+        }, CancellationToken.None);
+        await start.Should().ThrowAsync<EduPlatform.Shared.Kernel.Exceptions.BusinessRuleException>();
     }
 }

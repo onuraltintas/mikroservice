@@ -1502,6 +1502,10 @@
     <!-- Exercise Completed -->
     <div *ngIf="(engineState.isCompleted && exercisePhase !== 'questions') || exercisePhase === 'completed'"
         class="completed-state">
+        <div *ngIf="dailyProgressSaveStatus === 'failed'" role="alert" class="grid-save-status grid-save-status--failed">
+            <span>Sonuç kaydedildi ancak günlük ilerleme güncellenemedi.</span>
+            <button type="button" class="ep-btn ep-btn--primary" (click)="retryDailyProgress()">İlerlemeyi tekrar kaydet</button>
+        </div>
         <div class="result-card-new" [class.result-card-new--schulte]="engine?.engineType === 'grid_interaction'">
             <section class="schulte-summary" *ngIf="engine?.engineType === 'grid_interaction'">
                 <div class="schulte-summary__heading">
@@ -1921,17 +1925,17 @@
 
             <ng-template #completeAllTpl>
                 <div class="next-program-card ultimate-completion">
-                    <h3>Zirvedesiniz!</h3>
+                    <h3>Eğitim sonrası ölçüm</h3>
                     <div class="program-preview">
                         <div class="prog-icon gold">
                             <span class="material-icons">military_tech</span>
                         </div>
                         <div class="prog-info">
-                            <h4>Tüm Seviyeler Tamamlandı</h4>
-                            <p>Kendi yaş grubunuzdaki tüm programları başarıyla bitirdiniz.</p>
+                            <h4>Programınız tamamlandı</h4>
+                            <p>Gelişiminizi değerlendirmek için eğitim sonrası ölçümü tamamlayın. Bu sonuç, sonraki çalışma planınıza rehberlik eder.</p>
                             <span class="reason-badge gold">
                                 <span class="material-icons">star</span>
-                                Usta Okuyucu
+                                Sıradaki adım: ölçüm
                             </span>
                         </div>
                     </div>
@@ -1950,10 +1954,10 @@
                 </button>
 
                 <button *ngIf="!programCompletionData.recommendedNextProgram" class="ep-btn ep-btn--primary"
-                    class="btn-start-next" (click)="cancelProgramTransition()">
+                    class="btn-start-next" (click)="startPostTrainingAssessment()">
                     <div class="btn-content">
                         <span class="material-icons">dashboard</span>
-                        <span>ANA SAYFAYA DÖN</span>
+                        <span>EĞİTİM SONRASI ÖLÇÜME BAŞLA</span>
                     </div>
                 </button>
 

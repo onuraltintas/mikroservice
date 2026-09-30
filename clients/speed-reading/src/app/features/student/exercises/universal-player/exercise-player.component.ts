@@ -106,6 +106,18 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
 
   // Program Completion State
   showProgramCompletionModal = false;
+  dailyProgressSaveStatus: 'idle' | 'saving' | 'saved' | 'failed' = 'idle';
+  private pendingDailyProgressRequest: CompleteExerciseRequest | null = null;
+
+  startPostTrainingAssessment(): void {
+    this.router.navigate(['/student/assessment'], { queryParams: { phase: 2 } });
+  }
+
+  retryDailyProgress(): void {
+    if (this.dailyProgressSaveStatus === 'failed' && this.pendingDailyProgressRequest) {
+      this.submitDailyProgress(this.pendingDailyProgressRequest);
+    }
+  }
   programCompletionData: any = null;
   startingNextProgram = false;
 
@@ -3092,7 +3104,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
                 this.showToast('Öğrenme yolu ilerlemesi kaydedilemedi. Lütfen tekrar deneyin.', 'error', 5000);
               }
             });
-        } else if (!isAssessmentMode && !isPracticeMode && this.exercise?.id) {
+        } else if (!isAssessmentMode && !isPracticeMode && !this.reviewItemId && this.exercise?.id) {
           this.completeDailyProgress(result, customData, isMeasured);
         }
       },
@@ -3165,8 +3177,17 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       resultDataJson: JSON.stringify(customData)
     };
 
-    this.exerciseProgramService.completeExercise(completeRequest, this.sessionId).subscribe({
+    this.pendingDailyProgressRequest = completeRequest;
+    this.submitDailyProgress(completeRequest);
+  }
+
+  private submitDailyProgress(completeRequest: CompleteExerciseRequest): void {
+    this.dailyProgressSaveStatus = 'saving';
+    this.exerciseProgramService.completeExercise(completeRequest, completeRequest.sessionId).subscribe({
       next: (response: any) => {
+        this.dailyProgressSaveStatus = 'saved';
+        this.pendingDailyProgressRequest = null;
+        this.cdr.detectChanges();
         if (response.programCompleted) {
           console.log('🎉 Program Completed!', response);
           this.programCompletionData = response;
@@ -3189,6 +3210,9 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       },
       error: (err) => {
         console.error('[ExercisePlayer] Daily progress update failed:', err);
+        this.dailyProgressSaveStatus = 'failed';
+        this.showToast('Sonuç kaydedildi ancak günlük ilerleme güncellenemedi. Tekrar deneyin.', 'error', 5000);
+        this.cdr.detectChanges();
       }
     });
   }
