@@ -25,6 +25,10 @@ internal sealed class OwnedSpeedReadingAssessment(
         if (userId == Guid.Empty)
             throw new ArgumentException("A valid user is required.", nameof(userId));
         ArgumentNullException.ThrowIfNull(request);
+        if (request.Phase == AssessmentAttemptPhase.PostTraining
+            && !await HasCompletedTrainingAsync(userId, cancellationToken))
+            throw new BusinessRuleException("Assessment.TrainingIncomplete",
+                "Eğitim sonrası ölçüm için önce eğitim programınızı tamamlamalısınız.");
 
         var formVersion = string.IsNullOrWhiteSpace(request.FormVersion)
             ? GetDefaultFormVersion(request.Phase, request.Language)
@@ -301,8 +305,21 @@ internal sealed class OwnedSpeedReadingAssessment(
                 item.Language))
             .ToListAsync(cancellationToken);
 
-        return AssessmentPhasePlanCalculator.Calculate(attempts);
+        var plan = AssessmentPhasePlanCalculator.Calculate(attempts);
+        if (await HasCompletedTrainingAsync(userId, cancellationToken))
+            return plan;
+        var phases = plan.Phases.Select(item => item.Phase == AssessmentAttemptPhase.PostTraining
+            && item.Status != AssessmentPhasePlanStatus.Completed
+                ? item with { Status = AssessmentPhasePlanStatus.Locked, AvailableAt = null }
+                : item).ToList();
+        return new AssessmentPhasePlanSummary(phases,
+            phases.FirstOrDefault(item => item.Status is AssessmentPhasePlanStatus.Available
+                or AssessmentPhasePlanStatus.InProgress)?.Phase);
     }
+
+    private Task<bool> HasCompletedTrainingAsync(Guid userId, CancellationToken cancellationToken) =>
+        db.StudentProgramProgresses.AsNoTracking().AnyAsync(item => item.UserId == userId
+            && item.CompletedDate.HasValue && !item.IsActive, cancellationToken);
 
     public async Task<AssessmentExercisesSummary> GetExercisesAsync(
         Guid userId,
