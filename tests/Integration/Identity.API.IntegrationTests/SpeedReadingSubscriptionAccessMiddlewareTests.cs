@@ -86,7 +86,11 @@ public sealed class SpeedReadingSubscriptionAccessMiddlewareTests
     [InlineData("/api/speed-reading/adaptive-learning/recommendations", 403)]
     [InlineData("/api/speed-reading/adaptive-learning/daily-goal", 403)]
     [InlineData("/api/speed-reading/adaptive-learning/profile/status", 200)]
-    [InlineData("/api/speed-reading/teacher/students", 200)]
+    [InlineData("/api/speed-reading/vocabulary/user", 403)]
+    [InlineData("/api/speed-reading/content-feedback/recommended", 403)]
+    [InlineData("/api/speed-reading/analytics/student/summary", 403)]
+    [InlineData("/api/speed-reading/series-access/available", 403)]
+    [InlineData("/api/speed-reading/teachers/me/students", 200)]
     public async Task DualRoleKeepsStaffManagementButRequiresStudentTrainingAccess(string path, int expectedStatus)
     {
         using var db = CreateDb();

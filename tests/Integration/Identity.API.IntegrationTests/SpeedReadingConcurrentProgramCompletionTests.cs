@@ -2,6 +2,7 @@ using System.Data.Common;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using Npgsql;
 using Shared.IntegrationTests.Fixtures;
 using SpeedReading.Application.DailyProgress;
 using SpeedReading.Domain.Catalog;
@@ -14,12 +15,15 @@ namespace Identity.API.IntegrationTests;
 [Collection("Database")]
 public sealed class SpeedReadingConcurrentProgramCompletionTests(PostgresFixture postgres)
 {
-    [Fact]
-    public async Task Concurrent_final_slots_complete_the_program_once_without_lost_progress()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Concurrent_final_slots_complete_the_program_once_without_lost_progress(bool retryAfterSave)
     {
         DbContextOptions<OwnedSpeedReadingDbContext> Options(bool delay = false)
         {
-            var builder = new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>().UseNpgsql(postgres.ConnectionString);
+            var builder = new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>()
+                .UseNpgsql(postgres.ConnectionString, options => options.EnableRetryOnFailure(2, TimeSpan.Zero, null));
             if (delay) builder.AddInterceptors(new LogReadDelay());
             return builder.Options;
         }
@@ -55,7 +59,9 @@ public sealed class SpeedReadingConcurrentProgramCompletionTests(PostgresFixture
             await setup.SaveChangesAsync();
             async Task Complete(int index)
             {
-                await using var db = new OwnedSpeedReadingDbContext(Options(delay: true));
+                var options = new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>(Options(delay: true));
+                if (retryAfterSave && index == 0) options.AddInterceptors(new FailOnceAfterSave());
+                await using var db = new OwnedSpeedReadingDbContext(options.Options);
                 var type = typeof(OwnedSpeedReadingDbContext).Assembly.GetType(
                     "SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingDailyProgress")!;
                 var service = (ISpeedReadingDailyProgress)Activator.CreateInstance(type, db, null)!;
@@ -65,6 +71,7 @@ public sealed class SpeedReadingConcurrentProgramCompletionTests(PostgresFixture
                 }, sessions[index].Id.ToString(), CancellationToken.None);
             }
             await Task.WhenAll(Complete(0), Complete(1));
+            await Complete(0);
             setup.ChangeTracker.Clear();
             var saved = await setup.StudentProgramProgresses.SingleAsync();
             Assert.False(saved.IsActive);
@@ -76,6 +83,22 @@ public sealed class SpeedReadingConcurrentProgramCompletionTests(PostgresFixture
         finally
         {
             await setup.Database.EnsureDeletedAsync();
+        }
+    }
+
+    private sealed class FailOnceAfterSave : SaveChangesInterceptor
+    {
+        private bool failed;
+
+        public override ValueTask<int> SavedChangesAsync(SaveChangesCompletedEventData eventData,
+            int result, CancellationToken cancellationToken = default)
+        {
+            if (!failed)
+            {
+                failed = true;
+                throw new NpgsqlException("Injected transient failure before commit", new TimeoutException());
+            }
+            return ValueTask.FromResult(result);
         }
     }
 
