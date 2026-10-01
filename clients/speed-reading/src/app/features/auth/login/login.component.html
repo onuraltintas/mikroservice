@@ -1,3 +1,8 @@
+@if (googleRegistrationToken) {
+  <app-google-registration-consent product="speed-reading" [busy]="loading" [error]="error"
+    (confirm)="completeGoogleRegistration($event)" (cancel)="cancelGoogleRegistration()" />
+}
+<div [hidden]="!!googleRegistrationToken">
 <div class="auth-page">
   <div class="auth-shell">
     <a routerLink="/" class="auth-brand" aria-label="Master Hızlı Okuma ana sayfası">
@@ -143,4 +148,5 @@
       </mat-card-content>
     </mat-card>
   </div>
+</div>
 </div>

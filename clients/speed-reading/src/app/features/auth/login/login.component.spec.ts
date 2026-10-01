@@ -14,7 +14,7 @@ describe('LoginComponent', () => {
   let route: any;
 
   beforeEach(() => {
-    authService = jasmine.createSpyObj<AuthService>('AuthService', ['login', 'googleAuth']);
+    authService = jasmine.createSpyObj<AuthService>('AuthService', ['login', 'googleAuth', 'completeGoogleRegistration']);
     router = jasmine.createSpyObj<Router>('Router', ['navigate', 'navigateByUrl']);
     route = {
       queryParams: of({}),
@@ -86,6 +86,25 @@ describe('LoginComponent', () => {
     expect((component as any).googleRegistrationToken).toBe('pending-ticket');
     expect((component as any).handleAuthenticatedResponse).not.toHaveBeenCalled();
     expect(component.loading).toBe(false);
+  });
+
+  it('completes registration with the pending ticket and accepted versions', () => {
+    component.googleRegistrationToken = 'ticket';
+    authService.completeGoogleRegistration.and.returnValue(of({ token: 'access' } as any));
+    component.completeGoogleRegistration([]);
+    expect(authService.completeGoogleRegistration).not.toHaveBeenCalled();
+    const accepted = ['privacy', 'kvkk', 'speed-reading-terms'].map(slug => ({ slug, version: 1 }));
+    component.completeGoogleRegistration(accepted);
+    expect(authService.completeGoogleRegistration).toHaveBeenCalledWith('ticket', accepted);
+    expect(component.googleRegistrationToken).toBe('');
+    expect((component as any).handleAuthenticatedResponse).toHaveBeenCalled();
+  });
+
+  it('cancels pending registration without creating an account', () => {
+    component.googleRegistrationToken = 'ticket';
+    component.cancelGoogleRegistration();
+    expect(component.googleRegistrationToken).toBe('');
+    expect(authService.completeGoogleRegistration).not.toHaveBeenCalled();
   });
 
   it('sends a session-only preference when remember-me is cleared', () => {

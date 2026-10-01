@@ -12,6 +12,8 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 import { AuthService } from '../../../core/auth/auth.service';
 import { ToasterService } from '../../../core/services/toaster.service';
+import { GoogleRegistrationConsentComponent } from '../google-registration-consent.component';
+import { RegistrationLegalAcceptance } from '../../../core/services/identity.service';
 
 import { GoogleSigninButtonModule, SocialAuthService } from '@abacritt/angularx-social-login';
 
@@ -26,7 +28,8 @@ import { GoogleSigninButtonModule, SocialAuthService } from '@abacritt/angularx-
         MatButtonModule,
         MatIconModule,
         MatProgressSpinnerModule,
-        GoogleSigninButtonModule
+        GoogleSigninButtonModule,
+        GoogleRegistrationConsentComponent
     ],
     templateUrl: './login.component.html',
     styleUrl: './login.component.scss'
@@ -39,6 +42,7 @@ export class LoginComponent {
     private destroyRef = inject(DestroyRef);
 
     isLoading = signal(false);
+    googleRegistrationToken = signal('');
     errorMessage = signal<string | null>(null);
     showResendLink = signal(false);
     showSupportLink = signal(false);
@@ -70,9 +74,15 @@ export class LoginComponent {
     }
 
     async handleGoogleLogin(idToken: string) {
+        if (this.isLoading() || this.googleRegistrationToken()) return;
         this.isLoading.set(true);
         try {
             const result = await this.authService.loginWithGoogle(idToken);
+            if (result.requiresLegalAcceptance && result.registrationToken) {
+                this.googleRegistrationToken.set(result.registrationToken);
+                this.errorMessage.set(null);
+                return;
+            }
             if (result.requiresMfa) {
                 await this.beginMfa(result.mfaChallengeToken, result.mfaEnrollmentRequired);
             } else {
@@ -109,6 +119,25 @@ export class LoginComponent {
         } finally {
             this.isLoading.set(false);
         }
+    }
+
+    async completeGoogleRegistration(acceptances: RegistrationLegalAcceptance[]) {
+        if (!this.googleRegistrationToken() || this.isLoading() || acceptances.length !== 3) return;
+        this.isLoading.set(true);
+        this.errorMessage.set(null);
+        try {
+            const result = await this.authService.completeGoogleRegistration(this.googleRegistrationToken(), acceptances);
+            this.googleRegistrationToken.set('');
+            if (result.requiresMfa) await this.beginMfa(result.mfaChallengeToken, result.mfaEnrollmentRequired);
+        } catch (error: any) {
+            this.errorMessage.set(error.error?.description || error.error?.message || 'Kayıt tamamlanamadı. Lütfen Google ile tekrar devam edin.');
+            if (error.error?.code === 'Auth.GoogleRegistrationExpired') this.googleRegistrationToken.set('');
+        } finally { this.isLoading.set(false); }
+    }
+
+    cancelGoogleRegistration() {
+        this.googleRegistrationToken.set('');
+        this.errorMessage.set(null);
     }
 
     async onSubmit(event: Event) {

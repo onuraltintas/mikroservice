@@ -1,4 +1,6 @@
 export interface AuthResponse {
+  requiresLegalAcceptance?: boolean;
+  registrationToken?: string;
   id: string;
   token: string;
   refreshToken: string;

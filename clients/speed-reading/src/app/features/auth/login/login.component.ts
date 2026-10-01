@@ -21,6 +21,8 @@ import {
   GoogleIdentityResponse
 } from '../../../core/services/google-identity.service';
 import { resolveAuthDestination, resolveInvitationReturnUrl } from '../auth-role-routing';
+import { GoogleRegistrationConsentComponent } from '../google-registration-consent.component';
+import { RegistrationLegalAcceptance } from '../../../core/models/user.model';
 
 @Component({
   selector: 'app-login',
@@ -37,7 +39,8 @@ import { resolveAuthDestination, resolveInvitationReturnUrl } from '../auth-role
     MatProgressSpinnerModule,
     MatDividerModule,
     MatIconModule,
-    MatCheckboxModule
+    MatCheckboxModule,
+    GoogleRegistrationConsentComponent
   ],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss'
@@ -55,6 +58,7 @@ export class LoginComponent implements AfterViewInit, OnDestroy, OnInit {
 
   loginForm: FormGroup;
   loading = false;
+  googleRegistrationToken = '';
   error = '';
   showEmailVerificationWarning = false;
   unverifiedEmail = '';
@@ -128,11 +132,17 @@ export class LoginComponent implements AfterViewInit, OnDestroy, OnInit {
   }
 
   private handleGoogleResponse(response: any): void {
+    if (this.loading || this.googleRegistrationToken) return;
     this.loading = true;
     this.error = '';
 
     this.authService.googleAuth(response.credential).subscribe({
       next: (authResponse) => {
+        if (authResponse.requiresLegalAcceptance && authResponse.registrationToken) {
+          this.googleRegistrationToken = authResponse.registrationToken;
+          this.loading = false;
+          return;
+        }
         if (authResponse.requiresMfa) {
           void this.beginMfa(
             authResponse.mfaChallengeToken ?? null,
@@ -163,6 +173,30 @@ export class LoginComponent implements AfterViewInit, OnDestroy, OnInit {
         this.loading = false;
       }
     });
+  }
+
+  completeGoogleRegistration(acceptances: RegistrationLegalAcceptance[]): void {
+    if (!this.googleRegistrationToken || this.loading || acceptances.length !== 3) return;
+    this.loading = true;
+    this.error = '';
+    this.authService.completeGoogleRegistration(this.googleRegistrationToken, acceptances).subscribe({
+      next: response => {
+        this.googleRegistrationToken = '';
+        if (response.requiresMfa) {
+          void this.beginMfa(response.mfaChallengeToken ?? null, response.mfaEnrollmentRequired === true);
+        } else this.handleAuthenticatedResponse(response);
+      },
+      error: error => {
+        this.loading = false;
+        this.error = error.error?.description || error.error?.message || 'Kayıt tamamlanamadı. Lütfen Google ile tekrar devam edin.';
+        if (error.error?.code === 'Auth.GoogleRegistrationExpired') this.googleRegistrationToken = '';
+      }
+    });
+  }
+
+  cancelGoogleRegistration(): void {
+    this.googleRegistrationToken = '';
+    this.error = '';
   }
 
   onSubmit(): void {

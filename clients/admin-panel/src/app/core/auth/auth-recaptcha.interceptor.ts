@@ -28,6 +28,7 @@ export function getAuthRecaptchaAction(request: HttpRequest<unknown>): string | 
   }
 
   if (segments.length === 2 && ['coaching', 'speed-reading'].includes(first)) {
+    if (second === 'google-register-complete') return 'auth_register';
     if (['login', 'google', 'google-login'].includes(second)) return 'auth_login';
   }
 

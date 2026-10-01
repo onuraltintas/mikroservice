@@ -20,6 +20,7 @@ const anonymousAuthEndpoints = [
   '/auth/confirm-email',
   '/auth/resend-verification-email',
   '/auth/speed-reading/google-login',
+  '/auth/speed-reading/google-register-complete',
   '/auth/speed-reading/google',
   '/auth/mfa/setup',
   '/auth/mfa/enable',

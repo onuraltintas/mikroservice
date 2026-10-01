@@ -25,6 +25,29 @@ describe('LoginComponent MFA flow', () => {
     expect((component as any).googleRegistrationToken()).toBe('pending-ticket');
     expect(component.isLoading()).toBe(false);
   });
+  it('completes registration with the pending ticket and accepted versions, not the Google token', async () => {
+    const authService = { completeGoogleRegistration: vi.fn().mockResolvedValue({ authenticated: true }) };
+    const component = createComponent(authService);
+    component.googleRegistrationToken.set('ticket');
+    const accepted = ['privacy', 'kvkk', 'coaching-terms'].map(slug => ({ slug, version: 1 }));
+    await component.completeGoogleRegistration([]);
+    expect(authService.completeGoogleRegistration).not.toHaveBeenCalled();
+    await component.completeGoogleRegistration(accepted);
+    expect(authService.completeGoogleRegistration).toHaveBeenCalledWith('ticket', accepted);
+    expect(component.googleRegistrationToken()).toBe('');
+  });
+
+  it('clears an expired ticket and allows Google authentication again', async () => {
+    const component = createComponent({ completeGoogleRegistration: vi.fn().mockRejectedValue({
+      error: { code: 'Auth.GoogleRegistrationExpired', description: 'Süre doldu' }
+    }) });
+    component.googleRegistrationToken.set('ticket');
+    await component.completeGoogleRegistration(['privacy', 'kvkk', 'coaching-terms'].map(slug => ({ slug, version: 1 })));
+    expect(component.googleRegistrationToken()).toBe('');
+    expect(component.errorMessage()).toBe('Süre doldu');
+    expect(component.isLoading()).toBe(false);
+  });
+
   it('starts MFA enrollment only when the backend explicitly requires it', async () => {
     const authService = {
       loginWithPassword: vi.fn().mockResolvedValue({

@@ -29,6 +29,8 @@ interface AuthSessionResponse {
 }
 
 export interface AuthLoginResult {
+    requiresLegalAcceptance?: boolean;
+    registrationToken?: string;
     authenticated: boolean;
     requiresMfa: boolean;
     mfaEnrollmentRequired: boolean;
@@ -36,6 +38,8 @@ export interface AuthLoginResult {
 }
 
 interface AuthLoginResponse extends Partial<AuthSessionResponse> {
+    requiresLegalAcceptance?: boolean;
+    registrationToken?: string;
     requiresMfa?: boolean;
     mfaEnrollmentRequired?: boolean;
     mfaChallengeToken?: string | null;
@@ -139,6 +143,13 @@ export class AuthService implements OnDestroy {
             `${environment.apiUrl}/auth/coaching/google-login`,
             { idToken, legalAcceptances },
             { withCredentials: true }));
+        return this.handleLoginResponse(response);
+    }
+
+    async completeGoogleRegistration(registrationToken: string, legalAcceptances: RegistrationLegalAcceptance[]): Promise<AuthLoginResult> {
+        const response = await firstValueFrom(this.httpClient.post<AuthLoginResponse>(
+            `${environment.apiUrl}/auth/coaching/google-register-complete`,
+            { registrationToken, legalAcceptances }, { withCredentials: true }));
         return this.handleLoginResponse(response);
     }
 
@@ -274,6 +285,10 @@ export class AuthService implements OnDestroy {
     }
 
     private async handleLoginResponse(response: AuthLoginResponse): Promise<AuthLoginResult> {
+        if (response.requiresLegalAcceptance && response.registrationToken) {
+            return { authenticated: false, requiresMfa: false, mfaEnrollmentRequired: false,
+                mfaChallengeToken: null, requiresLegalAcceptance: true, registrationToken: response.registrationToken };
+        }
         if (response.requiresMfa) {
             return {
                 authenticated: false,

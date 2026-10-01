@@ -53,6 +53,7 @@ function withSession(req: HttpRequest<unknown>, token: string): HttpRequest<unkn
 function isSessionEndpoint(url: string): boolean {
     return url.endsWith('/auth/coaching/login')
         || url.endsWith('/auth/coaching/google-login')
+        || url.endsWith('/auth/coaching/google-register-complete')
         || url.endsWith('/auth/refresh-token')
         || url.endsWith('/auth/revoke-token');
 }

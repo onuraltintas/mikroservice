@@ -245,6 +245,14 @@ export class AuthService {
    * Backend returns: ApiResponse<void>
    * Service receives: void (auto-unwrapped)
    */
+  completeGoogleRegistration(registrationToken: string, legalAcceptances: RegistrationLegalAcceptance[]): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.AUTH_URL}/speed-reading/google-register-complete`,
+      { registrationToken, legalAcceptances }, { withCredentials: true }).pipe(
+      map(response => this.normalizeAuthResponse(response)),
+      switchMap(response => this.persistAndHydrateProfile(response))
+    );
+  }
+
   forgotPassword(email: string): Observable<any> {
     return this.http.post(`${this.AUTH_URL}/forgot-password`, { email }, { withCredentials: true });
   }

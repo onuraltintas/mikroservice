@@ -16,13 +16,13 @@ public sealed class GoogleRegistrationPendingTests(RedisFixture fixture)
         using var redis = await ConnectionMultiplexer.ConnectAsync(fixture.ConnectionString);
         var store = new GoogleRegistrationPendingStore(redis, new EphemeralDataProtectionProvider());
         var ticket = await store.CreateAsync("google-secret", PlatformProduct.Coaching);
-        var raw = await redis.GetDatabase().StringGetAsync(store.Key(ticket.Token, PlatformProduct.Coaching));
+        var raw = await redis.GetDatabase().StringGetAsync(store.Key(ticket.RegistrationToken, PlatformProduct.Coaching));
         raw.ToString().Should().NotContain("google-secret");
-        var ttl = await redis.GetDatabase().KeyTimeToLiveAsync(store.Key(ticket.Token, PlatformProduct.Coaching));
+        var ttl = await redis.GetDatabase().KeyTimeToLiveAsync(store.Key(ticket.RegistrationToken, PlatformProduct.Coaching));
         ttl.Should().BeLessThanOrEqualTo(TimeSpan.FromMinutes(5));
-        (await store.ConsumeAsync(ticket.Token, PlatformProduct.SpeedReading)).Should().BeNull();
+        (await store.ConsumeAsync(ticket.RegistrationToken, PlatformProduct.SpeedReading)).Should().BeNull();
         var attempts = await Task.WhenAll(Enumerable.Range(0, 5)
-            .Select(_ => store.ConsumeAsync(ticket.Token, PlatformProduct.Coaching)));
+            .Select(_ => store.ConsumeAsync(ticket.RegistrationToken, PlatformProduct.Coaching)));
         attempts.Count(value => value == "google-secret").Should().Be(1);
     }
 
@@ -33,7 +33,7 @@ public sealed class GoogleRegistrationPendingTests(RedisFixture fixture)
         var store = new GoogleRegistrationPendingStore(redis, new EphemeralDataProtectionProvider());
         (await store.ConsumeAsync("invalid", PlatformProduct.Coaching)).Should().BeNull();
         var ticket = await store.CreateAsync("google-secret", PlatformProduct.Coaching);
-        await redis.GetDatabase().KeyExpireAsync(store.Key(ticket.Token, PlatformProduct.Coaching), TimeSpan.Zero);
-        (await store.ConsumeAsync(ticket.Token, PlatformProduct.Coaching)).Should().BeNull();
+        await redis.GetDatabase().KeyExpireAsync(store.Key(ticket.RegistrationToken, PlatformProduct.Coaching), TimeSpan.Zero);
+        (await store.ConsumeAsync(ticket.RegistrationToken, PlatformProduct.Coaching)).Should().BeNull();
     }
 }

@@ -80,6 +80,7 @@ builder.Services.AddEduPlatformOpenTelemetry(builder.Configuration, builder.Envi
 
 // Add Infrastructure (DbContext, Repositories)
 builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddScoped<Identity.API.Security.GoogleRegistrationPendingStore>();
 
 // Add Shared Infrastructure (Validators, Redis, RabbitMQ)
 builder.Services.AddSharedInfrastructure(

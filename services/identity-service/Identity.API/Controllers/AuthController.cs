@@ -243,6 +243,12 @@ public class AuthController : ControllerBase
 
         if (result.IsFailure)
         {
+            if (product is { } requestedProduct && result.Error.Code == "Auth.LegalAcceptanceRequired"
+                && request.LegalAcceptances is not { Count: > 0 })
+            {
+                var pending = HttpContext.RequestServices.GetRequiredService<GoogleRegistrationPendingStore>();
+                return Ok(await pending.CreateAsync(request.IdToken!, requestedProduct));
+            }
             return BadRequest(result.Error);
         }
 
@@ -255,6 +261,28 @@ public class AuthController : ControllerBase
             Response,
             result.Value,
             UseSecureSessionCookie));
+    }
+
+    [HttpPost("{product:regex(coaching|speed-reading)}/google-register-complete")]
+    [AllowAnonymous]
+    public async Task<IActionResult> CompleteGoogleRegistration(
+        [FromRoute] string product,
+        [FromBody] CompleteGoogleRegistrationRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (!TryResolveProduct(product, out var platformProduct))
+            return BadRequest(new Error("Auth.InvalidProduct", "Geçersiz platform."));
+
+        var consent = HttpContext.RequestServices.GetRequiredService<Identity.Application.LegalPages.IRegistrationLegalConsentService>();
+        var validation = await consent.ValidateAsync(platformProduct, request.LegalAcceptances, cancellationToken);
+        if (validation.IsFailure) return BadRequest(validation.Error);
+
+        var pending = HttpContext.RequestServices.GetRequiredService<GoogleRegistrationPendingStore>();
+        var idToken = await pending.ConsumeAsync(request.RegistrationToken, platformProduct);
+        if (idToken is null)
+            return BadRequest(new Error("Auth.GoogleRegistrationExpired", "Kayıt işleminizin süresi doldu. Lütfen Google ile tekrar devam edin."));
+
+        return await GoogleLoginAsync(new GoogleLoginRequest(idToken, request.LegalAcceptances), platformProduct);
     }
 
     [HttpPost("google-link")]
@@ -454,6 +482,9 @@ public sealed record GoogleLoginRequest(
     [param: StringLength(16_384, MinimumLength = 1)]
     string? IdToken,
     IReadOnlyList<Identity.Application.LegalPages.LegalPageAcceptance>? LegalAcceptances = null);
+public sealed record CompleteGoogleRegistrationRequest(
+    [param: Required, StringLength(64, MinimumLength = 64)] string RegistrationToken,
+    IReadOnlyList<Identity.Application.LegalPages.LegalPageAcceptance>? LegalAcceptances);
 public record RefreshTokenRequest(string? RefreshToken = null);
 public record RevokeTokenRequest(string? Token = null);
 public sealed record MfaSetupRequest(string ChallengeToken);
