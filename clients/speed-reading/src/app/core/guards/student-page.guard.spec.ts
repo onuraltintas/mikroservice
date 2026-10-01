@@ -25,6 +25,18 @@ describe('studentPageGuard', () => {
     TestBed.resetTestingModule();
     expect(permits('daily-exercises', ['Teacher'])).toBeTrue();
   });
+  it('redirects the teacher student-shell landing to training programs', () => {
+    const destination = {};
+    const router = { navigate: jasmine.createSpy(), createUrlTree: jasmine.createSpy().and.returnValue(destination) };
+    TestBed.configureTestingModule({ providers: [
+      { provide: AuthService, useValue: { hasRole: (role: string) => role === 'Teacher' } },
+      { provide: Router, useValue: router }
+    ] });
+    const result = TestBed.runInInjectionContext(() => studentPageGuard(
+      { routeConfig: { path: 'dashboard' } } as ActivatedRouteSnapshot, {} as never));
+    expect(result).toBe(destination as any);
+    expect(router.createUrlTree).toHaveBeenCalledWith(['/student/training-programs']);
+  });
 
   it('preserves staff exercise preview', () => {
     expect(permits('exercises/universal-player/:exerciseId', ['Teacher'])).toBeTrue();
