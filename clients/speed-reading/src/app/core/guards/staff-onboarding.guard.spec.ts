@@ -25,6 +25,15 @@ describe('staffOnboardingGuard', () => {
     { url: '/student/dashboard' } as RouterStateSnapshot
   ));
 
+  for (const role of ['Admin', 'SystemAdmin', 'Editor']) {
+    it(`keeps a dual Student/${role} on student onboarding`, () => {
+      authService.hasAdminAccess.and.returnValue(role !== 'Editor');
+      authService.hasRole.and.callFake(candidate => candidate === 'Student' || candidate === role);
+      expect(activate()).toBe(true);
+      expect(router.createUrlTree).not.toHaveBeenCalled();
+    });
+  }
+
   it('sends admins and system admins to the exercise preview', () => {
     authService.hasAdminAccess.and.returnValue(true);
 

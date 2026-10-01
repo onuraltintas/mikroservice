@@ -1,45 +1,47 @@
-# Hızlı Okuma program akışı düzeltmeleri
+# Hızlı Okuma program akışı — ilerleme raporu
 
-Başlangıç: 30 Eylül 2026. Planın tamamı henüz bitmedi. Uygulama sürümü canlıya alınmadı.
+Güncelleme: 1 Ekim 2026. Planın tamamı henüz bitmedi. Uygulama değişiklikleri canlıya alınmadı.
 
-## Doğrulanan işler
+## Tamamlanan işler
 
-- Kullanıcının açık onayıyla VPS `speedreading_owned_db` içinde yalnız kullanılmayan `f035811f-31ae-4665-bc53-bb7df2d197f4` programı kalıcı silindi. Tüm `speed_reading` tablolarında satır JSON'unda UUID referansı tarandı, FK'ler incelendi, diğer kayıtla içerik eşitliği doğrulandı. Asıl `eaf89bb3-7427-4287-a6de-d19f49b782b6` programı ve bir öğrenci ilerleme kaydı korunuyor. Yedek: `/var/lib/eduivme/backups/program-catalog-20260930/speedreading_owned_db.dump`.
-- İlk otomatik atama yalnız `ProgramType=0`, sınav türü boş, aktif/silinmemiş ve yaşa uygun genel eğitim programlarından yapılır. Ondalıklı puan kesilmez. Ortak eşik puanında yüksek alt sınıra sahip program seçilir; ardından DisplayOrder ve Id ile deterministik sıralama yapılır. Uygun aday yoksa ilgisiz fallback yoktur. Mevcut atamalar değiştirilmedi.
-- 18 aktif eğitim programının 490 günü salt okunur kapasite kontrolünden geçti. Boş gün/yetersiz tür-yaş-zorluk kapasitesi yok. Aktif okuma motorlarına dört gerçek yaş grubu ile uygun metin ve gerekli A/B/C/D cevaplı soru varlığı kontrol edildi; eksik bağımlılık 0. Bu denetim metinlerin pedagojik kalitesinin veya bilimsel etkinliğinin onayı değildir.
-- Mevcut atama takviminin değişmezliği, boş gün ve yetersiz egzersiz durumunda atamanın engellenmesi test edildi.
-- Öğrenci menüsüne ödevler, tekrar egzersizleri ve kişisel öğrenme yolu eklendi.
-- Assessment durum API hatası eğitim erişimini açmaz; hata sayfasına yönlendirilir.
-- Öğrenci program ilerlemesi DTO'suna gerçek program adı ve sabit atama takviminden gün/hafta sayısı eklendi. Frontend boş ad/0 süre üretmiyor.
-- Tamamlanmış veya pasife alınmış programın tekrar tamamlanması sayaçları değiştirmez; program bitiminde son gün aşılmaz.
-- İlk eğitim sonrası ölçümü başlatmak için tamamlanmış program gerekiyor. Hem aşama planı hem başlatma servisi kontrol ediyor. Retention/Transfer süreleri korunuyor.
-- Player günlük ilerleme hatası görünür uyarı ve ayrı retry sunar; aynı session idempotency anahtarı kullanılır. Review kaydı günlük programa yanlışlıkla yazılmaz.
-- Program tamamlandı popup'ındaki tüm seviyelerin bittiği/usta okuyucu iddiası kaldırıldı. Eğitim sonrası ölçüm bağlantısı eklendi.
-- Çift öğrenci/öğretmen rollü hesaplarda öğrenci profil/ölçüm/abonelik önkoşulları uygulanır. Sunucu kişisel eğitim endpoint'lerinde öğrenci aboneliğini kontrol eder; öğretmen yönetimi staff yetkileriyle korunur.
+- Kullanıcının açık onayıyla yalnız kullanılmayan mükerrer program `f035811f-31ae-4665-bc53-bb7df2d197f4` canlıdan silindi. Asıl `eaf89bb3-7427-4287-a6de-d19f49b782b6` ve öğrenci geçmişi korunuyor. Tüm tablo UUID referansları, FK'ler ve içerik eşitliği kontrol edildi. Yedek: `/var/lib/eduivme/backups/program-catalog-20260930/speedreading_owned_db.dump`.
+- İlk atama yalnız aktif, silinmemiş, yaşa uygun genel eğitim programlarından; ondalık puan korunuyor, seçim deterministik ve ilgisiz fallback yok.
+- 18 eğitim programının 490 günü kapasite kontrolünden geçti. Dört yaş grubu için okuma metni/soru bağımlılıkları kontrol edildi. Bu, pedagojik kalite veya bilimsel etkinlik onayı değildir.
+- Atama takvimi sabit; boş gün ve yetersiz egzersiz atamayı engelliyor. Gerçek program adı ve süresi arayüzde kullanılıyor.
+- Öğrenci menüsünde ödev, tekrar ve öğrenme yolu erişimleri var. Assessment API hatası eğitim erişimini açmıyor.
+- Son gün tamamlaması idempotent. Günlük ilerleme hatasında görünür uyarı ve aynı session anahtarıyla retry var; Review günlük eğitimi tamamlamıyor.
+- Paralel son egzersizler öğrenci bazlı PostgreSQL advisory lock/transaction ile seri işleniyor. Retry sırasında önceki izlenen değişiklikler temizleniyor.
+- Tamamlanma tarihi ve özet ana sayfada korunuyor. Sonraki ölçüm aşaması sunucudan okunuyor; hata durumunda tahmin edilmiyor.
+- Her eğitim sonrası ölçüm kendi program ilerlemesine bağlanıyor. Eski program sonucu yeni programın ölçümünü açmıyor; Retention/Transfer aynı döngüdeki önkoşulları arıyor.
+- Nullable `program_progress_id` migration'ı geçmişi silmiyor veya tahminle bağlamıyor. Baseline ve program döngüsü için ayrı unique index'ler var. İleri/geri SQL gerçek PostgreSQL'de doğrulandı; canlıda uygulanmadı.
+- Ölçüm başlatma ve program atama aynı öğrenci kilidini kullanıyor; yarış durumu PostgreSQL testinde yeniden üretildi ve kapatıldı.
+- Eğitim sonrası sunucu ölçümüyle yaşa uygun genel program öneriliyor. Otomatik başlamıyor: bireysel kullanıcı açıkça onaylıyor; öğretmen/kurum bağlantılı öğrenci için yetkili onayı gerekiyor.
+- Onay kaynak program/ölçüm kimliğini kilit altında tekrar doğruluyor. Tek aktif program ve idempotent tekrar korunuyor; onaylayan aktör CreatedBy alanına kaydediliyor.
+- Öğrenci ana sayfasında öneri/onay; öğretmen/kurum öğrenci raporunda öneriyi inceleme/onay bölümü var. Öğrenci sahipliği ve kurum kapsamı sunucuda kontrol ediliyor.
+- Eksik/pasif öneri onayında 500 yerine 404 var. 39,99 gibi puanlar görüntüleme yuvarlamasından etkilenmeden paket seçimine giriyor.
+- Eski başlatma endpoint'i ilk seviye tespitini veya yeni açık onayı atlayamıyor; mevcut aktif programın zararsız tekrarı korunuyor.
+- Çift rollü hesaplarda kişisel içerik, seri, ödev ve gamification için öğrenci aboneliği kontrol ediliyor; staff yönetimi ayrı tutuluyor.
+- Student+Admin/SystemAdmin/Editor hesaplarının onboarding/önizleme yönlendirme döngüsü kapatıldı.
 
-## Test kanıtı
+## Son doğrulama
 
-- Backend tüm `SpeedReading.Application.UnitTests`: 733 geçti, 0 başarısız, 0 atlanan (frontend son düzeltmelerinden önce; backend aynı).
-- Hedefli backend son çalışma: 15 geçti.
-- Hedefli Angular son çalışma: 10 geçti.
-- Docker kullanıcı tarafından açıldı ve erişim doğrulandı: 29.8.0.
-- Geniş Angular son çalışma: 362 geçti, 0 başarısız.
-- İlgili API/middleware testleri: 14 geçti.
-- Docker Testcontainers gerçek PostgreSQL atama sorgusu: 1 geçti (geçici veritabanı; canlıya dokunulmadı).
-- Hızlı Okuma API Release build: başarılı, 0 hata, 0 uyarı.
-- Angular production build başarılı; mevcut player SCSS bütçe uyarısı (128.02 kB / 120 kB) var. Bu görevde SCSS değiştirilmedi.
+- Backend birim testleri: **748 geçti**, başarısız/atlanan yok.
+- İlgili middleware ve gerçek PostgreSQL testleri: **36 geçti**, başarısız/atlanan yok.
+- Öğrenci arayüzü: **371 geçti**.
+- Öğretmen/kurum paneli: **226 geçti**, 41 test dosyası.
+- API Release ve iki frontend production derlemesi başarılı. Son middleware/onboarding düzenlemesinden sonra tekrar derleme yapılacak.
+- Mevcut SCSS bütçe uyarıları: öğrenci player 128,02/120 kB; staff app 14,38/14 kB. İlgili SCSS değiştirilmedi.
+- Kod kapsamı yüzdesi ölçülmedi. Testlerin geçmesi ürünün yüzde yüz tamamlandığı anlamına gelmez.
 
-## Sırayla tamamlanacak işler
+## Kalan işler
 
-1. Katalog açıklamalarının gerçek içerik sayılarıyla uyumlandırılması; genel/sınav/kamp/maraton sınıflarının yönetim ekranında doğrulanması. Şimdiki veri kapasitesi kontrolü motor içi içerik kalitesi/konfigürasyon bütünlüğü testinin yerine geçmez.
-2. Çift rol önkoşul/abonelik düzeltmesinin tam tarayıcı yolculuğuyla doğrulanması; öğrenci+admin/editor persona/onboarding yönlendirmelerinin ayrıca kontrolü.
-3. Öğrenci yeniden giriş yaptığında erişilebilir, kalıcı program bitiş özeti ve sıradaki iş çağrısı.
-4. Her biten programı ilgili eğitim sonrası ölçüm döngüsüne bağlama. Şimdiki gate en az bir tamamlanmış program arar; önceki programın tamamlanması sonraki aktif program için yeterli kabul edilmemeli. Geçmiş ölçüm sonuçları yanlış döngüye öneri oluşturmamalı.
-5. Geçerli sunucu ölçümleriyle sonraki program önerisi; bireysel kullanıcı onayı, öğretmen/kurum atamalı öğrencide yetkili onayı; tek aktif program, tekrarlanan başlatma idempotency'si; eski sonuçların korunması. Rastgele bilimsel eşik üretme yok.
-6. Admin/öğretmen program amaç/yaş/eşik/katalog doğrulaması, tamamlanan/önerilen program yönetimi ve mevcut yanlış atamaları kontrollü inceleme.
-7. Gerçek PostgreSQL entegrasyon testleri, tüm frontend testleri, production build ve uçtan uca kullanıcı/kurum/çift rol/tamamla-ölç-yeni program senaryoları.
-8. Son rapor; uygulama canlıya alınmadan kullanıcı bilgilendirilecek. Şu an yalnız açık onaylı mükerrer veri silmesi canlıda uygulandı.
+1. Katalog açıklamalarını ve genel/sınav/kamp/maraton amaçlarının admin yönetimini gerçek içerikle eşleştirmek.
+2. Yeni program onayı için ayrı gerçek PostgreSQL eşzamanlılık ve HTTP yetkilendirme senaryoları.
+3. Admin program yaşam döngüsü yönetimi ve mevcut yanlış atamaları kontrollü inceleme.
+4. Öğrenci, öğretmen, kurum ve çift rol tam tarayıcı yolculukları: tamamla → ölç → öneri → onay → yeni aktif program.
+5. Motor konfigürasyonu/içerik bütünlüğü ve bilimsel/pedagojik kaliteyi ayrı değerlendirmek.
+6. Son toplu doğrulama ve rapor; uygulama canlıya alınmadan kullanıcı bilgilendirilecek.
 
 ## Kapsam koruması
 
-Çalışma ağacında önceki yaklaşık 500 dosya değişikliği var; bunlar bu görevin commit'lerine topluca dahil edilmez. Navigation dosyasındaki önceden mevcut eski öğretmen/kurum menüsü kaldırmaları korunmuş ve yalnız bu görevde eklenen öğrenci menü hunk'ı commit edilmiştir. Koçluk/Identity veritabanına dokunulmadı.
+Önceden yaklaşık 500 dosya değişikliği var; yalnız bu çalışmanın dosya/hunk'ları commit ediliyor. Koçluk ve Identity veritabanlarına dokunulmadı. Canlıdaki tek değişiklik açıkça onaylanan mükerrer program silmesidir.

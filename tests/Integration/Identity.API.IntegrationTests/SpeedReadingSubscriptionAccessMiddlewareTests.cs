@@ -90,6 +90,15 @@ public sealed class SpeedReadingSubscriptionAccessMiddlewareTests
     [InlineData("/api/speed-reading/content-feedback/recommended", 403)]
     [InlineData("/api/speed-reading/analytics/student/summary", 403)]
     [InlineData("/api/speed-reading/series-access/available", 403)]
+    [InlineData("/api/speed-reading/series-access/11111111-1111-1111-1111-111111111111/access", 403)]
+    [InlineData("/api/speed-reading/series-access/11111111-1111-1111-1111-111111111111/prerequisites", 403)]
+    [InlineData("/api/speed-reading/content-feedback/analytics", 403)]
+    [InlineData("/api/speed-reading/content-feedback/optimal-hours", 403)]
+    [InlineData("/api/speed-reading/content-feedback/retry-needed", 403)]
+    [InlineData("/api/speed-reading/gamification/user", 403)]
+    [InlineData("/api/speed-reading/gamification/achievements/user", 403)]
+    [InlineData("/api/speed-reading/assignments/my-assignments", 403)]
+    [InlineData("/api/speed-reading/assignments/teacher-assignments", 200)]
     [InlineData("/api/speed-reading/teachers/me/students", 200)]
     public async Task DualRoleKeepsStaffManagementButRequiresStudentTrainingAccess(string path, int expectedStatus)
     {

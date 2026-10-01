@@ -69,9 +69,15 @@ public sealed class SpeedReadingSubscriptionAccessMiddleware(RequestDelegate nex
             "/api/speed-reading/learning-paths/personalized",
             "/api/speed-reading/adaptive-learning",
             "/api/speed-reading/vocabulary/user",
-            "/api/speed-reading/content-feedback/recommended",
+            "/api/speed-reading/content-feedback",
             "/api/speed-reading/analytics/student",
-            "/api/speed-reading/series-access/available"
+            "/api/speed-reading/series-access",
+            "/api/speed-reading/assignments/my-assignments",
+            "/api/speed-reading/gamification/user",
+            "/api/speed-reading/gamification/achievements/user",
+            "/api/speed-reading/gamification/achievements/check",
+            "/api/speed-reading/gamification/achievements/showcase",
+            "/api/speed-reading/gamification/streak/use-freeze"
         }.Any(prefix => path.StartsWithSegments(prefix, StringComparison.OrdinalIgnoreCase));
 
     private static async Task<bool> IsAssessmentSessionAsync(
