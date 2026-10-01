@@ -10,6 +10,38 @@ namespace SpeedReading.Application.UnitTests;
 
 public sealed class NextProgramApiTests
 {
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Missing_recommended_template_returns_not_found(bool staff)
+    {
+        var service = DispatchProxy.Create<ISpeedReadingStudentProgram, MissingTemplateProxy>();
+        var context = new ControllerContext { HttpContext = new DefaultHttpContext
+        {
+            User = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, Guid.NewGuid().ToString())], "test"))
+        } };
+        var request = new ConfirmNextStudentProgramRequest(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
+        IActionResult result;
+        if (staff)
+        {
+            var controller = new StudentProgramManagementController(service,
+                DispatchProxy.Create<ISpeedReadingTeacherAccess, DeniedTeacherAccess>()) { ControllerContext = context };
+            result = await controller.Approve(Guid.NewGuid(), request, null);
+        }
+        else
+        {
+            var controller = new StudentProgramController(service) { ControllerContext = context };
+            result = await controller.ConfirmNextProgram(request);
+        }
+        Assert.IsType<NotFoundObjectResult>(result);
+    }
+
+    public class MissingTemplateProxy : DispatchProxy
+    {
+        protected override object? Invoke(MethodInfo? method, object?[]? args) =>
+            Task.FromException<StartStudentProgramResult>(new KeyNotFoundException("Program bulunamadı."));
+    }
+
     [Fact]
     public async Task Staff_cannot_read_an_unassigned_students_recommendation()
     {

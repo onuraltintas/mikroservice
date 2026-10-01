@@ -16,9 +16,11 @@ namespace SpeedReading.Application.UnitTests;
 public sealed class NextProgramRecommendationTests
 {
     [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public async Task Completed_current_cycle_recommends_age_matched_general_program_with_correct_approval(bool managed)
+    [InlineData(false, 4550)]
+    [InlineData(true, 4550)]
+    [InlineData(false, 3999)]
+    [InlineData(true, 3999)]
+    public async Task Completed_current_cycle_recommends_age_matched_general_program_with_correct_approval(bool managed, int scoreHundredths)
     {
         await using var db = CreateDb();
         var user = Guid.NewGuid();
@@ -39,7 +41,7 @@ public sealed class NextProgramRecommendationTests
         db.AssessmentAttempts.Add(post);
         for (var index = 0; index < 3; index++)
             db.ExerciseSessionResults.Add(ExerciseSessionResult.Create(Guid.NewGuid(), Guid.NewGuid(), user,
-                Guid.NewGuid(), null, 80, 10, rawWpm: 300, comprehensionScore: 45.5m, weightedKdp: 0, score: 80,
+                Guid.NewGuid(), null, 80, 10, rawWpm: 300, comprehensionScore: scoreHundredths / 100m, weightedKdp: 0, score: 80,
                 completedAt: now, isMeasured: true,
                 isAssessmentMode: true, assessmentAttemptId: post.Id));
         if (managed)
@@ -49,32 +51,34 @@ public sealed class NextProgramRecommendationTests
         db.ExerciseTypes.Add(ExerciseType.Create(typeId, "Fixation", "Fixation", "focus"));
         db.Exercises.Add(Exercise.Create("Exercise", "Fixation", "{}", 1, user, typeId));
         await db.SaveChangesAsync();
+        var expected = scoreHundredths < 4000 ? template : next;
+        var rejected = scoreHundredths < 4000 ? next : template;
         var result = await Service(db).GetNextProgramRecommendationAsync(user, CancellationToken.None);
         result.Should().NotBeNull();
-        result!.TemplateId.Should().Be(next.Id);
+        result!.TemplateId.Should().Be(expected.Id);
         result.SourceProgressId.Should().Be(progress.Id);
         result.AssessmentAttemptId.Should().Be(post.Id);
         result.RequiresStaffApproval.Should().Be(managed);
         (await db.StudentProgramProgresses.CountAsync()).Should().Be(1);
-        var wrongStart = () => Service(db).StartProgramAsync(user, template.Id, CancellationToken.None);
+        var wrongStart = () => Service(db).StartProgramAsync(user, rejected.Id, CancellationToken.None);
         (await wrongStart.Should().ThrowAsync<EduPlatform.Shared.Kernel.Exceptions.BusinessRuleException>())
             .Which.Code.Should().Be("Program.RecommendationChanged");
         if (managed)
         {
-            var unapproved = () => Service(db).StartProgramAsync(user, next.Id, CancellationToken.None);
+            var unapproved = () => Service(db).StartProgramAsync(user, expected.Id, CancellationToken.None);
             (await unapproved.Should().ThrowAsync<EduPlatform.Shared.Kernel.Exceptions.BusinessRuleException>())
                 .Which.Code.Should().Be("Program.StaffApprovalRequired");
         }
         else
         {
-            var legacyStart = () => Service(db).StartProgramAsync(user, next.Id, CancellationToken.None);
+            var legacyStart = () => Service(db).StartProgramAsync(user, expected.Id, CancellationToken.None);
             (await legacyStart.Should().ThrowAsync<EduPlatform.Shared.Kernel.Exceptions.BusinessRuleException>())
                 .Which.Code.Should().Be("Program.ExplicitConfirmationRequired");
         }
         var access = DispatchProxy.Create<ISpeedReadingTeacherAccess, TeacherAccessProxy>();
         ((TeacherAccessProxy)access).Teacher = teacher;
         ((TeacherAccessProxy)access).Student = user;
-        var request = new ConfirmNextStudentProgramRequest(next.Id, progress.Id, post.Id);
+        var request = new ConfirmNextStudentProgramRequest(expected.Id, progress.Id, post.Id);
         var wrongViewer = () => Service(db, access).ApproveNextProgramAsync(Guid.NewGuid(), user, request, null, CancellationToken.None);
         await wrongViewer.Should().ThrowAsync<UnauthorizedAccessException>();
         var accepted = managed

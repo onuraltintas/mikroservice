@@ -33,6 +33,8 @@
   } @else if (isLoading()) {
     <p class="loading" role="status">Öğrenci raporu yükleniyor…</p>
   } @else if (report(); as data) {
+    <staff-program-recommendation-panel [studentId]="student.userId"
+      [institutionId]="teacherScoped ? null : institutionId" (approved)="loadReport()" />
     <div class="summary-grid">
       <article class="metric-card">
         <span>Ortalama okuma hızı</span

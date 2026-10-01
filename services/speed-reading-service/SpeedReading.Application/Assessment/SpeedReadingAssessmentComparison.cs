@@ -32,7 +32,11 @@ public sealed record AssessmentComparisonPoint(
     decimal? AverageComprehension,
     decimal? AverageScore,
     decimal? WpmDeltaFromBaseline,
-    decimal? ComprehensionDeltaFromBaseline);
+    decimal? ComprehensionDeltaFromBaseline)
+{
+    [System.Text.Json.Serialization.JsonIgnore]
+    public decimal? PlacementComprehensionScore { get; init; }
+}
 
 public sealed record AssessmentComparisonSummary(
     IReadOnlyList<AssessmentComparisonPoint> Attempts,
@@ -101,7 +105,10 @@ public static class AssessmentComparisonCalculator
                 .Where(item => item.HasValue)
                 .Select(item => Math.Clamp(item!.Value, 0, 100))),
             null,
-            null);
+            null)
+        {
+            PlacementComprehensionScore = comprehensionValues.Count == 0 ? null : comprehensionValues.Average()
+        };
     }
 
     private static decimal? Average(IEnumerable<decimal> values)

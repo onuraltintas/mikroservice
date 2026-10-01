@@ -10,6 +10,20 @@ namespace SpeedReading.Application.UnitTests;
 public sealed class StudentProgramStartSafetyTests
 {
     [Fact]
+    public async Task First_program_cannot_be_started_by_bypassing_assessment_placement()
+    {
+        await using var db = CreateDb();
+        var user = Guid.NewGuid();
+        var template = Template(user);
+        db.ProgramTemplates.Add(template);
+        await db.SaveChangesAsync();
+        var start = () => Service(db).StartProgramAsync(user, template.Id, CancellationToken.None);
+        (await start.Should().ThrowAsync<BusinessRuleException>()).Which.Code
+            .Should().Be("Program.AssessmentPlacementRequired");
+        (await db.StudentProgramProgresses.CountAsync()).Should().Be(0);
+    }
+
+    [Fact]
     public async Task Repeated_start_returns_existing_active_assignment_without_resetting_progress()
     {
         await using var db = CreateDb();

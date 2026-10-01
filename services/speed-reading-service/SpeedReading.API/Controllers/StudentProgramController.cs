@@ -67,7 +67,14 @@ public sealed class StudentProgramController(ISpeedReadingStudentProgram student
         CancellationToken cancellationToken = default)
     {
         if (!TryGetCurrentUserId(out var userId)) return Unauthorized();
-        return Ok(await studentProgram.ConfirmNextProgramAsync(userId, request, cancellationToken));
+        try
+        {
+            return Ok(await studentProgram.ConfirmNextProgramAsync(userId, request, cancellationToken));
+        }
+        catch (KeyNotFoundException exception)
+        {
+            return NotFound(new { success = false, message = exception.Message });
+        }
     }
 
     private bool TryGetCurrentUserId(out Guid userId)

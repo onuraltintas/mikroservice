@@ -41,6 +41,10 @@ public sealed class StudentProgramManagementController(
         {
             return Forbid();
         }
+        catch (KeyNotFoundException exception)
+        {
+            return NotFound(new { success = false, message = exception.Message });
+        }
     }
 
     private bool TryGetActor(out Guid actor) => Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier)

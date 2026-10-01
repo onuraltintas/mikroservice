@@ -18,11 +18,12 @@ import {
   SpeedReadingStudentReport,
 } from './speed-reading-institution.service';
 import { SpeedReadingTeacherService } from './speed-reading-teacher.service';
+import { ProgramRecommendationPanelComponent } from './program-recommendation-panel.component';
 
 @Component({
   selector: 'staff-speed-reading-student-report',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ProgramRecommendationPanelComponent],
   templateUrl: './speed-reading-institution-student-report.component.html',
   styleUrl: './speed-reading-institution-student-report.component.scss',
 })
