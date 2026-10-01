@@ -104,6 +104,16 @@ internal sealed class OwnedSpeedReadingStudentProgram(OwnedSpeedReadingDbContext
                 if (activePrograms.Count > 0)
                     throw new BusinessRuleException("Program.ActiveTrainingExists",
                         "Yeni bir programa başlamadan önce aktif programınızı tamamlamalısınız.");
+                if (await db.StudentProgramProgresses.AsNoTracking().AnyAsync(item => item.UserId == userId, cancellationToken))
+                {
+                    var recommendation = await GetNextProgramRecommendationAsync(userId, cancellationToken);
+                    if (recommendation is null || recommendation.TemplateId != templateId)
+                        throw new BusinessRuleException("Program.RecommendationChanged",
+                            "Geçerli program önerisi bulunamadı veya değişti. Eğitim sonrası ölçümünüzü kontrol edin.");
+                    if (recommendation.RequiresStaffApproval)
+                        throw new BusinessRuleException("Program.StaffApprovalRequired",
+                            "Yeni programınız için öğretmeninizin veya kurum yöneticinizin onayı gerekir.");
+                }
                 var now = DateTime.UtcNow;
 
                 var progress = StudentProgramProgress.Start(
