@@ -1,0 +1,7 @@
+FROM node:22.14.0-alpine
+WORKDIR /app
+ENV NODE_ENV=production PORT=4000
+COPY admin-panel/ ./dist/admin-panel/
+EXPOSE 4000
+USER node
+ENTRYPOINT ["node", "dist/admin-panel/server/server.mjs"]
