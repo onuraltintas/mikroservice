@@ -62,6 +62,14 @@ public sealed class StudentProgramController(ISpeedReadingStudentProgram student
         }
     }
 
+    [HttpPost("confirm-next")]
+    public async Task<IActionResult> ConfirmNextProgram([FromBody] ConfirmNextStudentProgramRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryGetCurrentUserId(out var userId)) return Unauthorized();
+        return Ok(await studentProgram.ConfirmNextProgramAsync(userId, request, cancellationToken));
+    }
+
     private bool TryGetCurrentUserId(out Guid userId)
     {
         var value = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
