@@ -25,8 +25,29 @@ internal sealed class OwnedSpeedReadingAssessment(
         if (userId == Guid.Empty)
             throw new ArgumentException("A valid user is required.", nameof(userId));
         ArgumentNullException.ThrowIfNull(request);
+        var attempt = 0;
+        return await OwnedSpeedReadingProgramAssignmentLock.ExecuteAsync(db, async () =>
+        {
+            if (attempt++ > 0)
+                db.ChangeTracker.Clear();
+            await using var transaction = await OwnedSpeedReadingProgramAssignmentLock.AcquireAsync(db, userId, cancellationToken);
+            var result = await StartAttemptCoreAsync(userId, request, cancellationToken);
+            if (transaction is not null)
+                await transaction.CommitAsync(cancellationToken);
+            return result;
+        });
+    }
+
+    private async Task<AssessmentAttemptSummary> StartAttemptCoreAsync(
+        Guid userId,
+        StartAssessmentAttemptRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (userId == Guid.Empty)
+            throw new ArgumentException("A valid user is required.", nameof(userId));
+        ArgumentNullException.ThrowIfNull(request);
         var program = await GetLatestProgramAsync(userId, cancellationToken);
-        if (request.Phase == AssessmentAttemptPhase.PostTraining
+        if (request.Phase != AssessmentAttemptPhase.Baseline
             && !await HasCompletedTrainingAsync(userId, cancellationToken))
             throw new BusinessRuleException("Assessment.TrainingIncomplete",
                 "Eğitim sonrası ölçüm için önce eğitim programınızı tamamlamalısınız.");
