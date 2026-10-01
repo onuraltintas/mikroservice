@@ -471,7 +471,14 @@ namespace SpeedReading.Infrastructure.Persistence.Migrations
                     b.HasIndex("StudentId", "ProgramProgressId", "Phase");
 
                     b.HasIndex("StudentId", "Phase", "FormVersion")
-                        .HasFilter("status = 1");
+                        .IsUnique()
+                        .HasDatabaseName("ux_assessment_baseline_active")
+                        .HasFilter("status = 1 AND phase = 1");
+
+                    b.HasIndex("StudentId", "ProgramProgressId", "Phase", "FormVersion")
+                        .IsUnique()
+                        .HasDatabaseName("ux_assessment_program_phase_active")
+                        .HasFilter("status = 1 AND program_progress_id IS NOT NULL");
 
                     b.HasIndex("StudentId", "Phase", "Status", "StartedAt");
 

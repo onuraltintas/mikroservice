@@ -1546,7 +1546,11 @@ public sealed class OwnedSpeedReadingDbContext(
             entity.Property(item => item.CompletedAt).HasColumnName("completed_at");
             entity.HasIndex(item => new { item.StudentId, item.Phase, item.Status, item.StartedAt });
             entity.HasIndex(item => new { item.StudentId, item.Phase, item.FormVersion })
-                .HasFilter("status = 1");
+                .HasDatabaseName("ux_assessment_baseline_active").IsUnique()
+                .HasFilter("status = 1 AND phase = 1");
+            entity.HasIndex(item => new { item.StudentId, item.ProgramProgressId, item.Phase, item.FormVersion })
+                .HasDatabaseName("ux_assessment_program_phase_active").IsUnique()
+                .HasFilter("status = 1 AND program_progress_id IS NOT NULL");
         });
 
         modelBuilder.Entity<AssessmentStudyEnrollment>(entity =>
