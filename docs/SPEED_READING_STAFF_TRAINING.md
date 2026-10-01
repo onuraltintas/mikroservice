@@ -27,7 +27,7 @@
 - Rol matrisi, çift rollü hesabın endpoint'ten reddi, ilk kayıt, idempotent tekrar, okuma materyali yaşı ve normal öğrenci takvim kuralı için testler var.
 - Gerçek PostgreSQL'de migration SQL ileri/geri çalıştırıldı; iki günü aynı gün bitirme, normal öğrencinin ikinci günde kilitlenmesi, program bitişi ve geçmişi koruyarak yeniden kayıt doğrulandı.
 - Arayüzde katalog yükleme, açık kayıt isteği, aktif eğitime yönlendirme, menü, preview/kalıcı oturum ayrımı ve bitiş CTA test edildi.
-- İlgili entegrasyon grubu: 39 geçti. Öğrenci frontend tam süiti: 377 geçti. Node takvim sözleşme testleri: 2 geçti.
+- Backend tam birim test süiti: 760 geçti. İlgili entegrasyon grubu: 39 geçti. Öğrenci frontend tam süiti: 379 geçti. Node takvim sözleşme testleri: 2 geçti.
 - API Release: 0 hata, 0 uyarı. Frontend production derlemesi başarılı; önceden mevcut player SCSS bütçe uyarısı sürüyor.
 - Canlı tarayıcı uçtan uca testi yapılmadı; canlı migration/deploy uygulanmadı. Kod kapsamı yüzdesi ölçülmedi.
 

@@ -22,12 +22,13 @@ Güncelleme: 1 Ekim 2026. Planın tamamı henüz bitmedi. Uygulama değişiklikl
 - Eski başlatma endpoint'i ilk seviye tespitini veya yeni açık onayı atlayamıyor; mevcut aktif programın zararsız tekrarı korunuyor.
 - Çift rollü hesaplarda kişisel içerik, seri, ödev ve gamification için öğrenci aboneliği kontrol ediliyor; staff yönetimi ayrı tutuluyor.
 - Student+Admin/SystemAdmin/Editor hesaplarının onboarding/önizleme yönlendirme döngüsü kapatıldı.
+- Ek kullanıcı talebi: yalnız öğrenci rolü olmayan admin/öğretmen için ayrı Eğitim Programları sekmesi, serbest program seçimi ve kalıcı eğitim kaydı eklendi. Günün tüm egzersizleri bitince takvim beklemeden sonraki gün açılır; program bitince tekrar kayıt yapılabilir. Normal öğrenci kuralları korunur. Ayrıntılar: [staff eğitim akışı](SPEED_READING_STAFF_TRAINING.md).
 
 ## Son doğrulama
 
-- Backend birim testleri: **748 geçti**, başarısız/atlanan yok.
-- İlgili middleware ve gerçek PostgreSQL testleri: **36 geçti**, başarısız/atlanan yok.
-- Öğrenci arayüzü: **371 geçti**.
+- Backend birim testleri: **760 geçti**, başarısız/atlanan yok.
+- İlgili middleware ve gerçek PostgreSQL testleri: **39 geçti**, başarısız/atlanan yok.
+- Öğrenci arayüzü: **379 geçti**.
 - Öğretmen/kurum paneli: **226 geçti**, 41 test dosyası.
 - API Release ve iki frontend production derlemesi başarılı. Son middleware/onboarding düzenlemesinden sonra API ve öğrenci arayüzü yeniden derlendi.
 - Son kapsamlı kod incelemesinde açık bulgu kalmadı; inceleyen ajan ayrıca hedefli 12 backend ve tüm 226 staff panel testini doğruladı.
