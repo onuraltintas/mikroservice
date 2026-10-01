@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using EduPlatform.Shared.Kernel.Exceptions;
 using SpeedReading.Application.StudentProgram;
 using SpeedReading.Domain.Programs;
 
@@ -40,10 +41,13 @@ internal sealed class OwnedSpeedReadingStudentProgram(OwnedSpeedReadingDbContext
             .SingleOrDefaultAsync(item => item.Id == templateId && item.IsActive && !item.IsDeleted, cancellationToken)
             ?? throw new KeyNotFoundException("Program not found.");
 
+        var attempt = 0;
         return await OwnedSpeedReadingProgramAssignmentLock.ExecuteAsync(
             db,
             async () =>
             {
+                if (attempt++ > 0)
+                    db.ChangeTracker.Clear();
                 await using var transaction = await OwnedSpeedReadingProgramAssignmentLock.AcquireAsync(
                     db,
                     userId,
@@ -55,18 +59,20 @@ internal sealed class OwnedSpeedReadingStudentProgram(OwnedSpeedReadingDbContext
                         && item.CompletedDate == null)
                     .OrderByDescending(item => item.CreatedAt)
                     .ToListAsync(cancellationToken);
-                var previous = activePrograms.FirstOrDefault();
+                if (activePrograms.Count == 1 && activePrograms[0].ProgramTemplateId == templateId)
+                    return new StartStudentProgramResult(true, activePrograms[0].Id, template.Name,
+                        "Bu program zaten aktif; mevcut ilerlemeniz korundu.");
+                if (activePrograms.Count > 0)
+                    throw new BusinessRuleException("Program.ActiveTrainingExists",
+                        "Yeni bir programa başlamadan önce aktif programınızı tamamlamalısınız.");
                 var now = DateTime.UtcNow;
-
-                foreach (var activeProgram in activePrograms)
-                    activeProgram.Deactivate(userId, now);
 
                 var progress = StudentProgramProgress.Start(
                     Guid.NewGuid(),
                     userId,
                     template,
-                    previous?.CurrentStreak ?? 0,
-                    previous?.LongestStreak ?? 0,
+                    0,
+                    0,
                     userId,
                     now);
                 progress.SetSchedule(
