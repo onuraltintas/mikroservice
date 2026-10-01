@@ -8,10 +8,10 @@ import { ToasterService } from '../../../core/services/toaster.service';
 import { LoginComponent } from './login.component';
 
 describe('LoginComponent MFA flow', () => {
-  it('redirects a new Google user to registration for legal acceptances', async () => {
+  it('opens legal acceptance on the same screen without repeating Google authentication', async () => {
     const router = { navigate: vi.fn().mockResolvedValue(true) };
-    const authService = { loginWithGoogle: vi.fn().mockRejectedValue({
-      error: { code: 'Auth.LegalAcceptanceRequired', message: 'Onay gerekli' }
+    const authService = { loginWithGoogle: vi.fn().mockResolvedValue({
+      requiresLegalAcceptance: true, registrationToken: 'pending-ticket'
     }) };
     TestBed.configureTestingModule({ providers: [
       { provide: AuthService, useValue: authService },
@@ -21,7 +21,8 @@ describe('LoginComponent MFA flow', () => {
     ] });
     const component = TestBed.runInInjectionContext(() => new LoginComponent());
     await component.handleGoogleLogin('google-token');
-    expect(router.navigate).toHaveBeenCalledWith(['/auth/register/student']);
+    expect(router.navigate).not.toHaveBeenCalled();
+    expect((component as any).googleRegistrationToken()).toBe('pending-ticket');
     expect(component.isLoading()).toBe(false);
   });
   it('starts MFA enrollment only when the backend explicitly requires it', async () => {

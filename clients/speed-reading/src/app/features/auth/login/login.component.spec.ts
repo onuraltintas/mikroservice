@@ -77,14 +77,14 @@ describe('LoginComponent', () => {
     });
   });
 
-  it('redirects new Google users to registration without forwarding the Google token', () => {
-    authService.googleAuth.and.returnValue(throwError(() => ({
-      error: { code: 'Auth.LegalAcceptanceRequired', message: 'Onay gerekli' }
-    })));
+  it('opens legal acceptance on the same screen without repeating Google authentication', () => {
+    authService.googleAuth.and.returnValue(of({
+      requiresLegalAcceptance: true, registrationToken: 'pending-ticket'
+    } as any));
     (component as any).handleGoogleResponse({ credential: 'secret-google-token' });
-    expect(router.navigate).toHaveBeenCalledWith(['/auth/register'], {
-      queryParams: { returnUrl: null }
-    });
+    expect(router.navigate).not.toHaveBeenCalled();
+    expect((component as any).googleRegistrationToken).toBe('pending-ticket');
+    expect((component as any).handleAuthenticatedResponse).not.toHaveBeenCalled();
     expect(component.loading).toBe(false);
   });
 
