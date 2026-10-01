@@ -2,6 +2,7 @@ namespace SpeedReading.Application.StudentProgram;
 
 public interface ISpeedReadingStudentProgram
 {
+    Task<NextStudentProgramRecommendation?> GetNextProgramRecommendationAsync(Guid userId, CancellationToken cancellationToken);
     Task<StudentProgramInfo?> GetMyProgramAsync(Guid userId, CancellationToken cancellationToken);
 
     Task<IReadOnlyList<StudentProgramInfo>> GetMyProgramsAsync(Guid userId, CancellationToken cancellationToken);
@@ -11,6 +12,14 @@ public interface ISpeedReadingStudentProgram
         Guid templateId,
         CancellationToken cancellationToken);
 }
+
+public sealed record NextStudentProgramRecommendation(
+    Guid SourceProgressId,
+    Guid AssessmentAttemptId,
+    Guid TemplateId,
+    string TemplateName,
+    int TotalDays,
+    bool RequiresStaffApproval);
 
 public sealed record StudentProgramInfo(
     Guid ProgressId,

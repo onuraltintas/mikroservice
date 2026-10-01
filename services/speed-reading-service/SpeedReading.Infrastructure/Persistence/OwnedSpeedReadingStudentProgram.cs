@@ -1,12 +1,51 @@
 using Microsoft.EntityFrameworkCore;
 using EduPlatform.Shared.Kernel.Exceptions;
+using SpeedReading.Application.Assessment;
+using SpeedReading.Domain.Assessment;
+using SpeedReading.Domain.Institutions;
 using SpeedReading.Application.StudentProgram;
 using SpeedReading.Domain.Programs;
 
 namespace SpeedReading.Infrastructure.Persistence;
 
-internal sealed class OwnedSpeedReadingStudentProgram(OwnedSpeedReadingDbContext db) : ISpeedReadingStudentProgram
+internal sealed class OwnedSpeedReadingStudentProgram(OwnedSpeedReadingDbContext db, ISpeedReadingAssessment assessment) : ISpeedReadingStudentProgram
 {
+    public async Task<NextStudentProgramRecommendation?> GetNextProgramRecommendationAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        if (userId == Guid.Empty)
+            throw new ArgumentException("A valid user is required.", nameof(userId));
+        if (await db.StudentProgramProgresses.AsNoTracking().AnyAsync(item => item.UserId == userId && item.IsActive, cancellationToken))
+            return null;
+        var progress = await db.StudentProgramProgresses.AsNoTracking().Where(item => item.UserId == userId)
+            .OrderByDescending(item => item.AssignedDate).ThenByDescending(item => item.CreatedAt).ThenBy(item => item.Id)
+            .FirstOrDefaultAsync(cancellationToken);
+        if (progress?.CompletedDate is null) return null;
+        var post = await db.AssessmentAttempts.AsNoTracking().Where(item => item.StudentId == userId
+            && item.ProgramProgressId == progress.Id && item.Phase == AssessmentAttemptPhase.PostTraining
+            && item.Status == AssessmentAttemptStatus.Completed && !item.IsSkipped)
+            .OrderByDescending(item => item.CompletedAt).ThenBy(item => item.Id).FirstOrDefaultAsync(cancellationToken);
+        if (post is null) return null;
+        var comparison = await assessment.GetComparisonAsync(userId, cancellationToken);
+        var measurement = comparison.Attempts.FirstOrDefault(item => item.AttemptId == post.Id);
+        if (measurement?.AverageWpm is not > 0 || measurement.AverageComprehension is not (>= 0 and <= 100))
+            return null;
+        var age = await db.UserProfiles.AsNoTracking().Where(item => item.UserId == userId && item.IsActive)
+            .Select(item => item.AgeGroupConfigurationId).SingleOrDefaultAsync(cancellationToken);
+        age ??= await db.ProgramTemplates.AsNoTracking().Where(item => item.Id == progress.ProgramTemplateId)
+            .Select(item => (Guid?)item.TargetAgeGroupConfigurationId).SingleOrDefaultAsync(cancellationToken);
+        var score = measurement.AverageComprehension.Value;
+        var template = await db.ProgramTemplates.AsNoTracking().Where(item => item.IsActive && !item.IsDeleted
+            && !item.IsAssessment && item.ProgramType == 0 && (item.ExamType == null || item.ExamType == "")
+            && item.TargetAgeGroupConfigurationId == age && item.MinAssessmentScore <= score && item.MaxAssessmentScore >= score)
+            .OrderByDescending(item => item.MinAssessmentScore).ThenBy(item => item.DisplayOrder).ThenBy(item => item.Id)
+            .FirstOrDefaultAsync(cancellationToken);
+        if (template is null) return null;
+        var managed = await db.TeacherStudentAssignments.AsNoTracking().AnyAsync(item => item.StudentUserId == userId && item.IsActive, cancellationToken)
+            || await db.InstitutionMemberships.AsNoTracking().AnyAsync(item => item.UserId == userId && item.IsActive
+                && item.Role == SpeedReadingInstitutionMemberRole.Student, cancellationToken);
+        return new NextStudentProgramRecommendation(progress.Id, post.Id, template.Id, template.Name, template.TotalDays, managed);
+    }
+
     public async Task<StudentProgramInfo?> GetMyProgramAsync(
         Guid userId,
         CancellationToken cancellationToken)

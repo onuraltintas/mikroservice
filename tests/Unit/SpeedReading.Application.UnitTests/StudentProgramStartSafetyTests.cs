@@ -52,7 +52,7 @@ public sealed class StudentProgramStartSafetyTests
 
     private static ISpeedReadingStudentProgram Service(OwnedSpeedReadingDbContext db) =>
         (ISpeedReadingStudentProgram)Activator.CreateInstance(typeof(OwnedSpeedReadingDbContext).Assembly.GetType(
-            "SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingStudentProgram")!, db)!;
+            "SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingStudentProgram")!, db, null)!;
 
     private static ProgramTemplate Template(Guid user) => ProgramTemplate.Import(Guid.NewGuid(), "Program", "",
         Guid.NewGuid(), 0, 100, "{}", 1, 2, 5, 1, 1, true, 1, 0, null, false,

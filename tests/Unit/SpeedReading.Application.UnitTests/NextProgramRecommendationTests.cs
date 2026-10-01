@@ -35,7 +35,8 @@ public sealed class NextProgramRecommendationTests
         db.AssessmentAttempts.Add(post);
         for (var index = 0; index < 3; index++)
             db.ExerciseSessionResults.Add(ExerciseSessionResult.Create(Guid.NewGuid(), Guid.NewGuid(), user,
-                Guid.NewGuid(), null, 80, 10, 300, 300, 45.5m, 0, now, isMeasured: true,
+                Guid.NewGuid(), null, 80, 10, rawWpm: 300, comprehensionScore: 45.5m, weightedKdp: 0, score: 80,
+                completedAt: now, isMeasured: true,
                 isAssessmentMode: true, assessmentAttemptId: post.Id));
         if (managed)
             db.TeacherStudentAssignments.Add(SpeedReadingTeacherStudentAssignment.Create(null,
