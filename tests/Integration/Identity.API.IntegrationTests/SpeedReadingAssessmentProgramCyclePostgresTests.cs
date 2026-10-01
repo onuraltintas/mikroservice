@@ -80,6 +80,31 @@ public sealed class SpeedReadingAssessmentProgramCyclePostgresTests(PostgresFixt
             db.AssessmentAttempts.AddRange(oldInProgress, newInProgress);
             await db.SaveChangesAsync();
             Assert.Equal(4, await db.AssessmentAttempts.CountAsync());
+            await using var assignmentDb = new OwnedSpeedReadingDbContext(new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>()
+                .UseNpgsql(postgres.ConnectionString).Options);
+            await using var assignmentTransaction = await assignmentDb.Database.BeginTransactionAsync();
+            var bytes = user.ToByteArray();
+            var lockKey = BitConverter.ToInt64(bytes, 0) ^ BitConverter.ToInt64(bytes, 8);
+            await assignmentDb.Database.ExecuteSqlInterpolatedAsync($"SELECT pg_advisory_xact_lock({lockKey})");
+            var pending = service.StartAttemptAsync(user, new StartAssessmentAttemptRequest
+            {
+                Phase = AssessmentAttemptPhase.PostTraining
+            }, CancellationToken.None);
+            try
+            {
+                // The decision must wait until the concurrently held assignment lock is released.
+                Assert.NotSame(pending, await Task.WhenAny(pending, Task.Delay(500)));
+                var changedProgram = await assignmentDb.StudentProgramProgresses.SingleAsync(item => item.Id == latest.Id);
+                changedProgram.Reset(user, DateTime.UtcNow);
+                await assignmentDb.SaveChangesAsync();
+                await assignmentTransaction.CommitAsync();
+                await Assert.ThrowsAsync<EduPlatform.Shared.Kernel.Exceptions.BusinessRuleException>(() => pending);
+            }
+            finally
+            {
+                await assignmentTransaction.DisposeAsync();
+                try { await pending; } catch { /* The failed decision is asserted above; release before cleanup. */ }
+            }
         }
         finally
         {
