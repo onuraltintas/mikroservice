@@ -28,7 +28,7 @@ Güncelleme: 1 Ekim 2026. Planın tamamı henüz bitmedi. Uygulama değişiklikl
 
 - Backend birim testleri: **760 geçti**, başarısız/atlanan yok.
 - İlgili middleware ve gerçek PostgreSQL testleri: **39 geçti**, başarısız/atlanan yok.
-- Öğrenci arayüzü: **379 geçti**.
+- Öğrenci arayüzü: **380 geçti**.
 - Öğretmen/kurum paneli: **226 geçti**, 41 test dosyası.
 - API Release ve iki frontend production derlemesi başarılı. Son middleware/onboarding düzenlemesinden sonra API ve öğrenci arayüzü yeniden derlendi.
 - Son kapsamlı kod incelemesinde açık bulgu kalmadı; inceleyen ajan ayrıca hedefli 12 backend ve tüm 226 staff panel testini doğruladı.
