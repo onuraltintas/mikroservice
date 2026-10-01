@@ -420,6 +420,10 @@ namespace SpeedReading.Infrastructure.Persistence.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("phase");
 
+                    b.Property<Guid?>("ProgramProgressId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("program_progress_id");
+
                     b.Property<DateTime>("StartedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("started_at");
@@ -462,12 +466,25 @@ namespace SpeedReading.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ProgramProgressId");
+
+                    b.HasIndex("StudentId", "ProgramProgressId", "Phase");
+
                     b.HasIndex("StudentId", "Phase", "FormVersion")
                         .HasFilter("status = 1");
 
                     b.HasIndex("StudentId", "Phase", "Status", "StartedAt");
 
                     b.ToTable("assessment_attempts", "speed_reading");
+                });
+
+            modelBuilder.Entity("SpeedReading.Domain.Assessment.AssessmentAttempt", b =>
+                {
+                    b.HasOne("SpeedReading.Domain.Programs.StudentProgramProgress", null)
+                        .WithMany()
+                        .HasForeignKey("ProgramProgressId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_assessment_program_progress");
                 });
 
             modelBuilder.Entity("SpeedReading.Domain.Assessment.AssessmentAttemptExercise", b =>

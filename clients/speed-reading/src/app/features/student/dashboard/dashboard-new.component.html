@@ -74,11 +74,22 @@
     @if (programCompleted()) {
       <section class="db-onboarding__card" aria-label="Program tamamlama özeti">
         <h2>{{ programName() }} tamamlandı</h2>
-        <p>{{ totalDays() }} günlük programda {{ completedExercises() }} egzersiz kaydedildi.
-          Gelişiminizi değerlendirmek için eğitim sonrası ölçümü tamamlayın.</p>
-        <button type="button" class="db-cta-btn" (click)="startAssessment(2)">
-          Eğitim sonrası ölçüme başla
-        </button>
+        <p>{{ totalDays() }} günlük programda {{ completedExercises() }} egzersiz kaydedildi.</p>
+        @if (nextAssessmentPhase(); as phase) {
+          <button type="button" class="db-cta-btn" (click)="startAssessment(phase)">
+            @switch (phase) {
+              @case (1) { Başlangıç ölçümüne geç }
+              @case (2) { Eğitim sonrası ölçüme geç }
+              @case (3) { Kalıcılık ölçümüne geç }
+              @case (4) { Transfer ölçümüne geç }
+            }
+          </button>
+        } @else if (assessmentPlanError()) {
+          <p role="alert">Ölçüm planı yüklenemedi.</p>
+          <button type="button" class="db-cta-btn" (click)="loadCompletionAssessmentPlan()">Yeniden dene</button>
+        } @else if (assessmentWaitUntil()) {
+          <p>Sonraki ölçüm {{ assessmentWaitUntil() | date:'dd.MM.yyyy HH:mm' }} tarihinde açılacak.</p>
+        }
       </section>
     }
 

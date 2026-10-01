@@ -29,6 +29,7 @@ public sealed class AssessmentAttempt : AggregateRoot
     }
 
     public Guid StudentId { get; private set; }
+    public Guid? ProgramProgressId { get; private set; }
     public AssessmentAttemptPhase Phase { get; private set; }
     public AssessmentAttemptStatus Status { get; private set; }
     public bool IsSkipped { get; private set; }
@@ -96,6 +97,17 @@ public sealed class AssessmentAttempt : AggregateRoot
             CreatedAt = EnsureUtc(startedAt),
             CreatedBy = createdBy
         };
+    }
+
+    public void BindToProgram(Guid programProgressId)
+    {
+        if (programProgressId == Guid.Empty)
+            throw new ArgumentException("A program progress identifier is required.", nameof(programProgressId));
+        if (Phase == AssessmentAttemptPhase.Baseline)
+            throw new InvalidOperationException("A baseline precedes program assignment.");
+        if (ProgramProgressId.HasValue && ProgramProgressId != programProgressId)
+            throw new InvalidOperationException("An assessment cannot be moved to another program.");
+        ProgramProgressId = programProgressId;
     }
 
     private static string? Normalize(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();

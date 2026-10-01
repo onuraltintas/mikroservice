@@ -25,6 +25,7 @@ internal sealed class OwnedSpeedReadingAssessment(
         if (userId == Guid.Empty)
             throw new ArgumentException("A valid user is required.", nameof(userId));
         ArgumentNullException.ThrowIfNull(request);
+        var program = await GetLatestProgramAsync(userId, cancellationToken);
         if (request.Phase == AssessmentAttemptPhase.PostTraining
             && !await HasCompletedTrainingAsync(userId, cancellationToken))
             throw new BusinessRuleException("Assessment.TrainingIncomplete",
@@ -70,6 +71,10 @@ internal sealed class OwnedSpeedReadingAssessment(
                 .AsNoTracking()
                 .Where(item => item.StudentId == userId
                     && item.Phase == prerequisitePhase
+                    && (prerequisitePhase == AssessmentAttemptPhase.Baseline
+                        || item.ProgramProgressId == (program == null ? (Guid?)null : program.Id))
+                    && (prerequisitePhase != AssessmentAttemptPhase.Baseline
+                        || program == null || item.CompletedAt <= program.AssignedDate)
                     && item.Status == AssessmentAttemptStatus.Completed
                     && item.CompletedAt.HasValue)
                 .OrderByDescending(item => item.CompletedAt)
@@ -93,6 +98,8 @@ internal sealed class OwnedSpeedReadingAssessment(
         var existing = await db.AssessmentAttempts
             .SingleOrDefaultAsync(item => item.StudentId == userId
                 && item.Phase == request.Phase
+                && (request.Phase == AssessmentAttemptPhase.Baseline
+                    || item.ProgramProgressId == (program == null ? (Guid?)null : program.Id))
                 && item.Status == AssessmentAttemptStatus.InProgress
                 && item.FormVersion == formVersion,
                 cancellationToken);
@@ -152,6 +159,13 @@ internal sealed class OwnedSpeedReadingAssessment(
             studyEnrollment?.StudyCode,
             studyEnrollment?.ProtocolVersion,
             studyEnrollment?.CohortCode);
+        if (request.Phase != AssessmentAttemptPhase.Baseline)
+        {
+            if (program is null || !program.CompletedDate.HasValue)
+                throw new BusinessRuleException("Assessment.TrainingIncomplete",
+                    "Ölçüm için tamamlanmış bir eğitim programı gerekir.");
+            attempt.BindToProgram(program.Id);
+        }
         var formItems = await BuildPinnedFormItemsAsync(
             attempt.Id,
             assessmentExerciseCount,
@@ -208,7 +222,8 @@ internal sealed class OwnedSpeedReadingAssessment(
             attempt.ExpectedExerciseCount,
             completedCounts.GetValueOrDefault(attempt.Id),
             attempt.StartedAt,
-            attempt.CompletedAt)).ToList();
+            attempt.CompletedAt,
+            attempt.ProgramProgressId)).ToList();
     }
 
     public async Task<AssessmentComparisonSummary> GetComparisonAsync(
@@ -218,15 +233,23 @@ internal sealed class OwnedSpeedReadingAssessment(
         if (userId == Guid.Empty)
             throw new ArgumentException("A valid user is required.", nameof(userId));
 
+        var program = await GetLatestProgramAsync(userId, cancellationToken);
         var attempts = await db.AssessmentAttempts
             .AsNoTracking()
             .Where(item => item.StudentId == userId
+                && (item.Phase == AssessmentAttemptPhase.Baseline
+                    ? program == null || item.CompletedAt <= program.AssignedDate
+                    : program != null && item.ProgramProgressId == program.Id)
                 && item.Status == AssessmentAttemptStatus.Completed)
             .OrderBy(item => item.StartedAt)
             .ToListAsync(cancellationToken);
         if (attempts.Count == 0)
             return new AssessmentComparisonSummary([], null);
 
+        var baseline = attempts.Where(item => item.Phase == AssessmentAttemptPhase.Baseline)
+            .OrderByDescending(item => item.CompletedAt).ThenBy(item => item.Id).FirstOrDefault();
+        attempts = attempts.Where(item => item.Phase != AssessmentAttemptPhase.Baseline
+            || item.Id == baseline?.Id).ToList();
         var attemptIds = attempts.Select(item => item.Id).ToList();
         var resultRows = await db.ExerciseSessionResults
             .AsNoTracking()
@@ -292,9 +315,13 @@ internal sealed class OwnedSpeedReadingAssessment(
         if (userId == Guid.Empty)
             throw new ArgumentException("A valid user is required.", nameof(userId));
 
+        var program = await GetLatestProgramAsync(userId, cancellationToken);
         var attempts = await db.AssessmentAttempts
             .AsNoTracking()
-            .Where(item => item.StudentId == userId)
+            .Where(item => item.StudentId == userId
+                && (item.Phase == AssessmentAttemptPhase.Baseline
+                    ? program == null || item.CompletedAt <= program.AssignedDate
+                    : program != null && item.ProgramProgressId == program.Id))
             .Select(item => new AssessmentPhasePlanAttemptInput(
                 item.Id,
                 item.Phase,
@@ -331,6 +358,13 @@ internal sealed class OwnedSpeedReadingAssessment(
             .FirstOrDefaultAsync(cancellationToken);
         return latest?.CompletedDate.HasValue == true;
     }
+
+    private Task<StudentProgramProgress?> GetLatestProgramAsync(Guid userId, CancellationToken cancellationToken) =>
+        db.StudentProgramProgresses.AsNoTracking().Where(item => item.UserId == userId)
+            .OrderByDescending(item => item.AssignedDate)
+            .ThenByDescending(item => item.CreatedAt)
+            .ThenBy(item => item.Id)
+            .FirstOrDefaultAsync(cancellationToken);
 
     public async Task<AssessmentExercisesSummary> GetExercisesAsync(
         Guid userId,
@@ -1163,7 +1197,8 @@ internal sealed class OwnedSpeedReadingAssessment(
             attempt.ExpectedExerciseCount,
             completedExerciseCount,
             attempt.StartedAt,
-            attempt.CompletedAt);
+            attempt.CompletedAt,
+            attempt.ProgramProgressId);
     }
 
     private async Task EnsurePinnedFormItemsAsync(

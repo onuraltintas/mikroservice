@@ -1522,6 +1522,11 @@ public sealed class OwnedSpeedReadingDbContext(
         modelBuilder.Entity<AssessmentAttempt>(entity =>
         {
             entity.ToTable("assessment_attempts");
+            entity.Property(item => item.ProgramProgressId).HasColumnName("program_progress_id");
+            entity.HasIndex(item => new { item.StudentId, item.ProgramProgressId, item.Phase });
+            entity.HasOne<StudentProgramProgress>().WithMany()
+                .HasForeignKey(item => item.ProgramProgressId).OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("fk_assessment_program_progress");
             entity.Property(item => item.StudentId).HasColumnName("student_id");
             entity.Property(item => item.Phase).HasColumnName("phase");
             entity.Property(item => item.Status).HasColumnName("status");

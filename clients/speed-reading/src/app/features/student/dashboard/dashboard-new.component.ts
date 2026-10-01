@@ -62,6 +62,9 @@ export class DashboardNewComponent extends BaseComponent implements OnInit {
   completedExercises = signal(0);
   hasProgram = signal<boolean | null>(null);
   programCompleted = signal(false);
+  nextAssessmentPhase = signal<number | null>(null);
+  assessmentPlanError = signal(false);
+  assessmentWaitUntil = signal<string | null>(null);
 
   constructor(
     private authService: AuthService,
@@ -147,6 +150,7 @@ export class DashboardNewComponent extends BaseComponent implements OnInit {
       .subscribe({
         next: ({ progress, allAchievements, userAchievements }) => {
           this.programCompleted.set(!!progress?.completedDate);
+          if (progress?.completedDate) this.loadCompletionAssessmentPlan();
           if (!progress) {
             // An authenticated student can have a valid subscription before a
             // training program is assigned. Keep that state explicit instead
@@ -243,6 +247,21 @@ export class DashboardNewComponent extends BaseComponent implements OnInit {
   logout(): void {
     this.authService.logout();
     this.router.navigate(['/login']);
+  }
+
+  loadCompletionAssessmentPlan(): void {
+    this.nextAssessmentPhase.set(null);
+    this.assessmentPlanError.set(false);
+    this.assessmentWaitUntil.set(null);
+    this.assessmentService.getPhasePlan().pipe(takeUntil(this.destroy$)).subscribe({
+      next: plan => {
+        this.nextAssessmentPhase.set(plan.nextPhase ?? null);
+        const waiting = plan.phases.filter(item => item.status === 1 && item.availableAt)
+          .sort((a, b) => Date.parse(a.availableAt!) - Date.parse(b.availableAt!));
+        this.assessmentWaitUntil.set(waiting[0]?.availableAt ?? null);
+      },
+      error: () => this.assessmentPlanError.set(true)
+    });
   }
 
   startAssessment(phase = 1): void {

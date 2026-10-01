@@ -24,7 +24,8 @@ public sealed record AssessmentAttemptSummary(
     int ExpectedExerciseCount,
     int CompletedExerciseCount,
     DateTime StartedAt,
-    DateTime? CompletedAt);
+    DateTime? CompletedAt,
+    Guid? ProgramProgressId = null);
 
 public sealed record AssessmentExerciseItem(
     Guid Id,
