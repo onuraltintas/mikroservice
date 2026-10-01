@@ -49,6 +49,15 @@ public sealed class NextProgramRecommendationTests
         result.AssessmentAttemptId.Should().Be(post.Id);
         result.RequiresStaffApproval.Should().Be(managed);
         (await db.StudentProgramProgresses.CountAsync()).Should().Be(1);
+        var wrongStart = () => Service(db).StartProgramAsync(user, template.Id, CancellationToken.None);
+        (await wrongStart.Should().ThrowAsync<EduPlatform.Shared.Kernel.Exceptions.BusinessRuleException>())
+            .Which.Code.Should().Be("Program.RecommendationChanged");
+        if (managed)
+        {
+            var unapproved = () => Service(db).StartProgramAsync(user, next.Id, CancellationToken.None);
+            (await unapproved.Should().ThrowAsync<EduPlatform.Shared.Kernel.Exceptions.BusinessRuleException>())
+                .Which.Code.Should().Be("Program.StaffApprovalRequired");
+        }
     }
 
     [Fact]
