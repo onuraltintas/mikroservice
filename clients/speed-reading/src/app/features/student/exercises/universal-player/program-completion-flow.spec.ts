@@ -28,6 +28,11 @@ describe('program completion flow', () => {
     (ExercisePlayerComponent.prototype as any).startPostTrainingAssessment.call(instance);
     expect(instance.router.navigate).toHaveBeenCalledWith(['/student/assessment'], { queryParams: { phase: 2 } });
   });
+  it('returns staff training to the program catalog after completion', () => {
+    const instance = { ...player(), staffTrainingMode: true };
+    (ExercisePlayerComponent.prototype as any).startPostTrainingAssessment.call(instance);
+    expect(instance.router.navigate).toHaveBeenCalledWith(['/student/training-programs']);
+  });
 
   it('retries the same completed session with the same idempotency key', () => {
     const instance = player();
