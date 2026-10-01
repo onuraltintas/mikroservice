@@ -33,6 +33,8 @@ describe('auth reCAPTCHA interceptor', () => {
   }
 
   it('maps login, Google login, registration, and recovery to server actions', () => {
+    expect(getAuthRecaptchaAction(new HttpRequest('POST', '/api/auth/speed-reading/google-register-complete', {})))
+      .toBe('auth_register');
     expect(getAuthRecaptchaAction(new HttpRequest('POST', '/api/auth/speed-reading/login', {})))
       .toBe('auth_login');
     expect(getAuthRecaptchaAction(new HttpRequest('POST', '/api/auth/speed-reading/google', {})))

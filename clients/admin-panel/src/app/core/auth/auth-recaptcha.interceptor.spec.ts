@@ -10,6 +10,7 @@ describe('auth reCAPTCHA interceptor', () => {
   it.each([
     ['/api/auth/coaching/login', 'auth_login'],
     ['/api/auth/coaching/google-login', 'auth_login'],
+    ['/api/auth/coaching/google-register-complete', 'auth_register'],
     ['/api/auth/coaching/register/institution', 'auth_register'],
     ['/api/auth/speed-reading/register/student', 'auth_register'],
     ['/api/auth/forgot-password', 'auth_recovery'],
