@@ -7,6 +7,21 @@ import { PlatformLegalPagesService } from '../../../core/services/platform-legal
 import { of } from 'rxjs';
 
 describe('RegisterComponent', () => {
+  it('blocks both manual and Google requests until legal acceptances are complete', () => {
+    const auth = jasmine.createSpyObj('AuthService', ['googleAuth', 'register']);
+    auth.googleAuth.and.returnValue(of({ roles: [] }));
+    TestBed.configureTestingModule({ providers: [
+      { provide: AuthService, useValue: auth },
+      { provide: Router, useValue: jasmine.createSpyObj('Router', ['navigate']) },
+      { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: { get: () => null } } } },
+      { provide: GoogleIdentityService, useValue: {} }
+    ] });
+    const component = TestBed.runInInjectionContext(() => new RegisterComponent());
+    component.onSubmit();
+    (component as any).handleGoogleResponse({ credential: 'google-token' });
+    expect(auth.register).not.toHaveBeenCalled();
+    expect(auth.googleAuth).not.toHaveBeenCalled();
+  });
   it('requires all current central legal document acceptances before registration', () => {
     TestBed.configureTestingModule({
       imports: [RegisterComponent],

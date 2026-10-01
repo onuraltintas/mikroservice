@@ -14,7 +14,7 @@ describe('LoginComponent', () => {
   let route: any;
 
   beforeEach(() => {
-    authService = jasmine.createSpyObj<AuthService>('AuthService', ['login']);
+    authService = jasmine.createSpyObj<AuthService>('AuthService', ['login', 'googleAuth']);
     router = jasmine.createSpyObj<Router>('Router', ['navigate', 'navigateByUrl']);
     route = {
       queryParams: of({}),
@@ -75,6 +75,17 @@ describe('LoginComponent', () => {
       password: 'Password1!',
       rememberMe: true
     });
+  });
+
+  it('redirects new Google users to registration without forwarding the Google token', () => {
+    authService.googleAuth.and.returnValue(throwError(() => ({
+      error: { code: 'Auth.LegalAcceptanceRequired', message: 'Onay gerekli' }
+    })));
+    (component as any).handleGoogleResponse({ credential: 'secret-google-token' });
+    expect(router.navigate).toHaveBeenCalledWith(['/auth/register'], {
+      queryParams: { returnUrl: null }
+    });
+    expect(component.loading).toBe(false);
   });
 
   it('sends a session-only preference when remember-me is cleared', () => {

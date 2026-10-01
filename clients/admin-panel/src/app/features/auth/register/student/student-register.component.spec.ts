@@ -11,6 +11,16 @@ import { ConfigurationService } from '../../../../core/services/settings/configu
 import { StudentRegisterComponent } from './student-register.component';
 
 describe('StudentRegisterComponent Google registration', () => {
+  it('does not send Google registration without current legal acceptances', async () => {
+    const authState = new Subject<{ idToken?: string }>();
+    const authService = { loginWithGoogle: vi.fn() };
+    const toaster = { error: vi.fn(), info: vi.fn() };
+    createComponent(authState, authService, toaster);
+    authState.next({ idToken: 'google-token' });
+    await Promise.resolve();
+    expect(authService.loginWithGoogle).not.toHaveBeenCalled();
+    expect(toaster.info).toHaveBeenCalled();
+  });
   it('starts Google registration from the social auth state', async () => {
     const authState = new Subject<{ idToken?: string }>();
     const authService = {
