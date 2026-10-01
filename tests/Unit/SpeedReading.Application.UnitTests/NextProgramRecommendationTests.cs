@@ -65,6 +65,12 @@ public sealed class NextProgramRecommendationTests
             (await unapproved.Should().ThrowAsync<EduPlatform.Shared.Kernel.Exceptions.BusinessRuleException>())
                 .Which.Code.Should().Be("Program.StaffApprovalRequired");
         }
+        else
+        {
+            var legacyStart = () => Service(db).StartProgramAsync(user, next.Id, CancellationToken.None);
+            (await legacyStart.Should().ThrowAsync<EduPlatform.Shared.Kernel.Exceptions.BusinessRuleException>())
+                .Which.Code.Should().Be("Program.ExplicitConfirmationRequired");
+        }
         var access = DispatchProxy.Create<ISpeedReadingTeacherAccess, TeacherAccessProxy>();
         ((TeacherAccessProxy)access).Teacher = teacher;
         ((TeacherAccessProxy)access).Student = user;
