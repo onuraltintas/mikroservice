@@ -1,8 +1,15 @@
 import { describe, expect, it } from 'vitest';
 
 import { resolveServerAllowedHosts, serverAllowedHosts, serverTrustProxyHeaders } from './server-config';
+import { googleAuthOpenerPolicy } from './server-config';
 
 describe('admin SSR server configuration', () => {
+  it('allows Google popups only on authentication documents', () => {
+    expect(googleAuthOpenerPolicy('/auth/login')).toBe('same-origin-allow-popups');
+    expect(googleAuthOpenerPolicy('/auth/register/student')).toBe('same-origin-allow-popups');
+    expect(googleAuthOpenerPolicy('/coaching-portal')).toBeNull();
+    expect(googleAuthOpenerPolicy('/authentic')).toBeNull();
+  });
   it('allows the public admin domains and local health-check hosts', () => {
     expect(serverAllowedHosts).toEqual(
       expect.arrayContaining([
