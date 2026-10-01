@@ -9,6 +9,7 @@ import { Subject } from 'rxjs';
 import { AuthService } from '../../../core/services/auth.service';
 import { NavigationService, MenuItem } from '../../../core/services/navigation.service';
 import { ThemeService } from '../../../core/services/theme.service';
+import { canUseStaffTraining } from '../../../core/guards/staff-training.guard';
 
 @Component({
   selector: 'app-student-shell',
@@ -57,9 +58,12 @@ export class StudentShellComponent implements OnInit, OnDestroy {
       || this.authService.hasRole('SystemAdmin')
       || this.authService.hasRole('Editor');
     const preview          = this.authService.canPreviewExercises();
-    this.isTeacherPreview.set(preview);
+    const staffTraining = canUseStaffTraining(this.authService);
+    this.isTeacherPreview.set(preview && !staffTraining);
 
-    if (isPlatformPreview) {
+    if (staffTraining || this.authService.hasRole('Student')) {
+      this.menuItems.set(this.navService.getStudentMenuItems());
+    } else if (isPlatformPreview) {
       this.menuItems.set([{
         label: 'Egzersiz Kataloğu',
         icon: 'fitness_center',
