@@ -10,6 +10,27 @@ namespace SpeedReading.Application.UnitTests;
 public sealed class StaffTrainingTests
 {
     [Fact]
+    public async Task Reading_material_uses_selected_staff_program_age_group()
+    {
+        await using var db = new OwnedSpeedReadingDbContext(new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
+        var user = Guid.NewGuid();
+        var age = Guid.NewGuid();
+        var template = ProgramTemplate.Import(Guid.NewGuid(), "Training", "", age, 0, 100, "{}",
+            1, 2, 5, 1, 1, true, 1, 0, null, false, DateTime.UtcNow, null, null, null);
+        db.ProgramTemplates.Add(template);
+        db.StudentProgramProgresses.Add(StudentProgramProgress.Start(Guid.NewGuid(), user, template, 0, 0,
+            user, DateTime.UtcNow, isStaffTraining: true));
+        await db.SaveChangesAsync();
+        var type = typeof(OwnedSpeedReadingDbContext).Assembly.GetType(
+            "SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingExerciseSessions")!;
+        var service = Activator.CreateInstance(type, db)!;
+        var result = await (Task<Guid?>)type.GetMethod("GetAgeGroupIdAsync", System.Reflection.BindingFlags.NonPublic
+            | System.Reflection.BindingFlags.Instance)!.Invoke(service, [user, CancellationToken.None])!;
+        result.Should().Be(age);
+    }
+
+    [Fact]
     public async Task Staff_can_start_training_without_assessment_and_retry_preserves_progress()
     {
         await using var db = new OwnedSpeedReadingDbContext(new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>()
