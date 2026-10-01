@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using EduPlatform.Shared.Kernel.Exceptions;
 using SpeedReading.Application.Assessment;
+using SpeedReading.Application.Analytics;
 using SpeedReading.Domain.Assessment;
 using SpeedReading.Domain.Institutions;
 using SpeedReading.Application.StudentProgram;
@@ -8,7 +9,8 @@ using SpeedReading.Domain.Programs;
 
 namespace SpeedReading.Infrastructure.Persistence;
 
-internal sealed class OwnedSpeedReadingStudentProgram(OwnedSpeedReadingDbContext db, ISpeedReadingAssessment assessment) : ISpeedReadingStudentProgram
+internal sealed class OwnedSpeedReadingStudentProgram(OwnedSpeedReadingDbContext db, ISpeedReadingAssessment assessment,
+    ISpeedReadingTeacherAccess teacherAccess) : ISpeedReadingStudentProgram
 {
     public async Task<NextStudentProgramRecommendation?> GetNextProgramRecommendationAsync(Guid userId, CancellationToken cancellationToken)
     {
@@ -68,12 +70,29 @@ internal sealed class OwnedSpeedReadingStudentProgram(OwnedSpeedReadingDbContext
         return rows.Select(ToInfo).ToList();
     }
 
-    public async Task<StartStudentProgramResult> StartProgramAsync(
+    public Task<StartStudentProgramResult> StartProgramAsync(Guid userId, Guid templateId, CancellationToken cancellationToken) =>
+        StartProgramCoreAsync(userId, userId, templateId, null, null, cancellationToken);
+
+    public Task<StartStudentProgramResult> ConfirmNextProgramAsync(Guid userId, ConfirmNextStudentProgramRequest request,
+        CancellationToken cancellationToken) => StartProgramCoreAsync(userId, userId, request.TemplateId, request, null, cancellationToken);
+
+    public Task<StartStudentProgramResult> ApproveNextProgramAsync(Guid actorId, Guid userId, ConfirmNextStudentProgramRequest request,
+        Guid? institutionId, CancellationToken cancellationToken)
+    {
+        if (actorId == userId) throw new UnauthorizedAccessException("A student cannot approve their own managed program.");
+        return StartProgramCoreAsync(actorId, userId, request.TemplateId, request, institutionId, cancellationToken);
+    }
+
+    private async Task<StartStudentProgramResult> StartProgramCoreAsync(
+        Guid actorId,
         Guid userId,
         Guid templateId,
+        ConfirmNextStudentProgramRequest? confirmation,
+        Guid? institutionId,
         CancellationToken cancellationToken)
     {
-        if (userId == Guid.Empty || templateId == Guid.Empty)
+        if (actorId == Guid.Empty || userId == Guid.Empty || templateId == Guid.Empty
+            || (confirmation is not null && (confirmation.SourceProgressId == Guid.Empty || confirmation.AssessmentAttemptId == Guid.Empty)))
             throw new ArgumentException("A valid user and program template are required.");
 
         var template = await db.ProgramTemplates
@@ -92,6 +111,15 @@ internal sealed class OwnedSpeedReadingStudentProgram(OwnedSpeedReadingDbContext
                     userId,
                     cancellationToken);
 
+                if (actorId != userId)
+                {
+                    var allowed = institutionId.HasValue
+                        ? await teacherAccess.CanReadInstitutionStudentAsync(actorId, institutionId.Value, userId,
+                            cancellationToken: cancellationToken)
+                        : await teacherAccess.CanReadStudentAsync(actorId, userId, cancellationToken: cancellationToken);
+                    if (!allowed) throw new UnauthorizedAccessException("You cannot approve this student's program.");
+                }
+
                 var activePrograms = await db.StudentProgramProgresses
                     .Where(item => item.UserId == userId
                         && item.IsActive
@@ -107,13 +135,17 @@ internal sealed class OwnedSpeedReadingStudentProgram(OwnedSpeedReadingDbContext
                 if (await db.StudentProgramProgresses.AsNoTracking().AnyAsync(item => item.UserId == userId, cancellationToken))
                 {
                     var recommendation = await GetNextProgramRecommendationAsync(userId, cancellationToken);
-                    if (recommendation is null || recommendation.TemplateId != templateId)
+                    if (recommendation is null || recommendation.TemplateId != templateId
+                        || (confirmation is not null && (confirmation.SourceProgressId != recommendation.SourceProgressId
+                            || confirmation.AssessmentAttemptId != recommendation.AssessmentAttemptId)))
                         throw new BusinessRuleException("Program.RecommendationChanged",
                             "Geçerli program önerisi bulunamadı veya değişti. Eğitim sonrası ölçümünüzü kontrol edin.");
-                    if (recommendation.RequiresStaffApproval)
+                    if (recommendation.RequiresStaffApproval && actorId == userId)
                         throw new BusinessRuleException("Program.StaffApprovalRequired",
                             "Yeni programınız için öğretmeninizin veya kurum yöneticinizin onayı gerekir.");
                 }
+                else if (confirmation is not null)
+                    throw new BusinessRuleException("Program.RecommendationChanged", "Tamamlanmış program önerisi bulunamadı.");
                 var now = DateTime.UtcNow;
 
                 var progress = StudentProgramProgress.Start(
@@ -122,11 +154,11 @@ internal sealed class OwnedSpeedReadingStudentProgram(OwnedSpeedReadingDbContext
                     template,
                     0,
                     0,
-                    userId,
+                    actorId,
                     now);
                 progress.SetSchedule(
                     await OwnedSpeedReadingProgramSchedule.BuildAsync(db, template, null, cancellationToken),
-                    userId,
+                    actorId,
                     now);
                 db.StudentProgramProgresses.Add(progress);
                 await db.SaveChangesAsync(cancellationToken);

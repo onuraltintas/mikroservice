@@ -3,6 +3,9 @@ namespace SpeedReading.Application.StudentProgram;
 public interface ISpeedReadingStudentProgram
 {
     Task<NextStudentProgramRecommendation?> GetNextProgramRecommendationAsync(Guid userId, CancellationToken cancellationToken);
+    Task<StartStudentProgramResult> ConfirmNextProgramAsync(Guid userId, ConfirmNextStudentProgramRequest request, CancellationToken cancellationToken);
+    Task<StartStudentProgramResult> ApproveNextProgramAsync(Guid actorId, Guid userId, ConfirmNextStudentProgramRequest request,
+        Guid? institutionId, CancellationToken cancellationToken);
     Task<StudentProgramInfo?> GetMyProgramAsync(Guid userId, CancellationToken cancellationToken);
 
     Task<IReadOnlyList<StudentProgramInfo>> GetMyProgramsAsync(Guid userId, CancellationToken cancellationToken);
@@ -20,6 +23,8 @@ public sealed record NextStudentProgramRecommendation(
     string TemplateName,
     int TotalDays,
     bool RequiresStaffApproval);
+
+public sealed record ConfirmNextStudentProgramRequest(Guid TemplateId, Guid SourceProgressId, Guid AssessmentAttemptId);
 
 public sealed record StudentProgramInfo(
     Guid ProgressId,
