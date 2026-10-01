@@ -6,11 +6,16 @@ import {
 } from '@angular/ssr/node';
 import express from 'express';
 import { join } from 'node:path';
-import { resolveServerAllowedHosts, serverTrustProxyHeaders } from './server-config';
+import { googleAuthOpenerPolicy, resolveServerAllowedHosts, serverTrustProxyHeaders } from './server-config';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
 
 const app = express();
+app.use((req, res, next) => {
+  const policy = googleAuthOpenerPolicy(req.path);
+  if (policy) res.setHeader('Cross-Origin-Opener-Policy', policy);
+  next();
+});
 const angularApp = new AngularNodeAppEngine({
   allowedHosts: resolveServerAllowedHosts(process.env['ADMIN_PANEL_ADDITIONAL_ALLOWED_HOSTS']),
   trustProxyHeaders: serverTrustProxyHeaders,

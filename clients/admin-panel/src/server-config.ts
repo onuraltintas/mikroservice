@@ -30,6 +30,11 @@ export function resolveServerAllowedHosts(
 
 export const serverAllowedHosts = resolveServerAllowedHosts();
 
+/** Google GIS popup compatibility is limited to authentication documents. */
+export function googleAuthOpenerPolicy(path: string): string | null {
+  return path === '/auth' || path.startsWith('/auth/') ? 'same-origin-allow-popups' : null;
+}
+
 /** Headers added by the trusted LiteSpeed/Caddy proxy chain. */
 export const serverTrustProxyHeaders = [
   'x-forwarded-for',

@@ -2,8 +2,6 @@ using Microsoft.Extensions.DependencyInjection;
 using FluentValidation;
 using System.Reflection;
 using Coaching.Application.Authorization;
-using Coaching.Application.CoachingAgreements;
-using MediatR;
 
 namespace Coaching.Application;
 
@@ -17,9 +15,9 @@ public static class DependencyInjection
         services.AddScoped<ICoachingAccessPolicy, CoachingAccessPolicy>();
         services.AddScoped<ICoachingAdminScopeAuthorization, CoachingAdminScopeAuthorization>();
         services.AddSingleton(TimeProvider.System);
-        services.AddScoped(
-            typeof(IPipelineBehavior<,>),
-            typeof(CoachingAgreementRequirementBehavior<,>));
+        // Registration legal consent is enforced centrally by Identity. Specific
+        // coaching agreement workflows remain available, but are not a global
+        // prerequisite for every student read/write operation.
 
 
         return services;
