@@ -15,4 +15,15 @@ describe('Staff training shell menu', () => {
     expect(shell.menuItems()).toEqual(items as any);
     expect(shell.isTeacherPreview()).toBeFalse();
   });
+  it('preserves the personal student menu for dual admin/student accounts', () => {
+    const items = [{ label: 'Ana Sayfa', route: '/student/dashboard' }];
+    const shell = {
+      authService: { hasRole: (role: string) => ['Admin', 'Student'].includes(role), canPreviewExercises: () => false },
+      navService: { getStudentMenuItems: () => items },
+      menuItems: signal([]), isTeacherPreview: signal(false),
+      router: { events: new Subject() }, destroy$: new Subject()
+    };
+    StudentShellComponent.prototype.ngOnInit.call(shell as any);
+    expect(shell.menuItems()).toEqual(items as any);
+  });
 });
