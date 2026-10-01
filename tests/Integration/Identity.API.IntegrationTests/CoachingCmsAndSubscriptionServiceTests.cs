@@ -12,6 +12,26 @@ namespace Identity.API.IntegrationTests;
 
 public sealed class CoachingCmsAndSubscriptionServiceTests
 {
+    [Theory]
+    [InlineData("Teacher")]
+    [InlineData("Institution")]
+    public async Task ContactPlan_WithoutAgreedCapacityCannotGrantAccess(string audience)
+    {
+        await using var db = CreateDbContext();
+        var service = new CoachingSubscriptionService(db, new TestIdentityAuthorizationClient());
+        var plan = new CoachingSubscriptionPlan { Slug = "quote", Name = "Quote", Audience = audience,
+            Price = 0, IsContactOnly = true, DurationDays = 365, IncludedStudentSeats = null };
+        db.CoachingSubscriptionPlans.Add(plan);
+        await db.SaveChangesAsync();
+
+        var result = await service.CreateSubscriptionAsync(new CoachingSubscriptionCreateRequest(
+            plan.Id, audience == "Teacher" ? Guid.NewGuid() : null, null, null,
+            audience == "Institution" ? Guid.NewGuid() : null, [], DateTime.UtcNow, null), Guid.NewGuid());
+
+        result.Should().BeNull();
+        (await db.CoachingSubscriptions.CountAsync()).Should().Be(0);
+    }
+
     [Fact]
     public async Task CmsEntries_SupportPublicationSchedulingAndRevisionRestore()
     {

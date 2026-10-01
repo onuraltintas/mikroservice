@@ -10,6 +10,18 @@ namespace Identity.API.IntegrationTests;
 
 public sealed class CoachingCmsAndSubscriptionRulesTests
 {
+    [Theory]
+    [InlineData("Teacher", null, true)]
+    [InlineData("Institution", null, true)]
+    [InlineData("Teacher", 0, false)]
+    [InlineData("Institution", 100001, false)]
+    [InlineData("Teacher", 20, true)]
+    public void ContactPlans_AllowUnspecifiedCapacityButRejectInvalidCapacity(string audience, int? seats, bool expected)
+    {
+        CoachingManagementRules.IsValidPlan(audience, 0m, true, "OneTime", 365, seats)
+            .Should().Be(expected);
+    }
+
     [Fact]
     public void CmsStarterContentMigration_SeedsCoachingPagesAndNavigation()
     {
