@@ -143,6 +143,9 @@ internal sealed class OwnedSpeedReadingStudentProgram(OwnedSpeedReadingDbContext
                     if (recommendation.RequiresStaffApproval && actorId == userId)
                         throw new BusinessRuleException("Program.StaffApprovalRequired",
                             "Yeni programınız için öğretmeninizin veya kurum yöneticinizin onayı gerekir.");
+                    if (confirmation is null)
+                        throw new BusinessRuleException("Program.ExplicitConfirmationRequired",
+                            "Yeni programa başlamak için güncel öneriyi açıkça onaylamalısınız.");
                 }
                 else if (confirmation is not null)
                     throw new BusinessRuleException("Program.RecommendationChanged", "Tamamlanmış program önerisi bulunamadı.");
