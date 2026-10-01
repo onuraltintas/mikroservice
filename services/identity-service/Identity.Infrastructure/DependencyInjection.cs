@@ -93,6 +93,8 @@ public static class DependencyInjection
         services.AddScoped<IDataSubjectRequestAssessmentRepository, Repositories.DataSubjectRequestAssessmentRepository>();
         services.AddScoped<IDataSubjectRequestExecutionRepository, Repositories.DataSubjectRequestExecutionRepository>();
         services.AddScoped<IIdentityAccountErasureService, Services.IdentityAccountErasureService>();
+        services.AddScoped<Identity.Application.LegalPages.IPlatformLegalPages, Services.PlatformLegalPagesService>();
+        services.AddScoped<Identity.Application.LegalPages.IRegistrationLegalConsentService, Services.RegistrationLegalConsentService>();
         services.AddScoped<IUnitOfWork, Repositories.UnitOfWork>();
 
         return services;

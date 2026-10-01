@@ -17,6 +17,8 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { environment } from '../../../../../environments/environment';
 import { AuthService } from '../../../../core/auth/auth.service';
 import { ConfigurationService } from '../../../../core/services/settings/configuration.service';
+import { RegistrationLegalConsentComponent } from '../../registration-legal-consent.component';
+import { RegistrationLegalAcceptance } from '../../../../core/services/identity.service';
 
 @Component({
     selector: 'app-student-register',
@@ -24,7 +26,7 @@ import { ConfigurationService } from '../../../../core/services/settings/configu
     imports: [
         CommonModule, ReactiveFormsModule, RouterLink,
         MatCardModule, MatInputModule, MatButtonModule, MatIconModule, MatProgressSpinnerModule,
-        GoogleSigninButtonModule
+        GoogleSigninButtonModule, RegistrationLegalConsentComponent
     ],
     templateUrl: './student-register.component.html'
 })
@@ -42,6 +44,8 @@ export class StudentRegisterComponent implements OnInit {
     isLoading = signal(false);
     errorMessage = signal<string | null>(null);
     hidePassword = signal(true);
+    legalReady = false;
+    legalAcceptances: RegistrationLegalAcceptance[] = [];
 
     form = this.fb.group({
         firstName: ['', Validators.required],
@@ -82,7 +86,7 @@ export class StudentRegisterComponent implements OnInit {
     }
 
     async onSubmit() {
-        if (this.form.invalid) return;
+        if (this.form.invalid || !this.hasRequiredLegalAcceptances) return;
 
         this.isLoading.set(true);
         const formData = this.form.value;
@@ -92,6 +96,7 @@ export class StudentRegisterComponent implements OnInit {
             lastName: formData.lastName,
             email: formData.email,
             password: formData.password,
+            legalAcceptances: this.legalAcceptances,
             // Öğrenciye özel otomatik alanlar
             studentNumber: 'ST-' + Math.floor(Math.random() * 100000),
             dateOfBirth: new Date().toISOString() // İleride tarih seçici eklenirse değiştirilir
@@ -118,7 +123,7 @@ export class StudentRegisterComponent implements OnInit {
         this.errorMessage.set(null);
 
         try {
-            const result = await this.authService.loginWithGoogle(idToken);
+            const result = await this.authService.loginWithGoogle(idToken, this.legalAcceptances);
             if (result.requiresMfa) {
                 this.toaster.info('Bu Google hesabı mevcut. Güvenli giriş için giriş sayfasını kullanın.');
                 await this.router.navigate(['/auth/login']);
@@ -147,5 +152,9 @@ export class StudentRegisterComponent implements OnInit {
     togglePassword(e: Event) {
         e.preventDefault();
         this.hidePassword.update(v => !v);
+    }
+
+    get hasRequiredLegalAcceptances(): boolean {
+        return this.legalReady && this.legalAcceptances.length === 3;
     }
 }

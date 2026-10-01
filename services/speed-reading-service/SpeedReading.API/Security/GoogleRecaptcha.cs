@@ -71,17 +71,22 @@ public sealed record GoogleRecaptchaVerification(
 public static class GoogleRecaptchaRules
 {
     public const string ContactAction = "contact_submit";
+    public const string NewsletterSignupAction = "newsletter_signup";
+    public const string PaymentRequestAction = "speed_reading_eft_submit";
     public const int MaximumResponseTokenLength = 16_384;
 
     public static bool HasAcceptableToken(string? token) =>
         !string.IsNullOrWhiteSpace(token) && token.Length <= MaximumResponseTokenLength;
 
-    public static bool IsAccepted(GoogleRecaptchaOptions options, GoogleRecaptchaVerification verification)
+    public static bool IsAccepted(
+        GoogleRecaptchaOptions options,
+        GoogleRecaptchaVerification verification,
+        string requiredAction = ContactAction)
     {
         if (!verification.Success
             || !verification.Score.HasValue
             || verification.Score.Value < options.MinimumScore
-            || !string.Equals(verification.Action, ContactAction, StringComparison.Ordinal)
+            || !string.Equals(verification.Action, requiredAction, StringComparison.Ordinal)
             || string.IsNullOrWhiteSpace(verification.Hostname))
         {
             return false;
@@ -94,7 +99,11 @@ public static class GoogleRecaptchaRules
 
 public interface IGoogleRecaptchaValidator
 {
-    Task<bool> VerifyContactAsync(string? token, string? remoteIp, CancellationToken cancellationToken);
+    Task<bool> VerifyAsync(
+        string? token,
+        string? remoteIp,
+        string action,
+        CancellationToken cancellationToken);
 }
 
 public sealed class GoogleRecaptchaValidator(
@@ -102,7 +111,11 @@ public sealed class GoogleRecaptchaValidator(
     GoogleRecaptchaOptions options,
     ILogger<GoogleRecaptchaValidator> logger) : IGoogleRecaptchaValidator
 {
-    public async Task<bool> VerifyContactAsync(string? token, string? remoteIp, CancellationToken cancellationToken)
+    public async Task<bool> VerifyAsync(
+        string? token,
+        string? remoteIp,
+        string action,
+        CancellationToken cancellationToken)
     {
         if (!options.Enabled) return true;
         if (!GoogleRecaptchaRules.HasAcceptableToken(token))
@@ -132,7 +145,7 @@ public sealed class GoogleRecaptchaValidator(
             var verification = await response.Content.ReadFromJsonAsync<GoogleRecaptchaVerification>(cancellationToken: cancellationToken);
             if (verification is null) return false;
 
-            var accepted = GoogleRecaptchaRules.IsAccepted(options, verification);
+            var accepted = GoogleRecaptchaRules.IsAccepted(options, verification, action);
             if (!accepted)
             {
                 logger.LogWarning(

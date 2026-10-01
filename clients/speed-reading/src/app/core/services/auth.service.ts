@@ -8,6 +8,7 @@ import {
   RegisterInstitutionRequest,
   RegisterRequest,
   RegisterTeacherRequest,
+  RegistrationLegalAcceptance,
   RegistrationResponse
 } from '../models/user.model';
 import { environment } from '../../../environments/environment';
@@ -227,11 +228,12 @@ export class AuthService {
    * Backend returns: ApiResponse<AuthResponse>
    * Service receives: AuthResponse (auto-unwrapped)
    */
-  googleAuth(idToken: string, role?: string): Observable<AuthResponse> {
+  googleAuth(idToken: string, role?: string, legalAcceptances: RegistrationLegalAcceptance[] = []): Observable<AuthResponse> {
     const payload: any = { idToken };
     if (role) {
       payload.role = role;
     }
+    payload.legalAcceptances = legalAcceptances;
     return this.http.post<AuthResponse>(`${this.AUTH_URL}/speed-reading/google-login`, payload, { withCredentials: true }).pipe(
       map(response => this.normalizeAuthResponse(response)),
       switchMap(response => this.persistAndHydrateProfile(response))

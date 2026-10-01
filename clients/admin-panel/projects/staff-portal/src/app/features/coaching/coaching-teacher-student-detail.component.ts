@@ -182,11 +182,21 @@ export class CoachingTeacherStudentDetailComponent implements OnInit {
 
   private historyFilter(): CoachingStudentHistoryFilter {
     return {
-      ...(this.historyFromDate ? { fromDate: `${this.historyFromDate}T00:00:00.000Z` } : {}),
-      ...(this.historyToDate ? { toDate: `${this.historyToDate}T23:59:59.999Z` } : {}),
+      ...(this.historyFromDate ? { fromDate: this.toLocalDayStart(this.historyFromDate) } : {}),
+      ...(this.historyToDate ? { toDate: this.toLocalDayEnd(this.historyToDate) } : {}),
       ...(this.historyStatus ? { status: this.historyStatus } : {}),
       ...(this.historySearch.trim() ? { search: this.historySearch.trim() } : {})
     };
+  }
+
+  private toLocalDayStart(value: string): string {
+    const [year, month, day] = value.split('-').map(Number);
+    return new Date(year, month - 1, day).toISOString();
+  }
+
+  private toLocalDayEnd(value: string): string {
+    const [year, month, day] = value.split('-').map(Number);
+    return new Date(new Date(year, month - 1, day + 1).getTime() - 1).toISOString();
   }
 
   private validateHistoryRange(): boolean {

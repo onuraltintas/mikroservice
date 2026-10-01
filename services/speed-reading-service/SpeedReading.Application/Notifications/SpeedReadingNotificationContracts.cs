@@ -236,8 +236,10 @@ public sealed record EmailCampaignSummary(
     bool IncludeAllUsers,
     bool IncludeSubscribers,
     DateTime? ScheduledFor,
+    DateTime? QueuedAt,
     DateTime? SentAt,
     int TotalRecipients,
+    int QueuedCount,
     int SentCount,
     int FailedCount,
     int OpenedCount,
@@ -254,6 +256,7 @@ public sealed record EmailCampaignLogSummary(
     Guid Id,
     string RecipientEmail,
     string Status,
+    DateTime? QueuedAt,
     DateTime? SentAt,
     string? ErrorMessage);
 
@@ -283,6 +286,7 @@ public sealed record SendEmailCampaignRequest(bool SendNow);
 
 public sealed record EmailCampaignStats(
     int TotalRecipients,
+    int QueuedCount,
     int SentCount,
     int FailedCount,
     int OpenedCount,
@@ -336,4 +340,5 @@ public interface ISpeedReadingEmailCampaigns
     Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken);
     Task<EmailCampaignSummary?> SendAsync(Guid id, SendEmailCampaignRequest request, CancellationToken cancellationToken);
     Task<EmailCampaignStats?> GetStatsAsync(Guid id, CancellationToken cancellationToken);
+    Task<int> ProcessDueAsync(CancellationToken cancellationToken);
 }

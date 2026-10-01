@@ -180,6 +180,10 @@ export class BlogListComponent implements OnInit {
         return author.substring(0, 2).toUpperCase();
     }
 
+    hideBrokenCover(event: Event): void {
+        (event.currentTarget as HTMLImageElement).hidden = true;
+    }
+
     formatDate(dateString?: string): string {
         if (!dateString) return '';
         const date = new Date(dateString);

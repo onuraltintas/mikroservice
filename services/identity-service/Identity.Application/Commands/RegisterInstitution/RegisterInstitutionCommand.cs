@@ -1,4 +1,5 @@
 using EduPlatform.Shared.Kernel.Results;
+using Identity.Application.LegalPages;
 using Identity.Domain.Enums;
 using MediatR;
 
@@ -14,5 +15,6 @@ public record RegisterInstitutionCommand(
     string? Phone,
     string ProvinceId,
     string DistrictId,
-    PlatformProduct? Product = null
+    PlatformProduct? Product = null,
+    IReadOnlyList<LegalPageAcceptance>? LegalAcceptances = null
 ) : IRequest<Result<Guid>>;

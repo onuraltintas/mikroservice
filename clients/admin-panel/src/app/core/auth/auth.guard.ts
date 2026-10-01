@@ -1,9 +1,9 @@
 import { inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformServer } from '@angular/common';
 import { CanActivateFn, Router } from '@angular/router';
-import { AuthService, hasRequiredRole } from './auth.service';
+import { AuthService, hasRequiredRole, hasRole } from './auth.service';
 
-export const COACHING_PORTAL_ROLES = ['Student', 'Teacher', 'Parent'] as const;
+export const COACHING_PORTAL_ROLES = ['Student', 'Teacher'] as const;
 
 export function hasCoachingPortalRole(user: { roles: string[]; product?: string } | null): boolean {
     return user?.product === 'coaching' && COACHING_PORTAL_ROLES.some(role => user.roles.includes(role));
@@ -76,7 +76,7 @@ export const permissionGuard: CanActivateFn = async (route, state) => {
 };
 
 /**
- * Keeps management-only identities out of the student/teacher/parent portal.
+ * Keeps identities without a student or teacher workspace out of the Coaching portal.
  * The server remains the source of truth; this guard only controls navigation.
  */
 export const coachingPortalGuard: CanActivateFn = async (_route, state) => {
@@ -123,6 +123,11 @@ export const coachingRoleGuard: CanActivateFn = async (route, state) => {
 
     if (hasRequiredCoachingRole(authService.userProfile(), requiredRoles)) {
         return true;
+    }
+
+    if (authService.userProfile()?.product === 'coaching' && hasRole(authService.userProfile(), 'Teacher')) {
+        await router.navigate(['/coaching-portal/teacher']);
+        return false;
     }
 
     await router.navigate(['/dashboard'], { queryParams: { forbidden: 'true' } });

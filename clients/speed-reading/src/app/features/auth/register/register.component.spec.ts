@@ -3,15 +3,25 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { RegisterComponent } from './register.component';
 import { AuthService } from '../../../core/services/auth.service';
 import { GoogleIdentityService } from '../../../core/services/google-identity.service';
+import { PlatformLegalPagesService } from '../../../core/services/platform-legal-pages.service';
+import { of } from 'rxjs';
 
 describe('RegisterComponent', () => {
-  it('explains which required consents are missing before registration', () => {
+  it('requires all current central legal document acceptances before registration', () => {
     TestBed.configureTestingModule({
       imports: [RegisterComponent],
       providers: [
         { provide: AuthService, useValue: {} },
         { provide: Router, useValue: jasmine.createSpyObj('Router', ['navigate']) },
         { provide: ActivatedRoute, useValue: {} },
+        { provide: PlatformLegalPagesService, useValue: { getPage: (slug: string) => of({
+          slug,
+          title: slug,
+          content: 'Published legal text',
+          isPublished: true,
+          version: 2,
+          createdAt: new Date().toISOString()
+        }) } },
         { provide: GoogleIdentityService, useValue: {
           renderButton: jasmine.createSpy('renderButton').and.returnValue(Promise.resolve()),
           clearCallback: jasmine.createSpy('clearCallback')
@@ -21,14 +31,15 @@ describe('RegisterComponent', () => {
     const fixture = TestBed.createComponent(RegisterComponent);
     fixture.detectChanges();
 
-    expect(fixture.nativeElement.textContent).toContain('Kayıt için Kullanım Koşulları ve KVKK Metni onayları gereklidir.');
-
-    fixture.componentInstance.registerForm.patchValue({ acceptTerms: true });
-    fixture.detectChanges();
-    expect(fixture.nativeElement.textContent).toContain('Kayıt için KVKK Metni onayı gereklidir.');
-
-    fixture.componentInstance.registerForm.patchValue({ acceptKVKK: true });
-    fixture.detectChanges();
-    expect(fixture.nativeElement.textContent).not.toContain('onayı gereklidir.');
+    expect(fixture.componentInstance.hasRequiredLegalAcceptances).toBe(false);
+    fixture.componentInstance.legalReady = true;
+    fixture.componentInstance.legalAcceptances = [
+      { slug: 'privacy', version: 2 },
+      { slug: 'kvkk', version: 2 },
+      { slug: 'speed-reading-terms', version: 2 }
+    ];
+    expect(fixture.componentInstance.hasRequiredLegalAcceptances).toBe(true);
+    fixture.componentInstance.legalAcceptances.pop();
+    expect(fixture.componentInstance.hasRequiredLegalAcceptances).toBe(false);
   });
 });

@@ -1,4 +1,5 @@
 using FluentValidation;
+using Identity.Application.Validators;
 
 namespace Identity.Application.Commands.RegisterStudent;
 
@@ -18,14 +19,7 @@ public class RegisterStudentCommandValidator : AbstractValidator<RegisterStudent
             .NotEmpty().WithMessage("E-posta alanı zorunludur.")
             .EmailAddress().WithMessage("Geçerli bir e-posta adresi giriniz.");
 
-        RuleFor(x => x.Password)
-            .NotEmpty().WithMessage("Şifre alanı zorunludur.")
-            .MaximumLength(128).WithMessage("Şifre en fazla 128 karakter olabilir.")
-            .MinimumLength(8).WithMessage("Şifre en az 8 karakter olmalıdır.")
-            .Matches("[A-Z]").WithMessage("Şifre en az bir büyük harf içermelidir.")
-            .Matches("[a-z]").WithMessage("Şifre en az bir küçük harf içermelidir.")
-            .Matches("[0-9]").WithMessage("Şifre en az bir rakam içermelidir.")
-            .Matches("[^a-zA-Z0-9]").WithMessage("Şifre en az bir özel karakter içermelidir.");
+        RuleFor(x => x.Password).ApplyRegistrationPasswordPolicy();
 
         // Telefon validasyonu (opsiyonel)
         RuleFor(x => x.Phone)

@@ -1,0 +1,56 @@
+services:
+  identity-service:
+    image: eduivme/identity-service:all-products-20260928-265a6d2c-wt-r1
+    environment:
+      AuthRecaptcha__Enabled: ${AUTH_RECAPTCHA_ENABLED:-false}
+      AuthRecaptcha__SiteKey: ${AUTH_RECAPTCHA_SITE_KEY:-}
+      AuthRecaptcha__SecretKeyFile: /run/secrets/auth-recaptcha-secret
+      AuthRecaptcha__MinimumScore: ${AUTH_RECAPTCHA_MINIMUM_SCORE:-0.5}
+      AuthRecaptcha__AllowedHostnames__0: ${AUTH_RECAPTCHA_ALLOWED_HOSTNAME_0:-eduivme.com}
+      AuthRecaptcha__AllowedHostnames__1: ${AUTH_RECAPTCHA_ALLOWED_HOSTNAME_1:-onuraltintas.net}
+      AuthRecaptcha__AllowedHostnames__2: ${AUTH_RECAPTCHA_ALLOWED_HOSTNAME_2:-masterhizliokuma.com}
+    secrets:
+      - source: auth_recaptcha_secret
+        target: auth-recaptcha-secret
+
+  identity-migrations:
+    image: eduivme/identity-service:all-products-20260928-265a6d2c-wt-r1
+
+  coaching-service:
+    image: eduivme/coaching-service:all-products-20260928-265a6d2c-wt-r1
+    environment:
+      COACHING_NEWSLETTER_RECAPTCHA_ENABLED: ${COACHING_NEWSLETTER_RECAPTCHA_ENABLED:-false}
+      COACHING_NEWSLETTER_RECAPTCHA_SITE_KEY: ${COACHING_NEWSLETTER_RECAPTCHA_SITE_KEY:-}
+      COACHING_NEWSLETTER_RECAPTCHA_SECRET_KEY: ${COACHING_NEWSLETTER_RECAPTCHA_SECRET_KEY:-}
+      COACHING_NEWSLETTER_RECAPTCHA_MINIMUM_SCORE: ${COACHING_NEWSLETTER_RECAPTCHA_MINIMUM_SCORE:-0.5}
+      COACHING_NEWSLETTER_RECAPTCHA_ALLOWED_HOSTNAMES: ${COACHING_NEWSLETTER_RECAPTCHA_ALLOWED_HOSTNAMES:-}
+      Coaching__CmsMedia__RootPath: /var/lib/eduplatform/coaching-cms-media
+    volumes:
+      - coaching_cms_media:/var/lib/eduplatform/coaching-cms-media
+
+  coaching-migrations:
+    image: eduivme/coaching-service:all-products-20260928-265a6d2c-wt-r1
+    environment:
+      Coaching__CmsMedia__RootPath: /var/lib/eduplatform/coaching-cms-media
+
+  speed-reading-service:
+    image: eduivme/speed-reading-service:all-products-20260928-265a6d2c-wt-r1
+
+  speed-reading-migrations:
+    image: eduivme/speed-reading-service:all-products-20260928-265a6d2c-wt-r1
+
+  speed-reading-frontend:
+    image: eduivme/speed-reading-frontend:all-products-20260928-265a6d2c-wt-r1
+
+  api-gateway:
+    image: eduivme/api-gateway:all-products-20260928-265a6d2c-wt-r1
+
+  admin-panel:
+    image: eduivme/admin-panel:all-products-20260928-265a6d2c-wt-r1
+
+secrets:
+  auth_recaptcha_secret:
+    file: ${AUTH_RECAPTCHA_SECRET_HOST_PATH:-/opt/eduivme/secrets/auth-recaptcha-secret}
+
+volumes:
+  coaching_cms_media:

@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using SpeedReading.Application.Subscription;
+using SpeedReading.API.Security;
 using System.Security.Claims;
 
 namespace SpeedReading.API.Controllers;
@@ -12,8 +13,21 @@ namespace SpeedReading.API.Controllers;
 [ApiController]
 [ApiVersion(1.0)]
 [Route("api/speed-reading/bank-transfer")]
-public sealed class BankTransferPaymentsController(ISpeedReadingSubscription subscriptions) : ControllerBase
+public sealed class BankTransferPaymentsController(
+    ISpeedReadingSubscription subscriptions,
+    IGoogleRecaptchaValidator recaptcha,
+    GoogleRecaptchaOptions recaptchaOptions) : ControllerBase
 {
+    [HttpGet("recaptcha")]
+    [AllowAnonymous]
+    public IActionResult GetPaymentRecaptchaConfiguration() => recaptchaOptions.Enabled
+        ? Ok(recaptchaOptions.ToPublicConfiguration())
+        : StatusCode(StatusCodes.Status503ServiceUnavailable, new
+        {
+            success = false,
+            message = "Ödeme bildirimi şu anda alınamıyor. Lütfen daha sonra tekrar deneyin."
+        });
+
     [HttpGet]
     [AllowAnonymous]
     public async Task<IActionResult> GetPublicSettings(CancellationToken cancellationToken = default)
@@ -56,6 +70,23 @@ public sealed class BankTransferPaymentsController(ISpeedReadingSubscription sub
         CancellationToken cancellationToken = default)
     {
         if (!TryGetCurrentUserId(out var userId)) return Unauthorized();
+        if (!recaptchaOptions.Enabled)
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, new
+            {
+                success = false,
+                message = "Ödeme bildirimi şu anda alınamıyor. Lütfen daha sonra tekrar deneyin."
+            });
+        if (!await recaptcha.VerifyAsync(
+                Request.Headers["X-Auth-Recaptcha-Token"].FirstOrDefault(),
+                HttpContext.Connection.RemoteIpAddress?.ToString(),
+                GoogleRecaptchaRules.PaymentRequestAction,
+                cancellationToken))
+            return StatusCode(StatusCodes.Status403Forbidden, new
+            {
+                success = false,
+                code = "SpeedReading.CaptchaFailed",
+                message = "Güvenlik doğrulaması tamamlanamadı. Lütfen sayfayı yenileyip tekrar deneyin."
+            });
         var result = await subscriptions.CreateBankTransferPaymentRequestAsync(
             userId,
             request,

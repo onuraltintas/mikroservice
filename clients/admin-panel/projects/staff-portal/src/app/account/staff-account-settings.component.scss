@@ -1,0 +1,21 @@
+.account-panel { margin: 24px 0; padding: 22px; border: 1px solid #e1e6dc; border-radius: 16px; background: #fbfaf6; }
+.account-heading { margin-bottom: 17px; }
+.eyebrow { margin: 0 0 6px; color: #47806e; font-size: 9px; font-weight: 800; letter-spacing: .15em; text-transform: uppercase; }
+.account-heading h2 { margin: 0; color: #17333a; font-family: Georgia, 'Times New Roman', serif; font-size: 25px; font-weight: 400; }
+.account-heading p:not(.eyebrow) { margin: 7px 0 0; color: #72817d; font-size: 11px; line-height: 1.6; }
+.account-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px; }
+.account-card { display: grid; align-content: start; gap: 14px; padding: 16px; border: 1px solid #e5e8df; border-radius: 12px; background: #fffefa; }
+.account-card h3 { margin: 0; color: #244b43; font-family: Georgia, 'Times New Roman', serif; font-size: 18px; font-weight: 400; }
+.account-card form { display: grid; gap: 10px; }
+.account-card label { display: grid; gap: 5px; color: #526962; font-size: 10px; font-weight: 700; }
+.account-card input { min-height: 38px; padding: 8px 10px; border: 1px solid #d9dfd7; border-radius: 8px; color: #243e43; background: #fff; font: inherit; }
+.account-card input:focus { border-color: #47806e; outline: 0; box-shadow: 0 0 0 3px #47806e20; }
+.account-card input:disabled { color: #89948d; background: #f3f4ef; }
+.account-card small { color: #7b8982; font-size: 9px; font-weight: 400; }
+.primary-button, .notice button { min-height: 36px; padding: 0 12px; border: 1px solid #286250; border-radius: 8px; color: #fff; background: #286250; font: inherit; font-size: 10px; font-weight: 700; cursor: pointer; }
+.primary-button:disabled { opacity: .55; cursor: not-allowed; }
+.field-error, .notice.error { color: #963c34; font-size: 10px; }
+.success { padding: 10px 12px; border: 1px solid #cde2d5; border-radius: 9px; color: #386c5b; background: #edf7f0; font-size: 10px; }
+.notice.error { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 12px; border: 1px solid #e9c7c2; border-radius: 9px; background: #fff4f0; }
+.loading { color: #72817d; text-align: center; font-size: 11px; }
+@media (max-width: 760px) { .account-grid { grid-template-columns: 1fr; } .account-panel { padding: 15px; } }

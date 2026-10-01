@@ -38,13 +38,6 @@ describe('StudentAssignmentDetailComponent navigation', () => {
     expect(component.backRoute()).toBe('/coaching-portal/teacher/assignments');
   });
 
-  it('returns the child list for a parent', () => {
-    profile.set(user('Parent'));
-    const component = TestBed.createComponent(StudentAssignmentDetailComponent).componentInstance;
-
-    expect(component.backRoute()).toBe('/coaching-portal/children');
-  });
-
   it('shows book instructions for mixed assignments as well as book-only assignments', () => {
     const component = TestBed.createComponent(StudentAssignmentDetailComponent).componentInstance;
     const mixed = { source: 'Mixed' } as AssignmentDetail;

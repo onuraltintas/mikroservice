@@ -6,7 +6,6 @@ import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
-import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDividerModule } from '@angular/material/divider';
@@ -21,6 +20,8 @@ import {
 import { strongPasswordValidator } from '../../../shared/validators/password.validator';
 import { getErrorMessage } from '../../../core/utils/error-message';
 import { resolveInvitationReturnUrl } from '../auth-role-routing';
+import { RegistrationLegalAcceptance } from '../../../core/models/user.model';
+import { RegistrationLegalConsentComponent } from '../registration-legal-consent.component';
 
 @Component({
   selector: 'app-register-teacher',
@@ -33,10 +34,10 @@ import { resolveInvitationReturnUrl } from '../auth-role-routing';
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
-    MatCheckboxModule,
     MatIconModule,
     MatProgressSpinnerModule,
-    MatDividerModule
+    MatDividerModule,
+    RegistrationLegalConsentComponent
   ],
   templateUrl: './register-teacher.component.html',
   styleUrl: './register-teacher.component.scss'
@@ -57,15 +58,15 @@ export class RegisterTeacherComponent implements AfterViewInit, OnDestroy {
   successMessage = '';
   hidePassword = true;
   hideConfirmPassword = true;
+  legalReady = false;
+  legalAcceptances: RegistrationLegalAcceptance[] = [];
 
   registerForm = this.fb.group({
     firstName: ['', [Validators.required, Validators.minLength(2)]],
     lastName: ['', [Validators.required, Validators.minLength(2)]],
     email: ['', [Validators.required, Validators.email]],
     password: ['', [Validators.required, strongPasswordValidator()]],
-    confirmPassword: ['', [Validators.required]],
-    acceptTerms: [false, [Validators.requiredTrue]],
-    acceptKVKK: [false, [Validators.requiredTrue]]
+    confirmPassword: ['', [Validators.required]]
   }, {
     validators: this.passwordMatchValidator
   });
@@ -96,7 +97,7 @@ export class RegisterTeacherComponent implements AfterViewInit, OnDestroy {
     this.successMessage = '';
 
     // Pass 'Teacher' role to enforce correct registration/login context
-    this.authService.googleAuth(response.credential, 'Teacher').subscribe({
+    this.authService.googleAuth(response.credential, 'Teacher', this.legalAcceptances).subscribe({
       next: (authResponse) => {
         this.successMessage = 'Google ile giriş başarılı! Yönlendiriliyorsunuz...';
         setTimeout(() => {
@@ -134,7 +135,7 @@ export class RegisterTeacherComponent implements AfterViewInit, OnDestroy {
   }
 
   onSubmit() {
-    if (this.registerForm.invalid) return;
+    if (this.registerForm.invalid || !this.hasRequiredLegalAcceptances) return;
 
     this.isLoading = true;
     this.error = '';
@@ -145,8 +146,7 @@ export class RegisterTeacherComponent implements AfterViewInit, OnDestroy {
       lastName: formValue.lastName!,
       email: formValue.email!,
       password: formValue.password!,
-      acceptTerms: formValue.acceptTerms!,
-      acceptKVKK: formValue.acceptKVKK!
+      legalAcceptances: this.legalAcceptances
     };
 
     this.authService.registerTeacher(request).subscribe({
@@ -169,5 +169,9 @@ export class RegisterTeacherComponent implements AfterViewInit, OnDestroy {
         this.isLoading = false;
       }
     });
+  }
+
+  get hasRequiredLegalAcceptances(): boolean {
+    return this.legalReady && this.legalAcceptances.length === 3;
   }
 }

@@ -438,17 +438,6 @@ describe('CoachingPortalService', () => {
     http.verify();
   });
 
-  it('requests the parent child list from the identity-owned endpoint', () => {
-    const { service, http } = setup();
-
-    service.getMyChildren().subscribe();
-
-    const request = http.expectOne(candidate => candidate.url.endsWith('/users/me/children'));
-    expect(request.request.method).toBe('GET');
-    request.flush([]);
-    http.verify();
-  });
-
   it('reads, accepts and withdraws representative agreement evidence through scoped endpoints', () => {
     const { service, http } = setup();
 

@@ -73,6 +73,7 @@ public sealed class OwnedSpeedReadingDbContext(
     public DbSet<AssessmentStudyEnrollment> AssessmentStudyEnrollments => Set<AssessmentStudyEnrollment>();
     public DbSet<SpeedReadingErasureExecutionReceipt> ErasureExecutions => Set<SpeedReadingErasureExecutionReceipt>();
     internal DbSet<LegacyUserContentFeedback> ContentFeedbacks => Set<LegacyUserContentFeedback>();
+    internal DbSet<LegacyNewsletterSubscriber> NewsletterSubscribers => Set<LegacyNewsletterSubscriber>();
     internal DbSet<LegacyStudentLearningProfile> AdaptiveLearningProfiles => Set<LegacyStudentLearningProfile>();
     internal DbSet<LegacyContentRecommendation> AdaptiveContentRecommendations => Set<LegacyContentRecommendation>();
     internal DbSet<LegacyDailyGoal> AdaptiveDailyGoals => Set<LegacyDailyGoal>();
@@ -261,6 +262,7 @@ public sealed class OwnedSpeedReadingDbContext(
                 .HasColumnName("status")
                 .HasConversion<string>()
                 .HasMaxLength(24)
+                .IsConcurrencyToken()
                 .IsRequired();
             entity.Property(item => item.ExpiresAt).HasColumnName("expires_at").IsRequired();
             entity.Property(item => item.AcceptedByUserId).HasColumnName("accepted_by_user_id");
@@ -885,9 +887,19 @@ public sealed class OwnedSpeedReadingDbContext(
         modelBuilder.Entity<LegacyNewsletterSubscriber>(entity =>
         {
             ConfigureLegacyEntity(entity, "cms_newsletter_subscribers");
-            entity.Property(item => item.Email).HasMaxLength(100).IsRequired();
+            entity.Property(item => item.Email).HasMaxLength(320).IsRequired();
+            entity.Property(item => item.Status).HasMaxLength(32).HasDefaultValue("LegacyUnconfirmed").IsRequired();
+            entity.Property(item => item.ConsentStatementVersion).HasMaxLength(64);
+            entity.Property(item => item.ConfirmationTokenHash).HasMaxLength(64);
+            entity.Property(item => item.UnsubscribeTokenHash).HasMaxLength(64);
+            entity.Property(item => item.UnsubscribeTokenProtected).HasMaxLength(256);
             entity.Property(item => item.Source).HasMaxLength(50);
             entity.HasIndex(item => item.Email).IsUnique();
+            entity.HasIndex(item => item.Status);
+            entity.HasIndex(item => item.ConfirmationTokenHash).IsUnique()
+                .HasFilter("\"ConfirmationTokenHash\" IS NOT NULL");
+            entity.HasIndex(item => item.UnsubscribeTokenHash).IsUnique()
+                .HasFilter("\"UnsubscribeTokenHash\" IS NOT NULL");
         });
         modelBuilder.Entity<LegacyCmsMediaAsset>(entity =>
         {
@@ -1059,9 +1071,11 @@ public sealed class OwnedSpeedReadingDbContext(
             entity.Property(item => item.TargetInstitutionId).HasColumnName("target_institution_id");
             entity.Property(item => item.TemplateId).HasColumnName("template_id");
             entity.Property(item => item.ScheduledFor).HasColumnName("scheduled_for");
+            entity.Property(item => item.QueuedAt).HasColumnName("queued_at");
             entity.Property(item => item.SentAt).HasColumnName("sent_at");
-            entity.Property(item => item.Status).HasColumnName("status").HasMaxLength(20).IsRequired();
+            entity.Property(item => item.Status).HasColumnName("status").HasMaxLength(20).IsRequired().IsConcurrencyToken();
             entity.Property(item => item.TotalRecipients).HasColumnName("total_recipients");
+            entity.Property(item => item.QueuedCount).HasColumnName("queued_count");
             entity.Property(item => item.SentCount).HasColumnName("sent_count");
             entity.Property(item => item.FailedCount).HasColumnName("failed_count");
             entity.Property(item => item.CreatedByUserId).HasColumnName("created_by_user_id");
@@ -1079,7 +1093,9 @@ public sealed class OwnedSpeedReadingDbContext(
             entity.Property(item => item.CampaignId).HasColumnName("campaign_id");
             entity.Property(item => item.RecipientEmail).HasColumnName("recipient_email").HasMaxLength(256).IsRequired();
             entity.Property(item => item.Status).HasColumnName("status").HasMaxLength(20).IsRequired();
+            entity.Property(item => item.QueuedAt).HasColumnName("queued_at");
             entity.Property(item => item.SentAt).HasColumnName("sent_at");
+            entity.Property(item => item.NewsletterUnsubscribeTokenProtected).HasColumnName("newsletter_unsubscribe_token_protected").HasMaxLength(512);
             entity.Property(item => item.ErrorMessage).HasColumnName("error_message").HasMaxLength(2_000);
             entity.HasIndex(item => item.CampaignId);
         });

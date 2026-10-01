@@ -1,7 +1,7 @@
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
-import { DEFAULT_HOME_PAGE_CONTENT, HomeApproachContent, HomeSectionHeading } from '../../home-page-content';
+import { DEFAULT_HOME_PAGE_CONTENT, HomeApproachContent, HomePageContent, HomeSectionHeading } from '../../home-page-content';
 
 type ApproachContent = HomeSectionHeading & { items: HomeApproachContent[] };
 
@@ -14,4 +14,7 @@ type ApproachContent = HomeSectionHeading & { items: HomeApproachContent[] };
 })
 export class TestimonialsSectionComponent {
   @Input() content: ApproachContent = DEFAULT_HOME_PAGE_CONTENT.approach;
+  @Input() testimonialsContent: HomePageContent['testimonials'] = DEFAULT_HOME_PAGE_CONTENT.testimonials;
+  @Input() showApproach = true;
+  @Input() showTestimonials = false;
 }

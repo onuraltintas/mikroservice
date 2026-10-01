@@ -75,6 +75,12 @@ public sealed class TeacherAnalyticsController(
         CancellationToken cancellationToken = default)
     {
         var scope = await GetTeacherScopeAsync(cancellationToken);
+        if (scope is null && User.IsInRole("Teacher") && GetCurrentUserId() is Guid teacherUserId)
+        {
+            scope = new EduPlatform.Shared.Contracts.Reporting.SpeedReadingTeacherStudentScopeResponse(
+                [], [], 0, [], teacherUserId);
+        }
+
         if (scope is null)
         {
             return User.Identity?.IsAuthenticated == true ? Forbid() : Unauthorized();

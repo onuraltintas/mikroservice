@@ -11,7 +11,12 @@ public sealed class GatewayRouteConfigurationTests
     [InlineData("speed-reading-sitemap-public-route", "/api/speed-reading/sitemap.xml")]
     [InlineData("speed-reading-subscription-plans-public-route", "/api/speed-reading/subscription-plans/{**catch-all}")]
     [InlineData("speed-reading-products-public-route", "/api/speed-reading/products/{**catch-all}")]
-    public void Public_speed_reading_routes_bypass_gateway_fallback_authorization(
+    [InlineData("coaching-cms-public-route", "/api/coaching/cms/{**catch-all}")]
+    [InlineData("coaching-subscription-plans-public-route", "/api/coaching/subscription-plans/{**catch-all}")]
+    [InlineData("coaching-bank-transfer-settings-public-route", "/api/coaching/subscriptions/bank-transfer-settings")]
+    [InlineData("identity-platform-legal-pages-public-route", "/api/platform/legal-pages/{**catch-all}")]
+    [InlineData("identity-platform-legal-pages-public-root-route", "/api/platform/legal-pages")]
+    public void Public_content_and_pricing_routes_bypass_gateway_fallback_authorization(
         string routeName,
         string pathPattern)
     {
@@ -88,6 +93,20 @@ public sealed class GatewayRouteConfigurationTests
         route.GetProperty("ClusterId").GetString().Should().Be("coaching-cluster");
         route.GetProperty("Match").GetProperty("Path").GetString()
             .Should().Be("/api/coaching-agreements/{**catch-all}");
+    }
+
+    [Fact]
+    public void Coaching_subscription_and_cms_route_forwards_to_the_coaching_cluster()
+    {
+        using var document = JsonDocument.Parse(File.ReadAllText(GetGatewaySettingsPath()));
+        var route = document.RootElement
+            .GetProperty("ReverseProxy")
+            .GetProperty("Routes")
+            .GetProperty("coaching-route");
+
+        route.GetProperty("ClusterId").GetString().Should().Be("coaching-cluster");
+        route.GetProperty("Match").GetProperty("Path").GetString()
+            .Should().Be("/api/coaching/{**catch-all}");
     }
 
     [Fact]

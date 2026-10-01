@@ -1,5 +1,8 @@
 .roster { margin-top: 28px; }
 .roster-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 18px; }
+.roster-heading-actions { display: flex; flex: 0 0 auto; align-items: center; gap: 8px; }
+.roster-refresh { min-height: 34px; padding: 0 10px; border: 1px solid #d9dfd7; border-radius: 8px; color: #425b56; background: #fbfaf6; font: inherit; font-size: 10px; font-weight: 700; cursor: pointer; }
+.roster-refresh:disabled { cursor: wait; opacity: .55; }
 .roster-eyebrow { margin: 0 0 8px; color: #64876e; font-size: 9px; font-weight: 800; letter-spacing: .15em; }
 .roster-heading h2 { margin: 0; color: #17333a; font-family: Georgia, 'Times New Roman', serif; font-size: 28px; font-weight: 400; letter-spacing: -.035em; }
 .roster-description { margin: 8px 0 0; color: #72817d; font-size: 11px; line-height: 1.6; }
@@ -14,6 +17,8 @@
 .roster-search { display: flex; gap: 8px; margin: 22px 0 13px; }
 .roster-search input { min-width: 0; height: 42px; flex: 1; padding: 0 12px; border: 1px solid #d9dfd7; border-radius: 9px; outline: none; color: #243e43; background: #fffefa; font: inherit; font-size: 11px; }
 .roster-search input:focus { border-color: #779372; box-shadow: 0 0 0 3px rgb(119 147 114 / 14%); }
+.grade-filter { display: grid; min-width: 132px; gap: 4px; color: #596963; font-size: 9px; font-weight: 700; }
+.grade-filter select { height: 42px; padding: 0 10px; border: 1px solid #d9dfd7; border-radius: 9px; color: #243e43; background: #fffefa; font: inherit; font-size: 10px; }
 .search-button, .clear-search, .roster-error button, .roster-pagination button { min-height: 42px; padding: 0 14px; border: 1px solid #d9dfd7; border-radius: 9px; color: #425b56; background: #fbfaf6; font: inherit; font-size: 10px; font-weight: 700; cursor: pointer; }
 .search-button { border-color: #264b44; color: #f6f8ed; background: #264b44; }
 .search-button:hover { background: #1b3e38; }

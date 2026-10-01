@@ -1,4 +1,5 @@
 using Identity.Application.Interfaces;
+using Identity.Application.Exceptions;
 using Identity.Application.Authorization;
 using Identity.Domain.Entities;
 using Identity.Infrastructure.Persistence;
@@ -1723,7 +1724,16 @@ public class UnitOfWork : IUnitOfWork
 
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken)
     {
-        return await _context.SaveChangesAsync(cancellationToken);
+        try
+        {
+            return await _context.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException exception)
+        {
+            throw new IdentityConcurrencyConflictException(
+                "The record was changed by another request.",
+                exception);
+        }
     }
 
     public void ClearTracking() => _context.ChangeTracker.Clear();
@@ -2302,6 +2312,20 @@ public class InvitationRepository : IInvitationRepository
     {
         return await _context.Invitations
             .Where(i => i.InviterId == inviterId)
+            .OrderByDescending(i => i.CreatedAt)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<List<Invitation>> GetPendingByInviterIdAsync(
+        Guid inviterId,
+        DateTime now,
+        CancellationToken cancellationToken)
+    {
+        return await _context.Invitations
+            .AsNoTracking()
+            .Where(i => i.InviterId == inviterId
+                && i.Status == Identity.Domain.Enums.InvitationStatus.Pending
+                && i.ExpiresAt > now)
             .OrderByDescending(i => i.CreatedAt)
             .ToListAsync(cancellationToken);
     }

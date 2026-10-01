@@ -1,0 +1,7 @@
+services:
+  identity-service:
+    image: eduivme/identity-service:coaching-panels-20260928-697bdac5
+  coaching-service:
+    image: eduivme/coaching-service:coaching-panels-20260928-697bdac5
+  admin-panel:
+    image: eduivme/admin-panel:coaching-panels-20260928-697bdac5

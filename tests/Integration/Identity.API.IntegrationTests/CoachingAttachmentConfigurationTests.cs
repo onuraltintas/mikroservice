@@ -16,6 +16,7 @@ public sealed class CoachingAttachmentConfigurationTests
             ["ASPNETCORE_ENVIRONMENT"] = "Production",
             ["Coaching:Attachments:Provider"] = "Local",
             ["Coaching:Attachments:RootPath"] = Path.Combine(Path.GetTempPath(), "coaching-attachments"),
+            ["Coaching:CmsMedia:RootPath"] = Path.Combine(Path.GetTempPath(), "coaching-cms-media"),
             ["Coaching:Attachments:Scanner:Provider"] = "ClamAv"
         });
 
@@ -34,6 +35,7 @@ public sealed class CoachingAttachmentConfigurationTests
         {
             ["ASPNETCORE_ENVIRONMENT"] = "Production",
             ["Coaching:Attachments:Provider"] = "Local",
+            ["Coaching:CmsMedia:RootPath"] = Path.Combine(Path.GetTempPath(), "coaching-cms-media"),
             ["Coaching:Attachments:Scanner:Provider"] = "ClamAv"
         });
 
@@ -52,6 +54,7 @@ public sealed class CoachingAttachmentConfigurationTests
             ["ASPNETCORE_ENVIRONMENT"] = "Production",
             ["Coaching:Attachments:Provider"] = "External",
             ["Coaching:Attachments:RootPath"] = Path.Combine(Path.GetTempPath(), "coaching-attachments"),
+            ["Coaching:CmsMedia:RootPath"] = Path.Combine(Path.GetTempPath(), "coaching-cms-media"),
             ["Coaching:Attachments:Scanner:Provider"] = "ClamAv"
         });
 
@@ -70,6 +73,7 @@ public sealed class CoachingAttachmentConfigurationTests
             ["ASPNETCORE_ENVIRONMENT"] = "Production",
             ["Coaching:Attachments:Provider"] = "Local",
             ["Coaching:Attachments:RootPath"] = Path.Combine(Path.GetTempPath(), "coaching-attachments"),
+            ["Coaching:CmsMedia:RootPath"] = Path.Combine(Path.GetTempPath(), "coaching-cms-media"),
             ["Coaching:Attachments:Scanner:Provider"] = "Local"
         });
 
@@ -78,6 +82,24 @@ public sealed class CoachingAttachmentConfigurationTests
 
         act.Should().Throw<InvalidOperationException>()
             .WithMessage("*Scanner:Provider=ClamAv*");
+    }
+
+    [Fact]
+    public void Production_RejectsCmsMediaStorageWithoutExplicitPersistentPath()
+    {
+        var configuration = CreateConfiguration(new Dictionary<string, string?>
+        {
+            ["ASPNETCORE_ENVIRONMENT"] = "Production",
+            ["Coaching:Attachments:Provider"] = "Local",
+            ["Coaching:Attachments:RootPath"] = Path.Combine(Path.GetTempPath(), "coaching-attachments"),
+            ["Coaching:Attachments:Scanner:Provider"] = "ClamAv"
+        });
+
+        var services = new ServiceCollection();
+        var act = () => services.AddInfrastructure(configuration);
+
+        act.Should().Throw<InvalidOperationException>()
+            .WithMessage("*Coaching:CmsMedia:RootPath*");
     }
 
     [Fact]

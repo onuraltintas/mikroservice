@@ -6,8 +6,13 @@
 !.env.example
 .build-temp
 .npm-temp
+.codex-tmp
+.tmp
 .codex-staging-*
 .tmp-*
+*.tar
+*.tar.gz
+coaching-migration-reconcile-20260925.sql
 **/bin
 **/obj
 **/node_modules

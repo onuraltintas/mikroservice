@@ -6,9 +6,12 @@
     <div>
       <p class="roster-eyebrow">KOÇLUK · ÖĞRETMEN</p>
       <h2 id="roster-title">Öğrencilerim</h2>
-      <p class="roster-description">Size atanmış öğrencileri bulun, ilerleme özetlerini ve tüm Koçluk geçmişlerini inceleyin.</p>
+      <p class="roster-description">Aktif Koçluk atamanızdaki öğrencileri bulun, ilerleme özetlerini ve tüm Koçluk geçmişlerini inceleyin.</p>
     </div>
-    <span class="roster-count">{{ totalCount() }} öğrenci</span>
+    <div class="roster-heading-actions">
+      <button type="button" class="roster-refresh" data-testid="refresh-student-roster" (click)="load()" [disabled]="isLoading()">Yenile</button>
+      <span class="roster-count">{{ totalCount() }} öğrenci</span>
+    </div>
   </div>
 
   <form class="student-invitation" (ngSubmit)="sendStudentInvitation()" aria-label="Koçluk öğrencisi davet et">
@@ -20,13 +23,28 @@
   @if (invitationErrorMessage()) { <div class="roster-error" role="alert">{{ invitationErrorMessage() }}</div> }
   @if (invitationSuccessMessage()) { <p class="invitation-success" role="status">{{ invitationSuccessMessage() }}</p> }
   <p class="invitation-note">Bu davet yalnızca Koçluk öğrencisi içindir; davet e-postasındaki bağlantı kabul edilince öğrenci listenize eklenir.</p>
+  <button type="button" class="clear-search" data-testid="toggle-pending-invitations" [attr.aria-expanded]="pendingInvitationsVisible()" (click)="togglePendingInvitations()">
+    {{ pendingInvitationsVisible() ? 'Bekleyen davetleri gizle' : 'Bekleyen davetleri yönet' }}
+  </button>
+  @if (pendingInvitationsVisible()) {
+    <staff-pending-invitations [product]="'coaching'" [refreshKey]="invitationRefreshKey()" />
+  }
 
   <form class="roster-search" (ngSubmit)="setSearchTerm(searchInput)">
     <label class="visually-hidden" for="staff-coaching-student-search">Öğrenci adıyla ara</label>
     <input id="staff-coaching-student-search" name="studentSearch" type="search"
       [(ngModel)]="searchInput" placeholder="Öğrenci adıyla ara" autocomplete="off">
-    @if (searchTerm()) {
-      <button class="clear-search" type="button" (click)="clearSearch()">Temizle</button>
+    <label class="grade-filter" for="staff-coaching-student-grade">Sınıf
+      <select id="staff-coaching-student-grade" name="gradeLevel" data-testid="grade-filter"
+        [ngModel]="gradeLevelFilter()" (ngModelChange)="setGradeLevel($event)">
+        <option [ngValue]="null">Tüm sınıflar</option>
+        @for (grade of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]; track grade) {
+          <option [ngValue]="grade">{{ grade }}. sınıf</option>
+        }
+      </select>
+    </label>
+    @if (searchTerm() || gradeLevelFilter() !== null) {
+      <button class="clear-search" type="button" (click)="clearFilters()">Filtreleri temizle</button>
     }
     <button class="search-button" type="submit">Ara</button>
   </form>
@@ -44,7 +62,7 @@
     <div class="roster-empty">
       <span aria-hidden="true">○</span>
       <h3>Öğrenci bulunamadı</h3>
-      <p>{{ searchTerm() ? 'Arama ölçütünü değiştirip tekrar deneyin.' : 'Size atanmış bir öğrenci olduğunda burada listelenecek.' }}</p>
+      <p>{{ searchTerm() || gradeLevelFilter() !== null ? 'Arama veya sınıf filtresini değiştirip tekrar deneyin.' : 'Aktif Koçluk atamanızdaki öğrenciler burada listelenir.' }}</p>
     </div>
   } @else {
     <div class="student-list" aria-label="Koçluk öğrencileri">

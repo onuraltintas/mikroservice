@@ -9,7 +9,6 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatIconModule } from '@angular/material/icon';
-import { MatCheckboxModule } from '@angular/material/checkbox';
 import { AuthService } from '../../../core/services/auth.service';
 import { environment } from '../../../../environments/environment';
 import {
@@ -20,6 +19,8 @@ import {
 import { strongPasswordValidator, PASSWORD_ERROR_MESSAGES } from '../../../shared/validators/password.validator';
 import { resolveAuthDestination, resolveInvitationReturnUrl } from '../auth-role-routing';
 import { getErrorMessage } from '../../../core/utils/error-message';
+import { RegistrationLegalAcceptance } from '../../../core/models/user.model';
+import { RegistrationLegalConsentComponent } from '../registration-legal-consent.component';
 
 @Component({
   selector: 'app-register',
@@ -35,7 +36,7 @@ import { getErrorMessage } from '../../../core/utils/error-message';
     MatProgressSpinnerModule,
     MatDividerModule,
     MatIconModule,
-    MatCheckboxModule
+    RegistrationLegalConsentComponent
   ],
   templateUrl: './register.component.html',
   styleUrl: './register.component.scss'
@@ -56,15 +57,8 @@ export class RegisterComponent implements AfterViewInit, OnDestroy {
   passwordErrorMessages = PASSWORD_ERROR_MESSAGES;
   hidePassword = true; // Added visibility toggle state
   hideConfirmPassword = true;
-
-  get consentHint(): string {
-    const termsMissing = this.registerForm.get('acceptTerms')?.invalid;
-    const kvkkMissing = this.registerForm.get('acceptKVKK')?.invalid;
-    if (termsMissing && kvkkMissing) return 'Kayıt için Kullanım Koşulları ve KVKK Metni onayları gereklidir.';
-    if (termsMissing) return 'Kayıt için Kullanım Koşulları onayı gereklidir.';
-    if (kvkkMissing) return 'Kayıt için KVKK Metni onayı gereklidir.';
-    return '';
-  }
+  legalReady = false;
+  legalAcceptances: RegistrationLegalAcceptance[] = [];
 
   constructor() {
     this.registerForm = this.fb.group({
@@ -72,9 +66,7 @@ export class RegisterComponent implements AfterViewInit, OnDestroy {
       lastName: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, strongPasswordValidator()]],
-      confirmPassword: ['', [Validators.required]],
-      acceptTerms: [false, Validators.requiredTrue],
-      acceptKVKK: [false, Validators.requiredTrue]
+      confirmPassword: ['', [Validators.required]]
     }, { validators: this.passwordMatchValidator });
   }
 
@@ -119,7 +111,7 @@ export class RegisterComponent implements AfterViewInit, OnDestroy {
     this.loading = true;
     this.error = '';
 
-    this.authService.googleAuth(response.credential).subscribe({
+    this.authService.googleAuth(response.credential, undefined, this.legalAcceptances).subscribe({
       next: (authResponse) => {
         const invitationReturnUrl = this.getInvitationReturnUrl();
         if (invitationReturnUrl) {
@@ -155,14 +147,14 @@ export class RegisterComponent implements AfterViewInit, OnDestroy {
   }
 
   onSubmit(): void {
-    if (this.registerForm.invalid) {
+    if (this.registerForm.invalid || !this.hasRequiredLegalAcceptances) {
       return;
     }
 
     this.loading = true;
     this.error = '';
 
-    this.authService.register(this.registerForm.value).subscribe({
+    this.authService.register({ ...this.registerForm.value, legalAcceptances: this.legalAcceptances }).subscribe({
       next: (response) => {
         // Kayıt başarılı, login sayfasına yönlendir
         this.router.navigate(['/auth/login'], {
@@ -182,5 +174,9 @@ export class RegisterComponent implements AfterViewInit, OnDestroy {
 
   private getInvitationReturnUrl(): string | null {
     return resolveInvitationReturnUrl(this.route.snapshot.queryParamMap.get('returnUrl'));
+  }
+
+  get hasRequiredLegalAcceptances(): boolean {
+    return this.legalReady && this.legalAcceptances.length === 3;
   }
 }

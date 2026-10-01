@@ -5,6 +5,7 @@ using Identity.Application.Commands.RegisterStudent;
 using Identity.Application.Commands.RegisterTeacher;
 using Identity.Application.DTOs.Settings;
 using Identity.Application.Interfaces;
+using Identity.Application.LegalPages;
 using Identity.Domain.Entities;
 using Identity.Domain.Enums;
 using MassTransit;
@@ -13,6 +14,32 @@ namespace Identity.API.IntegrationTests;
 
 public sealed class ProductRegistrationProfileOwnershipTests
 {
+    [Fact]
+    public async Task TeacherRegistrationWithInvalidLegalAcceptanceDoesNotCreateAnIdentityAccount()
+    {
+        var userId = Guid.NewGuid();
+        var identity = CreateIdentityService(userId);
+        var handler = new RegisterTeacherCommandHandler(
+            identity,
+            CreateUserRepository(User.Create(userId, "teacher@example.test")),
+            DispatchProxy.Create<ITeacherRepository, TeacherRepositoryProxy>(),
+            DispatchProxy.Create<IUnitOfWork, UnitOfWorkProxy>(),
+            DispatchProxy.Create<IPublishEndpoint, PublishEndpointProxy>(),
+            DispatchProxy.Create<IConfigurationService, ConfigurationServiceProxy>(),
+            new RejectingLegalConsentService());
+
+        var result = await handler.Handle(
+            new RegisterTeacherCommand(
+                "teacher@example.test", "StrongPassword1!", "Test", "Teacher", null, PlatformProduct.Coaching),
+            CancellationToken.None);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("Auth.LegalAcceptanceRequired", result.Error.Code);
+        var identityProxy = (IdentityServiceProxy)(object)identity;
+        Assert.Equal(0, identityProxy.RegisterCount);
+        Assert.Equal(0, identityProxy.AssignRoleCount);
+    }
+
     [Fact]
     public async Task SpeedReadingStudentRegistration_DoesNotCreateCoachingStudentProfile()
     {
@@ -26,7 +53,8 @@ public sealed class ProductRegistrationProfileOwnershipTests
             students,
             DispatchProxy.Create<IUnitOfWork, UnitOfWorkProxy>(),
             DispatchProxy.Create<IPublishEndpoint, PublishEndpointProxy>(),
-            DispatchProxy.Create<IConfigurationService, ConfigurationServiceProxy>());
+            DispatchProxy.Create<IConfigurationService, ConfigurationServiceProxy>(),
+            new AcceptingLegalConsentService());
 
         var result = await handler.Handle(
             new RegisterStudentCommand(
@@ -51,7 +79,8 @@ public sealed class ProductRegistrationProfileOwnershipTests
             teachers,
             DispatchProxy.Create<IUnitOfWork, UnitOfWorkProxy>(),
             DispatchProxy.Create<IPublishEndpoint, PublishEndpointProxy>(),
-            DispatchProxy.Create<IConfigurationService, ConfigurationServiceProxy>());
+            DispatchProxy.Create<IConfigurationService, ConfigurationServiceProxy>(),
+            new AcceptingLegalConsentService());
 
         var result = await handler.Handle(
             new RegisterTeacherCommand(
@@ -80,14 +109,25 @@ public sealed class ProductRegistrationProfileOwnershipTests
     public class IdentityServiceProxy : DispatchProxy
     {
         public Guid UserId { get; set; }
+        public int RegisterCount { get; private set; }
+        public int AssignRoleCount { get; private set; }
 
-        protected override object? Invoke(MethodInfo? targetMethod, object?[]? args) => targetMethod?.Name switch
+        protected override object? Invoke(MethodInfo? targetMethod, object?[]? args)
         {
-            nameof(IIdentityService.RegisterUserAsync) => Task.FromResult(Result.Success(UserId)),
-            nameof(IIdentityService.AssignRoleForProductAsync) => Task.FromResult(Result.Success()),
-            nameof(IIdentityService.DeleteUserAsync) => Task.FromResult(Result.Success()),
-            _ => throw new NotSupportedException($"Unexpected identity-service call: {targetMethod?.Name}")
-        };
+            switch (targetMethod?.Name)
+            {
+                case nameof(IIdentityService.RegisterUserAsync):
+                    RegisterCount++;
+                    return Task.FromResult(Result.Success(UserId));
+                case nameof(IIdentityService.AssignRoleForProductAsync):
+                    AssignRoleCount++;
+                    return Task.FromResult(Result.Success());
+                case nameof(IIdentityService.DeleteUserAsync):
+                    return Task.FromResult(Result.Success());
+                default:
+                    throw new NotSupportedException($"Unexpected identity-service call: {targetMethod?.Name}");
+            }
+        }
     }
 
     public class UserRepositoryProxy : DispatchProxy
@@ -159,5 +199,47 @@ public sealed class ProductRegistrationProfileOwnershipTests
             nameof(IConfigurationService.GetAllConfigurationsAsync) => Task.FromResult(new List<ConfigurationDto>()),
             _ => throw new NotSupportedException($"Unexpected configuration-service call: {targetMethod?.Name}")
         };
+    }
+
+    private sealed class AcceptingLegalConsentService : IRegistrationLegalConsentService
+    {
+        public Task<Result<IReadOnlyList<PlatformLegalPageDto>>> ValidateAsync(
+            PlatformProduct product,
+            IEnumerable<LegalPageAcceptance>? acceptances,
+            CancellationToken cancellationToken = default)
+        {
+            var pages = RegistrationLegalConsentPolicy.RequiredSlugs(product)
+                .Select(slug => new PlatformLegalPageDto(
+                    slug, slug, "Test", true, false, null, 1, DateTime.UtcNow, null, null))
+                .ToArray();
+            return Task.FromResult(Result.Success<IReadOnlyList<PlatformLegalPageDto>>(pages));
+        }
+
+        public void TrackAcceptedDocuments(
+            Guid userId,
+            PlatformProduct product,
+            IReadOnlyList<PlatformLegalPageDto> documents,
+            string registrationMethod)
+        {
+        }
+    }
+
+    private sealed class RejectingLegalConsentService : IRegistrationLegalConsentService
+    {
+        public Task<Result<IReadOnlyList<PlatformLegalPageDto>>> ValidateAsync(
+            PlatformProduct product,
+            IEnumerable<LegalPageAcceptance>? acceptances,
+            CancellationToken cancellationToken = default) =>
+            Task.FromResult(Result.Failure<IReadOnlyList<PlatformLegalPageDto>>(new Error(
+                "Auth.LegalAcceptanceRequired",
+                "Kayıt için yayımlanmış yasal metinlerin güncel sürümlerini inceleyip onaylamanız gerekir.")));
+
+        public void TrackAcceptedDocuments(
+            Guid userId,
+            PlatformProduct product,
+            IReadOnlyList<PlatformLegalPageDto> documents,
+            string registrationMethod)
+        {
+        }
     }
 }

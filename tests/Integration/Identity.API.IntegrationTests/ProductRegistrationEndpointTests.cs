@@ -152,9 +152,9 @@ public sealed class ProductRegistrationEndpointTests
     [Fact]
     public async Task RegistrationHandlers_ShouldRejectMissingProductScope()
     {
-        var studentHandler = new RegisterStudentCommandHandler(null!, null!, null!, null!, null!, null!);
-        var teacherHandler = new RegisterTeacherCommandHandler(null!, null!, null!, null!, null!, null!);
-        var institutionHandler = new RegisterInstitutionCommandHandler(null!, null!, null!, null!, null!, null!, null!);
+        var studentHandler = new RegisterStudentCommandHandler(null!, null!, null!, null!, null!, null!, null!);
+        var teacherHandler = new RegisterTeacherCommandHandler(null!, null!, null!, null!, null!, null!, null!);
+        var institutionHandler = new RegisterInstitutionCommandHandler(null!, null!, null!, null!, null!, null!, null!, null!);
 
         var studentResult = await studentHandler.Handle(
             new RegisterStudentCommand("student@example.test", "password", "Test", "Student", null),
@@ -176,7 +176,7 @@ public sealed class ProductRegistrationEndpointTests
     [Fact]
     public async Task ParentRegistration_ShouldRejectNonCoachingProduct()
     {
-        var handler = new RegisterParentCommandHandler(null!, null!, null!, null!, null!, null!);
+        var handler = new RegisterParentCommandHandler(null!, null!, null!, null!, null!, null!, null!);
 
         var result = await handler.Handle(
             new RegisterParentCommand(

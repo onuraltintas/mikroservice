@@ -103,6 +103,8 @@
         </form>
         @if (studentInvitationError()) { <p class="workspace-alert error" role="alert">{{ studentInvitationError() }}</p> }
         @if (studentInvitationSuccess()) { <p class="workspace-alert success" role="status">{{ studentInvitationSuccess() }}</p> }
+        <button type="button" class="outline-button" data-testid="toggle-pending-invitations" [attr.aria-expanded]="pendingInvitationsVisible()" (click)="togglePendingInvitations()">{{ pendingInvitationsVisible() ? 'Bekleyen davetleri gizle' : 'Bekleyen davetleri yönet' }}</button>
+        @if (pendingInvitationsVisible()) { <staff-pending-invitations [product]="'coaching'" [refreshKey]="invitationRefreshKey()" /> }
 
         <div class="filter-row" aria-label="Öğrenci filtreleri">
           <label class="filter-field search-field"><span>Öğrenci ara</span><input #studentSearch type="search" [value]="studentSearchTerm()" (change)="searchStudents(studentSearch.value)" (keydown.enter)="$event.preventDefault(); searchStudents(studentSearch.value)" placeholder="Ad, soyad veya e-posta" /></label>
@@ -140,6 +142,8 @@
         </form>
         @if (teacherInvitationError()) { <p class="workspace-alert error" role="alert">{{ teacherInvitationError() }}</p> }
         @if (teacherInvitationSuccess()) { <p class="workspace-alert success" role="status">{{ teacherInvitationSuccess() }}</p> }
+        <button type="button" class="outline-button" data-testid="toggle-pending-invitations" [attr.aria-expanded]="pendingInvitationsVisible()" (click)="togglePendingInvitations()">{{ pendingInvitationsVisible() ? 'Bekleyen davetleri gizle' : 'Bekleyen davetleri yönet' }}</button>
+        @if (pendingInvitationsVisible()) { <staff-pending-invitations [product]="'coaching'" [refreshKey]="invitationRefreshKey()" /> }
         <label class="filter-field teacher-search"><span>Öğretmen ara</span><input #teacherSearch type="search" [value]="teacherSearchTerm()" (change)="searchTeachers(teacherSearch.value)" (keydown.enter)="$event.preventDefault(); searchTeachers(teacherSearch.value)" placeholder="Ad, soyad veya e-posta" /></label>
         @if (isLoadingTeachers()) {
           <p class="workspace-state" role="status">Öğretmenler yükleniyor…</p>

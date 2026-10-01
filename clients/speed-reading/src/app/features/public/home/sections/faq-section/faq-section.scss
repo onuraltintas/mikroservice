@@ -113,3 +113,68 @@
         }
     }
 }
+
+.faq-section {
+    padding: 3rem 1.25rem;
+    background: transparent;
+
+    .container {
+        max-width: 56rem;
+        padding: 0;
+    }
+
+    .section-header {
+        margin-bottom: 1.75rem;
+        text-align: left;
+
+        h2 {
+            color: var(--ui-text);
+            font-size: clamp(1.75rem, 3vw, 2.25rem);
+            font-weight: 650;
+            letter-spacing: -0.025em;
+        }
+
+        p {
+            color: var(--ui-text-muted);
+            font-size: 1rem;
+            line-height: 1.65;
+        }
+    }
+
+    .faq-accordion {
+        .mat-expansion-panel {
+            margin-bottom: 0.75rem;
+            border: 1px solid var(--ui-border);
+            border-radius: 1rem;
+            background: var(--ui-surface);
+        }
+
+        .mat-expansion-panel-header {
+            padding: 1rem 1.25rem;
+        }
+
+        .category-badge {
+            border-radius: 999px;
+            background: var(--ui-brand-soft);
+            color: var(--ui-brand-strong);
+            box-shadow: none;
+        }
+
+        .question-text {
+            color: var(--ui-text);
+        }
+
+        .mat-expansion-panel-body p {
+            color: var(--ui-text-muted);
+        }
+    }
+
+    .view-all-container .view-all-btn {
+        min-height: 2.75rem;
+        padding: 0.7rem 1rem;
+        border: 1px solid var(--ui-border);
+        border-radius: 0.85rem;
+        background: var(--ui-surface);
+        color: var(--ui-brand-strong);
+    }
+}

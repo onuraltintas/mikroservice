@@ -2,6 +2,7 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using System.Net;
 using SpeedReading.Application.Content;
 using SpeedReading.API.Security;
 
@@ -12,6 +13,7 @@ namespace SpeedReading.API.Controllers;
 [Route("api/speed-reading/cms")]
 public sealed class CmsController(
     ISpeedReadingCms cms,
+    ISpeedReadingNewsletter newsletter,
     IGoogleRecaptchaValidator recaptcha,
     GoogleRecaptchaOptions recaptchaOptions) : ControllerBase
 {
@@ -111,7 +113,11 @@ public sealed class CmsController(
             return BadRequest(new { success = false, message = "All contact fields are required" });
         }
 
-        if (!await recaptcha.VerifyContactAsync(request.RecaptchaToken, GetClientAddress(), cancellationToken))
+        if (!await recaptcha.VerifyAsync(
+                request.RecaptchaToken,
+                GetClientAddress(),
+                GoogleRecaptchaRules.ContactAction,
+                cancellationToken))
         {
             return BadRequest(new { success = false, message = "Güvenlik doğrulaması başarısız oldu. Lütfen tekrar deneyin." });
         }
@@ -122,9 +128,9 @@ public sealed class CmsController(
 
     private string? GetClientAddress()
     {
-        var forwardedAddress = Request.Headers["X-Forwarded-For"].FirstOrDefault()?.Split(',')[0].Trim();
-        return !string.IsNullOrWhiteSpace(forwardedAddress)
-            ? forwardedAddress
+        var gatewayAddress = Request.Headers["X-EduPlatform-Client-IP"].FirstOrDefault();
+        return IPAddress.TryParse(gatewayAddress, out _)
+            ? gatewayAddress
             : HttpContext.Connection.RemoteIpAddress?.ToString();
     }
 
@@ -135,18 +141,67 @@ public sealed class CmsController(
         [FromBody] CmsNewsletterSubscriptionRequest request,
         CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(request.Email))
+        if (string.IsNullOrWhiteSpace(request.Honeypot)
+            && !await recaptcha.VerifyAsync(
+                request.RecaptchaToken,
+                GetClientAddress(),
+                GoogleRecaptchaRules.NewsletterSignupAction,
+                cancellationToken))
         {
-            return BadRequest(new { success = false, message = "Email is required" });
+            return BadRequest(new
+            {
+                success = false,
+                message = "Güvenlik doğrulaması tamamlanamadı. Lütfen sayfayı yenileyip tekrar deneyin."
+            });
         }
 
-        var created = await cms.SubscribeAsync(request, cancellationToken);
-        return Ok(new
+        try
         {
-            success = true,
-            data = new { created },
-            message = created ? "Subscribed successfully" : "Already subscribed"
-        });
+            await newsletter.RequestSubscriptionAsync(request, cancellationToken);
+            return Accepted(new
+            {
+                success = true,
+                message = "Adres uygun ise onay bağlantısı e-posta adresinize gönderilecektir."
+            });
+        }
+        catch (SharedLegalPageVersionMismatchException)
+        {
+            return Conflict(new
+            {
+                success = false,
+                message = "Yasal metinler güncellendi. Lütfen güncel metinleri yeniden inceleyip onaylayın."
+            });
+        }
+        catch (SharedLegalPageUnavailableException)
+        {
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, new
+            {
+                success = false,
+                message = "Gizlilik metni şu anda doğrulanamıyor. Lütfen daha sonra tekrar deneyin."
+            });
+        }
+        catch (ArgumentException)
+        {
+            return BadRequest(new { success = false, message = "Geçerli bir e-posta adresi ve açık onay gereklidir." });
+        }
+    }
+
+    [HttpPost("newsletter/confirm")]
+    [AllowAnonymous]
+    [EnableRateLimiting("public-cms-write")]
+    public async Task<IActionResult> ConfirmNewsletterSubscription(
+        [FromBody] CmsNewsletterConfirmationRequest? request,
+        CancellationToken cancellationToken = default)
+    {
+        if (request is null || string.IsNullOrWhiteSpace(request.Token))
+        {
+            return BadRequest(new { success = false, message = "Onay bağlantısı geçersiz veya süresi dolmuş." });
+        }
+
+        var confirmed = await newsletter.ConfirmSubscriptionAsync(request.Token, cancellationToken);
+        return confirmed
+            ? Ok(new { success = true, message = "E-posta adresiniz doğrulandı; bülten aboneliğiniz etkin." })
+            : BadRequest(new { success = false, message = "Onay bağlantısı geçersiz veya süresi dolmuş." });
     }
 
     [HttpPost("newsletter/unsubscribe")]
@@ -160,7 +215,7 @@ public sealed class CmsController(
             return BadRequest(new { success = false, message = "Unsubscribe token is required" });
         }
 
-        var unsubscribed = await cms.UnsubscribeAsync(request.Token, cancellationToken);
+        var unsubscribed = await newsletter.UnsubscribeAsync(request.Token, cancellationToken);
         return unsubscribed
             ? Ok(new { success = true, message = "Unsubscribed successfully" })
             : BadRequest(new { success = false, message = "Invalid unsubscribe token" });

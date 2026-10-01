@@ -33,6 +33,12 @@ export interface RegisterInstitutionRequest {
   Phone?: string;
   ProvinceId: string;
   DistrictId: string;
+  legalAcceptances: RegistrationLegalAcceptance[];
+}
+
+export interface RegistrationLegalAcceptance {
+  slug: string;
+  version: number;
 }
 
 export interface RegistrationResponse {
@@ -44,8 +50,7 @@ export interface RegisterTeacherRequest {
   password: string;
   firstName: string;
   lastName: string;
-  acceptTerms: boolean;
-  acceptKVKK: boolean;
+  legalAcceptances: RegistrationLegalAcceptance[];
 }
 
 export interface User {
@@ -74,6 +79,7 @@ export interface RegisterRequest {
   password: string;
   firstName: string;
   lastName: string;
+  legalAcceptances: RegistrationLegalAcceptance[];
 }
 
 // User Management Models

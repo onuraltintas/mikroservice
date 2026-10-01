@@ -67,3 +67,48 @@
         }
     }
 }
+
+.stats-section {
+    padding: 1.5rem 1.25rem 3rem;
+    background: transparent;
+
+    .container {
+        max-width: var(--ui-content-max-width, 80rem);
+        padding: clamp(1.5rem, 4vw, 2.5rem);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 1.75rem;
+        background: linear-gradient(125deg, #101a36 0%, #242965 58%, #373a88 100%);
+        box-shadow: var(--ui-shadow-md);
+    }
+
+    .stats-grid {
+        gap: 1.5rem;
+    }
+
+    .stat-card {
+        .icon-wrapper {
+            width: 3rem;
+            height: 3rem;
+            margin-bottom: 1rem;
+            border-radius: 0.9rem;
+            background: rgba(199, 210, 254, 0.12);
+
+            mat-icon {
+                color: #c7d2fe;
+            }
+        }
+
+        .stat-value {
+            font-size: clamp(1.65rem, 3vw, 2.25rem);
+            letter-spacing: -0.025em;
+        }
+
+        .stat-label {
+            color: #dbe5ff;
+        }
+
+        .stat-evidence {
+            color: #c7d2fe;
+        }
+    }
+}

@@ -76,6 +76,7 @@
 
                 <form [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-col gap-4">
 
+
                     <!-- Institution Info -->
                     <div
                         class="p-4 bg-orange-50 dark:bg-orange-950/20 rounded-xl border border-orange-100 dark:border-orange-900/30">
@@ -141,6 +142,10 @@
                             *ngIf="form.get('confirmPassword')?.hasError('passwordMismatch')">Eşleşmiyor</mat-error>
                     </mat-form-field>
 
+                    <app-registration-legal-consent product="coaching"
+                        (acceptancesChange)="legalAcceptances = $event"
+                        (readinessChange)="legalReady = $event"></app-registration-legal-consent>
+
                     <div *ngIf="errorMessage()"
                         class="bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/30 text-red-600 p-4 rounded-xl text-sm flex items-start gap-3">
                         <mat-icon class="text-red-500">error_outline</mat-icon>
@@ -149,7 +154,7 @@
 
                     <button mat-flat-button color="primary" type="submit"
                         class="!py-6 !text-lg !rounded-xl w-full !bg-orange-600 !shadow-lg !shadow-orange-100 hover:!shadow-orange-200 transition-all mt-4"
-                        [disabled]="form.invalid || isLoading()">
+                          [disabled]="form.invalid || !hasRequiredLegalAcceptances || isLoading()">
                         <div class="flex items-center justify-center gap-2">
                             <mat-spinner *ngIf="isLoading()" diameter="24" class="!stroke-white"></mat-spinner>
                             <span *ngIf="!isLoading()">Kaydı Tamamla</span>

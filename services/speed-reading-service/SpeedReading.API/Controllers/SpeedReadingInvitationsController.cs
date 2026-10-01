@@ -78,6 +78,47 @@ public sealed class SpeedReadingInvitationsController(
         return await QueueInvitationEmailAsync(created, cancellationToken);
     }
 
+    [HttpGet("sent-pending")]
+    [Authorize]
+    [ProducesResponseType(typeof(IReadOnlyList<SpeedReadingPendingInvitation>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetMySentPending(
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryGetActor(out var actorId))
+            return Unauthorized();
+
+        var result = await invitations.GetPendingByInviterAsync(actorId, DateTime.UtcNow, cancellationToken);
+        return Ok(result);
+    }
+
+    [HttpPost("{invitationId:guid}/cancel")]
+    [Authorize]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> Cancel(
+        Guid invitationId,
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryGetActor(out var actorId))
+            return Unauthorized();
+
+        return await invitations.CancelAsync(invitationId, actorId, DateTime.UtcNow, cancellationToken) switch
+        {
+            SpeedReadingInvitationCancelResult.Cancelled => NoContent(),
+            SpeedReadingInvitationCancelResult.NotFound => NotFound(new
+            {
+                code = "Invitation.NotFound",
+                message = "Bekleyen davet bulunamadı."
+            }),
+            _ => Conflict(new
+            {
+                code = "Invitation.NotPending",
+                message = "Davet artık beklemede olmadığı için iptal edilemedi."
+            })
+        };
+    }
+
     [HttpPost("{invitationId:guid}/accept")]
     [Authorize]
     public async Task<IActionResult> Accept(

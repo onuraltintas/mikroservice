@@ -1,0 +1,72 @@
+<section class="notification-center" aria-labelledby="notification-title">
+  <div class="section-heading">
+    <div>
+      <p class="eyebrow">{{ product === 'speed-reading' ? 'HIZLI OKUMA' : 'KOÇLUK' }} · BİLDİRİMLER</p>
+      <h2 id="notification-title">Bildirim merkezi</h2>
+      <p>Okunmamış {{ unreadCount }} bildiriminiz var.</p>
+    </div>
+    <div class="heading-actions">
+      @if (product === 'speed-reading') {
+        <button type="button" class="secondary-button" (click)="togglePreferences()">{{ preferencesVisible() ? 'Tercihleri gizle' : 'Bildirim tercihleri' }}</button>
+      }
+      <button type="button" class="secondary-button" (click)="loadNotifications()">Yenile</button>
+      <button type="button" class="primary-button" [disabled]="isUpdating() || unreadCount === 0" (click)="markAllAsRead()">Tümünü okundu işaretle</button>
+    </div>
+  </div>
+
+  @if (errorMessage()) { <p class="notice error" role="alert">{{ errorMessage() }}</p> }
+  @if (successMessage()) { <p class="notice success" role="status">{{ successMessage() }}</p> }
+
+  @if (preferencesVisible()) {
+    <div class="preference-panel">
+      <div class="preference-title"><h3>Hızlı Okuma bildirim tercihleri</h3><p>Tercihler yalnızca Hızlı Okuma hesabınıza uygulanır.</p></div>
+      <div class="preference-bulk-actions">
+        <span>Uygulama içi</span>
+        <button type="button" class="text-button" (click)="setAllInApp(true)">Tümünü aç</button>
+        <button type="button" class="text-button" (click)="setAllInApp(false)">Tümünü kapat</button>
+        <span>E-posta</span>
+        <button type="button" class="text-button" (click)="setAllEmail(true)">Tümünü aç</button>
+        <button type="button" class="text-button" (click)="setAllEmail(false)">Tümünü kapat</button>
+      </div>
+      @for (preference of preferences(); track preference.id) {
+        <div class="preference-row">
+          <strong>{{ typeLabel(preference.notificationType) }}</strong>
+          <label><input type="checkbox" [(ngModel)]="preference.enableInApp"> Uygulama içi</label>
+          <label><input type="checkbox" [(ngModel)]="preference.enableEmail"> E-posta</label>
+        </div>
+      }
+      @if (preferences().length === 0) { <p class="empty-state">Yönetilebilecek bildirim tercihi bulunmuyor.</p> }
+      <button type="button" class="primary-button" [disabled]="isSavingPreferences()" (click)="savePreferences()">{{ isSavingPreferences() ? 'Kaydediliyor…' : 'Tercihleri kaydet' }}</button>
+    </div>
+  }
+
+  <div class="filters" role="group" aria-label="Bildirim filtresi">
+    <button type="button" [class.selected]="filter() === 'all'" (click)="filter.set('all')">Tümü</button>
+    <button type="button" [class.selected]="filter() === 'unread'" (click)="filter.set('unread')">Okunmamış</button>
+    <button type="button" [class.selected]="filter() === 'read'" (click)="filter.set('read')">Okunmuş</button>
+  </div>
+
+  @if (isLoading()) { <p class="empty-state" role="status">Bildirimler yükleniyor…</p> }
+  @else if (visibleNotifications.length === 0) { <p class="empty-state">Bu filtrede gösterilecek bildirim yok.</p> }
+  @else {
+    <div class="notification-list">
+      @for (notification of visibleNotifications; track notification.id) {
+        <article class="notification-card" [class.unread]="!notification.isRead">
+          <div class="notification-copy">
+            <div class="notification-title-row"><h3>{{ notification.title }}</h3>@if (!notification.isRead) { <span class="unread-badge">Yeni</span> }</div>
+            <p>{{ notification.message }}</p>
+            @if (notification.createdAt) { <time>{{ notification.createdAt | date:'medium' }}</time> }
+          </div>
+          <div class="notification-actions">
+            @if (!notification.isRead) { <button type="button" class="text-button" [disabled]="isUpdating()" (click)="markAsRead(notification)">Okundu işaretle</button> }
+            @if (pendingDeleteId() === notification.id) {
+              <span class="delete-confirm">Silinsin mi?</span>
+              <button type="button" class="text-button danger" (click)="deleteNotification(notification.id)">Evet, sil</button>
+              <button type="button" class="text-button" (click)="cancelDelete()">İptal</button>
+            } @else { <button type="button" class="text-button danger" (click)="confirmDelete(notification.id)">Sil</button> }
+          </div>
+        </article>
+      }
+    </div>
+  }
+</section>

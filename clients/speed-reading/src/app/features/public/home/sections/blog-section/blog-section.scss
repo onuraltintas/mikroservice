@@ -72,10 +72,22 @@
                 height: 100%;
                 background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%);
                 transition: transform 0.3s ease;
+                position: absolute;
+                inset: 0;
+            }
+
+            .cover-image {
+                position: relative;
+                z-index: 1;
+                display: block;
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
             }
 
             .category-badge {
                 position: absolute;
+                z-index: 2;
                 top: 1rem;
                 left: 1rem;
                 padding: 0.5rem 0.75rem;
@@ -208,5 +220,79 @@
                 transform: translateX(0.25rem);
             }
         }
+    }
+}
+
+.blog-section {
+    padding: 3rem 1.25rem;
+    background: transparent;
+
+    .container {
+        max-width: var(--ui-content-max-width, 80rem);
+        padding: 0;
+    }
+
+    .section-header {
+        max-width: 46rem;
+        margin: 0 0 1.75rem;
+        text-align: left;
+
+        h2 {
+            margin-bottom: 0.65rem;
+            color: var(--ui-text);
+            font-size: clamp(1.75rem, 3vw, 2.25rem);
+            font-weight: 650;
+            letter-spacing: -0.025em;
+        }
+
+        p {
+            color: var(--ui-text-muted);
+            font-size: 1rem;
+            line-height: 1.65;
+        }
+    }
+
+    .blog-grid {
+        gap: 1rem;
+    }
+
+    .blog-card {
+        height: 100%;
+        border: 1px solid var(--ui-border);
+        border-radius: 1.25rem;
+        background: var(--ui-surface);
+        box-shadow: var(--ui-shadow-sm);
+
+        &:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--ui-shadow-md);
+        }
+
+        .image-container,
+        .image-container .image-placeholder {
+            background: linear-gradient(135deg, #e0e7ff, #dbeafe);
+        }
+
+        mat-card-content h3 {
+            color: var(--ui-text);
+        }
+
+        mat-card-content p,
+        .metadata {
+            color: var(--ui-text-muted);
+        }
+
+        .author .avatar {
+            background: var(--ui-brand-soft);
+            color: var(--ui-brand-strong);
+        }
+    }
+
+    .cta-button .view-all-btn {
+        min-height: 2.75rem;
+        padding-inline: 1rem;
+        border-color: var(--ui-border-strong);
+        border-radius: 0.85rem;
+        color: var(--ui-brand-strong);
     }
 }

@@ -1,11 +1,14 @@
 # Production overlay. This file intentionally forces the application services
-# into Production mode. Provide DATAPROTECTION_CERTIFICATE_HOST_PATH and
-# DATAPROTECTION_CERTIFICATE_PASSWORD through the deployment secret manager,
-# and replace the development SMTP values with a real SMTP provider.
+# into Production mode. Provide DATAPROTECTION_CERTIFICATE_HOST_PATH,
+# AUTH_RECAPTCHA_SECRET_HOST_PATH and DATAPROTECTION_CERTIFICATE_PASSWORD through
+# the deployment secret manager, and replace the development SMTP values with a
+# real SMTP provider.
 # The certificate file is intentionally not stored in this repository.
 secrets:
   dataprotection_certificate:
     file: ${DATAPROTECTION_CERTIFICATE_HOST_PATH:?DATAPROTECTION_CERTIFICATE_HOST_PATH must point to the production PFX/PKCS12 file}
+  auth_recaptcha_secret:
+    file: ${AUTH_RECAPTCHA_SECRET_HOST_PATH:-/opt/eduivme/secrets/auth-recaptcha-secret}
 
 services:
   # Internal infrastructure is reachable only over the Compose network in
@@ -42,6 +45,13 @@ services:
     image: ${PRODUCTION_IMAGE_REPOSITORY:?PRODUCTION_IMAGE_REPOSITORY must be set for production}/identity-service:${RELEASE_TAG:?RELEASE_TAG must be set for production}
     environment:
       ASPNETCORE_ENVIRONMENT: Production
+      AuthRecaptcha__Enabled: ${AUTH_RECAPTCHA_ENABLED:?AUTH_RECAPTCHA_ENABLED must be explicitly set to true or false}
+      AuthRecaptcha__SiteKey: ${AUTH_RECAPTCHA_SITE_KEY:-}
+      AuthRecaptcha__SecretKeyFile: /run/secrets/auth-recaptcha-secret
+      AuthRecaptcha__MinimumScore: ${AUTH_RECAPTCHA_MINIMUM_SCORE:-0.5}
+      AuthRecaptcha__AllowedHostnames__0: ${AUTH_RECAPTCHA_ALLOWED_HOSTNAME_0:-}
+      AuthRecaptcha__AllowedHostnames__1: ${AUTH_RECAPTCHA_ALLOWED_HOSTNAME_1:-}
+      AuthRecaptcha__AllowedHostnames__2: ${AUTH_RECAPTCHA_ALLOWED_HOSTNAME_2:-}
       DataProtection__CertificatePath: /run/secrets/eduplatform-dataprotection.pfx
       DataProtection__CertificatePassword: ${DATAPROTECTION_CERTIFICATE_PASSWORD:?DATAPROTECTION_CERTIFICATE_PASSWORD must be set}
     depends_on:
@@ -54,6 +64,8 @@ services:
     secrets:
       - source: dataprotection_certificate
         target: eduplatform-dataprotection.pfx
+      - source: auth_recaptcha_secret
+        target: auth-recaptcha-secret
     restart: unless-stopped
 
   identity-migrations:
@@ -76,8 +88,14 @@ services:
     image: ${PRODUCTION_IMAGE_REPOSITORY:?PRODUCTION_IMAGE_REPOSITORY must be set for production}/coaching-service:${RELEASE_TAG:?RELEASE_TAG must be set for production}
     environment:
       ASPNETCORE_ENVIRONMENT: Production
+      COACHING_NEWSLETTER_RECAPTCHA_ENABLED: ${COACHING_NEWSLETTER_RECAPTCHA_ENABLED:-false}
+      COACHING_NEWSLETTER_RECAPTCHA_SITE_KEY: ${COACHING_NEWSLETTER_RECAPTCHA_SITE_KEY:-}
+      COACHING_NEWSLETTER_RECAPTCHA_SECRET_KEY: ${COACHING_NEWSLETTER_RECAPTCHA_SECRET_KEY:-}
+      COACHING_NEWSLETTER_RECAPTCHA_MINIMUM_SCORE: ${COACHING_NEWSLETTER_RECAPTCHA_MINIMUM_SCORE:-0.5}
+      COACHING_NEWSLETTER_RECAPTCHA_ALLOWED_HOSTNAMES: ${COACHING_NEWSLETTER_RECAPTCHA_ALLOWED_HOSTNAMES:-}
       Coaching__Attachments__Provider: Local
       Coaching__Attachments__Scanner__Provider: ClamAv
+      Coaching__CmsMedia__RootPath: /var/lib/eduplatform/coaching-cms-media
       DataProtection__CertificatePath: /run/secrets/eduplatform-dataprotection.pfx
       DataProtection__CertificatePassword: ${DATAPROTECTION_CERTIFICATE_PASSWORD:?DATAPROTECTION_CERTIFICATE_PASSWORD must be set}
     depends_on:
@@ -94,6 +112,8 @@ services:
     secrets:
       - source: dataprotection_certificate
         target: eduplatform-dataprotection.pfx
+    volumes:
+      - coaching_cms_media:/var/lib/eduplatform/coaching-cms-media
     restart: unless-stopped
 
   # Apply the Coaching schema once before web replicas start. The command
@@ -107,6 +127,10 @@ services:
     restart: "no"
     environment:
       ASPNETCORE_ENVIRONMENT: Production
+      Coaching__Attachments__Provider: Local
+      Coaching__Attachments__RootPath: /var/lib/eduplatform/attachments
+      Coaching__Attachments__Scanner__Provider: ClamAv
+      Coaching__CmsMedia__RootPath: /var/lib/eduplatform/coaching-cms-media
       ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=${POSTGRES_DB_COACHING};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};Maximum Pool Size=${POSTGRES_MAX_POOL_SIZE:-30}
     depends_on:
       postgres:
@@ -284,9 +308,31 @@ services:
     networks:
       - edu-network
 
+  # Staff portal is a separate SPA image. Caddy publishes it only below
+  # onuraltintas.net/staff while the existing student and admin portals stay put.
+  staff-portal:
+    image: ${PRODUCTION_IMAGE_REPOSITORY:?PRODUCTION_IMAGE_REPOSITORY must be set for production}/staff-portal:${RELEASE_TAG:?RELEASE_TAG must be set for production}
+    build:
+      context: ./clients
+      dockerfile: admin-panel/Dockerfile.staff-portal
+    expose:
+      - "80"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "--no-verbose", "http://127.0.0.1/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+    restart: unless-stopped
+    depends_on:
+      api-gateway:
+        condition: service_started
+    networks:
+      - edu-network
+
 volumes:
   production_caddy_data:
   production_caddy_config:
+  coaching_cms_media:
 
 networks:
   edu-network:

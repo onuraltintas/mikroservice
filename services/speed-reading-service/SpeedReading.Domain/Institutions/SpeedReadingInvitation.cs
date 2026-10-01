@@ -8,7 +8,8 @@ public enum SpeedReadingInvitationStatus
 {
     Pending = 1,
     Accepted = 2,
-    Expired = 3
+    Expired = 3,
+    Cancelled = 4
 }
 
 /// <summary>
@@ -104,6 +105,18 @@ public sealed class SpeedReadingInvitation : AggregateRoot
         Status = SpeedReadingInvitationStatus.Expired;
         UpdatedAt = EnsureUtc(at);
         UpdatedBy = "system";
+    }
+
+    public void MarkCancelled(Guid invitedByUserId, DateTime at)
+    {
+        if (invitedByUserId != InvitedByUserId)
+            throw new InvalidOperationException("Only the invitation sender can cancel it.");
+        if (Status != SpeedReadingInvitationStatus.Pending || ExpiresAt <= EnsureUtc(at))
+            throw new InvalidOperationException("Only an unexpired pending invitation can be cancelled.");
+
+        Status = SpeedReadingInvitationStatus.Cancelled;
+        UpdatedAt = EnsureUtc(at);
+        UpdatedBy = invitedByUserId.ToString();
     }
 
     private static string CreateDeduplicationKey(

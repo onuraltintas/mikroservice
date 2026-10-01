@@ -219,7 +219,7 @@ export class LoginComponent {
         this.resendingEmail.set(true);
         try {
             await this.authService.resendVerificationEmail(this.email);
-            this.toaster.success('Doğrulama e-postası tekrar gönderildi. Lütfen gelen kutunuzu kontrol edin.');
+            this.toaster.success('Eğer bu adres doğrulama bekliyorsa e-posta gönderme isteğiniz alındı. Gelen kutunuzu kontrol edin.');
             this.showResendLink.set(false);
         } catch (error: any) {
             this.toaster.error(error.error?.message || 'E-posta gönderilemedi.');

@@ -195,7 +195,8 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> ResendVerificationEmail([FromBody] ResendVerificationEmailCommand command)
     {
         var result = await _mediator.Send(command);
-        if (result.IsFailure)
+        if (result.IsFailure
+            && result.Error.Code is not ("User.NotFound" or "User.EmailAlreadyConfirmed"))
         {
             return BadRequest(result.Error);
         }
@@ -236,7 +237,8 @@ public class AuthController : ControllerBase
         var command = new Identity.Application.Commands.GoogleLogin.GoogleLoginCommand(
             request.IdToken!,
             ipAddress,
-            product);
+            product,
+            request.LegalAcceptances);
         var result = await _mediator.Send(command);
 
         if (result.IsFailure)
@@ -386,6 +388,15 @@ public class AuthController : ControllerBase
         var result = await _mediator.Send(command);
         if (result.IsFailure)
         {
+            if (result.Error.Code is "ResetPassword.UserNotFound"
+                or "ResetPassword.InvalidToken"
+                or "ResetPassword.ExpiredToken")
+            {
+                return BadRequest(new Error(
+                    "ResetPassword.InvalidRequest",
+                    "Sıfırlama bağlantısı geçersiz veya süresi dolmuş olabilir. Lütfen yeni bir bağlantı isteyin."));
+            }
+
             return BadRequest(result.Error);
         }
         return Ok();
@@ -441,7 +452,8 @@ public class AuthController : ControllerBase
 public sealed record GoogleLoginRequest(
     [param: Required]
     [param: StringLength(16_384, MinimumLength = 1)]
-    string? IdToken);
+    string? IdToken,
+    IReadOnlyList<Identity.Application.LegalPages.LegalPageAcceptance>? LegalAcceptances = null);
 public record RefreshTokenRequest(string? RefreshToken = null);
 public record RevokeTokenRequest(string? Token = null);
 public sealed record MfaSetupRequest(string ChallengeToken);

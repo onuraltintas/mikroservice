@@ -160,6 +160,23 @@ describe('SpeedReadingInstitutionWorkspaceComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Öğretmen daveti gönderildi');
   });
 
+  it('loads pending institution invitations only from the Speed Reading API', () => {
+    const fixture = createLoadedWorkspace();
+    (fixture.nativeElement.querySelector('[data-testid="toggle-pending-invitations"]') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    http.expectOne('/api/speed-reading/invitations/sent-pending').flush([{
+      invitationId: 'reading-teacher-invitation-1',
+      email: 'teacher@example.test',
+      role: 'Teacher',
+      createdAt: '2026-09-29T10:00:00Z',
+      expiresAt: '2026-10-06T10:00:00Z',
+    }]);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('teacher@example.test');
+    expect(fixture.nativeElement.textContent).toContain('Öğretmen daveti');
+  });
+
   it('switches from students to teachers and excludes student-only grade filters', () => {
     const fixture = TestBed.createComponent(SpeedReadingInstitutionWorkspaceComponent);
     fixture.detectChanges();

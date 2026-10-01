@@ -1,0 +1,23 @@
+services:
+  identity-service:
+    image: eduivme/identity-service:role-profiles-20260925-d2f8b3dc
+  identity-migrations:
+    image: eduivme/identity-service:role-profiles-20260925-d2f8b3dc
+  coaching-service:
+    image: eduivme/coaching-service:coaching-reports-20260924-65de08a7
+  coaching-migrations:
+    image: eduivme/coaching-service:coaching-reports-20260924-65de08a7
+  notification-service:
+    image: eduivme/notification-service:coaching-invite-email-20260924-c348cf4a
+  notification-migrations:
+    image: eduivme/notification-service:coaching-invite-email-20260924-c348cf4a
+  speed-reading-service:
+    image: eduivme/speed-reading-service:core-fixes-20260924
+  speed-reading-migrations:
+    image: eduivme/speed-reading-service:core-fixes-20260924
+  api-gateway:
+    image: eduivme/api-gateway:419f91c2
+  admin-panel:
+    image: eduivme/admin-panel:registration-toasts-20260924-ffc79f94
+  speed-reading-frontend:
+    image: eduivme/speed-reading-frontend:achievements-render-20260924

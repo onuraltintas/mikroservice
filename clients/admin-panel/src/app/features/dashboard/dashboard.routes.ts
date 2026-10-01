@@ -18,6 +18,18 @@ export const DASHBOARD_ROUTES: Routes = [
         loadChildren: () => import('../identity/identity.routes').then(m => m.IDENTITY_ROUTES)
     },
     {
+      path: 'coaching/cms',
+      canActivate: [permissionGuard],
+      data: { permission: ADMIN_PERMISSIONS.coachingContentManage },
+      loadComponent: () => import('./pages/coaching-cms').then(m => m.CoachingCmsComponent)
+    },
+    {
+      path: 'coaching/subscriptions',
+      canActivate: [permissionGuard],
+      data: { permission: ADMIN_PERMISSIONS.coachingSubscriptionManage },
+      loadComponent: () => import('./pages/coaching-subscriptions').then(m => m.CoachingSubscriptionsComponent)
+    },
+    {
         path: 'coaching/assignments/new',
         canActivate: [permissionGuard],
         data: { permission: ADMIN_PERMISSIONS.coachingManage },

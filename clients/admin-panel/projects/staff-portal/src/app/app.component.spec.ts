@@ -133,6 +133,24 @@ describe('Staff portal workspace role selection', () => {
   });
 });
 
+describe('Staff portal product deep links', () => {
+  const initialUrl = window.location.href;
+
+  afterEach(() => window.history.replaceState({}, '', initialUrl));
+
+  it('preselects the Speed Reading product for legacy handoff links', () => {
+    window.history.replaceState({}, '', '/staff/?product=speed-reading');
+
+    expect(createComponent({}).selectedProduct).toBe('speed-reading');
+  });
+
+  it('uses Coaching for an explicit Coaching handoff', () => {
+    window.history.replaceState({}, '', '/staff/?product=coaching');
+
+    expect(createComponent({}).selectedProduct).toBe('coaching');
+  });
+});
+
 function createComponent(auth: Partial<StaffAuthService>): AppComponent {
   TestBed.configureTestingModule({
     providers: [{ provide: StaffAuthService, useValue: auth }]

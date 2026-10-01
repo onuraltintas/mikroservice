@@ -1,7 +1,7 @@
 @if (auth.isAuthenticated()) {
   <div class="portal-shell">
     <aside class="sidebar" aria-label="Personel portalı">
-      <a class="brand" href="/" aria-label="Eduİvme personel portalı ana sayfa">
+      <a class="brand" href="/staff/" aria-label="Eduİvme personel portalı ana sayfa">
         <span class="brand-symbol">İ</span>
         <span class="brand-copy"><strong>eduivme</strong><small>PERSONEL ALANI</small></span>
       </a>
@@ -36,9 +36,11 @@
     <main class="main-area">
       <header class="topbar">
         <div class="breadcrumb"><span>Personel portalı</span><span aria-hidden="true">/</span><strong>{{ currentProductLabel }}</strong></div>
-        <button class="logout-button" type="button" (click)="logout()">
-          <span aria-hidden="true">↪</span> Güvenli çıkış
-        </button>
+        <div class="topbar-actions">
+          <button class="account-button" type="button" data-testid="toggle-notifications" [attr.aria-expanded]="notificationsVisible" (click)="notificationsVisible = !notificationsVisible">{{ notificationsVisible ? 'Bildirimleri gizle' : 'Bildirimler' }}</button>
+          <button class="account-button" type="button" data-testid="toggle-account-settings" [attr.aria-expanded]="accountSettingsVisible" (click)="accountSettingsVisible = !accountSettingsVisible">{{ accountSettingsVisible ? 'Hesap ayarlarını gizle' : 'Hesap ayarları' }}</button>
+          <button class="logout-button" type="button" (click)="logout()"><span aria-hidden="true">↪</span> Güvenli çıkış</button>
+        </div>
       </header>
 
       <div class="content-wrap">
@@ -94,8 +96,15 @@
           </div>
         </section>
 
+        @if (accountSettingsVisible) { <staff-account-settings /> }
+        @if (notificationsVisible) { <staff-notification-center [product]="auth.activeProduct() ?? 'coaching'" /> }
+
         @if (isTeacherWorkspaceSelected) {
-          <staff-coaching-teacher-workspace />
+          @defer (on immediate) {
+            <staff-coaching-teacher-workspace />
+          } @placeholder {
+            <p class="migration-note" role="status">Koçluk öğretmen alanı hazırlanıyor…</p>
+          }
         }
 
         @if (isInstitutionWorkspaceSelected) {
@@ -122,18 +131,6 @@
           }
         }
 
-        @if (auth.activeProduct() === 'speed-reading' && activeWorkspaceRole !== 'teacher' && activeWorkspaceRole !== 'institution') {
-          <section class="migration-note" aria-labelledby="reading-migration-title">
-            <div class="migration-icon" aria-hidden="true">↗</div>
-            <div>
-              <p class="eyebrow">HIZLI OKUMA · KURUM YÖNETİMİ</p>
-              <h2 id="reading-migration-title">Kurum yöneticisi ekranları sıradaki taşıma adımında.</h2>
-              <p>Öğretmen ekranları Hızlı Okuma’nın kendi API’sine bağlandı. Kurum yönetimi ayrı kurum yetkisiyle taşınacak; Koçluk verileri ve yetkileri ayrı kalacak.</p>
-            </div>
-            <span class="migration-status">Hazırlanıyor</span>
-          </section>
-        }
-
         <footer class="page-footer">Eduİvme · Personel çalışma alanı <span>Yetkiniz yalnızca erişim verilen ürünlerde geçerlidir.</span></footer>
       </div>
     </main>
@@ -141,7 +138,7 @@
 } @else {
   <main class="login-page">
     <section class="login-story" aria-label="Eduİvme personel portalı hakkında">
-      <a class="brand light-brand" href="/" aria-label="Eduİvme ana sayfa">
+      <a class="brand light-brand" href="/staff/" aria-label="Personel portalı ana sayfa">
         <span class="brand-symbol">İ</span>
         <span class="brand-copy"><strong>eduivme</strong><small>PERSONEL ALANI</small></span>
       </a>

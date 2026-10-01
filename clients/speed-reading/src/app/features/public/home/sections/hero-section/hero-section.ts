@@ -28,7 +28,7 @@ export class HeroSectionComponent {
   ];
 
   startFreeTrial() {
-    this.router.navigate(['/auth/register']);
+    this.router.navigateByUrl(this.content.primaryActionUrl || '/auth/register');
   }
 
   scrollToFeatures() {

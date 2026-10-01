@@ -48,14 +48,4 @@ public sealed class SpeedReadingReportExportRulesTests
             .Should().Throw<ArgumentOutOfRangeException>();
     }
 
-    [Fact]
-    public void Unsubscribe_requires_a_guid_token_and_is_not_affected_by_whitespace()
-    {
-        var subscriberId = Guid.NewGuid();
-
-        SpeedReadingNewsletterRules.TryGetSubscriberId("  " + subscriberId + "  ", out var parsedId)
-            .Should().BeTrue();
-        parsedId.Should().Be(subscriberId);
-        SpeedReadingNewsletterRules.TryGetSubscriberId("not-a-guid", out _).Should().BeFalse();
-    }
 }

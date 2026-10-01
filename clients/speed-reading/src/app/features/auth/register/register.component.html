@@ -80,19 +80,9 @@
           <small>En az 8 karakter, büyük/küçük harf, rakam ve sembol içermeli.</small>
         </div>
 
-        <!-- Consents -->
-        <div class="consents-wrapper">
-          <mat-checkbox formControlName="acceptTerms" color="primary">
-            <a routerLink="/legal/terms" target="_blank">Kullanım Koşulları</a>'nı kabul ediyorum.
-          </mat-checkbox>
-
-          <mat-checkbox formControlName="acceptKVKK" color="primary">
-            <a routerLink="/legal/kvkk" target="_blank">KVKK Metni</a>'ni okudum.
-          </mat-checkbox>
-          @if (consentHint) {
-          <p class="consent-hint" role="status">{{ consentHint }}</p>
-          }
-        </div>
+        <app-registration-legal-consent product="speed-reading"
+          (acceptancesChange)="legalAcceptances = $event"
+          (readinessChange)="legalReady = $event"></app-registration-legal-consent>
 
         @if (error) {
         <div class="error-message">
@@ -101,7 +91,7 @@
         }
 
         <!-- Actions -->
-        <button mat-raised-button color="primary" type="submit" [disabled]="loading || registerForm.invalid"
+        <button mat-raised-button color="primary" type="submit" [disabled]="loading || registerForm.invalid || !hasRequiredLegalAcceptances"
           class="submit-btn full-width">
           @if (loading) {
           <mat-spinner diameter="24"></mat-spinner>

@@ -97,7 +97,7 @@ describe('AuthService', () => {
 
     const request = http.expectOne('/api/auth/speed-reading/google-login');
     expect(request.request.withCredentials).toBeTrue();
-    expect(request.request.body).toEqual({ idToken: 'google-id-token' });
+    expect(request.request.body).toEqual({ idToken: 'google-id-token', legalAcceptances: [] });
     request.flush({ accessToken, roles: [] });
 
     const profileRequest = http.expectOne('/api/v1/users/me');
@@ -198,7 +198,8 @@ describe('AuthService', () => {
       firstName: 'Ada',
       lastName: 'Yılmaz',
       email: 'ada@example.com',
-      password: 'Password1!'
+      password: 'Password1!',
+      legalAcceptances: []
     }).subscribe();
 
     const request = http.expectOne('/api/auth/speed-reading/register/student');

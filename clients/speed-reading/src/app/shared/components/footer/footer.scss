@@ -121,3 +121,21 @@
         }
     }
 }
+
+:host(.public-cms-footer) .footer {
+    background: linear-gradient(125deg, #101a36 0%, #1b2451 100%);
+
+    .footer-column ul li a,
+    .footer-column .tagline,
+    .footer-bottom p {
+        color: #c7d2fe;
+    }
+
+    .footer-column .social-links a:hover {
+        background: var(--ui-brand-strong);
+    }
+
+    .footer-bottom {
+        border-top-color: rgba(199, 210, 254, 0.18);
+    }
+}

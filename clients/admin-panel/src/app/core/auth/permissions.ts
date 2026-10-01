@@ -20,6 +20,8 @@ export const ADMIN_PERMISSIONS = {
   institutionsManage: 'Permissions.Institutions.Manage',
   coachingView: 'Permissions.Coaching.View',
   coachingManage: 'Permissions.Coaching.Manage',
+  coachingContentManage: 'Permissions.Coaching.ContentManage',
+  coachingSubscriptionManage: 'Permissions.Coaching.SubscriptionManage',
   speedReadingView: 'Permissions.SpeedReading.View',
   speedReadingContentManage: 'Permissions.SpeedReading.ContentManage',
   speedReadingProgramManage: 'Permissions.SpeedReading.ProgramManage',

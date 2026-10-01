@@ -94,41 +94,6 @@ export class NavigationService {
     return items;
   }
 
-  getTeacherMenuItems(): MenuItem[] {
-    return [
-      {
-        label: 'Ana Sayfa',
-        icon: 'dashboard',
-        route: '/teacher/dashboard'
-      },
-      {
-        label: 'Öğrenciler',
-        icon: 'people',
-        route: '/teacher/students'
-      },
-      {
-        label: 'Ödevler',
-        icon: 'assignment',
-        route: '/teacher/assignments'
-      },
-      {
-        label: 'Koçluk',
-        icon: 'sports_kabaddi',
-        route: '/teacher/coaching'
-      },
-      {
-        label: 'Sınıf Raporu',
-        icon: 'analytics',
-        route: '/teacher/reports/class-overview'
-      },
-      {
-        label: 'Egzersiz Önizleme',
-        icon: 'preview',
-        route: '/student/exercises'
-      }
-    ];
-  }
-
   getCoachingMenuItems(): MenuItem[] {
     return [
       { label: 'Genel Bakış',      icon: 'dashboard',  route: '/coaching/dashboard' },
@@ -137,60 +102,6 @@ export class NavigationService {
       { label: 'Hedefler',         icon: 'flag',        route: '/coaching/goals' },
       { label: 'Ödevler',          icon: 'assignment', route: '/coaching/assignments' },
       { label: 'Sınav Sonuçları',  icon: 'analytics',  route: '/coaching/exam-results' },
-    ];
-  }
-
-  getInstitutionAdminMenuItems(): MenuItem[] {
-    return [
-      {
-        label: 'Ana Sayfa',
-        icon: 'dashboard',
-        route: '/teacher/dashboard'
-      },
-      {
-        label: 'Öğretmenler',
-        icon: 'school',
-        route: '/teacher/teachers'
-      },
-      {
-        label: 'Tüm Öğrenciler',
-        icon: 'people',
-        route: '/teacher/students'
-      },
-      {
-        label: 'Kurum Ödevleri',
-        icon: 'assignment',
-        route: '/teacher/assignments'
-      },
-
-      {
-        label: 'Raporlar',
-        icon: 'analytics',
-        children: [
-          {
-            label: 'Kurum Özeti',
-            icon: 'business',
-            route: '/teacher/reports/class-overview',
-            queryParams: { mode: 'institution' }
-          },
-          {
-            label: 'Öğretmen Bazlı',
-            icon: 'person',
-            route: '/teacher/reports/class-overview',
-            queryParams: { mode: 'teacher' }
-          }
-        ]
-      },
-      {
-        label: 'Kurum Ayarları',
-        icon: 'settings',
-        route: '/teacher/institution-settings'
-      },
-      {
-        label: 'Egzersiz Önizleme',
-        icon: 'preview',
-        route: '/student/exercises'
-      }
     ];
   }
 

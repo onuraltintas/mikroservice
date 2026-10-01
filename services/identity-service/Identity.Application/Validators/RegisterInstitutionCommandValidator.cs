@@ -11,14 +11,7 @@ public class RegisterInstitutionCommandValidator : AbstractValidator<RegisterIns
             .NotEmpty().WithMessage("Email address is required")
             .EmailAddress().WithMessage("A valid email address is required");
 
-        RuleFor(x => x.Password)
-            .NotEmpty().WithMessage("Password is required")
-            .MaximumLength(128).WithMessage("Password cannot exceed 128 characters")
-            .MinimumLength(8).WithMessage("Password must be at least 8 characters")
-            .Matches("[A-Z]").WithMessage("Password must contain at least one uppercase letter")
-            .Matches("[a-z]").WithMessage("Password must contain at least one lowercase letter")
-            .Matches("[0-9]").WithMessage("Password must contain at least one digit")
-            .Matches("[^a-zA-Z0-9]").WithMessage("Password must contain at least one special character");
+        RuleFor(x => x.Password).ApplyRegistrationPasswordPolicy();
 
         RuleFor(x => x.InstitutionName)
             .NotEmpty().WithMessage("Institution name is required")

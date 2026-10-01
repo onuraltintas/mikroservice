@@ -45,6 +45,10 @@ export class BlogSectionComponent implements OnInit {
     return author.substring(0, 2).toUpperCase();
   }
 
+  hideBrokenCover(event: Event): void {
+    (event.currentTarget as HTMLImageElement).hidden = true;
+  }
+
   formatDate(dateString?: string): string {
     if (!dateString) return '';
     return new Date(dateString).toLocaleDateString('tr-TR', { year: 'numeric', month: 'long', day: 'numeric' });

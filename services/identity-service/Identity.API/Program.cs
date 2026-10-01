@@ -56,6 +56,17 @@ if (migrationOnly)
     return;
 }
 
+var authRecaptchaOptions = builder.Configuration.GetSection(AuthRecaptchaOptions.SectionName)
+    .Get<AuthRecaptchaOptions>()
+    ?? new();
+authRecaptchaOptions = authRecaptchaOptions.Validate(builder.Environment.IsProduction());
+builder.Services.AddSingleton(authRecaptchaOptions);
+builder.Services.AddHttpClient<IAuthRecaptchaVerifier, GoogleAuthRecaptchaVerifier>(client =>
+{
+    client.BaseAddress = new Uri("https://www.google.com/recaptcha/api/");
+    client.Timeout = TimeSpan.FromSeconds(5);
+});
+
 // ============================================
 // Serilog Configuration (Centralized)
 // ============================================
@@ -222,6 +233,7 @@ app.UseRouting();
 // CORS
 app.UseCors("AllowAll");
 
+app.UseMiddleware<AuthRecaptchaMiddleware>();
 app.UseAuthentication();
 app.UseMiddleware<IdentityProductScopeMiddleware>();
 app.UseMiddleware<AdminAuditMiddleware>();

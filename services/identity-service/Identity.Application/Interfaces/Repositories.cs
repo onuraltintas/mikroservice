@@ -249,6 +249,10 @@ public interface IInvitationRepository
         string email,
         CancellationToken cancellationToken);
     Task<List<Invitation>> GetByInviterIdAsync(Guid inviterId, CancellationToken cancellationToken);
+    Task<List<Invitation>> GetPendingByInviterIdAsync(
+        Guid inviterId,
+        DateTime now,
+        CancellationToken cancellationToken);
 }
 
 public sealed record PendingInvitationReadModel(

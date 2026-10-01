@@ -25,6 +25,20 @@ public enum SpeedReadingInvitationAcceptResult
     InvalidInvitation
 }
 
+public enum SpeedReadingInvitationCancelResult
+{
+    Cancelled,
+    NotFound,
+    NotPending
+}
+
+public sealed record SpeedReadingPendingInvitation(
+    Guid InvitationId,
+    string Email,
+    string Role,
+    DateTime CreatedAt,
+    DateTime ExpiresAt);
+
 public sealed record SpeedReadingInvitationRecord(
     Guid InvitationId,
     string Email,
@@ -57,6 +71,17 @@ public interface ISpeedReadingInvitations
         Guid invitationId,
         Guid userId,
         string email,
+        DateTime at,
+        CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<SpeedReadingPendingInvitation>> GetPendingByInviterAsync(
+        Guid inviterUserId,
+        DateTime at,
+        CancellationToken cancellationToken = default);
+
+    Task<SpeedReadingInvitationCancelResult> CancelAsync(
+        Guid invitationId,
+        Guid inviterUserId,
         DateTime at,
         CancellationToken cancellationToken = default);
 }

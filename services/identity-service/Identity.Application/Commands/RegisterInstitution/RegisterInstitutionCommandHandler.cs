@@ -1,5 +1,6 @@
 using EduPlatform.Shared.Kernel.Results;
 using Identity.Application.Interfaces;
+using Identity.Application.LegalPages;
 using Identity.Domain.Entities;
 using Identity.Domain.Enums;
 using MediatR;
@@ -17,6 +18,7 @@ public class RegisterInstitutionCommandHandler : IRequestHandler<RegisterInstitu
     private readonly IPublishEndpoint _publishEndpoint;
     private readonly IConfigurationService _configurationService;
     private readonly ILocationRepository _locationRepository;
+    private readonly IRegistrationLegalConsentService _registrationLegalConsentService;
 
     public RegisterInstitutionCommandHandler(
         IIdentityService identityService,
@@ -25,7 +27,8 @@ public class RegisterInstitutionCommandHandler : IRequestHandler<RegisterInstitu
         IUnitOfWork unitOfWork,
         IPublishEndpoint publishEndpoint,
         IConfigurationService configurationService,
-        ILocationRepository locationRepository)
+        ILocationRepository locationRepository,
+        IRegistrationLegalConsentService registrationLegalConsentService)
     {
         _identityService = identityService;
         _userRepository = userRepository;
@@ -34,6 +37,7 @@ public class RegisterInstitutionCommandHandler : IRequestHandler<RegisterInstitu
         _publishEndpoint = publishEndpoint;
         _configurationService = configurationService;
         _locationRepository = locationRepository;
+        _registrationLegalConsentService = registrationLegalConsentService;
     }
 
     public async Task<Result<Guid>> Handle(RegisterInstitutionCommand request, CancellationToken cancellationToken)
@@ -49,6 +53,13 @@ public class RegisterInstitutionCommandHandler : IRequestHandler<RegisterInstitu
         {
             return Result.Failure<Guid>(new Error("Identity.RegistrationDisabled", "Yeni kullanıcı kayıtları sistem yöneticisi tarafından geçici olarak durdurulmuştur."));
         }
+
+        var legalValidation = await _registrationLegalConsentService.ValidateAsync(
+            product,
+            request.LegalAcceptances,
+            cancellationToken);
+        if (legalValidation.IsFailure)
+            return Result.Failure<Guid>(legalValidation.Error);
 
         var location = await _locationRepository.GetLocationAsync(
             request.ProvinceId,
@@ -118,6 +129,8 @@ public class RegisterInstitutionCommandHandler : IRequestHandler<RegisterInstitu
             user.SetPhoneNumber(request.Phone);
         }
         user.GenerateEmailVerificationToken();
+        _registrationLegalConsentService.TrackAcceptedDocuments(
+            userId, product, legalValidation.Value, "password");
 
         var institution = Institution.Create(
             request.InstitutionName,

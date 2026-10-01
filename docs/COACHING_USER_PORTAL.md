@@ -1,22 +1,27 @@
 # Coaching kullanıcı portalı
 
-`clients/admin-panel` içindeki `/coaching-portal` alanı, yönetim panelinden
-ayrı bir lazy feature boundary olarak öğrenci, öğretmen ve veli çalışma
-alanlarını sunar. Kimlik doğrulama ortak kalır; yetkiyi Coaching ve Identity
-servisleri kendi kaynaklarında tekrar doğrular.
+`clients/admin-panel` içindeki `/coaching-portal` alanı öğrenci panelidir.
+Öğretmen ve kurum yöneticileri ortak personel portalını
+`https://onuraltintas.net/staff/?product=coaching` adresinde kullanır. Eski
+`/coaching-portal/teacher/**` adresleri bu portala yönlendirilir. Veli paneli
+kaldırılmıştır; veli rolü, hesaplar ve veli-öğrenci ilişki kayıtları silinmemiş,
+yalnızca kullanıcı portalı erişimi kaldırılmıştır. Kimlik doğrulama ortak kalır;
+yetkiyi Coaching ve Identity servisleri kendi kaynaklarında tekrar doğrular.
 
 ## Rol akışları
 
 | Rol | Ekranlar | Yazma yetkisi |
 | --- | --- | --- |
 | Student | Ödev listesi/detayı, teslim, fotoğraf eki, hedefler, seanslar ve sınav sonuçları | Yalnızca kendi ödev teslimi/ekleri ve kendi hedef oluşturma-ilerleme güncellemesi |
-| Teacher | Kendi ödevleri, assignment detayı, öğrenci teslimleri, puan/geri bildirim, seanslar, öğrenci listesi ve akademik takip | Yalnızca bağlı aktif öğrencilerine ödev/seans/sınav/hedef yönetimi; kendi seanslarında yoklama ve geri bildirim |
-| Parent | Bağlı aktif çocuk seçimi, çocuğun ödev/hedef/sınav/seans özeti | Koçluk verilerine yazma yok |
+| Teacher | Yeni personel portalında kendi ödevleri, öğrenci teslimleri, puan/geri bildirim, seanslar, öğrenci listesi ve akademik takip | Yalnızca bağlı aktif öğrencilerine ödev/seans/sınav/hedef yönetimi; kendi seanslarında yoklama ve geri bildirim |
 
-Giriş sonrası `Student`, `Teacher` ve `Parent` rolleri `/coaching-portal`a,
-yönetim rolleri `/dashboard`a yönlendirilir. `/coaching-portal` route'u
-yalnızca bu üç rol için gezinme alanı açar; asıl veri yetkisi servislerdeki
-JWT + tenant/ilişki kontrollerindedir.
+Yalnız öğrenci rolü olan kullanıcılar `/coaching-portal` alanına erişir.
+Veli-only kullanıcılar bu portala alınmaz; Öğrenci rolü de varsa yalnızca
+öğrenci görünümünü kullanabilirler. Öğretmen/kurum kullanıcıları ortak personel
+portalına, yönetim rolleri `/dashboard`a yönlendirilir. Eski öğretmen ekranları
+uygulama route'larında sunulmaz; eski
+adresler uyumluluk için yeni portala aktarılır. Asıl veri yetkisi servislerdeki
+JWT + ürün/tenant/ilişki kontrollerindedir.
 
 ## Teslim ve fotoğraf eki
 
@@ -32,14 +37,14 @@ servisi dosyayı ClamAV taramasından geçirmeden temiz kabul etmez. Frontend
 kontrolleri kullanıcı deneyimi içindir; güvenlik doğrulaması her zaman API'de
 tekrarlanır.
 
-## Veli çocuk kapsamı
+## Veli ilişkileri ve API kapsamı
 
-`GET /api/users/me/children` yalnız `Parent` rolüyle kullanılabilir. Identity
-servisi aktif veli profilini, aktif öğrenci kullanıcısını, aktif öğrenci
-profilini ve varsa aktif kurumu birlikte kontrol eder; pasif veya başka veliye
-bağlı çocuklar response'a eklenmez. Parent daha sonra çocuğun `userId`'siyle
-Coaching okuma endpoint'lerini çağırır; Coaching → Identity iç erişim kontrolü
-aynı ilişkiyi tekrar doğrular.
+Veli paneli ve panelin frontend istemcisi kaldırılmıştır. Veli hesapları ve
+ilişki kayıtları korunur. `GET /api/users/me/children` sunucu tarafında yalnız
+`Parent` rolüyle kullanılabilir; Identity servisi aktif veli profilini, aktif
+öğrenci kullanıcısını, aktif öğrenci profilini ve varsa aktif kurumu birlikte
+kontrol eder. Koçluk okuma API'leri de ürün ve ilişki kapsamını sunucuda tekrar
+doğrular; panelin kaldırılması bu API/veri kurallarını veya kayıtları silmez.
 
 ## Seans ve öğrenci hedefi akışları
 
@@ -51,9 +56,9 @@ eklenmez. Yetkili kullanıcıya yalnız HTTP(S) olarak doğrulanmış `meetingLi
 alanı da döner; öğrenci ve öğretmen bu bağlantıyı portalın seans kartından
 açabilir. Öğrenci seans sonrası `PUT /api/sessions/{sessionId}/student-note`
 ile yalnız kendi attendance kaydına en fazla 2.000 karakterlik yansıma notu
-ekleyebilir ve okuyabilir; veli/öğretmen bu özel notu göremez ve bu endpoint ile yazamaz. Veli, aktif çocuğu
-seçtikten sonra aynı öğrenci okuma endpoint'ini
-kullanır ve Coaching → Identity ilişki kontrolü tekrar çalışır.
+ekleyebilir ve okuyabilir; veli/öğretmen bu özel notu göremez ve bu endpoint ile
+yazamaz. Veli arayüzü kaldırılmış olsa da, bu veri erişim kuralları API tarafında
+geçerlidir.
 
 Öğretmen response'unda yalnızca Identity tarafından yetkilendirilen ve boş
 olmayan öğrenci yansımaları `studentReflections` alanında görünür; öğretmen bu
@@ -70,13 +75,14 @@ oluşturabilir. İstek `Idempotency-Key` header'ı taşır; istemci aynı ağ
 zaman aşımı için aynı anahtarı, yeni hedef için yeni anahtarı kullanır.
 İlerleme yalnız öğrencinin kendi hedefi için `PUT
 /api/goals/{goalId}/progress` ile 0–100 arasında güncellenebilir. Öğretmen ve
-veli bu kullanıcı portalında başkasının hedef ilerlemesini değiştiremez;
+veli rolleri bu endpoint ile başkasının hedef ilerlemesini değiştiremez; veli
+paneli kaldırıldığı için veli arayüzünden hedef takibi sunulmaz.
 öğretmen/admin yönetimi ayrı, MFA ve `Permissions.Coaching.Manage` korumalı
 admin API'sinde kalır.
 
 ## Öğretmen akademik ve seans yönetimi
 
-Öğretmen portalı `/coaching-portal/teacher/academic` ekranında yalnızca kendi
+Yeni personel portalındaki akademik takip ekranı yalnızca kendi
 öğretmen kimliğiyle sınav ve hedef listelerini sayfalı olarak okur. Sınav/hedef
 oluşturma istekleri `Idempotency-Key` taşır; düzenleme endpoint'leri kaynak
 sahipliğini sunucu tarafında doğrular. Liste DTO'ları açıklama, süre, sınıf,
@@ -94,8 +100,7 @@ sonuç eklenemez.
 
 Öğrenci ilerleme ekranı son altı sınavı kronolojik trend olarak, puan/sıralama,
 doğru-yanlış-boş ve ders kırılımıyla gösterir ve sonuçları 25'lik sayfalarla
-yükler. Veli çocuk görünümünde aynı sınav ayrıntıları salt okunur olarak yer
-alır; çocuk seçimi değiştiğinde sonuç sayfalaması ve kapsamı sıfırlanır.
+yükler. Veli paneli kaldırıldığı için bu ekran veli kullanıcısına sunulmaz.
 
 Seans listeleri 25'lik sayfalarla yüklenir ve toplam kayıt sayısı API'nin
 `totalCount` alanından gösterilir. Gelecekteki planlanmış seans iptal

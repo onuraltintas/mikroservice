@@ -144,3 +144,97 @@
     align-items: center;
     min-height: 100vh;
 }
+
+.public-cms-dynamic-page {
+    padding-bottom: 2rem;
+    background: var(--ui-page);
+    color: var(--ui-text);
+
+    .page-header {
+        padding: 2.5rem 1.25rem 2rem;
+        background: transparent;
+        text-align: left;
+
+        .header-content {
+            max-width: var(--ui-content-max-width, 80rem);
+            padding: clamp(2rem, 5vw, 3.5rem);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 2rem;
+            background:
+                radial-gradient(ellipse at 82% 12%, rgba(96, 165, 250, 0.22), transparent 34%),
+                linear-gradient(125deg, #101a36 0%, #242965 58%, #373a88 100%);
+            box-shadow: var(--ui-shadow-md);
+
+            h1 {
+                max-width: 52rem;
+                color: #fff;
+                font-size: clamp(2rem, 4vw, 3.5rem);
+                font-weight: 650;
+                line-height: 1.12;
+                letter-spacing: -0.035em;
+            }
+        }
+    }
+
+    .page-content {
+        max-width: 68rem;
+        padding: 0 1.25rem;
+
+        .prose {
+            padding: clamp(1.5rem, 4vw, 3rem);
+            border: 1px solid var(--ui-border);
+            border-radius: 1.5rem;
+            background: var(--ui-surface);
+            box-shadow: var(--ui-shadow-sm);
+            color: var(--ui-text-muted);
+            font-size: 1rem;
+            line-height: 1.8;
+
+            ::ng-deep {
+                h1, h2, h3, h4, h5, h6 {
+                    color: var(--ui-text);
+                    font-weight: 650;
+                    letter-spacing: -0.02em;
+                }
+
+                h2 {
+                    padding-bottom: 0.65rem;
+                    border-bottom: 1px solid var(--ui-border);
+                    font-size: clamp(1.5rem, 3vw, 2rem);
+                }
+
+                a {
+                    color: var(--ui-brand-strong);
+                }
+
+                blockquote {
+                    border-left-color: var(--ui-brand);
+                    color: var(--ui-text-muted);
+                }
+
+                table th {
+                    background: var(--ui-surface-muted);
+                }
+
+                table th, table td {
+                    border-color: var(--ui-border);
+                }
+            }
+        }
+    }
+
+    .page-actions {
+        max-width: 68rem;
+        padding: 1rem 1.25rem 2rem;
+    }
+}
+
+@media (max-width: 48rem) {
+    .public-cms-dynamic-page .page-header {
+        padding: 1.5rem 0.75rem;
+
+        .header-content {
+            border-radius: 1.5rem;
+        }
+    }
+}

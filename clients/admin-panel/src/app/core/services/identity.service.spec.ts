@@ -70,3 +70,52 @@ describe('IdentityService privacy requests', () => {
     http.verify();
   });
 });
+
+describe('IdentityService shared platform legal pages', () => {
+  function setup() {
+    TestBed.configureTestingModule({
+      providers: [IdentityService, provideHttpClient(), provideHttpClientTesting()]
+    });
+    return { service: TestBed.inject(IdentityService), http: TestBed.inject(HttpTestingController) };
+  }
+
+  it('reads published legal pages from the shared platform endpoint', () => {
+    const { service, http } = setup();
+    service.getPublicLegalPage('privacy').subscribe(page => expect(page.slug).toBe('privacy'));
+    const request = http.expectOne('/api/platform/legal-pages/privacy');
+    expect(request.request.method).toBe('GET');
+    request.flush({ success: true, data: { slug: 'privacy', title: 'Gizlilik', isPublished: true } });
+    http.verify();
+  });
+
+  it('lists, edits and loads revisions from permission-protected Identity admin endpoints', () => {
+    const { service, http } = setup();
+    service.getLegalPages().subscribe(pages => expect(pages).toHaveLength(1));
+    http.expectOne('/api/platform/admin/legal-pages').flush({ success: true, data: [{ slug: 'privacy' }] });
+
+    service.upsertLegalPage('privacy', { title: 'Gizlilik', content: 'Onaylanmış metin', isPublished: false }).subscribe();
+    const update = http.expectOne('/api/platform/admin/legal-pages/privacy');
+    expect(update.request.method).toBe('PUT');
+    expect(update.request.body.isPublished).toBe(false);
+    update.flush({ success: true, data: { slug: 'privacy' } });
+
+    service.getLegalPageRevisions('privacy').subscribe(revisions => expect(revisions).toHaveLength(1));
+    http.expectOne('/api/platform/admin/legal-pages/privacy/revisions')
+      .flush({ success: true, data: [{ slug: 'privacy', version: 1 }] });
+    http.verify();
+  });
+
+  it('archives and restores legal documents through the protected admin API', () => {
+    const { service, http } = setup();
+    service.archiveLegalPage('privacy').subscribe(page => expect(page.isArchived).toBe(true));
+    const archive = http.expectOne('/api/platform/admin/legal-pages/privacy');
+    expect(archive.request.method).toBe('DELETE');
+    archive.flush({ success: true, data: { slug: 'privacy', isArchived: true } });
+
+    service.restoreLegalPage('privacy').subscribe(page => expect(page.isArchived).toBe(false));
+    const restore = http.expectOne('/api/platform/admin/legal-pages/privacy/restore');
+    expect(restore.request.method).toBe('POST');
+    restore.flush({ success: true, data: { slug: 'privacy', isArchived: false, isPublished: false } });
+    http.verify();
+  });
+});

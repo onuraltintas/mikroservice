@@ -1,5 +1,6 @@
 using EduPlatform.Shared.Kernel.Results;
 using Identity.Application.Interfaces;
+using Identity.Application.LegalPages;
 using Identity.Domain.Entities;
 using Identity.Domain.Enums;
 using MediatR;
@@ -16,6 +17,7 @@ public class RegisterParentCommandHandler : IRequestHandler<RegisterParentComman
     private readonly IUnitOfWork _unitOfWork;
     private readonly IPublishEndpoint _publishEndpoint;
     private readonly IConfigurationService _configurationService;
+    private readonly IRegistrationLegalConsentService _registrationLegalConsentService;
 
     public RegisterParentCommandHandler(
         IIdentityService identityService,
@@ -23,7 +25,8 @@ public class RegisterParentCommandHandler : IRequestHandler<RegisterParentComman
         IParentRepository parentRepository,
         IUnitOfWork unitOfWork,
         IPublishEndpoint publishEndpoint,
-        IConfigurationService configurationService)
+        IConfigurationService configurationService,
+        IRegistrationLegalConsentService registrationLegalConsentService)
     {
         _identityService = identityService;
         _userRepository = userRepository;
@@ -31,6 +34,7 @@ public class RegisterParentCommandHandler : IRequestHandler<RegisterParentComman
         _unitOfWork = unitOfWork;
         _publishEndpoint = publishEndpoint;
         _configurationService = configurationService;
+        _registrationLegalConsentService = registrationLegalConsentService;
     }
 
     public async Task<Result<Guid>> Handle(RegisterParentCommand request, CancellationToken cancellationToken)
@@ -46,6 +50,13 @@ public class RegisterParentCommandHandler : IRequestHandler<RegisterParentComman
         {
             return Result.Failure<Guid>(new Error("Identity.RegistrationDisabled", "Yeni kullanıcı kayıtları sistem yöneticisi tarafından geçici olarak durdurulmuştur."));
         }
+
+        var legalValidation = await _registrationLegalConsentService.ValidateAsync(
+            PlatformProduct.Coaching,
+            request.LegalAcceptances,
+            cancellationToken);
+        if (legalValidation.IsFailure)
+            return Result.Failure<Guid>(legalValidation.Error);
 
         var identityResult = await _identityService.RegisterUserAsync(
             request.Email,
@@ -99,6 +110,8 @@ public class RegisterParentCommandHandler : IRequestHandler<RegisterParentComman
                 user.SetPhoneNumber(request.PhoneNumber);
             }
             user.GenerateEmailVerificationToken();
+            _registrationLegalConsentService.TrackAcceptedDocuments(
+                userId, PlatformProduct.Coaching, legalValidation.Value, "password");
 
             await _parentRepository.AddAsync(parent, cancellationToken);
 

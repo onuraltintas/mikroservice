@@ -1,5 +1,6 @@
 using DotNetEnv;
 using System.Security.Claims;
+using System.Net;
 using System.Text.Json;
 using System.Threading.RateLimiting;
 using EduPlatform.Shared.Infrastructure.Extensions;
@@ -32,9 +33,9 @@ builder.Services.AddRateLimiter(options =>
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
     options.AddPolicy("public-cms-write", context =>
     {
-        var forwardedAddress = context.Request.Headers["X-Forwarded-For"].FirstOrDefault()?.Split(',')[0].Trim();
-        var partitionKey = !string.IsNullOrWhiteSpace(forwardedAddress)
-            ? forwardedAddress
+        var gatewayAddress = context.Request.Headers["X-EduPlatform-Client-IP"].FirstOrDefault();
+        var partitionKey = IPAddress.TryParse(gatewayAddress, out _)
+            ? gatewayAddress!
             : context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
         return RateLimitPartition.GetFixedWindowLimiter(partitionKey, _ => new FixedWindowRateLimiterOptions
         {

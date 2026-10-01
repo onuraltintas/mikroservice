@@ -14,13 +14,16 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 import { environment } from '../../../../../environments/environment.development';
 import { ConfigurationService } from '../../../../core/services/settings/configuration.service';
+import { RegistrationLegalConsentComponent } from '../../registration-legal-consent.component';
+import { RegistrationLegalAcceptance } from '../../../../core/services/identity.service';
 
 @Component({
     selector: 'app-institution-register',
     standalone: true,
     imports: [
         CommonModule, ReactiveFormsModule, RouterLink,
-        MatCardModule, MatInputModule, MatButtonModule, MatIconModule, MatProgressSpinnerModule
+        MatCardModule, MatInputModule, MatButtonModule, MatIconModule, MatProgressSpinnerModule,
+        RegistrationLegalConsentComponent
     ],
     templateUrl: './institution-register.component.html'
 })
@@ -35,6 +38,8 @@ export class InstitutionRegisterComponent implements OnInit {
     isLoading = signal(false);
     errorMessage = signal<string | null>(null);
     hidePassword = signal(true);
+    legalReady = false;
+    legalAcceptances: RegistrationLegalAcceptance[] = [];
 
     form = this.fb.group({
         institutionName: ['', Validators.required],
@@ -64,7 +69,7 @@ export class InstitutionRegisterComponent implements OnInit {
     }
 
     async onSubmit() {
-        if (this.form.invalid) return;
+        if (this.form.invalid || !this.hasRequiredLegalAcceptances) return;
 
         this.isLoading.set(true);
         const formData = this.form.value;
@@ -75,7 +80,8 @@ export class InstitutionRegisterComponent implements OnInit {
             managerFirstName: formData.firstName,
             managerLastName: formData.lastName,
             email: formData.email,
-            password: formData.password
+            password: formData.password,
+            legalAcceptances: this.legalAcceptances
         };
 
         this.http.post(`${environment.apiUrl}/auth/coaching/register/institution`, payload).subscribe({
@@ -93,4 +99,8 @@ export class InstitutionRegisterComponent implements OnInit {
     }
 
     togglePassword(e: Event) { e.preventDefault(); this.hidePassword.update(v => !v); }
+
+    get hasRequiredLegalAcceptances(): boolean {
+        return this.legalReady && this.legalAcceptances.length === 3;
+    }
 }

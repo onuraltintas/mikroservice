@@ -25,12 +25,25 @@ describe('CoachingTeacherStudentsComponent', () => {
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('[data-testid="teacher-student-invite-email"]')).toBeTruthy();
 
+    fixture.nativeElement.querySelector('[data-testid="toggle-pending-invitations"]').click();
+    fixture.detectChanges();
+    http.expectOne('/api/invitations/sent-pending').flush([]);
+
     fixture.componentInstance.studentInviteEmail = 'student@example.test';
     fixture.componentInstance.sendStudentInvitation();
     http.expectOne('/api/teachers/invite-student').flush({ invitationId: 'coaching-invitation-1' });
     fixture.detectChanges();
+    http.expectOne('/api/invitations/sent-pending').flush([{
+      invitationId: 'coaching-invitation-1',
+      email: 'student@example.test',
+      role: 'StudentToTeacher',
+      createdAt: '2026-09-29T10:00:00Z',
+      expiresAt: '2026-10-06T10:00:00Z',
+    }]);
+    fixture.detectChanges();
 
     expect(fixture.nativeElement.textContent).toContain('Koçluk öğrenci daveti gönderildi');
+    expect(fixture.nativeElement.textContent).toContain('student@example.test');
   });
 
   it('shows the teacher-scoped roster with grade and institution context', () => {
@@ -81,6 +94,34 @@ describe('CoachingTeacherStudentsComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Öğrenci bulunamadı');
   });
 
+  it('refreshes the teacher roster after an invited student accepts', () => {
+    const fixture = TestBed.createComponent(CoachingTeacherStudentsComponent);
+    fixture.detectChanges();
+    http.expectOne('/api/teachers/me/students?pageNumber=1&pageSize=25').flush({
+      items: [], pageNumber: 1, pageSize: 25, totalCount: 0, totalPages: 1
+    });
+    fixture.detectChanges();
+
+    const refreshButton = fixture.nativeElement.querySelector('[data-testid="refresh-student-roster"]') as HTMLButtonElement | null;
+    expect(refreshButton).toBeTruthy();
+    if (!refreshButton) return;
+    refreshButton.click();
+    fixture.detectChanges();
+    http.expectOne('/api/teachers/me/students?pageNumber=1&pageSize=25').flush({
+      items: [{
+        userId: 'accepted-student',
+        firstName: 'Deniz',
+        lastName: 'Kaya',
+        fullName: 'Deniz Kaya',
+        assignmentStartDate: '2026-09-29T00:00:00Z'
+      }],
+      pageNumber: 1, pageSize: 25, totalCount: 1, totalPages: 1
+    });
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Deniz Kaya');
+  });
+
   it('pages through the roster and resets to the first page when searching', () => {
     const fixture = TestBed.createComponent(CoachingTeacherStudentsComponent);
     fixture.detectChanges();
@@ -111,6 +152,27 @@ describe('CoachingTeacherStudentsComponent', () => {
 
     expect(fixture.componentInstance.pageNumber()).toBe(1);
     expect(fixture.nativeElement.textContent).toContain('Ayşe Demir');
+  });
+
+  it('filters students by grade and returns to the first page', () => {
+    const fixture = TestBed.createComponent(CoachingTeacherStudentsComponent);
+    fixture.detectChanges();
+    http.expectOne('/api/teachers/me/students?pageNumber=1&pageSize=25').flush({
+      items: [], pageNumber: 1, pageSize: 25, totalCount: 30, totalPages: 2
+    });
+
+    fixture.componentInstance.nextPage();
+    http.expectOne('/api/teachers/me/students?pageNumber=2&pageSize=25').flush({
+      items: [], pageNumber: 2, pageSize: 25, totalCount: 30, totalPages: 2
+    });
+
+    fixture.componentInstance.setGradeLevel(8);
+    const gradeRequest = http.expectOne('/api/teachers/me/students?pageNumber=1&pageSize=25&gradeLevel=8');
+    gradeRequest.flush({ items: [], pageNumber: 1, pageSize: 25, totalCount: 0, totalPages: 1 });
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.pageNumber()).toBe(1);
+    expect(fixture.componentInstance.gradeLevelFilter()).toBe(8);
   });
 
   it('ignores an older request when a newer search response arrives first', () => {

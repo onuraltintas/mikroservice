@@ -5,8 +5,13 @@
       <h2 id="reading-teacher-title">Öğretmen paneli</h2>
       <p>Size atanmış Hızlı Okuma öğrencilerini ve son 30 günlük sınıf özetini inceleyin.</p>
     </div>
-    <span class="student-count">{{ totalCount() }} öğrenci</span>
+    <div class="workspace-heading-actions">
+      <span class="student-count">{{ totalCount() }} öğrenci</span>
+      <button type="button" class="text-button" data-testid="toggle-teacher-assignment-management" [attr.aria-expanded]="assignmentManagementVisible()" (click)="assignmentManagementVisible.update(value => !value)">Ödevleri yönet</button>
+    </div>
   </header>
+
+  @if (assignmentManagementVisible()) { <staff-speed-reading-assignment-management /> }
 
   <section class="overview-section" aria-labelledby="class-overview-title">
     <div class="section-heading">
@@ -60,10 +65,11 @@
 
   <section class="roster-section" aria-labelledby="reading-roster-title">
     <div class="section-heading">
-      <div>
-        <p class="workspace-eyebrow">HIZLI OKUMA · ÖĞRENCİLER</p>
-        <h3 id="reading-roster-title">Öğrencilerim</h3>
-      </div>
+        <div>
+          <p class="workspace-eyebrow">HIZLI OKUMA · ÖĞRENCİLER</p>
+          <h3 id="reading-roster-title">Öğrencilerim</h3>
+        </div>
+        <button type="button" class="text-button" data-testid="refresh-student-roster" (click)="loadStudents()" [disabled]="isLoading()">Yenile</button>
     </div>
 
     <form class="roster-filters invitation-form" (ngSubmit)="sendStudentInvitation()" aria-label="Hızlı Okuma öğrencisi davet et">
@@ -80,6 +86,12 @@
     @if (invitationErrorMessage()) { <div class="inline-error" role="alert">{{ invitationErrorMessage() }}</div> }
     @if (invitationSuccessMessage()) { <p class="invitation-success" role="status">{{ invitationSuccessMessage() }}</p> }
     <p class="invitation-note">Davet Hızlı Okuma üyeliği içindir. Davet edilen kişi aynı e-posta adresiyle Hızlı Okuma hesabı açıp e-postadaki bağlantıyı kabul etmelidir.</p>
+    <button type="button" class="clear-button" data-testid="toggle-pending-invitations" [attr.aria-expanded]="pendingInvitationsVisible()" (click)="togglePendingInvitations()">
+      {{ pendingInvitationsVisible() ? 'Bekleyen davetleri gizle' : 'Bekleyen davetleri yönet' }}
+    </button>
+    @if (pendingInvitationsVisible()) {
+      <staff-pending-invitations [product]="'speed-reading'" [refreshKey]="invitationRefreshKey()" />
+    }
 
     <form class="roster-filters" (ngSubmit)="applyFilters()">
       <label class="search-field">

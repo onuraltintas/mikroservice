@@ -5,8 +5,8 @@
             <p>{{ content.subtitle }}</p>
         </div>
 
-        <mat-accordion *ngIf="faqs.length" class="faq-accordion">
-            <mat-expansion-panel *ngFor="let faq of faqs">
+        <mat-accordion *ngIf="content.items.length" class="faq-accordion">
+            <mat-expansion-panel *ngFor="let faq of content.items">
                 <mat-expansion-panel-header>
                     <mat-panel-title>
                         <div class="faq-header-content">

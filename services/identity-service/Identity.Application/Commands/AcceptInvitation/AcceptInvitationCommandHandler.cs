@@ -1,6 +1,7 @@
 using EduPlatform.Shared.Kernel.Results;
 using EduPlatform.Shared.Security.Interfaces;
 using Identity.Application.Interfaces;
+using Identity.Application.Exceptions;
 using Identity.Domain.Entities;
 using Identity.Domain.Enums;
 using MediatR;
@@ -107,6 +108,10 @@ public class AcceptInvitationCommandHandler : IRequestHandler<AcceptInvitationCo
 
             await _unitOfWork.SaveChangesAsync(cancellationToken);
             return Result.Success();
+        }
+        catch (IdentityConcurrencyConflictException)
+        {
+            return Result.Failure(new Error("Invitation.NotPending", "Invitation is no longer pending"));
         }
         catch (Exception ex)
         {

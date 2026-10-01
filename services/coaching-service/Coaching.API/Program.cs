@@ -1,5 +1,8 @@
 using Coaching.Application;
+using Coaching.API.Security;
 using Coaching.Infrastructure;
+using System.Net;
+using System.Threading.RateLimiting;
 using EduPlatform.Shared.Infrastructure.Extensions;
 using EduPlatform.Shared.Infrastructure.Logging;
 using EduPlatform.Shared.Infrastructure.Middleware;
@@ -11,6 +14,7 @@ using Serilog;
 using MassTransit;
 using Coaching.Infrastructure.Data;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using DotNetEnv;
 
@@ -64,6 +68,53 @@ builder.Services.AddEduPlatformOpenTelemetry(builder.Configuration, builder.Envi
 // ============================================
 // Services
 // ============================================
+
+var coachingNewsletterRecaptchaOptions = builder.Configuration
+    .GetSection(CoachingNewsletterRecaptchaOptions.SectionName)
+    .Get<CoachingNewsletterRecaptchaOptions>()
+    ?? new CoachingNewsletterRecaptchaOptions();
+coachingNewsletterRecaptchaOptions.ApplyEnvironmentOverrides(builder.Configuration);
+coachingNewsletterRecaptchaOptions.Validate();
+builder.Services.AddSingleton(coachingNewsletterRecaptchaOptions);
+builder.Services.AddHttpClient<ICoachingNewsletterRecaptchaValidator, CoachingNewsletterRecaptchaValidator>(client =>
+{
+    client.BaseAddress = new Uri("https://www.google.com/recaptcha/api/");
+    client.Timeout = TimeSpan.FromSeconds(5);
+});
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddPolicy("public-newsletter-write", context =>
+    {
+        var gatewayAddress = context.Request.Headers["X-EduPlatform-Client-IP"].FirstOrDefault();
+        var partitionKey = IPAddress.TryParse(gatewayAddress, out _)
+            ? gatewayAddress!
+            : context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+        return RateLimitPartition.GetFixedWindowLimiter(partitionKey, _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = 8,
+            Window = TimeSpan.FromMinutes(10),
+            QueueLimit = 0,
+            AutoReplenishment = true
+        });
+    });
+
+    options.AddPolicy("payment-request", context =>
+    {
+        var userId = context.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+            ?? context.User.FindFirst("sub")?.Value;
+        var partitionKey = !string.IsNullOrWhiteSpace(userId)
+            ? $"user:{userId}"
+            : $"address:{context.Connection.RemoteIpAddress?.ToString() ?? "unknown"}";
+        return RateLimitPartition.GetFixedWindowLimiter(partitionKey, _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = 5,
+            Window = TimeSpan.FromMinutes(10),
+            QueueLimit = 0,
+            AutoReplenishment = true
+        });
+    });
+});
 
 // Add Infrastructure (DbContext, Repositories)
 builder.Services.AddInfrastructure(builder.Configuration);
@@ -203,9 +254,10 @@ if (app.Environment.IsDevelopment())
 
 // Routing
 app.UseRouting();
-
 app.UseAuthentication();
 app.UseMiddleware<ProductScopeMiddleware>("coaching");
+app.UseRateLimiter();
+app.UseMiddleware<Coaching.API.Security.CoachingSubscriptionAccessMiddleware>();
 app.UseMiddleware<AdminAuditMiddleware>();
 app.UseAuthorization();
 

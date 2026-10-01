@@ -11,6 +11,10 @@ using Coaching.Infrastructure.Messaging;
 using EduPlatform.Shared.Infrastructure.Middleware;
 using Coaching.Application.Privacy;
 using Coaching.Infrastructure.Privacy;
+using Coaching.Application.Content;
+using Coaching.Application.Subscriptions;
+using Coaching.Application.Newsletters;
+using Coaching.Infrastructure.Management;
 
 namespace Coaching.Infrastructure;
 
@@ -90,6 +94,18 @@ public static class DependencyInjection
                 "Production local attachment storage requires an explicit absolute Coaching:Attachments:RootPath.");
         }
 
+        if (!storageOptions.Provider.Equals("Local", StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException("Coaching:Attachments:Provider must be Local.");
+
+        var coachingCmsMediaRootPath = configuration["Coaching:CmsMedia:RootPath"]
+            ?? Environment.GetEnvironmentVariable("COACHING_CMS_MEDIA_ROOT");
+        if (environmentName.Equals("Production", StringComparison.OrdinalIgnoreCase)
+            && (string.IsNullOrWhiteSpace(coachingCmsMediaRootPath) || !Path.IsPathFullyQualified(coachingCmsMediaRootPath)))
+        {
+            throw new InvalidOperationException(
+                "Production Coaching CMS media storage requires an explicit absolute Coaching:CmsMedia:RootPath.");
+        }
+
         services.AddOptions<AttachmentScanOptions>()
             .Bind(configuration.GetSection(AttachmentScanOptions.SectionName))
             .Validate(options => options.Provider.Equals("Local", StringComparison.OrdinalIgnoreCase)
@@ -118,8 +134,14 @@ public static class DependencyInjection
         services.AddScoped<ICoachingDataExportRepository, CoachingDataExportRepository>();
         services.AddScoped<ICoachingErasureAssessmentService, CoachingErasureAssessmentService>();
         services.AddScoped<ICoachingErasureExecutionService, CoachingErasureExecutionService>();
-        if (!storageOptions.Provider.Equals("Local", StringComparison.OrdinalIgnoreCase))
-            throw new InvalidOperationException("Coaching:Attachments:Provider must be Local.");
+        services.AddScoped<ICoachingCms, CoachingCmsService>();
+        services.AddScoped<ICoachingSubscription, CoachingSubscriptionService>();
+        services.AddScoped<ICoachingNewsletter>(provider => new CoachingNewsletterService(
+            provider.GetRequiredService<CoachingDbContext>(),
+            provider.GetRequiredService<ICoachingNewsletterEmailDelivery>(),
+            provider.GetRequiredService<ICoachingSharedLegalPageVersionProvider>(),
+            configuration["CoachingNewsletter:PublicBaseUrl"] ?? "https://onuraltintas.net"));
+        services.AddSingleton<ICoachingCmsMediaStorage, LocalCoachingCmsMediaStorage>();
         services.AddSingleton<IAssignmentAttachmentStorage, LocalAssignmentAttachmentStorage>();
         if (scanOptions.Provider.Equals("ClamAv", StringComparison.OrdinalIgnoreCase))
             services.AddSingleton<IAssignmentAttachmentScanner, ClamAvAttachmentScanner>();
@@ -139,6 +161,14 @@ public static class DependencyInjection
             client.Timeout = TimeSpan.FromSeconds(5);
         }).AddCorrelationIdPropagation();
         services.AddHttpClient<ICoachingAgreementRepresentativeAuthorizationClient, IdentityAuthorizationClient>(client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(5);
+        }).AddCorrelationIdPropagation();
+        services.AddHttpClient<ICoachingNewsletterEmailDelivery, CoachingNewsletterEmailClient>(client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(10);
+        }).AddCorrelationIdPropagation();
+        services.AddHttpClient<ICoachingSharedLegalPageVersionProvider, IdentitySharedLegalPageVersionClient>(client =>
         {
             client.Timeout = TimeSpan.FromSeconds(5);
         }).AddCorrelationIdPropagation();

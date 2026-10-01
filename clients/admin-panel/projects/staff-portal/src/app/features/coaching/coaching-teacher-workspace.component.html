@@ -33,6 +33,11 @@
       [class.active]="activeSection() === 'exams'" (click)="selectSection('exams')">
       Sınavlar
     </button>
+    <button type="button" data-testid="teacher-subscription-tab"
+      [attr.aria-pressed]="activeSection() === 'subscription'"
+      [class.active]="activeSection() === 'subscription'" (click)="selectSection('subscription')">
+      Öğretmen planım
+    </button>
   </nav>
 
   @if (activeSection() === 'students') {
@@ -47,11 +52,13 @@
     } @placeholder {
       <p class="section-loading" role="status">Hedefler hazırlanıyor…</p>
     }
-  } @else {
+  } @else if (activeSection() === 'exams') {
     @defer (on immediate) {
       <staff-coaching-teacher-exams />
     } @placeholder {
       <p class="section-loading" role="status">Sınavlar hazırlanıyor…</p>
     }
+  } @else {
+    <staff-coaching-teacher-subscription />
   }
 </section>

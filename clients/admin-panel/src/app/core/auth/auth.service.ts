@@ -7,6 +7,7 @@ import { Router } from '@angular/router';
 import { BehaviorSubject, filter, firstValueFrom, Subscription } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
+import { RegistrationLegalAcceptance } from '../services/identity.service';
 
 export interface UserProfile {
     id: string;
@@ -133,10 +134,10 @@ export class AuthService implements OnDestroy {
         this.oauthService.initLoginFlow();
     }
 
-    async loginWithGoogle(idToken: string): Promise<AuthLoginResult> {
+    async loginWithGoogle(idToken: string, legalAcceptances: RegistrationLegalAcceptance[] = []): Promise<AuthLoginResult> {
         const response = await firstValueFrom(this.httpClient.post<AuthLoginResponse>(
             `${environment.apiUrl}/auth/coaching/google-login`,
-            { idToken },
+            { idToken, legalAcceptances },
             { withCredentials: true }));
         return this.handleLoginResponse(response);
     }

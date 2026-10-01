@@ -1,6 +1,7 @@
 using FluentAssertions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
@@ -943,6 +944,7 @@ public sealed class SpeedReadingOwnedDomainTests
         var services = new ServiceCollection();
         services.AddHttpContextAccessor();
         services.AddLogging();
+        services.AddDataProtection();
         services.AddSingleton<IConfiguration>(configuration);
         services.AddSpeedReadingInfrastructure(configuration);
         using var provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });

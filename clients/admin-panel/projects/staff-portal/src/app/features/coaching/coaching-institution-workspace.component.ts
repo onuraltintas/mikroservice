@@ -11,13 +11,14 @@ import {
 } from './coaching-institution.service';
 import { CoachingInstitutionStudentReportComponent } from './coaching-institution-student-report.component';
 import { CoachingInstitutionTeacherReportComponent } from './coaching-institution-teacher-report.component';
+import { StaffPendingInvitationsComponent } from '../staff-pending-invitations.component';
 
 type InstitutionSection = 'overview' | 'students' | 'teachers';
 
 @Component({
   selector: 'staff-coaching-institution-workspace',
   standalone: true,
-  imports: [CommonModule, FormsModule, CoachingInstitutionStudentReportComponent, CoachingInstitutionTeacherReportComponent],
+  imports: [CommonModule, FormsModule, CoachingInstitutionStudentReportComponent, CoachingInstitutionTeacherReportComponent, StaffPendingInvitationsComponent],
   templateUrl: './coaching-institution-workspace.component.html',
   styleUrl: './coaching-institution-workspace.component.scss'
 })
@@ -37,6 +38,8 @@ export class CoachingInstitutionWorkspaceComponent implements OnInit {
   readonly teacherInvitationSuccess = signal<string | null>(null);
   readonly studentInvitationError = signal<string | null>(null);
   readonly studentInvitationSuccess = signal<string | null>(null);
+  readonly pendingInvitationsVisible = signal(false);
+  readonly invitationRefreshKey = signal(0);
   readonly selectedStudent = signal<CoachingInstitutionStudent | null>(null);
   readonly selectedTeacher = signal<CoachingInstitutionTeacher | null>(null);
   readonly activeSection = signal<InstitutionSection>('overview');
@@ -233,6 +236,7 @@ export class CoachingInstitutionWorkspaceComponent implements OnInit {
       next: () => {
         if (this.teacherInviteEmail.trim() === email) this.teacherInviteEmail = '';
         this.teacherInvitationSuccess.set('Öğretmen daveti gönderildi. Kabul edildiğinde öğretmen kurum listenizde görünür.');
+        this.invitationRefreshKey.update(value => value + 1);
       },
       error: error => {
         this.teacherInvitationError.set(this.getInvitationError(error, 'Öğretmen daveti gönderilemedi. E-posta adresini ve kurum yetkinizi kontrol edip yeniden deneyin.'));
@@ -256,6 +260,7 @@ export class CoachingInstitutionWorkspaceComponent implements OnInit {
           this.studentInviteTeacherUserId = '';
         }
         this.studentInvitationSuccess.set('Öğrenci daveti gönderildi. Kabul edildiğinde öğrenci kurum listenizde görünür.');
+        this.invitationRefreshKey.update(value => value + 1);
       },
       error: error => {
         this.studentInvitationError.set(this.getInvitationError(error, 'Öğrenci daveti gönderilemedi. E-posta adresini ve kurum yetkinizi kontrol edip yeniden deneyin.'));
@@ -270,6 +275,10 @@ export class CoachingInstitutionWorkspaceComponent implements OnInit {
     else if (this.activeSection() === 'students') this.loadStudents();
     else if (this.activeSection() === 'teachers') this.loadTeachers();
     else this.loadOverview();
+  }
+
+  togglePendingInvitations(): void {
+    this.pendingInvitationsVisible.update(visible => !visible);
   }
 
   trackByUserId(_: number, user: CoachingInstitutionStudent | CoachingInstitutionTeacher): string {

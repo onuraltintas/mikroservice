@@ -4,6 +4,8 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { SpeedReadingStudentReportComponent } from './speed-reading-institution-student-report.component';
 import { SpeedReadingReportStudent } from './speed-reading-institution.service';
+import { StaffPendingInvitationsComponent } from '../staff-pending-invitations.component';
+import { SpeedReadingAssignmentManagementComponent } from './speed-reading-assignment-management.component';
 import {
   SpeedReadingTeacherClassOverview,
   SpeedReadingTeacherRosterFilters,
@@ -16,7 +18,7 @@ type StudentStatusFilter = 'all' | 'active' | 'inactive';
 @Component({
   selector: 'staff-speed-reading-teacher-workspace',
   standalone: true,
-  imports: [CommonModule, FormsModule, SpeedReadingStudentReportComponent],
+  imports: [CommonModule, FormsModule, SpeedReadingStudentReportComponent, StaffPendingInvitationsComponent, SpeedReadingAssignmentManagementComponent],
   templateUrl: './speed-reading-teacher-workspace.component.html',
   styleUrl: './speed-reading-teacher-workspace.component.scss',
 })
@@ -39,6 +41,9 @@ export class SpeedReadingTeacherWorkspaceComponent implements OnInit {
   readonly isInvitationSending = signal(false);
   readonly invitationErrorMessage = signal<string | null>(null);
   readonly invitationSuccessMessage = signal<string | null>(null);
+  readonly pendingInvitationsVisible = signal(false);
+  readonly invitationRefreshKey = signal(0);
+  readonly assignmentManagementVisible = signal(false);
 
   invitationEmail = '';
   searchInput = '';
@@ -119,6 +124,7 @@ export class SpeedReadingTeacherWorkspaceComponent implements OnInit {
       next: () => {
         if (this.invitationEmail.trim() === email) this.invitationEmail = '';
         this.invitationSuccessMessage.set('Hızlı Okuma öğrenci daveti gönderildi. Öğrenci aynı e-posta adresiyle Hızlı Okuma hesabı açıp daveti kabul etmelidir.');
+        this.invitationRefreshKey.update(value => value + 1);
       },
       error: (error) => {
         this.invitationErrorMessage.set(
@@ -137,6 +143,10 @@ export class SpeedReadingTeacherWorkspaceComponent implements OnInit {
     this.filters.set({});
     this.pageNumber.set(1);
     this.loadStudents();
+  }
+
+  togglePendingInvitations(): void {
+    this.pendingInvitationsVisible.update(visible => !visible);
   }
 
   openStudentReport(student: SpeedReadingTeacherStudent): void {

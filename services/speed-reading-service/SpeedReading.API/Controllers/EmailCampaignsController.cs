@@ -72,7 +72,17 @@ public sealed class EmailCampaignsController(ISpeedReadingEmailCampaigns campaig
         try
         {
             var result = await campaigns.SendAsync(id, request, cancellationToken);
-            return result is null ? NotFound() : Ok(new { message = "Campaign send initiated", totalRecipients = result.TotalRecipients, campaign = result });
+            return result is null
+                ? NotFound()
+                : Accepted(new
+                {
+                    message = result.FailedCount > 0
+                        ? "Kampanya kısmen kuyruğa alındı; başarısız kayıtları inceleyip yeniden deneyin. Kuyruğa alınması teslim edildiği anlamına gelmez."
+                        : "Kampanya Notification e-posta kuyruğuna alındı. Bu, e-postanın teslim edildiği anlamına gelmez.",
+                    totalRecipients = result.TotalRecipients,
+                    queuedCount = result.QueuedCount,
+                    campaign = result
+                });
         }
         catch (InvalidOperationException exception)
         {

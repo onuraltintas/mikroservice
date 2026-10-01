@@ -87,7 +87,7 @@ const evidenceMetricIcons = ['insights', 'groups', 'quiz', 'speed', 'trending_up
       @if (selectedTab() === 'cms') {
         <section class="space-y-4" aria-labelledby="cms-title">
           <div class="flex flex-wrap items-end justify-between gap-3"><div><h2 id="cms-title" class="text-lg font-semibold text-gray-900 dark:text-white">CMS</h2><p class="muted">Ana sayfa, içerik sayfaları, blog, medya, menüler, iletişim mesajları ve bülten aboneleri.</p></div><button type="button" class="primary" (click)="startCmsCreate()" [disabled]="loading() || saving()">{{ loading() ? 'İçerik yükleniyor…' : cmsTab() === 'homepage' ? 'Ana sayfayı düzenle' : cmsTab() === 'evidence' ? 'Yeni kanıtlı istatistik' : cmsTab() === 'pages' ? 'Yeni sayfa' : cmsTab() === 'blog' ? 'Yeni blog yazısı' : cmsTab() === 'media' ? 'Medya yükle' : cmsTab() === 'navigation' ? 'Yeni menü öğesi' : 'Yenile' }}</button></div>
-          <nav class="ui-tab-list flex flex-wrap gap-2" aria-label="CMS sekmeleri">@for (tab of cmsTabs; track tab.value) {<button type="button" class="ui-tab secondary" [disabled]="loading()" [attr.aria-pressed]="cmsTab() === tab.value" [class.bg-gray-100]="cmsTab() === tab.value" (click)="selectCmsTab(tab.value)">{{ tab.label }}</button>}</nav>
+          <nav class="ui-tab-list flex flex-wrap gap-2" aria-label="CMS sekmeleri">@for (tab of visibleCmsTabs(); track tab.value) {<button type="button" class="ui-tab secondary" [disabled]="loading()" [attr.aria-pressed]="cmsTab() === tab.value" [class.bg-gray-100]="cmsTab() === tab.value" (click)="selectCmsTab(tab.value)">{{ tab.label }}</button>}</nav>
 
           @if (cmsTab() === 'homepage') {
             @if (homePageEditing()) {
@@ -264,7 +264,48 @@ const evidenceMetricIcons = ['insights', 'groups', 'quiz', 'speed', 'trending_up
 
           @if (selectedContact(); as message) {<div class="dialog-backdrop-shield" aria-hidden="true"></div><form class="form-card dialog-form" role="dialog" aria-modal="true" aria-label="İletişim mesajı ayrıntısı" cdkTrapFocus [cdkTrapFocusAutoCapture]="true" (ngSubmit)="replyContact()"><h3>{{ message.subject }}</h3><div class="form-grid"><label>Gönderen<input [value]="message.name + ' · ' + message.email" disabled /></label><label>Durum<input [value]="message.isRead ? 'Okundu' : 'Yeni'" disabled /></label><label class="wide">Mesaj<textarea [value]="message.message" readonly></textarea></label><label class="wide">Yanıt<textarea [(ngModel)]="contactReplyDraft" name="contactReply" required maxlength="10000"></textarea></label></div><div class="form-actions"><button type="button" class="secondary" (click)="selectedContact.set(null)">Kapat</button><button type="submit" class="primary" [disabled]="saving() || !contactReplyDraft.trim()">Yanıtı kaydet</button></div></form>}
 
-          @if (cmsTab() === 'subscribers') {<div class="data-card"><div class="inline-filter"><label class="check"><input type="checkbox" [(ngModel)]="includeInactiveSubscribers" name="includeInactiveSubscribers" /> Pasifleri göster</label><button type="button" class="secondary" (click)="loadSubscribers()">Filtrele</button><button type="button" class="secondary" (click)="exportSubscribers()">CSV dışa aktar</button></div><table class="data-table"><thead><tr><th>E-posta</th><th>Kaynak</th><th>Durum</th><th>Kayıt tarihi</th><th></th></tr></thead><tbody>@for (subscriber of subscribers().items; track subscriber.id) {<tr><td>{{ subscriber.email }}</td><td>{{ subscriber.source || '—' }}</td><td>{{ subscriber.isActive ? 'Aktif' : 'Pasif' }}</td><td>{{ subscriber.createdAt | date:'dd.MM.yyyy HH:mm' }}</td><td class="actions">@if (!subscriber.isActive) {<button type="button" (click)="restoreSubscriber(subscriber)">Yeniden aktifleştir</button>}<button type="button" class="danger" (click)="deleteSubscriber(subscriber)">Pasifleştir</button><button type="button" class="danger" (click)="hardDeleteSubscriber(subscriber)">Kalıcı sil</button></td></tr>} @empty {<tr><td colspan="5" class="empty">Bülten abonesi bulunamadı.</td></tr>}</tbody></table></div>}
+          @if (cmsTab() === 'subscribers') {
+            <div class="data-card">
+              <div class="inline-filter">
+                <input [(ngModel)]="subscriberSearch" name="subscriberSearch" maxlength="320" placeholder="E-posta ara" (keyup.enter)="filterSubscribers()" />
+                <select [(ngModel)]="subscriberStatus" name="subscriberStatus">
+                  <option value="">Tüm durumlar</option>
+                  <option value="Active">Onaylı</option>
+                  <option value="PendingConfirmation">E-posta onayı bekliyor</option>
+                  <option value="LegacyUnconfirmed">Eski / onaysız</option>
+                  <option value="Unsubscribed">Abonelikten çıkmış</option>
+                </select>
+                <button type="button" class="secondary" (click)="filterSubscribers()">Filtrele</button>
+                <button type="button" class="secondary" (click)="exportSubscribers()">CSV dışa aktar</button>
+              </div>
+              <p class="muted">Kampanyalar yalnız gizlilik sürümü ve e-posta adresi doğrulanmış abonelere gönderilir. Eski/onaysız kayıtlar gönderim kitlesine dahil edilmez.</p>
+              <table class="data-table">
+                <thead><tr><th>E-posta</th><th>Durum</th><th>Gizlilik sürümü</th><th>Açık onay</th><th>E-posta doğrulama</th><th>Abonelikten çıkış</th><th>Kaynak / kayıt</th><th></th></tr></thead>
+                <tbody>
+                  @for (subscriber of subscribers().items; track subscriber.id) {
+                    <tr>
+                      <td>{{ subscriber.email }}</td>
+                      <td>{{ newsletterStatusLabel(subscriber.status) }}</td>
+                      <td>{{ subscriber.privacyPolicyVersion ?? '—' }}</td>
+                      <td>{{ subscriber.consentedAt ? (subscriber.consentedAt | date:'dd.MM.yyyy HH:mm') : '—' }}</td>
+                      <td>{{ subscriber.confirmedAt ? (subscriber.confirmedAt | date:'dd.MM.yyyy HH:mm') : '—' }}</td>
+                      <td>{{ subscriber.unsubscribedAt ? (subscriber.unsubscribedAt | date:'dd.MM.yyyy HH:mm') : '—' }}</td>
+                      <td>{{ subscriber.source || '—' }}<div class="muted">{{ subscriber.createdAt | date:'dd.MM.yyyy HH:mm' }}</div></td>
+                      <td class="actions">
+                        @if (subscriber.status !== 'Unsubscribed') {<button type="button" class="danger" (click)="deleteSubscriber(subscriber)">Aboneliği iptal et</button>}
+                        <button type="button" class="danger" (click)="hardDeleteSubscriber(subscriber)">Kalıcı sil</button>
+                      </td>
+                    </tr>
+                  } @empty {<tr><td colspan="8" class="empty">Bülten abonesi bulunamadı.</td></tr>}
+                </tbody>
+              </table>
+              <div class="pager">
+                <span>Toplam {{ subscribers().totalCount }} · Sayfa {{ subscribers().pageNumber }} / {{ subscriberTotalPages() }}</span>
+                <button type="button" class="secondary" (click)="changeSubscriberPage(-1)" [disabled]="subscribers().pageNumber <= 1">Önceki</button>
+                <button type="button" class="secondary" (click)="changeSubscriberPage(1)" [disabled]="subscribers().pageNumber >= subscriberTotalPages()">Sonraki</button>
+              </div>
+            </div>
+          }
 
           @if (cmsPreview(); as preview) {<div class="dialog-backdrop-shield" aria-hidden="true"></div><div class="data-card dialog-form" role="dialog" aria-modal="true" aria-label="İçerik önizlemesi" cdkTrapFocus [cdkTrapFocusAutoCapture]="true"><div class="flex items-center justify-between gap-3"><h3>{{ preview.title }} · Önizleme</h3><button type="button" class="secondary" (click)="cmsPreview.set(null)">Kapat</button></div><article class="preview whitespace-pre-wrap" [innerHTML]="preview.content"></article></div>}
           @if (cmsRevisions().length > 0) {<div class="dialog-backdrop-shield" aria-hidden="true"></div><div class="data-card dialog-form" role="dialog" aria-modal="true" aria-label="İçerik sürüm geçmişi" cdkTrapFocus [cdkTrapFocusAutoCapture]="true"><div class="flex items-center justify-between gap-3"><h3>{{ cmsRevisionType() }} geçmişi</h3><button type="button" class="secondary" (click)="cmsRevisions.set([])">Kapat</button></div><table class="data-table"><thead><tr><th>Sürüm</th><th>Tarih</th><th>Oluşturan</th><th></th></tr></thead><tbody>@for (revision of cmsRevisions(); track revision.id) {<tr><td>{{ revision.version }}</td><td>{{ revision.createdAt | date:'dd.MM.yyyy HH:mm' }}</td><td>{{ revision.createdBy }}</td><td><button type="button" (click)="restoreRevision(revision)">Bu sürüme dön</button></td></tr>}</tbody></table></div>}
@@ -275,7 +316,60 @@ const evidenceMetricIcons = ['insights', 'groups', 'quiz', 'speed', 'trending_up
 
       @if (selectedTab() === 'email-templates') {<section class="space-y-4"><div class="flex items-end justify-between gap-3"><div><h2 class="text-lg font-semibold text-gray-900 dark:text-white">Hızlı Okuma e-posta şablonları</h2><p class="muted">Kod, değişkenler, konu ve HTML gövdesi servis içinde yönetilir.</p></div><button type="button" class="primary" (click)="emailTemplateEditing.set(true); emailTemplateEditingId = null; emailTemplateDraft = emptyEmailTemplate()">Yeni şablon</button></div>@if (emailTemplateEditing()) {<div class="dialog-backdrop-shield" aria-hidden="true"></div><form class="form-card dialog-form" role="dialog" aria-modal="true" aria-label="Düzenleme formu" cdkTrapFocus [cdkTrapFocusAutoCapture]="true" (ngSubmit)="saveEmailTemplate()"><h3>{{ emailTemplateEditingId ? 'Şablonu düzenle' : 'Yeni e-posta şablonu' }}</h3><div class="form-grid"><label>Ad<input [(ngModel)]="emailTemplateDraft.name" name="srEmailName" required maxlength="200" /></label><label>Kod<input [(ngModel)]="emailTemplateDraft.code" name="srEmailCode" required maxlength="100" [disabled]="!!emailTemplateEditingId" /></label><label class="wide">Konu<input [(ngModel)]="emailTemplateDraft.subject" name="srEmailSubject" required maxlength="998" /></label><label class="wide">HTML gövdesi<textarea [(ngModel)]="emailTemplateDraft.body" name="srEmailBody" required maxlength="200000"></textarea></label><label>Açıklama<textarea [(ngModel)]="emailTemplateDraft.description" name="srEmailDescription" maxlength="1000"></textarea></label><label>Kullanılabilir değişkenler<textarea [(ngModel)]="emailTemplateDraft.availableVariables" name="srEmailVariables" maxlength="10000"></textarea></label><label class="check"><input type="checkbox" [(ngModel)]="emailTemplateDraft.isActive" name="srEmailActive" /> Aktif</label></div><div class="form-actions"><button type="button" class="secondary" (click)="emailTemplateEditing.set(false)">İptal</button><button class="primary" type="submit" [disabled]="saving()">Kaydet</button></div></form>}<div class="data-card"><table class="data-table"><thead><tr><th>Ad/kod</th><th>Konu</th><th>Durum</th><th></th></tr></thead><tbody>@for (template of emailTemplates(); track template.id) {<tr><td><strong>{{ template.name }}</strong><div class="muted font-mono">{{ template.code }}</div></td><td>{{ template.subject }}</td><td>{{ template.isActive ? 'Aktif' : 'Pasif' }}</td><td class="actions"><button type="button" (click)="editEmailTemplate(template)">Düzenle</button><button type="button" (click)="previewEmailTemplate(template)">Önizleme</button><button type="button" class="danger" (click)="deleteEmailTemplate(template)">Sil</button></td></tr>} @empty {<tr><td colspan="4" class="empty">E-posta şablonu bulunamadı.</td></tr>}</tbody></table></div>@if (emailPreview(); as preview) {<div class="dialog-backdrop-shield" aria-hidden="true"></div><div class="data-card dialog-form" role="dialog" aria-modal="true" aria-label="E-posta önizlemesi" cdkTrapFocus [cdkTrapFocusAutoCapture]="true"><div class="flex items-center justify-between"><strong>{{ preview.subject }}</strong><button type="button" class="secondary" (click)="emailPreview.set(null)">Kapat</button></div><div class="preview" [innerHTML]="preview.body"></div></div>}</section>}
 
-      @if (selectedTab() === 'campaigns') {<section class="space-y-4"><div class="flex items-end justify-between gap-3"><div><h2 class="text-lg font-semibold text-gray-900 dark:text-white">E-posta kampanyaları</h2><p class="muted">Kampanya içeriklerini ve hedef kapsamını taslak olarak yönetin.</p></div><button type="button" class="primary" (click)="campaignEditing.set(true); campaignEditingId = null; campaignDraft = emptyCampaign()">Yeni kampanya taslağı</button></div><div role="note" class="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-200">E-posta gönderim kuyruğu ve zamanlayıcı henüz yapılandırılmadı. Bu ekranda yalnızca kampanya taslakları, mevcut kayıtlar ve istatistikler yönetilebilir.</div>@if (campaignEditing()) {<div class="dialog-backdrop-shield" aria-hidden="true"></div><form class="form-card dialog-form" role="dialog" aria-modal="true" aria-label="Düzenleme formu" cdkTrapFocus [cdkTrapFocusAutoCapture]="true" (ngSubmit)="saveCampaign()"><h3>{{ campaignEditingId ? 'Kampanyayı düzenle' : 'Yeni kampanya taslağı' }}</h3><div class="form-grid"><label>Ad<input [(ngModel)]="campaignDraft.name" name="campaignName" required maxlength="200" /></label><label>Konu<input [(ngModel)]="campaignDraft.subject" name="campaignSubject" required maxlength="998" /></label><label class="wide">HTML gövdesi<textarea [(ngModel)]="campaignDraft.body" name="campaignBody" required maxlength="200000"></textarea></label><label class="wide">Düz metin<textarea [(ngModel)]="campaignDraft.plainTextBody" name="campaignPlainText" maxlength="200000"></textarea></label><label>Hedef roller<input [(ngModel)]="campaignDraft.targetRoles" name="campaignRoles" maxlength="1000" /></label><label>Kurum ID<input [(ngModel)]="campaignDraft.targetInstitutionId" name="campaignInstitution" /></label><label class="check"><input type="checkbox" [(ngModel)]="campaignDraft.includeAllUsers" name="campaignAll" /> Tüm kullanıcılar</label><label class="check"><input type="checkbox" [(ngModel)]="campaignDraft.includeSubscribers" name="campaignSubscribers" /> Bülten aboneleri</label></div><div class="form-actions"><button type="button" class="secondary" (click)="campaignEditing.set(false)">İptal</button><button class="primary" type="submit" [disabled]="saving()">Taslağı kaydet</button></div></form>}<div class="data-card"><table class="data-table"><thead><tr><th>Kampanya</th><th>Durum</th><th>Alıcılar</th><th>Gönderim</th><th></th></tr></thead><tbody>@for (campaign of campaigns(); track campaign.id) {<tr><td><strong>{{ campaign.name }}</strong><div class="muted">{{ campaign.subject }}</div></td><td>{{ campaign.status }}</td><td>{{ campaign.totalRecipients }} / {{ campaign.sentCount }} gönderildi</td><td>{{ campaign.sentAt ? (campaign.sentAt | date:'dd.MM.yyyy HH:mm') : (campaign.scheduledFor ? 'Zamanlama devre dışı' : 'Taslak') }}</td><td class="actions"><button type="button" (click)="editCampaign(campaign)">Düzenle</button><span class="muted" title="E-posta gönderim kuyruğu yapılandırılmadı">Gönderim kapalı</span><button type="button" (click)="showCampaignStats(campaign)">İstatistik</button><button type="button" class="danger" (click)="deleteCampaign(campaign)">Sil</button></td></tr>} @empty {<tr><td colspan="5" class="empty">Kampanya bulunamadı.</td></tr>}</tbody></table></div>@if (campaignStats(); as stats) {<div class="dialog-backdrop-shield" aria-hidden="true"></div><div class="data-card dialog-form" role="dialog" aria-modal="true" aria-label="Kampanya istatistikleri" cdkTrapFocus [cdkTrapFocusAutoCapture]="true"><div class="flex items-center justify-between"><strong>Kampanya istatistikleri</strong><button type="button" class="secondary" (click)="campaignStats.set(null)">Kapat</button></div><p class="muted">Toplam: {{ stats.totalRecipients }} · Gönderilen: {{ stats.sentCount }} · Başarısız: {{ stats.failedCount }} · Açılan: {{ stats.openedCount }} · Tıklanan: {{ stats.clickedCount }} · Bekleyen: {{ stats.pendingCount }}</p></div>}</section>}
+      @if (selectedTab() === 'campaigns') {
+        <section class="space-y-4">
+          <div class="flex items-end justify-between gap-3">
+            <div><h2 class="text-lg font-semibold text-gray-900 dark:text-white">Hızlı Okuma bülten kampanyaları</h2><p class="muted">İçerikleri düzenleyin; yalnız açık onay vermiş ve e-postasını doğrulamış aboneler hedeflenir.</p></div>
+            <button type="button" class="primary" (click)="campaignEditing.set(true); campaignEditingId = null; campaignDraft = emptyCampaign()">Yeni kampanya</button>
+          </div>
+          <div role="note" class="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-200">
+            Gönderim Notification servisinin kalıcı kuyruğuna aktarılır. “Kuyruğa alındı” e-postanın SMTP tarafından teslim edildiği anlamına gelmez; bu ekranda açılma/tıklanma veya teslim sonucu takibi yoktur. Eski/onaysız aboneler hiçbir kampanyaya dahil edilmez.
+          </div>
+          @if (campaignEditing()) {
+            <div class="dialog-backdrop-shield" aria-hidden="true"></div>
+            <form class="form-card dialog-form" role="dialog" aria-modal="true" aria-label="Kampanya düzenle" cdkTrapFocus [cdkTrapFocusAutoCapture]="true" (ngSubmit)="saveCampaign()">
+              <h3>{{ campaignEditingId ? 'Kampanyayı düzenle' : 'Yeni kampanya' }}</h3>
+              <div class="form-grid">
+                <label>Ad<input [(ngModel)]="campaignDraft.name" name="campaignName" required maxlength="200" /></label>
+                <label>Konu<input [(ngModel)]="campaignDraft.subject" name="campaignSubject" required maxlength="500" /></label>
+                <label class="wide">HTML gövdesi<textarea [(ngModel)]="campaignDraft.body" name="campaignBody" required maxlength="200000"></textarea></label>
+                <label class="wide">Düz metin<textarea [(ngModel)]="campaignDraft.plainTextBody" name="campaignPlainText" maxlength="200000"></textarea></label>
+                <label class="wide">Zamanlama (isteğe bağlı)<input type="datetime-local" [(ngModel)]="campaignDraft.scheduledFor" name="campaignScheduledFor" /><small class="muted">Boş bırakılırsa taslak kalır. Gelecek bir tarih seçilirse servis zamanı gelince kuyruğa alır.</small></label>
+              </div>
+              <p class="muted">Alıcı kitlesi sabit: yalnız açık rıza ve e-posta doğrulaması tamamlanmış Hızlı Okuma bülten aboneleri.</p>
+              <div class="form-actions"><button type="button" class="secondary" (click)="campaignEditing.set(false)">İptal</button><button class="primary" type="submit" [disabled]="saving()">Kaydet</button></div>
+            </form>
+          }
+          <div class="data-card">
+            <table class="data-table">
+              <thead><tr><th>Kampanya</th><th>Durum</th><th>Kitle / kuyruk</th><th>Zaman</th><th></th></tr></thead>
+              <tbody>
+                @for (campaign of campaigns(); track campaign.id) {
+                  <tr>
+                    <td><strong>{{ campaign.name }}</strong><div class="muted">{{ campaign.subject }}</div></td>
+                    <td>{{ campaignStatusLabel(campaign.status) }}</td>
+                    <td>{{ campaign.totalRecipients }} alıcı · {{ campaign.queuedCount }} kuyruğa alındı · {{ campaign.sentCount }} teslim raporu</td>
+                    <td>{{ campaign.queuedAt ? (campaign.queuedAt | date:'dd.MM.yyyy HH:mm') + ' · kuyruğa alındı' : (campaign.scheduledFor ? (campaign.scheduledFor | date:'dd.MM.yyyy HH:mm') + ' · zamanlandı' : 'Taslak') }}</td>
+                    <td class="actions">
+                      @if (campaign.status === 0 || campaign.status === 1) {<button type="button" (click)="editCampaign(campaign)">Düzenle</button>}
+                      @if (campaign.status === 0 || campaign.status === 1 || campaign.status === 5) {<button type="button" class="primary" (click)="queueCampaign(campaign)" [disabled]="saving()">{{ campaign.status === 5 ? 'Kuyruğa yeniden dene' : 'Şimdi kuyruğa al' }}</button>}
+                      <button type="button" (click)="showCampaignStats(campaign)">İstatistik</button>
+                      @if (campaign.queuedCount === 0 && campaign.status !== 2 && campaign.status !== 3) {<button type="button" class="danger" (click)="deleteCampaign(campaign)">Sil</button>}
+                    </td>
+                  </tr>
+                } @empty {<tr><td colspan="5" class="empty">Kampanya bulunamadı.</td></tr>}
+              </tbody>
+            </table>
+          </div>
+          @if (campaignStats(); as stats) {
+            <div class="dialog-backdrop-shield" aria-hidden="true"></div>
+            <div class="data-card dialog-form" role="dialog" aria-modal="true" aria-label="Kampanya istatistikleri" cdkTrapFocus [cdkTrapFocusAutoCapture]="true">
+              <div class="flex items-center justify-between"><strong>Kampanya istatistikleri</strong><button type="button" class="secondary" (click)="campaignStats.set(null)">Kapat</button></div>
+              <p class="muted">Alıcı: {{ stats.totalRecipients }} · Notification kuyruğuna alınan: {{ stats.queuedCount }} · SMTP teslim raporu: {{ stats.sentCount }} · Kuyruğa alınamayan: {{ stats.failedCount }} · Bekleyen: {{ stats.pendingCount }}. Açılma/tıklanma takibi yapılandırılmadı.</p>
+            </div>
+          }
+        </section>
+      }
 
       @if (selectedTab() === 'notifications') {<section class="space-y-4"><div class="flex items-end justify-between gap-3"><div><h2 class="text-lg font-semibold text-gray-900 dark:text-white">Toplu bildirim ve servis bildirimleri</h2><p class="muted">Hedef kitleye uygulama içi bildirim gönderin ve gönderilmiş bildirimleri sayfalı olarak inceleyin.</p></div><button type="button" class="primary" (click)="bulkEditing.set(true)">Yeni toplu bildirim</button></div>@if (bulkEditing()) {<div class="dialog-backdrop-shield" aria-hidden="true"></div><form class="form-card dialog-form" role="dialog" aria-modal="true" aria-label="Toplu bildirim gönder" cdkTrapFocus [cdkTrapFocusAutoCapture]="true" (ngSubmit)="sendBulkNotification()"><h3>Toplu bildirim gönder</h3><div class="form-grid"><label>Hedef tipi<input [(ngModel)]="bulkDraft.targetType" name="bulkTargetType" required maxlength="50" placeholder="All, Role, Institution" /></label><label>Hedef rol<input [(ngModel)]="bulkDraft.targetRole" name="bulkTargetRole" maxlength="100" /></label><label>Başlık<input [(ngModel)]="bulkDraft.title" name="bulkTitle" required maxlength="200" /></label><label>Tür<input type="number" [(ngModel)]="bulkDraft.type" name="bulkType" min="0" max="100" /></label><label class="wide">Mesaj<textarea [(ngModel)]="bulkDraft.message" name="bulkMessage" required maxlength="10000"></textarea></label><label class="check"><input type="checkbox" [(ngModel)]="bulkDraft.sendEmail" name="bulkSendEmail" disabled /> E-posta kanalı yapılandırılmadı</label></div><div class="form-actions"><button type="button" class="secondary" (click)="bulkEditing.set(false)">İptal</button><button type="submit" class="primary" [disabled]="saving()">Gönder</button></div></form>}<div class="data-card"><div class="inline-filter"><input [(ngModel)]="notificationSearch" name="notificationSearch" placeholder="Kullanıcı veya e-posta ara" maxlength="100" /><button type="button" class="secondary" (click)="loadNotifications()">Filtrele</button></div><table class="data-table"><thead><tr><th>Kullanıcı</th><th>Başlık</th><th>Mesaj</th><th>Durum</th><th>Tarih</th></tr></thead><tbody>@for (notification of notifications().items; track notification.id) {<tr><td>{{ notification.userName }}<div class="muted">{{ notification.userEmail }}</div></td><td>{{ notification.title }}</td><td>{{ notification.message }}</td><td>{{ notification.isRead ? 'Okundu' : 'Yeni' }}</td><td>{{ notification.createdAt | date:'dd.MM.yyyy HH:mm' }}</td></tr>} @empty {<tr><td colspan="5" class="empty">Bildirim bulunamadı.</td></tr>}</tbody></table><div class="pager"><span>Toplam {{ notifications().totalCount }}</span><button type="button" class="secondary" (click)="changeNotificationPage(-1)" [disabled]="notificationPage <= 1">Önceki</button><button type="button" class="secondary" (click)="changeNotificationPage(1)" [disabled]="notificationPage >= notificationTotalPages()">Sonraki</button></div></div></section>}
 
@@ -325,10 +419,12 @@ export class SpeedReadingCommunicationsComponent implements OnInit {
   ];
   readonly canManageContent = computed(() => this.authService.hasPermission(ADMIN_PERMISSIONS.speedReadingContentManage));
   readonly canManageCommunications = computed(() => this.authService.hasPermission(ADMIN_PERMISSIONS.speedReadingCommunicationsManage));
-  readonly visibleTabs = computed(() => this.tabs.filter(tab => tab.value === 'cms' ? this.canManageContent() : this.canManageCommunications()));
+  readonly visibleTabs = computed(() => this.tabs.filter(tab => tab.value === 'cms' ? this.canManageContent() || this.canManageCommunications() : this.canManageCommunications()));
   readonly cmsTabs: { value: CmsTab; label: string }[] = [
     { value: 'homepage', label: 'Ana sayfa' }, { value: 'evidence', label: 'Kanıtlı istatistikler' }, { value: 'pages', label: 'Sayfalar' }, { value: 'blog', label: 'Blog' }, { value: 'media', label: 'Medya' }, { value: 'navigation', label: 'Menü' }, { value: 'contacts', label: 'İletişim' }, { value: 'subscribers', label: 'Bülten aboneleri' }
   ];
+  readonly visibleCmsTabs = computed(() => this.cmsTabs.filter(tab =>
+    tab.value === 'subscribers' ? this.canManageCommunications() : this.canManageContent()));
   readonly selectedTab = signal<CommunicationTab>('cms');
   readonly cmsTab = signal<CmsTab>('homepage');
   readonly loading = signal(false); readonly saving = signal(false); readonly error = signal('');
@@ -349,7 +445,9 @@ export class SpeedReadingCommunicationsComponent implements OnInit {
 
   cmsPageNumber = 1; cmsBlogPageNumber = 1; cmsMediaPageNumber = 1; notificationPage = 1; notificationSearch = '';
   navigationMenu = 'Main';
-  includeInactiveSubscribers = false;
+  subscriberSearch = '';
+  subscriberStatus = '';
+  subscriberPage = 1;
   mediaFile: File | null = null; mediaAltText = '';
   contactReadFilter = ''; contactReplyFilter = ''; announcementActiveFilter = ''; announcementIncludeExpired = false;
   cmsPageEditingId: string | null = null; cmsBlogEditingId: string | null = null;
@@ -373,7 +471,8 @@ export class SpeedReadingCommunicationsComponent implements OnInit {
     const requestedTab = this.route?.snapshot.queryParamMap.get('tab');
     const requestedTabIsVisible = this.visibleTabs().some(tab => tab.value === requestedTab);
     if (requestedTabIsVisible) this.selectedTab.set(requestedTab as CommunicationTab);
-    else if (!this.canManageContent() && this.canManageCommunications()) this.selectedTab.set('announcements');
+    else if (!this.canManageContent() && this.canManageCommunications()) this.selectedTab.set('cms');
+    if (!this.canManageContent() && this.canManageCommunications()) this.cmsTab.set('subscribers');
     this.loadSelectedTab();
   }
 
@@ -504,11 +603,14 @@ export class SpeedReadingCommunicationsComponent implements OnInit {
   openContactDialog(message: SpeedReadingCmsContactMessage): void { this.selectedContact.set(message); this.contactReplyDraft = message.replyContent ?? ''; }
   replyContact(): void { const message = this.selectedContact(); const reply = this.contactReplyDraft.trim(); if (!message || !reply) return; this.run(this.service.replyToCmsContactMessage({ messageId: message.id, replyContent: reply }), () => { this.selectedContact.set(null); this.loadContacts(); }, 'Mesaj yanıtlanamadı.'); }
   async deleteContact(message: SpeedReadingCmsContactMessage): Promise<void> { if (!await this.toaster.confirm('Bu iletişim mesajı silinsin mi?', { title: 'İletişim mesajını sil' })) return; this.run(this.service.deleteCmsContactMessage(message.id), () => this.loadContacts(), 'Mesaj silinemedi.'); }
-  loadSubscribers(): void { this.service.getCmsSubscribers(1, 25, this.includeInactiveSubscribers).subscribe({ next: value => this.subscribers.set(value), error: () => this.error.set('Bülten aboneleri yüklenemedi.') }); }
-  async deleteSubscriber(subscriber: SpeedReadingCmsNewsletterSubscriber): Promise<void> { if (!await this.toaster.confirm('Bu bülten aboneliği silinsin mi?', { title: 'Bülten aboneliğini sil' })) return; this.run(this.service.deleteCmsSubscriber(subscriber.id), () => this.loadSubscribers(), 'Abone silinemedi.'); }
-  async hardDeleteSubscriber(subscriber: SpeedReadingCmsNewsletterSubscriber): Promise<void> { if (!await this.toaster.confirm('Bu aboneyi kalıcı olarak silmek istediğinizden emin misiniz?', { title: 'Aboneyi kalıcı sil' })) return; this.run(this.service.deleteCmsSubscriber(subscriber.id, true), () => this.loadSubscribers(), 'Abone kalıcı olarak silinemedi.'); }
-  restoreSubscriber(subscriber: SpeedReadingCmsNewsletterSubscriber): void { this.run(this.service.restoreCmsSubscriber(subscriber.id), () => this.loadSubscribers(), 'Abone yeniden aktifleştirilemedi.'); }
-  exportSubscribers(): void { this.service.exportCmsSubscribers(this.includeInactiveSubscribers).subscribe({ next: blob => { const url = URL.createObjectURL(blob); const anchor = document.createElement('a'); anchor.href = url; anchor.download = 'hizli-okuma-bulten-aboneleri.csv'; anchor.click(); URL.revokeObjectURL(url); }, error: () => this.error.set('Aboneler dışa aktarılamadı.') }); }
+  loadSubscribers(): void { this.service.getCmsSubscribers(this.subscriberPage, 25, this.subscriberStatus || undefined, this.subscriberSearch).subscribe({ next: value => this.subscribers.set(value), error: () => this.error.set('Bülten aboneleri yüklenemedi.') }); }
+  filterSubscribers(): void { this.subscriberPage = 1; this.loadSubscribers(); }
+  changeSubscriberPage(delta: number): void { this.subscriberPage = Math.max(1, this.subscriberPage + delta); this.loadSubscribers(); }
+  subscriberTotalPages(): number { return Math.max(1, Math.ceil(this.subscribers().totalCount / this.subscribers().pageSize)); }
+  newsletterStatusLabel(status: string): string { return ({ Active: 'Onaylı', PendingConfirmation: 'E-posta onayı bekliyor', LegacyUnconfirmed: 'Eski / onaysız', Unsubscribed: 'Abonelikten çıkmış' } as Record<string, string>)[status] ?? status; }
+  async deleteSubscriber(subscriber: SpeedReadingCmsNewsletterSubscriber): Promise<void> { if (!await this.toaster.confirm('Bu kişinin e-posta kampanyalarına gönderimi durdurulsun mu?')) return; this.run(this.service.deleteCmsSubscriber(subscriber.id), () => this.loadSubscribers(), 'Abonelik iptal edilemedi.'); }
+  async hardDeleteSubscriber(subscriber: SpeedReadingCmsNewsletterSubscriber): Promise<void> { if (!await this.toaster.confirm('Bu abone kaydını kalıcı olarak silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.', { title: 'Aboneyi kalıcı sil' })) return; this.run(this.service.deleteCmsSubscriber(subscriber.id, true), () => this.loadSubscribers(), 'Abone kalıcı olarak silinemedi.'); }
+  exportSubscribers(): void { this.service.exportCmsSubscribers(this.subscriberStatus || undefined, this.subscriberSearch).subscribe({ next: blob => { const url = URL.createObjectURL(blob); const anchor = document.createElement('a'); anchor.href = url; anchor.download = 'hizli-okuma-bulten-aboneleri.csv'; anchor.click(); URL.revokeObjectURL(url); }, error: () => this.error.set('Aboneler dışa aktarılamadı.') }); }
 
   loadAnnouncements(): void { const isActive = this.announcementActiveFilter === '' ? undefined : this.announcementActiveFilter === 'true'; this.service.getAnnouncements({ isActive, includeExpired: this.announcementIncludeExpired, take: 100 }).subscribe({ next: value => this.announcements.set(value), error: () => this.error.set('Duyurular yüklenemedi.') }); }
   editAnnouncement(item: SpeedReadingAnnouncement): void { this.announcementEditingId = item.id; this.announcementEditing.set(true); this.announcementDraft = { title: item.title, content: item.content, plainTextContent: item.plainTextContent, priority: item.priority, targetAudience: item.targetAudience, targetInstitutionId: item.targetInstitutionId, targetRoles: item.targetRoles, isPinned: item.isPinned, startDate: item.startDate?.slice(0, 16) ?? null, expiresAt: item.expiresAt?.slice(0, 16) ?? null, displayType: item.displayType, icon: item.icon, colorTheme: item.colorTheme, actionUrl: item.actionUrl, actionText: item.actionText, sendEmailNotification: false, createInAppNotification: false }; this.announcementTargetRoles = item.targetRoles.join(', '); }
@@ -523,10 +625,12 @@ export class SpeedReadingCommunicationsComponent implements OnInit {
   previewEmailTemplate(item: SpeedReadingEmailTemplate): void { this.service.previewSpeedReadingEmailTemplate(item.id).subscribe({ next: value => this.emailPreview.set(value), error: () => this.error.set('E-posta önizlemesi yüklenemedi.') }); }
 
   loadCampaigns(): void { this.service.getSpeedReadingEmailCampaigns().subscribe({ next: value => this.campaigns.set(value), error: () => this.error.set('E-posta kampanyaları yüklenemedi.') }); }
-  editCampaign(item: SpeedReadingEmailCampaign): void { this.service.getSpeedReadingEmailCampaign(item.id).subscribe({ next: detail => { this.campaignEditingId = item.id; this.campaignEditing.set(true); this.campaignDraft = { name: detail.campaign.name, subject: detail.campaign.subject, body: detail.body, plainTextBody: detail.plainTextBody, targetRoles: detail.campaign.targetRoles, targetInstitutionId: detail.campaign.targetInstitutionId, includeAllUsers: detail.campaign.includeAllUsers, includeSubscribers: detail.campaign.includeSubscribers, scheduledFor: null }; }, error: () => this.error.set('Kampanya ayrıntısı yüklenemedi.') }); }
-  saveCampaign(): void { const request = { ...this.campaignDraft, scheduledFor: null }; const action = this.campaignEditingId ? this.service.updateSpeedReadingEmailCampaign(this.campaignEditingId, request) : this.service.createSpeedReadingEmailCampaign(request); this.run(action, () => { this.campaignEditing.set(false); this.loadCampaigns(); }, 'Kampanya taslağı kaydedilemedi.'); }
+  editCampaign(item: SpeedReadingEmailCampaign): void { this.service.getSpeedReadingEmailCampaign(item.id).subscribe({ next: detail => { this.campaignEditingId = item.id; this.campaignEditing.set(true); this.campaignDraft = { name: detail.campaign.name, subject: detail.campaign.subject, body: detail.body, plainTextBody: detail.plainTextBody, targetRoles: null, targetInstitutionId: null, includeAllUsers: false, includeSubscribers: true, scheduledFor: this.toLocalDateTime(detail.campaign.scheduledFor) }; }, error: () => this.error.set('Kampanya ayrıntısı yüklenemedi.') }); }
+  saveCampaign(): void { const request = { ...this.campaignDraft, targetRoles: null, targetInstitutionId: null, includeAllUsers: false, includeSubscribers: true, scheduledFor: this.toUtcSchedule(this.campaignDraft.scheduledFor) }; const action = this.campaignEditingId ? this.service.updateSpeedReadingEmailCampaign(this.campaignEditingId, request) : this.service.createSpeedReadingEmailCampaign(request); this.run(action, () => { this.campaignEditing.set(false); this.loadCampaigns(); }, 'Kampanya kaydedilemedi.'); }
+  async queueCampaign(item: SpeedReadingEmailCampaign): Promise<void> { if (!await this.toaster.confirm('Kampanya yalnız açık rıza ve e-posta doğrulaması tamamlanmış abonelere kuyruğa alınacak. Kuyruğa alınması e-postanın teslim edildiğini garanti etmez. Devam edilsin mi?', { title: item.status === 5 ? 'Kuyruğa yeniden dene' : 'Kampanyayı kuyruğa al' })) return; this.saving.set(true); this.error.set(''); this.service.sendSpeedReadingEmailCampaign(item.id, true).pipe(finalize(() => this.saving.set(false))).subscribe({ next: result => { if (result.campaign.failedCount > 0) this.error.set(`${result.queuedCount} e-posta kuyruğa alındı; ${result.campaign.failedCount} kayıt kuyruğa alınamadı.`); else this.toaster.success(`${result.queuedCount} e-posta Notification kuyruğuna alındı. Teslimat bu ekranda doğrulanamaz.`); this.loadCampaigns(); }, error: err => this.error.set(getAdminErrorMessage(err, 'Kampanya kuyruğa alınamadı.')) }); }
   async deleteCampaign(item: SpeedReadingEmailCampaign): Promise<void> { if (!await this.toaster.confirm('Bu kampanya silinsin mi?', { title: 'Kampanyayı sil' })) return; this.run(this.service.deleteSpeedReadingEmailCampaign(item.id), () => this.loadCampaigns(), 'Kampanya silinemedi.'); }
   showCampaignStats(item: SpeedReadingEmailCampaign): void { this.service.getSpeedReadingEmailCampaignStats(item.id).subscribe({ next: value => this.campaignStats.set(value), error: () => this.error.set('Kampanya istatistiği yüklenemedi.') }); }
+  campaignStatusLabel(status: number): string { return ({ 0: 'Taslak', 1: 'Zamanlandı', 2: 'Kuyrukta', 3: 'Gönderildi', 4: 'İptal edildi', 5: 'Kuyruğa alınamadı' } as Record<number, string>)[status] ?? 'Bilinmiyor'; }
 
   loadNotifications(): void { this.service.getSpeedReadingNotifications(this.notificationPage, 25, { searchTerm: this.notificationSearch }).subscribe({ next: value => this.notifications.set(value), error: () => this.error.set('Bildirimler yüklenemedi.') }); }
   sendBulkNotification(): void { this.saving.set(true); this.error.set(''); this.service.sendSpeedReadingBulkNotification(this.bulkDraft).pipe(finalize(() => this.saving.set(false))).subscribe({ next: (result: SpeedReadingBulkNotificationResult) => { this.bulkDraft = { ...this.bulkDraft, title: '', message: '' }; this.bulkEditing.set(false); this.loadNotifications(); if (result.errors.length > 0) this.error.set(result.errors.join(' ')); }, error: () => this.error.set('Toplu bildirim gönderilemedi.') }); }
@@ -567,5 +671,7 @@ export class SpeedReadingCommunicationsComponent implements OnInit {
   private emptyNavigation(): SpeedReadingCmsNavigationItemRequest { return { menu: 'Main', label: '', url: '/', fragment: null, icon: null, sortOrder: 0, isVisible: true, openInNewTab: false }; }
   emptyAnnouncement(): SpeedReadingAnnouncementRequest { return { title: '', content: '', plainTextContent: null, priority: 2, targetAudience: 0, targetInstitutionId: null, targetRoles: [], isPinned: false, startDate: null, expiresAt: null, displayType: 0, icon: null, colorTheme: null, actionUrl: null, actionText: null, sendEmailNotification: false, createInAppNotification: true }; }
   emptyEmailTemplate(): SpeedReadingEmailTemplateRequest { return { name: '', code: '', subject: '', body: '', description: null, availableVariables: null, isActive: true }; }
-  emptyCampaign(): SpeedReadingEmailCampaignRequest { return { name: '', subject: '', body: '', plainTextBody: null, targetRoles: null, targetInstitutionId: null, includeAllUsers: false, includeSubscribers: false, scheduledFor: null }; }
+  emptyCampaign(): SpeedReadingEmailCampaignRequest { return { name: '', subject: '', body: '', plainTextBody: null, targetRoles: null, targetInstitutionId: null, includeAllUsers: false, includeSubscribers: true, scheduledFor: null }; }
+  private toUtcSchedule(value: string | null | undefined): string | null { if (!value) return null; const parsed = new Date(value); if (Number.isNaN(parsed.getTime())) throw new Error('Planlanan zaman geçerli değil.'); return parsed.toISOString(); }
+  private toLocalDateTime(value: string | null): string | null { if (!value) return null; const parsed = new Date(value); if (Number.isNaN(parsed.getTime())) return null; return new Date(parsed.getTime() - parsed.getTimezoneOffset() * 60_000).toISOString().slice(0, 16); }
 }

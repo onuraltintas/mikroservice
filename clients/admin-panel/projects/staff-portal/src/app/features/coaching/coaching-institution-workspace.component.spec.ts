@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
-import { HttpErrorResponse } from '@angular/common/http';
+import { HttpErrorResponse, provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 import { CoachingInstitutionService, CoachingInstitutionStudent, CoachingInstitutionTeacher } from './coaching-institution.service';
@@ -126,6 +127,27 @@ describe('CoachingInstitutionWorkspaceComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Öğrenci daveti gönderildi');
   });
 
+  it('loads pending Coaching invitations from Identity when institution management is opened', async () => {
+    const fixture = await createFixture();
+    fixture.detectChanges();
+    fixture.componentInstance.selectSection('teachers');
+    fixture.detectChanges();
+    (fixture.nativeElement.querySelector('[data-testid="toggle-pending-invitations"]') as HTMLButtonElement).click();
+    fixture.detectChanges();
+
+    TestBed.inject(HttpTestingController).expectOne('/api/invitations/sent-pending').flush([{
+      invitationId: 'teacher-invitation-1',
+      email: 'teacher@example.test',
+      role: 'TeacherToInstitution',
+      createdAt: '2026-09-29T10:00:00Z',
+      expiresAt: '2026-10-06T10:00:00Z',
+    }]);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('teacher@example.test');
+    expect(fixture.nativeElement.textContent).toContain('Öğretmen daveti');
+  });
+
   it('shows the institution API duplicate-invitation reason instead of a generic error', async () => {
     const service = institutionService();
     service.inviteTeacher.mockReturnValueOnce(throwError(() => new HttpErrorResponse({
@@ -180,7 +202,11 @@ describe('CoachingInstitutionWorkspaceComponent', () => {
 async function createFixture(service = institutionService()) {
   TestBed.configureTestingModule({
     imports: [CoachingInstitutionWorkspaceComponent],
-    providers: [{ provide: CoachingInstitutionService, useValue: service }]
+    providers: [
+      { provide: CoachingInstitutionService, useValue: service },
+      provideHttpClient(),
+      provideHttpClientTesting(),
+    ]
   });
   await TestBed.compileComponents();
   return TestBed.createComponent(CoachingInstitutionWorkspaceComponent);

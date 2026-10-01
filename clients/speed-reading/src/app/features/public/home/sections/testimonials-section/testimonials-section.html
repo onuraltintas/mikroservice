@@ -1,17 +1,33 @@
 <section class="testimonials-section">
     <div class="container">
-        <div class="section-header">
-            <h2>{{ content.title }}</h2>
-            <p>{{ content.subtitle }}</p>
-        </div>
+        <ng-container *ngIf="showApproach">
+            <div class="section-header">
+                <h2>{{ content.title }}</h2>
+                <p>{{ content.subtitle }}</p>
+            </div>
 
-        <div class="approach-grid">
-            <mat-card *ngFor="let item of content.items; let index = index" class="approach-card">
-                <span class="step-number" aria-hidden="true">{{ index + 1 }}</span>
-                <p class="eyebrow">{{ item.role }}</p>
-                <h3>{{ item.title }}</h3>
-                <p>{{ item.description }}</p>
-            </mat-card>
-        </div>
+            <div class="approach-grid">
+                <mat-card *ngFor="let item of content.items; let index = index" class="approach-card">
+                    <span class="step-number" aria-hidden="true">{{ index + 1 }}</span>
+                    <p class="eyebrow">{{ item.role }}</p>
+                    <h3>{{ item.title }}</h3>
+                    <p>{{ item.description }}</p>
+                </mat-card>
+            </div>
+        </ng-container>
+
+        <ng-container *ngIf="showTestimonials && testimonialsContent.items.length">
+            <div class="section-header testimonial-heading">
+                <h2>{{ testimonialsContent.title }}</h2>
+                <p>{{ testimonialsContent.subtitle }}</p>
+            </div>
+            <div class="approach-grid">
+                <mat-card *ngFor="let item of testimonialsContent.items" class="approach-card testimonial-card">
+                    <p class="testimonial-rating" *ngIf="item.rating">Puan: {{ item.rating }}/5</p>
+                    <blockquote>{{ item.text }}</blockquote>
+                    <p class="testimonial-author">{{ item.name }}<span *ngIf="item.role"> · {{ item.role }}</span></p>
+                </mat-card>
+            </div>
+        </ng-container>
     </div>
 </section>

@@ -70,6 +70,11 @@ public sealed class LegacySpeedReadingCms : ISpeedReadingCms
         string slug,
         CancellationToken cancellationToken = default)
     {
+        if (CmsPageSlugPolicy.IsSharedLegalPageSlug(slug))
+        {
+            return null;
+        }
+
         var nowUtc = DateTime.UtcNow;
         var page = await db.Pages
             .AsNoTracking()
@@ -151,69 +156,6 @@ public sealed class LegacySpeedReadingCms : ISpeedReadingCms
         db.ContactMessages.Add(message);
         await db.SaveChangesAsync(cancellationToken);
         return message.Id;
-    }
-
-    public async Task<bool> SubscribeAsync(
-        CmsNewsletterSubscriptionRequest request,
-        CancellationToken cancellationToken = default)
-    {
-        var email = request.Email.Trim();
-        var existing = await db.NewsletterSubscribers
-            .SingleOrDefaultAsync(item => item.Email == email, cancellationToken);
-
-        if (existing is not null)
-        {
-            if (!existing.IsActive || existing.IsDeleted)
-            {
-                existing.IsActive = true;
-                existing.IsDeleted = false;
-                existing.UpdatedAt = DateTime.UtcNow;
-                existing.UpdatedBy = Guid.Empty;
-                await db.SaveChangesAsync(cancellationToken);
-            }
-
-            return false;
-        }
-
-        db.NewsletterSubscribers.Add(new LegacyNewsletterSubscriber
-        {
-            Id = Guid.NewGuid(),
-            Email = email,
-            IsActive = true,
-            Source = "website",
-            CreatedAt = DateTime.UtcNow,
-            CreatedBy = Guid.Empty
-        });
-        await db.SaveChangesAsync(cancellationToken);
-        return true;
-    }
-
-    public async Task<bool> UnsubscribeAsync(
-        string token,
-        CancellationToken cancellationToken = default)
-    {
-        if (!SpeedReadingNewsletterRules.TryGetSubscriberId(token, out var subscriberId))
-        {
-            return false;
-        }
-
-        var subscriber = await db.NewsletterSubscribers
-            .SingleOrDefaultAsync(item => item.Id == subscriberId && !item.IsDeleted, cancellationToken);
-        if (subscriber is null)
-        {
-            return false;
-        }
-
-        if (!subscriber.IsActive)
-        {
-            return true;
-        }
-
-        subscriber.IsActive = false;
-        subscriber.UpdatedAt = DateTime.UtcNow;
-        subscriber.UpdatedBy = Guid.Empty;
-        await db.SaveChangesAsync(cancellationToken);
-        return true;
     }
 
     public async Task<IReadOnlyList<CmsContentBlockSummary>> GetContentBlocksAsync(
@@ -705,80 +647,6 @@ public sealed class LegacySpeedReadingCms : ISpeedReadingCms
         return true;
     }
 
-    public async Task<SpeedReadingPage<CmsNewsletterSubscriberSummary>> GetSubscribersAsync(
-        int pageNumber,
-        int pageSize,
-        bool includeInactive = false,
-        CancellationToken cancellationToken = default)
-    {
-        var (page, size) = NormalizePage(pageNumber, pageSize);
-        var query = db.NewsletterSubscribers.AsNoTracking()
-            .Where(item => !item.IsDeleted && (includeInactive || item.IsActive));
-        var total = await query.CountAsync(cancellationToken);
-        var rows = await query
-            .OrderByDescending(item => item.CreatedAt)
-            .Skip((page - 1) * size)
-            .Take(size)
-            .ToListAsync(cancellationToken);
-        var items = rows.Select(ToSummary).ToList();
-        return new SpeedReadingPage<CmsNewsletterSubscriberSummary>(items, page, size, total);
-    }
-
-    public async Task<bool> DeleteSubscriberAsync(Guid id, bool hardDelete, Guid actorId, CancellationToken cancellationToken = default)
-    {
-        var subscriber = await db.NewsletterSubscribers
-            .SingleOrDefaultAsync(item => item.Id == id && !item.IsDeleted, cancellationToken);
-        if (subscriber is null)
-        {
-            return false;
-        }
-
-        if (hardDelete)
-        {
-            db.NewsletterSubscribers.Remove(subscriber);
-        }
-        else
-        {
-            subscriber.IsActive = false;
-            subscriber.UpdatedAt = DateTime.UtcNow;
-            subscriber.UpdatedBy = actorId;
-        }
-
-        await db.SaveChangesAsync(cancellationToken);
-        return true;
-    }
-
-    public async Task<IReadOnlyList<CmsNewsletterSubscriberSummary>> ExportSubscribersAsync(
-        bool includeInactive,
-        CancellationToken cancellationToken = default)
-    {
-        var rows = await db.NewsletterSubscribers
-            .AsNoTracking()
-            .Where(item => !item.IsDeleted && (includeInactive || item.IsActive))
-            .OrderBy(item => item.Email)
-            .ToListAsync(cancellationToken);
-        return rows.Select(ToSummary).ToList();
-    }
-
-    public async Task<bool> RestoreSubscriberAsync(
-        Guid id,
-        Guid actorId,
-        CancellationToken cancellationToken = default)
-    {
-        var subscriber = await db.NewsletterSubscribers
-            .SingleOrDefaultAsync(item => item.Id == id && !item.IsDeleted, cancellationToken);
-        if (subscriber is null)
-        {
-            return false;
-        }
-
-        subscriber.IsActive = true;
-        subscriber.UpdatedAt = DateTime.UtcNow;
-        subscriber.UpdatedBy = actorId;
-        await db.SaveChangesAsync(cancellationToken);
-        return true;
-    }
-
     public async Task<SpeedReadingPage<CmsContactMessageSummary>> GetContactMessagesAsync(
         int pageNumber,
         int pageSize,
@@ -875,7 +743,9 @@ public sealed class LegacySpeedReadingCms : ISpeedReadingCms
     private async Task<SpeedReadingPage<CmsPageSummary>> GetPagePageAsync(int pageNumber, int pageSize, CancellationToken cancellationToken)
     {
         var (page, size) = NormalizePage(pageNumber, pageSize);
-        var query = db.Pages.AsNoTracking().Where(item => !item.IsDeleted);
+        var query = db.Pages.AsNoTracking().Where(item => !item.IsDeleted
+            && item.Slug.ToLower() != CmsPageSlugPolicy.SharedPrivacySlug
+            && item.Slug.ToLower() != CmsPageSlugPolicy.SharedKvkkSlug);
         var total = await query.CountAsync(cancellationToken);
         var rows = await query
             .OrderByDescending(item => item.CreatedAt)
@@ -1096,9 +966,6 @@ public sealed class LegacySpeedReadingCms : ISpeedReadingCms
 
     private static CmsContactMessageSummary ToSummary(LegacyContactMessage item) =>
         new(item.Id, item.Name, item.Email, item.Subject, item.Message, item.IsRead, item.IsReplied, item.RepliedAt, item.ReplyContent, item.CreatedAt, item.UpdatedAt);
-
-    private static CmsNewsletterSubscriberSummary ToSummary(LegacyNewsletterSubscriber item) =>
-        new(item.Id, item.Email, item.IsActive, item.Source, item.CreatedAt, item.UpdatedAt);
 
     private static IReadOnlyList<string> SplitTags(string? tags) =>
         string.IsNullOrWhiteSpace(tags)

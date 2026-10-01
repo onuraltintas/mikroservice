@@ -6,7 +6,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { finalize } from 'rxjs';
-import { PublicCmsService } from '../../../core/services/public-cms.service';
+import { PlatformLegalPagesService } from '../../../core/services/platform-legal-pages.service';
 import { NavbarComponent } from '../../../shared/components/navbar/navbar';
 import { FooterComponent } from '../../../shared/components/footer/footer';
 
@@ -18,7 +18,7 @@ import { FooterComponent } from '../../../shared/components/footer/footer';
     styleUrls: ['./cookies.component.scss']
 })
 export class CookiesComponent {
-    private readonly cmsService = inject(PublicCmsService);
+    private readonly legalPages = inject(PlatformLegalPagesService);
     currentDate = new Date();
     content: string = '';
     title = 'Çerez Politikası';
@@ -27,9 +27,9 @@ export class CookiesComponent {
     noDocument = true;
 
     ngOnInit(): void {
-        this.cmsService.getPage('cookies').pipe(finalize(() => this.loading = false)).subscribe({
+        this.legalPages.getPage('cookies').pipe(finalize(() => this.loading = false)).subscribe({
             next: page => {
-                if (page?.content?.trim()) {
+                if (page?.isPublished && page.content?.trim()) {
                     this.title = page.title || this.title;
                     this.content = page.content;
                     this.noDocument = false;

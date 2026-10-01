@@ -6,7 +6,6 @@ import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
-import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDividerModule } from '@angular/material/divider';
@@ -17,6 +16,8 @@ import { RegisterInstitutionRequest } from '../../../core/models/user.model';
 import { strongPasswordValidator } from '../../../shared/validators/password.validator';
 import { DistrictOption, LocationsService, ProvinceOption } from '../../../core/services/locations.service';
 import { getErrorMessage } from '../../../core/utils/error-message';
+import { RegistrationLegalAcceptance } from '../../../core/models/user.model';
+import { RegistrationLegalConsentComponent } from '../registration-legal-consent.component';
 
 @Component({
   selector: 'app-register-school',
@@ -29,12 +30,12 @@ import { getErrorMessage } from '../../../core/utils/error-message';
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
-    MatCheckboxModule,
     MatIconModule,
     MatProgressSpinnerModule,
     MatDividerModule,
     MatSelectModule,
-    NgxMatSelectSearchModule
+    NgxMatSelectSearchModule,
+    RegistrationLegalConsentComponent
   ],
   templateUrl: './register-school.component.html',
   styleUrls: ['./register-school.component.scss']
@@ -56,6 +57,8 @@ export class RegisterSchoolComponent implements OnInit {
   filteredDistricts: DistrictOption[] = [];
   readonly provinceFilter = new FormControl('', { nonNullable: true });
   readonly districtFilter = new FormControl('', { nonNullable: true });
+  legalReady = false;
+  legalAcceptances: RegistrationLegalAcceptance[] = [];
 
   registerForm = this.fb.group({
     schoolName: ['', [Validators.required, Validators.minLength(3)]],
@@ -68,9 +71,7 @@ export class RegisterSchoolComponent implements OnInit {
     lastName: ['', [Validators.required, Validators.minLength(2)]],
     adminEmail: ['', [Validators.required, Validators.email]],
     password: ['', [Validators.required, strongPasswordValidator()]],
-    confirmPassword: ['', [Validators.required]],
-    acceptTerms: [false, [Validators.requiredTrue]],
-    acceptKVKK: [false, [Validators.requiredTrue]]
+    confirmPassword: ['', [Validators.required]]
   }, {
     validators: this.passwordMatchValidator
   });
@@ -132,7 +133,7 @@ export class RegisterSchoolComponent implements OnInit {
   }
 
   onSubmit() {
-    if (this.registerForm.invalid) return;
+    if (this.registerForm.invalid || !this.hasRequiredLegalAcceptances) return;
 
     this.isLoading = true;
     this.error = '';
@@ -147,7 +148,8 @@ export class RegisterSchoolComponent implements OnInit {
       InstitutionType: 1,
       Phone: formValue.phoneNumber!,
       ProvinceId: formValue.provinceId!,
-      DistrictId: formValue.districtId!
+      DistrictId: formValue.districtId!,
+      legalAcceptances: this.legalAcceptances
     };
 
     this.authService.registerInstitution(request).subscribe({
@@ -163,5 +165,9 @@ export class RegisterSchoolComponent implements OnInit {
         this.isLoading = false;
       }
     });
+  }
+
+  get hasRequiredLegalAcceptances(): boolean {
+    return this.legalReady && this.legalAcceptances.length === 3;
   }
 }

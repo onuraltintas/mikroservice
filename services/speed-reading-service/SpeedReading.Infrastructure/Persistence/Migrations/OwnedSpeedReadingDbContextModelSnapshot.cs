@@ -4977,6 +4977,14 @@ namespace SpeedReading.Infrastructure.Persistence.Migrations
                         .HasColumnType("text")
                         .HasColumnName("plain_text_body");
 
+                    b.Property<DateTime?>("QueuedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("queued_at");
+
+                    b.Property<int>("QueuedCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("queued_count");
+
                     b.Property<DateTime?>("ScheduledFor")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("scheduled_for");
@@ -4990,6 +4998,7 @@ namespace SpeedReading.Infrastructure.Persistence.Migrations
                         .HasColumnName("sent_count");
 
                     b.Property<string>("Status")
+                        .IsConcurrencyToken()
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)")
@@ -5070,6 +5079,15 @@ namespace SpeedReading.Infrastructure.Persistence.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean")
                         .HasColumnName("is_deleted");
+
+                    b.Property<string>("NewsletterUnsubscribeTokenProtected")
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)")
+                        .HasColumnName("newsletter_unsubscribe_token_protected");
+
+                    b.Property<DateTime?>("QueuedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("queued_at");
 
                     b.Property<string>("RecipientEmail")
                         .IsRequired()
@@ -5283,6 +5301,26 @@ namespace SpeedReading.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<DateTime?>("ConfirmationSentAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("ConfirmationTokenExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ConfirmationTokenHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTime?>("ConfirmedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ConsentStatementVersion")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTime?>("ConsentedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -5297,8 +5335,8 @@ namespace SpeedReading.Infrastructure.Persistence.Migrations
 
                     b.Property<string>("Email")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasMaxLength(320)
+                        .HasColumnType("character varying(320)");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
@@ -5306,9 +5344,30 @@ namespace SpeedReading.Infrastructure.Persistence.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
+                    b.Property<int?>("PrivacyPolicyVersion")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Source")
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasDefaultValue("LegacyUnconfirmed");
+
+                    b.Property<string>("UnsubscribeTokenHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("UnsubscribeTokenProtected")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<DateTime?>("UnsubscribedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -5318,8 +5377,18 @@ namespace SpeedReading.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ConfirmationTokenHash")
+                        .IsUnique()
+                        .HasFilter("\"ConfirmationTokenHash\" IS NOT NULL");
+
                     b.HasIndex("Email")
                         .IsUnique();
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("UnsubscribeTokenHash")
+                        .IsUnique()
+                        .HasFilter("\"UnsubscribeTokenHash\" IS NOT NULL");
 
                     b.ToTable("cms_newsletter_subscribers", "speed_reading");
                 });

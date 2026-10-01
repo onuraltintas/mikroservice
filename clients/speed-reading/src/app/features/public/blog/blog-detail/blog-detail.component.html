@@ -1,4 +1,4 @@
-<app-navbar [forceOpaque]="true"></app-navbar>
+<app-navbar class="public-cms-navbar" [forceOpaque]="true"></app-navbar>
 
 <div *ngIf="post" class="blog-detail-page">
     <!-- Breadcrumb -->
@@ -50,8 +50,10 @@
 
                 <!-- Featured Image -->
                 <div class="featured-image">
-                    <img *ngIf="post.coverImageUrl" [src]="post.coverImageUrl" [alt]="post.title" class="cover-image">
-                    <div *ngIf="!post.coverImageUrl" class="image-placeholder"></div>
+                    <div class="image-placeholder" aria-hidden="true"></div>
+                    <img *ngIf="post.coverImageUrl" [src]="post.coverImageUrl" [alt]="post.title"
+                        class="cover-image" loading="eager" fetchpriority="high" decoding="async"
+                        referrerpolicy="no-referrer" (error)="hideBrokenCover($event)">
                 </div>
 
                 <!-- Social Share -->
@@ -135,7 +137,10 @@
                             <a *ngFor="let related of relatedPosts" [routerLink]="['/blog', related.slug]"
                                 class="related-post">
                                 <div class="related-image">
-                                    <div class="image-placeholder"></div>
+                                    <div class="image-placeholder" aria-hidden="true"></div>
+                                    <img *ngIf="related.coverImageUrl" [src]="related.coverImageUrl"
+                                        [alt]="related.title" class="cover-image" loading="lazy" decoding="async"
+                                        referrerpolicy="no-referrer" (error)="hideBrokenCover($event)">
                                 </div>
                                 <div class="related-content">
                                     <h4>{{ related.title }}</h4>
@@ -170,7 +175,7 @@
         </div>
 </main>
 
-<app-footer></app-footer>
+<app-footer class="public-cms-footer"></app-footer>
 </div>
 
 <div *ngIf="!post" class="not-found">

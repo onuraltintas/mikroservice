@@ -430,3 +430,188 @@
         transform: translateX(-50%) translateY(-0.625rem);
     }
 }
+
+// Public CMS visual system: keep the speed-reading blue identity inside the
+// same calm, rounded indigo surfaces used by the Coaching CMS.
+.hero-section {
+    min-height: auto;
+    padding: 6.5rem 1.25rem 0;
+    background: transparent;
+    overflow: hidden;
+
+    .bg-decorations {
+        display: none;
+    }
+
+    .container {
+        max-width: var(--ui-content-max-width, 80rem);
+        min-height: 34rem;
+        padding: clamp(2rem, 6vw, 5rem);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 2rem;
+        background:
+            radial-gradient(ellipse at 80% 18%, rgba(96, 165, 250, 0.24), transparent 34%),
+            linear-gradient(125deg, #101a36 0%, #242965 55%, #373a88 100%);
+        box-shadow: 0 24px 60px rgba(21, 34, 67, 0.18);
+        overflow: hidden;
+        isolation: isolate;
+    }
+
+    .content-grid {
+        grid-template-columns: minmax(0, 1fr);
+        gap: clamp(2rem, 5vw, 4rem);
+    }
+
+    .text-content {
+        text-align: left;
+
+        .title {
+            max-width: 42rem;
+            margin-bottom: 1.25rem;
+            font-size: clamp(2.25rem, 4.2vw, 3.75rem);
+            font-weight: 650;
+            line-height: 1.08;
+            letter-spacing: -0.035em;
+        }
+
+        .subtitle {
+            max-width: 38rem;
+            margin: 0 0 1.75rem;
+            color: #dbe5ff;
+            font-size: clamp(1rem, 1.5vw, 1.2rem);
+            line-height: 1.7;
+        }
+
+        .cta-buttons {
+            gap: 0.75rem;
+            margin-bottom: 1.75rem;
+
+            .primary-btn,
+            .secondary-btn {
+                min-height: 3rem;
+                padding: 0.8rem 1.15rem !important;
+                border-radius: 0.85rem;
+                font-size: 0.9rem;
+                font-weight: 700;
+                box-shadow: none;
+            }
+
+            .primary-btn {
+                color: #242965 !important;
+                background: #fff !important;
+
+                &:hover {
+                    background: #eef2ff !important;
+                }
+            }
+
+            .secondary-btn {
+                color: #fff !important;
+                border-color: rgba(255, 255, 255, 0.35) !important;
+                background: rgba(255, 255, 255, 0.04) !important;
+            }
+        }
+
+        .trust-badges {
+            gap: 0.75rem 1.25rem;
+
+            .badge {
+                color: #dbe5ff;
+            }
+        }
+    }
+
+    .mockup-container {
+        padding: 1rem;
+
+        .mockup-card {
+            border: 1px solid #e2e8f0;
+            border-radius: 1.25rem;
+            box-shadow: 0 20px 48px rgba(4, 8, 30, 0.28);
+
+            &.floating {
+                animation-duration: 8s;
+            }
+        }
+
+        .badge-circle,
+        .progress-fill {
+            background: linear-gradient(135deg, #4f46e5, #2563eb);
+        }
+
+        .floating-badge {
+            border: 1px solid rgba(226, 232, 240, 0.9);
+            border-radius: 0.85rem;
+            box-shadow: 0 12px 28px rgba(4, 8, 30, 0.18);
+        }
+    }
+
+    .scroll-indicator {
+        position: static;
+        display: flex;
+        width: fit-content;
+        margin: 0.75rem auto 0;
+        padding: 0.4rem 0.6rem;
+        transform: none;
+        color: var(--ui-text-subtle);
+        animation: none;
+
+        &:hover {
+            color: var(--ui-brand);
+        }
+    }
+}
+
+@media (max-width: 64rem) {
+    .hero-section {
+        padding-top: 5.5rem;
+
+        .container {
+            min-height: auto;
+        }
+    }
+}
+
+@media (min-width: 64.0625rem) {
+    .hero-section .content-grid {
+        grid-template-columns: minmax(0, 1.1fr) minmax(18rem, 0.9fr);
+    }
+}
+
+@media (max-width: 48rem) {
+    .hero-section {
+        padding: 5rem 0.75rem 0;
+
+        .container {
+            padding: 2rem 1.25rem;
+            border-radius: 1.5rem;
+        }
+
+        .text-content {
+            text-align: center;
+
+            .cta-buttons,
+            .trust-badges {
+                justify-content: center;
+            }
+        }
+
+        .mockup-container {
+            padding: 0.25rem;
+
+            .floating-badge {
+                display: none;
+            }
+        }
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .hero-section {
+        .floating,
+        .floating-badge,
+        .scroll-indicator {
+            animation: none !important;
+        }
+    }
+}

@@ -83,7 +83,7 @@ describe('AuthService browser session security', () => {
     const loginPromise = service.loginWithGoogle('google-id-token');
     const request = http.expectOne(req => req.url.endsWith('/auth/coaching/google-login'));
     expect(request.request.withCredentials).toBe(true);
-    expect(request.request.body).toEqual({ idToken: 'google-id-token' });
+    expect(request.request.body).toEqual({ idToken: 'google-id-token', legalAcceptances: [] });
     request.flush({
       accessToken: createToken('coaching-user'),
       tokenType: 'Bearer',

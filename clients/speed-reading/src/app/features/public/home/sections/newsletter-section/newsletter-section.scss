@@ -120,6 +120,43 @@
                 text-align: center;
             }
 
+            .privacy-status,
+            .consent-label,
+            .consent-error {
+                color: #4b5563;
+                font-size: 0.875rem;
+                line-height: 1.5;
+            }
+
+            .consent-label {
+                display: flex;
+                align-items: flex-start;
+                gap: 0.625rem;
+
+                input {
+                    margin-top: 0.25rem;
+                    flex: 0 0 auto;
+                }
+
+                a {
+                    color: #1d4ed8;
+                    text-decoration: underline;
+                }
+            }
+
+            .consent-error {
+                margin: -0.75rem 0 0;
+                color: #b91c1c;
+            }
+
+            .newsletter-honeypot {
+                position: absolute;
+                left: -10000px;
+                width: 1px;
+                height: 1px;
+                overflow: hidden;
+            }
+
             .privacy-note {
                 display: flex;
                 align-items: center;
@@ -164,6 +201,56 @@
                 font-size: 1rem;
                 line-height: 1.6;
             }
+        }
+    }
+}
+
+.newsletter-section {
+    padding: 3rem 1.25rem;
+    background: transparent;
+    color: #fff;
+
+    .container {
+        max-width: var(--ui-content-max-width, 80rem);
+        padding: clamp(1.5rem, 5vw, 3.5rem);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 1.75rem;
+        background:
+            radial-gradient(ellipse at 82% 12%, rgba(96, 165, 250, 0.2), transparent 32%),
+            linear-gradient(125deg, #101a36 0%, #242965 100%);
+        box-shadow: var(--ui-shadow-md);
+    }
+
+    .newsletter-content {
+        gap: 2rem;
+    }
+
+    .newsletter-text {
+        h2 {
+            font-size: clamp(1.75rem, 3vw, 2.25rem);
+            font-weight: 650;
+            letter-spacing: -0.025em;
+        }
+
+        p {
+            color: #dbe5ff;
+            font-size: 1rem;
+            line-height: 1.7;
+        }
+    }
+
+    .newsletter-form-container {
+        .form-card,
+        .success-card {
+            border: 1px solid var(--ui-border);
+            border-radius: 1.25rem;
+            box-shadow: 0 16px 36px rgba(4, 8, 30, 0.18);
+        }
+
+        .subscribe-btn {
+            min-height: 3rem;
+            border-radius: 0.85rem;
+            background: var(--ui-brand-strong);
         }
     }
 }

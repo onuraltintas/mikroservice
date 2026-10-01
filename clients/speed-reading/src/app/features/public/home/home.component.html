@@ -1,11 +1,22 @@
-<app-navbar></app-navbar>
-<app-hero-section [content]="content.hero"></app-hero-section>
-@if (content.visibility.features) { <app-features-section [content]="content.features"></app-features-section> }
-@if (content.visibility.stats) { <app-stats-section></app-stats-section> }
-@if (content.visibility.approach) { <app-testimonials-section [content]="content.approach"></app-testimonials-section> }
-@if (content.visibility.pricing) { <app-pricing-section [content]="content.pricing"></app-pricing-section> }
-@if (content.visibility.blog) { <app-blog-section [content]="content.blog"></app-blog-section> }
-@if (content.visibility.newsletter) { <app-newsletter-section [content]="content.newsletter"></app-newsletter-section> }
-@if (content.visibility.faq) { <app-faq-section [content]="content.faq"></app-faq-section> }
-@if (content.visibility.cta) { <app-cta-section [content]="content.cta"></app-cta-section> }
-<app-footer></app-footer>
+<div class="public-cms-home">
+    <app-navbar class="public-cms-navbar"></app-navbar>
+    <main>
+        <app-hero-section [content]="content.hero"></app-hero-section>
+        @if (content.visibility.features) { <app-features-section [content]="content.features"></app-features-section> }
+        @if (content.visibility.stats) { <app-stats-section></app-stats-section> }
+        @if (content.visibility.approach || content.visibility.testimonials) {
+            <app-testimonials-section
+                [content]="content.approach"
+                [testimonialsContent]="content.testimonials"
+                [showApproach]="content.visibility.approach"
+                [showTestimonials]="content.visibility.testimonials">
+            </app-testimonials-section>
+        }
+        @if (content.visibility.pricing) { <app-pricing-section [content]="content.pricing"></app-pricing-section> }
+        @if (content.visibility.blog) { <app-blog-section [content]="content.blog"></app-blog-section> }
+        @if (content.visibility.newsletter) { <app-newsletter-section [content]="content.newsletter"></app-newsletter-section> }
+        @if (content.visibility.faq) { <app-faq-section [content]="content.faq"></app-faq-section> }
+        @if (content.visibility.cta) { <app-cta-section [content]="content.cta"></app-cta-section> }
+    </main>
+    <app-footer class="public-cms-footer"></app-footer>
+</div>

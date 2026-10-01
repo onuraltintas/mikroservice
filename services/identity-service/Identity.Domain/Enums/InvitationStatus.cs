@@ -20,5 +20,10 @@ public enum InvitationStatus
     /// <summary>
     /// Davet süresi doldu
     /// </summary>
-    Expired = 4
+    Expired = 4,
+
+    /// <summary>
+    /// Daveti gönderen tarafından iptal edildi
+    /// </summary>
+    Cancelled = 5
 }

@@ -14,6 +14,9 @@ import {
 } from './speed-reading-institution.service';
 import { SpeedReadingTeacherClassOverview } from './speed-reading-teacher.service';
 import { SpeedReadingStudentReportComponent } from './speed-reading-institution-student-report.component';
+import { StaffPendingInvitationsComponent } from '../staff-pending-invitations.component';
+import { SpeedReadingAssignmentManagementComponent } from './speed-reading-assignment-management.component';
+import { SpeedReadingInstitutionSettingsComponent } from './speed-reading-institution-settings.component';
 
 type MemberStatusFilter = 'all' | 'active' | 'inactive';
 type TeacherOption = { userId: string; displayName: string };
@@ -34,7 +37,7 @@ function utcDateInput(daysAgo: number): string {
 @Component({
   selector: 'staff-speed-reading-institution-workspace',
   standalone: true,
-  imports: [CommonModule, FormsModule, SpeedReadingStudentReportComponent],
+  imports: [CommonModule, FormsModule, SpeedReadingStudentReportComponent, StaffPendingInvitationsComponent, SpeedReadingAssignmentManagementComponent, SpeedReadingInstitutionSettingsComponent],
   templateUrl: './speed-reading-institution-workspace.component.html',
   styleUrl: './speed-reading-institution-workspace.component.scss',
 })
@@ -78,6 +81,10 @@ export class SpeedReadingInstitutionWorkspaceComponent implements OnInit {
   readonly institutionReportErrorMessage = signal<string | null>(null);
   readonly invitationErrorMessage = signal<string | null>(null);
   readonly invitationSuccessMessage = signal<string | null>(null);
+  readonly pendingInvitationsVisible = signal(false);
+  readonly invitationRefreshKey = signal(0);
+  readonly assignmentManagementVisible = signal(false);
+  readonly institutionSettingsVisible = signal(false);
 
   searchInput = '';
   invitationEmail = '';
@@ -202,6 +209,7 @@ export class SpeedReadingInstitutionWorkspaceComponent implements OnInit {
         this.invitationSuccessMessage.set(
           `${role === 'Student' ? 'Öğrenci' : 'Öğretmen'} daveti gönderildi. Davet edilen kişi aynı e-posta adresiyle Hızlı Okuma hesabı oluşturup daveti kabul edebilir.`,
         );
+        this.invitationRefreshKey.update(value => value + 1);
       },
       error: (error) => {
         this.invitationErrorMessage.set(
@@ -214,6 +222,10 @@ export class SpeedReadingInstitutionWorkspaceComponent implements OnInit {
       },
       complete: () => this.isInvitationSending.set(false),
     });
+  }
+
+  togglePendingInvitations(): void {
+    this.pendingInvitationsVisible.update(visible => !visible);
   }
 
   applyFilters(): void {

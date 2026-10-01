@@ -1001,18 +1001,19 @@ describe('SpeedReadingAdminService', () => {
     expect(restore.request.method).toBe('POST');
     restore.flush(null);
 
-    service.getCmsSubscribers(1, 25, true).subscribe(value => expect(value.totalCount).toBe(0));
-    const subscribers = http.expectOne('/api/speed-reading/admin/cms/newsletter/subscribers?pageNumber=1&pageSize=25&includeInactive=true');
+    service.getCmsSubscribers(2, 10, 'Active', '@example.com').subscribe(value => expect(value.totalCount).toBe(0));
+    const subscribers = http.expectOne(request => request.url === '/api/speed-reading/admin/cms/newsletter/subscribers'
+      && request.params.get('pageNumber') === '2'
+      && request.params.get('pageSize') === '10'
+      && request.params.get('status') === 'Active'
+      && request.params.get('search') === '@example.com');
     expect(subscribers.request.method).toBe('GET');
     subscribers.flush({ data: { items: [], totalCount: 0, pageNumber: 1, pageSize: 25 } });
 
-    service.restoreCmsSubscriber('subscriber-1').subscribe();
-    const subscriberRestore = http.expectOne('/api/speed-reading/admin/cms/newsletter/subscribers/subscriber-1/restore');
-    expect(subscriberRestore.request.method).toBe('PUT');
-    subscriberRestore.flush(null);
-
-    service.exportCmsSubscribers(true).subscribe();
-    const exportRequest = http.expectOne('/api/speed-reading/admin/cms/newsletter/subscribers/export?includeInactive=true');
+    service.exportCmsSubscribers('Active', '@example.com').subscribe();
+    const exportRequest = http.expectOne(request => request.url === '/api/speed-reading/admin/cms/newsletter/subscribers/export'
+      && request.params.get('status') === 'Active'
+      && request.params.get('search') === '@example.com');
     expect(exportRequest.request.method).toBe('GET');
     exportRequest.flush(new Blob(['csv'], { type: 'text/csv' }));
   });

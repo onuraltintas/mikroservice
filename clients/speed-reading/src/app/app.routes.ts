@@ -16,7 +16,17 @@ export const routes: Routes = [
     path: 'teacher',
     canActivate: [authGuard],
     data: { role: ['Teacher', 'InstitutionAdmin', 'InstitutionOwner'] },
-    loadChildren: () => import('./features/teacher/teacher.routes').then(m => m.teacherRoutes)
+    children: [
+      {
+        path: '',
+        pathMatch: 'full',
+        loadComponent: () => import('./features/legacy-staff-redirect.component').then(m => m.LegacyStaffRedirectComponent)
+      },
+      {
+        path: '**',
+        loadComponent: () => import('./features/legacy-staff-redirect.component').then(m => m.LegacyStaffRedirectComponent)
+      }
+    ]
   },
   {
     path: 'admin',
@@ -68,6 +78,10 @@ export const routes: Routes = [
       {
         path: 'cookies',
         loadComponent: () => import('./features/legal/cookies/cookies.component').then(m => m.CookiesComponent)
+      },
+      {
+        path: ':slug',
+        loadComponent: () => import('./features/legal/platform-legal-page.component').then(m => m.PlatformLegalPageComponent)
       }
     ]
   },
@@ -90,6 +104,10 @@ export const routes: Routes = [
   {
     path: 'newsletter',
     children: [
+      {
+        path: 'confirm',
+        loadComponent: () => import('./features/newsletter/unsubscribe/unsubscribe.component').then(m => m.UnsubscribeComponent)
+      },
       {
         path: 'unsubscribe',
         loadComponent: () => import('./features/newsletter/unsubscribe/unsubscribe.component').then(m => m.UnsubscribeComponent)

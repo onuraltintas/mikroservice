@@ -228,6 +228,17 @@ public sealed class OwnedSpeedReadingInvitations(
         {
             await db.SaveChangesAsync(cancellationToken);
         }
+        catch (DbUpdateConcurrencyException)
+        {
+            db.ChangeTracker.Clear();
+            var currentStatus = await db.Invitations.AsNoTracking()
+                .Where(item => item.Id == invitationId)
+                .Select(item => item.Status)
+                .SingleOrDefaultAsync(cancellationToken);
+            return currentStatus == SpeedReadingInvitationStatus.Accepted
+                ? SpeedReadingInvitationAcceptResult.AlreadyAccepted
+                : SpeedReadingInvitationAcceptResult.NotPending;
+        }
         catch (DbUpdateException)
         {
             db.ChangeTracker.Clear();
@@ -253,6 +264,75 @@ public sealed class OwnedSpeedReadingInvitations(
         }
 
         return SpeedReadingInvitationAcceptResult.Accepted;
+    }
+
+    public async Task<IReadOnlyList<SpeedReadingPendingInvitation>> GetPendingByInviterAsync(
+        Guid inviterUserId,
+        DateTime at,
+        CancellationToken cancellationToken = default)
+    {
+        if (inviterUserId == Guid.Empty)
+            return [];
+
+        var now = EnsureUtc(at);
+        return await db.Invitations.AsNoTracking()
+            .Where(invitation => invitation.InvitedByUserId == inviterUserId
+                && invitation.Status == SpeedReadingInvitationStatus.Pending
+                && invitation.ExpiresAt > now)
+            .OrderByDescending(invitation => invitation.CreatedAt)
+            .Select(invitation => new SpeedReadingPendingInvitation(
+                invitation.Id,
+                invitation.NormalizedEmail.ToLowerInvariant(),
+                invitation.Role.ToString(),
+                invitation.CreatedAt,
+                invitation.ExpiresAt))
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<SpeedReadingInvitationCancelResult> CancelAsync(
+        Guid invitationId,
+        Guid inviterUserId,
+        DateTime at,
+        CancellationToken cancellationToken = default)
+    {
+        if (invitationId == Guid.Empty || inviterUserId == Guid.Empty)
+            return SpeedReadingInvitationCancelResult.NotFound;
+
+        var invitation = await db.Invitations.SingleOrDefaultAsync(
+            item => item.Id == invitationId && item.InvitedByUserId == inviterUserId,
+            cancellationToken);
+        if (invitation is null)
+            return SpeedReadingInvitationCancelResult.NotFound;
+
+        var now = EnsureUtc(at);
+        if (invitation.Status != SpeedReadingInvitationStatus.Pending)
+            return SpeedReadingInvitationCancelResult.NotPending;
+        if (invitation.ExpiresAt <= now)
+        {
+            invitation.MarkExpired(now);
+            try
+            {
+                await db.SaveChangesAsync(cancellationToken);
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                db.ChangeTracker.Clear();
+            }
+            return SpeedReadingInvitationCancelResult.NotPending;
+        }
+
+        invitation.MarkCancelled(inviterUserId, now);
+        try
+        {
+            await db.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            db.ChangeTracker.Clear();
+            return SpeedReadingInvitationCancelResult.NotPending;
+        }
+
+        return SpeedReadingInvitationCancelResult.Cancelled;
     }
 
     private static SpeedReadingInvitationRecord ToRecord(SpeedReadingInvitation invitation) => new(

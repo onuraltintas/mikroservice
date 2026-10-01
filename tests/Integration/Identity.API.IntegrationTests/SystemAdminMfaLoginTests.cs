@@ -8,6 +8,7 @@ using Identity.Application.Commands.GoogleLogin;
 using Identity.Application.Commands.RefreshToken;
 using Identity.Application.DTOs.Settings;
 using Identity.Application.Interfaces;
+using Identity.Application.LegalPages;
 using Identity.Domain.Entities;
 using PlatformProduct = Identity.Domain.Enums.PlatformProduct;
 using UserProductAccessSource = Identity.Domain.Enums.UserProductAccessSource;
@@ -253,7 +254,8 @@ public sealed class SystemAdminMfaLoginTests
             new RejectingStudentRepository(),
             new StubConfigurationService(),
             mfaService,
-            NullLogger<GoogleLoginCommandHandler>.Instance);
+            NullLogger<GoogleLoginCommandHandler>.Instance,
+            new AcceptingLegalConsentService());
 
         var result = await handler.Handle(
             new GoogleLoginCommand("google-token", "127.0.0.1"),
@@ -282,7 +284,8 @@ public sealed class SystemAdminMfaLoginTests
             new RejectingStudentRepository(),
             new StubConfigurationService(),
             mfaService,
-            NullLogger<GoogleLoginCommandHandler>.Instance);
+            NullLogger<GoogleLoginCommandHandler>.Instance,
+            new AcceptingLegalConsentService());
 
         var result = await handler.Handle(
             new GoogleLoginCommand("google-token", "127.0.0.1"),
@@ -312,7 +315,8 @@ public sealed class SystemAdminMfaLoginTests
             new RejectingStudentRepository(),
             new StubConfigurationService(systemMfaMode: MfaPolicyModes.Disabled),
             mfaService,
-            NullLogger<GoogleLoginCommandHandler>.Instance);
+            NullLogger<GoogleLoginCommandHandler>.Instance,
+            new AcceptingLegalConsentService());
 
         var result = await handler.Handle(
             new GoogleLoginCommand("google-token", "127.0.0.1"),
@@ -343,7 +347,8 @@ public sealed class SystemAdminMfaLoginTests
             new RejectingStudentRepository(),
             new StubConfigurationService(),
             new StubMfaService(user.Id),
-            NullLogger<GoogleLoginCommandHandler>.Instance);
+            NullLogger<GoogleLoginCommandHandler>.Instance,
+            new AcceptingLegalConsentService());
 
         var result = await handler.Handle(
             new GoogleLoginCommand("google-token", "127.0.0.1", PlatformProduct.Coaching),
@@ -378,7 +383,8 @@ public sealed class SystemAdminMfaLoginTests
             new RejectingStudentRepository(),
             new StubConfigurationService(),
             new StubMfaService(user.Id),
-            NullLogger<GoogleLoginCommandHandler>.Instance);
+            NullLogger<GoogleLoginCommandHandler>.Instance,
+            new AcceptingLegalConsentService());
 
         var result = await handler.Handle(
             new GoogleLoginCommand("google-token", "127.0.0.1", requestedProduct),
@@ -411,7 +417,8 @@ public sealed class SystemAdminMfaLoginTests
             new RejectingStudentRepository(),
             new StubConfigurationService(),
             new StubMfaService(user.Id),
-            NullLogger<GoogleLoginCommandHandler>.Instance);
+            NullLogger<GoogleLoginCommandHandler>.Instance,
+            new AcceptingLegalConsentService());
 
         var result = await handler.Handle(
             new GoogleLoginCommand("google-token", "127.0.0.1", PlatformProduct.SpeedReading),
@@ -439,7 +446,8 @@ public sealed class SystemAdminMfaLoginTests
             new RejectingStudentRepository(),
             new StubConfigurationService(),
             mfaService,
-            NullLogger<GoogleLoginCommandHandler>.Instance);
+            NullLogger<GoogleLoginCommandHandler>.Instance,
+            new AcceptingLegalConsentService());
 
         var result = await handler.Handle(
             new GoogleLoginCommand("google-token", "127.0.0.1"),
@@ -464,7 +472,8 @@ public sealed class SystemAdminMfaLoginTests
             new RejectingStudentRepository(),
             new StubConfigurationService(),
             new StubMfaService(user.Id),
-            NullLogger<GoogleLoginCommandHandler>.Instance);
+            NullLogger<GoogleLoginCommandHandler>.Instance,
+            new AcceptingLegalConsentService());
 
         var result = await handler.Handle(
             new GoogleLoginCommand("google-token", "127.0.0.1"),
@@ -495,7 +504,8 @@ public sealed class SystemAdminMfaLoginTests
             new RejectingStudentRepository(),
             new StubConfigurationService(allowRegistration: "true"),
             new StubMfaService(inactiveUser.Id),
-            NullLogger<GoogleLoginCommandHandler>.Instance);
+            NullLogger<GoogleLoginCommandHandler>.Instance,
+            new AcceptingLegalConsentService());
 
         var result = await handler.Handle(
             new GoogleLoginCommand("google-token", "127.0.0.1", PlatformProduct.Coaching),
@@ -519,7 +529,8 @@ public sealed class SystemAdminMfaLoginTests
             new RejectingStudentRepository(),
             new StubConfigurationService(),
             new StubMfaService(user.Id),
-            NullLogger<GoogleLoginCommandHandler>.Instance);
+            NullLogger<GoogleLoginCommandHandler>.Instance,
+            new AcceptingLegalConsentService());
 
         var result = await handler.Handle(
             new GoogleLoginCommand("google-token", "127.0.0.1"),
@@ -1171,6 +1182,29 @@ public sealed class SystemAdminMfaLoginTests
         public Task UpdateConfigurationAsync(string key, UpdateConfigurationRequest request, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task DeleteConfigurationAsync(string key, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task RefreshCacheAsync(CancellationToken cancellationToken) => throw new NotSupportedException();
+    }
+
+    private sealed class AcceptingLegalConsentService : IRegistrationLegalConsentService
+    {
+        public Task<Result<IReadOnlyList<PlatformLegalPageDto>>> ValidateAsync(
+            PlatformProduct product,
+            IEnumerable<LegalPageAcceptance>? acceptances,
+            CancellationToken cancellationToken = default)
+        {
+            var pages = RegistrationLegalConsentPolicy.RequiredSlugs(product)
+                .Select(slug => new PlatformLegalPageDto(
+                    slug, slug, "Test", true, false, null, 1, DateTime.UtcNow, null, null))
+                .ToArray();
+            return Task.FromResult(Result.Success<IReadOnlyList<PlatformLegalPageDto>>(pages));
+        }
+
+        public void TrackAcceptedDocuments(
+            Guid userId,
+            PlatformProduct product,
+            IReadOnlyList<PlatformLegalPageDto> documents,
+            string registrationMethod)
+        {
+        }
     }
 
     private sealed class RejectingIdentityService(

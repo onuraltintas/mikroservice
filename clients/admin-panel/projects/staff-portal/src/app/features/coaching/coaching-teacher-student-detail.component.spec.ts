@@ -97,7 +97,10 @@ describe('CoachingTeacherStudentDetailComponent', () => {
     fixture.componentInstance.historySearch = '  Fen sınavı  ';
     fixture.componentInstance.historyStatus = 'Result';
     fixture.componentInstance.historyFromDate = '2026-09-01';
+    fixture.componentInstance.historyToDate = '2026-09-02';
     fixture.componentInstance.applyFilters();
+    const expectedFromDate = new Date(2026, 8, 1).toISOString();
+    const expectedToDate = new Date(new Date(2026, 8, 3).getTime() - 1).toISOString();
 
     const filteredRequest = http.expectOne(request =>
       request.url === '/api/reports/student/student-1/history'
@@ -105,7 +108,8 @@ describe('CoachingTeacherStudentDetailComponent', () => {
         && request.params.get('pageNumber') === '1'
         && request.params.get('search') === 'Fen sınavı'
         && request.params.get('status') === 'Result'
-        && request.params.get('fromDate') === '2026-09-01T00:00:00.000Z');
+        && request.params.get('fromDate') === expectedFromDate
+        && request.params.get('toDate') === expectedToDate);
     filteredRequest.flush({ items: [], pageNumber: 1, pageSize: 10, totalCount: 21, totalPages: 3 });
     fixture.detectChanges();
 
@@ -166,6 +170,7 @@ describe('CoachingTeacherStudentDetailComponent', () => {
     fixture.componentInstance.historySearch = '  Fen  ';
     fixture.componentInstance.historyStatus = 'Result';
     fixture.componentInstance.historyFromDate = '2026-09-01';
+    const expectedFromDate = new Date(2026, 8, 1).toISOString();
     const createObjectURL = vi.fn(() => 'blob:coaching-history');
     vi.stubGlobal('URL', { createObjectURL, revokeObjectURL: vi.fn() });
     const anchorClick = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
@@ -178,7 +183,7 @@ describe('CoachingTeacherStudentDetailComponent', () => {
         && candidate.params.get('type') === 'Assignments'
         && candidate.params.get('search') === 'Fen'
         && candidate.params.get('status') === 'Result'
-        && candidate.params.get('fromDate') === '2026-09-01T00:00:00.000Z');
+        && candidate.params.get('fromDate') === expectedFromDate);
     request.flush({
       items: [
         { id: 'assignment-2', type: 'Assignments', title: 'Fen çalışma', eventDate: '2026-09-11T10:00:00Z', status: 'Graded', score: 90, maxScore: 100 },

@@ -28,6 +28,17 @@
         }
     }
 
+    # Registration and legal pages read shared, public legal documents from Identity.
+    @sharedLegalPages {
+        method GET
+        path /api/platform/legal-pages /api/platform/legal-pages/*
+    }
+    handle @sharedLegalPages {
+        reverse_proxy api-gateway:8080 {
+            header_up X-Forwarded-Proto https
+        }
+    }
+
     # Keep the legacy CMS URLs working while the standalone client moves to
     # the bounded-context route above.
     @legacyCmsApi path /api/v1/cms /api/v1/cms/*
@@ -478,6 +489,9 @@
     handle @blockedApi {
         respond "Not Found" 404
     }
+
+    @legacyTeacher path /teacher /teacher/*
+    redir @legacyTeacher https://onuraltintas.net/staff/?product=speed-reading 302
 
     handle {
         reverse_proxy speed-reading-frontend:80

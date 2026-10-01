@@ -84,7 +84,11 @@ export interface GoogleRecaptchaConfiguration {
 
 export interface NewsletterSubscribeRequest {
     email: string;
-    name?: string;
+    consentGiven: boolean;
+    privacyPolicyVersion: number;
+    newsletterConsentVersion: number;
+    honeypot?: string;
+    recaptchaToken?: string;
 }
 
 @Injectable({
@@ -166,6 +170,12 @@ export class PublicCmsService {
     // Newsletter
     subscribeNewsletter(data: NewsletterSubscribeRequest): Observable<string> {
         return this.http.post<any>(`${this.apiUrl}/newsletter/subscribe`, data).pipe(
+            map(response => response?.message ?? '')
+        );
+    }
+
+    confirmNewsletterSubscription(token: string): Observable<string> {
+        return this.http.post<any>(`${this.apiUrl}/newsletter/confirm`, { token }).pipe(
             map(response => response?.message ?? '')
         );
     }

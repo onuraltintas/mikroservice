@@ -78,6 +78,17 @@ internal sealed class LegacyNewsletterSubscriber : LegacyBaseEntity
 {
     public string Email { get; set; } = string.Empty;
     public bool IsActive { get; set; }
+    public string Status { get; set; } = "LegacyUnconfirmed";
+    public int? PrivacyPolicyVersion { get; set; }
+    public string? ConsentStatementVersion { get; set; }
+    public DateTime? ConsentedAt { get; set; }
+    public DateTime? ConfirmedAt { get; set; }
+    public DateTime? UnsubscribedAt { get; set; }
+    public string? ConfirmationTokenHash { get; set; }
+    public DateTime? ConfirmationTokenExpiresAt { get; set; }
+    public DateTime? ConfirmationSentAt { get; set; }
+    public string? UnsubscribeTokenHash { get; set; }
+    public string? UnsubscribeTokenProtected { get; set; }
     public string? Source { get; set; }
 }
 

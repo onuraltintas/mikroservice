@@ -2,6 +2,7 @@ using EduPlatform.Shared.Kernel.Results;
 using EduPlatform.Shared.Security.Authorization;
 using Identity.Application.Commands.Login;
 using Identity.Application.Interfaces;
+using Identity.Application.LegalPages;
 using Identity.Domain.Entities;
 using Identity.Domain.Enums;
 using MediatR;
@@ -19,6 +20,7 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
     private readonly IStudentRepository _studentRepository;
     private readonly IConfigurationService _configurationService;
     private readonly IMultiFactorService _multiFactorService;
+    private readonly IRegistrationLegalConsentService _registrationLegalConsentService;
     private readonly ILogger<GoogleLoginCommandHandler> _logger;
 
     public GoogleLoginCommandHandler(
@@ -30,7 +32,8 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
         IStudentRepository studentRepository,
         IConfigurationService configurationService,
         IMultiFactorService multiFactorService,
-        ILogger<GoogleLoginCommandHandler> logger)
+        ILogger<GoogleLoginCommandHandler> logger,
+        IRegistrationLegalConsentService registrationLegalConsentService)
     {
         _googleAuthService = googleAuthService;
         _userRepository = userRepository;
@@ -40,6 +43,7 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
         _studentRepository = studentRepository;
         _configurationService = configurationService;
         _multiFactorService = multiFactorService;
+        _registrationLegalConsentService = registrationLegalConsentService;
         _logger = logger;
     }
 
@@ -85,6 +89,14 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
                  _logger.LogWarning("Google login blocked because registration is disabled.");
                  return Result.Failure<LoginResponse>(new Error("Identity.RegistrationDisabled", "Yeni kullanıcı kayıtları kapalıdır. Mevcut bir hesabınız yoksa giriş yapamazsınız."));
             }
+
+            var legalValidation = await _registrationLegalConsentService.ValidateAsync(
+                request.Product!.Value,
+                request.LegalAcceptances,
+                cancellationToken);
+            if (legalValidation.IsFailure)
+                return Result.Failure<LoginResponse>(legalValidation.Error);
+            var acceptedLegalPages = legalValidation.Value;
 
             // 2b. Auto-Register User
             _logger.LogInformation("Google login is registering a new user.");
@@ -132,6 +144,14 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
                createdNewUser = true;
                // Reload user to get fresh entity
                user = await _userRepository.GetByIdAsync(userId, cancellationToken);
+               if (user is not null)
+               {
+                   _registrationLegalConsentService.TrackAcceptedDocuments(
+                       userId,
+                       request.Product!.Value,
+                       acceptedLegalPages,
+                       "google");
+               }
             }
             
             // 2b-bis. Post-Creation Setup (Only if we have a user now)

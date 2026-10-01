@@ -44,6 +44,9 @@ public class IdentityDbContext : DbContext
     public DbSet<DataSubjectRequest> DataSubjectRequests => Set<DataSubjectRequest>();
     public DbSet<DataSubjectRequestAssessmentResult> DataSubjectRequestAssessmentResults => Set<DataSubjectRequestAssessmentResult>();
     public DbSet<DataSubjectRequestExecutionResult> DataSubjectRequestExecutionResults => Set<DataSubjectRequestExecutionResult>();
+    public DbSet<PlatformLegalPage> PlatformLegalPages => Set<PlatformLegalPage>();
+    public DbSet<PlatformLegalPageRevision> PlatformLegalPageRevisions => Set<PlatformLegalPageRevision>();
+    public DbSet<RegistrationLegalDocumentAcceptance> RegistrationLegalDocumentAcceptances => Set<RegistrationLegalDocumentAcceptance>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -53,6 +56,8 @@ public class IdentityDbContext : DbContext
         modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
         ConfigureAdminAudit(modelBuilder);
         ConfigureIdempotency(modelBuilder);
+        ConfigurePlatformLegalPages(modelBuilder);
+        ConfigureRegistrationLegalDocumentAcceptances(modelBuilder);
 
         // Set default schema
         modelBuilder.HasDefaultSchema("identity");
@@ -97,9 +102,54 @@ public class IdentityDbContext : DbContext
         idempotency.HasIndex(record => new { record.Scope, record.Key }).IsUnique();
     }
 
+    private static void ConfigurePlatformLegalPages(ModelBuilder modelBuilder)
+    {
+        var pages = modelBuilder.Entity<PlatformLegalPage>();
+        pages.ToTable("PlatformLegalPages");
+        pages.HasKey(page => page.Id);
+        pages.Property(page => page.Slug).HasMaxLength(80).IsRequired();
+        pages.Property(page => page.Title).HasMaxLength(200).IsRequired();
+        pages.Property(page => page.Content).HasColumnType("text").IsRequired();
+        pages.HasIndex(page => page.Slug).IsUnique();
+        pages.HasIndex(page => new { page.IsPublished, page.Slug });
+
+        var revisions = modelBuilder.Entity<PlatformLegalPageRevision>();
+        revisions.ToTable("PlatformLegalPageRevisions");
+        revisions.HasKey(revision => revision.Id);
+        revisions.Property(revision => revision.Slug).HasMaxLength(80).IsRequired();
+        revisions.Property(revision => revision.Title).HasMaxLength(200).IsRequired();
+        revisions.Property(revision => revision.Content).HasColumnType("text").IsRequired();
+        revisions.HasOne<PlatformLegalPage>()
+            .WithMany()
+            .HasForeignKey(revision => revision.PageId)
+            .OnDelete(DeleteBehavior.Cascade);
+        revisions.HasIndex(revision => new { revision.PageId, revision.Version }).IsUnique();
+    }
+
+    private static void ConfigureRegistrationLegalDocumentAcceptances(ModelBuilder modelBuilder)
+    {
+        var acceptances = modelBuilder.Entity<RegistrationLegalDocumentAcceptance>();
+        acceptances.ToTable("RegistrationLegalDocumentAcceptances");
+        acceptances.HasKey(acceptance => acceptance.Id);
+        acceptances.Property(acceptance => acceptance.DocumentSlug).HasMaxLength(80).IsRequired();
+        acceptances.Property(acceptance => acceptance.RegistrationMethod).HasMaxLength(32).IsRequired();
+        acceptances.HasOne<User>()
+            .WithMany()
+            .HasForeignKey(acceptance => acceptance.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+        acceptances.HasIndex(acceptance => new
+        {
+            acceptance.UserId,
+            acceptance.Product,
+            acceptance.DocumentSlug,
+            acceptance.DocumentVersion
+        });
+    }
+
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         EnsureAdminAuditIsAppendOnly();
+        EnsureRegistrationLegalDocumentAcceptancesAreAppendOnly();
 
         foreach (var entry in ChangeTracker.Entries())
         {
@@ -162,6 +212,15 @@ public class IdentityDbContext : DbContext
             .Any(entry => entry.State is EntityState.Modified or EntityState.Deleted))
         {
             throw new InvalidOperationException("Admin audit records are append-only.");
+        }
+    }
+
+    private void EnsureRegistrationLegalDocumentAcceptancesAreAppendOnly()
+    {
+        if (ChangeTracker.Entries<RegistrationLegalDocumentAcceptance>()
+            .Any(entry => entry.State is EntityState.Modified or EntityState.Deleted))
+        {
+            throw new InvalidOperationException("Registration legal document acceptance records are append-only.");
         }
     }
 }

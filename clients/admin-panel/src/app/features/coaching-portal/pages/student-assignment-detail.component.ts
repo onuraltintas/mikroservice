@@ -39,10 +39,8 @@ export class StudentAssignmentDetailComponent implements OnInit {
   readonly studentId = computed(() => this.authService.userProfile()?.id ?? '');
   readonly isTeacher = computed(() => this.views.current() === 'Teacher');
   readonly isStudent = computed(() => this.views.current() === 'Student');
-  readonly isParent = computed(() => this.views.current() === 'Parent');
   readonly backRoute = computed(() => {
     if (this.isTeacher()) return '/coaching-portal/teacher/assignments';
-    if (this.isParent()) return '/coaching-portal/children';
     return '/coaching-portal/assignments';
   });
   readonly studentRecord = computed<AssignedStudent | undefined>(() => {

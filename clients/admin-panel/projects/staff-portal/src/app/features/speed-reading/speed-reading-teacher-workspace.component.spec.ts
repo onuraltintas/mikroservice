@@ -33,14 +33,27 @@ describe('SpeedReadingTeacherWorkspaceComponent', () => {
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('[data-testid="teacher-student-invite-email"]')).toBeTruthy();
 
+    fixture.nativeElement.querySelector('[data-testid="toggle-pending-invitations"]').click();
+    fixture.detectChanges();
+    http.expectOne('/api/speed-reading/invitations/sent-pending').flush([]);
+
     fixture.componentInstance.invitationEmail = 'student@example.test';
     fixture.componentInstance.sendStudentInvitation();
     const request = http.expectOne('/api/speed-reading/invitations/teachers/me');
     expect(request.request.body).toEqual({ email: 'student@example.test' });
     request.flush({ invitationId: 'reading-invitation-1', status: 'Pending' }, { status: 202, statusText: 'Accepted' });
     fixture.detectChanges();
+    http.expectOne('/api/speed-reading/invitations/sent-pending').flush([{
+      invitationId: 'reading-invitation-1',
+      email: 'student@example.test',
+      role: 'Student',
+      createdAt: '2026-09-29T10:00:00Z',
+      expiresAt: '2026-10-06T10:00:00Z',
+    }]);
+    fixture.detectChanges();
 
     expect(fixture.nativeElement.textContent).toContain('Hızlı Okuma öğrenci daveti gönderildi');
+    expect(fixture.nativeElement.textContent).toContain('student@example.test');
   });
 
   it('shows the teacher roster and class overview from Speed Reading data', () => {
@@ -92,6 +105,40 @@ describe('SpeedReadingTeacherWorkspaceComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Ayşe Yılmaz');
     expect(fixture.nativeElement.textContent).toContain('245');
     expect(fixture.nativeElement.textContent).toContain('19');
+  });
+
+  it('refreshes the teacher roster after an invited student accepts', () => {
+    const fixture = TestBed.createComponent(SpeedReadingTeacherWorkspaceComponent);
+    fixture.detectChanges();
+    http.expectOne('/api/speed-reading/teachers/me/students?pageNumber=1&pageSize=25').flush({
+      items: [], totalCount: 0, pageNumber: 1, pageSize: 25,
+    });
+    http.expectOne((request) => request.url === '/api/speed-reading/analytics/teacher/class-overview').flush({
+      dateFrom: '', dateTo: '', totalStudents: 0, activeStudents: 0,
+      activeStudentsDataAvailable: false, classAverageWpmDataAvailable: false,
+      classAverageComprehensionDataAvailable: false, classAverageWpm: 0,
+      classAverageComprehension: 0, totalActivitiesCompleted: 0,
+      studentsAboveAverage: 0, studentsAtAverage: 0, studentsBelowAverage: 0,
+      topPerformers: [], studentsNeedingSupport: [],
+    });
+    fixture.detectChanges();
+
+    const refreshButton = fixture.nativeElement.querySelector('[data-testid="refresh-student-roster"]') as HTMLButtonElement | null;
+    expect(refreshButton).toBeTruthy();
+    if (!refreshButton) return;
+    refreshButton.click();
+    fixture.detectChanges();
+    http.expectOne('/api/speed-reading/teachers/me/students?pageNumber=1&pageSize=25').flush({
+      items: [{
+        id: 'accepted-student', firstName: 'Deniz', lastName: 'Kaya', email: 'deniz@example.test',
+        currentLevel: 1, gradeLevel: 7, targetWpm: 250, targetComprehension: 80,
+        dailyGoalMinutes: 15, learningStyle: 'Visual', isActive: true, createdAt: '2026-09-29T00:00:00Z',
+      }],
+      totalCount: 1, pageNumber: 1, pageSize: 25,
+    });
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Deniz Kaya');
   });
 
   it('applies search, grade and status filters to the teacher-scoped roster', () => {

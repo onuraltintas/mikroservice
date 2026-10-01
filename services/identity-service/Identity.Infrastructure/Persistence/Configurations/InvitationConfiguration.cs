@@ -25,7 +25,8 @@ public class InvitationConfiguration : IEntityTypeConfiguration<Invitation>
 
         builder.Property(i => i.Status)
             .IsRequired()
-            .HasConversion<string>();
+            .HasConversion<string>()
+            .IsConcurrencyToken();
 
         builder.Property(i => i.ExpiresAt)
             .IsRequired();

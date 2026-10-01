@@ -8,7 +8,10 @@
         <div class="blog-grid">
             <mat-card *ngFor="let post of posts" class="blog-card" [routerLink]="['/blog', post.slug]">
                 <div class="image-container">
-                    <div class="image-placeholder"></div>
+                    <div class="image-placeholder" aria-hidden="true"></div>
+                    <img *ngIf="post.coverImageUrl" class="cover-image" [src]="post.coverImageUrl"
+                        [alt]="post.title" loading="lazy" decoding="async" referrerpolicy="no-referrer"
+                        (error)="hideBrokenCover($event)">
                     <span class="category-badge" [ngClass]="getCategoryColor(getCategory(post.tags))">
                         {{ getCategory(post.tags) }}
                     </span>

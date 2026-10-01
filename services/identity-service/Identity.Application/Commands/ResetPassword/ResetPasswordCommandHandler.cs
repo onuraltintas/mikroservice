@@ -1,6 +1,7 @@
 using EduPlatform.Shared.Kernel.Results;
 using EduPlatform.Shared.Security.Interfaces;
 using Identity.Application.Interfaces;
+using Identity.Application.Validators;
 using MediatR;
 
 namespace Identity.Application.Commands.ResetPassword;
@@ -40,31 +41,11 @@ public class ResetPasswordCommandHandler : IRequestHandler<ResetPasswordCommand,
             return Result.Failure(new Error("ResetPassword.ExpiredToken", "Sıfırlama kodunun süresi dolmuş."));
         }
 
-        // Validate password strength
-        var password = request.NewPassword;
-        if (password.Length < 8)
+        if (!RegistrationPasswordRules.IsValid(request.NewPassword))
         {
-            return Result.Failure(new Error("ResetPassword.WeakPassword", "Şifre en az 8 karakter olmalıdır."));
-        }
-        if (password.Length > 128)
-        {
-            return Result.Failure(new Error("ResetPassword.WeakPassword", "Şifre en fazla 128 karakter olabilir."));
-        }
-        if (!password.Any(char.IsUpper))
-        {
-            return Result.Failure(new Error("ResetPassword.WeakPassword", "Şifre en az bir büyük harf içermelidir."));
-        }
-        if (!password.Any(char.IsLower))
-        {
-            return Result.Failure(new Error("ResetPassword.WeakPassword", "Şifre en az bir küçük harf içermelidir."));
-        }
-        if (!password.Any(char.IsDigit))
-        {
-            return Result.Failure(new Error("ResetPassword.WeakPassword", "Şifre en az bir rakam içermelidir."));
-        }
-        if (!password.Any(c => "!@#$%^&*(),.?\":{}|<>_-+=[]\\;'/`~".Contains(c)))
-        {
-            return Result.Failure(new Error("ResetPassword.WeakPassword", "Şifre en az bir özel karakter içermelidir."));
+            return Result.Failure(new Error(
+                "ResetPassword.WeakPassword",
+                "Şifre 8-128 karakter arasında olmalı; büyük harf, küçük harf, rakam ve özel karakter içermelidir."));
         }
 
         // Reset password

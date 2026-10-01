@@ -51,10 +51,12 @@ import { PublicCmsService } from '../../../core/services/public-cms.service';
   `]
 })
 export class UnsubscribeComponent implements OnInit {
-    loading = true;
+    loading = false;
+    complete = false;
     success = false;
     message = '';
     token: string | null = null;
+    action: 'confirm' | 'unsubscribe' = 'unsubscribe';
 
     constructor(
         private route: ActivatedRoute,
@@ -64,28 +66,39 @@ export class UnsubscribeComponent implements OnInit {
     ngOnInit(): void {
         this.route.queryParams.subscribe(params => {
             this.token = params['token'];
-            if (this.token) {
-                this.unsubscribe();
-            } else {
-                this.loading = false;
-                this.success = false;
+            this.action = this.route.snapshot.routeConfig?.path === 'confirm' ? 'confirm' : 'unsubscribe';
+            this.message = this.action === 'confirm'
+                ? 'Devam etmek için e-posta aboneliğinizi açıkça onaylayın.'
+                : 'Devam etmek için bülten aboneliğinizi iptal etmeyi onaylayın.';
+            if (!this.token) {
+                this.complete = true;
                 this.message = 'Geçersiz bağlantı. Token bulunamadı.';
             }
         });
     }
 
-    unsubscribe(): void {
-        this.cmsService.unsubscribeNewsletter(this.token!).subscribe({
+    processRequest(): void {
+        if (!this.token || this.loading) return;
+        this.loading = true;
+        const request = this.action === 'confirm'
+            ? this.cmsService.confirmNewsletterSubscription(this.token)
+            : this.cmsService.unsubscribeNewsletter(this.token);
+        request.subscribe({
             next: () => {
                 this.loading = false;
+                this.complete = true;
                 this.success = true;
-                this.message = 'Bülten aboneliğinden başarıyla ayrıldınız. Sizi özleyeceğiz!';
+                this.message = this.action === 'confirm'
+                    ? 'E-posta adresiniz doğrulandı ve bülten aboneliğiniz etkinleştirildi.'
+                    : 'Bülten aboneliğiniz iptal edildi.';
             },
-            error: (err) => {
+            error: () => {
                 this.loading = false;
+                this.complete = true;
                 this.success = false;
-                this.message = 'Abonelikten ayrılma işlemi sırasında bir hata oluştu. Lütfen daha sonra tekrar deneyin veya bizimle iletişime geçin.';
-                console.error('Unsubscribe error:', err);
+                this.message = this.action === 'confirm'
+                    ? 'Onay bağlantısı geçersiz veya süresi dolmuş. Yeni bir abonelik isteği oluşturabilirsiniz.'
+                    : 'Abonelik iptal bağlantısı geçersiz. Lütfen e-postadaki bağlantıyı yeniden kontrol edin.';
             }
         });
     }

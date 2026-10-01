@@ -6,6 +6,10 @@
 
     <div class="newsletter-content" *ngIf="!isMinimized">
         <p>En yeni içeriklerimizi e-posta ile alın.</p>
+        <p *ngIf="privacyLoading" class="privacy-status">Gizlilik metni yükleniyor…</p>
+        <p *ngIf="!privacyLoading && (privacyPolicyVersion === null || newsletterConsentVersion === null)" class="privacy-status">
+            Abonelik için ortak gizlilik ve Hızlı Okuma bülten onay metinlerinin yayımlanmış olması gerekir.
+        </p>
 
         <form [formGroup]="newsletterForm" (ngSubmit)="onSubmit()">
             <mat-form-field appearance="outline" class="email-field">
@@ -20,7 +24,25 @@
                 </mat-error>
             </mat-form-field>
 
-            <button mat-raised-button color="primary" type="submit" [disabled]="newsletterForm.invalid || loading"
+            <div class="newsletter-honeypot" aria-hidden="true">
+                <label for="blog-newsletter-website">Web sitesi</label>
+                <input id="blog-newsletter-website" type="text" formControlName="honeypot"
+                    tabindex="-1" autocomplete="off">
+            </div>
+
+            <label class="consent-label">
+                <input type="checkbox" formControlName="consentGiven" required>
+                <span>
+                    <a href="/legal/speed-reading-newsletter-consent" target="_blank" rel="noopener noreferrer">{{ newsletterConsentText }}</a>
+                    <a href="/legal/privacy" target="_blank" rel="noopener noreferrer">Ortak Gizlilik Politikası</a>
+                    (onay metni sürüm {{ newsletterConsentVersion }} · gizlilik sürüm {{ privacyPolicyVersion }})
+                </span>
+            </label>
+            <p *ngIf="newsletterForm.get('consentGiven')?.touched && newsletterForm.get('consentGiven')?.invalid"
+                class="consent-error">Devam etmek için açık onay vermeniz gerekir.</p>
+
+            <button mat-raised-button color="primary" type="submit"
+                [disabled]="newsletterForm.invalid || loading || privacyPolicyVersion === null || newsletterConsentVersion === null"
                 class="subscribe-button">
                 <span *ngIf="!loading">Abone Ol</span>
                 <span *ngIf="loading">Abone Olunuyor...</span>

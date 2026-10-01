@@ -71,6 +71,9 @@
 .legal-content {
   line-height: 1.8;
   color: #333;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-family: inherit;
 
   section {
     margin-bottom: 32px;

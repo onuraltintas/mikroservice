@@ -116,6 +116,13 @@ export class SidebarComponent {
             permission: ADMIN_PERMISSIONS.privacyView,
             role: 'SystemAdmin',
             icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3.75 4.5 6.75v5.625c0 4.125 3 7.5 7.5 8.625 4.5-1.125 7.5-4.5 7.5-8.625V6.75L12 3.75Z" /></svg>'
+          },
+          {
+            label: 'Ortak yasal sayfalar',
+            route: '/dashboard/identity/legal-pages',
+            permission: ADMIN_PERMISSIONS.privacyManage,
+            role: 'SystemAdmin',
+            icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.75V3.75m0 3c-2.485 0-4.5 1.007-4.5 2.25s2.015 2.25 4.5 2.25 4.5-1.007 4.5-2.25-2.015-2.25-4.5-2.25Zm-6.75 4.5c0 1.243 3.022 2.25 6.75 2.25s6.75-1.007 6.75-2.25m-13.5 0v4.5c0 1.243 3.022 2.25 6.75 2.25s6.75-1.007 6.75-2.25v-4.5M3.75 21h16.5" /></svg>'
           }
         ]
       });
@@ -190,6 +197,18 @@ export class SidebarComponent {
             route: '/dashboard/coaching/operations/new/goal',
             permission: ADMIN_PERMISSIONS.coachingManage,
             icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>'
+          },
+          {
+            label: 'İçerik yönetimi (CMS)',
+            route: '/dashboard/coaching/cms',
+            permission: ADMIN_PERMISSIONS.coachingContentManage,
+            icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 6.75h15m-15 5.25h15m-15 5.25h9" /></svg>'
+          },
+          {
+            label: 'Abonelik ve ödemeler',
+            route: '/dashboard/coaching/subscriptions',
+            permission: ADMIN_PERMISSIONS.coachingSubscriptionManage,
+            icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5m-18 0 1.5 12h13.5l1.5-12M6.75 5.25h10.5m-9-3h7.5" /></svg>'
           }
         ]
       });
@@ -315,6 +334,7 @@ export class SidebarComponent {
       '/dashboard/identity/permissions': ADMIN_PERMISSIONS.permissionView,
       '/dashboard/identity/institutions': ADMIN_PERMISSIONS.institutionsView,
       '/dashboard/identity/privacy-requests': ADMIN_PERMISSIONS.privacyView,
+      '/dashboard/identity/legal-pages': ADMIN_PERMISSIONS.privacyManage,
       '/dashboard/notifications/support': ADMIN_PERMISSIONS.supportView,
       '/dashboard/notifications/email-templates': ADMIN_PERMISSIONS.notificationTemplates,
         '/dashboard/coaching': ADMIN_PERMISSIONS.coachingView,
@@ -324,6 +344,8 @@ export class SidebarComponent {
       '/dashboard/coaching/operations/new/session': ADMIN_PERMISSIONS.coachingManage,
       '/dashboard/coaching/operations/new/exam': ADMIN_PERMISSIONS.coachingManage,
       '/dashboard/coaching/operations/new/goal': ADMIN_PERMISSIONS.coachingManage,
+      '/dashboard/coaching/cms': ADMIN_PERMISSIONS.coachingContentManage,
+      '/dashboard/coaching/subscriptions': ADMIN_PERMISSIONS.coachingSubscriptionManage,
       '/dashboard/speed-reading': ADMIN_PERMISSIONS.speedReadingView,
       '/dashboard/speed-reading/analytics': ADMIN_PERMISSIONS.speedReadingPlatformAnalytics,
       '/dashboard/speed-reading/progress': ADMIN_PERMISSIONS.speedReadingProgressView,

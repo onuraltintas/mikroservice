@@ -1,0 +1,27 @@
+services:
+  identity-service:
+    image: eduivme/identity-service:platform-release-20260928-2cedc8f0
+  identity-migrations:
+    image: eduivme/identity-service:platform-release-20260928-2cedc8f0
+  coaching-service:
+    image: eduivme/coaching-service:platform-release-20260928-2cedc8f0
+  coaching-migrations:
+    image: eduivme/coaching-service:platform-release-20260928-2cedc8f0
+  notification-service:
+    image: eduivme/notification-service:platform-release-20260928-2cedc8f0
+  notification-migrations:
+    image: eduivme/notification-service:platform-release-20260928-2cedc8f0
+  speed-reading-service:
+    image: eduivme/speed-reading-service:platform-release-20260928-2cedc8f0
+    environment:
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:?RABBITMQ_DEFAULT_USER must be set}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:?RABBITMQ_DEFAULT_PASS must be set}
+  speed-reading-migrations:
+    image: eduivme/speed-reading-service:platform-release-20260928-2cedc8f0
+  api-gateway:
+    image: eduivme/api-gateway:platform-release-20260928-2cedc8f0
+  admin-panel:
+    image: eduivme/admin-panel:platform-release-20260928-2cedc8f0
+  speed-reading-frontend:
+    image: eduivme/speed-reading-frontend:platform-release-20260928-2cedc8f0

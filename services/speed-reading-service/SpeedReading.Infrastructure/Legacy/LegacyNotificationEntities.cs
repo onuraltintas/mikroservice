@@ -141,9 +141,11 @@ internal sealed class LegacyEmailCampaign : LegacyNotificationBase
     public Guid? TargetInstitutionId { get; set; }
     public Guid? TemplateId { get; set; }
     public DateTime? ScheduledFor { get; set; }
+    public DateTime? QueuedAt { get; set; }
     public DateTime? SentAt { get; set; }
     public string Status { get; set; } = "Draft";
     public int TotalRecipients { get; set; }
+    public int QueuedCount { get; set; }
     public int SentCount { get; set; }
     public int FailedCount { get; set; }
     public Guid CreatedByUserId { get; set; }
@@ -159,7 +161,9 @@ internal sealed class LegacyEmailCampaignLog : LegacyNotificationBase
     public Guid CampaignId { get; set; }
     public string RecipientEmail { get; set; } = string.Empty;
     public string Status { get; set; } = "Pending";
+    public DateTime? QueuedAt { get; set; }
     public DateTime? SentAt { get; set; }
+    public string? NewsletterUnsubscribeTokenProtected { get; set; }
     public string? ErrorMessage { get; set; }
 }
 

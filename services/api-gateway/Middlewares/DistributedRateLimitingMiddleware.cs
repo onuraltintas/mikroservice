@@ -32,7 +32,7 @@ public sealed class DistributedRateLimitingMiddleware
 
     public async Task InvokeAsync(HttpContext context)
     {
-        var rule = GetRule(context.Request);
+        var rule = ResolveRateLimitRule(context.Request);
         if (rule is null)
         {
             await _next(context);
@@ -40,6 +40,10 @@ public sealed class DistributedRateLimitingMiddleware
         }
 
         var clientAddress = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+        // Forward the address resolved by the gateway's trusted-proxy middleware.
+        // Never let a caller-supplied copy of this internal header reach downstream APIs.
+        context.Request.Headers.Remove("X-EduPlatform-Client-IP");
+        context.Request.Headers["X-EduPlatform-Client-IP"] = clientAddress;
         var key = $"EduPlatform:RateLimit:{rule.Name}:{clientAddress}";
 
         try
@@ -70,12 +74,37 @@ public sealed class DistributedRateLimitingMiddleware
         await _next(context);
     }
 
-    private static RateLimitRule? GetRule(HttpRequest request)
+    internal static RateLimitRule? ResolveRateLimitRule(HttpRequest request)
     {
         var path = request.Path;
 
         if (path.StartsWithSegments("/api/auth"))
         {
+            if (HttpMethods.IsPost(request.Method))
+            {
+                if (string.Equals(path.Value, "/api/auth/forgot-password", StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(path.Value, "/api/auth/resend-verification-email", StringComparison.OrdinalIgnoreCase))
+                {
+                    return new RateLimitRule("auth-email", PermitLimit: 5, TimeSpan.FromMinutes(15));
+                }
+
+                if (string.Equals(path.Value, "/api/auth/reset-password", StringComparison.OrdinalIgnoreCase))
+                {
+                    return new RateLimitRule("auth-password-reset", PermitLimit: 10, TimeSpan.FromMinutes(15));
+                }
+
+                if (string.Equals(path.Value, "/api/auth/confirm-email", StringComparison.OrdinalIgnoreCase))
+                {
+                    return new RateLimitRule("auth-email-confirmation", PermitLimit: 10, TimeSpan.FromMinutes(15));
+                }
+
+                if (path.StartsWithSegments("/api/auth/coaching/register")
+                    || path.StartsWithSegments("/api/auth/speed-reading/register"))
+                {
+                    return new RateLimitRule("auth-registration", PermitLimit: 15, TimeSpan.FromMinutes(1));
+                }
+            }
+
             return new RateLimitRule("auth", PermitLimit: 30, TimeSpan.FromMinutes(1));
         }
 
@@ -84,10 +113,21 @@ public sealed class DistributedRateLimitingMiddleware
             return new RateLimitRule("support-submit", PermitLimit: 10, TimeSpan.FromMinutes(1));
         }
 
-        if (string.Equals(path.Value, "/api/speed-reading/cms/contact", StringComparison.OrdinalIgnoreCase)
-            || string.Equals(path.Value, "/api/speed-reading/cms/newsletter/subscribe", StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(path.Value, "/api/speed-reading/cms/contact", StringComparison.OrdinalIgnoreCase))
         {
             return new RateLimitRule("speed-reading-public-write", PermitLimit: 8, TimeSpan.FromMinutes(10));
+        }
+
+        if (path.StartsWithSegments("/api/speed-reading/cms/newsletter")
+            && HttpMethods.IsPost(request.Method))
+        {
+            return new RateLimitRule("speed-reading-public-write", PermitLimit: 8, TimeSpan.FromMinutes(10));
+        }
+
+        if (path.StartsWithSegments("/api/coaching/cms/newsletter")
+            && HttpMethods.IsPost(request.Method))
+        {
+            return new RateLimitRule("coaching-newsletter-public-write", PermitLimit: 8, TimeSpan.FromMinutes(10));
         }
 
         if (HttpMethods.IsPost(request.Method)
@@ -99,5 +139,5 @@ public sealed class DistributedRateLimitingMiddleware
         return null;
     }
 
-    private sealed record RateLimitRule(string Name, int PermitLimit, TimeSpan Window);
+    internal sealed record RateLimitRule(string Name, int PermitLimit, TimeSpan Window);
 }

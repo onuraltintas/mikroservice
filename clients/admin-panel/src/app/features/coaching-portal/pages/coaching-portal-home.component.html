@@ -50,25 +50,4 @@
       </a>
     </div>
   </ng-container>
-
-  <ng-container *ngIf="!isLoading() && isTeacher()">
-    <div class="grid gap-4 sm:grid-cols-3">
-      <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-        <p class="text-sm text-slate-500 dark:text-slate-400">Toplam ödev</p>
-        <p class="mt-2 text-3xl font-bold text-slate-950 dark:text-white">{{ teacherAssignmentCount() }}</p>
-      </div>
-      <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-        <p class="text-sm text-slate-500 dark:text-slate-400">Toplam öğrenci</p>
-        <p class="mt-2 text-3xl font-bold text-slate-950 dark:text-white">{{ teacherStudentCount() }}</p>
-      </div>
-      <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-        <a routerLink="/coaching-portal/teacher/assignments" class="text-sm font-semibold text-indigo-600 dark:text-indigo-300">Ödev yönetimine git →</a>
-      </div>
-    </div>
-  </ng-container>
-
-  <div *ngIf="!isLoading() && isParent()" class="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-sm text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/20 dark:text-amber-100">
-    <p>Çocuklarının ödev ve hedef ilerlemesini güvenli biçimde takip edebilirsin.</p>
-    <a routerLink="/coaching-portal/children" class="mt-3 inline-flex font-semibold underline">Çocuklarım alanını aç →</a>
-  </div>
 </section>

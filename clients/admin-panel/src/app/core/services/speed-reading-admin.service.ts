@@ -1332,6 +1332,11 @@ export interface SpeedReadingCmsNewsletterSubscriber {
   id: string;
   email: string;
   isActive: boolean;
+  status: 'LegacyUnconfirmed' | 'PendingConfirmation' | 'Active' | 'Unsubscribed' | string;
+  privacyPolicyVersion: number | null;
+  consentedAt: string | null;
+  confirmedAt: string | null;
+  unsubscribedAt: string | null;
   source: string | null;
   createdAt: string;
   updatedAt: string | null;
@@ -1481,8 +1486,10 @@ export interface SpeedReadingEmailCampaign {
   includeAllUsers: boolean;
   includeSubscribers: boolean;
   scheduledFor: string | null;
+  queuedAt: string | null;
   sentAt: string | null;
   totalRecipients: number;
+  queuedCount: number;
   sentCount: number;
   failedCount: number;
   openedCount: number;
@@ -1504,6 +1511,7 @@ export interface SpeedReadingEmailCampaignRequest {
 
 export interface SpeedReadingEmailCampaignStats {
   totalRecipients: number;
+  queuedCount: number;
   sentCount: number;
   failedCount: number;
   openedCount: number;
@@ -2769,9 +2777,12 @@ export class SpeedReadingAdminService {
     return this.http.post<void>(`${this.url}/admin/cms/revisions/${entityType}/${entityId}/${revisionId}/restore`, {});
   }
 
-  getCmsSubscribers(pageNumber = 1, pageSize = 25, includeInactive = false) {
+  getCmsSubscribers(pageNumber = 1, pageSize = 25, status?: string, search?: string) {
+    let params = new HttpParams().set('pageNumber', pageNumber).set('pageSize', pageSize);
+    if (status) params = params.set('status', status);
+    if (search?.trim()) params = params.set('search', search.trim());
     return this.http.get<{ data: SpeedReadingPage<SpeedReadingCmsNewsletterSubscriber> }>(`${this.url}/admin/cms/newsletter/subscribers`, {
-      params: new HttpParams().set('pageNumber', pageNumber).set('pageSize', pageSize).set('includeInactive', includeInactive)
+      params
     }).pipe(map(response => response.data));
   }
 
@@ -2781,13 +2792,12 @@ export class SpeedReadingAdminService {
     });
   }
 
-  restoreCmsSubscriber(id: string) {
-    return this.http.put<void>(`${this.url}/admin/cms/newsletter/subscribers/${id}/restore`, {});
-  }
-
-  exportCmsSubscribers(includeInactive = true) {
+  exportCmsSubscribers(status?: string, search?: string) {
+    let params = new HttpParams();
+    if (status) params = params.set('status', status);
+    if (search?.trim()) params = params.set('search', search.trim());
     return this.http.get(`${this.url}/admin/cms/newsletter/subscribers/export`, {
-      params: new HttpParams().set('includeInactive', includeInactive),
+      params,
       responseType: 'blob'
     });
   }
@@ -2890,7 +2900,7 @@ export class SpeedReadingAdminService {
   }
 
   sendSpeedReadingEmailCampaign(id: string, sendNow = true) {
-    return this.http.post<{ totalRecipients: number; campaign: SpeedReadingEmailCampaign }>(`${this.url}/email-campaigns/${id}/send`, { sendNow });
+    return this.http.post<{ totalRecipients: number; queuedCount: number; campaign: SpeedReadingEmailCampaign; message: string }>(`${this.url}/email-campaigns/${id}/send`, { sendNow });
   }
 
   getSpeedReadingEmailCampaignStats(id: string) {

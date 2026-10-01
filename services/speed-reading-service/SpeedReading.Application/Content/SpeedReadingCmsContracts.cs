@@ -63,6 +63,11 @@ public sealed record CmsNewsletterSubscriberSummary(
     Guid Id,
     string Email,
     bool IsActive,
+    string Status,
+    int? PrivacyPolicyVersion,
+    DateTime? ConsentedAt,
+    DateTime? ConfirmedAt,
+    DateTime? UnsubscribedAt,
     string? Source,
     DateTime CreatedAt,
     DateTime? UpdatedAt);
@@ -108,14 +113,68 @@ public sealed record CmsContactMessageRequest(
     string Message,
     string? RecaptchaToken = null);
 
-public sealed record CmsNewsletterSubscriptionRequest(string Email, string? Name);
+public sealed record CmsNewsletterSubscriptionRequest(
+    string Email,
+    bool ConsentGiven,
+    int PrivacyPolicyVersion,
+    string? Honeypot = null,
+    string? RecaptchaToken = null,
+    int? NewsletterConsentVersion = null);
 
 public sealed record CmsNewsletterUnsubscribeRequest(string Token);
 
-public static class SpeedReadingNewsletterRules
+public sealed record CmsNewsletterConfirmationRequest(string Token);
+
+public static class CmsNewsletterStatuses
 {
-    public static bool TryGetSubscriberId(string? token, out Guid subscriberId) =>
-        Guid.TryParse(token?.Trim(), out subscriberId) && subscriberId != Guid.Empty;
+    public const string LegacyUnconfirmed = "LegacyUnconfirmed";
+    public const string PendingConfirmation = "PendingConfirmation";
+    public const string Active = "Active";
+    public const string Unsubscribed = "Unsubscribed";
+}
+
+public sealed class SharedLegalPageVersionMismatchException(int submittedVersion, int currentVersion)
+    : Exception("A shared legal page changed. Review the current documents and submit consent again.")
+{
+    public int SubmittedVersion { get; } = submittedVersion;
+    public int CurrentVersion { get; } = currentVersion;
+}
+
+public sealed class SharedLegalPageUnavailableException(Exception? innerException = null)
+    : Exception("The published privacy page could not be verified.", innerException);
+
+public interface ISharedLegalPageVersionProvider
+{
+    Task<int?> GetPublishedVersionAsync(string slug, CancellationToken cancellationToken = default);
+}
+
+public interface ISpeedReadingNewsletter
+{
+    Task RequestSubscriptionAsync(
+        CmsNewsletterSubscriptionRequest request,
+        CancellationToken cancellationToken = default);
+
+    Task<bool> ConfirmSubscriptionAsync(string token, CancellationToken cancellationToken = default);
+
+    Task<bool> UnsubscribeAsync(string token, CancellationToken cancellationToken = default);
+
+    Task<SpeedReadingPage<CmsNewsletterSubscriberSummary>> GetSubscribersAsync(
+        string? search,
+        string? status,
+        int pageNumber,
+        int pageSize,
+        CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<CmsNewsletterSubscriberSummary>> ExportSubscribersAsync(
+        string? search,
+        string? status,
+        CancellationToken cancellationToken = default);
+
+    Task<bool> DeleteSubscriberAsync(
+        Guid id,
+        bool hardDelete,
+        Guid actorId,
+        CancellationToken cancellationToken = default);
 }
 
 public sealed record CmsContactReplyRequest(Guid MessageId, string ReplyContent);
@@ -382,14 +441,6 @@ public interface ISpeedReadingCms
         CmsContactMessageRequest request,
         CancellationToken cancellationToken = default);
 
-    Task<bool> SubscribeAsync(
-        CmsNewsletterSubscriptionRequest request,
-        CancellationToken cancellationToken = default);
-
-    Task<bool> UnsubscribeAsync(
-        string token,
-        CancellationToken cancellationToken = default);
-
     Task<IReadOnlyList<CmsContentBlockSummary>> GetContentBlocksAsync(
         string? group,
         CancellationToken cancellationToken = default);
@@ -490,23 +541,6 @@ public interface ISpeedReadingCms
     Task<bool> UpdateBlogPostAsync(Guid id, CmsBlogPostRequest request, Guid actorId, CancellationToken cancellationToken = default);
 
     Task<bool> DeleteBlogPostAsync(Guid id, Guid actorId, CancellationToken cancellationToken = default);
-
-    Task<SpeedReadingPage<CmsNewsletterSubscriberSummary>> GetSubscribersAsync(
-        int pageNumber,
-        int pageSize,
-        bool includeInactive = false,
-        CancellationToken cancellationToken = default);
-
-    Task<IReadOnlyList<CmsNewsletterSubscriberSummary>> ExportSubscribersAsync(
-        bool includeInactive,
-        CancellationToken cancellationToken = default);
-
-    Task<bool> RestoreSubscriberAsync(
-        Guid id,
-        Guid actorId,
-        CancellationToken cancellationToken = default);
-
-    Task<bool> DeleteSubscriberAsync(Guid id, bool hardDelete, Guid actorId, CancellationToken cancellationToken = default);
 
     Task<SpeedReadingPage<CmsContactMessageSummary>> GetContactMessagesAsync(
         int pageNumber,

@@ -21,17 +21,22 @@ export class StaffAuthRecaptchaService {
   private readonly document = inject(DOCUMENT);
   private readonly platformId = inject(PLATFORM_ID);
   private readonly http = new HttpClient(inject(HttpBackend));
-  private configurationPromise?: Promise<RecaptchaConfiguration>;
+  private readonly configurationPromises = new Map<string, Promise<RecaptchaConfiguration>>();
   private scriptPromise?: Promise<void>;
 
-  async createToken(action: string): Promise<string | null> {
+  async createToken(action: string, configurationUrl = `${environment.apiUrl}/auth/captcha-config`): Promise<string | null> {
     if (!isPlatformBrowser(this.platformId)) return null;
 
     let configuration: RecaptchaConfiguration;
     try {
-      configuration = await (this.configurationPromise ??= this.loadConfiguration());
+      let pending = this.configurationPromises.get(configurationUrl);
+      if (!pending) {
+        pending = this.loadConfiguration(configurationUrl);
+        this.configurationPromises.set(configurationUrl, pending);
+      }
+      configuration = await pending;
     } catch (error) {
-      this.configurationPromise = undefined;
+      this.configurationPromises.delete(configurationUrl);
       throw error;
     }
 
@@ -47,9 +52,9 @@ export class StaffAuthRecaptchaService {
     return token;
   }
 
-  private loadConfiguration(): Promise<RecaptchaConfiguration> {
+  private loadConfiguration(configurationUrl: string): Promise<RecaptchaConfiguration> {
     return firstValueFrom(this.http.get<RecaptchaConfiguration>(
-      `${environment.apiUrl}/auth/captcha-config`
+      configurationUrl
     ));
   }
 

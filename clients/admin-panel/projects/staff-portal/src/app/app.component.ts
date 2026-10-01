@@ -1,4 +1,5 @@
 import { Component, inject } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { StaffAuthService } from './auth/staff-auth.service';
@@ -7,20 +8,24 @@ import { CoachingTeacherWorkspaceComponent } from './features/coaching/coaching-
 import { CoachingInstitutionWorkspaceComponent } from './features/coaching/coaching-institution-workspace.component';
 import { SpeedReadingTeacherWorkspaceComponent } from './features/speed-reading/speed-reading-teacher-workspace.component';
 import { SpeedReadingInstitutionWorkspaceComponent } from './features/speed-reading/speed-reading-institution-workspace.component';
+import { StaffAccountSettingsComponent } from './account/staff-account-settings.component';
+import { StaffNotificationCenterComponent } from './notifications/staff-notification-center.component';
 
 type StaffWorkspaceRole = 'teacher' | 'institution';
 
 @Component({
   selector: 'staff-root',
   standalone: true,
-  imports: [FormsModule, CoachingTeacherWorkspaceComponent, CoachingInstitutionWorkspaceComponent, SpeedReadingTeacherWorkspaceComponent, SpeedReadingInstitutionWorkspaceComponent],
+  imports: [FormsModule, CoachingTeacherWorkspaceComponent, CoachingInstitutionWorkspaceComponent, SpeedReadingTeacherWorkspaceComponent, SpeedReadingInstitutionWorkspaceComponent, StaffAccountSettingsComponent, StaffNotificationCenterComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
 export class AppComponent {
   readonly auth = inject(StaffAuthService);
+  private readonly document = inject(DOCUMENT);
   readonly currentYear = new Date().getFullYear();
-  selectedProduct: StaffProduct = 'coaching';
+  selectedProduct: StaffProduct = new URLSearchParams(this.document.defaultView?.location.search ?? '')
+    .get('product') === 'speed-reading' ? 'speed-reading' : 'coaching';
   email = '';
   password = '';
   rememberMe = false;
@@ -33,6 +38,8 @@ export class AppComponent {
   mfaStage: 'none' | 'setup' | 'verify' | 'recovery' = 'none';
   recoveryCodes: string[] = [];
   isSubmitting = false;
+  accountSettingsVisible = false;
+  notificationsVisible = false;
   errorMessage = '';
   switchError = '';
   private readonly selectedWorkspaceRoles: Partial<Record<StaffProduct, StaffWorkspaceRole>> = {};
@@ -207,6 +214,8 @@ export class AppComponent {
 
   async logout(): Promise<void> {
     await this.auth.logout();
+    this.accountSettingsVisible = false;
+    this.notificationsVisible = false;
     this.email = '';
     this.password = '';
     this.rememberMe = false;

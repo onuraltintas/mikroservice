@@ -379,7 +379,7 @@ export class LoginComponent implements AfterViewInit, OnDestroy, OnInit {
     this.authService.resendVerification(this.unverifiedEmail).subscribe({
       next: () => {
         this.resendingEmail = false;
-        this.toaster.success('Doğrulama e-postası gönderildi! Lütfen gelen kutunuzu kontrol edin.', 5000);
+        this.toaster.success('Eğer bu adres doğrulama bekliyorsa e-posta gönderme isteğiniz alındı. Gelen kutunuzu kontrol edin.', 5000);
       },
       error: () => {
         this.resendingEmail = false;

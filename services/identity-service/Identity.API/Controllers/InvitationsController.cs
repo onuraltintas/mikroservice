@@ -1,6 +1,8 @@
 using Identity.Application.Commands.AcceptInvitation;
+using Identity.Application.Commands.CancelSentInvitation;
 using Identity.Application.Commands.RejectInvitation;
 using Identity.Application.Queries.GetMyInvitations;
+using Identity.Application.Queries.GetMySentInvitations;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -38,6 +40,22 @@ public class InvitationsController : ControllerBase
     }
 
     /// <summary>
+    /// Lists unexpired invitations created by the authenticated user.
+    /// </summary>
+    [HttpGet("sent-pending")]
+    [ProducesResponseType(typeof(List<SentInvitationDto>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetMySentPendingInvitations()
+    {
+        var result = await _mediator.Send(new GetMySentInvitationsQuery());
+        if (result.IsSuccess)
+            return Ok(result.Value);
+
+        return result.Error.Code == "Auth.Unauthorized"
+            ? Unauthorized(new { Error = result.Error })
+            : BadRequest(new { Error = result.Error });
+    }
+
+    /// <summary>
     /// Daveti kabul eder ve kullanıcıyı ilgili kuruma/öğretmene bağlar.
     /// </summary>
     [HttpPost("{id}/accept")]
@@ -71,5 +89,27 @@ public class InvitationsController : ControllerBase
         }
 
         return BadRequest(new { Error = result.Error });
+    }
+
+    /// <summary>
+    /// Cancels an unexpired invitation created by the authenticated user.
+    /// </summary>
+    [HttpPost("{id}/cancel")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> CancelSentInvitation(Guid id)
+    {
+        var result = await _mediator.Send(new CancelSentInvitationCommand(id));
+        if (result.IsSuccess)
+            return NoContent();
+
+        return result.Error.Code switch
+        {
+            "Auth.Unauthorized" => Unauthorized(new { Error = result.Error }),
+            "Invitation.NotFound" => NotFound(new { Error = result.Error }),
+            "Invitation.NotPending" => Conflict(new { Error = result.Error }),
+            _ => BadRequest(new { Error = result.Error })
+        };
     }
 }

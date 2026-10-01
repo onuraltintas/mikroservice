@@ -1,5 +1,11 @@
 @use '../terms/terms.component.scss' as *;
 
+.legal-content {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-family: inherit;
+}
+
 .purpose-table {
   width: 100%;
   border-collapse: collapse;

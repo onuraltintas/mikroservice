@@ -346,19 +346,6 @@ export interface TeacherSessionMutationResponse {
   scheduledDate?: string;
 }
 
-export interface ChildSummary {
-  relationshipId: string;
-  relationship: 'Mother' | 'Father' | 'Guardian' | 'Other';
-  userId: string;
-  firstName: string;
-  lastName: string;
-  fullName: string;
-  gradeLevel?: number;
-  institutionId?: string;
-  institutionName?: string;
-  avatarUrl?: string;
-}
-
 export interface RepresentativeCoachingAgreement {
   documentId: string;
   documentVersion: string;
@@ -925,10 +912,6 @@ export class CoachingPortalService {
 
   downloadCalendarFeed(audience: 'teacher' | 'student'): Observable<Blob> {
     return this.http.get(this.calendarFeedUrl(audience), { responseType: 'blob' });
-  }
-
-  getMyChildren(): Observable<ChildSummary[]> {
-    return this.http.get<ChildSummary[]>(`${environment.apiUrl}/users/me/children`);
   }
 
   getCurrentRepresentativeAgreement(studentId: string): Observable<RepresentativeCoachingAgreement> {

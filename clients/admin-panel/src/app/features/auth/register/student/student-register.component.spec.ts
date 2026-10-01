@@ -26,7 +26,7 @@ describe('StudentRegisterComponent Google registration', () => {
 
     authState.next({ idToken: 'google-id-token' });
 
-    await vi.waitFor(() => expect(authService.loginWithGoogle).toHaveBeenCalledWith('google-id-token'));
+    await vi.waitFor(() => expect(authService.loginWithGoogle).toHaveBeenCalledWith('google-id-token', []));
     expect(toaster.success).toHaveBeenCalledWith('Google hesabınızla devam edildi.');
   });
 

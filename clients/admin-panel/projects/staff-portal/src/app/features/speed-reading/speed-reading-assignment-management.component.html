@@ -1,0 +1,149 @@
+<section class="assignment-section" aria-labelledby="reading-assignments-title">
+  <div class="section-heading">
+    <div>
+      <p class="workspace-eyebrow">HIZLI OKUMA · ÖDEVLER</p>
+      <h3 id="reading-assignments-title">Ödev yönetimi</h3>
+      <p class="section-description">Ödevleri oluşturun, öğrenci katılımını inceleyin ve gerekli olduğunda kaldırın.</p>
+    </div>
+    <button class="primary-button" type="button" data-testid="open-assignment-form" (click)="openCreateForm()">Yeni ödev</button>
+  </div>
+
+  @if (successMessage()) { <p class="success-message" role="status">{{ successMessage() }}</p> }
+  @if (actionErrorMessage()) { <div class="inline-error" role="alert">{{ actionErrorMessage() }}</div> }
+
+  <form class="assignment-filters" (ngSubmit)="applyFilters()" aria-label="Ödev filtreleri">
+    <label>
+      <span>Ödev ara</span>
+      <input name="assignmentSearch" type="search" [(ngModel)]="searchInput" maxlength="100" placeholder="Başlık ara">
+    </label>
+    <label>
+      <span>İçerik türü</span>
+      <select name="assignmentTypeFilter" [(ngModel)]="exerciseTypeFilter">
+        <option value="">Tüm türler</option>
+        @for (type of exerciseTypes(); track trackById($index, type)) { <option [value]="type.id">{{ type.displayName }}</option> }
+      </select>
+    </label>
+    <label>
+      <span>Durum</span>
+      <select name="assignmentStatusFilter" [(ngModel)]="statusFilter">
+        <option value="all">Tümü</option><option value="active">Aktif</option><option value="inactive">Pasif</option>
+      </select>
+    </label>
+    <button class="secondary-button" type="submit">Filtrele</button>
+  </form>
+
+  @if (errorMessage()) {
+    <div class="inline-error" role="alert"><span>{{ errorMessage() }}</span><button type="button" (click)="loadAssignments()">Tekrar dene</button></div>
+  } @else if (isLoading()) {
+    <p class="loading" role="status">Ödevler yükleniyor…</p>
+  } @else if (assignments().length === 0) {
+    <div class="empty-state"><h4>Ödev bulunamadı</h4><p>Filtreleri değiştirin veya yeni bir ödev oluşturun.</p></div>
+  } @else {
+    <div class="assignment-table-wrap">
+      <table>
+        <thead><tr><th>Ödev</th>@if (institutionId) { <th>Öğretmen</th> }<th>İçerik</th><th>Teslim tarihi</th><th>Öğrenciler</th><th>Durum</th><th>İşlemler</th></tr></thead>
+        <tbody>
+          @for (assignment of assignments(); track trackById($index, assignment)) {
+            <tr>
+              <td><strong>{{ assignment.title }}</strong><small>{{ assignment.description || 'Açıklama yok' }}</small></td>
+              @if (institutionId) { <td>{{ assignment.teacherName || '—' }}</td> }
+              <td>{{ assignment.exerciseTitle || assignment.exerciseTypeName || '—' }}</td>
+              <td>{{ formatDate(assignment.dueDate) }}</td>
+              <td>{{ assignment.completedCount }} / {{ assignment.studentCount }} tamamlandı</td>
+              <td><span class="status" [class.inactive]="!assignment.isActive">{{ assignment.isActive ? 'Aktif' : 'Pasif' }}</span></td>
+              <td class="row-actions">
+                <button class="row-action" type="button" data-testid="assignment-details" (click)="openDetails(assignment)">Ayrıntılar</button>
+                <button class="row-action destructive" type="button" data-testid="request-assignment-delete" (click)="requestDelete(assignment)">Sil</button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    @if (totalPages() > 1) {
+      <nav class="pagination" aria-label="Ödev sayfaları">
+        <button type="button" (click)="previousPage()" [disabled]="pageNumber() === 1">Önceki</button>
+        <span>Sayfa {{ pageNumber() }} / {{ totalPages() }} · {{ totalCount() }} ödev</span>
+        <button type="button" (click)="nextPage()" [disabled]="pageNumber() >= totalPages()">Sonraki</button>
+      </nav>
+    }
+  }
+
+  @if (pendingDelete(); as assignment) {
+    <section class="confirmation" aria-labelledby="delete-assignment-title">
+      <div><h4 id="delete-assignment-title">Ödev silinsin mi?</h4><p>“{{ assignment.title }}” ödevi kaldırılacak. Bu işlem geri alınamaz.</p></div>
+      <div class="row-actions"><button class="secondary-button" type="button" (click)="cancelDelete()">Vazgeç</button><button class="danger-button" type="button" (click)="confirmDelete()" [disabled]="isSaving()">{{ isSaving() ? 'Siliniyor…' : 'Ödevi sil' }}</button></div>
+    </section>
+  }
+
+  @if (selectedAssignment(); as assignment) {
+    <section class="details-panel" aria-labelledby="assignment-details-title">
+      <div class="section-heading"><div><p class="workspace-eyebrow">ÖDEV İNCELEMESİ</p><h4 id="assignment-details-title">{{ assignment.title }}</h4></div><button class="secondary-button" type="button" (click)="closeDetails()">Kapat</button></div>
+      @if (isDetailsLoading()) { <p class="loading" role="status">Ödev ayrıntıları yükleniyor…</p> }
+      @else if (details(); as detail) {
+        <p>{{ detail.description || 'Açıklama yok' }} · Teslim: {{ formatDate(detail.dueDate) }}</p>
+        @if (assignmentStudentErrorMessage()) { <div class="inline-error" role="alert">{{ assignmentStudentErrorMessage() }}</div> }
+        @if (!institutionId) {
+          <div class="add-assignment-student">
+            <label for="assignment-add-student">Ödeve öğrenci ekle</label>
+            <select id="assignment-add-student" name="assignmentAddStudent" [(ngModel)]="selectedNewStudentId" [disabled]="isSaving()">
+              <option value="">Öğrenci seçin</option>
+              @for (student of availableAssignmentStudents(); track trackById($index, student)) { <option [value]="student.id">{{ student.firstName }} {{ student.lastName }} · {{ student.email || 'e-posta yok' }}</option> }
+            </select>
+            <button class="secondary-button" type="button" data-testid="add-assignment-student" (click)="addStudentToAssignment()" [disabled]="!selectedNewStudentId || isSaving()">Öğrenciyi ekle</button>
+          </div>
+        }
+        @if (pendingStudentRemoval(); as studentToRemove) {
+          <div class="inline-confirmation" role="group" aria-label="Öğrenciyi ödevden çıkarma onayı">
+            <span>{{ studentToRemove.fullName }} adlı öğrenci bu ödevden çıkarılsın mı?</span>
+            <button class="danger-button" type="button" (click)="confirmRemoveAssignmentStudent()" [disabled]="isSaving()">Çıkar</button>
+            <button class="secondary-button" type="button" (click)="pendingStudentRemoval.set(null)">Vazgeç</button>
+          </div>
+        }
+        @if (detail.students.length === 0) { <p class="empty-copy">Bu ödeve henüz öğrenci atanmamış.</p> }
+        @else {
+          <div class="assignment-table-wrap"><table><thead><tr><th>Öğrenci</th><th>Durum</th><th>Puan</th><th>Tamamlanma</th>@if (!institutionId) { <th>İşlem</th> }</tr></thead><tbody>
+            @for (student of detail.students; track student.studentId) { <tr><td>{{ student.fullName || (student.firstName + ' ' + student.lastName) }}</td><td>{{ student.isCompleted ? 'Tamamlandı' : 'Bekliyor' }}</td><td>{{ student.score ?? '—' }}</td><td>{{ student.completionDate ? formatDate(student.completionDate) : '—' }}</td>@if (!institutionId) { <td><button class="row-action destructive" type="button" data-testid="request-remove-assignment-student" (click)="pendingStudentRemoval.set(student)">Ödevden çıkar</button></td> }</tr> }
+          </tbody></table></div>
+        }
+      }
+    </section>
+  }
+
+  @if (isCreateFormVisible) {
+    <section class="create-panel" aria-labelledby="create-assignment-title">
+      <div class="section-heading"><div><p class="workspace-eyebrow">YENİ ÖDEV</p><h4 id="create-assignment-title">Öğrencilere ödev ata</h4></div><button class="secondary-button" type="button" (click)="closeCreateForm()">Kapat</button></div>
+      @if (catalogErrorMessage()) { <div class="inline-error" role="alert">{{ catalogErrorMessage() }} <button type="button" (click)="loadExerciseTypes()">Tekrar dene</button></div> }
+      <form class="create-form" (ngSubmit)="submitAssignment()">
+        @if (institutionId) {
+          <label><span>Öğretmen</span><select name="assignmentTeacher" [(ngModel)]="selectedTeacherId" (ngModelChange)="onTeacherChange()" required><option value="">Öğretmen seçin</option>@for (teacher of teachers(); track trackById($index, teacher)) { <option [value]="teacher.id">{{ teacher.firstName }} {{ teacher.lastName }} · {{ teacher.email || 'e-posta yok' }}</option> }</select></label>
+        }
+        <label><span>Ödev başlığı</span><input name="assignmentTitle" [(ngModel)]="assignmentTitle" maxlength="200" required placeholder="Örn. Haftalık okuma çalışması"></label>
+        <label><span>Açıklama</span><textarea name="assignmentDescription" [(ngModel)]="assignmentDescription" maxlength="2000" rows="3" placeholder="Öğrencilere göstermek istediğiniz yönerge"></textarea></label>
+        <div class="form-row">
+          <label><span>İçerik türü</span><select name="assignmentType" [(ngModel)]="selectedExerciseTypeId" (ngModelChange)="loadExercises()" required><option value="">Tür seçin</option>@for (type of exerciseTypes(); track trackById($index, type)) { <option [value]="type.id">{{ type.displayName }}</option> }</select></label>
+          <label><span>Ödev içeriği</span><select name="assignmentExercise" [(ngModel)]="selectedExerciseId" [disabled]="!selectedExerciseTypeId || isCatalogLoading()" required><option value="">İçerik seçin</option>@for (exercise of exercises(); track trackById($index, exercise)) { <option [value]="exercise.id">{{ exercise.title }}</option> }</select></label>
+          <label><span>Teslim tarihi</span><input name="assignmentDueDate" type="date" [(ngModel)]="dueDate" required></label>
+        </div>
+
+        @if (!institutionId || selectedTeacherId) {
+          <fieldset class="student-picker">
+            <legend>Öğrenciler <span>({{ selectedStudentCount }} seçildi / {{ studentTotalCount() }} toplam)</span></legend>
+            @if (studentsErrorMessage()) { <div class="inline-error" role="alert">{{ studentsErrorMessage() }} <button type="button" (click)="loadStudents(studentPageNumber())">Tekrar dene</button></div> }
+            @else if (isStudentsLoading()) { <p class="loading" role="status">Öğrenciler yükleniyor…</p> }
+            @else if (students().length === 0) { <p class="empty-copy">Atanabilecek öğrenci bulunamadı.</p> }
+            @else {
+              <div class="student-options">
+                @for (student of students(); track trackById($index, student)) {
+                  <label class="student-option"><input type="checkbox" [checked]="isStudentSelected(student.id)" (change)="toggleStudent(student.id, $any($event.target).checked)"><span><strong>{{ student.firstName }} {{ student.lastName }}</strong><small>{{ student.email || 'E-posta yok' }}</small></span></label>
+                }
+              </div>
+              @if (studentTotalPages() > 1) { <nav class="pagination student-pagination" aria-label="Ödev için öğrenci sayfaları"><button type="button" (click)="previousStudentPage()" [disabled]="studentPageNumber() === 1">Önceki</button><span>Sayfa {{ studentPageNumber() }} / {{ studentTotalPages() }}</span><button type="button" (click)="nextStudentPage()" [disabled]="studentPageNumber() >= studentTotalPages()">Sonraki</button></nav> }
+            }
+          </fieldset>
+        }
+        <div class="form-actions"><button class="secondary-button" type="button" (click)="closeCreateForm()">İptal</button><button class="primary-button" type="submit" data-testid="submit-assignment" [disabled]="isSaving() || isStudentsLoading()">{{ isSaving() ? 'Oluşturuluyor…' : 'Ödevi oluştur' }}</button></div>
+      </form>
+    </section>
+  }
+</section>

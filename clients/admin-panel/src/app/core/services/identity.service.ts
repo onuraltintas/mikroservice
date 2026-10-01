@@ -1,6 +1,42 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
+import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
+
+export interface PlatformLegalPageDto {
+    slug: string;
+    title: string;
+    content: string;
+    isPublished: boolean;
+    isArchived?: boolean;
+    archivedAt?: string | null;
+    version: number;
+    createdAt: string;
+    updatedAt?: string | null;
+    updatedBy?: string | null;
+}
+
+export interface RegistrationLegalAcceptance {
+    slug: string;
+    version: number;
+}
+
+export interface PlatformLegalPageUpdateRequest {
+    title: string;
+    content: string;
+    isPublished: boolean;
+}
+
+export interface PlatformLegalPageRevisionDto {
+    id: string;
+    slug: string;
+    title: string;
+    content: string;
+    version: number;
+    isArchived?: boolean;
+    createdAt: string;
+    createdBy: string;
+}
 
 export interface UserDto {
     userId: string;
@@ -231,6 +267,50 @@ export class IdentityService {
     private rolesUrl = `${environment.apiUrl}/roles`;
     private parentStudentRelationshipsUrl = `${environment.apiUrl}/parent-student-relationships`;
     private dataSubjectRequestsUrl = `${environment.apiUrl}/data-subject-requests`;
+    private publicLegalPagesUrl = `${environment.apiUrl}/platform/legal-pages`;
+    private adminLegalPagesUrl = `${environment.apiUrl}/platform/admin/legal-pages`;
+
+    getPublicLegalPage(slug: string) {
+        return this.http.get<{ success: boolean; data: PlatformLegalPageDto }>(
+            `${this.publicLegalPagesUrl}/${encodeURIComponent(slug)}`
+        ).pipe(map(response => response.data));
+    }
+
+    getLegalPages() {
+        return this.http.get<{ success: boolean; data: PlatformLegalPageDto[] }>(this.adminLegalPagesUrl)
+            .pipe(map(response => response.data ?? []));
+    }
+
+    createLegalStarterDrafts() {
+        return this.http.post<{ success: boolean; data: { createdCount: number } }>(
+            `${this.adminLegalPagesUrl}/starter-drafts`, {}
+        ).pipe(map(response => response.data));
+    }
+
+    upsertLegalPage(slug: string, request: PlatformLegalPageUpdateRequest) {
+        return this.http.put<{ success: boolean; data: PlatformLegalPageDto }>(
+            `${this.adminLegalPagesUrl}/${encodeURIComponent(slug)}`,
+            request
+        ).pipe(map(response => response.data));
+    }
+
+    archiveLegalPage(slug: string) {
+        return this.http.delete<{ success: boolean; data: PlatformLegalPageDto }>(
+            `${this.adminLegalPagesUrl}/${encodeURIComponent(slug)}`
+        ).pipe(map(response => response.data));
+    }
+
+    restoreLegalPage(slug: string) {
+        return this.http.post<{ success: boolean; data: PlatformLegalPageDto }>(
+            `${this.adminLegalPagesUrl}/${encodeURIComponent(slug)}/restore`, {}
+        ).pipe(map(response => response.data));
+    }
+
+    getLegalPageRevisions(slug: string) {
+        return this.http.get<{ success: boolean; data: PlatformLegalPageRevisionDto[] }>(
+            `${this.adminLegalPagesUrl}/${encodeURIComponent(slug)}/revisions`
+        ).pipe(map(response => response.data ?? []));
+    }
 
     getDataSubjectRequests(status?: DataSubjectRequestStatus, pageNumber = 1, pageSize = 50) {
         let params = new HttpParams().set('pageNumber', pageNumber).set('pageSize', pageSize);

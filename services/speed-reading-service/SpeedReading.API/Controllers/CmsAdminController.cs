@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SpeedReading.Application.Content;
 using System.Security.Claims;
-using System.Text;
 
 namespace SpeedReading.API.Controllers;
 
@@ -231,6 +230,15 @@ public sealed class CmsAdminController(ISpeedReadingCms cms) : ControllerBase
             return Unauthorized();
         }
 
+        if (CmsPageSlugPolicy.IsSharedLegalPageSlug(request.Slug))
+        {
+            return Conflict(new
+            {
+                success = false,
+                message = "Gizlilik ve KVKK sayfaları artık Ortak yasal sayfalar yönetiminden düzenleniyor."
+            });
+        }
+
         var id = await cms.CreatePageAsync(request, actorId, cancellationToken);
         return Ok(new { success = true, data = new { id }, message = "Page created" });
     }
@@ -241,6 +249,15 @@ public sealed class CmsAdminController(ISpeedReadingCms cms) : ControllerBase
         if (!TryGetCurrentUserId(out var actorId))
         {
             return Unauthorized();
+        }
+
+        if (CmsPageSlugPolicy.IsSharedLegalPageSlug(request.Slug))
+        {
+            return Conflict(new
+            {
+                success = false,
+                message = "Gizlilik ve KVKK sayfaları artık Ortak yasal sayfalar yönetiminden düzenleniyor."
+            });
         }
 
         return await cms.UpdatePageAsync(id, request, actorId, cancellationToken)
@@ -305,61 +322,6 @@ public sealed class CmsAdminController(ISpeedReadingCms cms) : ControllerBase
     [HttpDelete("blog/{id:guid}")]
     public Task<IActionResult> DeleteBlogPost(Guid id, CancellationToken cancellationToken = default) =>
         Delete(id, cms.DeleteBlogPostAsync, "Blog post not found", "Blog post deleted", cancellationToken);
-
-    [HttpGet("newsletter/subscribers")]
-    public async Task<IActionResult> GetSubscribers(
-        [FromQuery] int pageNumber = 1,
-        [FromQuery] int pageSize = 20,
-        [FromQuery] bool includeInactive = false,
-        CancellationToken cancellationToken = default)
-    {
-        var result = await cms.GetSubscribersAsync(pageNumber, pageSize, includeInactive, cancellationToken);
-        return Ok(new { success = true, data = ToPageResult(result), message = "Subscribers retrieved" });
-    }
-
-    [HttpGet("newsletter/subscribers/export")]
-    public async Task<IActionResult> ExportSubscribers(
-        [FromQuery] bool includeInactive = true,
-        CancellationToken cancellationToken = default)
-    {
-        var subscribers = await cms.ExportSubscribersAsync(includeInactive, cancellationToken);
-        var csv = new StringBuilder("Email,Durum,Kaynak,KayıtTarihi\r\n");
-        foreach (var subscriber in subscribers)
-        {
-            csv.Append(Csv(subscriber.Email)).Append(',')
-                .Append(Csv(subscriber.IsActive ? "Aktif" : "Pasif")).Append(',')
-                .Append(Csv(subscriber.Source ?? string.Empty)).Append(',')
-                .Append(Csv(subscriber.CreatedAt.ToString("O"))).Append("\r\n");
-        }
-
-        return File(Encoding.UTF8.GetBytes(csv.ToString()), "text/csv", "hizli-okuma-bulten-aboneleri.csv");
-    }
-
-    [HttpDelete("newsletter/subscribers/{id:guid}")]
-    public async Task<IActionResult> DeleteSubscriber(Guid id, [FromQuery] bool hardDelete = false, CancellationToken cancellationToken = default)
-    {
-        if (!TryGetCurrentUserId(out var actorId))
-        {
-            return Unauthorized();
-        }
-
-        return await cms.DeleteSubscriberAsync(id, hardDelete, actorId, cancellationToken)
-            ? Ok(new { success = true, message = "Subscriber deleted" })
-            : NotFound(new { success = false, message = "Subscriber not found" });
-    }
-
-    [HttpPut("newsletter/subscribers/{id:guid}/restore")]
-    public async Task<IActionResult> RestoreSubscriber(Guid id, CancellationToken cancellationToken = default)
-    {
-        if (!TryGetCurrentUserId(out var actorId))
-        {
-            return Unauthorized();
-        }
-
-        return await cms.RestoreSubscriberAsync(id, actorId, cancellationToken)
-            ? Ok(new { success = true, message = "Subscriber restored" })
-            : NotFound(new { success = false, message = "Subscriber not found" });
-    }
 
     [HttpGet("contact-messages")]
     public async Task<IActionResult> GetContactMessages(
@@ -436,9 +398,6 @@ public sealed class CmsAdminController(ISpeedReadingCms cms) : ControllerBase
         || value.Equals("blog", StringComparison.OrdinalIgnoreCase)
         || value.Equals("blogpost", StringComparison.OrdinalIgnoreCase)
         || value.Equals("blogposts", StringComparison.OrdinalIgnoreCase);
-
-    private static string Csv(string value) =>
-        $"\"{value.Replace("\"", "\"\"", StringComparison.Ordinal)}\"";
 
     private static object ToPageResult<T>(SpeedReadingPage<T> result) => new
     {

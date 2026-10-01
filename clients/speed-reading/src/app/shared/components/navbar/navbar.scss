@@ -248,3 +248,56 @@
         }
     }
 }
+
+:host(.public-cms-navbar) {
+    .navbar {
+        background: color-mix(in srgb, var(--ui-surface) 94%, transparent);
+        border-bottom: 1px solid color-mix(in srgb, var(--ui-border) 78%, transparent);
+        backdrop-filter: blur(14px);
+        box-shadow: var(--ui-shadow-sm);
+
+        &.scrolled {
+            background: color-mix(in srgb, var(--ui-surface) 96%, transparent);
+            box-shadow: var(--ui-shadow-md);
+        }
+
+        .logo,
+        .nav-links a,
+        .lang-switcher {
+            color: var(--ui-text);
+        }
+
+        .logo span.scrolled,
+        .nav-links a.scrolled,
+        .lang-switcher.scrolled {
+            color: var(--ui-text);
+        }
+
+        .logo .logo-icon {
+            background: var(--ui-brand-soft);
+        }
+
+        .nav-links button[mat-raised-button] {
+            min-height: 2.75rem;
+            border-radius: 0.85rem;
+            background: var(--ui-brand-strong);
+            color: var(--ui-brand-contrast);
+            font-weight: 700;
+        }
+
+        .mobile-toggle mat-icon,
+        .mobile-toggle mat-icon.scrolled {
+            color: var(--ui-text);
+        }
+
+        .mobile-menu {
+            background: var(--ui-surface);
+        }
+    }
+
+    :is(a, button, input):focus-visible {
+        outline: 3px solid var(--ui-brand);
+        outline-offset: 3px;
+        box-shadow: var(--ui-focus-ring);
+    }
+}

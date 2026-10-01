@@ -8,6 +8,7 @@
   justify-content: space-between;
   gap: 18px;
 }
+.workspace-heading-actions { display: grid; flex: 0 0 auto; justify-items: end; gap: 8px; }
 .workspace-eyebrow {
   margin: 0 0 8px;
   color: #47806e;

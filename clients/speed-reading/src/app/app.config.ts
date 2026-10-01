@@ -10,6 +10,7 @@ import localeTr from '@angular/common/locales/tr';
 
 import { routes } from './app.routes';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
+import { authRecaptchaInterceptor } from './core/interceptors/auth-recaptcha.interceptor';
 import { errorInterceptor } from './core/interceptors/error.interceptor';
 import { apiResponseInterceptor } from './core/interceptors/api-response.interceptor';
 import { GlobalErrorHandler } from './core/handlers/global-error.handler';
@@ -27,7 +28,7 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     provideAppInitializer(() => inject(AuthService).initializeSession()),
     provideHttpClient(
-      withInterceptors([apiResponseInterceptor, authInterceptor, errorInterceptor]),
+      withInterceptors([apiResponseInterceptor, authInterceptor, errorInterceptor, authRecaptchaInterceptor]),
       withFetch()
     ),
     provideAnimationsAsync(),

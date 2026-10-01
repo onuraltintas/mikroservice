@@ -150,19 +150,14 @@
                     </mat-form-field>
                 </div>
 
-                <!-- Agreements -->
-                <div class="mb-4 ui-form-section">
-                    <mat-checkbox formControlName="acceptTerms" color="primary">Kullanım koşullarını kabul
-                        ediyorum</mat-checkbox>
-                    <br>
-                    <mat-checkbox formControlName="acceptKVKK" color="primary">KVKK aydınlatma metnini
-                        okudum</mat-checkbox>
-                </div>
+                <app-registration-legal-consent product="speed-reading"
+                    (acceptancesChange)="legalAcceptances = $event"
+                    (readinessChange)="legalReady = $event"></app-registration-legal-consent>
 
                 <!-- Actions -->
                 <div class="actions-container">
                     <button mat-raised-button color="primary" type="submit"
-                        [disabled]="registerForm.invalid || isLoading" class="submit-btn full-width">
+                        [disabled]="registerForm.invalid || !hasRequiredLegalAcceptances || isLoading" class="submit-btn full-width">
                         <mat-spinner diameter="24" *ngIf="isLoading" class="ui-spinner--centered"></mat-spinner>
                         <span *ngIf="!isLoading">KAYDI TAMAMLA</span>
                     </button>

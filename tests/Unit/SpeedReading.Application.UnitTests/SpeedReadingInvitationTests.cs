@@ -98,6 +98,72 @@ public sealed class SpeedReadingInvitationTests
     }
 
     [Fact]
+    public async Task Pending_sent_invitations_are_scoped_to_sender_and_exclude_accepted_invitations()
+    {
+        await using var context = CreateContext();
+        var invitations = new OwnedSpeedReadingInvitations(context, new AllowAllSpeedReadingMembers());
+        var firstTeacherId = Guid.NewGuid();
+        var secondTeacherId = Guid.NewGuid();
+        var now = DateTime.UtcNow;
+        var pending = await invitations.CreateAsync(
+            "pending@example.com", SpeedReadingInstitutionMemberRole.Student,
+            null, firstTeacherId, firstTeacherId, now);
+        var accepted = await invitations.CreateAsync(
+            "accepted@example.com", SpeedReadingInstitutionMemberRole.Student,
+            null, firstTeacherId, firstTeacherId, now);
+        var otherSender = await invitations.CreateAsync(
+            "other@example.com", SpeedReadingInstitutionMemberRole.Student,
+            null, secondTeacherId, secondTeacherId, now);
+        await invitations.AcceptAsync(accepted.Invitation!.InvitationId, Guid.NewGuid(), "accepted@example.com", now);
+
+        var firstSenderList = await invitations.GetPendingByInviterAsync(firstTeacherId, now);
+        var secondSenderList = await invitations.GetPendingByInviterAsync(secondTeacherId, now);
+
+        firstSenderList.Should().ContainSingle().Which.InvitationId.Should().Be(pending.Invitation!.InvitationId);
+        firstSenderList.Single().Email.Should().Be("pending@example.com");
+        secondSenderList.Should().ContainSingle().Which.InvitationId.Should().Be(otherSender.Invitation!.InvitationId);
+        (await invitations.GetPendingByInviterAsync(firstTeacherId, now.AddDays(8))).Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task Only_sender_can_cancel_a_pending_invitation_and_cancelled_invitation_cannot_be_accepted()
+    {
+        await using var context = CreateContext();
+        var invitations = new OwnedSpeedReadingInvitations(context, new AllowAllSpeedReadingMembers());
+        var teacherId = Guid.NewGuid();
+        var now = DateTime.UtcNow;
+        var created = await invitations.CreateAsync(
+            "student@example.com", SpeedReadingInstitutionMemberRole.Student,
+            null, teacherId, teacherId, now);
+        var invitationId = created.Invitation!.InvitationId;
+
+        (await invitations.CancelAsync(invitationId, Guid.NewGuid(), now.AddMinutes(1)))
+            .Should().Be(SpeedReadingInvitationCancelResult.NotFound);
+        (await invitations.CancelAsync(invitationId, teacherId, now.AddMinutes(1)))
+            .Should().Be(SpeedReadingInvitationCancelResult.Cancelled);
+        context.Invitations.Single().Status.Should().Be(SpeedReadingInvitationStatus.Cancelled);
+        (await invitations.AcceptAsync(invitationId, Guid.NewGuid(), "student@example.com", now.AddMinutes(2)))
+            .Should().Be(SpeedReadingInvitationAcceptResult.NotPending);
+    }
+
+    [Fact]
+    public async Task Expired_sent_invitation_is_not_listed_or_cancelled_as_pending()
+    {
+        await using var context = CreateContext();
+        var invitations = new OwnedSpeedReadingInvitations(context, new AllowAllSpeedReadingMembers());
+        var teacherId = Guid.NewGuid();
+        var now = DateTime.UtcNow;
+        var created = await invitations.CreateAsync(
+            "student@example.com", SpeedReadingInstitutionMemberRole.Student,
+            null, teacherId, teacherId, now);
+
+        (await invitations.GetPendingByInviterAsync(teacherId, now.AddDays(8))).Should().BeEmpty();
+        (await invitations.CancelAsync(created.Invitation!.InvitationId, teacherId, now.AddDays(8)))
+            .Should().Be(SpeedReadingInvitationCancelResult.NotPending);
+        context.Invitations.Single().Status.Should().Be(SpeedReadingInvitationStatus.Expired);
+    }
+
+    [Fact]
     public async Task Institution_student_invitation_acceptance_creates_membership_and_relationship()
     {
         await using var context = CreateContext();

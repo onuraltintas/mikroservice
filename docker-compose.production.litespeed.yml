@@ -22,6 +22,8 @@ services:
     depends_on:
       admin-panel:
         condition: service_healthy
+      staff-portal:
+        condition: service_healthy
       api-gateway:
         condition: service_started
     restart: unless-stopped

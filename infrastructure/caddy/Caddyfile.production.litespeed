@@ -25,6 +25,15 @@ onuraltintas.net:80, www.onuraltintas.net:80 {
 		@root path /
 		redir @root /coaching-portal 302
 
+		@legacyCoachingStaff path /coaching-portal/teacher /coaching-portal/teacher/*
+		redir @legacyCoachingStaff https://onuraltintas.net/staff/?product=coaching 302
+
+		@staffRoot path /staff
+		redir @staffRoot /staff/ 308
+		handle_path /staff/* {
+			reverse_proxy staff-portal:80
+		}
+
 		@management path /dashboard /dashboard/*
 		respond @management 404
 
@@ -80,6 +89,9 @@ onuraltintas.net:80, www.onuraltintas.net:80 {
 			header_up X-Forwarded-Proto https
 		}
 	}
+
+	@legacyCoachingStaff path /coaching-portal/teacher /coaching-portal/teacher/*
+	redir @legacyCoachingStaff https://onuraltintas.net/staff/?product=coaching 302
 
 	handle {
 		reverse_proxy admin-panel:4000

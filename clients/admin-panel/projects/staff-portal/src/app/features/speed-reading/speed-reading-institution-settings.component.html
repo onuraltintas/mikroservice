@@ -1,0 +1,45 @@
+<section class="institution-settings" aria-labelledby="institution-settings-title">
+  <header class="settings-heading"><div><p class="workspace-eyebrow">HIZLI OKUMA · KURUM</p><h3 id="institution-settings-title">Kurum ayarları</h3><p>Kurum iletişim bilgileri ve bu ürüne ait erişim/lisans özetini görüntüleyin.</p></div></header>
+
+  @if (successMessage()) { <p class="success-message" role="status">{{ successMessage() }}</p> }
+  @if (errorMessage()) { <div class="inline-error" role="alert"><span>{{ errorMessage() }}</span><button type="button" (click)="loadInstitution()">Tekrar dene</button></div> }
+  @else if (isLoading()) { <p class="loading" role="status">Kurum ayarları yükleniyor…</p> }
+  @else if (profile(); as currentProfile) {
+    <div class="settings-grid">
+      <section class="settings-card" aria-labelledby="institution-contact-title">
+        <div><p class="workspace-eyebrow">KURUM KİMLİĞİ</p><h4 id="institution-contact-title">İletişim bilgileri</h4></div>
+        <form (ngSubmit)="saveProfile()">
+          <label><span>Kurum adı</span><input name="institutionName" [(ngModel)]="name" maxlength="200" required></label>
+          @if (currentProfile.code) { <label><span>Kurum kodu</span><input name="institutionCode" [value]="currentProfile.code" disabled></label> }
+          <label><span>İletişim e-postası</span><input name="institutionEmail" [(ngModel)]="email" type="email" autocomplete="email" maxlength="320" required></label>
+          <label><span>Telefon</span><input name="institutionPhone" [(ngModel)]="phone" type="tel" autocomplete="tel" maxlength="30"></label>
+          <div class="location-fields">
+            <label><span>İl ara</span><input name="provinceSearch" [(ngModel)]="provinceSearch" type="search" placeholder="İl yazın"></label>
+            <label><span>İl</span><select name="provinceId" [(ngModel)]="provinceId" (ngModelChange)="onProvinceChange()"><option value="">İl seçin</option>@for (province of filteredProvinces; track province.id) { <option [value]="province.id">{{ province.name }}</option> }</select></label>
+            <label><span>İlçe ara</span><input name="districtSearch" [(ngModel)]="districtSearch" type="search" [disabled]="!provinceId" placeholder="İlçe yazın"></label>
+            <label><span>İlçe</span><select name="districtId" [(ngModel)]="districtId" [disabled]="!provinceId"><option value="">İlçe seçin</option>@for (district of filteredDistricts; track district.id) { <option [value]="district.id">{{ district.name }}</option> }</select></label>
+          </div>
+          @if (locationErrorMessage()) { <p class="field-error" role="status">{{ locationErrorMessage() }}</p> }
+          <label><span>Açık adres</span><textarea name="institutionAddress" [(ngModel)]="address" rows="3" maxlength="500"></textarea></label>
+          <button class="primary-button" type="submit" [disabled]="isSaving()">{{ isSaving() ? 'Kaydediliyor…' : 'Kurum bilgilerini kaydet' }}</button>
+        </form>
+      </section>
+
+      <section class="settings-card" aria-labelledby="speed-reading-access-title">
+        <div><p class="workspace-eyebrow">ÜRÜN ERİŞİMİ</p><h4 id="speed-reading-access-title">Hızlı Okuma lisansı</h4></div>
+        @if (accessErrorMessage()) { <p class="field-error" role="status">{{ accessErrorMessage() }}</p> }
+        <div class="license-grid">
+          <article><span>Paket</span><strong>{{ licenseName() }}</strong></article>
+          <article><span>Durum</span><strong>{{ access()?.status || 'Onaylı erişim yok' }}</strong></article>
+          <article><span>Erişim başlangıcı</span><strong>{{ formatDate(access()?.startDate || currentProfile.subscriptionStartDate) }}</strong></article>
+          <article><span>Erişim bitişi</span><strong>{{ formatDate(access()?.endDate || currentProfile.subscriptionEndDate) }}</strong></article>
+          <article><span>Kalan süre</span><strong>{{ daysRemaining() }}</strong></article>
+          <article><span>Hızlı Okuma koltukları</span><strong>{{ access()?.usedSeatCount ?? 0 }} / {{ access()?.seatCount ?? '—' }}</strong></article>
+          <article><span>Öğrenci kontenjanı</span><strong>{{ currentProfile.studentCount }} / {{ currentProfile.maxStudents ?? '—' }}</strong></article>
+          <article><span>Öğretmen kontenjanı</span><strong>{{ currentProfile.teacherCount }} / {{ currentProfile.maxTeachers ?? '—' }}</strong></article>
+        </div>
+        <p class="license-note">Lisans, ödeme ve ek kontenjan işlemleri Eduİvme merkez yönetiminden yapılır. Bu panel yalnız Hızlı Okuma erişim özetini gösterir. Profil ve şifre işlemleri üst menüdeki “Hesap ayarları” bölümündedir.</p>
+      </section>
+    </div>
+  }
+</section>

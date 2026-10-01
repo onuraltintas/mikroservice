@@ -251,6 +251,9 @@ docker compose --env-file .env \
 docker run --rm \
   -v "$PWD/infrastructure/caddy/Caddyfile.production.litespeed:/etc/caddy/Caddyfile:ro" \
   caddy:2.9.1-alpine caddy validate --config /etc/caddy/Caddyfile
+docker run --rm \
+  -v "$PWD/infrastructure/caddy/Caddyfile.speed-reading.litespeed:/etc/caddy/Caddyfile:ro" \
+  caddy:2.9.1-alpine caddy validate --config /etc/caddy/Caddyfile
 docker compose --env-file .env \
   -f docker-compose.yml \
   -f docker-compose.production.yml \

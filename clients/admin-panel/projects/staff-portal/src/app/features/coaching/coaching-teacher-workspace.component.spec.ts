@@ -7,6 +7,7 @@ import { CoachingTeacherAssignmentsService } from './coaching-teacher-assignment
 import { CoachingTeacherSessionsService } from './coaching-teacher-sessions.service';
 import { CoachingTeacherGoalsService } from './coaching-teacher-goals.service';
 import { CoachingTeacherExamsService } from './coaching-teacher-exams.service';
+import { CoachingTeacherSubscriptionService } from './coaching-teacher-subscription.service';
 import { CoachingTeacherWorkspaceComponent } from './coaching-teacher-workspace.component';
 
 describe('CoachingTeacherWorkspaceComponent', () => {
@@ -43,6 +44,14 @@ describe('CoachingTeacherWorkspaceComponent', () => {
           getExamDetail: vi.fn(() => of({ id: 'exam-1', results: [], resultPageNumber: 1, resultPageSize: 25, resultTotalPages: 1 })),
           addExamResult: vi.fn(() => of({ message: 'ok' })),
           updateExamResult: vi.fn(() => of({ examId: 'exam-1', resultId: 'result-1', score: 90 }))
+        } },
+        { provide: CoachingTeacherSubscriptionService, useValue: {
+          getTeacherPlans: vi.fn(() => of([])),
+          getBankTransferSettings: vi.fn(() => of(null)),
+          getMyBankTransferRequests: vi.fn(() => of([])),
+          getMySeatSummary: vi.fn(() => of(null)),
+          assignStudent: vi.fn(() => of(void 0)),
+          removeStudent: vi.fn(() => of(void 0))
         } }
       ]
     }).compileComponents();
@@ -74,5 +83,11 @@ describe('CoachingTeacherWorkspaceComponent', () => {
     await fixture.whenStable();
     fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('Sınavlarım');
+
+    const subscriptionTab = fixture.nativeElement.querySelector('[data-testid="teacher-subscription-tab"]') as HTMLButtonElement;
+    expect(subscriptionTab).toBeTruthy();
+    subscriptionTab.click();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Öğretmen planları');
   });
 });

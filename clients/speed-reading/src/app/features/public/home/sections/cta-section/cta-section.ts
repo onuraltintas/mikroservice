@@ -16,6 +16,6 @@ export class CtaSectionComponent {
   @Input() content: HomeSectionHeading = DEFAULT_HOME_PAGE_CONTENT.cta;
 
   startTrial() {
-    this.router.navigate(['/auth/register']);
+    this.router.navigateByUrl(this.content.actionUrl || '/auth/register');
   }
 }

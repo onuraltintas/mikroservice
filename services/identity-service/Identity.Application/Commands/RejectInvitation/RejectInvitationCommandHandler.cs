@@ -1,5 +1,6 @@
 using EduPlatform.Shared.Kernel.Results;
 using EduPlatform.Shared.Security.Interfaces;
+using Identity.Application.Exceptions;
 using Identity.Application.Interfaces;
 using MediatR;
 
@@ -52,7 +53,14 @@ public class RejectInvitationCommandHandler : IRequestHandler<RejectInvitationCo
 
         // 5. Reject invitation
         invitation.Reject();
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+        }
+        catch (IdentityConcurrencyConflictException)
+        {
+            return Result.Failure(new Error("Invitation.NotPending", "Invitation is no longer pending"));
+        }
 
         return Result.Success();
     }

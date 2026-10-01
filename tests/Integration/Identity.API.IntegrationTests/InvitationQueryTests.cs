@@ -50,6 +50,8 @@ public sealed class InvitationQueryTests
             Task.FromResult(PendingWithInviter);
         public Task<List<Invitation>> GetByInviterIdAsync(Guid inviterId, CancellationToken cancellationToken) =>
             Task.FromResult(new List<Invitation>());
+        public Task<List<Invitation>> GetPendingByInviterIdAsync(Guid inviterId, DateTime now, CancellationToken cancellationToken) =>
+            Task.FromResult(new List<Invitation>());
     }
 
     private sealed class StubCurrentUserService(string email) : ICurrentUserService

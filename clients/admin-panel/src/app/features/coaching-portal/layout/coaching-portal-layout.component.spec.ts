@@ -7,7 +7,7 @@ import { CoachingPortalViewService } from '../coaching-portal-view.service';
 import { CoachingPortalLayoutComponent } from './coaching-portal-layout.component';
 
 describe('CoachingPortalLayoutComponent multi-role view', () => {
-  it('offers only authorized views and opens the student section for a dual-role account', () => {
+  it('keeps dual-role users in the student experience and omits the legacy teacher navigation', () => {
     const profile = signal<any>({ roles: ['Student', 'Teacher'], product: 'coaching', firstName: 'Ada' });
     TestBed.configureTestingModule({ imports: [CoachingPortalLayoutComponent], providers: [
       provideRouter([]),
@@ -17,11 +17,12 @@ describe('CoachingPortalLayoutComponent multi-role view', () => {
     const navigate = vi.spyOn(router, 'navigate').mockResolvedValue(true);
     const fixture = TestBed.createComponent(CoachingPortalLayoutComponent);
     fixture.detectChanges();
-    expect(fixture.nativeElement.textContent).toContain('Öğretmen görünümü');
+    expect(fixture.nativeElement.textContent).not.toContain('Öğretmen görünümü');
     fixture.componentInstance.selectView('Student');
     fixture.detectChanges();
     expect(navigate).toHaveBeenCalledWith(['/coaching-portal/assignments']);
-    expect(fixture.nativeElement.textContent).toContain('Öğrenci görünümü');
+    expect(fixture.nativeElement.textContent).not.toContain('Öğrenci görünümü');
+    expect(fixture.nativeElement.textContent).not.toContain('Ödev Yönetimi');
     expect(TestBed.inject(CoachingPortalViewService).current()).toBe('Student');
     expect(fixture.nativeElement.textContent).not.toContain('Veli görünümü');
   });

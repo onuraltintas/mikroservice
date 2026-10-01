@@ -1,6 +1,7 @@
 using EduPlatform.Shared.Kernel.Results;
 using EduPlatform.Shared.Security.Interfaces;
 using Identity.Application.Interfaces;
+using Identity.Application.LegalPages;
 using Identity.Domain.Entities;
 using Identity.Domain.Enums;
 using MediatR;
@@ -17,6 +18,7 @@ public class RegisterStudentCommandHandler : IRequestHandler<RegisterStudentComm
     private readonly IUnitOfWork _unitOfWork;
     private readonly IPublishEndpoint _publishEndpoint;
     private readonly IConfigurationService _configurationService;
+    private readonly IRegistrationLegalConsentService _registrationLegalConsentService;
 
     public RegisterStudentCommandHandler(
         IIdentityService identityService,
@@ -24,7 +26,8 @@ public class RegisterStudentCommandHandler : IRequestHandler<RegisterStudentComm
         IStudentRepository studentRepository,
         IUnitOfWork unitOfWork,
         IPublishEndpoint publishEndpoint,
-        IConfigurationService configurationService)
+        IConfigurationService configurationService,
+        IRegistrationLegalConsentService registrationLegalConsentService)
     {
         _identityService = identityService;
         _userRepository = userRepository;
@@ -32,6 +35,7 @@ public class RegisterStudentCommandHandler : IRequestHandler<RegisterStudentComm
         _unitOfWork = unitOfWork;
         _publishEndpoint = publishEndpoint;
         _configurationService = configurationService;
+        _registrationLegalConsentService = registrationLegalConsentService;
     }
 
     public async Task<Result<Guid>> Handle(RegisterStudentCommand request, CancellationToken cancellationToken)
@@ -47,6 +51,13 @@ public class RegisterStudentCommandHandler : IRequestHandler<RegisterStudentComm
         {
             return Result.Failure<Guid>(new Error("Identity.RegistrationDisabled", "Yeni kullanıcı kayıtları sistem yöneticisi tarafından geçici olarak durdurulmuştur."));
         }
+
+        var legalValidation = await _registrationLegalConsentService.ValidateAsync(
+            product,
+            request.LegalAcceptances,
+            cancellationToken);
+        if (legalValidation.IsFailure)
+            return Result.Failure<Guid>(legalValidation.Error);
 
         var identityResult = await _identityService.RegisterUserAsync(
             request.Email,
@@ -68,6 +79,8 @@ public class RegisterStudentCommandHandler : IRequestHandler<RegisterStudentComm
                 {
                     // Reactivate Case
                     existingUser.Activate();
+                    _registrationLegalConsentService.TrackAcceptedDocuments(
+                        existingUser.Id, product, legalValidation.Value, "password");
                     await _unitOfWork.SaveChangesAsync(cancellationToken);
             
                     // Reactivate in System (This will enable user AND set emailVerified=true)
@@ -117,6 +130,8 @@ public class RegisterStudentCommandHandler : IRequestHandler<RegisterStudentComm
                 user.SetPhoneNumber(request.Phone);
             }
             user.GenerateEmailVerificationToken();
+            _registrationLegalConsentService.TrackAcceptedDocuments(
+                userId, product, legalValidation.Value, "password");
 
             // await _userRepository.AddAsync(user, cancellationToken); // REMOVED: User already exists
             if (product == PlatformProduct.Coaching)

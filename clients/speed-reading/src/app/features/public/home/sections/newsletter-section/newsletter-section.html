@@ -13,6 +13,10 @@
 
             <div class="newsletter-form-container">
                 <div *ngIf="!submitted" class="form-card">
+                    <p *ngIf="privacyLoading" class="privacy-status">Gizlilik metni yükleniyor…</p>
+                    <p *ngIf="!privacyLoading && (privacyPolicyVersion === null || newsletterConsentVersion === null)" class="privacy-status error-message">
+                        Bülten aboneliği için ortak gizlilik ve Hızlı Okuma bülten onay metinlerinin yayımlanmış olması gerekir. Lütfen daha sonra tekrar deneyin.
+                    </p>
                     <form [formGroup]="newsletterForm" (ngSubmit)="onSubmit()">
                         <mat-form-field appearance="outline" class="email-field">
                             <mat-label>E-posta adresiniz</mat-label>
@@ -26,8 +30,25 @@
                             </mat-error>
                         </mat-form-field>
 
+                        <div class="newsletter-honeypot" aria-hidden="true">
+                            <label for="newsletter-website">Web sitesi</label>
+                            <input id="newsletter-website" type="text" formControlName="honeypot"
+                                tabindex="-1" autocomplete="off">
+                        </div>
+
+                        <label class="consent-label">
+                            <input type="checkbox" formControlName="consentGiven" required>
+                            <span>
+                                <a href="/legal/speed-reading-newsletter-consent" target="_blank" rel="noopener noreferrer">{{ newsletterConsentText }}</a>
+                                <a href="/legal/privacy" target="_blank" rel="noopener noreferrer">Ortak Gizlilik Politikası</a>
+                                (onay metni sürüm {{ newsletterConsentVersion }} · gizlilik sürüm {{ privacyPolicyVersion }})
+                            </span>
+                        </label>
+                        <p *ngIf="newsletterForm.get('consentGiven')?.touched && newsletterForm.get('consentGiven')?.invalid"
+                            class="consent-error">Devam etmek için açık onay vermeniz gerekir.</p>
+
                         <button mat-raised-button type="submit" class="subscribe-btn"
-                            [disabled]="newsletterForm.invalid || loading">
+                            [disabled]="newsletterForm.invalid || loading || privacyPolicyVersion === null || newsletterConsentVersion === null">
                             <mat-icon *ngIf="!loading">send</mat-icon>
                             <span *ngIf="!loading">Abone Ol</span>
                             <span *ngIf="loading">Gönderiliyor...</span>
@@ -37,14 +58,14 @@
                     </form>
                     <p class="privacy-note">
                         <mat-icon>lock</mat-icon>
-                        Bilgileriniz güvende. Her zaman abonelikten çıkabilirsiniz.
+                        Önce e-posta adresinizi doğrulamanız gerekir; her kampanya e-postasından abonelikten çıkabilirsiniz.
                     </p>
                 </div>
 
                 <div *ngIf="submitted" class="success-card">
                     <mat-icon class="success-icon">check_circle</mat-icon>
                     <h3>Tebrikler!</h3>
-                    <p>Bültenimize başarıyla abone oldunuz. Yakında e-posta kutunuza ilk içeriklerimiz ulaşacak.</p>
+                    <p>İsteğiniz alındı. Aboneliği tamamlamak için e-posta kutunuza gönderilen doğrulama bağlantısına tıklayın.</p>
                     <button mat-flat-button color="primary" (click)="resetForm()">Tamam</button>
                 </div>
             </div>

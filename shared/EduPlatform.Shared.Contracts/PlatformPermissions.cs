@@ -16,6 +16,8 @@ public static class PlatformPermissions
     {
         public const string View = "Permissions.Coaching.View";
         public const string Manage = "Permissions.Coaching.Manage";
+        public const string ContentManage = "Permissions.Coaching.ContentManage";
+        public const string SubscriptionManage = "Permissions.Coaching.SubscriptionManage";
     }
 
     public static class SpeedReading
@@ -61,6 +63,8 @@ public static class PlatformPermissions
         Institutions.Manage,
         Coaching.View,
         Coaching.Manage,
+        Coaching.ContentManage,
+        Coaching.SubscriptionManage,
         SpeedReading.View,
         SpeedReading.ContentManage,
         SpeedReading.ProgramManage,

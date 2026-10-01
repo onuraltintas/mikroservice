@@ -89,15 +89,11 @@
                     <span>Bağımsız öğretmen olarak kayıt olursunuz. Bir kuruma katılmak için kurum yöneticinizin davetini kabul edin.</span>
                 </div>
 
-                <!-- Terms & Actions -->
-                <div class="actions-container">
-                    <mat-checkbox formControlName="acceptTerms" color="primary">Kullanım koşullarını kabul
-                        ediyorum</mat-checkbox>
-                    <mat-checkbox formControlName="acceptKVKK" color="primary">KVKK aydınlatma metnini
-                        okudum</mat-checkbox>
-                </div>
+                <app-registration-legal-consent product="speed-reading"
+                    (acceptancesChange)="legalAcceptances = $event"
+                    (readinessChange)="legalReady = $event"></app-registration-legal-consent>
 
-                <button mat-raised-button color="primary" type="submit" [disabled]="registerForm.invalid || isLoading"
+                <button mat-raised-button color="primary" type="submit" [disabled]="registerForm.invalid || !hasRequiredLegalAcceptances || isLoading"
                     class="submit-btn full-width">
                     <mat-spinner diameter="20" *ngIf="isLoading" class="mr-2 inline-block"></mat-spinner>
                     {{ isLoading ? 'Kaydediliyor...' : 'Kaydı Tamamla' }}

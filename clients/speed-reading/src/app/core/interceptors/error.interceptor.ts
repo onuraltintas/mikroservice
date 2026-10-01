@@ -14,6 +14,7 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   return next(req).pipe(
     catchError((error: HttpErrorResponse) => {
       let errorMessage = 'Bir hata oluştu';
+      const isAuthCaptchaFailure = error.error?.code === 'Auth.CaptchaFailed';
 
       if (error.error instanceof ErrorEvent) {
         // Client-side error
@@ -34,7 +35,12 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
 
           case 403:
             // Modal-level access management can handle this response locally.
-            if (error.error?.code === 'SubscriptionRequired') {
+            if (isAuthCaptchaFailure) {
+              errorMessage = getErrorMessage(
+                error,
+                'Güvenlik doğrulaması tamamlanamadı. Lütfen tekrar deneyin.'
+              );
+            } else if (error.error?.code === 'SubscriptionRequired') {
               errorMessage = 'Aboneliğiniz sona erdi.';
               router.navigate(['/no-access']);
             } else {
@@ -79,7 +85,9 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
       }
 
       // Skip toast for 401 (refresh token handled by auth interceptor), 403, and 500
-      const skipToast = [401, 403, 500].includes(error.status) || req.headers.has('X-Skip-Error-Toast');
+      const skipToast = [401, 500].includes(error.status)
+        || (error.status === 403 && !isAuthCaptchaFailure)
+        || req.headers.has('X-Skip-Error-Toast');
 
       if (!skipToast) {
         toaster.error(errorMessage);

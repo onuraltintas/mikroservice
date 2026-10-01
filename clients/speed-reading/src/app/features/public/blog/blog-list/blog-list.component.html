@@ -1,4 +1,4 @@
-<app-navbar></app-navbar>
+<app-navbar class="public-cms-navbar"></app-navbar>
 
 <div class="blog-list-page">
     <!-- Header -->
@@ -29,7 +29,10 @@
             <mat-card class="featured-card" [routerLink]="['/blog', featuredPost.slug]">
                 <div class="featured-grid">
                     <div class="featured-image">
-                        <div class="image-placeholder"></div>
+                        <div class="image-placeholder" aria-hidden="true"></div>
+                        <img *ngIf="featuredPost.coverImageUrl" class="cover-image" [src]="featuredPost.coverImageUrl"
+                            [alt]="featuredPost.title" loading="eager" fetchpriority="high" decoding="async"
+                            referrerpolicy="no-referrer" (error)="hideBrokenCover($event)">
                     </div>
                     <div class="featured-content">
                         <span class="category-badge" [ngClass]="getCategoryColor(getCategory(featuredPost.tags))">
@@ -84,7 +87,10 @@
                 <div class="posts-grid">
                     <mat-card *ngFor="let post of filteredPosts" class="post-card" [routerLink]="['/blog', post.slug]">
                         <div class="image-container">
-                            <div class="image-placeholder"></div>
+                            <div class="image-placeholder" aria-hidden="true"></div>
+                            <img *ngIf="post.coverImageUrl" class="cover-image" [src]="post.coverImageUrl"
+                                [alt]="post.title" loading="lazy" decoding="async" referrerpolicy="no-referrer"
+                                (error)="hideBrokenCover($event)">
                             <span class="category-badge" [ngClass]="getCategoryColor(getCategory(post.tags))">
                                 {{ getCategory(post.tags) }}
                             </span>
@@ -120,4 +126,4 @@
     </main>
 </div>
 
-<app-footer></app-footer>
+<app-footer class="public-cms-footer"></app-footer>

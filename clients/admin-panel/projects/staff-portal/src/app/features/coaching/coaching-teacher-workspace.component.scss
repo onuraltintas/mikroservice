@@ -2,7 +2,7 @@
 .workspace-heading h2 { margin: 0; color: #17333a; font-family: Georgia, 'Times New Roman', serif; font-size: 27px; font-weight: 400; letter-spacing: -.035em; }
 .workspace-heading p:not(.workspace-eyebrow) { margin: 7px 0 0; color: #72817d; font-size: 11px; line-height: 1.6; }
 .workspace-eyebrow { margin: 0 0 8px; color: #64876e; font-size: 9px; font-weight: 800; letter-spacing: .15em; }
-.workspace-tabs { display: flex; gap: 5px; margin-top: 19px; padding: 4px; border: 1px solid #e0e5db; border-radius: 11px; background: #f3f4ed; }
+.workspace-tabs { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 19px; padding: 4px; border: 1px solid #e0e5db; border-radius: 11px; background: #f3f4ed; }
 .workspace-tabs button { min-height: 38px; padding: 0 14px; border: 0; border-radius: 8px; color: #71807a; background: transparent; font: inherit; font-size: 10px; font-weight: 750; cursor: pointer; }
 .workspace-tabs button.active { color: #24483f; background: #fffefa; box-shadow: 0 1px 3px rgb(29 55 47 / 12%); }
 .workspace-tabs button:focus-visible { outline: 2px solid #779372; outline-offset: 2px; }

@@ -4,11 +4,12 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CoachingTeacherStudent, CoachingTeacherStudentsService } from './coaching-teacher-students.service';
 import { CoachingTeacherStudentDetailComponent } from './coaching-teacher-student-detail.component';
+import { StaffPendingInvitationsComponent } from '../staff-pending-invitations.component';
 
 @Component({
   selector: 'staff-coaching-teacher-students',
   standalone: true,
-  imports: [CommonModule, FormsModule, CoachingTeacherStudentDetailComponent],
+  imports: [CommonModule, FormsModule, CoachingTeacherStudentDetailComponent, StaffPendingInvitationsComponent],
   templateUrl: './coaching-teacher-students.component.html',
   styleUrl: './coaching-teacher-students.component.scss'
 })
@@ -23,10 +24,13 @@ export class CoachingTeacherStudentsComponent implements OnInit {
   readonly totalPages = signal(1);
   readonly totalCount = signal(0);
   readonly searchTerm = signal('');
+  readonly gradeLevelFilter = signal<number | null>(null);
   readonly selectedStudent = signal<CoachingTeacherStudent | null>(null);
   readonly isInvitationSending = signal(false);
   readonly invitationErrorMessage = signal<string | null>(null);
   readonly invitationSuccessMessage = signal<string | null>(null);
+  readonly pendingInvitationsVisible = signal(false);
+  readonly invitationRefreshKey = signal(0);
   studentInviteEmail = '';
   searchInput = '';
 
@@ -38,7 +42,13 @@ export class CoachingTeacherStudentsComponent implements OnInit {
     const requestVersion = ++this.requestVersion;
     this.isLoading.set(true);
     this.errorMessage.set(null);
-    this.studentsService.getMyStudents(this.pageNumber(), 25, this.searchTerm() || undefined).subscribe({
+    this.studentsService.getMyStudents(
+      this.pageNumber(),
+      25,
+      this.searchTerm() || undefined,
+      undefined,
+      this.gradeLevelFilter() ?? undefined
+    ).subscribe({
       next: page => {
         if (requestVersion !== this.requestVersion) return;
         this.students.set(page.items);
@@ -64,9 +74,20 @@ export class CoachingTeacherStudentsComponent implements OnInit {
     this.load();
   }
 
-  clearSearch(): void {
+  setGradeLevel(value: number | null): void {
+    if (value === this.gradeLevelFilter()) return;
+    this.gradeLevelFilter.set(value);
+    this.pageNumber.set(1);
+    this.load();
+  }
+
+  clearFilters(): void {
+    if (!this.searchTerm() && this.gradeLevelFilter() === null) return;
     this.searchInput = '';
-    this.setSearchTerm('');
+    this.searchTerm.set('');
+    this.gradeLevelFilter.set(null);
+    this.pageNumber.set(1);
+    this.load();
   }
 
   sendStudentInvitation(): void {
@@ -79,6 +100,7 @@ export class CoachingTeacherStudentsComponent implements OnInit {
       next: () => {
         if (this.studentInviteEmail.trim() === email) this.studentInviteEmail = '';
         this.invitationSuccessMessage.set('Koçluk öğrenci daveti gönderildi. Öğrenci e-postadaki bağlantıyı kabul edince listenizde görünür.');
+        this.invitationRefreshKey.update(value => value + 1);
       },
       error: error => {
         this.invitationErrorMessage.set(this.getInvitationError(error, 'Koçluk öğrenci daveti gönderilemedi. E-posta adresini ve öğretmen yetkinizi kontrol edip yeniden deneyin.'));
@@ -90,6 +112,10 @@ export class CoachingTeacherStudentsComponent implements OnInit {
 
   openReport(student: CoachingTeacherStudent): void {
     this.selectedStudent.set(student);
+  }
+
+  togglePendingInvitations(): void {
+    this.pendingInvitationsVisible.update(visible => !visible);
   }
 
   backToStudents(): void {

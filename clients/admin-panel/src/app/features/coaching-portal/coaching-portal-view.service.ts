@@ -1,7 +1,7 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { AuthService, hasRole } from '../../core/auth/auth.service';
 
-export type CoachingPortalView = 'Student' | 'Teacher' | 'Parent';
+export type CoachingPortalView = 'Student' | 'Teacher';
 
 @Injectable({ providedIn: 'root' })
 export class CoachingPortalViewService {
@@ -13,9 +13,8 @@ export class CoachingPortalViewService {
     if (profile?.product !== 'coaching') return null;
     const preferred = this.preferred();
     if (preferred && hasRole(profile, preferred)) return preferred;
-    if (hasRole(profile, 'Teacher')) return 'Teacher';
     if (hasRole(profile, 'Student')) return 'Student';
-    if (hasRole(profile, 'Parent')) return 'Parent';
+    if (hasRole(profile, 'Teacher')) return 'Teacher';
     return null;
   });
 

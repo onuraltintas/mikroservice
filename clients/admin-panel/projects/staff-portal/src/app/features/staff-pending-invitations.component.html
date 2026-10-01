@@ -1,0 +1,61 @@
+<section class="pending-invitations" [attr.aria-label]="productLabel() + ' bekleyen davetleri'">
+  <header class="pending-heading">
+    <div>
+      <p class="pending-eyebrow">{{ productLabel() }}</p>
+      <h3>Bekleyen davetler</h3>
+    </div>
+    <button
+      type="button"
+      class="pending-refresh"
+      data-testid="refresh-pending-invitations"
+      (click)="load()"
+      [disabled]="isLoading() || isCancelling()"
+    >
+      {{ isLoading() ? 'Yükleniyor…' : 'Yenile' }}
+    </button>
+  </header>
+
+  @if (errorMessage()) { <p class="pending-error" role="alert">{{ errorMessage() }}</p> }
+  @if (statusMessage()) { <p class="pending-success" role="status">{{ statusMessage() }}</p> }
+  @if (isLoading()) {
+    <p class="pending-state" role="status">Davetler yükleniyor…</p>
+  } @else if (!invitations().length) {
+    <p class="pending-state">Bekleyen davet yok.</p>
+  } @else {
+    <ul class="pending-list">
+      @for (invitation of invitations(); track trackById($index, invitation)) {
+        <li class="pending-item">
+          <div class="pending-details">
+            <strong>{{ invitation.email }}</strong>
+            <span>{{ roleLabel(invitation.role) }} · son tarih {{ formatDate(invitation.expiresAt) }}</span>
+          </div>
+          @if (confirmingInvitationId() === invitation.invitationId) {
+            <div class="pending-confirmation">
+              <span>Bu bekleyen davet iptal edilsin mi?</span>
+              <button
+                type="button"
+                class="pending-cancel-confirm"
+                data-testid="confirm-cancel-invitation"
+                (click)="cancelInvitation(invitation)"
+                [disabled]="isCancelling()"
+              >
+                {{ isCancelling() ? 'İptal ediliyor…' : 'Evet, iptal et' }}
+              </button>
+              <button type="button" class="pending-cancel-dismiss" (click)="cancelConfirmation()" [disabled]="isCancelling()">Vazgeç</button>
+            </div>
+          } @else {
+            <button
+              type="button"
+              class="pending-cancel-request"
+              data-testid="request-cancel-invitation"
+              (click)="requestCancellation(invitation)"
+              [disabled]="isCancelling()"
+            >
+              Daveti iptal et
+            </button>
+          }
+        </li>
+      }
+    </ul>
+  }
+</section>

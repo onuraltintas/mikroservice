@@ -54,7 +54,7 @@ public class Invitation : AggregateRoot
         if (Status != InvitationStatus.Pending)
             throw new InvalidOperationException("Only pending invitations can be accepted");
             
-        if (DateTime.UtcNow > ExpiresAt)
+        if (DateTime.UtcNow >= ExpiresAt)
             throw new InvalidOperationException("Invitation has expired");
 
         Status = InvitationStatus.Accepted;
@@ -73,15 +73,25 @@ public class Invitation : AggregateRoot
         UpdatedAt = DateTime.UtcNow;
     }
 
+    public void Cancel()
+    {
+        if (!IsPending())
+            throw new InvalidOperationException("Only an unexpired pending invitation can be cancelled");
+
+        Status = InvitationStatus.Cancelled;
+        RespondedAt = DateTime.UtcNow;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     public void MarkAsExpired()
     {
-        if (Status == InvitationStatus.Pending && DateTime.UtcNow > ExpiresAt)
+        if (Status == InvitationStatus.Pending && DateTime.UtcNow >= ExpiresAt)
         {
             Status = InvitationStatus.Expired;
             UpdatedAt = DateTime.UtcNow;
         }
     }
 
-    public bool IsExpired() => DateTime.UtcNow > ExpiresAt;
+    public bool IsExpired() => DateTime.UtcNow >= ExpiresAt;
     public bool IsPending() => Status == InvitationStatus.Pending && !IsExpired();
 }

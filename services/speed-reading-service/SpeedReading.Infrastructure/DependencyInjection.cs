@@ -1,7 +1,9 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using EduPlatform.Shared.Infrastructure.Middleware;
 using SpeedReading.Application.AdaptiveLearning;
 using SpeedReading.Application.AdaptiveText;
@@ -91,6 +93,15 @@ public static class DependencyInjection
                 serviceProvider.GetRequiredService<IMemoryCache>(),
                 serviceProvider.GetRequiredService<ISpeedReadingEmailDelivery>(),
                 serviceProvider.GetRequiredService<ISpeedReadingCmsMediaStorage>()));
+        services.AddScoped<ISpeedReadingNewsletter>(serviceProvider =>
+            new SpeedReadingNewsletterService(
+                serviceProvider.GetRequiredService<OwnedSpeedReadingDbContext>(),
+                serviceProvider.GetRequiredService<ISpeedReadingEmailDelivery>(),
+                serviceProvider.GetRequiredService<ISharedLegalPageVersionProvider>(),
+                serviceProvider.GetRequiredService<IDataProtectionProvider>()
+                    .CreateProtector("EduPlatform.SpeedReading.NewsletterTokens.v1"),
+                serviceProvider.GetRequiredService<TimeProvider>(),
+                configuration["PublicApp:BaseUrl"] ?? "https://masterhizliokuma.com"));
         services.AddScoped<ISpeedReadingSubscription>(serviceProvider =>
             new LegacySpeedReadingSubscription(
                 serviceProvider.GetRequiredService<ISpeedReadingDataContext>(),
@@ -101,7 +112,15 @@ public static class DependencyInjection
         services.AddScoped<ISpeedReadingNotifications, LegacySpeedReadingNotifications>();
         services.AddScoped<ISpeedReadingAnnouncements, LegacySpeedReadingAnnouncements>();
         services.AddScoped<ISpeedReadingEmailTemplates, LegacySpeedReadingEmailTemplates>();
-        services.AddScoped<ISpeedReadingEmailCampaigns, LegacySpeedReadingEmailCampaigns>();
+        services.AddScoped<ISpeedReadingEmailCampaigns>(serviceProvider =>
+            new LegacySpeedReadingEmailCampaigns(
+                serviceProvider.GetRequiredService<ISpeedReadingDataContext>(),
+                serviceProvider.GetRequiredService<ISpeedReadingEmailDelivery>(),
+                serviceProvider.GetRequiredService<IDataProtectionProvider>(),
+                serviceProvider.GetRequiredService<TimeProvider>(),
+                configuration["PublicApp:BaseUrl"] ?? "https://masterhizliokuma.com",
+                serviceProvider.GetRequiredService<ILogger<LegacySpeedReadingEmailCampaigns>>()));
+        services.AddHostedService<SpeedReadingNewsletterCampaignScheduler>();
         services.AddScoped<ISpeedReadingRsvp, LegacySpeedReadingRsvp>();
 
         services.AddScoped<ILegacySpeedReadingCatalog, OwnedSpeedReadingCatalog>();
@@ -162,6 +181,10 @@ public static class DependencyInjection
         services.AddHttpClient<ISpeedReadingEmailDelivery, NotificationEmailClient>(client =>
         {
             client.Timeout = TimeSpan.FromSeconds(10);
+        }).AddCorrelationIdPropagation();
+        services.AddHttpClient<ISharedLegalPageVersionProvider, IdentitySharedLegalPageVersionClient>(client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(5);
         }).AddCorrelationIdPropagation();
 
         services.AddSingleton<ISpeedReadingReportExporter, ReportExportService>();

@@ -4,4 +4,7 @@
 :host {
     display: block;
     min-height: 100vh;
+    background: var(--ui-page);
+    color: var(--ui-text);
+    font-family: var(--ui-font-body);
 }

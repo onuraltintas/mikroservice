@@ -11,7 +11,7 @@ describe('CoachingPortalViewService', () => {
       { provide: AuthService, useValue: { userProfile: profile } }
     ] });
     const view = TestBed.inject(CoachingPortalViewService);
-    expect(view.current()).toBe('Teacher');
+    expect(view.current()).toBe('Student');
     view.select('Student');
     expect(view.current()).toBe('Student');
     profile.set({ roles: ['Teacher'], product: 'coaching' });
@@ -29,5 +29,27 @@ describe('CoachingPortalViewService', () => {
     const view = TestBed.inject(CoachingPortalViewService);
     expect(view.current()).toBeNull();
     expect(view.canSelect('Teacher')).toBe(false);
+  });
+
+  it('does not expose a Coaching panel for a parent-only account', () => {
+    const profile = signal<any>({ roles: ['Parent'], product: 'coaching' });
+    TestBed.configureTestingModule({ providers: [
+      CoachingPortalViewService,
+      { provide: AuthService, useValue: { userProfile: profile } }
+    ] });
+    const view = TestBed.inject(CoachingPortalViewService);
+
+    expect(view.current()).toBeNull();
+  });
+
+  it('keeps a student view for a dual Student and Parent account without a parent switch', () => {
+    const profile = signal<any>({ roles: ['Parent', 'Student'], product: 'coaching' });
+    TestBed.configureTestingModule({ providers: [
+      CoachingPortalViewService,
+      { provide: AuthService, useValue: { userProfile: profile } }
+    ] });
+    const view = TestBed.inject(CoachingPortalViewService);
+
+    expect(view.current()).toBe('Student');
   });
 });

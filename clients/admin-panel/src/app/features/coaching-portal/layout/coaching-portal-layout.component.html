@@ -22,29 +22,18 @@
     </div>
 
     <nav class="mx-auto flex max-w-7xl gap-1 overflow-x-auto px-4 pb-3 sm:px-6 lg:px-8" aria-label="Koçluk menüsü">
-      <div *ngIf="(canViewStudent() && (canViewTeacher() || canViewParent())) || (canViewTeacher() && canViewParent())" class="flex shrink-0 items-center gap-1 border-r border-slate-300 pr-2 mr-2 dark:border-slate-700" aria-label="Panel görünümü">
-        <button *ngIf="canViewStudent()" type="button" (click)="selectView('Student')" [attr.aria-pressed]="isStudent()" class="rounded px-2 py-2 text-sm" [class.bg-indigo-100]="isStudent()">Öğrenci görünümü</button>
-        <button *ngIf="canViewTeacher()" type="button" (click)="selectView('Teacher')" [attr.aria-pressed]="isTeacher()" class="rounded px-2 py-2 text-sm" [class.bg-indigo-100]="isTeacher()">Öğretmen görünümü</button>
-        <button *ngIf="canViewParent()" type="button" (click)="selectView('Parent')" [attr.aria-pressed]="isParent()" class="rounded px-2 py-2 text-sm" [class.bg-indigo-100]="isParent()">Veli görünümü</button>
-      </div>
       <a routerLink="/coaching-portal" [routerLinkActiveOptions]="{ exact: true }" routerLinkActive="bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-200"
         class="whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">Genel Bakış</a>
       <a *ngIf="isStudent()" routerLink="/coaching-portal/assignments" routerLinkActive="bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-200"
         class="whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">Ödevlerim</a>
       <a *ngIf="isStudent()" routerLink="/coaching-portal/progress" routerLinkActive="bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-200"
         class="whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">İlerlemem</a>
-      <a *ngIf="isStudent() || isTeacher()" routerLink="/coaching-portal/sessions" routerLinkActive="bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-200"
+      <a *ngIf="isStudent()" routerLink="/coaching-portal/subscription" routerLinkActive="bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-200"
+        class="whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">Abonelik ve ödeme</a>
+      <a *ngIf="isStudent()" routerLink="/coaching-portal/sessions" routerLinkActive="bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-200"
         class="whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">Seanslar</a>
       <a routerLink="/coaching-portal/notifications" routerLinkActive="bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-200"
         class="whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">Bildirimler</a>
-      <a *ngIf="isTeacher()" routerLink="/coaching-portal/teacher/assignments" routerLinkActive="bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-200"
-        class="whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">Ödev Yönetimi</a>
-      <a *ngIf="isTeacher()" routerLink="/coaching-portal/teacher/students" routerLinkActive="bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-200"
-        class="whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">Öğrencilerim</a>
-      <a *ngIf="isTeacher()" routerLink="/coaching-portal/teacher/academic" routerLinkActive="bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-200"
-        class="whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">Akademik takip</a>
-      <a *ngIf="isParent()" routerLink="/coaching-portal/children" routerLinkActive="bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-200"
-        class="whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">Çocuklarım</a>
     </nav>
   </header>
 

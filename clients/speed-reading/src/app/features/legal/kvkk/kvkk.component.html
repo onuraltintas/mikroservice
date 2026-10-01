@@ -18,11 +18,11 @@
       <div *ngIf="noDocument && !loading && !error" class="no-document" role="status">
         <mat-icon>description</mat-icon>
         <h2>Doküman henüz yayınlanmadı</h2>
-        <p>KVKK aydınlatma metni güncellendiğinde bu sayfada yayınlanacaktır.</p>
+        <p>Eduİvme’nin ortak KVKK aydınlatma metni yetkili yönetici tarafından yayımlandığında burada gösterilecektir.</p>
         <a mat-stroked-button routerLink="/iletisim">İletişime Geç</a>
       </div>
 
-      <div *ngIf="!loading && !error && !noDocument" class="legal-content" [innerHTML]="content"></div>
+      <pre *ngIf="!loading && !error && !noDocument" class="legal-content">{{ content }}</pre>
     </mat-card-content>
   </mat-card>
 

@@ -4,7 +4,10 @@
 **/.angular
 **/.tmp-ng
 **/.tmp
+**/.tmp-*
 **/.codex-staging-tmp
+**/.codex-staging-*
+**/.codex-tmp
 **/coverage
 **/*.log
 **/.env

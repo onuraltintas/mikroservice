@@ -37,6 +37,14 @@ describe('CoachingTeacherStudentsService', () => {
     await expect(response).resolves.toMatchObject({ pageNumber: 2, totalCount: 0 });
   });
 
+  it('filters the teacher roster by grade level', async () => {
+    const response = firstValueFrom(service.getMyStudents(1, 25, undefined, undefined, 8));
+    const request = http.expectOne('/api/teachers/me/students?pageNumber=1&pageSize=25&gradeLevel=8');
+    request.flush({ items: [], pageNumber: 1, pageSize: 25, totalCount: 0, totalPages: 1 });
+
+    await response;
+  });
+
   it('omits a blank search term and clamps invalid pagination', async () => {
     const response = firstValueFrom(service.getMyStudents(0, 1000, '   '));
     const request = http.expectOne('/api/teachers/me/students?pageNumber=1&pageSize=100');

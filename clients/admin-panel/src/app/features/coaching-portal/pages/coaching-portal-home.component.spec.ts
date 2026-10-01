@@ -7,8 +7,9 @@ import { AuthService, UserProfile } from '../../../core/auth/auth.service';
 import { CoachingPortalService } from '../../../core/services/coaching-portal.service';
 import { CoachingPortalHomeComponent } from './coaching-portal-home.component';
 import { CoachingPortalViewService } from '../coaching-portal-view.service';
+import { StaffPortalRedirectService } from '../staff-portal-redirect.service';
 
-describe('CoachingPortalHomeComponent teacher metrics', () => {
+describe('CoachingPortalHomeComponent', () => {
   it('loads the own-student summary when a dual-role user selects student view', () => {
     const profile = signal<UserProfile | null>({ id: 'user-1', email: 'a@test', firstName: 'Ada', lastName: 'Test', username: 'a@test', roles: ['Teacher', 'Student'], role: 'Teacher', permissions: [], product: 'coaching' });
     const service = {
@@ -19,7 +20,8 @@ describe('CoachingPortalHomeComponent teacher metrics', () => {
     TestBed.configureTestingModule({ imports: [CoachingPortalHomeComponent], providers: [
       provideRouter([]),
       { provide: AuthService, useValue: { userProfile: profile } },
-      { provide: CoachingPortalService, useValue: service }
+      { provide: CoachingPortalService, useValue: service },
+      { provide: StaffPortalRedirectService, useValue: { redirect: vi.fn(), url: () => 'https://onuraltintas.net/staff/?product=coaching' } }
     ] });
     TestBed.inject(CoachingPortalViewService).select('Student');
     const fixture = TestBed.createComponent(CoachingPortalHomeComponent);
@@ -27,7 +29,7 @@ describe('CoachingPortalHomeComponent teacher metrics', () => {
     expect(service.getStudentAssignments).toHaveBeenCalledWith('user-1', 1, 5);
     expect(service.getTeacherAssignments).not.toHaveBeenCalled();
   });
-  it('shows unique active roster count and full assignment total, not counts from a preview page', () => {
+  it('sends teacher-only users to the new staff portal instead of rendering the legacy dashboard', () => {
     const profile = signal<UserProfile | null>({
       id: 'teacher-1', email: 'teacher@example.test', firstName: 'Ada', lastName: 'Koç',
       username: 'teacher@example.test', roles: ['Teacher'], role: 'Teacher', permissions: [], product: 'coaching'
@@ -42,21 +44,22 @@ describe('CoachingPortalHomeComponent teacher metrics', () => {
         items: [{ userId: 'student-1' }], pageNumber: 1, pageSize: 1, totalCount: 41, totalPages: 41
       }))
     };
+    const redirect = vi.fn();
     TestBed.configureTestingModule({
       imports: [CoachingPortalHomeComponent],
       providers: [
         provideRouter([]),
         { provide: AuthService, useValue: { userProfile: profile } },
-        { provide: CoachingPortalService, useValue: service }
+        { provide: CoachingPortalService, useValue: service },
+        { provide: StaffPortalRedirectService, useValue: { redirect, url: () => 'https://onuraltintas.net/staff/?product=coaching' } }
       ]
     });
     const fixture = TestBed.createComponent(CoachingPortalHomeComponent);
     fixture.detectChanges();
 
-    expect(service.getTeacherStudents).toHaveBeenCalledWith(1, 1);
-    expect(fixture.nativeElement.textContent).toContain('Toplam ödev');
-    expect(fixture.nativeElement.textContent).toContain('23');
-    expect(fixture.nativeElement.textContent).toContain('41');
-    expect(fixture.nativeElement.textContent).not.toContain('Aktif ödevler');
+    expect(redirect).toHaveBeenCalledWith('coaching');
+    expect(service.getTeacherAssignments).not.toHaveBeenCalled();
+    expect(service.getTeacherStudents).not.toHaveBeenCalled();
+    expect(fixture.nativeElement.textContent).not.toContain('Toplam ödev');
   });
 });

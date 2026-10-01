@@ -1,0 +1,111 @@
+.pending-invitations {
+  margin-top: 14px;
+  padding: 16px;
+  border: 1px solid #e3e5dc;
+  border-radius: 12px;
+  background: #fbfaf6;
+}
+.pending-heading,
+.pending-item,
+.pending-confirmation {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.pending-eyebrow {
+  margin: 0 0 4px;
+  color: #64876e;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+.pending-heading h3 {
+  margin: 0;
+  color: #17333a;
+  font-size: 15px;
+}
+.pending-refresh,
+.pending-cancel-request,
+.pending-cancel-confirm,
+.pending-cancel-dismiss {
+  min-height: 34px;
+  padding: 0 10px;
+  border: 1px solid #d9dfd7;
+  border-radius: 8px;
+  color: #425b56;
+  background: #fffefa;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.pending-cancel-request,
+.pending-cancel-confirm {
+  border-color: #e6c7be;
+  color: #873f2d;
+  background: #fff7f3;
+}
+.pending-item {
+  padding: 12px 0;
+  border-top: 1px solid #e6e8e0;
+}
+.pending-list {
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.pending-details {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  color: #40544e;
+  font-size: 11px;
+}
+.pending-details strong {
+  overflow-wrap: anywhere;
+}
+.pending-details span,
+.pending-confirmation span,
+.pending-state {
+  color: #72817d;
+  font-size: 10px;
+}
+.pending-confirmation {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.pending-error,
+.pending-success {
+  margin: 12px 0 0;
+  padding: 9px 11px;
+  border-radius: 8px;
+  font-size: 10px;
+}
+.pending-error {
+  border: 1px solid #efc7b9;
+  color: #873f2d;
+  background: #fff1eb;
+}
+.pending-success {
+  border: 1px solid #bbdec6;
+  color: #27623b;
+  background: #f0faf2;
+}
+.pending-state {
+  margin: 14px 0 0;
+}
+button:disabled {
+  cursor: wait;
+  opacity: .55;
+}
+@media (max-width: 560px) {
+  .pending-item {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .pending-confirmation {
+    justify-content: flex-start;
+  }
+}
