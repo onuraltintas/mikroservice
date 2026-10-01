@@ -1,10 +1,29 @@
 using System.Security.Claims;
 using SpeedReading.API.Security;
+using SpeedReading.API.Controllers;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 
 namespace SpeedReading.Application.UnitTests;
 
 public sealed class StaffTrainingAccessTests
 {
+    [Fact]
+    public async Task Student_with_teacher_role_cannot_call_staff_enrollment_endpoint()
+    {
+        var controller = new StaffTrainingController(null!, null!)
+        {
+            ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext
+            {
+                User = new ClaimsPrincipal(new ClaimsIdentity([
+                    new Claim(ClaimTypes.NameIdentifier, Guid.NewGuid().ToString()),
+                    new Claim(ClaimTypes.Role, "Teacher"), new Claim(ClaimTypes.Role, "Student")], "test"))
+            } }
+        };
+        Assert.IsType<ForbidResult>(await controller.Start(new StartStudentProgramRequest(Guid.NewGuid()), CancellationToken.None));
+        Assert.IsType<ForbidResult>(await controller.GetPrograms(CancellationToken.None));
+    }
+
     [Theory]
     [InlineData("Admin", false, true)]
     [InlineData("SystemAdmin", false, true)]
