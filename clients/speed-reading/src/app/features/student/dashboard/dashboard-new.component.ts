@@ -15,6 +15,7 @@ import { LevelBadgesWidgetComponent } from './widgets/level-badges-widget.compon
 import { QuickAccessWidgetComponent } from './widgets/quick-access-widget.component';
 import { RecentAchievementsWidgetComponent } from './widgets/recent-achievements-widget.component';
 import { ExerciseProgramService } from '../../../core/services/exercise-program.service';
+import { NextProgramRecommendation, StudentProgramService } from '../../../core/services/student-program.service';
 
 import { QuoteWidgetComponent } from './widgets/quote-widget.component';
 import { AssignmentsWidgetComponent } from './widgets/assignments-widget.component';
@@ -39,6 +40,7 @@ import { AssignmentsWidgetComponent } from './widgets/assignments-widget.compone
 })
 export class DashboardNewComponent extends BaseComponent implements OnInit {
   private exerciseService = inject(ExerciseProgramService);
+  private studentProgramService = inject(StudentProgramService);
   private gamificationService = inject(GamificationService);
   // snackBar inherited from BaseComponent via toaster
 
@@ -65,6 +67,9 @@ export class DashboardNewComponent extends BaseComponent implements OnInit {
   nextAssessmentPhase = signal<number | null>(null);
   assessmentPlanError = signal(false);
   assessmentWaitUntil = signal<string | null>(null);
+  nextProgramRecommendation = signal<NextProgramRecommendation | null>(null);
+  nextProgramStarting = signal(false);
+  nextProgramError = signal<string | null>(null);
 
   constructor(
     private authService: AuthService,
@@ -150,7 +155,10 @@ export class DashboardNewComponent extends BaseComponent implements OnInit {
       .subscribe({
         next: ({ progress, allAchievements, userAchievements }) => {
           this.programCompleted.set(!!progress?.completedDate);
-          if (progress?.completedDate) this.loadCompletionAssessmentPlan();
+          if (progress?.completedDate) {
+            this.loadCompletionAssessmentPlan();
+            this.loadNextProgramRecommendation();
+          } else this.nextProgramRecommendation.set(null);
           if (!progress) {
             // An authenticated student can have a valid subscription before a
             // training program is assigned. Keep that state explicit instead
@@ -247,6 +255,28 @@ export class DashboardNewComponent extends BaseComponent implements OnInit {
   logout(): void {
     this.authService.logout();
     this.router.navigate(['/login']);
+  }
+
+  loadNextProgramRecommendation(): void {
+    this.nextProgramRecommendation.set(null);
+    this.nextProgramError.set(null);
+    this.studentProgramService.getNextRecommendation().pipe(takeUntil(this.destroy$)).subscribe({
+      next: recommendation => this.nextProgramRecommendation.set(recommendation),
+      error: () => this.nextProgramError.set('Program önerisi yüklenemedi. Lütfen yeniden deneyin.')
+    });
+  }
+
+  confirmNextProgram(): void {
+    const recommendation = this.nextProgramRecommendation();
+    if (!recommendation || recommendation.requiresStaffApproval || this.nextProgramStarting()) return;
+    this.nextProgramStarting.set(true);
+    this.nextProgramError.set(null);
+    this.studentProgramService.confirmNextProgram({ templateId: recommendation.templateId,
+      sourceProgressId: recommendation.sourceProgressId, assessmentAttemptId: recommendation.assessmentAttemptId })
+      .pipe(takeUntil(this.destroy$), finalize(() => this.nextProgramStarting.set(false))).subscribe({
+        next: () => this.loadDashboardStats(),
+        error: error => this.nextProgramError.set(error?.error?.message || 'Program başlatılamadı. Lütfen öneriyi yenileyin.')
+      });
   }
 
   loadCompletionAssessmentPlan(): void {

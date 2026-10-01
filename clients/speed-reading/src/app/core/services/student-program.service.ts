@@ -48,6 +48,15 @@ export interface StudentProgramInfo {
   completedDate: string | null;
 }
 
+export interface NextProgramRecommendation {
+  sourceProgressId: string;
+  assessmentAttemptId: string;
+  templateId: string;
+  templateName: string;
+  totalDays: number;
+  requiresStaffApproval: boolean;
+}
+
 /**
  * Student Program Service - Refactored for ApiResponse<T> compatibility
  * 
@@ -71,6 +80,14 @@ export class StudentProgramService {
   allPrograms = signal<StudentProgramInfo[]>([]);
   loading = signal<boolean>(false);
   error = signal<string | null>(null);
+
+  getNextRecommendation(): Observable<NextProgramRecommendation | null> {
+    return this.http.get<NextProgramRecommendation | null>(`${this.apiUrl}/next-recommendation`);
+  }
+
+  confirmNextProgram(request: { templateId: string; sourceProgressId: string; assessmentAttemptId: string }): Observable<{ success: boolean }> {
+    return this.http.post<{ success: boolean }>(`${this.apiUrl}/confirm-next`, request);
+  }
 
   /**
    * Get student's active program information

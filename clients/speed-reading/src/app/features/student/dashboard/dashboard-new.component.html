@@ -90,6 +90,21 @@
         } @else if (assessmentWaitUntil()) {
           <p>Sonraki ölçüm {{ assessmentWaitUntil() | date:'dd.MM.yyyy HH:mm' }} tarihinde açılacak.</p>
         }
+        @if (nextProgramRecommendation(); as recommendation) {
+          <h3>Önerilen program: {{ recommendation.templateName }}</h3>
+          <p>{{ recommendation.totalDays }} günlük eğitim. Öneri, tamamladığınız programın eğitim sonrası ölçümüne dayanır.</p>
+          @if (recommendation.requiresStaffApproval) {
+            <p>Bu programı başlatmak için öğretmeninizin veya kurum yöneticinizin onayı gerekiyor.</p>
+          } @else {
+            <button type="button" class="db-cta-btn" [disabled]="nextProgramStarting()" (click)="confirmNextProgram()">
+              {{ nextProgramStarting() ? 'Başlatılıyor…' : 'Önerilen programı onayla ve başla' }}
+            </button>
+          }
+        }
+        @if (nextProgramError()) {
+          <p role="alert">{{ nextProgramError() }}</p>
+          <button type="button" [disabled]="nextProgramStarting()" (click)="loadNextProgramRecommendation()">Öneriyi yenile</button>
+        }
       </section>
     }
 
