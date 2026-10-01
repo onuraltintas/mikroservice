@@ -20,6 +20,12 @@ describe('studentPageGuard', () => {
     expect(permits('reports', ['Teacher'])).toBeFalse();
   });
 
+  it('allows teachers to open staff training programs and their daily training', () => {
+    expect(permits('training-programs', ['Teacher'])).toBeTrue();
+    TestBed.resetTestingModule();
+    expect(permits('daily-exercises', ['Teacher'])).toBeTrue();
+  });
+
   it('preserves staff exercise preview', () => {
     expect(permits('exercises/universal-player/:exerciseId', ['Teacher'])).toBeTrue();
   });

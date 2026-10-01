@@ -12,6 +12,24 @@ namespace Identity.API.IntegrationTests;
 
 public sealed class SpeedReadingSubscriptionAccessMiddlewareTests
 {
+    [Fact]
+    public async Task Staff_training_cannot_be_used_after_account_becomes_a_student()
+    {
+        using var db = CreateDb();
+        var context = CreateContext("/api/speed-reading/daily-progress/today-exercises", "GET", "Student");
+        var user = Guid.Parse(context.User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var template = SpeedReading.Domain.Programs.ProgramTemplate.Import(Guid.NewGuid(), "Staff", "",
+            Guid.NewGuid(), 0, 100, "{}", 1, 2, 5, 1, 1, true, 1, 0, null, false, DateTime.UtcNow, null, null, null);
+        db.StudentProgramProgresses.Add(SpeedReading.Domain.Programs.StudentProgramProgress.Start(
+            Guid.NewGuid(), user, template, 0, 0, user, DateTime.UtcNow, isStaffTraining: true));
+        await db.SaveChangesAsync();
+        var called = false;
+        var middleware = new SpeedReadingSubscriptionAccessMiddleware(_ => { called = true; return Task.CompletedTask; });
+        await middleware.InvokeAsync(context, CreateSubscription(true), db);
+        Assert.False(called);
+        Assert.Equal(403, context.Response.StatusCode);
+    }
+
     [Theory]
     [InlineData("/api/speed-reading/daily-progress/today-exercises", "GET", false, 403)]
     [InlineData("/api/speed-reading/learning-paths/personalized", "GET", false, 403)]
