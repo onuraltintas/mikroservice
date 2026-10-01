@@ -1,11 +1,14 @@
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using System.Reflection;
+using SpeedReading.Application.Analytics;
 using SpeedReading.Application.Assessment;
 using SpeedReading.Application.StudentProgram;
 using SpeedReading.Domain.Assessment;
 using SpeedReading.Domain.Institutions;
 using SpeedReading.Domain.Programs;
 using SpeedReading.Domain.Sessions;
+using SpeedReading.Domain.Catalog;
 using SpeedReading.Infrastructure.Persistence;
 
 namespace SpeedReading.Application.UnitTests;
@@ -21,6 +24,7 @@ public sealed class NextProgramRecommendationTests
         var user = Guid.NewGuid();
         var age = Guid.NewGuid();
         var now = DateTime.UtcNow;
+        var teacher = Guid.NewGuid();
         var template = Template(age, "Current", 0, 40, 0);
         var next = Template(age, "Next", 40, 70, 0);
         db.ProgramTemplates.AddRange(template, next, Template(age, "Exam", 0, 100, 1),
@@ -40,7 +44,10 @@ public sealed class NextProgramRecommendationTests
                 isAssessmentMode: true, assessmentAttemptId: post.Id));
         if (managed)
             db.TeacherStudentAssignments.Add(SpeedReadingTeacherStudentAssignment.Create(null,
-                Guid.NewGuid(), user, user, now));
+                teacher, user, user, now));
+        var typeId = Guid.NewGuid();
+        db.ExerciseTypes.Add(ExerciseType.Create(typeId, "Fixation", "Fixation", "focus"));
+        db.Exercises.Add(Exercise.Create("Exercise", "Fixation", "{}", 1, user, typeId));
         await db.SaveChangesAsync();
         var result = await Service(db).GetNextProgramRecommendationAsync(user, CancellationToken.None);
         result.Should().NotBeNull();
@@ -58,6 +65,24 @@ public sealed class NextProgramRecommendationTests
             (await unapproved.Should().ThrowAsync<EduPlatform.Shared.Kernel.Exceptions.BusinessRuleException>())
                 .Which.Code.Should().Be("Program.StaffApprovalRequired");
         }
+        var access = DispatchProxy.Create<ISpeedReadingTeacherAccess, TeacherAccessProxy>();
+        ((TeacherAccessProxy)access).Teacher = teacher;
+        ((TeacherAccessProxy)access).Student = user;
+        var request = new ConfirmNextStudentProgramRequest(next.Id, progress.Id, post.Id);
+        var wrongViewer = () => Service(db, access).ApproveNextProgramAsync(Guid.NewGuid(), user, request, null, CancellationToken.None);
+        await wrongViewer.Should().ThrowAsync<UnauthorizedAccessException>();
+        var accepted = managed
+            ? await Service(db, access).ApproveNextProgramAsync(teacher, user, request, null, CancellationToken.None)
+            : await Service(db, access).ConfirmNextProgramAsync(user, request, CancellationToken.None);
+        var repeated = managed
+            ? await Service(db, access).ApproveNextProgramAsync(teacher, user, request, null, CancellationToken.None)
+            : await Service(db, access).ConfirmNextProgramAsync(user, request, CancellationToken.None);
+        repeated.ProgramId.Should().Be(accepted.ProgramId);
+        (await db.StudentProgramProgresses.CountAsync(item => item.IsActive)).Should().Be(1);
+        (await db.StudentProgramProgresses.CountAsync()).Should().Be(2);
+        var saved = await db.StudentProgramProgresses.SingleAsync(item => item.Id == accepted.ProgramId);
+        saved.CreatedBy.Should().Be((managed ? teacher : user).ToString());
+        progress.CompletedDate.Should().NotBeNull();
     }
 
     [Fact]
@@ -70,16 +95,25 @@ public sealed class NextProgramRecommendationTests
     private static OwnedSpeedReadingDbContext CreateDb() => new(new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>()
         .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
 
-    private static ISpeedReadingStudentProgram Service(OwnedSpeedReadingDbContext db)
+    private static ISpeedReadingStudentProgram Service(OwnedSpeedReadingDbContext db, ISpeedReadingTeacherAccess? access = null)
     {
         var assembly = typeof(OwnedSpeedReadingDbContext).Assembly;
         var assessment = (ISpeedReadingAssessment)Activator.CreateInstance(assembly.GetType(
             "SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingAssessment")!, db, null)!;
         return (ISpeedReadingStudentProgram)Activator.CreateInstance(assembly.GetType(
-            "SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingStudentProgram")!, db, assessment)!;
+            "SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingStudentProgram")!, db, assessment, access)!;
     }
 
     private static ProgramTemplate Template(Guid age, string name, int min, int max, int purpose) =>
-        ProgramTemplate.Import(Guid.NewGuid(), name, "", age, min, max, "{}", 1, 2, 5, 1, 1, true,
+        ProgramTemplate.Import(Guid.NewGuid(), name, "", age, min, max,
+            "{\"week1\":{\"day1\":[{\"Type\":\"Fixation\",\"Count\":1,\"Difficulty\":1}]}}", 1, 2, 5, 1, 1, true,
             1, purpose, purpose == 1 ? "LGS" : null, false, DateTime.UtcNow, null, null, null);
+
+    public class TeacherAccessProxy : DispatchProxy
+    {
+        public Guid Teacher { get; set; }
+        public Guid Student { get; set; }
+        protected override object? Invoke(MethodInfo? method, object?[]? args) =>
+            Task.FromResult((Guid)args![0]! == Teacher && (Guid)args[1]! == Student);
+    }
 }
