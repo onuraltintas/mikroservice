@@ -157,6 +157,8 @@ public interface ISpeedReadingDailyProgress
 
 public static class SpeedReadingDailyProgressRules
 {
+    public static int GetAvailableDay(DateTime assignedAt, DateTime now, bool isStaffTraining) =>
+        isStaffTraining ? int.MaxValue : GetCalendarAvailableDay(assignedAt, now);
     public static int GetCalendarAvailableDay(DateTime assignedAt, DateTime now)
     {
         var zone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Istanbul");

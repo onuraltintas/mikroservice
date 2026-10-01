@@ -25,6 +25,7 @@ public sealed class StudentProgramProgress : AggregateRoot
     public int CurrentDifficultyLevel { get; private set; }
     public int AdaptiveDifficultyOffset { get; private set; }
     public string? ScheduleJson { get; private set; }
+    public bool IsStaffTraining { get; private set; }
     public int DaysCompleted { get; private set; }
     public int ExercisesCompleted { get; private set; }
     public DateTime? LastCompletionDate { get; private set; }
@@ -41,7 +42,8 @@ public sealed class StudentProgramProgress : AggregateRoot
         int previousCurrentStreak,
         int previousLongestStreak,
         Guid actorId,
-        DateTime assignedAt)
+        DateTime assignedAt,
+        bool isStaffTraining = false)
     {
         if (id == Guid.Empty || userId == Guid.Empty)
             throw new ArgumentException("Student program identifiers are required.");
@@ -56,6 +58,7 @@ public sealed class StudentProgramProgress : AggregateRoot
             UserId = userId,
             ProgramTemplateId = template.Id,
             AssignedDate = EnsureUtc(assignedAt),
+            IsStaffTraining = isStaffTraining,
             CurrentDay = 1,
             CurrentWeek = 1,
             CurrentDifficultyLevel = template.InitialDifficultyLevel,

@@ -11,6 +11,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { firstValueFrom, Subject, takeUntil } from 'rxjs';
 import { AuthService } from '../../../../core/services/auth.service';
+import { canUseStaffTraining } from '../../../../core/guards/staff-training.guard';
 
 import { EngineFactory, EngineType } from './engines/engine-factory';
 import { shouldForwardExerciseAction } from './exercise-action-policy';
@@ -107,9 +108,14 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   // Program Completion State
   showProgramCompletionModal = false;
   dailyProgressSaveStatus: 'idle' | 'saving' | 'saved' | 'failed' = 'idle';
+  staffTrainingMode = false;
   private pendingDailyProgressRequest: CompleteExerciseRequest | null = null;
 
   startPostTrainingAssessment(): void {
+    if (this.staffTrainingMode) {
+      this.router.navigate(['/student/training-programs']);
+      return;
+    }
     this.router.navigate(['/student/assessment'], { queryParams: { phase: 2 } });
   }
 
@@ -389,6 +395,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
 
     // Check assignment and assessment context from query params so the flow survives refreshes.
     this.route.queryParams.subscribe(params => {
+      this.staffTrainingMode = params['mode'] === 'staff-training' && canUseStaffTraining(this.authService);
       this.assignmentId = params['assignmentId'];
       this.reviewItemId = params['mode'] === 'review' ? params['reviewItemId'] || null : null;
       this.pathItemId = params['pathItemId'] || null;
@@ -3128,6 +3135,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
 
   private isPreviewSession(): boolean {
     return this.authService.canPreviewExercises()
+      && !this.staffTrainingMode
       && !this.authService.hasRole('Student');
   }
 

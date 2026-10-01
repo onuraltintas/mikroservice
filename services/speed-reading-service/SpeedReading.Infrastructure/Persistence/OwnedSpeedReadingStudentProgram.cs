@@ -73,6 +73,9 @@ internal sealed class OwnedSpeedReadingStudentProgram(OwnedSpeedReadingDbContext
     public Task<StartStudentProgramResult> StartProgramAsync(Guid userId, Guid templateId, CancellationToken cancellationToken) =>
         StartProgramCoreAsync(userId, userId, templateId, null, null, cancellationToken);
 
+    public Task<StartStudentProgramResult> StartStaffTrainingAsync(Guid userId, Guid templateId, CancellationToken cancellationToken) =>
+        StartProgramCoreAsync(userId, userId, templateId, null, null, cancellationToken, isStaffTraining: true);
+
     public Task<StartStudentProgramResult> ConfirmNextProgramAsync(Guid userId, ConfirmNextStudentProgramRequest request,
         CancellationToken cancellationToken) => StartProgramCoreAsync(userId, userId, request.TemplateId, request, null, cancellationToken);
 
@@ -89,7 +92,8 @@ internal sealed class OwnedSpeedReadingStudentProgram(OwnedSpeedReadingDbContext
         Guid templateId,
         ConfirmNextStudentProgramRequest? confirmation,
         Guid? institutionId,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        bool isStaffTraining = false)
     {
         if (actorId == Guid.Empty || userId == Guid.Empty || templateId == Guid.Empty
             || (confirmation is not null && (confirmation.SourceProgressId == Guid.Empty || confirmation.AssessmentAttemptId == Guid.Empty)))
@@ -127,12 +131,21 @@ internal sealed class OwnedSpeedReadingStudentProgram(OwnedSpeedReadingDbContext
                     .OrderByDescending(item => item.CreatedAt)
                     .ToListAsync(cancellationToken);
                 if (activePrograms.Count == 1 && activePrograms[0].ProgramTemplateId == templateId)
+                {
+                    if (activePrograms[0].IsStaffTraining != isStaffTraining)
+                        throw new BusinessRuleException("Program.ModeMismatch", "Aktif program farklı bir kullanım akışına ait.");
                     return new StartStudentProgramResult(true, activePrograms[0].Id, template.Name,
                         "Bu program zaten aktif; mevcut ilerlemeniz korundu.");
+                }
                 if (activePrograms.Count > 0)
                     throw new BusinessRuleException("Program.ActiveTrainingExists",
                         "Yeni bir programa başlamadan önce aktif programınızı tamamlamalısınız.");
-                if (await db.StudentProgramProgresses.AsNoTracking().AnyAsync(item => item.UserId == userId, cancellationToken))
+                if (isStaffTraining)
+                {
+                    if (template.IsAssessment)
+                        throw new BusinessRuleException("Program.TrainingRequired", "Seviye tespitini eğitim programı olarak başlatamazsınız.");
+                }
+                else if (await db.StudentProgramProgresses.AsNoTracking().AnyAsync(item => item.UserId == userId, cancellationToken))
                 {
                     var recommendation = await GetNextProgramRecommendationAsync(userId, cancellationToken);
                     if (recommendation is null || recommendation.TemplateId != templateId
@@ -161,7 +174,8 @@ internal sealed class OwnedSpeedReadingStudentProgram(OwnedSpeedReadingDbContext
                     0,
                     0,
                     actorId,
-                    now);
+                    now,
+                    isStaffTraining);
                 progress.SetSchedule(
                     await OwnedSpeedReadingProgramSchedule.BuildAsync(db, template, null, cancellationToken),
                     actorId,
@@ -194,7 +208,7 @@ internal sealed class OwnedSpeedReadingStudentProgram(OwnedSpeedReadingDbContext
         var programTypeName = row.Template.ProgramType == 1 ? "Sınav Hazırlık" : "Standart Program";
         var visibleDay = row.Progress.IsActive && !row.Progress.CompletedDate.HasValue
             ? Math.Min(((row.Progress.CurrentWeek - 1) * 7) + row.Progress.CurrentDay,
-                SpeedReading.Application.DailyProgress.SpeedReadingDailyProgressRules.GetCalendarAvailableDay(row.Progress.AssignedDate, DateTime.UtcNow))
+                SpeedReading.Application.DailyProgress.SpeedReadingDailyProgressRules.GetAvailableDay(row.Progress.AssignedDate, DateTime.UtcNow, row.Progress.IsStaffTraining))
             : ((row.Progress.CurrentWeek - 1) * 7) + row.Progress.CurrentDay;
         var (week, day) = SpeedReading.Application.DailyProgress.SpeedReadingDailyProgressRules.GetWeekAndDay(Math.Max(visibleDay, 1));
         return new StudentProgramInfo(

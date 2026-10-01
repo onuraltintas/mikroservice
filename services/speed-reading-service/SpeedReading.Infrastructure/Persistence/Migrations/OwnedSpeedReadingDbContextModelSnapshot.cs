@@ -2869,6 +2869,10 @@ namespace SpeedReading.Infrastructure.Persistence.Migrations
                     b.Property<string>("ScheduleJson")
                         .HasColumnType("jsonb");
 
+                    b.Property<bool>("IsStaffTraining")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_staff_training");
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");

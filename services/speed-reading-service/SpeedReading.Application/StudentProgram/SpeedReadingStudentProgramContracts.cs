@@ -2,6 +2,7 @@ namespace SpeedReading.Application.StudentProgram;
 
 public interface ISpeedReadingStudentProgram
 {
+    Task<StartStudentProgramResult> StartStaffTrainingAsync(Guid userId, Guid templateId, CancellationToken cancellationToken);
     Task<NextStudentProgramRecommendation?> GetNextProgramRecommendationAsync(Guid userId, CancellationToken cancellationToken);
     Task<StartStudentProgramResult> ConfirmNextProgramAsync(Guid userId, ConfirmNextStudentProgramRequest request, CancellationToken cancellationToken);
     Task<StartStudentProgramResult> ApproveNextProgramAsync(Guid actorId, Guid userId, ConfirmNextStudentProgramRequest request,

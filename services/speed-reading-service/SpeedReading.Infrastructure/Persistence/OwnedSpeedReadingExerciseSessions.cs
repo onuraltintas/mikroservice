@@ -1007,12 +1007,19 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
 
     private async Task<Guid?> GetAgeGroupIdAsync(
         Guid studentId,
-        CancellationToken cancellationToken) =>
-        await db.UserProfiles
+        CancellationToken cancellationToken)
+    {
+        var trainingAge = await (from progress in db.StudentProgramProgresses.AsNoTracking()
+            join template in db.ProgramTemplates.AsNoTracking() on progress.ProgramTemplateId equals template.Id
+            where progress.UserId == studentId && progress.IsActive && progress.IsStaffTraining
+            select (Guid?)template.TargetAgeGroupConfigurationId).SingleOrDefaultAsync(cancellationToken);
+        if (trainingAge.HasValue) return trainingAge;
+        return await db.UserProfiles
             .AsNoTracking()
             .Where(item => item.UserId == studentId && item.IsActive)
             .Select(item => item.AgeGroupConfigurationId)
             .SingleOrDefaultAsync(cancellationToken);
+    }
 
     private async Task<SessionState> CreateSessionStateAsync(
         Guid exerciseId,

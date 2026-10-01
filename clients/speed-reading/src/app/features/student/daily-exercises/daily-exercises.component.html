@@ -12,9 +12,9 @@
       }
       <h1 class="de-header__title">Günlük İlerleme</h1>
     </div>
-    <a routerLink="/student/dashboard" class="de-back-btn">
+    <a [routerLink]="staffTraining ? '/student/training-programs' : '/student/dashboard'" class="de-back-btn">
       <span class="material-icons">dashboard</span>
-      Dashboard
+      {{ staffTraining ? 'Eğitim Programları' : 'Dashboard' }}
     </a>
   </div>
 

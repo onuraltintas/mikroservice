@@ -4,6 +4,8 @@ import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 import { ExerciseProgramService, DailyExercise, StudentProgressSummary } from '../../../core/services/exercise-program.service';
 import { BaseComponent } from '../../../core/components/base.component';
 import { ExerciseTypeService } from '../../../core/services/exercise-type.service';
+import { AuthService } from '../../../core/services/auth.service';
+import { canUseStaffTraining } from '../../../core/guards/staff-training.guard';
 
 /**
  * Daily Exercises Component
@@ -24,6 +26,7 @@ export class DailyExercisesComponent extends BaseComponent implements OnInit {
   // toaster inherited from BaseComponent
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
+  readonly staffTraining = canUseStaffTraining(inject(AuthService));
 
   // Signals for reactive state
   exercises = signal<DailyExercise[]>([]);
@@ -159,6 +162,7 @@ export class DailyExercisesComponent extends BaseComponent implements OnInit {
     this.router.navigate(
       ['/student/exercises/universal-player', exercise.exerciseId],
       {
+        queryParams: this.staffTraining ? { mode: 'staff-training' } : {},
         state: {
           fromDailyExercises: true,
           practiceMode: exercise.isCompleted,
@@ -361,6 +365,7 @@ export class DailyExercisesComponent extends BaseComponent implements OnInit {
     this.router.navigate(
       ['/student/exercises/universal-player', exercise.exerciseId],
       {
+        queryParams: this.staffTraining ? { mode: 'staff-training' } : {},
         state: {
           fromDailyExercises: true,
           fromHistoricalDay: true,

@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from './auth.service';
+import { canUseStaffTraining } from '../guards/staff-training.guard';
 
 export interface MenuItem {
   label: string;
@@ -22,6 +23,13 @@ export class NavigationService {
   ) { }
 
   getStudentMenuItems(): MenuItem[] {
+    if (canUseStaffTraining(this.authService)) {
+      return [
+        { label: 'Eğitim Programları', icon: 'school', route: '/student/training-programs' },
+        { label: 'Aktif Eğitimim', icon: 'fitness_center', route: '/student/daily-exercises' },
+        { label: 'Egzersiz Önizlemesi', icon: 'preview', route: '/student/exercises' }
+      ];
+    }
     const user = this.authService.currentUserValue;
     const isEditor = user?.roles?.includes('Editor');
     const canViewExercises = isEditor;

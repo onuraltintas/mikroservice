@@ -74,7 +74,7 @@ internal sealed class OwnedSpeedReadingPrograms(
             }
             if (!item.IsActive || item.CompletedDate.HasValue) return item;
             var visibleDay = Math.Min(((item.CurrentWeek - 1) * 7) + item.CurrentDay,
-                SpeedReading.Application.DailyProgress.SpeedReadingDailyProgressRules.GetCalendarAvailableDay(item.AssignedDate, DateTime.UtcNow));
+                SpeedReading.Application.DailyProgress.SpeedReadingDailyProgressRules.GetAvailableDay(item.AssignedDate, DateTime.UtcNow, progress.IsStaffTraining));
             var (week, day) = SpeedReading.Application.DailyProgress.SpeedReadingDailyProgressRules.GetWeekAndDay(visibleDay);
             return item with { CurrentWeek = week, CurrentDay = day };
         }).ToList();

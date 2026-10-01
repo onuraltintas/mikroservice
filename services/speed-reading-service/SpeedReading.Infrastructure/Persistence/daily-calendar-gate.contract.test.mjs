@@ -6,7 +6,7 @@ const backend = readFileSync(new URL('./OwnedSpeedReadingDailyProgress.cs', impo
 const dailyPage = readFileSync(new URL('../../../../clients/speed-reading/src/app/features/student/daily-exercises/daily-exercises.component.ts', import.meta.url), 'utf8');
 
 test('future program days are unavailable for listing and completion', () => {
-  assert.match(backend, /GetCalendarAvailableDay\(program\.Value\.Progress\.AssignedDate/);
+  assert.match(backend, /GetAvailableDay\(program\.Value\.Progress\.AssignedDate, DateTime\.UtcNow, program\.Value\.Progress\.IsStaffTraining/);
   assert.match(backend, /if \(dayNumber > visibleDay\)\s*return \[\]/);
   assert.match(backend, /DailyProgress\.DayLocked/);
 });

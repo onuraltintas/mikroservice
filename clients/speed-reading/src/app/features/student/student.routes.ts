@@ -5,6 +5,7 @@ import { assessmentGuard, assessmentCompletedGuard } from '../../core/guards/ass
 import { subscriptionGuard } from '../../core/guards/subscription.guard';
 import { staffOnboardingGuard } from '../../core/guards/staff-onboarding.guard';
 import { studentPageGuard } from '../../core/guards/student-page.guard';
+import { staffTrainingGuard } from '../../core/guards/staff-training.guard';
 
 export const studentRoutes: Routes = [
   {
@@ -12,6 +13,11 @@ export const studentRoutes: Routes = [
     canActivateChild: [studentPageGuard],
     loadComponent: () => import('./student-layout.component').then(m => m.StudentLayoutComponent),
     children: [
+      {
+        path: 'training-programs',
+        canActivate: [authGuard, staffTrainingGuard],
+        loadComponent: () => import('./training-programs/training-programs.component').then(m => m.TrainingProgramsComponent)
+      },
       {
         path: 'profile-setup',
         canActivate: [authGuard, staffOnboardingGuard],

@@ -1925,17 +1925,17 @@
 
             <ng-template #completeAllTpl>
                 <div class="next-program-card ultimate-completion">
-                    <h3>Eğitim sonrası ölçüm</h3>
+                    <h3>{{ staffTrainingMode ? 'Yeni bir eğitim seçin' : 'Eğitim sonrası ölçüm' }}</h3>
                     <div class="program-preview">
                         <div class="prog-icon gold">
                             <span class="material-icons">military_tech</span>
                         </div>
                         <div class="prog-info">
                             <h4>Programınız tamamlandı</h4>
-                            <p>Gelişiminizi değerlendirmek için eğitim sonrası ölçümü tamamlayın. Bu sonuç, sonraki çalışma planınıza rehberlik eder.</p>
+                            <p>{{ staffTrainingMode ? 'İlerlemeniz kaydedildi. Eğitim programları sekmesinden istediğiniz programı seçip devam edebilirsiniz.' : 'Gelişiminizi değerlendirmek için eğitim sonrası ölçümü tamamlayın. Bu sonuç, sonraki çalışma planınıza rehberlik eder.' }}</p>
                             <span class="reason-badge gold">
                                 <span class="material-icons">star</span>
-                                Sıradaki adım: ölçüm
+                                {{ staffTrainingMode ? 'Sıradaki adım: program seçimi' : 'Sıradaki adım: ölçüm' }}
                             </span>
                         </div>
                     </div>
@@ -1957,7 +1957,7 @@
                     class="btn-start-next" (click)="startPostTrainingAssessment()">
                     <div class="btn-content">
                         <span class="material-icons">dashboard</span>
-                        <span>EĞİTİM SONRASI ÖLÇÜME BAŞLA</span>
+                        <span>{{ staffTrainingMode ? 'EĞİTİM PROGRAMLARINI AÇ' : 'EĞİTİM SONRASI ÖLÇÜME BAŞLA' }}</span>
                     </div>
                 </button>
 

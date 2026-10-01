@@ -13,6 +13,18 @@ public sealed class SpeedReadingSubscriptionAccessMiddleware(RequestDelegate nex
         ISpeedReadingSubscription subscriptions,
         OwnedSpeedReadingDbContext db)
     {
+        if (context.User.Identity?.IsAuthenticated == true
+            && IsStudentTrainingRequest(context.Request.Path)
+            && !StaffTrainingAccess.IsAllowed(context.User)
+            && Guid.TryParse(context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? context.User.FindFirstValue("sub"), out var trainingUserId)
+            && await db.StudentProgramProgresses.AsNoTracking().AnyAsync(item => item.UserId == trainingUserId
+                && item.IsActive && item.IsStaffTraining, context.RequestAborted))
+        {
+            context.Response.StatusCode = StatusCodes.Status403Forbidden;
+            await context.Response.WriteAsJsonAsync(new { code = "StaffTrainingRoleRequired",
+                message = "Bu eğitim kaydı yalnız öğrenci rolü bulunmayan admin ve öğretmen hesaplarında kullanılabilir." }, context.RequestAborted);
+            return;
+        }
         if (context.User.Identity?.IsAuthenticated != true
             || !context.User.IsInRole("Student")
             || (HasStaffRole(context.User) && !IsStudentTrainingRequest(context.Request.Path))

@@ -1456,6 +1456,7 @@ public sealed class OwnedSpeedReadingDbContext(
         {
             entity.ToTable("student_program_progress");
             entity.Property(item => item.ScheduleJson).HasColumnType("jsonb");
+            entity.Property(item => item.IsStaffTraining).HasColumnName("is_staff_training");
             entity.Property(item => item.AverageSuccessRate).HasPrecision(5, 2);
             entity.HasIndex(item => new { item.UserId, item.IsActive, item.AssignedDate });
             entity.HasIndex(item => item.UserId)
