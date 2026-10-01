@@ -34,7 +34,7 @@ build)
   docker build -f Dockerfile.frontend -t eduivme/speed-reading-frontend:staff-training-20261001 .
   docker build -f Dockerfile.staff -t eduivme/staff-portal:staff-training-20261001 .
   ;;
-migrate) "${compose[@]}" -f "$release/production.override.yml" run --rm --no-deps speed-reading-migrations ;;
+migrate) "${compose[@]}" -f "$release/production.override.yml" run --rm --no-deps speed-reading-migrations --migrate-only ;;
 deploy) "${compose[@]}" -f "$release/production.override.yml" up -d --no-deps "${services[@]}" ;;
 rollback) "${compose[@]}" -f "$release/rollback.override.yml" up -d --no-deps "${services[@]}" ;;
 *) exit 2 ;;
