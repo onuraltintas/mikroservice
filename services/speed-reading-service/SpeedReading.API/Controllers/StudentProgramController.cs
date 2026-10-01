@@ -10,6 +10,13 @@ namespace SpeedReading.API.Controllers;
 [Authorize]
 public sealed class StudentProgramController(ISpeedReadingStudentProgram studentProgram) : ControllerBase
 {
+    [HttpGet("next-recommendation")]
+    public async Task<IActionResult> GetNextRecommendation(CancellationToken cancellationToken = default)
+    {
+        if (!TryGetCurrentUserId(out var userId)) return Unauthorized();
+        return Ok(await studentProgram.GetNextProgramRecommendationAsync(userId, cancellationToken));
+    }
+
     [HttpGet("my-program")]
     public async Task<IActionResult> GetMyProgram(CancellationToken cancellationToken = default)
     {
