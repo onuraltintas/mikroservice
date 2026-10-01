@@ -237,7 +237,13 @@ public sealed class CoachingSubscriptionService(
         CancellationToken cancellationToken = default) =>
         CreateBankTransferRequestAsync(userId, userName, userEmail, request, "Teacher", idempotencyKey, cancellationToken);
 
-    private async Task<CoachingBankTransferRequestSummary?> CreateBankTransferRequestAsync(
+    private Task<CoachingBankTransferRequestSummary?> CreateBankTransferRequestAsync(
+        Guid userId, string? userName, string? userEmail, CoachingBankTransferRequestCreate request,
+        string expectedAudience, string idempotencyKey, CancellationToken cancellationToken) =>
+        ExecuteWithRetryAsync(() => CreateBankTransferRequestCoreAsync(
+            userId, userName, userEmail, request, expectedAudience, idempotencyKey, cancellationToken), cancellationToken);
+
+    private async Task<CoachingBankTransferRequestSummary?> CreateBankTransferRequestCoreAsync(
         Guid userId,
         string? userName,
         string? userEmail,
@@ -432,7 +438,12 @@ public sealed class CoachingSubscriptionService(
             rows.Select(row => ToTransferSummary(row.request, row.plan)).ToArray(), pageNumber, pageSize, total);
     }
 
-    public async Task<CoachingBankTransferRequestSummary?> ReviewBankTransferRequestAsync(
+    public Task<CoachingBankTransferRequestSummary?> ReviewBankTransferRequestAsync(
+        Guid id, CoachingBankTransferReviewRequest request, Guid actorId, string idempotencyKey,
+        CancellationToken cancellationToken = default) =>
+        ExecuteWithRetryAsync(() => ReviewBankTransferRequestCoreAsync(id, request, actorId, idempotencyKey, cancellationToken), cancellationToken);
+
+    private async Task<CoachingBankTransferRequestSummary?> ReviewBankTransferRequestCoreAsync(
         Guid id,
         CoachingBankTransferReviewRequest request,
         Guid actorId,
@@ -701,11 +712,24 @@ public sealed class CoachingSubscriptionService(
         return new PagedResponse<CoachingSubscriptionSummary>(items, pageNumber, pageSize, total);
     }
 
-    public async Task<CoachingSubscriptionSummary?> CreateSubscriptionAsync(
+    public Task<CoachingSubscriptionSummary?> CreateSubscriptionAsync(
+        CoachingSubscriptionCreateRequest request, Guid actorId, CancellationToken cancellationToken = default)
+    {
+        var subscriptionId = Guid.NewGuid();
+        return ExecuteWithRetryAsync(() => CreateSubscriptionCoreAsync(request, actorId, subscriptionId, cancellationToken), cancellationToken);
+    }
+
+    private async Task<CoachingSubscriptionSummary?> CreateSubscriptionCoreAsync(
         CoachingSubscriptionCreateRequest request,
         Guid actorId,
+        Guid subscriptionId,
         CancellationToken cancellationToken = default)
     {
+        // A connection failure after COMMIT must not create a second license on retry.
+        if (await db.CoachingSubscriptions.AsNoTracking().AnyAsync(item => item.Id == subscriptionId, cancellationToken))
+        {
+            return await GetSubscriptionAsync(subscriptionId, cancellationToken);
+        }
         var userOwned = request.UserId.HasValue;
         var institutionOwned = request.InstitutionId.HasValue;
         if (userOwned == institutionOwned || request.UserId == Guid.Empty || request.InstitutionId == Guid.Empty)
@@ -769,6 +793,7 @@ public sealed class CoachingSubscriptionService(
 
         var subscription = new CoachingSubscription
         {
+            Id = subscriptionId,
             PlanId = plan.Id,
             UserId = request.UserId,
             UserName = NormalizeOptional(request.UserName, 200),
@@ -816,7 +841,11 @@ public sealed class CoachingSubscriptionService(
         return ToSubscriptionSummary(subscription, plan, (studentIds.Length, studentIds.Length));
     }
 
-    public async Task<CoachingSubscriptionSummary?> UpdateSubscriptionAsync(
+    public Task<CoachingSubscriptionSummary?> UpdateSubscriptionAsync(
+        Guid id, CoachingSubscriptionUpdateRequest request, Guid actorId, CancellationToken cancellationToken = default) =>
+        ExecuteWithRetryAsync(() => UpdateSubscriptionCoreAsync(id, request, actorId, cancellationToken), cancellationToken);
+
+    private async Task<CoachingSubscriptionSummary?> UpdateSubscriptionCoreAsync(
         Guid id,
         CoachingSubscriptionUpdateRequest request,
         Guid actorId,
@@ -960,7 +989,11 @@ public sealed class CoachingSubscriptionService(
             seats);
     }
 
-    public async Task<bool> AssignMyTeacherStudentSeatAsync(
+    public Task<bool> AssignMyTeacherStudentSeatAsync(
+        Guid teacherId, Guid studentId, CancellationToken cancellationToken = default) =>
+        ExecuteWithRetryAsync(() => AssignMyTeacherStudentSeatCoreAsync(teacherId, studentId, cancellationToken), cancellationToken);
+
+    private async Task<bool> AssignMyTeacherStudentSeatCoreAsync(
         Guid teacherId,
         Guid studentId,
         CancellationToken cancellationToken = default)
@@ -1376,6 +1409,21 @@ public sealed class CoachingSubscriptionService(
         }
 
         return false;
+    }
+
+    private Task<T> ExecuteWithRetryAsync<T>(Func<Task<T>> operation, CancellationToken cancellationToken)
+    {
+        var attempt = 0;
+        return db.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            // Reload state after a rolled-back attempt instead of saving stale tracked entities.
+            if (attempt++ > 0)
+            {
+                db.ChangeTracker.Clear();
+            }
+            return await operation();
+        });
     }
 
     private async Task<Dictionary<Guid, (int Total, int Active)>> GetSeatCountsAsync(

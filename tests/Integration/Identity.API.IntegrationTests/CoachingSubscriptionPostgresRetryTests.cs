@@ -5,6 +5,9 @@ using Coaching.Infrastructure.Data;
 using Coaching.Infrastructure.Management;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
+using System.Data.Common;
+using Npgsql;
 using Shared.IntegrationTests.Fixtures;
 
 namespace Identity.API.IntegrationTests;
@@ -19,10 +22,17 @@ public sealed class CoachingSubscriptionPostgresRetryTests(PostgresFixture postg
     [InlineData("grant-teacher")]
     [InlineData("update-teacher")]
     [InlineData("assign-seat")]
-    public async Task SubscriptionWrites_WorkWithProductionPostgresRetryPolicy(string operation)
+    [InlineData("create-transfer", true)]
+    [InlineData("review-transfer", true)]
+    [InlineData("grant-teacher", true)]
+    [InlineData("update-teacher", true)]
+    [InlineData("assign-seat", true)]
+    public async Task SubscriptionWrites_WorkWithProductionPostgresRetryPolicy(string operation, bool loseCommitAcknowledgement = false)
     {
+        var failure = new LostCommitAcknowledgement();
         await using var db = new CoachingDbContext(new DbContextOptionsBuilder<CoachingDbContext>()
-            .UseNpgsql(postgres.ConnectionString, options => options.EnableRetryOnFailure()).Options);
+            .UseNpgsql(postgres.ConnectionString, options => options.EnableRetryOnFailure(2, TimeSpan.Zero, null))
+            .AddInterceptors(failure).Options);
         // The fixture owns this disposable database; never use a production connection here.
         await db.Database.EnsureDeletedAsync();
         try
@@ -38,11 +48,12 @@ public sealed class CoachingSubscriptionPostgresRetryTests(PostgresFixture postg
             var transfer = new CoachingBankTransferRequest { UserId = user, PlanId = individualPlan.Id, Amount = 499, PaymentReference = "POSTGRES-REVIEW" };
             var teacherSubscription = new CoachingSubscription { PlanId = teacherPlan.Id, UserId = user, StartDate = DateTime.UtcNow.AddDays(-1), EndDate = DateTime.UtcNow.AddDays(364), Status = operation == "grant-teacher" ? "Suspended" : "Active" };
             db.CoachingSubscriptionPlans.AddRange(individualPlan, teacherPlan, institutionPlan);
-            db.CoachingBankTransferRequests.Add(transfer);
+            if (operation == "review-transfer") db.CoachingBankTransferRequests.Add(transfer);
             db.CoachingSubscriptions.Add(teacherSubscription);
             db.CoachingSubscriptionSettings.Add(new CoachingSubscriptionSettings { BankTransferEnabled = true, AccountHolder = "Test", BankName = "Test", Iban = "TR330006100519786457841326" });
             await db.SaveChangesAsync();
             db.ChangeTracker.Clear();
+            failure.Armed = loseCommitAcknowledgement;
             var service = new CoachingSubscriptionService(db, new IdentityAuthorization());
 
             switch (operation)
@@ -68,6 +79,7 @@ public sealed class CoachingSubscriptionPostgresRetryTests(PostgresFixture postg
                     break;
                 case "grant-teacher":
                     (await service.CreateSubscriptionAsync(new(teacherPlan.Id, user, null, null, null, [], DateTime.UtcNow, null), actor)).Should().NotBeNull();
+                    (await db.CoachingSubscriptions.CountAsync()).Should().Be(2);
                     break;
                 case "update-teacher":
                     (await service.UpdateSubscriptionAsync(teacherSubscription.Id, new("Active", DateTime.UtcNow.AddDays(365), null), actor)).Should().NotBeNull();
@@ -79,10 +91,28 @@ public sealed class CoachingSubscriptionPostgresRetryTests(PostgresFixture postg
                     (await db.CoachingSubscriptionSeats.CountAsync()).Should().Be(1);
                     break;
             }
+            failure.Failures.Should().Be(loseCommitAcknowledgement ? 1 : 0);
         }
         finally
         {
             await db.Database.EnsureDeletedAsync();
+        }
+    }
+
+    private sealed class LostCommitAcknowledgement : DbTransactionInterceptor
+    {
+        public bool Armed { get; set; }
+        public int Failures { get; private set; }
+        public override Task TransactionCommittedAsync(DbTransaction transaction, TransactionEndEventData eventData,
+            CancellationToken cancellationToken = default)
+        {
+            if (Armed)
+            {
+                Armed = false;
+                Failures++;
+                throw new NpgsqlException("Injected connection loss after commit", new TimeoutException());
+            }
+            return Task.CompletedTask;
         }
     }
 
