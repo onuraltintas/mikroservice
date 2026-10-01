@@ -1,0 +1,5 @@
+FROM nginx:1.27.5-alpine
+COPY staff-nginx.conf /etc/nginx/conf.d/default.conf
+COPY staff-portal/browser/ /usr/share/nginx/html/
+EXPOSE 80
+HEALTHCHECK --interval=10s --timeout=5s --retries=6 CMD wget --spider --no-verbose http://127.0.0.1/ || exit 1
