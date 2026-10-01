@@ -118,6 +118,10 @@ export class StudentRegisterComponent implements OnInit {
 
     private async handleGoogleRegistration(idToken: string) {
         if (this.isLoading()) return;
+        if (!this.hasRequiredLegalAcceptances) {
+            this.toaster.info('Önce güncel yasal metinleri inceleyip onaylayın, ardından Google ile kayıt düğmesine tekrar basın.');
+            return;
+        }
 
         this.isLoading.set(true);
         this.errorMessage.set(null);

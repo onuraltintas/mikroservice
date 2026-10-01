@@ -15,7 +15,9 @@ describe('StudentRegisterComponent Google registration', () => {
     const authState = new Subject<{ idToken?: string }>();
     const authService = { loginWithGoogle: vi.fn() };
     const toaster = { error: vi.fn(), info: vi.fn() };
-    createComponent(authState, authService, toaster);
+    const component = createComponent(authState, authService, toaster);
+    component.legalReady = false;
+    component.legalAcceptances = [];
     authState.next({ idToken: 'google-token' });
     await Promise.resolve();
     expect(authService.loginWithGoogle).not.toHaveBeenCalled();
@@ -36,7 +38,9 @@ describe('StudentRegisterComponent Google registration', () => {
 
     authState.next({ idToken: 'google-id-token' });
 
-    await vi.waitFor(() => expect(authService.loginWithGoogle).toHaveBeenCalledWith('google-id-token', []));
+    await vi.waitFor(() => expect(authService.loginWithGoogle).toHaveBeenCalledWith('google-id-token', [
+      { slug: 'privacy', version: 1 }, { slug: 'kvkk', version: 1 }, { slug: 'coaching-terms', version: 1 }
+    ]));
     expect(toaster.success).toHaveBeenCalledWith('Google hesabınızla devam edildi.');
   });
 
@@ -98,6 +102,11 @@ describe('StudentRegisterComponent Google registration', () => {
         { provide: ConfigurationService, useValue: {} }
       ]
     });
-    return TestBed.runInInjectionContext(() => new StudentRegisterComponent());
+    const component = TestBed.runInInjectionContext(() => new StudentRegisterComponent());
+    component.legalReady = true;
+    component.legalAcceptances = [
+      { slug: 'privacy', version: 1 }, { slug: 'kvkk', version: 1 }, { slug: 'coaching-terms', version: 1 }
+    ];
+    return component;
   }
 });

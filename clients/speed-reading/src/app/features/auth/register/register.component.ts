@@ -108,6 +108,11 @@ export class RegisterComponent implements AfterViewInit, OnDestroy {
   }
 
   private handleGoogleResponse(response: any): void {
+    if (this.loading) return;
+    if (!this.hasRequiredLegalAcceptances) {
+      this.error = 'Önce güncel yasal metinleri inceleyip onaylayın, ardından Google ile kayıt düğmesine tekrar basın.';
+      return;
+    }
     this.loading = true;
     this.error = '';
 

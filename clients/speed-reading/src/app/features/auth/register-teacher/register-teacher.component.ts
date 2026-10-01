@@ -92,6 +92,11 @@ export class RegisterTeacherComponent implements AfterViewInit, OnDestroy {
   }
 
   private handleGoogleResponse(response: any): void {
+    if (this.isLoading) return;
+    if (!this.hasRequiredLegalAcceptances) {
+      this.error = 'Önce güncel yasal metinleri inceleyip onaylayın, ardından Google ile kayıt düğmesine tekrar basın.';
+      return;
+    }
     this.isLoading = true;
     this.error = '';
     this.successMessage = '';

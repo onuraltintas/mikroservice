@@ -90,7 +90,10 @@ export class LoginComponent {
             const errorMsg = error.error?.message || error.error?.description || 'Bir hata oluştu.';
 
             /* MAINTENANCE MODE HANDLING & REGISTRATION CHECK */
-            if (errorCode === 'System.MaintenanceMode') {
+            if (errorCode === 'Auth.LegalAcceptanceRequired') {
+                this.toaster.info('Yeni hesabınız için kayıt ekranındaki yasal metinleri inceleyip onaylayın, ardından Google ile kayıt düğmesini kullanın.');
+                await this.router.navigate(['/auth/register/student']);
+            } else if (errorCode === 'System.MaintenanceMode') {
                 this.errorMessage.set(errorMsg || 'Sistem bakım modundadır.');
                 this.toaster.warning('⚠️ Sistem Bakım Modu Aktif');
             } else if (errorCode === 'Auth.UserInactive') {

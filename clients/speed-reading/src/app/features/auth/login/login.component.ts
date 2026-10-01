@@ -142,6 +142,13 @@ export class LoginComponent implements AfterViewInit, OnDestroy, OnInit {
         this.handleAuthenticatedResponse(authResponse);
       },
       error: (err) => {
+        if (err.error?.code === 'Auth.LegalAcceptanceRequired') {
+          this.loading = false;
+          void this.router.navigate(['/auth/register'], {
+            queryParams: { returnUrl: this.invitationReturnUrl }
+          });
+          return;
+        }
         if (err.error?.Message) {
           this.error = err.error.Message;
         } else if (err.error?.message) {
