@@ -718,7 +718,8 @@ public sealed class CoachingSubscriptionService(
             cancellationToken);
         if (plan is null
             || (userOwned && plan.Audience is not ("Individual" or "Teacher"))
-            || (institutionOwned && plan.Audience != "Institution"))
+            || (institutionOwned && plan.Audience != "Institution")
+            || (plan.Audience is "Teacher" or "Institution" && plan.IncludedStudentSeats is null))
         {
             return null;
         }

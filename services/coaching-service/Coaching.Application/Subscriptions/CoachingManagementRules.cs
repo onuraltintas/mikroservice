@@ -62,7 +62,9 @@ public static class CoachingManagementRules
         && (isContactOnly ? price == 0 : price > 0)
         && BillingPeriods.Contains(billingPeriod)
         && durationDays is >= 1 and <= 3650
-        && (audience is not ("Institution" or "Teacher") || includedStudentSeats is > 0 and <= 100_000)
+        && (audience is not ("Institution" or "Teacher")
+            || includedStudentSeats is > 0 and <= 100_000
+            || (isContactOnly && includedStudentSeats is null))
         && (audience != "Individual" || includedStudentSeats is null);
 
     public static string NormalizeIban(string? value) =>
