@@ -10,7 +10,7 @@ import { ToasterService } from '../../../core/services/toaster.service';
 import { CoachingSubscriptionsComponent } from './coaching-subscriptions';
 
 describe('CoachingSubscriptionsComponent', () => {
-  it('lets administrators create an independent teacher plan with a seat capacity', async () => {
+  it.each([false, true])('lets administrators create a teacher plan; contact-only=%s', async (contactOnly) => {
     const createdPlans: CoachingSubscriptionPlanRequest[] = [];
     const service = {
       getPlans: vi.fn(() => of([])),
@@ -36,19 +36,25 @@ describe('CoachingSubscriptionsComponent', () => {
     fixture.detectChanges();
     const component = fixture.componentInstance;
     component.startPlanCreate();
+    expect(component.planDraft.isPublic).toBe(false);
     component.planDraft = {
       ...component.planDraft,
       name: 'Bağımsız öğretmen',
       slug: 'bagimsiz-ogretmen',
       audience: 'Teacher',
-      price: 1000,
-      includedStudentSeats: 12
+      price: contactOnly ? 0 : 1000,
+      isContactOnly: contactOnly,
+      includedStudentSeats: contactOnly ? null : 12
     };
+
+    fixture.detectChanges();
+    const seatInput = fixture.nativeElement.querySelector('input[name="planSeats"]') as HTMLInputElement;
+    expect(seatInput.required).toBe(!contactOnly);
 
     await component.savePlan();
 
     expect(createdPlans).toHaveLength(1);
-    expect(createdPlans[0]).toMatchObject({ audience: 'Teacher', includedStudentSeats: 12, name: 'Bağımsız öğretmen' });
+    expect(createdPlans[0]).toMatchObject({ audience: 'Teacher', includedStudentSeats: contactOnly ? null : 12, name: 'Bağımsız öğretmen' });
   });
 
   it('requires a visible reason before rejecting an EFT request', async () => {
