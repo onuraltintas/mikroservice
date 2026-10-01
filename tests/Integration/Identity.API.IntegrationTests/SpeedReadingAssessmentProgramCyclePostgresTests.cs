@@ -48,6 +48,10 @@ public sealed class SpeedReadingAssessmentProgramCyclePostgresTests(PostgresFixt
             var generator = db.GetService<IMigrationsSqlGenerator>();
             foreach (var command in generator.Generate(migration.DownOperations, db.Model))
                 await db.Database.ExecuteSqlRawAsync(command.CommandText);
+            await db.Database.ExecuteSqlRawAsync("""
+                CREATE UNIQUE INDEX IF NOT EXISTS ix_assessment_attempts_student_id_phase_form_version_active
+                ON speed_reading.assessment_attempts (student_id, phase, form_version) WHERE status = 1
+                """);
             foreach (var command in generator.Generate(migration.UpOperations, db.Model))
                 await db.Database.ExecuteSqlRawAsync(command.CommandText);
             Assert.Equal(2, await db.AssessmentAttempts.CountAsync());
@@ -67,6 +71,15 @@ public sealed class SpeedReadingAssessmentProgramCyclePostgresTests(PostgresFixt
             var history = await service.GetAttemptHistoryAsync(user, CancellationToken.None);
             Assert.Equal(first.Id, history.Single(item => item.Id == historicalPost.Id).ProgramProgressId);
             Assert.Equal(2, history.Count);
+            var oldInProgress = AssessmentAttempt.Start(Guid.NewGuid(), user, AssessmentAttemptPhase.Retention,
+                "tr-retention-v1", "tr", null, 3, now.AddDays(-20), null);
+            oldInProgress.BindToProgram(first.Id);
+            var newInProgress = AssessmentAttempt.Start(Guid.NewGuid(), user, AssessmentAttemptPhase.Retention,
+                "tr-retention-v1", "tr", null, 3, now, null);
+            newInProgress.BindToProgram(latest.Id);
+            db.AssessmentAttempts.AddRange(oldInProgress, newInProgress);
+            await db.SaveChangesAsync();
+            Assert.Equal(4, await db.AssessmentAttempts.CountAsync());
         }
         finally
         {
