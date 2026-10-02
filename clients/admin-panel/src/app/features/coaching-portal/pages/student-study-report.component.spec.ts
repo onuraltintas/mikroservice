@@ -33,4 +33,20 @@ describe('StudentStudyReportComponent', () => {
     expect(component.report()).toBeNull(); expect(component.busy()).toBe(false);
     expect(component.error()).toBeTruthy();
   });
+  it('labels exam sources separately and shows topic study and answer statistics', () => {
+    const { fixture, component, http } = setup(); component.load();
+    http.expectOne(r => r.url.endsWith('/reports')).flush({ success: true, data: {
+      fromDate: component.fromDate, toDate: component.toDate, reason: 'CurrentStatusOfScheduledWork', source: 'StudentReported',
+      scheduledTasks: 1, completedTasks: 0, completionPercentage: 0, plannedMinutes: 30, actualMinutes: null,
+      topics: [{ topicId: 'topic', topicName: 'Kesirler', scheduledTasks: 1, completedTasks: 0, plannedMinutes: 30, actualMinutes: null }],
+      examGroups: [{ source: 'StudentReported', examType: 'Mock', maxScore: 100, count: 1, averagePercentage: 80 },
+        { source: 'TeacherRecorded', examType: 'Mock', maxScore: 100, count: 1, averagePercentage: 70 }],
+      lessonResults: [{ source: 'StudentReported', examType: 'Mock', lessonName: 'Matematik', topicName: 'Kesirler', questionCount: 10, correct: 8, wrong: 1, empty: 1 }]
+    } });
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Öğretmen kaydı');
+    expect(fixture.nativeElement.textContent).toContain('Kesirler');
+    expect(fixture.nativeElement.textContent).toContain('Matematik');
+    expect(fixture.nativeElement.textContent).toContain('8 / 1 / 1');
+  });
 });
