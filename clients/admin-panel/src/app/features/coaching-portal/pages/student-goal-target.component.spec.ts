@@ -4,6 +4,16 @@ import { CoachingStudyPlanningService } from '../../../core/services/coaching-st
 import { StudentGoalTargetComponent } from './student-goal-target.component';
 
 describe('StudentGoalTargetComponent', () => {
+  it('shows the linked catalog name and warns when its record is inactive', () => {
+    const { component, fixture } = setup();
+    component.open();
+    component.target.set({ goalId: 'goal', version: 3, targetSchoolId: 'school', targetUniversityProgramId: null,
+      canEdit: true, catalogTarget: { name: 'Science School', detail: 'Ankara / Center', isActive: false } });
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Science School');
+    expect(fixture.nativeElement.textContent).toContain('Ankara / Center');
+    expect(fixture.nativeElement.textContent).toContain('pasif');
+  });
   function setup(canEdit = true) {
     const target = { goalId: 'goal', version: 3, targetSchoolId: null, targetUniversityProgramId: null, canEdit };
     const service = {
