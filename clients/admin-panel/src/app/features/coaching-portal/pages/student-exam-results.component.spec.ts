@@ -34,6 +34,15 @@ describe('StudentExamResultsComponent', () => {
     component.confirmed = true; component.save(); expect(service.create).not.toHaveBeenCalled();
     component.changed(); expect(component.confirmed).toBe(false);
   });
+  it('allows lesson totals without mixing them with topic rows from the same lesson', () => {
+    const { component, fixture } = setup();
+    component.searchTopics(); fixture.detectChanges();
+    const button = [...fixture.nativeElement.querySelectorAll('button')].find((x: any) => x.textContent.includes('Ders toplamını ekle')) as HTMLButtonElement | undefined;
+    expect(button).toBeDefined();
+    button!.click(); fixture.detectChanges();
+    expect(component.lessons).toEqual([expect.objectContaining({ lessonId: 'lesson', topicId: null })]);
+    component.addTopic('topic'); expect(component.lessons.length).toBe(1);
+  });
   it('locks pending writes and keeps the draft after conflict without allowing a blind retry', () => {
     const { component, service } = setup();
     const pending = new Subject<any>(); service.create.mockReturnValueOnce(pending);
