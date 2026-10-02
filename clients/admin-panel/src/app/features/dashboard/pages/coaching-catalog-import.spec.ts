@@ -2,13 +2,13 @@ import { TestBed } from '@angular/core/testing';
 import { of, Subject } from 'rxjs';
 import { vi } from 'vitest';
 import { AuthService } from '../../../core/auth/auth.service';
-import { CoachingCatalogService } from '../../../core/services/coaching-catalog.service';
+import { CoachingCatalogImportReview, CoachingCatalogService } from '../../../core/services/coaching-catalog.service';
 import { ToasterService } from '../../../core/services/toaster.service';
 import { CoachingCatalogImportComponent } from './coaching-catalog-import';
 
 describe('CoachingCatalogImportComponent', () => {
   function setup(permitted = true) {
-    const review = { fingerprint: 'hash', counts: { 'lessons.json': 1 }, newRecords: 1 };
+    const review: CoachingCatalogImportReview = { fingerprint: 'hash', counts: { 'lessons.json': 1 }, newRecords: 1 };
     const service = { previewImport: vi.fn(() => of(review)), approveImport: vi.fn(() => of({ changed: 1 })), publishImport: vi.fn(() => of({ changed: 1 })) };
     const toaster = { confirm: vi.fn(async () => true), success: vi.fn() };
     TestBed.configureTestingModule({ imports: [CoachingCatalogImportComponent], providers: [

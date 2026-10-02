@@ -53,6 +53,8 @@ export interface CoachingCatalogFilter {
 
 export type CoachingCatalogSaveRequest = Partial<Pick<CoachingCatalogRow, 'gradeNumber' | 'examCode' | 'lessonId' | 'unitId' | 'parentId' | 'displayOrder' | 'estimatedMinutes' | 'universityName' | 'programCode' | 'scoreType' | 'minimumScore' | 'scoreYear' | 'provinceId' | 'districtId'>> & { name: string; reason: string; fingerprint?: string };
 export interface CoachingCatalogEditDocument { fingerprint: string; data: CoachingCatalogRow; }
+export interface CoachingCatalogImportRequest { source: string; files: Record<string, string>; fingerprint?: string; reason?: string; }
+export interface CoachingCatalogImportReview { fingerprint: string; counts: Record<string, number>; newRecords: number; }
 
 export interface CoachingCatalogUsage {
   id: string;
@@ -68,6 +70,15 @@ export interface CoachingCatalogUsage {
 @Injectable({ providedIn: 'root' })
 export class CoachingCatalogService {
   private readonly http = inject(HttpClient);
+  previewImport(request: CoachingCatalogImportRequest) {
+    return this.http.post<{ data: CoachingCatalogImportReview }>(`${environment.apiUrl}/coaching-admin/catalog-imports/preview`, request).pipe(map(response => response.data));
+  }
+  approveImport(request: CoachingCatalogImportRequest) {
+    return this.http.post<{ data: { changed: number } }>(`${environment.apiUrl}/coaching-admin/catalog-imports/approve`, request).pipe(map(response => response.data));
+  }
+  publishImport(request: CoachingCatalogImportRequest) {
+    return this.http.post<{ data: { changed: number } }>(`${environment.apiUrl}/coaching-admin/catalog-imports/publish`, request).pipe(map(response => response.data));
+  }
 
   get(kind: CoachingCatalogKind, id: string) {
     return this.http.get<{ data: CoachingCatalogEditDocument }>(`${environment.apiUrl}/coaching-admin/catalog/${kind}/${encodeURIComponent(id)}`)
