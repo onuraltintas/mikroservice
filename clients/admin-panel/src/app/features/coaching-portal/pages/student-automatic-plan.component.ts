@@ -77,6 +77,7 @@ export class StudentAutomaticPlanComponent implements OnInit {
       || this.selected.some(x => !Number.isInteger(x.minutes) || x.minutes! < 1 || x.minutes! > 1440)) {
       this.error.set('Geçerli bir başlangıç tarihi, 1-90 gün ve her konu için 1-1440 dakika belirtin.'); return;
     }
+    this.saveConfirmed = false;
     this.generating.set(true); this.preview.set(null); this.error.set(null);
     this.service.previewAutomatic({ startDate: this.startDate, days: this.days, expectedAvailabilityVersion: hours.version,
       topics: this.selected.map(x => ({ topicId: x.topic.id, requiredMinutes: x.minutes })) })
