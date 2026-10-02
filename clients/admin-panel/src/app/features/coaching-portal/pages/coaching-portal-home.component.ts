@@ -5,11 +5,12 @@ import { AuthService } from '../../../core/auth/auth.service';
 import { CoachingPortalViewService } from '../coaching-portal-view.service';
 import { CoachingPortalService, StudentAssignment } from '../../../core/services/coaching-portal.service';
 import { StaffPortalRedirectService } from '../staff-portal-redirect.service';
+import { StudentStudyTodayComponent } from './student-study-today.component';
 
 @Component({
   selector: 'app-coaching-portal-home',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, StudentStudyTodayComponent],
   templateUrl: './coaching-portal-home.component.html',
   styleUrl: './coaching-portal-home.component.scss'
 })
