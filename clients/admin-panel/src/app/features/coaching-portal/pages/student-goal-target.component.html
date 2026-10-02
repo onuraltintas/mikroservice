@@ -1,0 +1,36 @@
+<div class="mt-4 rounded-xl border border-slate-200 p-4 dark:border-slate-700">
+  <button *ngIf="!expanded()" type="button" (click)="open()" class="text-sm font-semibold text-indigo-600 dark:text-indigo-300">Okul / üniversite hedefini görüntüle</button>
+  <ng-container *ngIf="expanded()">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <h3 class="text-sm font-semibold">Okul / üniversite hedefi</h3>
+      <button type="button" (click)="open()" [disabled]="busy() || saving()" class="text-sm underline disabled:opacity-50">Yeniden yükle</button>
+    </div>
+    <p *ngIf="busy()" role="status" class="mt-2 text-sm">Yükleniyor…</p>
+    <p *ngIf="error()" role="alert" class="mt-2 text-sm text-red-600 dark:text-red-300">{{ error() }}</p>
+    <p *ngIf="success()" role="status" class="mt-2 text-sm text-emerald-700 dark:text-emerald-300">{{ success() }}</p>
+    <ng-container *ngIf="target() as current">
+      <p class="mt-2 text-sm text-slate-500">{{ current.targetSchoolId ? 'Bir okul hedefi bağlı.' : current.targetUniversityProgramId ? 'Bir üniversite programı bağlı.' : 'Henüz okul veya üniversite programı bağlanmadı.' }}</p>
+      <p *ngIf="!current.canEdit" class="mt-2 text-sm text-slate-500">Bu hedefi öğretmen oluşturdu. Bağlantıyı yalnız yetkili öğretmen düzenleyebilir.</p>
+      <form *ngIf="current.canEdit" (ngSubmit)="searchTargets()" class="mt-3">
+        <fieldset [disabled]="busy() || saving() || stale()" class="grid gap-3 sm:grid-cols-2">
+          <label class="text-sm">Hedef türü<select [ngModel]="kind" (ngModelChange)="changeKind($event)" name="kind" class="mt-1 w-full rounded-lg border bg-transparent p-2"><option value="school">Okul</option><option value="program">Üniversite programı</option></select></label>
+          <label class="text-sm">{{ kind === 'school' ? 'Okul adı' : 'Üniversite, bölüm veya program kodu' }}<input [(ngModel)]="query" name="query" maxlength="200" class="mt-1 w-full rounded-lg border bg-transparent p-2"></label>
+          <label *ngIf="kind === 'school'" class="text-sm">Şehir (tam adı)<input [(ngModel)]="city" name="city" maxlength="100" class="mt-1 w-full rounded-lg border bg-transparent p-2"></label>
+          <label *ngIf="kind === 'school'" class="text-sm">İlçe (tam adı)<input [(ngModel)]="district" name="district" maxlength="100" class="mt-1 w-full rounded-lg border bg-transparent p-2"></label>
+          <label *ngIf="kind === 'program'" class="text-sm">Puan türü<input [(ngModel)]="scoreType" name="scoreType" maxlength="30" placeholder="Örn. SAY" class="mt-1 w-full rounded-lg border bg-transparent p-2"></label>
+          <div class="flex items-end gap-3"><button type="submit" class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">Ara</button><button *ngIf="current.targetSchoolId || current.targetUniversityProgramId" type="button" (click)="clear()" class="text-sm underline">Bağlantıyı kaldır</button></div>
+        </fieldset>
+      </form>
+      <p *ngIf="searched && !results().length" class="mt-3 text-sm text-slate-500">Aktif kayıt bulunamadı. Filtreleri değiştirebilirsiniz.</p>
+      <p *ngIf="results().length" class="mt-3 text-xs text-slate-500">Taban puanlar yalnız katalog bilgisidir; yerleşme garantisi veya tahmini değildir. Bilinmeyen puan/yıl gösterilmez.</p>
+      <ul class="mt-3 space-y-2">
+        <li *ngFor="let item of results()" class="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-slate-50 p-3 dark:bg-slate-800">
+          <div><p class="text-sm font-medium">{{ item.label }}</p><p class="text-xs text-slate-500">{{ item.detail }}</p><p *ngIf="item.minimumScore !== null" class="text-xs text-slate-500">Taban puan: {{ item.minimumScore }} · Veri yılı: {{ item.scoreYear ?? 'Bilinmiyor' }}</p></div>
+          <button type="button" (click)="choose(item.id)" [disabled]="busy() || saving() || stale()" class="rounded-lg border border-indigo-200 px-3 py-2 text-sm font-semibold text-indigo-700 disabled:opacity-50 dark:text-indigo-300">Bu hedefi bağla</button>
+        </li>
+      </ul>
+      <div *ngIf="searched && total > 20" class="mt-3 flex items-center gap-3 text-sm"><button type="button" (click)="searchTargets(page - 1)" [disabled]="page <= 1 || busy() || saving() || stale()">Önceki</button><span>Sayfa {{ page }} · {{ total }} kayıt</span><button type="button" (click)="searchTargets(page + 1)" [disabled]="page * 20 >= total || busy() || saving() || stale()">Sonraki</button></div>
+    </ng-container>
+    <p *ngIf="saving()" role="status" class="mt-2 text-sm">Bağlantı kaydediliyor…</p>
+  </ng-container>
+</div>

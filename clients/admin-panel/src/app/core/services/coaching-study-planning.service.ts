@@ -26,12 +26,33 @@ export interface StudyWindow { day: StudyDay; startMinute: number; endMinute: nu
 export interface StudyAvailability { version: number; timeZoneId: string; windows: StudyWindow[] }
 export interface StudyAvailabilityUpdate { expectedVersion: number | null; timeZoneId: string; windows: StudyWindow[] }
 interface ApiResult<T> { success: boolean; data: T }
+export interface SchoolTarget { id: string; name: string; city: string; district: string; minimumScore: number | null; scoreYear: number | null }
+export interface UniversityTarget { id: string; name: string; universityName: string; programCode: string | null; scoreType: string | null; minimumScore: number | null; scoreYear: number | null }
+export interface TargetPage<T> { items: T[]; totalCount: number; pageNumber: number; pageSize: number }
+export interface GoalTarget { goalId: string; version: number; targetSchoolId: string | null; targetUniversityProgramId: string | null; canEdit: boolean }
 
 @Injectable({ providedIn: 'root' })
 export class CoachingStudyPlanningService {
   private readonly http = inject(HttpClient);
   private readonly url = `${environment.apiUrl}/coaching/study-planning/plans`;
   private readonly availabilityUrl = `${environment.apiUrl}/coaching/study-planning/availability`;
+  private readonly targetUrl = `${environment.apiUrl}/coaching/study-planning/targets`;
+
+  searchSchools(search: string, city: string, district: string, pageNumber = 1) {
+    const params = new HttpParams().set('search', search.trim()).set('city', city.trim()).set('district', district.trim()).set('pageNumber', pageNumber).set('pageSize', 20);
+    return this.http.get<ApiResult<TargetPage<SchoolTarget>>>(`${this.targetUrl}/schools`, { params }).pipe(map(result => result.data));
+  }
+  searchPrograms(search: string, scoreType: string, pageNumber = 1) {
+    const params = new HttpParams().set('search', search.trim()).set('scoreType', scoreType.trim()).set('pageNumber', pageNumber).set('pageSize', 20);
+    return this.http.get<ApiResult<TargetPage<UniversityTarget>>>(`${this.targetUrl}/university-programs`, { params }).pipe(map(result => result.data));
+  }
+  getGoalTarget(goalId: string) {
+    return this.http.get<ApiResult<GoalTarget>>(`${environment.apiUrl}/coaching/study-planning/goals/${encodeURIComponent(goalId)}/target`).pipe(map(result => result.data));
+  }
+  saveGoalTarget(goalId: string, expectedVersion: number, targetUniversityProgramId: string | null, targetSchoolId: string | null) {
+    return this.http.put<ApiResult<GoalTarget>>(`${environment.apiUrl}/coaching/study-planning/goals/${encodeURIComponent(goalId)}/target`,
+      { expectedVersion, targetUniversityProgramId, targetSchoolId }).pipe(map(result => result.data));
+  }
 
   getAvailability() {
     return this.http.get<ApiResult<StudyAvailability>>(this.availabilityUrl).pipe(map(result => result.data));
