@@ -9,6 +9,10 @@ import { ToasterService } from '../../../core/services/toaster.service';
 import { LocationService } from '../../../core/services/location.service';
 
 describe('CoachingCatalogComponent', () => {
+  it('provides the controlled import screen to global catalog managers', () => {
+    const { fixture } = create(); fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('app-coaching-catalog-import')).not.toBeNull();
+  });
   it('filters topics by hierarchy and clears downstream choices before the next query', () => {
     const { component, service } = create();
     component.changeKind('topics');
