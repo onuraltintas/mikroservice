@@ -4,7 +4,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
-import { AutomaticStudyPreview, CoachingStudyPlanningService, StudyAvailability, StudyTopic, TargetPage } from '../../../core/services/coaching-study-planning.service';
+import { AutomaticStudyPreview, CoachingStudyPlanningService, StudyAvailability, StudyPlan, StudyTopic, TargetPage } from '../../../core/services/coaching-study-planning.service';
 
 @Component({
   selector: 'app-student-automatic-plan', standalone: true,
@@ -21,6 +21,8 @@ export class StudentAutomaticPlanComponent implements OnInit {
   readonly loading = signal(false);
   readonly searching = signal(false);
   readonly generating = signal(false);
+  readonly saving = signal(false);
+  readonly savedPlan = signal<StudyPlan | null>(null);
   readonly stale = signal(false);
   readonly error = signal<string | null>(null);
   selected: { topic: StudyTopic; minutes: number | null }[] = [];
@@ -29,26 +31,29 @@ export class StudentAutomaticPlanComponent implements OnInit {
   examCode = '';
   startDate = '';
   days = 7;
+  title = '';
+  saveConfirmed = false;
   dirty = false;
 
   ngOnInit() { this.loadHours(); }
-  busy() { return this.loading() || this.searching() || this.generating(); }
+  busy() { return this.loading() || this.searching() || this.generating() || this.saving(); }
+  locked() { return this.busy() || this.savedPlan() !== null; }
   loadHours() {
-    if (this.busy()) return;
+    if (this.locked()) return;
     this.loading.set(true); this.availability.set(null); this.preview.set(null); this.error.set(null);
     this.service.getAvailability().pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.loading.set(false)))
       .subscribe({ next: hours => { this.availability.set(hours); this.stale.set(false); },
         error: () => this.error.set('Çalışma saatleri yüklenemedi. Önce saatlerinizi belirleyin veya yeniden yükleyin.') });
   }
   searchTopics(pageNumber = 1) {
-    if (this.busy()) return;
+    if (this.locked()) return;
     this.searching.set(true); this.error.set(null); this.results.set(null);
     this.service.searchTopics(this.query, this.gradeNumber, this.examCode, pageNumber)
       .pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.searching.set(false)))
       .subscribe({ next: result => this.results.set(result), error: () => this.error.set('Konular yüklenemedi. Filtreleri kontrol edip tekrar deneyin.') });
   }
   addTopic(id: string) {
-    if (this.busy() || this.selected.length >= 500 || this.selected.some(x => x.topic.id === id)) return;
+    if (this.locked() || this.selected.length >= 500 || this.selected.some(x => x.topic.id === id)) return;
     const topic = this.results()?.items.find(x => x.id === id);
     if (!topic) return;
     const minutes = topic.estimatedMinutes;
@@ -56,14 +61,14 @@ export class StudentAutomaticPlanComponent implements OnInit {
     this.changed();
   }
   removeTopic(id: string) {
-    if (this.busy()) return;
+    if (this.locked()) return;
     this.selected = this.selected.filter(x => x.topic.id !== id); this.changed();
   }
-  changed() { this.preview.set(null); this.dirty = true; }
+  changed() { if (this.locked()) return; this.preview.set(null); this.saveConfirmed = false; this.dirty = true; }
   topicName(id: string) { return this.selected.find(x => x.topic.id === id)?.topic.name ?? 'Konu'; }
   generate() {
     const hours = this.availability();
-    if (this.busy() || this.stale() || !hours) return;
+    if (this.locked() || this.stale() || !hours) return;
     const date = /^\d{4}-\d{2}-\d{2}$/.test(this.startDate) ? new Date(`${this.startDate}T00:00:00Z`) : new Date(NaN);
     const lastDate = new Date(date.getTime() + (this.days - 1) * 86400000);
     if (!Number.isFinite(date.getTime()) || date.toISOString().slice(0, 10) !== this.startDate || this.startDate < '0001-01-01'
@@ -81,9 +86,27 @@ export class StudentAutomaticPlanComponent implements OnInit {
         else this.error.set(typeof error?.error?.message === 'string' ? error.error.message : 'Önizleme oluşturulamadı. Seçimleriniz korundu; tekrar deneyin.');
       } });
   }
+  saveDraft() {
+    const preview = this.preview();
+    if (this.locked() || this.stale() || !preview || !this.saveConfirmed) return;
+    if (!this.title.trim() || this.title.trim().length > 200) { this.error.set('1-200 karakterlik bir plan başlığı girin.'); return; }
+    this.saving.set(true); this.error.set(null);
+    this.service.saveAutomaticDraft({ title: this.title.trim(),
+      preview: { startDate: this.startDate, days: this.days, expectedAvailabilityVersion: preview.availabilityVersion,
+        topics: this.selected.map(x => ({ topicId: x.topic.id, requiredMinutes: x.minutes })) },
+      expectedActiveRevisionId: preview.activeRevisionId, expectedActiveRevisionVersion: preview.activeRevisionVersion })
+      .pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.saving.set(false)))
+      .subscribe({ next: plan => { this.savedPlan.set(plan); this.dirty = false; this.saveConfirmed = false; },
+        error: error => {
+          this.saveConfirmed = false;
+          if (error?.status === 409) { this.stale.set(true); this.preview.set(null); }
+          this.error.set(typeof error?.error?.message === 'string' ? error.error.message : 'Taslak kaydedilemedi. Seçimleriniz korundu. Mevcut taslağı çalışma planlarından kontrol edin.');
+        } });
+  }
   canLeavePage() {
+    if (this.saving()) return false;
     return !this.dirty || (typeof window !== 'undefined' && window.confirm('Kaydedilmemiş plan seçimlerinden vazgeçerek ayrılmak istiyor musunuz?'));
   }
   @HostListener('window:beforeunload', ['$event'])
-  beforeUnload(event: BeforeUnloadEvent) { if (this.dirty) { event.preventDefault(); event.returnValue = ''; } }
+  beforeUnload(event: BeforeUnloadEvent) { if (this.dirty || this.saving()) { event.preventDefault(); event.returnValue = ''; } }
 }

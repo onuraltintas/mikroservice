@@ -32,6 +32,7 @@ export interface TargetPage<T> { items: T[]; totalCount: number; pageNumber: num
 export interface GoalTarget { goalId: string; version: number; targetSchoolId: string | null; targetUniversityProgramId: string | null; canEdit: boolean; catalogTarget?: { name: string; detail: string; isActive: boolean } | null }
 export interface StudyTopic { id: string; name: string; lessonName: string; unitName: string; gradeNumber: number | null; examCode: string | null; estimatedMinutes: number | null }
 export interface AutomaticStudyRequest { startDate: string; days: number; expectedAvailabilityVersion: number; topics: { topicId: string; requiredMinutes: number | null }[] }
+export interface AutomaticStudyDraftRequest { title: string; preview: AutomaticStudyRequest; expectedActiveRevisionId: string | null; expectedActiveRevisionVersion: number | null }
 export interface AutomaticStudyPreview {
   availabilityVersion: number; timeZoneId: string; activeRevisionId: string | null; activeRevisionVersion: number | null;
   protectedTasks: { taskId: string; plannedDate: string; title: string; plannedMinutes: number; isPinned: boolean; isCompleted: boolean }[];
@@ -55,6 +56,9 @@ export class CoachingStudyPlanningService {
   }
   previewAutomatic(request: AutomaticStudyRequest) {
     return this.http.post<ApiResult<AutomaticStudyPreview>>(`${environment.apiUrl}/coaching/study-planning/automatic-preview`, request).pipe(map(result => result.data));
+  }
+  saveAutomaticDraft(request: AutomaticStudyDraftRequest) {
+    return this.http.post<ApiResult<StudyPlan>>(`${environment.apiUrl}/coaching/study-planning/automatic-drafts`, request).pipe(map(result => result.data));
   }
 
   searchSchools(search: string, city: string, district: string, pageNumber = 1) {

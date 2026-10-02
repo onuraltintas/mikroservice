@@ -3,15 +3,17 @@
     <h1 id="automatic-title">Otomatik plan önizlemesi</h1>
     <p>Konuları öncelik sırasıyla ekle. Plan, seçtiğin tarihten itibaren çalışma saatlerine göre hazırlanır.</p></div></header>
   @if (error()) { <p class="notice error" role="alert">{{ error() }}</p> }
+  @if (savedPlan(); as plan) { <p class="notice success" role="status">{{ plan.title }} taslak olarak kaydedildi. Henüz yayımlanmadı.</p> }
+  <p><a routerLink="/coaching-portal/study-plans">Çalışma planlarımı aç</a></p>
   <div class="panel">
     <h2>1. Çalışma saatleri</h2>
     @if (availability(); as hours) { <p>Saat dilimi: {{ hours.timeZoneId }}. Plan günleri bu saat dilimine göredir.</p> }
     <div class="actions"><a routerLink="/coaching-portal/study-availability">Çalışma saatlerimi düzenle</a>
-      <button type="button" class="secondary" [disabled]="busy()" (click)="loadHours()">Saatleri yeniden yükle</button></div>
+      <button type="button" class="secondary" [disabled]="locked()" (click)="loadHours()">Saatleri yeniden yükle</button></div>
   </div>
   <div class="panel" style="margin-top: 1rem">
     <h2>2. Konuları ve süreleri seç</h2>
-    <form (ngSubmit)="searchTopics()"><fieldset [disabled]="busy()"><div class="fields">
+    <form (ngSubmit)="searchTopics()"><fieldset [disabled]="locked()"><div class="fields">
       <label>Konu, ders veya ünite<input name="query" [(ngModel)]="query" maxlength="200"></label>
       <label>Sınıf<select name="grade" [(ngModel)]="gradeNumber"><option [ngValue]="null">Tümü</option>
         @for (grade of [1,2,3,4,5,6,7,8,9,10,11,12]; track grade) { <option [ngValue]="grade">{{ grade }}</option> }</select></label>
@@ -29,7 +31,7 @@
         <button type="button" [disabled]="busy() || page.pageNumber * page.pageSize >= page.totalCount" (click)="searchTopics(page.pageNumber + 1)">Sonraki</button></div>
     }
     <h3>Seçilen konular ({{ selected.length }}/500)</h3><p class="muted">Süre tahmin değil, planına ayırmak istediğin toplam dakikadır. Bir konu birden fazla güne bölünebilir.</p>
-    <fieldset [disabled]="busy()">
+    <fieldset [disabled]="locked()">
       @for (selection of selected; track selection.topic.id) {
         <div class="task fields"><label>{{ $index + 1 }}. {{ selection.topic.name }} — dakika
           <input type="number" min="1" max="1440" step="1" [(ngModel)]="selection.minutes" (ngModelChange)="changed()" [attr.aria-label]="selection.topic.name + ' çalışma süresi'"></label>
@@ -38,13 +40,13 @@
     </fieldset>
   </div>
   <div class="panel" style="margin-top: 1rem"><h2>3. Planı önizle</h2>
-    <form (ngSubmit)="generate()"><fieldset [disabled]="busy()"><div class="fields">
+    <form (ngSubmit)="generate()"><fieldset [disabled]="locked()"><div class="fields">
       <label>Başlangıç tarihi<input type="date" name="start" [(ngModel)]="startDate" (ngModelChange)="changed()" required></label>
       <label>Plan süresi (gün)<input type="number" name="days" min="1" max="90" step="1" [(ngModel)]="days" (ngModelChange)="changed()" required></label>
       <button type="submit" [disabled]="!availability() || stale() || selected.length === 0">Önizleme oluştur</button></div></fieldset></form>
     @if (generating()) { <p role="status">Önizleme hazırlanıyor…</p> }
     @if (preview(); as result) {
-      <p class="notice" role="status">Henüz kaydedilmedi. Aktif planın değişmedi.</p>
+      @if (!savedPlan()) { <p class="notice" role="status">Henüz kaydedilmedi. Aktif planın değişmedi.</p> }
       <p>Yeni çalışmalar: {{ result.schedule.scheduledMinutes }} dk · Kalan kapasite: {{ result.schedule.unusedMinutes }} dk</p>
       <h3>Korunan çalışmalar</h3>
       @for (task of result.protectedTasks; track task.taskId) { <p>{{ task.plannedDate }} — {{ task.title }} · {{ task.plannedMinutes }} dk ({{ task.isCompleted ? 'tamamlanmış' : 'sabitlenmiş' }})</p> }
@@ -52,6 +54,15 @@
       @if (result.schedule.unscheduledMinutes > 0) {
         <h3>Plana sığmayan çalışmalar</h3><p>Süreyi veya müsaitlik saatlerini artırarak yeniden önizleyebilirsin. Görev sınırı 500'dür.</p>
         @for (topic of result.schedule.unscheduledTopics; track topic.topicId) { <p>{{ topicName(topic.topicId) }} — {{ topic.remainingMinutes }} dk</p> }
+      }
+      @if (!savedPlan()) {
+        <div class="publish-box"><h3>Taslak olarak kaydet</h3>
+          <p>Tamamlanmış çalışmalar geçmiş planda korunur. Tamamlanmamış sabit çalışmalar yeni taslağa alınır. Yayımlama ayrı bir adımdır.</p>
+          <label>Plan başlığı<input [(ngModel)]="title" maxlength="200" [disabled]="saving()"></label>
+          <label class="check"><input type="checkbox" [(ngModel)]="saveConfirmed" [disabled]="saving()">Önizlemeyi kontrol ettim; taslak olarak kaydetmeyi onaylıyorum.</label>
+          <button type="button" [disabled]="busy() || stale() || !saveConfirmed" (click)="saveDraft()">Taslağı kaydet</button>
+          @if (saving()) { <p role="status">Taslak kaydediliyor…</p> }
+        </div>
       }
     }
   </div>
