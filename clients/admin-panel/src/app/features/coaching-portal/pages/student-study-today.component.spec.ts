@@ -39,4 +39,12 @@ describe('StudentStudyTodayComponent', () => {
     expect(component.error()).toBeTruthy();
     expect(fixture.nativeElement.textContent).not.toContain('Henüz aktif çalışma planın yok');
   });
+  it('does not require saved availability preferences to show a manual plan', () => {
+    const { fixture, component, service } = setup();
+    service.getAvailability.mockReturnValueOnce(throwError(() => ({ status: 404 })) as any);
+    component.load(); fixture.detectChanges();
+    expect(component.error()).toBeNull();
+    expect(component.title()).toBe('My plan');
+    expect(service.get).toHaveBeenCalledTimes(2);
+  });
 });
