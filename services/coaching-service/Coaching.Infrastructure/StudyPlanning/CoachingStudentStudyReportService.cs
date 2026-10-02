@@ -22,7 +22,7 @@ public sealed class CoachingStudentStudyReportService(CoachingDbContext db, ICoa
                 && (plan.Status == StudyPlanStatus.Active || plan.Status == StudyPlanStatus.Archived && task.IsCompleted)
             select new { plan.Status, task.PlannedDate, task.TopicId, task.PlannedMinutes, task.IsCompleted, task.ActualMinutes })
             .Take(10001).ToListAsync(cancellationToken);
-        if (rows.Count > 10000) throw new ArgumentException("Select a shorter report period.");
+        if (rows.Count > 10000) throw ReportLimit();
         var report = StudyReportCalculator.Calculate(fromDate, toDate, rows.Select(x => new StudyReportTask(x.Status,
             x.PlannedDate, x.TopicId, x.PlannedMinutes, x.IsCompleted, x.ActualMinutes)).ToArray());
         var topicIds = report.Topics.Where(x => x.TopicId.HasValue).Select(x => x.TopicId!.Value).ToArray();
@@ -35,7 +35,7 @@ public sealed class CoachingStudentStudyReportService(CoachingDbContext db, ICoa
             .OrderBy(x => x.Exam.ExamDate).ThenBy(x => x.Id)
             .Select(x => new { x.Exam.StudentOwnerId, x.Exam.ExamType, x.Exam.MaxScore, x.Score, x.LessonAnswersJson })
             .Take(1001).ToListAsync(cancellationToken);
-        if (exams.Count > 1000) throw new ArgumentException("Select a shorter report period.");
+        if (exams.Count > 1000) throw ReportLimit();
         var groups = exams.Where(x => x.MaxScore > 0).GroupBy(x => new { Source = x.StudentOwnerId.HasValue ? "StudentReported" : "TeacherRecorded", x.ExamType, x.MaxScore })
             .Select(g => new StudyExamGroup(g.Key.Source, g.Key.ExamType, g.Key.MaxScore, g.Count(),
                 decimal.Round(g.Average(x => 100m * x.Score / x.MaxScore), 1)))
@@ -52,4 +52,6 @@ public sealed class CoachingStudentStudyReportService(CoachingDbContext db, ICoa
             TopicName = x.TopicId.HasValue ? names.GetValueOrDefault(x.TopicId.Value) : null }).ToArray(),
             ExamGroups = groups, LessonResults = lessons };
     }
+    private static BusinessRuleException ReportLimit() => new("StudyPlanning.ReportLimit",
+        "Bu dönem çok fazla kayıt içeriyor. Tam rapor için daha kısa bir tarih aralığı seçin.");
 }
