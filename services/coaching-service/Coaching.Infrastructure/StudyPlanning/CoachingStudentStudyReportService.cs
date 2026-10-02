@@ -14,6 +14,12 @@ public sealed class CoachingStudentStudyReportService(CoachingDbContext db, ICoa
     {
         if (access.CurrentUserId is not { } student || !access.IsCurrentStudent(student))
             throw new BusinessRuleException("Authorization.Forbidden", "Bu rapor yalnız öğrencinin kendi hesabında kullanılabilir.");
+        return await ReadAsync(db, student, fromDate, toDate, cancellationToken);
+    }
+
+    internal static async Task<StudentStudyReport> ReadAsync(CoachingDbContext db, Guid student,
+        DateOnly fromDate, DateOnly toDate, CancellationToken cancellationToken)
+    {
         StudyReportCalculator.ValidatePeriod(fromDate, toDate);
         // Goals are a current snapshot, not historical progress in the selected task/exam period.
         var goals = await db.AcademicGoals.AsNoTracking().Where(x => x.StudentId == student)
