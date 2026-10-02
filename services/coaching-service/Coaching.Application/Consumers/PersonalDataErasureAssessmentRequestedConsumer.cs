@@ -31,7 +31,12 @@ public sealed class PersonalDataErasureAssessmentRequestedConsumer(
                 assessment.GoalCount,
                 assessment.SessionCount,
                 assessment.AgreementCount,
-                assessment.AssessedAt),
+                assessment.AssessedAt,
+                new Dictionary<string, int> {
+                    ["Assignments"] = assessment.AssignmentCount, ["Attachments"] = assessment.AttachmentCount,
+                    ["ExamResults"] = assessment.ExamResultCount, ["Goals"] = assessment.GoalCount,
+                    ["Sessions"] = assessment.SessionCount, ["Agreements"] = assessment.AgreementCount,
+                    ["StudyPlanning"] = assessment.StudyPlanningRecordCount }),
             publishContext =>
             {
                 publishContext.MessageId = assessment.Id;
