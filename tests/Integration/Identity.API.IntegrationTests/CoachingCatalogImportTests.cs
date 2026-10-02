@@ -31,6 +31,7 @@ public sealed class CoachingCatalogImportTests(PostgresFixture postgres)
             Assert.Equal(6, review.NewRecords);
             Assert.Equal(6, review.Counts.Values.Sum());
             await Assert.ThrowsAsync<ArgumentException>(() => importer.ApproveAsync(files, "test-catalog", review.Fingerprint, "", Guid.NewGuid(), false));
+            await Assert.ThrowsAsync<ArgumentException>(() => importer.ApproveAsync(files, "test-catalog", review.Fingerprint, new string('x', 201), Guid.NewGuid(), false));
             var altered = files.ToDictionary(x => x.Key, x => x.Value);
             altered["lessons.json"] = altered["lessons.json"].Replace("Lesson", "Altered");
             await Assert.ThrowsAsync<InvalidOperationException>(() => importer.ApproveAsync(altered, "test-catalog", review.Fingerprint, "Test onayı", Guid.NewGuid(), false));
