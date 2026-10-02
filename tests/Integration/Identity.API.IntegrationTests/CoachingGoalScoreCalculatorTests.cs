@@ -10,17 +10,19 @@ public sealed class CoachingGoalScoreCalculatorTests
         new(Guid.NewGuid(), Guid.NewGuid(), source, type, scale, score, new DateTime(2026, 10, day, 0, 0, 0, DateTimeKind.Utc));
 
     [Theory]
-    [InlineData(null, 500, ExamType.LGS)]
-    [InlineData(400, null, ExamType.LGS)]
-    [InlineData(400, 500, null)]
-    [InlineData(0, 500, ExamType.LGS)]
-    [InlineData(600, 500, ExamType.LGS)]
+    [MemberData(nameof(InvalidTargets))]
     public void MissingOrInvalidConfiguration_HasNoInventedPercentage(decimal? target, decimal? scale, ExamType? type)
     {
         var report = GoalScoreCalculator.Calculate(target, scale, type, null, [Evidence()]);
         Assert.Equal("ScoreTargetNotConfigured", report.Reason);
         Assert.Empty(report.Comparisons);
     }
+    public static IEnumerable<object?[]> InvalidTargets =>
+    [
+        [null, 500m, ExamType.LGS], [400m, null, ExamType.LGS], [400m, 500m, null],
+        [0m, 500m, ExamType.LGS], [600m, 500m, ExamType.LGS], [400m, 0m, ExamType.LGS],
+        [400m, 1000m, ExamType.LGS], [400m, 500m, (ExamType)999]
+    ];
 
     [Fact]
     public void SubjectGoal_DoesNotUseWholeExamScore()
