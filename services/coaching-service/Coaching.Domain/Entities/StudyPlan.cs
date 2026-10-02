@@ -12,6 +12,9 @@ public sealed class StudyPlanRevision : AggregateRoot
     public string Title { get; private set; } = string.Empty;
     public StudyPlanStatus Status { get; private set; }
     public bool IsActive { get; private set; }
+    public int? AutomaticAvailabilityVersion { get; private set; }
+    public Guid? AutomaticSourceRevisionId { get; private set; }
+    public int? AutomaticSourceRevisionVersion { get; private set; }
     private StudyPlanRevision() { }
 
     public static StudyPlanRevision Create(Guid studentId, Guid planId, int revisionNumber, string title)
@@ -28,6 +31,16 @@ public sealed class StudyPlanRevision : AggregateRoot
         Status = StudyPlanStatus.Active;
         IsActive = true;
         UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void SetAutomaticSource(int availabilityVersion, Guid? revisionId, int? revisionVersion)
+    {
+        if (Status != StudyPlanStatus.Draft || availabilityVersion < 0 || revisionId == Guid.Empty
+            || revisionVersion < 0 || revisionId.HasValue != revisionVersion.HasValue)
+            throw new ArgumentException("Valid automatic plan source is required.");
+        AutomaticAvailabilityVersion = availabilityVersion;
+        AutomaticSourceRevisionId = revisionId;
+        AutomaticSourceRevisionVersion = revisionVersion;
     }
 
     public void RenameDraft(string title)

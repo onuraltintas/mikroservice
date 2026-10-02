@@ -33,7 +33,7 @@ public sealed class CoachingAutomaticDraftTests(PostgresFixture postgres)
             db.Entry(unit).Property(x => x.IsActive).CurrentValue = true;
             db.Entry(topic).Property(x => x.IsActive).CurrentValue = true;
             await db.SaveChangesAsync(); db.ChangeTracker.Clear();
-            var plans = new CoachingManualStudyPlanService(db, access);
+            var plans = new CoachingManualStudyPlanService(db, access, new CoachingAutomaticStudyPlanPreviewService(db, access));
             var date = new DateOnly(2026, 10, 5);
             var first = await plans.CreateDraftAsync(new("Current", [new(date, "Pinned", 15, null, true), new(date, "Completed", 15, null, false)]));
             var active = await plans.PublishAsync(first.Id, first.Version);

@@ -8,8 +8,39 @@ using Microsoft.EntityFrameworkCore.Storage;
 
 namespace Coaching.Infrastructure.StudyPlanning;
 
-public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachingAccessPolicy access) : IManualStudyPlanService
+public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachingAccessPolicy access,
+    IAutomaticStudyPlanPreviewService previews) : IManualStudyPlanService, IAutomaticStudyPlanDraftService
 {
+    public Task<ManualStudyPlanView> CreateAutomaticDraftAsync(AutomaticStudyDraftRequest request, CancellationToken cancellationToken = default)
+        => LockedAsync(async student =>
+        {
+            ArgumentNullException.ThrowIfNull(request);
+            var revision = StudyPlanRevision.Create(student, Guid.NewGuid(), 1, request.Title);
+            var preview = await previews.PreviewAsync(request.Preview, cancellationToken);
+            if (request.ExpectedActiveRevisionId != preview.ActiveRevisionId
+                || request.ExpectedActiveRevisionVersion != preview.ActiveRevisionVersion)
+                throw Conflict("Aktif plan değişti. Yeniden önizleyin.");
+            if (await db.StudyPlanRevisions.AnyAsync(x => x.StudentId == student && x.Status == StudyPlanStatus.Draft, cancellationToken))
+                throw Conflict("Önce mevcut taslağınızı düzenleyin veya yayımlayın.");
+            var ids = preview.Schedule.Tasks.Select(x => x.TopicId).Distinct().ToArray();
+            var names = await db.StudyCatalogTopics.AsNoTracking().Where(x => Enumerable.Contains(ids, x.Id))
+                .ToDictionaryAsync(x => x.Id, x => x.Name, cancellationToken);
+            var tasks = preview.Schedule.Tasks.Select(x => StudyPlanTask.Create(revision, x.PlannedDate,
+                names[x.TopicId], x.PlannedMinutes, x.TopicId)).ToList();
+            // Preserve pending pinned work, including work outside the generated horizon.
+            // Completed work remains in its original revision; actual results are never duplicated.
+            if (preview.ActiveRevisionId is { } activeId)
+            {
+                var pinned = await db.StudyPlanTasks.AsNoTracking().Where(x => x.StudentId == student
+                    && x.RevisionId == activeId && x.IsPinned && !x.IsCompleted).ToListAsync(cancellationToken);
+                tasks.AddRange(pinned.Select(x => StudyPlanTask.Create(revision, x.PlannedDate, x.Title, x.PlannedMinutes, x.TopicId, true)));
+            }
+            if (tasks.Count is < 1 or > 500) throw new ArgumentException("Taslak 1-500 çalışma içermelidir; konuları azaltın veya süreyi değiştirin.");
+            revision.SetAutomaticSource(preview.AvailabilityVersion, preview.ActiveRevisionId, preview.ActiveRevisionVersion);
+            db.StudyPlanRevisions.Add(revision); db.StudyPlanTasks.AddRange(tasks);
+            await db.SaveChangesAsync(cancellationToken);
+            return await ViewAsync(revision, cancellationToken);
+        }, cancellationToken);
     public Task<StudyPlanPage> ListAsync(int pageNumber, int pageSize, StudyPlanStatus? status, CancellationToken cancellationToken = default)
         => LockedAsync(async student =>
         {
@@ -71,6 +102,15 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
             if (!await db.StudyPlanTasks.AnyAsync(x => x.RevisionId == id && x.StudentId == student, cancellationToken))
                 throw Conflict("Yayımlamadan önce en az bir çalışma ekleyin.");
             var previous = await db.StudyPlanRevisions.SingleOrDefaultAsync(x => x.StudentId == student && x.IsActive, cancellationToken);
+            if (revision.AutomaticAvailabilityVersion is { } availabilityVersion)
+            {
+                // Lock the hours row so a concurrent preference update cannot pass this check then commit first.
+                var hours = await db.StudyAvailability.FromSqlInterpolated($"SELECT * FROM coaching.study_availability WHERE \"StudentId\" = {student} FOR UPDATE")
+                    .AsNoTracking().SingleOrDefaultAsync(cancellationToken);
+                if (hours?.Version != availabilityVersion || previous?.Id != revision.AutomaticSourceRevisionId
+                    || previous?.Version != revision.AutomaticSourceRevisionVersion)
+                    throw Conflict("Plan veya çalışma saatleri değişti. Otomatik taslağı güncel verilerle yeniden hazırlayın.");
+            }
             if (previous is not null)
             {
                 previous.Archive();

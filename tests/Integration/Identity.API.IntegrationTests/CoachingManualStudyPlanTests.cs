@@ -28,7 +28,7 @@ public sealed class CoachingManualStudyPlanTests(PostgresFixture postgres)
         try
         {
             var actor = new Actor { UserId = Guid.NewGuid() };
-            var service = new CoachingManualStudyPlanService(db, new CoachingAccessPolicy(actor));
+            var service = new CoachingManualStudyPlanService(db, new CoachingAccessPolicy(actor), new CoachingAutomaticStudyPlanPreviewService(db, new CoachingAccessPolicy(actor)));
             var input = new ManualStudyPlanInput("Haftalık plan", [new(new DateOnly(2026, 10, 5), "Matematik", 45, null, true)]);
             await Assert.ThrowsAsync<ArgumentNullException>(() => service.CreateDraftAsync(null!));
             var draft = await service.CreateDraftAsync(input);
@@ -82,7 +82,7 @@ public sealed class CoachingManualStudyPlanTests(PostgresFixture postgres)
         {
             var actor = new Actor { UserId = Guid.NewGuid() };
             var input = new ManualStudyPlanInput("Plan", [new(new DateOnly(2026, 10, 5), "Konu", 30, null, false)]);
-            var service = new CoachingManualStudyPlanService(db, new CoachingAccessPolicy(actor));
+            var service = new CoachingManualStudyPlanService(db, new CoachingAccessPolicy(actor), new CoachingAutomaticStudyPlanPreviewService(db, new CoachingAccessPolicy(actor)));
             var initial = await service.CreateDraftAsync(input);
             await service.PublishAsync(initial.Id, initial.Version);
             var next = await service.CreateDraftAsync(input);
@@ -91,7 +91,7 @@ public sealed class CoachingManualStudyPlanTests(PostgresFixture postgres)
                 await using var separate = new CoachingDbContext(options);
                 try
                 {
-                    await new CoachingManualStudyPlanService(separate, new CoachingAccessPolicy(actor)).PublishAsync(next.Id, next.Version);
+                    await new CoachingManualStudyPlanService(separate, new CoachingAccessPolicy(actor), new CoachingAutomaticStudyPlanPreviewService(separate, new CoachingAccessPolicy(actor))).PublishAsync(next.Id, next.Version);
                     return true;
                 }
                 catch (BusinessRuleException ex) when (ex.Code == "StudyPlanning.Conflict") { return false; }
@@ -117,7 +117,7 @@ public sealed class CoachingManualStudyPlanTests(PostgresFixture postgres)
         {
             var actor = new Actor { UserId = Guid.NewGuid() };
             var owner = actor.UserId;
-            var service = new CoachingManualStudyPlanService(db, new CoachingAccessPolicy(actor));
+            var service = new CoachingManualStudyPlanService(db, new CoachingAccessPolicy(actor), new CoachingAutomaticStudyPlanPreviewService(db, new CoachingAccessPolicy(actor)));
             var date = new DateOnly(2026, 10, 5);
             var input = new ManualStudyPlanInput("Plan", [new(date, "Birinci", 60, null, true), new(date.AddDays(1), "İkinci", 1440, null, false)]);
             Assert.Empty((await service.ListAsync(1, 20, null)).Items);
@@ -180,7 +180,7 @@ public sealed class CoachingManualStudyPlanTests(PostgresFixture postgres)
         try
         {
             var actor = new Actor { UserId = Guid.NewGuid() };
-            var service = new CoachingManualStudyPlanService(db, new CoachingAccessPolicy(actor));
+            var service = new CoachingManualStudyPlanService(db, new CoachingAccessPolicy(actor), new CoachingAutomaticStudyPlanPreviewService(db, new CoachingAccessPolicy(actor)));
             var input = new ManualStudyPlanInput("Plan", [new(new DateOnly(2026, 10, 5), "Konu", 30, null, false)]);
             var first = await service.CreateDraftAsync(input);
             var active = await service.PublishAsync(first.Id, first.Version);
@@ -214,7 +214,8 @@ public sealed class CoachingManualStudyPlanTests(PostgresFixture postgres)
         await db.Database.EnsureCreatedAsync();
         try
         {
-            var service = new CoachingManualStudyPlanService(db, new CoachingAccessPolicy(new Actor { UserId = Guid.NewGuid() }));
+            var actor = new Actor { UserId = Guid.NewGuid() };
+            var service = new CoachingManualStudyPlanService(db, new CoachingAccessPolicy(actor), new CoachingAutomaticStudyPlanPreviewService(db, new CoachingAccessPolicy(actor)));
             var input = new ManualStudyPlanInput("Plan", [new(new DateOnly(2026, 10, 5), "Konu", 30, null, false)]);
             var draft = operation == "create" ? null : await service.CreateDraftAsync(input);
             if (operation is "complete" or "reschedule") draft = await service.PublishAsync(draft!.Id, draft.Version);
