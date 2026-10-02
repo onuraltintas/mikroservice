@@ -65,6 +65,20 @@ public sealed class CoachingAutomaticDraftTests(PostgresFixture postgres)
             var latest = (await plans.GetAsync(published.Id))!;
             var regenerated = await plans.CreateAutomaticDraftAsync(nextRequest with { ExpectedActiveRevisionVersion = latest.Version });
             Assert.Equal(StudyPlanStatus.Draft, regenerated.Status);
+            var activeEntity = await db.StudyPlanRevisions.SingleAsync(x => x.Id == published.Id);
+            var existingPinned = await db.StudyPlanTasks.CountAsync(x => x.RevisionId == published.Id && x.IsPinned && !x.IsCompleted);
+            for (var i = existingPinned; i < 490; i++)
+                db.StudyPlanTasks.Add(StudyPlanTask.Create(activeEntity, date.AddDays(1), "Preserve outside horizon", 1, isPinned: true));
+            var selections = new List<StudyTopicSelection>();
+            for (var i = 0; i < 20; i++)
+            {
+                var extra = StudyCatalogTopic.Create("test", "extra" + i, lesson.Id, unit.Id, "Extra " + i, null, i, 1);
+                db.Add(extra); db.Entry(extra).Property(x => x.IsActive).CurrentValue = true;
+                selections.Add(new(extra.Id, 1));
+            }
+            await db.SaveChangesAsync(); db.ChangeTracker.Clear();
+            await Assert.ThrowsAsync<ArgumentException>(() => new CoachingAutomaticStudyPlanPreviewService(db, access)
+                .PreviewAsync(new(date, 1, hours.Version, selections)));
         }
         finally { await db.Database.EnsureDeletedAsync(); }
     }
