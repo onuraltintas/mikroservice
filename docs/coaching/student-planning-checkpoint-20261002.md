@@ -1,5 +1,9 @@
 # Öğrenci planlama: yerel doğrulama kaydı
 
+**Güncel durum:** Bu dosya tarihsel ara kontrol kayıtlarıdır. Otomatik hedef puanı hesabı
+ve kalan kod kapsamı tamamlandı; son sonuçlar [tamamlanma raporundadır](student-planning-completion-20261002.md).
+Aşağıdaki “henüz”, “kalan” ve ara test sayıları güncel tamamlanma durumunu temsil etmez.
+
 Tarih: 2026-10-02. Bu kayıt, [ilk yol haritasının](student-planning-roadmap.md)
 manuel ve otomatik plan adımlarındaki güncel durumu tamamlar. Canlı yayın değildir.
 

@@ -2,6 +2,13 @@
 
 Tarih: 2026-10-02. Kapsam: yalnız Koçluk öğrenci paneli; bu çalışma canlı yayın değildir.
 
+## Güncel durum
+
+Öğrenci planlama, hedef, otomatik puan karşılaştırması, sonuç ve rapor kod kapsamı
+yerelde tamamlandı. Güncel kabul sonuçları ve canlıya geçiş sınırları
+[tamamlanma raporundadır](student-planning-completion-20261002.md).
+Aşağıdaki yerel ilerleme notları tarihsel ara kontrol kayıtlarıdır; son durumu temsil etmez.
+
 ## Kesin sınırlar
 
 - Angular öğrenci paneli, mevcut .NET Koçluk servisi ve `coaching_db/coaching` şeması kullanılır.
@@ -65,7 +72,8 @@ Kataloglar varsayılan pasiftir, fiziksel silme öğrenci geçmişini bozmamalı
 9. Entegrasyon: öğrenci ana sayfa, bildirim, dışa aktarma ve erasure kapsamı.
 10. Yayın: E2E, yetki ve performans; yedek ve rollback; ayrı kullanıcı onayıyla canlı yayın.
 
-Her aşamada test -> uygulama -> doğrulama yapılır. Şu an öğrenci ekranları tamamlanmış değildir.
+Her aşamada test -> uygulama -> doğrulama yapılır. Güncel tamamlanma durumu yukarıdaki
+raporda tutulur; canlı yayın ayrıca onaylanır.
 
 ## Yerel ilerleme — 2026-10-02
 
