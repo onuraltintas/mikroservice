@@ -75,6 +75,11 @@ public sealed class CoachingStudentExamServiceTests(PostgresFixture postgres)
             var teacher = Exam.Create(Guid.NewGuid(), "Teacher result", ExamType.Mock, DateTime.UtcNow, 100);
             teacher.AddResult(ExamResult.Create(teacher.Id, actor.UserId!.Value, 70));
             db.Add(teacher); await db.SaveChangesAsync();
+            var resultPeriod = await studyReports.GetAsync(new(2026, 1, 1), new(2026, 12, 31));
+            Assert.Equal(80m, resultPeriod.ExamGroups.Single(x => x.Source == "StudentReported").AveragePercentage);
+            Assert.Equal(70m, resultPeriod.ExamGroups.Single(x => x.Source == "TeacherRecorded").AveragePercentage);
+            Assert.Equal(10, resultPeriod.LessonResults.Single().QuestionCount);
+            Assert.Equal("Math", resultPeriod.LessonResults.Single().LessonName);
             var legacyResults = await new GetStudentExamResultsQueryHandler(new ExamRepository(db), access, new Identity(actor.UserId!.Value))
                 .Handle(new(actor.UserId!.Value), CancellationToken.None);
             Assert.Equal("StudentReported", legacyResults.Items.Single(x => x.ExamId == created.Id).Source);
