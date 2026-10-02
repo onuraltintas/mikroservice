@@ -9,6 +9,9 @@ namespace Coaching.Infrastructure.Catalogs;
 // Administrative local import only. Not registered as an HTTP endpoint or startup seed.
 public sealed class CoachingCatalogImporter(CoachingDbContext db)
 {
+    public Task<int> PreviewAsync(IReadOnlyDictionary<string, string> files, string source,
+        CancellationToken cancellationToken = default) => ExecuteAsync(files, source, false, cancellationToken, true);
+
     public Task<int> ImportAsync(IReadOnlyDictionary<string, string> files, string source,
         CancellationToken cancellationToken = default) => ExecuteAsync(files, source, false, cancellationToken);
 
@@ -16,7 +19,7 @@ public sealed class CoachingCatalogImporter(CoachingDbContext db)
         CancellationToken cancellationToken) => ExecuteAsync(files, source, true, cancellationToken);
 
     private async Task<int> ExecuteAsync(IReadOnlyDictionary<string, string> files, string source,
-        bool verifyOnly, CancellationToken cancellationToken)
+        bool verifyOnly, CancellationToken cancellationToken, bool previewOnly = false)
     {
         if (string.IsNullOrWhiteSpace(source) || source.Trim().Length > 100)
             throw new ArgumentException("A valid catalog source is required.", nameof(source));
@@ -89,8 +92,8 @@ public sealed class CoachingCatalogImporter(CoachingDbContext db)
                 foreach (var row in rows["lgs-programs.json"])
                     added += Stage(schools, Text(row, "id"), () => TargetSchool.Create(source, Text(row, "id"), Text(row, "schoolName"), Text(row, "city"), Text(row, "town"), Score(row), Number(row, "scoreYear")));
                 if (verifyOnly && added != 0) throw new InvalidOperationException("Reviewed catalog contains records missing from storage.");
-                if (!verifyOnly) await db.SaveChangesAsync(cancellationToken);
-                if (transaction is not null) await transaction.CommitAsync(cancellationToken);
+                if (!verifyOnly && !previewOnly) await db.SaveChangesAsync(cancellationToken);
+                if (transaction is not null && !previewOnly) await transaction.CommitAsync(cancellationToken);
                 return added;
             }
             finally { db.ChangeTracker.Clear(); }
