@@ -8,6 +8,18 @@ import { AuthService } from './auth.service';
 import { authInterceptor } from './auth.interceptor';
 
 describe('authInterceptor', () => {
+  it('refreshes with cookie credentials without resolving the initializing AuthService', async () => {
+    TestBed.configureTestingModule({ providers: [
+      { provide: AuthService, useFactory: () => { throw new Error('AuthService is still constructing'); } }
+    ] });
+    const forwarded = vi.fn((request: HttpRequest<unknown>) => of(new HttpResponse({ status: 200 })));
+    const response$ = TestBed.runInInjectionContext(() => authInterceptor(
+      new HttpRequest('POST', '/api/auth/refresh-token', {}), forwarded));
+    await lastValueFrom(response$);
+    expect(forwarded.mock.calls[0][0].withCredentials).toBe(true);
+    expect(forwarded.mock.calls[0][0].headers.has('Authorization')).toBe(false);
+  });
+
   it('should not redirect or logout while rendering on the server', async () => {
     const logout = vi.fn();
     const navigate = vi.fn();
