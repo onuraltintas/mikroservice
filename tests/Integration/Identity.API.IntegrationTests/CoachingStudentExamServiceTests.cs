@@ -40,6 +40,8 @@ public sealed class CoachingStudentExamServiceTests(PostgresFixture postgres)
             var read = (await service.GetAsync(created.Id))!;
             Assert.Equal("StudentReported", read.Source);
             Assert.Equal(topic.Id, read.Lessons.Single().TopicId);
+            Assert.Equal("Math", read.Lessons.Single().LessonName);
+            Assert.Equal("Topic", read.Lessons.Single().TopicName);
             Assert.Equal(1, (await service.ListAsync(1, 10)).TotalCount);
             await Assert.ThrowsAsync<BusinessRuleException>(() => service.ReplaceAsync(created.Id,
                 new(request with { Title = "Changed" }, read.Version + 1)));
