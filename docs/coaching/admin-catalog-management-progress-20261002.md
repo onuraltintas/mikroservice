@@ -26,7 +26,7 @@ Bu kayıt yeni yerel çalışmayı anlatır; önceki listeleme/kullanım/kalıc�
 
 ## Kalan işler
 
-1. Liste ekranında ders/ünite ilişkisi filtreleri; son arayüz incelemesi ve üretim derlemesi.
+1. Liste ekranında ders/ünite ilişkisi filtreleri, son arayüz incelemesi ve üretim derlemesi tamamlandı; aşağıdaki son kontrol notuna bakın.
 2. Gerçek API ile yönetim ekranı tarayıcı E2E kontrolleri.
 3. Kontrollü aktarım önizlemesi, fark raporu, gerekçeli onay ve ayrı yayın. Kalıcı silinen kaynak kimliği eski dosyadan yeniden oluşturulmamalı.
 4. Öğrenci detayında yeni müsaitlik, çalışma planı, görev ve revizyon geçmişi incelemesi.
@@ -35,3 +35,14 @@ Bu kayıt yeni yerel çalışmayı anlatır; önceki listeleme/kullanım/kalıc�
 7. Tam kapsam regresyonu, yayın raporu ve ayrı canlı onayı.
 
 Plan bütünü henüz tamamlanmadı. Bu yerel adım için yeni veritabanı migration'ı gerekmedi.
+
+## Son yerel kontrol — hiyerarşi filtreleri ve aktarım güvenliği
+
+- Ders/ünite listesi arama ve 25 kayıtlık sayfalama ile filtrelere bağlandı. Üst ders değişince ünite seçimi, seçenekleri ve bekleyen eski sorgu temizlenir. Aramada seçili seçenek korunur.
+- Arayüz regresyonu: 79 geçti. Production derlemesi geçti; mevcut Speed Reading CSS bütçe uyarısı değişmedi. Salt okunur TypeScript/Angular incelemesinde ek bulgu yok.
+- Eski kaynak dosyası kalıcı silinen kaydı yeniden oluşturamaz. Aynı tablo kilitleri altında kaynak/tür/kimlik denetimi yapılır; tüm aktarım reddedilir. Konu kimlik önekleri korunur.
+- `PreviewAsync` aynı içerik/ilişki/kalıcı silme kontrollerini çalıştırıp eklenecek kayıt sayısını hesaplar; SaveChanges veya Commit çağırmaz. İçeriği değişmiş mevcut kaydı otomatik güncellemez.
+- Gerçek disposable PostgreSQL üzerinde önizleme/aktarımı/silme ve operator regresyonu: 15 geçti, 0 başarısız, 0 atlanan. C# incelemesinde engelleyici bulgu yok.
+- Henüz admin aktarım API/formu, ayrıntılı fark tablosu ve gerekçeli onay/yayın arayüzü yok. Önizleme temeli bunların tamamlandığı anlamına gelmez.
+- Öğrenci müsaitlik/plan/revizyon/hedef/yeni rapor admin incelemeleri ve tam tarayıcı E2E hâlâ kalan işlerdir.
+- Bu yeni işler yerelde commitlendi; GitHub'a veya canlıya aktarılmadı.
