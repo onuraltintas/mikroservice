@@ -6,7 +6,7 @@
   @if (success()) { <p class="notice success" role="status">{{ success() }}</p> }
   <div class="workspace"><aside class="panel" aria-label="Sonuç listesi">
     @if (busy()) { <p role="status">İşlem sürüyor…</p> }
-    @if (!page().items.length) { <p>Henüz kendi girdiğin bir sonuç yok.</p> }
+    @if (!busy() && !error() && !page().items.length) { <p>Henüz kendi girdiğin bir sonuç yok.</p> }
     @for (exam of page().items; track exam.id) { <button type="button" class="plan-row" (click)="open(exam.id)" [disabled]="busy()">
       <strong>{{ exam.title }}</strong><span>{{ exam.score }} / {{ exam.maxScore }}</span></button> }
     <div class="pagination"><button type="button" (click)="loadList(page().pageNumber - 1)" [disabled]="busy() || page().pageNumber <= 1">Önceki</button>

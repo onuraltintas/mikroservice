@@ -63,8 +63,12 @@ export class StudentStudyReportComponent {
   readonly report = signal<StudyReport | null>(null);
   readonly error = signal<string | null>(null);
   readonly busy = signal(false);
-  toDate = new Date().toISOString().slice(0, 10);
-  fromDate = new Date(Date.now() - 29 * 86400000).toISOString().slice(0, 10);
+  private readonly today = new Date();
+  toDate = this.localDate(this.today);
+  fromDate = this.localDate(new Date(this.today.getFullYear(), this.today.getMonth(), this.today.getDate() - 29));
+  private localDate(date: Date) {
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+  }
   sourceLabel(source: string) { return source === 'StudentReported' ? 'Öğrenci beyanı' : source === 'TeacherRecorded' ? 'Öğretmen kaydı' : 'Kaynak belirtilmemiş'; }
   load() {
     if (this.busy()) return;
