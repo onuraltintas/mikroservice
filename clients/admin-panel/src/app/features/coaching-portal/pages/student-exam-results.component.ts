@@ -82,11 +82,12 @@ export class StudentExamResultsComponent {
     }
     const input = { title: this.title.trim(), examType: this.examType, examDate: this.examDate, score: this.score,
       maxScore: this.maxScore, correctAnswers: counts[0], wrongAnswers: counts[1], emptyAnswers: counts[2], lessons: this.lessons.map(x => ({ ...x })) };
+    const isNew = !this.selected;
     const write = this.selected ? this.service.replace(this.selected.id, this.selected.version, input) : this.service.create(input);
     this.busy.set(true); this.error.set(null);
     write.pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.busy.set(false))).subscribe({ next: exam => {
       this.apply(exam); this.success.set('Sonucun kaydedildi. Öğrenci beyanı olarak raporlanacak.');
-      this.page.update(page => ({ ...page, items: [exam, ...page.items.filter(x => x.id !== exam.id)].slice(0, 20) }));
+      this.page.update(page => ({ ...page, totalCount: page.totalCount + (isNew ? 1 : 0), items: [exam, ...page.items.filter(x => x.id !== exam.id)].slice(0, 20) }));
     }, error: error => { this.confirmed = false; if (error?.status === 409) this.stale.set(true);
       this.error.set(error?.status === 409 ? 'Sonuç değişti. Kaydı yeniden yükle; formun henüz kaydedilmedi.' : 'Sonuç kaydedilemedi. Bilgilerin korundu; kontrol edip yeniden dene.'); } });
   }

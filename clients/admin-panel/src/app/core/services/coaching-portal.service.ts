@@ -174,6 +174,7 @@ export interface CoachingStudentHistoryItem {
 }
 
 export interface ExamResult {
+  source?: 'StudentReported' | 'TeacherRecorded';
   examId: string;
   examTitle: string;
   examDate: string;
