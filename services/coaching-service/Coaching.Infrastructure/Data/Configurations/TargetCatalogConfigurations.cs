@@ -26,15 +26,22 @@ public sealed class TargetSchoolConfiguration : IEntityTypeConfiguration<TargetS
 {
     public void Configure(EntityTypeBuilder<TargetSchool> builder)
     {
-        builder.ToTable("target_schools", table => table.HasCheckConstraint("ck_target_school_score", "\"MinimumScore\" IS NULL OR \"MinimumScore\" BETWEEN 0 AND 500"));
+        builder.ToTable("target_schools", table =>
+        {
+            table.HasCheckConstraint("ck_target_school_score", "\"MinimumScore\" IS NULL OR \"MinimumScore\" BETWEEN 0 AND 500");
+            table.HasCheckConstraint("ck_target_school_location_pair", "(\"ProvinceId\" IS NULL AND \"DistrictId\" IS NULL) OR (\"ProvinceId\" IS NOT NULL AND \"DistrictId\" IS NOT NULL)");
+        });
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Source).HasMaxLength(100).IsRequired();
         builder.Property(x => x.SourceId).HasMaxLength(100).IsRequired();
         builder.Property(x => x.Name).HasMaxLength(300).IsRequired();
         builder.Property(x => x.City).HasMaxLength(100).IsRequired();
         builder.Property(x => x.District).HasMaxLength(100).IsRequired();
+        builder.Property(x => x.ProvinceId).HasMaxLength(20);
+        builder.Property(x => x.DistrictId).HasMaxLength(20);
         builder.Property(x => x.MinimumScore).HasPrecision(10, 4);
         builder.HasIndex(x => new { x.Source, x.SourceId }).IsUnique();
         builder.HasIndex(x => new { x.IsActive, x.City, x.District });
+        builder.HasIndex(x => new { x.IsActive, x.ProvinceId, x.DistrictId });
     }
 }

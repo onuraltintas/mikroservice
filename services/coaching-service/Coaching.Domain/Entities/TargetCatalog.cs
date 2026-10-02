@@ -38,10 +38,21 @@ public sealed class TargetSchool
     public string Name { get; private set; } = string.Empty;
     public string City { get; private set; } = string.Empty;
     public string District { get; private set; } = string.Empty;
+    public string? ProvinceId { get; private set; }
+    public string? DistrictId { get; private set; }
     public decimal? MinimumScore { get; private set; }
     public int? ScoreYear { get; private set; }
     public bool IsActive { get; private set; }
     private TargetSchool() { }
+
+    // Call only after the shared Identity directory has verified this exact pair.
+    public void SetVerifiedLocation(string provinceId, string districtId)
+    {
+        var province = StudyCatalogText.Require(provinceId, 20);
+        var district = StudyCatalogText.Require(districtId, 20);
+        ProvinceId = province;
+        DistrictId = district;
+    }
 
     public static TargetSchool Create(string source, string sourceId, string name, string city,
         string district, decimal? minimumScore, int? scoreYear = null)
