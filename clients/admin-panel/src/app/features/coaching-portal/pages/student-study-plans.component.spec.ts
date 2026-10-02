@@ -77,4 +77,16 @@ describe('StudentStudyPlansComponent', () => {
     expect(service.get).not.toHaveBeenCalled();
     expect(component.error()).toContain('kaydedin');
   });
+  it('asks before leaving unsaved work and protects browser refresh', () => {
+    const { component } = setup();
+    component.dirty = true;
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    expect(component.canLeavePage()).toBe(false);
+    confirm.mockReturnValue(true);
+    expect(component.canLeavePage()).toBe(true);
+    const event = new Event('beforeunload', { cancelable: true });
+    component.beforeUnload(event as BeforeUnloadEvent);
+    expect(event.defaultPrevented).toBe(true);
+    confirm.mockRestore();
+  });
 });
