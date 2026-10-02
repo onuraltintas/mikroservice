@@ -59,6 +59,10 @@ public sealed class CoachingAutomaticStudyPlanPreviewService(CoachingDbContext d
             .ToArrayAsync(cancellationToken);
         var schedule = StudyPlanDraftScheduler.Generate(request.StartDate, request.Days, availability.Windows,
             topics, protectedTasks.Select(x => new StudyCapacityReservation(x.PlannedDate, x.PlannedMinutes)).ToArray());
+        var pinnedCount = revision is null ? 0 : await db.StudyPlanTasks.CountAsync(x => x.StudentId == studentId
+            && x.RevisionId == revision.Id && x.IsPinned && !x.IsCompleted, cancellationToken);
+        if (pinnedCount + schedule.Tasks.Count > 500)
+            throw new ArgumentException("Korunan sabit çalışmalar dahil en fazla 500 çalışma planlanabilir. Konu sayısını azaltın.");
         // Advisory preview only: saving later must revalidate both returned versions.
         return new(availability.Version, availability.TimeZoneId, revision?.Id, revision?.Version, protectedTasks, schedule);
     }
