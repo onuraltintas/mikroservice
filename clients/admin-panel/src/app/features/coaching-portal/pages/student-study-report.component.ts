@@ -14,6 +14,8 @@ interface StudyReport {
   examGroups?: { source: string; examType: string; maxScore: number; count: number; averagePercentage: number }[];
   lessonResults?: { source: string; examType: string; lessonName?: string | null; topicName?: string | null;
     questionCount: number; correct: number; wrong: number; empty: number }[];
+  goals?: { goalId: string; title: string; source: string; recordedProgress: number; isCompleted: boolean;
+    targetDate?: string | null; targetScore?: number | null; targetExamType?: string | null; targetSubject?: string | null }[];
 }
 
 @Component({ selector: 'app-student-study-report', standalone: true, imports: [CommonModule, FormsModule],
@@ -54,6 +56,19 @@ interface StudyReport {
             <tbody><tr *ngFor="let lesson of data.lessonResults" class="border-t dark:border-slate-800"><td class="p-2">{{ lesson.lessonName ?? 'Ders adı bulunamadı' }} · {{ lesson.topicName ?? 'Ders toplamı' }}</td><td class="p-2">{{ sourceLabel(lesson.source) }} · {{ lesson.examType }}</td><td class="p-2">{{ lesson.questionCount }}</td><td class="p-2">{{ lesson.correct }} / {{ lesson.wrong }} / {{ lesson.empty }}</td></tr></tbody>
           </table>
         </div>
+        <h3 class="mt-6 font-semibold">Güncel hedeflerim</h3>
+        <p class="mt-2 text-xs text-slate-500">Seçilen dönemin geçmiş durumunu göstermez. İlerleme, hedef kaydına girilen değerdir; sınavlardan veya çalışma planından otomatik hesaplanmaz. Otomatik başarı veya yerleşme tahmini değildir.</p>
+        <p *ngIf="!data.goals?.length" class="mt-2 text-sm">Henüz kayıtlı hedefin yok.</p>
+        <ul class="mt-3 space-y-3">
+          <li *ngFor="let goal of data.goals" class="rounded-lg border p-3 text-sm dark:border-slate-800">
+            <h4 class="font-semibold">{{ goal.title }}</h4>
+            <p class="mt-1 text-xs text-slate-500">{{ goal.source === 'TeacherSet' ? 'Öğretmenin belirlediği hedef' : 'Öğrencinin belirlediği hedef' }}</p>
+            <p class="mt-2">Kaydedilen ilerleme: %{{ goal.recordedProgress }} · {{ goal.isCompleted ? 'Tamamlandı olarak işaretli' : 'Devam ediyor' }}</p>
+            <p *ngIf="goal.targetDate">Hedef tarihi: {{ goal.targetDate | date:'dd.MM.yyyy':'UTC' }}</p>
+            <p *ngIf="goal.targetScore !== null && goal.targetScore !== undefined">Hedef puanı: {{ goal.targetScore }}<span *ngIf="goal.targetExamType"> · {{ goal.targetExamType }}</span></p>
+            <p *ngIf="goal.targetSubject">Hedef ders: {{ goal.targetSubject }}</p>
+          </li>
+        </ul>
       </div>
     </section>`,
 })
