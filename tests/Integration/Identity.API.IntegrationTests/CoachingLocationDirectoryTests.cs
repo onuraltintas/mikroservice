@@ -46,6 +46,37 @@ public sealed class CoachingLocationDirectoryTests
     private static IConfiguration Config() => new ConfigurationBuilder()
         .AddInMemoryCollection(new Dictionary<string, string?> { ["Services:IdentityService"] = "http://identity.test/" }).Build();
 
+    [Theory]
+    [InlineData("")]
+    [InlineData(" province ")]
+    [InlineData("identifier-longer-than-twenty")]
+    public async Task InvalidIdentifiersAreRejectedBeforeSendingARequest(string province)
+    {
+        using var http = new HttpClient(new Handler(_ => throw new InvalidOperationException("Must not call Identity")));
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            new IdentityLocationDirectoryClient(http, Config()).VerifyPairAsync(province, "district", default));
+    }
+
+    [Fact]
+    public async Task DuplicateProvinceIdentifiersAreNotAccepted()
+    {
+        using var http = new HttpClient(new Handler(_ => new(HttpStatusCode.OK)
+        {
+            Content = JsonContent.Create(new[] { new { id = "province", name = "A" }, new { id = "province", name = "B" } })
+        }));
+        Assert.False(await new IdentityLocationDirectoryClient(http, Config()).VerifyPairAsync("province", "district", default));
+    }
+
+    [Fact]
+    public async Task CallerCancellationIsPreserved()
+    {
+        using var http = new HttpClient(new Handler(_ => throw new InvalidOperationException("Must not call Identity")));
+        using var cancellation = new CancellationTokenSource();
+        cancellation.Cancel();
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
+            new IdentityLocationDirectoryClient(http, Config()).VerifyPairAsync("province", "district", cancellation.Token));
+    }
+
     private sealed class Handler(Func<HttpRequestMessage, HttpResponseMessage> response) : HttpMessageHandler
     {
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
