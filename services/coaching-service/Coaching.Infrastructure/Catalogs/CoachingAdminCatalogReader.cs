@@ -1,0 +1,50 @@
+using Coaching.Application.Authorization;
+using Coaching.Application.CatalogAdministration;
+using Coaching.Application.StudyPlanning;
+using Coaching.Infrastructure.Data;
+using EduPlatform.Shared.Kernel.Exceptions;
+using Microsoft.EntityFrameworkCore;
+
+namespace Coaching.Infrastructure.Catalogs;
+
+public sealed class CoachingAdminCatalogReader(CoachingDbContext db, ICoachingAdminScopeAuthorization scope)
+    : ICoachingAdminCatalogReader
+{
+    public async Task<TargetSearchPage<AdminCatalogRow>> ListAsync(CatalogKind kind, AdminCatalogFilter filter,
+        CancellationToken cancellationToken)
+    {
+        if (!(await scope.RequireReadScopeAsync(cancellationToken)).IsGlobal)
+            throw new BusinessRuleException("Authorization.Forbidden", "Ortak katalog yönetimi yalnız global yöneticiye açıktır.");
+        if (!Enum.IsDefined(kind) || filter.PageNumber is < 1 or > 10000 || filter.PageSize is < 1 or > 100
+            || filter.Search?.Length > 200 || filter.Source?.Length > 100)
+            throw new ArgumentException("Katalog arama ve sayfalama değerlerini kontrol edin.");
+        IQueryable<AdminCatalogRow> query = kind switch
+        {
+            CatalogKind.Lessons => db.StudyCatalogLessons.AsNoTracking().Select(x => new AdminCatalogRow
+            { Id = x.Id, Name = x.Name, Source = x.Source, SourceId = x.SourceId, IsActive = x.IsActive, GradeNumber = x.GradeNumber, ExamCode = x.ExamCode }),
+            CatalogKind.Units => db.StudyCatalogUnits.AsNoTracking().Select(x => new AdminCatalogRow
+            { Id = x.Id, Name = x.Name, Source = x.Source, SourceId = x.SourceId, IsActive = x.IsActive, LessonId = x.LessonId, DisplayOrder = x.DisplayOrder }),
+            CatalogKind.Topics => db.StudyCatalogTopics.AsNoTracking().Select(x => new AdminCatalogRow
+            { Id = x.Id, Name = x.Name, Source = x.Source, SourceId = x.SourceId, IsActive = x.IsActive,
+                LessonId = x.LessonId, UnitId = x.UnitId, ParentId = x.ParentId, DisplayOrder = x.DisplayOrder, EstimatedMinutes = x.EstimatedMinutes }),
+            CatalogKind.Schools => db.TargetSchools.AsNoTracking().Select(x => new AdminCatalogRow
+            { Id = x.Id, Name = x.Name, Source = x.Source, SourceId = x.SourceId, IsActive = x.IsActive, City = x.City,
+                District = x.District, ProvinceId = x.ProvinceId, DistrictId = x.DistrictId, MinimumScore = x.MinimumScore, ScoreYear = x.ScoreYear }),
+            CatalogKind.UniversityPrograms => db.TargetUniversityPrograms.AsNoTracking().Select(x => new AdminCatalogRow
+            { Id = x.Id, Name = x.Name, Source = x.Source, SourceId = x.SourceId, IsActive = x.IsActive,
+                UniversityName = x.UniversityName, ProgramCode = x.ProgramCode, ScoreType = x.ScoreType, MinimumScore = x.MinimumScore, ScoreYear = x.ScoreYear }),
+            _ => throw new ArgumentException("Geçersiz katalog türü.")
+        };
+        if (filter.IsActive.HasValue) query = query.Where(x => x.IsActive == filter.IsActive);
+        if (!string.IsNullOrWhiteSpace(filter.Source)) query = query.Where(x => x.Source == filter.Source.Trim());
+        if (!string.IsNullOrWhiteSpace(filter.Search))
+        {
+            var term = filter.Search.Trim().Replace("\\", "\\\\").Replace("%", "\\%").Replace("_", "\\_");
+            query = query.Where(x => EF.Functions.ILike(x.Name, "%" + term + "%", "\\"));
+        }
+        var count = await query.CountAsync(cancellationToken);
+        var rows = await query.OrderBy(x => x.Name).ThenBy(x => x.Id)
+            .Skip((filter.PageNumber - 1) * filter.PageSize).Take(filter.PageSize).ToListAsync(cancellationToken);
+        return new(rows, count, filter.PageNumber, filter.PageSize);
+    }
+}

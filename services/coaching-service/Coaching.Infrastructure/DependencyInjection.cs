@@ -162,6 +162,7 @@ public static class DependencyInjection
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<ICoachingEventPublisher, MassTransitCoachingEventPublisher>();
         services.AddSingleton<IAdminAuditWriter, CoachingAdminAuditWriter>();
+        services.AddScoped<Coaching.Application.CatalogAdministration.ICoachingAdminCatalogReader, Coaching.Infrastructure.Catalogs.CoachingAdminCatalogReader>();
         services.AddHttpClient<Coaching.Application.CatalogAdministration.ICoachingLocationDirectory, IdentityLocationDirectoryClient>(client =>
         {
             client.Timeout = TimeSpan.FromSeconds(5);
