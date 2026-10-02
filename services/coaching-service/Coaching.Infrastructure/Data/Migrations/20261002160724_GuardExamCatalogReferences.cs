@@ -41,8 +41,10 @@ namespace Coaching.Infrastructure.Data.Migrations
 
                 CREATE FUNCTION coaching.guard_catalog_exam_history() RETURNS trigger LANGUAGE plpgsql AS $$
                 BEGIN
-                    IF EXISTS (SELECT 1 FROM coaching.exam_results
-                        WHERE lesson_answers::text ILIKE '%' || OLD."Id"::text || '%') THEN
+                    IF EXISTS (SELECT 1 FROM coaching.exam_results AS result
+                        CROSS JOIN LATERAL jsonb_array_elements(result.lesson_answers) AS item
+                        WHERE COALESCE(item->>'LessonId', item->>'lessonId')::uuid = OLD."Id"
+                            OR COALESCE(item->>'TopicId', item->>'topicId')::uuid = OLD."Id") THEN
                         RAISE EXCEPTION 'Catalog entry is referenced by exam history' USING ERRCODE = '23503';
                     END IF;
                     RETURN OLD;

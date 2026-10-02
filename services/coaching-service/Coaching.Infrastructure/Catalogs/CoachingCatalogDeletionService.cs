@@ -116,12 +116,14 @@ public sealed class CoachingCatalogDeletionService(CoachingDbContext db,
             CatalogKind.UniversityPrograms => await db.AcademicGoals.CountAsync(x => x.TargetUniversityProgramId == id, cancellationToken),
             _ => 0
         };
-        // Conservative matching preserves all stored JSON history, including formatting/casing variants.
-        var pattern = "%" + id.ToString() + "%";
+        // Compare UUID values, not serialized spelling (PostgreSQL accepts compact UUID strings).
+        var key = kind == CatalogKind.Lessons ? "LessonId" : "TopicId";
+        var camelKey = kind == CatalogKind.Lessons ? "lessonId" : "topicId";
         var exams = kind is CatalogKind.Lessons or CatalogKind.Topics
             ? await db.Database.SqlQuery<int>($"""
-                SELECT count(*)::integer AS "Value" FROM coaching.exam_results
-                WHERE lesson_answers::text ILIKE {pattern}
+                SELECT count(*)::integer AS "Value" FROM coaching.exam_results AS result
+                WHERE EXISTS (SELECT 1 FROM jsonb_array_elements(result.lesson_answers) AS item
+                    WHERE COALESCE(item->>{key}, item->>{camelKey})::uuid = {id})
                 """).SingleAsync(cancellationToken) : 0;
         return new(id, name, fingerprint, catalog, plans, goals, exams);
     }
