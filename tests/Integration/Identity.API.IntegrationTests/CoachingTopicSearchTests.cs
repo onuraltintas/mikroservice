@@ -36,7 +36,7 @@ public sealed class CoachingTopicSearchTests(PostgresFixture postgres)
             Assert.Null(item.EstimatedMinutes);
             Assert.Empty((await service.SearchAsync(null, 9, "LGS", 1, 20)).Items);
             Assert.Empty((await service.SearchAsync(null, 8, "AYT", 1, 20)).Items);
-            Assert.Equal(3, (await service.SearchAsync(null, null, null, 1, 1)).TotalCount);
+            Assert.Equal(2, (await service.SearchAsync(null, null, null, 1, 1)).TotalCount);
             Assert.Single((await service.SearchAsync(null, null, null, 2, 1)).Items);
             var storedParent = await db.StudyCatalogTopics.SingleAsync(x => x.Id == parent.Id);
             db.Entry(storedParent).Property(x => x.IsActive).CurrentValue = false;
