@@ -50,6 +50,9 @@ describe('StudentGoalTargetComponent', () => {
     component.score = 501; component.maxScore = 500; component.saveScore();
     expect(service.saveGoalScoreTarget).toHaveBeenCalledTimes(2);
     expect(component.error()).toBeTruthy();
+    component.score = 12.345; component.maxScore = 100; component.saveScore();
+    component.score = 12; component.maxScore = 100.001; component.saveScore();
+    expect(service.saveGoalScoreTarget).toHaveBeenCalledTimes(2);
   });
   it('protects score writes for teacher goals, stale versions and pending saves', () => {
     const { component, service } = setup(false);

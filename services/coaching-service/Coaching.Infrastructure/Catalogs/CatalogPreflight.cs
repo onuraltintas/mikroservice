@@ -11,6 +11,9 @@ public static class CatalogPreflight
         "subjects.json", "university-programs.json", "lgs-programs.json"];
 
     public static async Task<CatalogPreflightReport> ReadAsync(string directory, CancellationToken cancellationToken = default)
+        => Validate(await ReadFilesAsync(directory, cancellationToken));
+
+    public static async Task<IReadOnlyDictionary<string, string>> ReadFilesAsync(string directory, CancellationToken cancellationToken = default)
     {
         var files = new Dictionary<string, string>(StringComparer.Ordinal);
         foreach (var name in FileNames)
@@ -23,7 +26,7 @@ public static class CatalogPreflight
                 throw new ArgumentException("Catalog file exceeds the 32 MiB limit.");
             files.Add(name, await File.ReadAllTextAsync(path, cancellationToken));
         }
-        return Validate(files);
+        return files;
     }
 
     public static CatalogPreflightReport Validate(IReadOnlyDictionary<string, string> files)
