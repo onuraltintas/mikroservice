@@ -60,6 +60,12 @@ public sealed class CoachingCatalogImportTests(PostgresFixture postgres)
             Assert.Equal(1, await db.AdminAuditRecords.CountAsync(x => x.Action == "CatalogImport"));
             await Assert.ThrowsAsync<InvalidOperationException>(() => importer.ApproveAsync(files, "test-catalog", review.Fingerprint, "Yayın onayı", Guid.NewGuid(), true));
             review = await importer.ReviewAsync(files, "test-catalog");
+            var extra = Coaching.Domain.Entities.TargetSchool.Create("test-catalog", "outside-review", "Extra school", "City", "District", 350, null);
+            db.TargetSchools.Add(extra); await db.SaveChangesAsync(); db.ChangeTracker.Clear();
+            var extraReview = await importer.ReviewAsync(files, "test-catalog");
+            await Assert.ThrowsAsync<InvalidOperationException>(() => importer.ApproveAsync(files, "test-catalog", extraReview.Fingerprint, "Yayın onayı", Guid.NewGuid(), true));
+            db.TargetSchools.Remove(extra); await db.SaveChangesAsync(); db.ChangeTracker.Clear();
+            review = await importer.ReviewAsync(files, "test-catalog");
             Assert.Equal(6, await importer.ApproveAsync(files, "test-catalog", review.Fingerprint, "Yayın onayı", Guid.NewGuid(), true));
             Assert.True(await db.TargetSchools.AllAsync(x => x.IsActive));
             Assert.Equal(1, await db.AdminAuditRecords.CountAsync(x => x.Action == "CatalogPublish"));
