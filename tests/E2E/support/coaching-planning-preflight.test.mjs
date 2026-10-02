@@ -12,3 +12,8 @@ test('accepts only the local API with the exact disposable database override', (
   assert.doesNotThrow(() => validatePlanningProcess(`dotnet ${path} --ConnectionStrings:DefaultConnection "${connection}"`));
   assert.throws(() => validatePlanningProcess(`dotnet unrelated.dll --ConnectionStrings:DefaultConnection "${connection}"`));
 });
+test('rejects later overrides and a decoy API path in an unrelated process', () => {
+  assert.throws(() => validatePlanningProcess(`dotnet ${path} --ConnectionStrings:DefaultConnection "${connection}" --ConnectionStrings:DefaultConnection=Host=production`));
+  assert.throws(() => validatePlanningProcess(`dotnet ${path} --ConnectionStrings:DefaultConnection "${connection}" ConnectionStrings:DefaultConnection=Host=production`));
+  assert.throws(() => validatePlanningProcess(`dotnet other.dll --decoy ${path} --ConnectionStrings:DefaultConnection "${connection}"`));
+});
