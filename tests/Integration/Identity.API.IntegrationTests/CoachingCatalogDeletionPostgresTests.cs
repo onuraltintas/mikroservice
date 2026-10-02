@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using EduPlatform.Shared.Infrastructure.Middleware;
 using System.Security.Claims;
+using System.Data.Common;
 using Shared.IntegrationTests.Fixtures;
 
 namespace Identity.API.IntegrationTests;
@@ -186,6 +187,47 @@ public sealed class CoachingCatalogDeletionPostgresTests(PostgresFixture postgre
             Assert.Single(await db.AdminAuditRecords.ToListAsync());
         }
         finally { await db.Database.EnsureDeletedAsync(); }
+    }
+
+    [Fact]
+    public async Task LostCommitAcknowledgementReturnsSuccessWithOneDeletionAndOneAudit()
+    {
+        var interceptor = new LoseCommitAcknowledgement();
+        await using var db = new CoachingDbContext(new DbContextOptionsBuilder<CoachingDbContext>()
+            .UseNpgsql(postgres.ConnectionString, options => options.EnableRetryOnFailure(2, TimeSpan.Zero, null))
+            .AddInterceptors(interceptor).Options);
+        await db.Database.EnsureDeletedAsync();
+        try
+        {
+            await db.Database.EnsureCreatedAsync();
+            var school = TargetSchool.Create("admin", "s1", "School", "City", "District", null);
+            db.TargetSchools.Add(school);
+            await db.SaveChangesAsync();
+            db.ChangeTracker.Clear();
+            var service = Service(db);
+            var usage = await service.GetUsageAsync(CatalogKind.Schools, school.Id, default);
+            interceptor.Armed = true;
+            await service.DeleteAsync(CatalogKind.Schools, school.Id, new(usage.Fingerprint, "Unused duplicate", school.Id), default);
+            Assert.True(interceptor.Failed);
+            Assert.False(await db.TargetSchools.AnyAsync());
+            Assert.Single(await db.AdminAuditRecords.ToListAsync());
+        }
+        finally { await db.Database.EnsureDeletedAsync(); }
+    }
+
+    private sealed class LoseCommitAcknowledgement : DbTransactionInterceptor
+    {
+        public bool Armed { get; set; }
+        public bool Failed { get; private set; }
+        public override Task TransactionCommittedAsync(DbTransaction transaction, TransactionEndEventData eventData, CancellationToken cancellationToken = default)
+        {
+            if (Armed && !Failed)
+            {
+                Failed = true;
+                throw new TimeoutException("Simulated lost commit acknowledgement.");
+            }
+            return Task.CompletedTask;
+        }
     }
 
     private sealed class FailFirstAuditSave : SaveChangesInterceptor

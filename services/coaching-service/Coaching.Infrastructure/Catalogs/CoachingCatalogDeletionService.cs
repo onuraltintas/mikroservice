@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.Encodings.Web;
 using Coaching.Application.Authorization;
 using Coaching.Application.CatalogAdministration;
 using Coaching.Infrastructure.Data;
@@ -27,8 +28,15 @@ public sealed class CoachingCatalogDeletionService(CoachingDbContext db,
         if (id == Guid.Empty || request.ConfirmId != id || string.IsNullOrWhiteSpace(request.Reason)
             || request.Reason.Trim().Length is < 5 or > 500 || request.Fingerprint?.Length != 64)
             throw new ArgumentException("Kalıcı silme için kayıt onayı ve 5–500 karakterlik gerekçe gereklidir.");
+        var auditId = Guid.NewGuid();
         await db.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
         {
+            // A stable transactional audit ID proves success if the commit acknowledgement was lost.
+            if (await db.AdminAuditRecords.AsNoTracking().AnyAsync(x => x.Id == auditId, cancellationToken)) return;
+            object? entity = null;
+            AdminAuditRecord? audit = null;
+            try
+            {
             await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
             // A rare administrative delete must exclude concurrent reference creation,
             // including exam JSON references which have no database foreign key.
@@ -39,19 +47,30 @@ public sealed class CoachingCatalogDeletionService(CoachingDbContext db,
                     coaching.study_plan_tasks, coaching.target_schools, coaching.target_university_programs
                 IN SHARE ROW EXCLUSIVE MODE
                 """, cancellationToken);
-            var entity = await LoadAsync(kind, id, cancellationToken);
+            entity = await LoadAsync(kind, id, cancellationToken);
             var usage = await UsageAsync(kind, id, entity, cancellationToken);
             if (!string.Equals(request.Fingerprint, usage.Fingerprint, StringComparison.Ordinal))
                 throw new BusinessRuleException("Catalog.Stale", "Kayıt değişmiş. Güncel kaydı inceleyip yeniden onaylayın.");
             if (!usage.CanDelete)
                 throw new BusinessRuleException("Catalog.InUse", "Kayıt kullanımda; geçmişi korumak için kalıcı silinemez. Pasife alabilirsiniz.");
             db.Remove(entity);
-            db.AdminAuditRecords.Add(new(Guid.NewGuid(), DateTimeOffset.UtcNow, "Coaching",
+            var snapshot = JsonSerializer.SerializeToElement(entity, entity.GetType());
+            audit = new(auditId, DateTimeOffset.UtcNow, "Coaching",
                 user.UserId!.Value.ToString(), "SystemAdmin", null, "DELETE", $"/api/coaching-admin/catalog/{kind}/{id}",
                 200, Guid.NewGuid().ToString("N"), null, null, "CatalogPermanentDelete", kind.ToString(), id.ToString(),
-                JsonSerializer.Serialize(new { reason = request.Reason.Trim(), fingerprint = usage.Fingerprint, name = usage.Name })));
+                JsonSerializer.Serialize(new { reason = request.Reason.Trim(), fingerprint = usage.Fingerprint,
+                    name = usage.Name, source = snapshot.GetProperty("Source").GetString(), sourceId = snapshot.GetProperty("SourceId").GetString() },
+                    new JsonSerializerOptions { Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping }));
+            db.AdminAuditRecords.Add(audit);
             await db.SaveChangesAsync(cancellationToken);
             await transaction.CommitAsync(cancellationToken);
+            }
+            finally
+            {
+                // Detach only this attempt's entities; unrelated tracked work is never cleared.
+                if (entity is not null) db.Entry(entity).State = EntityState.Detached;
+                if (audit is not null) db.Entry(audit).State = EntityState.Detached;
+            }
         });
     }
 
