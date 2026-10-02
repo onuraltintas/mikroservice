@@ -7,6 +7,7 @@ cd "$release"
 db_user=$(docker exec postgres printenv POSTGRES_USER)
 case "${1:-}" in
 build)
+  rm -f "$release/drill-complete" "$release/migrations-complete"
   docker build -t "eduivme/coaching-service:$tag" -f source/services/coaching-service/Dockerfile source > coaching-build.log 2>&1
   docker build -t "eduivme/admin-panel:$tag" -f source/clients/admin-panel/Dockerfile source/clients > admin-build.log 2>&1
   ;;
@@ -43,10 +44,13 @@ backup-drill)
   docker run --rm --network eduplatform-production --env ConnectionStrings__DefaultConnection "eduivme/coaching-service:$tag" --migrate-only > migration-drill.log 2>&1
   docker exec postgres psql -U "$db_user" -d "$drill" -v ON_ERROR_STOP=1 -Atc 'SELECT count(*) FROM coaching.__ef_migrations_history' > drill-migration-count.txt
   test "$(cat drill-migration-count.txt)" = 33
-  touch drill-complete
+  docker image inspect "eduivme/coaching-service:$tag" --format '{{.Id}}' > drill-complete
   ;;
 migrate|deploy|rollback)
-  test -f drill-complete
+  if [ "$1" != rollback ]; then
+    test -f drill-complete
+    test "$(cat drill-complete)" = "$(docker image inspect "eduivme/coaching-service:$tag" --format '{{.Id}}')"
+  fi
   IFS=',' read -ra files < compose-files.txt
   compose=(docker compose --project-name eduivme-production --project-directory /opt/eduivme --env-file /opt/eduivme/.env)
   for file in "${files[@]}"; do test -f "$file"; compose+=(-f "$file"); done
@@ -56,12 +60,14 @@ migrate|deploy|rollback)
   "${compose[@]}" config --quiet
   case "$1" in
     migrate)
+      rm -f "$release/migrations-complete"
       "${compose[@]}" run --rm --no-deps coaching-service --migrate-only > migration-production.log 2>&1
       test "$(docker exec postgres psql -U "$db_user" -d coaching_db -Atc 'SELECT count(*) FROM coaching.__ef_migrations_history')" = 33
-      touch migrations-complete
+      docker image inspect "eduivme/coaching-service:$tag" --format '{{.Id}}' > migrations-complete
       ;;
     deploy)
       test -f migrations-complete
+      test "$(cat migrations-complete)" = "$(docker image inspect "eduivme/coaching-service:$tag" --format '{{.Id}}')"
       "${compose[@]}" up -d --no-deps coaching-service admin-panel
       ;;
     rollback) "${compose[@]}" up -d --no-deps coaching-service admin-panel ;;
