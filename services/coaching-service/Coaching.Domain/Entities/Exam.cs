@@ -226,6 +226,7 @@ public class ExamResult : Entity
     public int? EmptyAnswers { get; private set; }
 
     public string? SubjectScoresJson { get; private set; } // JSON: {"Matematik": 85, "Türkçe": 90}
+    public string? LessonAnswersJson { get; private set; }
     public int? Ranking { get; private set; } // Sıralamadaki yeri
 
     public string? TeacherNotes { get; private set; }
@@ -261,6 +262,24 @@ public class ExamResult : Entity
     {
         SubjectScoresJson = System.Text.Json.JsonSerializer.Serialize(subjectScores);
     }
+
+    public void SetLessonAnswers(IReadOnlyList<LessonAnswerStatistics> lessons)
+    {
+        ArgumentNullException.ThrowIfNull(lessons);
+        if (lessons.Count > 50 || lessons.Any(x => x is null || x.LessonId == Guid.Empty || x.TopicId == Guid.Empty
+            || x.QuestionCount is < 1 or > 1000 || x.Correct < 0 || x.Wrong < 0 || x.Empty < 0
+            || (long)x.Correct + x.Wrong + x.Empty != x.QuestionCount)
+            || lessons.Select(x => (x.LessonId, x.TopicId)).Distinct().Count() != lessons.Count
+            || lessons.GroupBy(x => x.LessonId).Any(x => x.Count() > 1 && x.Any(y => y.TopicId is null)))
+            throw new ArgumentException("Lesson question counts must be non-negative, consistent and non-overlapping.", nameof(lessons));
+        if (lessons.Count > 0 && (lessons.Sum(x => (long)x.Correct) != CorrectAnswers
+            || lessons.Sum(x => (long)x.Wrong) != WrongAnswers || lessons.Sum(x => (long)x.Empty) != EmptyAnswers))
+            throw new ArgumentException("Lesson totals must match the exam totals.", nameof(lessons));
+        LessonAnswersJson = System.Text.Json.JsonSerializer.Serialize(lessons);
+    }
+
+    public IReadOnlyList<LessonAnswerStatistics> GetLessonAnswers() => string.IsNullOrWhiteSpace(LessonAnswersJson)
+        ? [] : System.Text.Json.JsonSerializer.Deserialize<List<LessonAnswerStatistics>>(LessonAnswersJson)!;
 
     public void SetRanking(int ranking)
     {
@@ -323,3 +342,5 @@ public class ExamResult : Entity
         return System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, decimal>>(SubjectScoresJson);
     }
 }
+
+public sealed record LessonAnswerStatistics(Guid LessonId, Guid? TopicId, int QuestionCount, int Correct, int Wrong, int Empty);

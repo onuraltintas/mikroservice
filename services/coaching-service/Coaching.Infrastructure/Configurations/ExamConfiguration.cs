@@ -23,8 +23,13 @@ public class ExamConfiguration : IEntityTypeConfiguration<Exam>
             .HasColumnName("institution_id");
 
         builder.Property(x => x.CreatedByTeacherId)
-            .HasColumnName("created_by_teacher_id")
-            .IsRequired();
+            .HasColumnName("created_by_teacher_id");
+
+        builder.Property(x => x.StudentOwnerId).HasColumnName("student_owner_id");
+        builder.HasIndex(x => new { x.StudentOwnerId, x.ExamDate });
+        builder.ToTable("exams", table => table.HasCheckConstraint("ck_exams_creator",
+            "(created_by_teacher_id IS NOT NULL AND student_owner_id IS NULL) OR "
+            + "(created_by_teacher_id IS NULL AND student_owner_id IS NOT NULL AND institution_id IS NULL)"));
 
         builder.Property(x => x.Title)
             .HasColumnName("title")
@@ -132,6 +137,8 @@ public class ExamResultConfiguration : IEntityTypeConfiguration<ExamResult>
         builder.Property(x => x.SubjectScoresJson)
             .HasColumnName("subject_scores")
             .HasColumnType("jsonb");
+
+        builder.Property(x => x.LessonAnswersJson).HasColumnName("lesson_answers").HasColumnType("jsonb");
 
         builder.Property(x => x.Ranking)
             .HasColumnName("ranking");
