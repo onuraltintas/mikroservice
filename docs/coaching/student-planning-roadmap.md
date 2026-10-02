@@ -81,3 +81,14 @@ Her aşamada test -> uygulama -> doğrulama yapılır. Şu an öğrenci ekranlar
   üst konu bağlantısı reddedildi; katalog migration geri alma işlemi doğrulandı.
   Ders/ünite/konu altyapısı doğrulandı; hedef program/okul katalogları ve aktarım henüz yapılmadı.
 - Canlı veritabanına migration uygulanmadı; kaynak katalog veya kişisel veri aktarılmadı.
+
+### Hedef katalogları
+
+Üniversite programı ve LGS hedef okul modelleri ile ayrı migration hazırlandı.
+Kaynak kimlikleri benzersiz, kataloglar başlangıçta pasiftir. Puan ve yılı bilinmiyorsa
+null korunur; doğrulanmış yıl verilirse kaydedilebilir. Üniversite adları şimdilik
+program satırında korunur; ad benzerliğiyle kurum birleştirilmez.
+Yeni hedef katalogları dahil Docker gerektirmeyen 70 test geçti ve model/migration
+eşleşmesi doğrulandı. PostgreSQL mükerrer kayıt ve geri alma testleri yazıldı;
+Docker motoruna yeniden erişilemediği için bu testler henüz doğrulanmadı.
+Bu aşama kapanmadan aktarım veya canlı yayın yapılmayacak.
