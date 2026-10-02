@@ -46,7 +46,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
       </form>
       @if (error()) { <div role="alert" class="rounded-lg border border-red-200 bg-red-50 p-4 text-red-800">{{ error() }}</div> }
       @if (usageLoading()) { <p role="status">Kullanım bilgisi kontrol ediliyor…</p> }
-      <div aria-live="polite" aria-atomic="true" class="sr-only">{{ selectedUsage()?.name ? selectedUsage()?.name + ' kullanım bilgisi yüklendi.' : '' }}</div>
+      <div aria-live="polite" aria-atomic="true" class="sr-only">{{ selectedUsage() ? kindLabel() + ': ' + selectedUsage()?.name + ' (' + selectedUsage()?.id + ') kullanım bilgisi yüklendi.' : '' }}</div>
       @if (selectedUsage(); as usage) {
         <section role="region" aria-labelledby="catalog-usage-title" class="space-y-3 rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-900">
           <h2 id="catalog-usage-title" class="text-lg font-semibold">{{ usage.name }} — Kullanım ve kalıcı silme</h2>
@@ -77,7 +77,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
                 <td class="p-4">{{ row.universityName || row.city || row.examCode || '—' }} @if (row.district) {<span class="block text-gray-500">{{ row.district }} · {{ row.districtId ? 'Doğrulanmış konum' : 'Konum eşleştirilmemiş' }}</span>} @if (row.gradeNumber) {<span class="block">{{ row.gradeNumber }}. sınıf</span>}</td>
                 <td class="p-4">@if (row.minimumScore != null) {{{ row.minimumScore | number:'1.0-4' }} · {{ row.scoreYear || 'Yıl belirtilmemiş' }}} @else if (row.estimatedMinutes != null) {{{ row.estimatedMinutes }} dakika} @else {—} @if (row.displayOrder != null) {<span class="block">Sıra: {{ row.displayOrder }}</span>} @if (row.scoreType) {<span class="block">{{ row.scoreType }} · {{ row.programCode || 'Kod yok' }}</span>}</td>
                 <td class="p-4">{{ row.source }}<span class="block text-xs text-gray-500">{{ row.sourceId }}</span></td>
-                <td class="p-4">{{ row.isActive ? 'Aktif' : 'Pasif' }}<button type="button" [attr.aria-label]="row.name + ' kullanımını incele'" (click)="inspectUsage(row.id)" [disabled]="deleting()" class="mt-2 block rounded-lg border px-2 py-1">Kullanımı incele</button></td>
+                <td class="p-4">{{ row.isActive ? 'Aktif' : 'Pasif' }}<button type="button" [attr.aria-label]="kindLabel() + ': ' + row.name + ' (' + row.id + ') kullanımını incele'" (click)="inspectUsage(row.id)" [disabled]="deleting()" class="mt-2 block rounded-lg border px-2 py-1">Kullanımı incele</button></td>
               </tr>
             }</tbody>
           </table></div>
