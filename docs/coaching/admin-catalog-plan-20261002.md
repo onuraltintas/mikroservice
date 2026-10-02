@@ -107,3 +107,24 @@ RED/GREEN checkpointleri aktif `codex/platform-hardening` dalında ayrı commitl
 Bu kontroller **planın tümünün tamamlandığı anlamına gelmez**. Canlıya veya GitHub'a
 bu yeni admin geliştirmesi aktarılmadı. Bir sonraki çalışma güvenli yazma API'leri,
 kullanım kontrolü, gerekçeli denetim kaydı ve admin düzenleme formlarıdır.
+
+## Kalıcı silme alt adımı — yerel doğrulama
+
+- Beş katalog türünde kullanım incelemesi ve yalnız kullanılmayan kayıt için kalıcı
+  silme API/arayüzü eklendi. Öğrenci planı, hedef, sınav veya alt katalog bağlantısı
+  olan kayıt silinmez. Silme gerekçesi ve kaynak kimlikleri denetim kaydında korunur.
+- Coaching.ContentManage, global yönetici kapsamı ve mevcut ayara bağlı Coaching
+  MFA kontrolü korunur. Kayıt parmak izi eski ekranla silmeyi engeller.
+- Silme ve denetim kaydı aynı transaction'dadır. Geçici hata ve commit cevabı kaybı
+  test edildi. JSON sınav referansları UUID değeriyle kontrol edilir; farklı UUID
+  yazımları kontrolü aşamaz. Yeni migration yalnız Koçluk veritabanına aittir.
+- Kullanıcı SİL yazar, gerekçe girer ve kayıt adı/türü/UUID içeren son onayı verir.
+  Kullanım sonucu ekran okuyuculara duyurulur; çift gönderim engellenir.
+- Backend seçili regresyon: **215 geçti, 0 başarısız, 0 atlanan**.
+- Admin arayüzü seçili regresyon: **64 geçti, 0 başarısız**.
+- Bu sonuçlar tam tarayıcı E2E veya tüm ürünün tamamlanması anlamına gelmez.
+- Henüz canlıya aktarılmadı. Yayın öncesi eski sınav JSON verilerindeki geçersiz
+  referanslar kontrol edilmeli. İçe aktarma adımı, silme denetimindeki kaynak
+  kimliklerini dikkate almalı; silinen kaydı eski dosyadan yeniden oluşturmamalı.
+- Sıradaki işler: oluşturma/düzenleme/pasifleştirme API ve formları, kontrollü
+  içe aktarma, öğrenci plan/hedef/rapor incelemesi ve uçtan uca doğrulama.

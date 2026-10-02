@@ -46,9 +46,11 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
       </form>
       @if (error()) { <div role="alert" class="rounded-lg border border-red-200 bg-red-50 p-4 text-red-800">{{ error() }}</div> }
       @if (usageLoading()) { <p role="status">Kullanım bilgisi kontrol ediliyor…</p> }
+      <div aria-live="polite" aria-atomic="true" class="sr-only">{{ selectedUsage()?.name ? selectedUsage()?.name + ' kullanım bilgisi yüklendi.' : '' }}</div>
       @if (selectedUsage(); as usage) {
-        <section aria-labelledby="catalog-usage-title" class="space-y-3 rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-900">
+        <section role="region" aria-labelledby="catalog-usage-title" class="space-y-3 rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-900">
           <h2 id="catalog-usage-title" class="text-lg font-semibold">{{ usage.name }} — Kullanım ve kalıcı silme</h2>
+          <p class="break-all text-xs text-gray-500">{{ kindLabel() }} · Kayıt kimliği: {{ usage.id }}</p>
           <p class="text-sm">Katalog bağlantısı: {{ usage.catalogReferences }} · Plan görevi: {{ usage.planReferences }} · Hedef: {{ usage.goalReferences }} · Sınav sonucu: {{ usage.examReferences }}</p>
           @if (!usage.canDelete) { <p class="text-sm text-amber-700">Bu kayıt kullanımda. Öğrenci geçmişini korumak için kalıcı silinemez.</p> }
           @else if (canDelete()) {
@@ -75,7 +77,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
                 <td class="p-4">{{ row.universityName || row.city || row.examCode || '—' }} @if (row.district) {<span class="block text-gray-500">{{ row.district }} · {{ row.districtId ? 'Doğrulanmış konum' : 'Konum eşleştirilmemiş' }}</span>} @if (row.gradeNumber) {<span class="block">{{ row.gradeNumber }}. sınıf</span>}</td>
                 <td class="p-4">@if (row.minimumScore != null) {{{ row.minimumScore | number:'1.0-4' }} · {{ row.scoreYear || 'Yıl belirtilmemiş' }}} @else if (row.estimatedMinutes != null) {{{ row.estimatedMinutes }} dakika} @else {—} @if (row.displayOrder != null) {<span class="block">Sıra: {{ row.displayOrder }}</span>} @if (row.scoreType) {<span class="block">{{ row.scoreType }} · {{ row.programCode || 'Kod yok' }}</span>}</td>
                 <td class="p-4">{{ row.source }}<span class="block text-xs text-gray-500">{{ row.sourceId }}</span></td>
-                <td class="p-4">{{ row.isActive ? 'Aktif' : 'Pasif' }}<button type="button" (click)="inspectUsage(row.id)" [disabled]="deleting()" class="mt-2 block rounded-lg border px-2 py-1">Kullanımı incele</button></td>
+                <td class="p-4">{{ row.isActive ? 'Aktif' : 'Pasif' }}<button type="button" [attr.aria-label]="row.name + ' kullanımını incele'" (click)="inspectUsage(row.id)" [disabled]="deleting()" class="mt-2 block rounded-lg border px-2 py-1">Kullanımı incele</button></td>
               </tr>
             }</tbody>
           </table></div>
@@ -124,6 +126,7 @@ export class CoachingCatalogComponent implements OnInit {
 
   constructor() { this.destroyRef.onDestroy(() => { this.request?.unsubscribe(); this.usageRequest?.unsubscribe(); }); }
   canDelete() { return this.auth.userProfile()?.roles?.includes('SystemAdmin') && this.auth.hasPermission(ADMIN_PERMISSIONS.coachingContentManage); }
+  kindLabel() { return this.kinds.find(option => option.value === this.kind)?.label; }
   closeUsage() {
     this.usageRequest?.unsubscribe();
     this.usageLoading.set(false);
@@ -146,7 +149,7 @@ export class CoachingCatalogComponent implements OnInit {
     const reason = this.deleteReason.trim();
     if (!selected?.canDelete || !this.canDelete() || this.deleting() || this.deleteConfirmation !== 'SİL' || reason.length < 5 || reason.length > 500) return;
     this.deleting.set(true);
-    const confirmed = await this.toaster.confirm(`“${selected.name}” kalıcı olarak silinsin mi? Bu işlem geri alınamaz.`, { title: 'Kalıcı silme', confirmText: 'Kalıcı sil', cancelText: 'Vazgeç' });
+    const confirmed = await this.toaster.confirm(`${this.kindLabel()}: “${selected.name}” (kayıt kimliği: ${selected.id}) kalıcı olarak silinsin mi? Bu işlem geri alınamaz.`, { title: 'Kalıcı silme', confirmText: 'Kalıcı sil', cancelText: 'Vazgeç' });
     if (!confirmed || this.destroyRef.destroyed) { this.deleting.set(false); return; }
     this.service.delete(kind, selected.id, { fingerprint: selected.fingerprint, reason, confirmId: selected.id })
       .pipe(takeUntilDestroyed(this.destroyRef)).subscribe({

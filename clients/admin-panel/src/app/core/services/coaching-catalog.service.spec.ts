@@ -5,6 +5,17 @@ import { CoachingCatalogService } from './coaching-catalog.service';
 import { environment } from '../../../environments/environment';
 
 describe('CoachingCatalogService', () => {
+  it('sends permanent deletion as DELETE with fingerprint, reason and record confirmation', () => {
+    TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
+    const http = TestBed.inject(HttpTestingController);
+    const body = { fingerprint: 'fingerprint', reason: 'Unused duplicate', confirmId: 'record' };
+    TestBed.inject(CoachingCatalogService).delete('topics', 'record', body).subscribe();
+    const request = http.expectOne(`${environment.apiUrl}/coaching-admin/catalog/topics/record`);
+    expect(request.request.method).toBe('DELETE');
+    expect(request.request.body).toEqual(body);
+    request.flush({ success: true });
+    http.verify();
+  });
   it('preserves false active filters and unwraps the API envelope', () => {
     TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
     const http = TestBed.inject(HttpTestingController);
