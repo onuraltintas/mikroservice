@@ -73,7 +73,7 @@ public sealed class GetTeacherExamDetailQueryHandler
         if (exam is null)
             return null;
 
-        _accessPolicy.RequireTeacher(exam.CreatedByTeacherId);
+        _accessPolicy.RequireTeacher(exam.RequireTeacherCreator());
         var studentIds = await _repository.GetResultStudentIdsByExamIdAsync(query.ExamId, cancellationToken);
         var authorizedStudentIds = await CoachingStudentReadAuthorization.GetAuthorizedStudentIdsAsync(
             _accessPolicy,

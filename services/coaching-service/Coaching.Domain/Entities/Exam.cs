@@ -10,7 +10,8 @@ namespace Coaching.Domain.Entities;
 public class Exam : AggregateRoot
 {
     public Guid? InstitutionId { get; private set; }
-    public Guid CreatedByTeacherId { get; private set; }
+    public Guid? CreatedByTeacherId { get; private set; }
+    public Guid? StudentOwnerId { get; private set; }
 
     public string Title { get; private set; } = string.Empty;
     public ExamType ExamType { get; private set; }
@@ -69,6 +70,23 @@ public class Exam : AggregateRoot
 
         UpdatedAt = DateTime.UtcNow;
     }
+
+    public static Exam CreateStudentReported(Guid studentId, string title, ExamType examType,
+        DateTime examDate, decimal maxScore)
+    {
+        if (studentId == Guid.Empty) throw new ArgumentException("Student is required.", nameof(studentId));
+        if (string.IsNullOrWhiteSpace(title) || title.Trim().Length > 200)
+            throw new ArgumentException("Title must contain 1-200 characters.", nameof(title));
+        if (!Enum.IsDefined(examType)) throw new ArgumentOutOfRangeException(nameof(examType));
+        if (examDate == DateTime.MinValue || examDate.Kind != DateTimeKind.Utc)
+            throw new ArgumentException("A UTC exam date is required.", nameof(examDate));
+        if (maxScore is <= 0 or > 999.99m) throw new ArgumentOutOfRangeException(nameof(maxScore));
+        return new Exam { StudentOwnerId = studentId, Title = title.Trim(), ExamType = examType,
+            ExamDate = examDate, MaxScore = maxScore };
+    }
+
+    public Guid RequireTeacherCreator() => CreatedByTeacherId
+        ?? throw new BusinessRuleException("Authorization.Forbidden", "Student-reported exams cannot be changed through teacher operations.");
 
     /// <summary>
     /// Replaces the editable exam definition. Optional null values are cleared.
@@ -135,6 +153,9 @@ public class Exam : AggregateRoot
 
     public void AddResult(ExamResult result)
     {
+        if (result.ExamId != Id) throw new ArgumentException("Result belongs to another exam.", nameof(result));
+        if (StudentOwnerId.HasValue && result.StudentId != StudentOwnerId)
+            throw new BusinessRuleException("Authorization.Forbidden", "Only the student's own result is allowed.");
         if (result.Score < 0 || result.Score > MaxScore)
             throw new BusinessRuleException(
                 "Exam.ScoreInvalid",

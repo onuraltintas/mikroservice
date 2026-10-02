@@ -724,7 +724,8 @@ public sealed class CoachingAdminController : ControllerBase
             var exam = await GetExamInScopeAsync(id, scope, cancellationToken);
             if (exam is null) return NotFound();
             if (!scope.IsGlobal
-                && !await IsTeacherTargetScopeAuthorizedAsync(scope, exam.CreatedByTeacherId, [command.StudentId], cancellationToken))
+                && (exam.CreatedByTeacherId is not { } teacherId
+                    || !await IsTeacherTargetScopeAuthorizedAsync(scope, teacherId, [command.StudentId], cancellationToken)))
             {
                 return Forbid();
             }

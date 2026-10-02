@@ -106,7 +106,7 @@ public sealed class UpdateExamCommandHandler
         var exam = await _repository.GetByIdAsync(command.ExamId, cancellationToken)
             ?? throw new InvalidOperationException($"Exam {command.ExamId} not found");
 
-        _accessPolicy.RequireTeacher(exam.CreatedByTeacherId, command.IsInstitutionAdminOperation);
+        _accessPolicy.RequireTeacher(exam.RequireTeacherCreator(), command.IsInstitutionAdminOperation);
         exam.UpdateEditableDetails(
             command.Title,
             command.Type,
@@ -120,7 +120,7 @@ public sealed class UpdateExamCommandHandler
         await _eventPublisher.PublishAsync(
             new ExamUpdatedEvent(
                 exam.Id,
-                exam.CreatedByTeacherId,
+                exam.RequireTeacherCreator(),
                 exam.InstitutionId,
                 exam.Title,
                 exam.ExamDate,
@@ -161,7 +161,7 @@ public sealed class UpdateExamResultCommandHandler
         var exam = await _repository.GetByIdAsync(command.ExamId, cancellationToken)
             ?? throw new InvalidOperationException($"Exam {command.ExamId} not found");
 
-        _accessPolicy.RequireTeacher(exam.CreatedByTeacherId, command.IsInstitutionAdminOperation);
+        _accessPolicy.RequireTeacher(exam.RequireTeacherCreator(), command.IsInstitutionAdminOperation);
         exam.UpdateResult(
             command.ResultId,
             command.Score,

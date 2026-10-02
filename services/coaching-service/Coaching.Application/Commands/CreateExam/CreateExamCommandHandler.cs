@@ -84,7 +84,7 @@ public class CreateExamCommandHandler : IRequestHandler<CreateExamCommand, Creat
         await _eventPublisher.PublishAsync(
             new ExamCreatedEvent(
                 exam.Id,
-                exam.CreatedByTeacherId,
+                exam.RequireTeacherCreator(),
                 exam.InstitutionId,
                 exam.Title,
                 exam.ExamDate),

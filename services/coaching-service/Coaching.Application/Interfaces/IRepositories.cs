@@ -326,7 +326,7 @@ public sealed record CoachingAdminSessionListDto(
 
 public sealed record CoachingAdminExamListDto(
     Guid Id,
-    Guid CreatedByTeacherId,
+    Guid? CreatedByTeacherId,
     Guid? InstitutionId,
     string Title,
     ExamType ExamType,

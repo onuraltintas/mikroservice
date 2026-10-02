@@ -13,7 +13,7 @@ public sealed record GetCoachingAdminExamQuery(
 
 public sealed record CoachingAdminExamDetailDto(
     Guid Id,
-    Guid CreatedByTeacherId,
+    Guid? CreatedByTeacherId,
     Guid? InstitutionId,
     string Title,
     ExamType ExamType,
