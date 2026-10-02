@@ -52,6 +52,7 @@ public sealed class CoachingStudyPlanOutboxTests(PostgresFixture postgres)
             var message = Assert.Single(await db.Set<OutboxMessage>().AsNoTracking().ToListAsync());
             Assert.Contains("StudyPlanPublishedEvent", message.MessageType);
             Assert.Contains(active.Id.ToString(), message.Body);
+            Assert.DoesNotContain("Test plan", message.Body);
             await Assert.ThrowsAsync<EduPlatform.Shared.Kernel.Exceptions.BusinessRuleException>(() => service.PublishAsync(draft.Id, draft.Version));
             Assert.Equal(1, await db.Set<OutboxMessage>().CountAsync());
             var next = await service.CreateDraftAsync(new("Next plan", [new(new(2026, 10, 3), "Next read", 30, null, false)]));
