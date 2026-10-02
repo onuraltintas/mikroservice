@@ -28,6 +28,15 @@ public sealed class CoachingStudyReportApiTests
         Assert.DoesNotContain("Internal detail", System.Text.Json.JsonSerializer.Serialize(response.Value));
     }
 
+    [Fact]
+    public async Task ReportVolumeLimit_ExplainsHowToNarrowValidPeriod()
+    {
+        var api = new StudentStudyReportsController(new Stub { Error = new BusinessRuleException("StudyPlanning.ReportLimit", "Daha kısa dönem seçin.") });
+        var response = Assert.IsAssignableFrom<ObjectResult>(await api.Get(new(2026, 10, 1), new(2026, 10, 2)));
+        Assert.Equal(422, response.StatusCode);
+        Assert.Contains("StudyPlanning.ReportLimit", System.Text.Json.JsonSerializer.Serialize(response.Value));
+    }
+
     private sealed class Stub : IStudentStudyReportService
     {
         public Exception? Error;
