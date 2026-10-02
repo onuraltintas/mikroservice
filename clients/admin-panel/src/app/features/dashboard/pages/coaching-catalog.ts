@@ -7,21 +7,23 @@ import { CoachingCatalogFilter, CoachingCatalogKind, CoachingCatalogRow, Coachin
 import { ToasterService } from '../../../core/services/toaster.service';
 import { ADMIN_PERMISSIONS } from '../../../core/auth/permissions';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { CoachingCatalogEditorComponent } from './coaching-catalog-editor';
 
 @Component({
   selector: 'app-coaching-catalog',
   standalone: true,
-  imports: [FormsModule, DecimalPipe],
+  imports: [FormsModule, DecimalPipe, CoachingCatalogEditorComponent],
   template: `
     <main class="space-y-6" aria-labelledby="coaching-catalog-title">
       <header>
         <p class="text-sm font-semibold text-indigo-600">Koçluk / Ortak katalog</p>
         <h1 id="coaching-catalog-title" class="mt-1 text-2xl font-bold text-gray-900 dark:text-white">Dersler ve hedef katalogları</h1>
-        <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">Kaynak kayıtlarını ve kullanımını inceleyin. Yetkili yönetici yalnız kullanılmayan kayıtları gerekçeyle kalıcı silebilir.</p>
+        <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">Katalog kayıtlarını ve kullanımını yönetin. Oluşturma, düzenleme ve yayın değişiklikleri gerekçeyle kaydedilir; yalnız kullanılmayan kayıtlar kalıcı silinebilir.</p>
+        @if (canDelete()) { <button type="button" (click)="openEditor(null)" [disabled]="editorOpen() || deleting()" class="mt-3 rounded-lg bg-indigo-600 px-4 py-2 text-white disabled:opacity-40">Yeni kayıt</button> }
       </header>
       <form (ngSubmit)="load()" class="grid gap-4 rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-900 sm:grid-cols-2 lg:grid-cols-4">
         <div><label for="catalog-kind" class="block text-sm font-medium">Katalog</label>
-          <select id="catalog-kind" [ngModel]="kind" (ngModelChange)="changeKind($event)" name="kind" class="mt-1 w-full rounded-lg border p-2 dark:bg-gray-800">
+          <select id="catalog-kind" [disabled]="editorOpen() || deleting()" [ngModel]="kind" (ngModelChange)="changeKind($event)" name="kind" class="mt-1 w-full rounded-lg border p-2 dark:bg-gray-800">
             @for (option of kinds; track option.value) { <option [value]="option.value">{{ option.label }}</option> }
           </select></div>
         <div><label for="catalog-search" class="block text-sm font-medium">Ara</label>
@@ -42,8 +44,9 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
         @if (kind === 'universityPrograms') {
           <div><label for="catalog-score" class="block text-sm font-medium">Puan türü</label><input id="catalog-score" name="score" [(ngModel)]="scoreType" maxlength="30" class="mt-1 w-full rounded-lg border p-2 dark:bg-gray-800" /></div>
         }
-        <div class="flex items-end"><button type="submit" class="rounded-lg bg-indigo-600 px-4 py-2 font-medium text-white">Filtrele</button></div>
+        <div class="flex items-end"><button type="submit" [disabled]="editorOpen() || deleting()" class="rounded-lg bg-indigo-600 px-4 py-2 font-medium text-white disabled:opacity-40">Filtrele</button></div>
       </form>
+      @if (editorOpen()) { <app-coaching-catalog-editor [kind]="kind" [recordId]="editingId" (cancelled)="closeEditor()" (saved)="editorSaved()" /> }
       @if (error()) { <div role="alert" class="rounded-lg border border-red-200 bg-red-50 p-4 text-red-800">{{ error() }}</div> }
       @if (usageLoading()) { <p role="status">Kullanım bilgisi kontrol ediliyor…</p> }
       <div aria-live="polite" aria-atomic="true" class="sr-only">{{ selectedUsage() ? kindLabel() + ': ' + selectedUsage()?.name + ' (' + selectedUsage()?.id + ') kullanım bilgisi yüklendi.' : '' }}</div>
@@ -74,17 +77,17 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
             <tbody>@for (row of items(); track row.id) {
               <tr class="border-t dark:border-gray-700">
                 <td class="p-4 font-medium">{{ row.name }}</td>
-                <td class="p-4">{{ row.universityName || row.city || row.examCode || '—' }} @if (row.district) {<span class="block text-gray-500">{{ row.district }} · {{ row.districtId ? 'Doğrulanmış konum' : 'Konum eşleştirilmemiş' }}</span>} @if (row.gradeNumber) {<span class="block">{{ row.gradeNumber }}. sınıf</span>}</td>
+                <td class="p-4">@if (kind === 'schools') {<span class="block text-xs text-gray-500">Kaynak konum (korunur)</span>}{{ row.universityName || row.city || row.examCode || '-' }} @if (row.district) {<span class="block text-gray-500">{{ row.district }} · {{ row.districtId ? 'Ortak dizinle eşleştirilmiş' : 'Konum eşleştirilmemiş' }}</span>} @if (row.gradeNumber) {<span class="block">{{ row.gradeNumber }}. sınıf</span>}</td>
                 <td class="p-4">@if (row.minimumScore != null) {{{ row.minimumScore | number:'1.0-4' }} · {{ row.scoreYear || 'Yıl belirtilmemiş' }}} @else if (row.estimatedMinutes != null) {{{ row.estimatedMinutes }} dakika} @else {—} @if (row.displayOrder != null) {<span class="block">Sıra: {{ row.displayOrder }}</span>} @if (row.scoreType) {<span class="block">{{ row.scoreType }} · {{ row.programCode || 'Kod yok' }}</span>}</td>
                 <td class="p-4">{{ row.source }}<span class="block text-xs text-gray-500">{{ row.sourceId }}</span></td>
-                <td class="p-4">{{ row.isActive ? 'Aktif' : 'Pasif' }}<button type="button" [attr.aria-label]="kindLabel() + ': ' + row.name + ' (' + row.id + ') kullanımını incele'" (click)="inspectUsage(row.id)" [disabled]="deleting()" class="mt-2 block rounded-lg border px-2 py-1">Kullanımı incele</button></td>
+                <td class="p-4">{{ row.isActive ? 'Aktif' : 'Pasif' }}@if (canDelete()) {<button type="button" [attr.aria-label]="row.name + ' (' + row.id + ') düzenle'" (click)="openEditor(row.id)" [disabled]="editorOpen() || deleting()" class="mt-2 block rounded-lg border px-2 py-1">Düzenle / yayın durumu</button>}<button type="button" [attr.aria-label]="kindLabel() + ': ' + row.name + ' (' + row.id + ') kullanımını incele'" (click)="inspectUsage(row.id)" [disabled]="editorOpen() || deleting()" class="mt-2 block rounded-lg border px-2 py-1">Kullanımı incele</button></td>
               </tr>
             }</tbody>
           </table></div>
         }
         <footer class="flex justify-between border-t p-4 dark:border-gray-700">
-          <button type="button" (click)="load(page() - 1)" [disabled]="loading() || page() <= 1" class="rounded-lg border px-3 py-2 disabled:opacity-40">Önceki</button>
-          <button type="button" (click)="load(page() + 1)" [disabled]="loading() || page() >= totalPages()" class="rounded-lg border px-3 py-2 disabled:opacity-40">Sonraki</button>
+          <button type="button" (click)="load(page() - 1)" [disabled]="editorOpen() || deleting() || loading() || page() <= 1" class="rounded-lg border px-3 py-2 disabled:opacity-40">Önceki</button>
+          <button type="button" (click)="load(page() + 1)" [disabled]="editorOpen() || deleting() || loading() || page() >= totalPages()" class="rounded-lg border px-3 py-2 disabled:opacity-40">Sonraki</button>
         </footer>
       </section>
       <p class="text-xs text-gray-500">Katalog puanları tarihsel referanstır; yerleşme veya başarı garantisi değildir.</p>
@@ -102,6 +105,8 @@ export class CoachingCatalogComponent implements OnInit {
   readonly selectedUsage = signal<CoachingCatalogUsage | null>(null);
   readonly usageLoading = signal(false);
   readonly deleting = signal(false);
+  readonly editorOpen = signal(false);
+  editingId: string | null = null;
   deleteReason = '';
   deleteConfirmation = '';
   readonly kinds: { value: CoachingCatalogKind; label: string }[] = [
@@ -127,6 +132,12 @@ export class CoachingCatalogComponent implements OnInit {
   constructor() { this.destroyRef.onDestroy(() => { this.request?.unsubscribe(); this.usageRequest?.unsubscribe(); }); }
   canDelete() { return this.auth.userProfile()?.roles?.includes('SystemAdmin') && this.auth.hasPermission(ADMIN_PERMISSIONS.coachingContentManage); }
   kindLabel() { return this.kinds.find(option => option.value === this.kind)?.label; }
+  openEditor(id: string | null) {
+    if (!this.canDelete() || this.deleting() || this.editorOpen()) return;
+    this.closeUsage(); this.editingId = id; this.editorOpen.set(true);
+  }
+  closeEditor() { this.editorOpen.set(false); this.editingId = null; }
+  editorSaved() { this.closeEditor(); this.load(this.page()); }
   closeUsage() {
     this.usageRequest?.unsubscribe();
     this.usageLoading.set(false);
@@ -135,7 +146,7 @@ export class CoachingCatalogComponent implements OnInit {
     this.deleteConfirmation = '';
   }
   inspectUsage(id: string) {
-    if (!this.auth.userProfile()?.roles?.includes('SystemAdmin') || this.deleting()) return;
+    if (!this.auth.userProfile()?.roles?.includes('SystemAdmin') || this.deleting() || this.editorOpen()) return;
     this.closeUsage();
     this.usageLoading.set(true);
     this.usageRequest = this.service.usage(this.kind, id).subscribe({
@@ -160,6 +171,7 @@ export class CoachingCatalogComponent implements OnInit {
   ngOnInit() { if (isPlatformBrowser(this.platformId)) this.load(); }
   totalPages() { return Math.max(1, Math.ceil(this.totalCount() / 25)); }
   changeKind(kind: CoachingCatalogKind) {
+    if (this.editorOpen() || this.deleting()) return;
     this.kind = kind;
     this.gradeNumber = null;
     this.examCode = '';
@@ -168,6 +180,7 @@ export class CoachingCatalogComponent implements OnInit {
     this.load();
   }
   load(page = 1) {
+    if (this.editorOpen() || this.deleting()) return;
     this.closeUsage();
     if (!this.auth.userProfile()?.roles?.includes('SystemAdmin')) {
       this.error.set('Ortak kataloglar yalnız global yönetici tarafından incelenebilir.');
