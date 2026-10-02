@@ -6,10 +6,11 @@ namespace Coaching.Infrastructure.Catalogs;
 // Operator-only; deliberately not registered as a public endpoint or startup action.
 public sealed class CoachingCatalogPublication(CoachingDbContext db)
 {
-    public async Task<int> SetPublishedAsync(string source, CatalogPreflightReport expected, bool published,
+    public async Task<int> SetPublishedAsync(string source, IReadOnlyDictionary<string, string> files, bool published,
         bool publicationAuthorized, CancellationToken cancellationToken = default)
     {
         if (published && !publicationAuthorized) throw new UnauthorizedAccessException("Catalog publication rights must be confirmed.");
+        var expected = CatalogPreflight.Validate(files);
         if (string.IsNullOrWhiteSpace(source) || source.Trim().Length > 100 || expected.Errors.Count != 0)
             throw new ArgumentException("A valid source and successful preflight are required.");
         source = source.Trim();
@@ -18,6 +19,8 @@ public sealed class CoachingCatalogPublication(CoachingDbContext db)
         {
             await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
             await db.Database.ExecuteSqlInterpolatedAsync($"SELECT pg_advisory_xact_lock(hashtext({source}));", cancellationToken);
+            // Verify actual content under the same lock/transaction as activation, not just row counts.
+            await new CoachingCatalogImporter(db).VerifyAsync(files, source, cancellationToken);
             var counts = new Dictionary<string, int>
             {
                 ["lessons.json"] = await db.StudyCatalogLessons.CountAsync(x => x.Source == source, cancellationToken),

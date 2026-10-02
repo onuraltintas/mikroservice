@@ -9,8 +9,14 @@ namespace Coaching.Infrastructure.Catalogs;
 // Administrative local import only. Not registered as an HTTP endpoint or startup seed.
 public sealed class CoachingCatalogImporter(CoachingDbContext db)
 {
-    public async Task<int> ImportAsync(IReadOnlyDictionary<string, string> files, string source,
-        CancellationToken cancellationToken = default)
+    public Task<int> ImportAsync(IReadOnlyDictionary<string, string> files, string source,
+        CancellationToken cancellationToken = default) => ExecuteAsync(files, source, false, cancellationToken);
+
+    internal Task<int> VerifyAsync(IReadOnlyDictionary<string, string> files, string source,
+        CancellationToken cancellationToken) => ExecuteAsync(files, source, true, cancellationToken);
+
+    private async Task<int> ExecuteAsync(IReadOnlyDictionary<string, string> files, string source,
+        bool verifyOnly, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(source) || source.Trim().Length > 100)
             throw new ArgumentException("A valid catalog source is required.", nameof(source));
@@ -19,10 +25,11 @@ public sealed class CoachingCatalogImporter(CoachingDbContext db)
         if (report.Errors.Count != 0) throw new ArgumentException("Catalog preflight failed: " + string.Join("; ", report.Errors.Take(10)));
         if (db.ChangeTracker.Entries().Any()) throw new InvalidOperationException("Import requires an unused dedicated context.");
         var rows = files.ToDictionary(x => x.Key, x => JsonSerializer.Deserialize<JsonElement[]>(x.Value)!);
-        return await db.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
+        async Task<int> RunAsync()
         {
             db.ChangeTracker.Clear();
-            await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+            await using var transaction = db.Database.CurrentTransaction is null
+                ? await db.Database.BeginTransactionAsync(cancellationToken) : null;
             try
             {
                 // Serialize imports for this source. Unique indexes remain the final guard.
@@ -54,12 +61,19 @@ public sealed class CoachingCatalogImporter(CoachingDbContext db)
                     added += Stage(programs, Text(row, "id"), () => TargetUniversityProgram.Create(source, Text(row, "id"), Text(row, "university"), Text(row, "programName"), Text(row, "programCode"), Text(row, "scoreType"), Score(row), Number(row, "scoreYear")));
                 foreach (var row in rows["lgs-programs.json"])
                     added += Stage(schools, Text(row, "id"), () => TargetSchool.Create(source, Text(row, "id"), Text(row, "schoolName"), Text(row, "city"), Text(row, "town"), Score(row), Number(row, "scoreYear")));
-                await db.SaveChangesAsync(cancellationToken);
-                await transaction.CommitAsync(cancellationToken);
+                if (verifyOnly && added != 0) throw new InvalidOperationException("Reviewed catalog contains records missing from storage.");
+                if (!verifyOnly) await db.SaveChangesAsync(cancellationToken);
+                if (transaction is not null) await transaction.CommitAsync(cancellationToken);
                 return added;
             }
             finally { db.ChangeTracker.Clear(); }
-        });
+        }
+        if (db.Database.CurrentTransaction is not null)
+        {
+            if (!verifyOnly) throw new InvalidOperationException("Import requires its own transaction.");
+            return await RunAsync();
+        }
+        return await db.Database.CreateExecutionStrategy().ExecuteAsync(RunAsync);
     }
 
     private int Stage<T>(Dictionary<string, T> existing, string key, Func<T> create) where T : class
