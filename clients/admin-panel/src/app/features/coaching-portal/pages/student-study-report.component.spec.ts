@@ -4,6 +4,13 @@ import { TestBed } from '@angular/core/testing';
 import { StudentStudyReportComponent } from './student-study-report.component';
 
 describe('StudentStudyReportComponent', () => {
+  it('uses the protected admin report endpoint and cancels it when student selection changes', () => {
+    const { fixture, component, http } = setup();
+    fixture.componentRef.setInput('adminStudentId', 'student-one'); fixture.detectChanges(); component.load();
+    const first = http.expectOne(r => r.url.endsWith('/coaching-admin/students/student-one/study/report'));
+    fixture.componentRef.setInput('adminStudentId', 'student-two'); fixture.detectChanges();
+    expect(first.cancelled).toBe(true); expect(component.report()).toBeNull();
+  });
   it('shows calculated attainment separately from manual progress and explains missing evidence', () => {
     const { component, fixture, http } = setup(); component.load();
     http.expectOne(r => r.url.endsWith('/reports')).flush({ success: true, data: {
