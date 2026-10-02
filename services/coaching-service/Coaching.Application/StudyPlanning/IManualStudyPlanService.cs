@@ -4,15 +4,15 @@ using Coaching.Domain.Entities;
 
 namespace Coaching.Application.StudyPlanning;
 
-public sealed record ManualStudyTaskInput(DateOnly PlannedDate, [property: Required] string Title,
+public sealed record ManualStudyTaskInput(DateOnly PlannedDate, [Required] string Title,
     int PlannedMinutes, Guid? TopicId, bool IsPinned);
-public sealed record ManualStudyPlanInput([property: Required] string Title,
-    [property: Required] IReadOnlyList<ManualStudyTaskInput> Tasks);
-public sealed record ManualStudyPlanUpdate([property: JsonRequired, Range(0, int.MaxValue)] int ExpectedVersion, [property: Required] ManualStudyPlanInput Plan);
-public sealed record StudyPlanPublishInput([property: JsonRequired, Range(0, int.MaxValue)] int ExpectedVersion);
-public sealed record StudyTaskCompleteInput([property: JsonRequired, Range(0, int.MaxValue)] int ExpectedVersion,
-    [property: Range(1, 1440)] int ActualMinutes);
-public sealed record StudyTaskRescheduleInput([property: JsonRequired, Range(0, int.MaxValue)] int ExpectedVersion,
+public sealed record ManualStudyPlanInput([Required] string Title,
+    [Required] IReadOnlyList<ManualStudyTaskInput> Tasks);
+public sealed record ManualStudyPlanUpdate([property: JsonRequired] [Range(0, int.MaxValue)] int ExpectedVersion, [Required] ManualStudyPlanInput Plan);
+public sealed record StudyPlanPublishInput([property: JsonRequired] [Range(0, int.MaxValue)] int ExpectedVersion);
+public sealed record StudyTaskCompleteInput([property: JsonRequired] [Range(0, int.MaxValue)] int ExpectedVersion,
+    [Range(1, 1440)] int ActualMinutes);
+public sealed record StudyTaskRescheduleInput([property: JsonRequired] [Range(0, int.MaxValue)] int ExpectedVersion,
     DateOnly PlannedDate);
 public sealed record ManualStudyTaskView(Guid Id, DateOnly PlannedDate, string Title, int PlannedMinutes,
     Guid? TopicId, bool IsPinned, bool IsCompleted, int? ActualMinutes, DateTime? CompletedAt = null);

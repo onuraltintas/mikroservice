@@ -3,8 +3,8 @@ using System.Text.Json.Serialization;
 
 namespace Coaching.Application.StudyPlanning;
 
-public sealed record AutomaticStudyDraftRequest([property: Required] string Title,
-    [property: Required] AutomaticStudyPreviewRequest Preview,
+public sealed record AutomaticStudyDraftRequest([Required] string Title,
+    [Required] AutomaticStudyPreviewRequest Preview,
     [property: JsonRequired] Guid? ExpectedActiveRevisionId,
     [property: JsonRequired] int? ExpectedActiveRevisionVersion);
 
