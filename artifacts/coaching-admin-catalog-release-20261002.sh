@@ -44,6 +44,7 @@ backup-drill)
   docker run --rm --network eduplatform-production --env ConnectionStrings__DefaultConnection "eduivme/coaching-service:$tag" --migrate-only > migration-drill.log 2>&1
   docker exec postgres psql -U "$db_user" -d "$drill" -v ON_ERROR_STOP=1 -Atc 'SELECT count(*) FROM coaching.__ef_migrations_history' > drill-migration-count.txt
   test "$(cat drill-migration-count.txt)" = 33
+  test "$(docker exec postgres psql -U "$db_user" -d "$drill" -v ON_ERROR_STOP=1 -Atc 'SELECT count(*) FROM coaching.__ef_migrations_history WHERE "MigrationId" IN ($$20261002151257_LinkTargetSchoolAdministrativeLocations$$,$$20261002160724_GuardExamCatalogReferences$$)')" = 2
   docker image inspect "eduivme/coaching-service:$tag" --format '{{.Id}}' > drill-complete
   ;;
 migrate|deploy|rollback)
@@ -63,6 +64,7 @@ migrate|deploy|rollback)
       rm -f "$release/migrations-complete"
       "${compose[@]}" run --rm --no-deps coaching-service --migrate-only > migration-production.log 2>&1
       test "$(docker exec postgres psql -U "$db_user" -d coaching_db -Atc 'SELECT count(*) FROM coaching.__ef_migrations_history')" = 33
+      test "$(docker exec postgres psql -U "$db_user" -d coaching_db -v ON_ERROR_STOP=1 -Atc 'SELECT count(*) FROM coaching.__ef_migrations_history WHERE "MigrationId" IN ($$20261002151257_LinkTargetSchoolAdministrativeLocations$$,$$20261002160724_GuardExamCatalogReferences$$)')" = 2
       docker image inspect "eduivme/coaching-service:$tag" --format '{{.Id}}' > migrations-complete
       ;;
     deploy)
