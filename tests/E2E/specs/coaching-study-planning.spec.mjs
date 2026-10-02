@@ -18,6 +18,20 @@ test('real API enforces authentication, product scope, role and student ownershi
 });
 
 test('student creates, publishes, completes a plan and enters a self-reported exam', async ({ page }) => {
+  const student = randomUUID();
+  await page.route('**/api/auth/refresh-token', route => route.fulfill({ status: 200, contentType: 'application/json',
+    body: JSON.stringify({ accessToken: planningToken(student), tokenType: 'Bearer', expiresInMinutes: 15 }) }));
+  const headers = { Authorization: `Bearer ${planningToken(student)}`, 'Idempotency-Key': randomUUID() };
+  const goalTitle = `Browser goal ${randomUUID()}`;
+  const goalResponse = await page.request.post('http://127.0.0.1:5006/api/goals', { headers, data: {
+    studentId: student, title: goalTitle, category: 'ExamPreparation', teacherId: null, description: null,
+    targetDate: '2027-06-01T00:00:00Z', targetScore: 400
+  } });
+  expect(goalResponse.ok(), await goalResponse.text()).toBeTruthy();
+  const goalId = (await goalResponse.json()).goalId;
+  expect((await page.request.put(`http://127.0.0.1:5006/api/goals/${goalId}/progress`, {
+    headers, data: { goalId, progress: 30 }
+  })).ok()).toBeTruthy();
   await page.goto('/coaching-portal/study-plans');
   await expect(page.getByRole('heading', { name: 'Çalışma planlarım', exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Yeni taslak', exact: true }).click();
@@ -45,12 +59,14 @@ test('student creates, publishes, completes a plan and enters a self-reported ex
   await page.getByRole('button', { name: 'Sonucu kaydet', exact: true }).click();
   await expect(page.getByText('Sonucun kaydedildi. Öğrenci beyanı olarak raporlanacak.')).toBeVisible();
   const report = await page.request.get('http://127.0.0.1:5006/api/coaching/study-planning/reports?fromDate=2026-10-02&toDate=2026-10-02', {
-    headers: { Authorization: `Bearer ${planningToken()}` }
+    headers: { Authorization: `Bearer ${planningToken(student)}` }
   });
   expect(report.ok()).toBeTruthy();
   const data = (await report.json()).data;
-  expect(data.completedTasks).toBeGreaterThan(0); expect(data.actualMinutes).toBeGreaterThanOrEqual(25);
+  expect(data.completedTasks).toBe(1); expect(data.actualMinutes).toBe(25);
   expect(data.examGroups.some(x => x.source === 'StudentReported' && x.averagePercentage === 80)).toBeTruthy();
+  expect(data.goals).toHaveLength(1);
+  expect(data.goals[0]).toMatchObject({ goalId, recordedProgress: 30, source: 'Unspecified' });
   await page.goto('/coaching-portal/progress');
   const studyReport = page.locator('app-student-study-report');
   await studyReport.getByLabel('Başlangıç', { exact: true }).fill('2026-10-02');
@@ -58,4 +74,6 @@ test('student creates, publishes, completes a plan and enters a self-reported ex
   await studyReport.getByRole('button', { name: 'Raporu göster', exact: true }).click();
   await expect(studyReport.getByText('Tamamlanan çalışma', { exact: true })).toBeVisible();
   await expect(studyReport.getByText(/Ortalama %80/)).toBeVisible();
+  await expect(studyReport.getByText(goalTitle, { exact: true })).toBeVisible();
+  await expect(studyReport.getByText(/Kaydedilen ilerleme: %30/)).toBeVisible();
 });

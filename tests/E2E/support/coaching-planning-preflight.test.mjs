@@ -16,4 +16,5 @@ test('rejects later overrides and a decoy API path in an unrelated process', () 
   assert.throws(() => validatePlanningProcess(`dotnet ${path} --ConnectionStrings:DefaultConnection "${connection}" --ConnectionStrings:DefaultConnection=Host=production`));
   assert.throws(() => validatePlanningProcess(`dotnet ${path} --ConnectionStrings:DefaultConnection "${connection}" ConnectionStrings:DefaultConnection=Host=production`));
   assert.throws(() => validatePlanningProcess(`dotnet other.dll --decoy ${path} --ConnectionStrings:DefaultConnection "${connection}"`));
+  assert.throws(() => validatePlanningProcess(`dotnet C:/another-checkout/services/coaching-service/Coaching.API/bin/Debug/net10.0/Coaching.API.dll --ConnectionStrings:DefaultConnection "${connection}"`));
 });
