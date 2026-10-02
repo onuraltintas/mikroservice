@@ -9,7 +9,7 @@ describe('StudentStudyReportComponent', () => {
     http.expectOne(r => r.url.endsWith('/reports')).flush({ success: true, data: {
       fromDate: component.fromDate, toDate: component.toDate, reason: 'NoScheduledTasks', source: 'StudentReported',
       scheduledTasks: 0, completedTasks: 0, completionPercentage: null, plannedMinutes: 0, actualMinutes: null, topics: [],
-      goals: [{ goalId: 'own', title: 'LGS hedefim', source: 'StudentSet', recordedProgress: 30, isCompleted: false,
+      goals: [{ goalId: 'own', title: 'LGS hedefim', source: 'Unspecified', recordedProgress: 30, isCompleted: false,
         targetDate: '2027-06-01T00:00:00Z', targetScore: 400, targetExamType: 'LGS', targetSubject: null },
         { goalId: 'teacher', title: 'Düzenli çalışma', source: 'TeacherSet', recordedProgress: 100, isCompleted: true }]
     } });
@@ -18,6 +18,7 @@ describe('StudentStudyReportComponent', () => {
     expect(text).toContain('Güncel hedeflerim');
     expect(text).toContain('Kaydedilen ilerleme: %30');
     expect(text).toContain('Öğretmenin belirlediği hedef');
+    expect(text).toContain('Belirleyen kişi kaydedilmemiş');
     expect(text).toContain('Hedef puanı: 400');
     expect(text).toContain('Otomatik başarı veya yerleşme tahmini değildir');
     expect(text).toContain('Seçilen dönemin geçmiş durumunu göstermez');
