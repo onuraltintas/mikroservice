@@ -55,7 +55,9 @@ public class GetStudentExamResultsQueryHandler : IRequestHandler<GetStudentExamR
                 WrongAnswers: studentResult.WrongAnswers,
                 EmptyAnswers: studentResult.EmptyAnswers,
                 SubjectScores: studentResult.GetSubjectScores(),
-                Ranking: studentResult.Ranking
+                Ranking: studentResult.Ranking,
+                Source: exam.StudentOwnerId.HasValue ? "StudentReported" : "TeacherRecorded",
+                LessonAnswers: studentResult.GetLessonAnswers()
             ));
         }
 
