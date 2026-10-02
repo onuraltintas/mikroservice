@@ -89,4 +89,11 @@ describe('StudentStudyPlansComponent', () => {
     expect(event.defaultPrevented).toBe(true);
     confirm.mockRestore();
   });
+  it('opens an existing draft instead of resetting it into a second draft', () => {
+    const { component, service } = setup();
+    component.selected.set({ ...active, status: 'Draft' });
+    component.newDraft();
+    expect(service.get).toHaveBeenCalledWith('plan');
+    expect(component.selected()?.id).toBe('plan');
+  });
 });
