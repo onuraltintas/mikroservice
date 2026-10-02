@@ -86,4 +86,12 @@ describe('StudentAutomaticPlanComponent', () => {
     expect(component.canLeavePage()).toBe(true);
     component.saveDraft(); expect(service.saveAutomaticDraft).toHaveBeenCalledTimes(1);
   });
+  it('requires a new confirmation for each regenerated preview', () => {
+    const { component, service } = setup();
+    component.searchTopics(); component.addTopic('topic'); component.selected[0].minutes = 30;
+    component.startDate = '2026-10-05'; component.title = 'My plan'; component.generate();
+    component.saveConfirmed = true; component.generate();
+    expect(component.saveConfirmed).toBe(false);
+    component.saveDraft(); expect(service.saveAutomaticDraft).not.toHaveBeenCalled();
+  });
 });
