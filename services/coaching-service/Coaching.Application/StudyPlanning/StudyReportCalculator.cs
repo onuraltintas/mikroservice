@@ -10,12 +10,16 @@ public sealed record StudyTopicReport(Guid? TopicId, int ScheduledTasks, int Com
 public sealed record StudyExamGroup(string Source, ExamType ExamType, decimal MaxScore, int Count, decimal AveragePercentage);
 public sealed record StudyLessonResult(string Source, ExamType ExamType, Guid LessonId, Guid? TopicId,
     string? LessonName, string? TopicName, long QuestionCount, long Correct, long Wrong, long Empty);
+public sealed record StudyGoalReport(Guid GoalId, string Title, string Source, int RecordedProgress,
+    bool IsCompleted, DateTime? TargetDate, decimal? TargetScore, ExamType? TargetExamType, string? TargetSubject);
 public sealed record StudentStudyReport(DateOnly FromDate, DateOnly ToDate, string Source, string Reason,
     int ScheduledTasks, int CompletedTasks, decimal? CompletionPercentage, long PlannedMinutes,
     long? ActualMinutes, IReadOnlyList<StudyTopicReport> Topics)
 {
     public IReadOnlyList<StudyExamGroup> ExamGroups { get; init; } = [];
     public IReadOnlyList<StudyLessonResult> LessonResults { get; init; } = [];
+    public IReadOnlyList<StudyGoalReport> Goals { get; init; } = [];
+    public string GoalReason { get; init; } = "CurrentGoalsWithRecordedProgress";
 }
 
 public static class StudyReportCalculator

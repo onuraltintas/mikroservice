@@ -15,6 +15,14 @@ public sealed class CoachingStudentStudyReportService(CoachingDbContext db, ICoa
         if (access.CurrentUserId is not { } student || !access.IsCurrentStudent(student))
             throw new BusinessRuleException("Authorization.Forbidden", "Bu rapor yalnız öğrencinin kendi hesabında kullanılabilir.");
         StudyReportCalculator.ValidatePeriod(fromDate, toDate);
+        // Goals are a current snapshot, not historical progress in the selected task/exam period.
+        var goals = await db.AcademicGoals.AsNoTracking().Where(x => x.StudentId == student)
+            .OrderBy(x => x.IsCompleted).ThenBy(x => x.TargetDate).ThenBy(x => x.Id)
+            .Select(x => new StudyGoalReport(x.Id, x.Title, x.SetByTeacherId.HasValue ? "TeacherSet" : "StudentSet",
+                x.CurrentProgress, x.IsCompleted, x.TargetDate, x.TargetScore, x.TargetExamType, x.TargetSubject))
+            .Take(1001).ToListAsync(cancellationToken);
+        if (goals.Count > 1000) throw new BusinessRuleException("StudyPlanning.GoalReportLimit",
+            "Hedef sayısı rapor sınırını aşıyor. Hedefleri Hedefler ekranından inceleyebilirsiniz.");
         var rows = await (from task in db.StudyPlanTasks.AsNoTracking()
             join plan in db.StudyPlanRevisions.AsNoTracking() on task.RevisionId equals plan.Id
             where task.StudentId == student && plan.StudentId == student
@@ -50,7 +58,7 @@ public sealed class CoachingStudentStudyReportService(CoachingDbContext db, ICoa
             .OrderBy(x => x.LessonId).ThenBy(x => x.TopicId).ThenBy(x => x.ExamType).ToArray();
         return report with { Topics = report.Topics.Select(x => x with {
             TopicName = x.TopicId.HasValue ? names.GetValueOrDefault(x.TopicId.Value) : null }).ToArray(),
-            ExamGroups = groups, LessonResults = lessons };
+            ExamGroups = groups, LessonResults = lessons, Goals = goals };
     }
     private static BusinessRuleException ReportLimit() => new("StudyPlanning.ReportLimit",
         "Bu dönem çok fazla kayıt içeriyor. Tam rapor için daha kısa bir tarih aralığı seçin.");
