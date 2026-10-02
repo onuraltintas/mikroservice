@@ -31,6 +31,7 @@ public sealed class CoachingCatalogDeletionPostgresTests(PostgresFixture postgre
             var school = TargetSchool.Create("admin", "s1", "School", "City", "District", null);
             db.TargetSchools.Add(school);
             await db.SaveChangesAsync();
+            db.ChangeTracker.Clear();
             var service = Service(db);
             var usage = await service.GetUsageAsync(CatalogKind.Schools, school.Id, default);
             Assert.True(usage.CanDelete);
