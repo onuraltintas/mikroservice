@@ -18,6 +18,7 @@ public sealed class CoachingAdminCatalogReader(CoachingDbContext db, ICoachingAd
         if (!Enum.IsDefined(kind) || filter.PageNumber is < 1 or > 10000 || filter.PageSize is < 1 or > 100
             || filter.Search?.Length > 200 || filter.Source?.Length > 100)
             throw new ArgumentException("Katalog arama ve sayfalama değerlerini kontrol edin.");
+        ValidateFilters(kind, filter);
         IQueryable<AdminCatalogRow> query = kind switch
         {
             CatalogKind.Lessons => db.StudyCatalogLessons.AsNoTracking().Select(x => new AdminCatalogRow
@@ -60,5 +61,25 @@ public sealed class CoachingAdminCatalogReader(CoachingDbContext db, ICoachingAd
         var rows = await query.OrderBy(x => x.Name).ThenBy(x => x.Id)
             .Skip((filter.PageNumber - 1) * filter.PageSize).Take(filter.PageSize).ToListAsync(cancellationToken);
         return new(rows, count, filter.PageNumber, filter.PageSize);
+    }
+
+    private static void ValidateFilters(CatalogKind kind, AdminCatalogFilter filter)
+    {
+        var lessons = kind == CatalogKind.Lessons;
+        var topics = kind == CatalogKind.Topics;
+        var schools = kind == CatalogKind.Schools;
+        var universities = kind == CatalogKind.UniversityPrograms;
+        if (filter.GradeNumber is < 1 or > 12 || filter.ScoreYear is < 1900 or > 2200
+            || filter.LessonId == Guid.Empty || filter.UnitId == Guid.Empty || filter.ParentId == Guid.Empty
+            || filter.ExamCode?.Length > 30 || filter.ScoreType?.Length > 30
+            || filter.ProvinceId?.Length > 20 || filter.DistrictId?.Length > 20
+            || (!lessons && (filter.GradeNumber.HasValue || filter.ExamCode is not null))
+            || (kind is not (CatalogKind.Units or CatalogKind.Topics) && filter.LessonId.HasValue)
+            || (!topics && (filter.UnitId.HasValue || filter.ParentId.HasValue))
+            || (!schools && (filter.ProvinceId is not null || filter.DistrictId is not null))
+            || (filter.DistrictId is not null && string.IsNullOrWhiteSpace(filter.ProvinceId))
+            || (!universities && filter.ScoreType is not null)
+            || (!(schools || universities) && filter.ScoreYear.HasValue))
+            throw new ArgumentException("Seçilen katalog için filtre değerlerini kontrol edin.");
     }
 }
