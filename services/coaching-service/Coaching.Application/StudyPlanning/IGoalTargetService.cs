@@ -5,7 +5,9 @@ namespace Coaching.Application.StudyPlanning;
 
 public sealed record GoalTargetUpdate([property: JsonRequired, Range(0, int.MaxValue)] int ExpectedVersion,
     Guid? TargetUniversityProgramId, Guid? TargetSchoolId);
-public sealed record GoalTargetView(Guid GoalId, int Version, Guid? TargetUniversityProgramId, Guid? TargetSchoolId, bool CanEdit);
+public sealed record GoalCatalogTargetView(string Name, string Detail, bool IsActive);
+public sealed record GoalTargetView(Guid GoalId, int Version, Guid? TargetUniversityProgramId, Guid? TargetSchoolId, bool CanEdit,
+    GoalCatalogTargetView? CatalogTarget = null);
 
 public interface IGoalTargetService
 {

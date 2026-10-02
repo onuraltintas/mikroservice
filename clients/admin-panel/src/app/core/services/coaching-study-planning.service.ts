@@ -29,7 +29,7 @@ interface ApiResult<T> { success: boolean; data: T }
 export interface SchoolTarget { id: string; name: string; city: string; district: string; minimumScore: number | null; scoreYear: number | null }
 export interface UniversityTarget { id: string; name: string; universityName: string; programCode: string | null; scoreType: string | null; minimumScore: number | null; scoreYear: number | null }
 export interface TargetPage<T> { items: T[]; totalCount: number; pageNumber: number; pageSize: number }
-export interface GoalTarget { goalId: string; version: number; targetSchoolId: string | null; targetUniversityProgramId: string | null; canEdit: boolean }
+export interface GoalTarget { goalId: string; version: number; targetSchoolId: string | null; targetUniversityProgramId: string | null; canEdit: boolean; catalogTarget?: { name: string; detail: string; isActive: boolean } | null }
 
 @Injectable({ providedIn: 'root' })
 export class CoachingStudyPlanningService {

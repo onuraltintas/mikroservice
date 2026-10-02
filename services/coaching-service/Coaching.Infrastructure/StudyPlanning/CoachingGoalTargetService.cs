@@ -17,7 +17,7 @@ public sealed class CoachingGoalTargetService(CoachingDbContext db, ICoachingAcc
         var studentId = RequireStudent();
         var goal = await db.AcademicGoals.AsNoTracking()
             .SingleOrDefaultAsync(x => x.Id == goalId && x.StudentId == studentId, cancellationToken);
-        return goal is null ? null : View(goal);
+        return goal is null ? null : await ViewAsync(goal, cancellationToken);
     }
 
     public async Task<GoalTargetView> ReplaceAsync(Guid goalId, GoalTargetUpdate request, CancellationToken cancellationToken = default)
@@ -40,12 +40,12 @@ public sealed class CoachingGoalTargetService(CoachingDbContext db, ICoachingAcc
             && !await db.TargetUniversityPrograms.AnyAsync(x => x.Id == programId && x.IsActive, cancellationToken))
             throw new ArgumentException("Seçilen üniversite programı artık kullanılamıyor.");
         if (goal.TargetSchoolId == request.TargetSchoolId && goal.TargetUniversityProgramId == request.TargetUniversityProgramId)
-            return View(goal);
+            return await ViewAsync(goal, cancellationToken);
         goal.SetCatalogTarget(request.TargetUniversityProgramId, request.TargetSchoolId);
         // The registered publisher uses the same scoped Coaching EF bus outbox.
         await events.PublishAsync(new GoalUpdatedEvent(goal.Id, goal.StudentId, goal.SetByTeacherId, goal.Title), cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
-        return View(goal);
+        return await ViewAsync(goal, cancellationToken);
     }
 
     private Guid RequireStudent()
@@ -54,6 +54,19 @@ public sealed class CoachingGoalTargetService(CoachingDbContext db, ICoachingAcc
             throw new BusinessRuleException("Authorization.Forbidden", "Bu işlem yalnız öğrencinin kendi hesabıyla kullanılabilir.");
         return studentId;
     }
-    private static GoalTargetView View(AcademicGoal goal) => new(goal.Id, goal.Version, goal.TargetUniversityProgramId,
-        goal.TargetSchoolId, !goal.SetByTeacherId.HasValue);
+    private async Task<GoalTargetView> ViewAsync(AcademicGoal goal, CancellationToken cancellationToken)
+    {
+        // Existing links remain readable even when the catalog entry becomes inactive.
+        GoalCatalogTargetView? target = null;
+        if (goal.TargetSchoolId is { } schoolId)
+            target = await db.TargetSchools.AsNoTracking().Where(x => x.Id == schoolId)
+                .Select(x => new GoalCatalogTargetView(x.Name, x.City + " / " + x.District, x.IsActive))
+                .SingleOrDefaultAsync(cancellationToken);
+        else if (goal.TargetUniversityProgramId is { } programId)
+            target = await db.TargetUniversityPrograms.AsNoTracking().Where(x => x.Id == programId)
+                .Select(x => new GoalCatalogTargetView(x.UniversityName + " — " + x.Name, x.ScoreType ?? "", x.IsActive))
+                .SingleOrDefaultAsync(cancellationToken);
+        return new(goal.Id, goal.Version, goal.TargetUniversityProgramId, goal.TargetSchoolId,
+            !goal.SetByTeacherId.HasValue, target);
+    }
 }
