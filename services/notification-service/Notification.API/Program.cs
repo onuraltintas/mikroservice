@@ -351,6 +351,14 @@ builder.Services.AddMassTransit(x =>
             e.ConfigureConsumer<GoalCreatedConsumer>(context);
         });
 
+        cfg.ReceiveEndpoint("coaching-study-plan-published", e =>
+        {
+            e.UseMessageRetry(retry =>
+                retry.Exponential(5, TimeSpan.FromSeconds(1), TimeSpan.FromMinutes(1), TimeSpan.FromSeconds(5)));
+            e.UseEntityFrameworkOutbox<NotificationDbContext>(context);
+            e.ConfigureConsumer<StudyPlanPublishedConsumer>(context);
+        });
+
         cfg.ReceiveEndpoint("notification-privacy-erasure-assessment", e =>
         {
             e.UseMessageRetry(retry =>
