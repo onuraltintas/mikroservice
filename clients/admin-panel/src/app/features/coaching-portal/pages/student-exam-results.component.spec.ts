@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { of, Subject } from 'rxjs';
+import { of, Subject, throwError } from 'rxjs';
 import { CoachingStudentExamsService } from '../../../core/services/coaching-student-exams.service';
 import { CoachingStudyPlanningService } from '../../../core/services/coaching-study-planning.service';
 import { StudentExamResultsComponent } from './student-exam-results.component';
@@ -24,6 +24,13 @@ describe('StudentExamResultsComponent', () => {
     component.confirmed = true; component.save();
     expect(service.create).toHaveBeenCalledWith(expect.objectContaining({ correctAnswers: 8, lessons: [expect.objectContaining({ lessonId: 'lesson', topicId: 'topic' })] }));
     expect(component.page().totalCount).toBe(1);
+  });
+  it('does not present a failed result load as an empty account', () => {
+    const { component, fixture, service } = setup();
+    service.list.mockReturnValueOnce(throwError(() => ({ status: 500 })));
+    component.loadList(); fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[role="alert"]')).not.toBeNull();
+    expect(fixture.nativeElement.textContent).not.toContain('Henüz kendi girdiğin bir sonuç yok.');
   });
   it('rejects inconsistent counts and impossible dates and invalidates confirmation on edits', () => {
     const { component, service } = setup();

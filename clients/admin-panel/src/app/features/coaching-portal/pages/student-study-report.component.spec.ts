@@ -10,6 +10,15 @@ describe('StudentStudyReportComponent', () => {
     const fixture = TestBed.createComponent(StudentStudyReportComponent);
     return { fixture, component: fixture.componentInstance, http: TestBed.inject(HttpTestingController) };
   }
+  it('defaults to the local calendar day rather than the previous UTC day', () => {
+    vi.useFakeTimers(); vi.setSystemTime(new Date(2026, 9, 3, 0, 30));
+    const iso = vi.spyOn(Date.prototype, 'toISOString').mockReturnValue('2026-10-02T21:30:00.000Z');
+    try {
+      const { component } = setup();
+      expect(component.toDate).toBe('2026-10-03');
+      expect(component.fromDate).toBe('2026-09-04');
+    } finally { iso.mockRestore(); vi.useRealTimers(); }
+  });
   it('passes the selected period and renders no data distinctly from zero', () => {
     const { fixture, component, http } = setup();
     component.fromDate = '2026-10-01'; component.toDate = '2026-10-02'; component.load();
