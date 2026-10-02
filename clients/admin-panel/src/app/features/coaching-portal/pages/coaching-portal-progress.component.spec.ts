@@ -54,6 +54,10 @@ describe('CoachingPortalProgressComponent', () => {
     expect(fixture.componentInstance.canLeavePage()).toBe(true);
     picker.saving.set(true);
     expect(fixture.componentInstance.canLeavePage()).toBe(false);
+    const input = document.createElement('input'); input.value = '60';
+    fixture.componentInstance.updateProgress(fixture.componentInstance.goals()[0], { target: input } as unknown as Event);
+    expect(service.updateGoalProgress).not.toHaveBeenCalled();
+    expect(input.value).toBe('0');
     fixture.componentInstance.goals.update(goals => goals.map(goal => ({ ...goal, progress: 20 })));
     fixture.detectChanges();
     expect(fixture.debugElement.query(By.directive(StudentGoalTargetComponent)).componentInstance).toBe(picker);
