@@ -18,6 +18,8 @@ public class AcademicGoal : AggregateRoot
 
     public ExamType? TargetExamType { get; private set; } // LGS, YKS, etc.
     public string? TargetSubject { get; private set; }
+    public Guid? TargetUniversityProgramId { get; private set; }
+    public Guid? TargetSchoolId { get; private set; }
 
     public decimal? TargetScore { get; private set; }
     public DateTime? TargetDate { get; private set; }
@@ -134,6 +136,16 @@ public class AcademicGoal : AggregateRoot
             CompletedAt = null;
         }
 
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void SetCatalogTarget(Guid? universityProgramId, Guid? schoolId)
+    {
+        if (universityProgramId == Guid.Empty || schoolId == Guid.Empty
+            || (universityProgramId.HasValue && schoolId.HasValue))
+            throw new ArgumentException("Select either a valid university program or a valid school.");
+        TargetUniversityProgramId = universityProgramId;
+        TargetSchoolId = schoolId;
         UpdatedAt = DateTime.UtcNow;
     }
 

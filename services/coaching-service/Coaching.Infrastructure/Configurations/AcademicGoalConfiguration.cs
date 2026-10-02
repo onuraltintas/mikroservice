@@ -11,7 +11,8 @@ public class AcademicGoalConfiguration : IEntityTypeConfiguration<AcademicGoal>
 {
     public void Configure(EntityTypeBuilder<AcademicGoal> builder)
     {
-        builder.ToTable("academic_goals");
+        builder.ToTable("academic_goals", table => table.HasCheckConstraint(
+            "ck_goal_single_catalog_target", "target_university_program_id IS NULL OR target_school_id IS NULL"));
 
         builder.HasKey(x => x.Id);
 
@@ -52,6 +53,13 @@ public class AcademicGoalConfiguration : IEntityTypeConfiguration<AcademicGoal>
         builder.Property(x => x.TargetSubject)
             .HasColumnName("target_subject")
             .HasMaxLength(100);
+
+        builder.Property(x => x.TargetUniversityProgramId).HasColumnName("target_university_program_id");
+        builder.Property(x => x.TargetSchoolId).HasColumnName("target_school_id");
+        builder.HasOne<TargetUniversityProgram>().WithMany().HasForeignKey(x => x.TargetUniversityProgramId)
+            .OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<TargetSchool>().WithMany().HasForeignKey(x => x.TargetSchoolId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder.Property(x => x.TargetScore)
             .HasColumnName("target_score")
