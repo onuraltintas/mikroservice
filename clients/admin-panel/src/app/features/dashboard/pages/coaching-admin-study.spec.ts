@@ -21,6 +21,7 @@ describe('CoachingAdminStudyComponent', () => {
     fixture.detectChanges(); const text = fixture.nativeElement.textContent;
     expect(text).toContain('Europe/Istanbul'); expect(text).toContain('History task'); expect(text).toContain('25');
     expect(fixture.nativeElement.querySelector('button[type="submit"]')).toBeNull();
+    expect(fixture.nativeElement.textContent).toContain('Düzeltme ve işlem geçmişini aç');
   });
   it('does not request personal planning data for institution managers', () => {
     const { http } = setup(false); http.expectNone(r => r.url.includes('/study/'));
