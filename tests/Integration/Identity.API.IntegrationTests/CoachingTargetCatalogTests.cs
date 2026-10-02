@@ -7,6 +7,13 @@ namespace Identity.API.IntegrationTests;
 public sealed class CoachingTargetCatalogTests
 {
     [Fact]
+    public void Catalogs_PreserveVerifiedScoreYearWhenProvided()
+    {
+        Assert.Equal(2025, TargetUniversityProgram.Create("source", "p", "University", "Program", null, null, 400, scoreYear: 2025).ScoreYear);
+        Assert.Equal(2025, TargetSchool.Create("source", "s", "School", "City", "District", 400, scoreYear: 2025).ScoreYear);
+    }
+
+    [Fact]
     public void UniversityProgram_PreservesUnknownYearAndStartsInactive()
     {
         var program = TargetUniversityProgram.Create("catalog", "p1", "University", "Program", "106510077", "SAY", 442.53m);
