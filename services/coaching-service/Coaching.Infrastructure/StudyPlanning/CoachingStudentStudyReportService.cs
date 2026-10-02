@@ -1,6 +1,7 @@
 using Coaching.Application.Authorization;
 using Coaching.Application.StudyPlanning;
 using Coaching.Domain.Entities;
+using Coaching.Domain.Enums;
 using Coaching.Infrastructure.Data;
 using EduPlatform.Shared.Kernel.Exceptions;
 using Microsoft.EntityFrameworkCore;
@@ -20,8 +21,35 @@ public sealed class CoachingStudentStudyReportService(CoachingDbContext db, ICoa
                 && task.PlannedDate >= fromDate && task.PlannedDate <= toDate
                 && (plan.Status == StudyPlanStatus.Active || plan.Status == StudyPlanStatus.Archived && task.IsCompleted)
             select new { plan.Status, task.PlannedDate, task.TopicId, task.PlannedMinutes, task.IsCompleted, task.ActualMinutes })
-            .ToListAsync(cancellationToken);
-        return StudyReportCalculator.Calculate(fromDate, toDate, rows.Select(x => new StudyReportTask(x.Status,
+            .Take(10001).ToListAsync(cancellationToken);
+        if (rows.Count > 10000) throw new ArgumentException("Select a shorter report period.");
+        var report = StudyReportCalculator.Calculate(fromDate, toDate, rows.Select(x => new StudyReportTask(x.Status,
             x.PlannedDate, x.TopicId, x.PlannedMinutes, x.IsCompleted, x.ActualMinutes)).ToArray());
+        var topicIds = report.Topics.Where(x => x.TopicId.HasValue).Select(x => x.TopicId!.Value).ToArray();
+        var names = await db.StudyCatalogTopics.AsNoTracking().Where(x => Enumerable.Contains(topicIds, x.Id))
+            .ToDictionaryAsync(x => x.Id, x => x.Name, cancellationToken);
+        var start = fromDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
+        var end = toDate.ToDateTime(TimeOnly.MaxValue, DateTimeKind.Utc);
+        var exams = await db.ExamResults.AsNoTracking()
+            .Where(x => x.StudentId == student && x.Exam.ExamDate >= start && x.Exam.ExamDate <= end)
+            .OrderBy(x => x.Exam.ExamDate).ThenBy(x => x.Id)
+            .Select(x => new { x.Exam.StudentOwnerId, x.Exam.ExamType, x.Exam.MaxScore, x.Score, x.LessonAnswersJson })
+            .Take(1001).ToListAsync(cancellationToken);
+        if (exams.Count > 1000) throw new ArgumentException("Select a shorter report period.");
+        var groups = exams.Where(x => x.MaxScore > 0).GroupBy(x => new { Source = x.StudentOwnerId.HasValue ? "StudentReported" : "TeacherRecorded", x.ExamType, x.MaxScore })
+            .Select(g => new StudyExamGroup(g.Key.Source, g.Key.ExamType, g.Key.MaxScore, g.Count(),
+                decimal.Round(g.Average(x => 100m * x.Score / x.MaxScore), 1)))
+            .OrderBy(x => x.Source).ThenBy(x => x.ExamType).ThenBy(x => x.MaxScore).ToArray();
+        var lessons = exams.Where(x => x.LessonAnswersJson is not null).SelectMany(x =>
+            (System.Text.Json.JsonSerializer.Deserialize<LessonAnswerStatistics[]>(x.LessonAnswersJson!) ?? [])
+                .Select(l => new { Source = x.StudentOwnerId.HasValue ? "StudentReported" : "TeacherRecorded", x.ExamType, Lesson = l }))
+            .GroupBy(x => new { x.Source, x.ExamType, x.Lesson.LessonId, x.Lesson.TopicId })
+            .Select(g => new StudyLessonResult(g.Key.Source, g.Key.ExamType, g.Key.LessonId, g.Key.TopicId,
+                g.Last().Lesson.LessonName, g.Last().Lesson.TopicName, g.Sum(x => (long)x.Lesson.QuestionCount),
+                g.Sum(x => (long)x.Lesson.Correct), g.Sum(x => (long)x.Lesson.Wrong), g.Sum(x => (long)x.Lesson.Empty)))
+            .OrderBy(x => x.LessonId).ThenBy(x => x.TopicId).ThenBy(x => x.ExamType).ToArray();
+        return report with { Topics = report.Topics.Select(x => x with {
+            TopicName = x.TopicId.HasValue ? names.GetValueOrDefault(x.TopicId.Value) : null }).ToArray(),
+            ExamGroups = groups, LessonResults = lessons };
     }
 }
