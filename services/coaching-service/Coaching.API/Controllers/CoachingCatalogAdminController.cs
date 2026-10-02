@@ -17,7 +17,8 @@ public sealed class CoachingCatalogAdminController(ICoachingAdminCatalogReader r
     [HttpGet("{kind}")]
     public async Task<IActionResult> List(string kind, [FromQuery] AdminCatalogFilter filter, CancellationToken cancellationToken)
     {
-        if (!Enum.TryParse<CatalogKind>(kind, true, out var parsed) || !Enum.IsDefined(parsed))
+        if (!Enum.TryParse<CatalogKind>(kind, true, out var parsed) || !Enum.IsDefined(parsed)
+            || !string.Equals(kind, parsed.ToString(), StringComparison.OrdinalIgnoreCase))
             return BadRequest(new { success = false, message = "Geçerli bir katalog türü seçin." });
         try
         {
