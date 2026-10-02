@@ -54,6 +54,28 @@ public sealed class CoachingAdminStudyCorrectionTests(PostgresFixture postgres)
         service = new(null!,new Scope(true),new TestUser(Guid.NewGuid(),false));
         await Assert.ThrowsAsync<BusinessRuleException>(() => service.CorrectPlanAsync(Guid.NewGuid(),Guid.NewGuid(),new(0,"Title",false,"Valid reason"),default));
     }
+
+    [Fact]
+    public async Task GoalCorrectionPreservesRecordedProgressAndAuditsPreviousTarget()
+    {
+        await using var db = new CoachingDbContext(new DbContextOptionsBuilder<CoachingDbContext>().UseNpgsql(postgres.ConnectionString).Options);
+        await db.Database.EnsureDeletedAsync(); await db.Database.EnsureCreatedAsync();
+        try
+        {
+            var student = Guid.NewGuid();
+            var goal = AcademicGoal.Create(student,"Goal",Coaching.Domain.Enums.GoalCategory.ExamPreparation);
+            goal.SetTarget(targetScore:400); goal.UpdateProgress(35);
+            db.Add(goal); await db.SaveChangesAsync(); db.ChangeTracker.Clear();
+            var service = new CoachingAdminStudyCorrectionService(db,new Scope(true),new TestUser(Guid.NewGuid()));
+            await service.CorrectGoalAsync(student,goal.Id,new(0,"Reviewed description",new(2027,6,1),450,"Verified goal correction"),default);
+            var saved = await db.AcademicGoals.AsNoTracking().SingleAsync();
+            Assert.Equal(35,saved.CurrentProgress); Assert.Equal(450,saved.TargetScore);
+            Assert.Contains("400",(await db.AdminAuditRecords.SingleAsync()).ChangedFieldsJson);
+            db.ChangeTracker.Clear();
+            await Assert.ThrowsAsync<BusinessRuleException>(() => service.CorrectGoalAsync(student,goal.Id,new(0,"Stale",null,450,"Stale target correction"),default));
+        }
+        finally { await db.Database.EnsureDeletedAsync(); }
+    }
     private sealed class Scope(bool global) : ICoachingAdminScopeAuthorization
     { public Task<CoachingAdminScope> RequireReadScopeAsync(CancellationToken ct) => Task.FromResult(new CoachingAdminScope(global,null)); }
     private sealed class TestUser(Guid id,bool manage=true) : ICurrentUserService
