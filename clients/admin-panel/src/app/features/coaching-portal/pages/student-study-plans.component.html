@@ -50,6 +50,8 @@
           </fieldset>
         </form>
         @if (selected()?.status === 'Draft') {
+          <div class="actions"><button type="button" class="secondary" [disabled]="busy() || dirty" (click)="archiveDraft()">Taslağı arşivle</button>
+            <p class="muted">Güncelliğini yitirmiş bir taslağı arşivleyip otomatik planı yeniden hazırlayabilirsin. Geçmiş silinmez.</p></div>
           <div class="publish-box"><h3>Planını yayımla</h3><p>Bu taslak aktif planın olacak. Önceki plan arşivlenecek; çalışma geçmişin silinmeyecek.</p>
             <label class="check"><input type="checkbox" [(ngModel)]="publishConfirmed" [disabled]="busy() || dirty">Planımı kontrol ettim, yayımlamayı onaylıyorum.</label>
             <button type="button" (click)="publish()" [disabled]="busy() || dirty || !publishConfirmed || !selected()?.tasks?.length">Planı yayımla</button></div>

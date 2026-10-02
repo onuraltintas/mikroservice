@@ -120,6 +120,12 @@ export class StudentStudyPlansComponent implements OnInit {
     if (!plan || plan.status !== 'Draft' || !plan.tasks.length || !this.publishConfirmed || this.dirty || this.busy()) return;
     this.mutate(this.service.publish(plan.id, plan.version), 'Plan yayımlandı. Önceki planın geçmişi korundu.');
   }
+  archiveDraft() {
+    const plan = this.selected();
+    if (!plan || plan.status !== 'Draft' || this.busy() || this.dirty || typeof window === 'undefined') return;
+    if (!window.confirm('Taslak arşivlensin mi? Çalışmalar geçmişte korunacak; yeni bir taslak hazırlayabileceksiniz.')) return;
+    this.mutate(this.service.archive(plan.id, plan.version), 'Taslak arşivlendi. Geçmiş korundu; yeni taslak hazırlayabilirsin.');
+  }
 
   complete(task: StudyTask, actualMinutes: number) {
     const plan = this.selected();
