@@ -1,0 +1,50 @@
+<section class="study-plans" aria-labelledby="student-results-title">
+  <header class="page-heading"><div><p class="eyebrow">Gelişimini kaydet</p><h1 id="student-results-title">Sınav sonuçlarım</h1>
+    <p>Kendi sonuçlarını gir, ders ve konu dağılımını takip et. Bu kayıtlar öğrenci beyanıdır; resmî puan veya öğretmen ölçümü değildir.</p></div>
+    <button type="button" (click)="newExam()" [disabled]="busy()">Yeni sonuç</button></header>
+  @if (error()) { <p class="notice error" role="alert">{{ error() }}</p> }
+  @if (success()) { <p class="notice success" role="status">{{ success() }}</p> }
+  <div class="workspace"><aside class="panel" aria-label="Sonuç listesi">
+    @if (busy()) { <p role="status">İşlem sürüyor…</p> }
+    @if (!page().items.length) { <p>Henüz kendi girdiğin bir sonuç yok.</p> }
+    @for (exam of page().items; track exam.id) { <button type="button" class="plan-row" (click)="open(exam.id)" [disabled]="busy()">
+      <strong>{{ exam.title }}</strong><span>{{ exam.score }} / {{ exam.maxScore }}</span></button> }
+    <div class="pagination"><button type="button" (click)="loadList(page().pageNumber - 1)" [disabled]="busy() || page().pageNumber <= 1">Önceki</button>
+      <span>{{ page().pageNumber }} · {{ page().totalCount }} sonuç</span>
+      <button type="button" (click)="loadList(page().pageNumber + 1)" [disabled]="busy() || page().pageNumber * page().pageSize >= page().totalCount">Sonraki</button></div>
+    <button type="button" class="secondary" (click)="loadList(page().pageNumber)" [disabled]="busy()">Listeyi yenile</button>
+  </aside><div class="panel" [attr.aria-busy]="busy()">
+    <h2>{{ selected ? 'Sonucunu düzenle' : 'Yeni sonuç ekle' }}</h2>
+    <form (ngSubmit)="save()"><fieldset [disabled]="busy()">
+      <label>Başlık<input name="title" [(ngModel)]="title" (ngModelChange)="changed()" maxlength="200" required></label>
+      <div class="fields"><label>Sınav türü<select name="examType" [(ngModel)]="examType" (ngModelChange)="changed()">
+        @for (type of examTypes; track type.value) { <option [value]="type.value">{{ type.label }}</option> }</select></label>
+        <label>Tarih<input type="date" name="date" [(ngModel)]="examDate" (ngModelChange)="changed()" required></label></div>
+      <div class="fields"><label>Aldığın puan<input type="number" name="score" [(ngModel)]="score" (ngModelChange)="changed()" min="0" [max]="maxScore" step="0.01" required></label>
+        <label>Maksimum puan<input type="number" name="max" [(ngModel)]="maxScore" (ngModelChange)="changed()" min="0.01" max="999.99" step="0.01" required></label></div>
+      @if (!lessons.length) { <div class="fields"><label>Doğru<input type="number" name="correct" [(ngModel)]="correctAnswers" (ngModelChange)="changed()" min="0" max="1000" step="1" required></label>
+        <label>Yanlış<input type="number" name="wrong" [(ngModel)]="wrongAnswers" (ngModelChange)="changed()" min="0" max="1000" step="1" required></label>
+        <label>Boş<input type="number" name="empty" [(ngModel)]="emptyAnswers" (ngModelChange)="changed()" min="0" max="1000" step="1" required></label></div> }
+      <h3>Ders/konu dağılımı (isteğe bağlı)</h3><p class="muted">Konu eklersen genel doğru/yanlış/boş sayıları bu satırlardan hesaplanır. Aynı soruyu iki kez sayma.</p>
+      @for (lesson of lessons; track $index; let i = $index) { <div class="draft-task"><strong>{{ lesson.lessonName }} · {{ lesson.topicName || 'Ders toplamı' }}</strong>
+        <div class="fields"><label>Soru<input type="number" [name]="'questions-'+i" [(ngModel)]="lesson.questionCount" (ngModelChange)="changed()" min="1" max="1000" step="1" required></label>
+          <label>Doğru<input type="number" [name]="'correct-'+i" [(ngModel)]="lesson.correct" (ngModelChange)="changed()" min="0" max="1000" step="1" required></label>
+          <label>Yanlış<input type="number" [name]="'wrong-'+i" [(ngModel)]="lesson.wrong" (ngModelChange)="changed()" min="0" max="1000" step="1" required></label>
+          <label>Boş<input type="number" [name]="'empty-'+i" [(ngModel)]="lesson.empty" (ngModelChange)="changed()" min="0" max="1000" step="1" required></label></div>
+        <button type="button" class="secondary" (click)="removeTopic(i)">Satırı kaldır</button></div> }
+      <div class="publish-box"><label class="check"><input type="checkbox" name="confirmed" [(ngModel)]="confirmed">Bilgilerimi kontrol ettim; öğrenci beyanı olarak kaydet.</label>
+        <button type="submit" [disabled]="!confirmed || stale()">Sonucu kaydet</button></div>
+    </fieldset></form>
+    <div class="draft-task"><h3>Konu ekle</h3><div class="fields">
+      <label>Arama<input [(ngModel)]="search" maxlength="200" [disabled]="busy()" (keydown.enter)="searchTopics()"></label>
+      <label>Sınıf<input type="number" [(ngModel)]="grade" min="1" max="12" step="1" [disabled]="busy()"></label>
+      <label>Sınav<select [(ngModel)]="examCode" [disabled]="busy()"><option value="">Tümü</option><option>LGS</option><option>TYT</option><option>AYT</option><option>YDT</option></select></label>
+      <button type="button" (click)="searchTopics()" [disabled]="busy()">Konuları ara</button></div>
+      @for (topic of topics().items; track topic.id) { <button type="button" class="plan-row" (click)="addTopic(topic.id)" [disabled]="busy() || lessons.length >= 50">{{ topic.lessonName }} · {{ topic.name }} · Ekle</button> }
+      <div class="pagination"><button type="button" (click)="searchTopics(topics().pageNumber - 1)" [disabled]="busy() || topics().pageNumber <= 1">Önceki</button>
+        <span>{{ topics().totalCount }} konu</span><button type="button" (click)="searchTopics(topics().pageNumber + 1)" [disabled]="busy() || topics().pageNumber * topics().pageSize >= topics().totalCount">Sonraki</button></div>
+    </div>
+    @if (selected) { <div class="actions"><button type="button" class="secondary" (click)="open(selected.id)" [disabled]="busy()">Kaydı yeniden yükle</button>
+      <button type="button" class="secondary" (click)="deleteSelected()" [disabled]="busy() || dirty || stale()">Sonucu sil</button></div> }
+  </div></div>
+</section>

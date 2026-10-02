@@ -30,7 +30,7 @@ export interface SchoolTarget { id: string; name: string; city: string; district
 export interface UniversityTarget { id: string; name: string; universityName: string; programCode: string | null; scoreType: string | null; minimumScore: number | null; scoreYear: number | null }
 export interface TargetPage<T> { items: T[]; totalCount: number; pageNumber: number; pageSize: number }
 export interface GoalTarget { goalId: string; version: number; targetSchoolId: string | null; targetUniversityProgramId: string | null; canEdit: boolean; catalogTarget?: { name: string; detail: string; isActive: boolean } | null }
-export interface StudyTopic { id: string; name: string; lessonName: string; unitName: string; gradeNumber: number | null; examCode: string | null; estimatedMinutes: number | null }
+export interface StudyTopic { id: string; lessonId?: string; name: string; lessonName: string; unitName: string; gradeNumber: number | null; examCode: string | null; estimatedMinutes: number | null }
 export interface AutomaticStudyRequest { startDate: string; days: number; expectedAvailabilityVersion: number; topics: { topicId: string; requiredMinutes: number | null }[] }
 export interface AutomaticStudyDraftRequest { title: string; preview: AutomaticStudyRequest; expectedActiveRevisionId: string | null; expectedActiveRevisionVersion: number | null }
 export interface AutomaticStudyPreview {

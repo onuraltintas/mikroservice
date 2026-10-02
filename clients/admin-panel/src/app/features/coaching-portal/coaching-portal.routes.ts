@@ -4,8 +4,14 @@ import type { StudentStudyPlansComponent } from './pages/student-study-plans.com
 import type { StudentStudyAvailabilityComponent } from './pages/student-study-availability.component';
 import type { CoachingPortalProgressComponent } from './pages/coaching-portal-progress.component';
 import type { StudentAutomaticPlanComponent } from './pages/student-automatic-plan.component';
+import type { StudentExamResultsComponent } from './pages/student-exam-results.component';
 
 export const COACHING_PORTAL_ROUTES: Routes = [
+  {
+    path: 'exam-results', canActivate: [coachingRoleGuard], data: { coachingRoles: ['Student'] },
+    canDeactivate: [(component: StudentExamResultsComponent) => component.canLeavePage()],
+    loadComponent: () => import('./pages/student-exam-results.component').then(m => m.StudentExamResultsComponent)
+  },
   {
     path: 'automatic-plan',
     canActivate: [coachingRoleGuard],
