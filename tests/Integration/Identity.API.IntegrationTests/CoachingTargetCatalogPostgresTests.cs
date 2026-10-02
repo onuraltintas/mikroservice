@@ -28,6 +28,9 @@ public sealed class CoachingTargetCatalogPostgresTests(PostgresFixture postgres)
             const string previous = "20261002082803_AddCoachingStudyCatalog";
             const string current = "20261002091400_AddCoachingTargetCatalog";
             await db.Database.ExecuteSqlRawAsync(migrator.GenerateScript(previous, current));
+            // Current entity includes optional location IDs; preserve this historical migration test's schema compatibility.
+            await db.Database.ExecuteSqlRawAsync(migrator.GenerateScript(
+                "20261002134329_AddGoalScoreScale", "20261002151257_LinkTargetSchoolAdministrativeLocations"));
             db.TargetUniversityPrograms.Add(TargetUniversityProgram.Create("test", "program", "University", "Program", null, null, null));
             db.TargetSchools.Add(TargetSchool.Create("test", "school", "School", "City", "District", null));
             await db.SaveChangesAsync();
