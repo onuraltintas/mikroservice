@@ -76,6 +76,9 @@ public sealed class CoachingErasureAssessmentConsumerTests
             published.RequestId.Should().Be(requestId);
             published.ServiceName.Should().Be("Coaching");
             published.CanProceed.Should().BeTrue();
+            published.RecordCounts.Should().NotBeNull();
+            published.RecordCounts!["StudyPlanning"].Should().Be(4);
+            published.RecordCounts.Values.Sum().Should().Be(15);
         }
         finally
         {
@@ -101,7 +104,7 @@ public sealed class CoachingErasureAssessmentConsumerTests
                 goalCount: 3,
                 sessionCount: 4,
                 agreementCount: 1,
-                DateTime.UtcNow));
+                DateTime.UtcNow, studyPlanningRecordCount: 4));
         }
     }
 }
