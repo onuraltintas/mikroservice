@@ -8,6 +8,7 @@ using EduPlatform.Shared.Security.Interfaces;
 using MassTransit;
 using MassTransit.EntityFrameworkCoreIntegration;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using Shared.IntegrationTests.Fixtures;
 using System.Security.Claims;
@@ -21,7 +22,8 @@ public sealed class CoachingStudyPlanOutboxTests(PostgresFixture postgres)
     public async Task PublishingPlan_PersistsNotificationInSameTransactionWithoutRunningBroker()
     {
         var services = new ServiceCollection(); services.AddLogging();
-        services.AddDbContext<CoachingDbContext>(o => o.UseNpgsql(postgres.ConnectionString));
+        var fault = new PublicationFault();
+        services.AddDbContext<CoachingDbContext>(o => o.UseNpgsql(postgres.ConnectionString).AddInterceptors(fault));
         services.AddMassTransit(x => {
             x.AddEntityFrameworkOutbox<CoachingDbContext>(o => { o.UsePostgres(); o.UseBusOutbox(); });
             x.UsingInMemory((context, cfg) => cfg.ConfigureEndpoints(context));
@@ -37,6 +39,11 @@ public sealed class CoachingStudyPlanOutboxTests(PostgresFixture postgres)
                 new MassTransitCoachingEventPublisher(scope.ServiceProvider.GetRequiredService<IPublishEndpoint>()));
             var draft = await service.CreateDraftAsync(new("Test plan", [new(new(2026, 10, 2), "Read", 30, null, false)]));
             Assert.Equal(0, await db.Set<OutboxMessage>().CountAsync());
+            fault.Enabled = true;
+            await Assert.ThrowsAsync<InvalidOperationException>(() => service.PublishAsync(draft.Id, draft.Version));
+            Assert.Equal(0, await db.Set<OutboxMessage>().AsNoTracking().CountAsync());
+            Assert.Equal(StudyPlanStatus.Draft, (await service.GetAsync(draft.Id))!.Status);
+            fault.Enabled = false;
             var active = await service.PublishAsync(draft.Id, draft.Version);
             Assert.Equal(StudyPlanStatus.Active, active.Status);
             var message = Assert.Single(await db.Set<OutboxMessage>().AsNoTracking().ToListAsync());
@@ -52,6 +59,17 @@ public sealed class CoachingStudyPlanOutboxTests(PostgresFixture postgres)
     {
         public Guid? UserId { get; } = Guid.NewGuid(); public string? Email => null; public string? FullName => null;
         public IEnumerable<string> Roles => ["Student"]; public bool IsAuthenticated => true; public ClaimsPrincipal? User => null;
+    }
+    private sealed class PublicationFault : SaveChangesInterceptor
+    {
+        public bool Enabled;
+        public override ValueTask<InterceptionResult<int>> SavingChangesAsync(DbContextEventData eventData,
+            InterceptionResult<int> result, CancellationToken cancellationToken = default)
+        {
+            if (Enabled && eventData.Context!.ChangeTracker.Entries<StudyPlanRevision>().Any(x => x.Entity.IsActive))
+                throw new InvalidOperationException("Simulated publication failure.");
+            return ValueTask.FromResult(result);
+        }
     }
 }
 
