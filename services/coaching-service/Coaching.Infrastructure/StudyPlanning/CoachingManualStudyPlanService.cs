@@ -121,7 +121,7 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
                 await db.SaveChangesAsync(cancellationToken);
             }
             revision.Activate();
-            await events.PublishAsync(new StudyPlanPublishedEvent(revision.Id, student, revision.Title), cancellationToken);
+            await events.PublishAsync(new StudyPlanPublishedEvent(revision.Id, student), cancellationToken);
             await db.SaveChangesAsync(cancellationToken);
             return await ViewAsync(revision, cancellationToken);
         }, cancellationToken);

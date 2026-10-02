@@ -1,6 +1,6 @@
 namespace EduPlatform.Shared.Contracts.Events.Coaching;
 
-public sealed record StudyPlanPublishedEvent(Guid RevisionId, Guid StudentId, string Title);
+public sealed record StudyPlanPublishedEvent(Guid RevisionId, Guid StudentId);
 
 public sealed record AssignmentCreatedEvent(
     Guid AssignmentId,

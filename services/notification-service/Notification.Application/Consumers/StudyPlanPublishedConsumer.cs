@@ -11,6 +11,6 @@ public sealed class StudyPlanPublishedConsumer(ICoachingNotificationDispatcher d
         var message = context.Message;
         var messageId = context.MessageId ?? throw new InvalidOperationException("StudyPlanPublishedEvent.MessageId is required.");
         return dispatcher.SendAsync(messageId, [message.StudentId],
-            "Çalışma planın hazır", message.Title, "StudyPlanPublished", message.RevisionId.ToString(), context.CancellationToken);
+            "Çalışma planın hazır", "Çalışma planını öğrenci panelinden inceleyebilirsin.", "StudyPlanPublished", message.RevisionId.ToString(), context.CancellationToken);
     }
 }

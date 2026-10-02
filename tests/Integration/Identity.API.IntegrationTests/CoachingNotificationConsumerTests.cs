@@ -87,7 +87,7 @@ public sealed class CoachingNotificationConsumerTests
                 Guid.NewGuid(), secondStudentId, teacherId, "Read two books"));
             await harness.Bus.Publish(new GoalUpdatedEvent(
                 Guid.NewGuid(), secondStudentId, teacherId, "Read three books"));
-            await harness.Bus.Publish(new StudyPlanPublishedEvent(Guid.NewGuid(), firstStudentId, "My study plan"));
+            await harness.Bus.Publish(new StudyPlanPublishedEvent(Guid.NewGuid(), firstStudentId));
 
             (await harness.Consumed.Any<AssignmentCreatedEvent>()).Should().BeTrue();
             (await harness.Consumed.Any<AssignmentUpdatedEvent>()).Should().BeTrue();
