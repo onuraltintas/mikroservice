@@ -115,6 +115,17 @@ export class CoachingCatalogComponent implements OnInit {
     this.totalCount.set(0);
     this.page.set(page);
     this.error.set('');
+    this.loading.set(false);
+    if (this.kind === 'lessons' && this.gradeNumber !== null
+        && (!Number.isInteger(this.gradeNumber) || this.gradeNumber < 1 || this.gradeNumber > 12)) {
+      this.error.set('Sınıf 1 ile 12 arasında tam sayı olmalıdır.');
+      return;
+    }
+    if ((this.kind === 'schools' || this.kind === 'universityPrograms') && this.scoreYear !== null
+        && (!Number.isInteger(this.scoreYear) || this.scoreYear < 1900 || this.scoreYear > 2200)) {
+      this.error.set('Puan yılı 1900 ile 2200 arasında tam sayı olmalıdır.');
+      return;
+    }
     this.loading.set(true);
     const filter: CoachingCatalogFilter = { pageNumber: page, pageSize: 25, search: this.search.trim(), source: this.source.trim() };
     if (this.status) filter.isActive = this.status === 'active';

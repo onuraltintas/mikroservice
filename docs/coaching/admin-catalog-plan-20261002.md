@@ -91,12 +91,18 @@ RED/GREEN checkpointleri aktif `codex/platform-hardening` dalında ayrı commitl
 - İlave API/konum hata senaryoları: **25 geçti, 0 başarısız, 0 atlanan**;
   önceki seçimle örtüştükleri için sonuçlar toplanmamalı.
 - Arayüz bileşeni, menü/rota ve HTTP servis testleri: **10 geçti**.
+- Son geniş arayüz regresyonu: mevcut koçluk admin sayfaları dahil **60 geçti**.
+  Kod incelemesindeki sayısal filtre doğrulaması bulgusu RED/GREEN testle düzeltildi;
+  geçersiz sınıf/yıl değerleri istek yapılmadan kullanıcıya açıklanır.
 - Admin production build başarılı. Mevcut Speed Reading katalog stil bütçesi uyarısı
   devam ediyor; bu çalışmanın kapsamı dışında değiştirilmedi.
 - Controller ve konum istemcisinin async dalları dahil satır kapsamı %100;
   katalog reader async satır kapsamı %98. Bunlar ürün genelinin kapsamı değildir.
 - C# kapsam incelemesinde blocker yok. Yazma endpointleri, tam tarayıcı E2E ve
   kullanım/işlem geçmişi güvenlik kontrolleri henüz tamamlanmadı.
+- TypeScript/Angular incelemesinde blocker yok; TypeScript tip kontrolü geçti.
+  Arayüz mevcut admin tasarımıyla uyumlu tutuldu; tamamlanmış görsel tarayıcı
+  incelemesi veya gerçek API ile tam E2E olarak raporlanmaz.
 
 Bu kontroller **planın tümünün tamamlandığı anlamına gelmez**. Canlıya veya GitHub'a
 bu yeni admin geliştirmesi aktarılmadı. Bir sonraki çalışma güvenli yazma API'leri,
