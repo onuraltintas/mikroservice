@@ -4,11 +4,25 @@ using Coaching.Domain.Entities;
 using EduPlatform.Shared.Kernel.Exceptions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Text.Json;
 
 namespace Identity.API.IntegrationTests;
 
 public sealed class CoachingManualStudyPlanApiTests
 {
+    [Fact]
+    public void Json_RequiresExplicitVersionAndBodyLimitFitsMaximumPlan()
+    {
+        Assert.Throws<JsonException>(() => JsonSerializer.Deserialize<StudyPlanPublishInput>("{}"));
+        Assert.Throws<JsonException>(() => JsonSerializer.Deserialize<ManualStudyPlanUpdate>("{\"Plan\":{\"Title\":\"Plan\",\"Tasks\":[]}}"));
+        foreach (var name in new[] { nameof(ManualStudyPlansController.Create), nameof(ManualStudyPlansController.Replace) })
+        {
+            var limit = Assert.Single(typeof(ManualStudyPlansController).GetMethod(name)!
+                .GetCustomAttributes(typeof(RequestSizeLimitAttribute), false).Cast<RequestSizeLimitAttribute>());
+            Assert.Equal(1024 * 1024, ((Microsoft.AspNetCore.Http.Metadata.IRequestSizeLimitMetadata)limit).MaxRequestBodySize);
+        }
+    }
+
     [Fact]
     public async Task Api_Returns201WithLocationAndRequiresStudent()
     {
