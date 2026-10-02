@@ -94,6 +94,8 @@ public sealed class CoachingCatalogImporter(CoachingDbContext db)
                 var topics = await db.StudyCatalogTopics.Where(x => x.Source == source).ToDictionaryAsync(x => x.SourceId, cancellationToken);
                 var programs = await db.TargetUniversityPrograms.Where(x => x.Source == source).ToDictionaryAsync(x => x.SourceId, cancellationToken);
                 var schools = await db.TargetSchools.Where(x => x.Source == source).ToDictionaryAsync(x => x.SourceId, cancellationToken);
+                if (publish && (report.Counts.Values.Sum() == 0 || lessons.Count + units.Count + topics.Count + programs.Count + schools.Count != report.Counts.Values.Sum()))
+                    throw new InvalidOperationException("Publication requires the complete reviewed source and no extra stored records.");
                 var snapshot = JsonSerializer.Serialize(new { source,
                     files = files.OrderBy(x => x.Key, StringComparer.Ordinal).ToArray(),
                     lessons = lessons.OrderBy(x => x.Key, StringComparer.Ordinal).ToArray(),
