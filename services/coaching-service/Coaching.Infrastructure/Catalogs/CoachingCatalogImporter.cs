@@ -34,6 +34,33 @@ public sealed class CoachingCatalogImporter(CoachingDbContext db)
             {
                 // Serialize imports for this source. Unique indexes remain the final guard.
                 await db.Database.ExecuteSqlInterpolatedAsync($"SELECT pg_advisory_xact_lock(hashtext({source}));", cancellationToken);
+                // Share the deletion writer's table locks before reading its committed tombstones.
+                await db.Database.ExecuteSqlRawAsync("SET LOCAL lock_timeout = '3s'", cancellationToken);
+                await db.Database.ExecuteSqlRawAsync("""
+                    LOCK TABLE coaching.study_catalog_lessons, coaching.study_catalog_topics,
+                        coaching.study_catalog_units, coaching.target_schools,
+                        coaching.target_university_programs IN SHARE ROW EXCLUSIVE MODE
+                    """, cancellationToken);
+                var deletions = await db.AdminAuditRecords.AsNoTracking()
+                    .Where(x => x.ServiceName == "Coaching" && x.Action == "CatalogPermanentDelete")
+                    .Select(x => new { x.ResourceType, x.ChangedFieldsJson }).ToListAsync(cancellationToken);
+                var keys = new Dictionary<string, HashSet<string>>
+                {
+                    ["Lessons"] = rows["lessons.json"].Select(x => Text(x, "id")).ToHashSet(),
+                    ["Units"] = rows["units-derived.json"].Select(x => Text(x, "id")).ToHashSet(),
+                    ["Topics"] = rows["upper-subjects.json"].Select(x => "upper:" + Text(x, "id"))
+                        .Concat(rows["subjects.json"].Select(x => "topic:" + Text(x, "id"))).ToHashSet(),
+                    ["Schools"] = rows["lgs-programs.json"].Select(x => Text(x, "id")).ToHashSet(),
+                    ["UniversityPrograms"] = rows["university-programs.json"].Select(x => Text(x, "id")).ToHashSet()
+                };
+                foreach (var deletion in deletions)
+                {
+                    using var payload = JsonDocument.Parse(deletion.ChangedFieldsJson ?? throw new InvalidOperationException("Deletion audit payload is missing."));
+                    if (Text(payload.RootElement, "source") == source && deletion.ResourceType is not null
+                        && keys.TryGetValue(deletion.ResourceType, out var candidates)
+                        && candidates.Contains(Text(payload.RootElement, "sourceId")))
+                        throw new InvalidOperationException("Reviewed files contain a permanently deleted catalog record.");
+                }
                 var lessons = await db.StudyCatalogLessons.Where(x => x.Source == source).ToDictionaryAsync(x => x.SourceId, cancellationToken);
                 var units = await db.StudyCatalogUnits.Where(x => x.Source == source).ToDictionaryAsync(x => x.SourceId, cancellationToken);
                 var topics = await db.StudyCatalogTopics.Where(x => x.Source == source).ToDictionaryAsync(x => x.SourceId, cancellationToken);
