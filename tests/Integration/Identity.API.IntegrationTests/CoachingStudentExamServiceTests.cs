@@ -1,10 +1,13 @@
 using System.Security.Claims;
 using Coaching.Application.Authorization;
 using Coaching.Application.StudyPlanning;
+using Coaching.Application.Interfaces;
+using Coaching.Application.Queries.GetExamResults;
 using Coaching.Domain.Entities;
 using Coaching.Domain.Enums;
 using Coaching.Infrastructure.Data;
 using Coaching.Infrastructure.StudyPlanning;
+using Coaching.Infrastructure.Repositories;
 using EduPlatform.Shared.Kernel.Exceptions;
 using EduPlatform.Shared.Security.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -57,6 +60,11 @@ public sealed class CoachingStudentExamServiceTests(PostgresFixture postgres)
             var teacher = Exam.Create(Guid.NewGuid(), "Teacher result", ExamType.Mock, DateTime.UtcNow, 100);
             teacher.AddResult(ExamResult.Create(teacher.Id, actor.UserId!.Value, 70));
             db.Add(teacher); await db.SaveChangesAsync();
+            var legacyResults = await new GetStudentExamResultsQueryHandler(new ExamRepository(db), access, new Identity(actor.UserId!.Value))
+                .Handle(new(actor.UserId!.Value), CancellationToken.None);
+            Assert.Equal("StudentReported", legacyResults.Items.Single(x => x.ExamId == created.Id).Source);
+            Assert.Equal("TeacherRecorded", legacyResults.Items.Single(x => x.ExamId == teacher.Id).Source);
+            Assert.Single(legacyResults.Items.Single(x => x.ExamId == created.Id).LessonAnswers!);
             Assert.Null(await service.GetAsync(teacher.Id));
             await Assert.ThrowsAsync<KeyNotFoundException>(() => service.DeleteAsync(teacher.Id, teacher.Version));
             await service.DeleteAsync(created.Id, replaced.Version);
@@ -79,5 +87,14 @@ public sealed class CoachingStudentExamServiceTests(PostgresFixture postgres)
         public bool IsAuthenticated => true;
         public IEnumerable<Claim> Claims => [];
         public string? GetClaimValue(string type) => null;
+    }
+
+    private sealed class Identity(Guid student) : ICoachingIdentityAuthorizationClient
+    {
+        public Task<IReadOnlyCollection<Guid>> AuthorizeStudentReadAsync(Guid viewerUserId, IReadOnlyCollection<Guid> studentIds, CancellationToken cancellationToken)
+            => Task.FromResult<IReadOnlyCollection<Guid>>([student]);
+        public Task<CoachingAdminAccessScope?> AuthorizeCoachingAdminAsync(Guid viewerUserId, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<Guid?> AuthorizeTeacherTargetsAsync(Guid teacherId, IReadOnlyCollection<Guid> studentIds, Guid? requestedInstitutionId, bool isSystemAdministrator, CancellationToken cancellationToken)
+            => throw new NotSupportedException();
     }
 }
