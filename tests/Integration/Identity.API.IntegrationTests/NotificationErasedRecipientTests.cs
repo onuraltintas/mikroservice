@@ -13,6 +13,24 @@ namespace Identity.API.IntegrationTests;
 public sealed class NotificationErasedRecipientTests(PostgresFixture postgres)
 {
     [Fact]
+    public async Task HistoricalReceiptReplay_AddsMissingRecipientProtection()
+    {
+        await using var db = new NotificationDbContext(new DbContextOptionsBuilder<NotificationDbContext>().UseNpgsql(postgres.ConnectionString).Options);
+        await db.Database.EnsureDeletedAsync(); await db.Database.EnsureCreatedAsync();
+        try
+        {
+            var subject = Guid.NewGuid(); var requestId = Guid.NewGuid();
+            db.ErasureExecutions.Add(NotificationErasureExecutionReceipt.Complete(requestId, 0, DateTime.UtcNow));
+            await db.SaveChangesAsync();
+            await new NotificationErasureExecutionService(db, TimeProvider.System).ExecuteAsync(
+                new(Guid.NewGuid(), requestId, subject, DateTime.UtcNow, PersonalDataScope.Account), CancellationToken.None);
+            Assert.True(await db.ErasedRecipients.AnyAsync(x => x.UserId == subject));
+            Assert.Null(await NotificationRecipientWrites.PersistAsync(db, NotificationItem.Create(subject, "Late", "Late", "Info")));
+        }
+        finally { await db.Database.EnsureDeletedAsync(); }
+    }
+
+    [Fact]
     public async Task ConcurrentNotification_WaitsForErasureAndCannotRecreateSubjectData()
     {
         var options = new DbContextOptionsBuilder<NotificationDbContext>().UseNpgsql(postgres.ConnectionString).Options;
