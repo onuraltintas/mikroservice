@@ -63,7 +63,7 @@ public sealed class CoachingStudyPlanningPrivacyTests(PostgresFixture postgres)
         finally { await db.Database.EnsureDeletedAsync(); }
     }
 
-    private sealed class NoAttachments : IAssignmentAttachmentStorage
+    internal sealed class NoAttachments : IAssignmentAttachmentStorage
     {
         public Task<AssignmentAttachmentUploadTicket> CreateUploadTicketAsync(Guid assignmentId, Guid studentId, Guid attachmentId, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task<StoredAssignmentAttachment> StoreAsync(string storageKey, Stream content, string expectedContentType, long expectedSizeBytes, string expectedSha256, CancellationToken cancellationToken = default) => throw new NotSupportedException();

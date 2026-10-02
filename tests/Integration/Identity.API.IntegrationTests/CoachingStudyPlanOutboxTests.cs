@@ -4,6 +4,8 @@ using Coaching.Domain.Entities;
 using Coaching.Infrastructure.Data;
 using Coaching.Infrastructure.Messaging;
 using Coaching.Infrastructure.StudyPlanning;
+using Coaching.Infrastructure.Privacy;
+using EduPlatform.Shared.Contracts.Events.Privacy;
 using EduPlatform.Shared.Security.Interfaces;
 using MassTransit;
 using MassTransit.EntityFrameworkCoreIntegration;
@@ -58,6 +60,20 @@ public sealed class CoachingStudyPlanOutboxTests(PostgresFixture postgres)
             var next = await service.CreateDraftAsync(new("Next plan", [new(new(2026, 10, 3), "Next read", 30, null, false)]));
             await service.PublishAsync(next.Id, next.Version);
             Assert.Equal(2, await db.Set<OutboxMessage>().CountAsync());
+            var otherAccess = new CoachingAccessPolicy(new Actor());
+            var otherService = new CoachingManualStudyPlanService(db, otherAccess, new CoachingAutomaticStudyPlanPreviewService(db, otherAccess),
+                new MassTransitCoachingEventPublisher(scope.ServiceProvider.GetRequiredService<IPublishEndpoint>()));
+            var otherDraft = await otherService.CreateDraftAsync(new("Other plan", [new(new(2026, 10, 3), "Read", 30, null, false)]));
+            await otherService.PublishAsync(otherDraft.Id, otherDraft.Version);
+            var requestId = Guid.NewGuid(); var eventId = Guid.NewGuid(); var now = DateTime.UtcNow;
+            var student = access.CurrentUserId!.Value;
+            var assessment = await new CoachingErasureAssessmentService(db, TimeProvider.System)
+                .AssessAsync(new(eventId, requestId, student, now, true, PersonalDataScope.Coaching), CancellationToken.None);
+            Assert.Equal(6, assessment.StudyPlanningRecordCount);
+            await new CoachingErasureExecutionService(db, new CoachingStudyPlanningPrivacyTests.NoAttachments(), TimeProvider.System)
+                .ExecuteAsync(new(eventId, requestId, student, now, PersonalDataScope.Coaching), CancellationToken.None);
+            var remaining = Assert.Single(await db.Set<OutboxMessage>().AsNoTracking().ToListAsync());
+            Assert.Contains(otherDraft.Id.ToString(), remaining.Body);
         }
         finally { await db.Database.EnsureDeletedAsync(); }
     }
