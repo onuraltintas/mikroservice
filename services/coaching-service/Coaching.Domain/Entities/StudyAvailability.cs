@@ -47,4 +47,12 @@ public sealed class StudyAvailability : AggregateRoot
         WindowsJson = JsonSerializer.Serialize(ordered);
         UpdatedAt = DateTime.UtcNow;
     }
+
+    public void ReplacePreferences(string timeZoneId, IEnumerable<StudyAvailabilityWindow> windows)
+    {
+        var zone = StudyCatalogText.Require(timeZoneId, 100);
+        TimeZoneInfo.FindSystemTimeZoneById(zone);
+        ReplaceWindows(windows);
+        TimeZoneId = zone;
+    }
 }

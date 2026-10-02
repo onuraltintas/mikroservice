@@ -135,6 +135,7 @@ public static class DependencyInjection
         services.AddScoped<ICoachingErasureAssessmentService, CoachingErasureAssessmentService>();
         services.AddScoped<ICoachingErasureExecutionService, CoachingErasureExecutionService>();
         services.AddScoped<ICoachingCms, CoachingCmsService>();
+        services.AddScoped<Coaching.Application.StudyPlanning.IStudyAvailabilityService, Coaching.Infrastructure.StudyPlanning.CoachingStudyAvailabilityService>();
         services.AddScoped<ICoachingSubscription, CoachingSubscriptionService>();
         services.AddScoped<ICoachingNewsletter>(provider => new CoachingNewsletterService(
             provider.GetRequiredService<CoachingDbContext>(),

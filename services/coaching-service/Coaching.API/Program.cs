@@ -84,6 +84,18 @@ builder.Services.AddHttpClient<ICoachingNewsletterRecaptchaValidator, CoachingNe
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddPolicy("study-planning-write", context =>
+    {
+        var userId = context.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+            ?? context.User.FindFirst("sub")?.Value;
+        return RateLimitPartition.GetFixedWindowLimiter(userId ?? "anonymous", _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = 30,
+            Window = TimeSpan.FromMinutes(1),
+            QueueLimit = 0,
+            AutoReplenishment = true
+        });
+    });
     options.AddPolicy("public-newsletter-write", context =>
     {
         var gatewayAddress = context.Request.Headers["X-EduPlatform-Client-IP"].FirstOrDefault();

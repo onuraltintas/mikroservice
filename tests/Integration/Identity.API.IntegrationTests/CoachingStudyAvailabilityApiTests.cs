@@ -9,6 +9,14 @@ namespace Identity.API.IntegrationTests;
 public sealed class CoachingStudyAvailabilityApiTests
 {
     [Fact]
+    public void Replacement_LimitsRequestBodySize()
+    {
+        var method = typeof(StudyPlanningController).GetMethod(nameof(StudyPlanningController.ReplaceAvailability))!;
+        var limit = Assert.Single(method.GetCustomAttributes(typeof(RequestSizeLimitAttribute), false).Cast<RequestSizeLimitAttribute>());
+        Assert.Equal(16 * 1024, ((Microsoft.AspNetCore.Http.Metadata.IRequestSizeLimitMetadata)limit).MaxRequestBodySize);
+    }
+
+    [Fact]
     public async Task Api_ReturnsNotFoundForMissingPreferencesAndOkForReplacement()
     {
         var controller = new StudyPlanningController(new Stub());

@@ -37,6 +37,9 @@ public sealed class CoachingStudyAvailabilityServiceTests(PostgresFixture postgr
             Assert.Empty(changed.Windows);
             Assert.True(changed.Version > created.Version);
             db.ChangeTracker.Clear();
+            await Assert.ThrowsAsync<ArgumentException>(() => service.ReplaceAsync(request with { ExpectedVersion = changed.Version, Windows = null! }));
+            await Assert.ThrowsAsync<ArgumentException>(() => service.ReplaceAsync(request with { ExpectedVersion = changed.Version,
+                Windows = Enumerable.Repeat(new StudyWindowInput(DayOfWeek.Monday, 480, 540), 43).ToArray() }));
             var stale = await Assert.ThrowsAsync<BusinessRuleException>(() => service.ReplaceAsync(request with { ExpectedVersion = 0 }));
             Assert.Equal("StudyPlanning.Conflict", stale.Code);
             db.ChangeTracker.Clear();
@@ -47,6 +50,9 @@ public sealed class CoachingStudyAvailabilityServiceTests(PostgresFixture postgr
             }));
             db.ChangeTracker.Clear();
             Assert.Empty((await service.GetAsync())!.Windows);
+            var zoneChanged = await service.ReplaceAsync(request with { ExpectedVersion = changed.Version, TimeZoneId = "UTC", Windows = [] });
+            Assert.Equal("UTC", zoneChanged.TimeZoneId);
+            db.ChangeTracker.Clear();
             var other = Guid.NewGuid();
             actor.UserId = other;
             Assert.Null(await service.GetAsync());
