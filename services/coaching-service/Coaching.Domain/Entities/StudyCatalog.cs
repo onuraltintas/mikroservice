@@ -11,6 +11,16 @@ public sealed class StudyCatalogLesson
     public bool IsActive { get; private set; }
     private StudyCatalogLesson() { }
 
+    public void SetActive(bool active) => IsActive = active;
+
+    public void Edit(string name, int? gradeNumber, string? examCode)
+    {
+        var validated = Create(Source, SourceId, name, gradeNumber, examCode);
+        Name = validated.Name;
+        GradeNumber = validated.GradeNumber;
+        ExamCode = validated.ExamCode;
+    }
+
     public static StudyCatalogLesson Create(string source, string sourceId, string name, int? gradeNumber, string? examCode)
     {
         if (gradeNumber is < 1 or > 12) throw new ArgumentOutOfRangeException(nameof(gradeNumber));
@@ -32,6 +42,15 @@ public sealed class StudyCatalogUnit
     public int? DisplayOrder { get; private set; }
     public bool IsActive { get; private set; }
     private StudyCatalogUnit() { }
+
+    public void SetActive(bool active) => IsActive = active;
+
+    public void Edit(string name, int? displayOrder)
+    {
+        var validated = Create(Source, SourceId, LessonId, name, displayOrder);
+        Name = validated.Name;
+        DisplayOrder = validated.DisplayOrder;
+    }
 
     public static StudyCatalogUnit Create(string source, string sourceId, Guid lessonId, string name, int? displayOrder)
     {
@@ -57,6 +76,16 @@ public sealed class StudyCatalogTopic
     public int? EstimatedMinutes { get; private set; }
     public bool IsActive { get; private set; }
     private StudyCatalogTopic() { }
+
+    public void SetActive(bool active) => IsActive = active;
+
+    public void Edit(string name, int? displayOrder, int? estimatedMinutes)
+    {
+        var validated = Create(Source, SourceId, LessonId, UnitId, name, ParentId, displayOrder, estimatedMinutes);
+        Name = validated.Name;
+        DisplayOrder = validated.DisplayOrder;
+        EstimatedMinutes = validated.EstimatedMinutes;
+    }
 
     public static StudyCatalogTopic Create(string source, string sourceId, Guid lessonId, Guid unitId,
         string name, Guid? parentId, int? displayOrder, int? estimatedMinutes = null)

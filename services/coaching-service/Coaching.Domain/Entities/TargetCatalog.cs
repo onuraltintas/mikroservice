@@ -15,6 +15,20 @@ public sealed class TargetUniversityProgram
     public bool IsActive { get; private set; }
     private TargetUniversityProgram() { }
 
+    public void SetActive(bool active) => IsActive = active;
+
+    public void Edit(string universityName, string name, string? programCode, string? scoreType,
+        decimal? minimumScore, int? scoreYear)
+    {
+        var validated = Create(Source, SourceId, universityName, name, programCode, scoreType, minimumScore, scoreYear);
+        UniversityName = validated.UniversityName;
+        Name = validated.Name;
+        ProgramCode = validated.ProgramCode;
+        ScoreType = validated.ScoreType;
+        MinimumScore = validated.MinimumScore;
+        ScoreYear = validated.ScoreYear;
+    }
+
     public static TargetUniversityProgram Create(string source, string sourceId, string universityName,
         string name, string? programCode, string? scoreType, decimal? minimumScore, int? scoreYear = null)
     {
@@ -44,6 +58,16 @@ public sealed class TargetSchool
     public int? ScoreYear { get; private set; }
     public bool IsActive { get; private set; }
     private TargetSchool() { }
+
+    public void SetActive(bool active) => IsActive = active;
+
+    public void Edit(string name, decimal? minimumScore, int? scoreYear)
+    {
+        var validated = Create(Source, SourceId, name, City, District, minimumScore, scoreYear);
+        Name = validated.Name;
+        MinimumScore = validated.MinimumScore;
+        ScoreYear = validated.ScoreYear;
+    }
 
     // Call only after the shared Identity directory has verified this exact pair.
     public void SetVerifiedLocation(string provinceId, string districtId)
