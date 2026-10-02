@@ -8,6 +8,7 @@ import { CoachingPortalService } from '../../../core/services/coaching-portal.se
 import { CoachingPortalHomeComponent } from './coaching-portal-home.component';
 import { CoachingPortalViewService } from '../coaching-portal-view.service';
 import { StaffPortalRedirectService } from '../staff-portal-redirect.service';
+import { CoachingStudyPlanningService } from '../../../core/services/coaching-study-planning.service';
 
 describe('CoachingPortalHomeComponent', () => {
   it('loads the own-student summary when a dual-role user selects student view', () => {
@@ -21,6 +22,7 @@ describe('CoachingPortalHomeComponent', () => {
       provideRouter([]),
       { provide: AuthService, useValue: { userProfile: profile } },
       { provide: CoachingPortalService, useValue: service },
+      { provide: CoachingStudyPlanningService, useValue: { list: () => of({ items: [] }), getAvailability: () => of({ timeZoneId: 'Europe/Istanbul' }) } },
       { provide: StaffPortalRedirectService, useValue: { redirect: vi.fn(), url: () => 'https://onuraltintas.net/staff/?product=coaching' } }
     ] });
     TestBed.inject(CoachingPortalViewService).select('Student');
@@ -28,6 +30,7 @@ describe('CoachingPortalHomeComponent', () => {
     fixture.detectChanges();
     expect(service.getStudentAssignments).toHaveBeenCalledWith('user-1', 1, 5);
     expect(service.getTeacherAssignments).not.toHaveBeenCalled();
+    expect(fixture.nativeElement.textContent).toContain('Henüz aktif çalışma planın yok');
   });
   it('sends teacher-only users to the new staff portal instead of rendering the legacy dashboard', () => {
     const profile = signal<UserProfile | null>({
