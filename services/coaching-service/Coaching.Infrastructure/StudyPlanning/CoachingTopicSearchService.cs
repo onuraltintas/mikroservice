@@ -22,7 +22,7 @@ public sealed class CoachingTopicSearchService(CoachingDbContext db) : IStudyTop
                         && (topic.ParentId == null || db.StudyCatalogTopics.Any(parent => parent.Id == topic.ParentId
                             && parent.IsActive && parent.UnitId == topic.UnitId && parent.LessonId == topic.LessonId))
                     select new { topic.Id, topic.Name, LessonName = lesson.Name, UnitName = unit.Name,
-                        lesson.GradeNumber, lesson.ExamCode, topic.EstimatedMinutes };
+                        lesson.GradeNumber, lesson.ExamCode, topic.EstimatedMinutes, topic.LessonId };
         if (!string.IsNullOrEmpty(search))
         {
             var pattern = "%" + search.Replace("\\", "\\\\").Replace("%", "\\%").Replace("_", "\\_") + "%";
@@ -34,7 +34,7 @@ public sealed class CoachingTopicSearchService(CoachingDbContext db) : IStudyTop
         var count = await query.CountAsync(cancellationToken);
         var items = await query.OrderBy(x => x.LessonName).ThenBy(x => x.UnitName).ThenBy(x => x.Name).ThenBy(x => x.Id)
             .Skip((pageNumber - 1) * pageSize).Take(pageSize)
-            .Select(x => new StudyTopicView(x.Id, x.Name, x.LessonName, x.UnitName, x.GradeNumber, x.ExamCode, x.EstimatedMinutes))
+            .Select(x => new StudyTopicView(x.Id, x.Name, x.LessonName, x.UnitName, x.GradeNumber, x.ExamCode, x.EstimatedMinutes, x.LessonId))
             .ToListAsync(cancellationToken);
         return new(items, count, pageNumber, pageSize);
     }

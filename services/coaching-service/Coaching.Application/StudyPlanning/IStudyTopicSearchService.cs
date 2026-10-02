@@ -1,7 +1,7 @@
 namespace Coaching.Application.StudyPlanning;
 
 public sealed record StudyTopicView(Guid Id, string Name, string LessonName, string UnitName,
-    int? GradeNumber, string? ExamCode, int? EstimatedMinutes);
+    int? GradeNumber, string? ExamCode, int? EstimatedMinutes, Guid LessonId = default);
 
 public interface IStudyTopicSearchService
 {
