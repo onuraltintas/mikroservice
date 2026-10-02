@@ -238,7 +238,7 @@ public sealed record CoachingAdminStudentAssignmentDto(
     Guid Id, string Title, string Status, DateTime DueDate, decimal? Score);
 
 public sealed record CoachingAdminStudentExamDto(
-    Guid Id, string Title, decimal Score, decimal MaxScore, DateTime ExamDate);
+    Guid Id, string Title, decimal Score, decimal MaxScore, DateTime ExamDate, string Source = "TeacherRecorded");
 
 public sealed record CoachingAdminStudentHistoryItemDto(
     Guid Id,
@@ -249,7 +249,8 @@ public sealed record CoachingAdminStudentHistoryItemDto(
     decimal? Score = null,
     decimal? MaxScore = null,
     int? Progress = null,
-    string? Category = null);
+    string? Category = null,
+    string? Source = null);
 
 public sealed record TeacherCoachingAnalyticsDto(
     Guid TeacherId,

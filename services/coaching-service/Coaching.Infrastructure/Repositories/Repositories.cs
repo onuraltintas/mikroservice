@@ -524,7 +524,7 @@ public sealed class CoachingStudentProgressRepository(CoachingDbContext context)
 
         var exams = await context.ExamResults
             .AsNoTracking()
-            .Where(item => item.StudentId == studentId)
+            .Where(item => item.StudentId == studentId && item.Exam.StudentOwnerId == null)
             .Select(item => new { item.Score, item.Exam.MaxScore })
             .ToListAsync(cancellationToken);
         var examPercentages = exams
@@ -914,7 +914,8 @@ public sealed class CoachingAdminRepository : ICoachingAdminRepository
         var examItems = await exams
             .OrderByDescending(item => item.Exam.ExamDate)
             .Select(item => new CoachingAdminStudentExamDto(
-                item.ExamId, item.Exam.Title, item.Score, item.Exam.MaxScore, item.Exam.ExamDate))
+                item.ExamId, item.Exam.Title, item.Score, item.Exam.MaxScore, item.Exam.ExamDate,
+                item.Exam.StudentOwnerId.HasValue ? "StudentReported" : "TeacherRecorded"))
             .Take(10).ToListAsync(cancellationToken);
 
         return new CoachingAdminStudentDetailDto(
@@ -1010,7 +1011,8 @@ public sealed class CoachingAdminRepository : ICoachingAdminRepository
                         item.Exam.ExamDate,
                         "Result",
                         item.Score,
-                        item.Exam.MaxScore))
+                        item.Exam.MaxScore,
+                        null, null, item.Exam.StudentOwnerId.HasValue ? "StudentReported" : "TeacherRecorded"))
                     .ToListAsync(cancellationToken);
                 break;
             }
