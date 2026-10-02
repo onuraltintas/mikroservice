@@ -33,7 +33,7 @@ public sealed class CoachingDataExportRepository(CoachingDbContext context)
         var exams = examRows.Select(row => new CoachingDataExamDto(
             row.ExamId, row.Exam.Title, row.Exam.Subject, row.Exam.ExamDate, row.Exam.MaxScore,
             row.Score, row.CorrectAnswers, row.WrongAnswers, row.EmptyAnswers,
-            row.SubjectScoresJson, row.Ranking)).ToArray();
+            row.SubjectScoresJson, row.Ranking, row.Exam.StudentOwnerId.HasValue ? "StudentReported" : "TeacherRecorded", row.GetLessonAnswers())).ToArray();
 
         var goalRows = await context.AcademicGoals.AsNoTracking()
             .Where(goal => goal.StudentId == studentId)
@@ -41,7 +41,7 @@ public sealed class CoachingDataExportRepository(CoachingDbContext context)
             .ToListAsync(cancellationToken);
         var goals = goalRows.Select(goal => new CoachingDataGoalDto(
             goal.Id, goal.Title, goal.Description, goal.Category.ToString(), goal.CurrentProgress,
-            goal.IsCompleted, goal.TargetDate, goal.TargetScore)).ToArray();
+            goal.IsCompleted, goal.TargetDate, goal.TargetScore, goal.TargetSchoolId, goal.TargetUniversityProgramId)).ToArray();
 
         var sessionRows = await context.SessionAttendances.AsNoTracking()
             .Where(attendance => attendance.StudentId == studentId)
@@ -72,7 +72,18 @@ public sealed class CoachingDataExportRepository(CoachingDbContext context)
             acknowledgement.AcknowledgedAt,
             acknowledgement.WithdrawnAt)).ToArray();
 
+        var planRows = await context.StudyPlanRevisions.AsNoTracking().Where(x => x.StudentId == studentId)
+            .OrderBy(x => x.CreatedAt).ThenBy(x => x.Id).ToListAsync(cancellationToken);
+        var taskRows = await context.StudyPlanTasks.AsNoTracking().Where(x => x.StudentId == studentId)
+            .OrderBy(x => x.PlannedDate).ThenBy(x => x.Id).ToListAsync(cancellationToken);
+        var plans = planRows.Select(x => new CoachingDataStudyPlanDto(x.Id, x.PlanId, x.RevisionNumber, x.Version,
+            x.Title, x.Status.ToString(), x.AutomaticAvailabilityVersion, x.AutomaticSourceRevisionId, x.AutomaticSourceRevisionVersion,
+            taskRows.Where(t => t.RevisionId == x.Id).Select(t => new Coaching.Application.StudyPlanning.ManualStudyTaskView(
+                t.Id, t.PlannedDate, t.Title, t.PlannedMinutes, t.TopicId, t.IsPinned, t.IsCompleted, t.ActualMinutes, t.CompletedAt)).ToArray())).ToArray();
+        var hours = await context.StudyAvailability.AsNoTracking().SingleOrDefaultAsync(x => x.StudentId == studentId, cancellationToken);
+        var availability = hours is null ? null : new Coaching.Application.StudyPlanning.StudyAvailabilityView(hours.Version, hours.TimeZoneId,
+            hours.Windows.Select(x => new Coaching.Application.StudyPlanning.StudyWindowInput(x.Day, x.StartMinute, x.EndMinute)).ToArray());
         return new CoachingDataExportDto(
-            "1.0", studentId, exportedAt, assignments, exams, goals, sessions, agreements);
+            "1.1", studentId, exportedAt, assignments, exams, goals, sessions, agreements, plans, availability);
     }
 }

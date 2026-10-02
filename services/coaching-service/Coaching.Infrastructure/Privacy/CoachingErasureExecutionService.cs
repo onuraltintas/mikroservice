@@ -51,6 +51,10 @@ public sealed class CoachingErasureExecutionService(
         var examResults = await context.ExamResults
             .Where(row => row.StudentId == message.SubjectUserId)
             .ToListAsync(cancellationToken);
+        var studentExams = await context.Exams.Where(x => x.StudentOwnerId == message.SubjectUserId).ToListAsync(cancellationToken);
+        var studyTasks = await context.StudyPlanTasks.Where(x => x.StudentId == message.SubjectUserId).ToListAsync(cancellationToken);
+        var studyPlans = await context.StudyPlanRevisions.Where(x => x.StudentId == message.SubjectUserId).ToListAsync(cancellationToken);
+        var studyAvailability = await context.StudyAvailability.Where(x => x.StudentId == message.SubjectUserId).ToListAsync(cancellationToken);
         var goals = await context.AcademicGoals
             .Where(row => row.StudentId == message.SubjectUserId)
             .ToListAsync(cancellationToken);
@@ -64,6 +68,7 @@ public sealed class CoachingErasureExecutionService(
         var deletedRecordCount = attachments.Count
             + assignmentStudents.Count
             + examResults.Count
+            + studentExams.Count + studyTasks.Count + studyPlans.Count + studyAvailability.Count
             + goals.Count
             + attendances.Count
             + acknowledgements.Count;
@@ -73,6 +78,10 @@ public sealed class CoachingErasureExecutionService(
         context.AssignmentSubmissionAttachments.RemoveRange(attachments);
         context.AssignmentStudents.RemoveRange(assignmentStudents);
         context.ExamResults.RemoveRange(examResults);
+        context.Exams.RemoveRange(studentExams);
+        context.StudyPlanTasks.RemoveRange(studyTasks);
+        context.StudyPlanRevisions.RemoveRange(studyPlans);
+        context.StudyAvailability.RemoveRange(studyAvailability);
         context.AcademicGoals.RemoveRange(goals);
         context.SessionAttendances.RemoveRange(attendances);
         context.CoachingAgreementAcknowledgements.RemoveRange(acknowledgements);

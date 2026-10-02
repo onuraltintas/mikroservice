@@ -16,7 +16,9 @@ public sealed record CoachingDataExportDto(
     IReadOnlyList<CoachingDataExamDto> Exams,
     IReadOnlyList<CoachingDataGoalDto> Goals,
     IReadOnlyList<CoachingDataSessionDto> Sessions,
-    IReadOnlyList<CoachingDataAgreementDto> Agreements)
+    IReadOnlyList<CoachingDataAgreementDto> Agreements,
+    IReadOnlyList<CoachingDataStudyPlanDto>? StudyPlans = null,
+    Coaching.Application.StudyPlanning.StudyAvailabilityView? StudyAvailability = null)
 {
     public static CoachingDataExportDto Empty(Guid studentId, DateTimeOffset exportedAt) =>
         new("1.0", studentId, exportedAt, [], [], [], [], []);
@@ -29,11 +31,16 @@ public sealed record CoachingDataAssignmentDto(
 public sealed record CoachingDataExamDto(
     Guid ExamId, string Title, string? Subject, DateTime ExamDate, decimal MaxScore,
     decimal Score, int? CorrectAnswers, int? WrongAnswers, int? EmptyAnswers,
-    string? SubjectScoresJson, int? Ranking);
+    string? SubjectScoresJson, int? Ranking, string Source = "TeacherRecorded",
+    IReadOnlyList<Coaching.Domain.Entities.LessonAnswerStatistics>? LessonAnswers = null);
+
+public sealed record CoachingDataStudyPlanDto(Guid Id, Guid PlanId, int RevisionNumber, int Version, string Title,
+    string Status, int? AutomaticAvailabilityVersion, Guid? AutomaticSourceRevisionId, int? AutomaticSourceRevisionVersion,
+    IReadOnlyList<Coaching.Application.StudyPlanning.ManualStudyTaskView> Tasks);
 
 public sealed record CoachingDataGoalDto(
     Guid GoalId, string Title, string? Description, string Category, int CurrentProgress,
-    bool IsCompleted, DateTime? TargetDate, decimal? TargetScore);
+    bool IsCompleted, DateTime? TargetDate, decimal? TargetScore, Guid? TargetSchoolId = null, Guid? TargetUniversityProgramId = null);
 
 public sealed record CoachingDataSessionDto(
     Guid SessionId, string Title, DateTime ScheduledDate, int DurationMinutes, string Status,
