@@ -79,6 +79,17 @@ public sealed class CoachingCatalogImportTests(PostgresFixture postgres)
             files["lgs-programs.json"] = """[{"id":"s1","schoolName":"School","city":"City","town":"District","minScore":-5}]""";
             await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => importer.ImportAsync(files, "test-catalog"));
             Assert.Equal(1, await db.StudyCatalogLessons.CountAsync());
+            db.ChangeTracker.Clear();
+            var school = await db.TargetSchools.SingleAsync();
+            db.TargetSchools.Remove(school);
+            db.AdminAuditRecords.Add(new(Guid.NewGuid(), DateTimeOffset.UtcNow, "Coaching", Guid.NewGuid().ToString(),
+                "SystemAdmin", null, "DELETE", "/test", 200, "test", null, null, "CatalogPermanentDelete", "Schools", school.Id.ToString(),
+                System.Text.Json.JsonSerializer.Serialize(new { source = "test-catalog", sourceId = "s1" })));
+            await db.SaveChangesAsync(); db.ChangeTracker.Clear();
+            files["lgs-programs.json"] = """[{"id":"s1","schoolName":"School","city":"City","town":"District","minScore":350}]""";
+            await Assert.ThrowsAsync<InvalidOperationException>(() => importer.ImportAsync(files, "test-catalog"));
+            Assert.False(await db.TargetSchools.AnyAsync());
+            Assert.Equal(1, await db.StudyCatalogLessons.CountAsync());
         }
         finally { await db.Database.EnsureDeletedAsync(); }
     }
