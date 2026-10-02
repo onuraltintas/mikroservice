@@ -11,7 +11,11 @@ public sealed record StudyExamGroup(string Source, ExamType ExamType, decimal Ma
 public sealed record StudyLessonResult(string Source, ExamType ExamType, Guid LessonId, Guid? TopicId,
     string? LessonName, string? TopicName, long QuestionCount, long Correct, long Wrong, long Empty);
 public sealed record StudyGoalReport(Guid GoalId, string Title, string Source, int RecordedProgress,
-    bool IsCompleted, DateTime? TargetDate, decimal? TargetScore, ExamType? TargetExamType, string? TargetSubject);
+    bool IsCompleted, DateTime? TargetDate, decimal? TargetScore, ExamType? TargetExamType, string? TargetSubject,
+    decimal? TargetMaxScore = null)
+{
+    public GoalScoreAssessment ScoreAssessment { get; init; } = new("ScoreTargetNotConfigured", []);
+}
 public sealed record StudentStudyReport(DateOnly FromDate, DateOnly ToDate, string Source, string Reason,
     int ScheduledTasks, int CompletedTasks, decimal? CompletionPercentage, long PlannedMinutes,
     long? ActualMinutes, IReadOnlyList<StudyTopicReport> Topics)

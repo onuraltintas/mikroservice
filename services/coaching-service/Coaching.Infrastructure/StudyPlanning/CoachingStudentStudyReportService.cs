@@ -19,7 +19,7 @@ public sealed class CoachingStudentStudyReportService(CoachingDbContext db, ICoa
         var goals = await db.AcademicGoals.AsNoTracking().Where(x => x.StudentId == student)
             .OrderBy(x => x.IsCompleted).ThenBy(x => x.TargetDate).ThenBy(x => x.Id)
             .Select(x => new StudyGoalReport(x.Id, x.Title, x.SetByTeacherId.HasValue ? "TeacherSet" : "Unspecified",
-                x.CurrentProgress, x.IsCompleted, x.TargetDate, x.TargetScore, x.TargetExamType, x.TargetSubject))
+                x.CurrentProgress, x.IsCompleted, x.TargetDate, x.TargetScore, x.TargetExamType, x.TargetSubject, x.TargetMaxScore))
             .Take(1001).ToListAsync(cancellationToken);
         if (goals.Count > 1000) throw new BusinessRuleException("StudyPlanning.GoalReportLimit",
             "Hedef sayısı rapor sınırını aşıyor. Hedefleri Hedefler ekranından inceleyebilirsiniz.");
@@ -41,9 +41,12 @@ public sealed class CoachingStudentStudyReportService(CoachingDbContext db, ICoa
         var exams = await db.ExamResults.AsNoTracking()
             .Where(x => x.StudentId == student && x.Exam.ExamDate >= start && x.Exam.ExamDate <= end)
             .OrderBy(x => x.Exam.ExamDate).ThenBy(x => x.Id)
-            .Select(x => new { x.Exam.StudentOwnerId, x.Exam.ExamType, x.Exam.MaxScore, x.Score, x.LessonAnswersJson })
+            .Select(x => new { ResultId = x.Id, x.ExamId, x.Exam.ExamDate, x.Exam.StudentOwnerId, x.Exam.ExamType, x.Exam.MaxScore, x.Score, x.LessonAnswersJson })
             .Take(1001).ToListAsync(cancellationToken);
         if (exams.Count > 1000) throw ReportLimit();
+        var evidence = exams.Select(x => new GoalScoreEvidence(x.ResultId, x.ExamId,
+            x.StudentOwnerId.HasValue ? "StudentReported" : "TeacherRecorded", x.ExamType,
+            x.MaxScore, x.Score, x.ExamDate)).ToArray();
         var groups = exams.Where(x => x.MaxScore > 0).GroupBy(x => new { Source = x.StudentOwnerId.HasValue ? "StudentReported" : "TeacherRecorded", x.ExamType, x.MaxScore })
             .Select(g => new StudyExamGroup(g.Key.Source, g.Key.ExamType, g.Key.MaxScore, g.Count(),
                 decimal.Round(g.Average(x => 100m * x.Score / x.MaxScore), 1)))
@@ -58,7 +61,9 @@ public sealed class CoachingStudentStudyReportService(CoachingDbContext db, ICoa
             .OrderBy(x => x.LessonId).ThenBy(x => x.TopicId).ThenBy(x => x.ExamType).ToArray();
         return report with { Topics = report.Topics.Select(x => x with {
             TopicName = x.TopicId.HasValue ? names.GetValueOrDefault(x.TopicId.Value) : null }).ToArray(),
-            ExamGroups = groups, LessonResults = lessons, Goals = goals };
+            ExamGroups = groups, LessonResults = lessons, Goals = goals.Select(goal => goal with {
+                ScoreAssessment = GoalScoreCalculator.Calculate(goal.TargetScore, goal.TargetMaxScore,
+                    goal.TargetExamType, goal.TargetSubject, evidence) }).ToArray() };
     }
     private static BusinessRuleException ReportLimit() => new("StudyPlanning.ReportLimit",
         "Bu dönem çok fazla kayıt içeriyor. Tam rapor için daha kısa bir tarih aralığı seçin.");
