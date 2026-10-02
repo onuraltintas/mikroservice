@@ -23,7 +23,7 @@ public sealed class CoachingCatalogImporter(CoachingDbContext db)
     public Task<int> ApproveAsync(IReadOnlyDictionary<string, string> files, string source, string fingerprint,
         string reason, Guid actorId, bool publish, CancellationToken ct = default)
     {
-        if (fingerprint?.Length != 64 || string.IsNullOrWhiteSpace(reason) || reason.Trim().Length is < 5 or > 500 || actorId == Guid.Empty)
+        if (fingerprint?.Length != 64 || string.IsNullOrWhiteSpace(reason) || reason.Trim().Length is < 5 or > 200 || actorId == Guid.Empty)
             throw new ArgumentException("Approval requires a fingerprint, actor and reason.");
         return ExecuteAsync(files, source, publish, ct, expected: fingerprint, reason: reason.Trim(), actor: actorId, publish: publish);
     }
@@ -61,9 +61,9 @@ public sealed class CoachingCatalogImporter(CoachingDbContext db)
             try
             {
                 // Serialize imports for this source. Unique indexes remain the final guard.
+                await db.Database.ExecuteSqlRawAsync("SET LOCAL lock_timeout = '3s'", cancellationToken);
                 await db.Database.ExecuteSqlInterpolatedAsync($"SELECT pg_advisory_xact_lock(hashtext({source}));", cancellationToken);
                 // Share the deletion writer's table locks before reading its committed tombstones.
-                await db.Database.ExecuteSqlRawAsync("SET LOCAL lock_timeout = '3s'", cancellationToken);
                 await db.Database.ExecuteSqlRawAsync("""
                     LOCK TABLE coaching.study_catalog_lessons, coaching.study_catalog_topics,
                         coaching.study_catalog_units, coaching.target_schools,
