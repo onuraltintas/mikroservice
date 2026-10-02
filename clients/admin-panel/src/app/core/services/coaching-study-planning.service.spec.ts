@@ -17,6 +17,11 @@ describe('CoachingStudyPlanningService', () => {
     expect(request.request.method).toBe('POST');
     expect(request.request.body).toEqual(input);
     request.flush({ success: true, data: {} });
+    service.saveAutomaticDraft({ title: 'Plan', preview: input, expectedActiveRevisionId: null, expectedActiveRevisionVersion: null }).subscribe();
+    const save = http.expectOne('/api/coaching/study-planning/automatic-drafts');
+    expect(save.request.body.expectedActiveRevisionId).toBeNull();
+    expect(save.request.body.preview).toEqual(input);
+    save.flush({ success: true, data: {} });
     http.verify();
   });
   it('searches targets with filters and saves only the goal target and version', () => {
