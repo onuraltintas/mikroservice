@@ -65,6 +65,13 @@ public sealed class CoachingStudentExamServiceTests(PostgresFixture postgres)
             Assert.Equal("StudentReported", legacyResults.Items.Single(x => x.ExamId == created.Id).Source);
             Assert.Equal("TeacherRecorded", legacyResults.Items.Single(x => x.ExamId == teacher.Id).Source);
             Assert.Single(legacyResults.Items.Single(x => x.ExamId == created.Id).LessonAnswers!);
+            var summary = await new CoachingStudentProgressRepository(db).GetStudentSummaryAsync(actor.UserId!.Value);
+            Assert.Equal(70, summary.AverageExamPercentage);
+            var admin = new CoachingAdminRepository(db);
+            var detail = await admin.GetStudentDetailAsync(actor.UserId.Value);
+            Assert.Equal("StudentReported", detail.Exams.Single(x => x.Id == created.Id).Source);
+            var history = await admin.GetStudentHistoryAsync(actor.UserId.Value, CoachingStudentHistoryType.Exams, 1, 20);
+            Assert.Equal("StudentReported", history.Items.Single(x => x.Id == created.Id).Source);
             Assert.Null(await service.GetAsync(teacher.Id));
             await Assert.ThrowsAsync<KeyNotFoundException>(() => service.DeleteAsync(teacher.Id, teacher.Version));
             await service.DeleteAsync(created.Id, replaced.Version);
