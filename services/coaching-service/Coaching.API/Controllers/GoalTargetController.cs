@@ -42,5 +42,22 @@ public sealed class GoalTargetController(IGoalTargetService targets) : Controlle
         { return BadRequest(new { success = false, code = "StudyPlanning.Validation", message = "Geçerli ve aktif tek bir okul veya üniversite programı seçin. Bağlantıyı kaldırmak için seçimi boş bırakabilirsiniz." }); }
     }
 
+    [HttpPut("score")]
+    [RequestSizeLimit(1024)]
+    [EnableRateLimiting("study-planning-write")]
+    public async Task<IActionResult> ReplaceScore(Guid goalId, [FromBody] GoalScoreTargetUpdate request, CancellationToken cancellationToken = default)
+    {
+        try { return Ok(new { success = true, data = await targets.ReplaceScoreAsync(goalId, request, cancellationToken) }); }
+        catch (BusinessRuleException ex) when (ex.Code.StartsWith("Authorization.", StringComparison.Ordinal))
+        { return StatusCode(403, new { success = false, code = ex.Code, message = ex.Message }); }
+        catch (BusinessRuleException ex) when (ex.Code == "StudyPlanning.Conflict")
+        { return Conflict(new { success = false, code = ex.Code, message = ex.Message }); }
+        catch (ConcurrencyException)
+        { return Conflict(new { success = false, code = "StudyPlanning.Conflict", message = "Hedef değişti. Yeniden yükleyin." }); }
+        catch (KeyNotFoundException) { return Missing(); }
+        catch (ArgumentException)
+        { return BadRequest(new { success = false, code = "StudyPlanning.Validation", message = "Pozitif hedef puanı, en fazla 999,99 olan puan ölçeği ve sınav türü seçin. Hedef puanı ölçeği aşamaz. Temizlemek için üçünü de boş gönderin." }); }
+    }
+
     private NotFoundObjectResult Missing() => NotFound(new { success = false, message = "Hedef bulunamadı." });
 }
