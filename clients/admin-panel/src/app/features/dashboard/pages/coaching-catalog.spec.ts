@@ -3,12 +3,12 @@ import { PLATFORM_ID } from '@angular/core';
 import { of, Subject, throwError } from 'rxjs';
 import { vi } from 'vitest';
 import { AuthService } from '../../../core/auth/auth.service';
-import { CoachingCatalogService } from '../../../core/services/coaching-catalog.service';
+import { CoachingCatalogPage, CoachingCatalogService } from '../../../core/services/coaching-catalog.service';
 import { CoachingCatalogComponent } from './coaching-catalog';
 
 describe('CoachingCatalogComponent', () => {
   function create(roles = ['SystemAdmin']) {
-    const service = { list: vi.fn(() => of({ items: [], totalCount: 0, pageNumber: 1, pageSize: 25 })) };
+    const service = { list: vi.fn(() => of<CoachingCatalogPage>({ items: [], totalCount: 0, pageNumber: 1, pageSize: 25 })) };
     TestBed.configureTestingModule({
       imports: [CoachingCatalogComponent],
       providers: [
@@ -46,11 +46,11 @@ describe('CoachingCatalogComponent', () => {
 
   it('cancels an old request when changing catalog type', () => {
     const { component, service } = create();
-    const first = new Subject<any>();
+    const first = new Subject<CoachingCatalogPage>();
     service.list.mockReturnValueOnce(first);
     component.load();
     component.changeKind('schools');
-    first.next({ items: [{ name: 'Old lesson' }], totalCount: 1, pageNumber: 1, pageSize: 25 });
+    first.next({ items: [{ id: 'old', name: 'Old lesson', source: 'test', sourceId: '1', isActive: false }], totalCount: 1, pageNumber: 1, pageSize: 25 });
     expect(component.items()).toEqual([]);
     expect(service.list).toHaveBeenLastCalledWith('schools', expect.objectContaining({ pageNumber: 1 }));
   });

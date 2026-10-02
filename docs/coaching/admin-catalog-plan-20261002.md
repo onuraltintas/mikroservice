@@ -8,9 +8,12 @@ bu planın migration'ı canlıya uygulanmadı ve GitHub'a gönderilmedi.
 1. Veri/yetki envanteri: ilk kontrol tamamlandı.
 2. Ortak şehir–ilçe entegrasyonu: eşleştirici, API istemcisi, nullable kimlik alanları
    ve yerel migration doğrulandı. Admin formu ve kayıt bazında onaylı eşleştirme işlemleri bekliyor.
-3. Ders/ünite/konu admin ekranı ve API: bekliyor.
-4. Okul admin ekranı ve API: bekliyor.
-5. Üniversite programı admin ekranı ve API: bekliyor.
+3. Ders/ünite/konu: salt okunur listeleme API'si ve admin ekranı hazır;
+   oluşturma/düzenleme, kullanım bilgisi ve yayın işlemleri bekliyor.
+4. Okul: salt okunur listeleme API'si ve admin ekranı hazır;
+   ortak konum seçimi, onaylı eşleştirme ve yazma işlemleri bekliyor.
+5. Üniversite programı: listeleme, ad/üniversite/kod araması ve puan türü/yıl
+   filtreleri API'de hazır; admin liste ekranı hazır, yazma işlemleri bekliyor.
 6. Kontrollü aktarım önizleme/onay/yayın ekranı: bekliyor.
 7. Öğrenci detayında müsaitlik/plan/görev/geçmiş incelemesi: bekliyor.
 8. Öğrenci detayında hedef/sınav/rapor incelemesi: bekliyor.
@@ -69,3 +72,32 @@ Onaylı kayıt bazlı eşleştirme ekranı tamamlanmadan bunların kimlikleri do
 - Admin arayüzü ve E2E bu aşamada tamamlanmadı; test edilmiş sayılmaz.
 
 RED/GREEN checkpointleri aktif `codex/platform-hardening` dalında ayrı commitlerle korunur.
+
+## Katalog listeleme ve düzenleme temeli — yerel ikinci kontrol
+
+- Global kapsam kontrolü, `Coaching.View` ve mevcut Coaching MFA kategorisi korunur.
+  Sayısal enum yolları kabul edilmez; türler yalnız isimleriyle seçilir.
+- API beş katalog türünü SQL tarafında arar, filtreler ve sayfalar. Sıralama ad + kimliktir.
+  Literal `%`, `_` ve ters eğik çizgi araması kaçışlanır. Başka katalog türüne ait
+  filtreler sessizce yok sayılmaz, doğrulama hatası döner.
+- Ders/ünite/konu ve hedef domain düzenlemeleri tüm doğrulamayı atamalardan önce yapar;
+  kaynak/kimlik ve tarihsel ilişkiler değişmez. Henüz yazma API'si olarak sunulmadılar.
+- Yeni admin adresi: `/dashboard/coaching/catalog`, menü: Koçluk → Ders ve hedef katalogları.
+  Yalnız SystemAdmin ve Coaching.View ile görünür; SSR'de API çağrısı yapılmaz.
+  Eski filtre isteği iptal edilir; yükleme/boş sonuç/hata ayrı gösterilir.
+  Bu ekran salt okunurdur. Ünite/konu ilişki seçicileri ve okul konum filtreleri
+  henüz ekrana bağlanmadı; API filtreleri vardır.
+- Geniş backend regresyonu: **195 geçti, 0 başarısız, 0 atlanan**.
+- İlave API/konum hata senaryoları: **25 geçti, 0 başarısız, 0 atlanan**;
+  önceki seçimle örtüştükleri için sonuçlar toplanmamalı.
+- Arayüz bileşeni, menü/rota ve HTTP servis testleri: **10 geçti**.
+- Admin production build başarılı. Mevcut Speed Reading katalog stil bütçesi uyarısı
+  devam ediyor; bu çalışmanın kapsamı dışında değiştirilmedi.
+- Controller ve konum istemcisinin async dalları dahil satır kapsamı %100;
+  katalog reader async satır kapsamı %98. Bunlar ürün genelinin kapsamı değildir.
+- C# kapsam incelemesinde blocker yok. Yazma endpointleri, tam tarayıcı E2E ve
+  kullanım/işlem geçmişi güvenlik kontrolleri henüz tamamlanmadı.
+
+Bu kontroller **planın tümünün tamamlandığı anlamına gelmez**. Canlıya veya GitHub'a
+bu yeni admin geliştirmesi aktarılmadı. Bir sonraki çalışma güvenli yazma API'leri,
+kullanım kontrolü, gerekçeli denetim kaydı ve admin düzenleme formlarıdır.
