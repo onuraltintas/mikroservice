@@ -26,6 +26,22 @@ public sealed class EmailDeliveryQueue : IEmailDeliveryQueue
         Guid? subjectUserId = null,
         CancellationToken cancellationToken = default)
     {
+        if (subjectUserId.HasValue)
+        {
+            await NotificationRecipientWrites.LockedAsync(_dbContext, subjectUserId.Value, async () =>
+            {
+                if (!await _dbContext.ErasedRecipients.AnyAsync(x => x.UserId == subjectUserId.Value, cancellationToken))
+                    await InsertAsync(messageId, consumerType, recipient, subject, body, subjectUserId, cancellationToken);
+                return true;
+            }, cancellationToken);
+            return;
+        }
+        await InsertAsync(messageId, consumerType, recipient, subject, body, subjectUserId, cancellationToken);
+    }
+
+    private async Task InsertAsync(Guid messageId, string consumerType, string recipient, string subject, string body,
+        Guid? subjectUserId, CancellationToken cancellationToken)
+    {
         var delivery = EmailDelivery.Create(
             messageId,
             consumerType,
