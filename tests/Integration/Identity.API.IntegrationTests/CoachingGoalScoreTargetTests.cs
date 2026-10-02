@@ -6,6 +6,14 @@ namespace Identity.API.IntegrationTests;
 public sealed class CoachingGoalScoreTargetTests
 {
     [Fact]
+    public void ScorePrecisionCannotBeSilentlyRoundedByStorage()
+    {
+        var goal = AcademicGoal.Create(Guid.NewGuid(), "Target", GoalCategory.ExamPreparation);
+        Assert.Throws<ArgumentException>(() => goal.SetScoreTarget(80.001m, 100, ExamType.Mock));
+        Assert.Throws<ArgumentException>(() => goal.SetScoreTarget(80, 100.001m, ExamType.Mock));
+        Assert.Null(goal.TargetScore);
+    }
+    [Fact]
     public void ScoreTarget_IsExplicitAndIndependentOfManualProgress()
     {
         var goal = AcademicGoal.Create(Guid.NewGuid(), "Target", GoalCategory.ExamPreparation);
