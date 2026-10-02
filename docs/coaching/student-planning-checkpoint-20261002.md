@@ -19,8 +19,8 @@ manuel ve otomatik plan adımlarındaki güncel durumu tamamlar. Canlı yayın d
 
 ## Doğrulama
 
-- İlgili backend regresyon seçimi: **99 geçti, 0 başarısız, 0 atlanan**.
-- Öğrenci planlama ve bağlı ekranlar: **42 geçti**, 7 test dosyası.
+- İlgili backend regresyon seçimi, sınav sonucu doğrulamaları dahil: **104 geçti, 0 başarısız, 0 atlanan**.
+- Öğrenci planlama ve bağlı ekranlar: **43 geçti**, 7 test dosyası. Yeniden oluşturulan önizleme, önceki kaydetme onayını sıfırlar.
 - Angular üretim derlemesi başarılı. Önceden mevcut Hızlı Okuma katalog stil bütçesi uyarısı devam ediyor.
 - Seçili önizleme/taslak/manuel plan/konu arama servisleri ve otomatik controller kapsamı:
   **312/312 satır (%100)**, **%87,5 dal kapsamı**. Bu oran tüm ürünün kod kapsamı değildir.
@@ -42,3 +42,21 @@ manuel ve otomatik plan adımlarındaki güncel durumu tamamlar. Canlı yayın d
 `20261002111022_TrackAutomaticStudyPlanSource`, yalnız `coaching.study_plan_revisions`
 tablosuna üç nullable kaynak/sürüm alanı ekler. Identity ve Hızlı Okuma şemaları değişmez.
 Canlı veritabanına uygulanmadı. Üretimde eski/yeni uygulama uyumu ve yedek ayrıca kontrol edilmelidir.
+
+## Sonuç girişi hazırlığı
+
+Mevcut `ExamResult.SetAnswerStatistics` negatif doğru/yanlış/boş değerlerini artık
+değişiklik yapmadan reddeder; sıfır değerleri geçerlidir. Üç negatif durum ve sıfır
+durumu test edildi. Bu, öğrenci sonuç girişi ekranının tamamlandığı anlamına gelmez.
+
+Mevcut sınav modeli öğretmen oluşturucusunu zorunlu tutuyor. Öğrenci beyanı
+öğretmen kimliği alanına yazılmayacak. Sonraki uygulama sırası:
+
+1. Aynı Exam/ExamResult modeli üzerinde açık öğrenci sahipliği ve kayıt kaynağı;
+   öğretmen oluşturucusu ile öğrenci oluşturucusunun karşılıklı dışlanması.
+2. Öğretmen/kurum değiştirme ve silme yollarının öğrenci beyanını sahiplenmesini
+   engelleyen yetki regresyonları; DTO, migration ve gerçek PostgreSQL doğrulaması.
+3. Yalnız kendi sonucunu oluşturan öğrenci API'si; aktif ders/yaprak konu kimliği,
+   soru sayısı tutarlılığı, sürüm kontrollü düzenleme ve sınırlandırılmış istekler.
+4. Öğrenci ekranı ve kaynak etiketli rapor entegrasyonu. Beyan edilen puan,
+   resmî sınav puanı veya doğrulanmış ölçüm gibi sunulmayacak.
