@@ -8,12 +8,13 @@ import { ToasterService } from '../../../core/services/toaster.service';
 import { ADMIN_PERMISSIONS } from '../../../core/auth/permissions';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CoachingCatalogEditorComponent } from './coaching-catalog-editor';
+import { CoachingCatalogImportComponent } from './coaching-catalog-import';
 import { DistrictOption, LocationService, ProvinceOption } from '../../../core/services/location.service';
 
 @Component({
   selector: 'app-coaching-catalog',
   standalone: true,
-  imports: [FormsModule, DecimalPipe, CoachingCatalogEditorComponent],
+  imports: [FormsModule, DecimalPipe, CoachingCatalogEditorComponent, CoachingCatalogImportComponent],
   template: `
     <main class="space-y-6" aria-labelledby="coaching-catalog-title">
       <header>
@@ -22,6 +23,7 @@ import { DistrictOption, LocationService, ProvinceOption } from '../../../core/s
         <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">Katalog kayıtlarını ve kullanımını yönetin. Oluşturma, düzenleme ve yayın değişiklikleri gerekçeyle kaydedilir; yalnız kullanılmayan kayıtlar kalıcı silinebilir.</p>
         @if (canDelete()) { <button type="button" (click)="openEditor(null)" [disabled]="editorOpen() || deleting()" class="mt-3 rounded-lg bg-indigo-600 px-4 py-2 text-white disabled:opacity-40">Yeni kayıt</button> }
       </header>
+      @if (canDelete()) { <details class="rounded-xl border p-4"><summary class="cursor-pointer font-medium">Toplu katalog aktarımı ve yayın</summary><app-coaching-catalog-import /></details> }
       <form (ngSubmit)="load()" class="grid gap-4 rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-900 sm:grid-cols-2 lg:grid-cols-4">
         <div><label for="catalog-kind" class="block text-sm font-medium">Katalog</label>
           <select id="catalog-kind" [disabled]="editorOpen() || deleting()" [ngModel]="kind" (ngModelChange)="changeKind($event)" name="kind" class="mt-1 w-full rounded-lg border p-2 dark:bg-gray-800">
