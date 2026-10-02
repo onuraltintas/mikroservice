@@ -111,10 +111,12 @@ describe('CoachingCatalogComponent', () => {
   it('announces loaded usage and labels each record action distinctly', () => {
     const { fixture, component } = create();
     fixture.detectChanges();
-    component.items.set([{ id: 'record', name: 'Math', source: 'admin', sourceId: '1', isActive: false }]);
+    component.items.set([{ id: 'record', name: 'Math', source: 'admin', sourceId: '1', isActive: false }, { id: 'other', name: 'Math', source: 'admin', sourceId: '2', isActive: false }]);
     component.inspectUsage('record');
     fixture.detectChanges();
-    expect(fixture.nativeElement.querySelector('[aria-label="Math kullanımını incele"]')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('[aria-label="Dersler: Math (record) kullanımını incele"]')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('[aria-label="Dersler: Math (other) kullanımını incele"]')).not.toBeNull();
     expect(fixture.nativeElement.querySelector('[aria-live="polite"][aria-atomic="true"]').textContent).toContain('Math');
+    expect(fixture.nativeElement.querySelector('[aria-live="polite"][aria-atomic="true"]').textContent).toContain('record');
   });
 });
