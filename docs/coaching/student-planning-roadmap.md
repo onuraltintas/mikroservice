@@ -66,3 +66,18 @@ Kataloglar varsayılan pasiftir, fiziksel silme öğrenci geçmişini bozmamalı
 10. Yayın: E2E, yetki ve performans; yedek ve rollback; ayrı kullanıcı onayıyla canlı yayın.
 
 Her aşamada test -> uygulama -> doğrulama yapılır. Şu an öğrenci ekranları tamamlanmış değildir.
+
+## Yerel ilerleme — 2026-10-02
+
+- Ders, ünite ve konu modelleri ile yalnız Koçluk şemasına ait migration hazırlandı.
+- Katalog sınıf aralığı mevcut Koçluk profilleriyle uyumlu olarak 1–12'dir;
+  kaynak dosyalarda olmayan sınıflar için veri üretilmez.
+- Kataloglar pasif başlar; kaynak kimlikleri benzersizdir. Bileşik yabancı anahtarlar
+  konunun yanlış ders/üniteye veya başka ünitedeki üst konuya bağlanmasını engeller.
+- Katalog ve mevcut CMS/abonelik kapsamındaki Docker gerektirmeyen 63 test geçti.
+  EF model/migration eşleşmesi doğrulandı.
+- Docker açıldıktan sonra katalog, CMS/abonelik ve PostgreSQL retry regresyon kapsamındaki
+  77 testin tamamı geçti. PostgreSQL'de mükerrer kaynak, yanlış ders/ünite ve yanlış
+  üst konu bağlantısı reddedildi; katalog migration geri alma işlemi doğrulandı.
+  Ders/ünite/konu altyapısı doğrulandı; hedef program/okul katalogları ve aktarım henüz yapılmadı.
+- Canlı veritabanına migration uygulanmadı; kaynak katalog veya kişisel veri aktarılmadı.

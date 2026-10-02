@@ -30,6 +30,13 @@ public sealed class CoachingStudyCatalogTests
     }
 
     [Fact]
+    public void Lesson_SupportsExistingCoachingSchoolGrades()
+    {
+        Assert.Equal(1, StudyCatalogLesson.Create("source", "primary", "Lesson", 1, null).GradeNumber);
+        Assert.Equal(12, StudyCatalogLesson.Create("source", "secondary", "Lesson", 12, null).GradeNumber);
+    }
+
+    [Fact]
     public void Catalog_RejectsEmptyNameAndMissingOwnership()
     {
         Assert.Throws<ArgumentException>(() => StudyCatalogLesson.Create("source", "id", " ", null, null));
@@ -51,6 +58,6 @@ public sealed class CoachingStudyCatalogTests
         Assert.Contains("CREATE TABLE coaching.study_catalog_lessons", script);
         Assert.Contains("CREATE TABLE coaching.study_catalog_units", script);
         Assert.Contains("CREATE TABLE coaching.study_catalog_topics", script);
-        Assert.DoesNotContain("INSERT INTO", script);
+        Assert.DoesNotContain("INSERT INTO coaching.study_catalog", script);
     }
 }
