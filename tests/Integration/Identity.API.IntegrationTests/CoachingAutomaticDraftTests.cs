@@ -58,6 +58,13 @@ public sealed class CoachingAutomaticDraftTests(PostgresFixture postgres)
             await plans.CompleteTaskAsync(published.Id, published.Tasks.First().Id, published.Version, 15);
             await Assert.ThrowsAsync<BusinessRuleException>(() => plans.PublishAsync(nextDraft.Id, nextDraft.Version));
             Assert.Equal(1, await db.StudyPlanRevisions.CountAsync(x => x.IsActive));
+            await Assert.ThrowsAsync<BusinessRuleException>(() => plans.ArchiveDraftAsync(published.Id, published.Version));
+            var archived = await plans.ArchiveDraftAsync(nextDraft.Id, nextDraft.Version);
+            Assert.Equal(StudyPlanStatus.Archived, archived.Status);
+            Assert.Equal(nextDraft.Tasks.Count, archived.Tasks.Count);
+            var latest = (await plans.GetAsync(published.Id))!;
+            var regenerated = await plans.CreateAutomaticDraftAsync(nextRequest with { ExpectedActiveRevisionVersion = latest.Version });
+            Assert.Equal(StudyPlanStatus.Draft, regenerated.Status);
         }
         finally { await db.Database.EnsureDeletedAsync(); }
     }
