@@ -41,7 +41,7 @@ Bir ondalığa yuvarlanır; `kalan puan = max(0, hedef − sonuç)`.
 | Bildirim silme/teslim ve plan outbox/gizlilik regresyonları | 13 + 8 geçti, 0 başarısız |
 | Koçluk öğrenci paneli ve oturum arayüz testleri | 99 geçti, 19 dosya |
 | Tarayıcı E2E | 3 senaryo iki kez, 6/6 geçti |
-| E2E ortam korumaları | 4 Node testi geçti |
+| E2E ortam korumaları | 5 Node testi geçti |
 | Angular production derlemesi / TypeScript | Başarılı / 0 tip hatası |
 | Katalog aracı derlemesi | Başarılı, 0 uyarı, 0 hata |
 | Yeni GoalScoreCalculator kapsamı | %100 satır ve %100 dal |
@@ -60,7 +60,8 @@ Hiçbir özel öğrenci dosyası okunup aktarılmadı. Altı küçük sentetik k
 E2E gerçek Koçluk API/PostgreSQL kullanır. Oturum ve harici Identity sahiplik cevabı
 yalnız loopback test taklididir; gerçek Google/Identity giriş veya canlı doğrulaması değildir.
 Test ön kontrolü mutlak API assembly yolunu, tek açık geçici DB parametresini ve tek açık
-loopback Identity parametresini doğrular; farklı/sonradan eklenen hedefleri reddeder.
+loopback Identity parametresini ve o porttaki tam test betiği sürecini doğrular;
+farklı/sonradan eklenen hedefleri reddeder.
 
 ## Canlıya geçiş için kalan işletim işleri
 

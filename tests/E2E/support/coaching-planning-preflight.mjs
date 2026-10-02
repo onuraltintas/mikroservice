@@ -5,6 +5,13 @@ import { fileURLToPath } from 'node:url';
 
 const connection = 'Host=127.0.0.1;Port=55441;Database=coaching_planning_e2e;Username=planning_test;Password=disposable-planning-only';
 const assembly = fileURLToPath(new URL('../../../services/coaching-service/Coaching.API/bin/Debug/net10.0/Coaching.API.dll', import.meta.url));
+const identityFixture = fileURLToPath(new URL('./coaching-planning-session.mjs', import.meta.url));
+export function validateIdentityFixtureProcess(commandLine) {
+  const args = (commandLine.match(/"[^"]*"|\S+/g) ?? []).map(x => x.replace(/^"|"$/g, ''));
+  assert.match(args[0] ?? '', /(?:^|[\\/])node(?:\.exe)?$/i, 'Expected the Node fixture host.');
+  assert.equal(resolve(args[1] ?? '').toLowerCase(), resolve(identityFixture).toLowerCase(),
+    'Use the exact workspace fixture using its absolute script path.');
+}
 export function validatePlanningProcess(commandLine) {
   const args = (commandLine.match(/"[^"]*"|\S+/g) ?? []).map(x => x.replace(/^"|"$/g, ''));
   assert.match(args[0] ?? '', /(?:^|[\\/])dotnet(?:\.exe)?$/i, 'Expected the dotnet API host.');
@@ -29,4 +36,8 @@ export default function preflight() {
     '$listeners=@(Get-NetTCPConnection -State Listen -LocalPort 5006); if(!$listeners.Count -or @($listeners | Where-Object {$_.LocalAddress -notin @("127.0.0.1","::1")}).Count){throw "Expected loopback-only API listeners"}; $pids=@($listeners | Select-Object -ExpandProperty OwningProcess -Unique); if($pids.Count -ne 1){throw "Expected one local API process"}; (Get-CimInstance Win32_Process -Filter ("ProcessId="+$pids[0])).CommandLine'],
   { encoding: 'utf8', timeout: 15_000 });
   validatePlanningProcess(commandLine.trim());
+  const fixtureCommandLine = execFileSync('powershell.exe', ['-NoProfile', '-Command',
+    '$listeners=@(Get-NetTCPConnection -State Listen -LocalPort 4600); if(!$listeners.Count -or @($listeners | Where-Object {$_.LocalAddress -notin @("127.0.0.1","::1")}).Count){throw "Expected loopback-only fixture listeners"}; $pids=@($listeners | Select-Object -ExpandProperty OwningProcess -Unique); if($pids.Count -ne 1){throw "Expected one local fixture process"}; (Get-CimInstance Win32_Process -Filter ("ProcessId="+$pids[0])).CommandLine'],
+  { encoding: 'utf8', timeout: 15_000 });
+  validateIdentityFixtureProcess(fixtureCommandLine.trim());
 }
