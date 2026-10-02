@@ -3,7 +3,10 @@ import { Component, DestroyRef, OnInit, PLATFORM_ID, inject, signal } from '@ang
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { AuthService } from '../../../core/auth/auth.service';
-import { CoachingCatalogFilter, CoachingCatalogKind, CoachingCatalogRow, CoachingCatalogService } from '../../../core/services/coaching-catalog.service';
+import { CoachingCatalogFilter, CoachingCatalogKind, CoachingCatalogRow, CoachingCatalogService, CoachingCatalogUsage } from '../../../core/services/coaching-catalog.service';
+import { ToasterService } from '../../../core/services/toaster.service';
+import { ADMIN_PERMISSIONS } from '../../../core/auth/permissions';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-coaching-catalog',
@@ -14,7 +17,7 @@ import { CoachingCatalogFilter, CoachingCatalogKind, CoachingCatalogRow, Coachin
       <header>
         <p class="text-sm font-semibold text-indigo-600">Koçluk / Ortak katalog</p>
         <h1 id="coaching-catalog-title" class="mt-1 text-2xl font-bold text-gray-900 dark:text-white">Dersler ve hedef katalogları</h1>
-        <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">Kaynak kayıtlarını, yayın durumunu ve hedef puanlarını inceleyin. Bu ekran şu aşamada salt okunurdur.</p>
+        <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">Kaynak kayıtlarını ve kullanımını inceleyin. Yetkili yönetici yalnız kullanılmayan kayıtları gerekçeyle kalıcı silebilir.</p>
       </header>
       <form (ngSubmit)="load()" class="grid gap-4 rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-900 sm:grid-cols-2 lg:grid-cols-4">
         <div><label for="catalog-kind" class="block text-sm font-medium">Katalog</label>
@@ -42,6 +45,23 @@ import { CoachingCatalogFilter, CoachingCatalogKind, CoachingCatalogRow, Coachin
         <div class="flex items-end"><button type="submit" class="rounded-lg bg-indigo-600 px-4 py-2 font-medium text-white">Filtrele</button></div>
       </form>
       @if (error()) { <div role="alert" class="rounded-lg border border-red-200 bg-red-50 p-4 text-red-800">{{ error() }}</div> }
+      @if (usageLoading()) { <p role="status">Kullanım bilgisi kontrol ediliyor…</p> }
+      @if (selectedUsage(); as usage) {
+        <section aria-labelledby="catalog-usage-title" class="space-y-3 rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-900">
+          <h2 id="catalog-usage-title" class="text-lg font-semibold">{{ usage.name }} — Kullanım ve kalıcı silme</h2>
+          <p class="text-sm">Katalog bağlantısı: {{ usage.catalogReferences }} · Plan görevi: {{ usage.planReferences }} · Hedef: {{ usage.goalReferences }} · Sınav sonucu: {{ usage.examReferences }}</p>
+          @if (!usage.canDelete) { <p class="text-sm text-amber-700">Bu kayıt kullanımda. Öğrenci geçmişini korumak için kalıcı silinemez.</p> }
+          @else if (canDelete()) {
+            <p class="text-sm text-red-700">Kalıcı silme geri alınamaz. Kayıt veritabanından kaldırılır; silme denetim kaydı korunur.</p>
+            <label for="catalog-delete-reason" class="block text-sm font-medium">Silme gerekçesi</label>
+            <textarea id="catalog-delete-reason" [(ngModel)]="deleteReason" minlength="5" maxlength="500" [disabled]="deleting()" class="w-full rounded-lg border p-2 dark:bg-gray-800"></textarea>
+            <label for="catalog-delete-confirm" class="block text-sm font-medium">Onaylamak için SİL yazın</label>
+            <input id="catalog-delete-confirm" [(ngModel)]="deleteConfirmation" [disabled]="deleting()" class="rounded-lg border p-2 dark:bg-gray-800" />
+            <button type="button" (click)="deleteSelected()" [disabled]="deleting() || deleteConfirmation !== 'SİL' || deleteReason.trim().length < 5" class="ml-3 rounded-lg bg-red-600 px-4 py-2 text-white disabled:opacity-40">{{ deleting() ? 'İşleniyor…' : 'Kalıcı sil' }}</button>
+          }
+          <button type="button" (click)="closeUsage()" [disabled]="deleting()" class="block rounded-lg border px-3 py-2">Kapat</button>
+        </section>
+      }
       <section class="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900" [attr.aria-busy]="loading()">
         <div class="border-b px-5 py-3 text-sm" aria-live="polite">{{ totalCount() }} kayıt · Sayfa {{ page() }} / {{ totalPages() }}</div>
         @if (loading()) { <p role="status" class="p-6">Katalog yükleniyor…</p> }
@@ -55,7 +75,7 @@ import { CoachingCatalogFilter, CoachingCatalogKind, CoachingCatalogRow, Coachin
                 <td class="p-4">{{ row.universityName || row.city || row.examCode || '—' }} @if (row.district) {<span class="block text-gray-500">{{ row.district }} · {{ row.districtId ? 'Doğrulanmış konum' : 'Konum eşleştirilmemiş' }}</span>} @if (row.gradeNumber) {<span class="block">{{ row.gradeNumber }}. sınıf</span>}</td>
                 <td class="p-4">@if (row.minimumScore != null) {{{ row.minimumScore | number:'1.0-4' }} · {{ row.scoreYear || 'Yıl belirtilmemiş' }}} @else if (row.estimatedMinutes != null) {{{ row.estimatedMinutes }} dakika} @else {—} @if (row.displayOrder != null) {<span class="block">Sıra: {{ row.displayOrder }}</span>} @if (row.scoreType) {<span class="block">{{ row.scoreType }} · {{ row.programCode || 'Kod yok' }}</span>}</td>
                 <td class="p-4">{{ row.source }}<span class="block text-xs text-gray-500">{{ row.sourceId }}</span></td>
-                <td class="p-4">{{ row.isActive ? 'Aktif' : 'Pasif' }}</td>
+                <td class="p-4">{{ row.isActive ? 'Aktif' : 'Pasif' }}<button type="button" (click)="inspectUsage(row.id)" [disabled]="deleting()" class="mt-2 block rounded-lg border px-2 py-1">Kullanımı incele</button></td>
               </tr>
             }</tbody>
           </table></div>
@@ -73,7 +93,15 @@ export class CoachingCatalogComponent implements OnInit {
   private readonly service = inject(CoachingCatalogService);
   private readonly auth = inject(AuthService);
   private readonly platformId = inject(PLATFORM_ID);
+  private readonly toaster = inject(ToasterService);
+  private readonly destroyRef = inject(DestroyRef);
   private request?: Subscription;
+  private usageRequest?: Subscription;
+  readonly selectedUsage = signal<CoachingCatalogUsage | null>(null);
+  readonly usageLoading = signal(false);
+  readonly deleting = signal(false);
+  deleteReason = '';
+  deleteConfirmation = '';
   readonly kinds: { value: CoachingCatalogKind; label: string }[] = [
     { value: 'lessons', label: 'Dersler' }, { value: 'units', label: 'Üniteler' },
     { value: 'topics', label: 'Konular' }, { value: 'schools', label: 'Okullar' },
@@ -94,7 +122,38 @@ export class CoachingCatalogComponent implements OnInit {
   scoreYear: number | null = null;
   scoreType = '';
 
-  constructor() { inject(DestroyRef).onDestroy(() => this.request?.unsubscribe()); }
+  constructor() { this.destroyRef.onDestroy(() => { this.request?.unsubscribe(); this.usageRequest?.unsubscribe(); }); }
+  canDelete() { return this.auth.userProfile()?.roles?.includes('SystemAdmin') && this.auth.hasPermission(ADMIN_PERMISSIONS.coachingContentManage); }
+  closeUsage() {
+    this.usageRequest?.unsubscribe();
+    this.usageLoading.set(false);
+    this.selectedUsage.set(null);
+    this.deleteReason = '';
+    this.deleteConfirmation = '';
+  }
+  inspectUsage(id: string) {
+    if (!this.auth.userProfile()?.roles?.includes('SystemAdmin') || this.deleting()) return;
+    this.closeUsage();
+    this.usageLoading.set(true);
+    this.usageRequest = this.service.usage(this.kind, id).subscribe({
+      next: usage => { this.selectedUsage.set(usage); this.usageLoading.set(false); },
+      error: () => { this.usageLoading.set(false); this.toaster.error('Kullanım bilgisi alınamadı. Yeniden deneyin.'); }
+    });
+  }
+  async deleteSelected() {
+    const selected = this.selectedUsage();
+    const kind = this.kind;
+    const reason = this.deleteReason.trim();
+    if (!selected?.canDelete || !this.canDelete() || this.deleting() || this.deleteConfirmation !== 'SİL' || reason.length < 5 || reason.length > 500) return;
+    this.deleting.set(true);
+    const confirmed = await this.toaster.confirm(`“${selected.name}” kalıcı olarak silinsin mi? Bu işlem geri alınamaz.`, { title: 'Kalıcı silme', confirmText: 'Kalıcı sil', cancelText: 'Vazgeç' });
+    if (!confirmed || this.destroyRef.destroyed) { this.deleting.set(false); return; }
+    this.service.delete(kind, selected.id, { fingerprint: selected.fingerprint, reason, confirmId: selected.id })
+      .pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+        next: () => { this.deleting.set(false); this.closeUsage(); this.toaster.success('Kullanılmayan kayıt kalıcı olarak silindi.'); this.load(); },
+        error: () => { this.deleting.set(false); this.closeUsage(); this.toaster.error('Kayıt silinemedi. Kullanım bilgisi değişmiş olabilir; güncel kaydı yeniden kontrol edin.'); }
+      });
+  }
   ngOnInit() { if (isPlatformBrowser(this.platformId)) this.load(); }
   totalPages() { return Math.max(1, Math.ceil(this.totalCount() / 25)); }
   changeKind(kind: CoachingCatalogKind) {
@@ -106,6 +165,7 @@ export class CoachingCatalogComponent implements OnInit {
     this.load();
   }
   load(page = 1) {
+    this.closeUsage();
     if (!this.auth.userProfile()?.roles?.includes('SystemAdmin')) {
       this.error.set('Ortak kataloglar yalnız global yönetici tarafından incelenebilir.');
       return;

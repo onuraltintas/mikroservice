@@ -45,9 +45,29 @@ export interface CoachingCatalogFilter {
   scoreYear?: number;
 }
 
+export interface CoachingCatalogUsage {
+  id: string;
+  name: string;
+  fingerprint: string;
+  canDelete: boolean;
+  catalogReferences: number;
+  planReferences: number;
+  goalReferences: number;
+  examReferences: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class CoachingCatalogService {
   private readonly http = inject(HttpClient);
+
+  usage(kind: CoachingCatalogKind, id: string) {
+    return this.http.get<{ data: CoachingCatalogUsage }>(`${environment.apiUrl}/coaching-admin/catalog/${kind}/${encodeURIComponent(id)}/usage`)
+      .pipe(map(response => response.data));
+  }
+
+  delete(kind: CoachingCatalogKind, id: string, request: { fingerprint: string; reason: string; confirmId: string }) {
+    return this.http.delete<{ success: boolean }>(`${environment.apiUrl}/coaching-admin/catalog/${kind}/${encodeURIComponent(id)}`, { body: request });
+  }
 
   list(kind: CoachingCatalogKind, filter: CoachingCatalogFilter) {
     let params = new HttpParams();
