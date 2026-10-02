@@ -133,6 +133,23 @@ public class NotificationDbContext : DbContext, INotificationDbContext
     }
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        => SaveChangesAsync(true, cancellationToken);
+
+    public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
+    {
+        ValidateImmutableRecords();
+        return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+    }
+
+    public override int SaveChanges() => SaveChanges(true);
+
+    public override int SaveChanges(bool acceptAllChangesOnSuccess)
+    {
+        ValidateImmutableRecords();
+        return base.SaveChanges(acceptAllChangesOnSuccess);
+    }
+
+    private void ValidateImmutableRecords()
     {
         if (ChangeTracker.Entries<NotificationErasedRecipient>().Any(x => x.State is EntityState.Modified or EntityState.Deleted))
             throw new InvalidOperationException("Erased recipient guards are immutable.");
@@ -142,6 +159,5 @@ public class NotificationDbContext : DbContext, INotificationDbContext
             throw new InvalidOperationException("Admin audit records are append-only.");
         }
 
-        return base.SaveChangesAsync(cancellationToken);
     }
 }
