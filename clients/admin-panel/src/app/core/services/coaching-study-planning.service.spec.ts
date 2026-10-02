@@ -4,6 +4,20 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { CoachingStudyPlanningService } from './coaching-study-planning.service';
 
 describe('CoachingStudyPlanningService', () => {
+  it('uses availability endpoints and never supplies a student ID', () => {
+    TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
+    const service = TestBed.inject(CoachingStudyPlanningService);
+    const http = TestBed.inject(HttpTestingController);
+    service.getAvailability().subscribe();
+    http.expectOne('/api/coaching/study-planning/availability').flush({ success: true, data: { version: 0, timeZoneId: 'UTC', windows: [] } });
+    const update = { expectedVersion: null, timeZoneId: 'Europe/Istanbul', windows: [{ day: 'Monday' as const, startMinute: 480, endMinute: 540 }] };
+    service.saveAvailability(update).subscribe();
+    const request = http.expectOne('/api/coaching/study-planning/availability');
+    expect(request.request.method).toBe('PUT');
+    expect(request.request.body).toEqual(update);
+    request.flush({ success: true, data: { version: 0, timeZoneId: 'Europe/Istanbul', windows: update.windows } });
+    http.verify();
+  });
   it('uses product-specific endpoints, unwraps data and sends versions without owner IDs', () => {
     TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
     const service = TestBed.inject(CoachingStudyPlanningService);
