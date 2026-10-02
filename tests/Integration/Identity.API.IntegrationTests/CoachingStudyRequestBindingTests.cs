@@ -19,6 +19,7 @@ public sealed class CoachingStudyRequestBindingTests
         yield return [new StudyAvailabilityUpdate(null, "Europe/Istanbul", [new(DayOfWeek.Monday, 600, 660)])];
         yield return [new AutomaticStudyPreviewRequest(new(2026, 10, 2), 7, 0, [new(Guid.NewGuid(), 30)])];
         yield return [new GoalTargetUpdate(0, null, Guid.NewGuid())];
+        yield return [new GoalScoreTargetUpdate(0, 400, 500, Coaching.Domain.Enums.ExamType.LGS)];
     }
     [Theory]
     [MemberData(nameof(Requests))]

@@ -11,6 +11,37 @@ namespace Identity.API.IntegrationTests;
 public sealed class CoachingGoalTargetApiTests
 {
     [Fact]
+    public async Task ScoreApi_RequiresExplicitFieldsAndUsesWriteProtections()
+    {
+        var method = typeof(GoalTargetController).GetMethod(nameof(GoalTargetController.ReplaceScore))!;
+        Assert.Equal("study-planning-write", Assert.Single(method.GetCustomAttributes(typeof(EnableRateLimitingAttribute), false).Cast<EnableRateLimitingAttribute>()).PolicyName);
+        Assert.Single(method.GetCustomAttributes(typeof(RequestSizeLimitAttribute), false));
+        Assert.Throws<JsonException>(() => JsonSerializer.Deserialize<GoalScoreTargetUpdate>("{}"));
+        Assert.Throws<JsonException>(() => JsonSerializer.Deserialize<GoalScoreTargetUpdate>("{\"ExpectedVersion\":0}"));
+        Assert.IsType<OkObjectResult>(await new GoalTargetController(new Stub()).ReplaceScore(Guid.NewGuid(), new(0, 400, 500, Coaching.Domain.Enums.ExamType.LGS)));
+    }
+
+    [Theory]
+    [InlineData("forbidden", 403)]
+    [InlineData("conflict", 409)]
+    [InlineData("missing", 404)]
+    [InlineData("invalid", 400)]
+    public async Task ScoreApi_MapsExpectedFailures(string failure, int status)
+    {
+        Exception exception = failure switch
+        {
+            "forbidden" => new BusinessRuleException("Authorization.Forbidden", "Denied"),
+            "conflict" => new BusinessRuleException("StudyPlanning.Conflict", "Changed"),
+            "missing" => new KeyNotFoundException(),
+            _ => new ArgumentException("Internal detail")
+        };
+        var result = Assert.IsAssignableFrom<ObjectResult>(await new GoalTargetController(new Stub { Failure = exception })
+            .ReplaceScore(Guid.NewGuid(), new(0, 400, 500, Coaching.Domain.Enums.ExamType.LGS)));
+        Assert.Equal(status, result.StatusCode);
+        Assert.DoesNotContain("Internal detail", JsonSerializer.Serialize(result.Value));
+    }
+
+    [Fact]
     public void Api_RequiresStudentVersionAndLimitsWriteBodyAndTraffic()
     {
         var type = typeof(GoalTargetController);
