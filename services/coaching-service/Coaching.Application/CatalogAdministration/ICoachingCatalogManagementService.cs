@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Coaching.Application.CatalogAdministration;
 
@@ -7,7 +8,7 @@ public sealed record CatalogSaveRequest(string Name, string Reason, string? Fing
     Guid? ParentId = null, int? DisplayOrder = null, int? EstimatedMinutes = null,
     string? UniversityName = null, string? ProgramCode = null, string? ScoreType = null,
     decimal? MinimumScore = null, int? ScoreYear = null, string? ProvinceId = null, string? DistrictId = null);
-public sealed record CatalogStatusRequest(string Fingerprint, bool IsActive, string Reason);
+public sealed record CatalogStatusRequest(string Fingerprint, [property: JsonRequired] bool IsActive, string Reason);
 public sealed record CatalogEditDocument(string Fingerprint, JsonElement Data);
 
 public interface ICoachingCatalogManagementService

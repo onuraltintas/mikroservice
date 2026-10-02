@@ -195,7 +195,9 @@ public sealed class CoachingCatalogManagementService(CoachingDbContext db, ICoac
         var topic = kind == CatalogKind.Topics;
         var university = kind == CatalogKind.UniversityPrograms;
         var school = kind == CatalogKind.Schools;
-        if (!Enum.IsDefined(kind) || r.ScoreYear is < 1900 or > 2200 || r.LessonId == Guid.Empty || r.UnitId == Guid.Empty || r.ParentId == Guid.Empty
+        if (!Enum.IsDefined(kind) || r.ScoreYear is < 1900 or > 2200
+            || (r.MinimumScore.HasValue && (r.MinimumScore < 0 || r.MinimumScore > 999999.9999m || decimal.Round(r.MinimumScore.Value, 4) != r.MinimumScore))
+            || r.LessonId == Guid.Empty || r.UnitId == Guid.Empty || r.ParentId == Guid.Empty
             || (!lesson && (r.GradeNumber.HasValue || r.ExamCode is not null))
             || (kind is not (CatalogKind.Units or CatalogKind.Topics) && (r.LessonId.HasValue || r.DisplayOrder.HasValue))
             || (!topic && (r.UnitId.HasValue || r.ParentId.HasValue || r.EstimatedMinutes.HasValue))
