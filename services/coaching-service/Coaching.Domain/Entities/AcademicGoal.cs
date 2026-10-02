@@ -22,6 +22,7 @@ public class AcademicGoal : AggregateRoot
     public Guid? TargetSchoolId { get; private set; }
 
     public decimal? TargetScore { get; private set; }
+    public decimal? TargetMaxScore { get; private set; }
     public DateTime? TargetDate { get; private set; }
 
     public int CurrentProgress { get; private set; } // 0-100%
@@ -93,6 +94,7 @@ public class AcademicGoal : AggregateRoot
         Description = NormalizeOptional(description);
         Category = category;
         TargetDate = targetDate;
+        if (TargetScore != targetScore || TargetExamType != targetExamType) TargetMaxScore = null;
         TargetScore = targetScore;
         TargetExamType = targetExamType;
         TargetSubject = NormalizeOptional(targetSubject);
@@ -111,9 +113,14 @@ public class AcademicGoal : AggregateRoot
             if (targetScore.Value is < 0 or > 999.99m)
                 throw new ArgumentOutOfRangeException(nameof(targetScore), "Target score must be between 0 and 999.99");
 
+            if (TargetScore != targetScore) TargetMaxScore = null;
             TargetScore = targetScore;
         }
-        if (targetExamType.HasValue) TargetExamType = targetExamType;
+        if (targetExamType.HasValue)
+        {
+            if (TargetExamType != targetExamType) TargetMaxScore = null;
+            TargetExamType = targetExamType;
+        }
         if (targetSubject != null) TargetSubject = targetSubject;
 
         UpdatedAt = DateTime.UtcNow;
@@ -136,6 +143,20 @@ public class AcademicGoal : AggregateRoot
             CompletedAt = null;
         }
 
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void SetScoreTarget(decimal? score, decimal? maxScore, ExamType? examType)
+    {
+        if (score.HasValue || maxScore.HasValue || examType.HasValue)
+        {
+            if (score is null or <= 0 || maxScore is null or <= 0 or > 999.99m || score > maxScore
+                || examType is null || !Enum.IsDefined(examType.Value))
+                throw new ArgumentException("Specify a positive target, its score scale and an exam type.");
+        }
+        TargetScore = score;
+        TargetMaxScore = maxScore;
+        TargetExamType = examType;
         UpdatedAt = DateTime.UtcNow;
     }
 
