@@ -2,6 +2,7 @@ using EduPlatform.Shared.Contracts.Events.Privacy;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.AspNetCore.DataProtection;
 using Notification.Domain.Entities;
 using Notification.Infrastructure.Persistence;
 using Notification.Infrastructure.Services;
@@ -93,6 +94,9 @@ public sealed class NotificationErasedRecipientTests(PostgresFixture postgres)
             var request = new PersonalDataErasureExecutionRequestedV1(Guid.NewGuid(), Guid.NewGuid(), subject,
                 DateTime.UtcNow, PersonalDataScope.Account);
             await erasure.ExecuteAsync(request, CancellationToken.None);
+            await new EmailDeliveryQueue(db, new EphemeralDataProtectionProvider()).QueueAsync(
+                Guid.NewGuid(), "LateEvent", "test@example.com", "Late", "Late", subject);
+            Assert.False(await db.EmailDeliveries.AnyAsync(x => x.SubjectUserId == subject));
             Assert.Null(await NotificationRecipientWrites.PersistAsync(db, NotificationItem.Create(subject, "Late", "Late", "StudyPlanPublished")));
             Assert.NotNull(await NotificationRecipientWrites.PersistAsync(db, NotificationItem.Create(other, "Keep", "Keep", "Info")));
             Assert.Equal(0, await db.Notifications.CountAsync(x => x.UserId == subject));
