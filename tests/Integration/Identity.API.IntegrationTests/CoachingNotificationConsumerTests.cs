@@ -12,6 +12,21 @@ namespace Identity.API.IntegrationTests;
 public sealed class CoachingNotificationConsumerTests
 {
     [Fact]
+    public void ProductionConfiguration_BindsStudyPlanConsumerWithInboxAndRetry()
+    {
+        var directory = new DirectoryInfo(AppContext.BaseDirectory);
+        while (directory is not null && !Directory.Exists(Path.Combine(directory.FullName, "services", "notification-service"))) directory = directory.Parent;
+        Assert.NotNull(directory);
+        var source = File.ReadAllText(Path.Combine(directory.FullName, "services", "notification-service", "Notification.API", "Program.cs"));
+        var binding = System.Text.RegularExpressions.Regex.Match(source,
+            "ReceiveEndpoint\\(\"coaching-study-plan-published\".*?\\n        \\}\\);", System.Text.RegularExpressions.RegexOptions.Singleline);
+        Assert.True(binding.Success, "The production consumer must have a receive endpoint.");
+        Assert.Contains("ConfigureConsumer<StudyPlanPublishedConsumer>", binding.Value);
+        Assert.Contains("UseEntityFrameworkOutbox<NotificationDbContext>", binding.Value);
+        Assert.Contains("UseMessageRetry", binding.Value);
+    }
+
+    [Fact]
     public async Task CoachingConsumers_MapEventsToExpectedRecipients()
     {
         var teacherId = Guid.NewGuid();
