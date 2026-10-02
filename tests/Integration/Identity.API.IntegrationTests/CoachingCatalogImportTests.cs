@@ -27,6 +27,9 @@ public sealed class CoachingCatalogImportTests(PostgresFixture postgres)
                 ["lgs-programs.json"] = """[{"id":"s1","schoolName":"School","city":"City","town":"District","minScore":350}]"""
             };
             var importer = new CoachingCatalogImporter(db);
+            Assert.Equal(6, await importer.PreviewAsync(files, "test-catalog"));
+            Assert.False(await db.StudyCatalogLessons.AnyAsync());
+            Assert.False(await db.TargetSchools.AnyAsync());
             // Opt-in manual validation reads only catalog files, never private student exports.
             var providedDirectory = Environment.GetEnvironmentVariable("COACHING_TEST_CATALOG_DIRECTORY");
             if (!string.IsNullOrWhiteSpace(providedDirectory))
@@ -47,6 +50,7 @@ public sealed class CoachingCatalogImportTests(PostgresFixture postgres)
                 return;
             }
             Assert.Equal(6, await importer.ImportAsync(files, "test-catalog"));
+            Assert.Equal(0, await importer.PreviewAsync(files, "test-catalog"));
             Assert.Equal(2025, (await db.TargetUniversityPrograms.SingleAsync()).ScoreYear);
             var lessonId = (await db.StudyCatalogLessons.SingleAsync()).Id;
             db.ChangeTracker.Clear();
@@ -89,6 +93,7 @@ public sealed class CoachingCatalogImportTests(PostgresFixture postgres)
             files["lgs-programs.json"] = """[{"id":"s1","schoolName":"School","city":"City","town":"District","minScore":350}]""";
             await Assert.ThrowsAsync<InvalidOperationException>(() => importer.ImportAsync(files, "test-catalog"));
             Assert.False(await db.TargetSchools.AnyAsync());
+            await Assert.ThrowsAsync<InvalidOperationException>(() => importer.PreviewAsync(files, "test-catalog"));
             Assert.Equal(1, await db.StudyCatalogLessons.CountAsync());
         }
         finally { await db.Database.EnsureDeletedAsync(); }
