@@ -17,6 +17,38 @@ namespace Identity.API.IntegrationTests;
 public sealed class CoachingGoalTargetServiceTests(PostgresFixture postgres)
 {
     [Fact]
+    public async Task ScoreConfiguration_IsOwnedVersionedAndDoesNotOverwriteRecordedProgress()
+    {
+        await using var db = new CoachingDbContext(new DbContextOptionsBuilder<CoachingDbContext>().UseNpgsql(postgres.ConnectionString).Options);
+        await db.Database.EnsureDeletedAsync(); await db.Database.EnsureCreatedAsync();
+        try
+        {
+            var actor = new Actor(); var events = new Events();
+            var goal = AcademicGoal.Create(actor.UserId!.Value, "Score target", GoalCategory.ExamPreparation);
+            goal.UpdateProgress(30);
+            var teacher = AcademicGoal.Create(actor.UserId.Value, "Teacher target", GoalCategory.ExamPreparation, Guid.NewGuid());
+            db.AddRange(goal, teacher); await db.SaveChangesAsync(); db.ChangeTracker.Clear();
+            var service = new CoachingGoalTargetService(db, new CoachingAccessPolicy(actor), events);
+            var original = (await service.GetAsync(goal.Id))!;
+            var saved = await service.ReplaceScoreAsync(goal.Id, new(original.Version, 400, 500, ExamType.LGS));
+            Assert.Equal(500, saved.ScoreTarget!.MaxScore); Assert.Equal(400, saved.ScoreTarget.TargetScore);
+            Assert.True(saved.Version > original.Version); db.ChangeTracker.Clear();
+            Assert.Equal(30, (await db.AcademicGoals.SingleAsync(x => x.Id == goal.Id)).CurrentProgress);
+            await Assert.ThrowsAsync<BusinessRuleException>(() => service.ReplaceScoreAsync(goal.Id, new(original.Version, 80, 100, ExamType.Mock)));
+            await Assert.ThrowsAsync<ArgumentException>(() => service.ReplaceScoreAsync(goal.Id, new(saved.Version, 400, 100, ExamType.LGS)));
+            await Assert.ThrowsAsync<BusinessRuleException>(() => service.ReplaceScoreAsync(teacher.Id, new(0, 400, 500, ExamType.LGS)));
+            Assert.Equal(1, events.Count); db.ChangeTracker.Clear();
+            var cleared = await service.ReplaceScoreAsync(goal.Id, new(saved.Version, null, null, null));
+            Assert.Null(cleared.ScoreTarget!.MaxScore); Assert.Equal(2, events.Count);
+            actor.UserId = Guid.NewGuid(); db.ChangeTracker.Clear();
+            await Assert.ThrowsAsync<KeyNotFoundException>(() => service.ReplaceScoreAsync(goal.Id, new(cleared.Version, 400, 500, ExamType.LGS)));
+            actor.Roles = ["Teacher"];
+            await Assert.ThrowsAsync<BusinessRuleException>(() => service.ReplaceScoreAsync(goal.Id, new(cleared.Version, 400, 500, ExamType.LGS)));
+        }
+        finally { await db.Database.EnsureDeletedAsync(); }
+    }
+
+    [Fact]
     public async Task TargetLink_PreservesGoalAndRejectsInvalidStaleAndUnauthorizedChanges()
     {
         await using var db = new CoachingDbContext(new DbContextOptionsBuilder<CoachingDbContext>()
