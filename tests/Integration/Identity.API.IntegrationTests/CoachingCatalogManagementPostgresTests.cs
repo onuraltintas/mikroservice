@@ -19,6 +19,25 @@ public sealed class CoachingCatalogManagementPostgresTests(PostgresFixture postg
         => new(db, new Scope(global), new TestUser(), new Locations());
 
     [Theory]
+    [InlineData("400.12345")]
+    [InlineData("1000000")]
+    public async Task RejectsScoresNotRepresentableInDatabaseBeforeSaving(string value)
+    {
+        await using var db = Database();
+        await db.Database.EnsureDeletedAsync();
+        try
+        {
+            await db.Database.EnsureCreatedAsync();
+            var score = decimal.Parse(value, System.Globalization.CultureInfo.InvariantCulture);
+            await Assert.ThrowsAsync<ArgumentException>(() => Service(db).CreateAsync(CatalogKind.UniversityPrograms,
+                new("Program", "Test kaydı", UniversityName: "University", MinimumScore: score), default));
+            Assert.False(await db.AdminAuditRecords.AnyAsync());
+            Assert.False(await db.TargetUniversityPrograms.AnyAsync());
+        }
+        finally { await db.Database.EnsureDeletedAsync(); }
+    }
+
+    [Theory]
     [InlineData(CatalogKind.Lessons)]
     [InlineData(CatalogKind.Units)]
     [InlineData(CatalogKind.Topics)]

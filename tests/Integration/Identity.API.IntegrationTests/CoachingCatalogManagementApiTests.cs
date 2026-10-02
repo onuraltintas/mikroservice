@@ -12,6 +12,11 @@ namespace Identity.API.IntegrationTests;
 public sealed class CoachingCatalogManagementApiTests
 {
     [Fact]
+    public void MissingStatusValueIsRejectedRatherThanSilentlyDeactivating()
+    {
+        Assert.Throws<JsonException>(() => JsonSerializer.Deserialize<CatalogStatusRequest>("{\"fingerprint\":\"hash\",\"reason\":\"Yayın onayı\"}", new JsonSerializerOptions(JsonSerializerDefaults.Web)));
+    }
+    [Fact]
     public async Task CreateReturns201AndLocationWhileNumericKindIsRejected()
     {
         var service = new Service();
