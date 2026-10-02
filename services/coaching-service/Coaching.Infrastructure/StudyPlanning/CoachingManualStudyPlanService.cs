@@ -7,6 +7,7 @@ using Coaching.Infrastructure.Data;
 using EduPlatform.Shared.Kernel.Exceptions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
+using MassTransit.EntityFrameworkCoreIntegration;
 
 namespace Coaching.Infrastructure.StudyPlanning;
 
@@ -217,6 +218,9 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
         {
             resultReady = false;
             await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+            var transactionCommitted = false;
+            var priorOutboxStates = db.ChangeTracker.Entries<OutboxState>()
+                .ToDictionary(x => x.Entity.OutboxId, x => x.State);
             try
             {
                 var key = "coaching-study-plan:" + student;
@@ -225,6 +229,7 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
                 completedResult = result;
                 resultReady = true;
                 await transaction.CommitAsync(cancellationToken);
+                transactionCommitted = true;
                 return result;
             }
             finally
@@ -232,6 +237,16 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
                 // Rolled-back versions/tasks must not survive a retry or another call in this scope.
                 foreach (var entry in db.ChangeTracker.Entries().Where(x => x.Entity is StudyPlanRevision or StudyPlanTask).ToArray())
                     entry.State = EntityState.Detached;
+                if (!transactionCommitted)
+                {
+                    // A rolled-back publication must not be flushed by a later operation in this scope.
+                    foreach (var entry in db.ChangeTracker.Entries<OutboxMessage>().ToArray())
+                        entry.State = EntityState.Detached;
+                    // The scoped MassTransit publisher retains this state instance. Keep it attached,
+                    // restoring Added for newly created rows that were never committed.
+                    foreach (var entry in db.ChangeTracker.Entries<OutboxState>().ToArray())
+                        entry.State = priorOutboxStates.GetValueOrDefault(entry.Entity.OutboxId, EntityState.Added);
+                }
             }
         }, async (_, _, token) =>
         {
