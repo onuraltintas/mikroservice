@@ -8,6 +8,20 @@ import { CoachingCatalogComponent } from './coaching-catalog';
 import { ToasterService } from '../../../core/services/toaster.service';
 
 describe('CoachingCatalogComponent', () => {
+  it('opens the editor only for global managers and does not switch its catalog underneath it', () => {
+    const { component } = create();
+    component.openEditor(null);
+    expect(component.editorOpen()).toBe(true);
+    component.changeKind('schools');
+    expect(component.kind).toBe('lessons');
+    component.closeEditor();
+    expect(component.editorOpen()).toBe(false);
+  });
+  it('never opens shared catalog editing for an institution administrator', () => {
+    const { component } = create(['InstitutionAdmin']);
+    component.openEditor('record');
+    expect(component.editorOpen()).toBe(false);
+  });
   function create(roles = ['SystemAdmin']) {
     const service = {
       list: vi.fn(() => of<CoachingCatalogPage>({ items: [], totalCount: 0, pageNumber: 1, pageSize: 25 })),
