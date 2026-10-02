@@ -44,7 +44,8 @@ public sealed class CoachingErasureAssessmentService(
         var planningCount = await context.Exams.CountAsync(x => x.StudentOwnerId == message.SubjectUserId, cancellationToken)
             + await context.StudyPlanRevisions.CountAsync(x => x.StudentId == message.SubjectUserId, cancellationToken)
             + await context.StudyPlanTasks.CountAsync(x => x.StudentId == message.SubjectUserId, cancellationToken)
-            + await context.StudyAvailability.CountAsync(x => x.StudentId == message.SubjectUserId, cancellationToken);
+            + await context.StudyAvailability.CountAsync(x => x.StudentId == message.SubjectUserId, cancellationToken)
+            + await CoachingStudyPlanErasureMessages.ForStudent(context, message.SubjectUserId).CountAsync(cancellationToken);
 
         var assessment = CoachingErasureAssessment.Create(
             message.RequestId,
