@@ -40,7 +40,8 @@ public sealed record CoachingDataStudyPlanDto(Guid Id, Guid PlanId, int Revision
 
 public sealed record CoachingDataGoalDto(
     Guid GoalId, string Title, string? Description, string Category, int CurrentProgress,
-    bool IsCompleted, DateTime? TargetDate, decimal? TargetScore, Guid? TargetSchoolId = null, Guid? TargetUniversityProgramId = null);
+    bool IsCompleted, DateTime? TargetDate, decimal? TargetScore, Guid? TargetSchoolId = null, Guid? TargetUniversityProgramId = null,
+    decimal? TargetMaxScore = null, string? TargetExamType = null, string? TargetSubject = null);
 
 public sealed record CoachingDataSessionDto(
     Guid SessionId, string Title, DateTime ScheduledDate, int DurationMinutes, string Status,
