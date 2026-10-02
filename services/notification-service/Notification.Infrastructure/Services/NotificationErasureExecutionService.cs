@@ -27,7 +27,14 @@ public sealed class NotificationErasureExecutionService(
         var existing = await context.ErasureExecutions
             .SingleOrDefaultAsync(item => item.RequestId == message.RequestId, cancellationToken);
         if (existing is not null)
+        {
+            if (!await context.ErasedRecipients.AnyAsync(x => x.UserId == message.SubjectUserId, cancellationToken))
+            {
+                context.ErasedRecipients.Add(NotificationErasedRecipient.Create(message.SubjectUserId, existing.CompletedAt));
+                await context.SaveChangesAsync(cancellationToken);
+            }
             return ToResult(existing);
+        }
 
         var notifications = await context.Notifications
             .Where(item => item.UserId == message.SubjectUserId)
