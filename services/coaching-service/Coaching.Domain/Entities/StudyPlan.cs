@@ -30,6 +30,13 @@ public sealed class StudyPlanRevision : AggregateRoot
         UpdatedAt = DateTime.UtcNow;
     }
 
+    public void RenameDraft(string title)
+    {
+        if (Status != StudyPlanStatus.Draft) throw new InvalidOperationException("Only drafts can be renamed.");
+        Title = StudyCatalogText.Require(title, 200);
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     public void Archive()
     {
         Status = StudyPlanStatus.Archived;
