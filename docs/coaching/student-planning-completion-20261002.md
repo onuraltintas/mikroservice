@@ -1,6 +1,7 @@
 # Koçluk öğrenci planlama, hedef ve rapor — tamamlanma raporu
 
-Tarih: 2026-10-02. Yerel geliştirme/doğrulama tamamlandı; bu canlı yayın değildir.
+Tarih: 2026-10-02. Bu belge yerel geliştirme/doğrulama anını kaydeder.
+Sonraki canlı yayın ve doğrulama durumu: [canlı yayın raporu](student-planning-live-release-20261002.md).
 
 ## Tamamlanan kapsam
 
