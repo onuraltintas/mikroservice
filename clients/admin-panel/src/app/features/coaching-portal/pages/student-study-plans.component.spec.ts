@@ -96,4 +96,13 @@ describe('StudentStudyPlansComponent', () => {
     expect(service.get).toHaveBeenCalledWith('plan');
     expect(component.selected()?.id).toBe('plan');
   });
+  it('blocks navigation and warns on refresh during an in-flight write', () => {
+    const { component } = setup();
+    component.busy.set(true);
+    component.dirty = false;
+    expect(component.canLeavePage()).toBe(false);
+    const event = new Event('beforeunload', { cancelable: true });
+    component.beforeUnload(event as BeforeUnloadEvent);
+    expect(event.defaultPrevented).toBe(true);
+  });
 });
