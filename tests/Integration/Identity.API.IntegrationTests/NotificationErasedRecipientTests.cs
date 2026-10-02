@@ -13,6 +13,38 @@ namespace Identity.API.IntegrationTests;
 public sealed class NotificationErasedRecipientTests(PostgresFixture postgres)
 {
     [Fact]
+    public async Task ConcurrentNotification_WaitsForErasureAndCannotRecreateSubjectData()
+    {
+        var options = new DbContextOptionsBuilder<NotificationDbContext>().UseNpgsql(postgres.ConnectionString).Options;
+        await using var db = new NotificationDbContext(options);
+        await db.Database.EnsureDeletedAsync(); await db.Database.EnsureCreatedAsync();
+        try
+        {
+            var subject = Guid.NewGuid();
+            await using var transaction = await db.Database.BeginTransactionAsync();
+            var key = $"notification-recipient:{subject:N}";
+            await db.Database.ExecuteSqlInterpolatedAsync($"SELECT pg_advisory_xact_lock(hashtextextended({key}, 0))");
+            var writer = Task.Run(async () => {
+                await using var concurrent = new NotificationDbContext(options);
+                return await NotificationRecipientWrites.PersistAsync(concurrent, NotificationItem.Create(subject, "Late", "Late", "Info"));
+            });
+            var deadline = DateTime.UtcNow.AddSeconds(5); var waiting = 0;
+            while (waiting == 0 && DateTime.UtcNow < deadline)
+            {
+                waiting = await db.Database.SqlQueryRaw<int>("SELECT COUNT(*)::int AS \"Value\" FROM pg_locks WHERE locktype = 'advisory' AND NOT granted").SingleAsync();
+                if (waiting == 0) await Task.Delay(20);
+            }
+            Assert.True(waiting > 0, "Concurrent writer must actually wait on the recipient lock.");
+            await new NotificationErasureExecutionService(db, TimeProvider.System).ExecuteAsync(
+                new(Guid.NewGuid(), Guid.NewGuid(), subject, DateTime.UtcNow, PersonalDataScope.Account), CancellationToken.None);
+            await transaction.CommitAsync();
+            Assert.Null(await writer);
+            Assert.Equal(0, await db.Notifications.CountAsync(x => x.UserId == subject));
+        }
+        finally { await db.Database.EnsureDeletedAsync(); }
+    }
+
+    [Fact]
     public async Task Migration_RefusesRollbackThatWouldLoseErasedRecipientProtection()
     {
         await using var db = new NotificationDbContext(new DbContextOptionsBuilder<NotificationDbContext>().UseNpgsql(postgres.ConnectionString).Options);
