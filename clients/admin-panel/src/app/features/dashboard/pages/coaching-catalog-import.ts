@@ -9,6 +9,7 @@ import { ToasterService } from '../../../core/services/toaster.service';
 @Component({ selector: 'app-coaching-catalog-import', standalone: true, imports: [FormsModule], template: `
   <section class="space-y-4 rounded-xl border bg-white p-5 dark:bg-gray-900" aria-labelledby="catalog-import-title" [attr.aria-busy]="busy()">
     <h2 id="catalog-import-title" class="text-xl font-semibold">Kontrollü katalog aktarımı</h2>
+    @if(busy()) { <p role="status" aria-live="polite" class="text-sm text-indigo-600">İşlem sürüyor; tamamlanana kadar bekleyin.</p> }
     <p class="text-sm text-gray-500">Altı JSON dosyasını birlikte seçin. Yeni kayıtlar pasif eklenir; yayınlama ayrı onay ister. Mevcut içerik değiştirilmez, geçmiş silinmez.</p>
     <fieldset [disabled]="busy() || !permitted()" class="space-y-3">
       <label class="block text-sm">Kaynak adı<input [(ngModel)]="source" (ngModelChange)="invalidate()" maxlength="100" class="ml-3 rounded border p-2 dark:bg-gray-800" /></label>
@@ -39,7 +40,7 @@ export class CoachingCatalogImportComponent {
   permitted() { return !!this.auth.userProfile()?.roles?.includes('SystemAdmin') && this.auth.hasPermission(ADMIN_PERMISSIONS.coachingContentManage); }
   ready() { return !!this.source.trim() && Object.keys(this.files).length === 6 && this.fileNames.every(name => typeof this.files[name] === 'string'); }
   total() { return Object.values(this.review()?.counts ?? {}).reduce((sum, count) => sum + count, 0); }
-  invalidate() { this.review.set(null); this.error.set(''); }
+  invalidate() { this.review.set(null); this.reason = ''; this.error.set(''); }
   async selectFiles(event: Event) {
     if (this.busy() || !this.permitted()) return;
     this.invalidate(); this.files = {};
