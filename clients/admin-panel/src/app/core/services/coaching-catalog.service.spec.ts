@@ -5,6 +5,32 @@ import { CoachingCatalogService } from './coaching-catalog.service';
 import { environment } from '../../../environments/environment';
 
 describe('CoachingCatalogService', () => {
+  it('supports detail, create, update and explicit status with the same typed envelope', () => {
+    TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
+    const http = TestBed.inject(HttpTestingController);
+    const service = TestBed.inject(CoachingCatalogService);
+    const data = { fingerprint: 'hash', data: { id: 'record', name: 'Math', source: 'admin-manual', sourceId: '1', isActive: false } };
+    let received = '';
+    service.get('lessons', 'record').subscribe(result => received = result.data.name);
+    http.expectOne(`${environment.apiUrl}/coaching-admin/catalog/lessons/record`).flush({ data });
+    expect(received).toBe('Math');
+    const body = { name: 'Math', reason: 'Yeni kayıt' };
+    service.create('lessons', body).subscribe();
+    const post = http.expectOne(`${environment.apiUrl}/coaching-admin/catalog/lessons`);
+    expect(post.request.method).toBe('POST');
+    expect(post.request.body).toEqual(body);
+    post.flush({ data });
+    service.update('lessons', 'record', { ...body, fingerprint: 'hash' }).subscribe();
+    const put = http.expectOne(`${environment.apiUrl}/coaching-admin/catalog/lessons/record`);
+    expect(put.request.method).toBe('PUT');
+    put.flush({ data });
+    service.setActive('lessons', 'record', { fingerprint: 'hash', reason: 'Yayın onayı', isActive: true }).subscribe();
+    const patch = http.expectOne(`${environment.apiUrl}/coaching-admin/catalog/lessons/record/status`);
+    expect(patch.request.method).toBe('PATCH');
+    expect(patch.request.body.isActive).toBe(true);
+    patch.flush({ data });
+    http.verify();
+  });
   it('sends permanent deletion as DELETE with fingerprint, reason and record confirmation', () => {
     TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
     const http = TestBed.inject(HttpTestingController);
