@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
-import { finalize, forkJoin, of, switchMap } from 'rxjs';
+import { catchError, finalize, forkJoin, of, switchMap, throwError } from 'rxjs';
 import { CoachingStudyPlanningService, StudyTask } from '../../../core/services/coaching-study-planning.service';
 
 @Component({ selector: 'app-student-study-today', standalone: true, imports: [CommonModule, RouterLink], template: `
@@ -33,7 +33,8 @@ export class StudentStudyTodayComponent implements OnInit {
   load() {
     if (this.busy()) return;
     this.busy.set(true); this.error.set(null); this.title.set(null); this.todayTasks.set([]); this.overdue.set([]);
-    forkJoin({ plans: this.service.list(1, 'Active'), hours: this.service.getAvailability() })
+    forkJoin({ plans: this.service.list(1, 'Active'), hours: this.service.getAvailability().pipe(catchError(error =>
+      error?.status === 404 ? of({ timeZoneId: Intl.DateTimeFormat().resolvedOptions().timeZone }) : throwError(() => error))) })
       .pipe(switchMap(({ plans, hours }) => {
         this.timeZone.set(hours.timeZoneId);
         const parts = new Intl.DateTimeFormat('en-US', { timeZone: hours.timeZoneId, year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(new Date(Date.now()));
