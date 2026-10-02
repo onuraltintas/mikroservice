@@ -60,6 +60,20 @@ public sealed class CoachingAdminCatalogReaderTests
             .ListAsync(CatalogKind.Topics, new() { PageNumber = page, PageSize = size }, default));
     }
 
+    [Fact]
+    public async Task FiltersForOtherCatalogKindsAndInvalidBoundsAreRejected()
+    {
+        using var db = Database();
+        var reader = new CoachingAdminCatalogReader(db, new Scope(CoachingAdminScope.Global));
+        foreach (var filter in new AdminCatalogFilter[]
+        {
+            new() { GradeNumber = 13 }, new() { LessonId = Guid.Empty },
+            new() { ProvinceId = "06" }, new() { ScoreYear = 2025 }, new() { UnitId = Guid.NewGuid() }
+        })
+            await Assert.ThrowsAsync<ArgumentException>(() => reader.ListAsync(CatalogKind.Lessons, filter, default));
+        await Assert.ThrowsAsync<ArgumentException>(() => reader.ListAsync(CatalogKind.Schools, new() { DistrictId = "123" }, default));
+    }
+
     private sealed class Scope(CoachingAdminScope scope) : ICoachingAdminScopeAuthorization
     {
         public Task<CoachingAdminScope> RequireReadScopeAsync(CancellationToken cancellationToken) => Task.FromResult(scope);
