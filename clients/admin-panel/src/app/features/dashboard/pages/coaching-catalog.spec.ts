@@ -14,7 +14,7 @@ describe('CoachingCatalogComponent', () => {
       usage: vi.fn(() => of({ id: 'record', name: 'Math', fingerprint: 'fingerprint', canDelete: true, catalogReferences: 0, planReferences: 0, goalReferences: 0, examReferences: 0 })),
       delete: vi.fn(() => of({ success: true }))
     };
-    const toaster = { confirm: vi.fn(async () => true), success: vi.fn(), error: vi.fn() };
+    const toaster = { confirm: vi.fn(async (_message: string, _options?: unknown) => true), success: vi.fn(), error: vi.fn() };
     TestBed.configureTestingModule({
       imports: [CoachingCatalogComponent],
       providers: [
@@ -91,6 +91,8 @@ describe('CoachingCatalogComponent', () => {
     component.deleteConfirmation = 'SİL';
     await component.deleteSelected();
     expect(toaster.confirm).toHaveBeenCalled();
+    expect(toaster.confirm.mock.calls[0][0]).toContain('Dersler');
+    expect(toaster.confirm.mock.calls[0][0]).toContain('record');
     expect(service.delete).toHaveBeenCalledWith('lessons', 'record', { fingerprint: 'fingerprint', reason: 'Unused duplicate', confirmId: 'record' });
     expect(component.selectedUsage()).toBeNull();
   });
@@ -104,5 +106,15 @@ describe('CoachingCatalogComponent', () => {
     await component.deleteSelected();
     expect(service.delete).not.toHaveBeenCalled();
     expect(toaster.confirm).not.toHaveBeenCalled();
+  });
+
+  it('announces loaded usage and labels each record action distinctly', () => {
+    const { fixture, component } = create();
+    fixture.detectChanges();
+    component.items.set([{ id: 'record', name: 'Math', source: 'admin', sourceId: '1', isActive: false }]);
+    component.inspectUsage('record');
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[aria-label="Math kullanımını incele"]')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('[aria-live="polite"][aria-atomic="true"]').textContent).toContain('Math');
   });
 });
