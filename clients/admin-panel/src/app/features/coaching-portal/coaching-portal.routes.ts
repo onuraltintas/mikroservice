@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { coachingRoleGuard } from '../../core/auth/auth.guard';
 import type { StudentStudyPlansComponent } from './pages/student-study-plans.component';
+import type { StudentStudyAvailabilityComponent } from './pages/student-study-availability.component';
 
 export const COACHING_PORTAL_ROUTES: Routes = [
   {
@@ -19,6 +20,13 @@ export const COACHING_PORTAL_ROUTES: Routes = [
     canActivate: [coachingRoleGuard],
     data: { coachingRoles: ['Student'] },
     loadComponent: () => import('./pages/student-assignments.component').then(m => m.StudentAssignmentsComponent)
+  },
+  {
+    path: 'study-availability',
+    canActivate: [coachingRoleGuard],
+    canDeactivate: [(component: StudentStudyAvailabilityComponent) => component.canLeavePage()],
+    data: { coachingRoles: ['Student'] },
+    loadComponent: () => import('./pages/student-study-availability.component').then(m => m.StudentStudyAvailabilityComponent)
   },
   {
     path: 'study-plans',

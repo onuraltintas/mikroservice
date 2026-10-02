@@ -1,0 +1,38 @@
+<section class="study-plans" aria-labelledby="availability-title">
+  <header class="page-heading"><div><p class="eyebrow">Haftalık çalışma ritmin</p><h1 id="availability-title">Çalışma saatlerim</h1>
+    <p>Ders çalışabileceğin gün ve saatleri belirle. Bu ayarlar mevcut planını kendiliğinden değiştirmez.</p></div>
+    <span class="badge" aria-live="polite">Haftalık {{ weeklyMinutes() }} dakika</span></header>
+  @if (error()) { <p role="alert" class="notice error">{{ error() }}</p> }
+  @if (success()) { <p role="status" class="notice success">{{ success() }}</p> }
+  @if (loading()) { <p role="status">Çalışma saatleri yükleniyor…</p> }
+  <div class="panel">
+    <form #availabilityForm="ngForm" (ngSubmit)="save()">
+      <fieldset [disabled]="!ready() || loading() || saving()">
+        <label for="time-zone">Saat dilimi</label>
+        <input id="time-zone" name="timeZone" [(ngModel)]="timeZoneId" (ngModelChange)="dirty = true" required maxlength="100" aria-describedby="timezone-help">
+        <p id="timezone-help" class="muted">Türkiye için Europe/Istanbul kullanılır. Başka bir ülkedeysen geçerli bölge/şehir saat dilimini gir.</p>
+        @if (!rows.length) { <p class="muted">Henüz saat aralığı eklenmedi. Boş kaydetmek, haftalık müsaitlik belirtmediğin anlamına gelir.</p> }
+        @for (row of rows; track $index; let i = $index) {
+          <div class="draft-task">
+            <div class="fields">
+              <label>Gün<select [name]="'day-' + i" [(ngModel)]="row.day" (ngModelChange)="dirty = true">
+                @for (day of days; track day.value) { <option [value]="day.value">{{ day.label }}</option> }
+              </select></label>
+              <label>Başlangıç<input type="time" [name]="'start-' + i" [(ngModel)]="row.start" (ngModelChange)="dirty = true" required></label>
+              <label>Bitiş<input type="time" [name]="'end-' + i" [(ngModel)]="row.end" (ngModelChange)="dirty = true" [disabled]="row.endOfDay" [required]="!row.endOfDay"></label>
+            </div>
+            <label class="check"><input type="checkbox" [name]="'midnight-' + i" [(ngModel)]="row.endOfDay" (ngModelChange)="dirty = true">Günün sonunda bitir (24:00)</label>
+            <button type="button" class="secondary" (click)="removeRow(i)">Aralığı kaldır</button>
+          </div>
+        }
+        <div class="actions">
+          <button type="button" class="secondary" (click)="addRow()" [disabled]="rows.length >= 42">Saat aralığı ekle</button>
+          <button type="submit" [disabled]="availabilityForm.invalid">Çalışma saatlerini kaydet</button>
+          <button type="button" class="secondary" (click)="discardChanges()" [disabled]="!dirty">Değişikliklerden vazgeç</button>
+        </div>
+      </fieldset>
+    </form>
+    <button type="button" class="secondary" (click)="load()" [disabled]="loading() || saving() || dirty">Yeniden yükle</button>
+    @if (saving()) { <p role="status">Çalışma saatleri kaydediliyor…</p> }
+  </div>
+</section>

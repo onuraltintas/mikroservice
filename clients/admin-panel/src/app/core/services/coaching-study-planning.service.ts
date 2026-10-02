@@ -21,12 +21,24 @@ export interface StudyPlanSummary { id: string; version: number; title: string; 
 export interface StudyPlan extends StudyPlanSummary { tasks: StudyTask[] }
 export interface StudyPlanInput { title: string; tasks: StudyTaskInput[] }
 export interface StudyPlanPage { items: StudyPlanSummary[]; totalCount: number; pageNumber: number; pageSize: number }
+export type StudyDay = 'Sunday' | 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday';
+export interface StudyWindow { day: StudyDay; startMinute: number; endMinute: number }
+export interface StudyAvailability { version: number; timeZoneId: string; windows: StudyWindow[] }
+export interface StudyAvailabilityUpdate { expectedVersion: number | null; timeZoneId: string; windows: StudyWindow[] }
 interface ApiResult<T> { success: boolean; data: T }
 
 @Injectable({ providedIn: 'root' })
 export class CoachingStudyPlanningService {
   private readonly http = inject(HttpClient);
   private readonly url = `${environment.apiUrl}/coaching/study-planning/plans`;
+  private readonly availabilityUrl = `${environment.apiUrl}/coaching/study-planning/availability`;
+
+  getAvailability() {
+    return this.http.get<ApiResult<StudyAvailability>>(this.availabilityUrl).pipe(map(result => result.data));
+  }
+  saveAvailability(update: StudyAvailabilityUpdate) {
+    return this.http.put<ApiResult<StudyAvailability>>(this.availabilityUrl, update).pipe(map(result => result.data));
+  }
 
   list(pageNumber = 1, status?: StudyPlanStatus) {
     let params = new HttpParams().set('pageNumber', pageNumber).set('pageSize', 20);
