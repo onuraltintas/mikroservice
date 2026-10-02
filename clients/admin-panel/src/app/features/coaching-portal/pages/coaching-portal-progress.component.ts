@@ -97,6 +97,7 @@ export class CoachingPortalProgressComponent implements OnInit {
   }
 
   createGoal() {
+    if (!this.canLeavePage()) return;
     const studentId = this.authService.userProfile()?.id;
     if (!studentId) {
       this.goalFormError.set('Öğrenci profili bulunamadı.');
@@ -139,6 +140,7 @@ export class CoachingPortalProgressComponent implements OnInit {
 
   updateProgress(goal: Goal, event: Event) {
     const input = event.target as HTMLInputElement;
+    if (!this.canLeavePage()) { input.value = String(goal.progress); return; }
     const progress = Math.min(100, Math.max(0, Number(input.value)));
     if (!Number.isFinite(progress) || progress === goal.progress) return;
 
