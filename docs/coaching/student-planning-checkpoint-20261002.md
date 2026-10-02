@@ -14,6 +14,18 @@ manuel ve otomatik plan adımlarındaki güncel durumu tamamlar. Canlı yayın d
 - Notification için silinen alıcıların asgari işaret kaydı ve alıcı bazlı eşzamanlılık koruması yerelde geliştirildi. Canlı migration uygulanmadı. Eski silme kayıtları için canlı geçiş öncesinde kimlik eşleştirme/backfill kontrolü gerekir.
 - Otomatik plan/hedef/rapor ekranlarının daha geniş tarayıcı kapsamı, katalog işletim adımı ve genel son regresyon hâlâ tamamlanmalıdır. Canlıya çıkış ayrıca onay gerektirir.
 
+### Hedef raporu ve izole E2E eki
+
+- Rapora öğrencinin yalnız kendi güncel hedefleri eklendi. Kaydedilmiş ilerleme, tamamlanma işareti, hedef tarih/puan/sınav türü/ders gösterilir; seçilen dönemin geçmiş hedef durumu veya otomatik başarı oranı olarak sunulmaz.
+- Öğretmen kimliği varsa kaynak öğretmen olarak belirtilir. Diğer kayıtlarda öğrenci/admin/sistem ayrımı kanıtlanamadığı için `Unspecified` ve "Belirleyen kişi kaydedilmemiş" kullanılır.
+- Hedefte puan ölçeği ve çalışma planı bağlantısı bulunmadığından otomatik puan açığı/yerleşme tahmini üretilmez. Bu karşılaştırma geliştirmesi hâlâ ayrıdır.
+- Hedef raporu için yeni migration gerekmedi; sorgu öğrencinin mevcut Koçluk hedeflerini kullanır. 1000 üzeri hedefte sessiz eksiltme yerine açıklamalı 422 döner.
+- Son seçili backend regresyonu: **100 geçti, 0 başarısız, 0 atlanan**. Son öğrenci planlama/hedef/sonuç/rapor/oturum arayüz seçimi: **50 geçti, 9 dosya**. Bunlar tüm ürün testleri veya tüm ürün kapsam oranı değildir.
+- Son tarayıcı kontrolü: 2 senaryo iki kez çalıştırıldı, **4/4 geçti**. Her tarayıcı senaryosu yeni öğrenci kimliği kullanır; tam olarak 1 tamamlanan çalışma/25 dakika ve 1 hedef doğrulanır. Hedef API oluşturma/ilerleme ve gerçek rapor ekranı da kapsamdadır.
+- E2E başlamadan Windows'taki 5006 dinleyicisinin yalnız loopback'e bağlı tek süreç olduğu, çalıştırılan assembly'nin bu çalışma alanındaki mutlak Koçluk API yolu olduğu ve tek açık bağlantı parametresinin yalnız `127.0.0.1:55441/coaching_planning_e2e` veritabanını seçtiği doğrulanır. Farklı/sonradan eklenen bağlantı parametresi testi durdurur. Koruma için 3 Node testi geçti.
+- Son Angular üretim derlemesi başarılı; önceden mevcut Hızlı Okuma katalog stil bütçesi uyarısı devam eder.
+- VPS, canlı veritabanları ve GitHub değiştirilmedi. Gerçek Identity/Google giriş testi yapılmış sayılmaz; kontrollü test oturumu kullanılır.
+
 ## Hazır ve doğrulanmış
 
 - Öğrenciye ait müsaitlik saatleri, sürüm ve saat dilimi doğrulaması.
