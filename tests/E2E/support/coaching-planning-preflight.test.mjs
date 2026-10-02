@@ -1,10 +1,16 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { validatePlanningProcess } from './coaching-planning-preflight.mjs';
+import { validatePlanningProcess, validateIdentityFixtureProcess } from './coaching-planning-preflight.mjs';
 
 const path = 'D:/Calismalar/microservice/services/coaching-service/Coaching.API/bin/Debug/net10.0/Coaching.API.dll';
 const connection = 'Host=127.0.0.1;Port=55441;Database=coaching_planning_e2e;Username=planning_test;Password=disposable-planning-only';
 const identity = '--Services:IdentityService http://127.0.0.1:4600';
+test('requires the exact workspace Identity fixture process, not a decoy argument', () => {
+  const fixture = 'D:/Calismalar/microservice/tests/E2E/support/coaching-planning-session.mjs';
+  assert.doesNotThrow(() => validateIdentityFixtureProcess(`node "${fixture}"`));
+  assert.throws(() => validateIdentityFixtureProcess(`node other.mjs --decoy "${fixture}"`));
+  assert.throws(() => validateIdentityFixtureProcess('node C:/other-checkout/tests/E2E/support/coaching-planning-session.mjs'));
+});
 test('rejects an API without an explicit disposable database override', () => {
   assert.throws(() => validatePlanningProcess(`dotnet ${path}`));
   assert.throws(() => validatePlanningProcess(`dotnet ${path} --ConnectionStrings:DefaultConnection "Host=production"`));
