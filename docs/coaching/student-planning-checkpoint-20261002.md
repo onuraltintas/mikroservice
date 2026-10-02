@@ -3,6 +3,17 @@
 Tarih: 2026-10-02. Bu kayıt, [ilk yol haritasının](student-planning-roadmap.md)
 manuel ve otomatik plan adımlarındaki güncel durumu tamamlar. Canlı yayın değildir.
 
+## Son doğrulama eki
+
+Önceki sayılar aşağıda tarihsel kontrol noktası olarak korunmuştur; toplam test sayısı değildir.
+
+- Gerçek yerel Koçluk API'siyle 2 E2E testi geçti: kimlik/ürün/rol/sahiplik sınırları ve tarayıcıda manuel plan oluşturma, yayımlama, görev tamamlama, öğrenci beyanı sınav girişi ve API raporu.
+- Identity oturumu yalnız localhost üzerinde, tek kullanımlık ortam anahtarıyla imzalı test oturumudur. Gerçek Google/kayıt/giriş doğrulaması değildir.
+- MVC record doğrulama metadata hatası düzeltildi; ilgili MVC/manuel/otomatik seçiminde 46 test geçti.
+- Oturum yenilemenin AuthService oluşturulurken aynı servisi interceptor'dan yeniden çözmesi düzeltildi. Oturum servisi/interceptor seçiminde 10 test geçti.
+- Notification için silinen alıcıların asgari işaret kaydı ve alıcı bazlı eşzamanlılık koruması yerelde geliştirildi. Canlı migration uygulanmadı. Eski silme kayıtları için canlı geçiş öncesinde kimlik eşleştirme/backfill kontrolü gerekir.
+- Otomatik plan/hedef/rapor ekranlarının daha geniş tarayıcı kapsamı, katalog işletim adımı ve genel son regresyon hâlâ tamamlanmalıdır. Canlıya çıkış ayrıca onay gerektirir.
+
 ## Hazır ve doğrulanmış
 
 - Öğrenciye ait müsaitlik saatleri, sürüm ve saat dilimi doğrulaması.

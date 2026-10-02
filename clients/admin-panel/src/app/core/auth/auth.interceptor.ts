@@ -7,6 +7,11 @@ import { catchError, switchMap } from 'rxjs/operators';
 import { from, throwError } from 'rxjs';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
+    // Startup refresh runs while AuthService is being constructed; it uses
+    // the HttpOnly cookie, not the access token held by that service.
+    if (req.url === `${environment.apiUrl}/auth/refresh-token`) {
+        return next(withSession(req, ''));
+    }
     const authService = inject(AuthService);
     const platformId = inject(PLATFORM_ID);
 
