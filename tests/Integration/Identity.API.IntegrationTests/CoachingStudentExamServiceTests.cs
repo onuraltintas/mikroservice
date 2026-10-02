@@ -36,6 +36,8 @@ public sealed class CoachingStudentExamServiceTests(PostgresFixture postgres)
             db.Entry(topic).Property(x => x.IsActive).CurrentValue = true;
             await db.SaveChangesAsync(); db.ChangeTracker.Clear();
             var service = new CoachingStudentExamService(db, access);
+            var topicPage = await new CoachingTopicSearchService(db).SearchAsync(null, null, null, 1, 20);
+            Assert.Equal(lesson.Id, topicPage.Items.Single().LessonId);
             var request = new StudentExamInput("My mock", ExamType.Mock, new(2026, 10, 1), 80, 100, 8, 1, 1,
                 [new(lesson.Id, topic.Id, 10, 8, 1, 1)]);
             var created = await service.CreateAsync(request);
