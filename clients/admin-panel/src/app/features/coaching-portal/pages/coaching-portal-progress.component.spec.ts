@@ -5,6 +5,9 @@ import { vi } from 'vitest';
 import { AuthService, UserProfile } from '../../../core/auth/auth.service';
 import { CoachingPortalService, ExamResult, Goal } from '../../../core/services/coaching-portal.service';
 import { CoachingPortalProgressComponent } from './coaching-portal-progress.component';
+import { CoachingStudyPlanningService } from '../../../core/services/coaching-study-planning.service';
+import { StudentGoalTargetComponent } from './student-goal-target.component';
+import { By } from '@angular/platform-browser';
 
 describe('CoachingPortalProgressComponent', () => {
   const profile = signal<UserProfile | null>(null);
@@ -34,9 +37,23 @@ describe('CoachingPortalProgressComponent', () => {
       imports: [CoachingPortalProgressComponent],
       providers: [
         { provide: AuthService, useValue: { userProfile: profile } },
-        { provide: CoachingPortalService, useValue: service }
+        { provide: CoachingPortalService, useValue: service },
+        { provide: CoachingStudyPlanningService, useValue: {} }
       ]
     }).compileComponents();
+  });
+
+  it('renders lazy target pickers and blocks leaving during a target save', () => {
+    service.getStudentGoals.mockReturnValue(of({ items: [{ id: 'goal-1', title: 'School goal', category: 'ExamPreparation', progress: 0, isCompleted: false }], pageNumber: 1, pageSize: 100, totalCount: 1, totalPages: 1 }));
+    const fixture = TestBed.createComponent(CoachingPortalProgressComponent);
+    fixture.detectChanges();
+    const child = fixture.debugElement.query(By.directive(StudentGoalTargetComponent));
+    expect(child).not.toBeNull();
+    const picker = child.componentInstance as StudentGoalTargetComponent;
+    expect(picker.goalId).toBe('goal-1');
+    expect(fixture.componentInstance.canLeavePage()).toBe(true);
+    picker.saving.set(true);
+    expect(fixture.componentInstance.canLeavePage()).toBe(false);
   });
 
   it('creates a self-managed goal with a generated idempotency key', () => {
