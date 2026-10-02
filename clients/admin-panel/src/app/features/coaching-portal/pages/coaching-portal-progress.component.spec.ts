@@ -70,6 +70,9 @@ describe('CoachingPortalProgressComponent', () => {
     const fixture = TestBed.createComponent(CoachingPortalProgressComponent); fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('Öğrenci beyanı');
     expect(fixture.nativeElement.textContent).toContain('Öğretmen sınavı sayısı');
+    const trend = fixture.nativeElement.querySelector('.grid.sm\\:grid-cols-3.lg\\:grid-cols-6');
+    expect(trend.textContent).toContain('Öğrenci beyanı');
+    expect(trend.textContent).toContain('Mock');
   });
 
   it('creates a self-managed goal with a generated idempotency key', () => {
