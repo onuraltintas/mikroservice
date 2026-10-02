@@ -59,6 +59,12 @@ public sealed class ManualStudyPlansController(IManualStudyPlanService plans) : 
     public Task<IActionResult> Publish(Guid id, [FromBody] StudyPlanPublishInput request, CancellationToken cancellationToken = default)
         => Respond(async () => Ok(new { success = true, data = await plans.PublishAsync(id, request.ExpectedVersion, cancellationToken) }));
 
+    [HttpPost("{id:guid}/archive")]
+    [RequestSizeLimit(1024)]
+    [EnableRateLimiting("study-planning-write")]
+    public Task<IActionResult> Archive(Guid id, [FromBody] StudyPlanPublishInput request, CancellationToken cancellationToken = default)
+        => Respond(async () => Ok(new { success = true, data = await plans.ArchiveDraftAsync(id, request.ExpectedVersion, cancellationToken) }));
+
     [HttpPut("{id:guid}/tasks/{taskId:guid}/completion")]
     [RequestSizeLimit(1024)]
     [EnableRateLimiting("study-planning-write")]

@@ -81,6 +81,7 @@ public sealed class CoachingManualStudyPlanApiTests
         public Task<ManualStudyPlanView> CreateDraftAsync(ManualStudyPlanInput request, CancellationToken cancellationToken = default) => Result();
         public Task<ManualStudyPlanView> ReplaceDraftAsync(Guid id, int expectedVersion, ManualStudyPlanInput request, CancellationToken cancellationToken = default) => Result();
         public Task<ManualStudyPlanView> PublishAsync(Guid id, int expectedVersion, CancellationToken cancellationToken = default) => Result();
+        public Task<ManualStudyPlanView> ArchiveDraftAsync(Guid id, int expectedVersion, CancellationToken cancellationToken = default) => Result();
         private Task<ManualStudyPlanView> Result() => Failure is null
             ? Task.FromResult(new ManualStudyPlanView(Guid.NewGuid(), 0, "Plan", StudyPlanStatus.Draft, []))
             : Task.FromException<ManualStudyPlanView>(Failure);

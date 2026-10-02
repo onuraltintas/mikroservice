@@ -130,6 +130,16 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
         return revision;
     }
 
+    public Task<ManualStudyPlanView> ArchiveDraftAsync(Guid id, int expectedVersion, CancellationToken cancellationToken = default)
+        => LockedAsync(async student =>
+        {
+            var revision = await OwnedAsync(id, student, expectedVersion, cancellationToken);
+            if (revision.Status != StudyPlanStatus.Draft) throw Conflict("Yalnız taslak plan arşivlenebilir.");
+            revision.Archive();
+            await db.SaveChangesAsync(cancellationToken);
+            return await ViewAsync(revision, cancellationToken);
+        }, cancellationToken);
+
     public Task<ManualStudyPlanView> CompleteTaskAsync(Guid id, Guid taskId, int expectedVersion, int actualMinutes, CancellationToken cancellationToken = default)
         => LockedAsync(async student =>
         {
