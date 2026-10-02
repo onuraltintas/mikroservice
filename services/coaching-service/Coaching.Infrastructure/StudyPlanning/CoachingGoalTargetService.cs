@@ -48,6 +48,23 @@ public sealed class CoachingGoalTargetService(CoachingDbContext db, ICoachingAcc
         return await ViewAsync(goal, cancellationToken);
     }
 
+    public async Task<GoalTargetView> ReplaceScoreAsync(Guid goalId, GoalScoreTargetUpdate request, CancellationToken cancellationToken = default)
+    {
+        var studentId = RequireStudent();
+        ArgumentNullException.ThrowIfNull(request);
+        if (request.ExpectedVersion < 0) throw new ArgumentException("A valid version is required.");
+        var goal = await db.AcademicGoals.SingleOrDefaultAsync(x => x.Id == goalId && x.StudentId == studentId, cancellationToken)
+            ?? throw new KeyNotFoundException("Hedef bulunamadı.");
+        if (goal.SetByTeacherId.HasValue)
+            throw new BusinessRuleException("Authorization.Forbidden", "Öğretmenin oluşturduğu hedefi öğrenci değiştiremez.");
+        if (goal.Version != request.ExpectedVersion)
+            throw new BusinessRuleException("StudyPlanning.Conflict", "Hedef değişti. Güncel kaydı yükleyip tekrar deneyin.");
+        goal.SetScoreTarget(request.TargetScore, request.MaxScore, request.ExamType);
+        await events.PublishAsync(new GoalUpdatedEvent(goal.Id, goal.StudentId, goal.SetByTeacherId, goal.Title), cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+        return await ViewAsync(goal, cancellationToken);
+    }
+
     private Guid RequireStudent()
     {
         if (access.CurrentUserId is not { } studentId || !access.IsCurrentStudent(studentId))
@@ -67,6 +84,7 @@ public sealed class CoachingGoalTargetService(CoachingDbContext db, ICoachingAcc
                 .Select(x => new GoalCatalogTargetView(x.UniversityName + " — " + x.Name, x.ScoreType ?? "", x.IsActive))
                 .SingleOrDefaultAsync(cancellationToken);
         return new(goal.Id, goal.Version, goal.TargetUniversityProgramId, goal.TargetSchoolId,
-            !goal.SetByTeacherId.HasValue, target);
+            !goal.SetByTeacherId.HasValue, target,
+            new(goal.TargetScore, goal.TargetMaxScore, goal.TargetExamType, goal.TargetSubject));
     }
 }

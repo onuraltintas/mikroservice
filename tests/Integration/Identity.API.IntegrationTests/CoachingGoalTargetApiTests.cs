@@ -67,5 +67,8 @@ public sealed class CoachingGoalTargetApiTests
             return Failure is null ? Task.FromResult(new GoalTargetView(goalId, request.ExpectedVersion + 1,
                 request.TargetUniversityProgramId, request.TargetSchoolId, true)) : Task.FromException<GoalTargetView>(Failure);
         }
+        public Task<GoalTargetView> ReplaceScoreAsync(Guid goalId, GoalScoreTargetUpdate request, CancellationToken cancellationToken = default)
+            => Failure is null ? Task.FromResult(new GoalTargetView(goalId, request.ExpectedVersion + 1, null, null, true,
+                ScoreTarget: new(request.TargetScore, request.MaxScore, request.ExamType, null))) : Task.FromException<GoalTargetView>(Failure);
     }
 }
