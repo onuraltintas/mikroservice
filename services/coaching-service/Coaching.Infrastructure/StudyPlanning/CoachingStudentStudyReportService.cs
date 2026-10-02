@@ -18,7 +18,7 @@ public sealed class CoachingStudentStudyReportService(CoachingDbContext db, ICoa
         // Goals are a current snapshot, not historical progress in the selected task/exam period.
         var goals = await db.AcademicGoals.AsNoTracking().Where(x => x.StudentId == student)
             .OrderBy(x => x.IsCompleted).ThenBy(x => x.TargetDate).ThenBy(x => x.Id)
-            .Select(x => new StudyGoalReport(x.Id, x.Title, x.SetByTeacherId.HasValue ? "TeacherSet" : "StudentSet",
+            .Select(x => new StudyGoalReport(x.Id, x.Title, x.SetByTeacherId.HasValue ? "TeacherSet" : "Unspecified",
                 x.CurrentProgress, x.IsCompleted, x.TargetDate, x.TargetScore, x.TargetExamType, x.TargetSubject))
             .Take(1001).ToListAsync(cancellationToken);
         if (goals.Count > 1000) throw new BusinessRuleException("StudyPlanning.GoalReportLimit",

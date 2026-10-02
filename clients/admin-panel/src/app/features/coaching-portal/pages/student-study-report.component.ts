@@ -62,7 +62,7 @@ interface StudyReport {
         <ul class="mt-3 space-y-3">
           <li *ngFor="let goal of data.goals" class="rounded-lg border p-3 text-sm dark:border-slate-800">
             <h4 class="font-semibold">{{ goal.title }}</h4>
-            <p class="mt-1 text-xs text-slate-500">{{ goal.source === 'TeacherSet' ? 'Öğretmenin belirlediği hedef' : 'Öğrencinin belirlediği hedef' }}</p>
+            <p class="mt-1 text-xs text-slate-500">{{ goal.source === 'TeacherSet' ? 'Öğretmenin belirlediği hedef' : 'Belirleyen kişi kaydedilmemiş' }}</p>
             <p class="mt-2">Kaydedilen ilerleme: %{{ goal.recordedProgress }} · {{ goal.isCompleted ? 'Tamamlandı olarak işaretli' : 'Devam ediyor' }}</p>
             <p *ngIf="goal.targetDate">Hedef tarihi: {{ goal.targetDate | date:'dd.MM.yyyy':'UTC' }}</p>
             <p *ngIf="goal.targetScore !== null && goal.targetScore !== undefined">Hedef puanı: {{ goal.targetScore }}<span *ngIf="goal.targetExamType"> · {{ goal.targetExamType }}</span></p>
