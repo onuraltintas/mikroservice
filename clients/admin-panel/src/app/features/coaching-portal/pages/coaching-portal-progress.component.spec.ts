@@ -64,6 +64,14 @@ describe('CoachingPortalProgressComponent', () => {
     expect(fixture.componentInstance.canLeavePage()).toBe(false);
   });
 
+  it('labels student-reported exam results separately from teacher records', () => {
+    service.getStudentExamResults.mockReturnValue(of({ items: [{ examId: 'self', examTitle: 'Self mock', examType: 'Mock',
+      examDate: '2026-10-01T00:00:00Z', score: 80, maxScore: 100, source: 'StudentReported' }], pageNumber: 1, pageSize: 100, totalCount: 1, totalPages: 1 }));
+    const fixture = TestBed.createComponent(CoachingPortalProgressComponent); fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Öğrenci beyanı');
+    expect(fixture.nativeElement.textContent).toContain('Öğretmen sınavı sayısı');
+  });
+
   it('creates a self-managed goal with a generated idempotency key', () => {
     const component = TestBed.createComponent(CoachingPortalProgressComponent).componentInstance;
     component.ngOnInit();

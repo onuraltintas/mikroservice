@@ -23,6 +23,7 @@ describe('StudentExamResultsComponent', () => {
     Object.assign(component.lessons[0], { questionCount: 10, correct: 8, wrong: 1, empty: 1 });
     component.confirmed = true; component.save();
     expect(service.create).toHaveBeenCalledWith(expect.objectContaining({ correctAnswers: 8, lessons: [expect.objectContaining({ lessonId: 'lesson', topicId: 'topic' })] }));
+    expect(component.page().totalCount).toBe(1);
   });
   it('rejects inconsistent counts and impossible dates and invalidates confirmation on edits', () => {
     const { component, service } = setup();
