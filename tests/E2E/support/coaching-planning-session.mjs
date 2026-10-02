@@ -8,6 +8,7 @@ import { pathToFileURL } from 'node:url';
 assert.equal(process.env.E2E_DISPOSABLE_ENV, 'true', 'This fixture is only for disposable local tests.');
 export const planningStudent = 'dba472ec-a13e-453b-af7f-fec507c08817';
 const key = 'local-planning-e2e-signing-key-20261002-never-use-in-production-123456789';
+const internalKey = 'local-planning-e2e-internal-key-never-use-in-production-123456789';
 export function planningToken(userId = planningStudent, roles = ['Student'], product = 'coaching') {
   const now = Math.floor(Date.now() / 1000);
   const encode = value => Buffer.from(JSON.stringify(value)).toString('base64url');
@@ -21,12 +22,28 @@ export function planningToken(userId = planningStudent, roles = ['Student'], pro
 
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
   createServer(async (request, response) => {
+    // Only the external Identity ownership contract is stubbed; Coaching queries remain real.
+    if (request.url === '/api/internal/coaching/authorize-student-read' && request.method === 'POST') {
+      if (request.headers['x-internal-service-key'] !== internalKey) { response.writeHead(403); response.end(); return; }
+      try {
+        const chunks = []; let length = 0;
+        for await (const chunk of request) { length += chunk.length; if (length > 16_384) throw new Error('Body limit'); chunks.push(chunk); }
+        const payload = JSON.parse(Buffer.concat(chunks).toString());
+        assert.match(payload.viewerUserId, /^[0-9a-f-]{36}$/i);
+        assert.ok(Array.isArray(payload.studentIds) && payload.studentIds.length <= 100);
+        response.writeHead(200, { 'content-type': 'application/json' });
+        response.end(JSON.stringify({ allowedStudentUserIds: payload.studentIds.filter(id => id === payload.viewerUserId) }));
+      } catch { response.writeHead(400); response.end(); }
+      return;
+    }
     if (request.url === '/api/auth/refresh-token' && request.method === 'POST') {
       response.writeHead(200, { 'content-type': 'application/json' });
       response.end(JSON.stringify({ accessToken: planningToken(), tokenType: 'Bearer', expiresInMinutes: 15 }));
       return;
     }
-    if (!request.url?.startsWith('/api/coaching/')) { response.writeHead(404); response.end(); return; }
+    if (!request.url || !/^\/api\/(coaching\/|goals(?:\/|\?|$)|reports\/|exams\/)/.test(request.url)) {
+      response.writeHead(404); response.end(); return;
+    }
     try {
       const chunks = []; let length = 0;
       for await (const chunk of request) {

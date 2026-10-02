@@ -15,6 +15,11 @@ export function validatePlanningProcess(commandLine) {
   const index = args.findIndex(x => /^--ConnectionStrings:DefaultConnection$/i.test(x));
   assert.ok(index >= 2, 'Start the API with an explicit spaced database override.');
   assert.equal(args[index + 1], connection, 'API database must be the dedicated loopback test database.');
+  assert.equal((commandLine.match(/Services:IdentityService/gi) ?? []).length, 1,
+    'Exactly one explicit Identity fixture override is required.');
+  const identityIndex = args.findIndex(x => /^--Services:IdentityService$/i.test(x));
+  assert.ok(identityIndex >= 2, 'Use the explicit loopback Identity fixture.');
+  assert.equal(args[identityIndex + 1], 'http://127.0.0.1:4600', 'Identity calls must stay in the local test fixture.');
 }
 
 export default function preflight() {
