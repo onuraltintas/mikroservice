@@ -20,6 +20,36 @@ public sealed class CoachingCatalogPreflightTests
     }
 
     [Fact]
+    public void Preflight_RejectsMissingCatalogAndNonArrayInput()
+    {
+        var files = EmptyCatalogs();
+        files.Remove("lessons.json");
+        Assert.Throws<ArgumentException>(() => CatalogPreflight.Validate(files));
+        files["lessons.json"] = "{}";
+        Assert.Throws<ArgumentException>(() => CatalogPreflight.Validate(files));
+    }
+
+    [Fact]
+    public async Task Reader_OnlyReadsApprovedFiles()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), "coaching-catalog-tests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        try
+        {
+            foreach (var (name, json) in EmptyCatalogs())
+                await File.WriteAllTextAsync(Path.Combine(directory, name), json);
+            await File.WriteAllTextAsync(Path.Combine(directory, "student-goals.json"), "invalid JSON must not be read");
+            var report = await CatalogPreflight.ReadAsync(directory);
+            Assert.Empty(report.Errors);
+            Assert.Equal(6, report.Counts.Count);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [Fact]
     public void Preflight_CountsValidRelationshipsWithoutWritingData()
     {
         var files = EmptyCatalogs();
