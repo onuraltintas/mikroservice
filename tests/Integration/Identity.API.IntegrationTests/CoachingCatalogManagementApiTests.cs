@@ -12,6 +12,20 @@ namespace Identity.API.IntegrationTests;
 public sealed class CoachingCatalogManagementApiTests
 {
     [Fact]
+    public async Task DetailAndStatusReturnDocumentsAndRejectNumericKinds()
+    {
+        var service = new Service();
+        var controller = new CoachingCatalogManagementAdminController(service);
+        var detail = Assert.IsType<OkObjectResult>(await controller.Get("lessons", service.Id, default));
+        var json = JsonSerializer.SerializeToElement(detail.Value, new JsonSerializerOptions(JsonSerializerDefaults.Web));
+        Assert.Equal(service.Id, json.GetProperty("data").GetProperty("data").GetProperty("id").GetGuid());
+        Assert.Equal("hash", json.GetProperty("data").GetProperty("fingerprint").GetString());
+        Assert.IsType<OkObjectResult>(await controller.SetActive("lessons", service.Id, new("hash", true, "Yayın onayı"), default));
+        Assert.IsType<BadRequestObjectResult>(await controller.Get("0", service.Id, default));
+        Assert.IsType<BadRequestObjectResult>(await controller.SetActive("0", service.Id, new("hash", true, "Yayın onayı"), default));
+        Assert.Equal(2, service.Calls);
+    }
+    [Fact]
     public void MissingStatusValueIsRejectedRatherThanSilentlyDeactivating()
     {
         Assert.Throws<JsonException>(() => JsonSerializer.Deserialize<CatalogStatusRequest>("{\"fingerprint\":\"hash\",\"reason\":\"Yayın onayı\"}", new JsonSerializerOptions(JsonSerializerDefaults.Web)));
