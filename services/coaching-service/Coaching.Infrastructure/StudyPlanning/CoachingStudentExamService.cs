@@ -12,12 +12,12 @@ public sealed class CoachingStudentExamService(CoachingDbContext db, ICoachingAc
     public async Task<StudentExamView> CreateAsync(StudentExamInput request, CancellationToken cancellationToken = default)
     {
         var student = RequireStudent();
-        await ValidateAsync(request, cancellationToken);
+        var lessons = await ValidateAsync(request, cancellationToken);
         var exam = Exam.CreateStudentReported(student, request.Title, request.ExamType,
             request.ExamDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc), request.MaxScore);
         var result = ExamResult.Create(exam.Id, student, request.Score);
         result.SetAnswerStatistics(request.CorrectAnswers, request.WrongAnswers, request.EmptyAnswers);
-        result.SetLessonAnswers(request.Lessons);
+        result.SetLessonAnswers(lessons);
         exam.AddResult(result); db.Exams.Add(exam);
         await SaveAsync(cancellationToken);
         return View(exam);
@@ -47,15 +47,15 @@ public sealed class CoachingStudentExamService(CoachingDbContext db, ICoachingAc
         var student = RequireStudent();
         ArgumentNullException.ThrowIfNull(request);
         var exam = await OwnedAsync(id, student, request.ExpectedVersion, cancellationToken);
-        await ValidateAsync(request.Exam, cancellationToken);
+        var lessons = await ValidateAsync(request.Exam, cancellationToken);
         var input = request.Exam;
         // Validate a detached result first, so rejected lesson totals cannot partially mutate the tracked aggregate.
         var check = ExamResult.Create(exam.Id, student, input.Score);
         check.SetAnswerStatistics(input.CorrectAnswers, input.WrongAnswers, input.EmptyAnswers);
-        check.SetLessonAnswers(input.Lessons);
+        check.SetLessonAnswers(lessons);
         var result = exam.Results.Single();
         result.UpdateEditableDetails(input.Score, input.CorrectAnswers, input.WrongAnswers, input.EmptyAnswers, null, null, null, input.MaxScore);
-        result.SetLessonAnswers(input.Lessons);
+        result.SetLessonAnswers(lessons);
         exam.UpdateEditableDetails(input.Title, input.ExamType, null, null,
             input.ExamDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc), null, input.MaxScore, null);
         await SaveAsync(cancellationToken);
@@ -78,7 +78,7 @@ public sealed class CoachingStudentExamService(CoachingDbContext db, ICoachingAc
         return exam;
     }
 
-    private async Task ValidateAsync(StudentExamInput request, CancellationToken ct)
+    private async Task<IReadOnlyList<LessonAnswerStatistics>> ValidateAsync(StudentExamInput request, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(request);
         if (string.IsNullOrWhiteSpace(request.Title) || request.Title.Trim().Length > 200
@@ -95,7 +95,7 @@ public sealed class CoachingStudentExamService(CoachingDbContext db, ICoachingAc
         check.SetLessonAnswers(request.Lessons);
         var lessonIds = request.Lessons.Select(x => x.LessonId).Distinct().ToArray();
         var activeLessons = await db.StudyCatalogLessons.AsNoTracking().Where(x => x.IsActive && Enumerable.Contains(lessonIds, x.Id))
-            .Select(x => x.Id).ToListAsync(ct);
+            .Select(x => new { x.Id, x.Name }).ToListAsync(ct);
         if (activeLessons.Count != lessonIds.Length) throw new ArgumentException("Seçilen ders kullanılamıyor.");
         var topicIds = request.Lessons.Where(x => x.TopicId.HasValue).Select(x => x.TopicId!.Value).ToArray();
         var topics = await (from t in db.StudyCatalogTopics.AsNoTracking()
@@ -104,9 +104,11 @@ public sealed class CoachingStudentExamService(CoachingDbContext db, ICoachingAc
                 && !db.StudyCatalogTopics.Any(child => child.ParentId == t.Id)
                 && (t.ParentId == null || db.StudyCatalogTopics.Any(p => p.Id == t.ParentId
                     && p.IsActive && p.LessonId == t.LessonId && p.UnitId == t.UnitId))
-            select new { t.Id, t.LessonId }).ToListAsync(ct);
+            select new { t.Id, t.LessonId, t.Name }).ToListAsync(ct);
         if (request.Lessons.Any(x => x.TopicId.HasValue && !topics.Any(t => t.Id == x.TopicId && t.LessonId == x.LessonId)))
             throw new ArgumentException("Seçilen konu derse ait değil veya kullanılamıyor.");
+        return request.Lessons.Select(x => x with { LessonName = activeLessons.Single(l => l.Id == x.LessonId).Name,
+            TopicName = x.TopicId.HasValue ? topics.Single(t => t.Id == x.TopicId).Name : null }).ToArray();
     }
 
     private Guid RequireStudent() => access.CurrentUserId is { } student && access.IsCurrentStudent(student)

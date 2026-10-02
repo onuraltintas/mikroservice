@@ -343,4 +343,5 @@ public class ExamResult : Entity
     }
 }
 
-public sealed record LessonAnswerStatistics(Guid LessonId, Guid? TopicId, int QuestionCount, int Correct, int Wrong, int Empty);
+public sealed record LessonAnswerStatistics(Guid LessonId, Guid? TopicId, int QuestionCount, int Correct, int Wrong, int Empty,
+    string? LessonName = null, string? TopicName = null);
