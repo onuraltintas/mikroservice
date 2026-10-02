@@ -4,6 +4,24 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { CoachingStudyPlanningService } from './coaching-study-planning.service';
 
 describe('CoachingStudyPlanningService', () => {
+  it('searches targets with filters and saves only the goal target and version', () => {
+    TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
+    const service = TestBed.inject(CoachingStudyPlanningService);
+    const http = TestBed.inject(HttpTestingController);
+    service.searchSchools('science', 'Ankara', 'Center', 2).subscribe();
+    const school = http.expectOne('/api/coaching/study-planning/targets/schools?search=science&city=Ankara&district=Center&pageNumber=2&pageSize=20');
+    school.flush({ success: true, data: { items: [], totalCount: 0, pageNumber: 2, pageSize: 20 } });
+    service.searchPrograms('Software', 'SAY', 1).subscribe();
+    http.expectOne('/api/coaching/study-planning/targets/university-programs?search=Software&scoreType=SAY&pageNumber=1&pageSize=20')
+      .flush({ success: true, data: { items: [], totalCount: 0, pageNumber: 1, pageSize: 20 } });
+    service.getGoalTarget('goal').subscribe();
+    http.expectOne('/api/coaching/study-planning/goals/goal/target').flush({ success: true, data: {} });
+    service.saveGoalTarget('goal', 3, null, 'school').subscribe();
+    const save = http.expectOne('/api/coaching/study-planning/goals/goal/target');
+    expect(save.request.body).toEqual({ expectedVersion: 3, targetUniversityProgramId: null, targetSchoolId: 'school' });
+    save.flush({ success: true, data: {} });
+    http.verify();
+  });
   it('uses availability endpoints and never supplies a student ID', () => {
     TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
     const service = TestBed.inject(CoachingStudyPlanningService);
