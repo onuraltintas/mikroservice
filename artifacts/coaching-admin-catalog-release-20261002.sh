@@ -25,7 +25,7 @@ backup-drill)
   test ! -e coaching.backup
   docker exec postgres pg_dump -U "$db_user" -d coaching_db -Fc > coaching.backup
   chmod 600 coaching.backup
-  docker exec postgres pg_restore --list < coaching.backup > backup-manifest.txt
+  docker exec -i postgres pg_restore --list < coaching.backup > backup-manifest.txt
   docker exec postgres createdb -U "$db_user" "$drill"
   docker exec -i postgres pg_restore -U "$db_user" -d "$drill" --exit-on-error --no-owner < coaching.backup
   # A parse error also fails closed: malformed historical JSON must be reviewed before release.
