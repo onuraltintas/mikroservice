@@ -5,20 +5,27 @@ import { vi } from 'vitest';
 import { AuthService } from '../../../core/auth/auth.service';
 import { CoachingCatalogPage, CoachingCatalogService } from '../../../core/services/coaching-catalog.service';
 import { CoachingCatalogComponent } from './coaching-catalog';
+import { ToasterService } from '../../../core/services/toaster.service';
 
 describe('CoachingCatalogComponent', () => {
   function create(roles = ['SystemAdmin']) {
-    const service = { list: vi.fn(() => of<CoachingCatalogPage>({ items: [], totalCount: 0, pageNumber: 1, pageSize: 25 })) };
+    const service = {
+      list: vi.fn(() => of<CoachingCatalogPage>({ items: [], totalCount: 0, pageNumber: 1, pageSize: 25 })),
+      usage: vi.fn(() => of({ id: 'record', name: 'Math', fingerprint: 'fingerprint', canDelete: true, catalogReferences: 0, planReferences: 0, goalReferences: 0, examReferences: 0 })),
+      delete: vi.fn(() => of({ success: true }))
+    };
+    const toaster = { confirm: vi.fn(async () => true), success: vi.fn(), error: vi.fn() };
     TestBed.configureTestingModule({
       imports: [CoachingCatalogComponent],
       providers: [
         { provide: PLATFORM_ID, useValue: 'browser' },
-        { provide: AuthService, useValue: { userProfile: () => ({ roles }) } },
+        { provide: AuthService, useValue: { userProfile: () => ({ roles }), hasPermission: () => true } },
+        { provide: ToasterService, useValue: toaster },
         { provide: CoachingCatalogService, useValue: service }
       ]
     });
     const fixture = TestBed.createComponent(CoachingCatalogComponent);
-    return { fixture, component: fixture.componentInstance, service };
+    return { fixture, component: fixture.componentInstance, service, toaster };
   }
 
   it('does not fetch shared catalogs for an institution administrator', () => {
@@ -73,5 +80,29 @@ describe('CoachingCatalogComponent', () => {
     component.load();
     expect(service.list).not.toHaveBeenCalled();
     expect(component.error()).toContain('Puan yılı');
+  });
+
+  it('requires a reason and explicit confirmation before permanent deletion', async () => {
+    const { component, service, toaster } = create();
+    component.inspectUsage('record');
+    await component.deleteSelected();
+    expect(service.delete).not.toHaveBeenCalled();
+    component.deleteReason = 'Unused duplicate';
+    component.deleteConfirmation = 'SİL';
+    await component.deleteSelected();
+    expect(toaster.confirm).toHaveBeenCalled();
+    expect(service.delete).toHaveBeenCalledWith('lessons', 'record', { fingerprint: 'fingerprint', reason: 'Unused duplicate', confirmId: 'record' });
+    expect(component.selectedUsage()).toBeNull();
+  });
+
+  it('never offers deletion for a used record', async () => {
+    const { component, service, toaster } = create();
+    service.usage.mockReturnValue(of({ id: 'record', name: 'Math', fingerprint: 'fingerprint', canDelete: false, catalogReferences: 0, planReferences: 1, goalReferences: 0, examReferences: 0 }));
+    component.inspectUsage('record');
+    component.deleteReason = 'Unused duplicate';
+    component.deleteConfirmation = 'SİL';
+    await component.deleteSelected();
+    expect(service.delete).not.toHaveBeenCalled();
+    expect(toaster.confirm).not.toHaveBeenCalled();
   });
 });
