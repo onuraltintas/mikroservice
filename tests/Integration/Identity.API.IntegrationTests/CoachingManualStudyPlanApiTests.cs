@@ -1,0 +1,51 @@
+using Coaching.API.Controllers;
+using Coaching.Application.StudyPlanning;
+using Coaching.Domain.Entities;
+using EduPlatform.Shared.Kernel.Exceptions;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+
+namespace Identity.API.IntegrationTests;
+
+public sealed class CoachingManualStudyPlanApiTests
+{
+    [Fact]
+    public async Task Api_Returns201WithLocationAndRequiresStudent()
+    {
+        var controller = new ManualStudyPlansController(new Stub());
+        var result = Assert.IsType<CreatedAtActionResult>(await controller.Create(new("Plan", [])));
+        Assert.Equal(nameof(ManualStudyPlansController.Get), result.ActionName);
+        Assert.Equal("Student", Assert.Single(typeof(ManualStudyPlansController)
+            .GetCustomAttributes(typeof(AuthorizeAttribute), false).Cast<AuthorizeAttribute>()).Roles);
+    }
+
+    [Theory]
+    [InlineData("Authorization.Forbidden", 403)]
+    [InlineData("StudyPlanning.NotFound", 404)]
+    [InlineData("StudyPlanning.Conflict", 409)]
+    public async Task Api_ReturnsExpectedErrors(string code, int status)
+    {
+        var controller = new ManualStudyPlansController(new Stub { Failure = new BusinessRuleException(code, "Message") });
+        Assert.Equal(status, Assert.IsAssignableFrom<ObjectResult>(await controller.Publish(Guid.NewGuid(), new(0))).StatusCode);
+    }
+
+    [Fact]
+    public async Task Api_InvalidInputReturns400AndMissingPlanReturns404()
+    {
+        Assert.IsType<NotFoundObjectResult>(await new ManualStudyPlansController(new Stub()).Get(Guid.NewGuid()));
+        var controller = new ManualStudyPlansController(new Stub { Failure = new ArgumentException() });
+        Assert.IsType<BadRequestObjectResult>(await controller.Replace(Guid.NewGuid(), new(0, new("Plan", []))));
+    }
+
+    private sealed class Stub : IManualStudyPlanService
+    {
+        public Exception? Failure { get; init; }
+        public Task<ManualStudyPlanView?> GetAsync(Guid id, CancellationToken cancellationToken = default) => Task.FromResult<ManualStudyPlanView?>(null);
+        public Task<ManualStudyPlanView> CreateDraftAsync(ManualStudyPlanInput request, CancellationToken cancellationToken = default) => Result();
+        public Task<ManualStudyPlanView> ReplaceDraftAsync(Guid id, int expectedVersion, ManualStudyPlanInput request, CancellationToken cancellationToken = default) => Result();
+        public Task<ManualStudyPlanView> PublishAsync(Guid id, int expectedVersion, CancellationToken cancellationToken = default) => Result();
+        private Task<ManualStudyPlanView> Result() => Failure is null
+            ? Task.FromResult(new ManualStudyPlanView(Guid.NewGuid(), 0, "Plan", StudyPlanStatus.Draft, []))
+            : Task.FromException<ManualStudyPlanView>(Failure);
+    }
+}
