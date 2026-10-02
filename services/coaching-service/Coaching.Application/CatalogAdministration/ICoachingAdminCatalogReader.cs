@@ -16,6 +16,7 @@ public sealed record AdminCatalogFilter
     public Guid? LessonId { get; init; }
     public Guid? UnitId { get; init; }
     public Guid? ParentId { get; init; }
+    public bool? HasParent { get; init; }
     public string? ProvinceId { get; init; }
     public string? DistrictId { get; init; }
     public string? ScoreType { get; init; }

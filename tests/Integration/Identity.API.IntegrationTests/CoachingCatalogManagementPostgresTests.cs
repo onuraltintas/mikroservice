@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.Data.Common;
 using Coaching.Application.Authorization;
 using Coaching.Application.CatalogAdministration;
 using Coaching.Domain.Entities;
@@ -7,6 +8,8 @@ using Coaching.Infrastructure.Data;
 using EduPlatform.Shared.Kernel.Exceptions;
 using EduPlatform.Shared.Security.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
+using EduPlatform.Shared.Infrastructure.Middleware;
 using Shared.IntegrationTests.Fixtures;
 
 namespace Identity.API.IntegrationTests;
@@ -17,6 +20,68 @@ public sealed class CoachingCatalogManagementPostgresTests(PostgresFixture postg
     private CoachingDbContext Database() => new(new DbContextOptionsBuilder<CoachingDbContext>().UseNpgsql(postgres.ConnectionString).Options);
     private static CoachingCatalogManagementService Service(CoachingDbContext db, bool global = true)
         => new(db, new Scope(global), new TestUser(), new Locations());
+
+    [Theory]
+    [InlineData("create", false)]
+    [InlineData("update", false)]
+    [InlineData("status", false)]
+    [InlineData("create", true)]
+    [InlineData("update", true)]
+    [InlineData("status", true)]
+    public async Task TransientSaveAndLostCommitAcknowledgementKeepExactlyOneWriteAndAudit(string action, bool lostAck)
+    {
+        var saveFailure = new AuditSaveFailure();
+        var commitFailure = new CommitFailure();
+        await using var db = new CoachingDbContext(new DbContextOptionsBuilder<CoachingDbContext>()
+            .UseNpgsql(postgres.ConnectionString, options => options.EnableRetryOnFailure(2, TimeSpan.Zero, null))
+            .AddInterceptors(lostAck ? (IInterceptor)commitFailure : saveFailure).Options);
+        await db.Database.EnsureDeletedAsync();
+        try
+        {
+            await db.Database.EnsureCreatedAsync();
+            var service = Service(db);
+            CatalogEditDocument? initial = null;
+            if (action != "create") initial = await service.CreateAsync(CatalogKind.Lessons, new("Original", "Test kaydı"), default);
+            if (lostAck) commitFailure.Armed = true; else saveFailure.Armed = true;
+            var request = new CatalogSaveRequest("Final", "Test kaydı", Fingerprint: initial?.Fingerprint);
+            var result = action switch
+            {
+                "create" => await service.CreateAsync(CatalogKind.Lessons, request, default),
+                "update" => await service.UpdateAsync(CatalogKind.Lessons, initial!.Data.GetProperty("Id").GetGuid(), request, default),
+                _ => await service.SetActiveAsync(CatalogKind.Lessons, initial!.Data.GetProperty("Id").GetGuid(), new(initial.Fingerprint, true, "Yayın onayı"), default)
+            };
+            Assert.True(lostAck ? commitFailure.Failed : saveFailure.Failed);
+            var stored = Assert.Single(await db.StudyCatalogLessons.AsNoTracking().ToListAsync());
+            Assert.Equal(stored.Id, result.Data.GetProperty("Id").GetGuid());
+            Assert.Equal(action == "status" ? "Original" : "Final", stored.Name);
+            Assert.Equal(action == "status", stored.IsActive);
+            Assert.Equal(action == "create" ? 1 : 2, await db.AdminAuditRecords.CountAsync());
+        }
+        finally { await db.Database.EnsureDeletedAsync(); }
+    }
+
+    [Fact]
+    public async Task VerifiedMappingChangesPreserveOriginalSourceLabelsAndScoreBoundaryIsStable()
+    {
+        await using var db = Database();
+        await db.Database.EnsureDeletedAsync();
+        try
+        {
+            await db.Database.EnsureCreatedAsync();
+            var service = Service(db);
+            var school = await service.CreateAsync(CatalogKind.Schools, new("School", "Test kaydı", ProvinceId: "66", DistrictId: "1"), default);
+            var updated = await service.UpdateAsync(CatalogKind.Schools, school.Data.GetProperty("Id").GetGuid(),
+                new("School", "Eşleştirme düzeltme", Fingerprint: school.Fingerprint, ProvinceId: "06", DistrictId: "2"), default);
+            Assert.Equal("06", updated.Data.GetProperty("ProvinceId").GetString());
+            Assert.Equal("2", updated.Data.GetProperty("DistrictId").GetString());
+            Assert.Equal("Yozgat", updated.Data.GetProperty("City").GetString());
+            Assert.Equal("Merkez", updated.Data.GetProperty("District").GetString());
+            var program = await service.CreateAsync(CatalogKind.UniversityPrograms, new("Program", "Test kaydı", UniversityName: "University", MinimumScore: 999999.9999m), default);
+            var fetched = await service.GetAsync(CatalogKind.UniversityPrograms, program.Data.GetProperty("Id").GetGuid(), default);
+            Assert.Equal(program.Fingerprint, fetched.Fingerprint);
+        }
+        finally { await db.Database.EnsureDeletedAsync(); }
+    }
 
     [Theory]
     [InlineData("400.12345")]
@@ -151,9 +216,30 @@ public sealed class CoachingCatalogManagementPostgresTests(PostgresFixture postg
     }
     private sealed class Locations : ICoachingLocationDirectory
     {
-        public Task<IReadOnlyList<LocationProvince>> GetProvincesAsync(CancellationToken ct) => Task.FromResult<IReadOnlyList<LocationProvince>>([new("66", "Yozgat")]);
-        public Task<IReadOnlyList<LocationDistrict>> GetDistrictsAsync(string provinceId, CancellationToken ct) => Task.FromResult<IReadOnlyList<LocationDistrict>>([new("1", "66", "Merkez")]);
+        public Task<IReadOnlyList<LocationProvince>> GetProvincesAsync(CancellationToken ct) => Task.FromResult<IReadOnlyList<LocationProvince>>([new("66", "Yozgat"), new("06", "Ankara")]);
+        public Task<IReadOnlyList<LocationDistrict>> GetDistrictsAsync(string provinceId, CancellationToken ct) => Task.FromResult<IReadOnlyList<LocationDistrict>>([new("1", "66", "Merkez"), new("2", "06", "Çankaya")]);
         public Task<bool> VerifyPairAsync(string provinceId, string districtId, CancellationToken ct) => Task.FromResult(provinceId == "66" && districtId == "1");
+    }
+    private sealed class AuditSaveFailure : SaveChangesInterceptor
+    {
+        public bool Armed { get; set; }
+        public bool Failed { get; private set; }
+        public override ValueTask<InterceptionResult<int>> SavingChangesAsync(DbContextEventData data, InterceptionResult<int> result, CancellationToken ct = default)
+        {
+            if (Armed && !Failed && data.Context!.ChangeTracker.Entries<AdminAuditRecord>().Any(x => x.State == EntityState.Added))
+            { Failed = true; throw new TimeoutException("Simulated audit save timeout."); }
+            return ValueTask.FromResult(result);
+        }
+    }
+    private sealed class CommitFailure : DbTransactionInterceptor
+    {
+        public bool Armed { get; set; }
+        public bool Failed { get; private set; }
+        public override Task TransactionCommittedAsync(DbTransaction transaction, TransactionEndEventData data, CancellationToken ct = default)
+        {
+            if (Armed && !Failed) { Failed = true; throw new TimeoutException("Simulated lost commit acknowledgement."); }
+            return Task.CompletedTask;
+        }
     }
     private sealed class TestUser : ICurrentUserService
     {

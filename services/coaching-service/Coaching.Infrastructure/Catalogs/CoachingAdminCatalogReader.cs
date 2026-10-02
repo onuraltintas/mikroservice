@@ -43,6 +43,7 @@ public sealed class CoachingAdminCatalogReader(CoachingDbContext db, ICoachingAd
         if (filter.LessonId.HasValue) query = query.Where(x => x.LessonId == filter.LessonId);
         if (filter.UnitId.HasValue) query = query.Where(x => x.UnitId == filter.UnitId);
         if (filter.ParentId.HasValue) query = query.Where(x => x.ParentId == filter.ParentId);
+        if (filter.HasParent.HasValue) query = query.Where(x => (x.ParentId != null) == filter.HasParent.Value);
         if (!string.IsNullOrWhiteSpace(filter.ProvinceId)) query = query.Where(x => x.ProvinceId == filter.ProvinceId.Trim());
         if (!string.IsNullOrWhiteSpace(filter.DistrictId)) query = query.Where(x => x.DistrictId == filter.DistrictId.Trim());
         if (!string.IsNullOrWhiteSpace(filter.ScoreType)) query = query.Where(x => x.ScoreType == filter.ScoreType.Trim());
@@ -75,7 +76,7 @@ public sealed class CoachingAdminCatalogReader(CoachingDbContext db, ICoachingAd
             || filter.ProvinceId?.Length > 20 || filter.DistrictId?.Length > 20
             || (!lessons && (filter.GradeNumber.HasValue || filter.ExamCode is not null))
             || (kind is not (CatalogKind.Units or CatalogKind.Topics) && filter.LessonId.HasValue)
-            || (!topics && (filter.UnitId.HasValue || filter.ParentId.HasValue))
+            || (!topics && (filter.UnitId.HasValue || filter.ParentId.HasValue || filter.HasParent.HasValue))
             || (!schools && (filter.ProvinceId is not null || filter.DistrictId is not null))
             || (filter.DistrictId is not null && string.IsNullOrWhiteSpace(filter.ProvinceId))
             || (!universities && filter.ScoreType is not null)
