@@ -27,6 +27,13 @@ public sealed class CoachingCatalogImportTests(PostgresFixture postgres)
                 ["lgs-programs.json"] = """[{"id":"s1","schoolName":"School","city":"City","town":"District","minScore":350}]"""
             };
             var importer = new CoachingCatalogImporter(db);
+            var review = await importer.ReviewAsync(files, "test-catalog");
+            Assert.Equal(6, review.NewRecords);
+            Assert.Equal(6, review.Counts.Values.Sum());
+            await Assert.ThrowsAsync<ArgumentException>(() => importer.ApproveAsync(files, "test-catalog", review.Fingerprint, "", Guid.NewGuid(), false));
+            var altered = files.ToDictionary(x => x.Key, x => x.Value);
+            altered["lessons.json"] = altered["lessons.json"].Replace("Lesson", "Altered");
+            await Assert.ThrowsAsync<InvalidOperationException>(() => importer.ApproveAsync(altered, "test-catalog", review.Fingerprint, "Test onayı", Guid.NewGuid(), false));
             Assert.Equal(6, await importer.PreviewAsync(files, "test-catalog"));
             Assert.False(await db.StudyCatalogLessons.AnyAsync());
             Assert.False(await db.TargetSchools.AnyAsync());
@@ -49,7 +56,14 @@ public sealed class CoachingCatalogImportTests(PostgresFixture postgres)
                 Console.WriteLine($"Provided catalog records imported and repeated safely: {expected}");
                 return;
             }
-            Assert.Equal(6, await importer.ImportAsync(files, "test-catalog"));
+            Assert.Equal(6, await importer.ApproveAsync(files, "test-catalog", review.Fingerprint, "Test onayı", Guid.NewGuid(), false));
+            Assert.Equal(1, await db.AdminAuditRecords.CountAsync(x => x.Action == "CatalogImport"));
+            await Assert.ThrowsAsync<InvalidOperationException>(() => importer.ApproveAsync(files, "test-catalog", review.Fingerprint, "Yayın onayı", Guid.NewGuid(), true));
+            review = await importer.ReviewAsync(files, "test-catalog");
+            Assert.Equal(6, await importer.ApproveAsync(files, "test-catalog", review.Fingerprint, "Yayın onayı", Guid.NewGuid(), true));
+            Assert.True(await db.TargetSchools.AllAsync(x => x.IsActive));
+            Assert.Equal(1, await db.AdminAuditRecords.CountAsync(x => x.Action == "CatalogPublish"));
+            await new CoachingCatalogPublication(db).SetPublishedAsync("test-catalog", files, false, true);
             Assert.Equal(0, await importer.PreviewAsync(files, "test-catalog"));
             Assert.Equal(2025, (await db.TargetUniversityPrograms.SingleAsync()).ScoreYear);
             var lessonId = (await db.StudyCatalogLessons.SingleAsync()).Id;
