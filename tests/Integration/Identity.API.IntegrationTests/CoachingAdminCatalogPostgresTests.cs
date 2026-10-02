@@ -33,6 +33,20 @@ public sealed class CoachingAdminCatalogPostgresTests(PostgresFixture postgres)
             Assert.Single(page.Items);
             foreach (var kind in Enum.GetValues<CatalogKind>())
                 await reader.ListAsync(kind, new(), default);
+            var grade = await reader.ListAsync(CatalogKind.Lessons, new() { GradeNumber = 9 }, default);
+            Assert.Empty(grade.Items);
+            var exam = await reader.ListAsync(CatalogKind.Lessons, new() { ExamCode = "TYT" }, default);
+            Assert.Empty(exam.Items);
+            db.TargetUniversityPrograms.Add(TargetUniversityProgram.Create("manual", "u1", "Test University", "Engineering", "12345", "SAY", 400, 2025));
+            var school = TargetSchool.Create("manual", "s1", "School", "Ankara", "Çankaya", 450, 2025);
+            school.SetVerifiedLocation("06", "123");
+            db.TargetSchools.Add(school);
+            await db.SaveChangesAsync();
+            Assert.Single((await reader.ListAsync(CatalogKind.UniversityPrograms, new() { Search = "Test University", ScoreType = "SAY", ScoreYear = 2025 }, default)).Items);
+            Assert.Single((await reader.ListAsync(CatalogKind.UniversityPrograms, new() { Search = "12345" }, default)).Items);
+            Assert.Empty((await reader.ListAsync(CatalogKind.UniversityPrograms, new() { ScoreType = "EA" }, default)).Items);
+            Assert.Single((await reader.ListAsync(CatalogKind.Schools, new() { ProvinceId = "06", DistrictId = "123" }, default)).Items);
+            Assert.Empty((await reader.ListAsync(CatalogKind.Schools, new() { ProvinceId = "34" }, default)).Items);
         }
         finally { await db.Database.EnsureDeletedAsync(); }
     }
