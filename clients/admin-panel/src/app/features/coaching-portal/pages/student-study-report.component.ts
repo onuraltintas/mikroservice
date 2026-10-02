@@ -15,7 +15,9 @@ interface StudyReport {
   lessonResults?: { source: string; examType: string; lessonName?: string | null; topicName?: string | null;
     questionCount: number; correct: number; wrong: number; empty: number }[];
   goals?: { goalId: string; title: string; source: string; recordedProgress: number; isCompleted: boolean;
-    targetDate?: string | null; targetScore?: number | null; targetExamType?: string | null; targetSubject?: string | null }[];
+    targetDate?: string | null; targetScore?: number | null; targetExamType?: string | null; targetSubject?: string | null;
+    targetMaxScore?: number | null; scoreAssessment?: { reason: string; comparisons: { resultId: string; examId: string;
+      source: string; examDate: string; score: number; targetAttainmentPercentage: number; remainingScore: number; targetReached: boolean }[] } }[];
 }
 
 @Component({ selector: 'app-student-study-report', standalone: true, imports: [CommonModule, FormsModule],
@@ -67,6 +69,16 @@ interface StudyReport {
             <p *ngIf="goal.targetDate">Hedef tarihi: {{ goal.targetDate | date:'dd.MM.yyyy':'UTC' }}</p>
             <p *ngIf="goal.targetScore !== null && goal.targetScore !== undefined">Hedef puanı: {{ goal.targetScore }}<span *ngIf="goal.targetExamType"> · {{ goal.targetExamType }}</span></p>
             <p *ngIf="goal.targetSubject">Hedef ders: {{ goal.targetSubject }}</p>
+            <div class="mt-3 rounded-lg bg-indigo-50 p-3 dark:bg-indigo-950/30" *ngIf="goal.scoreAssessment as assessment">
+              <h5 class="font-semibold">Otomatik puan karşılaştırması</h5>
+              <p class="mt-1 text-xs text-slate-500">Dönemdeki son uyumlu sonuç / hedef puanı. Öğrenme artışı veya yerleşme olasılığı değildir; hedefi otomatik tamamlamaz.</p>
+              <p *ngIf="!assessment.comparisons.length" class="mt-2">{{ scoreReason(assessment.reason) }}</p>
+              <div *ngFor="let comparison of assessment.comparisons" class="mt-3">
+                <p>{{ sourceLabel(comparison.source) }} · {{ comparison.examDate | date:'dd.MM.yyyy':'UTC' }} · Sonuç: {{ comparison.score }} / {{ goal.targetMaxScore }}</p>
+                <p class="mt-1 font-semibold">Puan hedefine erişim: %{{ comparison.targetAttainmentPercentage }} · Kalan puan: {{ comparison.remainingScore }}</p>
+                <p *ngIf="comparison.targetReached" class="mt-1">Bu sonuçta puan hedefi karşılandı.</p>
+              </div>
+            </div>
           </li>
         </ul>
       </div>
@@ -85,6 +97,11 @@ export class StudentStudyReportComponent {
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
   }
   sourceLabel(source: string) { return source === 'StudentReported' ? 'Öğrenci beyanı' : source === 'TeacherRecorded' ? 'Öğretmen kaydı' : 'Kaynak belirtilmemiş'; }
+  scoreReason(reason: string) {
+    return reason === 'NoMatchingResults' ? 'Seçilen dönemde aynı tür ve puan ölçeğinde uyumlu sınav sonucu yok.'
+      : reason === 'SubjectTargetNotComparable' ? 'Ders hedefi toplam sınav puanıyla karşılaştırılamaz.'
+      : 'Otomatik karşılaştırma için hedef puanı, sınav türü ve puan ölçeğini birlikte belirleyin.';
+  }
   load() {
     if (this.busy()) return;
     this.report.set(null); this.error.set(null);

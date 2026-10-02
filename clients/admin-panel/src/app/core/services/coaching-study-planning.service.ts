@@ -29,7 +29,7 @@ interface ApiResult<T> { success: boolean; data: T }
 export interface SchoolTarget { id: string; name: string; city: string; district: string; minimumScore: number | null; scoreYear: number | null }
 export interface UniversityTarget { id: string; name: string; universityName: string; programCode: string | null; scoreType: string | null; minimumScore: number | null; scoreYear: number | null }
 export interface TargetPage<T> { items: T[]; totalCount: number; pageNumber: number; pageSize: number }
-export interface GoalTarget { goalId: string; version: number; targetSchoolId: string | null; targetUniversityProgramId: string | null; canEdit: boolean; catalogTarget?: { name: string; detail: string; isActive: boolean } | null }
+export interface GoalTarget { goalId: string; version: number; targetSchoolId: string | null; targetUniversityProgramId: string | null; canEdit: boolean; catalogTarget?: { name: string; detail: string; isActive: boolean } | null; scoreTarget?: { targetScore: number | null; maxScore: number | null; examType: string | null; subject: string | null } | null }
 export interface StudyTopic { id: string; lessonId?: string; name: string; lessonName: string; unitName: string; gradeNumber: number | null; examCode: string | null; estimatedMinutes: number | null }
 export interface AutomaticStudyRequest { startDate: string; days: number; expectedAvailabilityVersion: number; topics: { topicId: string; requiredMinutes: number | null }[] }
 export interface AutomaticStudyDraftRequest { title: string; preview: AutomaticStudyRequest; expectedActiveRevisionId: string | null; expectedActiveRevisionVersion: number | null }
@@ -75,6 +75,10 @@ export class CoachingStudyPlanningService {
   saveGoalTarget(goalId: string, expectedVersion: number, targetUniversityProgramId: string | null, targetSchoolId: string | null) {
     return this.http.put<ApiResult<GoalTarget>>(`${environment.apiUrl}/coaching/study-planning/goals/${encodeURIComponent(goalId)}/target`,
       { expectedVersion, targetUniversityProgramId, targetSchoolId }).pipe(map(result => result.data));
+  }
+  saveGoalScoreTarget(goalId: string, expectedVersion: number, targetScore: number | null, maxScore: number | null, examType: string | null) {
+    return this.http.put<ApiResult<GoalTarget>>(`${environment.apiUrl}/coaching/study-planning/goals/${encodeURIComponent(goalId)}/target/score`,
+      { expectedVersion, targetScore, maxScore, examType }).pipe(map(result => result.data));
   }
 
   getAvailability() {

@@ -25,6 +25,10 @@ export class StudentGoalTargetComponent {
   kind: 'school' | 'program' = 'school';
   query = ''; city = ''; district = ''; scoreType = '';
   page = 1; total = 0; searched = false;
+  score: number | null = null;
+  maxScore: number | null = null;
+  examType = '';
+  readonly examTypes = ['Mock', 'Weekly', 'Monthly', 'LGS', 'YKS', 'MidTerm', 'Final', 'Quiz'];
 
   open() {
     if (this.busy() || this.saving()) return;
@@ -32,7 +36,7 @@ export class StudentGoalTargetComponent {
     this.stale.set(false); this.error.set(''); this.success.set(''); this.searched = false;
     this.busy.set(true);
     this.service.getGoalTarget(this.goalId).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.busy.set(false))).subscribe({
-      next: value => this.target.set(value),
+      next: value => { this.target.set(value); this.loadScore(value); },
       error: () => this.error.set('Hedef bilgisi yüklenemedi. Yeniden yükleyebilirsiniz.')
     });
   }
@@ -56,6 +60,31 @@ export class StudentGoalTargetComponent {
     this.save(this.kind === 'program' ? id : null, this.kind === 'school' ? id : null);
   }
   clear() { this.save(null, null); }
+  private loadScore(value: GoalTarget) {
+    this.score = value.scoreTarget?.targetScore ?? null;
+    this.maxScore = value.scoreTarget?.maxScore ?? null;
+    this.examType = value.scoreTarget?.examType ?? '';
+  }
+  saveScore() {
+    if (this.score === null || this.maxScore === null || !Number.isFinite(this.score) || !Number.isFinite(this.maxScore)
+      || this.score <= 0 || this.maxScore <= 0 || this.maxScore > 999.99 || this.score > this.maxScore
+      || !this.examTypes.includes(this.examType)) {
+      this.error.set('Sınav türünü ve geçerli hedef puanı / puan ölçeğini birlikte girin. Hedef puanı ölçeği aşamaz.'); return;
+    }
+    this.writeScore(this.score, this.maxScore, this.examType);
+  }
+  clearScore() { this.writeScore(null, null, null); }
+  private writeScore(score: number | null, maxScore: number | null, examType: string | null) {
+    const target = this.target();
+    if (!target?.canEdit || this.busy() || this.saving() || this.stale()) return;
+    this.saving.set(true); this.error.set(''); this.success.set('');
+    this.service.saveGoalScoreTarget(this.goalId, target.version, score, maxScore, examType)
+      .pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.saving.set(false))).subscribe({
+        next: value => { this.target.set(value); this.loadScore(value); this.success.set(score === null ? 'Puan hedefi kaldırıldı.' : 'Puan hedefi kaydedildi. Raporu yenileyerek hesabı görebilirsiniz.'); },
+        error: err => { this.stale.set(err.status === 409); this.error.set(err.status === 409
+          ? 'Hedef değişti. Güncel bilgileri yeniden yükleyin.' : 'Puan hedefi kaydedilemedi. Bilgileri kontrol edip yeniden deneyin.'); }
+      });
+  }
   private save(programId: string | null, schoolId: string | null) {
     const target = this.target();
     if (!target?.canEdit || this.busy() || this.saving() || this.stale()) return;
