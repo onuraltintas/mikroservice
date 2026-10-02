@@ -51,4 +51,11 @@ test('student creates, publishes, completes a plan and enters a self-reported ex
   const data = (await report.json()).data;
   expect(data.completedTasks).toBeGreaterThan(0); expect(data.actualMinutes).toBeGreaterThanOrEqual(25);
   expect(data.examGroups.some(x => x.source === 'StudentReported' && x.averagePercentage === 80)).toBeTruthy();
+  await page.goto('/coaching-portal/progress');
+  const studyReport = page.locator('app-student-study-report');
+  await studyReport.getByLabel('Başlangıç', { exact: true }).fill('2026-10-02');
+  await studyReport.getByLabel('Bitiş', { exact: true }).fill('2026-10-02');
+  await studyReport.getByRole('button', { name: 'Raporu göster', exact: true }).click();
+  await expect(studyReport.getByText('Tamamlanan çalışma', { exact: true })).toBeVisible();
+  await expect(studyReport.getByText(/Ortalama %80/)).toBeVisible();
 });
