@@ -227,6 +227,10 @@ public class ExamResult : Entity
 
     public void SetAnswerStatistics(int correct, int wrong, int empty)
     {
+        ArgumentOutOfRangeException.ThrowIfNegative(correct);
+        ArgumentOutOfRangeException.ThrowIfNegative(wrong);
+        ArgumentOutOfRangeException.ThrowIfNegative(empty);
+
         CorrectAnswers = correct;
         WrongAnswers = wrong;
         EmptyAnswers = empty;
