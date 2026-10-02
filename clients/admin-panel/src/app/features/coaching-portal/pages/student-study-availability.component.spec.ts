@@ -34,6 +34,7 @@ describe('StudentStudyAvailabilityComponent', () => {
   it('rejects overlaps but accepts adjacent ranges', () => {
     const { component, service } = setup();
     component.rows.push({ day: 'Monday', start: '08:30', end: '10:00', endOfDay: false });
+    expect(component.weeklyMinutes()).toBe(120);
     component.save();
     expect(service.saveAvailability).not.toHaveBeenCalled();
     expect(component.error()).toContain('çakış');
