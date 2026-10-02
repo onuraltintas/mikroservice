@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.AspNetCore.DataProtection;
+using Notification.Application.Commands.SubmitSupportRequest;
 using Notification.Domain.Entities;
 using Notification.Infrastructure.Persistence;
 using Notification.Infrastructure.Services;
@@ -97,6 +98,11 @@ public sealed class NotificationErasedRecipientTests(PostgresFixture postgres)
             await new EmailDeliveryQueue(db, new EphemeralDataProtectionProvider()).QueueAsync(
                 Guid.NewGuid(), "LateEvent", "test@example.com", "Late", "Late", subject);
             Assert.False(await db.EmailDeliveries.AnyAsync(x => x.SubjectUserId == subject));
+            await using var supportDb = new NotificationDbContext(new DbContextOptionsBuilder<NotificationDbContext>().UseNpgsql(postgres.ConnectionString).Options);
+            var support = await new SubmitSupportRequestHandler(supportDb, new EmailDeliveryQueue(supportDb, new EphemeralDataProtectionProvider()))
+                .Handle(new("Test", "User", "test@example.com", "Late support", "Late support message", "late-support-idempotency", subject), CancellationToken.None);
+            Assert.False(support.IsSuccess);
+            Assert.False(await db.SupportRequests.AnyAsync(x => x.SubjectUserId == subject));
             Assert.Null(await NotificationRecipientWrites.PersistAsync(db, NotificationItem.Create(subject, "Late", "Late", "StudyPlanPublished")));
             Assert.NotNull(await NotificationRecipientWrites.PersistAsync(db, NotificationItem.Create(other, "Keep", "Keep", "Info")));
             Assert.Equal(0, await db.Notifications.CountAsync(x => x.UserId == subject));
