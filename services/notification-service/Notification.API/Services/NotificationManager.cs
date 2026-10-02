@@ -37,17 +37,21 @@ public class NotificationManager : INotificationService
                 sourceMessageId));
         if (notification is null) return;
 
-        // 2. Send via SignalR
-        // We assume userId matches the JWT 'sub' claim or whatever UserIdentifier is mapped to.
-        await _hubContext.Clients.User(userId.ToString()).SendAsync("ReceiveNotification", new 
+        // Recheck under the same recipient lock: erasure may have committed after persistence.
+        await NotificationRecipientWrites.LockedAsync(_dbContext, userId, async () =>
         {
-            Id = notification.Id,
-            Title = title,
-            Message = message,
-            Type = type,
-            CreatedAt = notification.CreatedAt,
-            IsRead = notification.IsRead,
-            RelatedEntityId = notification.RelatedEntityId
-        });
+            if (await _dbContext.ErasedRecipients.AnyAsync(x => x.UserId == userId)) return false;
+            await _hubContext.Clients.User(userId.ToString()).SendAsync("ReceiveNotification", new
+            {
+                Id = notification.Id,
+                Title = notification.Title,
+                Message = notification.Message,
+                Type = notification.Type,
+                CreatedAt = notification.CreatedAt,
+                IsRead = notification.IsRead,
+                RelatedEntityId = notification.RelatedEntityId
+            });
+            return true;
+        }, CancellationToken.None);
     }
 }
