@@ -23,7 +23,9 @@ public sealed class CoachingStudyPlanOutboxTests(PostgresFixture postgres)
     {
         var services = new ServiceCollection(); services.AddLogging();
         var fault = new PublicationFault();
-        services.AddDbContext<CoachingDbContext>(o => o.UseNpgsql(postgres.ConnectionString).AddInterceptors(fault));
+        var acknowledgement = new CommitAcknowledgementFault();
+        services.AddDbContext<CoachingDbContext>(o => o.UseNpgsql(postgres.ConnectionString, x => x.EnableRetryOnFailure())
+            .AddInterceptors(fault, acknowledgement));
         services.AddMassTransit(x => {
             x.AddEntityFrameworkOutbox<CoachingDbContext>(o => { o.UsePostgres(); o.UseBusOutbox(); });
             x.UsingInMemory((context, cfg) => cfg.ConfigureEndpoints(context));
@@ -44,6 +46,7 @@ public sealed class CoachingStudyPlanOutboxTests(PostgresFixture postgres)
             Assert.Equal(0, await db.Set<OutboxMessage>().AsNoTracking().CountAsync());
             Assert.Equal(StudyPlanStatus.Draft, (await service.GetAsync(draft.Id))!.Status);
             fault.Enabled = false;
+            acknowledgement.Enabled = true;
             var active = await service.PublishAsync(draft.Id, draft.Version);
             Assert.Equal(StudyPlanStatus.Active, active.Status);
             var message = Assert.Single(await db.Set<OutboxMessage>().AsNoTracking().ToListAsync());
@@ -51,6 +54,9 @@ public sealed class CoachingStudyPlanOutboxTests(PostgresFixture postgres)
             Assert.Contains(active.Id.ToString(), message.Body);
             await Assert.ThrowsAsync<EduPlatform.Shared.Kernel.Exceptions.BusinessRuleException>(() => service.PublishAsync(draft.Id, draft.Version));
             Assert.Equal(1, await db.Set<OutboxMessage>().CountAsync());
+            var next = await service.CreateDraftAsync(new("Next plan", [new(new(2026, 10, 3), "Next read", 30, null, false)]));
+            await service.PublishAsync(next.Id, next.Version);
+            Assert.Equal(2, await db.Set<OutboxMessage>().CountAsync());
         }
         finally { await db.Database.EnsureDeletedAsync(); }
     }
@@ -69,6 +75,20 @@ public sealed class CoachingStudyPlanOutboxTests(PostgresFixture postgres)
             if (Enabled && eventData.Context!.ChangeTracker.Entries<StudyPlanRevision>().Any(x => x.Entity.IsActive))
                 throw new InvalidOperationException("Simulated publication failure.");
             return ValueTask.FromResult(result);
+        }
+    }
+    private sealed class CommitAcknowledgementFault : DbTransactionInterceptor
+    {
+        public bool Enabled;
+        public override Task TransactionCommittedAsync(System.Data.Common.DbTransaction transaction,
+            TransactionEndEventData eventData, CancellationToken cancellationToken = default)
+        {
+            if (Enabled)
+            {
+                Enabled = false;
+                throw new Npgsql.NpgsqlException("Simulated lost COMMIT acknowledgement.", new IOException("Connection interrupted."));
+            }
+            return Task.CompletedTask;
         }
     }
 }
