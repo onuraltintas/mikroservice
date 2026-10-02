@@ -141,6 +141,7 @@ public static class DependencyInjection
         services.AddScoped<Coaching.Application.StudyPlanning.IAutomaticStudyPlanPreviewService, Coaching.Infrastructure.StudyPlanning.CoachingAutomaticStudyPlanPreviewService>();
         services.AddScoped<Coaching.Application.StudyPlanning.IStudyTopicSearchService, Coaching.Infrastructure.StudyPlanning.CoachingTopicSearchService>();
         services.AddScoped<Coaching.Application.StudyPlanning.IStudentExamService, Coaching.Infrastructure.StudyPlanning.CoachingStudentExamService>();
+        services.AddScoped<Coaching.Application.StudyPlanning.IStudentStudyReportService, Coaching.Infrastructure.StudyPlanning.CoachingStudentStudyReportService>();
         services.AddScoped<Coaching.Application.StudyPlanning.IAutomaticStudyPlanDraftService>(sp =>
             (Coaching.Infrastructure.StudyPlanning.CoachingManualStudyPlanService)sp.GetRequiredService<Coaching.Application.StudyPlanning.IManualStudyPlanService>());
         services.AddScoped<Coaching.Application.StudyPlanning.IManualStudyPlanService, Coaching.Infrastructure.StudyPlanning.CoachingManualStudyPlanService>();
