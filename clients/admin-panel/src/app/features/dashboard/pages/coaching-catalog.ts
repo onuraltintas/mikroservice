@@ -8,6 +8,7 @@ import { ToasterService } from '../../../core/services/toaster.service';
 import { ADMIN_PERMISSIONS } from '../../../core/auth/permissions';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CoachingCatalogEditorComponent } from './coaching-catalog-editor';
+import { DistrictOption, LocationService, ProvinceOption } from '../../../core/services/location.service';
 
 @Component({
   selector: 'app-coaching-catalog',
@@ -43,6 +44,10 @@ import { CoachingCatalogEditorComponent } from './coaching-catalog-editor';
         }
         @if (kind === 'universityPrograms') {
           <div><label for="catalog-score" class="block text-sm font-medium">Puan türü</label><input id="catalog-score" name="score" [(ngModel)]="scoreType" maxlength="30" class="mt-1 w-full rounded-lg border p-2 dark:bg-gray-800" /></div>
+        }
+        @if (kind === 'schools') {
+          <div><label for="catalog-province" class="block text-sm font-medium">Doğrulanmış şehir</label><select id="catalog-province" name="province" [(ngModel)]="provinceId" (ngModelChange)="provinceChanged()" [disabled]="editorOpen() || deleting()" class="mt-1 w-full rounded-lg border p-2 dark:bg-gray-800"><option value="">Tümü</option>@for (row of provinces(); track row.id) { <option [value]="row.id">{{ row.name }}</option> }</select></div>
+          <div><label for="catalog-district" class="block text-sm font-medium">Doğrulanmış ilçe</label><select id="catalog-district" name="district" [(ngModel)]="districtId" [disabled]="!provinceId || editorOpen() || deleting()" class="mt-1 w-full rounded-lg border p-2 dark:bg-gray-800"><option value="">Tümü</option>@for (row of districts(); track row.id) { <option [value]="row.id">{{ row.name }}</option> }</select><p class="text-xs text-gray-500">Bu filtreler yalnız doğrulanmış konum eşleştirmelerini kapsar.</p></div>
         }
         <div class="flex items-end"><button type="submit" [disabled]="editorOpen() || deleting()" class="rounded-lg bg-indigo-600 px-4 py-2 font-medium text-white disabled:opacity-40">Filtrele</button></div>
       </form>
@@ -96,6 +101,12 @@ import { CoachingCatalogEditorComponent } from './coaching-catalog-editor';
 })
 export class CoachingCatalogComponent implements OnInit {
   private readonly service = inject(CoachingCatalogService);
+  private readonly locations = inject(LocationService);
+  private locationRequest?: Subscription;
+  readonly provinces = signal<ProvinceOption[]>([]);
+  readonly districts = signal<DistrictOption[]>([]);
+  provinceId = '';
+  districtId = '';
   private readonly auth = inject(AuthService);
   private readonly platformId = inject(PLATFORM_ID);
   private readonly toaster = inject(ToasterService);
@@ -173,11 +184,20 @@ export class CoachingCatalogComponent implements OnInit {
   changeKind(kind: CoachingCatalogKind) {
     if (this.editorOpen() || this.deleting()) return;
     this.kind = kind;
+    this.locationRequest?.unsubscribe();
+    this.provinceId = ''; this.districtId = ''; this.districts.set([]);
+    if (kind === 'schools' && this.auth.userProfile()?.roles?.includes('SystemAdmin')) this.locations.getProvinces().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({ next: rows => this.provinces.set(rows), error: () => this.toaster.error('Şehir seçenekleri alınamadı. Kataloğu yeniden açın.') });
     this.gradeNumber = null;
     this.examCode = '';
     this.scoreYear = null;
     this.scoreType = '';
     this.load();
+  }
+  provinceChanged() {
+    this.locationRequest?.unsubscribe(); this.districtId = ''; this.districts.set([]);
+    if (!this.provinceId || !this.auth.userProfile()?.roles?.includes('SystemAdmin')) return;
+    const province = this.provinceId;
+    this.locationRequest = this.locations.getDistricts(province).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({ next: rows => this.districts.set(rows.filter(row => row.provinceId === province)), error: () => this.toaster.error('İlçe seçenekleri alınamadı. Şehri yeniden seçin.') });
   }
   load(page = 1) {
     if (this.editorOpen() || this.deleting()) return;
@@ -207,6 +227,7 @@ export class CoachingCatalogComponent implements OnInit {
     if (this.status) filter.isActive = this.status === 'active';
     if (this.kind === 'lessons') { filter.gradeNumber = this.gradeNumber ?? undefined; filter.examCode = this.examCode; }
     if (this.kind === 'schools' || this.kind === 'universityPrograms') filter.scoreYear = this.scoreYear ?? undefined;
+    if (this.kind === 'schools') { filter.provinceId = this.provinceId || undefined; filter.districtId = this.districtId || undefined; }
     if (this.kind === 'universityPrograms') filter.scoreType = this.scoreType.trim();
     this.request = this.service.list(this.kind, filter).subscribe({
       next: result => { this.items.set(result.items); this.totalCount.set(result.totalCount); this.loading.set(false); },
