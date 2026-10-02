@@ -43,6 +43,12 @@ public sealed class StudyPlanRevision : AggregateRoot
         IsActive = false;
         UpdatedAt = DateTime.UtcNow;
     }
+
+    public void RecordTaskChange()
+    {
+        if (Status != StudyPlanStatus.Active) throw new InvalidOperationException("Only active plan tasks can be changed.");
+        UpdatedAt = DateTime.UtcNow;
+    }
 }
 
 public sealed class StudyPlanTask : AggregateRoot
@@ -83,5 +89,13 @@ public sealed class StudyPlanTask : AggregateRoot
         IsCompleted = true;
         CompletedAt = DateTime.UtcNow;
         UpdatedAt = CompletedAt;
+    }
+
+    public void Reschedule(DateOnly plannedDate)
+    {
+        if (IsCompleted) throw new InvalidOperationException("Completed work cannot be rescheduled.");
+        if (plannedDate == default) throw new ArgumentException("Valid task date is required.");
+        PlannedDate = plannedDate;
+        UpdatedAt = DateTime.UtcNow;
     }
 }

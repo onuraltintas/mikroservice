@@ -1,5 +1,6 @@
 using Asp.Versioning;
 using Coaching.Application.StudyPlanning;
+using Coaching.Domain.Entities;
 using EduPlatform.Shared.Kernel.Exceptions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -17,6 +18,12 @@ namespace Coaching.API.Controllers;
 [ProducesResponseType(StatusCodes.Status409Conflict)]
 public sealed class ManualStudyPlansController(IManualStudyPlanService plans) : ControllerBase
 {
+    [HttpGet]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public Task<IActionResult> List([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 20,
+        [FromQuery] StudyPlanStatus? status = null, CancellationToken cancellationToken = default)
+        => Respond(async () => Ok(new { success = true, data = await plans.ListAsync(pageNumber, pageSize, status, cancellationToken) }));
+
     [HttpGet("{id:guid}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public Task<IActionResult> Get(Guid id, CancellationToken cancellationToken = default)
@@ -51,6 +58,20 @@ public sealed class ManualStudyPlansController(IManualStudyPlanService plans) : 
     [ProducesResponseType(StatusCodes.Status200OK)]
     public Task<IActionResult> Publish(Guid id, [FromBody] StudyPlanPublishInput request, CancellationToken cancellationToken = default)
         => Respond(async () => Ok(new { success = true, data = await plans.PublishAsync(id, request.ExpectedVersion, cancellationToken) }));
+
+    [HttpPut("{id:guid}/tasks/{taskId:guid}/completion")]
+    [RequestSizeLimit(1024)]
+    [EnableRateLimiting("study-planning-write")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public Task<IActionResult> Complete(Guid id, Guid taskId, [FromBody] StudyTaskCompleteInput request, CancellationToken cancellationToken = default)
+        => Respond(async () => Ok(new { success = true, data = await plans.CompleteTaskAsync(id, taskId, request.ExpectedVersion, request.ActualMinutes, cancellationToken) }));
+
+    [HttpPut("{id:guid}/tasks/{taskId:guid}/schedule")]
+    [RequestSizeLimit(1024)]
+    [EnableRateLimiting("study-planning-write")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public Task<IActionResult> Reschedule(Guid id, Guid taskId, [FromBody] StudyTaskRescheduleInput request, CancellationToken cancellationToken = default)
+        => Respond(async () => Ok(new { success = true, data = await plans.RescheduleTaskAsync(id, taskId, request.ExpectedVersion, request.PlannedDate, cancellationToken) }));
 
     private async Task<IActionResult> Respond(Func<Task<IActionResult>> action)
     {

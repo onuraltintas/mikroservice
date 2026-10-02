@@ -10,6 +10,20 @@ namespace Coaching.Infrastructure.StudyPlanning;
 
 public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachingAccessPolicy access) : IManualStudyPlanService
 {
+    public Task<StudyPlanPage> ListAsync(int pageNumber, int pageSize, StudyPlanStatus? status, CancellationToken cancellationToken = default)
+        => LockedAsync(async student =>
+        {
+            if (pageNumber is < 1 or > 10000 || pageSize is < 1 or > 50 || (status.HasValue && !Enum.IsDefined(status.Value)))
+                throw new ArgumentException("Geçerli sayfa ve plan durumu seçin.");
+            var query = db.StudyPlanRevisions.AsNoTracking().Where(x => x.StudentId == student);
+            if (status.HasValue) query = query.Where(x => x.Status == status.Value);
+            var total = await query.CountAsync(cancellationToken);
+            var items = await query.OrderByDescending(x => x.CreatedAt).ThenByDescending(x => x.Id)
+                .Skip((pageNumber - 1) * pageSize).Take(pageSize)
+                .Select(x => new StudyPlanSummary(x.Id, x.Version, x.Title, x.Status)).ToListAsync(cancellationToken);
+            return new StudyPlanPage(items, total, pageNumber, pageSize);
+        }, cancellationToken);
+
     public Task<ManualStudyPlanView?> GetAsync(Guid id, CancellationToken cancellationToken = default)
         => LockedAsync<ManualStudyPlanView?>(async student =>
         {
@@ -76,6 +90,48 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
         return revision;
     }
 
+    public Task<ManualStudyPlanView> CompleteTaskAsync(Guid id, Guid taskId, int expectedVersion, int actualMinutes, CancellationToken cancellationToken = default)
+        => LockedAsync(async student =>
+        {
+            var revision = await OwnedAsync(id, student, expectedVersion, cancellationToken);
+            var task = await ActiveTaskAsync(revision, taskId, cancellationToken);
+            if (actualMinutes is < 1 or > 1440) throw new ArgumentException("Gerçek çalışma süresi 1–1440 dakika olmalıdır.");
+            if (task.IsCompleted)
+            {
+                if (task.ActualMinutes != actualMinutes) throw Conflict("Tamamlanan çalışmanın süresi değiştirilemez.");
+                return await ViewAsync(revision, cancellationToken);
+            }
+            task.Complete(actualMinutes);
+            revision.RecordTaskChange();
+            await db.SaveChangesAsync(cancellationToken);
+            return await ViewAsync(revision, cancellationToken);
+        }, cancellationToken);
+
+    public Task<ManualStudyPlanView> RescheduleTaskAsync(Guid id, Guid taskId, int expectedVersion, DateOnly plannedDate, CancellationToken cancellationToken = default)
+        => LockedAsync(async student =>
+        {
+            var revision = await OwnedAsync(id, student, expectedVersion, cancellationToken);
+            var task = await ActiveTaskAsync(revision, taskId, cancellationToken);
+            if (task.IsCompleted) throw Conflict("Tamamlanan çalışma başka güne taşınamaz.");
+            if (plannedDate == default) throw new ArgumentException("Geçerli çalışma tarihi seçin.");
+            if (task.PlannedDate == plannedDate) return await ViewAsync(revision, cancellationToken);
+            var dailyMinutes = await db.StudyPlanTasks.Where(x => x.RevisionId == id && x.StudentId == student
+                && x.Id != taskId && x.PlannedDate == plannedDate).SumAsync(x => x.PlannedMinutes, cancellationToken);
+            if (dailyMinutes + task.PlannedMinutes > 1440) throw new ArgumentException("Bir güne 24 saatten fazla çalışma eklenemez.");
+            task.Reschedule(plannedDate);
+            revision.RecordTaskChange();
+            await db.SaveChangesAsync(cancellationToken);
+            return await ViewAsync(revision, cancellationToken);
+        }, cancellationToken);
+
+    private async Task<StudyPlanTask> ActiveTaskAsync(StudyPlanRevision revision, Guid taskId, CancellationToken cancellationToken)
+    {
+        if (revision.Status != StudyPlanStatus.Active) throw Conflict("Yalnız aktif planın çalışmaları güncellenebilir.");
+        return await db.StudyPlanTasks.SingleOrDefaultAsync(x => x.Id == taskId && x.RevisionId == revision.Id
+            && x.StudentId == revision.StudentId, cancellationToken)
+            ?? throw new BusinessRuleException("StudyPlanning.NotFound", "Çalışma bulunamadı.");
+    }
+
     private async Task<StudyPlanTask[]> ValidateTasksAsync(StudyPlanRevision revision, ManualStudyPlanInput request, CancellationToken cancellationToken)
     {
         if (request.Tasks is null || request.Tasks.Count > 500 || request.Tasks.Any(x => x is null))
@@ -93,7 +149,7 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
     {
         var tasks = await db.StudyPlanTasks.AsNoTracking().Where(x => x.RevisionId == revision.Id && x.StudentId == revision.StudentId)
             .OrderBy(x => x.PlannedDate).ThenBy(x => x.Id)
-            .Select(x => new ManualStudyTaskView(x.Id, x.PlannedDate, x.Title, x.PlannedMinutes, x.TopicId, x.IsPinned, x.IsCompleted, x.ActualMinutes))
+            .Select(x => new ManualStudyTaskView(x.Id, x.PlannedDate, x.Title, x.PlannedMinutes, x.TopicId, x.IsPinned, x.IsCompleted, x.ActualMinutes, x.CompletedAt))
             .ToListAsync(cancellationToken);
         return new(revision.Id, revision.Version, revision.Title, revision.Status, tasks);
     }
