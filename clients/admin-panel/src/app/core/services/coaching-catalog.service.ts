@@ -46,6 +46,7 @@ export interface CoachingCatalogFilter {
   lessonId?: string;
   unitId?: string;
   parentId?: string;
+  hasParent?: boolean;
   provinceId?: string;
   districtId?: string;
 }

@@ -169,7 +169,7 @@ export class CoachingCatalogEditorComponent implements OnInit {
   searchRelation(relation: RelationKind, page = 1) {
     this.lookupRequests[relation]?.unsubscribe();
     if (page < 1 || (relation !== 'lessons' && !this.form.lessonId) || (relation === 'topics' && !this.form.unitId)) return;
-    this.lookupRequests[relation] = this.service.list(relation, { pageNumber: page, pageSize: 25, search: this.lookupSearch[relation], ...(relation !== 'lessons' ? { lessonId: this.form.lessonId! } : {}), ...(relation === 'topics' ? { unitId: this.form.unitId! } : {}) }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({ next: result => { this.lookupPages[relation] = page; this.lookupTotals[relation] = result.totalCount; this.options.update(all => ({ ...all, [relation]: relation === 'topics' ? result.items.filter(x => !x.parentId) : result.items })); }, error: () => this.error.set('Bağlantı seçenekleri yüklenemedi. Yeniden arayın.') });
+    this.lookupRequests[relation] = this.service.list(relation, { pageNumber: page, pageSize: 25, search: this.lookupSearch[relation], ...(relation !== 'lessons' ? { lessonId: this.form.lessonId! } : {}), ...(relation === 'topics' ? { unitId: this.form.unitId!, hasParent: false } : {}) }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({ next: result => { this.lookupPages[relation] = page; this.lookupTotals[relation] = result.totalCount; this.options.update(all => ({ ...all, [relation]: result.items })); }, error: () => this.error.set('Bağlantı seçenekleri yüklenemedi. Yeniden arayın.') });
   }
   relationChanged(relation: RelationKind, value: string | null) {
     this.form[this.linkFields[relation]] = value;
