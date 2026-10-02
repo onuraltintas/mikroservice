@@ -40,6 +40,7 @@
       <label>Sınıf<input type="number" [(ngModel)]="grade" min="1" max="12" step="1" [disabled]="busy()"></label>
       <label>Sınav<select [(ngModel)]="examCode" [disabled]="busy()"><option value="">Tümü</option><option>LGS</option><option>TYT</option><option>AYT</option><option>YDT</option></select></label>
       <button type="button" (click)="searchTopics()" [disabled]="busy()">Konuları ara</button></div>
+      @for (lesson of catalogLessons(); track lesson.lessonId) { <button type="button" class="plan-row" (click)="addLesson(lesson.lessonId!)" [disabled]="busy() || lessons.length >= 50">{{ lesson.lessonName }} · Ders toplamını ekle</button> }
       @for (topic of topics().items; track topic.id) { <button type="button" class="plan-row" (click)="addTopic(topic.id)" [disabled]="busy() || lessons.length >= 50">{{ topic.lessonName }} · {{ topic.name }} · Ekle</button> }
       <div class="pagination"><button type="button" (click)="searchTopics(topics().pageNumber - 1)" [disabled]="busy() || topics().pageNumber <= 1">Önceki</button>
         <span>{{ topics().totalCount }} konu</span><button type="button" (click)="searchTopics(topics().pageNumber + 1)" [disabled]="busy() || topics().pageNumber * topics().pageSize >= topics().totalCount">Sonraki</button></div>

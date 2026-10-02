@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, HostListener, inject, signal } from '@angular/core';
+import { Component, DestroyRef, HostListener, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
@@ -14,6 +14,7 @@ export class StudentExamResultsComponent {
   private readonly destroyRef = inject(DestroyRef);
   readonly page = signal<TargetPage<StudentExam>>({ items: [], totalCount: 0, pageNumber: 1, pageSize: 20 });
   readonly topics = signal<TargetPage<StudyTopic>>({ items: [], totalCount: 0, pageNumber: 1, pageSize: 20 });
+  readonly catalogLessons = computed(() => [...new Map(this.topics().items.filter(x => x.lessonId).map(x => [x.lessonId!, x])).values()]);
   readonly busy = signal(false); readonly stale = signal(false);
   readonly error = signal<string | null>(null); readonly success = signal<string | null>(null);
   selected: StudentExam | null = null;
@@ -43,8 +44,15 @@ export class StudentExamResultsComponent {
   addTopic(id: string) {
     if (this.busy() || this.lessons.length >= 50) return;
     const topic = this.topics().items.find(x => x.id === id);
-    if (!topic?.lessonId || this.lessons.some(x => x.topicId === id)) return;
+    if (!topic?.lessonId || this.lessons.some(x => x.topicId === id || (x.lessonId === topic.lessonId && !x.topicId))) return;
     this.lessons.push({ lessonId: topic.lessonId, topicId: id, lessonName: topic.lessonName, topicName: topic.name,
+      questionCount: 1, correct: 0, wrong: 0, empty: 1 }); this.changed();
+  }
+  addLesson(lessonId: string) {
+    if (this.busy() || this.lessons.length >= 50 || this.lessons.some(x => x.lessonId === lessonId)) return;
+    const lesson = this.catalogLessons().find(x => x.lessonId === lessonId);
+    if (!lesson) return;
+    this.lessons.push({ lessonId, topicId: null, lessonName: lesson.lessonName, topicName: null,
       questionCount: 1, correct: 0, wrong: 0, empty: 1 }); this.changed();
   }
   removeTopic(index: number) { if (!this.busy()) { this.lessons.splice(index, 1); this.changed(); } }
