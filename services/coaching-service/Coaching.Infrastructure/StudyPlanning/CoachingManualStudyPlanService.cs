@@ -255,6 +255,14 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
             var committed = resultReady && completedResult is ManualStudyPlanView view
                 && await db.StudyPlanRevisions.AsNoTracking().AnyAsync(x => x.Id == view.Id && x.StudentId == student
                     && x.Version == view.Version && x.Status == view.Status, token);
+            if (committed)
+            {
+                var states = db.ChangeTracker.Entries<OutboxState>().Where(x => x.State == EntityState.Added).ToArray();
+                var ids = states.Select(x => x.Entity.OutboxId).ToArray();
+                var persisted = await db.Set<OutboxState>().AsNoTracking().Where(x => Enumerable.Contains(ids, x.OutboxId))
+                    .Select(x => x.OutboxId).ToListAsync(token);
+                foreach (var state in states.Where(x => persisted.Contains(x.Entity.OutboxId))) state.State = EntityState.Unchanged;
+            }
             return new ExecutionResult<T>(committed, completedResult);
         }, cancellationToken);
     }
