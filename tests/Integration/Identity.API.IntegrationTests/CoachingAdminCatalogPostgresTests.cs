@@ -51,6 +51,30 @@ public sealed class CoachingAdminCatalogPostgresTests(PostgresFixture postgres)
         finally { await db.Database.EnsureDeletedAsync(); }
     }
 
+    [Fact]
+    public async Task ParentlessTopicsAreFilteredBeforeCountingAndPagination()
+    {
+        await using var db = new CoachingDbContext(new DbContextOptionsBuilder<CoachingDbContext>().UseNpgsql(postgres.ConnectionString).Options);
+        await db.Database.EnsureDeletedAsync();
+        try
+        {
+            await db.Database.EnsureCreatedAsync();
+            var lesson = StudyCatalogLesson.Create("manual", "l", "Lesson", 8, "LGS");
+            var unit = StudyCatalogUnit.Create("manual", "u", lesson.Id, "Unit", 1);
+            var parent = StudyCatalogTopic.Create("manual", "p", lesson.Id, unit.Id, "Z Parent", null, 1);
+            var child = StudyCatalogTopic.Create("manual", "c", lesson.Id, unit.Id, "A Child", parent.Id, 1);
+            db.AddRange(lesson, unit, parent, child);
+            await db.SaveChangesAsync();
+            var reader = new CoachingAdminCatalogReader(db, new GlobalScope());
+            var page = await reader.ListAsync(CatalogKind.Topics, new() { HasParent = false, PageSize = 1 }, default);
+            Assert.Equal(1, page.TotalCount);
+            Assert.Equal(parent.Id, Assert.Single(page.Items).Id);
+            Assert.Equal(child.Id, Assert.Single((await reader.ListAsync(CatalogKind.Topics, new() { HasParent = true }, default)).Items).Id);
+            await Assert.ThrowsAsync<ArgumentException>(() => reader.ListAsync(CatalogKind.Lessons, new() { HasParent = false }, default));
+        }
+        finally { await db.Database.EnsureDeletedAsync(); }
+    }
+
     private sealed class GlobalScope : ICoachingAdminScopeAuthorization
     {
         public Task<CoachingAdminScope> RequireReadScopeAsync(CancellationToken cancellationToken) => Task.FromResult(CoachingAdminScope.Global);
