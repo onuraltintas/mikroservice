@@ -81,5 +81,18 @@ test('admin inspects real student revisions and report without student write con
   await expect(report.getByText('Bu döneme planlanmış çalışma yok. Başarı oranı hesaplanmadı.', { exact: true })).toBeVisible();
   await expect(report.getByRole('heading', { name: 'Öğrencinin güncel hedefleri' })).toBeVisible();
   await expect(panel.locator('button[type=submit]')).toHaveCount(0);
+  await panel.getByRole('button', { name: 'Düzeltme ve işlem geçmişini aç' }).click();
+  const corrections=panel.locator('app-coaching-study-corrections');
+  await corrections.getByLabel('İşlem gerekçesi').fill('Browser reviewed plan correction');
+  await corrections.getByLabel('Düzeltilmiş plan başlığı').fill('Reviewed browser plan');
+  await corrections.getByRole('button',{name:'Plan başlığını düzelt'}).click();
+  await page.getByRole('dialog').getByRole('button',{name:'Onayla',exact:true}).click();
+  await expect(corrections.getByLabel('Düzeltilmiş plan başlığı')).toHaveValue('Reviewed browser plan');
+  await corrections.getByRole('button',{name:'İşlem geçmişini yükle'}).click();
+  await expect(corrections.getByText(/Browser reviewed plan correction/)).toBeVisible();
+  await corrections.getByLabel('İşlem gerekçesi').fill('Browser archive reviewed plan');
+  await corrections.getByRole('button',{name:'Planı arşivle'}).click();
+  await page.getByRole('dialog').getByRole('button',{name:'Onayla',exact:true}).click();
+  await expect(corrections.getByLabel('Düzeltilmiş plan başlığı')).toHaveCount(0);
   await page.screenshot({ path: '../../artifacts/local-admin-catalog-e2e/student-review.png', fullPage: true });
 });

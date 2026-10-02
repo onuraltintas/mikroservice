@@ -1,5 +1,14 @@
 # Koçluk admin katalog yönetimi — yerel ilerleme
 
+## Gerekçeli öğrenci düzeltmeleri — yerel doğrulama
+
+- Global SystemAdmin + Coaching.Manage ve mevcut ayara bağlı Coaching MFA ile plan başlığı, bekleyen görev başlık/tarih/planlanan dakika, hedef açıklama/tarih/puan düzeltmesi ve plan arşivleme eklendi. Katalog ContentManage izni tek başına yeterli değildir.
+- Tamamlanmış görev ve arşivlenmiş plan değiştirilemez. ActualMinutes, tamamlanma bilgisi, sınav puanı ve hedef CurrentProgress bu API'lerden değiştirilemez.
+- Sürüm denetimi eski ekranla yazmayı reddeder. Plan yazıları öğrenci işlemleriyle aynı öğrenci bazlı kilidi kullanır. Eski/yeni değer, gerekçe, yönetici ve zaman aynı transaction'da korunur; öğrenci düzeltme geçmişi sayfalıdır.
+- API ve admin formu tamamlandı; C#/TypeScript incelemesinde engelleyici bulgu yok. Yeni/ilgili backend regresyonu 30, arayüz regresyonu 30 geçti. Production derlemesi geçti; mevcut Speed Reading CSS bütçesi uyarısı değişmedi.
+- Edge tarayıcı senaryoları iki kesintisiz tekrar halinde 6/6 geçti; düzeltme sonrası yeni sürümü yeniden okuma, geçmiş kaydı ve arşivleme gerçek yerel Koçluk API/veritabanıyla doğrulandı. Identity oturumu ve kurum profilleri fixture olduğundan gerçek Identity uçtan uca doğrulaması halen ayrıdır.
+- Yeni migration gerekmedi. GitHub/canlı yayın yapılmadı. Sıradaki kapsam gerçek Identity entegrasyonu ve rol/hata/mobil tarayıcı testlerinin genişletilmesidir; bütün plan tamamlandı iddiası yoktur.
+
 ## Sonuç — 2 Ekim, admin aktarımı ve öğrenci incelemesi
 
 Bu bölüm aşağıdaki tarihsel kalan işler listesinin aktarım/yayın ve salt okunur öğrenci inceleme maddelerini günceller. Değişiklikler yereldir; GitHub'a gönderilmedi, canlıya alınmadı.

@@ -16,7 +16,7 @@ export function planningToken(userId = planningStudent, roles = ['Student'], pro
     'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier': userId,
     'http://schemas.microsoft.com/ws/2008/06/identity/claims/role': roles,
     platform_product: product, given_name: 'Planning', family_name: 'Test', email: 'planning@example.invalid',
-    permission: roles.includes('SystemAdmin') ? ['Permissions.Coaching.View', 'Permissions.Coaching.ContentManage'] : [],
+    permission: roles.includes('SystemAdmin') ? ['Permissions.Coaching.View', 'Permissions.Coaching.ContentManage', 'Permissions.Coaching.Manage'] : [],
     amr: roles.includes('SystemAdmin') ? ['mfa'] : [],
     iss: 'EduPlatform', aud: 'EduPlatform', iat: now, nbf: now, exp: now + 900 })}`;
   return `${body}.${createHmac('sha256', key).update(body).digest('base64url')}`;
