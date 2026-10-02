@@ -10,6 +10,8 @@ public sealed class CoachingAdminCatalogApiTests
     [Theory]
     [InlineData("unknown")]
     [InlineData("99")]
+    [InlineData("0")]
+    [InlineData("1")]
     public async Task UnknownCatalogTypeReturnsFriendlyBadRequest(string kind)
     {
         var result = await new CoachingCatalogAdminController(new Reader()).List(kind, new(), default);
