@@ -50,6 +50,13 @@ public sealed class StudyPlanRevision : AggregateRoot
         UpdatedAt = DateTime.UtcNow;
     }
 
+    public void CorrectTitle(string title)
+    {
+        if (Status == StudyPlanStatus.Archived) throw new InvalidOperationException("Archived revisions cannot be corrected.");
+        Title = StudyCatalogText.Require(title, 200);
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     public void Archive()
     {
         Status = StudyPlanStatus.Archived;
@@ -109,6 +116,15 @@ public sealed class StudyPlanTask : AggregateRoot
         if (IsCompleted) throw new InvalidOperationException("Completed work cannot be rescheduled.");
         if (plannedDate == default) throw new ArgumentException("Valid task date is required.");
         PlannedDate = plannedDate;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void CorrectPlanning(string title, DateOnly plannedDate, int plannedMinutes)
+    {
+        if (IsCompleted) throw new InvalidOperationException("Completed work cannot be corrected.");
+        var validatedTitle = StudyCatalogText.Require(title, 200);
+        if (plannedDate == default || plannedMinutes is < 1 or > 1440) throw new ArgumentException("Valid planning date and minutes are required.");
+        Title = validatedTitle; PlannedDate = plannedDate; PlannedMinutes = plannedMinutes;
         UpdatedAt = DateTime.UtcNow;
     }
 }
