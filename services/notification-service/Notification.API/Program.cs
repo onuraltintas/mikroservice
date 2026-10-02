@@ -219,6 +219,7 @@ builder.Services.AddMassTransit(x =>
     x.AddConsumer<SessionCancelledConsumer>();
     x.AddConsumer<GoalCreatedConsumer>();
     x.AddConsumer<GoalUpdatedConsumer>();
+    x.AddConsumer<StudyPlanPublishedConsumer>();
     x.AddConsumer<NotificationErasureAssessmentRequestedConsumer>();
     x.AddConsumer<NotificationErasureExecutionRequestedConsumer>();
     
