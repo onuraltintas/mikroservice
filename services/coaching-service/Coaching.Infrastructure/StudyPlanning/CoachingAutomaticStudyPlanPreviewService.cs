@@ -39,6 +39,7 @@ public sealed class CoachingAutomaticStudyPlanPreviewService(CoachingDbContext d
                              join lesson in db.StudyCatalogLessons on topic.LessonId equals lesson.Id
                              where Enumerable.Contains(ids, topic.Id) && topic.IsActive && unit.IsActive
                                  && lesson.IsActive && unit.LessonId == lesson.Id
+                                 && !db.StudyCatalogTopics.Any(child => child.ParentId == topic.Id)
                                  && (topic.ParentId == null || db.StudyCatalogTopics.Any(parent => parent.Id == topic.ParentId
                                      && parent.IsActive && parent.UnitId == topic.UnitId && parent.LessonId == topic.LessonId))
                              select topic).ToDictionaryAsync(x => x.Id, cancellationToken);

@@ -19,7 +19,7 @@ public sealed class CoachingAutomaticDraftTests(PostgresFixture postgres)
     {
         await using var db = new CoachingDbContext(new DbContextOptionsBuilder<CoachingDbContext>()
             .UseNpgsql(postgres.ConnectionString).Options);
-        await db.Database.EnsureDeletedAsync(); await db.Database.EnsureCreatedAsync();
+        await db.Database.EnsureDeletedAsync(); await db.Database.MigrateAsync();
         try
         {
             var actor = new Actor(); var access = new CoachingAccessPolicy(actor);

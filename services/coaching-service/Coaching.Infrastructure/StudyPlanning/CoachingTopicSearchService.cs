@@ -18,6 +18,7 @@ public sealed class CoachingTopicSearchService(CoachingDbContext db) : IStudyTop
                     join unit in db.StudyCatalogUnits on topic.UnitId equals unit.Id
                     join lesson in db.StudyCatalogLessons on topic.LessonId equals lesson.Id
                     where topic.IsActive && unit.IsActive && lesson.IsActive && unit.LessonId == lesson.Id
+                        && !db.StudyCatalogTopics.Any(child => child.ParentId == topic.Id)
                         && (topic.ParentId == null || db.StudyCatalogTopics.Any(parent => parent.Id == topic.ParentId
                             && parent.IsActive && parent.UnitId == topic.UnitId && parent.LessonId == topic.LessonId))
                     select new { topic.Id, topic.Name, LessonName = lesson.Name, UnitName = unit.Name,

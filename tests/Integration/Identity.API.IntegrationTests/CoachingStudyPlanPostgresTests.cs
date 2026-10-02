@@ -24,7 +24,7 @@ public sealed class CoachingStudyPlanPostgresTests(PostgresFixture postgres)
             await db.Database.ExecuteSqlRawAsync("CREATE TABLE \"__EFMigrationsHistory\" (\"MigrationId\" varchar(150) PRIMARY KEY, \"ProductVersion\" varchar(32) NOT NULL);");
             var migrator = db.GetService<IMigrator>();
             const string previous = "20261002092936_LinkAcademicGoalTargetCatalog";
-            const string current = "20261002093428_AddStudentStudyPlans";
+            const string current = "20261002111022_TrackAutomaticStudyPlanSource";
             await db.Database.ExecuteSqlRawAsync(migrator.GenerateScript(current, previous));
             await db.Database.ExecuteSqlRawAsync(migrator.GenerateScript(previous, current));
             var student = Guid.NewGuid();
