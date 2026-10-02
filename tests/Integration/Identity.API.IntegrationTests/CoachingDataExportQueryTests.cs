@@ -65,8 +65,10 @@ public sealed class CoachingDataExportQueryTests
                 .Options);
         var studentId = Guid.NewGuid();
         var otherStudentId = Guid.NewGuid();
+        var ownGoal = AcademicGoal.Create(studentId, "My goal", GoalCategory.SubjectMastery);
+        ownGoal.SetScoreTarget(400, 500, ExamType.LGS);
         context.AcademicGoals.AddRange(
-            AcademicGoal.Create(studentId, "My goal", GoalCategory.SubjectMastery),
+            ownGoal,
             AcademicGoal.Create(otherStudentId, "Other student's goal", GoalCategory.SubjectMastery));
         await context.SaveChangesAsync();
 
@@ -76,6 +78,8 @@ public sealed class CoachingDataExportQueryTests
         export.StudentId.Should().Be(studentId);
         export.Goals.Should().ContainSingle(goal => goal.Title == "My goal");
         export.Goals.Should().NotContain(goal => goal.Title == "Other student's goal");
+        export.Goals.Single().TargetMaxScore.Should().Be(500);
+        export.Goals.Single().TargetExamType.Should().Be("LGS");
     }
 
     private sealed class StubRepository(CoachingDataExportDto? result) : ICoachingDataExportRepository
