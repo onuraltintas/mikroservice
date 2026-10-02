@@ -10,7 +10,10 @@ interface StudyReport {
   fromDate: string; toDate: string; source: string; reason: string;
   scheduledTasks: number; completedTasks: number; completionPercentage: number | null;
   plannedMinutes: number; actualMinutes: number | null;
-  topics: { topicId: string | null; scheduledTasks: number; completedTasks: number; plannedMinutes: number; actualMinutes: number | null }[];
+  topics: { topicId: string | null; topicName?: string | null; scheduledTasks: number; completedTasks: number; plannedMinutes: number; actualMinutes: number | null }[];
+  examGroups?: { source: string; examType: string; maxScore: number; count: number; averagePercentage: number }[];
+  lessonResults?: { source: string; examType: string; lessonName?: string | null; topicName?: string | null;
+    questionCount: number; correct: number; wrong: number; empty: number }[];
 }
 
 @Component({ selector: 'app-student-study-report', standalone: true, imports: [CommonModule, FormsModule],
@@ -33,6 +36,24 @@ interface StudyReport {
           <div><dt>Kaydedilen süre</dt><dd class="text-xl font-semibold">{{ data.actualMinutes === null ? 'Henüz süre kaydı yok' : data.actualMinutes + ' dakika' }}</dd></div>
         </dl>
         <p class="mt-3 text-xs text-slate-500">Taslaklar ve arşivlenen planların tamamlanmamış işleri hesaba katılmaz. Tamamlanmış eski işler korunur.</p>
+        <div *ngIf="data.topics.length" class="mt-4 overflow-x-auto">
+          <table class="w-full text-left text-sm"><caption class="py-2 text-left font-semibold">Konu bazında çalışma · Öğrenci beyanı</caption>
+            <thead><tr><th class="p-2">Konu</th><th class="p-2">Tamamlanan / planlanan</th><th class="p-2">Planlanan / kaydedilen dakika</th></tr></thead>
+            <tbody><tr *ngFor="let topic of data.topics" class="border-t dark:border-slate-800"><td class="p-2">{{ topic.topicName ?? (topic.topicId ? 'Konu adı bulunamadı' : 'Kataloğa bağlanmamış çalışma') }}</td><td class="p-2">{{ topic.completedTasks }} / {{ topic.scheduledTasks }}</td><td class="p-2">{{ topic.plannedMinutes }} / {{ topic.actualMinutes ?? 'Kayıt yok' }}</td></tr></tbody>
+          </table>
+        </div>
+        <h3 class="mt-5 font-semibold">Dönem sınav özeti</h3>
+        <p *ngIf="!data.examGroups?.length" class="mt-2 text-sm">Bu dönemde sınav sonucu yok; başarı ortalaması hesaplanmadı.</p>
+        <p class="mt-2 text-xs text-slate-500">Kaynak, sınav türü ve puan ölçeği ayrı değerlendirilir. Ortalama, resmî sınav puanı veya yerleşme tahmini değildir.</p>
+        <div *ngFor="let group of data.examGroups" class="mt-2 rounded-lg border p-3 text-sm dark:border-slate-800">
+          {{ sourceLabel(group.source) }} · {{ group.examType }} · {{ group.maxScore }} puan ölçeği · {{ group.count }} sonuç · Ortalama %{{ group.averagePercentage }}
+        </div>
+        <div *ngIf="data.lessonResults?.length" class="mt-4 overflow-x-auto">
+          <table class="w-full text-left text-sm"><caption class="py-2 text-left font-semibold">Ders / konu soru dağılımı</caption>
+            <thead><tr><th class="p-2">Ders / konu</th><th class="p-2">Kaynak / tür</th><th class="p-2">Soru</th><th class="p-2">Doğru / yanlış / boş</th></tr></thead>
+            <tbody><tr *ngFor="let lesson of data.lessonResults" class="border-t dark:border-slate-800"><td class="p-2">{{ lesson.lessonName ?? 'Ders adı bulunamadı' }} · {{ lesson.topicName ?? 'Ders toplamı' }}</td><td class="p-2">{{ sourceLabel(lesson.source) }} · {{ lesson.examType }}</td><td class="p-2">{{ lesson.questionCount }}</td><td class="p-2">{{ lesson.correct }} / {{ lesson.wrong }} / {{ lesson.empty }}</td></tr></tbody>
+          </table>
+        </div>
       </div>
     </section>`,
 })
@@ -44,6 +65,7 @@ export class StudentStudyReportComponent {
   readonly busy = signal(false);
   toDate = new Date().toISOString().slice(0, 10);
   fromDate = new Date(Date.now() - 29 * 86400000).toISOString().slice(0, 10);
+  sourceLabel(source: string) { return source === 'StudentReported' ? 'Öğrenci beyanı' : source === 'TeacherRecorded' ? 'Öğretmen kaydı' : 'Kaynak belirtilmemiş'; }
   load() {
     if (this.busy()) return;
     this.report.set(null); this.error.set(null);
