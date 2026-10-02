@@ -4,6 +4,21 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { CoachingStudyPlanningService } from './coaching-study-planning.service';
 
 describe('CoachingStudyPlanningService', () => {
+  it('searches topics and previews without sending an owner or creating a plan', () => {
+    TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
+    const service = TestBed.inject(CoachingStudyPlanningService);
+    const http = TestBed.inject(HttpTestingController);
+    service.searchTopics(' math ', 8, 'LGS', 2).subscribe();
+    http.expectOne('/api/coaching/study-planning/topics?search=math&pageNumber=2&pageSize=20&gradeNumber=8&examCode=LGS')
+      .flush({ success: true, data: { items: [], totalCount: 0, pageNumber: 2, pageSize: 20 } });
+    const input = { startDate: '2026-10-05', days: 7, expectedAvailabilityVersion: 3, topics: [{ topicId: 'topic', requiredMinutes: 30 }] };
+    service.previewAutomatic(input).subscribe();
+    const request = http.expectOne('/api/coaching/study-planning/automatic-preview');
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual(input);
+    request.flush({ success: true, data: {} });
+    http.verify();
+  });
   it('searches targets with filters and saves only the goal target and version', () => {
     TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
     const service = TestBed.inject(CoachingStudyPlanningService);
