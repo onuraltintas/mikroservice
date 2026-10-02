@@ -19,6 +19,7 @@ public sealed class CoachingStudyGoalReportTests
         var actor = new Actor();
         var goal = AcademicGoal.Create(actor.UserId!.Value, "My target", GoalCategory.ExamPreparation);
         goal.SetTarget(new DateTime(2027, 6, 1, 0, 0, 0, DateTimeKind.Utc), 400, ExamType.LGS);
+        goal.SetScoreTarget(400, 500, ExamType.LGS);
         goal.UpdateProgress(30);
         var teacherGoal = AcademicGoal.Create(actor.UserId.Value, "Teacher target", GoalCategory.StudyHabits, Guid.NewGuid());
         teacherGoal.MarkAsCompleted();
@@ -26,8 +27,8 @@ public sealed class CoachingStudyGoalReportTests
         var institutionGoal = AcademicGoal.Create(actor.UserId.Value, "Institution target", GoalCategory.Other,
             institutionId: Guid.NewGuid());
         var exam = Exam.CreateStudentReported(actor.UserId.Value, "Practice", ExamType.LGS,
-            new DateTime(2026, 10, 2, 0, 0, 0, DateTimeKind.Utc), 100);
-        exam.AddResult(ExamResult.Create(exam.Id, actor.UserId.Value, 80));
+            new DateTime(2026, 10, 2, 0, 0, 0, DateTimeKind.Utc), 500);
+        exam.AddResult(ExamResult.Create(exam.Id, actor.UserId.Value, 320));
         db.AddRange(goal, teacherGoal, institutionGoal, otherGoal, exam);
         await db.SaveChangesAsync();
         var report = await new CoachingStudentStudyReportService(db, new CoachingAccessPolicy(actor))
@@ -40,11 +41,18 @@ public sealed class CoachingStudyGoalReportTests
         Assert.Equal(400, own.TargetScore);
         Assert.Equal(ExamType.LGS, own.TargetExamType);
         Assert.False(own.IsCompleted);
+        Assert.Equal(500, own.TargetMaxScore);
+        Assert.Equal("LatestMatchingResultPerSource", own.ScoreAssessment.Reason);
+        Assert.Equal(80, Assert.Single(own.ScoreAssessment.Comparisons).TargetAttainmentPercentage);
+        Assert.Equal(80, Assert.Single(own.ScoreAssessment.Comparisons).RemainingScore);
         Assert.Equal("TeacherSet", Assert.Single(report.Goals.Where(x => x.GoalId == teacherGoal.Id)).Source);
         Assert.Equal("Unspecified", Assert.Single(report.Goals.Where(x => x.GoalId == institutionGoal.Id)).Source);
         Assert.Equal("CurrentGoalsWithRecordedProgress", report.GoalReason);
         Assert.DoesNotContain(report.Goals, x => x.GoalId == otherGoal.Id);
         Assert.Equal(30, (await db.AcademicGoals.SingleAsync(x => x.Id == goal.Id)).CurrentProgress);
+        var emptyPeriod = await new CoachingStudentStudyReportService(db, new CoachingAccessPolicy(actor))
+            .GetAsync(new(2026, 9, 1), new(2026, 9, 2));
+        Assert.Equal("NoMatchingResults", emptyPeriod.Goals.Single(x => x.GoalId == goal.Id).ScoreAssessment.Reason);
     }
 
     [Fact]
