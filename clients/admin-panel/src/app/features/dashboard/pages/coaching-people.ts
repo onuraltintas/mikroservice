@@ -1,6 +1,7 @@
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Component, inject, OnInit, PLATFORM_ID, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { CoachingAdminStudyComponent } from './coaching-admin-study';
 import { ActivatedRoute, Router } from '@angular/router';
 import { forkJoin, Observable } from 'rxjs';
 import { AuthService } from '../../../core/auth/auth.service';
@@ -18,7 +19,7 @@ import { collectCoachingHistory, coachingHistoryCsv, downloadCoachingHistoryCsv,
 @Component({
   selector: 'app-coaching-people',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, CoachingAdminStudyComponent],
   template: `
     <section class="space-y-5">
       <div>
@@ -80,6 +81,7 @@ import { collectCoachingHistory, coachingHistoryCsv, downloadCoachingHistoryCsv,
                 </div>
                 <p class="text-xs text-gray-500">Bu öğrenciye erişim aktif kurum üyeliğiyle doğrulanır; ayrıntı kurum değişikliği dâhil tüm koçluk geçmişini kapsar.</p>
               }
+              @if (scope()?.isGlobal) { <app-coaching-admin-study [studentId]="student.userId" /> }
             </article>
             <section class="space-y-3 rounded-xl border bg-white p-5 dark:border-gray-700 dark:bg-gray-800" aria-labelledby="student-history-heading">
               <div class="flex flex-wrap items-end justify-between gap-3">

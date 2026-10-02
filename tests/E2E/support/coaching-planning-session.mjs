@@ -16,12 +16,19 @@ export function planningToken(userId = planningStudent, roles = ['Student'], pro
     'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier': userId,
     'http://schemas.microsoft.com/ws/2008/06/identity/claims/role': roles,
     platform_product: product, given_name: 'Planning', family_name: 'Test', email: 'planning@example.invalid',
+    permission: roles.includes('SystemAdmin') ? ['Permissions.Coaching.View', 'Permissions.Coaching.ContentManage'] : [],
+    amr: roles.includes('SystemAdmin') ? ['mfa'] : [],
     iss: 'EduPlatform', aud: 'EduPlatform', iat: now, nbf: now, exp: now + 900 })}`;
   return `${body}.${createHmac('sha256', key).update(body).digest('base64url')}`;
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
   createServer(async (request, response) => {
+    if (request.url === '/api/internal/mfa-policy/coaching' && request.method === 'GET') {
+      if (request.headers['x-internal-service-key'] !== internalKey) { response.writeHead(403); response.end(); return; }
+      response.writeHead(200, { 'content-type': 'application/json' });
+      response.end(JSON.stringify({ mode: 'disabled' })); return;
+    }
     // Only the external Identity ownership contract is stubbed; Coaching queries remain real.
     if (request.url === '/api/internal/coaching/authorize-student-read' && request.method === 'POST') {
       if (request.headers['x-internal-service-key'] !== internalKey) { response.writeHead(403); response.end(); return; }
@@ -41,14 +48,14 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
       response.end(JSON.stringify({ accessToken: planningToken(), tokenType: 'Bearer', expiresInMinutes: 15 }));
       return;
     }
-    if (!request.url || !/^\/api\/(coaching\/|goals(?:\/|\?|$)|reports\/|exams\/)/.test(request.url)) {
+    if (!request.url || !/^\/api\/(coaching\/|coaching-admin\/|goals(?:\/|\?|$)|reports\/|exams\/)/.test(request.url)) {
       response.writeHead(404); response.end(); return;
     }
     try {
       const chunks = []; let length = 0;
       for await (const chunk of request) {
         length += chunk.length;
-        if (length > 1024 * 1024) { response.writeHead(413); response.end(); return; }
+        if (length > 48 * 1024 * 1024) { response.writeHead(413); response.end(); return; }
         chunks.push(chunk);
       }
       const headers = { ...request.headers }; delete headers.host; delete headers.connection;
