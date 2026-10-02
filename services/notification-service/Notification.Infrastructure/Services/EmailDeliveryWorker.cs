@@ -103,7 +103,8 @@ public sealed class EmailDeliveryWorker : BackgroundService
             delivery.Subject,
             delivery.Body,
             delivery.AttemptCount,
-            leaseToken);
+            leaseToken,
+            delivery.SubjectUserId);
     }
 
     private async Task DeliverAsync(EmailDeliveryWorkItem workItem, CancellationToken cancellationToken)
@@ -112,6 +113,25 @@ public sealed class EmailDeliveryWorker : BackgroundService
         var emailService = scope.ServiceProvider.GetRequiredService<IEmailService>();
         var dbContext = scope.ServiceProvider.GetRequiredService<NotificationDbContext>();
 
+        async Task<bool> DeliverOwnedAsync()
+        {
+            if (workItem.SubjectUserId is { } subject && await dbContext.ErasedRecipients.AnyAsync(x => x.UserId == subject, cancellationToken))
+                return false;
+            if (!await dbContext.EmailDeliveries.AnyAsync(x => x.Id == workItem.Id
+                    && x.Status == EmailDeliveryStatus.Processing && x.LeaseToken == workItem.LeaseToken
+                    && x.LeaseUntil > DateTime.UtcNow, cancellationToken)) return false;
+            await DeliverOwnedAsyncCore(workItem, dbContext, emailService, cancellationToken);
+            return true;
+        }
+        if (workItem.SubjectUserId is { } userId)
+            await NotificationRecipientWrites.LockedAsync(dbContext, userId, DeliverOwnedAsync, cancellationToken);
+        else
+            await DeliverOwnedAsync();
+    }
+
+    private async Task DeliverOwnedAsyncCore(EmailDeliveryWorkItem workItem, NotificationDbContext dbContext,
+        IEmailService emailService, CancellationToken cancellationToken)
+    {
         try
         {
             var body = _bodyProtector.Unprotect(workItem.ProtectedBody);
@@ -222,5 +242,6 @@ public sealed class EmailDeliveryWorker : BackgroundService
         string Subject,
         string ProtectedBody,
         int AttemptCount,
-        Guid LeaseToken);
+        Guid LeaseToken,
+        Guid? SubjectUserId);
 }
