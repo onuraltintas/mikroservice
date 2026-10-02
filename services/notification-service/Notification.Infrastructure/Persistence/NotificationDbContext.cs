@@ -26,6 +26,18 @@ public class NotificationDbContext : DbContext, INotificationDbContext
         CancellationToken cancellationToken)
         => Database.BeginTransactionAsync(cancellationToken);
 
+    public async Task<bool> LockAndCheckErasedRecipientAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        if (userId == Guid.Empty) throw new ArgumentException("Recipient is required.");
+        if (Database.IsRelational())
+        {
+            if (Database.CurrentTransaction is null) throw new InvalidOperationException("A recipient transaction is required.");
+            var key = $"notification-recipient:{userId:N}";
+            await Database.ExecuteSqlInterpolatedAsync($"SELECT pg_advisory_xact_lock(hashtextextended({key}, 0))", cancellationToken);
+        }
+        return await ErasedRecipients.AnyAsync(x => x.UserId == userId, cancellationToken);
+    }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);

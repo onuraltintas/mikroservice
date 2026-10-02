@@ -22,6 +22,9 @@ public class SubmitSupportRequestHandler : IRequestHandler<SubmitSupportRequestC
 
     public async Task<Result<Guid>> Handle(SubmitSupportRequestCommand request, CancellationToken cancellationToken)
     {
+        await using var transaction = await _dbContext.BeginTransactionAsync(cancellationToken);
+        if (request.SubjectUserId is { } userId && await _dbContext.LockAndCheckErasedRecipientAsync(userId, cancellationToken))
+            return Result.Failure<Guid>(Error.Forbidden("Bu hesap için destek talebi oluşturulamıyor."));
         var normalizedEmail = request.Email.Trim().ToLowerInvariant();
         var idempotencyKey = request.IdempotencyKey!.Trim();
         var existingRequest = await FindExistingAsync(normalizedEmail, idempotencyKey, cancellationToken);
@@ -41,7 +44,6 @@ public class SubmitSupportRequestHandler : IRequestHandler<SubmitSupportRequestC
             return Result.Success(existingRequest.Id);
         }
 
-        await using var transaction = await _dbContext.BeginTransactionAsync(cancellationToken);
         var supportRequest = new SupportRequest(
             Guid.NewGuid(),
             request.FirstName,

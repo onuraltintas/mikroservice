@@ -11,5 +11,6 @@ public interface INotificationDbContext
     DbSet<SupportRequest> SupportRequests { get; }
     DbSet<SupportForwardDelivery> SupportForwardDeliveries { get; }
     Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken);
+    Task<bool> LockAndCheckErasedRecipientAsync(Guid userId, CancellationToken cancellationToken);
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 }
