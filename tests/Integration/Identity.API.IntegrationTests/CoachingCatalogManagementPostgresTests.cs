@@ -133,7 +133,7 @@ public sealed class CoachingCatalogManagementPostgresTests(PostgresFixture postg
     private sealed class Locations : ICoachingLocationDirectory
     {
         public Task<IReadOnlyList<LocationProvince>> GetProvincesAsync(CancellationToken ct) => Task.FromResult<IReadOnlyList<LocationProvince>>([new("66", "Yozgat")]);
-        public Task<IReadOnlyList<LocationDistrict>> GetDistrictsAsync(string provinceId, CancellationToken ct) => Task.FromResult<IReadOnlyList<LocationDistrict>>([new("1", "Merkez", "66")]);
+        public Task<IReadOnlyList<LocationDistrict>> GetDistrictsAsync(string provinceId, CancellationToken ct) => Task.FromResult<IReadOnlyList<LocationDistrict>>([new("1", "66", "Merkez")]);
         public Task<bool> VerifyPairAsync(string provinceId, string districtId, CancellationToken ct) => Task.FromResult(provinceId == "66" && districtId == "1");
     }
     private sealed class TestUser : ICurrentUserService

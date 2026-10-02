@@ -164,6 +164,7 @@ public static class DependencyInjection
         services.AddSingleton<IAdminAuditWriter, CoachingAdminAuditWriter>();
         services.AddScoped<Coaching.Application.CatalogAdministration.ICoachingAdminCatalogReader, Coaching.Infrastructure.Catalogs.CoachingAdminCatalogReader>();
         services.AddScoped<Coaching.Application.CatalogAdministration.ICoachingCatalogDeletionService, Coaching.Infrastructure.Catalogs.CoachingCatalogDeletionService>();
+        services.AddScoped<Coaching.Application.CatalogAdministration.ICoachingCatalogManagementService, Coaching.Infrastructure.Catalogs.CoachingCatalogManagementService>();
         services.AddHttpClient<Coaching.Application.CatalogAdministration.ICoachingLocationDirectory, IdentityLocationDirectoryClient>(client =>
         {
             client.Timeout = TimeSpan.FromSeconds(5);
