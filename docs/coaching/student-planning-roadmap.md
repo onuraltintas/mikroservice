@@ -90,5 +90,23 @@ null korunur; doğrulanmış yıl verilirse kaydedilebilir. Üniversite adları 
 program satırında korunur; ad benzerliğiyle kurum birleştirilmez.
 Yeni hedef katalogları dahil Docker gerektirmeyen 70 test geçti ve model/migration
 eşleşmesi doğrulandı. PostgreSQL mükerrer kayıt ve geri alma testleri yazıldı;
-Docker motoruna yeniden erişilemediği için bu testler henüz doğrulanmadı.
-Bu aşama kapanmadan aktarım veya canlı yayın yapılmayacak.
+Docker yeniden açılınca PostgreSQL dahil 86 test geçti; hedef katalog migration
+geri alma ve mükerrer kayıt kontrolleri doğrulandı.
+
+### Kontrollü katalog aktarımı
+
+Yerel aktarım bileşeni altı katalog dosyasını doğrular, yalnız Koçluk tablolarına
+transaction içinde yazar. Mevcut içerik değişmişse sessiz güncelleme yapmaz; çakışmayla
+durur. Kaynak başına PostgreSQL advisory lock ve benzersiz indeksler mükerrer yazımı
+engeller. Üst konu ve konu kaynak kimlikleri ayrı öneklerle saklanır. Sınıf etiketleri
+tanımlı eşlemeyle çözülür; bilinmeyen etiket aktarımı durdurur. Müfredat sürümleri
+ad benzerliğiyle birleştirilmez; ayrı kaynak kimlikleri korunur.
+
+2026-10-02 doğrulaması: geçici PostgreSQL'de 30.769 gerçek katalog kaydı aktarıldı;
+ikinci çalıştırma 0 yeni kayıt ekledi. Kataloglar pasif kaldı. Test sonunda geçici
+veritabanı kaldırıldı. Hiçbir kişisel öğrenci dosyası veya canlı veritabanı kullanılmadı.
+Sentetik atomiklik/çakışma testleri ve regresyon kapsamında 93 test geçti.
+
+Bu bileşen HTTP endpoint'i veya otomatik başlangıç seed'i değildir. Gerçek aktarım
+ayrı kontrollü işletim adımıdır; canlıya uygulama ve katalog aktivasyonu yapılmadı.
+Öğrenci hedef/plan/görev tabloları ve panel entegrasyonu sonraki aşamadır.
