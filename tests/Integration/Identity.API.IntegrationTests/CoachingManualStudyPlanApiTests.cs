@@ -51,9 +51,32 @@ public sealed class CoachingManualStudyPlanApiTests
         Assert.IsType<BadRequestObjectResult>(await controller.Replace(Guid.NewGuid(), new(0, new("Plan", []))));
     }
 
+    [Fact]
+    public async Task Api_ListsPlansAndChangesTasksWithBoundedAuthenticatedRequests()
+    {
+        var controller = new ManualStudyPlansController(new Stub());
+        Assert.IsType<OkObjectResult>(await controller.List(1, 20, StudyPlanStatus.Active));
+        Assert.IsType<OkObjectResult>(await controller.Complete(Guid.NewGuid(), Guid.NewGuid(), new(0, 30)));
+        Assert.IsType<OkObjectResult>(await controller.Reschedule(Guid.NewGuid(), Guid.NewGuid(), new(0, new DateOnly(2026, 10, 6))));
+        Assert.Throws<JsonException>(() => JsonSerializer.Deserialize<StudyTaskCompleteInput>("{\"ActualMinutes\":30}"));
+        Assert.Throws<JsonException>(() => JsonSerializer.Deserialize<StudyTaskRescheduleInput>("{\"PlannedDate\":\"2026-10-06\"}"));
+        foreach (var name in new[] { nameof(ManualStudyPlansController.Complete), nameof(ManualStudyPlansController.Reschedule) })
+        {
+            var method = typeof(ManualStudyPlansController).GetMethod(name)!;
+            Assert.Single(method.GetCustomAttributes(typeof(RequestSizeLimitAttribute), false));
+            Assert.Single(method.GetCustomAttributes(typeof(Microsoft.AspNetCore.RateLimiting.EnableRateLimitingAttribute), false));
+        }
+        var denied = new ManualStudyPlansController(new Stub { Failure = new BusinessRuleException("StudyPlanning.Conflict", "Changed") });
+        Assert.IsType<ConflictObjectResult>(await denied.Complete(Guid.NewGuid(), Guid.NewGuid(), new(0, 30)));
+    }
+
     private sealed class Stub : IManualStudyPlanService
     {
         public Exception? Failure { get; init; }
+        public Task<StudyPlanPage> ListAsync(int pageNumber, int pageSize, StudyPlanStatus? status, CancellationToken cancellationToken = default)
+            => Task.FromResult(new StudyPlanPage([], 0, pageNumber, pageSize));
+        public Task<ManualStudyPlanView> CompleteTaskAsync(Guid id, Guid taskId, int expectedVersion, int actualMinutes, CancellationToken cancellationToken = default) => Result();
+        public Task<ManualStudyPlanView> RescheduleTaskAsync(Guid id, Guid taskId, int expectedVersion, DateOnly plannedDate, CancellationToken cancellationToken = default) => Result();
         public Task<ManualStudyPlanView?> GetAsync(Guid id, CancellationToken cancellationToken = default) => Task.FromResult<ManualStudyPlanView?>(null);
         public Task<ManualStudyPlanView> CreateDraftAsync(ManualStudyPlanInput request, CancellationToken cancellationToken = default) => Result();
         public Task<ManualStudyPlanView> ReplaceDraftAsync(Guid id, int expectedVersion, ManualStudyPlanInput request, CancellationToken cancellationToken = default) => Result();
