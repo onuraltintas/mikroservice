@@ -4,6 +4,25 @@ import { TestBed } from '@angular/core/testing';
 import { StudentStudyReportComponent } from './student-study-report.component';
 
 describe('StudentStudyReportComponent', () => {
+  it('shows calculated attainment separately from manual progress and explains missing evidence', () => {
+    const { component, fixture, http } = setup(); component.load();
+    http.expectOne(r => r.url.endsWith('/reports')).flush({ success: true, data: {
+      fromDate: component.fromDate, toDate: component.toDate, reason: 'NoScheduledTasks', source: 'StudentReported',
+      scheduledTasks: 0, completedTasks: 0, completionPercentage: null, plannedMinutes: 0, actualMinutes: null, topics: [],
+      goals: [{ goalId: 'goal', title: 'Puan hedefim', source: 'Unspecified', recordedProgress: 30, isCompleted: false,
+        targetScore: 400, targetMaxScore: 500, targetExamType: 'LGS', scoreAssessment: {
+          reason: 'LatestMatchingResultPerSource', comparisons: [{ resultId: 'result', examId: 'exam',
+            source: 'StudentReported', examDate: '2026-10-02T00:00:00Z', score: 320,
+            targetAttainmentPercentage: 80, remainingScore: 80, targetReached: false }] } },
+        { goalId: 'empty', title: 'Kanıt yok', source: 'Unspecified', recordedProgress: 0, isCompleted: false,
+          scoreAssessment: { reason: 'NoMatchingResults', comparisons: [] } }]
+    } });
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Puan hedefine erişim: %80');
+    expect(fixture.nativeElement.textContent).toContain('Kalan puan: 80');
+    expect(fixture.nativeElement.textContent).toContain('Kaydedilen ilerleme: %30');
+    expect(fixture.nativeElement.textContent).toContain('uyumlu sınav sonucu yok');
+  });
   it('renders recorded goal progress separately from exam achievement and historical dates', () => {
     const { fixture, component, http } = setup(); component.load();
     http.expectOne(r => r.url.endsWith('/reports')).flush({ success: true, data: {

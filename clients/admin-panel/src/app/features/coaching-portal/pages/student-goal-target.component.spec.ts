@@ -18,6 +18,7 @@ describe('StudentGoalTargetComponent', () => {
     const target = { goalId: 'goal', version: 3, targetSchoolId: null, targetUniversityProgramId: null, canEdit };
     const service = {
       getGoalTarget: vi.fn(() => of(target)),
+      saveGoalScoreTarget: vi.fn(() => of({ ...target, version: 4 })),
       searchSchools: vi.fn(() => of({ items: [{ id: 'school', name: 'Science School', city: 'Ankara', district: 'Center', minimumScore: null, scoreYear: null }], totalCount: 25, pageNumber: 1, pageSize: 20 })),
       searchPrograms: vi.fn(() => of({ items: [], totalCount: 0, pageNumber: 1, pageSize: 20 })),
       saveGoalTarget: vi.fn(() => of({ ...target, version: 4, targetSchoolId: 'school' }))
@@ -38,6 +39,33 @@ describe('StudentGoalTargetComponent', () => {
     component.choose('school');
     expect(service.saveGoalTarget).toHaveBeenCalledWith('goal', 3, null, 'school');
     expect(component.target()?.version).toBe(4);
+  });
+  it('validates score configuration, saves its version and clears explicitly', () => {
+    const { component, service } = setup();
+    component.open(); component.score = 400; component.maxScore = 500; component.examType = 'LGS';
+    component.saveScore();
+    expect(service.saveGoalScoreTarget).toHaveBeenCalledWith('goal', 3, 400, 500, 'LGS');
+    component.clearScore();
+    expect(service.saveGoalScoreTarget).toHaveBeenLastCalledWith('goal', 4, null, null, null);
+    component.score = 501; component.maxScore = 500; component.saveScore();
+    expect(service.saveGoalScoreTarget).toHaveBeenCalledTimes(2);
+    expect(component.error()).toBeTruthy();
+  });
+  it('protects score writes for teacher goals, stale versions and pending saves', () => {
+    const { component, service } = setup(false);
+    component.open(); component.clearScore();
+    expect(service.saveGoalScoreTarget).not.toHaveBeenCalled();
+    component.target.set({ ...component.target()!, canEdit: true });
+    service.saveGoalScoreTarget.mockReturnValueOnce(throwError(() => ({ status: 409 })));
+    component.clearScore(); component.clearScore();
+    expect(service.saveGoalScoreTarget).toHaveBeenCalledTimes(1);
+    expect(component.stale()).toBe(true);
+    component.open(); component.target.set({ ...component.target()!, canEdit: true });
+    const pending = new Subject<any>(); service.saveGoalScoreTarget.mockReturnValueOnce(pending);
+    component.clearScore(); component.clearScore();
+    expect(service.saveGoalScoreTarget).toHaveBeenCalledTimes(2);
+    expect(component.canLeavePage()).toBe(false);
+    pending.complete(); expect(component.canLeavePage()).toBe(true);
   });
   it('does not search or write teacher-created targets', () => {
     const { component, service, fixture } = setup(false);
