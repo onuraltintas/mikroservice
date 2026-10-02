@@ -1,4 +1,6 @@
 using Coaching.Application.Authorization;
+using Coaching.Application.Interfaces;
+using EduPlatform.Shared.Contracts.Events.Coaching;
 using Coaching.Application.StudyPlanning;
 using Coaching.Domain.Entities;
 using Coaching.Infrastructure.Data;
@@ -9,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage;
 namespace Coaching.Infrastructure.StudyPlanning;
 
 public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachingAccessPolicy access,
-    IAutomaticStudyPlanPreviewService previews) : IManualStudyPlanService, IAutomaticStudyPlanDraftService
+    IAutomaticStudyPlanPreviewService previews, ICoachingEventPublisher events) : IManualStudyPlanService, IAutomaticStudyPlanDraftService
 {
     public Task<ManualStudyPlanView> CreateAutomaticDraftAsync(AutomaticStudyDraftRequest request, CancellationToken cancellationToken = default)
         => LockedAsync(async student =>
@@ -118,6 +120,7 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
                 await db.SaveChangesAsync(cancellationToken);
             }
             revision.Activate();
+            await events.PublishAsync(new StudyPlanPublishedEvent(revision.Id, student, revision.Title), cancellationToken);
             await db.SaveChangesAsync(cancellationToken);
             return await ViewAsync(revision, cancellationToken);
         }, cancellationToken);
