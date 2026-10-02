@@ -16,6 +16,14 @@ public sealed class NotificationErasureExecutionService(
         if (message.Scope != PersonalDataScope.Account)
             throw new InvalidOperationException("The erasure scope does not include Notification.");
 
+        return await NotificationRecipientWrites.LockedAsync(context, message.SubjectUserId,
+            () => ExecuteLockedAsync(message, cancellationToken), cancellationToken);
+    }
+
+    private async Task<NotificationErasureExecutionResult> ExecuteLockedAsync(
+        PersonalDataErasureExecutionRequestedV1 message, CancellationToken cancellationToken)
+    {
+
         var existing = await context.ErasureExecutions
             .SingleOrDefaultAsync(item => item.RequestId == message.RequestId, cancellationToken);
         if (existing is not null)
@@ -44,6 +52,8 @@ public sealed class NotificationErasureExecutionService(
                 + supportForwardDeliveries.Count,
             timeProvider.GetUtcNow().UtcDateTime);
         context.ErasureExecutions.Add(receipt);
+        if (!await context.ErasedRecipients.AnyAsync(x => x.UserId == message.SubjectUserId, cancellationToken))
+            context.ErasedRecipients.Add(NotificationErasedRecipient.Create(message.SubjectUserId, timeProvider.GetUtcNow().UtcDateTime));
         await context.SaveChangesAsync(cancellationToken);
         return ToResult(receipt);
     }

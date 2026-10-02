@@ -20,6 +20,7 @@ public class NotificationDbContext : DbContext, INotificationDbContext
     public DbSet<SupportForwardDelivery> SupportForwardDeliveries { get; set; }
     public DbSet<AdminAuditRecord> AdminAuditRecords => Set<AdminAuditRecord>();
     public DbSet<NotificationErasureExecutionReceipt> ErasureExecutions => Set<NotificationErasureExecutionReceipt>();
+    public DbSet<NotificationErasedRecipient> ErasedRecipients => Set<NotificationErasedRecipient>();
 
     public Task<Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction> BeginTransactionAsync(
         CancellationToken cancellationToken)
@@ -30,6 +31,11 @@ public class NotificationDbContext : DbContext, INotificationDbContext
         base.OnModelCreating(modelBuilder);
 
         ConfigureAdminAudit(modelBuilder);
+        modelBuilder.Entity<NotificationErasedRecipient>(entity =>
+        {
+            entity.ToTable("PrivacyErasedRecipients");
+            entity.HasKey(x => x.UserId);
+        });
         modelBuilder.Entity<NotificationErasureExecutionReceipt>(entity =>
         {
             entity.ToTable("PrivacyErasureExecutions");
@@ -116,6 +122,8 @@ public class NotificationDbContext : DbContext, INotificationDbContext
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
+        if (ChangeTracker.Entries<NotificationErasedRecipient>().Any(x => x.State is EntityState.Modified or EntityState.Deleted))
+            throw new InvalidOperationException("Erased recipient guards are immutable.");
         if (ChangeTracker.Entries<AdminAuditRecord>()
             .Any(entry => entry.State is EntityState.Modified or EntityState.Deleted))
         {

@@ -4,6 +4,7 @@ using Notification.Domain.Entities;
 using Microsoft.AspNetCore.SignalR;
 using Notification.API.Hubs;
 using Microsoft.EntityFrameworkCore;
+using Notification.Infrastructure.Services;
 
 namespace Notification.API.Services;
 
@@ -27,23 +28,14 @@ public class NotificationManager : INotificationService
         Guid? sourceMessageId = null)
     {
         // 1. Persist to DB
-        var notification = sourceMessageId.HasValue
-            ? await _dbContext.Notifications
-                .SingleOrDefaultAsync(x => x.Id == sourceMessageId.Value && x.UserId == userId)
-            : null;
-
-        if (notification is null)
-        {
-            notification = NotificationItem.Create(
+        var notification = await NotificationRecipientWrites.PersistAsync(_dbContext, NotificationItem.Create(
                 userId,
                 title,
                 message,
                 type,
                 relatedEntityId,
-                sourceMessageId);
-            _dbContext.Notifications.Add(notification);
-            await _dbContext.SaveChangesAsync();
-        }
+                sourceMessageId));
+        if (notification is null) return;
 
         // 2. Send via SignalR
         // We assume userId matches the JWT 'sub' claim or whatever UserIdentifier is mapped to.
