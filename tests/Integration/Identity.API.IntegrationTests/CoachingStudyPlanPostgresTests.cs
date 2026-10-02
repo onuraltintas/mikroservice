@@ -1,6 +1,8 @@
 using Coaching.Domain.Entities;
 using Coaching.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Shared.IntegrationTests.Fixtures;
 
 namespace Identity.API.IntegrationTests;
@@ -18,6 +20,13 @@ public sealed class CoachingStudyPlanPostgresTests(PostgresFixture postgres)
         await db.Database.EnsureCreatedAsync();
         try
         {
+            // Apply the actual Down/Up SQL against the disposable schema before writing data.
+            await db.Database.ExecuteSqlRawAsync("CREATE TABLE \"__EFMigrationsHistory\" (\"MigrationId\" varchar(150) PRIMARY KEY, \"ProductVersion\" varchar(32) NOT NULL);");
+            var migrator = db.GetService<IMigrator>();
+            const string previous = "20261002092936_LinkAcademicGoalTargetCatalog";
+            const string current = "20261002093428_AddStudentStudyPlans";
+            await db.Database.ExecuteSqlRawAsync(migrator.GenerateScript(current, previous));
+            await db.Database.ExecuteSqlRawAsync(migrator.GenerateScript(previous, current));
             var student = Guid.NewGuid();
             var plan = StudyPlanRevision.Create(student, Guid.NewGuid(), 1, "Plan");
             plan.Activate();
@@ -30,6 +39,13 @@ public sealed class CoachingStudyPlanPostgresTests(PostgresFixture postgres)
             db.StudyPlanRevisions.Add(competing);
             await Assert.ThrowsAsync<DbUpdateException>(() => db.SaveChangesAsync());
             db.ChangeTracker.Clear();
+            var draft = StudyPlanRevision.Create(student, plan.PlanId, 2, "Draft");
+            db.StudyPlanRevisions.Add(draft);
+            await db.SaveChangesAsync();
+            db.ChangeTracker.Clear();
+            db.StudyPlanRevisions.Add(StudyPlanRevision.Create(student, plan.PlanId, 3, "Other draft"));
+            await Assert.ThrowsAsync<DbUpdateException>(() => db.SaveChangesAsync());
+            db.ChangeTracker.Clear();
             await Assert.ThrowsAsync<Npgsql.PostgresException>(() => db.Database.ExecuteSqlInterpolatedAsync(
                 $"UPDATE coaching.study_plan_tasks SET \"StudentId\" = {Guid.NewGuid()} WHERE \"Id\" = {task.Id}"));
             await using var concurrentDb = new CoachingDbContext(options);
@@ -38,7 +54,7 @@ public sealed class CoachingStudyPlanPostgresTests(PostgresFixture postgres)
             first.Complete(20);
             await db.SaveChangesAsync();
             stale.Complete(25);
-            await Assert.ThrowsAnyAsync<Exception>(() => concurrentDb.SaveChangesAsync());
+            await Assert.ThrowsAsync<EduPlatform.Shared.Kernel.Exceptions.ConcurrencyException>(() => concurrentDb.SaveChangesAsync());
             db.ChangeTracker.Clear();
             Assert.Equal(20, (await db.StudyPlanTasks.SingleAsync()).ActualMinutes);
         }
