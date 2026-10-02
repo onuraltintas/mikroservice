@@ -68,6 +68,8 @@ export class StudentGoalTargetComponent {
   saveScore() {
     if (this.score === null || this.maxScore === null || !Number.isFinite(this.score) || !Number.isFinite(this.maxScore)
       || this.score <= 0 || this.maxScore <= 0 || this.maxScore > 999.99 || this.score > this.maxScore
+      || Math.abs(this.score * 100 - Math.round(this.score * 100)) > 0.000001
+      || Math.abs(this.maxScore * 100 - Math.round(this.maxScore * 100)) > 0.000001
       || !this.examTypes.includes(this.examType)) {
       this.error.set('Sınav türünü ve geçerli hedef puanı / puan ölçeğini birlikte girin. Hedef puanı ölçeği aşamaz.'); return;
     }

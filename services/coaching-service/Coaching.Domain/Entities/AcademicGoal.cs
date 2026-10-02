@@ -151,6 +151,7 @@ public class AcademicGoal : AggregateRoot
         if (score.HasValue || maxScore.HasValue || examType.HasValue)
         {
             if (score is null or <= 0 || maxScore is null or <= 0 or > 999.99m || score > maxScore
+                || decimal.Round(score.Value, 2) != score || decimal.Round(maxScore.Value, 2) != maxScore
                 || examType is null || !Enum.IsDefined(examType.Value))
                 throw new ArgumentException("Specify a positive target, its score scale and an exam type.");
         }
