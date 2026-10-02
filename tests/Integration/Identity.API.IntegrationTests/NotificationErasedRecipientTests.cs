@@ -14,6 +14,29 @@ namespace Identity.API.IntegrationTests;
 [Collection("Database")]
 public sealed class NotificationErasedRecipientTests(PostgresFixture postgres)
 {
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    [InlineData(2)]
+    [InlineData(3)]
+    public async Task ErasedRecipient_CannotBeDeletedThroughAnySaveOverload(int overload)
+    {
+        await using var db = new NotificationDbContext(new DbContextOptionsBuilder<NotificationDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
+        var guard = NotificationErasedRecipient.Create(Guid.NewGuid(), DateTime.UtcNow);
+        db.ErasedRecipients.Add(guard); await db.SaveChangesAsync(); db.ErasedRecipients.Remove(guard);
+        await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+        {
+            switch (overload)
+            {
+                case 0: db.SaveChanges(); break;
+                case 1: db.SaveChanges(false); break;
+                case 2: await db.SaveChangesAsync(false, CancellationToken.None); break;
+                default: await db.SaveChangesAsync(); break;
+            }
+        });
+    }
+
     [Fact]
     public async Task HistoricalReceiptReplay_AddsMissingRecipientProtection()
     {
