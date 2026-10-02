@@ -3,12 +3,30 @@ using System.Text.RegularExpressions;
 using Coaching.Domain.Entities;
 using Coaching.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Cryptography;
+using System.Text;
+using EduPlatform.Shared.Infrastructure.Middleware;
 
 namespace Coaching.Infrastructure.Catalogs;
 
 // Administrative local import only. Not registered as an HTTP endpoint or startup seed.
 public sealed class CoachingCatalogImporter(CoachingDbContext db)
 {
+    public sealed record Review(string Fingerprint, IReadOnlyDictionary<string, int> Counts, int NewRecords);
+    public async Task<Review> ReviewAsync(IReadOnlyDictionary<string, string> files, string source, CancellationToken ct = default)
+    {
+        string fingerprint = "";
+        var added = await ExecuteAsync(files, source, false, ct, true, capture: value => fingerprint = value);
+        return new(fingerprint, CatalogPreflight.Validate(files).Counts, added);
+    }
+
+    public Task<int> ApproveAsync(IReadOnlyDictionary<string, string> files, string source, string fingerprint,
+        string reason, Guid actorId, bool publish, CancellationToken ct = default)
+    {
+        if (fingerprint?.Length != 64 || string.IsNullOrWhiteSpace(reason) || reason.Trim().Length is < 5 or > 500 || actorId == Guid.Empty)
+            throw new ArgumentException("Approval requires a fingerprint, actor and reason.");
+        return ExecuteAsync(files, source, publish, ct, expected: fingerprint, reason: reason.Trim(), actor: actorId, publish: publish);
+    }
     public Task<int> PreviewAsync(IReadOnlyDictionary<string, string> files, string source,
         CancellationToken cancellationToken = default) => ExecuteAsync(files, source, false, cancellationToken, true);
 
@@ -19,7 +37,8 @@ public sealed class CoachingCatalogImporter(CoachingDbContext db)
         CancellationToken cancellationToken) => ExecuteAsync(files, source, true, cancellationToken);
 
     private async Task<int> ExecuteAsync(IReadOnlyDictionary<string, string> files, string source,
-        bool verifyOnly, CancellationToken cancellationToken, bool previewOnly = false)
+        bool verifyOnly, CancellationToken cancellationToken, bool previewOnly = false,
+        Action<string>? capture = null, string? expected = null, string? reason = null, Guid? actor = null, bool publish = false)
     {
         if (string.IsNullOrWhiteSpace(source) || source.Trim().Length > 100)
             throw new ArgumentException("A valid catalog source is required.", nameof(source));
@@ -28,8 +47,14 @@ public sealed class CoachingCatalogImporter(CoachingDbContext db)
         if (report.Errors.Count != 0) throw new ArgumentException("Catalog preflight failed: " + string.Join("; ", report.Errors.Take(10)));
         if (db.ChangeTracker.Entries().Any()) throw new InvalidOperationException("Import requires an unused dedicated context.");
         var rows = files.ToDictionary(x => x.Key, x => JsonSerializer.Deserialize<JsonElement[]>(x.Value)!);
+        var auditId = Guid.NewGuid();
         async Task<int> RunAsync()
         {
+            if (expected is not null)
+            {
+                var committed = await db.AdminAuditRecords.AsNoTracking().SingleOrDefaultAsync(x => x.Id == auditId, cancellationToken);
+                if (committed is not null) return JsonDocument.Parse(committed.ChangedFieldsJson!).RootElement.GetProperty("changed").GetInt32();
+            }
             db.ChangeTracker.Clear();
             await using var transaction = db.Database.CurrentTransaction is null
                 ? await db.Database.BeginTransactionAsync(cancellationToken) : null;
@@ -69,6 +94,17 @@ public sealed class CoachingCatalogImporter(CoachingDbContext db)
                 var topics = await db.StudyCatalogTopics.Where(x => x.Source == source).ToDictionaryAsync(x => x.SourceId, cancellationToken);
                 var programs = await db.TargetUniversityPrograms.Where(x => x.Source == source).ToDictionaryAsync(x => x.SourceId, cancellationToken);
                 var schools = await db.TargetSchools.Where(x => x.Source == source).ToDictionaryAsync(x => x.SourceId, cancellationToken);
+                var snapshot = JsonSerializer.Serialize(new { source,
+                    files = files.OrderBy(x => x.Key, StringComparer.Ordinal).ToArray(),
+                    lessons = lessons.OrderBy(x => x.Key, StringComparer.Ordinal).ToArray(),
+                    units = units.OrderBy(x => x.Key, StringComparer.Ordinal).ToArray(),
+                    topics = topics.OrderBy(x => x.Key, StringComparer.Ordinal).ToArray(),
+                    programs = programs.OrderBy(x => x.Key, StringComparer.Ordinal).ToArray(),
+                    schools = schools.OrderBy(x => x.Key, StringComparer.Ordinal).ToArray() });
+                var fingerprint = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(snapshot)));
+                capture?.Invoke(fingerprint);
+                if (expected is not null && !string.Equals(expected, fingerprint, StringComparison.Ordinal))
+                    throw new InvalidOperationException("Catalog or files changed after preview. Preview again.");
                 var added = 0;
                 foreach (var row in rows["lessons.json"])
                 {
@@ -92,7 +128,21 @@ public sealed class CoachingCatalogImporter(CoachingDbContext db)
                 foreach (var row in rows["lgs-programs.json"])
                     added += Stage(schools, Text(row, "id"), () => TargetSchool.Create(source, Text(row, "id"), Text(row, "schoolName"), Text(row, "city"), Text(row, "town"), Score(row), Number(row, "scoreYear")));
                 if (verifyOnly && added != 0) throw new InvalidOperationException("Reviewed catalog contains records missing from storage.");
-                if (!verifyOnly && !previewOnly) await db.SaveChangesAsync(cancellationToken);
+                if (publish)
+                {
+                    var entities = lessons.Values.Cast<object>().Concat(units.Values).Concat(topics.Values).Concat(programs.Values).Concat(schools.Values);
+                    foreach (var entity in entities)
+                    {
+                        var active = (bool)entity.GetType().GetProperty("IsActive")!.GetValue(entity)!;
+                        if (!active) { entity.GetType().GetMethod("SetActive")!.Invoke(entity, [true]); added++; }
+                    }
+                }
+                if (expected is not null)
+                    db.AdminAuditRecords.Add(new(auditId, DateTimeOffset.UtcNow, "Coaching", actor!.Value.ToString(), "SystemAdmin", null,
+                        "POST", "/api/coaching-admin/catalog-imports", 200, Guid.NewGuid().ToString("N"), null, null,
+                        publish ? "CatalogPublish" : "CatalogImport", "CatalogSource", source,
+                        JsonSerializer.Serialize(new { reason, fingerprint, changed = added })));
+                if ((!verifyOnly || publish) && !previewOnly) await db.SaveChangesAsync(cancellationToken);
                 if (transaction is not null && !previewOnly) await transaction.CommitAsync(cancellationToken);
                 return added;
             }
