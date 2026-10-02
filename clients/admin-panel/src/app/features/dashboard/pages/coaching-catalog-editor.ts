@@ -14,6 +14,7 @@ type RelationKind = 'lessons' | 'units' | 'topics';
   selector: 'app-coaching-catalog-editor', standalone: true, imports: [FormsModule],
   template: `
     <section aria-labelledby="catalog-editor-title" class="space-y-4 rounded-xl border border-indigo-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-900">
+      <p role="status" aria-live="polite" class="sr-only">Katalog düzenleme formu açıldı.</p>
       <header class="flex items-start justify-between gap-3">
         <div><h2 id="catalog-editor-title" class="text-xl font-semibold">{{ recordId ? 'Katalog kaydını düzenle' : 'Yeni katalog kaydı' }}</h2>
           <p class="mt-1 text-sm text-gray-500">Yeni kayıt pasif oluşturulur. Yayınlama ayrı onay gerektirir; kaynak kimlikleri değiştirilemez.</p></div>
@@ -168,6 +169,8 @@ export class CoachingCatalogEditorComponent implements OnInit {
   }
   searchRelation(relation: RelationKind, page = 1) {
     this.lookupRequests[relation]?.unsubscribe();
+    this.options.update(all => ({ ...all, [relation]: [] }));
+    this.lookupTotals[relation] = 0;
     if (page < 1 || (relation !== 'lessons' && !this.form.lessonId) || (relation === 'topics' && !this.form.unitId)) return;
     this.lookupRequests[relation] = this.service.list(relation, { pageNumber: page, pageSize: 25, search: this.lookupSearch[relation], ...(relation !== 'lessons' ? { lessonId: this.form.lessonId! } : {}), ...(relation === 'topics' ? { unitId: this.form.unitId!, hasParent: false } : {}) }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({ next: result => { this.lookupPages[relation] = page; this.lookupTotals[relation] = result.totalCount; this.options.update(all => ({ ...all, [relation]: result.items })); }, error: () => this.error.set('Bağlantı seçenekleri yüklenemedi. Yeniden arayın.') });
   }
@@ -180,6 +183,7 @@ export class CoachingCatalogEditorComponent implements OnInit {
     this.form.unitId = null; this.form.parentId = null;
     this.lookupRequests.units?.unsubscribe(); this.lookupRequests.topics?.unsubscribe();
     this.options.update(all => ({ ...all, units: [], topics: [] }));
+    this.lookupTotals.units = 0; this.lookupTotals.topics = 0;
     if (this.kind === 'topics') this.searchRelation('units');
   }
   provinceChanged() { this.form.districtId = null; this.loadDistricts(); }
