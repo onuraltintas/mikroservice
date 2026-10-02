@@ -31,6 +31,11 @@ test('real admin APIs reject anonymous/student access and stale preview', async 
   const stale = await request.post(`${api}/coaching-admin/catalog-imports/publish`, { headers, data: { ...data, fingerprint: review.fingerprint, reason: 'Stale preview must fail' } });
   expect(stale.status()).toBe(409);
   expect((await request.get(`${api}/coaching-admin/students/${randomUUID()}/study/plans`, { headers: { Authorization: `Bearer ${planningToken()}` } })).status()).toBe(403);
+  for (const role of ['Teacher','InstitutionAdmin']) {
+    expect((await request.get(`${api}/coaching-admin/students/${randomUUID()}/study/plans`, { headers:{Authorization:`Bearer ${planningToken(randomUUID(),[role])}`} })).status()).toBe(403);
+  }
+  expect((await request.get(`${api}/coaching-admin/students/${randomUUID()}/study/plans?pageSize=101`,{headers})).status()).toBe(400);
+  expect((await request.post(url,{headers,data:{source:'invalid',files:{}}})).status()).toBe(400);
 });
 
 test('admin browser previews, imports inactive, reviews again and publishes', async ({ page }) => {
@@ -59,6 +64,7 @@ test('admin browser previews, imports inactive, reviews again and publishes', as
 });
 
 test('admin inspects real student revisions and report without student write controls', async ({ page }) => {
+  await page.setViewportSize({width:390,height:844});
   const student = randomUUID(); const institution = randomUUID(); const token = adminToken();
   const headers = { Authorization: `Bearer ${planningToken(student)}` };
   const created = await page.request.post(`${api}/coaching/study-planning/plans`, { headers, data: { title: 'Browser inspection plan', tasks: [{ plannedDate: '2026-10-02', title: 'Inspection task', plannedMinutes: 30, topicId: null, isPinned: false }] } });
@@ -94,5 +100,8 @@ test('admin inspects real student revisions and report without student write con
   await corrections.getByRole('button',{name:'Planı arşivle'}).click();
   await page.getByRole('dialog').getByRole('button',{name:'Onayla',exact:true}).click();
   await expect(corrections.getByLabel('Düzeltilmiş plan başlığı')).toHaveCount(0);
+  await page.route(`**/api/coaching-admin/students/${student}/study/plans?*`,route=>route.fulfill({status:503,json:{message:'Test outage'}}));
+  await panel.getByRole('button',{name:'Filtrele / yeniden dene'}).click();
+  await expect(panel.getByRole('alert')).toContainText('Plan revizyonları yüklenemedi');
   await page.screenshot({ path: '../../artifacts/local-admin-catalog-e2e/student-review.png', fullPage: true });
 });
