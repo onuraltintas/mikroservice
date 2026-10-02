@@ -6,8 +6,23 @@ import { AuthService } from '../../../core/auth/auth.service';
 import { CoachingCatalogPage, CoachingCatalogService } from '../../../core/services/coaching-catalog.service';
 import { CoachingCatalogComponent } from './coaching-catalog';
 import { ToasterService } from '../../../core/services/toaster.service';
+import { LocationService } from '../../../core/services/location.service';
 
 describe('CoachingCatalogComponent', () => {
+  it('filters schools by verified location and clears dependent choices on province change', () => {
+    const { component, service } = create();
+    component.changeKind('schools');
+    component.provinceId = '66';
+    component.districtId = 'old';
+    component.provinceChanged();
+    expect(component.districtId).toBe('');
+    component.districtId = '1';
+    component.load();
+    expect(service.list).toHaveBeenLastCalledWith('schools', expect.objectContaining({ provinceId: '66', districtId: '1' }));
+    component.changeKind('lessons');
+    expect(component.provinceId).toBe('');
+    expect(component.districtId).toBe('');
+  });
   it('opens the editor only for global managers and does not switch its catalog underneath it', () => {
     const { component } = create();
     component.openEditor(null);
@@ -35,6 +50,7 @@ describe('CoachingCatalogComponent', () => {
         { provide: PLATFORM_ID, useValue: 'browser' },
         { provide: AuthService, useValue: { userProfile: () => ({ roles }), hasPermission: () => true } },
         { provide: ToasterService, useValue: toaster },
+        { provide: LocationService, useValue: { getProvinces: () => of([{ id: '66', name: 'Yozgat' }]), getDistricts: () => of([{ id: '1', provinceId: '66', name: 'Merkez' }]) } },
         { provide: CoachingCatalogService, useValue: service }
       ]
     });
