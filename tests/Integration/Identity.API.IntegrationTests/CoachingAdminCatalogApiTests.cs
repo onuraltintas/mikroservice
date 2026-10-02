@@ -25,6 +25,19 @@ public sealed class CoachingAdminCatalogApiTests
         Assert.IsType<OkObjectResult>(result);
     }
 
+    [Fact]
+    public async Task InvalidFilterReturnsFriendlyBadRequest()
+    {
+        var result = await new CoachingCatalogAdminController(new InvalidReader()).List("schools", new(), default);
+        Assert.IsType<BadRequestObjectResult>(result);
+    }
+
+    private sealed class InvalidReader : ICoachingAdminCatalogReader
+    {
+        public Task<TargetSearchPage<AdminCatalogRow>> ListAsync(CatalogKind kind, AdminCatalogFilter filter, CancellationToken cancellationToken)
+            => throw new ArgumentException("Filtre değerlerini kontrol edin.");
+    }
+
     private sealed class Reader : ICoachingAdminCatalogReader
     {
         public Task<TargetSearchPage<AdminCatalogRow>> ListAsync(CatalogKind kind, AdminCatalogFilter filter, CancellationToken cancellationToken)

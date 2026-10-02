@@ -77,6 +77,30 @@ public sealed class CoachingLocationDirectoryTests
             new IdentityLocationDirectoryClient(http, Config()).VerifyPairAsync("province", "district", cancellation.Token));
     }
 
+    [Fact]
+    public async Task NullDirectoryResponseIsNotAnEmptySuccessfulDirectory()
+    {
+        using var http = new HttpClient(new Handler(_ => new(HttpStatusCode.OK) { Content = JsonContent.Create<object?>(null) }));
+        await Assert.ThrowsAsync<HttpRequestException>(() =>
+            new IdentityLocationDirectoryClient(http, Config()).GetProvincesAsync(default));
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task MissingOrDuplicateDistrictIdentifiersAreRejected(bool duplicate)
+    {
+        using var http = new HttpClient(new Handler(request => new(HttpStatusCode.OK)
+        {
+            Content = request.RequestUri!.AbsolutePath.EndsWith("/districts")
+                ? JsonContent.Create(duplicate
+                    ? new[] { new { id = "district", provinceId = "province", name = "A" }, new { id = "district", provinceId = "province", name = "B" } }
+                    : Array.Empty<object>())
+                : JsonContent.Create(new[] { new { id = "province", name = "Province" } })
+        }));
+        Assert.False(await new IdentityLocationDirectoryClient(http, Config()).VerifyPairAsync("province", "district", default));
+    }
+
     private sealed class Handler(Func<HttpRequestMessage, HttpResponseMessage> response) : HttpMessageHandler
     {
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
