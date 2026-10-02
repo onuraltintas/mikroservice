@@ -27,6 +27,19 @@ public sealed class CoachingStudentExamServiceTests(PostgresFixture postgres)
         try
         {
             var actor = new Actor(); var access = new CoachingAccessPolicy(actor);
+            var studyReports = new CoachingStudentStudyReportService(db, access);
+            Assert.Null((await studyReports.GetAsync(new(2026, 10, 1), new(2026, 10, 2))).CompletionPercentage);
+            var ownPlan = StudyPlanRevision.Create(actor.UserId!.Value, Guid.NewGuid(), 1, "Own plan");
+            ownPlan.Activate();
+            var otherPlan = StudyPlanRevision.Create(Guid.NewGuid(), Guid.NewGuid(), 1, "Other plan");
+            otherPlan.Activate();
+            var task = StudyPlanTask.Create(ownPlan, new(2026, 10, 1), "Read", 30); task.Complete(25);
+            db.AddRange(ownPlan, otherPlan, task, StudyPlanTask.Create(otherPlan, new(2026, 10, 1), "Private", 60));
+            await db.SaveChangesAsync();
+            var studyReport = await studyReports.GetAsync(new(2026, 10, 1), new(2026, 10, 2));
+            Assert.Equal(1, studyReport.ScheduledTasks);
+            Assert.Equal(100m, studyReport.CompletionPercentage);
+            Assert.Equal(25, studyReport.ActualMinutes);
             var lesson = StudyCatalogLesson.Create("test", "l", "Math", 8, "LGS");
             var unit = StudyCatalogUnit.Create("test", "u", lesson.Id, "Unit", 0);
             var topic = StudyCatalogTopic.Create("test", "t", lesson.Id, unit.Id, "Topic", null, 0, 30);
@@ -80,6 +93,7 @@ public sealed class CoachingStudentExamServiceTests(PostgresFixture postgres)
             Assert.Null(await service.GetAsync(created.Id));
             Assert.True(await db.Exams.AnyAsync(x => x.Id == teacher.Id));
             actor.Roles = ["Teacher"];
+            await Assert.ThrowsAsync<BusinessRuleException>(() => studyReports.GetAsync(new(2026, 10, 1), new(2026, 10, 2)));
             await Assert.ThrowsAsync<BusinessRuleException>(() => service.ListAsync(1, 10));
         }
         finally { await db.Database.EnsureDeletedAsync(); }
