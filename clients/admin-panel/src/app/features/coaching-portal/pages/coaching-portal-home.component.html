@@ -1,4 +1,5 @@
 <section class="space-y-6">
+  <app-student-study-today *ngIf="isStudent()" />
   <div class="rounded-2xl bg-gradient-to-br from-indigo-700 to-violet-700 p-6 text-white shadow-lg sm:p-8">
     <p class="text-sm font-medium text-indigo-100">Koçluk çalışma alanın</p>
     <h1 class="mt-2 text-2xl font-bold sm:text-3xl">Merhaba, {{ user()?.firstName || 'Hoş geldin' }}.</h1>
