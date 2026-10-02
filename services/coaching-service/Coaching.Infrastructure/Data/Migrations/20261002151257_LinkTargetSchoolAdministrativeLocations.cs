@@ -42,6 +42,13 @@ namespace Coaching.Infrastructure.Data.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.Sql("""
+                DO $$ BEGIN
+                  IF EXISTS (SELECT 1 FROM coaching.target_schools WHERE "ProvinceId" IS NOT NULL OR "DistrictId" IS NOT NULL) THEN
+                    RAISE EXCEPTION 'Verified school locations exist. Restore a verified backup or explicitly review clearing the mappings before rollback.';
+                  END IF;
+                END $$;
+                """);
             migrationBuilder.DropIndex(
                 name: "IX_target_schools_IsActive_ProvinceId_DistrictId",
                 schema: "coaching",
