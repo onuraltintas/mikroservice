@@ -120,6 +120,9 @@ public sealed class CoachingCatalogDeletionPostgresTests(PostgresFixture postgre
             var lessonUsage = await service.GetUsageAsync(CatalogKind.Lessons, lesson.Id, default);
             var schoolUsage = await service.GetUsageAsync(CatalogKind.Schools, school.Id, default);
             Assert.Equal(1, lessonUsage.ExamReferences);
+            var compactReference = System.Text.Json.JsonSerializer.Serialize(new[] { new { LessonId = lesson.Id.ToString("N"), TopicId = (string?)null } });
+            await db.Database.ExecuteSqlInterpolatedAsync($"UPDATE coaching.exam_results SET lesson_answers = {compactReference}::jsonb WHERE id = {result.Id}");
+            Assert.Equal(1, (await service.GetUsageAsync(CatalogKind.Lessons, lesson.Id, default)).ExamReferences);
             Assert.Equal(1, schoolUsage.GoalReferences);
             await Assert.ThrowsAsync<BusinessRuleException>(() => service.DeleteAsync(CatalogKind.Lessons, lesson.Id, new(lessonUsage.Fingerprint, "Duplicate", lesson.Id), default));
             await Assert.ThrowsAsync<BusinessRuleException>(() => service.DeleteAsync(CatalogKind.Schools, school.Id, new(schoolUsage.Fingerprint, "Duplicate", school.Id), default));

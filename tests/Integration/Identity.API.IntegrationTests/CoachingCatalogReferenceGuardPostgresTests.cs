@@ -42,6 +42,8 @@ public sealed class CoachingCatalogReferenceGuardPostgresTests(PostgresFixture p
                 Assert.Equal("55P03", locked.SqlState);
                 await writer.CommitAsync();
             }
+            var compactReference = System.Text.Json.JsonSerializer.Serialize(new[] { new { LessonId = lesson.Id.ToString("N"), TopicId = (string?)null } });
+            await db.Database.ExecuteSqlInterpolatedAsync($"UPDATE coaching.exam_results SET lesson_answers = {compactReference}::jsonb WHERE id = {result.Id}");
             var inUse = await Assert.ThrowsAsync<PostgresException>(() => db.Database.ExecuteSqlInterpolatedAsync($"DELETE FROM coaching.study_catalog_lessons WHERE \"Id\" = {lesson.Id}"));
             Assert.Equal("23503", inUse.SqlState);
             result.SetLessonAnswers([new(Guid.NewGuid(), null, 1, 1, 0, 0)]);
