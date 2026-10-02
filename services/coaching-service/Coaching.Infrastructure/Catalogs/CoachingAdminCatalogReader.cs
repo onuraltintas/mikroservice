@@ -37,10 +37,24 @@ public sealed class CoachingAdminCatalogReader(CoachingDbContext db, ICoachingAd
         };
         if (filter.IsActive.HasValue) query = query.Where(x => x.IsActive == filter.IsActive);
         if (!string.IsNullOrWhiteSpace(filter.Source)) query = query.Where(x => x.Source == filter.Source.Trim());
+        if (filter.GradeNumber.HasValue) query = query.Where(x => x.GradeNumber == filter.GradeNumber);
+        if (!string.IsNullOrWhiteSpace(filter.ExamCode)) query = query.Where(x => x.ExamCode == filter.ExamCode.Trim());
+        if (filter.LessonId.HasValue) query = query.Where(x => x.LessonId == filter.LessonId);
+        if (filter.UnitId.HasValue) query = query.Where(x => x.UnitId == filter.UnitId);
+        if (filter.ParentId.HasValue) query = query.Where(x => x.ParentId == filter.ParentId);
+        if (!string.IsNullOrWhiteSpace(filter.ProvinceId)) query = query.Where(x => x.ProvinceId == filter.ProvinceId.Trim());
+        if (!string.IsNullOrWhiteSpace(filter.DistrictId)) query = query.Where(x => x.DistrictId == filter.DistrictId.Trim());
+        if (!string.IsNullOrWhiteSpace(filter.ScoreType)) query = query.Where(x => x.ScoreType == filter.ScoreType.Trim());
+        if (filter.ScoreYear.HasValue) query = query.Where(x => x.ScoreYear == filter.ScoreYear);
         if (!string.IsNullOrWhiteSpace(filter.Search))
         {
             var term = filter.Search.Trim().Replace("\\", "\\\\").Replace("%", "\\%").Replace("_", "\\_");
-            query = query.Where(x => EF.Functions.ILike(x.Name, "%" + term + "%", "\\"));
+            var pattern = "%" + term + "%";
+            query = kind == CatalogKind.UniversityPrograms
+                ? query.Where(x => EF.Functions.ILike(x.Name, pattern, "\\")
+                    || EF.Functions.ILike(x.UniversityName!, pattern, "\\")
+                    || EF.Functions.ILike(x.ProgramCode!, pattern, "\\"))
+                : query.Where(x => EF.Functions.ILike(x.Name, pattern, "\\"));
         }
         var count = await query.CountAsync(cancellationToken);
         var rows = await query.OrderBy(x => x.Name).ThenBy(x => x.Id)

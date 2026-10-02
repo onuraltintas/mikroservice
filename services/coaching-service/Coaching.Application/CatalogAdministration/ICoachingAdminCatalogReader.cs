@@ -11,6 +11,15 @@ public sealed record AdminCatalogFilter
     public string? Search { get; init; }
     public bool? IsActive { get; init; }
     public string? Source { get; init; }
+    public int? GradeNumber { get; init; }
+    public string? ExamCode { get; init; }
+    public Guid? LessonId { get; init; }
+    public Guid? UnitId { get; init; }
+    public Guid? ParentId { get; init; }
+    public string? ProvinceId { get; init; }
+    public string? DistrictId { get; init; }
+    public string? ScoreType { get; init; }
+    public int? ScoreYear { get; init; }
 }
 
 public sealed record AdminCatalogRow
