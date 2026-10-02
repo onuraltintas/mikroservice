@@ -1,5 +1,17 @@
 # Koçluk admin katalog yönetimi — yerel ilerleme
 
+## Sonuç — 2 Ekim, admin aktarımı ve öğrenci incelemesi
+
+Bu bölüm aşağıdaki tarihsel kalan işler listesinin aktarım/yayın ve salt okunur öğrenci inceleme maddelerini günceller. Değişiklikler yereldir; GitHub'a gönderilmedi, canlıya alınmadı.
+
+- Admin kataloğunda altı JSON dosyasıyla önizleme, dosya bazında kayıt sayısı ve yeni/mevcut aynı içerik özeti, gerekçeli pasif aktarım ve ayrı yayın onayı tamamlandı. İçeriği değişmiş mevcut kayıt otomatik güncellenmez. Parmak izi, silinmiş kaynak kimliği ve tam kaynak kümesi denetimleri sunucudadır; işlemler atomik denetim kaydı oluşturur.
+- Global admin öğrenci detayına haftalık müsaitlik, filtreli/sayfalı plan revizyonları ve görev ayrıntısı eklendi. Kurum yetkileri genişletilmedi; kişisel plan incelemesi global admin ve Coaching.View gerektirir.
+- Aynı detayda dönem çalışma/sınav raporu ve güncel hedefler ile hedef puanı karşılaştırması mevcut öğrenci rapor hesaplamaları kullanılarak gösterilir. Öğrenci değişiminde eski istekler iptal edilir. Bu ekran salt okunurdur; öğrenci beyanı veya geçmiş kayıtlar değiştirilemez.
+- Son seçili backend regresyonu: **82 geçti, 0 başarısız, 0 atlanan**. Son seçili arayüz regresyonu: **68 geçti**. Production derlemesi geçti; önceden mevcut Speed Reading katalog CSS bütçesi uyarısı devam ediyor.
+- Gerçek Edge tarayıcısında **3 senaryo geçti**: gerçek API yetkisiz erişim/eski önizleme reddi; ekrandan pasif aktarım ve ayrı yayın; gerçek Koçluk veritabanından öğrenci revizyon/görev/rapor incelemesi. Son senaryoda mevcut kurum roster/profil yanıtları test fixture'ıdır; Identity giriş/kurum entegrasyonunun uçtan uca doğrulandığı iddia edilmez.
+- Tarayıcı kanıtları: `artifacts/local-admin-catalog-e2e/catalog-mobile.png`, `student-review.png`. Testler yalnız geçici yerel Koçluk veritabanında çalıştırıldı. Canlı veya Hızlı Okuma veritabanı değiştirilmedi.
+- C# ve TypeScript incelemelerinde engelleyici bulgu yok. Bu sonuç tüm ürünün %100 test kapsaması veya tüm tarayıcı/Identity akışlarının tamamlandığı anlamına gelmez. Gerekçeli öğrenci düzeltme/arşivleme ayrı kapsam olarak kalır; bu turda kullanıcı isteğindeki salt okunur incelemeye eklenmedi.
+
 Bu kayıt yeni yerel çalışmayı anlatır; önceki listeleme/kullanım/kalıcı silme yayını ile karıştırılmamalıdır. Yeni değişiklikler GitHub'a gönderilmedi ve canlıya alınmadı.
 
 ## Tamamlanan geliştirmeler
