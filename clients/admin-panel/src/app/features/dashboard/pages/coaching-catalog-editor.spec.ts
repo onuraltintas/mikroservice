@@ -8,6 +8,25 @@ import { ToasterService } from '../../../core/services/toaster.service';
 import { CoachingCatalogEditorComponent } from './coaching-catalog-editor';
 
 describe('CoachingCatalogEditorComponent', () => {
+  it('clears old parent options while a changed unit query is pending and after clearing the unit', () => {
+    const { component, service } = create('topics');
+    const pending = new Subject<{ items: never[]; totalCount: number; pageNumber: number; pageSize: number }>();
+    service.list.mockReturnValue(pending);
+    component.form.lessonId = 'lesson';
+    component.options.set({ lessons: [], units: [], topics: [{ id: 'old', name: 'Old', source: 'fixture', sourceId: '1', isActive: true }] });
+    component.lookupTotals.topics = 100;
+    component.relationChanged('units', 'new-unit');
+    expect(component.options().topics).toEqual([]);
+    expect(component.lookupTotals.topics).toBe(0);
+    component.relationChanged('units', null);
+    expect(pending.observed).toBe(false);
+    expect(component.options().topics).toEqual([]);
+  });
+
+  it('announces the dynamically opened editor', () => {
+    const { fixture } = create();
+    expect(fixture.nativeElement.querySelector('[role="status"]').textContent).toContain('Katalog');
+  });
   function create(kind = 'lessons', id: string | null = null, permitted = true) {
     const document = { fingerprint: 'hash', data: { id: 'record', name: 'Math', source: 'fixture', sourceId: '1', isActive: false, gradeNumber: 8, examCode: 'LGS' } };
     const service = { get: vi.fn(() => of(document)), create: vi.fn((_kind: string, _request: unknown) => of(document)), update: vi.fn(() => of(document)), setActive: vi.fn(() => of(document)), list: vi.fn(() => of({ items: [], totalCount: 0, pageNumber: 1, pageSize: 25 })) };
