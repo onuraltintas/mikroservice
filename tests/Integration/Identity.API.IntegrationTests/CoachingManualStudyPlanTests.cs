@@ -106,6 +106,69 @@ public sealed class CoachingManualStudyPlanTests(PostgresFixture postgres)
     }
 
     [Fact]
+    public async Task ListsAndTaskOperations_AreOwnedVersionedAndPreserveCompletedWork()
+    {
+        var options = new DbContextOptionsBuilder<CoachingDbContext>()
+            .UseNpgsql(postgres.ConnectionString, x => x.EnableRetryOnFailure()).Options;
+        await using var db = new CoachingDbContext(options);
+        await db.Database.EnsureDeletedAsync();
+        await db.Database.EnsureCreatedAsync();
+        try
+        {
+            var actor = new Actor { UserId = Guid.NewGuid() };
+            var owner = actor.UserId;
+            var service = new CoachingManualStudyPlanService(db, new CoachingAccessPolicy(actor));
+            var date = new DateOnly(2026, 10, 5);
+            var input = new ManualStudyPlanInput("Plan", [new(date, "Birinci", 60, null, true), new(date.AddDays(1), "İkinci", 1440, null, false)]);
+            Assert.Empty((await service.ListAsync(1, 20, null)).Items);
+            var draft = await service.CreateDraftAsync(input);
+            await Assert.ThrowsAsync<BusinessRuleException>(() => service.CompleteTaskAsync(draft.Id, draft.Tasks[0].Id, draft.Version, 55));
+            var active = await service.PublishAsync(draft.Id, draft.Version);
+            var first = active.Tasks.Single(x => x.Title == "Birinci");
+            await Assert.ThrowsAsync<ArgumentException>(() => service.RescheduleTaskAsync(active.Id, first.Id, active.Version, date.AddDays(1)));
+            await Assert.ThrowsAsync<ArgumentException>(() => service.RescheduleTaskAsync(active.Id, first.Id, active.Version, default));
+            var moved = await service.RescheduleTaskAsync(active.Id, first.Id, active.Version, date.AddDays(2));
+            Assert.True(moved.Version > active.Version);
+            Assert.Equal(date.AddDays(2), moved.Tasks.Single(x => x.Id == first.Id).PlannedDate);
+            Assert.True(moved.Tasks.Single(x => x.Id == first.Id).IsPinned);
+            await Assert.ThrowsAsync<BusinessRuleException>(() => service.CompleteTaskAsync(active.Id, first.Id, active.Version, 55));
+            var completed = await service.CompleteTaskAsync(active.Id, first.Id, moved.Version, 55);
+            var completedTask = completed.Tasks.Single(x => x.Id == first.Id);
+            Assert.True(completedTask.IsCompleted);
+            Assert.Equal(55, completedTask.ActualMinutes);
+            Assert.NotNull(completedTask.CompletedAt);
+            var repeated = await service.CompleteTaskAsync(active.Id, first.Id, completed.Version, 55);
+            Assert.Equal(completed.Version, repeated.Version);
+            Assert.Equal(completedTask.CompletedAt, repeated.Tasks.Single(x => x.Id == first.Id).CompletedAt);
+            await Assert.ThrowsAsync<BusinessRuleException>(() => service.CompleteTaskAsync(active.Id, first.Id, completed.Version, 56));
+            await Assert.ThrowsAsync<BusinessRuleException>(() => service.RescheduleTaskAsync(active.Id, first.Id, completed.Version, date.AddDays(3)));
+            await Assert.ThrowsAsync<BusinessRuleException>(() => service.CompleteTaskAsync(active.Id, Guid.NewGuid(), completed.Version, 30));
+            var next = await service.CreateDraftAsync(input);
+            var drafts = await service.ListAsync(1, 20, StudyPlanStatus.Draft);
+            Assert.Equal(next.Id, Assert.Single(drafts.Items).Id);
+            var list = await service.ListAsync(1, 1, null);
+            Assert.Equal(2, list.TotalCount);
+            Assert.Single(list.Items);
+            Assert.Single((await service.ListAsync(2, 1, null)).Items);
+            await Assert.ThrowsAsync<ArgumentException>(() => service.ListAsync(0, 20, null));
+            await Assert.ThrowsAsync<ArgumentException>(() => service.ListAsync(1, 51, null));
+            await Assert.ThrowsAsync<ArgumentException>(() => service.ListAsync(1, 20, (StudyPlanStatus)9));
+            await service.PublishAsync(next.Id, next.Version);
+            var archived = (await service.GetAsync(active.Id))!;
+            Assert.Equal(55, archived.Tasks.Single(x => x.Id == first.Id).ActualMinutes);
+            await Assert.ThrowsAsync<BusinessRuleException>(() => service.CompleteTaskAsync(active.Id, first.Id, archived.Version, 55));
+            actor.UserId = Guid.NewGuid();
+            Assert.Empty((await service.ListAsync(1, 20, null)).Items);
+            var missing = await Assert.ThrowsAsync<BusinessRuleException>(() => service.CompleteTaskAsync(next.Id, next.Tasks[0].Id, 0, 30));
+            Assert.Equal("StudyPlanning.NotFound", missing.Code);
+            actor.UserId = owner;
+            actor.Roles = ["Teacher"];
+            await Assert.ThrowsAsync<BusinessRuleException>(() => service.ListAsync(1, 20, null));
+        }
+        finally { await db.Database.EnsureDeletedAsync(); }
+    }
+
+    [Fact]
     public async Task FailedActivation_RollsBackPreviousArchiveAndCanBeRetried()
     {
         var fault = new ActivationFault();
@@ -139,6 +202,8 @@ public sealed class CoachingManualStudyPlanTests(PostgresFixture postgres)
     [InlineData("create")]
     [InlineData("replace")]
     [InlineData("publish")]
+    [InlineData("complete")]
+    [InlineData("reschedule")]
     public async Task LostCommitAcknowledgement_ReturnsCommittedResult(string operation)
     {
         var fault = new CommitAcknowledgementFault();
@@ -152,11 +217,14 @@ public sealed class CoachingManualStudyPlanTests(PostgresFixture postgres)
             var service = new CoachingManualStudyPlanService(db, new CoachingAccessPolicy(new Actor { UserId = Guid.NewGuid() }));
             var input = new ManualStudyPlanInput("Plan", [new(new DateOnly(2026, 10, 5), "Konu", 30, null, false)]);
             var draft = operation == "create" ? null : await service.CreateDraftAsync(input);
+            if (operation is "complete" or "reschedule") draft = await service.PublishAsync(draft!.Id, draft.Version);
             fault.Enabled = true;
             var result = operation switch
             {
                 "create" => await service.CreateDraftAsync(input),
                 "replace" => await service.ReplaceDraftAsync(draft!.Id, draft.Version, input with { Title = "Düzenlenmiş" }),
+                "complete" => await service.CompleteTaskAsync(draft!.Id, draft.Tasks[0].Id, draft.Version, 25),
+                "reschedule" => await service.RescheduleTaskAsync(draft!.Id, draft.Tasks[0].Id, draft.Version, new DateOnly(2026, 10, 6)),
                 _ => await service.PublishAsync(draft!.Id, draft.Version)
             };
             Assert.Equal(1, fault.Failures);
