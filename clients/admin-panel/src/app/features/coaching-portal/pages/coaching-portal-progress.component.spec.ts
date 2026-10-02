@@ -54,6 +54,10 @@ describe('CoachingPortalProgressComponent', () => {
     expect(fixture.componentInstance.canLeavePage()).toBe(true);
     picker.saving.set(true);
     expect(fixture.componentInstance.canLeavePage()).toBe(false);
+    fixture.componentInstance.goals.update(goals => goals.map(goal => ({ ...goal, progress: 20 })));
+    fixture.detectChanges();
+    expect(fixture.debugElement.query(By.directive(StudentGoalTargetComponent)).componentInstance).toBe(picker);
+    expect(fixture.componentInstance.canLeavePage()).toBe(false);
   });
 
   it('creates a self-managed goal with a generated idempotency key', () => {
