@@ -13,7 +13,8 @@ describe('StudentStudyPlansComponent', () => {
       list: vi.fn(() => of({ items: [{ ...active, tasks: undefined }], totalCount: 1, pageNumber: 1, pageSize: 20 })),
       get: vi.fn(() => of(active)), create: vi.fn(() => of({ ...active, status: 'Draft' })),
       replace: vi.fn(() => of({ ...active, status: 'Draft' })), publish: vi.fn(() => of(active)),
-      complete: vi.fn(() => of({ ...active, version: 5 })), reschedule: vi.fn(() => of({ ...active, version: 5 }))
+      complete: vi.fn(() => of({ ...active, version: 5 })), reschedule: vi.fn(() => of({ ...active, version: 5 })),
+      archive: vi.fn(() => of({ ...active, status: 'Archived' as const, version: 5 }))
     };
     TestBed.configureTestingModule({ imports: [StudentStudyPlansComponent], providers: [{ provide: CoachingStudyPlanningService, useValue: service }] });
     const fixture = TestBed.createComponent(StudentStudyPlansComponent);
@@ -36,6 +37,19 @@ describe('StudentStudyPlansComponent', () => {
     component.publishConfirmed = true;
     component.publish();
     expect(service.publish).toHaveBeenCalledWith('plan', 4);
+  });
+  it('archives only a clean draft after explicit confirmation so regeneration is possible', () => {
+    const { component, service } = setup();
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    component.selected.set({ ...active, status: 'Draft' });
+    component.archiveDraft(); expect(service.archive).not.toHaveBeenCalled();
+    confirm.mockReturnValue(true);
+    component.dirty = true; component.archiveDraft(); expect(service.archive).not.toHaveBeenCalled();
+    component.dirty = false; component.archiveDraft();
+    expect(service.archive).toHaveBeenCalledWith('plan', 4);
+    expect(component.selected()?.status).toBe('Archived');
+    expect(component.knownDraftId()).toBeNull();
+    confirm.mockRestore();
   });
   it('does not mutate completed or archived tasks', () => {
     const { component, service } = setup();
