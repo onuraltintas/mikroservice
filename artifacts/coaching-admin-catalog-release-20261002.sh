@@ -22,7 +22,17 @@ prepare)
   printf 'services:\n  coaching-service:\n    image: eduivme/coaching-service:%s\n  admin-panel:\n    image: eduivme/admin-panel:%s\n' "$tag" "$tag" > production.override.yml
   chmod 600 compose-files.txt *.override.yml
   ;;
+pin-rollback)
+  test ! -e migrations-complete
+  printf 'services:\n' > rollback.override.yml
+  for service in coaching-service admin-panel; do
+    previous=$(docker inspect "eduivme-production-${service}-1" --format '{{.Image}}')
+    printf '  %s:\n    image: %s\n    pull_policy: never\n' "$service" "$previous" >> rollback.override.yml
+  done
+  chmod 600 rollback.override.yml
+  ;;
 backup-drill)
+  rm -f "$release/drill-complete" "$release/migrations-complete"
   test ! -e coaching.backup
   docker exec postgres pg_dump -U "$db_user" -d coaching_db -Fc > coaching.backup
   chmod 600 coaching.backup
@@ -70,6 +80,7 @@ migrate|deploy|rollback)
     deploy)
       test -f migrations-complete
       test "$(cat migrations-complete)" = "$(docker image inspect "eduivme/coaching-service:$tag" --format '{{.Id}}')"
+      test "$(docker exec postgres psql -U "$db_user" -d coaching_db -v ON_ERROR_STOP=1 -Atc 'SELECT count(*) FROM coaching.__ef_migrations_history WHERE "MigrationId" IN ($$20261002151257_LinkTargetSchoolAdministrativeLocations$$,$$20261002160724_GuardExamCatalogReferences$$)')" = 2
       "${compose[@]}" up -d --no-deps coaching-service admin-panel
       ;;
     rollback) "${compose[@]}" up -d --no-deps coaching-service admin-panel ;;
