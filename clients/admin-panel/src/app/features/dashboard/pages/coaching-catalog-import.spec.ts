@@ -24,7 +24,7 @@ describe('CoachingCatalogImportComponent', () => {
   it('requires preview before approval and keeps publication separate', async () => {
     const { component, service } = setup();
     await component.approve(false); expect(service.approveImport).not.toHaveBeenCalled();
-    component.preview(); await component.approve(false);
+    component.preview(); component.reason = 'Test onayı'; await component.approve(false);
     expect(service.approveImport).toHaveBeenCalledWith(expect.objectContaining({ source: 'fixture', fingerprint: 'hash', reason: 'Test onayı' }));
     expect(component.review()).toBeNull();
     expect(service.publishImport).not.toHaveBeenCalled();
@@ -40,7 +40,12 @@ describe('CoachingCatalogImportComponent', () => {
     expect(pending.observed).toBe(false);
   });
   it('invalidates preview when source changes', () => {
-    const { component } = setup(); component.preview(); component.invalidate(); expect(component.review()).toBeNull();
+    const { component } = setup(); component.preview(); component.reason = 'Önceki kaynak gerekçesi'; component.invalidate(); expect(component.review()).toBeNull();
+    expect(component.reason).toBe('');
+  });
+  it('announces a pending operation visibly', () => {
+    const { fixture, component } = setup(); component.busy.set(true); fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[role="status"]').textContent).toContain('İşlem');
   });
   it('never publishes files that still contain new records', async () => {
     const { component, service } = setup(); component.preview(); await component.approve(true);
