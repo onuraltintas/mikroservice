@@ -43,7 +43,15 @@ export interface CoachingCatalogFilter {
   examCode?: string;
   scoreType?: string;
   scoreYear?: number;
+  lessonId?: string;
+  unitId?: string;
+  parentId?: string;
+  provinceId?: string;
+  districtId?: string;
 }
+
+export type CoachingCatalogSaveRequest = Partial<Pick<CoachingCatalogRow, 'gradeNumber' | 'examCode' | 'lessonId' | 'unitId' | 'parentId' | 'displayOrder' | 'estimatedMinutes' | 'universityName' | 'programCode' | 'scoreType' | 'minimumScore' | 'scoreYear' | 'provinceId' | 'districtId'>> & { name: string; reason: string; fingerprint?: string };
+export interface CoachingCatalogEditDocument { fingerprint: string; data: CoachingCatalogRow; }
 
 export interface CoachingCatalogUsage {
   id: string;
@@ -59,6 +67,26 @@ export interface CoachingCatalogUsage {
 @Injectable({ providedIn: 'root' })
 export class CoachingCatalogService {
   private readonly http = inject(HttpClient);
+
+  get(kind: CoachingCatalogKind, id: string) {
+    return this.http.get<{ data: CoachingCatalogEditDocument }>(`${environment.apiUrl}/coaching-admin/catalog/${kind}/${encodeURIComponent(id)}`)
+      .pipe(map(response => response.data));
+  }
+
+  create(kind: CoachingCatalogKind, request: CoachingCatalogSaveRequest) {
+    return this.http.post<{ data: CoachingCatalogEditDocument }>(`${environment.apiUrl}/coaching-admin/catalog/${kind}`, request)
+      .pipe(map(response => response.data));
+  }
+
+  update(kind: CoachingCatalogKind, id: string, request: CoachingCatalogSaveRequest) {
+    return this.http.put<{ data: CoachingCatalogEditDocument }>(`${environment.apiUrl}/coaching-admin/catalog/${kind}/${encodeURIComponent(id)}`, request)
+      .pipe(map(response => response.data));
+  }
+
+  setActive(kind: CoachingCatalogKind, id: string, request: { fingerprint: string; isActive: boolean; reason: string }) {
+    return this.http.patch<{ data: CoachingCatalogEditDocument }>(`${environment.apiUrl}/coaching-admin/catalog/${kind}/${encodeURIComponent(id)}/status`, request)
+      .pipe(map(response => response.data));
+  }
 
   usage(kind: CoachingCatalogKind, id: string) {
     return this.http.get<{ data: CoachingCatalogUsage }>(`${environment.apiUrl}/coaching-admin/catalog/${kind}/${encodeURIComponent(id)}/usage`)
