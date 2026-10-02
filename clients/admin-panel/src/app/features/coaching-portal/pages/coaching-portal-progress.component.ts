@@ -5,11 +5,12 @@ import { catchError, finalize, forkJoin, of } from 'rxjs';
 import { AuthService } from '../../../core/auth/auth.service';
 import { CoachingPortalService, ExamResult, Goal, StudentProgressSummary } from '../../../core/services/coaching-portal.service';
 import { StudentGoalTargetComponent } from './student-goal-target.component';
+import { StudentStudyReportComponent } from './student-study-report.component';
 
 @Component({
   selector: 'app-coaching-portal-progress',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, StudentGoalTargetComponent],
+  imports: [CommonModule, ReactiveFormsModule, StudentGoalTargetComponent, StudentStudyReportComponent],
   templateUrl: './coaching-portal-progress.component.html',
   styleUrl: './coaching-portal-progress.component.scss'
 })
