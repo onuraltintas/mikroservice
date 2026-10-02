@@ -49,6 +49,10 @@ import { DistrictOption, LocationService, ProvinceOption } from '../../../core/s
           <div><label for="catalog-province" class="block text-sm font-medium">Doğrulanmış şehir</label><select id="catalog-province" name="province" [(ngModel)]="provinceId" (ngModelChange)="provinceChanged()" [disabled]="editorOpen() || deleting()" class="mt-1 w-full rounded-lg border p-2 dark:bg-gray-800"><option value="">Tümü</option>@for (row of provinces(); track row.id) { <option [value]="row.id">{{ row.name }}</option> }</select></div>
           <div><label for="catalog-district" class="block text-sm font-medium">Doğrulanmış ilçe</label><select id="catalog-district" name="district" [(ngModel)]="districtId" [disabled]="!provinceId || editorOpen() || deleting()" class="mt-1 w-full rounded-lg border p-2 dark:bg-gray-800"><option value="">Tümü</option>@for (row of districts(); track row.id) { <option [value]="row.id">{{ row.name }}</option> }</select><p class="text-xs text-gray-500">Bu filtreler yalnız doğrulanmış konum eşleştirmelerini kapsar.</p></div>
         }
+        @if (kind === 'units' || kind === 'topics') {
+          <div><label for="catalog-lesson-search" class="block text-sm font-medium">Ders seçeneklerinde ara</label><input id="catalog-lesson-search" name="lessonSearch" [(ngModel)]="lessonSearch" maxlength="200" class="mt-1 w-full rounded-lg border p-2 dark:bg-gray-800" /><button type="button" (click)="loadRelations('lessons')" [disabled]="editorOpen() || deleting()" class="mt-1 rounded-lg border px-2 py-1">Ders ara</button><label for="catalog-lesson" class="mt-2 block text-sm font-medium">Ders</label><select id="catalog-lesson" name="lessonId" [(ngModel)]="lessonId" (ngModelChange)="lessonFilterChanged()" [disabled]="editorOpen() || deleting()" class="mt-1 w-full rounded-lg border p-2 dark:bg-gray-800"><option value="">Tümü</option>@for(row of lessonOptions(); track row.id) {<option [value]="row.id">{{ row.name }}</option>}</select><button type="button" (click)="loadRelations('lessons', lessonPage + 1)" [disabled]="editorOpen() || deleting() || lessonPage * 25 >= lessonTotal" class="mt-1 rounded-lg border px-2 py-1">Daha fazla ders</button></div>
+          @if (kind === 'topics') {<div><label for="catalog-unit-search" class="block text-sm font-medium">Ünite seçeneklerinde ara</label><input id="catalog-unit-search" name="unitSearch" [(ngModel)]="unitSearch" maxlength="200" class="mt-1 w-full rounded-lg border p-2 dark:bg-gray-800" /><button type="button" (click)="loadRelations('units')" [disabled]="!lessonId || editorOpen() || deleting()" class="mt-1 rounded-lg border px-2 py-1">Ünite ara</button><label for="catalog-unit" class="mt-2 block text-sm font-medium">Ünite</label><select id="catalog-unit" name="unitId" [(ngModel)]="unitId" [disabled]="!lessonId || editorOpen() || deleting()" class="mt-1 w-full rounded-lg border p-2 dark:bg-gray-800"><option value="">Tümü</option>@for(row of unitOptions(); track row.id) {<option [value]="row.id">{{ row.name }}</option>}</select><button type="button" (click)="loadRelations('units', unitPage + 1)" [disabled]="!lessonId || editorOpen() || deleting() || unitPage * 25 >= unitTotal" class="mt-1 rounded-lg border px-2 py-1">Daha fazla ünite</button></div>}
+        }
         <div class="flex items-end"><button type="submit" [disabled]="editorOpen() || deleting()" class="rounded-lg bg-indigo-600 px-4 py-2 font-medium text-white disabled:opacity-40">Filtrele</button></div>
       </form>
       @if (editorOpen()) { <app-coaching-catalog-editor [kind]="kind" [recordId]="editingId" (cancelled)="closeEditor()" (saved)="editorSaved()" /> }
@@ -103,6 +107,11 @@ export class CoachingCatalogComponent implements OnInit {
   private readonly service = inject(CoachingCatalogService);
   private readonly locations = inject(LocationService);
   private locationRequest?: Subscription;
+  private relationRequests: Partial<Record<'lessons' | 'units', Subscription>> = {};
+  readonly lessonOptions = signal<CoachingCatalogRow[]>([]);
+  readonly unitOptions = signal<CoachingCatalogRow[]>([]);
+  lessonId = ''; unitId = ''; lessonSearch = ''; unitSearch = '';
+  lessonPage = 1; unitPage = 1; lessonTotal = 0; unitTotal = 0;
   readonly provinces = signal<ProvinceOption[]>([]);
   readonly districts = signal<DistrictOption[]>([]);
   provinceId = '';
@@ -184,6 +193,10 @@ export class CoachingCatalogComponent implements OnInit {
   changeKind(kind: CoachingCatalogKind) {
     if (this.editorOpen() || this.deleting()) return;
     this.kind = kind;
+    this.relationRequests.lessons?.unsubscribe(); this.relationRequests.units?.unsubscribe();
+    this.lessonId = ''; this.unitId = ''; this.lessonSearch = ''; this.unitSearch = '';
+    this.lessonOptions.set([]); this.unitOptions.set([]); this.lessonTotal = 0; this.unitTotal = 0;
+    if (kind === 'units' || kind === 'topics') this.loadRelations('lessons');
     this.locationRequest?.unsubscribe();
     this.provinceId = ''; this.districtId = ''; this.districts.set([]);
     if (kind === 'schools' && this.auth.userProfile()?.roles?.includes('SystemAdmin')) this.locations.getProvinces().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({ next: rows => this.provinces.set(rows), error: () => this.toaster.error('Şehir seçenekleri alınamadı. Kataloğu yeniden açın.') });
@@ -198,6 +211,26 @@ export class CoachingCatalogComponent implements OnInit {
     if (!this.provinceId || !this.auth.userProfile()?.roles?.includes('SystemAdmin')) return;
     const province = this.provinceId;
     this.locationRequest = this.locations.getDistricts(province).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({ next: rows => this.districts.set(rows.filter(row => row.provinceId === province)), error: () => this.toaster.error('İlçe seçenekleri alınamadı. Şehri yeniden seçin.') });
+  }
+  lessonFilterChanged() {
+    this.unitId = ''; this.unitSearch = ''; this.unitOptions.set([]); this.unitTotal = 0;
+    this.relationRequests.units?.unsubscribe();
+    if (this.kind === 'topics' && this.lessonId) this.loadRelations('units');
+  }
+  loadRelations(kind: 'lessons' | 'units', page = 1) {
+    if (!this.auth.userProfile()?.roles?.includes('SystemAdmin') || this.editorOpen() || this.deleting() || page < 1) return;
+    this.relationRequests[kind]?.unsubscribe();
+    if (kind === 'units' && !this.lessonId) return;
+    const options = kind === 'lessons' ? this.lessonOptions : this.unitOptions;
+    if (page === 1) {
+      const selected = kind === 'lessons' ? this.lessonId : this.unitId;
+      options.update(rows => rows.filter(row => row.id === selected));
+    }
+    this.relationRequests[kind] = this.service.list(kind, { pageNumber: page, pageSize: 25, search: kind === 'lessons' ? this.lessonSearch.trim() : this.unitSearch.trim(), ...(kind === 'units' ? { lessonId: this.lessonId } : {}) }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({ next: result => {
+      options.update(rows => [...rows, ...result.items.filter(item => !rows.some(row => row.id === item.id))]);
+      if (kind === 'lessons') { this.lessonPage = page; this.lessonTotal = result.totalCount; }
+      else { this.unitPage = page; this.unitTotal = result.totalCount; }
+    }, error: () => this.toaster.error('Ders/ünite seçenekleri alınamadı. Yeniden arayın.') });
   }
   load(page = 1) {
     if (this.editorOpen() || this.deleting()) return;
@@ -228,6 +261,8 @@ export class CoachingCatalogComponent implements OnInit {
     if (this.kind === 'lessons') { filter.gradeNumber = this.gradeNumber ?? undefined; filter.examCode = this.examCode; }
     if (this.kind === 'schools' || this.kind === 'universityPrograms') filter.scoreYear = this.scoreYear ?? undefined;
     if (this.kind === 'schools') { filter.provinceId = this.provinceId || undefined; filter.districtId = this.districtId || undefined; }
+    if (this.kind === 'units' || this.kind === 'topics') filter.lessonId = this.lessonId || undefined;
+    if (this.kind === 'topics') filter.unitId = this.unitId || undefined;
     if (this.kind === 'universityPrograms') filter.scoreType = this.scoreType.trim();
     this.request = this.service.list(this.kind, filter).subscribe({
       next: result => { this.items.set(result.items); this.totalCount.set(result.totalCount); this.loading.set(false); },
