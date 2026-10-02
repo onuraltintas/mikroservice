@@ -19,6 +19,31 @@ public sealed class CoachingErasureExecutionService(
         if (message.Scope is not (PersonalDataScope.Account or PersonalDataScope.Coaching))
             throw new InvalidOperationException("The erasure scope does not include Coaching.");
 
+        if (!context.Database.IsRelational()) return await ExecuteLockedAsync(message, cancellationToken);
+        async Task<CoachingErasureExecution> RunAsync()
+        {
+            var key = "coaching-study-plan:" + message.SubjectUserId;
+            await context.Database.ExecuteSqlInterpolatedAsync($"SELECT pg_advisory_xact_lock(hashtextextended({key}, 0))", cancellationToken);
+            return await ExecuteLockedAsync(message, cancellationToken);
+        }
+        if (context.Database.CurrentTransaction is not null) return await RunAsync();
+        return await context.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
+        {
+            await using var transaction = await context.Database.BeginTransactionAsync(cancellationToken);
+            try
+            {
+                var result = await RunAsync();
+                await transaction.CommitAsync(cancellationToken);
+                return result;
+            }
+            finally { context.ChangeTracker.Clear(); }
+        });
+    }
+
+    private async Task<CoachingErasureExecution> ExecuteLockedAsync(
+        PersonalDataErasureExecutionRequestedV1 message, CancellationToken cancellationToken)
+    {
+
         var existing = await context.CoachingErasureExecutions
             .SingleOrDefaultAsync(execution => execution.RequestId == message.RequestId, cancellationToken);
         if (existing is not null)
