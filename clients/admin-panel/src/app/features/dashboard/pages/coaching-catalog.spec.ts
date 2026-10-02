@@ -9,6 +9,18 @@ import { ToasterService } from '../../../core/services/toaster.service';
 import { LocationService } from '../../../core/services/location.service';
 
 describe('CoachingCatalogComponent', () => {
+  it('filters topics by hierarchy and clears downstream choices before the next query', () => {
+    const { component, service } = create();
+    component.changeKind('topics');
+    component.lessonId = 'lesson'; component.unitId = 'old';
+    component.lessonFilterChanged();
+    expect(component.unitId).toBe('');
+    component.unitId = 'unit'; component.load();
+    expect(service.list).toHaveBeenLastCalledWith('topics', expect.objectContaining({ lessonId: 'lesson', unitId: 'unit' }));
+    component.changeKind('schools');
+    expect(component.lessonId).toBe('');
+    expect(component.unitId).toBe('');
+  });
   it('filters schools by verified location and clears dependent choices on province change', () => {
     const { component, service } = create();
     component.changeKind('schools');
