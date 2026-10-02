@@ -30,6 +30,15 @@ export interface SchoolTarget { id: string; name: string; city: string; district
 export interface UniversityTarget { id: string; name: string; universityName: string; programCode: string | null; scoreType: string | null; minimumScore: number | null; scoreYear: number | null }
 export interface TargetPage<T> { items: T[]; totalCount: number; pageNumber: number; pageSize: number }
 export interface GoalTarget { goalId: string; version: number; targetSchoolId: string | null; targetUniversityProgramId: string | null; canEdit: boolean; catalogTarget?: { name: string; detail: string; isActive: boolean } | null }
+export interface StudyTopic { id: string; name: string; lessonName: string; unitName: string; gradeNumber: number | null; examCode: string | null; estimatedMinutes: number | null }
+export interface AutomaticStudyRequest { startDate: string; days: number; expectedAvailabilityVersion: number; topics: { topicId: string; requiredMinutes: number | null }[] }
+export interface AutomaticStudyPreview {
+  availabilityVersion: number; timeZoneId: string; activeRevisionId: string | null; activeRevisionVersion: number | null;
+  protectedTasks: { taskId: string; plannedDate: string; title: string; plannedMinutes: number; isPinned: boolean; isCompleted: boolean }[];
+  schedule: { tasks: { topicId: string; plannedDate: string; plannedMinutes: number }[];
+    unscheduledTopics: { topicId: string; remainingMinutes: number }[];
+    availableMinutes: number; scheduledMinutes: number; unscheduledMinutes: number; unusedMinutes: number };
+}
 
 @Injectable({ providedIn: 'root' })
 export class CoachingStudyPlanningService {
@@ -37,6 +46,16 @@ export class CoachingStudyPlanningService {
   private readonly url = `${environment.apiUrl}/coaching/study-planning/plans`;
   private readonly availabilityUrl = `${environment.apiUrl}/coaching/study-planning/availability`;
   private readonly targetUrl = `${environment.apiUrl}/coaching/study-planning/targets`;
+
+  searchTopics(search: string, gradeNumber: number | null, examCode: string, pageNumber = 1) {
+    let params = new HttpParams().set('search', search.trim()).set('pageNumber', pageNumber).set('pageSize', 20);
+    if (gradeNumber !== null) params = params.set('gradeNumber', gradeNumber);
+    if (examCode.trim()) params = params.set('examCode', examCode.trim());
+    return this.http.get<ApiResult<TargetPage<StudyTopic>>>(`${environment.apiUrl}/coaching/study-planning/topics`, { params }).pipe(map(result => result.data));
+  }
+  previewAutomatic(request: AutomaticStudyRequest) {
+    return this.http.post<ApiResult<AutomaticStudyPreview>>(`${environment.apiUrl}/coaching/study-planning/automatic-preview`, request).pipe(map(result => result.data));
+  }
 
   searchSchools(search: string, city: string, district: string, pageNumber = 1) {
     const params = new HttpParams().set('search', search.trim()).set('city', city.trim()).set('district', district.trim()).set('pageNumber', pageNumber).set('pageSize', 20);

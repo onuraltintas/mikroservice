@@ -3,8 +3,16 @@ import { coachingRoleGuard } from '../../core/auth/auth.guard';
 import type { StudentStudyPlansComponent } from './pages/student-study-plans.component';
 import type { StudentStudyAvailabilityComponent } from './pages/student-study-availability.component';
 import type { CoachingPortalProgressComponent } from './pages/coaching-portal-progress.component';
+import type { StudentAutomaticPlanComponent } from './pages/student-automatic-plan.component';
 
 export const COACHING_PORTAL_ROUTES: Routes = [
+  {
+    path: 'automatic-plan',
+    canActivate: [coachingRoleGuard],
+    canDeactivate: [(component: StudentAutomaticPlanComponent) => component.canLeavePage()],
+    data: { coachingRoles: ['Student'] },
+    loadComponent: () => import('./pages/student-automatic-plan.component').then(m => m.StudentAutomaticPlanComponent)
+  },
   {
     path: '',
     loadComponent: () => import('./pages/coaching-portal-home.component').then(m => m.CoachingPortalHomeComponent)

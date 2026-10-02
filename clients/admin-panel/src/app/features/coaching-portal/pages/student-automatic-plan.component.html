@@ -1,0 +1,58 @@
+<section class="study-plans" aria-labelledby="automatic-title">
+  <header class="page-heading"><div><p class="eyebrow">Saatlerine uygun bir başlangıç</p>
+    <h1 id="automatic-title">Otomatik plan önizlemesi</h1>
+    <p>Konuları öncelik sırasıyla ekle. Plan, seçtiğin tarihten itibaren çalışma saatlerine göre hazırlanır.</p></div></header>
+  @if (error()) { <p class="notice error" role="alert">{{ error() }}</p> }
+  <div class="panel">
+    <h2>1. Çalışma saatleri</h2>
+    @if (availability(); as hours) { <p>Saat dilimi: {{ hours.timeZoneId }}. Plan günleri bu saat dilimine göredir.</p> }
+    <div class="actions"><a routerLink="/coaching-portal/study-availability">Çalışma saatlerimi düzenle</a>
+      <button type="button" class="secondary" [disabled]="busy()" (click)="loadHours()">Saatleri yeniden yükle</button></div>
+  </div>
+  <div class="panel" style="margin-top: 1rem">
+    <h2>2. Konuları ve süreleri seç</h2>
+    <form (ngSubmit)="searchTopics()"><fieldset [disabled]="busy()"><div class="fields">
+      <label>Konu, ders veya ünite<input name="query" [(ngModel)]="query" maxlength="200"></label>
+      <label>Sınıf<select name="grade" [(ngModel)]="gradeNumber"><option [ngValue]="null">Tümü</option>
+        @for (grade of [1,2,3,4,5,6,7,8,9,10,11,12]; track grade) { <option [ngValue]="grade">{{ grade }}</option> }</select></label>
+      <label>Sınav<select name="exam" [(ngModel)]="examCode"><option value="">Tümü</option>
+        @for (exam of ['LGS','TYT','AYT','YDT','TDP']; track exam) { <option [value]="exam">{{ exam }}</option> }</select></label>
+      <button type="submit">Konuları ara</button></div></fieldset></form>
+    @if (searching()) { <p role="status">Konular yükleniyor…</p> }
+    @if (results(); as page) {
+      @for (topic of page.items; track topic.id) {
+        <div class="task"><strong>{{ topic.name }}</strong><p>{{ topic.lessonName }} / {{ topic.unitName }}</p>
+          <button type="button" class="secondary" [disabled]="busy() || selected.length >= 500" (click)="addTopic(topic.id)">Konu ekle</button></div>
+      } @empty { <p>Bu filtrelerle aktif konu bulunamadı.</p> }
+      <div class="pagination"><button type="button" [disabled]="busy() || page.pageNumber <= 1" (click)="searchTopics(page.pageNumber - 1)">Önceki</button>
+        <span>{{ page.totalCount }} konu · Sayfa {{ page.pageNumber }}</span>
+        <button type="button" [disabled]="busy() || page.pageNumber * page.pageSize >= page.totalCount" (click)="searchTopics(page.pageNumber + 1)">Sonraki</button></div>
+    }
+    <h3>Seçilen konular ({{ selected.length }}/500)</h3><p class="muted">Süre tahmin değil, planına ayırmak istediğin toplam dakikadır. Bir konu birden fazla güne bölünebilir.</p>
+    <fieldset [disabled]="busy()">
+      @for (selection of selected; track selection.topic.id) {
+        <div class="task fields"><label>{{ $index + 1 }}. {{ selection.topic.name }} — dakika
+          <input type="number" min="1" max="1440" step="1" [(ngModel)]="selection.minutes" (ngModelChange)="changed()" [attr.aria-label]="selection.topic.name + ' çalışma süresi'"></label>
+          <button type="button" class="secondary" (click)="removeTopic(selection.topic.id)">Çıkar</button></div>
+      } @empty { <p>Henüz konu seçmedin.</p> }
+    </fieldset>
+  </div>
+  <div class="panel" style="margin-top: 1rem"><h2>3. Planı önizle</h2>
+    <form (ngSubmit)="generate()"><fieldset [disabled]="busy()"><div class="fields">
+      <label>Başlangıç tarihi<input type="date" name="start" [(ngModel)]="startDate" (ngModelChange)="changed()" required></label>
+      <label>Plan süresi (gün)<input type="number" name="days" min="1" max="90" step="1" [(ngModel)]="days" (ngModelChange)="changed()" required></label>
+      <button type="submit" [disabled]="!availability() || stale() || selected.length === 0">Önizleme oluştur</button></div></fieldset></form>
+    @if (generating()) { <p role="status">Önizleme hazırlanıyor…</p> }
+    @if (preview(); as result) {
+      <p class="notice" role="status">Henüz kaydedilmedi. Aktif planın değişmedi.</p>
+      <p>Yeni çalışmalar: {{ result.schedule.scheduledMinutes }} dk · Kalan kapasite: {{ result.schedule.unusedMinutes }} dk</p>
+      <h3>Korunan çalışmalar</h3>
+      @for (task of result.protectedTasks; track task.taskId) { <p>{{ task.plannedDate }} — {{ task.title }} · {{ task.plannedMinutes }} dk ({{ task.isCompleted ? 'tamamlanmış' : 'sabitlenmiş' }})</p> }
+      @for (task of result.schedule.tasks; track $index) { <div class="task"><strong>{{ task.plannedDate }} — {{ topicName(task.topicId) }}</strong><p>{{ task.plannedMinutes }} dk</p></div> }
+      @if (result.schedule.unscheduledMinutes > 0) {
+        <h3>Plana sığmayan çalışmalar</h3><p>Süreyi veya müsaitlik saatlerini artırarak yeniden önizleyebilirsin. Görev sınırı 500'dür.</p>
+        @for (topic of result.schedule.unscheduledTopics; track topic.topicId) { <p>{{ topicName(topic.topicId) }} — {{ topic.remainingMinutes }} dk</p> }
+      }
+    }
+  </div>
+</section>
