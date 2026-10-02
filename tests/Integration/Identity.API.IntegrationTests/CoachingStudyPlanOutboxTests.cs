@@ -70,8 +70,27 @@ public sealed class CoachingStudyPlanOutboxTests(PostgresFixture postgres)
             var assessment = await new CoachingErasureAssessmentService(db, TimeProvider.System)
                 .AssessAsync(new(eventId, requestId, student, now, true, PersonalDataScope.Coaching), CancellationToken.None);
             Assert.Equal(6, assessment.StudyPlanningRecordCount);
-            await new CoachingErasureExecutionService(db, new CoachingStudyPlanningPrivacyTests.NoAttachments(), TimeProvider.System)
-                .ExecuteAsync(new(eventId, requestId, student, now, PersonalDataScope.Coaching), CancellationToken.None);
+            await using var gate = new CoachingDbContext(new DbContextOptionsBuilder<CoachingDbContext>().UseNpgsql(postgres.ConnectionString).Options);
+            await using var transaction = await gate.Database.BeginTransactionAsync();
+            var key = "coaching-study-plan:" + student;
+            await gate.Database.ExecuteSqlInterpolatedAsync($"SELECT pg_advisory_xact_lock(hashtextextended({key}, 0))");
+            var erase = Task.Run(async () =>
+            {
+                await using var concurrent = new CoachingDbContext(new DbContextOptionsBuilder<CoachingDbContext>().UseNpgsql(postgres.ConnectionString).Options);
+                return await new CoachingErasureExecutionService(concurrent, new CoachingStudyPlanningPrivacyTests.NoAttachments(), TimeProvider.System)
+                    .ExecuteAsync(new(eventId, requestId, student, now, PersonalDataScope.Coaching), CancellationToken.None);
+            });
+            var waiting = 0; var deadline = DateTime.UtcNow.AddSeconds(5);
+            try
+            {
+                while (waiting == 0 && !erase.IsCompleted && DateTime.UtcNow < deadline)
+                {
+                    waiting = await gate.Database.SqlQueryRaw<int>("SELECT COUNT(*)::int AS \"Value\" FROM pg_locks WHERE locktype = 'advisory' AND NOT granted").SingleAsync();
+                    if (waiting == 0) await Task.Delay(20);
+                }
+                Assert.True(waiting > 0, "Erasure must wait on the plan publisher's student lock.");
+            }
+            finally { await transaction.CommitAsync(); await erase; }
             var remaining = Assert.Single(await db.Set<OutboxMessage>().AsNoTracking().ToListAsync());
             Assert.Contains(otherDraft.Id.ToString(), remaining.Body);
         }
