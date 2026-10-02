@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { coachingRoleGuard } from '../../core/auth/auth.guard';
 import type { StudentStudyPlansComponent } from './pages/student-study-plans.component';
 import type { StudentStudyAvailabilityComponent } from './pages/student-study-availability.component';
+import type { CoachingPortalProgressComponent } from './pages/coaching-portal-progress.component';
 
 export const COACHING_PORTAL_ROUTES: Routes = [
   {
@@ -38,6 +39,7 @@ export const COACHING_PORTAL_ROUTES: Routes = [
   {
     path: 'progress',
     canActivate: [coachingRoleGuard],
+    canDeactivate: [(component: CoachingPortalProgressComponent) => component.canLeavePage()],
     data: { coachingRoles: ['Student'] },
     loadComponent: () => import('./pages/coaching-portal-progress.component').then(m => m.CoachingPortalProgressComponent)
   },

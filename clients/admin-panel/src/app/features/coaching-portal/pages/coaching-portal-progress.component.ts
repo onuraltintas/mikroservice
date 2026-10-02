@@ -1,18 +1,25 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, QueryList, signal, ViewChildren } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { catchError, finalize, forkJoin, of } from 'rxjs';
 import { AuthService } from '../../../core/auth/auth.service';
 import { CoachingPortalService, ExamResult, Goal, StudentProgressSummary } from '../../../core/services/coaching-portal.service';
+import { StudentGoalTargetComponent } from './student-goal-target.component';
 
 @Component({
   selector: 'app-coaching-portal-progress',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, StudentGoalTargetComponent],
   templateUrl: './coaching-portal-progress.component.html',
   styleUrl: './coaching-portal-progress.component.scss'
 })
 export class CoachingPortalProgressComponent implements OnInit {
+  @ViewChildren(StudentGoalTargetComponent) private targetPickers?: QueryList<StudentGoalTargetComponent>;
+  trackGoal(_index: number, goal: Goal) { return goal.id; }
+  canLeavePage() {
+    return !this.isSavingGoal() && !this.updatingGoalId()
+      && (this.targetPickers?.toArray().every(picker => picker.canLeavePage()) ?? true);
+  }
   private readonly authService = inject(AuthService);
   private readonly coachingService = inject(CoachingPortalService);
   private readonly formBuilder = inject(FormBuilder);
