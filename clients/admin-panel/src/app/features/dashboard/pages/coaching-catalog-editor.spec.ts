@@ -97,4 +97,11 @@ describe('CoachingCatalogEditorComponent', () => {
     expect(component.form.unitId).toBeNull();
     expect(component.form.parentId).toBeNull();
   });
+  it('requests parentless topics on the server before pagination', () => {
+    const { component, service } = create('topics');
+    component.form.lessonId = 'lesson';
+    component.form.unitId = 'unit';
+    component.searchRelation('topics', 2);
+    expect(service.list).toHaveBeenCalledWith('topics', expect.objectContaining({ pageNumber: 2, lessonId: 'lesson', unitId: 'unit', hasParent: false }));
+  });
 });
