@@ -61,4 +61,17 @@ describe('CoachingCatalogComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Kayıt bulunamadı');
     expect(fixture.nativeElement.querySelector('label[for="catalog-search"]')).not.toBeNull();
   });
+
+  it('rejects invalid numeric filters before sending an API request', () => {
+    const { component, service } = create();
+    component.gradeNumber = 13;
+    component.load();
+    expect(service.list).not.toHaveBeenCalled();
+    expect(component.error()).toContain('Sınıf');
+    component.kind = 'schools';
+    component.scoreYear = 2025.5;
+    component.load();
+    expect(service.list).not.toHaveBeenCalled();
+    expect(component.error()).toContain('Puan yılı');
+  });
 });
