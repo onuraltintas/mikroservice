@@ -31,6 +31,14 @@ describe('Single-window custom preview levels', () => {
     expect(fixture.nativeElement.querySelector('#preview-level')).not.toBeNull();
     fixture.componentInstance.selectLevel('second');
     expect(fixture.componentInstance.speedWpm).toBe(400);
+    fixture.componentInstance.selectLevel('unknown');
+    expect(fixture.componentInstance.selectedLevelId).toBe('second');
+    fixture.componentInstance.speedWpm = 19;
+    fixture.componentInstance.submit();
+    expect(close).not.toHaveBeenCalled();
+    expect(fixture.componentInstance.error).not.toBe('');
+    fixture.componentInstance.reset();
+    expect(fixture.componentInstance.speedWpm).toBe(400);
     fixture.componentInstance.speedWpm = 500;
     fixture.componentInstance.submit();
     expect(close).toHaveBeenCalledWith({ exerciseId: 'second', values: { speedWpm: 500, chunkSize: 1 } });
