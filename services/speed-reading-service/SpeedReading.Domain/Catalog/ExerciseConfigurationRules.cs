@@ -52,6 +52,17 @@ public static class ExerciseConfigurationRules
     public static IReadOnlyList<string> GetSupportedEngineTypes() =>
         SupportedEngines.Order(StringComparer.Ordinal).ToList();
 
+    public static string ResolveReadingPurpose(string engineType, string? configuredPurpose, bool assessment)
+    {
+        var engine = NormalizeEngineType(engineType);
+        var purpose = configuredPurpose?.Trim().ToLowerInvariant();
+        if (purpose is not (null or "practice" or "evaluation"))
+            throw new ArgumentException("Okuma amacı practice veya evaluation olmalıdır.", nameof(configuredPurpose));
+        if (assessment || engine is "reading_comprehension" or "exam_simulation" or "adaptive_fluency")
+            return "evaluation";
+        return purpose ?? "practice";
+    }
+
     public static bool ShouldIncludeComprehensionQuestions(
         string exerciseTypeName, string engineType, string? textStreamMode) =>
         !string.Equals(exerciseTypeName, "Tachistoscope", StringComparison.OrdinalIgnoreCase)
