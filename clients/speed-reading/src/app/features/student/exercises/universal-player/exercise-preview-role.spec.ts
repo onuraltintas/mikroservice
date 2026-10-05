@@ -24,6 +24,38 @@ describe('Exercise player role scope', () => {
       expect(player.parsedConfig.engineConfig).toEqual({});
     }
   });
+  it('blocks custom settings for assignments, review and path sessions', () => {
+    for (const scope of ['assignmentId', 'reviewItemId', 'pathItemId']) {
+      const player: any = { exercise: { id: 'exercise' }, parsedConfig: { engineType: 'word_highlight', engineConfig: {} },
+        authService: { currentUserValue: { roles: ['Admin'] } }, isPreviewSession: () => true, [scope]: 'scope' };
+      (ExercisePlayerComponent.prototype as any).applyCustomPreview.call(player,
+        { customPreview: { exerciseId: 'exercise', values: { speedWpm: 350 } } });
+      expect(player.customPreviewActive).toBeFalse();
+      expect(player.parsedConfig.engineConfig).toEqual({});
+    }
+  });
+  it('does not create or complete backend sessions in preview', () => {
+    const start = jasmine.createSpy('start');
+    const complete = jasmine.createSpy('complete');
+    const player: any = { exercise: { id: 'exercise' }, isPreviewSession: () => true,
+      resetActionTracking: () => undefined, startPreviewSession: jasmine.createSpy('preview'),
+      sessionService: { startSession: start, completeSession: complete }, showToast: () => undefined };
+    (ExercisePlayerComponent.prototype as any).startSession.call(player);
+    (ExercisePlayerComponent.prototype as any).saveResult.call(player, {});
+    expect(player.startPreviewSession).toHaveBeenCalled();
+    expect(start).not.toHaveBeenCalled();
+    expect(complete).not.toHaveBeenCalled();
+    expect(player.resultSaveStatus).toBe('preview');
+  });
+  it('reports invalid local settings without modifying the recorded configuration', () => {
+    const player: any = { exercise: { id: 'exercise' }, parsedConfig: { engineType: 'word_highlight', engineConfig: {} },
+      authService: { currentUserValue: { roles: ['Teacher'] } }, isPreviewSession: () => true };
+    (ExercisePlayerComponent.prototype as any).applyCustomPreview.call(player,
+      { customPreview: { exerciseId: 'exercise', values: { speedWpm: -1 } } });
+    expect(player.customPreviewActive).toBeFalse();
+    expect(player.error).toContain('geçersiz');
+    expect(player.parsedConfig.engineConfig).toEqual({});
+  });
   function preview(roles: string[], staffTrainingMode = false): boolean {
     return (ExercisePlayerComponent.prototype as any).isPreviewSession.call({
       reviewItemId: null,
