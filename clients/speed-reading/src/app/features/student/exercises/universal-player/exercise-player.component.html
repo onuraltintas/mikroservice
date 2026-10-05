@@ -1620,7 +1620,20 @@
                 </div>
             </div>
 
-            <div class="measurement-not-available" *ngIf="result?.details?.measurementStatus === 'NotMeasured'">
+            <div class="stats-row" *ngIf="result?.details?.displayPaceWpm">
+                <div class="stat-card">
+                    <div class="stat-value">{{ result?.details?.displayPaceWpm }}</div>
+                    <div class="stat-label">Gösterim temposu (kelime/dk)</div>
+                </div>
+                <div class="stat-card" *ngIf="result?.details?.comprehensionScore != null">
+                    <div class="stat-value">{{ result?.details?.comprehensionScore }}%</div>
+                    <div class="stat-label">Anlama</div>
+                </div>
+            </div>
+            <div class="measurement-not-available" *ngIf="result?.details?.displayPaceWpm">
+                {{ getReadingMeasurementMessage() }}
+            </div>
+            <div class="measurement-not-available" *ngIf="result?.details?.measurementStatus === 'NotMeasured' && !result?.details?.displayPaceWpm">
                 Egzersiz tamamlandı ve kaydedildi. Bu egzersizdeki harf yanıtları sunucuda doğrulanmadığı için
                 seviye tespit puanına dahil edilmez; WPM ölçülmez.
             </div>
@@ -1737,7 +1750,7 @@
                 </div>
 
                 <!-- Comprehension Box (Only if available) -->
-                <div class="result-box comprehension-box" *ngIf="result?.details?.comprehensionScore !== undefined">
+                <div class="result-box comprehension-box" *ngIf="result?.details?.comprehensionScore != null">
                     <span class="material-icons">psychology</span>
                     <div class="result-value">{{ result?.details?.comprehensionScore }}%</div>
                     <div class="result-label">Anlama Oranı</div>

@@ -3084,6 +3084,12 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     return !observationOnlyEngines.includes(this.engine?.engineType || '');
   }
 
+  getReadingMeasurementMessage(): string {
+    return this.result?.details?.comprehensionScore == null
+      ? 'Anlama ölçülmedi. Gösterilen tempo, metnin gösterim temposudur; ölçülmüş okuma hızı değildir.'
+      : 'Anlama sorularla ölçüldü. Gösterilen tempo, metnin gösterim temposudur; ölçülmüş okuma hızı değildir.';
+  }
+
   private normalizeEngineResultForDisplay(result: EngineResult): EngineResult {
     const paced = ['word_highlight', 'text_fade', 'text_stream'].includes(this.engine?.engineType || '');
     const details = { ...(result.details || {}), ...(paced ? { wpm: null, displayPaceWpm: this.getWpm() } : {}) };
