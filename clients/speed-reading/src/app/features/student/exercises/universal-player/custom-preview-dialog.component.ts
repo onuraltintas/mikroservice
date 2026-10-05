@@ -39,7 +39,7 @@ export interface CustomPreviewLevel {
     <mat-dialog-actions align="end">
       <button type="button" (click)="reset()">Varsayılana dön</button>
       <button type="button" mat-dialog-close>İptal</button>
-      <button type="button" class="primary" (click)="submit()">Denemeyi başlat</button>
+      <button type="button" class="primary" [disabled]="!controls.length" (click)="submit()">Denemeyi başlat</button>
     </mat-dialog-actions>
   `,
   styles: [`label{display:block;font-weight:600;margin:18px 0 6px}input,select{width:100%;padding:10px;border:1px solid #aebbc9;border-radius:8px;font:inherit;box-sizing:border-box}small{display:block;margin-top:5px;color:#52647b}p{line-height:1.6}button{padding:10px 14px;border:1px solid #dce2ef;border-radius:8px;cursor:pointer;background:transparent;font:inherit}.primary{background:var(--primary-blue,#1976d2);color:white}button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #1976d2;outline-offset:2px}[role=alert]{color:#b42318}mat-dialog-actions{gap:8px;flex-wrap:wrap}`]
@@ -68,9 +68,10 @@ export class CustomPreviewDialogComponent {
   reset(): void {
     this.controls = getCustomPreviewControls(this.configuration);
     this.values = Object.fromEntries(this.controls.map(control => [control.key, control.value]));
-    this.error = '';
+    this.error = this.controls.length ? '' : 'Bu seviyede özel ayarlar desteklenmiyor. Başka bir seviye seçebilirsiniz.';
   }
   submit(): void {
+    if (!this.controls.length) return;
     try {
       const values = { ...this.values };
       applyCustomPreviewSettings(this.configuration, values, { roles: ['Teacher'], preview: true });
