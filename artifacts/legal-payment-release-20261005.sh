@@ -35,10 +35,17 @@ prepare)
   done
   compose_command production.override.yml
   ;;
-backup-drill)
+backup-drill|backup-drill-speed)
   test ! -e drill-complete
-  for product in coaching speed_reading; do
+  products=(coaching speed_reading)
+  if [[ "$1" == backup-drill-speed ]]; then
+    test -s coaching_db.backup
+    test "$(docker exec postgres psql -U "$db_user" -d legal_payment_coaching_drill_20261005 -Atc 'SELECT count(*) FROM coaching.__ef_migrations_history WHERE "MigrationId"=$$20261005090416_RecordAdultPayerDeclaration$$')" = 1
+    products=(speed_reading)
+  fi
+  for product in "${products[@]}"; do
     database="${product}_db"
+    if [[ "$product" == speed_reading ]]; then database=speedreading_owned_db; fi
     drill="legal_payment_${product}_drill_20261005"
     test ! -e "$database.backup"
     docker exec postgres pg_dump -U "$db_user" -d "$database" -Fc > "$database.backup"
