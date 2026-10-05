@@ -204,7 +204,7 @@ public sealed class CoachingCmsAndSubscriptionServiceTests
             userId,
             "Öğrenci Adı",
             "student@example.com",
-            new CoachingBankTransferRequestCreate(planId!.Value, "EFT-2026-001", "Öğrenci Adı", null),
+            new CoachingBankTransferRequestCreate(planId!.Value, "EFT-2026-001", "Öğrenci Adı", null, true),
             "create-approved-test-key-0001");
         transfer.Should().NotBeNull();
 
@@ -250,13 +250,19 @@ public sealed class CoachingCmsAndSubscriptionServiceTests
         (await subscriptions.UpdateSettingsAsync(settings, actorId, "settings-idempotency-key-0001"))
             .BankTransferEnabled.Should().BeTrue();
 
-        var createRequest = new CoachingBankTransferRequestCreate(planId!.Value, "eft 2026-01", "Ada Öğrenci", null);
+        var createRequest = new CoachingBankTransferRequestCreate(planId!.Value, "eft 2026-01", "Ada Öğrenci", null, true);
+        var denied = await subscriptions.CreateBankTransferRequestAsync(userId, "Ada", "ada@example.test",
+            createRequest with { AdultPayerDeclaration = false }, "create-denied-key-0001");
+        denied.Should().BeNull();
         var first = await subscriptions.CreateBankTransferRequestAsync(
             userId, "Ada Öğrenci", "ada@example.test", createRequest, "create-idempotency-key-0001");
         var retry = await subscriptions.CreateBankTransferRequestAsync(
             userId, "Ada Öğrenci", "ada@example.test", createRequest, "create-idempotency-key-0001");
         first!.Id.Should().Be(retry!.Id);
         first.PaymentReference.Should().Be("EFT-2026-01");
+        var evidence = await db.CoachingBankTransferRequests.AsNoTracking().SingleAsync();
+        evidence.AdultPayerDeclarationVersion.Should().Be(1);
+        evidence.AdultPayerDeclaredAt.Should().NotBeNull();
 
         var sameReference = await subscriptions.CreateBankTransferRequestAsync(
             userId, "Ada Öğrenci", "ada@example.test",
@@ -284,7 +290,7 @@ public sealed class CoachingCmsAndSubscriptionServiceTests
             actorId, "settings-review-key-0001");
         var transfer = await subscriptions.CreateBankTransferRequestAsync(
             userId, "Ada Öğrenci", "ada@example.test",
-            new CoachingBankTransferRequestCreate(planId!.Value, "EFT-2026-03", "Ada Öğrenci", null),
+            new CoachingBankTransferRequestCreate(planId!.Value, "EFT-2026-03", "Ada Öğrenci", null, true),
             "create-review-key-0001");
 
         var noReason = await subscriptions.ReviewBankTransferRequestAsync(
