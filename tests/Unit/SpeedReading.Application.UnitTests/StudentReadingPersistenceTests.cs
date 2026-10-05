@@ -20,6 +20,47 @@ namespace SpeedReading.Application.UnitTests;
 
 public sealed class StudentReadingPersistenceTests
 {
+    [Theory]
+    [InlineData("practice", 0)]
+    [InlineData("evaluation", 1)]
+    public async Task Reading_purpose_controls_questions_in_owned_snapshot(string purpose, int expectedQuestions)
+    {
+        await using var context = CreateContext();
+        var studentId = Guid.NewGuid();
+        var typeId = Guid.NewGuid();
+        var exerciseId = Guid.NewGuid();
+        var textId = Guid.NewGuid();
+        context.ExerciseTypes.Add(ExerciseType.Create(typeId, "SpeedReading", "Reading", "word_highlight"));
+        context.Exercises.Add(Exercise.Create("Reading", "word_highlight",
+            JsonSerializer.Serialize(new { engineType = "word_highlight", engineConfig = new { readingPurpose = purpose } }),
+            1, studentId, typeId, id: exerciseId));
+        context.ReadingTexts.Add(ReadingText.Create(textId, "Text", "A reading text.", difficultyLevel: 1, exerciseId: exerciseId));
+        context.ReadingQuestions.Add(ReadingQuestion.Create(Guid.NewGuid(), textId, "Question", "A", 0, 1, 1,
+            optionA: "Yes", optionB: "No", optionC: "Other", optionD: "None"));
+        await context.SaveChangesAsync();
+        var service = CreateExerciseSessionService(context);
+        var started = await service.StartAsync(studentId, new StartExerciseSessionRequest { ExerciseId = exerciseId });
+        started.InitialData.GetProperty("questions").GetArrayLength().Should().Be(expectedQuestions);
+        started.InitialData.GetProperty("readingPurpose").GetString().Should().Be(purpose);
+    }
+
+    [Fact]
+    public async Task Evaluation_rejects_a_pinned_text_without_questions()
+    {
+        await using var context = CreateContext();
+        var studentId = Guid.NewGuid();
+        var typeId = Guid.NewGuid();
+        var exerciseId = Guid.NewGuid();
+        var textId = Guid.NewGuid();
+        context.ExerciseTypes.Add(ExerciseType.Create(typeId, "Comprehension", "Reading", "reading_comprehension"));
+        context.Exercises.Add(Exercise.Create("Reading", "reading_comprehension", "{}", 1, studentId, typeId, id: exerciseId));
+        context.ReadingTexts.Add(ReadingText.Create(textId, "Text", "A reading text.", difficultyLevel: 1, exerciseId: exerciseId));
+        await context.SaveChangesAsync();
+        var service = CreateExerciseSessionService(context);
+        var start = () => service.StartAsync(studentId, new StartExerciseSessionRequest { ExerciseId = exerciseId, ReadingTextId = textId });
+        await start.Should().ThrowAsync<BusinessRuleException>().Where(error => error.Code == "ExerciseSession.ReadingQuestionsUnavailable");
+    }
+
     [Fact]
     public async Task Repeated_reading_finish_does_not_include_later_question_time()
     {
