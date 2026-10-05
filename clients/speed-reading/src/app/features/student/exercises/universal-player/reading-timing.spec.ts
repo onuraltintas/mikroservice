@@ -2,9 +2,48 @@ import { fakeAsync, flushMicrotasks, tick } from '@angular/core/testing';
 import { of, Subject, throwError } from 'rxjs';
 import { ExercisePlayerComponent } from './exercise-player.component';
 import { RegressionReductionEngine } from './engines/regression-reduction.engine';
+import { ReadingComprehensionEngine } from './engines/reading-comprehension.engine';
 import { EngineCallbacks } from './engines/base-engine.interface';
 
 describe('reading phase timing', () => {
+  it('does not report full-text speed when a reading deadline expires', fakeAsync(() => {
+    let result: any;
+    const callbacks: EngineCallbacks = {
+      onStart: () => undefined, onPause: () => undefined, onResume: () => undefined,
+      onComplete: value => result = value, onError: () => undefined,
+      onStateChange: () => undefined, onStepComplete: () => undefined, onAction: () => undefined
+    };
+    const engine = new ReadingComprehensionEngine();
+    engine.initialize({ content: { text: 'bir iki üç dört' }, timing: { maxReadingTimeMs: 1000 } } as any, callbacks);
+    engine.start();
+    tick(1500);
+    expect(result.details.timedOut).toBeTrue();
+    expect(result.details.wpm).toBeNull();
+    expect(result.completedSteps).toBe(0);
+    engine.destroy();
+  }));
+
+  it('cannot finish a paused comprehension reading', fakeAsync(() => {
+    const completed = jasmine.createSpy('completed');
+    const callbacks: EngineCallbacks = {
+      onStart: () => undefined, onPause: () => undefined, onResume: () => undefined,
+      onComplete: completed, onError: () => undefined,
+      onStateChange: () => undefined, onStepComplete: () => undefined, onAction: () => undefined
+    };
+    const engine = new ReadingComprehensionEngine();
+    engine.initialize({ content: { text: 'bir iki üç dört' } } as any, callbacks);
+    engine.start();
+    engine.pause();
+    engine.completeReading();
+    expect(completed).not.toHaveBeenCalled();
+    engine.destroy();
+  }));
+
+  it('uses effective RSVP tempo in the live badge', () => {
+    const player = Object.create(ExercisePlayerComponent.prototype) as any;
+    player.engine = { engineType: 'text_stream', getCurrentDuration: () => 300, getDisplayPaceWpm: () => 100 };
+    expect(player.getCurrentTextStreamWpm()).toBe(100);
+  });
   it('waits for validated server start before starting the engine', () => {
     const player = Object.create(ExercisePlayerComponent.prototype) as any;
     const response = new Subject<any>();
