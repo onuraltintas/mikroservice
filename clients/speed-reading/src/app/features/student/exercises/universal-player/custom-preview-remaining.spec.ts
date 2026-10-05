@@ -1,5 +1,6 @@
 import { applyCustomPreviewSettings, getCustomPreviewControls } from './custom-preview-settings';
 import { GridInteractionEngine } from './engines/grid-interaction.engine';
+import { VisualizationEngine } from './engines/visualization.engine';
 import { EngineCallbacks } from './engines/base-engine.interface';
 
 const context = { roles: ['Teacher'], preview: true };
@@ -36,5 +37,35 @@ describe('Remaining custom preview motors', () => {
       expect(() => applyCustomPreviewSettings(configuration, { gridSize }, context)).toThrow();
     }
     expect(applyCustomPreviewSettings(configuration, { gridSize: 3 }, { roles: ['Teacher'], preview: false })).toBe(configuration);
+  });
+
+  it('changes only visualization scene timing and preserves descriptions, IDs and questions', () => {
+    const scenes = [{ sceneId: 'scene', description: 'Özgün sahne', duration: 5,
+      questions: [{ questionId: 'question', questionText: 'Soru', options: ['A', 'B'] }] }];
+    const configuration = { engineType: 'visualization', engineConfig: { mode: 'static', scenes } };
+    expect(getCustomPreviewControls(configuration)[0]?.value).toBe(5);
+    const result = applyCustomPreviewSettings(configuration, { sceneDurationSec: 12, scenes: [] }, context);
+    const engine = new VisualizationEngine();
+    engine.initialize({ ...result, ...result.engineConfig } as any, callbacks);
+    expect(engine.getCurrentScene()?.duration).toBe(12);
+    expect(engine.getCurrentScene()?.sceneId).toBe('scene');
+    expect(engine.getCurrentScene()?.description).toBe('Özgün sahne');
+    expect(result.engineConfig.scenes[0].questions).toEqual(scenes[0].questions);
+    expect(scenes[0].duration).toBe(5);
+    expect(() => applyCustomPreviewSettings(configuration, { sceneDurationSec: 0 }, context)).toThrow();
+  });
+
+  it('resolves guided visualization SessionData and changes only the effective step interval', () => {
+    const configuration = { engineType: 'visualization', engineConfig: {
+      SessionData: { mode: 'guided', Scenes: [{ SceneId: 'scene', Duration: 5, Steps: ['Bir', 'İki'], StepDurationMs: 3000 }] }
+    } };
+    expect(getCustomPreviewControls(configuration).map(control => control.key)).toEqual(['stepDurationMs']);
+    const result = applyCustomPreviewSettings(configuration, { stepDurationMs: 1500, sceneDurationSec: 30 }, context);
+    const engine = new VisualizationEngine();
+    engine.initialize({ ...result, ...result.engineConfig } as any, callbacks);
+    expect(engine.getCurrentScene()?.stepDurationMs).toBe(1500);
+    expect(engine.getCurrentScene()?.duration).toBe(5);
+    expect(engine.getCurrentScene()?.steps).toEqual(['Bir', 'İki']);
+    expect(() => applyCustomPreviewSettings(configuration, { stepDurationMs: 99 }, context)).toThrow();
   });
 });
