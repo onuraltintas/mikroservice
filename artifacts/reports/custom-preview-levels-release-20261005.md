@@ -8,3 +8,5 @@ Deployment targets only Speed Reading frontend. Image tag: `custom-preview-level
 
 Release directory: `/var/lib/eduivme/releases/custom-preview-levels-20261005`.
 Script: `artifacts/custom-preview-levels-release-20261005.sh` (`build`, `prepare`, `deploy`, `smoke`, `rollback`).
+
+Published 2026-10-05. Image ID: `sha256:2a554263064c23b9bd6d2c00b1751481421f8cae9fdeb497f76cb1168c64bd31`. Source archive SHA-256 verified before extraction. Container healthy; home, exercise catalogue, training-program SPA and release-worker smoke checks passed. Deployed chunks contain the new `training-header` and `preview-level` markers. Previous image retained for rollback. Authenticated interaction/mobile visual verification remains separate and is not claimed by these smoke checks.
