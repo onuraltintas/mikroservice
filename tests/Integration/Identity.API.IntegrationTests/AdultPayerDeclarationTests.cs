@@ -7,6 +7,21 @@ namespace Identity.API.IntegrationTests;
 
 public sealed class AdultPayerDeclarationTests
 {
+    [Fact]
+    public void BothPaymentEntitiesKeepNullableDeclarationEvidenceForHistoricalRecords()
+    {
+        var speedType = typeof(SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingDbContext).Assembly
+            .GetType("SpeedReading.Infrastructure.Legacy.LegacyBankTransferPaymentRequest")!;
+        foreach (var type in new[] { typeof(Coaching.Domain.Entities.CoachingBankTransferRequest), speedType })
+        {
+            type.GetProperty("AdultPayerDeclarationVersion").Should().NotBeNull();
+            type.GetProperty("AdultPayerDeclarationVersion")!.PropertyType.Should().Be(typeof(int?));
+            type.GetProperty("AdultPayerDeclaredAt")!.PropertyType.Should().Be(typeof(DateTime?));
+            var historical = Activator.CreateInstance(type)!;
+            type.GetProperty("AdultPayerDeclarationVersion")!.GetValue(historical).Should().BeNull();
+            type.GetProperty("AdultPayerDeclaredAt")!.GetValue(historical).Should().BeNull();
+        }
+    }
     [Theory]
     [InlineData(false)]
     [InlineData(true)]

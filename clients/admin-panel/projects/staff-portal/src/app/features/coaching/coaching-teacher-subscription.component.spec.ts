@@ -86,9 +86,16 @@ describe('CoachingTeacherSubscriptionComponent', () => {
     fixture.componentInstance.paymentReference = ' EFT-77 ';
     fixture.componentInstance.payerName = ' Ada Teacher ';
     await fixture.componentInstance.submitRequest();
+    expect(subscriptionService.createBankTransferRequest).not.toHaveBeenCalled();
+    const checkbox = fixture.nativeElement.querySelector('input[name="adultPayerDeclaration"]') as HTMLInputElement;
+    expect(checkbox).not.toBeNull();
+    expect(checkbox.checked).toBe(false);
+    checkbox.click();
+    fixture.detectChanges();
+    await fixture.componentInstance.submitRequest();
 
     expect(subscriptionService.createBankTransferRequest).toHaveBeenCalledWith({
-      planId: 'teacher-plan', paymentReference: ' EFT-77 ', payerName: ' Ada Teacher ', note: ''
+      planId: 'teacher-plan', paymentReference: ' EFT-77 ', payerName: ' Ada Teacher ', note: '', adultPayerDeclaration: true
     });
     expect(fixture.componentInstance.success()).toContain('Ödeme bildiriminiz alındı');
   });
