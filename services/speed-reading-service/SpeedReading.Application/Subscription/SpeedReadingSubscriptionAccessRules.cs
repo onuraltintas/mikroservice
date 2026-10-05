@@ -42,7 +42,8 @@ public static class SpeedReadingSubscriptionAccessRules
         if (section.Equals("adaptive-learning", StringComparison.OrdinalIgnoreCase)
             && parts.Length == 5
             && parts[3].Equals("profile", StringComparison.OrdinalIgnoreCase)
-            && parts[4].Equals("status", StringComparison.OrdinalIgnoreCase)
+            && (parts[4].Equals("status", StringComparison.OrdinalIgnoreCase)
+                || parts[4].Equals("settings", StringComparison.OrdinalIgnoreCase))
             && method.Equals("GET", StringComparison.OrdinalIgnoreCase))
             return false;
         if (method.Equals("GET", StringComparison.OrdinalIgnoreCase)
