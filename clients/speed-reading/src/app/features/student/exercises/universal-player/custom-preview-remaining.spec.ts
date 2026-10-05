@@ -2,6 +2,7 @@ import { applyCustomPreviewSettings, getCustomPreviewControls } from './custom-p
 import { GridInteractionEngine } from './engines/grid-interaction.engine';
 import { VisualizationEngine } from './engines/visualization.engine';
 import { AdaptiveFluencyEngine } from './engines/adaptive-fluency.engine';
+import { ErrorAnalysisEngine } from './engines/error-analysis.engine';
 import { EngineCallbacks } from './engines/base-engine.interface';
 
 const context = { roles: ['Teacher'], preview: true };
@@ -12,6 +13,19 @@ const callbacks: EngineCallbacks = {
 };
 
 describe('Remaining custom preview motors', () => {
+  it('changes error-analysis text size without rewriting errors or words', () => {
+    const configuration = { engineType: 'error_analysis', engineConfig: {
+      words: [{ index: 0, text: 'kelime' }], errors: [{ wordIndex: 0, originalWord: 'kelime' }]
+    } };
+    expect(getCustomPreviewControls(configuration)[0]?.value).toBe('medium');
+    const result = applyCustomPreviewSettings(configuration, { fontSize: 'large', errors: [] }, context);
+    const engine = new ErrorAnalysisEngine();
+    engine.initialize({ ...result, ...result.engineConfig } as any, callbacks);
+    expect(engine.getFontSize()).toBe('large');
+    expect(result.engineConfig.words).toEqual(configuration.engineConfig.words);
+    expect(result.engineConfig.errors).toEqual(configuration.engineConfig.errors);
+    expect(() => applyCustomPreviewSettings(configuration, { fontSize: 'huge' }, context)).toThrow();
+  });
   it('uses the selected Schulte size in the real motor without changing the catalogue board', () => {
     const configuration = { engineType: 'grid_interaction', gridSize: 5,
       engineConfig: { grid: { rows: 5, cols: 5 }, content: { title: 'Tablo' } } };
