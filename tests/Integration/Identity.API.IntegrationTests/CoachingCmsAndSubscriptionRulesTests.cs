@@ -78,6 +78,10 @@ public sealed class CoachingCmsAndSubscriptionRulesTests
     [Theory]
     [InlineData("/api/coaching/assignments/student/123", true)]
     [InlineData("/api/coaching/subscription-plans", false)]
+    [InlineData("/api/coaching/subscriptions/my-access", false)]
+    [InlineData("/api/coaching/subscriptions/bank-transfer-requests", false)]
+    [InlineData("/api/coaching/reports/student/123/progress", true)]
+    [InlineData("/api/coaching/subscriptions-extra/paid", true)]
     [InlineData("/api/coaching/cms/pages/about", false)]
     [InlineData("/health/ready", false)]
     public void SubscriptionAccess_OnlyProtectsCoachingLearningEndpoints(string path, bool expected)

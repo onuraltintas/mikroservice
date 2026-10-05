@@ -13,6 +13,8 @@ public sealed class SpeedReadingSubscriptionAccessRulesTests
     [InlineData("/api/speed-reading/reports/student", "GET")]
     [InlineData("/api/speed-reading/adaptive-learning/dashboard", "GET")]
     [InlineData("/api/speed-reading/adaptive-learning/profile/extra", "PUT")]
+    [InlineData("/api/speed-reading/adaptive-learning/profile/settings", "PUT")]
+    [InlineData("/api/speed-reading/adaptive-learning/profile/settings/extra", "GET")]
     public void PaidStudentEndpointsRequireSubscription(string path, string method)
     {
         Assert.True(SpeedReadingSubscriptionAccessRules.RequiresSubscription(path, method));
@@ -24,6 +26,7 @@ public sealed class SpeedReadingSubscriptionAccessRulesTests
     [InlineData("/api/speed-reading/adaptive-learning/profile", "GET")]
     [InlineData("/api/speed-reading/adaptive-learning/profile", "PUT")]
     [InlineData("/api/speed-reading/adaptive-learning/profile/status", "GET")]
+    [InlineData("/api/speed-reading/adaptive-learning/profile/settings", "GET")]
     [InlineData("/api/speed-reading/subscriptions/my-modules", "GET")]
     [InlineData("/api/speed-reading/payment/verify", "POST")]
     [InlineData("/api/speed-reading/reading-texts/00000000-0000-0000-0000-000000000001", "GET")]
