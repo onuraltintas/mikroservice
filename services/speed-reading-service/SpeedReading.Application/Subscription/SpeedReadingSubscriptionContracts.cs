@@ -152,7 +152,7 @@ public sealed record CreateBankTransferPaymentRequest(
     string PaymentReference,
     string? PayerName,
     string? Note,
-    [property: System.ComponentModel.DataAnnotations.Range(typeof(bool), "true", "true", ErrorMessage = "Ödeme için 18 yaş ve üzeri olduğunuzu beyan etmeniz gerekir.")]
+    [System.ComponentModel.DataAnnotations.Range(typeof(bool), "true", "true", ErrorMessage = "Ödeme için 18 yaş ve üzeri olduğunuzu beyan etmeniz gerekir.")]
     bool AdultPayerDeclaration = false);
 
 public sealed record ReviewBankTransferPaymentRequest(

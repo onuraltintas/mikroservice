@@ -1,4 +1,3 @@
-using System.ComponentModel.DataAnnotations;
 using Coaching.Application.Subscriptions;
 using SpeedReading.Application.Subscription;
 using FluentAssertions;
