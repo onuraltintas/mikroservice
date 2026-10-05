@@ -275,7 +275,8 @@ describe('reading pacer runtime safety', () => {
 
     expect(() => engine.initialize({ Chunks: [1, null, 'valid words'] } as any, callbacks))
       .not.toThrow();
-    expect(engine.state.totalSteps).toBe(1);
+    expect(engine.state.totalSteps).toBe(2);
+    expect(engine.getChunks().flatMap(chunk => chunk.words)).toEqual(['valid', 'words']);
   });
 
   it('normalizes malformed nested containers', () => {

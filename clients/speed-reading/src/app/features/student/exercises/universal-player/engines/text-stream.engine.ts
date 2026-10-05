@@ -163,7 +163,7 @@ export class TextStreamEngine implements BaseEngine {
             ?? caseInsensitiveField(root, 'words')
             ?? caseInsensitiveField(root, 'chunks');
         const stimuli = Array.isArray(rawStimuli)
-            ? rawStimuli.filter(item => typeof item === 'string' || (item && typeof item === 'object')).slice(0, 500)
+            ? rawStimuli.filter(item => typeof item === 'string' || (item && typeof item === 'object')).slice(0, this.isRsvpMode() ? 100_000 : 500)
             : undefined;
         const displayDuration = boundedInteger(
             caseInsensitiveField(nested, 'displayDurationMs')
@@ -178,7 +178,7 @@ export class TextStreamEngine implements BaseEngine {
             ?? caseInsensitiveField(root, 'totalStimuli')
             ?? caseInsensitiveField(root, 'totalWords')
             ?? content['count'],
-            stimuli?.length || 20, 1, 500);
+            stimuli?.length || 20, 1, this.isRsvpMode() ? 100_000 : 500);
 
         // Store normalized values in config for easier access
         this.config.Stimuli = stimuli;
@@ -733,7 +733,8 @@ export class TextStreamEngine implements BaseEngine {
                 trials: this.trials,
 
                 // RSVP Specific Details
-                wpm: this.isRsvpMode() ? Math.round(60000 / this.currentDurationMs) : null,
+                wpm: null,
+                displayPaceWpm: this.isRsvpMode() ? this.getDisplayPaceWpm() : null,
                 readWordCount: this.currentStimulusIndex,
                 totalWordCount: this.stimuli.length,
                 durationSeconds: Math.round(this.state.timeElapsed / 1000),
@@ -774,6 +775,14 @@ export class TextStreamEngine implements BaseEngine {
 
     getCurrentDuration(): number {
         return this.currentDurationMs;
+    }
+
+    getDisplayPaceWpm(): number {
+        const count = this.stimuli.length;
+        const words = this.stimuli.reduce((total, text) => total + text.split(/\s+/).filter(Boolean).length, 0);
+        const milliseconds = count * (this.currentDurationMs + (this.config.visuals?.showFixation !== false ? 300 : 0))
+            + Math.max(0, count - 1) * (this.config.timing?.intervalMs || 0);
+        return milliseconds > 0 ? Math.round(words * 60_000 / milliseconds) : 0;
     }
 
     getLastTrialResult(): TrialRecord | null {

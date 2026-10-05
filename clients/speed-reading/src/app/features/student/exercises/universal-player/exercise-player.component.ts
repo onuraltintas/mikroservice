@@ -449,6 +449,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   }
 
   private handleWordHighlightScroll(): void {
+    if (this.engine?.engineType === 'word_highlight' && !(this.engine as WordHighlightEngine).shouldAutoScroll()) return;
     if (!this.wordHighlightContainer?.nativeElement) return;
 
     const container = this.wordHighlightContainer.nativeElement;
@@ -3051,11 +3052,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     }
     // For RSVP / Text Stream
     if (this.engine?.engineType === 'text_stream') {
-      const config = (this.engine as any).config;
-      if (config?.timing?.intervalMs) {
-        // 60000 / interval = WPM (approx)
-        return Math.round(60000 / config.timing.intervalMs);
-      }
+      return (this.engine as TextStreamEngine).getDisplayPaceWpm();
     }
     return 0;
   }
@@ -3075,6 +3072,8 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     const observationOnlyEngines = [
       'motion_path',
       'text_fade',
+      'word_highlight',
+      'text_stream',
       'regression_reduction',
       'subvocalization_reduction',
       'chunking',
@@ -3086,10 +3085,12 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   }
 
   private normalizeEngineResultForDisplay(result: EngineResult): EngineResult {
+    const paced = ['word_highlight', 'text_fade', 'text_stream'].includes(this.engine?.engineType || '');
+    const details = { ...(result.details || {}), ...(paced ? { wpm: null, displayPaceWpm: this.getWpm() } : {}) };
     if (this.isMeasuredClientResult(result)) {
       return {
         ...result,
-        details: { ...(result.details || {}), measurementStatus: 'Measured' }
+        details: { ...details, measurementStatus: 'Measured' }
       };
     }
 
@@ -3098,7 +3099,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       score: 0,
       accuracy: 0,
       details: {
-        ...(result.details || {}),
+        ...details,
         wpm: null,
         speedScore: null,
         comprehensionScore: null,

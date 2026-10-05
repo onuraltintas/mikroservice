@@ -266,6 +266,8 @@ export class TextFadeEngine implements BaseEngine {
         if (this.state.isCompleted) return;
         this.state.isCompleted = true;
         this.state.isRunning = false;
+        if (this.startTime) this.state.timeElapsed = Date.now() - this.startTime
+            - (this.state.isPaused ? Date.now() - this.pauseStartTime : 0);
         this.stop();
         this.callbacks.onStateChange({ ...this.state });
 
@@ -277,7 +279,8 @@ export class TextFadeEngine implements BaseEngine {
             completedSteps: this.state.currentStep,
             errors: 0,
             details: {
-                wpm: this.config.fading.speedWpm,
+                wpm: null,
+                displayPaceWpm: this.config.fading.speedWpm,
                 mode: 'vanishing_text'
             }
         };

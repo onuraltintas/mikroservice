@@ -4,7 +4,7 @@ describe('reading result semantics', () => {
   for (const type of ['word_highlight', 'text_fade', 'text_stream']) {
     it(`${type} reports tempo without inventing measured reading speed or comprehension`, () => {
       const player = Object.create(ExercisePlayerComponent.prototype) as any;
-      player.engine = { engineType: type, getWpm: () => 200, getCurrentDuration: () => 300, getMode: () => 'rsvp' };
+      player.engine = { engineType: type, getWpm: () => 200, getDisplayPaceWpm: () => 200, getCurrentDuration: () => 300, getMode: () => 'rsvp' };
       player.questionAnswers = [];
       const result = player.normalizeEngineResultForDisplay({ score: 100, accuracy: 100,
         details: { wpm: 200, comprehensionScore: 100 }, completedSteps: 10, totalSteps: 10, totalTime: 3000, errors: 0 });

@@ -96,7 +96,6 @@ export class WordHighlightEngine implements BaseEngine {
         } as WordHighlightConfig;
         this.chunks = [];
         this.allWords = [];
-        let wordPointer = 0;
 
         // Populate chunks from backend primary source
         const text = resolveReadingText(root, WordHighlightEngine.TEXT_POOL.join(' '));
@@ -106,23 +105,8 @@ export class WordHighlightEngine implements BaseEngine {
             ?? caseInsensitiveField(root, 'chunkSize') ?? pacer['chunksize'], 1, 1, 10);
         const targetWpm = boundedInteger(caseInsensitiveField(nested, 'targetWpm')
             ?? caseInsensitiveField(root, 'targetWpm') ?? pacer['speedwpm'], 200, 20, 1500);
-        if (backendChunks.length > 0) {
-            backendChunks.forEach((chunkStr: string) => {
-                const words = chunkStr.split(' ').filter(w => w.length > 0);
-                if (words.length > 0) {
-                    const cleanWords = words.map(w => w.trim());
-                    this.chunks.push({
-                        words: cleanWords,
-                        hasNewline: chunkStr.includes('\n'),
-                        startIndex: wordPointer
-                    });
-                    this.allWords.push(...cleanWords);
-                    wordPointer += cleanWords.length;
-                }
-            });
-        } else {
-            // Fallback to text splitting logic
-            const rawWords = text.split(/\s+/).filter(w => w.length > 0);
+        {
+            const rawWords = (backendChunks.length ? backendChunks.join(' ') : text).split(/\s+/).filter(w => w.length > 0);
             const cs = chunkSize;
 
             for (let i = 0; i < rawWords.length; i += cs) {
@@ -274,6 +258,8 @@ export class WordHighlightEngine implements BaseEngine {
         this.state.isRunning = false;
         this.state.currentStep = completedSteps;
         this.state.score = completionScore;
+        if (this.startTime) this.state.timeElapsed = Date.now() - this.startTime
+            - (this.state.isPaused ? Date.now() - this.pauseStartTime : 0);
         this.state.accuracy = completionScore;
         this.stop();
         this.callbacks.onStateChange({ ...this.state });
@@ -286,7 +272,9 @@ export class WordHighlightEngine implements BaseEngine {
             completedSteps,
             errors: 0,
             details: {
-                wpm: this.config.pacer?.speedWpm,
+                wpm: null,
+                displayPaceWpm: this.config.pacer?.speedWpm,
+                completionPercent: completionScore,
                 chunkCount: this.totalChunks,
                 mode: this.config.mode || 'chunking',
                 timedOut: !completedNaturally
@@ -302,5 +290,6 @@ export class WordHighlightEngine implements BaseEngine {
     getCurrentWordIndex(): number { return this.chunks[this.currentChunkIdx]?.startIndex || 0; }
     getChunkSize(): number { return this.chunks[this.currentChunkIdx]?.words.length || 1; }
     getWpm(): number { return this.config.pacer?.speedWpm || 200; }
+    shouldAutoScroll(): boolean { return this.config.pacer?.autoScroll !== false; }
     getHighlightFontSize(): string { return this.config.visuals?.fontSize || 'medium'; }
 }
