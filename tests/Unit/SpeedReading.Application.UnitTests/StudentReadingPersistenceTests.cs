@@ -303,8 +303,10 @@ public sealed class StudentReadingPersistenceTests
         session.CurrentStep.Should().Be(0);
     }
 
-    [Fact]
-    public async Task Grid_session_uses_the_validated_nested_grid_configuration()
+    [Theory]
+    [InlineData("\"rules\":{\"timeLimit\":90}")]
+    [InlineData("\"timing\":{\"maxReadingTimeMs\":90000}")]
+    public async Task Grid_session_uses_the_validated_nested_grid_configuration(string timing)
     {
         await using var context = CreateContext();
         var studentId = Guid.NewGuid();
@@ -315,7 +317,7 @@ public sealed class StudentReadingPersistenceTests
         context.Exercises.Add(Exercise.Create(
             "İç ayarlı grid",
             "grid_interaction",
-            """{"engineType":"grid_interaction","engineConfig":{"engineType":"grid_interaction","gridSize":7,"sequenceType":"numeric","rules":{"timeLimit":90}}}""",
+            "{\"engineType\":\"grid_interaction\",\"engineConfig\":{\"engineType\":\"grid_interaction\",\"gridSize\":7,\"sequenceType\":\"numeric\"," + timing + "}}",
             1,
             studentId,
             typeId,
