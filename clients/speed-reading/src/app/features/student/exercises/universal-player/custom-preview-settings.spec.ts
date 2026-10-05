@@ -127,4 +127,15 @@ describe('Custom preview settings safety', () => {
     expect(get).not.toHaveBeenCalled();
     expect(set).not.toHaveBeenCalled();
   });
+  it('supports font choices for reading engines without changing text or questions', () => {
+    for (const engineType of ['reading_comprehension', 'free_reading', 'exam_simulation']) {
+      const config = { engineType, engineConfig: { display: { fontSize: 'small', lineHeight: 1.5 }, content: 'Metin', questions: [{ id: 'question' }] } };
+      const result = applyCustomPreviewSettings(config, { fontSize: 'large', content: 'Başka metin' }, context);
+      expect(result.engineConfig.display.fontSize).toBe('large');
+      expect(result.engineConfig.content).toBe('Metin');
+      expect(result.engineConfig.questions).toEqual(config.engineConfig.questions);
+      expect(result.engineConfig.display.lineHeight).toBe(1.5);
+      expect(() => applyCustomPreviewSettings(config, { fontSize: 'huge' }, context)).toThrow();
+    }
+  });
 });
