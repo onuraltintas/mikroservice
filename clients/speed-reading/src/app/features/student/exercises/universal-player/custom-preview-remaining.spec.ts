@@ -13,6 +13,22 @@ const callbacks: EngineCallbacks = {
 };
 
 describe('Remaining custom preview motors', () => {
+  it('keeps guided and non-guided scene timing separate in mixed previews', () => {
+    const configuration = { engineType: 'visualization', engineConfig: { mode: 'guided', scenes: [
+      { duration: 5, steps: ['Bir'], stepDurationMs: 3000 }, { duration: 8 }
+    ] } };
+    const result = applyCustomPreviewSettings(configuration, { sceneDurationSec: 12, stepDurationMs: 1500 }, context);
+    expect(result.engineConfig.scenes[0].duration).toBe(5);
+    expect(result.engineConfig.scenes[0].stepDurationMs).toBe(1500);
+    expect(result.engineConfig.scenes[1].duration).toBe(12);
+    expect(result.engineConfig.scenes[1].stepDurationMs).toBeUndefined();
+  });
+
+  it('does not let nested server flags turn a local visualization preview into a server session', () => {
+    const engine = new VisualizationEngine();
+    engine.initialize({ previewOnly: true, sessionData: { serverAuthoritative: true, scenes: [] } } as any, callbacks);
+    expect((engine as any).serverAuthoritative).toBeFalse();
+  });
   it('changes error-analysis text size without rewriting errors or words', () => {
     const configuration = { engineType: 'error_analysis', engineConfig: {
       words: [{ index: 0, text: 'kelime' }], errors: [{ wordIndex: 0, originalWord: 'kelime' }]
