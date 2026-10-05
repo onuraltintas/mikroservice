@@ -2,6 +2,64 @@ import { EngineCallbacks, EngineResult } from './base-engine.interface';
 import { GridInteractionEngine } from './grid-interaction.engine';
 
 describe('GridInteractionEngine', () => {
+  function create(config: any) {
+    const complete = jasmine.createSpy('complete');
+    const engine = new GridInteractionEngine();
+    engine.initialize(config, {
+      onStart: () => undefined, onPause: () => undefined, onResume: () => undefined,
+      onComplete: complete, onError: () => undefined, onStateChange: () => undefined,
+      onStepComplete: () => undefined, onAction: () => undefined
+    });
+    return { engine, complete };
+  }
+
+  it('finishes an incomplete table when its time limit expires', () => {
+    jasmine.clock().install();
+    jasmine.clock().mockDate(new Date(0));
+    try {
+      const { engine, complete } = create({ gridSize: 3, timeLimit: 1 });
+      engine.start();
+      jasmine.clock().tick(1000);
+      expect(complete).toHaveBeenCalledTimes(1);
+      expect(complete.calls.mostRecent().args[0].completedSteps).toBe(0);
+      expect(complete.calls.mostRecent().args[0].details.completionReason).toBe('time_limit');
+      engine.destroy();
+    } finally { jasmine.clock().uninstall(); }
+  });
+
+  it('retains search time before a pause and measures the exact final click', () => {
+    jasmine.clock().install();
+    jasmine.clock().mockDate(new Date(0));
+    try {
+      const { engine, complete } = create({ gridSize: 3 });
+      engine.start();
+      jasmine.clock().tick(250);
+      engine.pause();
+      jasmine.clock().tick(2000);
+      engine.resume();
+      jasmine.clock().tick(125);
+      for (let value = 1; value <= 9; value++) {
+        engine.handleInput({ cellIndex: engine.getGrid().indexOf(value), value });
+      }
+      const result = complete.calls.mostRecent().args[0];
+      expect(result.totalTime).toBe(375);
+      expect(result.details.clickHistory[0].responseTime).toBe(375);
+      engine.destroy();
+    } finally { jasmine.clock().uninstall(); }
+  });
+
+  it('does not accept a number submitted for another cell', () => {
+    const { engine } = create({ gridSize: 3 });
+    engine.start();
+    engine.handleInput({ cellIndex: engine.getGrid().indexOf(2), value: 1 });
+    expect(engine.state.currentStep).toBe(0);
+    engine.destroy();
+  });
+
+  it('rejects duplicate server values and generates a complete numeric table', () => {
+    const { engine } = create({ gridSize: 3, serverGrid: Array(9).fill(1) });
+    expect([...engine.getGrid()].sort((a, b) => Number(a) - Number(b))).toEqual([1,2,3,4,5,6,7,8,9]);
+  });
   it('uses the server layout when the template also has grid dimensions', () => {
     const engine = new GridInteractionEngine();
     const layout = [
