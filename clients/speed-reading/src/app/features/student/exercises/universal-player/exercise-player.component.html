@@ -898,7 +898,11 @@
                 Hedef: {{ getTargetWpm() }} WPM
             </div>
             <!-- Show Actual WPM for other reading exercises -->
-            <div class="wpm-badge" *ngIf="engine?.engineType !== 'exam_simulation'">
+            <div class="wpm-badge" *ngIf="isPacedReadingEngine()">
+                <span class="material-icons">speed</span>
+                Gösterim temposu: {{ getWpm() }} kelime/dk
+            </div>
+            <div class="wpm-badge" *ngIf="engine?.engineType !== 'exam_simulation' && !isPacedReadingEngine() && readingWpm > 0">
                 <span class="material-icons">speed</span>
                 {{ readingWpm }} WPM
             </div>

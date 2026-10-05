@@ -2077,6 +2077,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       }
     };
 
+    this.result = this.normalizeEngineResultForDisplay(this.result);
     this.exercisePhase = 'completed';
     this.engineState.isCompleted = true;
     this.saveResult(this.result);
@@ -3079,6 +3080,10 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     return !observationOnlyEngines.includes(this.engine?.engineType || '');
   }
 
+  isPacedReadingEngine(): boolean {
+    return ['word_highlight', 'text_fade', 'text_stream'].includes(this.engine?.engineType || '');
+  }
+
   getReadingMeasurementMessage(): string {
     return this.result?.details?.comprehensionScore == null
       ? 'Anlama ölçülmedi. Gösterilen tempo, metnin gösterim temposudur; ölçülmüş okuma hızı değildir.'
@@ -3086,7 +3091,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   }
 
   private normalizeEngineResultForDisplay(result: EngineResult): EngineResult {
-    const paced = ['word_highlight', 'text_fade', 'text_stream'].includes(this.engine?.engineType || '');
+    const paced = this.isPacedReadingEngine();
     const details = { ...(result.details || {}), ...(paced ? { wpm: null, displayPaceWpm: this.getWpm() } : {}) };
     if (this.isMeasuredClientResult(result)) {
       return {
