@@ -1,11 +1,11 @@
-import { caseInsensitiveField, mergeCaseInsensitiveRecords, recordOrEmpty } from './engines/reading-pacer-safety';
+import { boundedInteger, caseInsensitiveField, mergeCaseInsensitiveRecords, recordOrEmpty } from './engines/reading-pacer-safety';
 
 export interface CustomPreviewContext {
   roles: readonly string[];
   preview: boolean;
 }
 
-export const CUSTOM_PREVIEW_ENGINES = ['word_highlight', 'subvocalization_reduction', 'regression_reduction', 'text_fade', 'text_stream', 'motion_path', 'scan_find', 'focus', 'vocabulary_builder', 'visual_expansion', 'reading_comprehension', 'free_reading', 'exam_simulation', 'grid_interaction'] as const;
+export const CUSTOM_PREVIEW_ENGINES = ['word_highlight', 'subvocalization_reduction', 'regression_reduction', 'text_fade', 'text_stream', 'motion_path', 'scan_find', 'focus', 'vocabulary_builder', 'visual_expansion', 'reading_comprehension', 'free_reading', 'exam_simulation', 'grid_interaction', 'visualization'] as const;
 
 export interface PreviewControl {
   key: string;
@@ -31,7 +31,7 @@ export function getCustomPreviewControls(configuration: Record<string, unknown>)
   const movement = mergeCaseInsensitiveRecords(configuration, settings, 'movement');
   const pacer = mergeCaseInsensitiveRecords(configuration, settings, 'pacer');
   const fading = mergeCaseInsensitiveRecords(configuration, settings, 'fading');
-  const session = ['focus', 'vocabulary_builder', 'subvocalization_reduction', 'regression_reduction'].includes(String(configuration['engineType']))
+  const session = ['focus', 'vocabulary_builder', 'subvocalization_reduction', 'regression_reduction', 'visualization'].includes(String(configuration['engineType']))
     ? recordOrEmpty(caseInsensitiveField(settings, 'sessionData') ?? caseInsensitiveField(configuration, 'sessionData')) : {};
   const difficulty = recordOrEmpty(caseInsensitiveField(session, 'difficultySettings') ?? caseInsensitiveField(settings, 'difficultySettings') ?? caseInsensitiveField(configuration, 'difficultySettings'));
   const read = (name: string) => caseInsensitiveField(session, name)
@@ -40,6 +40,21 @@ export function getCustomPreviewControls(configuration: Record<string, unknown>)
   const control = (key: string, label: string, min: number, max: number, value: unknown): PreviewControl =>
     ({ key, label, min, max, value: Number(value) });
   switch (configuration['engineType']) {
+    case 'visualization': {
+      const scenes = read('scenes');
+      if (!Array.isArray(scenes) || !scenes.length) return [];
+      const guided = read('mode') === 'guided';
+      const withSteps = scenes.filter(scene => {
+        const steps = caseInsensitiveField(recordOrEmpty(scene), 'steps');
+        return guided && Array.isArray(steps) && steps.length > 0;
+      });
+      const controls: PreviewControl[] = [];
+      if (withSteps.length < scenes.length) controls.push(control('sceneDurationSec', 'Adımsız sahnelerin gösterim süresi (saniye)', 1, 3600,
+        boundedInteger(caseInsensitiveField(recordOrEmpty(scenes.find(scene => !withSteps.includes(scene))), 'duration'), 5, 1, 3600)));
+      if (withSteps.length) controls.push(control('stepDurationMs', 'Yönlendirmeli sahnelerde adım süresi (ms)', 100, 60000,
+        boundedInteger(caseInsensitiveField(recordOrEmpty(withSteps[0]), 'stepDurationMs'), 3000, 100, 60000)));
+      return controls;
+    }
     case 'grid_interaction': return [control('gridSize', 'Tablo boyutu (satır ve sütun)', 3, 7,
       configuration['gridSize'] || recordOrEmpty(settings['grid'])['rows'] || 5)];
     case 'reading_comprehension':
@@ -127,6 +142,23 @@ export function applyCustomPreviewSettings<T extends Record<string, unknown>>(
       }
     }
   };
+  if (engine === 'visualization') {
+    const entries: Record<string, number> = {};
+    if (validated['sceneDurationSec'] !== undefined) entries['duration'] = validated['sceneDurationSec'];
+    if (validated['stepDurationMs'] !== undefined) entries['stepDurationMs'] = validated['stepDurationMs'];
+    const containers = [result as Record<string, unknown>, settings];
+    for (const container of [...containers]) {
+      for (const key of Object.keys(container)) if (key.toLowerCase() === 'sessiondata') containers.push(recordOrEmpty(container[key]));
+    }
+    for (const container of containers) {
+      for (const key of Object.keys(container)) {
+        if (key.toLowerCase() === 'scenes' && Array.isArray(container[key])) {
+          container[key] = (container[key] as unknown[]).map(scene => overrideFields(scene, entries));
+        }
+      }
+    }
+    return result;
+  }
   if (engine === 'grid_interaction') {
     if (validated['gridSize'] !== undefined) {
       (result as Record<string, unknown>)['gridSize'] = validated['gridSize'];
