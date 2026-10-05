@@ -9,6 +9,7 @@ import { Exercise } from '../../../core/models/exercise.model';
 import { ExerciseLevelDialogComponent } from './exercise-level-dialog/exercise-level-dialog.component';
 import { forkJoin } from 'rxjs';
 import { AuthService } from '../../../core/services/auth.service';
+import { CustomPreviewDialogComponent } from './universal-player/custom-preview-dialog.component';
 
 interface ExerciseCard {
   id?: string;
@@ -166,7 +167,30 @@ export class ExercisesListComponent extends BaseComponent implements OnInit {
     }
   }
 
-  startExercise(exerciseCard: ExerciseCard): void {
+  get canCustomizePreview(): boolean {
+    const roles = this.authService.currentUserValue?.roles ?? [];
+    return !roles.includes('Student') && roles.some(role => ['Admin', 'SystemAdmin', 'Teacher'].includes(role));
+  }
+
+  openCustomPreview(exercise: Exercise): void {
+    const roles = this.authService.currentUserValue?.roles ?? [];
+    if (roles.includes('Student') || !roles.some(role => ['Admin', 'SystemAdmin', 'Teacher'].includes(role))) return;
+    let configuration: Record<string, unknown>;
+    try { configuration = JSON.parse(exercise.configurationJson || '{}'); }
+    catch { this.toaster.error('Bu egzersizin ayarları okunamadı.'); return; }
+    if (!configuration || !['word_highlight', 'subvocalization_reduction'].includes(String(configuration['engineType']))) {
+      this.toaster.error('Bu egzersiz türü için özel ayarlar henüz desteklenmiyor. Kayıtlı ayarlarla başlatabilirsiniz.');
+      return;
+    }
+    this.dialog.open(CustomPreviewDialogComponent, { width: '480px', maxWidth: '95vw', data: configuration })
+      .afterClosed().subscribe(values => {
+        if (values) this.router.navigate(['/student/exercises/universal-player', exercise.id], {
+          state: { customPreview: { exerciseId: exercise.id, values } }
+        });
+      });
+  }
+
+  startExercise(exerciseCard: ExerciseCard, custom = false): void {
     if (!exerciseCard.exercises || exerciseCard.exercises.length === 0) {
       this.toaster.error('Bu kategoride aktif egzersiz bulunamadı.');
       return;
@@ -174,6 +198,7 @@ export class ExercisesListComponent extends BaseComponent implements OnInit {
 
     // If only 1 level, start immediately
     if (exerciseCard.exercises.length === 1) {
+      if (custom) { this.openCustomPreview(exerciseCard.exercises[0]); return; }
       this.router.navigate(['/student/exercises/universal-player', exerciseCard.exercises[0].id]);
       return;
     }
@@ -189,6 +214,7 @@ export class ExercisesListComponent extends BaseComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe(selectedExercise => {
       if (selectedExercise) {
+        if (custom) { this.openCustomPreview(selectedExercise); return; }
         this.router.navigate(['/student/exercises/universal-player', selectedExercise.id]);
       }
     });

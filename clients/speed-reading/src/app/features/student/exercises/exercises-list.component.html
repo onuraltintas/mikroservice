@@ -72,8 +72,13 @@
             <div class="sp-card-actions">
                 <button class="sp-btn start-button" (click)="startExercise(exercise)">
                     <span class="material-icons">play_arrow</span>
-                    Başlat
+                    Kayıtlı ayarlarla başlat
                 </button>
+                @if (canCustomizePreview) {
+                <button class="sp-btn" (click)="startExercise(exercise, true)">
+                    <span class="material-icons" aria-hidden="true">tune</span> Özel ayarlarla dene
+                </button>
+                }
                 <button class="sp-btn" title="Detaylı bilgi" (click)="showInfo(exercise)">
                     <span class="material-icons">info</span>
                 </button>
