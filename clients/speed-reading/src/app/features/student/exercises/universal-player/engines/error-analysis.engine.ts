@@ -14,7 +14,7 @@
  */
 
 import { BaseEngine, EngineConfig, EngineState, EngineResult, EngineCallbacks } from './base-engine.interface';
-import { boundedText, caseInsensitiveField, recordOrEmpty } from './reading-pacer-safety';
+import { boundedText, caseInsensitiveField, mergeCaseInsensitiveRecords, recordOrEmpty } from './reading-pacer-safety';
 
 export interface ErrorInfo {
     wordIndex: number;
@@ -59,6 +59,9 @@ export class ErrorAnalysisEngine implements BaseEngine {
     private words: WordInfo[] = [];
     private errors: ErrorInfo[] = [];
     private errorCount: number = 0;
+    private fontSize: string = 'medium';
+
+    getFontSize(): string { return this.fontSize; }
 
     private foundErrors: number[] = [];
     private falseAlarms: number[] = [];
@@ -91,6 +94,9 @@ export class ErrorAnalysisEngine implements BaseEngine {
         this.callbacks = callbacks;
         const root = recordOrEmpty(config);
         const nested = recordOrEmpty(caseInsensitiveField(root, 'engineConfig'));
+        const display = mergeCaseInsensitiveRecords(root, nested, 'display');
+        const fontSize = String(display['fontsize'] ?? 'medium').toLowerCase();
+        this.fontSize = ['small', 'medium', 'large'].includes(fontSize) ? fontSize : 'medium';
         const sessionData = recordOrEmpty(caseInsensitiveField(root, 'sessionData'));
         const read = (name: string) => caseInsensitiveField(sessionData, name)
             ?? caseInsensitiveField(nested, name)

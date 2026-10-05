@@ -6790,6 +6790,8 @@ h1 {
     .error-text-content {
         line-height: 1.8;
         font-size: 18px;
+        &.font-small { font-size: 16px; }
+        &.font-large { font-size: 22px; }
         max-height: 400px;
         overflow-y: auto;
         padding-right: 8px;

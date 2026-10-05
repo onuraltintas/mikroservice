@@ -5,7 +5,7 @@ export interface CustomPreviewContext {
   preview: boolean;
 }
 
-export const CUSTOM_PREVIEW_ENGINES = ['word_highlight', 'subvocalization_reduction', 'regression_reduction', 'text_fade', 'text_stream', 'motion_path', 'scan_find', 'focus', 'vocabulary_builder', 'visual_expansion', 'reading_comprehension', 'free_reading', 'exam_simulation', 'grid_interaction', 'visualization', 'adaptive_fluency'] as const;
+export const CUSTOM_PREVIEW_ENGINES = ['word_highlight', 'subvocalization_reduction', 'regression_reduction', 'text_fade', 'text_stream', 'motion_path', 'scan_find', 'focus', 'vocabulary_builder', 'visual_expansion', 'reading_comprehension', 'free_reading', 'exam_simulation', 'grid_interaction', 'visualization', 'adaptive_fluency', 'error_analysis'] as const;
 
 export interface PreviewControl {
   key: string;
@@ -58,6 +58,7 @@ export function getCustomPreviewControls(configuration: Record<string, unknown>)
     }
     case 'grid_interaction': return [control('gridSize', 'Tablo boyutu (satır ve sütun)', 3, 7,
       configuration['gridSize'] || recordOrEmpty(settings['grid'])['rows'] || 5)];
+    case 'error_analysis':
     case 'reading_comprehension':
     case 'free_reading':
     case 'exam_simulation': {

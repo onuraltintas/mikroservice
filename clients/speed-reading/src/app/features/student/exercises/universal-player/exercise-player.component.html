@@ -726,7 +726,7 @@
 
         <!-- Text Area with Clickable Words -->
         <div class="error-text-area" [class.paused]="engineState.isPaused">
-            <div class="error-text-content">
+            <div class="error-text-content" [ngClass]="'font-' + getErrorAnalysisFontSize()">
                 <span *ngFor="let word of getErrorAnalysisWords(); let i = index; trackBy: trackByIdx"
                     class="error-word" [class.selected]="isErrorWordSelected(i)"
                     [class.found-error]="isErrorWordFoundError(i)" [class.false-alarm]="isErrorWordFalseAlarm(i)"

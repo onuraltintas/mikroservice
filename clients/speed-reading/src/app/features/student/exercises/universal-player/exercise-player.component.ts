@@ -3630,6 +3630,11 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   }
 
   // --- Error Analysis Helpers ---
+  getErrorAnalysisFontSize(): string {
+    return this.engine?.engineType === 'error_analysis'
+      ? (this.engine as any).getFontSize?.() || 'medium' : 'medium';
+  }
+
   getErrorAnalysisPhase(): string {
     if (this.engine?.engineType === 'error_analysis') {
       return (this.engine as any).getPhase?.() || 'idle';
