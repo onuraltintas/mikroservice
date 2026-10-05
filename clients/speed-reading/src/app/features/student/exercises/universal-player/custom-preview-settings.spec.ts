@@ -138,4 +138,27 @@ describe('Custom preview settings safety', () => {
       expect(() => applyCustomPreviewSettings(config, { fontSize: 'huge' }, context)).toThrow();
     }
   });
+  it('updates nested session overrides and preserves legacy section fields', () => {
+    const config = { engineType: 'focus', engineConfig: { SessionData: { SpeedMs: 1500, NLevel: 2 } } };
+    expect(getCustomPreviewControls(config)[0].value).toBe(1500);
+    const result = applyCustomPreviewSettings(config, { speedMs: 1000 }, context);
+    expect((result.engineConfig as any).SessionData.SpeedMs).toBe(1000);
+    expect((result.engineConfig as any).SessionData.NLevel).toBe(2);
+    const motion = applyCustomPreviewSettings({ engineType: 'motion_path', engineConfig: { Timing: { totalDurationSeconds: 60, holdMs: 2000 } } }, { holdMs: 1000 }, context);
+    expect((motion.engineConfig as any).timing.totalDurationSeconds).toBe(60);
+    const reading = applyCustomPreviewSettings({ engineType: 'reading_comprehension', engineConfig: { Display: { lineHeight: 1.8 } } }, { fontSize: 'large' }, context);
+    expect((reading.engineConfig as any).display.lineHeight).toBe(1.8);
+  });
+  it('uses the motion engine mode source and visual expansion effective zero defaults', () => {
+    expect(getCustomPreviewControls({ engineType: 'motion_path', engineConfig: { mode: 'fixation' }, sessionData: { mode: 'tracking' } })[0].key).toBe('holdMs');
+    const controls = getCustomPreviewControls({ engineType: 'visual_expansion', engineConfig: { timing: { durationMs: 0, intervalMs: 0 } } });
+    expect(controls[0].value).toBe(250);
+    expect(controls[1].value).toBe(1500);
+  });
+  it('does not wait for server authority in vocabulary preview even with stale session flags', () => {
+    spyOn(localStorage, 'getItem').and.returnValue(null);
+    const engine = new VocabularyBuilderEngine();
+    engine.initialize({ previewOnly: true, sessionData: { previewOnly: false, serverAuthoritative: true } } as any, {} as any);
+    expect((engine as any).serverAuthoritative).toBeFalse();
+  });
 });
