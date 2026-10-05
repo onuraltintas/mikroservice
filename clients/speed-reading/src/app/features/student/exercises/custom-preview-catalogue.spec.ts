@@ -3,6 +3,28 @@ import { ExercisesListComponent } from './exercises-list.component';
 import { CustomPreviewDialogComponent } from './universal-player/custom-preview-dialog.component';
 
 describe('Custom preview catalogue navigation', () => {
+  it('allows later supported levels when the first level has no custom controls', () => {
+    const open = jasmine.createSpy('open').and.returnValue({ afterClosed: () => of(undefined) });
+    const context: any = { dialog: { open }, authService: { currentUserValue: { roles: ['Teacher'] } }, toaster: { error: jasmine.createSpy('error') } };
+    const levels: any[] = [
+      { id: 'learn', configurationJson: JSON.stringify({ engineType: 'vocabulary_builder', engineConfig: { mode: 'learn' } }) },
+      { id: 'quiz', configurationJson: JSON.stringify({ engineType: 'vocabulary_builder', engineConfig: { mode: 'quiz' } }) }
+    ];
+    ExercisesListComponent.prototype.openCustomPreview.call(context, levels[0], levels);
+    expect(open).toHaveBeenCalled();
+  });
+  it('rejects non-object level configurations with a friendly message', () => {
+    const open = jasmine.createSpy('open');
+    const error = jasmine.createSpy('error');
+    const context: any = { dialog: { open }, authService: { currentUserValue: { roles: ['Teacher'] } }, toaster: { error } };
+    const levels: any[] = [
+      { id: 'first', configurationJson: JSON.stringify({ engineType: 'word_highlight' }) },
+      { id: 'bad', configurationJson: 'null' }
+    ];
+    ExercisesListComponent.prototype.openCustomPreview.call(context, levels[0], levels);
+    expect(open).not.toHaveBeenCalled();
+    expect(error).toHaveBeenCalled();
+  });
   it('opens one settings dialog directly for a multi-level custom preview', () => {
     const open = jasmine.createSpy('open').and.returnValue({ afterClosed: () => of({ exerciseId: 'second', values: { speedWpm: 400 } }) });
     const navigate = jasmine.createSpy('navigate');
