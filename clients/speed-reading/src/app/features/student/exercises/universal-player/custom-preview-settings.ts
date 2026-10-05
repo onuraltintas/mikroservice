@@ -5,7 +5,7 @@ export interface CustomPreviewContext {
   preview: boolean;
 }
 
-export const CUSTOM_PREVIEW_ENGINES = ['word_highlight', 'subvocalization_reduction', 'regression_reduction', 'text_fade', 'text_stream', 'motion_path', 'scan_find'] as const;
+export const CUSTOM_PREVIEW_ENGINES = ['word_highlight', 'subvocalization_reduction', 'regression_reduction', 'text_fade', 'text_stream', 'motion_path', 'scan_find', 'focus', 'vocabulary_builder', 'visual_expansion'] as const;
 
 export interface PreviewControl {
   key: string;
@@ -29,6 +29,13 @@ export function getCustomPreviewControls(configuration: Record<string, unknown>)
   const control = (key: string, label: string, min: number, max: number, value: unknown): PreviewControl =>
     ({ key, label, min, max, value: Number(value) });
   switch (configuration['engineType']) {
+    case 'focus': return [control('speedMs', 'Uyaran süresi (ms)', 100, 10000, read('SpeedMs') ?? read('FocusSpeedMs') ?? 1500)];
+    case 'vocabulary_builder': return read('mode') === 'quiz'
+      ? [control('timeLimitPerWord', 'Kelime başına süre (saniye; 0: sınırsız)', 0, 3600, read('timeLimitPerWord') ?? 0)] : [];
+    case 'visual_expansion': return [
+      control('displayDurationMs', 'Gösterim süresi (ms)', 50, 5000, timing['durationms'] ?? read('VisualExpansionDisplayDurationMs') ?? 250),
+      control('intervalMs', 'Gösterimler arası bekleme (ms)', 50, 10000, timing['intervalms'] ?? 1500)
+    ];
     case 'text_stream': return [
       control('displayDurationMs', 'Gösterim süresi (ms)', 50, 5000, read('displayDurationMs') ?? read('intervalMs') ?? timing['durationms'] ?? 500),
       control('intervalMs', 'Gösterimler arası bekleme (ms)', 0, 10000, timing['intervalms'] ?? 0)
@@ -60,8 +67,10 @@ export function applyCustomPreviewSettings<T extends Record<string, unknown>>(
   }
   const engine = configuration['engineType'];
   if (!CUSTOM_PREVIEW_ENGINES.some(type => type === engine)) return configuration;
+  const controls = getCustomPreviewControls(configuration);
+  if (!controls.length) return configuration;
   const validated: Record<string, number> = {};
-  for (const { key, min, max, label } of getCustomPreviewControls(configuration)) {
+  for (const { key, min, max, label } of controls) {
     if (values[key] === undefined) continue;
     if (key === 'chunkSize' && engine === 'text_fade') continue;
     const value = values[key];
@@ -70,6 +79,7 @@ export function applyCustomPreviewSettings<T extends Record<string, unknown>>(
     }
     validated[key] = value;
   }
+  if (!Object.keys(validated).length) return configuration;
   const result = structuredClone(configuration);
   const nested = result['engineConfig'];
   const settings: Record<string, unknown> = nested && typeof nested === 'object' && !Array.isArray(nested)
@@ -79,6 +89,24 @@ export function applyCustomPreviewSettings<T extends Record<string, unknown>>(
     const original = settings[name] ?? configuration[name];
     settings[name] = { ...(original && typeof original === 'object' && !Array.isArray(original) ? original as Record<string, unknown> : {}), ...entries };
   };
+  if (engine === 'focus' || engine === 'vocabulary_builder') {
+    const key = engine === 'focus' ? 'SpeedMs' : 'timeLimitPerWord';
+    const value = validated[engine === 'focus' ? 'speedMs' : key];
+    if (value !== undefined) {
+      settings[key] = value;
+      const session = recordOrEmpty(caseInsensitiveField(result, 'sessionData'));
+      if (Object.keys(session).length) {
+        const field = engine === 'focus' ? 'SessionData' : 'sessionData';
+        (result as Record<string, unknown>)[field] = { ...session, [key]: value };
+      }
+    }
+    return result;
+  }
+  if (engine === 'visual_expansion') {
+    if (validated['displayDurationMs'] !== undefined) merge('timing', { durationMs: validated['displayDurationMs'] });
+    if (validated['intervalMs'] !== undefined) merge('timing', { intervalMs: validated['intervalMs'] });
+    return result;
+  }
   if (engine === 'text_stream') {
     if (validated['displayDurationMs'] !== undefined) settings['displayDurationMs'] = validated['displayDurationMs'];
     if (validated['intervalMs'] !== undefined) merge('timing', { intervalMs: validated['intervalMs'] });
