@@ -5,14 +5,15 @@ export interface CustomPreviewContext {
   preview: boolean;
 }
 
-export const CUSTOM_PREVIEW_ENGINES = ['word_highlight', 'subvocalization_reduction', 'regression_reduction', 'text_fade', 'text_stream', 'motion_path', 'scan_find', 'focus', 'vocabulary_builder', 'visual_expansion'] as const;
+export const CUSTOM_PREVIEW_ENGINES = ['word_highlight', 'subvocalization_reduction', 'regression_reduction', 'text_fade', 'text_stream', 'motion_path', 'scan_find', 'focus', 'vocabulary_builder', 'visual_expansion', 'reading_comprehension', 'free_reading', 'exam_simulation'] as const;
 
 export interface PreviewControl {
   key: string;
   label: string;
   min: number;
   max: number;
-  value: number;
+  value: number | string;
+  options?: { value: string; label: string }[];
 }
 
 export function getCustomPreviewControls(configuration: Record<string, unknown>): PreviewControl[] {
@@ -29,6 +30,13 @@ export function getCustomPreviewControls(configuration: Record<string, unknown>)
   const control = (key: string, label: string, min: number, max: number, value: unknown): PreviewControl =>
     ({ key, label, min, max, value: Number(value) });
   switch (configuration['engineType']) {
+    case 'reading_comprehension':
+    case 'free_reading':
+    case 'exam_simulation': {
+      const display = mergeCaseInsensitiveRecords(configuration, settings, 'display');
+      return [{ key: 'fontSize', label: 'Metin boyutu', min: 0, max: 0, value: String(display['fontsize'] ?? 'medium').toLowerCase(),
+        options: [{ value: 'small', label: 'Küçük' }, { value: 'medium', label: 'Orta' }, { value: 'large', label: 'Büyük' }] }];
+    }
     case 'focus': return [control('speedMs', 'Uyaran süresi (ms)', 100, 10000, read('SpeedMs') ?? read('FocusSpeedMs') ?? 1500)];
     case 'vocabulary_builder': return read('mode') === 'quiz'
       ? [control('timeLimitPerWord', 'Kelime başına süre (saniye; 0: sınırsız)', 0, 3600, read('timeLimitPerWord') ?? 0)] : [];
@@ -69,6 +77,17 @@ export function applyCustomPreviewSettings<T extends Record<string, unknown>>(
   if (!CUSTOM_PREVIEW_ENGINES.some(type => type === engine)) return configuration;
   const controls = getCustomPreviewControls(configuration);
   if (!controls.length) return configuration;
+  const fontControl = controls.find(control => control.key === 'fontSize');
+  if (fontControl) {
+    const value = values['fontSize'];
+    if (value === undefined) return configuration;
+    if (!fontControl.options?.some(option => option.value === value)) throw new Error('Geçerli bir metin boyutu seçin.');
+    const result = structuredClone(configuration);
+    const settings = recordOrEmpty(result['engineConfig']);
+    (result as Record<string, unknown>)['engineConfig'] = settings;
+    settings['display'] = { ...recordOrEmpty(configuration['display']), ...recordOrEmpty(settings['display']), fontSize: value };
+    return result;
+  }
   const validated: Record<string, number> = {};
   for (const { key, min, max, label } of controls) {
     if (values[key] === undefined) continue;
