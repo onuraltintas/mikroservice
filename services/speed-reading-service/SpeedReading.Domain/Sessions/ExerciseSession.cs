@@ -153,6 +153,39 @@ public sealed class ExerciseSession : AggregateRoot
         UpdatedAt = DateTime.UtcNow;
     }
 
+    public void Abandon(DateTime at)
+    {
+        if (Status is not (ExerciseSessionStatus.Active or ExerciseSessionStatus.Paused))
+            throw new InvalidOperationException("Only an unfinished session can be abandoned.");
+        EndTime = EnsureUtc(at);
+        TotalPausedSeconds += CalculateNonNegativeSeconds(PausedAt, EndTime.Value);
+        PausedAt = null;
+        Status = ExerciseSessionStatus.Abandoned;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void RestartForVerification(int totalSteps, int? timeLimitSeconds, string stateJson, DateTime at)
+    {
+        if (Status is not (ExerciseSessionStatus.Active or ExerciseSessionStatus.Paused) || !AssessmentAttemptId.HasValue)
+            throw new InvalidOperationException("Only an unfinished assessment session can be restarted for verification.");
+        if (totalSteps <= 0) throw new ArgumentOutOfRangeException(nameof(totalSteps));
+        CustomDataJson = System.Text.Json.JsonSerializer.Serialize(new
+        {
+            previousUnverifiedAttempt = new { StartTime, CurrentStep, CorrectCount, IncorrectCount, SessionDataJson },
+            previousCustomData = CustomDataJson
+        });
+        Status = ExerciseSessionStatus.Active;
+        StartTime = EnsureUtc(at);
+        EndTime = null;
+        PausedAt = null;
+        TotalPausedSeconds = CurrentStep = CorrectCount = IncorrectCount = 0;
+        TotalSteps = totalSteps;
+        TimeLimitSeconds = timeLimitSeconds;
+        SessionDataJson = stateJson;
+        ProcessedActionsJson = "{}";
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     public void Resume(DateTime at)
     {
         EnsureStatus(ExerciseSessionStatus.Paused, "Only a paused session can be resumed.");

@@ -3,11 +3,11 @@
  * Tachistoscope, RSVP ve benzeri metin akışı egzersizleri için.
  * Kelimeler/cümleler belirli hızda gösterilir, kullanıcı ne gördüğünü yazar.
  * 
- * Bilimsel Standartlar:
+ * Eğitim akışı:
  * - Stimulus gösterim süresi: 50-500ms (adaptif)
  * - Fixation point öncesi
- * - Kullanıcı yanıtı + Levenshtein fuzzy matching
- * - Adaptif hız: %80+ doğruluk → %10 hızlan, %60 altı → %20 yavaşla
+ * - Türkçe büyük/küçük harf normalizasyonuyla yanıt karşılaştırma
+ * - Yapılandırılabilir eğitim kuralları; bilimsel okuma hızı normu değildir.
  */
 
 import { BaseEngine, EngineConfig, EngineState, EngineResult, EngineCallbacks } from './base-engine.interface';
@@ -92,6 +92,16 @@ export class TextStreamEngine implements BaseEngine {
     // Adaptive speed
     private currentDurationMs = 500;
     private initialDurationMs = 500;
+    private serverAuthoritative = false;
+    private awaitingServer = false;
+    private pendingAnswer = '';
+    private pendingStimulus = '';
+    private restoredCorrectCount = 0;
+    private restoredIncorrectCount = 0;
+    private contentPool: string[] = [];
+    private targetLength = 3;
+    private initialTargetLength = 3;
+    private consecutiveCorrect = 0;
 
     // Fallback word pools (used only if no backend data)
     private static readonly WORD_POOL = [
@@ -168,19 +178,36 @@ export class TextStreamEngine implements BaseEngine {
             ?? caseInsensitiveField(root, 'totalStimuli')
             ?? caseInsensitiveField(root, 'totalWords')
             ?? content['count'],
-            20, 1, 500);
+            stimuli?.length || 20, 1, 500);
 
         // Store normalized values in config for easier access
         this.config.Stimuli = stimuli;
         this.config.DisplayDurationMs = displayDuration;
         this.config.TotalStimuli = totalStimuli;
         if (this.config.content) this.config.content.count = totalStimuli;
+        if (adaptive['maxdurationms'] === undefined) this.config.adaptive.maxDurationMs = Math.max(this.config.adaptive.maxDurationMs, displayDuration);
 
+        this.serverAuthoritative = root.serverAuthoritative === true && !this.isRsvpMode();
+        const serverState = recordOrEmpty(root.tachistoscope);
+        this.targetLength = boundedInteger(root.difficultyLevel, 1, 1, 5) * 2 + 1;
+        if (this.config.content?.type === 'letter') this.targetLength = boundedInteger(root.difficultyLevel, 1, 1, 5);
+        this.initialTargetLength = this.targetLength;
         this.generateStimuli();
+        if (this.serverAuthoritative) {
+            this.stimuli = new Array(boundedInteger(serverState['count'], totalStimuli, 1, 500)).fill('');
+            this.currentStimulusIndex = boundedInteger(serverState['round'], 0, 0, this.stimuli.length);
+            this.restoredCorrectCount = boundedInteger(serverState['correctCount'], 0, 0, this.currentStimulusIndex);
+            this.restoredIncorrectCount = boundedInteger(serverState['incorrectCount'], 0, 0, this.currentStimulusIndex);
+        }
         this.state.totalSteps = this.stimuli.length;
 
         // Initialize adaptive speed
         this.currentDurationMs = displayDuration;
+        if (!this.isRsvpMode() && this.config.adaptive?.enabled) {
+            this.currentDurationMs = Math.max(this.config.adaptive.minDurationMs,
+                Math.min(this.config.adaptive.maxDurationMs, this.currentDurationMs));
+        }
+        if (this.serverAuthoritative) this.currentDurationMs = boundedInteger(serverState['displayDurationMs'], this.currentDurationMs, 50, 5000);
         this.initialDurationMs = this.currentDurationMs;
 
 
@@ -194,6 +221,10 @@ export class TextStreamEngine implements BaseEngine {
                 const text = typeof s === 'string' ? s : (s.Text || s.text || '');
                 return typeof text === 'string' ? text.slice(0, 1000) : '';
             }).filter(Boolean);
+            if (!this.isRsvpMode()) {
+                this.contentPool = [...this.stimuli];
+                this.stimuli = new Array(this.config.TotalStimuli).fill('');
+            }
             return;
         }
 
@@ -207,6 +238,8 @@ export class TextStreamEngine implements BaseEngine {
                 .filter(item => typeof item === 'string')
                 .slice(0, count)
                 .map(item => item.slice(0, 1000));
+            this.contentPool = [...this.config.content.items];
+            if (!this.isRsvpMode()) this.stimuli = new Array(count).fill('');
             return;
         }
 
@@ -223,6 +256,9 @@ export class TextStreamEngine implements BaseEngine {
             this.stimuli.push(...this.shuffleArray([...pool]));
         }
         this.stimuli = this.stimuli.slice(0, count);
+        this.contentPool = type === 'phrase'
+            ? TextStreamEngine.WORD_POOL.map((word, index) => word + ' ' + TextStreamEngine.WORD_POOL[(index + 1) % TextStreamEngine.WORD_POOL.length])
+            : [...TextStreamEngine.WORD_POOL];
     }
 
     private shuffleArray<T>(array: T[]): T[] {
@@ -233,14 +269,87 @@ export class TextStreamEngine implements BaseEngine {
         return array;
     }
 
+    private selectPreviewStimulus(): string {
+        const type = this.config.content?.type || 'word';
+        if (this.config.content?.source !== 'custom' && type === 'letter') {
+            const alphabet = 'ABCÇDEFGĞHIİJKLMNOÖPRSŞTUÜVYZ';
+            return Array.from({ length: Math.min(12, this.targetLength) }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join('');
+        }
+        if (this.config.content?.source !== 'custom' && type === 'number') {
+            return Array.from({ length: Math.min(12, this.targetLength) }, () => Math.floor(Math.random() * 10)).join('');
+        }
+        let candidates = this.contentPool.filter(word => word !== this.currentStimulus);
+        if (!candidates.length) candidates = this.contentPool;
+        if (!candidates.length) {
+            this.stop();
+            this.callbacks.onError('Takistoskop için uygun içerik bulunamadı.');
+            return '';
+        }
+        const distance = Math.min(...candidates.map(word => Math.abs(word.length - this.targetLength)));
+        candidates = candidates.filter(word => Math.abs(word.length - this.targetLength) === distance);
+        return candidates[Math.floor(Math.random() * candidates.length)];
+    }
+
+    reconcileServerResponse(action: { action: string; index?: number }, response: {
+        isValid: boolean; message?: string; isCorrect?: boolean | null; isCompleted?: boolean;
+        feedbackData?: { round?: number; stimulus?: string; displayDurationMs?: number; targetLength?: number; trial?: TrialRecord };
+    }): void {
+        if (!this.serverAuthoritative || !this.state.isRunning) return;
+        this.awaitingServer = false;
+        if (!response.isValid) {
+            this.stop();
+            this.callbacks.onError(response.message || 'Takistoskop yanıtı doğrulanamadı.');
+            return;
+        }
+        const data = response.feedbackData;
+        if (action.action === 'tachistoscope_present') {
+            if (this.state.isPaused) return;
+            if (data?.round !== this.currentStimulusIndex || typeof data.stimulus !== 'string' || !data.stimulus.length) {
+                this.stop(); this.callbacks.onError('Takistoskop uyaranı sunucudan eksik döndü.'); return;
+            }
+            this.currentDurationMs = boundedInteger(data.displayDurationMs, this.currentDurationMs, 50, 5000);
+            this.targetLength = boundedInteger(data.targetLength, this.targetLength, 1, 100);
+            this.currentStimulus = data.stimulus;
+            this.displayStimulus();
+            return;
+        }
+        if (action.action !== 'tachistoscope_answer' || data?.round !== this.currentStimulusIndex + 1) {
+            this.stop(); this.callbacks.onError('Takistoskop tur sırası doğrulanamadı.'); return;
+        }
+        const correct = response.isCorrect === true;
+        if (response.isCorrect != null && !(this.config as any).isAssessmentMode) {
+            this.trials.push(data.trial || { stimulus: this.pendingStimulus, userAnswer: this.pendingAnswer,
+                isCorrect: correct, responseTimeMs: Math.max(0, Date.now() - this.stimulusShowTime - this.currentDurationMs),
+                displayDurationMs: this.currentDurationMs });
+            if (correct) this.correctCount++; else this.state.errors++;
+        }
+        this.currentStimulusIndex = data.round;
+        this.state.currentStep = data.round;
+        this.state.accuracy = this.correctCount + this.state.errors
+            ? Math.round(this.correctCount / (this.correctCount + this.state.errors) * 100) : 0;
+        this.state.score = this.state.accuracy;
+        this.currentDurationMs = boundedInteger(data.displayDurationMs, this.currentDurationMs, 50, 5000);
+        this.targetLength = boundedInteger(data.targetLength, this.targetLength, 1, 100);
+        this.callbacks.onStepComplete(this.currentStimulusIndex, correct);
+        this.callbacks.onStateChange({ ...this.state });
+        if (this.state.isPaused) return;
+        this.scheduleTransition(() => this.showNextStimulus(),
+            this.currentStimulusIndex >= this.stimuli.length ? 500 : this.config.timing.intervalMs);
+    }
+
     start(): void {
         if (this.state.isRunning || this.state.isCompleted) return;
         this.state.isRunning = true;
         this.state.isPaused = false;
         this.startTime = Date.now();
-        this.currentStimulusIndex = 0;
+        if (!this.serverAuthoritative) this.currentStimulusIndex = 0;
         this.trials = [];
-        this.correctCount = 0;
+        this.correctCount = this.serverAuthoritative ? this.restoredCorrectCount : 0;
+        this.state.errors = this.serverAuthoritative ? this.restoredIncorrectCount : 0;
+        this.state.currentStep = this.currentStimulusIndex;
+        this.state.accuracy = this.isRsvpMode() ? 100 : this.correctCount + this.state.errors
+            ? Math.round(this.correctCount / (this.correctCount + this.state.errors) * 100) : 0;
+        this.consecutiveCorrect = 0;
 
         // Timer
         this.timerInterval = setInterval(() => {
@@ -293,8 +402,17 @@ export class TextStreamEngine implements BaseEngine {
             return;
         }
 
-        // Show stimulus
-        this.currentStimulus = this.stimuli[this.currentStimulusIndex];
+        if (this.serverAuthoritative) {
+            this.awaitingServer = true;
+            this.callbacks.onAction({ action: 'tachistoscope_present', index: this.currentStimulusIndex });
+            return;
+        }
+        this.currentStimulus = this.isRsvpMode() ? this.stimuli[this.currentStimulusIndex] : this.selectPreviewStimulus();
+        this.displayStimulus();
+    }
+
+    private displayStimulus(): void {
+        if (!this.state.isRunning || this.state.isPaused) return;
         this.isShowingStimulus = true;
         this.isShowingFixation = false;
         this.isWaitingForAnswer = false;
@@ -317,6 +435,7 @@ export class TextStreamEngine implements BaseEngine {
     }
 
     private isRsvpMode(): boolean {
+        if ((this.config as any).exerciseTypeName === 'Tachistoscope') return false;
         return this.config.mode === 'rsvp' || (this.config as any).exerciseTypeName === 'RSVP';
     }
 
@@ -361,6 +480,14 @@ export class TextStreamEngine implements BaseEngine {
         this.state.isPaused = true;
         this.pauseStartTime = Date.now();
         clearTimeout(this.stimulusTimeout);
+        if (!this.isRsvpMode()) {
+            this.isShowingStimulus = false;
+            this.isShowingFixation = false;
+            if (this.serverAuthoritative || !this.isWaitingForAnswer) {
+                this.isWaitingForAnswer = false;
+                this.currentStimulus = '';
+            }
+        }
         if (this.transitionCallback) {
             this.transitionRemainingMs = Math.max(0, this.transitionEndsAt - this.pauseStartTime);
             clearTimeout(this.transitionTimeout);
@@ -378,7 +505,10 @@ export class TextStreamEngine implements BaseEngine {
         if (this.isWaitingForAnswer) this.stimulusShowTime += pauseDuration;
 
         this.state.isPaused = false;
-        if (this.isWaitingForAnswer) {
+        if (this.serverAuthoritative) {
+            this.awaitingServer = false;
+            this.showNextStimulus();
+        } else if (this.isWaitingForAnswer) {
             // Continue waiting for answer
             this.callbacks.onStateChange({ ...this.state });
         } else if (this.transitionCallback) {
@@ -397,6 +527,10 @@ export class TextStreamEngine implements BaseEngine {
         clearTimeout(this.transitionTimeout);
         this.transitionCallback = null;
         this.transitionRemainingMs = 0;
+        this.isShowingStimulus = false;
+        this.isShowingFixation = false;
+        this.isWaitingForAnswer = false;
+        this.awaitingServer = false;
         this.callbacks.onStateChange({ ...this.state });
     }
 
@@ -427,6 +561,8 @@ export class TextStreamEngine implements BaseEngine {
         this.isWaitingForAnswer = false;
         this.trials = [];
         this.correctCount = 0;
+        this.consecutiveCorrect = 0;
+        this.targetLength = this.initialTargetLength;
         this.currentDurationMs = this.initialDurationMs;
         this.generateStimuli(); // Regenerate for variety
         this.callbacks.onStateChange({ ...this.state });
@@ -440,15 +576,24 @@ export class TextStreamEngine implements BaseEngine {
      * Handle user answer submission
      */
     handleInput(input: { answer: string }): void {
-        if (!this.isWaitingForAnswer || !this.state.isRunning) {
+        if (!this.isWaitingForAnswer || !this.state.isRunning || this.state.isPaused || this.awaitingServer) {
             return;
         }
 
         const responseTime = Date.now() - this.stimulusShowTime - this.currentDurationMs;
         const userAnswer = (input.answer || '').trim().toLocaleLowerCase('tr-TR');
         const correctAnswer = this.currentStimulus.toLocaleLowerCase('tr-TR');
+        if (this.serverAuthoritative) {
+            this.pendingAnswer = input.answer || '';
+            this.pendingStimulus = this.currentStimulus;
+            this.awaitingServer = true;
+            this.isWaitingForAnswer = false;
+            this.callbacks.onAction({ action: 'tachistoscope_answer', index: this.currentStimulusIndex, answer: this.pendingAnswer });
+            this.callbacks.onStateChange({ ...this.state });
+            return;
+        }
 
-        // Check correctness using Levenshtein distance (fuzzy matching)
+        // Compare normalized Turkish text exactly; near-matches are not correct answers.
         const isCorrect = this.calculateSimilarity(userAnswer, correctAnswer);
 
         // Record trial
@@ -477,7 +622,7 @@ export class TextStreamEngine implements BaseEngine {
 
         // Adaptive speed adjustment
         if (this.config.adaptive?.enabled !== false) {
-            // Success logic: Every 2 correct answers (instant)
+            // Increase difficulty after two consecutive correct answers.
             this.checkFastAdaptation(isCorrect);
 
             // Deceleration logic: Every 5 trials (periodic)
@@ -496,8 +641,8 @@ export class TextStreamEngine implements BaseEngine {
         if (this.currentStimulusIndex >= this.stimuli.length) {
             this.scheduleTransition(() => this.complete(), 500);
         } else {
-            // Brief pause then show next (Wait for feedback to finish which is 1.2s)
-            this.scheduleTransition(() => this.showNextStimulus(), 1300);
+            // Respect the configured interval before the next stimulus.
+            this.scheduleTransition(() => this.showNextStimulus(), this.config.timing.intervalMs);
         }
     }
 
@@ -517,29 +662,31 @@ export class TextStreamEngine implements BaseEngine {
             // Low accuracy → slow down (increase duration by 10% as requested)
             const newDuration = Math.min(maxDuration, Math.round(this.currentDurationMs * 1.1));
             this.currentDurationMs = newDuration;
+            this.targetLength = Math.max(this.initialTargetLength, this.targetLength - 1);
         }
     }
 
     private checkFastAdaptation(isCorrect: boolean): void {
-        if (!isCorrect) return;
+        this.consecutiveCorrect = isCorrect ? this.consecutiveCorrect + 1 : 0;
 
         // Every 2 correct answers, speed up (Başarı Durumu)
-        const totalCorrect = this.trials.filter(t => t.isCorrect).length;
-        if (totalCorrect > 0 && totalCorrect % 2 === 0) {
+        if (this.consecutiveCorrect >= 2) {
             const minDuration = this.config.adaptive?.minDurationMs || 50;
             const newDuration = Math.max(minDuration, Math.round(this.currentDurationMs * 0.9));
             this.currentDurationMs = newDuration;
+            const maxLength = this.config.content?.type === 'number' || this.config.content?.type === 'letter'
+                ? 12 : Math.max(this.targetLength, ...this.contentPool.map(word => word.length));
+            this.targetLength = Math.min(maxLength, this.targetLength + 1);
+            this.consecutiveCorrect = 0;
         }
     }
 
     /**
-     * Calculate similarity using Levenshtein distance
-     * Allows small typos
+     * Compare normalized Turkish answers without treating typos as correct.
      */
     private calculateSimilarity(answer1: string, answer2: string): boolean {
-        // Strict match: Remove Levenshtein fuzzy matching as requested.
-        // Only case-insensitive and trimmed comparison.
-        return answer1.trim().toLocaleLowerCase('tr-TR') === answer2.trim().toLocaleLowerCase('tr-TR');
+        const normalize = (value: string) => value.trim().replace(/\s+/g, ' ').normalize('NFC').toLocaleLowerCase('tr-TR');
+        return normalize(answer1) === normalize(answer2);
     }
 
 
@@ -552,6 +699,7 @@ export class TextStreamEngine implements BaseEngine {
         this.state.isCompleted = true;
         this.state.isRunning = false;
         this.state.score = score;
+        if (this.startTime) this.state.timeElapsed = Date.now() - this.startTime - (this.state.isPaused ? Date.now() - this.pauseStartTime : 0);
         clearInterval(this.timerInterval);
         clearTimeout(this.stimulusTimeout);
         clearTimeout(this.transitionTimeout);
@@ -585,7 +733,7 @@ export class TextStreamEngine implements BaseEngine {
                 trials: this.trials,
 
                 // RSVP Specific Details
-                wpm: Math.round(60000 / this.currentDurationMs),
+                wpm: this.isRsvpMode() ? Math.round(60000 / this.currentDurationMs) : null,
                 readWordCount: this.currentStimulusIndex,
                 totalWordCount: this.stimuli.length,
                 durationSeconds: Math.round(this.state.timeElapsed / 1000),
@@ -613,7 +761,7 @@ export class TextStreamEngine implements BaseEngine {
     }
 
     isWaitingForUserAnswer(): boolean {
-        return this.isWaitingForAnswer;
+        return this.isWaitingForAnswer && !this.state.isPaused;
     }
 
     getFontSize(): string {

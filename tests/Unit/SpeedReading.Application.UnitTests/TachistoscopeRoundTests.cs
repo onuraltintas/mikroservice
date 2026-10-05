@@ -5,6 +5,23 @@ namespace SpeedReading.Application.UnitTests;
 
 public sealed class TachistoscopeRoundTests
 {
+    [Fact]
+    public void Legacy_assessment_is_restarted_without_replacing_its_unique_session()
+    {
+        var attemptId = Guid.NewGuid();
+        var session = ExerciseSession.Start(Guid.NewGuid(), Guid.NewGuid(), null, 1,
+            DateTime.UtcNow.AddMinutes(-1), null, assessmentAttemptId: attemptId);
+        session.SetState("{\"old\":true}");
+        session.Advance(true);
+        session.RestartForVerification(3, null, "{\"tachistoscope\":{}}", DateTime.UtcNow);
+        session.AssessmentAttemptId.Should().Be(attemptId);
+        session.TotalSteps.Should().Be(3);
+        session.CurrentStep.Should().Be(0);
+        session.CorrectCount.Should().Be(0);
+        session.CustomDataJson.Should().Contain("old");
+        session.SessionDataJson.Should().Contain("tachistoscope");
+    }
+
     [Theory]
     [InlineData("number", "2468")]
     [InlineData("letter", "ABC")]

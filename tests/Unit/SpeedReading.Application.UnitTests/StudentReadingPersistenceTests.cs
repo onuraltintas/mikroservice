@@ -36,6 +36,10 @@ public sealed class StudentReadingPersistenceTests
         var started = await service.StartAsync(studentId, new StartExerciseSessionRequest { ExerciseId = exerciseId });
         started.TotalSteps.Should().Be(2);
         started.InitialData.ToString().Should().NotContain("kalem");
+        (await service.ValidateActionAsync(studentId, started.SessionId,
+            new ExerciseActionRequest { Action = "advance" })).IsValid.Should().BeFalse();
+        (await service.ValidateActionAsync(studentId, started.SessionId,
+            new ExerciseActionRequest { Action = "tachistoscope_answer", Index = 0, Answer = "bir" })).IsValid.Should().BeFalse();
         for (var round = 0; round < 2; round++)
         {
             var presentation = await service.ValidateActionAsync(studentId, started.SessionId,
@@ -84,8 +88,10 @@ public sealed class StudentReadingPersistenceTests
         await complete.Should().ThrowAsync<BusinessRuleException>().Where(item => item.Code == "ExerciseSession.Incomplete");
     }
 
-    [Fact]
-    public async Task Tachistoscope_preserves_but_replaces_legacy_unverifiable_sessions()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Tachistoscope_preserves_legacy_history_and_recovers_the_session(bool assessment)
     {
         await using var context = CreateContext();
         var studentId = Guid.NewGuid();
@@ -95,18 +101,88 @@ public sealed class StudentReadingPersistenceTests
         context.Exercises.Add(Exercise.Create("Takistoskop", "text_stream",
             """{"engineType":"text_stream","engineConfig":{"mode":"flash","content":{"type":"letter","count":2}}}""",
             1, studentId, typeId, id: exerciseId));
+        var request = new StartExerciseSessionRequest { ExerciseId = exerciseId };
+        if (assessment)
+        {
+            var attemptId = Guid.NewGuid();
+            request = new StartExerciseSessionRequest { ExerciseId = exerciseId, AssessmentAttemptId = attemptId };
+            context.AssessmentAttempts.Add(AssessmentAttempt.Start(attemptId, studentId,
+                AssessmentAttemptPhase.Baseline, "baseline-v1", "tr", null, 1, DateTime.UtcNow, studentId.ToString()));
+            var snapshot = JsonSerializer.Serialize(new {
+                version = 1,
+                exercise = new {
+                    id = exerciseId, title = "Takistoskop", description = "Flash", typeName = "Tachistoscope",
+                    difficultyLevel = 1, engineType = "text_stream",
+                    configurationJson = """{"engineConfig":{"mode":"flash","content":{"type":"letter","count":2}}}"""
+                },
+                questions = Array.Empty<object>()
+            });
+            context.AssessmentAttemptExercises.Add(AssessmentAttemptExercise.Pin(Guid.NewGuid(), attemptId,
+                exerciseId, null, "attention", 1, snapshot, DateTime.UtcNow, studentId.ToString()));
+        }
         await context.SaveChangesAsync();
         var service = CreateExerciseSessionService(context);
-        var started = await service.StartAsync(studentId, new StartExerciseSessionRequest { ExerciseId = exerciseId });
+        var started = await service.StartAsync(studentId, request);
         var legacy = await context.ExerciseSessions.SingleAsync();
         var data = System.Text.Json.Nodes.JsonNode.Parse(legacy.SessionDataJson)!.AsObject();
         data.Remove("tachistoscope");
         legacy.SetState(data.ToJsonString());
         await context.SaveChangesAsync();
-        var replacement = await service.StartAsync(studentId, new StartExerciseSessionRequest { ExerciseId = exerciseId });
-        replacement.SessionId.Should().NotBe(started.SessionId);
-        (await context.ExerciseSessions.FindAsync(started.SessionId))!.Status.ToString().Should().Be("Abandoned");
+        var replacement = await service.StartAsync(studentId, request);
+        if (assessment)
+        {
+            replacement.SessionId.Should().Be(started.SessionId);
+            legacy.CustomDataJson.Should().Contain("previousUnverifiedAttempt");
+            context.ExerciseSessions.Count().Should().Be(1);
+        }
+        else
+        {
+            replacement.SessionId.Should().NotBe(started.SessionId);
+            (await context.ExerciseSessions.FindAsync(started.SessionId))!.Status.ToString().Should().Be("Abandoned");
+        }
         replacement.TotalSteps.Should().Be(2);
+    }
+
+    [Fact]
+    public async Task Tachistoscope_invalidates_unanswered_stimuli_on_pause_and_refresh()
+    {
+        await using var context = CreateContext();
+        var studentId = Guid.NewGuid();
+        var typeId = Guid.NewGuid();
+        var exerciseId = Guid.NewGuid();
+        context.ExerciseTypes.Add(ExerciseType.Create(typeId, "Tachistoscope", "Flash", "text_stream"));
+        context.Exercises.Add(Exercise.Create("Takistoskop", "text_stream",
+            """{"engineConfig":{"mode":"flash","timing":{"durationMs":5000},"content":{"type":"word","source":"custom","items":["bir","iki"],"count":1}}}""",
+            1, studentId, typeId, id: exerciseId));
+        await context.SaveChangesAsync();
+        var service = CreateExerciseSessionService(context);
+        var request = new StartExerciseSessionRequest { ExerciseId = exerciseId };
+        var started = await service.StartAsync(studentId, request);
+        var first = await service.ValidateActionAsync(studentId, started.SessionId,
+            new ExerciseActionRequest { Action = "tachistoscope_present", Index = 0 });
+        var firstWord = first.FeedbackData!.Value.GetProperty("stimulus").GetString();
+        var session = await context.ExerciseSessions.SingleAsync();
+        var data = System.Text.Json.Nodes.JsonNode.Parse(session.SessionDataJson)!;
+        data["tachistoscope"]!["presentedAt"] = DateTime.UtcNow.AddMinutes(1);
+        session.SetState(data.ToJsonString());
+        await context.SaveChangesAsync();
+        (await service.ValidateActionAsync(studentId, started.SessionId,
+            new ExerciseActionRequest { Action = "tachistoscope_answer", Index = 0, Answer = firstWord })).IsValid.Should().BeFalse();
+        await service.PauseAsync(studentId, started.SessionId);
+        (await service.StartAsync(studentId, request)).Status.ToString().Should().Be("Paused");
+        await service.ResumeAsync(studentId, started.SessionId);
+        (await service.ValidateActionAsync(studentId, started.SessionId,
+            new ExerciseActionRequest { Action = "tachistoscope_answer", Index = 0, Answer = firstWord })).IsValid.Should().BeFalse();
+        var presentationId = Guid.NewGuid();
+        var next = await service.ValidateActionAsync(studentId, started.SessionId,
+            new ExerciseActionRequest { Action = "tachistoscope_present", Index = 0, ActionId = presentationId });
+        var nextWord = next.FeedbackData!.Value.GetProperty("stimulus").GetString();
+        nextWord.Should().NotBe(firstWord);
+        (await service.StartAsync(studentId, request)).SessionId.Should().Be(started.SessionId);
+        var refreshed = await service.ValidateActionAsync(studentId, started.SessionId,
+            new ExerciseActionRequest { Action = "tachistoscope_present", Index = 0, ActionId = presentationId });
+        refreshed.FeedbackData!.Value.GetProperty("stimulus").GetString().Should().NotBe(nextWord);
+        session.CurrentStep.Should().Be(0);
     }
     [Theory]
     [InlineData("word")]

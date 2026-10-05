@@ -21,14 +21,13 @@ public sealed class TachistoscopeState
     public string LastStimulus { get; set; } = string.Empty;
     public string ExpectedStimulus { get; set; } = string.Empty;
     public DateTime? PresentedAt { get; set; }
-    public int PausedSecondsAtPresentation { get; set; }
     public List<TachistoscopeTrial> Trials { get; set; } = [];
 
     public string SelectStimulus()
     {
-        if (ContentType == "number")
+        if (ContentType == "number" && Source != "custom")
             return string.Concat(Enumerable.Range(0, Math.Clamp(TargetLength, 1, 12)).Select(_ => Random.Shared.Next(10)));
-        if (ContentType == "letter")
+        if (ContentType == "letter" && Source != "custom")
         {
             const string alphabet = "ABCÇDEFGĞHIİJKLMNOÖPRSŞTUÜVYZ";
             return string.Concat(Enumerable.Range(0, Math.Clamp(TargetLength, 1, 12)).Select(_ => alphabet[Random.Shared.Next(alphabet.Length)]));

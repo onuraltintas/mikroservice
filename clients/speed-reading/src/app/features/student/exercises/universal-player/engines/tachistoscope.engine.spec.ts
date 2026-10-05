@@ -34,6 +34,14 @@ describe('Tachistoscope runtime', () => {
     engine.destroy();
   }));
 
+  it('preserves the RSVP automatic playback score', fakeAsync(() => {
+    const { engine, result } = create({ mode: 'rsvp', Words: ['bir'], DisplayDurationMs: 50 });
+    engine.start(); tick(550);
+    expect(result()?.accuracy).toBe(100);
+    expect(result()?.score).toBe(100);
+    engine.destroy();
+  }));
+
   it('does not submit an answer while paused waiting for input', fakeAsync(() => {
     const { engine } = create({ Words: ['bir'], DisplayDurationMs: 50 });
     engine.start(); tick(50); engine.pause();
@@ -46,6 +54,43 @@ describe('Tachistoscope runtime', () => {
     const { engine } = create({ content: { type: 'letter', count: 2 }, difficultyLevel: 1 });
     engine.start();
     expect(engine.getCurrentStimulus()).toMatch(/^[ABCÇDEFGĞHIİJKLMNOÖPRSŞTUÜVYZ]$/);
+    engine.destroy();
+  });
+
+  it('increases target word length after consecutive preview successes', fakeAsync(() => {
+    const { engine } = create({ Words: ['bir', 'iki', 'masa', 'kapı', 'kalem'],
+      DisplayDurationMs: 500, content: { count: 3 }, adaptive: { enabled: true } });
+    engine.start();
+    for (let round = 0; round < 2; round++) {
+      tick(engine.getCurrentDuration());
+      engine.handleInput({ answer: engine.getCurrentStimulus() });
+      tick(0);
+    }
+    expect(engine.getCurrentDuration()).toBe(450);
+    expect(engine.getCurrentStimulus().length).toBe(4);
+    engine.destroy();
+  }));
+
+  it('restores verified counters when an authoritative session is resumed', fakeAsync(() => {
+    const { engine, actions, result } = create({ serverAuthoritative: true,
+      tachistoscope: { count: 3, round: 2, correctCount: 1, incorrectCount: 1, displayDurationMs: 50 } });
+    engine.start();
+    expect(engine.state.currentStep).toBe(2);
+    engine.reconcileServerResponse(actions[0], { isValid: true,
+      feedbackData: { round: 2, stimulus: 'bir', displayDurationMs: 50 } });
+    tick(50); engine.handleInput({ answer: 'bir' });
+    engine.reconcileServerResponse(actions[1], { isValid: true, isCorrect: true,
+      feedbackData: { round: 3 } });
+    tick(500);
+    expect(result()?.accuracy).toBe(67);
+    expect(result()?.errors).toBe(1);
+    engine.destroy();
+  }));
+
+  it('uses explicitly configured custom numbers without generating replacements', () => {
+    const { engine } = create({ content: { type: 'number', source: 'custom', items: ['2468'], count: 1 } });
+    engine.start();
+    expect(engine.getCurrentStimulus()).toBe('2468');
     engine.destroy();
   });
 
@@ -67,6 +112,20 @@ describe('Tachistoscope runtime', () => {
     tick(500);
     expect(result()?.accuracy).toBe(100);
     expect(result()?.details.wpm).toBeNull();
+    engine.destroy();
+  }));
+
+  it('does not reconstruct withheld assessment correctness', fakeAsync(() => {
+    const { engine, actions } = create({ serverAuthoritative: true, isAssessmentMode: true,
+      tachistoscope: { count: 1, round: 0, displayDurationMs: 50 } });
+    engine.start();
+    engine.reconcileServerResponse(actions[0], { isValid: true,
+      feedbackData: { round: 0, stimulus: 'bir', displayDurationMs: 50 } });
+    tick(50); engine.handleInput({ answer: 'bir' });
+    engine.reconcileServerResponse(actions[1], { isValid: true, isCorrect: null,
+      feedbackData: { round: 1 } });
+    expect(engine.getLastTrialResult()).toBeNull();
+    expect(engine.state.currentStep).toBe(1);
     engine.destroy();
   }));
 });

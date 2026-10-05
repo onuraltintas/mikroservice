@@ -331,7 +331,7 @@
             <div class="progress-info">
                 <span class="word-count-display word-count-display--active">
                     {{ engineState.currentStep }}/{{ engineState.totalSteps }}
-                    <small class="word-count-display__label">Kelime</small>
+                    <small class="word-count-display__label">{{ isTachistoscopeMode() ? 'Uyaran' : 'Kelime' }}</small>
                 </span>
                 <div class="ep-progress-bar"><div class="ep-progress-bar__fill" [style.width.%]="getProgressPercent()"></div></div>
             </div>
@@ -386,8 +386,8 @@
 
         <div class="game-stats">
             <div class="stat">
-                <span class="label">Hız</span>
-                <span class="value">{{ getCurrentTextStreamWpm() }} WPM</span>
+                <span class="label">{{ isTachistoscopeMode() ? 'Gösterim süresi' : 'Hız' }}</span>
+                <span class="value">{{ isTachistoscopeMode() ? getCurrentDuration() : getCurrentTextStreamWpm() }} {{ isTachistoscopeMode() ? 'ms' : 'WPM' }}</span>
             </div>
         </div>
     </div>
@@ -1687,6 +1687,16 @@
             </div>
 
             <!-- Speed Reading / RSVP Results (WPM) -->
+            <div class="speed-reading-results" *ngIf="isTachistoscopeMode() && result?.details">
+                <div class="result-box">
+                    <div class="result-value">{{ result?.details?.avgResponseTime == null ? '—' : result?.details?.avgResponseTime + ' ms' }}</div>
+                    <div class="result-label">Ortalama cevap süresi</div>
+                </div>
+                <div class="result-box">
+                    <div class="result-value">{{ result?.details?.initialDurationMs }} → {{ result?.details?.finalDurationMs }} ms</div>
+                    <div class="result-label">Gösterim süresi</div>
+                </div>
+            </div>
             <div class="speed-reading-results" *ngIf="engine?.engineType === 'adaptive_fluency' && result?.details">
                 <div class="result-box wpm-box">
                     <span class="material-icons">flag</span>

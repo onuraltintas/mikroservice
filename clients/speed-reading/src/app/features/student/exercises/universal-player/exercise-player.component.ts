@@ -344,6 +344,8 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   private readingTrackingStartCompleted = false;
   private pendingReadingCompletion?: () => void;
   private actionQueue: Promise<void> = Promise.resolve();
+  isPauseTransitionPending = false;
+  private restoredTachistoscopePaused = false;
   private readonly actionFailureState = createActionFailureState();
   questionSubmissionPending = false;
 
@@ -614,6 +616,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
           this.sessionId = response.sessionId;
 
           const initialData = response.initialData || (response as any).InitialData || {};
+          this.restoredTachistoscopePaused = response.status === 2 && !!initialData.tachistoscope;
           const configuration = response.configuration || (response as any).Configuration || {};
           // Assessment content is pinned by the server when the attempt is
           // created. Normalize the public session snapshot into the fields
@@ -1041,7 +1044,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
             this.engine?.engineType === 'reading_comprehension' ||
             this.engine?.engineType === 'exam_simulation' ||
             this.engine?.engineType === 'text_fade' ||
-            this.engine?.engineType === 'text_stream' ||
+            (this.engine?.engineType === 'text_stream' && !this.isTachistoscopeMode()) ||
             this.engine?.engineType === 'free_reading'; // text_stream (RSVP) added
 
           // Regression Reduction engine handles its own question flow internally
@@ -1143,6 +1146,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
           this.cdr.detectChanges();
         },
         onStepComplete: (step, correct) => {
+          if (this.isTachistoscopeMode() && !this.isAssessmentMode) this.refreshTachistoscopeFeedback();
         },
         onAction: (action) => {
           // Backend motoruna aksiyonu bildir
@@ -1218,6 +1222,9 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
               : engineType === 'motion_path'
                 ? (response: ValidationResponse) =>
                   (this.engine as MotionPathEngine).reconcileServerResponse(action, response)
+              : engineType === 'text_stream'
+                ? (response: ValidationResponse) =>
+                  (this.engine as TextStreamEngine).reconcileServerResponse(action, response)
               : undefined;
           void this.enqueueAction(action as ActionData, onResponse).catch(() => undefined);
         }
@@ -1308,14 +1315,15 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
         },
         // Metadata ve yaş grubu/zorluk bilgisini ekle
         metadata: this.parsedConfig?.['metadata'],
-        difficultyLevel: this.parsedConfig?.['difficultyLevel'] || this.backendSessionConfig?.DifficultyLevel
+        difficultyLevel: this.parsedConfig?.['difficultyLevel'] || this.backendSessionConfig?.difficultyLevel
+          || this.backendSessionConfig?.DifficultyLevel || this.exercise?.difficultyLevel
       };
 
       this.engine.initialize(engineConfig, callbacks);
 
       // --- Timer Initialization for RSVP / Duration Based Mode ---
       // If the exercise has a defined duration (implied by word count * interval for RSVP), setup the timer
-      if (engineConfig.words && Array.isArray(engineConfig.words) && engineConfig.words.length > 0 && engineConfig.intervalMs) {
+      if (!this.isTachistoscopeMode() && engineConfig.words && Array.isArray(engineConfig.words) && engineConfig.words.length > 0 && engineConfig.intervalMs) {
         const wordCount = engineConfig.words.length;
         const interval = engineConfig.intervalMs;
         // Total duration in seconds (Rounded up)
@@ -1330,6 +1338,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     return !!this.sessionId
       && this.sessionId !== 'preview-mode'
       && !this.isPreviewSession()
+      && !this.isTachistoscopeMode()
       && [
         'word_highlight',
         'reading_comprehension',
@@ -1503,7 +1512,21 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     resetActionFailureState(this.actionFailureState);
   }
 
-  startExercise(): void {
+  async startExercise(): Promise<void> {
+    if (this.isPauseTransitionPending) return;
+    if (this.restoredTachistoscopePaused && this.sessionId) {
+      this.isPauseTransitionPending = true;
+      try {
+        await firstValueFrom(this.sessionService.resumeSession(this.sessionId));
+        this.restoredTachistoscopePaused = false;
+      } catch (error) {
+        this.error = this.getActionValidationErrorMessage(error);
+        return;
+      } finally {
+        this.isPauseTransitionPending = false;
+        this.cdr.detectChanges();
+      }
+    }
     window.scrollTo({ top: 0, behavior: 'smooth' });
     this.clickedCells.clear();
     this.correctCells.clear();
@@ -1607,7 +1630,29 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     }
   }
 
-  togglePause(): void {
+  async togglePause(): Promise<void> {
+    if (this.isPauseTransitionPending) return;
+    if (this.isTachistoscopeMode() && this.sessionId && this.sessionId !== 'preview-mode') {
+      this.isPauseTransitionPending = true;
+      const resuming = this.engineState.isPaused;
+      if (!resuming) this.engine?.pause();
+      this.tachistoscopeAnswer = '';
+      this.tachistoscopeFeedback = null;
+      try {
+        await this.actionQueue;
+        await firstValueFrom(resuming
+          ? this.sessionService.resumeSession(this.sessionId)
+          : this.sessionService.pauseSession(this.sessionId));
+        if (resuming) this.engine?.resume();
+      } catch (error) {
+        this.engine?.stop();
+        this.error = this.getActionValidationErrorMessage(error);
+      } finally {
+        this.isPauseTransitionPending = false;
+        this.cdr.detectChanges();
+      }
+      return;
+    }
     if (this.engineState.isPaused) {
       this.engine?.resume();
     } else {
@@ -1671,19 +1716,25 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     this.startSession();
   }
 
-  goBack(): void {
+  async goBack(): Promise<void> {
     // Eğer egzersiz çalışıyorsa, onay iste
     if (this.engineState.isRunning && !this.engineState.isCompleted) {
-      this.engine?.pause();
+      if (this.isTachistoscopeMode()) {
+        if (this.isPauseTransitionPending) return;
+        if (!this.engineState.isPaused) await this.togglePause();
+      } else this.engine?.pause();
       this.showExitConfirm = true;
     } else {
       this.navigateBack();
     }
   }
 
-  cancelExit(): void {
+  async cancelExit(): Promise<void> {
+    if (this.isPauseTransitionPending) return;
     this.showExitConfirm = false;
-    this.engine?.resume();
+    if (this.isTachistoscopeMode()) {
+      if (this.engineState.isPaused) await this.togglePause();
+    } else this.engine?.resume();
   }
 
   confirmExit(): void {
@@ -2768,10 +2819,22 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     if (!this.engine || this.engine.engineType !== 'text_stream') return;
 
     const answer = this.tachistoscopeAnswer.trim();
-    const currentStimulus = this.getCurrentStimulus();
 
     // Submit to engine
     (this.engine as TextStreamEngine).handleInput({ answer });
+
+    // Server-backed feedback arrives through onStepComplete, not the submitted input.
+    this.tachistoscopeAnswer = '';
+    this.cdr.detectChanges();
+  }
+
+  isTachistoscopeMode(): boolean {
+    return this.engine?.engineType === 'text_stream'
+      && (this.exercise?.exerciseTypeName === 'Tachistoscope'
+        || (this.engine as TextStreamEngine).getMode() !== 'rsvp');
+  }
+
+  private refreshTachistoscopeFeedback(): void {
 
     // Get last trial result for feedback
     const lastTrial = (this.engine as TextStreamEngine).getLastTrialResult?.();
@@ -2788,8 +2851,6 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       }, 1200);
     }
 
-    // Clear input
-    this.tachistoscopeAnswer = '';
     this.cdr.detectChanges();
   }
 
@@ -3107,12 +3168,22 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       next: (sessionResult: SessionResult) => {
         this.resultSaveStatus = 'saved';
         this.sessionResult = sessionResult;
+        const tachistoscope = this.isTachistoscopeMode() ? sessionResult.detailedResults?.tachistoscope : undefined;
+        const trials: Array<{ responseTimeMs: number }> = tachistoscope?.trials || [];
         this.result = {
           ...(this.result || result),
           score: sessionResult.score ?? 0,
           accuracy: sessionResult.accuracy ?? 0,
           details: {
             ...((this.result || result).details || {}),
+            ...(tachistoscope ? {
+              trials,
+              correctCount: sessionResult.correctCount,
+              incorrectCount: sessionResult.incorrectCount,
+              initialDurationMs: tachistoscope.initialDurationMs,
+              finalDurationMs: tachistoscope.displayDurationMs,
+              avgResponseTime: trials.length ? Math.round(trials.reduce((sum, trial) => sum + trial.responseTimeMs, 0) / trials.length) : null
+            } : {}),
             wpm: sessionResult.rawWPM ?? null,
             comprehensionScore: sessionResult.comprehensionScore ?? null,
             weightedKDP: sessionResult.weightedKDP ?? null,

@@ -223,9 +223,47 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
             var matchingSession = activeSessions.FirstOrDefault(item =>
                 item.AssessmentAttemptId == request.AssessmentAttemptId
                 && item.StudentAssignmentId == request.StudentAssignmentId);
+            if (matchingSession is not null
+                && IsTachistoscope(exerciseTypeName, exerciseEngineType, ParseJsonOrEmpty(configurationJson))
+                && DeserializeState(matchingSession.SessionDataJson).Tachistoscope is null)
+            {
+                // Legacy client-scored attempts cannot be verified by the new round protocol.
+                // Preserve their history, but start a fresh authoritative attempt.
+                var legacySession = await db.ExerciseSessions.SingleAsync(item => item.Id == matchingSession.Id, token);
+                if (legacySession.AssessmentAttemptId.HasValue)
+                {
+                    var upgradedState = await CreateSessionStateAsync(request.ExerciseId, exerciseTypeName,
+                        exerciseEngineType, difficultyLevel, configurationJson, null, assessmentSnapshot,
+                        true, request.CustomData, profileAgeGroupId, token);
+                    legacySession.RestartForVerification(upgradedState.TotalSteps, upgradedState.TimeLimitSeconds,
+                        JsonSerializer.Serialize(upgradedState, JsonOptions), DateTime.UtcNow);
+                    await db.SaveChangesAsync(token);
+                    if (startTransaction is not null) await startTransaction.CommitAsync(token);
+                    return new StartExerciseSessionResponse(legacySession.Id, legacySession.ExerciseId, exerciseTypeName,
+                        Application.ExerciseSessions.ExerciseSessionStatus.Active, legacySession.StartTime,
+                        legacySession.TotalSteps, ToPublicJson(upgradedState),
+                        SpeedReadingContentSecurity.SanitizeFocusAssessmentJson(ParseJsonOrEmpty(configurationJson)));
+                }
+                legacySession.Abandon(DateTime.UtcNow);
+                await db.SaveChangesAsync(token);
+                activeSessions.Remove(matchingSession);
+                matchingSession = null;
+                activeSession = activeSessions.FirstOrDefault();
+            }
             if (matchingSession is not null)
             {
                 var existingState = DeserializeState(matchingSession.SessionDataJson);
+                if (existingState.Tachistoscope is { PresentedAt: not null } pending)
+                {
+                    pending.LastStimulus = pending.ExpectedStimulus;
+                    pending.ExpectedStimulus = string.Empty;
+                    pending.PresentedAt = null;
+                    var tracked = await db.ExerciseSessions.SingleAsync(item => item.Id == matchingSession.Id, token);
+                    tracked.SetState(JsonSerializer.Serialize(existingState, JsonOptions), tracked.CustomDataJson);
+                    InvalidateTachistoscopePresentations(tracked);
+                    await db.SaveChangesAsync(token);
+                    if (startTransaction is not null) await startTransaction.CommitAsync(token);
+                }
                 var existingConfiguration = ParseJsonOrEmpty(configurationJson);
                 return new StartExerciseSessionResponse(
                     matchingSession.Id,
@@ -365,7 +403,9 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
             throw new InvalidOperationException("Actions can only be submitted to an active session.");
 
         var actionName = request.Action?.Trim().ToLowerInvariant();
-        var response = actionName == "vocabulary_review"
+        var response = state.Tachistoscope is not null && actionName is not ("tachistoscope_present" or "tachistoscope_answer")
+            ? Invalid("Takistoskop yalnız doğrulanmış tur aksiyonlarıyla ilerler.")
+            : actionName == "vocabulary_review"
             ? await ReviewVocabularyAsync(session, state, request, studentId, now, cancellationToken)
             : actionName switch
             {
@@ -508,7 +548,19 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
             throw IncompleteSession("All questions in the session must be answered.");
 
         if (request.CustomData is not null)
-            session.SetState(session.SessionDataJson, SerializeOptional(request.CustomData));
+        {
+            var previousCustomData = ParseJsonOrEmpty(session.CustomDataJson ?? "{}");
+            var unverified = ReadProperty(previousCustomData, "previousUnverifiedAttempt");
+            var customJson = state.Tachistoscope is not null && unverified.ValueKind == JsonValueKind.Object
+                ? JsonSerializer.Serialize(new {
+                    previousUnverifiedAttempt = unverified,
+                    previousCustomData = ReadProperty(previousCustomData, "previousCustomData").ValueKind == JsonValueKind.Undefined
+                        ? (JsonElement?)null : ReadProperty(previousCustomData, "previousCustomData"),
+                    currentCustomData = request.CustomData
+                }, JsonOptions)
+                : SerializeOptional(request.CustomData);
+            session.SetState(session.SessionDataJson, customJson);
+        }
         session.Complete(now);
 
         if (state.ReadingPausedAt.HasValue)
@@ -874,6 +926,7 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         session.Pause(now);
         if (state.Tachistoscope is { } tachistoscope)
         {
+            InvalidateTachistoscopePresentations(session);
             tachistoscope.LastStimulus = tachistoscope.ExpectedStimulus.Length > 0
                 ? tachistoscope.ExpectedStimulus : tachistoscope.LastStimulus;
             tachistoscope.ExpectedStimulus = string.Empty;
@@ -1063,7 +1116,10 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         var engineConfig = ReadObject(config, "engineConfig");
         var effectiveConfig = engineConfig.ValueKind == JsonValueKind.Object ? engineConfig : config;
         if (IsTachistoscope(exerciseTypeName, exerciseEngineType, config))
+        {
             state.Tachistoscope = await CreateTachistoscopeAsync(effectiveConfig, difficultyLevel, profileAgeGroupId, cancellationToken);
+            if (isAssessmentMode) state.Tachistoscope.AdaptiveEnabled = false;
+        }
         if (IsGridExercise(exerciseTypeName, config))
         {
             state.TimeLimitSeconds = ReadGridTimeLimit(effectiveConfig) ?? ReadGridTimeLimit(config);
@@ -2249,6 +2305,17 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
             && !string.Equals(mode, "rsvp", StringComparison.OrdinalIgnoreCase);
     }
 
+    private static void InvalidateTachistoscopePresentations(ExerciseSession session)
+    {
+        var cache = JsonSerializer.SerializeToNode(ParseJsonOrEmpty(session.ProcessedActionsJson), JsonOptions)!.AsObject();
+        foreach (var item in cache.ToArray())
+        {
+            if (item.Value?["feedbackData"]?["stimulus"] is not null)
+                cache.Remove(item.Key);
+        }
+        session.SetProcessedActions(cache.ToJsonString());
+    }
+
     private async Task<TachistoscopeState> CreateTachistoscopeAsync(JsonElement config, int difficulty,
         Guid? ageGroupId, CancellationToken cancellationToken)
     {
@@ -2936,11 +3003,17 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
                 tachistoscope.Round, tachistoscope.Count, tachistoscope.ContentType, tachistoscope.Source,
                 tachistoscope.DisplayDurationMs, tachistoscope.InitialDurationMs, tachistoscope.TargetLength,
                 tachistoscope.AdaptiveEnabled,
+                correctCount = state.IsAssessmentMode ? (int?)null : tachistoscope.Trials.Count(trial => trial.IsCorrect),
+                incorrectCount = state.IsAssessmentMode ? (int?)null : tachistoscope.Trials.Count(trial => !trial.IsCorrect),
                 trials = tachistoscope.Round == tachistoscope.Count ? tachistoscope.Trials : []
             }, JsonOptions);
         }
         var result = JsonSerializer.SerializeToElement(json, JsonOptions);
-        return state.IsAssessmentMode ? SpeedReadingContentSecurity.SanitizeFocusAssessmentJson(result) : RemoveAssessmentKeys(result);
+        if (state.IsAssessmentMode) return SpeedReadingContentSecurity.SanitizeFocusAssessmentJson(result);
+        var sanitized = JsonSerializer.SerializeToNode(RemoveAssessmentKeys(result), JsonOptions)!.AsObject();
+        if (state.Tachistoscope is { } completed && completed.Round == completed.Count)
+            sanitized["tachistoscope"]!["trials"] = JsonSerializer.SerializeToNode(completed.Trials, JsonOptions);
+        return JsonSerializer.SerializeToElement(sanitized, JsonOptions);
     }
 
     private static JsonElement RemoveAssessmentKeys(JsonElement element) =>

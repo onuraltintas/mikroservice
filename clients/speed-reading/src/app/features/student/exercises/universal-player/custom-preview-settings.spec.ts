@@ -10,6 +10,12 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 
 describe('Custom preview settings safety', () => {
   const context = { roles: ['Admin'], preview: true };
+  it('allows a custom tachistoscope stimulus count without replacing its content', () => {
+    const config = { engineType: 'text_stream', engineConfig: { mode: 'flash', content: { items: ['bir', 'masa'] } } as Record<string, unknown> };
+    const result = applyCustomPreviewSettings(config, { stimulusCount: 3 }, context);
+    expect((result.engineConfig['content'] as any).count).toBe(3);
+    expect((result.engineConfig['content'] as any).items).toEqual(['bir', 'masa']);
+  });
   it('changes only supported settings without mutating saved exercise configuration', () => {
     const original = { engineType: 'word_highlight', engineConfig: { pacer: { speedWpm: 200, chunkSize: 1 }, content: { text: 'Original' } } };
     const result = applyCustomPreviewSettings(original, { speedWpm: 300, chunkSize: 2, text: 'Injected' }, context);

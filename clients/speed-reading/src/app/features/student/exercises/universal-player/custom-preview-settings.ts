@@ -75,7 +75,9 @@ export function getCustomPreviewControls(configuration: Record<string, unknown>)
     ];
     case 'text_stream': return [
       control('displayDurationMs', 'Gösterim süresi (ms)', 50, 5000, read('displayDurationMs') ?? read('intervalMs') ?? timing['durationms'] ?? 500),
-      control('intervalMs', 'Gösterimler arası bekleme (ms)', 0, 10000, timing['intervalms'] ?? 0)
+      control('intervalMs', 'Gösterimler arası bekleme (ms)', 0, 10000, timing['intervalms'] ?? 0),
+      ...(read('mode') === 'rsvp' ? [] : [control('stimulusCount', 'Uyaran sayısı', 1, 500,
+        read('totalStimuli') ?? caseInsensitiveField(recordOrEmpty(read('content')), 'count') ?? 20)])
     ];
     case 'motion_path': {
       const mode = String(read('mode') ?? 'fixation').toLowerCase();
@@ -198,6 +200,10 @@ export function applyCustomPreviewSettings<T extends Record<string, unknown>>(
   if (engine === 'text_stream') {
     if (validated['displayDurationMs'] !== undefined) settings['displayDurationMs'] = validated['displayDurationMs'];
     if (validated['intervalMs'] !== undefined) merge('timing', { intervalMs: validated['intervalMs'] });
+    if (validated['stimulusCount'] !== undefined) {
+      settings['totalStimuli'] = validated['stimulusCount'];
+      merge('content', { count: validated['stimulusCount'] });
+    }
     return result;
   }
   if (engine === 'motion_path') {
