@@ -74,7 +74,8 @@ import {
             <label class="mt-4 block text-sm">Banka işlem referansı<input class="mt-1 w-full rounded-lg border border-slate-300 bg-transparent px-3 py-2 dark:border-slate-700" [(ngModel)]="paymentReference" name="paymentReference" maxlength="120" required autocomplete="off" /></label>
             <label class="mt-3 block text-sm">Ödemeyi yapan kişi (isteğe bağlı)<input class="mt-1 w-full rounded-lg border border-slate-300 bg-transparent px-3 py-2 dark:border-slate-700" [(ngModel)]="payerName" name="payerName" maxlength="200" autocomplete="name" /></label>
             <label class="mt-3 block text-sm">Not (isteğe bağlı)<textarea class="mt-1 w-full rounded-lg border border-slate-300 bg-transparent px-3 py-2 dark:border-slate-700" [(ngModel)]="note" name="paymentNote" maxlength="1000" rows="3"></textarea></label>
-            <button class="mt-4 w-full rounded-lg bg-indigo-600 px-4 py-2 font-medium text-white disabled:opacity-50" type="submit" [disabled]="submitting() || !settings()">{{ submitting() ? 'Gönderiliyor…' : 'Ödeme yaptım, bildir' }}</button>
+            <label class="mt-4 flex items-start gap-2 text-sm"><input type="checkbox" [(ngModel)]="adultPayerDeclaration" name="adultPayerDeclaration" required />Ödemeyi yapan kişi olarak 18 yaş ve üzeri olduğumu beyan ediyorum. Bu beyan yaş doğrulaması değildir.</label>
+            <button class="mt-4 w-full rounded-lg bg-indigo-600 px-4 py-2 font-medium text-white disabled:opacity-50" type="submit" [disabled]="submitting() || !settings() || !adultPayerDeclaration">{{ submitting() ? 'Gönderiliyor…' : 'Ödeme yaptım, bildir' }}</button>
             <p class="mt-2 text-xs text-slate-500">Erişim, yönetici banka hareketini doğruladıktan sonra açılır. Bu ekran kart bilgisi almaz.</p>
           </form>
         </section>
@@ -103,6 +104,7 @@ export class CoachingSubscriptionComponent implements OnInit {
   paymentReference = '';
   payerName = '';
   note = '';
+  adultPayerDeclaration = false;
 
   ngOnInit(): void {
     this.service.getPublicSubscriptionPlans().subscribe({
@@ -128,6 +130,7 @@ export class CoachingSubscriptionComponent implements OnInit {
     const reference = this.paymentReference.trim();
     if (!plan || plan.isContactOnly || !this.settings()) { this.error.set('Ödeme bildirimi için satışa açık plan ve yayınlanmış banka bilgisi gereklidir.'); return; }
     if (!reference || reference.length > 120) { this.error.set('Banka işlem referansını 1–120 karakter arasında gir.'); return; }
+    if (!this.adultPayerDeclaration) { this.error.set('Ödeme için 18 yaş ve üzeri olduğunuzu beyan etmeniz gerekir.'); return; }
 
     this.submitting.set(true);
     this.error.set(null);
@@ -136,7 +139,8 @@ export class CoachingSubscriptionComponent implements OnInit {
       planId: plan.id,
       paymentReference: reference,
       payerName: this.payerName.trim() || null,
-      note: this.note.trim() || null
+      note: this.note.trim() || null,
+      adultPayerDeclaration: this.adultPayerDeclaration
     }).subscribe({
       next: request => {
         this.requests.update(items => [request, ...items.filter(item => item.id !== request.id)]);
@@ -146,6 +150,7 @@ export class CoachingSubscriptionComponent implements OnInit {
         this.paymentReference = '';
         this.payerName = '';
         this.note = '';
+        this.adultPayerDeclaration = false;
         this.submitting.set(false);
       },
       error: response => {

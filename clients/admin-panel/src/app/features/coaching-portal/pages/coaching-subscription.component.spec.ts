@@ -31,6 +31,7 @@ describe('CoachingSubscriptionComponent', () => {
     component.paymentReference = '  EFT-2026-01  ';
     component.payerName = '  Ada Öğrenci  ';
     component.note = '  Mart dönemi  ';
+    component.adultPayerDeclaration = true;
 
     component.submitRequest();
 
@@ -38,10 +39,11 @@ describe('CoachingSubscriptionComponent', () => {
       createMyCoachingBankTransferRequest: ReturnType<typeof vi.fn>;
     };
     expect(service.createMyCoachingBankTransferRequest).toHaveBeenCalledWith({
-      planId: 'individual-plan', paymentReference: 'EFT-2026-01', payerName: 'Ada Öğrenci', note: 'Mart dönemi'
+      planId: 'individual-plan', paymentReference: 'EFT-2026-01', payerName: 'Ada Öğrenci', note: 'Mart dönemi', adultPayerDeclaration: true
     });
     expect(component.requests()[0].id).toBe('request-1');
     expect(component.success()).toContain('incelemeye alındı');
+    expect(component.adultPayerDeclaration).toBe(false);
   });
 
   function setup() {

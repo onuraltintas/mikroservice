@@ -151,6 +151,7 @@ export interface CoachingBankTransferRequestCreate {
   paymentReference: string;
   payerName: string | null;
   note: string | null;
+  adultPayerDeclaration: boolean;
 }
 
 export interface CoachingBankTransferRequest {

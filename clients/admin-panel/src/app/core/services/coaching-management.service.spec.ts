@@ -17,11 +17,11 @@ describe('CoachingManagementService student subscription flow', () => {
     service.getMyCoachingBankTransferRequests().subscribe(requests => expect(requests).toEqual([]));
     http.expectOne('/api/coaching/subscriptions/my-bank-transfer-requests').flush({ success: true, data: [] });
 
-    service.createMyCoachingBankTransferRequest({ planId: 'plan-1', paymentReference: ' EFT-123 ', payerName: null, note: null }).subscribe();
+    service.createMyCoachingBankTransferRequest({ planId: 'plan-1', paymentReference: ' EFT-123 ', payerName: null, note: null, adultPayerDeclaration: true }).subscribe();
     const request = http.expectOne('/api/coaching/subscriptions/bank-transfer-requests');
     expect(request.request.method).toBe('POST');
     expect(request.request.headers.get('Idempotency-Key')).toMatch(/^[A-Za-z0-9._~-]{16,128}$/);
-    expect(request.request.body).toEqual({ planId: 'plan-1', paymentReference: 'EFT-123', payerName: null, note: null });
+    expect(request.request.body).toEqual({ planId: 'plan-1', paymentReference: 'EFT-123', payerName: null, note: null, adultPayerDeclaration: true });
     request.flush({ success: true, data: { id: 'request-1' } });
     http.verify();
   });
