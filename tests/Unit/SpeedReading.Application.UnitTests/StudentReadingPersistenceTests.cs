@@ -28,8 +28,8 @@ public sealed class StudentReadingPersistenceTests
         var typeId = Guid.NewGuid();
         var exerciseId = Guid.NewGuid();
         var textId = Guid.NewGuid();
-        context.ExerciseTypes.Add(ExerciseType.Create(typeId, "Comprehension", "Reading", "reading_comprehension"));
-        context.Exercises.Add(Exercise.Create("Reading", "reading_comprehension", "{}", 1, studentId, typeId, id: exerciseId));
+        context.ExerciseTypes.Add(ExerciseType.Create(typeId, "FreeReading", "Reading", "free_reading"));
+        context.Exercises.Add(Exercise.Create("Reading", "free_reading", "{}", 1, studentId, typeId, id: exerciseId));
         context.ReadingTexts.Add(ReadingText.Create(textId, "Text", string.Join(" ", Enumerable.Repeat("word", 100)),
             difficultyLevel: 1, exerciseId: exerciseId));
         await context.SaveChangesAsync();

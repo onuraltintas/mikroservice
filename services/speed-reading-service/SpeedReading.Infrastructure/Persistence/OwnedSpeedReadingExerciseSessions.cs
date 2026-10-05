@@ -410,7 +410,7 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
             : actionName switch
             {
                 "start_reading" => StartReading(session, state, now),
-                "finish_reading" => FinishReading(session, state, now),
+                "finish_reading" => FinishReading(session, state, now, request.IsTimeout),
                 "adaptive_next_stage" => AdvanceAdaptiveStage(session, state),
                 "focus_start" => StartFocus(session, state, now),
                 "focus_step" => AdvanceFocus(session, state, request, now),
@@ -588,7 +588,9 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
             ? state.AdaptiveStageResults.SingleOrDefault(item => item.Stage == 3)
             : null;
         var rawWpmCandidate = adaptiveTransferResult?.Wpm
-            ?? SpeedReadingExerciseSessionRules.CalculateValidatedRawWpm(wordsRead ?? 0, timeSpent);
+            ?? (SupportsServerReadingMeasurement(state)
+                ? SpeedReadingExerciseSessionRules.CalculateValidatedRawWpm(wordsRead ?? 0, timeSpent)
+                : null);
         var measurementStatus = SpeedReadingExerciseSessionRules.ResolveMeasurementStatus(
             state.Questions.Count,
             session.CorrectCount,
@@ -1500,13 +1502,18 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
     private static ExerciseActionValidationResponse FinishReading(
         ExerciseSession session,
         SessionState state,
-        DateTime now)
+        DateTime now,
+        bool incomplete)
     {
         if (IsAdaptiveFluency(state))
             return FinishAdaptiveStage(session, state, now);
         EnsureTimingStarted(session, state, now);
         state.ReadingStartTime ??= state.TimingStartedAt ?? now;
-        state.ReadingEndTime ??= now;
+        if (!state.ReadingEndTime.HasValue)
+        {
+            state.ReadingEndTime = now;
+            state.ReadingIncomplete = incomplete;
+        }
         session.SetCurrentStep(Math.Max(session.CurrentStep, 1));
         var seconds = SpeedReadingExerciseSessionRules.CalculateReadingSeconds(
             session.StartTime,
@@ -1514,7 +1521,9 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
             state.ReadingStartTime,
             state.ReadingEndTime,
             state.ReadingPausedSeconds);
-        var wpm = SpeedReadingExerciseSessionRules.CalculateValidatedRawWpm(state.WordCount, seconds);
+        var wpm = SupportsServerReadingMeasurement(state)
+            ? SpeedReadingExerciseSessionRules.CalculateValidatedRawWpm(state.WordCount, seconds)
+            : null;
         var message = wpm.HasValue
             ? "Okuma tamamlandı! Hızınız: " + wpm.Value + " WPM."
             : "Okuma tamamlandı; güvenilir WPM için yeterli ölçüm alınamadı.";
@@ -2456,6 +2465,8 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
 
     private static bool SupportsServerReadingMeasurement(SessionState state) =>
         state.Tachistoscope is null && IsReadingExerciseFlow(state)
+        && !state.ReadingIncomplete
+        && state.EngineType is not ("word_highlight" or "text_stream" or "text_fade")
         && state.ReadingStartTime.HasValue
         && state.ReadingEndTime.HasValue;
 
@@ -3210,6 +3221,7 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         public int TimingPausedSecondsBeforeStart { get; set; }
         public DateTime? ReadingStartTime { get; set; }
         public DateTime? ReadingEndTime { get; set; }
+        public bool ReadingIncomplete { get; set; }
         public DateTime? ReadingPausedAt { get; set; }
         public int ReadingPausedSeconds { get; set; }
         public decimal? FinalWpm { get; set; }

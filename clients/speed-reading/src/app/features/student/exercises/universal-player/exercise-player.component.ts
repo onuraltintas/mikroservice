@@ -1098,7 +1098,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
           this.cdr.detectChanges();
           };
 
-          this.waitForPendingActions(() => this.finishReadingTracking(finalizeCompletion));
+          this.waitForPendingActions(() => this.finishReadingTracking(finalizeCompletion, result.details?.timedOut === true));
         },
         onError: (error) => {
           this.error = error;
@@ -1355,17 +1355,25 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       ].includes(this.engine?.engineType || '');
   }
 
-  private startReadingTracking(): void {
-    if (!this.shouldTrackReading() || this.readingTrackingStarted)
+  private startReadingTracking(onStarted: () => void = () => undefined): void {
+    if (!this.shouldTrackReading()) {
+      onStarted();
       return;
+    }
+    if (this.readingTrackingStarted) return;
 
     this.readingTrackingStarted = true;
     this.sessionService.validateAction(this.sessionId!, {
       action: 'start_reading',
       timestamp: new Date()
     }).pipe(takeUntil(this.destroy$)).subscribe({
-      next: () => {
+      next: response => {
+        if (!response.isValid) {
+          this.failReadingTracking();
+          return;
+        }
         this.readingTrackingStartCompleted = true;
+        onStarted();
         if (this.pendingReadingCompletion) {
           const onFinished = this.pendingReadingCompletion;
           this.pendingReadingCompletion = undefined;
@@ -1375,17 +1383,12 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       error: (error) => {
         this.readingTrackingStarted = false;
         this.readingTrackingStartCompleted = false;
-        console.error('[ExercisePlayer] Reading start tracking failed:', error);
-        if (this.pendingReadingCompletion) {
-          const onFinished = this.pendingReadingCompletion;
-          this.pendingReadingCompletion = undefined;
-          onFinished();
-        }
+        this.failReadingTracking();
       }
     });
   }
 
-  private finishReadingTracking(onFinished: (response?: ValidationResponse) => void): void {
+  private finishReadingTracking(onFinished: (response?: ValidationResponse) => void, incomplete = false): void {
     if (!this.shouldTrackReading() || !this.readingTrackingStarted || this.readingTrackingFinished) {
       onFinished();
       return;
@@ -1399,14 +1402,23 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     this.readingTrackingFinished = true;
     this.sessionService.validateAction(this.sessionId!, {
       action: 'finish_reading',
+      isTimeout: incomplete,
       timestamp: new Date()
     }).pipe(takeUntil(this.destroy$)).subscribe({
-      next: response => onFinished(response),
+      next: response => response.isValid ? onFinished(response) : this.failReadingTracking(),
       error: (error) => {
-        console.error('[ExercisePlayer] Reading finish tracking failed:', error);
-        onFinished();
+        this.failReadingTracking();
       }
     });
+  }
+
+  private failReadingTracking(): void {
+    this.readingTrackingFinished = false;
+    this.pendingReadingCompletion = undefined;
+    this.engine?.stop();
+    this.stopTimer();
+    this.error = 'Okuma süresi doğrulanamadı. Lütfen bağlantınızı kontrol edip egzersizi yeniden açın.';
+    this.cdr.detectChanges();
   }
 
   private enqueueAction(
@@ -1550,8 +1562,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       return;
     }
 
-    this.startReadingTracking();
-    this.engine?.start();
+    this.startReadingTracking(() => this.engine?.start());
 
     // Calculate line breaks for Subvocalization Reduction to prevent cross-line chunks
     if (this.engine?.engineType === 'subvocalization_reduction') {
@@ -1723,7 +1734,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   async goBack(): Promise<void> {
     // Eğer egzersiz çalışıyorsa, onay iste
     if (this.engineState.isRunning && !this.engineState.isCompleted) {
-      if (this.isTachistoscopeMode()) {
+      if (this.isTachistoscopeMode() || this.shouldTrackReading()) {
         if (this.isPauseTransitionPending) return;
         if (!this.engineState.isPaused) await this.togglePause();
       } else this.engine?.pause();
@@ -1736,7 +1747,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   async cancelExit(): Promise<void> {
     if (this.isPauseTransitionPending) return;
     this.showExitConfirm = false;
-    if (this.isTachistoscopeMode()) {
+    if (this.isTachistoscopeMode() || this.shouldTrackReading()) {
       if (this.engineState.isPaused) await this.togglePause();
     } else this.engine?.resume();
   }
