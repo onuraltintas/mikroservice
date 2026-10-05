@@ -3545,8 +3545,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       this.readingTrackingStartCompleted = false;
       this.readingTrackingFinished = false;
       this.exercisePhase = 'reading';
-      this.startReadingTracking();
-      engine.start();
+      this.startReadingTracking(() => engine.start());
       this.cdr.detectChanges();
     }).catch(error => this.showToast(error?.message || 'Sonraki aşamaya geçilemedi.', 'error'));
   }
