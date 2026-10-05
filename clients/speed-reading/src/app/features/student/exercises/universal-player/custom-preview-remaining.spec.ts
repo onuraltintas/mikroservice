@@ -20,6 +20,7 @@ describe('Remaining custom preview motors', () => {
     ] } as any, callbacks);
     engine.start();
     expect(engine.getSceneDisplayRemaining()).toBe(3);
+    expect(engine.getSceneDisplayPercent()).toBe(100);
     engine.destroy();
   });
   it('keeps guided and non-guided scene timing separate in mixed previews', () => {
