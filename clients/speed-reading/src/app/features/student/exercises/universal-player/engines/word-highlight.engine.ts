@@ -5,7 +5,7 @@
  */
 
 import { BaseEngine, EngineConfig, EngineState, EngineResult, EngineCallbacks } from './base-engine.interface';
-import { boundedInteger, boundedStringArray, boundedText, caseInsensitiveField, mergeCaseInsensitiveRecords, recordOrEmpty } from './reading-pacer-safety';
+import { boundedInteger, boundedStringArray, caseInsensitiveField, mergeCaseInsensitiveRecords, recordOrEmpty, resolveReadingText } from './reading-pacer-safety';
 
 export interface WordHighlightConfig extends EngineConfig {
     content: {
@@ -99,7 +99,9 @@ export class WordHighlightEngine implements BaseEngine {
         let wordPointer = 0;
 
         // Populate chunks from backend primary source
-        const backendChunks = boundedStringArray(caseInsensitiveField(nested, 'chunks') ?? caseInsensitiveField(root, 'chunks'));
+        const text = resolveReadingText(root, WordHighlightEngine.TEXT_POOL.join(' '));
+        const backendChunks = root.serverAuthoritative === true ? []
+            : boundedStringArray(caseInsensitiveField(nested, 'chunks') ?? caseInsensitiveField(root, 'chunks'));
         const chunkSize = boundedInteger(caseInsensitiveField(nested, 'chunkSize')
             ?? caseInsensitiveField(root, 'chunkSize') ?? pacer['chunksize'], 1, 1, 10);
         const targetWpm = boundedInteger(caseInsensitiveField(nested, 'targetWpm')
@@ -120,11 +122,6 @@ export class WordHighlightEngine implements BaseEngine {
             });
         } else {
             // Fallback to text splitting logic
-            const text = boundedText(
-                caseInsensitiveField(nested, 'readingTextContent')
-                    ?? caseInsensitiveField(root, 'readingTextContent')
-                    ?? content['text'],
-                WordHighlightEngine.TEXT_POOL.join(' '));
             const rawWords = text.split(/\s+/).filter(w => w.length > 0);
             const cs = chunkSize;
 

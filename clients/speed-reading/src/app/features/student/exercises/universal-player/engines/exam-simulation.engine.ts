@@ -10,7 +10,7 @@
  */
 
 import { BaseEngine, EngineConfig, EngineState, EngineResult, EngineCallbacks } from './base-engine.interface';
-import { boundedInteger, boundedText, caseInsensitiveField, mergeCaseInsensitiveRecords, recordOrEmpty } from './reading-pacer-safety';
+import { boundedInteger, boundedText, caseInsensitiveField, mergeCaseInsensitiveRecords, recordOrEmpty, resolveReadingText } from './reading-pacer-safety';
 
 interface ExamSimulationConfig extends EngineConfig {
     // Backend session data
@@ -146,7 +146,7 @@ export class ExamSimulationEngine implements BaseEngine {
             }
         }
 
-        this.text = extractedText || this.getRandomText();
+        this.text = resolveReadingText(cfg, extractedText || this.getRandomText());
 
         this.title = cfg.ReadingTextTitle ||
             config.readingTextTitle ||

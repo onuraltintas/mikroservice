@@ -5,7 +5,7 @@
  */
 
 import { BaseEngine, EngineConfig, EngineState, EngineResult, EngineCallbacks } from './base-engine.interface';
-import { boundedInteger, boundedText, caseInsensitiveField, mergeCaseInsensitiveRecords, recordOrEmpty } from './reading-pacer-safety';
+import { boundedInteger, caseInsensitiveField, mergeCaseInsensitiveRecords, recordOrEmpty, resolveReadingText } from './reading-pacer-safety';
 
 export interface TextFadeConfig extends EngineConfig {
     content: {
@@ -79,11 +79,7 @@ export class TextFadeEngine implements BaseEngine {
         } as TextFadeConfig;
 
         // Prepare words
-        const text = boundedText(
-            caseInsensitiveField(nested, 'readingTextContent')
-                ?? caseInsensitiveField(root, 'readingTextContent')
-                ?? content['text'],
-            TextFadeEngine.TEXT_POOL.join(' '));
+        const text = resolveReadingText(root, TextFadeEngine.TEXT_POOL.join(' '));
         this.words = text.split(/\s+/).filter((w: string) => w.length > 0);
 
         // Determine Speed (WPM)

@@ -7,6 +7,24 @@ export function boundedText(value: unknown, fallback: string, maximumLength = 10
   return typeof value === 'string' ? value.slice(0, maximumLength) : fallback;
 }
 
+export function resolveReadingText(config: Record<string, any>, fallback: string): string {
+  const nested = recordOrEmpty(caseInsensitiveField(config, 'engineConfig'));
+  const rootContent = caseInsensitiveField(config, 'content');
+  const nestedContent = caseInsensitiveField(nested, 'content');
+  const serverOwned = config['serverAuthoritative'] === true || config['isAssessmentMode'] === true;
+  const raw = typeof rootContent === 'string'
+    ? rootContent
+    : caseInsensitiveField(config, 'readingTextContent')
+      ?? caseInsensitiveField(recordOrEmpty(rootContent), 'text')
+      ?? caseInsensitiveField(nested, 'readingTextContent')
+      ?? (typeof nestedContent === 'string' ? nestedContent : caseInsensitiveField(recordOrEmpty(nestedContent), 'text'))
+      ?? caseInsensitiveField(config, 'text');
+  if (serverOwned && (typeof raw !== 'string' || !raw.trim() || raw.length > 100_000)) {
+    throw new Error('Server reading text is missing or invalid.');
+  }
+  return boundedText(raw, fallback);
+}
+
 export function boundedStringArray(value: unknown, maximumItems = 500, maximumItemLength = 1_000): string[] {
   if (!Array.isArray(value)) return [];
   return value

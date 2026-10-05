@@ -13,7 +13,7 @@
  */
 
 import { BaseEngine, EngineConfig, EngineState, EngineResult, EngineCallbacks } from './base-engine.interface';
-import { boundedInteger, boundedText, caseInsensitiveField, mergeCaseInsensitiveRecords, recordOrEmpty } from './reading-pacer-safety';
+import { boundedInteger, boundedText, caseInsensitiveField, mergeCaseInsensitiveRecords, recordOrEmpty, resolveReadingText } from './reading-pacer-safety';
 
 interface ReadingComprehensionConfig extends EngineConfig {
     // Backend session data (from ComprehensionEngine)
@@ -163,7 +163,7 @@ export class ReadingComprehensionEngine implements BaseEngine {
         if ((!resolvedText || invalidAssessmentText) && assessmentMode) {
             throw new Error('Assessment reading text was not provided by the server.');
         }
-        this.text = resolvedText || this.getRandomText();
+        this.text = resolveReadingText(cfg, resolvedText || this.getRandomText());
 
         this.title = cfg.ReadingTextTitle ||   // PascalCase from C#
             config.readingTextTitle ||

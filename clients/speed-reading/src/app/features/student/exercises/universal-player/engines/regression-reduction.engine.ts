@@ -5,7 +5,7 @@
  */
 
 import { BaseEngine, EngineConfig, EngineState, EngineResult, EngineCallbacks } from './base-engine.interface';
-import { boundedInteger, boundedText, caseInsensitiveField, recordOrEmpty } from './reading-pacer-safety';
+import { boundedInteger, caseInsensitiveField, recordOrEmpty, resolveReadingText } from './reading-pacer-safety';
 
 export interface RegressionConfig extends EngineConfig {
     mode: string;
@@ -69,7 +69,7 @@ export class RegressionReductionEngine implements BaseEngine {
         } as RegressionConfig;
 
         // Load content
-        const text = boundedText(read('readingTextContent'), '');
+        const text = resolveReadingText({ ...sessionData, ...root }, '');
         this.words = text.split(/\s+/).filter((w: string) => w.length > 0);
         const questions = read('questions');
         this.questions = Array.isArray(questions)
