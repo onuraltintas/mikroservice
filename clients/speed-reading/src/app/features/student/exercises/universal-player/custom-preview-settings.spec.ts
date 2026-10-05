@@ -41,6 +41,32 @@ describe('Custom preview settings safety', () => {
     expect(result.engineConfig['targetWpm']).toBe(400);
     expect(result.engineConfig['chunkSize']).toBeUndefined();
   });
+  it('maps text stream timing without modifying stimuli or adaptive rules', () => {
+    const config = { engineType: 'text_stream', engineConfig: { stimuli: ['A'], adaptive: { enabled: true } } as Record<string, unknown> };
+    const result = applyCustomPreviewSettings(config, { displayDurationMs: 600, intervalMs: 150, speedWpm: 400 }, context);
+    expect(result.engineConfig['displayDurationMs']).toBe(600);
+    expect(result.engineConfig['timing']).toEqual({ intervalMs: 150 });
+    expect(result.engineConfig['stimuli']).toEqual(['A']);
+    expect(result.engineConfig['adaptive']).toEqual({ enabled: true });
+    expect(result.engineConfig['targetWpm']).toBeUndefined();
+    expect(() => applyCustomPreviewSettings(config, { displayDurationMs: 49 }, context)).toThrow();
+  });
+  it('uses only controls relevant to the motion mode', () => {
+    const config = { engineType: 'motion_path', engineConfig: { mode: 'tracking', movement: { speedLevel: 1 } } };
+    const result = applyCustomPreviewSettings(config, { speedLevel: 4, holdMs: 700 }, context);
+    expect(result.engineConfig.movement.speedLevel).toBe(4);
+    expect((result.engineConfig as Record<string, unknown>)['timing']).toBeUndefined();
+    expect(() => applyCustomPreviewSettings(config, { speedLevel: 6 }, context)).toThrow();
+    const fixation = applyCustomPreviewSettings({ engineType: 'motion_path', engineConfig: { mode: 'fixation' } as Record<string, unknown> }, { holdMs: 700 }, context);
+    expect(fixation.engineConfig['timing']).toEqual({ holdMs: 700 });
+  });
+  it('sets scan time limit without changing targets', () => {
+    const config = { engineType: 'scan_find', engineConfig: { timeLimitSeconds: 120, targets: { words: ['A'] } } };
+    const result = applyCustomPreviewSettings(config, { timeLimitSec: 60 }, context);
+    expect(result.engineConfig.timeLimitSeconds).toBe(60);
+    expect(result.engineConfig.targets).toEqual(config.engineConfig.targets);
+    expect(() => applyCustomPreviewSettings(config, { timeLimitSec: 0 }, context)).toThrow();
+  });
   it('shows recorded defaults and resets custom inputs without saving them', () => {
     const close = jasmine.createSpy('close');
     TestBed.configureTestingModule({ providers: [
