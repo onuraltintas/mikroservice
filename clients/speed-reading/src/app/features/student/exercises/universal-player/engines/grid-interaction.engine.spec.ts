@@ -4,25 +4,26 @@ import { GridInteractionEngine } from './grid-interaction.engine';
 describe('GridInteractionEngine', () => {
   function create(config: any) {
     const complete = jasmine.createSpy('complete');
+    const error = jasmine.createSpy('error');
     const engine = new GridInteractionEngine();
     engine.initialize(config, {
       onStart: () => undefined, onPause: () => undefined, onResume: () => undefined,
-      onComplete: complete, onError: () => undefined, onStateChange: () => undefined,
+      onComplete: complete, onError: error, onStateChange: () => undefined,
       onStepComplete: () => undefined, onAction: () => undefined
     });
-    return { engine, complete };
+    return { engine, complete, error };
   }
 
   it('finishes an incomplete table when its time limit expires', () => {
     jasmine.clock().install();
     jasmine.clock().mockDate(new Date(0));
     try {
-      const { engine, complete } = create({ gridSize: 3, timeLimit: 1 });
+      const { engine, complete, error } = create({ gridSize: 3, timeLimit: 1 });
       engine.start();
       jasmine.clock().tick(1000);
-      expect(complete).toHaveBeenCalledTimes(1);
-      expect(complete.calls.mostRecent().args[0].completedSteps).toBe(0);
-      expect(complete.calls.mostRecent().args[0].details.completionReason).toBe('time_limit');
+      expect(complete).not.toHaveBeenCalled();
+      expect(error).toHaveBeenCalledTimes(1);
+      expect(engine.state.isRunning).toBeFalse();
       engine.destroy();
     } finally { jasmine.clock().uninstall(); }
   });
