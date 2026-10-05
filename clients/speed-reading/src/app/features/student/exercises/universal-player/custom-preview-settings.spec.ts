@@ -22,7 +22,7 @@ describe('Custom preview settings safety', () => {
     const config = { engineType: 'word_highlight', engineConfig: {} };
     expect(() => applyCustomPreviewSettings(config, { speedWpm: Infinity }, context)).toThrow();
     expect(() => applyCustomPreviewSettings(config, { chunkSize: 0 }, context)).toThrow();
-    expect(applyCustomPreviewSettings({ engineType: 'focus' }, { speedWpm: 300 }, context)).toEqual({ engineType: 'focus' });
+    expect(applyCustomPreviewSettings({ engineType: 'error_analysis' }, { speedWpm: 300 }, context)).toEqual({ engineType: 'error_analysis' });
   });
   it('maps subvocalization speed to consistent milliseconds and supports inclusive bounds', () => {
     const result = applyCustomPreviewSettings({ engineType: 'subvocalization_reduction', engineConfig: {} as Record<string, unknown> },
@@ -97,5 +97,24 @@ describe('Custom preview settings safety', () => {
     expect((engine as any).config.chunkSize).toBe(4);
     expect((engine as any).config.msPerWord).toBe(100);
     expect(config.engineConfig.difficultySettings.targetWpm).toBe(100);
+  });
+  it('adjusts focus presentation timing without altering sequence or task difficulty', () => {
+    const config = { engineType: 'focus', engineConfig: { SpeedMs: 1500, NLevel: 2, PositionSequence: [1, 2, 1] } };
+    const result = applyCustomPreviewSettings(config, { speedMs: 1000, NLevel: 4 }, context);
+    expect(result.engineConfig.SpeedMs).toBe(1000);
+    expect(result.engineConfig.NLevel).toBe(2);
+    expect(result.engineConfig.PositionSequence).toEqual([1, 2, 1]);
+    expect(() => applyCustomPreviewSettings(config, { speedMs: 0 }, context)).toThrow();
+  });
+  it('adjusts vocabulary quiz duration only in quiz mode', () => {
+    const config = { engineType: 'vocabulary_builder', engineConfig: { mode: 'quiz', timeLimitPerWord: 0 } };
+    expect(applyCustomPreviewSettings(config, { timeLimitPerWord: 20 }, context).engineConfig.timeLimitPerWord).toBe(20);
+    expect(getCustomPreviewControls({ engineType: 'vocabulary_builder', engineConfig: { mode: 'learn' } })).toEqual([]);
+  });
+  it('adjusts visual expansion display duration without replacing stimuli', () => {
+    const config = { engineType: 'visual_expansion', engineConfig: { timing: { durationMs: 250, intervalMs: 1500 }, content: { stimulusType: 'letter' } } };
+    const result = applyCustomPreviewSettings(config, { displayDurationMs: 400, intervalMs: 1800 }, context);
+    expect(result.engineConfig.timing).toEqual({ durationMs: 400, intervalMs: 1800 });
+    expect(result.engineConfig.content).toEqual(config.engineConfig.content);
   });
 });
