@@ -1636,7 +1636,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
 
   async togglePause(): Promise<void> {
     if (this.isPauseTransitionPending) return;
-    if (this.isTachistoscopeMode() && this.sessionId && this.sessionId !== 'preview-mode') {
+    if ((this.isTachistoscopeMode() || this.shouldTrackReading()) && this.sessionId && this.sessionId !== 'preview-mode') {
       this.isPauseTransitionPending = true;
       const resuming = this.engineState.isPaused;
       if (!resuming) this.engine?.pause();

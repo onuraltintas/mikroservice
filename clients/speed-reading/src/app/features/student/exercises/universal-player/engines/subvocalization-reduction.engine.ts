@@ -272,7 +272,7 @@ export class SubvocalizationReductionEngine implements BaseEngine {
         // Adjust startTime and readingStartTime to account for pause duration
         const pauseDuration = Date.now() - this.pauseStartTime;
         this.startTime += pauseDuration;
-        this.readingStartTime += pauseDuration;
+        if (this.phase === 'reading') this.readingStartTime += pauseDuration;
 
         this.state.isPaused = false;
         this.callbacks.onResume();

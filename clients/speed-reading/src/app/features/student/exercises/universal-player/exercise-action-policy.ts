@@ -33,7 +33,7 @@ export function shouldForwardExerciseAction(
   }
 
   if (questionBearingPassiveExerciseTypes.has(normalizedType ?? '')) {
-    return normalizedAction === 'answer_question';
+    return normalizedAction === 'answer_question' || normalizedAction === 'finish_reading';
   }
 
   return !passiveExerciseTypes.has(normalizedType ?? '')

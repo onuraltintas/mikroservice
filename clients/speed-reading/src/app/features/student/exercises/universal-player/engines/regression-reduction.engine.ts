@@ -37,6 +37,7 @@ export class RegressionReductionEngine implements BaseEngine {
     private config!: RegressionConfig;
     private callbacks!: EngineCallbacks;
     private startTime = 0;
+    private readingTimeMs = 0;
     private pauseStartTime = 0;
     private timerInterval: any;
     private pacerInterval: any;
@@ -89,6 +90,7 @@ export class RegressionReductionEngine implements BaseEngine {
         this.state.isRunning = true;
         this.state.isPaused = false;
         this.startTime = Date.now();
+        this.readingTimeMs = 0;
         this.callbacks.onStart();
 
         // Start Global Timer
@@ -145,6 +147,7 @@ export class RegressionReductionEngine implements BaseEngine {
 
     private finishReading(): void {
         clearInterval(this.pacerInterval);
+        this.readingTimeMs = Date.now() - this.startTime;
         this.phase = 'answering';
         this.currentQuestionIndex = 0;
 
@@ -292,7 +295,7 @@ export class RegressionReductionEngine implements BaseEngine {
         this.state.currentStep = this.state.totalSteps;
 
         // WPM hesapla
-        const readingTimeMinutes = this.state.timeElapsed / 60000;
+        const readingTimeMinutes = this.readingTimeMs / 60000;
         const wpm = readingTimeMinutes > 0 ? Math.round(this.words.length / readingTimeMinutes) : 0;
 
         const result: EngineResult = {
