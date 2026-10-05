@@ -13,6 +13,15 @@ const callbacks: EngineCallbacks = {
 };
 
 describe('Remaining custom preview motors', () => {
+  it('shows guided preview time using the selected step interval', () => {
+    const engine = new VisualizationEngine();
+    engine.initialize({ previewOnly: true, mode: 'guided', scenes: [
+      { duration: 5, steps: ['Bir', 'Iki'], stepDurationMs: 1500 }
+    ] } as any, callbacks);
+    engine.start();
+    expect(engine.getSceneDisplayRemaining()).toBe(3);
+    engine.destroy();
+  });
   it('keeps guided and non-guided scene timing separate in mixed previews', () => {
     const configuration = { engineType: 'visualization', engineConfig: { mode: 'guided', scenes: [
       { duration: 5, steps: ['Bir'], stepDurationMs: 3000 }, { duration: 8 }
