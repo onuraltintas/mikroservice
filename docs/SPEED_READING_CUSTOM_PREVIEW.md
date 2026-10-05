@@ -27,9 +27,12 @@ değiştir → Denemeyi başlat. Varsayılana dön kayıtlı ayarları yeniden y
 | visual_expansion | Gösterim (50–5000 ms), bekleme (50–10000 ms) |
 | reading_comprehension, free_reading, exam_simulation | Metin boyutu: küçük/orta/büyük |
 
-Grid, hata analizi, görselleştirme ve adaptif akıcılık için bu sürümde özel
-kontrol açılmadı. Bunlarda uygun kontrolün içerik üretimi/evre davranışından
-ayrılarak tasarlanması gerekir. Desteklenmeyen motor veya kelime öğrenme modu
+| grid_interaction | Schulte tablo boyutu: 3-7 |
+| visualization | Adımsız sahne: 1-3600 saniye; yönlendirmeli adım: 100-60000 ms |
+| adaptive_fluency | Yerel evrelerde korunan yönlendirme hedefi: 20-1500 WPM; gerçek ölçüm değişmez |
+| error_analysis | Metin boyutu: küçük/orta/büyük; kelime ve hata listesi korunur |
+
+Desteklenmeyen motor, sahnesiz görselleştirme veya kelime öğrenme modu
 boş form açmaz; açıklama gösterir. Tüm motorlar için tam ayar editörü değildir.
 
 ## Kalıcılık ve güvenlik

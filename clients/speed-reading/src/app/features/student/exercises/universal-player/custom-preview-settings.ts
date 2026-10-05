@@ -152,6 +152,8 @@ export function applyCustomPreviewSettings<T extends Record<string, unknown>>(
     return result;
   }
   if (engine === 'visualization') {
+    const session = recordOrEmpty(caseInsensitiveField(settings, 'sessionData') ?? caseInsensitiveField(result, 'sessionData'));
+    const guided = (caseInsensitiveField(session, 'mode') ?? caseInsensitiveField(settings, 'mode') ?? caseInsensitiveField(result, 'mode')) === 'guided';
     const entries: Record<string, number> = {};
     if (validated['sceneDurationSec'] !== undefined) entries['duration'] = validated['sceneDurationSec'];
     if (validated['stepDurationMs'] !== undefined) entries['stepDurationMs'] = validated['stepDurationMs'];
@@ -162,7 +164,11 @@ export function applyCustomPreviewSettings<T extends Record<string, unknown>>(
     for (const container of containers) {
       for (const key of Object.keys(container)) {
         if (key.toLowerCase() === 'scenes' && Array.isArray(container[key])) {
-          container[key] = (container[key] as unknown[]).map(scene => overrideFields(scene, entries));
+          container[key] = (container[key] as unknown[]).map(scene => {
+            const steps = caseInsensitiveField(recordOrEmpty(scene), 'steps');
+            const field = guided && Array.isArray(steps) && steps.length ? 'stepDurationMs' : 'duration';
+            return overrideFields(scene, entries[field] === undefined ? {} : { [field]: entries[field] });
+          });
         }
       }
     }

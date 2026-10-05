@@ -88,7 +88,7 @@ export class VisualizationEngine implements BaseEngine {
         this.config = { ...root, ...nested, ...sessionData } as VisualizationConfig;
         const mode = read('mode');
         this.mode = ['static', 'guided', 'flash'].includes(mode) ? mode : 'static';
-        this.serverAuthoritative = read('serverAuthoritative') === true;
+        this.serverAuthoritative = root['previewOnly'] !== true && read('serverAuthoritative') === true;
 
         // Get scenes from config (try both cases)
         const configuredScenes = read('scenes');
