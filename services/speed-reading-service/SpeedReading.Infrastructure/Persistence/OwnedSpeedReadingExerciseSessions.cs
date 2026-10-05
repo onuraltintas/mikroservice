@@ -294,7 +294,11 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
                 && requiresReadingText)
             {
                 var normalizedEngineType = ExerciseConfigurationRules.NormalizeEngineType(exerciseEngineType);
-                var requiresScorableQuestions = normalizedEngineType is "reading_comprehension" or "exam_simulation";
+                var requiresScorableQuestions = ExerciseConfigurationRules.ResolveReadingPurpose(
+                    normalizedEngineType,
+                    ReadString(ReadObject(parsedConfiguration, "engineConfig"), "readingPurpose")
+                        ?? ReadString(parsedConfiguration, "readingPurpose"),
+                    request.AssessmentAttemptId.HasValue) == "evaluation";
                 readingTextId = await db.ReadingTexts
                     .AsNoTracking()
                     .Where(item => item.IsActive
@@ -1117,6 +1121,11 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         };
         var engineConfig = ReadObject(config, "engineConfig");
         var effectiveConfig = engineConfig.ValueKind == JsonValueKind.Object ? engineConfig : config;
+        if (IsReadingExerciseFlow(state) && state.EngineType is not ("scan_find" or "scanning" or "skimming"))
+            state.ReadingPurpose = ExerciseConfigurationRules.ResolveReadingPurpose(
+                exerciseEngineType,
+                ReadString(effectiveConfig, "readingPurpose") ?? ReadString(config, "readingPurpose"),
+                isAssessmentMode);
         if (IsTachistoscope(exerciseTypeName, exerciseEngineType, config))
         {
             state.Tachistoscope = await CreateTachistoscopeAsync(effectiveConfig, difficultyLevel, profileAgeGroupId, cancellationToken);
@@ -1307,10 +1316,17 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
                 .ToList();
         }
 
-        if (!ExerciseConfigurationRules.ShouldIncludeComprehensionQuestions(
+        if (state.ReadingPurpose == "practice" || !ExerciseConfigurationRules.ShouldIncludeComprehensionQuestions(
                 exerciseTypeName, exerciseEngineType,
                 ReadString(effectiveConfig, "mode") ?? ReadString(config, "mode")))
             state.Questions.Clear();
+
+        if (state.ReadingPurpose is not null && string.IsNullOrWhiteSpace(state.Content))
+            throw new BusinessRuleException("ExerciseSession.ReadingContentUnavailable",
+                "Bu egzersiz için uygun okuma metni bulunamadı. Lütfen farklı bir egzersiz seçin.");
+        if (state.ReadingPurpose == "evaluation" && state.Questions.Count == 0)
+            throw new BusinessRuleException("ExerciseSession.ReadingQuestionsUnavailable",
+                "Bu değerlendirme için anlama soruları henüz hazırlanmadı. Lütfen farklı bir değerlendirme seçin.");
 
         if (state.AdaptiveEnabled)
         {
@@ -3222,6 +3238,7 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         public DateTime? ReadingStartTime { get; set; }
         public DateTime? ReadingEndTime { get; set; }
         public bool ReadingIncomplete { get; set; }
+        public string? ReadingPurpose { get; set; }
         public DateTime? ReadingPausedAt { get; set; }
         public int ReadingPausedSeconds { get; set; }
         public decimal? FinalWpm { get; set; }
