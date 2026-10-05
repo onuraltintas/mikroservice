@@ -12,6 +12,11 @@ import { ToasterService } from '../../../core/services/toaster.service';
 import { SpeedReadingSubscriptionsComponent } from './speed-reading-subscriptions';
 
 describe('SpeedReadingSubscriptionsComponent', () => {
+  it('distinguishes historical requests from an adult payer self-declaration', () => {
+    const { component } = createComponent();
+    expect(component.adultPayerLabel({ adultPayerDeclarationVersion: null, adultPayerDeclaredAt: null })).toBe('Yetişkin beyanı kaydı yok (eski talep)');
+    expect(component.adultPayerLabel({ adultPayerDeclarationVersion: 1, adultPayerDeclaredAt: '2026-10-05T09:00:00Z' })).toContain('yaş doğrulaması değildir');
+  });
   const emptyPage = { items: [], totalCount: 0, page: 1, pageSize: 25 };
 
   function createComponent() {

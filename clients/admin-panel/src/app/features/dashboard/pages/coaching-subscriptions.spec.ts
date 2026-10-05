@@ -35,6 +35,8 @@ describe('CoachingSubscriptionsComponent', () => {
     const fixture = TestBed.createComponent(CoachingSubscriptionsComponent);
     fixture.detectChanges();
     const component = fixture.componentInstance;
+    expect(component.adultPayerLabel({ adultPayerDeclarationVersion: null, adultPayerDeclaredAt: null })).toBe('Yetişkin beyanı kaydı yok (eski talep)');
+    expect(component.adultPayerLabel({ adultPayerDeclarationVersion: 1, adultPayerDeclaredAt: '2026-10-05T09:00:00Z' })).toContain('yaş doğrulaması değildir');
     component.startPlanCreate();
     expect(component.planDraft.isPublic).toBe(false);
     component.planDraft = {
