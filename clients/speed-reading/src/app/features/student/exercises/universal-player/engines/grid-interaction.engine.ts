@@ -104,12 +104,26 @@ export class GridInteractionEngine implements BaseEngine {
         const flattenedServerGrid = Array.isArray(serverGrid)
             ? serverGrid.flat().filter((value: unknown) => typeof value === 'number' || typeof value === 'string')
             : [];
-        this.grid = flattenedServerGrid.length === totalCells
-            ? flattenedServerGrid
-            : [...this.sequence].sort(() => Math.random() - 0.5);
+        const validLayout = flattenedServerGrid.length === totalCells
+            && new Set(flattenedServerGrid).size === totalCells
+            && this.sequence.every(value => flattenedServerGrid.includes(value));
+        this.grid = validLayout ? flattenedServerGrid : [...this.sequence];
+        if (!validLayout) {
+            for (let i = this.grid.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [this.grid[i], this.grid[j]] = [this.grid[j], this.grid[i]];
+            }
+        }
     }
 
     start(): void {
+        this.state.isCompleted = false;
+        this.state.currentStep = 0;
+        this.state.errors = 0;
+        this.state.score = 0;
+        this.state.accuracy = 100;
+        this.state.timeElapsed = 0;
+        this.cellResponseTimes.fill(0);
         this.state.isRunning = true;
         this.state.isPaused = false;
         this.startTime = Date.now();
@@ -126,6 +140,7 @@ export class GridInteractionEngine implements BaseEngine {
         this.timerInterval = setInterval(() => {
             if (!this.state.isPaused) {
                 this.state.timeElapsed = Date.now() - this.startTime;
+                if (this.expireIfNeeded()) return;
                 this.callbacks.onStateChange({ ...this.state });
             }
         }, 100);
@@ -150,7 +165,7 @@ export class GridInteractionEngine implements BaseEngine {
         this.startTime += pauseDuration;
 
         this.state.isPaused = false;
-        this.lastClickTime = Date.now();
+        this.lastClickTime += pauseDuration;
         this.callbacks.onResume();
         this.callbacks.onStateChange({ ...this.state });
     }
@@ -193,6 +208,10 @@ export class GridInteractionEngine implements BaseEngine {
         }
 
         const now = Date.now();
+        this.state.timeElapsed = now - this.startTime;
+        if (this.expireIfNeeded()) return;
+        if (!Number.isInteger(input.cellIndex) || input.cellIndex < 0
+            || input.cellIndex >= this.grid.length || this.grid[input.cellIndex] !== input.value) return;
         const responseTime = now - this.lastClickTime;
         this.totalClicks++;
 
@@ -306,6 +325,15 @@ export class GridInteractionEngine implements BaseEngine {
         };
 
         this.callbacks.onComplete(result);
+    }
+
+    private expireIfNeeded(): boolean {
+        const limit = this.config.timeLimit;
+        if (!limit || !Number.isFinite(limit) || limit <= 0 || this.state.timeElapsed < limit * 1000) return false;
+        this.state.timeElapsed = limit * 1000;
+        this.stop();
+        this.callbacks.onError('Süre doldu. Tablo tamamlanmadığı için eğitim ilerlemesine eklenmedi. Yeniden deneyebilirsiniz.');
+        return true;
     }
 
     // En yavaş N hücreyi bul
