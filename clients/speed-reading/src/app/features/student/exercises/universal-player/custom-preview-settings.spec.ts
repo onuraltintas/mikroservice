@@ -29,6 +29,18 @@ describe('Custom preview settings safety', () => {
     expect(result.engineConfig['msPerWord']).toBe(40);
     expect(result.engineConfig['targetWpm']).toBe(1500);
   });
+  it('supports regression speed and clears its overriding delay', () => {
+    const result = applyCustomPreviewSettings({ engineType: 'regression_reduction', engineConfig: { wordDelayMs: 700, wpm: 100 } },
+      { speedWpm: 300, chunkSize: 3 }, context);
+    expect(result.engineConfig.wpm).toBe(300);
+    expect(result.engineConfig.wordDelayMs).toBe(0);
+  });
+  it('supports fading speed without adding unsupported chunk controls', () => {
+    const result = applyCustomPreviewSettings({ engineType: 'text_fade', engineConfig: {} as Record<string, unknown> },
+      { speedWpm: 400, chunkSize: 3 }, context);
+    expect(result.engineConfig['targetWpm']).toBe(400);
+    expect(result.engineConfig['chunkSize']).toBeUndefined();
+  });
   it('shows recorded defaults and resets custom inputs without saving them', () => {
     const close = jasmine.createSpy('close');
     TestBed.configureTestingModule({ providers: [
