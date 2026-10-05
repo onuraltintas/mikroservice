@@ -1506,7 +1506,7 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
             return FinishAdaptiveStage(session, state, now);
         EnsureTimingStarted(session, state, now);
         state.ReadingStartTime ??= state.TimingStartedAt ?? now;
-        state.ReadingEndTime = now;
+        state.ReadingEndTime ??= now;
         session.SetCurrentStep(Math.Max(session.CurrentStep, 1));
         var seconds = SpeedReadingExerciseSessionRules.CalculateReadingSeconds(
             session.StartTime,
