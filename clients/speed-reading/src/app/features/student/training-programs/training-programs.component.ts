@@ -12,7 +12,7 @@ interface TrainingTemplate { id: string; name: string; description: string; tota
   selector: 'app-training-programs', standalone: true, imports: [RouterLink],
   template: `
     <section>
-      <header class="page-header"><span class="eyebrow">KENDİ HIZINIZDA EĞİTİM</span><h1>Eğitim Programları</h1>
+      <header class="training-header"><span class="eyebrow">KENDİ HIZINIZDA EĞİTİM</span><h1>Eğitim Programları</h1>
       <p>Admin ve öğretmen eğitimi: günün tüm egzersizlerini bitirince sonraki gün hemen açılır.
         Aktif programı tamamladıktan sonra istediğiniz programı yeniden veya ilk kez başlatabilirsiniz.</p></header>
       @if (loading()) { <p role="status">Programlar yükleniyor…</p> }
@@ -45,9 +45,9 @@ interface TrainingTemplate { id: string; name: string; description: string; tota
   styles: [`
     :host{display:block;color:var(--text-primary,#172b4d)}
     section{max-width:1200px;margin:auto;padding:32px 24px}
-    .page-header{margin-bottom:28px;max-width:850px}.eyebrow{font-size:12px;letter-spacing:.12em;font-weight:700;color:var(--primary-blue,#1976d2)}
+    .training-header{display:flex;flex-direction:column;align-items:flex-start;gap:10px;margin-bottom:28px;max-width:850px}.training-header h1,.training-header p{margin:0}.eyebrow{font-size:12px;letter-spacing:.12em;font-weight:700;color:var(--primary-blue,#1976d2)}
     h1{font-size:clamp(26px,3vw,36px);font-weight:750;line-height:1.2;margin:10px 0 14px}h2{font-size:22px;font-weight:700;line-height:1.35;margin:12px 0}h3{font-size:19px;font-weight:700;line-height:1.4;margin:18px 0 12px}
-    p{font-size:15px;line-height:1.7}.page-header p,.muted,.description{color:var(--text-secondary,#52647b)}
+    p{font-size:15px;line-height:1.7}.training-header p,.muted,.description{color:var(--text-secondary,#52647b)}
     .active-program{display:flex;align-items:center;justify-content:space-between;gap:24px;padding:28px;background:var(--card-bg,#fff);border:1px solid var(--primary-blue,#1976d2);border-left-width:5px;border-radius:18px;box-shadow:0 8px 28px #172b4d08;margin-bottom:32px}
     .status-badge,.card-meta span{display:inline-block;font-size:12px;font-weight:650;border-radius:6px;padding:5px 9px;background:var(--background-secondary,#eef4fb);color:var(--primary-blue,#1976d2)}
     .progress-stats{display:flex;flex-wrap:wrap;gap:10px 22px;font-size:14px}.progress-stats strong{font-weight:700}.muted{margin:12px 0 0}
