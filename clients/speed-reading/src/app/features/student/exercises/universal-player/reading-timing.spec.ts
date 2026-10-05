@@ -6,6 +6,22 @@ import { ReadingComprehensionEngine } from './engines/reading-comprehension.engi
 import { EngineCallbacks } from './engines/base-engine.interface';
 
 describe('reading phase timing', () => {
+  it('waits for server tracking before starting the next adaptive stage', () => {
+    const player = Object.create(ExercisePlayerComponent.prototype) as any;
+    let confirmed: (() => void) | undefined;
+    player.sessionId = 'owned-reading';
+    player.engine = { applyStage: () => undefined, getQuestions: () => [], start: jasmine.createSpy('start') };
+    player.cdr = { detectChanges: () => undefined };
+    player.enqueueAction = (_: unknown, callback: (response: any) => void) => {
+      callback({ isValid: true, feedbackData: { stage: 1 } });
+      return Promise.resolve();
+    };
+    player.startReadingTracking = (callback: () => void) => confirmed = callback;
+    player.advanceAdaptiveStage();
+    expect(player.engine.start).not.toHaveBeenCalled();
+    confirmed?.();
+    expect(player.engine.start).toHaveBeenCalledTimes(1);
+  });
   it('does not report full-text speed when a reading deadline expires', fakeAsync(() => {
     let result: any;
     const callbacks: EngineCallbacks = {
