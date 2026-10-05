@@ -16,13 +16,23 @@ export interface PreviewControl {
   options?: { value: string; label: string }[];
 }
 
+function overrideFields(source: unknown, values: Record<string, unknown>): Record<string, unknown> {
+  const result = { ...recordOrEmpty(source) };
+  for (const [name, value] of Object.entries(values)) {
+    for (const key of Object.keys(result)) if (key.toLowerCase() === name.toLowerCase()) delete result[key];
+    result[name] = value;
+  }
+  return result;
+}
+
 export function getCustomPreviewControls(configuration: Record<string, unknown>): PreviewControl[] {
   const settings = recordOrEmpty(configuration['engineConfig']);
   const timing = mergeCaseInsensitiveRecords(configuration, settings, 'timing');
   const movement = mergeCaseInsensitiveRecords(configuration, settings, 'movement');
   const pacer = mergeCaseInsensitiveRecords(configuration, settings, 'pacer');
   const fading = mergeCaseInsensitiveRecords(configuration, settings, 'fading');
-  const session = recordOrEmpty(caseInsensitiveField(configuration, 'sessionData'));
+  const session = ['focus', 'vocabulary_builder', 'subvocalization_reduction', 'regression_reduction'].includes(String(configuration['engineType']))
+    ? recordOrEmpty(caseInsensitiveField(settings, 'sessionData') ?? caseInsensitiveField(configuration, 'sessionData')) : {};
   const difficulty = recordOrEmpty(caseInsensitiveField(session, 'difficultySettings') ?? caseInsensitiveField(settings, 'difficultySettings') ?? caseInsensitiveField(configuration, 'difficultySettings'));
   const read = (name: string) => caseInsensitiveField(session, name)
     ?? (configuration['engineType'] === 'subvocalization_reduction' ? caseInsensitiveField(difficulty, name) : undefined)
@@ -41,8 +51,8 @@ export function getCustomPreviewControls(configuration: Record<string, unknown>)
     case 'vocabulary_builder': return read('mode') === 'quiz'
       ? [control('timeLimitPerWord', 'Kelime başına süre (saniye; 0: sınırsız)', 0, 3600, read('timeLimitPerWord') ?? 0)] : [];
     case 'visual_expansion': return [
-      control('displayDurationMs', 'Gösterim süresi (ms)', 50, 5000, timing['durationms'] ?? read('VisualExpansionDisplayDurationMs') ?? 250),
-      control('intervalMs', 'Gösterimler arası bekleme (ms)', 50, 10000, timing['intervalms'] ?? 1500)
+      control('displayDurationMs', 'Gösterim süresi (ms)', 50, 5000, timing['durationms'] || read('VisualExpansionDisplayDurationMs') || 250),
+      control('intervalMs', 'Gösterimler arası bekleme (ms)', 50, 10000, timing['intervalms'] || 1500)
     ];
     case 'text_stream': return [
       control('displayDurationMs', 'Gösterim süresi (ms)', 50, 5000, read('displayDurationMs') ?? read('intervalMs') ?? timing['durationms'] ?? 500),
@@ -85,7 +95,7 @@ export function applyCustomPreviewSettings<T extends Record<string, unknown>>(
     const result = structuredClone(configuration);
     const settings = recordOrEmpty(result['engineConfig']);
     (result as Record<string, unknown>)['engineConfig'] = settings;
-    settings['display'] = { ...recordOrEmpty(configuration['display']), ...recordOrEmpty(settings['display']), fontSize: value };
+    settings['display'] = overrideFields({ ...recordOrEmpty(caseInsensitiveField(configuration, 'display')), ...recordOrEmpty(caseInsensitiveField(settings, 'display')) }, { fontSize: value });
     return result;
   }
   const validated: Record<string, number> = {};
@@ -105,19 +115,22 @@ export function applyCustomPreviewSettings<T extends Record<string, unknown>>(
     ? nested as Record<string, unknown> : {};
   (result as Record<string, unknown>)['engineConfig'] = settings;
   const merge = (name: string, entries: Record<string, number>) => {
-    const original = settings[name] ?? configuration[name];
-    settings[name] = { ...(original && typeof original === 'object' && !Array.isArray(original) ? original as Record<string, unknown> : {}), ...entries };
+    const original = { ...recordOrEmpty(caseInsensitiveField(configuration, name)), ...recordOrEmpty(caseInsensitiveField(settings, name)) };
+    settings[name] = overrideFields(original, entries);
+  };
+  const updateSessions = (entries: Record<string, number>) => {
+    for (const container of [result as Record<string, unknown>, settings]) {
+      for (const key of Object.keys(container)) {
+        if (key.toLowerCase() === 'sessiondata') container[key] = overrideFields(container[key], entries);
+      }
+    }
   };
   if (engine === 'focus' || engine === 'vocabulary_builder') {
     const key = engine === 'focus' ? 'SpeedMs' : 'timeLimitPerWord';
     const value = validated[engine === 'focus' ? 'speedMs' : key];
     if (value !== undefined) {
       settings[key] = value;
-      const session = recordOrEmpty(caseInsensitiveField(result, 'sessionData'));
-      if (Object.keys(session).length) {
-        const field = engine === 'focus' ? 'SessionData' : 'sessionData';
-        (result as Record<string, unknown>)[field] = { ...session, [key]: value };
-      }
+      updateSessions({ [key]: value });
     }
     return result;
   }
@@ -168,8 +181,7 @@ export function applyCustomPreviewSettings<T extends Record<string, unknown>>(
     }
     if (validated['chunkSize'] !== undefined) overrides['chunkSize'] = validated['chunkSize'];
     if (engine === 'subvocalization_reduction') merge('difficultySettings', overrides);
-    const session = recordOrEmpty(caseInsensitiveField(result, 'sessionData'));
-    if (Object.keys(session).length) (result as Record<string, unknown>)['sessionData'] = { ...session, ...overrides };
+    updateSessions(overrides);
   }
   return result;
 }

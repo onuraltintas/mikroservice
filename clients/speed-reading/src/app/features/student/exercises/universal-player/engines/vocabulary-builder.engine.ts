@@ -102,8 +102,8 @@ export class VocabularyBuilderEngine implements BaseEngine {
             ?? caseInsensitiveField(nested, name)
             ?? caseInsensitiveField(root, name);
         this.config = { ...root, ...nested, ...sessionData } as VocabularyConfig;
-        this.serverAuthoritative = read('serverAuthoritative') === true;
         this.previewOnly = root['previewOnly'] === true;
+        this.serverAuthoritative = !this.previewOnly && read('serverAuthoritative') === true;
 
         // userId mapping (fallback to guest)
         this.userId = boundedText(read('userId'), 'guest', 100) || 'guest';
