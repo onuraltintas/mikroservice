@@ -20,6 +20,68 @@ namespace SpeedReading.Application.UnitTests;
 
 public sealed class StudentReadingPersistenceTests
 {
+    [Fact]
+    public async Task Tachistoscope_uses_owned_rounds_and_saves_verified_accuracy_without_wpm()
+    {
+        await using var context = CreateContext();
+        var studentId = Guid.NewGuid();
+        var typeId = Guid.NewGuid();
+        var exerciseId = Guid.NewGuid();
+        context.ExerciseTypes.Add(ExerciseType.Create(typeId, "Tachistoscope", "Flash", "text_stream"));
+        context.Exercises.Add(Exercise.Create("Takistoskop", "text_stream",
+            """{"engineType":"text_stream","engineConfig":{"mode":"flash","timing":{"durationMs":100,"intervalMs":0},"content":{"type":"word","source":"custom","count":2,"items":["bir","masa","kalem"]}}}""",
+            1, studentId, typeId, id: exerciseId));
+        await context.SaveChangesAsync();
+        var service = CreateExerciseSessionService(context);
+        var started = await service.StartAsync(studentId, new StartExerciseSessionRequest { ExerciseId = exerciseId });
+        started.TotalSteps.Should().Be(2);
+        started.InitialData.ToString().Should().NotContain("kalem");
+        for (var round = 0; round < 2; round++)
+        {
+            var presentation = await service.ValidateActionAsync(studentId, started.SessionId,
+                new ExerciseActionRequest { Action = "tachistoscope_present", Index = round });
+            presentation.IsValid.Should().BeTrue();
+            var stimulus = presentation.FeedbackData!.Value.GetProperty("stimulus").GetString()!;
+            var session = await context.ExerciseSessions.SingleAsync();
+            var state = System.Text.Json.Nodes.JsonNode.Parse(session.SessionDataJson)!;
+            state["tachistoscope"]!["presentedAt"] = DateTime.UtcNow.AddSeconds(-1);
+            session.SetState(state.ToJsonString());
+            await context.SaveChangesAsync();
+            var answer = await service.ValidateActionAsync(studentId, started.SessionId,
+                new ExerciseActionRequest { Action = "tachistoscope_answer", Index = round, Answer = round == 0 ? stimulus : "yanlış" });
+            answer.IsValid.Should().BeTrue();
+            answer.IsCorrect.Should().Be(round == 0);
+            var duplicate = await service.ValidateActionAsync(studentId, started.SessionId,
+                new ExerciseActionRequest { Action = "tachistoscope_answer", Index = round, Answer = stimulus });
+            duplicate.IsValid.Should().BeFalse();
+        }
+        var result = await service.CompleteAsync(studentId, started.SessionId, new CompleteExerciseSessionRequest());
+        result.Accuracy.Should().Be(50);
+        result.Score.Should().Be(50);
+        result.RawWPM.Should().BeNull();
+        result.CorrectCount.Should().Be(1);
+        result.IncorrectCount.Should().Be(1);
+        result.DetailedResults.GetProperty("tachistoscope").GetProperty("trials").GetArrayLength().Should().Be(2);
+        (await context.ExerciseSessionResults.CountAsync()).Should().Be(1);
+    }
+
+    [Fact]
+    public async Task Tachistoscope_cannot_complete_without_validated_answers()
+    {
+        await using var context = CreateContext();
+        var studentId = Guid.NewGuid();
+        var typeId = Guid.NewGuid();
+        var exerciseId = Guid.NewGuid();
+        context.ExerciseTypes.Add(ExerciseType.Create(typeId, "Tachistoscope", "Flash", "text_stream"));
+        context.Exercises.Add(Exercise.Create("Takistoskop", "text_stream",
+            """{"engineType":"text_stream","engineConfig":{"mode":"flash","content":{"type":"letter","count":2}}}""",
+            1, studentId, typeId, id: exerciseId));
+        await context.SaveChangesAsync();
+        var service = CreateExerciseSessionService(context);
+        var started = await service.StartAsync(studentId, new StartExerciseSessionRequest { ExerciseId = exerciseId });
+        var complete = () => service.CompleteAsync(studentId, started.SessionId, new CompleteExerciseSessionRequest());
+        await complete.Should().ThrowAsync<BusinessRuleException>().Where(item => item.Code == "ExerciseSession.Incomplete");
+    }
     [Theory]
     [InlineData("word")]
     [InlineData("position")]
