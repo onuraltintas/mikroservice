@@ -246,6 +246,7 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
                 ? assessmentSnapshot.ReadingText?.Id
                 : pinnedReadingTextId ?? request.ReadingTextId;
             var parsedConfiguration = ParseJsonOrEmpty(configurationJson);
+            if (IsTachistoscope(exerciseTypeName, exerciseEngineType, parsedConfiguration)) readingTextId = null;
             var requiresReadingText = IsReadingExerciseFlow(
                 exerciseTypeName,
                 exerciseEngineType,
@@ -377,6 +378,8 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
                 "visual_expansion_answer" => AnswerVisualExpansion(session, state, request, now),
                 "fixation_present" => PresentFixation(session, state, now),
                 "fixation_answer" => AnswerFixation(session, state, request),
+                "tachistoscope_present" => PresentTachistoscope(state, request, now),
+                "tachistoscope_answer" => AnswerTachistoscope(session, state, request, now),
                 "answer_question" => AnswerQuestion(session, state, request),
                 "position_match" => ValidateFocusMatch(session, state, request, "position", now),
                 "word_match" => ValidateFocusMatch(session, state, request, "word", now),
@@ -466,6 +469,9 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
 
         if (state.CurrentNumber.HasValue && state.CurrentNumber.Value <= state.TotalSteps)
             throw IncompleteSession("All grid targets must be completed before the session can be completed.");
+        if ((state.Tachistoscope is not null || state.ExerciseTypeName.Equals("Tachistoscope", StringComparison.OrdinalIgnoreCase))
+            && (state.Tachistoscope is null || state.Tachistoscope.Round < state.TotalSteps))
+            throw IncompleteSession("All tachistoscope rounds must be validated before completion.");
         if (IsFocusExercise(state) && !state.FocusCompleted)
         {
             if (IsObservationOnlyMotionPath(state) && state.FixationPeripheralCount == 0)
@@ -525,7 +531,7 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         var accuracy = SpeedReadingExerciseSessionRules.CalculateAccuracy(
             session.CorrectCount,
             session.IncorrectCount);
-        var wordsRead = state.WordCount > 0 ? (int?)state.WordCount : null;
+        var wordsRead = state.Tachistoscope is not null ? null : state.WordCount > 0 ? (int?)state.WordCount : null;
         var adaptiveTransferResult = IsAdaptiveFluency(state)
             ? state.AdaptiveStageResults.SingleOrDefault(item => item.Stage == 3)
             : null;
@@ -813,6 +819,7 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         string exerciseEngineType,
         JsonElement configuration)
     {
+        if (IsTachistoscope(exerciseTypeName, exerciseEngineType, configuration)) return false;
         if (ReadingExerciseTypes.Contains(exerciseTypeName)
             || ReadingExerciseTypes.Contains(exerciseEngineType))
             return true;
@@ -865,6 +872,13 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         var now = DateTime.UtcNow;
         var state = DeserializeState(session.SessionDataJson);
         session.Pause(now);
+        if (state.Tachistoscope is { } tachistoscope)
+        {
+            tachistoscope.LastStimulus = tachistoscope.ExpectedStimulus.Length > 0
+                ? tachistoscope.ExpectedStimulus : tachistoscope.LastStimulus;
+            tachistoscope.ExpectedStimulus = string.Empty;
+            tachistoscope.PresentedAt = null;
+        }
         if (state.ReadingStartTime.HasValue && !state.ReadingEndTime.HasValue)
             state.ReadingPausedAt = now;
         session.SetState(JsonSerializer.Serialize(state, JsonOptions), session.CustomDataJson);
@@ -1048,6 +1062,8 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         };
         var engineConfig = ReadObject(config, "engineConfig");
         var effectiveConfig = engineConfig.ValueKind == JsonValueKind.Object ? engineConfig : config;
+        if (IsTachistoscope(exerciseTypeName, exerciseEngineType, config))
+            state.Tachistoscope = await CreateTachistoscopeAsync(effectiveConfig, difficultyLevel, profileAgeGroupId, cancellationToken);
         if (IsGridExercise(exerciseTypeName, config))
         {
             state.TimeLimitSeconds = ReadGridTimeLimit(effectiveConfig) ?? ReadGridTimeLimit(config);
@@ -1398,6 +1414,7 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
 
         if (exerciseTypeName.Equals("RSVP", StringComparison.OrdinalIgnoreCase) && state.Words.Length > 0)
             state.TotalSteps = state.Words.Length;
+        if (state.Tachistoscope is { } tachistoscope) state.TotalSteps = tachistoscope.Count;
         state.CustomData = customData;
         return state;
     }
@@ -2221,6 +2238,116 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
     private static bool IsFocusExercise(SessionState state) =>
         IsFocusExercise(state.ExerciseTypeName) || IsFocusEngineType(state.EngineType);
 
+    private static bool IsTachistoscope(string typeName, string engineType, JsonElement config)
+    {
+        if (typeName.Equals("Tachistoscope", StringComparison.OrdinalIgnoreCase)) return true;
+        if (typeName.Equals("RSVP", StringComparison.OrdinalIgnoreCase)) return false;
+        var nested = ReadObject(config, "engineConfig");
+        var mode = ReadString(nested, "mode") ?? ReadString(config, "mode");
+        var type = ReadString(nested, "engineType") ?? ReadString(config, "engineType") ?? engineType;
+        return type.Equals("text_stream", StringComparison.OrdinalIgnoreCase)
+            && !string.Equals(mode, "rsvp", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private async Task<TachistoscopeState> CreateTachistoscopeAsync(JsonElement config, int difficulty,
+        Guid? ageGroupId, CancellationToken cancellationToken)
+    {
+        var timing = ReadObject(config, "timing");
+        var content = ReadObject(config, "content");
+        var adaptive = ReadObject(config, "adaptive");
+        var type = (ReadString(content, "type") ?? "word").ToLowerInvariant();
+        var level = Math.Clamp(difficulty, 1, 5);
+        var duration = Math.Clamp(ReadPositiveInt(config, "displayDurationMs")
+            ?? ReadPositiveInt(timing, "durationMs") ?? 500, 50, 5000);
+        var min = Math.Clamp(ReadPositiveInt(adaptive, "minDurationMs") ?? 50, 50, 5000);
+        var max = Math.Clamp(ReadPositiveInt(adaptive, "maxDurationMs") ?? Math.Max(1000, duration), min, 5000);
+        var state = new TachistoscopeState
+        {
+            ContentType = type,
+            Count = Math.Clamp(ReadPositiveInt(config, "totalStimuli") ?? ReadPositiveInt(content, "count") ?? 20, 1, 500),
+            DisplayDurationMs = Math.Clamp(duration, min, max),
+            InitialDurationMs = Math.Clamp(duration, min, max),
+            MinDurationMs = min, MaxDurationMs = max,
+            AdaptiveEnabled = ReadProperty(adaptive, "enabled").ValueKind != JsonValueKind.False,
+            TargetLength = type == "letter" ? level : type == "number" ? level + 2 : level * 2 + 1
+        };
+        if (type is not ("word" or "phrase" or "number" or "letter"))
+            throw new ArgumentException("Takistoskop içerik türü word, phrase, number veya letter olmalıdır.");
+        var customItems = ReadStringArray(content, "items").Select(item => item.Trim())
+            .Where(item => item.Length is > 0 and <= 100).Distinct().Take(500).ToArray();
+        if (string.Equals(ReadString(content, "source"), "custom", StringComparison.OrdinalIgnoreCase))
+        {
+            if (customItems.Length == 0) throw new ArgumentException("Takistoskop özel içerik listesi boş olamaz.");
+            state.Pool = customItems;
+            state.Source = "custom";
+            // Explicit custom content must never be replaced with generated numbers or letters.
+            state.ContentType = type;
+        }
+        else if (type is "word" or "phrase")
+        {
+            var words = await db.VocabularyItems.AsNoTracking()
+                .Where(item => !item.IsDeleted && item.DifficultyLevel <= level
+                    && (item.TargetAgeGroupId == null || item.TargetAgeGroupId == ageGroupId))
+                .OrderBy(item => item.Word).Select(item => item.Word).Take(1000).ToListAsync(cancellationToken);
+            state.Pool = words.Select(word => word.Trim()).Where(word => word.Length is >= 2 and <= 20
+                && word.All(char.IsLetter)).Distinct().ToArray();
+            state.Source = state.Pool.Length > 0 ? "vocabulary_items" : "default_pool";
+            if (state.Pool.Length == 0)
+                state.Pool = ["su", "ev", "bir", "göz", "yol", "masa", "kapı", "okul", "ağaç", "kitap", "kalem", "zihin",
+                    "anlam", "dikkat", "kelime", "görsel", "öğrenme", "çalışma", "düşünce", "başlangıç", "verimlilik",
+                    "odaklanma", "araştırma", "motivasyon", "geliştirmek", "değerlendirme", "konsantrasyon", "sürdürülebilirlik"];
+            if (type == "phrase")
+                state.Pool = state.Pool.Select((word, index) => word + " " + state.Pool[(index + 1) % state.Pool.Length]).ToArray();
+        }
+        if (state.Pool.Length > 0)
+            state.TargetLength = Math.Clamp(state.TargetLength, state.Pool.Min(word => word.Length), state.Pool.Max(word => word.Length));
+        state.InitialTargetLength = state.TargetLength;
+        return state;
+    }
+
+    private static ExerciseActionValidationResponse PresentTachistoscope(SessionState state, ExerciseActionRequest request, DateTime now)
+    {
+        var tachistoscope = state.Tachistoscope;
+        if (tachistoscope is null || request.Index != tachistoscope.Round || tachistoscope.Round >= tachistoscope.Count)
+            return Invalid("Takistoskop turu geçerli değil. Egzersizi yeniden başlatın.");
+        if (tachistoscope.PresentedAt is null)
+        {
+            tachistoscope.ExpectedStimulus = tachistoscope.SelectStimulus();
+            tachistoscope.PresentedAt = now;
+        }
+        return Valid("Takistoskop uyaranı hazır.", tachistoscope.Round, feedbackData: JsonSerializer.SerializeToElement(new
+        {
+            round = tachistoscope.Round, stimulus = tachistoscope.ExpectedStimulus,
+            displayDurationMs = tachistoscope.DisplayDurationMs, targetLength = tachistoscope.TargetLength
+        }, JsonOptions));
+    }
+
+    private static ExerciseActionValidationResponse AnswerTachistoscope(ExerciseSession session, SessionState state,
+        ExerciseActionRequest request, DateTime now)
+    {
+        var tachistoscope = state.Tachistoscope;
+        if (tachistoscope is null || request.Index != tachistoscope.Round || tachistoscope.PresentedAt is null
+            || tachistoscope.ExpectedStimulus.Length == 0 || request.Answer is null || request.Answer.Length > 100)
+            return Invalid("Yanıt bekleyen geçerli bir Takistoskop turu yok.");
+        var elapsed = (now - tachistoscope.PresentedAt.Value).TotalMilliseconds;
+        if (elapsed < tachistoscope.DisplayDurationMs)
+            return Invalid("Takistoskop gösterimi bitmeden yanıt gönderilemez.");
+        var correct = tachistoscope.Record(tachistoscope.ExpectedStimulus, request.Answer,
+            (int)Math.Clamp(elapsed - tachistoscope.DisplayDurationMs, 0, int.MaxValue));
+        session.Advance(correct);
+        tachistoscope.ExpectedStimulus = string.Empty;
+        tachistoscope.PresentedAt = null;
+        return Valid(session.AssessmentAttemptId.HasValue ? "Yanıt kaydedildi." : correct ? "Doğru." : "Yanlış.",
+            tachistoscope.Round, isCompleted: tachistoscope.Round >= tachistoscope.Count,
+            isCorrect: session.AssessmentAttemptId.HasValue ? null : correct,
+            feedbackData: JsonSerializer.SerializeToElement(new
+            {
+                round = tachistoscope.Round, displayDurationMs = tachistoscope.DisplayDurationMs,
+                targetLength = tachistoscope.TargetLength,
+                trial = session.AssessmentAttemptId.HasValue ? null : tachistoscope.Trials.Last()
+            }, JsonOptions));
+    }
+
     private static int? ReadGridTimeLimit(JsonElement config)
     {
         var timing = ReadObject(config, "timing");
@@ -2261,7 +2388,7 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         ?? (state.TimingStartsOnAction ? now : session.StartTime);
 
     private static bool SupportsServerReadingMeasurement(SessionState state) =>
-        IsReadingExerciseFlow(state)
+        state.Tachistoscope is null && IsReadingExerciseFlow(state)
         && state.ReadingStartTime.HasValue
         && state.ReadingEndTime.HasValue;
 
@@ -2799,11 +2926,22 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         }
     }
 
-    private static JsonElement ToPublicJson(SessionState state) =>
-        state.IsAssessmentMode
-            ? SpeedReadingContentSecurity.SanitizeFocusAssessmentJson(
-                JsonSerializer.SerializeToElement(state, JsonOptions))
-            : RemoveAssessmentKeys(JsonSerializer.SerializeToElement(state, JsonOptions));
+    private static JsonElement ToPublicJson(SessionState state)
+    {
+        var json = JsonSerializer.SerializeToNode(state, JsonOptions)!.AsObject();
+        if (state.Tachistoscope is { } tachistoscope)
+        {
+            json["tachistoscope"] = JsonSerializer.SerializeToNode(new
+            {
+                tachistoscope.Round, tachistoscope.Count, tachistoscope.ContentType, tachistoscope.Source,
+                tachistoscope.DisplayDurationMs, tachistoscope.InitialDurationMs, tachistoscope.TargetLength,
+                tachistoscope.AdaptiveEnabled,
+                trials = tachistoscope.Round == tachistoscope.Count ? tachistoscope.Trials : []
+            }, JsonOptions);
+        }
+        var result = JsonSerializer.SerializeToElement(json, JsonOptions);
+        return state.IsAssessmentMode ? SpeedReadingContentSecurity.SanitizeFocusAssessmentJson(result) : RemoveAssessmentKeys(result);
+    }
 
     private static JsonElement RemoveAssessmentKeys(JsonElement element) =>
         SpeedReadingContentSecurity.SanitizeAssessmentJson(element);
@@ -2989,6 +3127,7 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         public int DifficultyLevel { get; set; }
         public int TotalSteps { get; set; }
         public int CurrentWordIndex { get; set; }
+        public TachistoscopeState? Tachistoscope { get; set; }
         public int? CurrentNumber { get; set; }
         public int GridSize { get; set; }
         public int[][]? Grid { get; set; }
