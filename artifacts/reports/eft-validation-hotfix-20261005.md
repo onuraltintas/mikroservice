@@ -17,3 +17,7 @@ ASP.NET Core MVC rejects validation attributes placed on generated properties of
 Only Coaching and Speed Reading APIs use the new `eft-validation-20261005` images. Frontends, Identity and Notification are unchanged. The deployment script records immutable prior image IDs for rollback and does not run migrations.
 
 No real EFT request, financial transaction or user declaration is submitted by the agent. Final authenticated EFT submission is verified by the user. The separately reported profile settings 403 is not addressed by this metadata-only hotfix; subscription access protections remain in place.
+
+## Live result
+
+Both APIs were deployed successfully and returned Healthy readiness with zero container restarts. Both public sites returned HTTP 200 (Coaching after its normal redirect). The unauthenticated Speed Reading EFT endpoint returned HTTP 401. No new exception was observed in the inspected Speed Reading startup log. The smoke script was corrected to follow the normal Coaching redirect; its initial non-following HTTP check had failed despite healthy APIs.

@@ -42,7 +42,7 @@ smoke)
     printf '\n%s ready\n' "$service"
   done
   for url in https://masterhizliokuma.com/ https://onuraltintas.net/; do
-    test "$(curl --silent --show-error --max-time 20 -o /dev/null -w '%{http_code}' "$url")" = 200
+    test "$(curl --silent --show-error --location --max-time 20 -o /dev/null -w '%{http_code}' "$url")" = 200
     printf '%s HTTP200\n' "$url"
   done
   ;;
