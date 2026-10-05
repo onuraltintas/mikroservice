@@ -12,6 +12,7 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { firstValueFrom, Subject, takeUntil } from 'rxjs';
 import { AuthService } from '../../../../core/services/auth.service';
 import { canUseStaffTraining } from '../../../../core/guards/staff-training.guard';
+import { applyCustomPreviewSettings } from './custom-preview-settings';
 
 import { EngineFactory, EngineType } from './engines/engine-factory';
 import { shouldForwardExerciseAction } from './exercise-action-policy';
@@ -383,6 +384,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
 
   assignmentId: string | null = null;
   pathItemId: string | null = null;
+  customPreviewActive = false;
 
   ngOnInit(): void {
     // Scroll to top immediately and after a short delay to ensure it works
@@ -566,6 +568,8 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
         next: (exercise: any) => {
           this.exercise = exercise;
           this.parseConfiguration();
+          this.applyCustomPreview(history.state);
+          if (this.error) { this.finishLoading(); return; }
           this.startSession();
         },
         error: (err) => {
@@ -936,6 +940,25 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     console.error('[ExercisePlayer] Engine initialization failed:', error);
     this.engine = null;
     this.error = 'Egzersiz hazırlanırken bir hata oluştu. Lütfen tekrar deneyin.';
+  }
+
+  private applyCustomPreview(state: unknown): void {
+    this.customPreviewActive = false;
+    if (!this.parsedConfig || !this.isPreviewSession() || this.isAssessmentMode || this.assignmentId || this.reviewItemId || this.pathItemId) return;
+    if (!state || typeof state !== 'object') return;
+    const custom = (state as Record<string, unknown>)['customPreview'];
+    if (!custom || typeof custom !== 'object') return;
+    const request = custom as Record<string, unknown>;
+    if (request['exerciseId'] !== this.exercise?.id || !request['values'] || typeof request['values'] !== 'object' || Array.isArray(request['values'])) return;
+    const roles = this.authService.currentUserValue?.roles ?? [];
+    if (!roles.some(role => ['Admin', 'SystemAdmin', 'Teacher'].includes(role))) return;
+    try {
+      const changed = applyCustomPreviewSettings(this.parsedConfig, request['values'] as Record<string, unknown>, { roles, preview: true });
+      this.customPreviewActive = changed !== this.parsedConfig;
+      this.parsedConfig = changed;
+    } catch {
+      this.error = 'Özel ayarlar geçersiz. Kataloğa dönüp ayarları kontrol edin.';
+    }
   }
 
   private parseConfiguration(): void {

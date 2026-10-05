@@ -1,4 +1,5 @@
 <div class="player-container">
+    <p *ngIf="customPreviewActive" role="status">Özel ayarlı önizleme — sonuç ve ilerleme kaydedilmez.</p>
     <!-- Loading State -->
     <div *ngIf="isLoading" class="loading-state">
         <div class="ep-spinner"></div>
