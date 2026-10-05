@@ -3,6 +3,12 @@ import { FormsModule } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { applyCustomPreviewSettings, getCustomPreviewControls, PreviewControl } from './custom-preview-settings';
 
+export interface CustomPreviewLevel {
+  id: string;
+  label: string;
+  configuration: Record<string, unknown>;
+}
+
 @Component({
   standalone: true,
   imports: [FormsModule, MatDialogModule],
@@ -10,6 +16,13 @@ import { applyCustomPreviewSettings, getCustomPreviewControls, PreviewControl } 
     <h2 mat-dialog-title>Özel ayarlarla dene</h2>
     <mat-dialog-content>
       <p>Bu ayarlar yalnız bu önizlemeye uygulanır. Kayıtlı egzersiz ve ilerlemeniz değişmez.</p>
+      @if (levels.length > 1) {
+        <label for="preview-level">Başlangıç seviyesi</label>
+        <select id="preview-level" [ngModel]="selectedLevelId" (ngModelChange)="selectLevel($event)">
+          @for (level of levels; track level.id) { <option [value]="level.id">{{ level.label }}</option> }
+        </select>
+        <small>Seviye değişince o seviyenin varsayılan ayarları yüklenir.</small>
+      }
       @for (control of controls; track control.key) {
       <label [for]="'preview-' + control.key">{{ control.label }}</label>
       @if (control.options) {
@@ -32,7 +45,10 @@ import { applyCustomPreviewSettings, getCustomPreviewControls, PreviewControl } 
   styles: [`label{display:block;font-weight:600;margin:18px 0 6px}input,select{width:100%;padding:10px;border:1px solid #aebbc9;border-radius:8px;font:inherit;box-sizing:border-box}small{display:block;margin-top:5px;color:#52647b}p{line-height:1.6}button{padding:10px 14px;border:1px solid #dce2ef;border-radius:8px;cursor:pointer;background:transparent;font:inherit}.primary{background:var(--primary-blue,#1976d2);color:white}button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #1976d2;outline-offset:2px}[role=alert]{color:#b42318}mat-dialog-actions{gap:8px;flex-wrap:wrap}`]
 })
 export class CustomPreviewDialogComponent {
-  readonly configuration = inject<Record<string, unknown>>(MAT_DIALOG_DATA);
+  private readonly data = inject<Record<string, unknown> & { previewLevels?: CustomPreviewLevel[] }>(MAT_DIALOG_DATA);
+  readonly levels = this.data.previewLevels ?? [];
+  selectedLevelId = this.levels[0]?.id ?? '';
+  configuration = this.levels[0]?.configuration ?? this.data;
   private readonly dialog = inject(MatDialogRef<CustomPreviewDialogComponent>);
   controls: PreviewControl[] = [];
   values: Record<string, number | string> = {};
@@ -42,6 +58,13 @@ export class CustomPreviewDialogComponent {
   set chunkSize(value: number) { this.values['chunkSize'] = value; }
   error = '';
   constructor() { this.reset(); }
+  selectLevel(id: string): void {
+    const level = this.levels.find(item => item.id === id);
+    if (!level) return;
+    this.selectedLevelId = id;
+    this.configuration = level.configuration;
+    this.reset();
+  }
   reset(): void {
     this.controls = getCustomPreviewControls(this.configuration);
     this.values = Object.fromEntries(this.controls.map(control => [control.key, control.value]));
@@ -51,7 +74,7 @@ export class CustomPreviewDialogComponent {
     try {
       const values = { ...this.values };
       applyCustomPreviewSettings(this.configuration, values, { roles: ['Teacher'], preview: true });
-      this.dialog.close(values);
+      this.dialog.close(this.levels.length ? { exerciseId: this.selectedLevelId, values } : values);
     } catch (error) { this.error = error instanceof Error ? error.message : 'Ayarları kontrol edin.'; }
   }
 }

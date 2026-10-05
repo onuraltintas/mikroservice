@@ -173,7 +173,7 @@ export class ExercisesListComponent extends BaseComponent implements OnInit {
     return !roles.includes('Student') && roles.some(role => ['Admin', 'SystemAdmin', 'Teacher'].includes(role));
   }
 
-  openCustomPreview(exercise: Exercise): void {
+  openCustomPreview(exercise: Exercise, levels?: Exercise[]): void {
     const roles = this.authService.currentUserValue?.roles ?? [];
     if (roles.includes('Student') || !roles.some(role => ['Admin', 'SystemAdmin', 'Teacher'].includes(role))) return;
     let configuration: Record<string, unknown>;
@@ -183,10 +183,19 @@ export class ExercisesListComponent extends BaseComponent implements OnInit {
       this.toaster.error('Bu egzersiz türü için özel ayarlar henüz desteklenmiyor. Kayıtlı ayarlarla başlatabilirsiniz.');
       return;
     }
-    this.dialog.open(CustomPreviewDialogComponent, { width: '480px', maxWidth: '95vw', data: configuration })
-      .afterClosed().subscribe(values => {
-        if (values) this.router.navigate(['/student/exercises/universal-player', exercise.id], {
-          state: { customPreview: { exerciseId: exercise.id, values } }
+    let previewLevels;
+    try {
+      previewLevels = levels?.map(level => ({ id: level.id, label: `Seviye ${level.difficultyLevel}`,
+        configuration: JSON.parse(level.configurationJson || '{}') as Record<string, unknown> }));
+    } catch { this.toaster.error('Bu egzersizin seviye ayarları okunamadı.'); return; }
+    this.dialog.open(CustomPreviewDialogComponent, { width: '480px', maxWidth: '95vw', data: previewLevels ? { ...configuration, previewLevels } : configuration })
+      .afterClosed().subscribe(result => {
+        if (!result) return;
+        const exerciseId = levels ? result.exerciseId : exercise.id;
+        if (levels && !levels.some(level => level.id === exerciseId)) return;
+        const values = levels ? result.values : result;
+        this.router.navigate(['/student/exercises/universal-player', exerciseId], {
+          state: { customPreview: { exerciseId, values } }
         });
       });
   }
@@ -198,8 +207,8 @@ export class ExercisesListComponent extends BaseComponent implements OnInit {
     }
 
     // If only 1 level, start immediately
+    if (custom) { this.openCustomPreview(exerciseCard.exercises[0], exerciseCard.exercises); return; }
     if (exerciseCard.exercises.length === 1) {
-      if (custom) { this.openCustomPreview(exerciseCard.exercises[0]); return; }
       this.router.navigate(['/student/exercises/universal-player', exerciseCard.exercises[0].id]);
       return;
     }
@@ -215,7 +224,6 @@ export class ExercisesListComponent extends BaseComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe(selectedExercise => {
       if (selectedExercise) {
-        if (custom) { this.openCustomPreview(selectedExercise); return; }
         this.router.navigate(['/student/exercises/universal-player', selectedExercise.id]);
       }
     });

@@ -5,8 +5,8 @@ import { CustomPreviewDialogComponent } from './custom-preview-dialog.component'
 describe('Single-window custom preview levels', () => {
   it('loads selected-level defaults and returns the matching exercise with temporary values', () => {
     const close = jasmine.createSpy('close');
-    const first = { engineType: 'word_highlight', engineConfig: { speedWpm: 200 } };
-    const second = { engineType: 'word_highlight', engineConfig: { speedWpm: 400 } };
+    const first = { engineType: 'word_highlight', engineConfig: { targetWpm: 200 } };
+    const second = { engineType: 'word_highlight', engineConfig: { targetWpm: 400 } };
     TestBed.configureTestingModule({ providers: [
       { provide: MAT_DIALOG_DATA, useValue: { ...first, previewLevels: [
         { id: 'first', label: 'Seviye 1', configuration: first }, { id: 'second', label: 'Seviye 2', configuration: second }
@@ -20,6 +20,6 @@ describe('Single-window custom preview levels', () => {
     fixture.componentInstance.speedWpm = 500;
     fixture.componentInstance.submit();
     expect(close).toHaveBeenCalledWith({ exerciseId: 'second', values: { speedWpm: 500, chunkSize: 1 } });
-    expect(second.engineConfig.speedWpm).toBe(400);
+    expect(second.engineConfig.targetWpm).toBe(400);
   });
 });
