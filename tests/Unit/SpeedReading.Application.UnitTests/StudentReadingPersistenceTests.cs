@@ -62,6 +62,7 @@ public sealed class StudentReadingPersistenceTests
         result.CorrectCount.Should().Be(1);
         result.IncorrectCount.Should().Be(1);
         result.DetailedResults.GetProperty("tachistoscope").GetProperty("trials").GetArrayLength().Should().Be(2);
+        result.DetailedResults.GetProperty("tachistoscope").GetProperty("trials")[0].GetProperty("isCorrect").GetBoolean().Should().BeTrue();
         (await context.ExerciseSessionResults.CountAsync()).Should().Be(1);
     }
 
@@ -81,6 +82,31 @@ public sealed class StudentReadingPersistenceTests
         var started = await service.StartAsync(studentId, new StartExerciseSessionRequest { ExerciseId = exerciseId });
         var complete = () => service.CompleteAsync(studentId, started.SessionId, new CompleteExerciseSessionRequest());
         await complete.Should().ThrowAsync<BusinessRuleException>().Where(item => item.Code == "ExerciseSession.Incomplete");
+    }
+
+    [Fact]
+    public async Task Tachistoscope_preserves_but_replaces_legacy_unverifiable_sessions()
+    {
+        await using var context = CreateContext();
+        var studentId = Guid.NewGuid();
+        var typeId = Guid.NewGuid();
+        var exerciseId = Guid.NewGuid();
+        context.ExerciseTypes.Add(ExerciseType.Create(typeId, "Tachistoscope", "Flash", "text_stream"));
+        context.Exercises.Add(Exercise.Create("Takistoskop", "text_stream",
+            """{"engineType":"text_stream","engineConfig":{"mode":"flash","content":{"type":"letter","count":2}}}""",
+            1, studentId, typeId, id: exerciseId));
+        await context.SaveChangesAsync();
+        var service = CreateExerciseSessionService(context);
+        var started = await service.StartAsync(studentId, new StartExerciseSessionRequest { ExerciseId = exerciseId });
+        var legacy = await context.ExerciseSessions.SingleAsync();
+        var data = System.Text.Json.Nodes.JsonNode.Parse(legacy.SessionDataJson)!.AsObject();
+        data.Remove("tachistoscope");
+        legacy.SetState(data.ToJsonString());
+        await context.SaveChangesAsync();
+        var replacement = await service.StartAsync(studentId, new StartExerciseSessionRequest { ExerciseId = exerciseId });
+        replacement.SessionId.Should().NotBe(started.SessionId);
+        (await context.ExerciseSessions.FindAsync(started.SessionId))!.Status.ToString().Should().Be("Abandoned");
+        replacement.TotalSteps.Should().Be(2);
     }
     [Theory]
     [InlineData("word")]

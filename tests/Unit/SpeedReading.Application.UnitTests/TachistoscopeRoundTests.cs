@@ -5,6 +5,15 @@ namespace SpeedReading.Application.UnitTests;
 
 public sealed class TachistoscopeRoundTests
 {
+    [Theory]
+    [InlineData("number", "2468")]
+    [InlineData("letter", "ABC")]
+    public void Custom_content_is_used_for_all_content_types(string type, string stimulus)
+    {
+        var state = new TachistoscopeState { ContentType = type, Source = "custom", Pool = [stimulus] };
+        state.SelectStimulus().Should().Be(stimulus);
+    }
+
     [Fact]
     public void Two_consecutive_correct_answers_increase_length_and_shorten_display()
     {
