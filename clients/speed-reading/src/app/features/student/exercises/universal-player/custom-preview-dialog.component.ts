@@ -13,9 +13,11 @@ import { applyCustomPreviewSettings } from './custom-preview-settings';
       <label for="preview-speed">Okuma hızı (kelime/dakika)</label>
       <input id="preview-speed" type="number" min="20" max="1500" step="1" [(ngModel)]="speedWpm">
       <small>20–1500 kelime/dakika</small>
+      @if (configuration['engineType'] !== 'text_fade') {
       <label for="preview-chunk">Kelime grubu</label>
       <input id="preview-chunk" type="number" min="1" max="10" step="1" [(ngModel)]="chunkSize">
       <small>Her adımda 1–10 kelime</small>
+      }
       @if (error) { <p role="alert">{{ error }}</p> }
     </mat-dialog-content>
     <mat-dialog-actions align="end">
@@ -36,7 +38,8 @@ export class CustomPreviewDialogComponent {
   reset(): void {
     const nested = (this.configuration['engineConfig'] ?? {}) as Record<string, unknown>;
     const pacer = (nested['pacer'] ?? {}) as Record<string, unknown>;
-    this.speedWpm = Number(nested['targetWpm'] ?? nested['wpm'] ?? this.configuration['targetWpm'] ?? this.configuration['wpm'] ?? pacer['speedWpm'] ?? 200);
+    const fading = (nested['fading'] ?? {}) as Record<string, unknown>;
+    this.speedWpm = Number(nested['targetWpm'] ?? nested['wpm'] ?? this.configuration['targetWpm'] ?? this.configuration['wpm'] ?? pacer['speedWpm'] ?? fading['speedWpm'] ?? 200);
     this.chunkSize = Number(nested['chunkSize'] ?? this.configuration['chunkSize'] ?? pacer['chunkSize'] ?? 1);
     this.error = '';
   }

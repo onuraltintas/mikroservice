@@ -10,6 +10,7 @@ import { ExerciseLevelDialogComponent } from './exercise-level-dialog/exercise-l
 import { forkJoin } from 'rxjs';
 import { AuthService } from '../../../core/services/auth.service';
 import { CustomPreviewDialogComponent } from './universal-player/custom-preview-dialog.component';
+import { CUSTOM_PREVIEW_ENGINES } from './universal-player/custom-preview-settings';
 
 interface ExerciseCard {
   id?: string;
@@ -178,7 +179,7 @@ export class ExercisesListComponent extends BaseComponent implements OnInit {
     let configuration: Record<string, unknown>;
     try { configuration = JSON.parse(exercise.configurationJson || '{}'); }
     catch { this.toaster.error('Bu egzersizin ayarları okunamadı.'); return; }
-    if (!configuration || !['word_highlight', 'subvocalization_reduction'].includes(String(configuration['engineType']))) {
+    if (!configuration || !CUSTOM_PREVIEW_ENGINES.some(type => type === configuration['engineType'])) {
       this.toaster.error('Bu egzersiz türü için özel ayarlar henüz desteklenmiyor. Kayıtlı ayarlarla başlatabilirsiniz.');
       return;
     }

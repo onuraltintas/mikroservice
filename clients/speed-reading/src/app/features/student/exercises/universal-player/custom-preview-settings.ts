@@ -3,6 +3,8 @@ export interface CustomPreviewContext {
   preview: boolean;
 }
 
+export const CUSTOM_PREVIEW_ENGINES = ['word_highlight', 'subvocalization_reduction', 'regression_reduction', 'text_fade'] as const;
+
 /** Applies temporary numeric controls only; catalogue content and identifiers remain untouched. */
 export function applyCustomPreviewSettings<T extends Record<string, unknown>>(
   configuration: T,
@@ -13,10 +15,11 @@ export function applyCustomPreviewSettings<T extends Record<string, unknown>>(
     return configuration;
   }
   const engine = configuration['engineType'];
-  if (engine !== 'word_highlight' && engine !== 'subvocalization_reduction') return configuration;
+  if (!CUSTOM_PREVIEW_ENGINES.some(type => type === engine)) return configuration;
   const validated: Record<string, number> = {};
   for (const [key, min, max] of [['speedWpm', 20, 1500], ['chunkSize', 1, 10]] as const) {
     if (values[key] === undefined) continue;
+    if (key === 'chunkSize' && engine === 'text_fade') continue;
     const value = values[key];
     if (typeof value !== 'number' || !Number.isInteger(value) || value < min || value > max) {
       throw new Error(`${key} için geçerli bir değer girin (${min}–${max}).`);
@@ -42,7 +45,8 @@ export function applyCustomPreviewSettings<T extends Record<string, unknown>>(
   } else if (validated['speedWpm'] !== undefined) {
     settings['targetWpm'] = validated['speedWpm'];
     settings['wpm'] = validated['speedWpm'];
-    settings['msPerWord'] = Math.round(60000 / validated['speedWpm']);
+    if (engine === 'subvocalization_reduction') settings['msPerWord'] = Math.round(60000 / validated['speedWpm']);
+    if (engine === 'regression_reduction') settings['wordDelayMs'] = 0;
   }
   return result;
 }
