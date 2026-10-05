@@ -1,6 +1,9 @@
 import { applyCustomPreviewSettings, getCustomPreviewControls } from './custom-preview-settings';
 import { SubvocalizationReductionEngine } from './engines/subvocalization-reduction.engine';
 import { VocabularyBuilderEngine } from './engines/vocabulary-builder.engine';
+import { FocusEngine } from './engines/focus.engine';
+import { MotionPathEngine } from './engines/motion-path.engine';
+import { TextStreamEngine } from './engines/text-stream.engine';
 import { CustomPreviewDialogComponent } from './custom-preview-dialog.component';
 import { TestBed } from '@angular/core/testing';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
@@ -160,5 +163,19 @@ describe('Custom preview settings safety', () => {
     const engine = new VocabularyBuilderEngine();
     engine.initialize({ previewOnly: true, sessionData: { previewOnly: false, serverAuthoritative: true } } as any, {} as any);
     expect((engine as any).serverAuthoritative).toBeFalse();
+  });
+  it('initializes actual motors with the selected effective preview controls', () => {
+    const focusConfig = applyCustomPreviewSettings({ engineType: 'focus', engineConfig: { SessionData: { SpeedMs: 1500, PositionSequence: [1, 2, 1] } } }, { speedMs: 1000 }, context);
+    const focus = new FocusEngine();
+    focus.initialize({ ...focusConfig, ...focusConfig.engineConfig, previewOnly: true } as any, {} as any);
+    expect(focus.config.SpeedMs).toBe(1000);
+    const motionConfig = applyCustomPreviewSettings({ engineType: 'motion_path', engineConfig: { mode: 'fixation', Timing: { totalDurationSeconds: 60, holdMs: 2000 } } }, { holdMs: 1000 }, context);
+    const motion = new MotionPathEngine();
+    motion.initialize({ ...motionConfig, ...motionConfig.engineConfig } as any, {} as any);
+    expect(motion.getFixationDuration()).toBe(1000);
+    const streamConfig = applyCustomPreviewSettings({ engineType: 'text_stream', engineConfig: { stimuli: ['A'], DisplayDurationMs: 500 } }, { displayDurationMs: 600, intervalMs: 0 }, context);
+    const stream = new TextStreamEngine();
+    stream.initialize({ ...streamConfig, ...streamConfig.engineConfig } as any, {} as any);
+    expect(stream.getCurrentDuration()).toBe(600);
   });
 });
