@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
-import { applyCustomPreviewSettings } from './custom-preview-settings';
+import { applyCustomPreviewSettings, getCustomPreviewControls, PreviewControl } from './custom-preview-settings';
 
 @Component({
   standalone: true,
@@ -10,13 +10,10 @@ import { applyCustomPreviewSettings } from './custom-preview-settings';
     <h2 mat-dialog-title>Özel ayarlarla dene</h2>
     <mat-dialog-content>
       <p>Bu ayarlar yalnız bu önizlemeye uygulanır. Kayıtlı egzersiz ve ilerlemeniz değişmez.</p>
-      <label for="preview-speed">Okuma hızı (kelime/dakika)</label>
-      <input id="preview-speed" type="number" min="20" max="1500" step="1" [(ngModel)]="speedWpm">
-      <small>20–1500 kelime/dakika</small>
-      @if (configuration['engineType'] !== 'text_fade') {
-      <label for="preview-chunk">Kelime grubu</label>
-      <input id="preview-chunk" type="number" min="1" max="10" step="1" [(ngModel)]="chunkSize">
-      <small>Her adımda 1–10 kelime</small>
+      @for (control of controls; track control.key) {
+      <label [for]="'preview-' + control.key">{{ control.label }}</label>
+      <input [id]="'preview-' + control.key" type="number" [min]="control.min" [max]="control.max" step="1" [(ngModel)]="values[control.key]">
+      <small>{{ control.min }}–{{ control.max }}</small>
       }
       @if (error) { <p role="alert">{{ error }}</p> }
     </mat-dialog-content>
@@ -31,21 +28,22 @@ import { applyCustomPreviewSettings } from './custom-preview-settings';
 export class CustomPreviewDialogComponent {
   readonly configuration = inject<Record<string, unknown>>(MAT_DIALOG_DATA);
   private readonly dialog = inject(MatDialogRef<CustomPreviewDialogComponent>);
-  speedWpm = 200;
-  chunkSize = 1;
+  controls: PreviewControl[] = [];
+  values: Record<string, number> = {};
+  get speedWpm(): number { return this.values['speedWpm']; }
+  set speedWpm(value: number) { this.values['speedWpm'] = value; }
+  get chunkSize(): number { return this.values['chunkSize']; }
+  set chunkSize(value: number) { this.values['chunkSize'] = value; }
   error = '';
   constructor() { this.reset(); }
   reset(): void {
-    const nested = (this.configuration['engineConfig'] ?? {}) as Record<string, unknown>;
-    const pacer = (nested['pacer'] ?? {}) as Record<string, unknown>;
-    const fading = (nested['fading'] ?? {}) as Record<string, unknown>;
-    this.speedWpm = Number(nested['targetWpm'] ?? nested['wpm'] ?? this.configuration['targetWpm'] ?? this.configuration['wpm'] ?? pacer['speedWpm'] ?? fading['speedWpm'] ?? 200);
-    this.chunkSize = Number(nested['chunkSize'] ?? this.configuration['chunkSize'] ?? pacer['chunkSize'] ?? 1);
+    this.controls = getCustomPreviewControls(this.configuration);
+    this.values = Object.fromEntries(this.controls.map(control => [control.key, control.value]));
     this.error = '';
   }
   submit(): void {
     try {
-      const values = { speedWpm: this.speedWpm, chunkSize: this.chunkSize };
+      const values = { ...this.values };
       applyCustomPreviewSettings(this.configuration, values, { roles: ['Teacher'], preview: true });
       this.dialog.close(values);
     } catch (error) { this.error = error instanceof Error ? error.message : 'Ayarları kontrol edin.'; }

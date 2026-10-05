@@ -1,9 +1,49 @@
+import { caseInsensitiveField, mergeCaseInsensitiveRecords, recordOrEmpty } from './engines/reading-pacer-safety';
+
 export interface CustomPreviewContext {
   roles: readonly string[];
   preview: boolean;
 }
 
-export const CUSTOM_PREVIEW_ENGINES = ['word_highlight', 'subvocalization_reduction', 'regression_reduction', 'text_fade'] as const;
+export const CUSTOM_PREVIEW_ENGINES = ['word_highlight', 'subvocalization_reduction', 'regression_reduction', 'text_fade', 'text_stream', 'motion_path', 'scan_find'] as const;
+
+export interface PreviewControl {
+  key: string;
+  label: string;
+  min: number;
+  max: number;
+  value: number;
+}
+
+export function getCustomPreviewControls(configuration: Record<string, unknown>): PreviewControl[] {
+  const settings = recordOrEmpty(configuration['engineConfig']);
+  const timing = mergeCaseInsensitiveRecords(configuration, settings, 'timing');
+  const movement = mergeCaseInsensitiveRecords(configuration, settings, 'movement');
+  const pacer = mergeCaseInsensitiveRecords(configuration, settings, 'pacer');
+  const fading = mergeCaseInsensitiveRecords(configuration, settings, 'fading');
+  const read = (name: string) => caseInsensitiveField(settings, name) ?? caseInsensitiveField(configuration, name);
+  const control = (key: string, label: string, min: number, max: number, value: unknown): PreviewControl =>
+    ({ key, label, min, max, value: Number(value) });
+  switch (configuration['engineType']) {
+    case 'text_stream': return [
+      control('displayDurationMs', 'Gösterim süresi (ms)', 50, 5000, read('displayDurationMs') ?? read('intervalMs') ?? timing['durationms'] ?? 500),
+      control('intervalMs', 'Gösterimler arası bekleme (ms)', 0, 10000, timing['intervalms'] ?? 0)
+    ];
+    case 'motion_path': {
+      const mode = String(read('mode') ?? 'fixation').toLowerCase();
+      if (mode === 'tracking') return [control('speedLevel', 'Hareket hızı seviyesi', 1, 5, movement['speedlevel'] ?? 1)];
+      if (mode === 'saccade') return [control('jumpIntervalMs', 'Hedef geçiş aralığı (ms)', 50, 10000, movement['jumpintervalms'] ?? 1000)];
+      return [control('holdMs', 'Odaklanma süresi (ms)', 50, 10000, timing['holdms'] ?? movement['fixationtimems'] ?? 2000)];
+    }
+    case 'scan_find': return [control('timeLimitSec', 'Süre sınırı (saniye)', 1, 3600, read('timeLimitSeconds') ?? read('timeLimit') ?? timing['timelimitsec'] ?? 3600)];
+    default: {
+      if (!CUSTOM_PREVIEW_ENGINES.some(type => type === configuration['engineType'])) return [];
+      const controls = [control('speedWpm', 'Okuma hızı (kelime/dakika)', 20, 1500, read('targetWpm') ?? read('wpm') ?? pacer['speedwpm'] ?? fading['speedwpm'] ?? 200)];
+      if (configuration['engineType'] !== 'text_fade') controls.push(control('chunkSize', 'Kelime grubu', 1, 10, read('chunkSize') ?? pacer['chunksize'] ?? 1));
+      return controls;
+    }
+  }
+}
 
 /** Applies temporary numeric controls only; catalogue content and identifiers remain untouched. */
 export function applyCustomPreviewSettings<T extends Record<string, unknown>>(
@@ -17,12 +57,12 @@ export function applyCustomPreviewSettings<T extends Record<string, unknown>>(
   const engine = configuration['engineType'];
   if (!CUSTOM_PREVIEW_ENGINES.some(type => type === engine)) return configuration;
   const validated: Record<string, number> = {};
-  for (const [key, min, max] of [['speedWpm', 20, 1500], ['chunkSize', 1, 10]] as const) {
+  for (const { key, min, max, label } of getCustomPreviewControls(configuration)) {
     if (values[key] === undefined) continue;
     if (key === 'chunkSize' && engine === 'text_fade') continue;
     const value = values[key];
     if (typeof value !== 'number' || !Number.isInteger(value) || value < min || value > max) {
-      throw new Error(`${key} için geçerli bir değer girin (${min}–${max}).`);
+      throw new Error(`${label} için geçerli bir değer girin (${min}–${max}).`);
     }
     validated[key] = value;
   }
@@ -31,6 +71,25 @@ export function applyCustomPreviewSettings<T extends Record<string, unknown>>(
   const settings: Record<string, unknown> = nested && typeof nested === 'object' && !Array.isArray(nested)
     ? nested as Record<string, unknown> : {};
   (result as Record<string, unknown>)['engineConfig'] = settings;
+  const merge = (name: string, entries: Record<string, number>) => {
+    const original = settings[name] ?? configuration[name];
+    settings[name] = { ...(original && typeof original === 'object' && !Array.isArray(original) ? original as Record<string, unknown> : {}), ...entries };
+  };
+  if (engine === 'text_stream') {
+    if (validated['displayDurationMs'] !== undefined) settings['displayDurationMs'] = validated['displayDurationMs'];
+    if (validated['intervalMs'] !== undefined) merge('timing', { intervalMs: validated['intervalMs'] });
+    return result;
+  }
+  if (engine === 'motion_path') {
+    if (validated['holdMs'] !== undefined) merge('timing', { holdMs: validated['holdMs'] });
+    if (validated['speedLevel'] !== undefined) merge('movement', { speedLevel: validated['speedLevel'] });
+    if (validated['jumpIntervalMs'] !== undefined) merge('movement', { jumpIntervalMs: validated['jumpIntervalMs'] });
+    return result;
+  }
+  if (engine === 'scan_find') {
+    if (validated['timeLimitSec'] !== undefined) settings['timeLimitSeconds'] = validated['timeLimitSec'];
+    return result;
+  }
   if (validated['chunkSize'] !== undefined) settings['chunkSize'] = validated['chunkSize'];
   if (engine === 'word_highlight') {
     const existing = settings['pacer'];
