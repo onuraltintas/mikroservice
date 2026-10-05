@@ -19,4 +19,21 @@ describe('Custom preview catalogue navigation', () => {
     (ExercisesListComponent.prototype as any).openCustomPreview.call(context, { id: 'exercise' });
     expect(open).not.toHaveBeenCalled();
   });
+  it('does not navigate when customization is cancelled', () => {
+    const navigate = jasmine.createSpy('navigate');
+    const open = jasmine.createSpy('open').and.returnValue({ afterClosed: () => of(undefined) });
+    const context: any = { router: { navigate }, dialog: { open }, authService: { currentUserValue: { roles: ['Admin'] } }, toaster: { error: jasmine.createSpy('error') } };
+    (ExercisesListComponent.prototype as any).openCustomPreview.call(context,
+      { id: 'exercise', configurationJson: JSON.stringify({ engineType: 'word_highlight' }) });
+    expect(navigate).not.toHaveBeenCalled();
+  });
+  it('explains configurations without adjustable controls instead of opening an empty form', () => {
+    const open = jasmine.createSpy('open').and.returnValue({ afterClosed: () => of(undefined) });
+    const error = jasmine.createSpy('error');
+    const context: any = { dialog: { open }, authService: { currentUserValue: { roles: ['Teacher'] } }, toaster: { error } };
+    (ExercisesListComponent.prototype as any).openCustomPreview.call(context,
+      { id: 'exercise', configurationJson: JSON.stringify({ engineType: 'vocabulary_builder', engineConfig: { mode: 'learn' } }) });
+    expect(open).not.toHaveBeenCalled();
+    expect(error).toHaveBeenCalled();
+  });
 });
