@@ -78,6 +78,7 @@ export class VocabularyBuilderEngine implements BaseEngine {
     private correctAnswer = '';
     private currentQuizQuestionType: 'word' | 'definition' = 'word'; // 'word' means question is word, options are definitions
     private serverAuthoritative = false;
+    private previewOnly = false;
     private pendingQuizAnswer: { word: VocabularyWord; responseTime: number } | null = null;
 
     // Persistence (Local Spaced Repetition)
@@ -102,10 +103,11 @@ export class VocabularyBuilderEngine implements BaseEngine {
             ?? caseInsensitiveField(root, name);
         this.config = { ...root, ...nested, ...sessionData } as VocabularyConfig;
         this.serverAuthoritative = read('serverAuthoritative') === true;
+        this.previewOnly = root['previewOnly'] === true;
 
         // userId mapping (fallback to guest)
         this.userId = boundedText(read('userId'), 'guest', 100) || 'guest';
-        if (this.config['previewOnly'] !== true) this.loadProgress();
+        if (!this.previewOnly) this.loadProgress();
 
         // Parse words (handle PascalCase from backend)
         const configuredWords = read('words');
@@ -632,7 +634,7 @@ export class VocabularyBuilderEngine implements BaseEngine {
     }
 
     private saveProgress(): void {
-        if (this.config['previewOnly'] === true) return;
+        if (this.previewOnly) return;
         try {
             localStorage.setItem(`vocab_progress_${this.userId}`, JSON.stringify(this.userProgress));
         } catch (e) {
