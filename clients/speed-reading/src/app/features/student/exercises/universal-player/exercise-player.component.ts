@@ -758,10 +758,6 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     const state: any = this.isRecord(initialData) ? initialData : {};
     const merged = { ...config, ...state };
 
-    if (!this.isAssessmentMode) {
-      return merged;
-    }
-
     const content = this.readFirstString(
       state.content,
       state.Content?.Text,
@@ -786,7 +782,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
             : undefined;
 
     if (!content) {
-      return { ...merged, isAssessmentMode: true };
+      return { ...merged, isAssessmentMode: this.isAssessmentMode };
     }
 
     const wordCount = this.readPositiveNumber(
@@ -806,7 +802,15 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
 
     return {
       ...merged,
-      isAssessmentMode: true,
+      isAssessmentMode: this.isAssessmentMode,
+      engineConfig: {
+        ...(this.isRecord(config['engineConfig']) ? config['engineConfig'] : {}),
+        ...(this.isRecord(state.engineConfig) ? state.engineConfig : {}),
+        readingTextContent: content,
+        content: contentObject,
+        wordCount,
+        ...(questions ? { Questions: questions, questions } : {})
+      },
       readingTextContent: content,
       ReadingTextContent: content,
       readingTextTitle: title,

@@ -160,7 +160,7 @@ export class ReadingComprehensionEngine implements BaseEngine {
             : '';
         const invalidAssessmentText = rawText !== undefined
             && (typeof rawText !== 'string' || rawText.length > 100_000);
-        if ((!resolvedText || invalidAssessmentText) && assessmentMode) {
+        if ((!resolvedText || invalidAssessmentText) && assessmentMode && cfg.serverAuthoritative !== true) {
             throw new Error('Assessment reading text was not provided by the server.');
         }
         this.text = resolveReadingText(cfg, resolvedText || this.getRandomText());
@@ -173,7 +173,7 @@ export class ReadingComprehensionEngine implements BaseEngine {
         this.words = this.text.split(/\s+/).filter(w => w.length > 0);
 
         // Use wordCount from backend if available
-        const wordCount = boundedInteger(
+        const wordCount = cfg.serverAuthoritative === true ? this.words.length : boundedInteger(
             caseInsensitiveField(nested, 'wordCount')
                 ?? contentWordCount
                 ?? caseInsensitiveField(cfg, 'wordCount'),

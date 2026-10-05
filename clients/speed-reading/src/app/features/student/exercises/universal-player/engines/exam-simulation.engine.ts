@@ -127,7 +127,7 @@ export class ExamSimulationEngine implements BaseEngine {
         let extractedText = typeof dedicatedRawText === 'string'
             ? boundedText(dedicatedRawText, '', 100_000)
             : '';
-        if ((!extractedText || invalidAssessmentText) && assessmentMode) {
+        if ((!extractedText || invalidAssessmentText) && assessmentMode && cfg.serverAuthoritative !== true) {
             throw new Error('Assessment reading text was not provided by the server.');
         }
 
@@ -156,7 +156,7 @@ export class ExamSimulationEngine implements BaseEngine {
 
         this.words = this.text.split(/\s+/).filter(w => w.length > 0);
 
-        const wordCount = boundedInteger(
+        const wordCount = cfg.serverAuthoritative === true ? this.words.length : boundedInteger(
             caseInsensitiveField(nested, 'wordCount')
                 ?? contentWordCount
                 ?? caseInsensitiveField(cfg, 'wordCount'),

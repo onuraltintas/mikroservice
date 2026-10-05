@@ -7,15 +7,17 @@ export function boundedText(value: unknown, fallback: string, maximumLength = 10
   return typeof value === 'string' ? value.slice(0, maximumLength) : fallback;
 }
 
-export function resolveReadingText(config: Record<string, any>, fallback: string): string {
+export function resolveReadingText(config: Record<string, unknown>, fallback: string): string {
   const nested = recordOrEmpty(caseInsensitiveField(config, 'engineConfig'));
   const rootContent = caseInsensitiveField(config, 'content');
   const nestedContent = caseInsensitiveField(nested, 'content');
   const serverOwned = config['serverAuthoritative'] === true || config['isAssessmentMode'] === true;
-  const raw = typeof rootContent === 'string'
+  const snapshotText = typeof rootContent === 'string'
     ? rootContent
     : caseInsensitiveField(config, 'readingTextContent')
-      ?? caseInsensitiveField(recordOrEmpty(rootContent), 'text')
+      ?? caseInsensitiveField(recordOrEmpty(rootContent), 'text');
+  const raw = serverOwned ? snapshotText
+    : snapshotText
       ?? caseInsensitiveField(nested, 'readingTextContent')
       ?? (typeof nestedContent === 'string' ? nestedContent : caseInsensitiveField(recordOrEmpty(nestedContent), 'text'))
       ?? caseInsensitiveField(config, 'text');
