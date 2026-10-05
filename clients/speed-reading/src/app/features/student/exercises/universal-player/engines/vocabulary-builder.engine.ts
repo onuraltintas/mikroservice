@@ -105,7 +105,7 @@ export class VocabularyBuilderEngine implements BaseEngine {
 
         // userId mapping (fallback to guest)
         this.userId = boundedText(read('userId'), 'guest', 100) || 'guest';
-        this.loadProgress();
+        if (this.config['previewOnly'] !== true) this.loadProgress();
 
         // Parse words (handle PascalCase from backend)
         const configuredWords = read('words');
@@ -632,6 +632,7 @@ export class VocabularyBuilderEngine implements BaseEngine {
     }
 
     private saveProgress(): void {
+        if (this.config['previewOnly'] === true) return;
         try {
             localStorage.setItem(`vocab_progress_${this.userId}`, JSON.stringify(this.userProgress));
         } catch (e) {

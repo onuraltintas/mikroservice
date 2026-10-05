@@ -1295,6 +1295,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
           || this.backendSessionConfig?.Words
           || this.parsedConfig?.engineConfig?.['words'],
         serverAuthoritative: !!this.sessionId && this.sessionId !== 'preview-mode',
+        previewOnly: this.sessionId === 'preview-mode',
         getRenderBounds: () => {
           const element = this.visualExpansionArea?.nativeElement;
           return element
