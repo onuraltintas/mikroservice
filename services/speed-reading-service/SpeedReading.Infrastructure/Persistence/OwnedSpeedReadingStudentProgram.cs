@@ -201,7 +201,12 @@ internal sealed class OwnedSpeedReadingStudentProgram(OwnedSpeedReadingDbContext
             on template.TargetAgeGroupConfigurationId equals ageGroup.Id into ageGroups
         from ageGroup in ageGroups.DefaultIfEmpty()
         where progress.UserId == userId
-        select new StudentProgramRow(progress, template, ageGroup == null ? "Bilinmiyor" : ageGroup.DisplayName);
+        select new StudentProgramRow
+        {
+            Progress = progress,
+            Template = template,
+            AgeGroupName = ageGroup == null ? "Bilinmiyor" : ageGroup.DisplayName
+        };
 
     private static StudentProgramInfo ToInfo(StudentProgramRow row)
     {
@@ -238,8 +243,10 @@ internal sealed class OwnedSpeedReadingStudentProgram(OwnedSpeedReadingDbContext
             row.Progress.CompletedDate);
     }
 
-    private sealed record StudentProgramRow(
-        StudentProgramProgress Progress,
-        ProgramTemplate Template,
-        string AgeGroupName);
+    private sealed record StudentProgramRow
+    {
+        public required StudentProgramProgress Progress { get; init; }
+        public required ProgramTemplate Template { get; init; }
+        public required string AgeGroupName { get; init; }
+    }
 }
