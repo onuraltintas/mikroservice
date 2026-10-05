@@ -1,6 +1,30 @@
 import { ExercisePlayerComponent } from './exercise-player.component';
 
 describe('reading result semantics', () => {
+  it('keeps question-phase completion separate from display pace', () => {
+    const player = Object.create(ExercisePlayerComponent.prototype) as any;
+    player.engine = { engineType: 'word_highlight', getWpm: () => 200 };
+    player.engineState = { timeElapsed: 3000 };
+    player.readingWpm = 999;
+    player.comprehensionQuestions = [{}];
+    player.questionAnswers = [{ isCorrect: true, timeSpent: 1000, targetTime: 2000, selectedAnswer: 'A' }];
+    player.stopQuestionTimer = () => undefined;
+    player.getTargetWpm = () => 200;
+    player.saveResult = jasmine.createSpy('saveResult');
+    player.cdr = { detectChanges: () => undefined };
+    player.finishQuestionPhase();
+    expect(player.result.details.wpm).toBeNull();
+    expect(player.result.details.displayPaceWpm).toBe(200);
+    expect(player.result.details.comprehensionScore).toBe(100);
+  });
+
+  it('identifies paced reading for the question header', () => {
+    const player = Object.create(ExercisePlayerComponent.prototype) as any;
+    player.engine = { engineType: 'word_highlight' };
+    expect(player.isPacedReadingEngine()).toBeTrue();
+    player.engine = { engineType: 'reading_comprehension' };
+    expect(player.isPacedReadingEngine()).toBeFalse();
+  });
   it('explains unmeasured comprehension without claiming letter-answer validation', () => {
     const player = Object.create(ExercisePlayerComponent.prototype) as any;
     player.result = { details: { displayPaceWpm: 200, comprehensionScore: null } };
