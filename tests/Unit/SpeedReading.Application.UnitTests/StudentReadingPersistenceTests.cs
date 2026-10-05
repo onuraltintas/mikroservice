@@ -333,6 +333,17 @@ public sealed class StudentReadingPersistenceTests
         session.TimeLimitSeconds.Should().Be(90);
         started.InitialData.GetProperty("gridSize").GetInt32().Should().Be(7);
         started.InitialData.GetProperty("grid").GetArrayLength().Should().Be(7);
+
+        var state = System.Text.Json.Nodes.JsonNode.Parse(session.SessionDataJson)!;
+        state["timingStartedAt"] = DateTime.UtcNow.AddMinutes(-2);
+        session.SetState(state.ToJsonString());
+        await context.SaveChangesAsync();
+        var complete = () => service.CompleteAsync(studentId, started.SessionId,
+            new CompleteExerciseSessionRequest(), CancellationToken.None);
+        await complete.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("This exercise session has timed out.");
+        session.Status.Should().Be(SpeedReading.Domain.Sessions.ExerciseSessionStatus.Timeout);
+        (await context.ExerciseSessionResults.CountAsync()).Should().Be(0);
     }
 
     [Fact]

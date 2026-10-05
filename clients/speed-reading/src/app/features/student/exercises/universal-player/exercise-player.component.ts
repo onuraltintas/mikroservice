@@ -13,6 +13,7 @@ import { firstValueFrom, Subject, takeUntil } from 'rxjs';
 import { AuthService } from '../../../../core/services/auth.service';
 import { canUseStaffTraining } from '../../../../core/guards/staff-training.guard';
 import { applyCustomPreviewSettings } from './custom-preview-settings';
+import { resolveSchulteSettings } from './schulte-settings';
 
 import { EngineFactory, EngineType } from './engines/engine-factory';
 import { shouldForwardExerciseAction } from './exercise-action-policy';
@@ -286,6 +287,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   // Grid interaction specific
   clickedCells = new Set<number>();
   correctCells = new Set<number>();
+  schulteSettings = resolveSchulteSettings({}, {});
   wrongCells = new Set<number>();
 
   sessionId: string | null = null;
@@ -1222,6 +1224,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       };
 
       // Engine config'i hazırla - backend session data ile birleştir
+      this.schulteSettings = resolveSchulteSettings(this.parsedConfig, this.backendSessionConfig);
       const engineConfig = {
         ...(this.parsedConfig || {}),
         ...(this.parsedConfig?.engineConfig || {}),
@@ -1237,6 +1240,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
           ? this.backendSessionConfig?.['grid']
           : undefined,
         sequenceType: 'numeric',
+        ...(engineType === 'grid_interaction' ? this.schulteSettings : {}),
         exerciseTypeName: this.exercise?.exerciseTypeName,
         mode: engineType === 'motion_path'
           ? (this.parsedConfig?.engineConfig?.['mode'] || this.parsedConfig?.['mode'] || 'fixation')
@@ -2099,6 +2103,9 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   }
 
   getRemainingTimeMs(): number {
+    if (this.engine?.engineType === 'grid_interaction') {
+      return Math.max(0, (this.schulteSettings.timeLimit ?? 0) * 1000 - this.engineState.timeElapsed);
+    }
     if (this.engineState.remainingSeconds !== undefined) {
       return this.engineState.remainingSeconds * 1000;
     }
@@ -2440,6 +2447,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   }
 
   hasTimeLimit(): boolean {
+    if (this.engine?.engineType === 'grid_interaction') return this.schulteSettings.timeLimit !== undefined;
     if (this.engineState.remainingSeconds !== undefined) {
       return true;
     }

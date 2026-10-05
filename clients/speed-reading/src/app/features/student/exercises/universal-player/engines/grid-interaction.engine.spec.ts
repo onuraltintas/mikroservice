@@ -61,6 +61,47 @@ describe('GridInteractionEngine', () => {
     const { engine } = create({ gridSize: 3, serverGrid: Array(9).fill(1) });
     expect([...engine.getGrid()].sort((a, b) => Number(a) - Number(b))).toEqual([1,2,3,4,5,6,7,8,9]);
   });
+
+  it('keeps wrong clicks from advancing and resets completed progress', () => {
+    const { engine } = create({ gridSize: 3 });
+    engine.start();
+    const index = engine.getGrid().indexOf(2);
+    engine.handleInput({ cellIndex: index, value: 2 });
+    expect(engine.state.errors).toBe(1);
+    expect(engine.state.currentStep).toBe(0);
+    engine.pause();
+    engine.pause();
+    engine.handleInput({ cellIndex: engine.getGrid().indexOf(1), value: 1 });
+    expect(engine.state.currentStep).toBe(0);
+    engine.resume();
+    engine.resume();
+    engine.reset();
+    expect(engine.state.errors).toBe(0);
+    expect(engine.getHeatmapData()).toEqual(Array(9).fill(0));
+    expect(engine.getGridSize()).toBe(3);
+    expect(engine.getBenchmarks().intermediate).toBe(10000);
+    engine.destroy();
+  });
+
+  for (const elapsed of [5000, 7000, 10000, 15000, 16000]) {
+    it(`reports complete measurements after ${elapsed}ms`, () => {
+      jasmine.clock().install();
+      jasmine.clock().mockDate(new Date(0));
+      try {
+        const { engine, complete } = create({ gridSize: 3 });
+        engine.start();
+        jasmine.clock().tick(elapsed);
+        for (let value = 1; value <= 9; value++) {
+          engine.handleInput({ cellIndex: engine.getGrid().indexOf(value), value });
+        }
+        expect(complete.calls.mostRecent().args[0].totalTime).toBe(elapsed);
+        expect(complete.calls.mostRecent().args[0].completedSteps).toBe(9);
+        engine.handleInput({ cellIndex: 0, value: engine.getGrid()[0] });
+        expect(complete).toHaveBeenCalledTimes(1);
+        engine.destroy();
+      } finally { jasmine.clock().uninstall(); }
+    });
+  }
   it('uses the server layout when the template also has grid dimensions', () => {
     const engine = new GridInteractionEngine();
     const layout = [

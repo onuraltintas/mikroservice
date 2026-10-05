@@ -1048,6 +1048,15 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         };
         var engineConfig = ReadObject(config, "engineConfig");
         var effectiveConfig = engineConfig.ValueKind == JsonValueKind.Object ? engineConfig : config;
+        if (IsGridExercise(exerciseTypeName, config))
+        {
+            state.TimeLimitSeconds = ReadPositiveInt(effectiveConfig, "timeLimitSeconds")
+                ?? ReadPositiveInt(effectiveConfig, "timeLimit")
+                ?? ReadPositiveInt(ReadObject(effectiveConfig, "rules"), "timeLimit")
+                ?? ReadPositiveInt(ReadObject(effectiveConfig, "timing"), "timeLimitSec")
+                ?? ReadPositiveInt(config, "timeLimitSeconds")
+                ?? ReadPositiveInt(config, "timeLimit");
+        }
         if (IsVocabularyExercise(exerciseTypeName, effectiveConfig))
         {
             state.VocabularyMode = (ReadString(effectiveConfig, "mode") ?? "learning").Trim().ToLowerInvariant();
