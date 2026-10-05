@@ -16,6 +16,28 @@ const callbacks: EngineCallbacks = {
 };
 
 describe('reading pacer runtime safety', () => {
+  it('does not truncate a server RSVP text to 500 words', () => {
+    const engine = new TextStreamEngine();
+    engine.initialize({ mode: 'rsvp', words: Array(501).fill('word') } as any, callbacks);
+    expect(engine.state.totalSteps).toBe(501);
+  });
+
+  it('applies the selected grouping to legacy chunks', () => {
+    const engine = new WordHighlightEngine();
+    engine.initialize({ chunks: ['bir iki uc dort'], pacer: { chunkSize: 1 } } as any, callbacks);
+    expect(engine.getChunks().map(chunk => chunk.words.length)).toEqual([1, 1, 1, 1]);
+  });
+
+  it('captures exact active elapsed time on highlight completion', fakeAsync(() => {
+    let result: any;
+    const engine = new WordHighlightEngine();
+    engine.initialize({ content: { text: 'bir iki uc' }, pacer: { speedWpm: 1500 } } as any,
+      { ...callbacks, onComplete: value => result = value });
+    engine.start();
+    tick(120);
+    expect(result.totalTime).toBe(120);
+    engine.destroy();
+  }));
   it('reads text stream data from nested engine configuration', () => {
     const engine = new TextStreamEngine();
 
