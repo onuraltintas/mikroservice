@@ -317,22 +317,23 @@ export class ReadingComprehensionEngine implements BaseEngine {
      * Called when user clicks "Okudum" button
      */
     completeReading(force = false): void {
-        if (this.state.isCompleted || !this.state.isRunning) return;
+        if (this.state.isCompleted || !this.state.isRunning || this.state.isPaused) return;
+        this.state.timeElapsed = Date.now() - this.startTime;
         // Check minimum reading time (optional)
         const minTime = this.config.timing?.minReadingTimeMs || 0;
         if (!force && this.state.timeElapsed < minTime) return;
 
         this.readingState.phase = 'completed';
-        this.complete();
+        this.complete(force);
     }
 
-    private complete(): void {
+    private complete(timedOut = false): void {
         if (this.state.isCompleted) return;
         clearInterval(this.timerInterval);
 
         this.state.isCompleted = true;
         this.state.isRunning = false;
-        this.state.currentStep = this.configuredTotalSteps;
+        this.state.currentStep = timedOut ? 0 : this.configuredTotalSteps;
         this.state.score = 0;
         this.state.accuracy = 0;
 
@@ -348,10 +349,11 @@ export class ReadingComprehensionEngine implements BaseEngine {
             accuracy: 0,
             totalTime: this.state.timeElapsed,
             totalSteps: this.configuredTotalSteps,
-            completedSteps: this.configuredTotalSteps,
+            completedSteps: this.state.currentStep,
             errors: 0,
             details: {
-                wpm: wpm,
+                wpm: timedOut ? null : wpm,
+                timedOut,
                 wordCount: this.words.length,
                 readingTimeMs: this.state.timeElapsed,
                 scrolledToEnd: this.readingState.hasScrolledToEnd

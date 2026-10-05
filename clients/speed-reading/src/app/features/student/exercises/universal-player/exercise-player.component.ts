@@ -2212,12 +2212,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
 
   getCurrentTextStreamWpm(): number {
     if (this.engine?.engineType !== 'text_stream') return 0;
-    // Cast to any to access specific method
-    const duration = (this.engine as any).getCurrentDuration?.();
-    if (duration > 0) {
-      return Math.round(60000 / duration);
-    }
-    return 0;
+    return (this.engine as TextStreamEngine).getDisplayPaceWpm();
   }
 
   // --- Regression Reduction Helpers ---
