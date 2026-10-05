@@ -1,6 +1,11 @@
 import { shouldForwardExerciseAction } from './exercise-action-policy';
 
 describe('exercise action forwarding policy', () => {
+  for (const type of ['regression_reduction', 'subvocalization_reduction']) {
+    it(`forwards ${type} reading completion before questions start`, () => {
+      expect(shouldForwardExerciseAction(type, undefined, 'finish_reading')).toBeTrue();
+    });
+  }
   it('forwards only validated fixation actions from motion path', () => {
     expect(shouldForwardExerciseAction('motion_path', 'fixation', 'fixation_present')).toBeTrue();
     expect(shouldForwardExerciseAction('motion_path', 'fixation', 'fixation_answer')).toBeTrue();
