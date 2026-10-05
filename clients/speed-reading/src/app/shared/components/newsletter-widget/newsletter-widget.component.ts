@@ -38,7 +38,6 @@ export class NewsletterWidgetComponent {
     isMinimized = false;
     privacyPolicyVersion: number | null = null;
     newsletterConsentVersion: number | null = null;
-    newsletterConsentText = '';
     privacyLoading = true;
 
     constructor() {
@@ -55,7 +54,6 @@ export class NewsletterWidgetComponent {
                 if (privacy.isPublished && privacy.content.trim() && privacy.version > 0) this.privacyPolicyVersion = privacy.version;
                 if (consent.isPublished && consent.content.trim() && consent.version > 0) {
                     this.newsletterConsentVersion = consent.version;
-                    this.newsletterConsentText = consent.content.trim();
                 }
                 this.privacyLoading = false;
             },
