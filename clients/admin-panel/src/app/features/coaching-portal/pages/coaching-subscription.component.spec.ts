@@ -5,6 +5,16 @@ import { CoachingManagementService, CoachingSubscriptionPlan } from '../../../co
 import { CoachingSubscriptionComponent } from './coaching-subscription.component';
 
 describe('CoachingSubscriptionComponent', () => {
+  it('does not submit a payment without an explicit adult payer declaration', () => {
+    const fixture = setup();
+    fixture.detectChanges();
+    fixture.componentInstance.selectedPlanId.set('individual-plan');
+    fixture.componentInstance.paymentReference = 'EFT-123';
+    fixture.componentInstance.submitRequest();
+    const service = TestBed.inject(CoachingManagementService);
+    expect(service.createMyCoachingBankTransferRequest).not.toHaveBeenCalled();
+    expect(fixture.componentInstance.error()).toContain('18 yaş');
+  });
   it('shows individual Coaching plans and excludes institution plans', () => {
     const fixture = setup();
     fixture.detectChanges();
