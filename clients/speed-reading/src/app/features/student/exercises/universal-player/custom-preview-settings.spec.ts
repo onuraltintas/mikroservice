@@ -1,4 +1,5 @@
-import { applyCustomPreviewSettings } from './custom-preview-settings';
+import { applyCustomPreviewSettings, getCustomPreviewControls } from './custom-preview-settings';
+import { SubvocalizationReductionEngine } from './engines/subvocalization-reduction.engine';
 import { CustomPreviewDialogComponent } from './custom-preview-dialog.component';
 import { TestBed } from '@angular/core/testing';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
@@ -81,5 +82,20 @@ describe('Custom preview settings safety', () => {
     expect(fixture.componentInstance.speedWpm).toBe(320);
     fixture.componentInstance.submit();
     expect(close).toHaveBeenCalledWith({ speedWpm: 320, chunkSize: 3 });
+  });
+  it('resolves legacy root and priority difficulty defaults', () => {
+    expect(getCustomPreviewControls({ engineType: 'text_fade', fading: { speedWpm: 450 } })[0].value).toBe(450);
+    expect(getCustomPreviewControls({ engineType: 'word_highlight', pacer: { speedWpm: 350 } })[0].value).toBe(350);
+    expect(getCustomPreviewControls({ engineType: 'subvocalization_reduction', engineConfig: { targetWpm: 200, difficultySettings: { targetWpm: 500 } } })[0].value).toBe(500);
+  });
+  it('applies custom values to the actual motor despite priority difficulty settings', () => {
+    const config = { engineType: 'subvocalization_reduction', engineConfig: { difficultySettings: { targetWpm: 100, chunkSize: 1, msPerWord: 600 } } };
+    const result = applyCustomPreviewSettings(config, { speedWpm: 600, chunkSize: 4 }, context);
+    const engine = new SubvocalizationReductionEngine();
+    engine.initialize(result as any, {} as any);
+    expect((engine as any).config.wpm).toBe(600);
+    expect((engine as any).config.chunkSize).toBe(4);
+    expect((engine as any).config.msPerWord).toBe(100);
+    expect(config.engineConfig.difficultySettings.targetWpm).toBe(100);
   });
 });
