@@ -9,7 +9,7 @@ import { Exercise } from '../../../core/models/exercise.model';
 import { ExerciseLevelDialogComponent } from './exercise-level-dialog/exercise-level-dialog.component';
 import { forkJoin } from 'rxjs';
 import { AuthService } from '../../../core/services/auth.service';
-import { CustomPreviewDialogComponent } from './universal-player/custom-preview-dialog.component';
+import { CustomPreviewDialogComponent, CustomPreviewLevel } from './universal-player/custom-preview-dialog.component';
 import { getCustomPreviewControls } from './universal-player/custom-preview-settings';
 
 interface ExerciseCard {
@@ -176,18 +176,21 @@ export class ExercisesListComponent extends BaseComponent implements OnInit {
   openCustomPreview(exercise: Exercise, levels?: Exercise[]): void {
     const roles = this.authService.currentUserValue?.roles ?? [];
     if (roles.includes('Student') || !roles.some(role => ['Admin', 'SystemAdmin', 'Teacher'].includes(role))) return;
-    let configuration: Record<string, unknown>;
-    try { configuration = JSON.parse(exercise.configurationJson || '{}'); }
+    let parsedLevels: CustomPreviewLevel[];
+    try {
+      parsedLevels = (levels ?? [exercise]).map(level => {
+        const configuration: unknown = JSON.parse(level.configurationJson || '{}');
+        if (!configuration || typeof configuration !== 'object' || Array.isArray(configuration)) throw new Error('Invalid configuration');
+        return { id: level.id, label: `Seviye ${level.difficultyLevel}`, configuration: configuration as Record<string, unknown> };
+      });
+    }
     catch { this.toaster.error('Bu egzersizin ayarları okunamadı.'); return; }
-    if (!configuration || !getCustomPreviewControls(configuration).length) {
+    if (!parsedLevels.some(level => getCustomPreviewControls(level.configuration).length)) {
       this.toaster.error('Bu egzersiz türü için özel ayarlar henüz desteklenmiyor. Kayıtlı ayarlarla başlatabilirsiniz.');
       return;
     }
-    let previewLevels;
-    try {
-      previewLevels = levels?.map(level => ({ id: level.id, label: `Seviye ${level.difficultyLevel}`,
-        configuration: JSON.parse(level.configurationJson || '{}') as Record<string, unknown> }));
-    } catch { this.toaster.error('Bu egzersizin seviye ayarları okunamadı.'); return; }
+    const configuration = parsedLevels[0].configuration;
+    const previewLevels = levels ? parsedLevels : undefined;
     this.dialog.open(CustomPreviewDialogComponent, { width: '480px', maxWidth: '95vw', data: previewLevels ? { ...configuration, previewLevels } : configuration })
       .afterClosed().subscribe(result => {
         if (!result) return;
