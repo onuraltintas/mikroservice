@@ -5,6 +5,29 @@ import { Router, provideRouter } from '@angular/router';
 import { TrainingProgramsComponent } from './training-programs.component';
 
 describe('Staff training programs', () => {
+  it('stacks the title and description despite shared header flex styles', () => {
+    TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])] });
+    const fixture = TestBed.createComponent(TrainingProgramsComponent);
+    fixture.detectChanges();
+    const http = TestBed.inject(HttpTestingController);
+    http.expectOne(request => request.url.endsWith('/staff-training/programs')).flush([]);
+    http.expectOne(request => request.url.endsWith('/student-program/my-programs')).flush([]);
+    const sharedStyle = document.createElement('style');
+    sharedStyle.textContent = '.page-header { display:flex; align-items:center; justify-content:space-between; }';
+    document.head.appendChild(sharedStyle);
+    document.body.appendChild(fixture.nativeElement);
+    try {
+      const header = fixture.nativeElement.querySelector('header') as HTMLElement;
+      expect(header.classList.contains('page-header')).toBeFalse();
+      expect(getComputedStyle(header).display).toBe('flex');
+      expect(getComputedStyle(header).flexDirection).toBe('column');
+      expect(getComputedStyle(header).alignItems).toBe('flex-start');
+    } finally {
+      sharedStyle.remove();
+      fixture.nativeElement.remove();
+    }
+    http.verify();
+  });
   it('explains locked enrollment and clearly distinguishes the active program', () => {
     TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])] });
     const fixture = TestBed.createComponent(TrainingProgramsComponent);
