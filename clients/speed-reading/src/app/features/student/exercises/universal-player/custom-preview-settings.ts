@@ -5,7 +5,7 @@ export interface CustomPreviewContext {
   preview: boolean;
 }
 
-export const CUSTOM_PREVIEW_ENGINES = ['word_highlight', 'subvocalization_reduction', 'regression_reduction', 'text_fade', 'text_stream', 'motion_path', 'scan_find', 'focus', 'vocabulary_builder', 'visual_expansion', 'reading_comprehension', 'free_reading', 'exam_simulation'] as const;
+export const CUSTOM_PREVIEW_ENGINES = ['word_highlight', 'subvocalization_reduction', 'regression_reduction', 'text_fade', 'text_stream', 'motion_path', 'scan_find', 'focus', 'vocabulary_builder', 'visual_expansion', 'reading_comprehension', 'free_reading', 'exam_simulation', 'grid_interaction'] as const;
 
 export interface PreviewControl {
   key: string;
@@ -40,6 +40,8 @@ export function getCustomPreviewControls(configuration: Record<string, unknown>)
   const control = (key: string, label: string, min: number, max: number, value: unknown): PreviewControl =>
     ({ key, label, min, max, value: Number(value) });
   switch (configuration['engineType']) {
+    case 'grid_interaction': return [control('gridSize', 'Tablo boyutu (satır ve sütun)', 3, 7,
+      configuration['gridSize'] || recordOrEmpty(settings['grid'])['rows'] || 5)];
     case 'reading_comprehension':
     case 'free_reading':
     case 'exam_simulation': {
@@ -125,6 +127,13 @@ export function applyCustomPreviewSettings<T extends Record<string, unknown>>(
       }
     }
   };
+  if (engine === 'grid_interaction') {
+    if (validated['gridSize'] !== undefined) {
+      (result as Record<string, unknown>)['gridSize'] = validated['gridSize'];
+      settings['gridSize'] = validated['gridSize'];
+    }
+    return result;
+  }
   if (engine === 'focus' || engine === 'vocabulary_builder') {
     const key = engine === 'focus' ? 'SpeedMs' : 'timeLimitPerWord';
     const value = validated[engine === 'focus' ? 'speedMs' : key];
