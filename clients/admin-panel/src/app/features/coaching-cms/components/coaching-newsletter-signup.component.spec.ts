@@ -13,6 +13,16 @@ describe('CoachingNewsletterSignupComponent', () => {
     version: 1, createdAt: '2026-01-01T00:00:00Z'
   };
 
+  it('shows a compact consent link rather than embedding the full legal text', () => {
+    const { fixture } = setup(of(privacyPage));
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).not.toContain(privacyPage.content);
+    const link = fixture.nativeElement.querySelector('a[href="/legal/coaching-newsletter-consent"]');
+    expect(link.textContent).toBe('Bülten onay metni');
+    expect(link.target).toBe('_blank');
+    expect(fixture.componentInstance.consentGiven()).toBe(false);
+  });
+
   it('does not offer newsletter signup until the common privacy page is published', () => {
     const { fixture } = setup(throwError(() => ({ status: 404 })));
     fixture.detectChanges();
