@@ -21,6 +21,36 @@ namespace SpeedReading.Application.UnitTests;
 public sealed class StudentReadingPersistenceTests
 {
     [Fact]
+    public async Task Repeated_reading_finish_does_not_include_later_question_time()
+    {
+        await using var context = CreateContext();
+        var studentId = Guid.NewGuid();
+        var typeId = Guid.NewGuid();
+        var exerciseId = Guid.NewGuid();
+        var textId = Guid.NewGuid();
+        context.ExerciseTypes.Add(ExerciseType.Create(typeId, "SpeedReading", "Reading", "word_highlight"));
+        context.Exercises.Add(Exercise.Create("Reading", "word_highlight", "{}", 1, studentId, typeId, id: exerciseId));
+        context.ReadingTexts.Add(ReadingText.Create(textId, "Text", string.Join(" ", Enumerable.Repeat("word", 100)),
+            difficultyLevel: 1, exerciseId: exerciseId));
+        await context.SaveChangesAsync();
+        var service = CreateExerciseSessionService(context);
+        var started = await service.StartAsync(studentId, new StartExerciseSessionRequest { ExerciseId = exerciseId });
+        var session = await context.ExerciseSessions.SingleAsync();
+        var state = System.Text.Json.Nodes.JsonNode.Parse(session.SessionDataJson)!;
+        var finishedAt = DateTime.UtcNow.AddSeconds(-60);
+        state["readingStartTime"] = finishedAt.AddSeconds(-30);
+        state["readingEndTime"] = finishedAt;
+        session.SetState(state.ToJsonString());
+        await context.SaveChangesAsync();
+
+        var response = await service.ValidateActionAsync(studentId, started.SessionId,
+            new ExerciseActionRequest { Action = "finish_reading" });
+        response.CurrentWPM.Should().Be(200);
+        var result = await service.CompleteAsync(studentId, started.SessionId, new CompleteExerciseSessionRequest());
+        result.RawWPM.Should().Be(200);
+    }
+
+    [Fact]
     public async Task Tachistoscope_uses_owned_rounds_and_saves_verified_accuracy_without_wpm()
     {
         await using var context = CreateContext();
