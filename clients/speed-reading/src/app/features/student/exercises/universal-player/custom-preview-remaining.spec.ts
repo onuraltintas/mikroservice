@@ -1,6 +1,7 @@
 import { applyCustomPreviewSettings, getCustomPreviewControls } from './custom-preview-settings';
 import { GridInteractionEngine } from './engines/grid-interaction.engine';
 import { VisualizationEngine } from './engines/visualization.engine';
+import { AdaptiveFluencyEngine } from './engines/adaptive-fluency.engine';
 import { EngineCallbacks } from './engines/base-engine.interface';
 
 const context = { roles: ['Teacher'], preview: true };
@@ -67,5 +68,37 @@ describe('Remaining custom preview motors', () => {
     expect(engine.getCurrentScene()?.duration).toBe(5);
     expect(engine.getCurrentScene()?.steps).toEqual(['Bir', 'İki']);
     expect(() => applyCustomPreviewSettings(configuration, { stepDurationMs: 99 }, context)).toThrow();
+  });
+
+  it('keeps an adaptive preview target through local stages without altering stage or content', () => {
+    const configuration = { engineType: 'adaptive_fluency', engineConfig: {
+      sessionData: { adaptiveStage: 0, adaptiveTargetWpm: 200, content: 'Özgün metin', questions: [{ id: 'question' }] }
+    } };
+    expect(getCustomPreviewControls(configuration)[0]?.value).toBe(200);
+    const result = applyCustomPreviewSettings(configuration, { adaptiveTargetWpm: 400, adaptiveStage: 3, content: 'Değiştir' }, context);
+    const engine = new AdaptiveFluencyEngine();
+    engine.initialize({ ...result, ...result.engineConfig, previewOnly: true } as any, callbacks);
+    expect(engine.getTargetWpm()).toBe(400);
+    expect(engine.getStage()).toBe(0);
+    expect(engine.getText()).toBe('Özgün metin');
+    expect(engine.getQuestions()).toEqual([{ id: 'question' }]);
+    engine.applyStage({ stage: 1 });
+    expect(engine.getTargetWpm()).toBe(400);
+    engine.applyStage({ stage: 2 });
+    expect(engine.getTargetWpm()).toBe(400);
+    expect(configuration.engineConfig.sessionData.adaptiveTargetWpm).toBe(200);
+  });
+
+  it('does not retain a manual adaptive target in server-owned sessions and rejects invalid bounds', () => {
+    const configuration = { engineType: 'adaptive_fluency', engineConfig: { adaptiveTargetWpm: 200 } };
+    const engine = new AdaptiveFluencyEngine();
+    engine.initialize({ ...configuration, previewOnly: false } as any, callbacks);
+    engine.applyStage({ stage: 1, targetWpm: 300 });
+    expect(engine.getTargetWpm()).toBe(300);
+    engine.applyStage({ stage: 2 });
+    expect(engine.getTargetWpm()).toBeUndefined();
+    for (const adaptiveTargetWpm of [19, 1501, Infinity]) {
+      expect(() => applyCustomPreviewSettings(configuration, { adaptiveTargetWpm }, context)).toThrow();
+    }
   });
 });
