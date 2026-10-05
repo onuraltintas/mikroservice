@@ -23,6 +23,7 @@ export class AdaptiveFluencyEngine implements BaseEngine {
   private pausedAt = 0;
   private stage = 0;
   private targetWpm?: number;
+  private previewTargetWpm?: number;
   private purpose = 'Başlangıç düzeyinizi ölçün.';
 
   initialize(config: EngineConfig, callbacks: EngineCallbacks): void {
@@ -36,6 +37,7 @@ export class AdaptiveFluencyEngine implements BaseEngine {
     this.targetWpm = typeof configuredTarget === 'number' && Number.isFinite(configuredTarget)
       ? boundedInteger(configuredTarget, 200, 20, 1500)
       : undefined;
+    this.previewTargetWpm = root['previewOnly'] === true ? this.targetWpm : undefined;
     this.state = this.freshState();
   }
 
@@ -101,7 +103,7 @@ export class AdaptiveFluencyEngine implements BaseEngine {
     this.clearTimer();
     this.stage = boundedInteger(feedback.stage, 0, 0, 3);
     this.targetWpm = feedback.targetWpm === undefined
-      ? undefined
+      ? this.previewTargetWpm
       : boundedInteger(feedback.targetWpm, 200, 20, 1500);
     this.purpose = feedback.purpose || this.purpose;
     this.state = this.freshState();

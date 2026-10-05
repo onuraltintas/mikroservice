@@ -5,7 +5,7 @@ export interface CustomPreviewContext {
   preview: boolean;
 }
 
-export const CUSTOM_PREVIEW_ENGINES = ['word_highlight', 'subvocalization_reduction', 'regression_reduction', 'text_fade', 'text_stream', 'motion_path', 'scan_find', 'focus', 'vocabulary_builder', 'visual_expansion', 'reading_comprehension', 'free_reading', 'exam_simulation', 'grid_interaction', 'visualization'] as const;
+export const CUSTOM_PREVIEW_ENGINES = ['word_highlight', 'subvocalization_reduction', 'regression_reduction', 'text_fade', 'text_stream', 'motion_path', 'scan_find', 'focus', 'vocabulary_builder', 'visual_expansion', 'reading_comprehension', 'free_reading', 'exam_simulation', 'grid_interaction', 'visualization', 'adaptive_fluency'] as const;
 
 export interface PreviewControl {
   key: string;
@@ -31,7 +31,7 @@ export function getCustomPreviewControls(configuration: Record<string, unknown>)
   const movement = mergeCaseInsensitiveRecords(configuration, settings, 'movement');
   const pacer = mergeCaseInsensitiveRecords(configuration, settings, 'pacer');
   const fading = mergeCaseInsensitiveRecords(configuration, settings, 'fading');
-  const session = ['focus', 'vocabulary_builder', 'subvocalization_reduction', 'regression_reduction', 'visualization'].includes(String(configuration['engineType']))
+  const session = ['focus', 'vocabulary_builder', 'subvocalization_reduction', 'regression_reduction', 'visualization', 'adaptive_fluency'].includes(String(configuration['engineType']))
     ? recordOrEmpty(caseInsensitiveField(settings, 'sessionData') ?? caseInsensitiveField(configuration, 'sessionData')) : {};
   const difficulty = recordOrEmpty(caseInsensitiveField(session, 'difficultySettings') ?? caseInsensitiveField(settings, 'difficultySettings') ?? caseInsensitiveField(configuration, 'difficultySettings'));
   const read = (name: string) => caseInsensitiveField(session, name)
@@ -40,6 +40,7 @@ export function getCustomPreviewControls(configuration: Record<string, unknown>)
   const control = (key: string, label: string, min: number, max: number, value: unknown): PreviewControl =>
     ({ key, label, min, max, value: Number(value) });
   switch (configuration['engineType']) {
+    case 'adaptive_fluency': return [control('adaptiveTargetWpm', 'Önizleme hedef hızı (kelime/dakika)', 20, 1500, read('adaptiveTargetWpm') ?? 200)];
     case 'visualization': {
       const scenes = read('scenes');
       if (!Array.isArray(scenes) || !scenes.length) return [];
@@ -142,6 +143,13 @@ export function applyCustomPreviewSettings<T extends Record<string, unknown>>(
       }
     }
   };
+  if (engine === 'adaptive_fluency') {
+    if (validated['adaptiveTargetWpm'] !== undefined) {
+      settings['adaptiveTargetWpm'] = validated['adaptiveTargetWpm'];
+      updateSessions({ adaptiveTargetWpm: validated['adaptiveTargetWpm'] });
+    }
+    return result;
+  }
   if (engine === 'visualization') {
     const entries: Record<string, number> = {};
     if (validated['sceneDurationSec'] !== undefined) entries['duration'] = validated['sceneDurationSec'];
