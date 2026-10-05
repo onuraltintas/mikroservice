@@ -2,6 +2,10 @@ using System.ComponentModel.DataAnnotations;
 using Coaching.Application.Subscriptions;
 using SpeedReading.Application.Subscription;
 using FluentAssertions;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Identity.API.IntegrationTests;
 
@@ -41,8 +45,13 @@ public sealed class AdultPayerDeclarationTests
             var property = type.GetProperty("AdultPayerDeclaration");
             property.Should().NotBeNull("payment requests must explicitly carry the payer declaration");
             var request = Activator.CreateInstance(type, Guid.NewGuid(), "REF", "Payer", null, accepted)!;
-            var errors = new List<ValidationResult>();
-            Validator.TryValidateObject(request, new ValidationContext(request), errors, true).Should().Be(accepted);
+            var services = new ServiceCollection();
+            services.AddLogging();
+            services.AddControllers();
+            using var provider = services.BuildServiceProvider();
+            var context = new ActionContext { HttpContext = new DefaultHttpContext { RequestServices = provider } };
+            provider.GetRequiredService<IObjectModelValidator>().Validate(context, null, string.Empty, request);
+            context.ModelState.IsValid.Should().Be(accepted);
         }
     }
 }
