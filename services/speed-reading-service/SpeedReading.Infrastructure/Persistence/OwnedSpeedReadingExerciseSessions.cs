@@ -1050,12 +1050,7 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         var effectiveConfig = engineConfig.ValueKind == JsonValueKind.Object ? engineConfig : config;
         if (IsGridExercise(exerciseTypeName, config))
         {
-            state.TimeLimitSeconds = ReadPositiveInt(effectiveConfig, "timeLimitSeconds")
-                ?? ReadPositiveInt(effectiveConfig, "timeLimit")
-                ?? ReadPositiveInt(ReadObject(effectiveConfig, "rules"), "timeLimit")
-                ?? ReadPositiveInt(ReadObject(effectiveConfig, "timing"), "timeLimitSec")
-                ?? ReadPositiveInt(config, "timeLimitSeconds")
-                ?? ReadPositiveInt(config, "timeLimit");
+            state.TimeLimitSeconds = ReadGridTimeLimit(effectiveConfig) ?? ReadGridTimeLimit(config);
         }
         if (IsVocabularyExercise(exerciseTypeName, effectiveConfig))
         {
@@ -2225,6 +2220,17 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
 
     private static bool IsFocusExercise(SessionState state) =>
         IsFocusExercise(state.ExerciseTypeName) || IsFocusEngineType(state.EngineType);
+
+    private static int? ReadGridTimeLimit(JsonElement config)
+    {
+        var timing = ReadObject(config, "timing");
+        var milliseconds = ReadPositiveInt(timing, "maxReadingTimeMs");
+        return ReadPositiveInt(config, "timeLimitSeconds")
+            ?? ReadPositiveInt(config, "timeLimit")
+            ?? ReadPositiveInt(ReadObject(config, "rules"), "timeLimit")
+            ?? ReadPositiveInt(timing, "timeLimitSec")
+            ?? (milliseconds.HasValue ? (int)Math.Ceiling(milliseconds.Value / 1000d) : null);
+    }
 
     private static bool IsTimedOut(ExerciseSession session, SessionState state, DateTime now) =>
         !(state.TimingStartsOnAction && !state.TimingStartedAt.HasValue)
