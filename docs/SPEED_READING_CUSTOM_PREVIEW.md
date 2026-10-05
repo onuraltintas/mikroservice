@@ -7,8 +7,9 @@ Egzersiz kataloğunda Admin, SystemAdmin ve yalnız öğretmen rolüyle kullanı
 öğrenci oturumu davranışını korur. Program eğitimi, atama, öğrenme yolu,
 tekrar ve gerçek ölçüm oturumlarında özel ayarlar uygulanmaz.
 
-Kullanım: katalogdan egzersiz/seviye seç → Özel ayarlarla dene → değerleri
-değiştir → Denemeyi başlat. Varsayılana dön kayıtlı ayarları yeniden yükler;
+Kullanım: katalogdan Özel ayarlarla dene → aynı pencerede başlangıç seviyesini
+ve ayarları seç → Denemeyi başlat. Seviye değişince yeni seviyenin varsayılan
+ayarları yüklenir. Varsayılana dön seçilen seviyenin kayıtlı ayarlarını yeniden yükler;
 İptal oturum başlatmaz. Normal başlatma seçeneği korunur.
 
 ## Desteklenen kontroller
