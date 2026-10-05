@@ -8,6 +8,15 @@ namespace Identity.API.IntegrationTests;
 public sealed class AdultPayerDeclarationTests
 {
     [Fact]
+    public void BothPaymentSummariesExposeDeclarationEvidenceToReviewers()
+    {
+        foreach (var type in new[] { typeof(CoachingBankTransferRequestSummary), typeof(BankTransferPaymentRequestSummary) })
+        {
+            type.GetProperty("AdultPayerDeclarationVersion").Should().NotBeNull();
+            type.GetProperty("AdultPayerDeclaredAt").Should().NotBeNull();
+        }
+    }
+    [Fact]
     public void BothPaymentEntitiesKeepNullableDeclarationEvidenceForHistoricalRecords()
     {
         var speedType = typeof(SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingDbContext).Assembly
