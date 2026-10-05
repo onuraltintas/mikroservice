@@ -35,10 +35,10 @@ prepare)
   done
   compose_command production.override.yml
   ;;
-backup-drill|backup-drill-speed)
+backup-drill|backup-drill-speed|repair-speed-drill)
   test ! -e drill-complete
   products=(coaching speed_reading)
-  if [[ "$1" == backup-drill-speed ]]; then
+  if [[ "$1" == backup-drill-speed || "$1" == repair-speed-drill ]]; then
     test -s coaching_db.backup
     test "$(docker exec postgres psql -U "$db_user" -d legal_payment_coaching_drill_20261005 -Atc 'SELECT count(*) FROM coaching.__ef_migrations_history WHERE "MigrationId"=$$20261005090416_RecordAdultPayerDeclaration$$')" = 1
     products=(speed_reading)
@@ -47,12 +47,19 @@ backup-drill|backup-drill-speed)
     database="${product}_db"
     if [[ "$product" == speed_reading ]]; then database=speedreading_owned_db; fi
     drill="legal_payment_${product}_drill_20261005"
-    test ! -e "$database.backup"
-    docker exec postgres pg_dump -U "$db_user" -d "$database" -Fc > "$database.backup"
+    if [[ "$1" == repair-speed-drill ]]; then
+      test "$drill" = legal_payment_speed_reading_drill_20261005
+      test -s "$database.backup"
+      docker exec postgres dropdb -U "$db_user" "$drill"
+    else
+      test ! -e "$database.backup"
+      docker exec postgres pg_dump -U "$db_user" -d "$database" -Fc > "$database.backup"
+    fi
     test -s "$database.backup"
     docker exec -i postgres pg_restore --list < "$database.backup" > "$database.manifest"
     docker exec postgres createdb -U "$db_user" "$drill"
-    docker exec -i postgres pg_restore -U "$db_user" -d "$drill" --exit-on-error --no-owner < "$database.backup"
+    # Preserve the source schema/table owners so the application role has the same migration rights.
+    docker exec -i postgres pg_restore -U "$db_user" -d "$drill" --exit-on-error < "$database.backup"
     service=coaching-service
     migration=20261005090416_RecordAdultPayerDeclaration
     table=bank_transfer_requests
@@ -83,6 +90,12 @@ migrate|deploy|rollback)
   if [[ "$1" == rollback ]]; then override=rollback.override.yml; fi
   compose_command "$override"
   if [[ "$1" == migrate ]]; then
+    for database in coaching_db speedreading_owned_db; do
+      test ! -e "$database.production-before-migration.backup"
+      docker exec postgres pg_dump -U "$db_user" -d "$database" -Fc > "$database.production-before-migration.backup"
+      test -s "$database.production-before-migration.backup"
+      docker exec -i postgres pg_restore --list < "$database.production-before-migration.backup" > "$database.production-before-migration.manifest"
+    done
     "${compose[@]}" run --rm --no-deps coaching-service --migrate-only > coaching-production-migration.log 2>&1
     "${compose[@]}" run --rm --no-deps speed-reading-service --migrate-only > speed-production-migration.log 2>&1
     cp drill-complete migrations-complete
