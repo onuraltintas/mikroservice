@@ -1,10 +1,41 @@
 import { fakeAsync, flushMicrotasks, tick } from '@angular/core/testing';
-import { of } from 'rxjs';
+import { of, Subject, throwError } from 'rxjs';
 import { ExercisePlayerComponent } from './exercise-player.component';
 import { RegressionReductionEngine } from './engines/regression-reduction.engine';
 import { EngineCallbacks } from './engines/base-engine.interface';
 
 describe('reading phase timing', () => {
+  it('waits for validated server start before starting the engine', () => {
+    const player = Object.create(ExercisePlayerComponent.prototype) as any;
+    const response = new Subject<any>();
+    const started = jasmine.createSpy('started');
+    player.sessionId = 'reading';
+    player.destroy$ = new Subject<void>();
+    player.shouldTrackReading = () => true;
+    player.sessionService = { validateAction: () => response };
+    player.startReadingTracking(started);
+    expect(started).not.toHaveBeenCalled();
+    response.next({ isValid: true });
+    expect(started).toHaveBeenCalledTimes(1);
+    response.complete();
+  });
+
+  it('does not finalize reading as successful after a tracking network error', () => {
+    const player = Object.create(ExercisePlayerComponent.prototype) as any;
+    const finalized = jasmine.createSpy('finalized');
+    player.sessionId = 'reading';
+    player.destroy$ = new Subject<void>();
+    player.shouldTrackReading = () => true;
+    player.readingTrackingStarted = true;
+    player.readingTrackingStartCompleted = true;
+    player.sessionService = { validateAction: () => throwError(() => new Error('offline')) };
+    player.engine = { stop: () => undefined };
+    player.stopTimer = () => undefined;
+    player.cdr = { detectChanges: () => undefined };
+    player.finishReadingTracking(finalized);
+    expect(finalized).not.toHaveBeenCalled();
+    expect(player.readingTrackingFinished).toBeFalse();
+  });
   it('synchronizes normal reading pauses with the server', fakeAsync(() => {
     const player = Object.create(ExercisePlayerComponent.prototype) as any;
     player.sessionId = 'owned-reading';

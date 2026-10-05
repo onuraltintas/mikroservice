@@ -28,8 +28,8 @@ public sealed class StudentReadingPersistenceTests
         var typeId = Guid.NewGuid();
         var exerciseId = Guid.NewGuid();
         var textId = Guid.NewGuid();
-        context.ExerciseTypes.Add(ExerciseType.Create(typeId, "SpeedReading", "Reading", "word_highlight"));
-        context.Exercises.Add(Exercise.Create("Reading", "word_highlight", "{}", 1, studentId, typeId, id: exerciseId));
+        context.ExerciseTypes.Add(ExerciseType.Create(typeId, "Comprehension", "Reading", "reading_comprehension"));
+        context.Exercises.Add(Exercise.Create("Reading", "reading_comprehension", "{}", 1, studentId, typeId, id: exerciseId));
         context.ReadingTexts.Add(ReadingText.Create(textId, "Text", string.Join(" ", Enumerable.Repeat("word", 100)),
             difficultyLevel: 1, exerciseId: exerciseId));
         await context.SaveChangesAsync();
@@ -48,6 +48,72 @@ public sealed class StudentReadingPersistenceTests
         response.CurrentWPM.Should().Be(200);
         var result = await service.CompleteAsync(studentId, started.SessionId, new CompleteExerciseSessionRequest());
         result.RawWPM.Should().Be(200);
+    }
+
+    [Theory]
+    [InlineData("word_highlight", false)]
+    [InlineData("text_fade", false)]
+    [InlineData("text_stream", false)]
+    [InlineData("reading_comprehension", true)]
+    public async Task Paced_or_incomplete_reading_does_not_generate_measured_wpm(string engine, bool timedOut)
+    {
+        await using var context = CreateContext();
+        var studentId = Guid.NewGuid();
+        var typeId = Guid.NewGuid();
+        var exerciseId = Guid.NewGuid();
+        var textId = Guid.NewGuid();
+        var questionId = Guid.NewGuid();
+        context.ExerciseTypes.Add(ExerciseType.Create(typeId, engine == "text_stream" ? "RSVP" : engine, "Reading", engine));
+        context.Exercises.Add(Exercise.Create("Reading", engine, "{}", 1, studentId, typeId, id: exerciseId));
+        context.ReadingTexts.Add(ReadingText.Create(textId, "Text", string.Join(" ", Enumerable.Repeat("word", 100)),
+            difficultyLevel: 1, exerciseId: exerciseId));
+        context.ReadingQuestions.Add(ReadingQuestion.Create(questionId, textId, "Question", "A",
+            orderIndex: 0, type: 1, bloomLevel: 1,
+            optionA: "Yes", optionB: "No", optionC: "Other", optionD: "None"));
+        await context.SaveChangesAsync();
+        var service = CreateExerciseSessionService(context);
+        var started = await service.StartAsync(studentId, new StartExerciseSessionRequest { ExerciseId = exerciseId });
+        var session = await context.ExerciseSessions.SingleAsync();
+        var state = System.Text.Json.Nodes.JsonNode.Parse(session.SessionDataJson)!;
+        state["readingStartTime"] = DateTime.UtcNow.AddSeconds(-30);
+        session.SetState(state.ToJsonString());
+        await context.SaveChangesAsync();
+        await service.ValidateActionAsync(studentId, started.SessionId,
+            new ExerciseActionRequest { Action = "finish_reading", IsTimeout = timedOut });
+        await service.ValidateActionAsync(studentId, started.SessionId,
+            new ExerciseActionRequest { Action = "answer_question", QuestionId = questionId, Answer = "A" });
+        var result = await service.CompleteAsync(studentId, started.SessionId, new CompleteExerciseSessionRequest());
+        result.RawWPM.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task Comprehension_answers_without_finished_reading_do_not_generate_wpm()
+    {
+        await using var context = CreateContext();
+        var studentId = Guid.NewGuid();
+        var typeId = Guid.NewGuid();
+        var exerciseId = Guid.NewGuid();
+        var textId = Guid.NewGuid();
+        var questionId = Guid.NewGuid();
+        context.ExerciseTypes.Add(ExerciseType.Create(typeId, "Comprehension", "Reading", "reading_comprehension"));
+        context.Exercises.Add(Exercise.Create("Reading", "reading_comprehension", "{}", 1, studentId, typeId, id: exerciseId));
+        context.ReadingTexts.Add(ReadingText.Create(textId, "Text", "A short reading text.", difficultyLevel: 1, exerciseId: exerciseId));
+        context.ReadingQuestions.Add(ReadingQuestion.Create(questionId, textId, "Question", "A",
+            orderIndex: 0, type: 1, bloomLevel: 1,
+            optionA: "Yes", optionB: "No", optionC: "Other", optionD: "None"));
+        await context.SaveChangesAsync();
+        var service = CreateExerciseSessionService(context);
+        var started = await service.StartAsync(studentId, new StartExerciseSessionRequest { ExerciseId = exerciseId });
+        var session = await context.ExerciseSessions.SingleAsync();
+        var state = System.Text.Json.Nodes.JsonNode.Parse(session.SessionDataJson)!;
+        state["timingStartedAt"] = DateTime.UtcNow.AddSeconds(-30);
+        session.SetState(state.ToJsonString());
+        await context.SaveChangesAsync();
+        await service.ValidateActionAsync(studentId, started.SessionId,
+            new ExerciseActionRequest { Action = "answer_question", QuestionId = questionId, Answer = "A" });
+        var result = await service.CompleteAsync(studentId, started.SessionId, new CompleteExerciseSessionRequest());
+        result.ComprehensionScore.Should().Be(100);
+        result.RawWPM.Should().BeNull();
     }
 
     [Fact]
