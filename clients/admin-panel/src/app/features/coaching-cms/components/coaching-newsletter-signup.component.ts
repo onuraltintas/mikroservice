@@ -33,7 +33,7 @@ import { IdentityService } from '../../../core/services/identity.service';
             </div>
             <label class="flex items-start gap-3 rounded-xl border border-slate-200 p-4 text-sm leading-6 text-slate-700 dark:border-slate-700 dark:text-slate-200">
               <input class="mt-1" type="checkbox" name="consentGiven" required [ngModel]="consentGiven()" (ngModelChange)="consentGiven.set($event)" />
-              <span><a routerLink="/legal/coaching-newsletter-consent" target="_blank" rel="noopener noreferrer" class="font-semibold text-indigo-700 underline dark:text-indigo-300">{{ newsletterConsentText() }}</a> <a routerLink="/legal/privacy" target="_blank" rel="noopener noreferrer" class="font-semibold text-indigo-700 underline dark:text-indigo-300">Ortak gizlilik politikasını</a> okudum. (onay metni sürüm {{ newsletterConsentVersion() }} · gizlilik sürümü {{ privacyPolicyVersion() }})</span>
+              <span><a routerLink="/legal/coaching-newsletter-consent" target="_blank" rel="noopener noreferrer" class="font-semibold text-indigo-700 underline dark:text-indigo-300">Bülten onay metni</a> kapsamında Koçluk bültenini e-posta ile almayı kabul ediyorum. <a routerLink="/legal/privacy" target="_blank" rel="noopener noreferrer" class="font-semibold text-indigo-700 underline dark:text-indigo-300">Ortak gizlilik politikasını</a> okudum. (onay metni sürüm {{ newsletterConsentVersion() }} · gizlilik sürümü {{ privacyPolicyVersion() }})</span>
             </label>
             <button class="rounded-xl bg-indigo-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-indigo-800 disabled:cursor-not-allowed disabled:opacity-50" type="submit" [disabled]="newsletterForm.invalid || submitting()">{{ submitting() ? 'Gönderiliyor…' : 'Onay bağlantısı gönder' }}</button>
           </form>
@@ -60,7 +60,6 @@ export class CoachingNewsletterSignupComponent implements OnInit {
   readonly policyAvailable = signal(false);
   readonly privacyPolicyVersion = signal<number | null>(null);
   readonly newsletterConsentVersion = signal<number | null>(null);
-  readonly newsletterConsentText = signal('');
   readonly policyLoadFailed = signal(false);
   readonly submitting = signal(false);
   readonly message = signal('');
@@ -77,7 +76,6 @@ export class CoachingNewsletterSignupComponent implements OnInit {
         this.policyAvailable.set(privacyAvailable && consentAvailable);
         this.privacyPolicyVersion.set(privacyAvailable ? privacy.version : null);
         this.newsletterConsentVersion.set(consentAvailable ? consent.version : null);
-        this.newsletterConsentText.set(consentAvailable ? consent.content.trim() : '');
         this.loadingPolicy.set(false);
       },
       error: response => {
