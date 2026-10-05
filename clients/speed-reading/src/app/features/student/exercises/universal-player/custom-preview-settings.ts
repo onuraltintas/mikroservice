@@ -21,7 +21,11 @@ export function getCustomPreviewControls(configuration: Record<string, unknown>)
   const movement = mergeCaseInsensitiveRecords(configuration, settings, 'movement');
   const pacer = mergeCaseInsensitiveRecords(configuration, settings, 'pacer');
   const fading = mergeCaseInsensitiveRecords(configuration, settings, 'fading');
-  const read = (name: string) => caseInsensitiveField(settings, name) ?? caseInsensitiveField(configuration, name);
+  const session = recordOrEmpty(caseInsensitiveField(configuration, 'sessionData'));
+  const difficulty = recordOrEmpty(caseInsensitiveField(session, 'difficultySettings') ?? caseInsensitiveField(settings, 'difficultySettings') ?? caseInsensitiveField(configuration, 'difficultySettings'));
+  const read = (name: string) => caseInsensitiveField(session, name)
+    ?? (configuration['engineType'] === 'subvocalization_reduction' ? caseInsensitiveField(difficulty, name) : undefined)
+    ?? caseInsensitiveField(settings, name) ?? caseInsensitiveField(configuration, name);
   const control = (key: string, label: string, min: number, max: number, value: unknown): PreviewControl =>
     ({ key, label, min, max, value: Number(value) });
   switch (configuration['engineType']) {
@@ -106,6 +110,19 @@ export function applyCustomPreviewSettings<T extends Record<string, unknown>>(
     settings['wpm'] = validated['speedWpm'];
     if (engine === 'subvocalization_reduction') settings['msPerWord'] = Math.round(60000 / validated['speedWpm']);
     if (engine === 'regression_reduction') settings['wordDelayMs'] = 0;
+  }
+  if (engine === 'subvocalization_reduction' || engine === 'regression_reduction') {
+    const overrides: Record<string, number> = {};
+    if (validated['speedWpm'] !== undefined) {
+      overrides['targetWpm'] = validated['speedWpm'];
+      overrides['wpm'] = validated['speedWpm'];
+      if (engine === 'subvocalization_reduction') overrides['msPerWord'] = Math.round(60000 / validated['speedWpm']);
+      else overrides['wordDelayMs'] = 0;
+    }
+    if (validated['chunkSize'] !== undefined) overrides['chunkSize'] = validated['chunkSize'];
+    if (engine === 'subvocalization_reduction') merge('difficultySettings', overrides);
+    const session = recordOrEmpty(caseInsensitiveField(result, 'sessionData'));
+    if (Object.keys(session).length) (result as Record<string, unknown>)['sessionData'] = { ...session, ...overrides };
   }
   return result;
 }
