@@ -122,7 +122,7 @@ describe('Custom preview settings safety', () => {
     const get = spyOn(localStorage, 'getItem').and.returnValue(null);
     const set = spyOn(localStorage, 'setItem');
     const engine = new VocabularyBuilderEngine();
-    engine.initialize({ previewOnly: true, mode: 'quiz', words: [] } as any, {} as any);
+    engine.initialize({ previewOnly: true, engineConfig: { previewOnly: false }, mode: 'quiz', words: [] } as any, {} as any);
     (engine as any).saveProgress();
     expect(get).not.toHaveBeenCalled();
     expect(set).not.toHaveBeenCalled();
