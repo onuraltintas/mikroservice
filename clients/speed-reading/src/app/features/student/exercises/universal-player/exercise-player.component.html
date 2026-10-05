@@ -1137,7 +1137,7 @@
             </div>
 
             <div class="scene-countdown-visual">
-                <div class="ep-progress-bar"><div class="ep-progress-bar__fill" [style.width.%]="(getVisualizationSceneRemaining() / (getVisualizationCurrentScene()?.duration || 10)) * 100"></div></div>
+                <div class="ep-progress-bar"><div class="ep-progress-bar__fill" [style.width.%]="getVisualizationScenePercent()"></div></div>
             </div>
 
             <button class="ep-btn ep-btn--primary" (click)="skipVisualizationScene()" class="skip-scene-btn">

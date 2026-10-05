@@ -2389,6 +2389,10 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     return (this.engine as VisualizationEngine)?.getSceneDisplayRemaining?.() || 0;
   }
 
+  getVisualizationScenePercent(): number {
+    return (this.engine as VisualizationEngine)?.getSceneDisplayPercent?.() || 0;
+  }
+
   getVisualizationMode(): string {
     return (this.engine as VisualizationEngine)?.mode || 'static';
   }

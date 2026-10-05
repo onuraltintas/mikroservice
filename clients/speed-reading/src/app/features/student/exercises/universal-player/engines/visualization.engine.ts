@@ -63,6 +63,12 @@ export class VisualizationEngine implements BaseEngine {
     private timerInterval: any;
     private sceneTimeout: any;
     private sceneDisplayRemaining = 0;
+    private sceneDisplayTotal = 0;
+
+    getSceneDisplayPercent(): number {
+        return this.sceneDisplayTotal > 0
+            ? Math.min(100, Math.max(0, this.sceneDisplayRemaining / this.sceneDisplayTotal * 100)) : 0;
+    }
     private serverAuthoritative = false;
     private previewOnly = false;
     private pendingServerAnswer: { questionId: string; answer: string; sceneId: string } | null = null;
@@ -204,6 +210,7 @@ export class VisualizationEngine implements BaseEngine {
             }, scene.duration * 1000);
         }
 
+        this.sceneDisplayTotal = this.sceneDisplayRemaining;
         this.callbacks.onStateChange({
             ...this.state,
             phase: 'scene',
