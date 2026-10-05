@@ -1,5 +1,6 @@
 import { applyCustomPreviewSettings, getCustomPreviewControls } from './custom-preview-settings';
 import { SubvocalizationReductionEngine } from './engines/subvocalization-reduction.engine';
+import { VocabularyBuilderEngine } from './engines/vocabulary-builder.engine';
 import { CustomPreviewDialogComponent } from './custom-preview-dialog.component';
 import { TestBed } from '@angular/core/testing';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
@@ -116,5 +117,14 @@ describe('Custom preview settings safety', () => {
     const result = applyCustomPreviewSettings(config, { displayDurationMs: 400, intervalMs: 1800 }, context);
     expect(result.engineConfig.timing).toEqual({ durationMs: 400, intervalMs: 1800 });
     expect(result.engineConfig.content).toEqual(config.engineConfig.content);
+  });
+  it('keeps vocabulary preview progress out of browser storage', () => {
+    const get = spyOn(localStorage, 'getItem').and.returnValue(null);
+    const set = spyOn(localStorage, 'setItem');
+    const engine = new VocabularyBuilderEngine();
+    engine.initialize({ previewOnly: true, mode: 'quiz', words: [] } as any, {} as any);
+    (engine as any).saveProgress();
+    expect(get).not.toHaveBeenCalled();
+    expect(set).not.toHaveBeenCalled();
   });
 });
