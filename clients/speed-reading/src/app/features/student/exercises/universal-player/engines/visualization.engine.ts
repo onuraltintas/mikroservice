@@ -64,6 +64,7 @@ export class VisualizationEngine implements BaseEngine {
     private sceneTimeout: any;
     private sceneDisplayRemaining = 0;
     private serverAuthoritative = false;
+    private previewOnly = false;
     private pendingServerAnswer: { questionId: string; answer: string; sceneId: string } | null = null;
     private answerEvaluated = false;
 
@@ -88,7 +89,8 @@ export class VisualizationEngine implements BaseEngine {
         this.config = { ...root, ...nested, ...sessionData } as VisualizationConfig;
         const mode = read('mode');
         this.mode = ['static', 'guided', 'flash'].includes(mode) ? mode : 'static';
-        this.serverAuthoritative = root['previewOnly'] !== true && read('serverAuthoritative') === true;
+        this.previewOnly = root['previewOnly'] === true;
+        this.serverAuthoritative = !this.previewOnly && read('serverAuthoritative') === true;
 
         // Get scenes from config (try both cases)
         const configuredScenes = read('scenes');
@@ -188,6 +190,7 @@ export class VisualizationEngine implements BaseEngine {
         this.sceneDisplayRemaining = scene.duration * 1000;
 
         if (this.mode === 'guided' && scene.steps && scene.steps.length > 0) {
+            if (this.previewOnly) this.sceneDisplayRemaining = scene.steps.length * (scene.stepDurationMs || 3000);
             // Guided Mode Logic
             this.currentGuidedStepIndex = 0;
             this.startGuidedSteps(scene);
