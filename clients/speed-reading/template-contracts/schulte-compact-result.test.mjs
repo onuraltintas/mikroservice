@@ -5,6 +5,13 @@ import test from 'node:test';
 const html = readFileSync(new URL('../src/app/features/student/exercises/universal-player/exercise-player.component.html', import.meta.url), 'utf8');
 const scss = readFileSync(new URL('../src/app/features/student/exercises/universal-player/exercise-player.component.scss', import.meta.url), 'utf8');
 
+test('Schulte visibility and highlighting follow the effective settings', () => {
+  assert.match(html, /class="target-display" \*ngIf="schulteSettings\.showHints"/);
+  assert.match(html, /\[class\.correct\]="schulteSettings\.highlightOnClick && correctCells\.has\(i\)"/);
+  assert.match(html, /class="fixation-point" \*ngIf="schulteSettings\.showFixationPoint &&/);
+  assert.match(html, /Uygulama referansı/);
+});
+
 test('Schulte results keep metrics and heatmap in one compact section', () => {
   const section = html.match(/<section class="schulte-summary"[\s\S]*?<\/section>/)?.[0];
   assert.ok(section, 'Schulte summary must exist');

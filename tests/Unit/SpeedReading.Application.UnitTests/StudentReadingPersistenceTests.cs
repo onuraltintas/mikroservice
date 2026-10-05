@@ -315,7 +315,7 @@ public sealed class StudentReadingPersistenceTests
         context.Exercises.Add(Exercise.Create(
             "İç ayarlı grid",
             "grid_interaction",
-            """{"engineType":"grid_interaction","engineConfig":{"engineType":"grid_interaction","gridSize":7,"sequenceType":"numeric"}}""",
+            """{"engineType":"grid_interaction","engineConfig":{"engineType":"grid_interaction","gridSize":7,"sequenceType":"numeric","rules":{"timeLimit":90}}}""",
             1,
             studentId,
             typeId,
@@ -329,6 +329,8 @@ public sealed class StudentReadingPersistenceTests
             CancellationToken.None);
 
         started.TotalSteps.Should().Be(49);
+        var session = await context.ExerciseSessions.SingleAsync(item => item.Id == started.SessionId);
+        session.TimeLimitSeconds.Should().Be(90);
         started.InitialData.GetProperty("gridSize").GetInt32().Should().Be(7);
         started.InitialData.GetProperty("grid").GetArrayLength().Should().Be(7);
     }
