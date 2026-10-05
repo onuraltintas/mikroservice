@@ -75,7 +75,7 @@ export class CoachingTeacherSubscriptionService {
       .pipe(map(response => response.data.filter(request => request.plan.audience === 'Teacher')));
   }
 
-  createBankTransferRequest(request: { planId: string; paymentReference: string; payerName: string | null; note: string | null }, idempotencyKey?: string) {
+  createBankTransferRequest(request: { planId: string; paymentReference: string; payerName: string | null; note: string | null; adultPayerDeclaration: boolean }, idempotencyKey?: string) {
     return this.http.post<{ data: CoachingTeacherBankTransferRequest }>(`${this.subscriptionsUrl}/teacher-bank-transfer-requests`, {
       ...request,
       paymentReference: request.paymentReference.trim(),

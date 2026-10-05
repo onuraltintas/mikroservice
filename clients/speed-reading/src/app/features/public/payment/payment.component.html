@@ -81,7 +81,8 @@
                   </label>
                   @if (error()) { <p class="message error" role="alert">{{ error() }}</p> }
                   @if (success()) { <p class="message success" role="status">{{ success() }}</p> }
-                  <button mat-raised-button color="primary" type="submit" [disabled]="submitting()">
+                  <label><input type="checkbox" [(ngModel)]="adultPayerDeclaration" name="adultPayerDeclaration" required />Ödemeyi yapan kişi olarak 18 yaş ve üzeri olduğumu beyan ediyorum. Bu beyan yaş doğrulaması değildir.</label>
+                  <button mat-raised-button color="primary" type="submit" [disabled]="submitting() || !adultPayerDeclaration">
                     {{ submitting() ? 'Talep iletiliyor…' : 'Ödeme talebini ilet' }}
                   </button>
                 } @else {

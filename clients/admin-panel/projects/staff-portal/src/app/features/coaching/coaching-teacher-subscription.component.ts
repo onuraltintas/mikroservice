@@ -89,7 +89,8 @@ import {
             <label>Ödeme referansı<input name="paymentReference" [(ngModel)]="paymentReference" required maxlength="120" autocomplete="off" /></label>
             <label>Ödeyen adı<input name="payerName" [(ngModel)]="payerName" maxlength="200" autocomplete="name" /></label>
             <label>Not<textarea name="paymentNote" [(ngModel)]="paymentNote" maxlength="1000" rows="2"></textarea></label>
-            <button type="submit" [disabled]="savingRequest() || !selectedPlanId || selectedPlan?.isContactOnly || !paymentReference.trim() || !settings()?.bankTransferEnabled">{{ savingRequest() ? 'Gönderiliyor…' : 'Ödeme bildirimi gönder' }}</button>
+            <label><input type="checkbox" name="adultPayerDeclaration" [(ngModel)]="adultPayerDeclaration" required />Ödemeyi yapan kişi olarak 18 yaş ve üzeri olduğumu beyan ediyorum. Bu beyan yaş doğrulaması değildir.</label>
+            <button type="submit" [disabled]="savingRequest() || !selectedPlanId || selectedPlan?.isContactOnly || !paymentReference.trim() || !settings()?.bankTransferEnabled || !adultPayerDeclaration">{{ savingRequest() ? 'Gönderiliyor…' : 'Ödeme bildirimi gönder' }}</button>
           </form>
         } @else {
           <p class="muted">Havale / EFT bilgileri şu anda yayımlanmıyor; ödeme bildirimi gönderilemez.</p>
@@ -156,6 +157,7 @@ export class CoachingTeacherSubscriptionComponent implements OnInit {
   paymentReference = '';
   payerName = '';
   paymentNote = '';
+  adultPayerDeclaration = false;
 
   ngOnInit(): void {
     this.load();
@@ -216,6 +218,7 @@ export class CoachingTeacherSubscriptionComponent implements OnInit {
 
   async submitRequest(): Promise<void> {
     if (!this.selectedPlanId || this.selectedPlan?.isContactOnly || !this.paymentReference.trim() || !this.settings()?.bankTransferEnabled || this.savingRequest()) return;
+    if (!this.adultPayerDeclaration) { this.error.set('Ödeme için 18 yaş ve üzeri olduğunuzu beyan etmeniz gerekir.'); return; }
     this.savingRequest.set(true);
     this.error.set(null);
     this.success.set(null);
@@ -224,11 +227,13 @@ export class CoachingTeacherSubscriptionComponent implements OnInit {
         planId: this.selectedPlanId,
         paymentReference: this.paymentReference,
         payerName: this.payerName,
-        note: this.paymentNote
+        note: this.paymentNote,
+        adultPayerDeclaration: this.adultPayerDeclaration
       }));
       this.paymentReference = '';
       this.payerName = '';
       this.paymentNote = '';
+      this.adultPayerDeclaration = false;
       this.success.set('Ödeme bildiriminiz alındı. Onay sonrasında öğretmen planınız etkinleşir.');
       this.subscriptions.getMyBankTransferRequests().subscribe({ next: requests => this.requests.set(requests) });
     } catch (error) {

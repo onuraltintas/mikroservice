@@ -1587,6 +1587,8 @@ export interface SpeedReadingBankTransferSettingsRequest {
 }
 
 export interface SpeedReadingBankTransferRequest {
+  adultPayerDeclarationVersion?: number | null;
+  adultPayerDeclaredAt?: string | null;
   id: string;
   userId: string;
   userName: string;

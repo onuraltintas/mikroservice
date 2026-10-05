@@ -311,6 +311,7 @@ public sealed class LegacySpeedReadingSubscription : ISpeedReadingSubscription
         string idempotencyKey,
         CancellationToken cancellationToken = default)
     {
+        if (!request.AdultPayerDeclaration) return null;
         OwnedContentMutationIdempotency.Validate(userId, idempotencyKey);
         var key = idempotencyKey.Trim();
         var requestHash = OwnedContentMutationIdempotency.CreateRequestHash(userId, BankTransferRequestScope, Guid.Empty, request);
@@ -372,6 +373,8 @@ public sealed class LegacySpeedReadingSubscription : ISpeedReadingSubscription
             PaymentReference = paymentReference,
             PayerName = NormalizeOptional(request.PayerName, 200),
             Note = NormalizeOptional(request.Note, 2_000),
+            AdultPayerDeclarationVersion = 1,
+            AdultPayerDeclaredAt = now,
             Status = BankTransferPaymentRules.PendingStatus,
             CreatedAt = now,
             UpdatedAt = now
@@ -1338,7 +1341,9 @@ public sealed class LegacySpeedReadingSubscription : ISpeedReadingSubscription
             paymentRequest.CreatedAt,
             paymentRequest.ReviewedBy,
             paymentRequest.ReviewedAt,
-            paymentRequest.ReviewNote);
+            paymentRequest.ReviewNote,
+            paymentRequest.AdultPayerDeclarationVersion,
+            paymentRequest.AdultPayerDeclaredAt);
 
     private static string? NormalizeRequired(string? value, int maxLength)
     {

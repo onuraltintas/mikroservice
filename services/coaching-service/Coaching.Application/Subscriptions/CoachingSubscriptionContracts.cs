@@ -66,7 +66,9 @@ public sealed record CoachingBankTransferRequestSummary(
     Guid? ReviewedBy,
     DateTime? ReviewedAt,
     string? ReviewNote,
-    DateTime CreatedAt);
+    DateTime CreatedAt,
+    int? AdultPayerDeclarationVersion = null,
+    DateTime? AdultPayerDeclaredAt = null);
 
 public sealed record CoachingBankTransferRequestCreate(
     Guid PlanId,

@@ -252,6 +252,7 @@ public sealed class CoachingSubscriptionService(
         string idempotencyKey,
         CancellationToken cancellationToken)
     {
+        if (!request.AdultPayerDeclaration) return null;
         var key = ValidateIdempotencyKey(userId, idempotencyKey);
         var reference = NormalizePaymentReference(request.PaymentReference);
         var payerName = NormalizeOptional(request.PayerName, 200);
@@ -263,7 +264,7 @@ public sealed class CoachingSubscriptionService(
 
         var requestHash = CreateRequestHash(
             userId.ToString("D"), TransferCreateIdempotencyScope, expectedAudience, request.PlanId.ToString("D"),
-            reference, payerName, note);
+            reference, payerName, note, "adult-payer-v1");
         var replay = await GetIdempotencyRecordAsync(TransferCreateIdempotencyScope, key, cancellationToken);
         if (replay is not null)
         {
@@ -359,7 +360,9 @@ public sealed class CoachingSubscriptionService(
             Currency = settings.Currency,
             PaymentReference = reference,
             PayerName = payerName,
-            Note = note
+            Note = note,
+            AdultPayerDeclarationVersion = 1,
+            AdultPayerDeclaredAt = DateTime.UtcNow
         };
         db.CoachingBankTransferRequests.Add(requestEntity);
         db.IdempotencyRecords.Add(IdempotencyRecord.Create(
@@ -1577,7 +1580,9 @@ public sealed class CoachingSubscriptionService(
             request.ReviewedBy,
             request.ReviewedAt,
             request.ReviewNote,
-            request.CreatedAt);
+            request.CreatedAt,
+            request.AdultPayerDeclarationVersion,
+            request.AdultPayerDeclaredAt);
 
     private static CoachingSubscriptionSummary ToSubscriptionSummary(
         CoachingSubscription subscription,

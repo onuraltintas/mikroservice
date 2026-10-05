@@ -116,6 +116,8 @@ internal sealed class LegacyBankTransferPaymentSettings
 
 internal sealed class LegacyBankTransferPaymentRequest
 {
+    public int? AdultPayerDeclarationVersion { get; set; }
+    public DateTime? AdultPayerDeclaredAt { get; set; }
     public Guid Id { get; set; }
     public Guid UserId { get; set; }
     public string UserName { get; set; } = string.Empty;

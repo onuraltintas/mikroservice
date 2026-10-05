@@ -69,6 +69,8 @@ public sealed class CoachingSubscriptionSettings
 
 public sealed class CoachingBankTransferRequest
 {
+    public int? AdultPayerDeclarationVersion { get; set; }
+    public DateTime? AdultPayerDeclaredAt { get; set; }
     public Guid Id { get; set; } = Guid.NewGuid();
     public Guid UserId { get; set; }
     public string UserName { get; set; } = string.Empty;

@@ -73,7 +73,7 @@ public sealed class CoachingEftRecaptchaTests
             false, "TRY", "EduIvme", "Bank", "TR330006100519786457841326", null, true),
             actor, "eft-settings-idempotency-key");
         var controller = CreateController(db, new RecordingValidator(true), enabled: true, "valid-token");
-        var request = new CoachingBankTransferRequestCreate(plan!.Value, "EFT-2026-01", null, null);
+        var request = new CoachingBankTransferRequestCreate(plan!.Value, "EFT-2026-01", null, null, true);
 
         var result = teacher
             ? await controller.CreateTeacherBankTransferRequest(request, "eft-test-idempotency-key")

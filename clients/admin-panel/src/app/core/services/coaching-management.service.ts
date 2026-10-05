@@ -155,6 +155,8 @@ export interface CoachingBankTransferRequestCreate {
 }
 
 export interface CoachingBankTransferRequest {
+  adultPayerDeclarationVersion?: number | null;
+  adultPayerDeclaredAt?: string | null;
   id: string;
   userId: string;
   userName: string;

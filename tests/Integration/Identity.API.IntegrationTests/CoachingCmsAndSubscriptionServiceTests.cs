@@ -376,7 +376,7 @@ public sealed class CoachingCmsAndSubscriptionServiceTests
 
         var transfer = await subscriptions.CreateTeacherBankTransferRequestAsync(
             teacherId, "Öğretmen", "teacher@example.test",
-            new CoachingBankTransferRequestCreate(planId!.Value, "TEACHER-EFT-1", "Öğretmen", null),
+            new CoachingBankTransferRequestCreate(planId!.Value, "TEACHER-EFT-1", "Öğretmen", null, true),
             "create-teacher-test-key-0001");
         transfer.Should().NotBeNull();
         var reviewed = await subscriptions.ReviewBankTransferRequestAsync(
@@ -426,7 +426,7 @@ public sealed class CoachingCmsAndSubscriptionServiceTests
 
         var transfer = await subscriptions.CreateTeacherBankTransferRequestAsync(
             teacherId, "Öğretmen", "teacher@example.test",
-            new CoachingBankTransferRequestCreate(planId.Value, "TEACHER-EFT-RENEW", "Öğretmen", null),
+            new CoachingBankTransferRequestCreate(planId.Value, "TEACHER-EFT-RENEW", "Öğretmen", null, true),
             "create-teacher-renewal-key-01");
         transfer.Should().NotBeNull();
         (await subscriptions.ReviewBankTransferRequestAsync(

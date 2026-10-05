@@ -93,7 +93,9 @@ public sealed record BankTransferPaymentRequestSummary(
     DateTime CreatedAt,
     Guid? ReviewedBy,
     DateTime? ReviewedAt,
-    string? ReviewNote);
+    string? ReviewNote,
+    int? AdultPayerDeclarationVersion = null,
+    DateTime? AdultPayerDeclaredAt = null);
 
 public sealed record CreateProductRequest(
     string Slug,

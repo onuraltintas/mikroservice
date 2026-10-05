@@ -188,6 +188,7 @@ export interface CreateBankTransferPaymentRequest {
   paymentReference: string;
   payerName: string | null;
   note: string | null;
+  adultPayerDeclaration: boolean;
 }
 
 export interface BankTransferPaymentRequest {
