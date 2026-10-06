@@ -58,6 +58,11 @@ export class VisualizationEngine implements BaseEngine {
 
     private stepDeadline = 0;
     private stepRemainingMs = 0;
+    private sceneDeadline = 0;
+    private questionStartedAtMs = 0;
+    private startedAtMs = 0;
+    private pausedAtMs: number | null = null;
+    private pausedMilliseconds = 0;
     private questionAnswers: { questionId: string; answer: string; isCorrect: boolean | null; }[] = [];
 
     private timerInterval: any;
@@ -69,6 +74,7 @@ export class VisualizationEngine implements BaseEngine {
         return this.sceneDisplayTotal > 0
             ? Math.min(100, Math.max(0, this.sceneDisplayRemaining / this.sceneDisplayTotal * 100)) : 0;
     }
+    private serverAuthoritative = false;
     private previewOnly = false;
     private pendingServerAnswer: { questionId: string; answer: string; sceneId: string } | null = null;
     private answerEvaluated = false;
@@ -95,6 +101,7 @@ export class VisualizationEngine implements BaseEngine {
         const mode = read('mode');
         this.mode = ['static', 'guided', 'flash'].includes(mode) ? mode : 'static';
         this.previewOnly = root['previewOnly'] === true;
+        this.serverAuthoritative = !this.previewOnly;
 
         // Get scenes from config (try both cases)
         const configuredScenes = read('scenes');
@@ -154,15 +161,18 @@ export class VisualizationEngine implements BaseEngine {
         this.state.isPaused = false;
         this.state.isCompleted = false;
         this.state.timeElapsed = 0;
+        this.startedAtMs = Date.now();
+        this.pausedAtMs = null;
+        this.pausedMilliseconds = 0;
 
         // Start global timer
         this.timerInterval = setInterval(() => {
             if (!this.state.isPaused && this.state.isRunning) {
-                this.state.timeElapsed += 100;
+                this.state.timeElapsed = this.activeElapsedMs();
 
                 // Update scene countdown
                 if (this.phase === 'scene' && this.sceneDisplayRemaining > 0) {
-                    this.sceneDisplayRemaining -= 100;
+                    this.sceneDisplayRemaining = Math.max(0, this.sceneDeadline - Date.now());
                 }
 
                 this.callbacks.onStateChange({
@@ -198,6 +208,7 @@ export class VisualizationEngine implements BaseEngine {
             this.currentGuidedStepIndex = 0;
             this.startGuidedSteps(scene);
         } else {
+            this.sceneDeadline = Date.now() + this.sceneDisplayRemaining;
             // Static/Flash Mode Logic
             // Auto-transition to questions after scene duration
             this.sceneTimeout = setTimeout(() => {
@@ -208,6 +219,7 @@ export class VisualizationEngine implements BaseEngine {
         }
 
         this.sceneDisplayTotal = this.sceneDisplayRemaining;
+        this.sceneDeadline = Date.now() + this.sceneDisplayRemaining;
         this.callbacks.onStateChange({
             ...this.state,
             phase: 'scene',
@@ -269,6 +281,7 @@ export class VisualizationEngine implements BaseEngine {
 
     private endSceneDisplay(): void {
         this.phase = 'questions';
+        this.questionStartedAtMs = this.activeElapsedMs();
 
         if (this.sceneTimeout) {
             clearTimeout(this.sceneTimeout);
@@ -296,7 +309,12 @@ export class VisualizationEngine implements BaseEngine {
 
     pause(): void {
         if (!this.state.isRunning || this.state.isPaused) return;
+        this.state.timeElapsed = this.activeElapsedMs();
+        this.pausedAtMs = Date.now();
         this.stepRemainingMs = Math.max(0, this.stepDeadline - Date.now());
+        if (this.phase === 'scene') {
+            this.sceneDisplayRemaining = Math.max(0, this.sceneDeadline - Date.now());
+        }
         this.state.isPaused = true;
         if (this.sceneTimeout) clearTimeout(this.sceneTimeout);
         if (this.guidedStepTimer) clearTimeout(this.guidedStepTimer);
@@ -306,10 +324,13 @@ export class VisualizationEngine implements BaseEngine {
 
     resume(): void {
         if (!this.state.isRunning || !this.state.isPaused) return;
+        this.pausedMilliseconds += Date.now() - (this.pausedAtMs ?? Date.now());
+        this.pausedAtMs = null;
         this.state.isPaused = false;
 
         // Resume scene timer if in scene phase
         if (this.phase === 'scene') {
+            this.sceneDeadline = Date.now() + this.sceneDisplayRemaining;
             if (this.mode === 'guided' && this.getCurrentScene()?.steps?.length) {
                 // Resume guided steps (simple restart of current step duration for now)
                 const scene = this.getCurrentScene();
@@ -319,6 +340,7 @@ export class VisualizationEngine implements BaseEngine {
                     this.guidedStepTimer = setTimeout(() => this.continueGuidedSteps(scene, stepDuration), this.stepRemainingMs);
                 }
             } else if (this.sceneDisplayRemaining > 0) {
+                this.sceneDeadline = Date.now() + this.sceneDisplayRemaining;
                 this.sceneTimeout = setTimeout(() => {
                     if (this.state.isRunning && !this.state.isPaused) {
                         this.endSceneDisplay();
@@ -390,6 +412,10 @@ export class VisualizationEngine implements BaseEngine {
         this.guidedStepTimer = null;
     }
 
+    private activeElapsedMs(): number {
+        return Math.max(0, (this.pausedAtMs ?? Date.now()) - this.startedAtMs - this.pausedMilliseconds);
+    }
+
     handleInput(input: any): void {
         if (!input || typeof input !== 'object' || !this.state.isRunning || this.state.isPaused || this.state.isCompleted) return;
 
@@ -422,7 +448,7 @@ export class VisualizationEngine implements BaseEngine {
             return;
         }
 
-        {
+        if (this.serverAuthoritative) {
             this.pendingServerAnswer = {
                 questionId: question.questionId,
                 answer,
@@ -437,6 +463,7 @@ export class VisualizationEngine implements BaseEngine {
                 action: 'answer_question',
                 questionId: question.questionId,
                 answer: this.toOptionLetter(question, answer),
+                responseTime: Math.max(0, this.activeElapsedMs() - this.questionStartedAtMs),
                 customData: { sceneId: scene.sceneId },
                 timestamp: new Date()
             });
@@ -478,6 +505,7 @@ export class VisualizationEngine implements BaseEngine {
                 this.startScene();
             }
         } else {
+            this.questionStartedAtMs = this.activeElapsedMs();
             this.callbacks.onStateChange({
                 ...this.state,
                 phase: 'questions',
@@ -545,6 +573,7 @@ export class VisualizationEngine implements BaseEngine {
 
     private complete(): void {
         if (this.state.isCompleted) return;
+        this.state.timeElapsed = this.activeElapsedMs();
         this.cleanup();
         this.state.isRunning = false;
         this.state.isCompleted = true;

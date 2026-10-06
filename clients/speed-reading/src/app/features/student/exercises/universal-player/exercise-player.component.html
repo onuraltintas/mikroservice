@@ -1139,7 +1139,7 @@
                 <div class="ep-progress-bar"><div class="ep-progress-bar__fill" [style.width.%]="getVisualizationScenePercent()"></div></div>
             </div>
 
-            <button class="ep-btn ep-btn--primary" (click)="skipVisualizationScene()" class="skip-scene-btn">
+            <button class="ep-btn ep-btn--primary skip-scene-btn" (click)="skipVisualizationScene()" [disabled]="engineState.isPaused">
                 <span class="material-icons">skip_next</span>
                 Hazırım, Sorulara Geç
             </button>
@@ -1209,7 +1209,7 @@
             <!-- Answer Options -->
             <div class="modern-options" *ngIf="!isVisualizationShowingFeedback()">
                 <button *ngFor="let option of getVisualizationCurrentQuestion().options; let i = index"
-                    class="modern-option-btn" (click)="submitVisualizationAnswer(option)">
+                    class="modern-option-btn" [disabled]="engineState.isPaused" (click)="submitVisualizationAnswer(option)">
                     <span class="option-letter">{{ ['A', 'B', 'C', 'D'][i] }}</span>
                     <span class="option-text">{{ option }}</span>
                     <span class="material-icons" class="option-arrow">chevron_right</span>
@@ -1233,11 +1233,15 @@
 
             <!-- Next Button -->
             <button class="ep-btn ep-btn--primary" class="next-question-btn" *ngIf="isVisualizationShowingFeedback()"
-                [disabled]="isVisualizationAnswerPending()" (click)="nextVisualizationQuestion()">
+                [disabled]="isVisualizationAnswerPending() || engineState.isPaused" (click)="nextVisualizationQuestion()">
                 <span>{{ getVisualizationQuestionProgress().current >= getVisualizationQuestionProgress().total ?
                     'Sonraki Sahne' : 'Sonraki Soru' }}</span>
                 <span class="material-icons">arrow_forward</span>
             </button>
+
+            <p role="status" *ngIf="isVisualizationShowingFeedback() && !isVisualizationAnswerEvaluated()">
+                {{ isVisualizationAnswerPending() ? 'Cevabınız doğrulanıyor…' : sessionId === 'preview-mode' ? 'Önizleme: cevap değerlendirilmedi.' : 'Cevabınız kaydedildi.' }}
+            </p>
 
             <!-- Hint -->
             <div class="hint-box"
@@ -1658,8 +1662,13 @@
                 Gösterim yarım kaldı. Bu sonuç program veya ödev tamamlanması olarak sayılmaz.
             </div>
             <div class="measurement-not-available" *ngIf="result?.details?.measurementStatus === 'NotMeasured' && !result?.details?.displayPaceWpm">
+                <ng-container *ngIf="engine?.engineType === 'visualization'; else otherUnmeasuredExercise">
+                    Anlama ölçülmedi. Görselleştirme egzersizi gerçek okuma hızı veya zihinsel görüntü kalitesi ölçmez.
+                </ng-container>
+                <ng-template #otherUnmeasuredExercise>
                 Egzersiz tamamlandı ve kaydedildi. Bu egzersizdeki harf yanıtları sunucuda doğrulanmadığı için
                 seviye tespit puanına dahil edilmez; WPM ölçülmez.
+                </ng-template>
             </div>
 
             <div class="stats-row" *ngIf="engine?.engineType === 'motion_path' && result?.details?.fixationResults?.length">

@@ -5,6 +5,7 @@ using SpeedReading.Application.ExerciseSessions;
 using SpeedReading.Application.Visualization;
 using SpeedReading.Domain.Catalog;
 using SpeedReading.Domain.Visualization;
+using SpeedReading.Domain.Profiles;
 using SpeedReading.Infrastructure.Persistence;
 
 namespace SpeedReading.Application.UnitTests;
@@ -100,5 +101,31 @@ public sealed class VisualizationPersistenceTests
         Assert.Null(result.RawWPM); Assert.Equal(100m, result.ComprehensionScore);
         Assert.Equal(result.ComprehensionScore, (await service.CompleteAsync(student, started.SessionId, new())).ComprehensionScore);
         Assert.Single(await db.ExerciseSessionResults.ToListAsync());
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Limits_scenes_to_the_profile_age_group_or_global_content(bool configured)
+    {
+        await using var db = Context(); var student = Guid.NewGuid(); var age = Guid.NewGuid(); var otherAge = Guid.NewGuid();
+        var profile = SpeedReadingUserProfile.CreateDefault(Guid.NewGuid(), student, DateTime.UtcNow);
+        profile.UpdateSettings(1, 250, 75, 20, age, student, DateTime.UtcNow); db.UserProfiles.Add(profile);
+        var type = ExerciseType.Create(Guid.NewGuid(), "Visualization", "Görselleştirme", "visualization");
+        var configuration = configured ? System.Text.Json.JsonSerializer.Serialize(new { scenes = new[] {
+            new { sceneId = "own", description = "Kendi yaş", targetAgeGroupId = (Guid?)age },
+            new { sceneId = "other", description = "Başka yaş", targetAgeGroupId = (Guid?)otherAge },
+            new { sceneId = "global", description = "Genel", targetAgeGroupId = (Guid?)null }
+        } }) : "{}";
+        var exercise = Exercise.Create("Görselleştirme", "strategy", configuration, 3, student, type.Id);
+        db.ExerciseTypes.Add(type); db.Exercises.Add(exercise);
+        if (!configured) db.VisualizationScenes.AddRange(
+            VisualizationScene.Create(Guid.NewGuid(), exercise.Id, "Kendi yaş", null, 5, 0, 3, age, student, DateTime.UtcNow),
+            VisualizationScene.Create(Guid.NewGuid(), exercise.Id, "Başka yaş", null, 5, 1, 3, otherAge, student, DateTime.UtcNow),
+            VisualizationScene.Create(Guid.NewGuid(), exercise.Id, "Genel", null, 5, 2, 3, null, student, DateTime.UtcNow));
+        await db.SaveChangesAsync();
+        var started = await Service(db).StartAsync(student, new() { ExerciseId = exercise.Id });
+        var scenes = started.InitialData.GetProperty("visualizationScenes").EnumerateArray().ToArray();
+        Assert.Equal(2, scenes.Length); Assert.DoesNotContain(scenes, scene => scene.GetProperty("description").GetString() == "Başka yaş");
     }
 }

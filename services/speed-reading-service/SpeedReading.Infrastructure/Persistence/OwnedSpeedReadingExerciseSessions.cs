@@ -2956,11 +2956,15 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         {
             if (scene.ValueKind != JsonValueKind.Object)
                 continue;
-            if (ReadPositiveInt(scene, "difficultyLevel") is { } sceneLevel && sceneLevel != difficultyLevel)
+            var levelMetadata = ReadProperty(scene, "difficultyLevel");
+            if (levelMetadata.ValueKind is not (JsonValueKind.Undefined or JsonValueKind.Null)
+                && (levelMetadata.ValueKind != JsonValueKind.Number || !levelMetadata.TryGetInt32(out var sceneLevel)
+                    || sceneLevel is < 1 or > 5 || sceneLevel != difficultyLevel))
                 continue;
-            var targetAgeGroup = ReadString(scene, "targetAgeGroupId");
-            if (profileAgeGroupId.HasValue && Guid.TryParse(targetAgeGroup, out var sceneAgeGroup)
-                && sceneAgeGroup != profileAgeGroupId.Value)
+            var ageMetadata = ReadProperty(scene, "targetAgeGroupId");
+            if (ageMetadata.ValueKind is not (JsonValueKind.Undefined or JsonValueKind.Null)
+                && (ageMetadata.ValueKind != JsonValueKind.String || !Guid.TryParse(ageMetadata.GetString(), out var sceneAgeGroup)
+                    || sceneAgeGroup == Guid.Empty || (profileAgeGroupId.HasValue && sceneAgeGroup != profileAgeGroupId.Value)))
                 continue;
             var description = ReadString(scene, "description")?.Trim();
             if (string.IsNullOrWhiteSpace(description))

@@ -1865,7 +1865,7 @@ public sealed class StudentReadingPersistenceTests
         context.Exercises.Add(Exercise.Create(
             "Görsel egzersiz",
             "Görsel egzersiz",
-            "{}",
+            """{"scenes":[{"sceneId":"scene","description":"Bir ev","duration":5}]}""",
             difficultyLevel: 1,
             creatorId: studentId,
             exerciseTypeId,
