@@ -10,6 +10,30 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 
 describe('Custom preview settings safety', () => {
   const context = { roles: ['Admin'], preview: true };
+  it('exposes comprehension duration and line spacing controls', () => {
+    const controls = getCustomPreviewControls({ engineType: 'reading_comprehension', engineConfig: {
+      timing: { minReadingTimeMs: 2000, maxReadingTimeMs: 60000 }, display: { lineHeight: 2.2 }
+    } });
+    expect(Object.fromEntries(controls.map(control => [control.key, control.value]))).toEqual({
+      fontSize: 'medium', minReadingTimeSec: 2, maxReadingTimeSec: 60, lineHeightPercent: 220
+    });
+  });
+  it('applies comprehension timing without needing a font override or modifying content', () => {
+    const config = { engineType: 'reading_comprehension', engineConfig: { content: { text: 'Original' } } as Record<string, unknown> };
+    const result = applyCustomPreviewSettings(config, { minReadingTimeSec: 5, maxReadingTimeSec: 20, lineHeightPercent: 210 }, context);
+    expect(result.engineConfig['timing']).toEqual({ minReadingTimeMs: 5000, maxReadingTimeMs: 20000 });
+    expect(result.engineConfig['display']).toEqual({ lineHeight: 2.1 });
+    expect(result.engineConfig['content']).toEqual({ text: 'Original' });
+    expect(config.engineConfig['timing']).toBeUndefined();
+  });
+  it('rejects contradictory comprehension bounds and invalid spacing but allows unlimited reading', () => {
+    const config = { engineType: 'reading_comprehension', engineConfig: { timing: { minReadingTimeMs: 5000 } } };
+    expect(() => applyCustomPreviewSettings(config, { maxReadingTimeSec: 2 }, context)).toThrow();
+    expect(() => applyCustomPreviewSettings(config, { lineHeightPercent: 99 }, context)).toThrow();
+    expect(() => applyCustomPreviewSettings(config, { minReadingTimeSec: NaN }, context)).toThrow();
+    const result = applyCustomPreviewSettings(config, { maxReadingTimeSec: 0 }, context);
+    expect((result.engineConfig as any).timing.maxReadingTimeMs).toBe(0);
+  });
   it('allows a custom tachistoscope stimulus count without replacing its content', () => {
     const config = { engineType: 'text_stream', engineConfig: { mode: 'flash', content: { items: ['bir', 'masa'] } } as Record<string, unknown> };
     const result = applyCustomPreviewSettings(config, { stimulusCount: 3 }, context);
