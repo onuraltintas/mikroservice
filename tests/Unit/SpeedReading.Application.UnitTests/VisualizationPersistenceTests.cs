@@ -2,6 +2,7 @@ using System.Reflection;
 using System.Text.Json.Nodes;
 using Microsoft.EntityFrameworkCore;
 using SpeedReading.Application.ExerciseSessions;
+using SpeedReading.Application.Visualization;
 using SpeedReading.Domain.Catalog;
 using SpeedReading.Domain.Visualization;
 using SpeedReading.Infrastructure.Persistence;
@@ -10,6 +11,22 @@ namespace SpeedReading.Application.UnitTests;
 
 public sealed class VisualizationPersistenceTests
 {
+    [Fact]
+    public async Task Admin_scene_listing_survives_malformed_question_options()
+    {
+        await using var context = Context();
+        var actorId = Guid.NewGuid(); var typeId = Guid.NewGuid(); var exerciseId = Guid.NewGuid(); var sceneId = Guid.NewGuid();
+        context.ExerciseTypes.Add(ExerciseType.Create(typeId, "visualization", "Görselleştirme", "visualization"));
+        context.Exercises.Add(Exercise.Create("Görsel takip", "visualization", "{}", 1, actorId, typeId, exerciseId));
+        context.VisualizationScenes.Add(VisualizationScene.Create(sceneId, exerciseId, "Sahne", null, 30, 0, 1, null, actorId, DateTime.UtcNow));
+        context.VisualizationQuestions.Add(VisualizationQuestion.Create(Guid.NewGuid(), sceneId, "Ne gördünüz?", "{}", "A", "detail", 0, null, actorId, DateTime.UtcNow));
+        await context.SaveChangesAsync();
+        var service = (ISpeedReadingVisualization)Activator.CreateInstance(typeof(OwnedSpeedReadingDbContext).Assembly
+            .GetType("SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingVisualization")!,
+            BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, [context], null)!;
+        var result = await service.GetAdminScenesAsync(1, 25, null, null, CancellationToken.None);
+        Assert.Single(result.Items); Assert.Single(result.Items[0].Questions); Assert.Empty(result.Items[0].Questions[0].Options);
+    }
     private static OwnedSpeedReadingDbContext Context() => new(new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>()
         .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
     private static ISpeedReadingExerciseSessions Service(OwnedSpeedReadingDbContext db) =>

@@ -1487,8 +1487,11 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             state.VisualizationScenes = await LoadVisualizationScenesAsync(
                 exerciseId,
                 config,
+                difficultyLevel,
                 profileAgeGroupId,
                 cancellationToken);
+            if (state.VisualizationScenes.Count == 0)
+                throw new InvalidOperationException("Görselleştirme için seviyenize uygun sahne bulunamadı.");
             state.Questions = state.VisualizationScenes
                 .SelectMany(scene => scene.Questions)
                 .Select(ToSessionQuestion)
@@ -2887,6 +2890,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
     private async Task<List<VisualizationSceneState>> LoadVisualizationScenesAsync(
         Guid exerciseId,
         JsonElement config,
+        int difficultyLevel,
         Guid? profileAgeGroupId,
         CancellationToken cancellationToken)
     {
@@ -2897,6 +2901,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         var scenes = await db.VisualizationScenes.AsNoTracking()
             .Where(item => item.ExerciseId == exerciseId
                 && !item.IsDeleted
+                && item.DifficultyLevel == difficultyLevel
                 && (!profileAgeGroupId.HasValue
                     || item.TargetAgeGroupId == null
                     || item.TargetAgeGroupId == profileAgeGroupId.Value))
