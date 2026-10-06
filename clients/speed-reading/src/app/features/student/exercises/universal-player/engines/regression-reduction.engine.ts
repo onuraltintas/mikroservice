@@ -46,6 +46,8 @@ export class RegressionReductionEngine implements BaseEngine {
 
     private words: string[] = [];
     private currentWordIndex = -1;
+    private currentChunkStart = 0;
+    private backwardClickCount = 0;
     private phase: 'reading' | 'answering' | 'completed' = 'reading';
 
     // Questions Related
@@ -127,6 +129,7 @@ export class RegressionReductionEngine implements BaseEngine {
         }
 
         const visibleWords = Math.min(chunkSize, this.words.length - nextStart);
+        this.currentChunkStart = nextStart;
         this.currentWordIndex = nextStart + visibleWords - 1;
         this.state.currentStep = this.currentWordIndex + 1;
         this.remainingChunkMs = visibleWords * (this.config.wordDelayMs || 60000 / this.config.wpm);
@@ -203,6 +206,8 @@ export class RegressionReductionEngine implements BaseEngine {
         this.phase = 'reading';
         this.currentQuestionIndex = 0;
         this.answers = [];
+        this.backwardClickCount = 0;
+        this.currentChunkStart = 0;
         this.readingTimeMs = 0;
         this.remainingChunkMs = 0;
         this.chunkDeadline = 0;
@@ -258,16 +263,16 @@ export class RegressionReductionEngine implements BaseEngine {
         // Detect Regression (if user clicks on previous words)
         // This would be called from the component when a word is clicked.
         if (input.type === 'regression'
+            && this.state.isRunning && !this.state.isPaused && this.phase === 'reading'
             && Number.isInteger(input.wordIndex)
             && input.wordIndex >= 0
-            && input.wordIndex < this.words.length) {
+            && input.wordIndex < this.currentChunkStart) {
             this.callbacks.onAction({
-                action: 'regression_detected',
+                action: 'backward_word_clicked',
                 number: input.wordIndex,
                 timestamp: new Date()
             });
-            this.state.errors++;
-            this.state.accuracy = Math.round(100 - (this.state.errors / this.words.length * 100));
+            this.backwardClickCount++;
             this.callbacks.onStateChange({ ...this.state });
         }
     }
@@ -287,11 +292,7 @@ export class RegressionReductionEngine implements BaseEngine {
             ? Math.round((correctCount / this.questions.length) * 100)
             : null;
 
-        // Regresyon skorunu hesapla
-        const regressionScore = Math.max(0, 100 - (this.state.errors * 5));
-
-        // Genel skor: %40 regresyon + %60 anlama
-        const finalScore = comprehensionScore === null ? 0 : Math.round((regressionScore * 0.4) + (comprehensionScore * 0.6));
+        const finalScore = comprehensionScore ?? 0;
         this.state.score = finalScore;
         this.state.accuracy = comprehensionScore ?? 0;
         this.state.currentStep = this.state.totalSteps;
@@ -307,7 +308,7 @@ export class RegressionReductionEngine implements BaseEngine {
                 displayPaceWpm: this.config.wordDelayMs ? Math.round(60000 / this.config.wordDelayMs) : this.config.wpm,
                 readingTimeMs: this.readingTimeMs,
                 measurementStatus: this.questions.length > 0 ? 'Measured' : 'NotMeasured',
-                regressionCount: this.state.errors,
+                backwardClickCount: this.backwardClickCount,
                 comprehensionScore: comprehensionScore,
                 correctAnswers: correctCount,
                 totalQuestions: this.questions.length,
@@ -323,6 +324,10 @@ export class RegressionReductionEngine implements BaseEngine {
     // Public Getters for UI
     getWords(): string[] { return this.words; }
     getCurrentWordIndex(): number { return this.currentWordIndex; }
+    getCurrentChunkStart(): number { return this.currentChunkStart; }
+    getChunkSize(): number { return this.config.chunkSize || 1; }
+    getDisplayPaceWpm(): number { return this.config.wordDelayMs ? Math.round(60000 / this.config.wordDelayMs) : this.config.wpm; }
+    getBackwardClickCount(): number { return this.backwardClickCount; }
     getPhase(): 'reading' | 'answering' | 'completed' { return this.phase; }
     getQuestions(): any[] { return this.questions; }
     getCurrentQuestion(): any { return this.questions[this.currentQuestionIndex]; }
