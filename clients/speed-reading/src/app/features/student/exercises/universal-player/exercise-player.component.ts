@@ -18,6 +18,7 @@ import { resolveSchulteSettings } from './schulte-settings';
 import { EngineFactory, EngineType } from './engines/engine-factory';
 import { shouldForwardExerciseAction } from './exercise-action-policy';
 import { shouldShowReadingQuestions } from './reading-question-flow';
+import { SkimmingEngine } from './engines/skimming.engine';
 import {
   createActionFailureState,
   finishAfterPendingActions,
@@ -1044,6 +1045,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
             this.comprehensionQuestions.length,
             this.exercise?.exerciseTypeName);
           const isReadingEngine =
+            this.engine?.engineType === 'skimming' ||
             this.engine?.engineType === 'word_highlight' ||
             this.engine?.engineType === 'reading_comprehension' ||
             this.engine?.engineType === 'exam_simulation' ||
@@ -1070,7 +1072,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
 
             const readingTimeMinutes = (result.totalTime / 1000) / 60;
             // If engine calculated WPM (like RSVP), use it, otherwise calc
-            this.readingWpm = this.readingIncomplete ? 0 : (this.engine as any).getCurrentWPM?.() ||
+            this.readingWpm = this.readingIncomplete || this.engine?.engineType === 'skimming' ? 0 : (this.engine as any).getCurrentWPM?.() ||
               (readingTimeMinutes > 0 ? Math.round(wordCount / readingTimeMinutes) : 0);
 
             this.exercisePhase = 'questions';
@@ -1368,6 +1370,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       && [
         'word_highlight',
         'reading_comprehension',
+        'skimming',
         'text_fade',
         'text_stream',
         'free_reading',
@@ -1636,6 +1639,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
 
   private startTimer(): void {
     if (this.activeTimer) return;
+    if (this.engine?.engineType === 'skimming') return;
     if (this.engine?.engineType === 'text_stream' && !this.isTachistoscopeMode()) return;
 
     // Sadece remainingSeconds initialize edilmişse timer başlat
@@ -1836,6 +1840,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
 
   // Helper to get target WPM from config
   getTargetWpm(): number {
+    if (this.engine?.engineType === 'skimming') return 0;
     // Check config for target WPM
     const config = this.backendSessionConfig;
     if (config) {
@@ -2084,7 +2089,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       completedSteps: totalQuestions,
       errors: totalQuestions - correctCount,
       details: {
-        wpm: this.readingIncomplete ? null : this.readingWpm,
+        wpm: this.readingIncomplete || this.engine?.engineType === 'skimming' ? null : this.readingWpm,
         timedOut: this.readingIncomplete,
         targetWpm: this.getTargetWpm(),
         comprehensionScore: comprehensionAccuracy,
@@ -2195,6 +2200,8 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   }
 
   getRemainingTimeMs(): number {
+    if (this.engine?.engineType === 'skimming')
+      return Math.max(0, (this.engine as SkimmingEngine).getMaximumMs() - this.engineState.timeElapsed);
     if (this.engine?.engineType === 'grid_interaction') {
       return Math.max(0, (this.schulteSettings.timeLimit ?? 0) * 1000 - this.engineState.timeElapsed);
     }
@@ -2539,6 +2546,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   }
 
   hasTimeLimit(): boolean {
+    if (this.engine?.engineType === 'skimming') return true;
     if (this.engine?.engineType === 'grid_interaction') return this.schulteSettings.timeLimit !== undefined;
     if (this.engineState.remainingSeconds !== undefined) {
       return true;
@@ -3086,7 +3094,8 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       'chunking',
       'rsvp',
       'speed_reading',
-      'free_reading'
+      'free_reading',
+      'skimming'
     ];
     return !observationOnlyEngines.includes(this.engine?.engineType || '');
   }
@@ -3103,7 +3112,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
 
   private normalizeEngineResultForDisplay(result: EngineResult): EngineResult {
     const paced = this.isPacedReadingEngine();
-    const details = { ...(result.details || {}), ...(paced ? {
+    const details = { ...(result.details || {}), ...(this.engine?.engineType === 'skimming' ? { wpm: null } : {}), ...(paced ? {
       wpm: null, displayPaceWpm: this.getWpm(),
       completionPercent: result.totalSteps > 0 ? Math.round(result.completedSteps / result.totalSteps * 100) : 0,
       incomplete: result.details?.timedOut === true
@@ -3233,6 +3242,11 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
             comprehensionScore: sessionResult.comprehensionScore ?? null,
             weightedKDP: sessionResult.weightedKDP ?? null,
             measurementStatus: sessionResult.measurementStatus,
+            ...(this.engine?.engineType === 'skimming' ? {
+              inspectionTimeMs: sessionResult.detailedResults?.skimmingInspectionMs,
+              incomplete: sessionResult.detailedResults?.readingIncomplete === true,
+              timedOut: sessionResult.detailedResults?.readingIncomplete === true
+            } : {}),
             ...(sessionResult.detailedResults?.groupingDisplayPaceWpm > 0 ? {
               displayPaceWpm: sessionResult.detailedResults.groupingDisplayPaceWpm,
               completionPercent: sessionResult.detailedResults.groupingCompletionPercent,
@@ -3407,22 +3421,26 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   // Reading Comprehension helpers
   private readingScrollProgress = 0;
 
+  isManualReadingEngine(): boolean {
+    return ['reading_comprehension', 'free_reading', 'exam_simulation', 'adaptive_fluency', 'skimming'].includes(this.engine?.engineType || '');
+  }
+
   getComprehensionText(): string {
-    if (this.engine?.engineType === 'reading_comprehension' || this.engine?.engineType === 'free_reading' || this.engine?.engineType === 'exam_simulation' || this.engine?.engineType === 'adaptive_fluency') {
+    if (this.isManualReadingEngine()) {
       return (this.engine as any).getText?.() || '';
     }
     return '';
   }
 
   getComprehensionWordCount(): number {
-    if (this.engine?.engineType === 'reading_comprehension' || this.engine?.engineType === 'free_reading' || this.engine?.engineType === 'exam_simulation' || this.engine?.engineType === 'adaptive_fluency') {
+    if (this.isManualReadingEngine()) {
       return (this.engine as any).getWordCount?.() || 0;
     }
     return 0;
   }
 
   getComprehensionFontSize(): string {
-    if (this.engine?.engineType === 'reading_comprehension' || this.engine?.engineType === 'free_reading' || this.engine?.engineType === 'exam_simulation' || this.engine?.engineType === 'adaptive_fluency') {
+    if (this.isManualReadingEngine()) {
       return (this.engine as any).getFontSize?.() || 'medium';
     }
     return 'medium';
@@ -3460,14 +3478,14 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       this.readingScrollProgress = Math.min(100, Math.max(0, scrollPercent));
 
       // Notify engine about scroll progress
-      if (this.engine?.engineType === 'reading_comprehension' || this.engine?.engineType === 'free_reading' || this.engine?.engineType === 'exam_simulation' || this.engine?.engineType === 'adaptive_fluency') {
-        this.engine.handleInput({ scrollProgress: this.readingScrollProgress });
+      if (this.isManualReadingEngine()) {
+        this.engine?.handleInput({ scrollProgress: this.readingScrollProgress });
       }
     }
   }
 
   completeReading(): void {
-    if (this.engine?.engineType === 'reading_comprehension' || this.engine?.engineType === 'free_reading' || this.engine?.engineType === 'exam_simulation' || this.engine?.engineType === 'adaptive_fluency') {
+    if (this.isManualReadingEngine()) {
       (this.engine as any).completeReading();
     }
   }

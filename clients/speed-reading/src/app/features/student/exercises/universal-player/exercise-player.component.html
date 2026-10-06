@@ -494,7 +494,7 @@
     </div>
 
     <!-- Exercise Running - Reading Comprehension (Serbest Okuma + Anlama) -->
-    <div *ngIf="engine && engineState.isRunning && (engine.engineType === 'reading_comprehension' || engine.engineType === 'free_reading' || engine.engineType === 'exam_simulation' || engine.engineType === 'adaptive_fluency') && exercisePhase === 'reading'"
+    <div *ngIf="engine && engineState.isRunning && isManualReadingEngine() && exercisePhase === 'reading'"
         class="game-container reading-comprehension-container">
         <div class="game-header">
             <div class="timer" [class.countdown]="hasTimeLimit()" [class.urgent]="isTimeUrgent()">
@@ -514,9 +514,13 @@
         </div>
 
         <!-- Reading Instructions -->
-        <div class="reading-instruction" *ngIf="!engineState.isPaused && engine.engineType !== 'adaptive_fluency'">
+        <div class="reading-instruction" *ngIf="!engineState.isPaused && engine.engineType !== 'adaptive_fluency' && engine.engineType !== 'skimming'">
             <span class="material-icons">menu_book</span>
             <span>Metni kendi hızınızda okuyun. Okuma bitince "Okudum" butonuna basın.</span>
+        </div>
+        <div class="reading-instruction" *ngIf="!engineState.isPaused && engine.engineType === 'skimming'">
+            <span class="material-icons">article</span>
+            <span>Başlık, giriş ve sonuç cümlelerine göz gezdirerek metnin ana fikrini belirleyin. Her kelimeyi okumak zorunda değilsiniz. İncelemeyi bitirince ana fikir sorularına geçin.</span>
         </div>
         <div class="reading-instruction" *ngIf="!engineState.isPaused && engine.engineType === 'adaptive_fluency'">
             <span class="material-icons">track_changes</span>
@@ -527,7 +531,9 @@
         <!-- Text Reading Area -->
         <div class="reading-text-area" [class.paused]="engineState.isPaused" #readingTextContainer
             (scroll)="onReadingScroll($event)">
-            <div class="reading-text-content" [ngClass]="'font-' + getComprehensionFontSize()" [style.line-height]="getComprehensionLineHeight()">
+            <h3 *ngIf="engine.engineType === 'skimming'">{{ backendSessionConfig?.readingTextTitle }}</h3>
+            <div class="reading-text-content" [ngClass]="'font-' + getComprehensionFontSize()" [style.line-height]="getComprehensionLineHeight()"
+                [style.font-size.px]="engine.engineType === 'skimming' ? $any(engine).getFontSizePx() : null" [style.white-space]="engine.engineType === 'skimming' ? 'pre-line' : null">
                 {{ getComprehensionText() }}
             </div>
         </div>
@@ -547,7 +553,7 @@
 
             <button class="complete-reading-btn" (click)="completeReading()" [disabled]="!canCompleteReading()">
                 <span class="material-icons">done</span>
-                {{ comprehensionQuestions.length ? 'Okudum, Sorulara Geç' : 'Okumayı Bitir' }}
+                {{ engine.engineType === 'skimming' ? 'İncelemeyi bitir, Sorulara geç' : comprehensionQuestions.length ? 'Okudum, Sorulara Geç' : 'Okumayı Bitir' }}
             </button>
         </div>
     </div>
@@ -1707,6 +1713,11 @@
             </div>
 
             <!-- XP and Level Row -->
+            <div class="measurement-not-available" *ngIf="engine?.engineType === 'skimming'">
+                Ana fikir başarısı sorularla ölçülür; metne göz gezdirme süresi normal okuma hızı (WPM) değildir.
+                <span *ngIf="result?.details?.inspectionTimeMs != null">İnceleme süresi: {{ formatTime(result?.details?.inspectionTimeMs) }}</span>
+                <span *ngIf="result?.details?.comprehensionScore != null">Ana fikir başarısı: {{ result?.details?.comprehensionScore }}%</span>
+            </div>
             <div class="measurement-not-available" *ngIf="result?.details?.timedOut">
                 Okuma süresi doldu. Anlama cevapları kaydedildi; okuma hızı ölçülmedi ve program/ödev ilerlemesi verilmedi.
             </div>

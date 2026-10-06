@@ -114,7 +114,12 @@ export function getCustomPreviewControls(configuration: Record<string, unknown>)
       if (mode === 'saccade') return [control('jumpIntervalMs', 'Hedef geçiş aralığı (ms)', 50, 10000, movement['jumpintervalms'] ?? 1000)];
       return [control('holdMs', 'Odaklanma süresi (ms)', 50, 10000, timing['holdms'] ?? movement['fixationtimems'] ?? 2000)];
     }
-    case 'skimming':
+    case 'skimming': return [
+      control('timeLimitSec', 'İnceleme süresi sınırı (saniye)', 1, 3600,
+        timing['maxreadingtimems'] !== undefined ? Number(timing['maxreadingtimems']) / 1000
+          : read('timeLimitSeconds') ?? read('timeLimit') ?? timing['timelimitsec'] ?? 90),
+      control('fontSizePx', 'Metin boyutu (px)', 14, 48, Number.parseInt(String(caseInsensitiveField(recordOrEmpty(read('visuals')), 'fontSize') ?? '20'), 10) || 20)
+    ];
     case 'scanning':
     case 'scan_find': return [
       control('timeLimitSec', 'Süre sınırı (saniye)', 1, 3600, read('timeLimitSeconds') ?? read('timeLimit') ?? timing['timelimitsec'] ?? 90),
@@ -338,7 +343,17 @@ export function applyCustomPreviewSettings<T extends Record<string, unknown>>(
     if (validated['jumpIntervalMs'] !== undefined) merge('movement', { jumpIntervalMs: validated['jumpIntervalMs'] });
     return result;
   }
-  if (engine === 'scan_find' || engine === 'scanning' || engine === 'skimming') {
+  if (engine === 'skimming') {
+    if (validated['timeLimitSec'] !== undefined) {
+      const minimum = mergeCaseInsensitiveRecords(configuration, settings, 'timing')['minreadingtimems'] ?? 3000;
+      if (validated['timeLimitSec'] * 1000 <= Number(minimum)) throw new Error('İnceleme süresi minimum süreden uzun olmalıdır.');
+      merge('timing', { maxReadingTimeMs: validated['timeLimitSec'] * 1000 });
+      settings['timeLimitSeconds'] = validated['timeLimitSec'];
+    }
+    if (validated['fontSizePx'] !== undefined) settings['visuals'] = overrideFields(recordOrEmpty(caseInsensitiveField(settings, 'visuals') ?? caseInsensitiveField(configuration, 'visuals')), { fontSize: `${validated['fontSizePx']}px` });
+    return result;
+  }
+  if (engine === 'scan_find' || engine === 'scanning') {
     if (validated['timeLimitSec'] !== undefined) settings['timeLimitSeconds'] = validated['timeLimitSec'];
     if (validated['targetCount'] !== undefined) {
       settings['targetCount'] = validated['targetCount'];
