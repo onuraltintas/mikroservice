@@ -266,7 +266,7 @@ public sealed class StudentReadingPersistenceTests
         var started = await service.StartAsync(studentId, new StartExerciseSessionRequest { ExerciseId = exerciseId, StudentAssignmentId = studentAssignment.Id });
         var session = await context.ExerciseSessions.SingleAsync();
         var state = System.Text.Json.Nodes.JsonNode.Parse(session.SessionDataJson)!;
-        state["readingStartTime"] = DateTime.UtcNow.AddSeconds(-30);
+        state["readingStartTime"] = DateTime.UtcNow.AddSeconds(engine == "text_stream" ? -81 : -30);
         session.SetState(state.ToJsonString());
         await context.SaveChangesAsync();
         await service.ValidateActionAsync(studentId, started.SessionId,

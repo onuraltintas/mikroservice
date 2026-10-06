@@ -142,6 +142,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             var minimumWords = isFreeText ? ReadPositiveInt(explicitContent, "minWordCount") ?? ReadPositiveInt(ReadObject(explicitConfig, "content"), "minWordCount") ?? 0 : 0;
             var maximumWords = isFreeText ? ReadPositiveInt(explicitContent, "maxWordCount") ?? ReadPositiveInt(ReadObject(explicitConfig, "content"), "maxWordCount") ?? 0 : 0;
             var strictTextLevel = IsGrouping(new SessionState { EngineType = exerciseEngineType, ExerciseTypeName = exerciseTypeName })
+                || IsRsvp(exerciseTypeName, exerciseEngineType, explicitConfig)
                 || ExerciseConfigurationRules.NormalizeEngineType(exerciseEngineType) is "free_reading" or "text_fade" or "regression_reduction" or "subvocalization_reduction";
             var readingTextMatches = await db.ReadingTexts
                 .AsNoTracking()
@@ -241,6 +242,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                         && DeserializeState(matchingSession.SessionDataJson).GroupingDisplayPaceWpm <= 0)
                     || (IsTextFade(DeserializeState(matchingSession.SessionDataJson))
                         && DeserializeState(matchingSession.SessionDataJson).FadeDisplayPaceWpm <= 0)
+                    || (IsRsvp(exerciseTypeName, exerciseEngineType, ParseJsonOrEmpty(configurationJson))
+                        && DeserializeState(matchingSession.SessionDataJson).RsvpProtocolVersion != 1)
                     || (IsVisualExpansionExercise(DeserializeState(matchingSession.SessionDataJson))
                         && DeserializeState(matchingSession.SessionDataJson).VisualExpansionProtocolVersion != 1)
                     || (IsValidatedFixation(DeserializeState(matchingSession.SessionDataJson))
@@ -322,6 +325,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                 var isGrouping = normalizedEngineType == "word_highlight"
                     && exerciseTypeName.Equals("Chunking", StringComparison.OrdinalIgnoreCase);
                 var isTextFade = normalizedEngineType == "text_fade";
+                var isRsvp = IsRsvp(exerciseTypeName, exerciseEngineType, parsedConfiguration);
                 var isRegression = normalizedEngineType == "regression_reduction";
                 var isSubvocalization = normalizedEngineType == "subvocalization_reduction";
                 var requiresScorableQuestions = ExerciseConfigurationRules.ResolveReadingPurpose(
@@ -334,7 +338,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                     .Where(item => item.IsActive
                         && !item.IsDeleted
                         && item.Content != string.Empty
-                        && (!(isFreeReading || isComprehension || isScanning || isGrouping || isTextFade || isRegression || isSubvocalization) || item.DifficultyLevel == difficultyLevel)
+                        && (!(isFreeReading || isComprehension || isScanning || isGrouping || isTextFade || isRegression || isSubvocalization || isRsvp) || item.DifficultyLevel == difficultyLevel)
                         && (!isFreeReading || (item.WordCount >= freeMinimumWords && (freeMaximumWords == 0 || item.WordCount <= freeMaximumWords)))
                         && (!profileAgeGroupId.HasValue
                             || item.TargetAgeGroupId == null
@@ -347,7 +351,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                                 || question.CorrectAnswer.Trim().ToUpper() == "B"
                                 || question.CorrectAnswer.Trim().ToUpper() == "C"
                                 || question.CorrectAnswer.Trim().ToUpper() == "D"))))
-                    .OrderBy(item => isFreeReading || isScanning || isGrouping || isTextFade || isRegression || isSubvocalization
+                    .OrderBy(item => isFreeReading || isScanning || isGrouping || isTextFade || isRegression || isSubvocalization || isRsvp
                         ? db.ExerciseSessions.Count(history => history.StudentId == studentId && history.ReadingTextId == item.Id)
                         : isComprehension
                         ? db.ReadingSessions.Count(history => history.UserId == studentId && history.ReadingTextId == item.Id)
@@ -359,6 +363,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                     .FirstOrDefaultAsync(token);
                 if (isGrouping && !readingTextId.HasValue)
                     throw new InvalidOperationException("Seçilen Gruplama seviyesine uygun aktif metin bulunamadı.");
+                if (isRsvp && !readingTextId.HasValue)
+                    throw new InvalidOperationException("Seçilen RSVP seviyesine uygun aktif metin bulunamadı.");
                 if (isTextFade && !readingTextId.HasValue)
                     throw new InvalidOperationException("Seçilen Metin Solma seviyesine uygun aktif metin bulunamadı.");
                 if (isRegression && !readingTextId.HasValue)
@@ -570,6 +576,9 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         if ((IsGrouping(state) || IsTextFade(state)) && (DisplayPace(state) <= 0 || state.ReadingMinimumMs <= 0
             || !state.ReadingStartTime.HasValue || !state.ReadingEndTime.HasValue))
             throw IncompleteSession("Doğrulanmış gösterim tamamlanmadan oturum kaydedilemez. Egzersizi yeniden başlatın.");
+        if (IsRsvp(state) && (state.RsvpProtocolVersion != 1 || !state.ReadingStartTime.HasValue
+            || !state.ReadingEndTime.HasValue || state.ReadingMinimumMs <= 0))
+            throw IncompleteSession("RSVP gösterimi doğrulanmadan oturum kaydedilemez. Egzersizi yeniden başlatın.");
 
         if (IsScanning(state))
         {
@@ -682,7 +691,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             : IsScanning(state) ? ScanningAccuracy(state)
             : SpeedReadingExerciseSessionRules.CalculateAccuracy(session.CorrectCount, session.IncorrectCount);
         var wordsRead = state.Tachistoscope is not null || IsScanning(state)
-            || IsErrorAnalysis(state) || IsVocabularyState(state)
+            || IsRsvp(state) || IsErrorAnalysis(state) || IsVocabularyState(state)
             || IsFocusExercise(state)
             || IsVisualizationExercise(state.ExerciseTypeName) || IsEngineType(state.EngineType, "visualization")
             || IsEngineType(state.EngineType, "regression_reduction") || IsEngineType(state.EngineType, "subvocalization_reduction")
@@ -1247,6 +1256,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         };
         var engineConfig = ReadObject(config, "engineConfig");
         var effectiveConfig = engineConfig.ValueKind == JsonValueKind.Object ? engineConfig : config;
+        state.TextStreamMode = ReadString(effectiveConfig, "mode") ?? ReadString(config, "mode") ?? string.Empty;
         if (ExerciseConfigurationRules.NormalizeEngineType(exerciseEngineType) is "reading_comprehension" or "free_reading")
         {
             state.ReadingPausedMilliseconds = 0;
@@ -1649,8 +1659,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                     ?? state.TotalSteps, 1, 500);
         }
 
-        if (exerciseTypeName.Equals("RSVP", StringComparison.OrdinalIgnoreCase) && state.Words.Length > 0)
-            state.TotalSteps = state.Words.Length;
+        if (IsRsvp(state)) InitializeRsvp(state, config, effectiveConfig);
         if (state.Tachistoscope is { } tachistoscope) state.TotalSteps = tachistoscope.Count;
         if (IsScanning(state)) InitializeScanning(state, effectiveConfig);
         if (IsErrorAnalysis(state)) InitializeErrorAnalysis(state, effectiveConfig);
@@ -1734,8 +1743,10 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
     {
         if (IsAdaptiveFluency(state))
             return FinishAdaptiveStage(session, state, now);
-        if (ExerciseConfigurationRules.NormalizeEngineType(state.EngineType) is "reading_comprehension" or "free_reading" || IsGrouping(state) || IsTextFade(state))
+        if (ExerciseConfigurationRules.NormalizeEngineType(state.EngineType) is "reading_comprehension" or "free_reading" || IsGrouping(state) || IsTextFade(state) || IsRsvp(state))
         {
+            if (IsRsvp(state) && state.RsvpProtocolVersion != 1)
+                return Invalid("Bu eski RSVP oturumu doğrulanamıyor. Egzersizi yeniden başlatın.");
             if ((IsGrouping(state) || IsTextFade(state)) && (DisplayPace(state) <= 0 || state.ReadingMinimumMs <= 0))
                 return Invalid("Bu eski egzersiz oturumu doğrulanamıyor. Egzersizi yeniden başlatın.");
             if (!state.ReadingStartTime.HasValue)
@@ -1757,6 +1768,15 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         {
             state.ReadingEndTime = now;
             state.ReadingIncomplete = incomplete;
+            if (IsRsvp(state)) {
+                var elapsedMs = Math.Max(0, (now - state.ReadingStartTime.Value).TotalMilliseconds
+                    - (state.ReadingPausedMilliseconds ?? 0));
+                var cycleMs = state.RsvpDisplayDurationMs + state.RsvpFixationMs + state.RsvpGapMs;
+                state.RsvpPresentedWords = incomplete
+                    ? Math.Min(state.WordCount, (int)Math.Floor((elapsedMs + state.RsvpGapMs) / cycleMs))
+                    : state.WordCount;
+                state.RsvpCompletionPercent = Math.Round(100m * state.RsvpPresentedWords / state.WordCount, 2);
+            }
             if (IsGrouping(state))
             {
                 var elapsedMs = Math.Max(0, (now - state.ReadingStartTime.Value).TotalMilliseconds
@@ -3607,6 +3627,14 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         public DateTime? ReadingStartTime { get; set; }
         public DateTime? ReadingEndTime { get; set; }
         public bool ReadingIncomplete { get; set; }
+        public string TextStreamMode { get; set; } = string.Empty;
+        public int RsvpProtocolVersion { get; set; }
+        public int RsvpDisplayDurationMs { get; set; }
+        public int RsvpGapMs { get; set; }
+        public int RsvpFixationMs { get; set; }
+        public decimal RsvpDisplayPaceWpm { get; set; }
+        public int RsvpPresentedWords { get; set; }
+        public decimal RsvpCompletionPercent { get; set; }
         public int GroupingChunkSize { get; set; }
         public decimal FadeDisplayPaceWpm { get; set; }
         public int FadeLagMs { get; set; }
