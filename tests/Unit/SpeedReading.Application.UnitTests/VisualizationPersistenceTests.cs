@@ -71,7 +71,7 @@ public sealed class VisualizationPersistenceTests
     {
         await using var db = Context(); var student = Guid.NewGuid();
         var type = ExerciseType.Create(Guid.NewGuid(), "Visualization", "Görselleştirme", "visualization");
-        var config = """{"scenes":[{"sceneId":"wrong","description":"Yanlış","difficultyLevel":1},{"sceneId":"blank","description":" "},{"sceneId":"right","description":"Doğru","difficultyLevel":3}]}""";
+        var config = """{"scenes":[{"sceneId":"wrong","description":"Yanlış","difficultyLevel":1},{"sceneId":"bad-level","description":"Geçersiz seviye","difficultyLevel":0},{"sceneId":"bad-age","description":"Geçersiz yaş","targetAgeGroupId":"invalid"},{"sceneId":"blank","description":" "},{"sceneId":"right","description":"Doğru","difficultyLevel":3}]}""";
         var exercise = Exercise.Create("Görselleştirme", "strategy", nested ? "{\"engineConfig\":" + config + "}" : config, 3, student, type.Id);
         db.ExerciseTypes.Add(type); db.Exercises.Add(exercise); await db.SaveChangesAsync();
         var started = await Service(db).StartAsync(student, new() { ExerciseId = exercise.Id });
