@@ -16,6 +16,21 @@ const callbacks: EngineCallbacks = {
 };
 
 describe('reading pacer runtime safety', () => {
+  it('translates legacy group cycle timing to display tempo without overriding explicit WPM', fakeAsync(() => {
+    let result: any;
+    const engine = new WordHighlightEngine();
+    engine.initialize({ engineConfig: { content: { text: 'bir iki üç dört', chunkSize: 2 },
+      timing: { durationMs: 850, delayMs: 450 } } } as any, { ...callbacks, onComplete: value => result = value });
+    expect(engine.getWpm()).toBeCloseTo(120000 / 1300, 5);
+    engine.start();
+    tick(2610);
+    expect(result.completedSteps).toBe(2);
+    expect(result.details.wpm).toBeNull();
+    engine.destroy();
+    engine.initialize({ content: { text: 'bir iki', chunkSize: 2 }, timing: { durationMs: 850, delayMs: 450 },
+      pacer: { speedWpm: 300 } } as any, callbacks);
+    expect(engine.getWpm()).toBe(300);
+  }));
   it('uses supported catalogue highlight colors and safely defaults invalid colors', () => {
     const engine = new WordHighlightEngine();
     engine.initialize({ content: { text: 'bir iki' }, visuals: { highlightColor: 'blue' } } as any, callbacks);
