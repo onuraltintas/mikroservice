@@ -302,6 +302,22 @@ describe('VocabularyBuilderEngine server validation contract', () => {
   });
 });
 
+describe('Vocabulary paused quiz navigation', () => {
+  it('does not advance acknowledged quiz feedback while paused or stopped', () => {
+    const engine = createQuizEngine([], []);
+    engine.start();
+    engine.submitQuizAnswer(engine.getQuizOptions()[0].letter);
+    engine.applyServerResponse({ isValid: true, isCorrect: true, feedbackData: { box: 2 } } as any);
+    engine.pause();
+    engine.nextQuizQuestion();
+    expect(engine.getProgress().current).toBe(1);
+    engine.resume();
+    engine.nextQuizQuestion();
+    expect(engine.getProgress().current).toBe(2);
+    engine.destroy();
+  });
+});
+
 function createQuizEngine(actions: any[], errors: string[]): VocabularyBuilderEngine {
   const engine = new VocabularyBuilderEngine();
   engine.initialize({
