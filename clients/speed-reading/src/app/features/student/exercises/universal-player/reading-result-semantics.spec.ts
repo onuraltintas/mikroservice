@@ -1,6 +1,23 @@
 import { ExercisePlayerComponent } from './exercise-player.component';
 
 describe('reading result semantics', () => {
+  it('retains incomplete reading after questions without fabricating speed', () => {
+    const player = Object.create(ExercisePlayerComponent.prototype) as any;
+    player.engine = { engineType: 'reading_comprehension' };
+    player.engineState = { timeElapsed: 5000 };
+    player.readingIncomplete = true;
+    player.readingWpm = 999;
+    player.comprehensionQuestions = [{}];
+    player.questionAnswers = [{ isCorrect: true, timeSpent: 1000, targetTime: 2000, selectedAnswer: 'A' }];
+    player.stopQuestionTimer = () => undefined;
+    player.getTargetWpm = () => 200;
+    player.saveResult = () => undefined;
+    player.cdr = { detectChanges: () => undefined };
+    player.finishQuestionPhase();
+    expect(player.result.details.wpm).toBeNull();
+    expect(player.result.details.timedOut).toBeTrue();
+    expect(player.result.details.comprehensionScore).toBe(100);
+  });
   it('keeps question-phase completion separate from display pace', () => {
     const player = Object.create(ExercisePlayerComponent.prototype) as any;
     player.engine = { engineType: 'word_highlight', getWpm: () => 200 };
