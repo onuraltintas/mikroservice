@@ -561,7 +561,13 @@ public static class ExerciseConfigurationRules
 
         var timing = TryGetObject(config, "timing");
         if (timing.HasValue)
+        {
             ValidateOptionalIntRange(timing.Value, "timeLimitSec", 1, 3_600, "Kelime vurgulama süre sınırı");
+            ValidateOptionalIntRange(timing.Value, "durationMs", 1, 10_000, "Kelime vurgulama gösterim süresi");
+            ValidateOptionalIntRange(timing.Value, "delayMs", 0, 10_000, "Kelime vurgulama bekleme süresi");
+        }
+        if (TryGetObject(config, "content") is { } content)
+            ValidateOptionalIntRange(content, "chunkSize", 1, 10, "Kelime vurgulama öbek boyutu");
         ValidateOptionalStringArray(config, "chunks", 500, 1_000, "Kelime vurgulama öbekleri");
         ValidateOptionalInlineText(config);
     }

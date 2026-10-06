@@ -1561,18 +1561,22 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             var timing = ReadObject(effectiveConfig, "timing");
             state.GroupingChunkSize = Math.Clamp(ReadPositiveInt(effectiveConfig, "chunkSize")
                 ?? ReadPositiveInt(config, "chunkSize") ?? ReadPositiveInt(pacer, "chunkSize")
-                ?? ReadPositiveInt(content, "chunkSize") ?? ReadPositiveInt(ReadObject(config, "pacer"), "chunkSize")
+                ?? ReadPositiveInt(ReadObject(config, "pacer"), "chunkSize") ?? ReadPositiveInt(content, "chunkSize")
                 ?? ReadPositiveInt(ReadObject(config, "content"), "chunkSize") ?? 1, 1, 10);
             var explicitWpm = ReadPositiveInt(effectiveConfig, "targetWpm")
                 ?? ReadPositiveInt(config, "targetWpm") ?? ReadPositiveInt(pacer, "speedWpm")
                 ?? ReadPositiveInt(ReadObject(config, "pacer"), "speedWpm");
             var rootTiming = ReadObject(config, "timing");
             var duration = ReadPositiveInt(timing, "durationMs") ?? ReadPositiveInt(rootTiming, "durationMs");
-            var delay = Math.Clamp(ReadPositiveInt(timing, "delayMs") ?? ReadPositiveInt(rootTiming, "delayMs") ?? 0, 0, 10000);
+            var delay = timing.ValueKind == JsonValueKind.Object && timing.TryGetProperty("delayMs", out var nestedDelay)
+                && nestedDelay.TryGetInt32(out var delayValue) ? delayValue : ReadPositiveInt(rootTiming, "delayMs") ?? 0;
+            delay = Math.Clamp(delay, 0, 10000);
             state.GroupingDisplayPaceWpm = explicitWpm.HasValue ? Math.Clamp(explicitWpm.Value, 20, 1500)
                 : duration.HasValue ? Math.Clamp(60000m * state.GroupingChunkSize /
                     (Math.Clamp(duration.Value, 1, 10000) + delay), 20, 1500) : 200;
             state.ReadingMinimumMs = (int)Math.Ceiling(state.Words.Length * 60000m / state.GroupingDisplayPaceWpm);
+            state.ReadingMaximumMs = (ReadPositiveInt(timing, "timeLimitSec")
+                ?? ReadPositiveInt(rootTiming, "timeLimitSec") ?? 0) * 1000;
             state.ReadingPausedMilliseconds = 0;
             state.TotalSteps = (int)Math.Ceiling((decimal)state.Words.Length / state.GroupingChunkSize);
         }
@@ -1618,6 +1622,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             {
                 var elapsedMs = Math.Max(0, (now - state.ReadingStartTime.Value).TotalMilliseconds
                     - (state.ReadingPausedMilliseconds ?? state.ReadingPausedSeconds * 1000L));
+                if (IsGrouping(state))
+                    incomplete |= state.ReadingMaximumMs > 0 && elapsedMs >= state.ReadingMaximumMs;
                 if (!incomplete && elapsedMs < state.ReadingMinimumMs)
                     return Invalid("Minimum okuma süresi henüz dolmadı.");
                 incomplete |= state.ReadingMaximumMs > 0 && elapsedMs >= state.ReadingMaximumMs;
