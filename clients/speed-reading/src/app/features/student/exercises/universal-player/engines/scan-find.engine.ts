@@ -99,6 +99,11 @@ export class ScanFindEngine implements BaseEngine {
         };
         this.callbacks = callbacks;
         this.normalizeConfig();
+        if (!this.config['serverAuthoritative'] && this.config['targetCount']) {
+            for (const round of this.config.scanningRounds || []) {
+                if (round.targets.length === 0) round.targets = this.generateTargets(round.textContent);
+            }
+        }
         this.currentRoundIndex = boundedInteger(this.config.currentRound, 0, 0,
             Math.max(0, (this.config.scanningRounds?.length || 1) - 1));
         this.totalFoundUniqueAcrossRounds = this.config.scanningRounds
@@ -161,6 +166,12 @@ export class ScanFindEngine implements BaseEngine {
         return caseSensitive ? clean : clean.toLocaleLowerCase('tr-TR');
     }
 
+    private generateTargets(text: string): string[] {
+        return [...new Set(text.split(/\s+/).map(word => this.normalizeWord(word, this.config.targets?.caseSensitive === true)))]
+            .filter(word => /\p{L}/u.test(word)).sort((a, b) => b.length - a.length || a.localeCompare(b, 'tr-TR'))
+            .slice(0, boundedInteger(this.config['targetCount'], 3, 1, 100));
+    }
+
     private generateContent(): void {
         let rawText = "";
         let targetWordsList: string[] = [];
@@ -187,9 +198,7 @@ export class ScanFindEngine implements BaseEngine {
 
         const caseSensitive = this.config.targets?.caseSensitive || false;
         if (targetWordsList.length === 0 && rawText && !this.config['serverAuthoritative'] && this.config['targetCount']) {
-            targetWordsList = [...new Set(rawText.split(/\s+/).map(word => this.normalizeWord(word, caseSensitive)))]
-                .filter(word => /\p{L}/u.test(word)).sort((a, b) => b.length - a.length || a.localeCompare(b, 'tr-TR'))
-                .slice(0, boundedInteger(this.config['targetCount'], 3, 1, 100));
+            targetWordsList = this.generateTargets(rawText);
         }
         this.targetWords = [...new Set(targetWordsList.map(w => this.normalizeWord(w, caseSensitive)))];
         const restoredTargets = (currentRound?.foundTargets || [])
