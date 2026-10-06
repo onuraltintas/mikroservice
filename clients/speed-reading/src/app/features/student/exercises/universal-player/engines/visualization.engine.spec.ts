@@ -124,4 +124,21 @@ describe('VisualizationEngine', () => {
     engine.start(); engine.pause(); engine.handleInput({ action: 'skip_scene' });
     expect(engine.getPhase()).toBe('scene'); engine.destroy();
   });
+
+  it('does not label withheld assessment correctness as a measured wrong answer', () => {
+    let result: any; const engine = new VisualizationEngine();
+    engine.initialize({ scenes: [scene] } as any, callbacks(value => result = value));
+    engine.start(); engine.handleInput({ action: 'skip_scene' }); engine.handleInput({ type: 'answer', answer: 'A' });
+    engine.applyServerResponse({ isValid: true, isCorrect: null }); engine.nextQuestion();
+    expect(result.details.measurementStatus).toBe('NotMeasured');
+    expect(result.details.answers[0].isCorrect).toBeNull();
+  });
+
+  it('maps server answer letters to visible options', () => {
+    const engine = new VisualizationEngine();
+    engine.initialize({ scenes: [{ ...scene, questions: [{ ...scene.questions[0], options: ['Kırmızı', 'Mavi'] }] }] } as any, callbacks());
+    engine.start(); engine.handleInput({ action: 'skip_scene' }); engine.handleInput({ type: 'answer', answer: 'Kırmızı' });
+    engine.applyServerResponse({ isValid: true, isCorrect: true, correctAnswer: 'A' });
+    expect(engine.correctAnswer).toBe('Kırmızı'); engine.destroy();
+  });
 });
