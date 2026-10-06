@@ -1,0 +1,62 @@
+import { fakeAsync, tick } from '@angular/core/testing';
+import { TextStreamEngine } from './text-stream.engine';
+import { EngineCallbacks } from './base-engine.interface';
+import { ExercisePlayerComponent } from '../exercise-player.component';
+
+describe('RSVP presentation', () => {
+  let result: any;
+  let errors: string[];
+  let engine: TextStreamEngine;
+  const callbacks: EngineCallbacks = {
+    onStart: () => undefined, onPause: () => undefined, onResume: () => undefined,
+    onStateChange: () => undefined, onStepComplete: () => undefined, onAction: () => undefined,
+    onComplete: value => result = value, onError: value => errors.push(value)
+  };
+  beforeEach(() => { result = undefined; errors = []; engine = new TextStreamEngine(); });
+  afterEach(() => engine.destroy());
+
+  it('preserves the remaining word exposure across pause', fakeAsync(() => {
+    engine.initialize({ mode: 'rsvp', words: ['bir', 'iki'], timing: { durationMs: 200 }, visuals: { showFixation: false } } as any, callbacks);
+    engine.start(); tick(150); engine.pause(); tick(5000); engine.resume(); tick(50);
+    expect(engine.state.currentStep).toBe(1);
+    tick(200);
+    expect(result.totalTime).toBe(400);
+    expect(result.details.wpm).toBeNull();
+  }));
+
+  it('preserves the remaining fixation across pause', fakeAsync(() => {
+    engine.initialize({ mode: 'rsvp', words: ['bir'], timing: { durationMs: 200 } } as any, callbacks);
+    engine.start(); tick(100); engine.pause(); tick(1000); engine.resume(); tick(399);
+    expect(result).toBeUndefined(); tick(1);
+    expect(result.totalTime).toBe(500);
+  }));
+
+  it('does not silently replace missing RSVP text with random words', () => {
+    engine.initialize({ mode: 'rsvp' } as any, callbacks);
+    engine.start();
+    expect(errors.length).toBe(1);
+    expect(engine.state.isRunning).toBeFalse();
+  });
+
+  it('does not let catalog words replace the owned server text', fakeAsync(() => {
+    engine.initialize({ serverAuthoritative: true, words: ['sunucu'], engineConfig: { mode: 'rsvp', words: ['eski', 'katalog'] }, visuals: { showFixation: false } } as any, callbacks);
+    engine.start(); tick(500);
+    expect(result.totalSteps).toBe(1);
+  }));
+
+  it('normalizes RSVP mode names', fakeAsync(() => {
+    engine.initialize({ mode: 'RSVP', words: ['bir'], visuals: { showFixation: false } } as any, callbacks);
+    engine.start(); tick(500);
+    expect(result).toBeDefined();
+  }));
+
+  it('does not impose a second player deadline on RSVP', fakeAsync(() => {
+    const player = Object.create(ExercisePlayerComponent.prototype) as any;
+    player.engine = { engineType: 'text_stream', getMode: () => 'rsvp', finish: jasmine.createSpy('finish') };
+    player.exercise = { exerciseTypeName: 'RSVP' };
+    player.engineState = { remainingSeconds: 1 };
+    player.cdr = { detectChanges: () => undefined };
+    player.startTimer(); tick(2100); player.stopTimer();
+    expect(player.engine.finish).not.toHaveBeenCalled();
+  }));
+});
