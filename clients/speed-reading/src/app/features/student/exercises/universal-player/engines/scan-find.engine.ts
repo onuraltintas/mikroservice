@@ -73,6 +73,9 @@ export class ScanFindEngine implements BaseEngine {
     private totalFoundUniqueAcrossRounds = 0;
     private totalTargetCountAcrossRounds = 0;
     private foundUniqueWordsInRound = new Set<string>();
+    private awaitingServer = false;
+    private serverStarted = false;
+    private timedOut = false;
 
     // Dummy text generator
     private static readonly TEXT_POOL = [
@@ -89,7 +92,11 @@ export class ScanFindEngine implements BaseEngine {
     ];
 
     initialize(config: EngineConfig, callbacks: EngineCallbacks): void {
-        this.config = config as ScanFindConfig;
+        this.config = { ...config } as ScanFindConfig;
+        if (config['serverAuthoritative']) this.config.targets = {
+            words: [], caseSensitive: config['scanningCaseSensitive'] === true,
+            mode: config['scanningFindAny'] === true ? 'find_any' : 'find_all'
+        };
         this.callbacks = callbacks;
         this.normalizeConfig();
         this.currentRoundIndex = boundedInteger(this.config.currentRound, 0, 0,
@@ -225,7 +232,12 @@ export class ScanFindEngine implements BaseEngine {
 
                 const timeLimitSec = this.config.timeLimit || this.config.timeLimitSeconds || this.config.timing?.timeLimitSec;
                 if (timeLimitSec && this.state.timeElapsed >= timeLimitSec * 1000) {
-                    this.complete();
+                    if (this.config['serverAuthoritative']) {
+                        if (this.serverStarted && !this.awaitingServer) this.sendServerAction('scan_timeout');
+                    } else {
+                        this.timedOut = true;
+                        this.complete();
+                    }
                 }
 
                 this.callbacks.onStateChange({ ...this.state });
@@ -234,6 +246,10 @@ export class ScanFindEngine implements BaseEngine {
 
         this.callbacks.onStart();
         this.callbacks.onStateChange({ ...this.state });
+        if (this.config['serverAuthoritative']) {
+            this.sendServerAction('scan_start');
+            return;
+        }
         if (this.targetCount === 0) {
             if (!this.advanceToNextPlayableRound())
                 this.complete();
@@ -247,6 +263,11 @@ export class ScanFindEngine implements BaseEngine {
 
         const word = this.words[index];
         if (!word) return;
+        if (this.config['serverAuthoritative']) {
+            if (!this.serverStarted || this.awaitingServer || word.found) return;
+            this.sendServerAction('scan_click', index);
+            return;
+        }
 
         if (word.isTarget && !word.found) {
             word.found = true;
@@ -272,9 +293,48 @@ export class ScanFindEngine implements BaseEngine {
         this.callbacks.onStateChange({ ...this.state });
     }
 
+    private sendServerAction(action: string, index?: number): void {
+        this.awaitingServer = true;
+        this.callbacks.onAction({ action, index, number: this.currentRoundIndex, timestamp: new Date() });
+    }
+
+    reconcileServerResponse(action: { action: string }, response: {
+        isValid: boolean; isCompleted?: boolean; message?: string; feedbackData?: any;
+    }): void {
+        if (!this.config['serverAuthoritative'] || !this.state.isRunning) return;
+        this.awaitingServer = false;
+        if (!response.isValid || !response.feedbackData) {
+            this.stop();
+            this.callbacks.onError(response.message || 'Tarama doğrulanamadı. Lütfen egzersizi yeniden açın.');
+            return;
+        }
+        const feedback = response.feedbackData;
+        this.config.scanningRounds = feedback.scanningRounds;
+        this.config.targets = { words: [], caseSensitive: feedback.scanningCaseSensitive === true,
+            mode: feedback.scanningFindAny === true ? 'find_any' : 'find_all' };
+        this.normalizeConfig();
+        this.currentRoundIndex = boundedInteger(feedback.currentRound, 0, 0,
+            Math.max(0, (this.config.scanningRounds?.length || 1) - 1));
+        this.totalFoundUniqueAcrossRounds = this.config.scanningRounds?.slice(0, this.currentRoundIndex)
+            .reduce((sum, round) => sum + round.foundTargets.length, 0) ?? 0;
+        this.totalTargetCountAcrossRounds = boundedInteger(feedback.totalSteps, 1, 1, 5000);
+        this.state.totalSteps = this.totalTargetCountAcrossRounds;
+        this.state.errors = boundedInteger(feedback.incorrectCount, 0, 0, 100000);
+        this.state.timeElapsed = boundedInteger(feedback.searchTimeMs, 0, 0, 3600000);
+        this.startTime = Date.now() - this.state.timeElapsed;
+        this.generateContent();
+        if (action.action === 'scan_start') this.serverStarted = true;
+        this.timedOut = feedback.timedOut === true;
+        if (response.isCompleted) this.complete();
+        else this.callbacks.onStateChange({ ...this.state });
+    }
+
     private nextRound(): void {
         this.totalFoundUniqueAcrossRounds += this.foundCount;
         this.foundUniqueWordsInRound.clear();
+        this.awaitingServer = false;
+        this.serverStarted = false;
+        this.timedOut = false;
         this.currentRoundIndex++;
 
         if (this.config.scanningRounds && this.currentRoundIndex < this.config.scanningRounds.length) {
@@ -376,7 +436,10 @@ export class ScanFindEngine implements BaseEngine {
             errors: this.state.errors,
             details: {
                 foundCount: foundTargets,
-                roundsCompleted: this.currentRoundIndex
+                roundsCompleted: this.currentRoundIndex,
+                timedOut: this.timedOut,
+                incomplete: this.timedOut,
+                searchTimeMs: this.state.timeElapsed
             }
         };
 

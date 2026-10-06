@@ -1233,6 +1233,9 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
               : engineType === 'text_stream'
                 ? (response: ValidationResponse) =>
                   (this.engine as TextStreamEngine).reconcileServerResponse(action, response)
+              : engineType === 'scan_find' || engineType === 'scanning'
+                ? (response: ValidationResponse) =>
+                  (this.engine as ScanFindEngine).reconcileServerResponse(action, response)
               : undefined;
           void this.enqueueAction(action as ActionData, onResponse).catch(() => undefined);
         }
@@ -3237,7 +3240,8 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
           this.submitReviewResult(sessionResult.sessionId);
         }
 
-        if (!isAssessmentMode && this.pathItemId && this.sessionId) {
+        const incomplete = (this.engine?.engineType === 'scan_find') && result.details?.incomplete === true;
+        if (!incomplete && !isAssessmentMode && this.pathItemId && this.sessionId) {
           this.learningPathService.completePersonalizedPathItem(this.pathItemId, this.sessionId)
             .subscribe({
               error: (error) => {
@@ -3245,7 +3249,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
                 this.showToast('Öğrenme yolu ilerlemesi kaydedilemedi. Lütfen tekrar deneyin.', 'error', 5000);
               }
             });
-        } else if (!isAssessmentMode && !isPracticeMode && !this.reviewItemId && this.exercise?.id) {
+        } else if (!incomplete && !isAssessmentMode && !isPracticeMode && !this.reviewItemId && this.exercise?.id) {
           this.completeDailyProgress(result, customData, isMeasured);
         }
       },
