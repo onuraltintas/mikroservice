@@ -8,6 +8,16 @@ function callbacks() {
 }
 
 describe('FocusEngine timing', () => {
+  it('matches word casing like the server and permits retry after a rejected response', fakeAsync(() => {
+    const engine = new FocusEngine(); const actions: any[] = [];
+    engine.initialize({ Mode: 'word', SpeedMs: 1000, NLevel: 1, WordSequence: ['a', 'A', 'b'] } as any,
+      { ...callbacks(), onAction: action => actions.push(action) });
+    expect(engine.config.WordTargetIndices).toEqual([1]);
+    engine.start(); tick(1000); engine.handleInput({ type: 'word_match' });
+    engine.reconcileServerResponse({ action: 'word_match', index: 1 }, { isValid: false });
+    engine.handleInput({ type: 'word_match' });
+    expect(actions.filter(action => action.action === 'word_match').length).toBe(2); engine.destroy();
+  }));
   it('routes legacy position matches only to position and bounds completed steps', fakeAsync(() => {
     const engine = new FocusEngine(); const actions: any[] = [];
     engine.initialize({ Mode: 'position', SpeedMs: 1000, PositionSequence: [1, 2, 1] } as any,
