@@ -40,6 +40,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions
         if (state.ScanningRounds.Count == 0)
             throw new BusinessRuleException("ExerciseSession.ScanningContentUnavailable", "Tarama metni ve hedefleri henüz hazırlanmadı.");
         state.Content = state.ScanningRounds[0].TextContent;
+        state.ReadingPausedMilliseconds = 0;
         state.Questions.Clear();
         state.TotalSteps = state.ScanningRounds.Sum(round => state.ScanningFindAny ? 1 : round.Targets.Length);
         state.TimeLimitSeconds = Math.Clamp(ReadGridTimeLimit(config) ?? 90, 1, 3600);
@@ -71,7 +72,19 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions
 
     private static bool ScanningExpired(ExerciseSession session, SessionState state, DateTime now) =>
         !ScanningComplete(state) && state.TimingStartedAt.HasValue && state.TimeLimitSeconds.HasValue
-        && (now - state.TimingStartedAt.Value).TotalSeconds - GetTimingPausedSeconds(session, state) >= state.TimeLimitSeconds.Value;
+        && ScanningActiveMs(state, now) >= state.TimeLimitSeconds.Value * 1000L;
+
+    private static long ScanningActiveMs(SessionState state, DateTime now) => state.TimingStartedAt.HasValue
+        ? (long)Math.Max(0, ((state.ReadingPausedAt ?? now) - state.TimingStartedAt.Value).TotalMilliseconds
+            - (state.ReadingPausedMilliseconds ?? 0)) : 0;
+
+    private static void UpdateScanningTime(ExerciseSession session, SessionState state, DateTime now)
+    {
+        state.ScanningElapsedMs = Math.Min(ScanningActiveMs(state, now), (state.TimeLimitSeconds ?? 3600) * 1000L);
+        if (state.CurrentRound < state.ScanningRounds.Count)
+            state.ScanningRounds[state.CurrentRound].SearchTimeMs = Math.Max(0, state.ScanningElapsedMs.Value
+                - state.ScanningRounds.Take(state.CurrentRound).Sum(round => round.SearchTimeMs));
+    }
 
     private static ExerciseActionValidationResponse ValidateScanning(ExerciseSession session, SessionState state,
         ExerciseActionRequest request, DateTime now)
@@ -85,11 +98,13 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions
         if (action == "scan_start")
         {
             EnsureTimingStarted(session, state, now);
+            UpdateScanningTime(session, state, now);
             return ScanningResponse(session, state, now);
         }
         if (!state.TimingStartedAt.HasValue) return Invalid("Önce taramayı başlatın.");
         if (ScanningExpired(session, state, now))
         {
+            UpdateScanningTime(session, state, now);
             state.ReadingIncomplete = true;
             return ScanningResponse(session, state, now);
         }
@@ -101,15 +116,17 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions
         var word = NormalizeScanningWord(tokens[index], state.ScanningCaseSensitive);
         if (round.FoundTargets.Contains(word, StringComparer.Ordinal)) return Invalid("Bu hedef zaten bulundu.");
         var correct = round.Targets.Contains(word, StringComparer.Ordinal);
+        UpdateScanningTime(session, state, now);
         if (correct)
         {
+            round.TargetResponseTimesMs.Add(Math.Max(0, round.SearchTimeMs - round.LastTargetElapsedMs));
+            round.LastTargetElapsedMs = round.SearchTimeMs;
             round.FoundTargets.Add(word);
             session.Advance();
             round.IsCompleted = state.ScanningFindAny || round.FoundTargets.Count == round.Targets.Length;
             if (round.IsCompleted) state.CurrentRound++;
         }
         else session.RecordIncorrectAttempt();
-        round.SearchTimeMs = (long)Math.Max(0, (now - state.TimingStartedAt.Value).TotalMilliseconds - GetTimingPausedSeconds(session, state) * 1000L);
         return ScanningResponse(session, state, now, correct);
     }
 
@@ -120,8 +137,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions
                 state.ScanningRounds, state.CurrentRound, state.ScanningCaseSensitive, state.ScanningFindAny,
                 state.TotalSteps, session.CorrectCount, session.IncorrectCount,
                 timedOut = state.ReadingIncomplete,
-                searchTimeMs = state.TimingStartedAt.HasValue ? Math.Max(0,
-                    (now - state.TimingStartedAt.Value).TotalMilliseconds - GetTimingPausedSeconds(session, state) * 1000L) : 0
+                searchTimeMs = state.ScanningElapsedMs ?? 0
             }, JsonOptions));
 
     private sealed class ScanningRound
@@ -131,5 +147,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions
         public List<string> FoundTargets { get; set; } = [];
         public long SearchTimeMs { get; set; }
         public bool IsCompleted { get; set; }
+        public List<long> TargetResponseTimesMs { get; set; } = [];
+        public long LastTargetElapsedMs { get; set; }
     }
 }

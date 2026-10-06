@@ -527,7 +527,11 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         {
             if (state.ScanningRounds.Count == 0)
                 throw IncompleteSession("Bu tarama oturumu doğrulanmış hedef içermiyor. Egzersizi yeniden açın.");
-            if (ScanningExpired(session, state, now)) state.ReadingIncomplete = true;
+            if (ScanningExpired(session, state, now))
+            {
+                UpdateScanningTime(session, state, now);
+                state.ReadingIncomplete = true;
+            }
             if (!ScanningComplete(state) && !state.ReadingIncomplete)
                 throw IncompleteSession("Tarama hedefleri doğrulanmadan oturum tamamlanamaz.");
             state.Questions.Clear();
@@ -613,7 +617,9 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         var pausedReadingSeconds = state.ReadingStartTime.HasValue
             ? state.ReadingPausedSeconds
             : GetTimingPausedSeconds(session, state);
-        var timeSpent = SpeedReadingExerciseSessionRules.CalculateReadingSeconds(
+        var timeSpent = IsScanning(state) && state.ScanningElapsedMs.HasValue
+            ? Math.Max(0, (int)Math.Round(state.ScanningElapsedMs.Value / 1000d))
+            : SpeedReadingExerciseSessionRules.CalculateReadingSeconds(
             GetTimingStartTime(session, state, now),
             now,
             state.ReadingStartTime,
@@ -646,7 +652,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             ? (decimal?)null
             : state.Questions.Count > 0
             ? SpeedReadingExerciseSessionRules.CalculateCompositeScore(comprehension, rawWpm)
-            : accuracy;
+            : IsScanning(state) ? Math.Max(0, accuracy - session.IncorrectCount * 10m) : accuracy;
         var weightedKdp = rawWpm.HasValue ? Math.Round(rawWpm.Value * comprehension / 100, 2) : (decimal?)null;
         var xpAwarded = measurementStatus == SpeedReadingMeasurementStatus.Measured && !state.ReadingIncomplete
             ? SpeedReadingExerciseSessionRules.CalculateXp(score ?? 0, accuracy, timeSpent)
@@ -971,7 +977,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             tachistoscope.ExpectedStimulus = string.Empty;
             tachistoscope.PresentedAt = null;
         }
-        if (state.ReadingStartTime.HasValue && !state.ReadingEndTime.HasValue)
+        if (IsScanning(state) || state.ReadingStartTime.HasValue && !state.ReadingEndTime.HasValue)
             state.ReadingPausedAt = now;
         session.SetState(JsonSerializer.Serialize(state, JsonOptions), session.CustomDataJson);
         await db.SaveChangesAsync(cancellationToken);
@@ -3380,6 +3386,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         public int CurrentRound { get; set; }
         public bool ScanningCaseSensitive { get; set; }
         public bool ScanningFindAny { get; set; }
+        public long? ScanningElapsedMs { get; set; }
         public List<VisualizationSceneState> VisualizationScenes { get; set; } = [];
         public string VocabularyMode { get; set; } = "learning";
         public string VocabularyQuizType { get; set; } = "mixed";
