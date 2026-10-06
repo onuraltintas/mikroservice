@@ -344,7 +344,7 @@ export class VisualizationEngine implements BaseEngine {
                     this.stepDeadline = Date.now() + this.stepRemainingMs;
                     this.guidedStepTimer = setTimeout(() => this.continueGuidedSteps(scene, stepDuration), this.stepRemainingMs);
                 }
-            } else if (this.sceneDisplayRemaining > 0) {
+            } else {
                 this.sceneDeadline = Date.now() + this.sceneDisplayRemaining;
                 this.sceneTimeout = setTimeout(() => {
                     if (this.state.isRunning && !this.state.isPaused) {

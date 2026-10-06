@@ -658,6 +658,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         var accuracy = IsScanning(state) ? ScanningAccuracy(state)
             : SpeedReadingExerciseSessionRules.CalculateAccuracy(session.CorrectCount, session.IncorrectCount);
         var wordsRead = state.Tachistoscope is not null || IsScanning(state)
+            || IsVisualizationExercise(state.ExerciseTypeName) || IsEngineType(state.EngineType, "visualization")
             || IsEngineType(state.EngineType, "regression_reduction") || IsEngineType(state.EngineType, "subvocalization_reduction")
             ? null : state.WordCount > 0 ? (int?)state.WordCount : null;
         var adaptiveTransferResult = IsAdaptiveFluency(state)
@@ -1480,9 +1481,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             state.TotalSteps = 4;
         }
 
-        if ((IsVisualizationExercise(exerciseTypeName)
+        if (IsVisualizationExercise(exerciseTypeName)
                 || IsEngineType(exerciseEngineType, "visualization"))
-            && state.Questions.Count == 0)
         {
             state.VisualizationScenes = await LoadVisualizationScenesAsync(
                 exerciseId,
@@ -2695,6 +2695,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
 
     private static bool SupportsServerReadingMeasurement(SessionState state) =>
         state.Tachistoscope is null && IsReadingExerciseFlow(state)
+        && !IsVisualizationExercise(state.ExerciseTypeName) && !IsEngineType(state.EngineType, "visualization")
         && !state.ReadingIncomplete
         && !IsEngineType(state.EngineType, "subvocalization_reduction")
         && state.EngineType is not ("word_highlight" or "text_stream" or "text_fade" or "regression_reduction" or "scan_find" or "scanning" or "skimming")
