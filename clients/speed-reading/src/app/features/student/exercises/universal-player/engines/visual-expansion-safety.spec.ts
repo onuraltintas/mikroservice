@@ -22,6 +22,14 @@ describe('visual expansion configuration safety', () => {
     const engine = new VisualExpansionEngine();
     expect(() => engine.initialize({ expansion: { pattern: 'random' } } as any, callbacks())).toThrow();
   });
+  it('reports relative screen distance and sanitizes configured stimulus size', () => {
+    const engine = new VisualExpansionEngine();
+    engine.initialize({ startDegrees: 30, visuals: { stimulusSize: '2rem' } } as any, callbacks());
+    expect((engine as any).getRelativeDistancePercent()).toBe(50);
+    expect((engine as any).getStimulusSizeCss()).toBe('2rem');
+    engine.initialize({ visuals: { stimulusSize: 'url(javascript:bad)' } } as any, callbacks());
+    expect((engine as any).getStimulusSizeCss()).toBe('2rem');
+  });
   it('keeps a presentation hidden while paused and continues its remaining exposure without replay', fakeAsync(() => {
     const engine = new VisualExpansionEngine();
     engine.initialize({ rounds: 1, expansion: { pattern: 'horizontal', stimulusType: 'letter' },
