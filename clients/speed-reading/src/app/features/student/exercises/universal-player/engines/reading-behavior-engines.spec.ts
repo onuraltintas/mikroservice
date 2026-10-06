@@ -256,9 +256,10 @@ describe('reading behavior engines', () => {
     engine.initialize({ readingTextContent: 'bir iki', wpm: 1500, chunkSize: 1 } as any, callbacks());
 
     engine.start();
+    expect(engine.state.currentStep).toBe(1);
     tick(40);
 
-    expect(engine.state.currentStep).toBe(1);
+    expect(engine.state.currentStep).toBe(2);
     engine.destroy();
   }));
 

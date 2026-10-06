@@ -47,6 +47,8 @@ export class SubvocalizationReductionEngine implements BaseEngine {
 
     private lineBreakIndices: Set<number> = new Set();
     private actualChunkSize = 1;
+    private chunkDeadline = 0;
+    private remainingChunkMs = 0;
 
     private words: string[] = [];
     private currentWordIndex = -1;
@@ -154,55 +156,27 @@ export class SubvocalizationReductionEngine implements BaseEngine {
 
     private startHighlightMode(): void {
         if (this.wordTimeout) clearTimeout(this.wordTimeout);
+        if (!this.state.isRunning || this.state.isPaused) return;
+        const start = this.currentWordIndex + 1;
+        if (start >= this.words.length) {
+            this.finishReading();
+            return;
+        }
+        let size = Math.min(this.config.chunkSize, this.words.length - start);
+        for (let i = 1; i < size; i++) {
+            if (this.lineBreakIndices.has(start + i)) { size = i; break; }
+        }
+        this.actualChunkSize = size;
+        this.currentWordIndex = start + size - 1;
+        this.state.currentStep = this.currentWordIndex + 1;
+        this.callbacks.onStateChange({ ...this.state, actualChunkSize: size } as any);
+        this.scheduleChunk(this.config.msPerWord * size);
+    }
 
-        const runStep = () => {
-            if (!this.state.isRunning) return;
-            if (this.state.isPaused) {
-                this.wordTimeout = setTimeout(runStep, 100);
-                return;
-            }
-
-            // Calculate next step size based on line breaks
-            let step = this.config.chunkSize || 1;
-            const nextIdx = this.currentWordIndex + step;
-
-            // Safety: Don't exceed word count
-            if (this.currentWordIndex + step >= this.words.length) {
-                step = this.words.length - this.currentWordIndex - 1;
-            }
-
-            // Line separation check: Don't cross to next line in the same chunk
-            for (let i = 1; i < step; i++) {
-                if (this.lineBreakIndices.has(this.currentWordIndex + 1 + i)) {
-                    step = i;
-                    break;
-                }
-            }
-
-            this.actualChunkSize = Math.max(1, step);
-            this.currentWordIndex += this.actualChunkSize;
-
-            if (this.currentWordIndex >= this.words.length) {
-                this.finishReading();
-                return;
-            }
-
-            this.state.currentStep = Math.min(this.currentWordIndex + 1, this.words.length);
-            this.callbacks.onStateChange({
-                ...this.state,
-                currentWordIndex: this.currentWordIndex,
-                actualChunkSize: this.actualChunkSize,
-                displayMode: 'highlight',
-                chunkSize: this.config.chunkSize
-            } as any);
-
-            // Calculate delay: proportional to words shown to keep WPM rhythm
-            const delay = this.config.msPerWord * this.actualChunkSize;
-            this.wordTimeout = setTimeout(runStep, delay);
-        };
-
-        // Start the first step after a small initial delay
-        this.wordTimeout = setTimeout(runStep, this.config.msPerWord);
+    private scheduleChunk(delay: number): void {
+        this.remainingChunkMs = delay;
+        this.chunkDeadline = Date.now() + delay;
+        this.wordTimeout = setTimeout(() => this.startHighlightMode(), delay);
     }
 
     private startMetronome(): void {
@@ -262,6 +236,10 @@ export class SubvocalizationReductionEngine implements BaseEngine {
         if (this.state.isPaused) return;
         this.state.isPaused = true;
         this.pauseStartTime = Date.now();
+        if (this.phase === 'reading') {
+            this.remainingChunkMs = Math.max(0, this.chunkDeadline - Date.now());
+            clearTimeout(this.wordTimeout);
+        }
         this.callbacks.onPause();
         this.callbacks.onStateChange({ ...this.state });
     }
@@ -275,6 +253,7 @@ export class SubvocalizationReductionEngine implements BaseEngine {
         if (this.phase === 'reading') this.readingStartTime += pauseDuration;
 
         this.state.isPaused = false;
+        if (this.phase === 'reading') this.scheduleChunk(this.remainingChunkMs);
         this.callbacks.onResume();
         this.callbacks.onStateChange({ ...this.state });
     }
@@ -452,8 +431,7 @@ export class SubvocalizationReductionEngine implements BaseEngine {
         if (this.currentWordIndex < 0 || this.currentWordIndex >= this.words.length) {
             return '';
         }
-        const chunkEnd = Math.min(this.currentWordIndex + (this.config.chunkSize || 1), this.words.length);
-        return this.words.slice(this.currentWordIndex, chunkEnd).join(' ');
+        return this.words.slice(this.currentWordIndex - this.actualChunkSize + 1, this.currentWordIndex + 1).join(' ');
     }
 
     getPhase(): string { return this.phase; }
