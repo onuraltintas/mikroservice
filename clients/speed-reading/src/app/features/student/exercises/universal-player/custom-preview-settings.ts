@@ -63,8 +63,14 @@ export function getCustomPreviewControls(configuration: Record<string, unknown>)
     case 'free_reading':
     case 'exam_simulation': {
       const display = mergeCaseInsensitiveRecords(configuration, settings, 'display');
-      return [{ key: 'fontSize', label: 'Metin boyutu', min: 0, max: 0, value: String(display['fontsize'] ?? 'medium').toLowerCase(),
+      const controls: PreviewControl[] = [{ key: 'fontSize', label: 'Metin boyutu', min: 0, max: 0, value: String(display['fontsize'] ?? 'medium').toLowerCase(),
         options: [{ value: 'small', label: 'Küçük' }, { value: 'medium', label: 'Orta' }, { value: 'large', label: 'Büyük' }] }];
+      if (configuration['engineType'] === 'reading_comprehension') controls.push(
+        control('minReadingTimeSec', 'Minimum okuma süresi (saniye)', 0, 3600, Number(timing['minreadingtimems'] ?? 0) / 1000),
+        control('maxReadingTimeSec', 'Maksimum okuma süresi (saniye; 0: sınırsız)', 0, 3600, Number(timing['maxreadingtimems'] ?? 0) / 1000),
+        control('lineHeightPercent', 'Satır aralığı (%)', 100, 300, Math.round(Number(display['lineheight'] ?? 1.8) * 100))
+      );
+      return controls;
     }
     case 'focus': return [control('speedMs', 'Uyaran süresi (ms)', 100, 10000, read('SpeedMs') ?? read('FocusSpeedMs') ?? 1500)];
     case 'vocabulary_builder': return read('mode') === 'quiz'
@@ -111,12 +117,30 @@ export function applyCustomPreviewSettings<T extends Record<string, unknown>>(
   const fontControl = controls.find(control => control.key === 'fontSize');
   if (fontControl) {
     const value = values['fontSize'];
-    if (value === undefined) return configuration;
-    if (!fontControl.options?.some(option => option.value === value)) throw new Error('Geçerli bir metin boyutu seçin.');
+    const numeric: Record<string, number> = {};
+    for (const { key, min, max, label } of controls.filter(control => !control.options)) {
+      const input = values[key];
+      if (input === undefined) continue;
+      if (typeof input !== 'number' || !Number.isInteger(input) || input < min || input > max)
+        throw new Error(`${label} için geçerli bir değer girin (${min}-${max}).`);
+      numeric[key] = input;
+    }
+    if (value === undefined && !Object.keys(numeric).length) return configuration;
+    if (value !== undefined && !fontControl.options?.some(option => option.value === value)) throw new Error('Geçerli bir metin boyutu seçin.');
     const result = structuredClone(configuration);
     const settings = recordOrEmpty(result['engineConfig']);
     (result as Record<string, unknown>)['engineConfig'] = settings;
-    settings['display'] = overrideFields({ ...recordOrEmpty(caseInsensitiveField(configuration, 'display')), ...recordOrEmpty(caseInsensitiveField(settings, 'display')) }, { fontSize: value });
+    const displayOverrides: Record<string, unknown> = {};
+    if (value !== undefined) displayOverrides['fontSize'] = value;
+    if (numeric['lineHeightPercent'] !== undefined) displayOverrides['lineHeight'] = numeric['lineHeightPercent'] / 100;
+    if (Object.keys(displayOverrides).length) settings['display'] = overrideFields({ ...recordOrEmpty(caseInsensitiveField(configuration, 'display')), ...recordOrEmpty(caseInsensitiveField(settings, 'display')) }, displayOverrides);
+    if (numeric['minReadingTimeSec'] !== undefined || numeric['maxReadingTimeSec'] !== undefined) {
+      const timing = mergeCaseInsensitiveRecords(configuration, settings, 'timing');
+      const minimum = numeric['minReadingTimeSec'] === undefined ? Number(timing['minreadingtimems'] ?? 0) : numeric['minReadingTimeSec'] * 1000;
+      const maximum = numeric['maxReadingTimeSec'] === undefined ? Number(timing['maxreadingtimems'] ?? 0) : numeric['maxReadingTimeSec'] * 1000;
+      if (maximum > 0 && maximum < minimum) throw new Error('Maksimum okuma süresi minimum süreden kısa olamaz.');
+      settings['timing'] = overrideFields({ ...recordOrEmpty(caseInsensitiveField(configuration, 'timing')), ...recordOrEmpty(caseInsensitiveField(settings, 'timing')) }, { minReadingTimeMs: minimum, maxReadingTimeMs: maximum });
+    }
     return result;
   }
   const validated: Record<string, number> = {};
