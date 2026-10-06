@@ -17,6 +17,27 @@ function callbacks(onComplete: (result: any) => void = () => undefined): EngineC
 }
 
 describe('reading behavior engines', () => {
+  it('records only earlier-chunk clicks while running without penalizing comprehension', fakeAsync(() => {
+    let result: any;
+    const engine = new RegressionReductionEngine();
+    engine.initialize({ readingTextContent: 'bir iki üç', wordDelayMs: 100, chunkSize: 2,
+      questions: [{ questionId: 'q1', correctAnswer: 'A' }] } as any, callbacks(value => result = value));
+    engine.handleInput({ type: 'regression', wordIndex: 0 });
+    engine.start();
+    engine.handleInput({ type: 'regression', wordIndex: 0 });
+    tick(200);
+    engine.pause();
+    engine.handleInput({ type: 'regression', wordIndex: 0 });
+    engine.resume();
+    engine.handleInput({ type: 'regression', wordIndex: 0 });
+    tick(100);
+    engine.handleInput({ type: 'answer', answer: 'A' });
+    expect(result.details.backwardClickCount).toBe(1);
+    expect(result.errors).toBe(0);
+    expect(result.score).toBe(100);
+    engine.destroy();
+  }));
+
   it('shows the first regression chunk immediately and exposes the partial last chunk proportionally', fakeAsync(() => {
     let result: any;
     const engine = new RegressionReductionEngine();
