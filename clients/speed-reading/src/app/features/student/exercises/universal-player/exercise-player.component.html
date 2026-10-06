@@ -1770,7 +1770,7 @@
                     <div class="result-label">Anlam korunarak kazanım</div>
                 </div>
             </div>
-            <div class="speed-reading-results" *ngIf="result?.details?.wpm && result?.details?.measurementStatus !== 'NotMeasured' && engine?.engineType !== 'exam_simulation' && engine?.engineType !== 'adaptive_fluency'">
+            <div class="speed-reading-results" *ngIf="result?.details?.wpm && result?.details?.measurementStatus !== 'NotMeasured' && engine?.engineType !== 'free_reading' && engine?.engineType !== 'exam_simulation' && engine?.engineType !== 'adaptive_fluency'">
                 <!-- WPM Box -->
                 <div class="result-box wpm-box">
                     <span class="material-icons">speed</span>

@@ -136,6 +136,11 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
 
         if (request.ReadingTextId.HasValue && assessmentSnapshot is null)
         {
+            var explicitConfig = ParseJsonOrEmpty(configurationJson);
+            var explicitContent = ReadObject(ReadObject(explicitConfig, "engineConfig"), "content");
+            var isFreeText = ExerciseConfigurationRules.NormalizeEngineType(exerciseEngineType) == "free_reading";
+            var minimumWords = isFreeText ? ReadPositiveInt(explicitContent, "minWordCount") ?? ReadPositiveInt(ReadObject(explicitConfig, "content"), "minWordCount") ?? 0 : 0;
+            var maximumWords = isFreeText ? ReadPositiveInt(explicitContent, "maxWordCount") ?? ReadPositiveInt(ReadObject(explicitConfig, "content"), "maxWordCount") ?? 0 : 0;
             var strictTextLevel = IsGrouping(new SessionState { EngineType = exerciseEngineType, ExerciseTypeName = exerciseTypeName })
                 || ExerciseConfigurationRules.NormalizeEngineType(exerciseEngineType) is "free_reading" or "text_fade" or "regression_reduction" or "subvocalization_reduction";
             var readingTextMatches = await db.ReadingTexts
@@ -144,6 +149,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                     && item.IsActive
                     && !item.IsDeleted
                     && (!strictTextLevel || item.DifficultyLevel == difficultyLevel)
+                    && (!isFreeText || (item.WordCount >= minimumWords && (maximumWords == 0 || item.WordCount <= maximumWords)))
                     && (!profileAgeGroupId.HasValue
                         || item.TargetAgeGroupId == null
                         || item.TargetAgeGroupId == profileAgeGroupId.Value)
