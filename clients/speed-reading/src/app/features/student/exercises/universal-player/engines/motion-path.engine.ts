@@ -205,6 +205,8 @@ export class MotionPathEngine implements BaseEngine {
             this.state.totalSteps = this.isTimeBased ? 0 : this.saccadeTargets.length;
         } else {
             const peripheralCount = boundedInteger(field(content, 'peripheralCount') ?? field(fixation, 'peripheralCount'), 0, 0, 4);
+            // Answered fixation rounds finish by verified point count, not by a timer while answering.
+            if (mode === 'fixation' && peripheralCount > 0) this.isTimeBased = false;
             const pointSize = boundedInteger(field(content, 'pointSize') ?? field(fixation, 'pointSize'), 36, 8, 200);
             const configuredPoints = boundedInteger(field(content, 'points') ?? field(fixation, 'points'), 10, 1, 500);
             const points = this.isTimeBased
