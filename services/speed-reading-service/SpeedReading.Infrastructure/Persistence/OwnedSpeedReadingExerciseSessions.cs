@@ -654,7 +654,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             pausedReadingSeconds);
         var accuracy = IsScanning(state) ? ScanningAccuracy(state)
             : SpeedReadingExerciseSessionRules.CalculateAccuracy(session.CorrectCount, session.IncorrectCount);
-        var wordsRead = state.Tachistoscope is not null || IsScanning(state) ? null : state.WordCount > 0 ? (int?)state.WordCount : null;
+        var wordsRead = state.Tachistoscope is not null || IsScanning(state)
+            || state.EngineType == "regression_reduction" ? null : state.WordCount > 0 ? (int?)state.WordCount : null;
         var adaptiveTransferResult = IsAdaptiveFluency(state)
             ? state.AdaptiveStageResults.SingleOrDefault(item => item.Stage == 3)
             : null;
