@@ -1,4 +1,5 @@
 import { ExercisePlayerComponent } from './exercise-player.component';
+import { createActionFailureState } from './exercise-action-queue';
 
 describe('subvocalization answer validation', () => {
   function player(): any {
@@ -45,5 +46,19 @@ describe('subvocalization answer validation', () => {
     value.submitSubvocAnswer('A');
     expect(value.engine.handleInput).toHaveBeenCalledWith(jasmine.objectContaining({ previewOnly: true }));
     expect(value.isMeasuredClientResult({ details: { measurementStatus: 'NotMeasured', comprehensionScore: null, totalQuestions: 1 } })).toBeFalse();
+  });
+
+  it('allows completion after a rejected answer is successfully retried', async () => {
+    const value = player();
+    value.actionQueue = Promise.resolve(); value.actionFailureState = createActionFailureState();
+    let attempts = 0;
+    value.validateActionWithTransientRetry = async () => ++attempts === 1
+      ? { isValid: false, message: 'Retry' } : { isValid: true, isCorrect: true };
+    value.submitSubvocAnswer('A');
+    await value.actionQueue.catch(() => undefined);
+    await Promise.resolve();
+    value.submitSubvocAnswer('A');
+    await value.actionQueue;
+    expect(value.actionFailureState.hasFailure).toBeFalse();
   });
 });
