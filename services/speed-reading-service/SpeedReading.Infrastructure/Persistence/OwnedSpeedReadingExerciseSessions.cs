@@ -348,7 +348,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                             || item.TargetAgeGroupId == profileAgeGroupId.Value)
                         && (item.ExerciseId == null || item.ExerciseId == request.ExerciseId)
                         && (!isSkimming || db.ReadingQuestions.Any(question => question.ReadingTextId == item.Id
-                            && !question.IsDeleted && question.Type == 1
+                            && !question.IsDeleted && question.Type == 1 && question.BloomLevel >= 1 && question.BloomLevel <= 6
                             && (question.CorrectAnswer.Trim().ToUpper() == "A" || question.CorrectAnswer.Trim().ToUpper() == "B"
                                 || question.CorrectAnswer.Trim().ToUpper() == "C" || question.CorrectAnswer.Trim().ToUpper() == "D")
                             && question.OptionA.Trim() != "" && question.OptionB.Trim() != "" && question.OptionC.Trim() != "" && question.OptionD.Trim() != ""))
@@ -1772,6 +1772,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             {
                 var elapsedMs = Math.Max(0, (now - state.ReadingStartTime.Value).TotalMilliseconds
                     - (state.ReadingPausedMilliseconds ?? state.ReadingPausedSeconds * 1000L));
+                if (IsSkimming(state) && incomplete && elapsedMs < state.ReadingMaximumMs)
+                    return Invalid("İnceleme süresi henüz dolmadı.");
                 if (IsGrouping(state) || IsTextFade(state))
                     incomplete |= state.ReadingMaximumMs > 0 && elapsedMs >= state.ReadingMaximumMs;
                 if (!incomplete && elapsedMs < state.ReadingMinimumMs)

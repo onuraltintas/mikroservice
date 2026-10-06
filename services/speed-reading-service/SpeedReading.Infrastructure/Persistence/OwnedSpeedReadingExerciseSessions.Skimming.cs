@@ -11,7 +11,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions
 
     private static void InitializeSkimming(SessionState state, JsonElement config, JsonElement root)
     {
-        state.Questions = state.Questions.Where(question => question.QuestionType == 1
+        state.Questions = state.Questions.Where(question => question.QuestionType == 1 && question.BloomLevel is >= 1 and <= 6
             && !string.IsNullOrWhiteSpace(question.OptionA) && !string.IsNullOrWhiteSpace(question.OptionB)
             && !string.IsNullOrWhiteSpace(question.OptionC) && !string.IsNullOrWhiteSpace(question.OptionD)).ToList();
         if (!state.ReadingTextId.HasValue || string.IsNullOrWhiteSpace(state.Content) || state.Questions.Count == 0)
