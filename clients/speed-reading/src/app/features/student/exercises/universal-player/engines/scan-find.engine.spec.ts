@@ -25,6 +25,7 @@ describe('ScanFindEngine', () => {
     }, callbacks(value => result = value));
     engine.start();
     engine.handleWordClick(0);
+    expect(engine.isTargetFound('ışık')).toBeTrue();
     engine.handleWordClick(1);
     expect(result?.accuracy).toBe(100);
     engine.destroy();
