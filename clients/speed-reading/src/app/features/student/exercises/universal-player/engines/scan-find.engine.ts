@@ -109,6 +109,7 @@ export class ScanFindEngine implements BaseEngine {
             : this.requiredTargetCount(this.config.targets?.words || []);
 
         this.generateContent();
+        if (!this.config.scanningRounds?.length) this.totalTargetCountAcrossRounds = this.targetCount;
         this.state.totalSteps = this.totalTargetCountAcrossRounds;
     }
 
@@ -127,7 +128,7 @@ export class ScanFindEngine implements BaseEngine {
             wordCount: boundedInteger(content['wordCount'], 100, 1, 10000)
         };
         this.config.targets = {
-            words: [...new Set(boundedStringArray(targets['words'], 100, 100).map(normalizeTarget))],
+            words: [...new Set(boundedStringArray(targets['words'], 100, 100).map(normalizeTarget).filter(Boolean))],
             caseSensitive,
             mode: targets['mode'] === 'find_any' ? 'find_any' : 'find_all'
         };
@@ -143,7 +144,7 @@ export class ScanFindEngine implements BaseEngine {
                 .map(round => ({
                     ...round,
                     textContent: boundedText(round.textContent, ''),
-                    targets: [...new Set(boundedStringArray(round.targets, 100, 100).map(normalizeTarget))],
+                    targets: [...new Set(boundedStringArray(round.targets, 100, 100).map(normalizeTarget).filter(Boolean))],
                     foundTargets: [...new Set(boundedStringArray(round.foundTargets, 100, 100).map(normalizeTarget))]
                 }))
             : undefined;
@@ -185,6 +186,11 @@ export class ScanFindEngine implements BaseEngine {
         }
 
         const caseSensitive = this.config.targets?.caseSensitive || false;
+        if (targetWordsList.length === 0 && rawText && !this.config['serverAuthoritative'] && this.config['targetCount']) {
+            targetWordsList = [...new Set(rawText.split(/\s+/).map(word => this.normalizeWord(word, caseSensitive)))]
+                .filter(word => /\p{L}/u.test(word)).sort((a, b) => b.length - a.length || a.localeCompare(b, 'tr-TR'))
+                .slice(0, boundedInteger(this.config['targetCount'], 3, 1, 100));
+        }
         this.targetWords = [...new Set(targetWordsList.map(w => this.normalizeWord(w, caseSensitive)))];
         const restoredTargets = (currentRound?.foundTargets || [])
             .filter(word => this.targetWords.includes(word));
@@ -214,6 +220,12 @@ export class ScanFindEngine implements BaseEngine {
 
     getTargetWords(): string[] {
         return this.targetWords;
+    }
+
+    getFontSizePx(): number {
+        const sizes: Record<string, number> = { small: 16, medium: 20, large: 28, xlarge: 36 };
+        const value = String(this.config.visuals?.fontSize ?? 'medium');
+        return boundedInteger(sizes[value] ?? Number.parseInt(value, 10), 20, 14, 48);
     }
 
     isTargetFound(target: string): boolean {
@@ -251,8 +263,10 @@ export class ScanFindEngine implements BaseEngine {
             return;
         }
         if (this.targetCount === 0) {
-            if (!this.advanceToNextPlayableRound())
-                this.complete();
+            if (!this.advanceToNextPlayableRound()) {
+                this.stop();
+                this.callbacks.onError('Bu metin için tarama hedefleri henüz hazırlanmadı.');
+            }
         } else if (this.foundCount >= this.targetCount) {
             this.nextRound();
         }

@@ -5,7 +5,7 @@ export interface CustomPreviewContext {
   preview: boolean;
 }
 
-export const CUSTOM_PREVIEW_ENGINES = ['word_highlight', 'subvocalization_reduction', 'regression_reduction', 'text_fade', 'text_stream', 'motion_path', 'scan_find', 'focus', 'vocabulary_builder', 'visual_expansion', 'reading_comprehension', 'free_reading', 'exam_simulation', 'grid_interaction', 'visualization', 'adaptive_fluency', 'error_analysis'] as const;
+export const CUSTOM_PREVIEW_ENGINES = ['word_highlight', 'subvocalization_reduction', 'regression_reduction', 'text_fade', 'text_stream', 'motion_path', 'scan_find', 'scanning', 'skimming', 'focus', 'vocabulary_builder', 'visual_expansion', 'reading_comprehension', 'free_reading', 'exam_simulation', 'grid_interaction', 'visualization', 'adaptive_fluency', 'error_analysis'] as const;
 
 export interface PreviewControl {
   key: string;
@@ -92,7 +92,13 @@ export function getCustomPreviewControls(configuration: Record<string, unknown>)
       if (mode === 'saccade') return [control('jumpIntervalMs', 'Hedef geçiş aralığı (ms)', 50, 10000, movement['jumpintervalms'] ?? 1000)];
       return [control('holdMs', 'Odaklanma süresi (ms)', 50, 10000, timing['holdms'] ?? movement['fixationtimems'] ?? 2000)];
     }
-    case 'scan_find': return [control('timeLimitSec', 'Süre sınırı (saniye)', 1, 3600, read('timeLimitSeconds') ?? read('timeLimit') ?? timing['timelimitsec'] ?? 3600)];
+    case 'skimming':
+    case 'scanning':
+    case 'scan_find': return [
+      control('timeLimitSec', 'Süre sınırı (saniye)', 1, 3600, read('timeLimitSeconds') ?? read('timeLimit') ?? timing['timelimitsec'] ?? 90),
+      control('targetCount', 'Hedef sözcük sayısı', 1, 100, read('targetCount') ?? 3),
+      control('fontSizePx', 'Metin boyutu (px)', 14, 48, Number.parseInt(String(caseInsensitiveField(recordOrEmpty(read('visuals')), 'fontSize') ?? '20'), 10) || 20)
+    ];
     default: {
       if (!CUSTOM_PREVIEW_ENGINES.some(type => type === configuration['engineType'])) return [];
       const controls = [control('speedWpm', 'Okuma hızı (kelime/dakika)', 20, 1500, read('targetWpm') ?? read('wpm') ?? pacer['speedwpm'] ?? fading['speedwpm'] ?? 200)];
@@ -238,8 +244,18 @@ export function applyCustomPreviewSettings<T extends Record<string, unknown>>(
     if (validated['jumpIntervalMs'] !== undefined) merge('movement', { jumpIntervalMs: validated['jumpIntervalMs'] });
     return result;
   }
-  if (engine === 'scan_find') {
+  if (engine === 'scan_find' || engine === 'scanning' || engine === 'skimming') {
     if (validated['timeLimitSec'] !== undefined) settings['timeLimitSeconds'] = validated['timeLimitSec'];
+    if (validated['targetCount'] !== undefined) {
+      settings['targetCount'] = validated['targetCount'];
+      settings['targets'] = overrideFields(recordOrEmpty(caseInsensitiveField(settings, 'targets') ?? caseInsensitiveField(configuration, 'targets')), { words: [] });
+      // Custom target count intentionally replaces the temporary preview targets, never the catalogue.
+      for (const container of [result as Record<string, unknown>, settings]) {
+        for (const key of Object.keys(container)) if (key.toLowerCase() === 'scanningrounds' && Array.isArray(container[key]))
+          container[key] = (container[key] as unknown[]).map(round => overrideFields(round, { targets: [], foundTargets: [] }));
+      }
+    }
+    if (validated['fontSizePx'] !== undefined) settings['visuals'] = overrideFields(recordOrEmpty(caseInsensitiveField(settings, 'visuals') ?? caseInsensitiveField(configuration, 'visuals')), { fontSize: `${validated['fontSizePx']}px` });
     return result;
   }
   if (validated['chunkSize'] !== undefined) settings['chunkSize'] = validated['chunkSize'];

@@ -687,8 +687,11 @@
             </div>
         </div>
 
-        <div class="scan-text-area">
+        <div class="scan-text-area" [style.font-size.px]="getScanFontSize()" [class.paused]="engineState.isPaused">
             <span *ngFor="let word of getScanWords(); let i = index; trackBy: trackByIdx" (click)="onScanWordClick(i)"
+                role="button" [tabindex]="engineState.isPaused || word.found ? -1 : 0"
+                (keydown.enter)="onScanWordClick(i)" (keydown.space)="$event.preventDefault(); onScanWordClick(i)"
+                [attr.aria-pressed]="word.found" [attr.aria-disabled]="engineState.isPaused"
                 class="scan-word" [class.found]="word.found" [class.target]="word.isTarget"
                 [class.missed]="word.isTarget && !word.found && engineState.isCompleted">
                 {{ word.text }}

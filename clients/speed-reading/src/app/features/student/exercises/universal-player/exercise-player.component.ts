@@ -3608,6 +3608,10 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     return false;
   }
 
+  getScanFontSize(): number {
+    return this.engine?.engineType === 'scan_find' ? (this.engine as ScanFindEngine).getFontSizePx() : 20;
+  }
+
   onScanWordClick(index: number): void {
     if (this.engine?.engineType === 'scan_find') {
       (this.engine as ScanFindEngine).handleWordClick(index);
