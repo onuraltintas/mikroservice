@@ -9,6 +9,13 @@ import { TestBed } from '@angular/core/testing';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 
 describe('Custom preview settings safety', () => {
+  it('loads legacy grouping size and display cycle into custom defaults', () => {
+    const config = { engineType: 'word_highlight', engineConfig: {
+      content: { chunkSize: 2 }, timing: { durationMs: 850, delayMs: 450 } } };
+    const controls = getCustomPreviewControls(config);
+    expect(controls.find(control => control.key === 'chunkSize')?.value).toBe(2);
+    expect(controls.find(control => control.key === 'speedWpm')?.value).toBe(92);
+  });
   const context = { roles: ['Admin'], preview: true };
   it('supports scanning catalogue alias and applies target and visual overrides only in preview', () => {
     const config = { engineType: 'scanning', engineConfig: { targetCount: 3, timeLimit: 90 } };
