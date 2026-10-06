@@ -17,6 +17,13 @@ function callbacks(onComplete: (result: any) => void = () => undefined): EngineC
 }
 
 describe('reading behavior engines', () => {
+  it('does not present unimplemented legacy masking modes as active', () => {
+    for (const maskingType of ['contingent', 'ior']) {
+      const engine = new RegressionReductionEngine();
+      engine.initialize({ readingTextContent: 'bir', maskingType } as any, callbacks());
+      expect(engine.getMaskingType()).toBe('none');
+    }
+  });
   it('does not complete regression questions using a client answer key', fakeAsync(() => {
     const engine = new RegressionReductionEngine();
     engine.initialize({ readingTextContent: 'bir', wordDelayMs: 100,
