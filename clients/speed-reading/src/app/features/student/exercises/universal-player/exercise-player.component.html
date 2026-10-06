@@ -1382,7 +1382,7 @@
         <div class="game-header">
             <div class="timer">
                 <span class="material-icons">{{ getVocabMode() === 'quiz' ? 'quiz' : 'menu_book' }}</span>
-                {{ getVocabMode() === 'quiz' ? 'Kelime Bilgisi Testi' : 'Kelime Öğrenme' }}
+                {{ getVocabMode() === 'quiz' ? 'Kelime Bilgisi Testi' : getVocabMode() === 'review' ? 'Zamanı Gelen Kelimeler' : 'Kelime Öğrenme' }}
             </div>
             <div class="progress-info">
                 <span>{{ getVocabProgress().current }} / {{ getVocabProgress().total }}</span>
@@ -1406,7 +1406,7 @@
 
         <!-- LEARNING MODE UI -->
         <div class="vocabulary-learning-area" [class.blurred]="engineState.isPaused"
-            *ngIf="getVocabMode() === 'learning' && getVocabCurrentWord()">
+            *ngIf="getVocabMode() !== 'quiz' && getVocabCurrentWord()">
             <div class="word-card-container">
                 <div class="word-card" [class.flipped]="isVocabDefinitionVisible()"
                     (click)="!isVocabDefinitionVisible() && showVocabDefinition()">
@@ -1451,11 +1451,11 @@
 
             <!-- Modern Actions Panel outside the card -->
             <div class="learning-actions-panel" [class.visible]="isVocabDefinitionVisible()">
-                <button class="action-btn unknown-btn" (click)="markVocabUnknown()">
+                <button class="action-btn unknown-btn" [disabled]="engineState.isPaused || isVocabAwaitingPersistence()" (click)="markVocabUnknown()">
                     <span class="material-icons">close</span>
                     Bilmiyorum
                 </button>
-                <button class="action-btn known-btn" (click)="markVocabKnown()">
+                <button class="action-btn known-btn" [disabled]="engineState.isPaused || isVocabAwaitingPersistence()" (click)="markVocabKnown()">
                     <span class="material-icons">check</span>
                     Biliyorum
                 </button>
@@ -1483,7 +1483,8 @@
                 </div>
 
                 <!-- Quiz Feedback -->
-                <div class="quiz-feedback" *ngIf="isVocabShowingFeedback()">
+                <p role="status" *ngIf="isVocabAwaitingPersistence()">Yanıtınız kaydediliyor…</p>
+                <div class="quiz-feedback" *ngIf="isVocabShowingFeedback() && !isVocabAwaitingPersistence()">
                     <div class="feedback-banner" [class.correct]="isVocabAnswerCorrect()"
                         [class.incorrect]="!isVocabAnswerCorrect()">
                         <span class="material-icons">{{ isVocabAnswerCorrect() ? 'check_circle' : 'cancel' }}</span>

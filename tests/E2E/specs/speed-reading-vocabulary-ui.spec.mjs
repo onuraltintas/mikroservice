@@ -38,7 +38,7 @@ for (const mode of ['learning', 'review', 'quiz']) {
       } else {
         await expect(page.locator('.word-text')).toHaveText(words[i].word);
         await page.locator('.word-card').click();
-        await page.getByRole('button', { name: 'Biliyorum', exact: true }).click();
+        await page.getByRole('button', { name: /\bBiliyorum$/ }).click();
       }
     }
     await expect.poll(() => completed).toBe(1);

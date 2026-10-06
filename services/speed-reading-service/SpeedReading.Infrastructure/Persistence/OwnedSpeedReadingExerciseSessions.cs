@@ -2895,7 +2895,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         var progressQuery = db.UserVocabularyProgresses.AsNoTracking().Where(p => p.UserId == studentId && !p.IsDeleted);
         if (mode == "review") {
             var now = DateTime.UtcNow;
-            query = query.Where(item => progressQuery.Any(p => p.VocabularyItemId == item.Id && p.NextReviewDate <= now));
+            query = query.Where(item => progressQuery.Where(p => p.VocabularyItemId == item.Id)
+                .OrderByDescending(p => p.CreatedAt).Select(p => (DateTime?)p.NextReviewDate).FirstOrDefault() <= now);
         }
         if (configuredIds.Length > 0)
         {
@@ -2918,8 +2919,15 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         if (difficulty is >= 1 and <= 5)
             query = query.Where(item => item.DifficultyLevel == difficulty);
 
-        var candidates = await query.ToListAsync(cancellationToken);
-        var selectedWords = candidates.OrderBy(_ => Guid.NewGuid()).Take(count)
+        // Bound transferred candidates; database random ordering rotates the pool between sessions.
+        var candidates = await query.OrderBy(_ => EF.Functions.Random()).Take(500).ToListAsync(cancellationToken);
+        if (mode == "quiz") {
+            var seenWords = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var seenDefinitions = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            candidates = candidates.Where(item => !seenWords.Contains(item.Word) && !seenDefinitions.Contains(item.Definition)
+                && seenWords.Add(item.Word) && seenDefinitions.Add(item.Definition)).ToList();
+        }
+        var selectedWords = candidates.Take(count)
             .Select(ToVocabularyWordState)
             .ToList();
         await ApplyVocabularyBoxesAsync(selectedWords, studentId, cancellationToken);

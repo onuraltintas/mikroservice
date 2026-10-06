@@ -3687,6 +3687,10 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     }
     return 'learning';
   }
+  isVocabAwaitingPersistence(): boolean {
+    return this.engine?.engineType === 'vocabulary_builder'
+      && (this.engine as VocabularyBuilderEngine).isAwaitingPersistence();
+  }
 
   getVocabQuizOptions(): any[] {
     if (this.engine?.engineType === 'vocabulary_builder') {
