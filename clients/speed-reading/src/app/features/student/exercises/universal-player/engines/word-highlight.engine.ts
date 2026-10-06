@@ -104,8 +104,14 @@ export class WordHighlightEngine implements BaseEngine {
             : boundedStringArray(caseInsensitiveField(nested, 'chunks') ?? caseInsensitiveField(root, 'chunks'));
         const chunkSize = boundedInteger(caseInsensitiveField(nested, 'chunkSize')
             ?? caseInsensitiveField(root, 'chunkSize') ?? pacer['chunksize'] ?? content['chunksize'], 1, 1, 10);
-        const targetWpm = boundedInteger(caseInsensitiveField(nested, 'targetWpm')
-            ?? caseInsensitiveField(root, 'targetWpm') ?? pacer['speedwpm'], 200, 20, 1500);
+        const explicitWpm = caseInsensitiveField(nested, 'targetWpm')
+            ?? caseInsensitiveField(root, 'targetWpm') ?? pacer['speedwpm'];
+        const legacyDuration = boundedInteger(timing['durationms'], 0, 0, 10000);
+        const legacyDelay = boundedInteger(timing['delayms'], 0, 0, 10000);
+        // Legacy duration/delay together represent one group display cycle.
+        const targetWpm = explicitWpm == null && legacyDuration > 0
+            ? Math.max(20, Math.min(1500, 60000 * chunkSize / (legacyDuration + legacyDelay)))
+            : boundedInteger(explicitWpm, 200, 20, 1500);
         {
             const rawWords = (backendChunks.length ? backendChunks.join(' ') : text).split(/\s+/).filter(w => w.length > 0);
             const cs = chunkSize;
