@@ -1,6 +1,41 @@
+import { fakeAsync, tick } from '@angular/core/testing';
 import { VocabularyBuilderEngine } from './vocabulary-builder.engine';
 
 describe('VocabularyBuilderEngine server validation contract', () => {
+  it('preserves the exact remaining deadline and excludes paused response time', fakeAsync(() => {
+    const actions: any[] = []; const engine = createQuizEngine(actions, []);
+    (engine as any).timeLimitPerWord = 10;
+    engine.start(); tick(2500); engine.pause(); tick(5000); engine.resume();
+    expect(engine.wordTimeRemaining).toBe(8);
+    tick(7500); expect(actions[0]?.action).toBe('timeout');
+    engine.destroy();
+  }));
+  it('blocks learning input before start and during pause', () => {
+    const actions: any[] = []; const engine = new VocabularyBuilderEngine();
+    engine.initialize({ mode: 'learning', words: [{ id: crypto.randomUUID(), word: 'a', definition: 'b' }] } as any, createCallbacks(actions, []));
+    engine.markAsKnown(); expect(actions.length).toBe(0);
+    engine.start(); engine.pause(); engine.markAsUnknown(); expect(actions.length).toBe(0); engine.destroy();
+  });
+  it('waits for learning persistence, permits retry, and uses the server box', () => {
+    const actions: any[] = []; const engine = new VocabularyBuilderEngine(); const id = crypto.randomUUID();
+    engine.initialize({ serverAuthoritative: true, mode: 'learning', words: [{ id, word: 'a', definition: 'b', box: 4 }] } as any, createCallbacks(actions, []));
+    expect(engine.getWordBox(id)).toBe(4);
+    engine.start(); engine.markAsKnown(); engine.markAsKnown();
+    expect(actions.length).toBe(1); expect(engine.state.isCompleted).toBeFalse();
+    engine.applyServerResponse({ isValid: false }); expect(engine.state.currentStep).toBe(0);
+    engine.markAsKnown(); engine.applyServerResponse({ isValid: true, isCorrect: true, feedbackData: { box: 5 } });
+    expect(engine.getWordBox(id)).toBe(5); expect(engine.state.isCompleted).toBeTrue(); engine.destroy();
+  });
+  it('clears the prior session when initialized again', () => {
+    const engine = createQuizEngine([], []); engine.start(); engine.submitQuizAnswer(engine.getQuizOptions()[0].letter);
+    engine.initialize({ mode: 'learning', words: [{ id: crypto.randomUUID(), word: 'yeni', definition: 'anlam' }] } as any, createCallbacks([], []));
+    expect(engine.getResult().completedSteps).toBe(0); expect(engine.isShowingFeedback()).toBeFalse(); engine.destroy();
+  });
+  it('rejects ambiguous quiz content rather than generating placeholder options', () => {
+    const errors: string[] = []; const engine = new VocabularyBuilderEngine();
+    engine.initialize({ mode: 'quiz', words: [{ id: crypto.randomUUID(), word: 'a', definition: 'b' }] } as any, createCallbacks([], errors));
+    engine.start(); expect(engine.state.isRunning).toBeFalse(); expect(errors.length).toBe(1); engine.destroy();
+  });
   it('reads words and settings from nested engine configuration', () => {
     const engine = new VocabularyBuilderEngine();
     engine.initialize({
