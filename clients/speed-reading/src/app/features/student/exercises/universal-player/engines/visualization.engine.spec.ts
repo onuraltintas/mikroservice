@@ -141,4 +141,18 @@ describe('VisualizationEngine', () => {
     engine.applyServerResponse({ isValid: true, isCorrect: true, correctAnswer: 'A' });
     expect(engine.correctAnswer).toBe('Kırmızı'); engine.destroy();
   });
+
+  it('resumes a static scene precisely between countdown ticks', fakeAsync(() => {
+    const engine = new VisualizationEngine(); engine.initialize({ scenes: [scene] } as any, callbacks());
+    engine.start(); tick(37); engine.pause(); tick(3000); engine.resume(); tick(4963);
+    expect(engine.getPhase()).toBe('questions'); engine.destroy();
+  }));
+
+  it('sends active question response time rather than scene display time', fakeAsync(() => {
+    const actions: any[] = []; const engine = new VisualizationEngine();
+    engine.initialize({ scenes: [scene] } as any, { ...callbacks(), onAction: action => actions.push(action) });
+    engine.start(); tick(5000); tick(400); engine.pause(); tick(3000); engine.resume(); tick(600);
+    engine.handleInput({ type: 'answer', answer: 'A' });
+    expect(actions[0].responseTime).toBe(1000); engine.destroy();
+  }));
 });
