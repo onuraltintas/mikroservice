@@ -80,7 +80,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions
         var action = request.Action?.Trim().ToLowerInvariant();
         if (action is not ("scan_start" or "scan_click" or "scan_timeout"))
             return Invalid("Tarama yalnız doğrulanmış hedef tıklamalarıyla ilerler.");
-        if (ScanningComplete(state) || state.ReadingIncomplete) return Invalid("Tarama zaten tamamlandı.");
+        if (ScanningComplete(state) || state.ReadingIncomplete)
+            return action == "scan_start" ? ScanningResponse(session, state, now) : Invalid("Tarama zaten tamamlandı.");
         if (action == "scan_start")
         {
             EnsureTimingStarted(session, state, now);

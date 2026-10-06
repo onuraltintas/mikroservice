@@ -638,6 +638,13 @@ internal sealed class OwnedSpeedReadingLearningPaths(OwnedSpeedReadingDbContext 
                     "LearningPath.SessionMismatch", "Bu çalışma için tamamlanmış egzersiz oturumu bulunamadı.");
             if (result.CompletedAt < item.CreatedAt)
                 throw new BusinessRuleException("LearningPath.SessionTooOld", "Eski bir oturum bu öneriyi tamamlayamaz.");
+            var session = await db.ExerciseSessions.AsNoTracking()
+                .SingleOrDefaultAsync(row => row.Id == sessionId && row.StudentId == studentId, cancellationToken)
+                ?? throw new BusinessRuleException("LearningPath.SessionMismatch", "Doğrulanmış egzersiz oturumu bulunamadı.");
+            using var state = JsonDocument.Parse(session.SessionDataJson);
+            if (state.RootElement.TryGetProperty("readingIncomplete", out var incomplete)
+                && incomplete.ValueKind == JsonValueKind.True)
+                throw new BusinessRuleException("LearningPath.IncompleteSession", "Tamamlanmamış egzersiz öğrenme yolunu ilerletemez.");
             achievedScore = result.IsMeasured ? result.Score : null;
         }
         else if (item.ContentType == "ReadingText")

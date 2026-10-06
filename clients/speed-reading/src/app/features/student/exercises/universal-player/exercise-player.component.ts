@@ -1233,7 +1233,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
               : engineType === 'text_stream'
                 ? (response: ValidationResponse) =>
                   (this.engine as TextStreamEngine).reconcileServerResponse(action, response)
-              : engineType === 'scan_find' || engineType === 'scanning'
+              : this.engine?.engineType === 'scan_find'
                 ? (response: ValidationResponse) =>
                   (this.engine as ScanFindEngine).reconcileServerResponse(action, response)
               : undefined;
