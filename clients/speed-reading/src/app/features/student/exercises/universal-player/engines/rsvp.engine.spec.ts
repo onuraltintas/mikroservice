@@ -60,4 +60,45 @@ describe('RSVP presentation', () => {
     player.startTimer(); tick(2100); player.stopTimer();
     expect(player.engine.finish).not.toHaveBeenCalled();
   }));
+
+  it('uses the owned timing snapshot after a catalog edit', fakeAsync(() => {
+    engine.initialize({ serverAuthoritative: true, exerciseTypeName: 'RSVP', words: ['bir', 'iki'],
+      rsvpProtocolVersion: 1, rsvpDisplayDurationMs: 200, rsvpGapMs: 100, rsvpFixationMs: 300,
+      engineConfig: { mode: 'rsvp', displayDurationMs: 50, timing: { intervalMs: 0 }, visuals: { showFixation: false } }
+    } as any, callbacks);
+    engine.start(); tick(1099); expect(result).toBeUndefined(); tick(1);
+    expect(result.totalTime).toBe(1100);
+  }));
+
+  for (const words of [undefined, null, []]) {
+    it(`rejects absent owned text (${String(words)}) even when catalog content exists`, () => {
+      engine.initialize({ serverAuthoritative: true, exerciseTypeName: 'RSVP', words,
+        engineConfig: { mode: 'rsvp', words: ['katalog'], content: { source: 'custom', items: ['yerel'] } }
+      } as any, callbacks);
+      engine.start();
+      expect(errors.length).toBe(1);
+      expect(engine.state.isRunning).toBeFalse();
+    });
+  }
+
+  it('reports RSVP mode inferred from type to the player', () => {
+    engine.initialize({ exerciseTypeName: 'RSVP', words: ['bir'] } as any, callbacks);
+    expect(engine.getMode()).toBe('rsvp');
+  });
+
+  it('normalizes the player Tachistoscope type check', () => {
+    engine.initialize({ mode: 'rsvp', words: ['bir'] } as any, callbacks);
+    const player = Object.create(ExercisePlayerComponent.prototype) as any;
+    player.engine = engine;
+    player.exercise = { exerciseTypeName: 'tachistoscope' };
+    expect(player.isTachistoscopeMode()).toBeTrue();
+  });
+
+  it('keeps the remaining gap and excludes pauses from presentation time', fakeAsync(() => {
+    engine.initialize({ mode: 'rsvp', words: ['bir', 'iki'], timing: { durationMs: 200, intervalMs: 100 }, visuals: { showFixation: false } } as any, callbacks);
+    engine.start(); tick(250); engine.pause(); tick(1000); engine.resume(); tick(249);
+    expect(result).toBeUndefined(); tick(1);
+    expect(result.totalTime).toBe(500);
+    expect(result.details.displayPaceWpm).toBe(240);
+  }));
 });
