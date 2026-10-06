@@ -2,6 +2,13 @@ import { fakeAsync, tick } from '@angular/core/testing';
 import { VocabularyBuilderEngine } from './vocabulary-builder.engine';
 
 describe('VocabularyBuilderEngine server validation contract', () => {
+  it('does not restart timeout while a rejected pending answer is paused', fakeAsync(() => {
+    const actions: any[] = []; const engine = createQuizEngine(actions, []);
+    (engine as any).serverAuthoritative = true; engine.timeLimitPerWord = 2;
+    engine.start(); engine.submitQuizAnswer(engine.getQuizOptions()[0].letter); engine.pause();
+    engine.applyServerResponse({ isValid: false }); tick(5000);
+    expect(actions.length).toBe(1); expect(engine.state.currentStep).toBe(0); engine.destroy();
+  }));
   it('preserves the exact remaining deadline and excludes paused response time', fakeAsync(() => {
     const actions: any[] = []; const engine = createQuizEngine(actions, []);
     (engine as any).timeLimitPerWord = 10;
