@@ -1,6 +1,6 @@
 /**
  * Subvocalization Reduction Engine
- * Trains to reduce internal speech while reading to increase speed.
+ * Paced reading practice with optional visual rhythm; does not measure inner speech.
  */
 
 import { BaseEngine, EngineConfig, EngineState, EngineResult, EngineCallbacks } from './base-engine.interface';
@@ -74,13 +74,15 @@ export class SubvocalizationReductionEngine implements BaseEngine {
             ?? caseInsensitiveField(nested, name)
             ?? caseInsensitiveField(root, name);
 
-        const targetWpm = boundedInteger(read('targetWpm') ?? read('wpm'), 200, 20, 1500);
+        const duration = boundedInteger(read('msPerWord'), 300, 40, 3000);
+        const targetWpm = boundedInteger(read('targetWpm') ?? read('wpm'), Math.round(60000 / duration), 20, 1500);
+        const msPerWord = 60000 / targetWpm;
         const displayMode = read('displayMode');
         this.config = {
             ...root,
             ...nested,
             wpm: targetWpm,
-            msPerWord: boundedInteger(read('msPerWord'), Math.round(60000 / targetWpm), 40, 3000),
+            msPerWord,
             displayMode: ['highlight', 'rsvp', 'chunk'].includes(displayMode) ? displayMode : 'highlight',
             chunkSize: boundedInteger(read('chunkSize'), 1, 1, 10),
             metronomeEnabled: read('metronomeEnabled') === true,
@@ -119,18 +121,6 @@ export class SubvocalizationReductionEngine implements BaseEngine {
         this.timerInterval = setInterval(() => {
             if (this.state.isRunning && !this.state.isPaused) {
                 this.state.timeElapsed = Date.now() - this.startTime;
-
-                // Calculate WPM here periodically, not on every get call
-                if (this.readingStartTime && this.currentWordIndex >= 0) {
-                    const elapsedMs = Date.now() - this.readingStartTime;
-                    if (elapsedMs > 3000) {
-                        const elapsedMinutes = elapsedMs / 60000;
-                        const currentWpm = Math.round((this.currentWordIndex + 1) / elapsedMinutes);
-                        this.state.currentWPM = Math.min(2000, currentWpm);
-                    } else {
-                        this.state.currentWPM = this.config.wpm;
-                    }
-                }
 
                 this.callbacks.onStateChange({ ...this.state });
             }
@@ -190,6 +180,7 @@ export class SubvocalizationReductionEngine implements BaseEngine {
         // Since EngineState interface doesn't have it, we'll cast or just rely on passing it.
         // BETTER APPROACH: Add it to the class property state effectively (via casting)
         (this.state as any).metronomeStep = this.metronomeBeats;
+        (this.state as any).metronomeBeat = this.config.visualMetronome;
 
         this.callbacks.onStateChange({
             ...this.state,
@@ -202,6 +193,7 @@ export class SubvocalizationReductionEngine implements BaseEngine {
             // Move to next number: 1 -> 2 -> 3 -> 4 -> 1 ...
             this.metronomeBeats = (this.metronomeBeats % 4) + 1;
             (this.state as any).metronomeStep = this.metronomeBeats;
+            (this.state as any).metronomeBeat = this.config.visualMetronome && this.metronomeBeats % 2 === 1;
 
             this.callbacks.onStateChange({
                 ...this.state,
@@ -282,7 +274,7 @@ export class SubvocalizationReductionEngine implements BaseEngine {
         }
 
         if (this.phase === 'answering' && input.type === 'answer') {
-            if (this.showingFeedback || !this.state.isRunning || this.state.isPaused) return;
+            if (this.showingFeedback || !this.state.isRunning) return;
             if (input.previewOnly !== true && (input.serverValidated !== true || typeof input.isCorrect !== 'boolean')) return;
 
             const question = this.questions[this.currentQuestionIndex];
@@ -437,8 +429,10 @@ export class SubvocalizationReductionEngine implements BaseEngine {
     getTargetWpm(): number { return this.config.wpm; }
 
     getCurrentWpm(): number {
-        return this.state.currentWPM || this.config.wpm;
+        return this.config.wpm;
     }
+
+    isMetronomeEnabled(): boolean { return this.config.metronomeEnabled; }
 
     getProgress(): number {
         if (this.words.length === 0) return 0;
