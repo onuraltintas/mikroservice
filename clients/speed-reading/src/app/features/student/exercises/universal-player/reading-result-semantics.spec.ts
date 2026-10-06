@@ -2,6 +2,29 @@ import { ExercisePlayerComponent } from './exercise-player.component';
 import { of } from 'rxjs';
 
 describe('reading result semantics', () => {
+  it('uses authoritative RSVP presentation metrics without marking partial daily progress complete', () => {
+    const player = Object.create(ExercisePlayerComponent.prototype) as any;
+    player.engine = { engineType: 'text_stream', getMode: () => 'rsvp' };
+    player.engineState = { totalSteps: 4 };
+    player.parsedConfig = {};
+    player.questionAnswers = [];
+    player.sessionId = 'session';
+    player.exercise = { id: 'exercise', exerciseTypeName: 'RSVP' };
+    player.isPreviewSession = () => false;
+    player.showToast = () => undefined;
+    player.cdr = { detectChanges: () => undefined };
+    player.completeDailyProgress = jasmine.createSpy('daily');
+    player.sessionService = { completeSession: () => of({ score: null, accuracy: null, rawWPM: null,
+      detailedResults: { rsvpDisplayPaceWpm: 218.18, rsvpCompletionPercent: 50, rsvpPresentedWords: 2, readingIncomplete: true } }) };
+    player.result = { score: 0, accuracy: 0, errors: 0, totalSteps: 4, completedSteps: 4,
+      details: { displayPaceWpm: 999, completionPercent: 100, incomplete: false } };
+    player.saveResult(player.result);
+    expect(player.result.details.displayPaceWpm).toBe(218.18);
+    expect(player.result.details.completionPercent).toBe(50);
+    expect(player.result.details.rsvpPresentedWords).toBe(2);
+    expect(player.result.details.incomplete).toBeTrue();
+    expect(player.completeDailyProgress).not.toHaveBeenCalled();
+  });
   it('uses authoritative fade partial results and does not advance daily progress', () => {
     const player = Object.create(ExercisePlayerComponent.prototype) as any;
     player.engine = { engineType: 'text_fade', getWpm: () => 200 };
