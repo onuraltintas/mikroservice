@@ -532,7 +532,7 @@
         <!-- Text Reading Area -->
         <div class="reading-text-area" [class.paused]="engineState.isPaused" #readingTextContainer
             (scroll)="onReadingScroll($event)">
-            <div class="reading-text-content" [ngClass]="'font-' + getComprehensionFontSize()">
+            <div class="reading-text-content" [ngClass]="'font-' + getComprehensionFontSize()" [style.line-height]="getComprehensionLineHeight()">
                 {{ getComprehensionText() }}
             </div>
         </div>
@@ -540,7 +540,7 @@
         <!-- Reading Stats & Complete Button -->
         <div class="reading-footer">
             <div class="reading-stats">
-                <div class="stat-item">
+                <div class="stat-item" *ngIf="getCurrentReadingWpm() > 0">
                     <span class="material-icons">speed</span>
                     <span>~{{ getCurrentReadingWpm() }} WPM</span>
                 </div>
@@ -550,7 +550,7 @@
                 </div>
             </div>
 
-            <button class="complete-reading-btn" (click)="completeReading()" [disabled]="engineState.isPaused">
+            <button class="complete-reading-btn" (click)="completeReading()" [disabled]="!canCompleteReading()">
                 <span class="material-icons">done</span>
                 Okudum, Sorulara Geç
             </button>

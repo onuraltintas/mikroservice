@@ -32,6 +32,7 @@ import { GridInteractionEngine } from './engines/grid-interaction.engine';
 import { TextStreamEngine } from './engines/text-stream.engine';
 import { TextFadeEngine } from './engines/text-fade.engine';
 import { WordHighlightEngine } from './engines/word-highlight.engine';
+import { ReadingComprehensionEngine } from './engines/reading-comprehension.engine';
 import { VisualExpansionEngine } from './engines/visual-expansion.engine';
 import { MotionPathEngine } from './engines/motion-path.engine';
 import { ScanFindEngine } from './engines/scan-find.engine';
@@ -3379,6 +3380,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   }
 
   getCurrentReadingWpm(): number {
+    if (this.engine?.engineType === 'reading_comprehension' || this.engine?.engineType === 'free_reading') return 0;
     if (this.engine?.engineType === 'reading_comprehension' || this.engine?.engineType === 'exam_simulation' || this.engine?.engineType === 'adaptive_fluency') {
       const wordCount = (this.engine as any).getWordCount?.() || 0;
       const timeMinutes = this.engineState.timeElapsed / 1000 / 60;
@@ -3391,6 +3393,15 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
 
   getReadingScrollProgress(): number {
     return this.readingScrollProgress;
+  }
+
+  getComprehensionLineHeight(): number {
+    return (this.engine as ReadingComprehensionEngine)?.getLineHeight?.() || 1.8;
+  }
+
+  canCompleteReading(): boolean {
+    if (!this.engineState.isRunning || this.engineState.isPaused) return false;
+    return (this.engine as ReadingComprehensionEngine)?.canComplete?.() ?? true;
   }
 
   onReadingScroll(event: Event): void {

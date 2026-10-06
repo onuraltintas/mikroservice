@@ -401,8 +401,7 @@ export class ReadingComprehensionEngine implements BaseEngine {
     }
 
     canComplete(): boolean {
-        // Can complete if either scrolled to end or spent enough time
-        const minTime = this.config.timing?.minReadingTimeMs ?? 5000;
-        return this.state.timeElapsed >= minTime || this.readingState.hasScrolledToEnd;
+        return this.state.isRunning && !this.state.isPaused && !this.state.isCompleted
+            && this.state.timeElapsed >= (this.config.timing?.minReadingTimeMs ?? 0);
     }
 }
