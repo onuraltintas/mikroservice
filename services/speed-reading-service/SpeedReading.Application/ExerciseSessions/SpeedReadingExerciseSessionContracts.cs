@@ -234,7 +234,7 @@ public static class SpeedReadingExerciseSessionRules
         return Math.Round(Math.Clamp((comprehension * 0.6m) + speedComponent, 0, 100), 2);
     }
 
-    public static decimal? CalculateValidatedRawWpm(int wordsRead, int readingSeconds)
+    public static decimal? CalculateValidatedRawWpm(int wordsRead, decimal readingSeconds)
     {
         if (wordsRead <= 0 || readingSeconds < 3)
         {

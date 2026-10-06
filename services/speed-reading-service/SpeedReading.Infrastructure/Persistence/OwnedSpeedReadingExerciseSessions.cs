@@ -574,6 +574,8 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
 
         if (state.ReadingPausedAt.HasValue)
         {
+            if (state.ReadingPausedMilliseconds.HasValue)
+                state.ReadingPausedMilliseconds += (long)Math.Max(0, (now - state.ReadingPausedAt.Value).TotalMilliseconds);
             state.ReadingPausedSeconds += Math.Max(
                 0,
                 (int)Math.Round((now - state.ReadingPausedAt.Value).TotalSeconds));
@@ -597,9 +599,7 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
             ? state.AdaptiveStageResults.SingleOrDefault(item => item.Stage == 3)
             : null;
         var rawWpmCandidate = adaptiveTransferResult?.Wpm
-            ?? (SupportsServerReadingMeasurement(state)
-                ? SpeedReadingExerciseSessionRules.CalculateValidatedRawWpm(wordsRead ?? 0, timeSpent)
-                : null);
+            ?? CalculateReadingWpm(state, timeSpent);
         var measurementStatus = SpeedReadingExerciseSessionRules.ResolveMeasurementStatus(
             state.Questions.Count,
             session.CorrectCount,
@@ -957,6 +957,8 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         session.Resume(now);
         if (state.ReadingPausedAt.HasValue)
         {
+            if (state.ReadingPausedMilliseconds.HasValue)
+                state.ReadingPausedMilliseconds += (long)Math.Max(0, (now - state.ReadingPausedAt.Value).TotalMilliseconds);
             state.ReadingPausedSeconds += Math.Max(
                 0,
                 (int)Math.Round((now - state.ReadingPausedAt.Value).TotalSeconds));
@@ -1128,6 +1130,7 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         var effectiveConfig = engineConfig.ValueKind == JsonValueKind.Object ? engineConfig : config;
         if (ExerciseConfigurationRules.NormalizeEngineType(exerciseEngineType) == "reading_comprehension")
         {
+            state.ReadingPausedMilliseconds = 0;
             var timing = ReadObject(effectiveConfig, "timing");
             var rootTiming = ReadObject(config, "timing");
             state.ReadingMinimumMs = ReadPositiveInt(timing, "minReadingTimeMs")
@@ -1271,7 +1274,8 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
             state.ReadingTextId = snapshotText.Id;
             state.ReadingTextTitle = snapshotText.Title;
             state.Content = snapshotText.Content;
-            state.WordCount = snapshotText.WordCount > 0 ? snapshotText.WordCount : CountWords(snapshotText.Content);
+            state.WordCount = state.ReadingPausedMilliseconds.HasValue ? CountWords(snapshotText.Content)
+                : snapshotText.WordCount > 0 ? snapshotText.WordCount : CountWords(snapshotText.Content);
             state.Words = SplitWords(snapshotText.Content);
             state.Questions = assessmentSnapshot.Questions
                 .Where(item => ReadingQuestionQualityRules.HasScorableAnswerKey(item.CorrectAnswer))
@@ -1304,7 +1308,8 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
             state.ReadingTextId = readingText.Id;
             state.ReadingTextTitle = readingText.Title;
             state.Content = readingText.Content;
-            state.WordCount = readingText.WordCount > 0 ? readingText.WordCount : CountWords(readingText.Content);
+            state.WordCount = state.ReadingPausedMilliseconds.HasValue ? CountWords(readingText.Content)
+                : readingText.WordCount > 0 ? readingText.WordCount : CountWords(readingText.Content);
             state.Words = SplitWords(readingText.Content);
             state.Questions = await db.ReadingQuestions.AsNoTracking()
                 .Where(item => item.ReadingTextId == readingText.Id && !item.IsDeleted)
@@ -1544,7 +1549,7 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
             if (!state.ReadingEndTime.HasValue)
             {
                 var elapsedMs = Math.Max(0, (now - state.ReadingStartTime.Value).TotalMilliseconds
-                    - state.ReadingPausedSeconds * 1000d);
+                    - (state.ReadingPausedMilliseconds ?? state.ReadingPausedSeconds * 1000L));
                 if (!incomplete && elapsedMs < state.ReadingMinimumMs)
                     return Invalid("Minimum okuma süresi henüz dolmadı.");
                 incomplete |= state.ReadingMaximumMs > 0 && elapsedMs >= state.ReadingMaximumMs;
@@ -1564,9 +1569,7 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
             state.ReadingStartTime,
             state.ReadingEndTime,
             state.ReadingPausedSeconds);
-        var wpm = SupportsServerReadingMeasurement(state)
-            ? SpeedReadingExerciseSessionRules.CalculateValidatedRawWpm(state.WordCount, seconds)
-            : null;
+        var wpm = CalculateReadingWpm(state, seconds);
         var message = wpm.HasValue
             ? "Okuma tamamlandı! Hızınız: " + wpm.Value + " WPM."
             : "Okuma tamamlandı; güvenilir WPM için yeterli ölçüm alınamadı.";
@@ -2506,6 +2509,16 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         state.TimingStartedAt
         ?? (state.TimingStartsOnAction ? now : session.StartTime);
 
+    private static decimal? CalculateReadingWpm(SessionState state, int fallbackSeconds)
+    {
+        if (!SupportsServerReadingMeasurement(state)) return null;
+        var seconds = state.ReadingPausedMilliseconds.HasValue
+            ? (decimal)Math.Max(0, (state.ReadingEndTime!.Value - state.ReadingStartTime!.Value).TotalMilliseconds
+                - state.ReadingPausedMilliseconds.Value) / 1000m
+            : fallbackSeconds;
+        return SpeedReadingExerciseSessionRules.CalculateValidatedRawWpm(state.WordCount, seconds);
+    }
+
     private static bool SupportsServerReadingMeasurement(SessionState state) =>
         state.Tachistoscope is null && IsReadingExerciseFlow(state)
         && !state.ReadingIncomplete
@@ -3268,6 +3281,7 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         public string? ReadingPurpose { get; set; }
         public DateTime? ReadingPausedAt { get; set; }
         public int ReadingPausedSeconds { get; set; }
+        public long? ReadingPausedMilliseconds { get; set; }
         public int ReadingMinimumMs { get; set; }
         public int ReadingMaximumMs { get; set; }
         public decimal? FinalWpm { get; set; }
