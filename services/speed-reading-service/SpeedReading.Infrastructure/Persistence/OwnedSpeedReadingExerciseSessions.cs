@@ -232,7 +232,9 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                     || (IsScanning(new SessionState { EngineType = exerciseEngineType })
                         && DeserializeState(matchingSession.SessionDataJson).ScanningRounds.Count == 0)
                     || (IsGrouping(DeserializeState(matchingSession.SessionDataJson))
-                        && DeserializeState(matchingSession.SessionDataJson).GroupingDisplayPaceWpm <= 0)))
+                        && DeserializeState(matchingSession.SessionDataJson).GroupingDisplayPaceWpm <= 0)
+                    || (IsTextFade(DeserializeState(matchingSession.SessionDataJson))
+                        && DeserializeState(matchingSession.SessionDataJson).FadeDisplayPaceWpm <= 0)))
             {
                 // Legacy client-scored attempts cannot be verified by the new round protocol.
                 // Preserve their history, but start a fresh authoritative attempt.
@@ -535,9 +537,9 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         if (existingResult is not null)
             return ToResult(existingResult, session, state);
 
-        if (IsGrouping(state) && (state.GroupingDisplayPaceWpm <= 0 || state.ReadingMinimumMs <= 0
+        if ((IsGrouping(state) || IsTextFade(state)) && (DisplayPace(state) <= 0 || state.ReadingMinimumMs <= 0
             || !state.ReadingStartTime.HasValue || !state.ReadingEndTime.HasValue))
-            throw IncompleteSession("Gruplama gösterimi tamamlanmadan oturum kaydedilemez.");
+            throw IncompleteSession("Doğrulanmış gösterim tamamlanmadan oturum kaydedilemez. Egzersizi yeniden başlatın.");
 
         if (IsScanning(state))
         {
@@ -1585,6 +1587,27 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             state.TotalSteps = (int)Math.Ceiling((decimal)state.Words.Length / state.GroupingChunkSize);
         }
         state.CustomData = customData;
+        if (IsTextFade(state))
+        {
+            if (state.Words.Length == 0)
+                throw new InvalidOperationException("Metin Solma için geçerli bir metin gereklidir.");
+            var fading = ReadObject(effectiveConfig, "fading");
+            var rootFading = ReadObject(config, "fading");
+            var timing = ReadObject(effectiveConfig, "timing");
+            var rootTiming = ReadObject(config, "timing");
+            state.FadeDisplayPaceWpm = Math.Clamp(ReadPositiveInt(effectiveConfig, "targetWpm")
+                ?? ReadPositiveInt(config, "targetWpm") ?? ReadPositiveInt(fading, "speedWpm")
+                ?? ReadPositiveInt(rootFading, "speedWpm") ?? 200, 20, 1500);
+            state.FadeLagMs = Math.Clamp(ReadNonNegativeInt(effectiveConfig, "lagMs")
+                ?? ReadNonNegativeInt(config, "lagMs") ?? ReadNonNegativeInt(fading, "lagMs")
+                ?? ReadNonNegativeInt(rootFading, "lagMs") ?? 3000, 0, 10000);
+            state.WordCount = state.Words.Length;
+            state.ReadingMinimumMs = state.FadeLagMs + (int)Math.Ceiling(state.WordCount * 60000m / state.FadeDisplayPaceWpm);
+            state.ReadingMaximumMs = (ReadNonNegativeInt(timing, "timeLimitSec")
+                ?? ReadNonNegativeInt(rootTiming, "timeLimitSec") ?? 0) * 1000;
+            state.ReadingPausedMilliseconds = 0;
+            state.TotalSteps = state.WordCount;
+        }
         return state;
     }
 
@@ -1618,9 +1641,9 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
     {
         if (IsAdaptiveFluency(state))
             return FinishAdaptiveStage(session, state, now);
-        if (ExerciseConfigurationRules.NormalizeEngineType(state.EngineType) == "reading_comprehension" || IsGrouping(state))
+        if (ExerciseConfigurationRules.NormalizeEngineType(state.EngineType) == "reading_comprehension" || IsGrouping(state) || IsTextFade(state))
         {
-            if (IsGrouping(state) && (state.GroupingDisplayPaceWpm <= 0 || state.ReadingMinimumMs <= 0))
+            if ((IsGrouping(state) || IsTextFade(state)) && (DisplayPace(state) <= 0 || state.ReadingMinimumMs <= 0))
                 return Invalid("Bu eski egzersiz oturumu doğrulanamıyor. Egzersizi yeniden başlatın.");
             if (!state.ReadingStartTime.HasValue)
                 return Invalid("Önce okumayı başlatın.");
@@ -1628,7 +1651,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             {
                 var elapsedMs = Math.Max(0, (now - state.ReadingStartTime.Value).TotalMilliseconds
                     - (state.ReadingPausedMilliseconds ?? state.ReadingPausedSeconds * 1000L));
-                if (IsGrouping(state))
+                if (IsGrouping(state) || IsTextFade(state))
                     incomplete |= state.ReadingMaximumMs > 0 && elapsedMs >= state.ReadingMaximumMs;
                 if (!incomplete && elapsedMs < state.ReadingMinimumMs)
                     return Invalid("Minimum okuma süresi henüz dolmadı.");
@@ -1647,6 +1670,15 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                     - (state.ReadingPausedMilliseconds ?? state.ReadingPausedSeconds * 1000L));
                 state.GroupingCompletionPercent = incomplete
                     ? Math.Min(99, Math.Round((decimal)elapsedMs / Math.Max(1, state.ReadingMinimumMs) * 100, 2)) : 100;
+            }
+            if (IsTextFade(state))
+            {
+                var elapsedMs = Math.Max(0, (now - state.ReadingStartTime.Value).TotalMilliseconds
+                    - (state.ReadingPausedMilliseconds ?? state.ReadingPausedSeconds * 1000L));
+                if (state.ReadingMaximumMs > 0) elapsedMs = Math.Min(elapsedMs, state.ReadingMaximumMs);
+                var fadedWords = Math.Floor(Math.Max(0, (decimal)elapsedMs - state.FadeLagMs) * state.FadeDisplayPaceWpm / 60000m);
+                state.FadeCompletionPercent = incomplete
+                    ? Math.Min(99, Math.Round(fadedWords / Math.Max(1, state.WordCount) * 100, 2)) : 100;
             }
         }
         session.SetCurrentStep(Math.Max(session.CurrentStep, 1));
@@ -2617,6 +2649,12 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         ExerciseConfigurationRules.NormalizeEngineType(state.EngineType) == "word_highlight"
         && state.ExerciseTypeName.Equals("Chunking", StringComparison.OrdinalIgnoreCase);
 
+    private static bool IsTextFade(SessionState state) =>
+        ExerciseConfigurationRules.NormalizeEngineType(state.EngineType) == "text_fade";
+
+    private static decimal DisplayPace(SessionState state) =>
+        IsTextFade(state) ? state.FadeDisplayPaceWpm : state.GroupingDisplayPaceWpm;
+
     private static bool HasFocusStimulus(SessionState state) =>
         state.FocusMode.Equals("word", StringComparison.OrdinalIgnoreCase)
             ? state.WordSequence.Length >= state.TotalSteps
@@ -3381,6 +3419,9 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         public DateTime? ReadingEndTime { get; set; }
         public bool ReadingIncomplete { get; set; }
         public int GroupingChunkSize { get; set; }
+        public decimal FadeDisplayPaceWpm { get; set; }
+        public int FadeLagMs { get; set; }
+        public decimal FadeCompletionPercent { get; set; }
         public decimal GroupingDisplayPaceWpm { get; set; }
         public decimal GroupingCompletionPercent { get; set; }
         public string? ReadingPurpose { get; set; }

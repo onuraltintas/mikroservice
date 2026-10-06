@@ -534,8 +534,10 @@ public static class ExerciseConfigurationRules
 
     private static void ValidateTextFadeConfiguration(JsonElement config)
     {
-        foreach (var name in new[] { "fading", "content", "visuals" })
+        foreach (var name in new[] { "fading", "content", "visuals", "timing" })
             ValidateOptionalObject(config, name, "Kaybolan metin");
+        if (TryGetObject(config, "timing") is { } timing)
+            ValidateOptionalIntRange(timing, "timeLimitSec", 0, 3_600, "Metin Solma süre sınırı");
         ValidateOptionalIntRange(config, "targetWpm", 20, 1_500, "Kaybolan metin hedef WPM");
         ValidateOptionalIntRange(config, "lagMs", 0, 10_000, "Kaybolan metin gecikmesi");
         ValidateOptionalInlineText(config);

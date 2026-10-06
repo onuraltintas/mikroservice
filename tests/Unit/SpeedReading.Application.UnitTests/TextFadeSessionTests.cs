@@ -44,7 +44,7 @@ public sealed class TextFadeSessionTests
     {
         await using var db = Context();
         var (service, student, exercise) = await Seed(db,
-            """{"engineType":"text_fade","timing":{"timeLimitSec":1},"fading":{"speedWpm":200,"lagMs":300},"engineConfig":{"lagMs":0}}}""");
+            """{"engineType":"text_fade","timing":{"timeLimitSec":1},"fading":{"speedWpm":200,"lagMs":300},"engineConfig":{"lagMs":0}}""");
         db.ReadingTexts.Add(ReadingText.Create(Guid.NewGuid(), "A", "bir iki üç dört beş altı", difficultyLevel: 3));
         await db.SaveChangesAsync();
         var started = await service.StartAsync(student, new() { ExerciseId = exercise });
