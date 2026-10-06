@@ -4,6 +4,20 @@ import { SubvocalizationReductionEngine } from './subvocalization-reduction.engi
 
 describe('subvocalization measurement', () => {
   const noOp = () => undefined;
+  it('does not start or save an empty reading text', () => {
+    const error = jasmine.createSpy('error'), action = jasmine.createSpy('action');
+    const engine = new SubvocalizationReductionEngine();
+    engine.initialize({ readingTextContent: '' } as any, {
+      onStart: noOp, onPause: noOp, onResume: noOp, onComplete: noOp, onError: error,
+      onStateChange: noOp, onStepComplete: noOp, onAction: action
+    });
+    engine.start();
+    expect(error).toHaveBeenCalled();
+    expect(action).not.toHaveBeenCalled();
+    expect(engine.state.isRunning).toBeFalse();
+    expect(engine.state.isCompleted).toBeFalse();
+    engine.destroy();
+  });
   function withQuestion(onComplete: (result: EngineResult) => void = noOp): SubvocalizationReductionEngine {
     const engine = new SubvocalizationReductionEngine();
     engine.initialize({ readingTextContent: 'bir', wpm: 600,

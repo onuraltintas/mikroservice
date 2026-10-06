@@ -104,6 +104,11 @@ describe('Custom preview settings safety', () => {
     expect(result.engineConfig['msPerWord']).toBe(40);
     expect(result.engineConfig['targetWpm']).toBe(1500);
   });
+  it('labels subvocalization as display pace and reads legacy duration defaults', () => {
+    const controls = getCustomPreviewControls({ engineType: 'subvocalization_reduction', engineConfig: { msPerWord: 100 } });
+    expect(controls[0].label).toBe('Gösterim temposu (kelime/dakika)');
+    expect(controls[0].value).toBe(600);
+  });
   it('supports regression speed and clears its overriding delay', () => {
     const result = applyCustomPreviewSettings({ engineType: 'regression_reduction', engineConfig: { wordDelayMs: 700, wpm: 100 } },
       { speedWpm: 300, chunkSize: 3 }, context);
