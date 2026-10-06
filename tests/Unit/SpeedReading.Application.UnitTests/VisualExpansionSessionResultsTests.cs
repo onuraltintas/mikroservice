@@ -9,6 +9,19 @@ namespace SpeedReading.Application.UnitTests;
 
 public sealed class VisualExpansionSessionResultsTests
 {
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Legacy_public_state_does_not_publish_unmeasured_visual_metrics(bool assessment)
+    {
+        var owned = typeof(OwnedSpeedReadingDbContext).Assembly.GetType("SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingExerciseSessions")!;
+        var deserialize = owned.GetMethod("DeserializeState", BindingFlags.Static | BindingFlags.NonPublic)!;
+        var state = deserialize.Invoke(null, [$$"""{"engineType":"visual_expansion","exerciseTypeName":"VisualExpansion","isAssessmentMode":{{assessment.ToString().ToLowerInvariant()}}}"""])!;
+        var json = (System.Text.Json.JsonElement)owned.GetMethod("ToPublicJson", BindingFlags.Static | BindingFlags.NonPublic)!.Invoke(null, [state])!;
+        Assert.False(json.TryGetProperty("visualExpansionRoundResults", out _));
+        Assert.False(json.TryGetProperty("visualExpansionMaxPresentedDistance", out _));
+        Assert.False(json.TryGetProperty("visualExpansionAverageResponseTimeMs", out _));
+    }
     [Fact]
     public async Task Restarts_legacy_attempt_instead_of_publishing_an_incomplete_verified_history()
     {
