@@ -15,6 +15,31 @@ function callbacks(onComplete: (result: any) => void = () => undefined) {
 }
 
 describe('ErrorAnalysisEngine', () => {
+  it('rejects a non-string word without throwing', () => {
+    const engine = new ErrorAnalysisEngine();
+    engine.initialize({ words: [{ index: 0, text: 123 }], errors: [{ wordIndex: 0 }] } as any, callbacks());
+    expect(() => engine.start()).not.toThrow(); expect(engine.state.isRunning).toBeFalse(); engine.destroy();
+  });
+  it('includes assisted status and completes at the configured active time limit', fakeAsync(() => {
+    let result: any; const engine = new ErrorAnalysisEngine();
+    engine.initialize({ timing: { timeLimitSec: 1 }, words: [{ index: 3, text: 'yanlız' }],
+      errors: [{ wordIndex: 3, originalWord: 'yalnız', errorWord: 'yanlız' }] }, callbacks(value => result = value));
+    engine.start(); engine.useHint(); tick(400); engine.pause(); tick(1000); engine.resume(); tick(600);
+    expect(result?.details.hintUsedCount).toBe(1); expect(result?.details.assisted).toBeTrue();
+    expect(result?.totalTime).toBe(1000); expect(result?.details.missedErrors).toBe(1); engine.destroy();
+  }));
+  it('waits for a server response before marking a word or completing', () => {
+    const actions: any[] = []; let completions = 0; const engine = new ErrorAnalysisEngine();
+    engine.initialize({ serverAuthoritative: true, words: [{ index: 3, text: 'yanlız' }],
+      errors: [{ wordIndex: 3, originalWord: 'yalnız', errorWord: 'yanlız' }] },
+      { ...callbacks(() => completions++), onAction: action => actions.push(action) });
+    engine.start(); expect(actions[0]?.action).toBe('error_analysis_start');
+    (engine as any).reconcileServerResponse(actions[0], { isValid: true, feedbackData: { selected: [], found: [], falseAlarms: [] } });
+    engine.handleInput({ type: 'select_word', wordIndex: 3 }); expect(engine.isWordSelected(3)).toBeFalse(); expect(completions).toBe(0);
+    (engine as any).reconcileServerResponse(actions[1], { isValid: true, isCompleted: true,
+      feedbackData: { selected: [3], found: [3], falseAlarms: [], hintUsedCount: 0, timeElapsed: 300, score: 100, accuracy: 100 } });
+    expect(engine.getFoundCount()).toBe(1); expect(completions).toBe(1); engine.destroy();
+  });
   it('rejects empty or inconsistent error targets before starting', () => {
     const errors: string[] = []; const cb: any = callbacks(); cb.onError = (error: string) => { errors.push(error); };
     const engine = new ErrorAnalysisEngine();
