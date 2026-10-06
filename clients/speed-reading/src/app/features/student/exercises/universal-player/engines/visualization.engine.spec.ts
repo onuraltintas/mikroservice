@@ -155,4 +155,20 @@ describe('VisualizationEngine', () => {
     engine.handleInput({ type: 'answer', answer: 'A' });
     expect(actions[0].responseTime).toBe(1000); engine.destroy();
   }));
+
+  it('reports missing content to the player instead of silently staying idle', () => {
+    const onError = jasmine.createSpy('error'); const engine = new VisualizationEngine();
+    engine.initialize({ scenes: [] } as any, { ...callbacks(), onError }); engine.start();
+    expect(onError).toHaveBeenCalled(); expect(engine.state.isRunning).toBeFalse();
+  });
+
+  it('reinitialization clears pending feedback and ignores stale responses after stopping', () => {
+    const engine = new VisualizationEngine(); engine.initialize({ scenes: [scene] } as any, callbacks());
+    engine.start(); engine.handleInput({ action: 'skip_scene' }); engine.handleInput({ type: 'answer', answer: 'A' });
+    engine.stop(); engine.applyServerResponse({ isValid: true, isCorrect: true });
+    expect(engine.state.currentStep).toBe(0);
+    engine.initialize({ scenes: [scene] } as any, callbacks());
+    expect(engine.showingFeedback).toBeFalse(); expect(engine.lastAnswer).toBe('');
+    engine.destroy();
+  });
 });
