@@ -8,6 +8,7 @@ import { BaseEngine, EngineConfig, EngineState, EngineResult, EngineCallbacks } 
 import { boundedInteger, caseInsensitiveField, mergeCaseInsensitiveRecords, recordOrEmpty, resolveReadingText } from './reading-pacer-safety';
 
 export interface TextFadeConfig extends EngineConfig {
+    timing: { timeLimitSec: number };
     content: {
         text?: string;
         wordCount?: number;
@@ -68,10 +69,12 @@ export class TextFadeEngine implements BaseEngine {
         const content = mergeCaseInsensitiveRecords(root, nested, 'content');
         const visuals = mergeCaseInsensitiveRecords(root, nested, 'visuals');
         const fading = mergeCaseInsensitiveRecords(root, nested, 'fading');
+        const timing = mergeCaseInsensitiveRecords(root, nested, 'timing');
         this.config = {
             ...root,
             ...nested,
             content,
+            timing: { timeLimitSec: boundedInteger(timing['timelimitsec'], 0, 0, 3600) },
             visuals: {
                 ...visuals,
                 fontSize: typeof visuals['fontsize'] === 'string' ? visuals['fontsize'] : 'medium'
@@ -112,6 +115,10 @@ export class TextFadeEngine implements BaseEngine {
         this.timerInterval = setInterval(() => {
             if (!this.state.isPaused) {
                 this.state.timeElapsed = Date.now() - this.startTime;
+                if (this.config.timing?.timeLimitSec && this.state.timeElapsed >= this.config.timing.timeLimitSec * 1000) {
+                    this.complete(false);
+                    return;
+                }
                 this.callbacks.onStateChange({ ...this.state });
             }
         }, 100);
@@ -257,7 +264,7 @@ export class TextFadeEngine implements BaseEngine {
     destroy(): void { this.stop(); }
     handleInput(input: any): void { }
 
-    private complete(): void {
+    private complete(completed = true): void {
         if (this.state.isCompleted) return;
         this.state.isCompleted = true;
         this.state.isRunning = false;
@@ -276,6 +283,8 @@ export class TextFadeEngine implements BaseEngine {
             details: {
                 wpm: null,
                 displayPaceWpm: this.config.fading.speedWpm,
+                timedOut: !completed,
+                completionPercent: this.words.length ? Math.round(this.state.currentStep / this.words.length * 100) : 0,
                 mode: 'vanishing_text'
             }
         };
@@ -288,4 +297,11 @@ export class TextFadeEngine implements BaseEngine {
     getActiveIndex(): number { return this.fadedWordIndex + 1; }
     getWpm(): number { return this.config.fading.speedWpm || 200; }
     getFontSize(): string { return (this.config.visuals as any)?.fontSize || 'medium'; }
+    getFontSizeCss(): string {
+        const size = this.getFontSize().toLowerCase();
+        const named: Record<string, number> = { small: 16, medium: 20, large: 24 };
+        const pixels = /^\d+px$/.test(size) ? boundedInteger(Number.parseInt(size, 10), 20, 14, 48)
+            : Object.hasOwn(named, size) ? named[size] : 20;
+        return `${pixels}px`;
+    }
 }

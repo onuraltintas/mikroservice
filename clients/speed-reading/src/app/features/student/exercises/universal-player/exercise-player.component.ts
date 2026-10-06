@@ -3066,6 +3066,10 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     return 0;
   }
 
+  getTextFadeFontSize(): string {
+    return (this.engine as TextFadeEngine)?.getFontSizeCss?.() || '20px';
+  }
+
   private isMeasuredClientResult(result: EngineResult): boolean {
     if (this.engine?.engineType === 'motion_path' && result.details?.serverValidatedFixation)
       return true;

@@ -421,6 +421,7 @@
 
             <div class="fading-text-container">
                 <span *ngFor="let word of getWords(); let i = index; trackBy: trackByIdx" class="fading-word-item"
+                    [style.font-size]="getTextFadeFontSize()"
                     [ngClass]="'font-' + getFontSize()" [class.faded]="isWordFaded(i)"
                     [class.active]="getActiveWordIndex() === i">
                     {{ word }}

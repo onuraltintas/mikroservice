@@ -41,6 +41,19 @@ export function getCustomPreviewControls(configuration: Record<string, unknown>)
   const control = (key: string, label: string, min: number, max: number, value: unknown): PreviewControl =>
     ({ key, label, min, max, value: Number(value) });
   switch (configuration['engineType']) {
+    case 'text_fade': {
+      const visuals = mergeCaseInsensitiveRecords(configuration, settings, 'visuals');
+      const size = String(visuals['fontsize'] ?? 'medium').toLowerCase();
+      const named: Record<string, number> = { small: 16, medium: 20, large: 24 };
+      const pixels = /^\d+px$/.test(size) ? boundedInteger(Number.parseInt(size, 10), 20, 14, 48)
+        : Object.hasOwn(named, size) ? named[size] : 20;
+      return [
+        control('speedWpm', 'Gösterim temposu (kelime/dakika)', 20, 1500, read('targetWpm') ?? fading['speedwpm'] ?? 200),
+        control('lagMs', 'Başlangıç beklemesi (ms)', 0, 10000, read('lagMs') ?? fading['lagms'] ?? 3000),
+        control('timeLimitSec', 'Süre sınırı (saniye; 0: sınırsız)', 0, 3600, timing['timelimitsec'] ?? 0),
+        control('fontSizePx', 'Metin boyutu (px)', 14, 48, pixels)
+      ];
+    }
     case 'adaptive_fluency': return [control('adaptiveTargetWpm', 'Önizleme hedef hızı (kelime/dakika)', 20, 1500, read('adaptiveTargetWpm') ?? 200)];
     case 'visualization': {
       const scenes = read('scenes');
@@ -187,6 +200,21 @@ export function applyCustomPreviewSettings<T extends Record<string, unknown>>(
       }
     }
   };
+  if (engine === 'text_fade') {
+    if (validated['speedWpm'] !== undefined) {
+      settings['targetWpm'] = validated['speedWpm'];
+      merge('fading', { speedWpm: validated['speedWpm'] });
+    }
+    if (validated['lagMs'] !== undefined) {
+      settings['lagMs'] = validated['lagMs'];
+      merge('fading', { lagMs: validated['lagMs'] });
+    }
+    if (validated['timeLimitSec'] !== undefined) merge('timing', { timeLimitSec: validated['timeLimitSec'] });
+    if (validated['fontSizePx'] !== undefined) settings['visuals'] = overrideFields(
+      { ...recordOrEmpty(caseInsensitiveField(configuration, 'visuals')), ...recordOrEmpty(caseInsensitiveField(settings, 'visuals')) },
+      { fontSize: `${validated['fontSizePx']}px` });
+    return result;
+  }
   if (engine === 'adaptive_fluency') {
     if (validated['adaptiveTargetWpm'] !== undefined) {
       settings['adaptiveTargetWpm'] = validated['adaptiveTargetWpm'];
