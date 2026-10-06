@@ -16,6 +16,15 @@ const callbacks: EngineCallbacks = {
 };
 
 describe('reading pacer runtime safety', () => {
+  it('does not report automatically faded words as measured reading WPM', fakeAsync(() => {
+    const engine = new TextFadeEngine();
+    engine.initialize({ content: { text: 'bir iki üç dört' }, fading: { speedWpm: 200, lagMs: 0 } } as any, callbacks);
+    engine.start();
+    tick(700);
+    expect(engine.state.currentStep).toBeGreaterThan(0);
+    expect(engine.state.currentWPM).toBe(0);
+    engine.destroy();
+  }));
   it('translates legacy group cycle timing to display tempo without overriding explicit WPM', fakeAsync(() => {
     let result: any;
     const engine = new WordHighlightEngine();
