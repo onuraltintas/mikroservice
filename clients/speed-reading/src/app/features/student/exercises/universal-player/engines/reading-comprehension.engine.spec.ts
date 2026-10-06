@@ -17,6 +17,19 @@ function callbacks(onComplete: (result: EngineResult) => void): EngineCallbacks 
 }
 
 describe('ReadingComprehensionEngine', () => {
+  it('cleans the previous free reading timer when reinitialized', fakeAsync(() => {
+    const engine = new ReadingComprehensionEngine('free_reading');
+    engine.initialize({ content: 'Bir iki.' }, callbacks(() => undefined)); engine.start(); tick(500);
+    engine.initialize({ content: 'Yeni metin.' }, callbacks(() => undefined)); tick(500);
+    expect(engine.state.timeElapsed).toBe(0);
+    expect(engine.displayName).toBe('Serbest Okuma'); engine.destroy();
+  }));
+  it('does not pause or resume an idle or destroyed free reading engine', () => {
+    const engine = new ReadingComprehensionEngine('free_reading');
+    engine.initialize({ content: 'Bir iki.' }, callbacks(() => undefined)); engine.pause();
+    expect(engine.state.isPaused).toBeFalse(); engine.start(); engine.pause(); engine.destroy(); engine.resume();
+    expect(engine.state.isRunning).toBeFalse(); expect(engine.state.isPaused).toBeFalse();
+  });
   it('uses the reading snapshot when the backend sends content as a string', () => {
     const engine = new ReadingComprehensionEngine();
     engine.initialize({
