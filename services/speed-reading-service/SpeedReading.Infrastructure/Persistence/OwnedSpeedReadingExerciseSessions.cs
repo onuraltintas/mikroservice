@@ -2894,7 +2894,9 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         Guid? profileAgeGroupId,
         CancellationToken cancellationToken)
     {
-        var configuredScenes = ReadVisualizationScenes(config);
+        var nested = ReadObject(config, "engineConfig");
+        var sceneConfig = ReadProperty(nested, "scenes").ValueKind == JsonValueKind.Array ? nested : config;
+        var configuredScenes = ReadVisualizationScenes(sceneConfig, difficultyLevel, profileAgeGroupId);
         if (configuredScenes.Count > 0)
             return configuredScenes;
 
@@ -2941,7 +2943,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         }).ToList();
     }
 
-    private static List<VisualizationSceneState> ReadVisualizationScenes(JsonElement config)
+    private static List<VisualizationSceneState> ReadVisualizationScenes(JsonElement config, int difficultyLevel, Guid? profileAgeGroupId)
     {
         var scenesElement = ReadProperty(config, "scenes");
         if (scenesElement.ValueKind != JsonValueKind.Array)
@@ -2953,6 +2955,15 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         foreach (var scene in scenesElement.EnumerateArray())
         {
             if (scene.ValueKind != JsonValueKind.Object)
+                continue;
+            if (ReadPositiveInt(scene, "difficultyLevel") is { } sceneLevel && sceneLevel != difficultyLevel)
+                continue;
+            var targetAgeGroup = ReadString(scene, "targetAgeGroupId");
+            if (profileAgeGroupId.HasValue && Guid.TryParse(targetAgeGroup, out var sceneAgeGroup)
+                && sceneAgeGroup != profileAgeGroupId.Value)
+                continue;
+            var description = ReadString(scene, "description")?.Trim();
+            if (string.IsNullOrWhiteSpace(description))
                 continue;
 
             var questions = new List<VisualizationQuestionState>();
@@ -2982,7 +2993,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             scenes.Add(new VisualizationSceneState
             {
                 SceneId = ReadString(scene, "sceneId") ?? ReadString(scene, "id") ?? Guid.NewGuid().ToString("D"),
-                Description = ReadString(scene, "description") ?? string.Empty,
+                Description = description,
                 ImageUrl = ReadString(scene, "imageUrl"),
                 Duration = ReadPositiveInt(scene, "duration") ?? 30,
                 DisplayOrder = ReadPositiveInt(scene, "displayOrder") ?? scenes.Count,
