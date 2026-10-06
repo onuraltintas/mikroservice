@@ -56,8 +56,8 @@ export class VisualizationEngine implements BaseEngine {
     private phase: Phase = 'scene';
     public mode: 'static' | 'guided' | 'flash' = 'static'; // Public for template access
 
-    private sceneStartTime = 0;
-    private sceneEndTime = 0;
+    private stepDeadline = 0;
+    private stepRemainingMs = 0;
     private questionAnswers: { questionId: string; answer: string; isCorrect: boolean; }[] = [];
 
     private timerInterval: any;
@@ -96,7 +96,7 @@ export class VisualizationEngine implements BaseEngine {
         const mode = read('mode');
         this.mode = ['static', 'guided', 'flash'].includes(mode) ? mode : 'static';
         this.previewOnly = root['previewOnly'] === true;
-        this.serverAuthoritative = !this.previewOnly && read('serverAuthoritative') === true;
+        this.serverAuthoritative = !this.previewOnly;
 
         // Get scenes from config (try both cases)
         const configuredScenes = read('scenes');
@@ -189,14 +189,13 @@ export class VisualizationEngine implements BaseEngine {
         }
 
         this.phase = 'scene';
-        this.sceneStartTime = Date.now();
         this.currentQuestionIndex = 0;
 
         const scene = this.scenes[this.currentSceneIndex];
         this.sceneDisplayRemaining = scene.duration * 1000;
 
         if (this.mode === 'guided' && scene.steps && scene.steps.length > 0) {
-            if (this.previewOnly) this.sceneDisplayRemaining = scene.steps.length * (scene.stepDurationMs || 3000);
+            this.sceneDisplayRemaining = scene.steps.length * (scene.stepDurationMs || 3000);
             // Guided Mode Logic
             this.currentGuidedStepIndex = 0;
             this.startGuidedSteps(scene);
@@ -217,12 +216,6 @@ export class VisualizationEngine implements BaseEngine {
             currentSceneIndex: this.currentSceneIndex,
             sceneDisplayRemaining: this.sceneDisplayRemaining
         } as any);
-
-        // Notify backend
-        this.callbacks.onAction({
-            action: 'scene_viewed',
-            timestamp: new Date()
-        });
 
     }
 
@@ -247,11 +240,13 @@ export class VisualizationEngine implements BaseEngine {
             } else {
                 // Next step
                 this.updateGuidedStepState();
+                this.stepDeadline = Date.now() + stepDuration;
                 this.guidedStepTimer = setTimeout(advanceStep, stepDuration);
             }
         };
 
         // Start first timeout
+        this.stepDeadline = Date.now() + stepDuration;
         this.guidedStepTimer = setTimeout(advanceStep, stepDuration);
     }
 
@@ -271,11 +266,10 @@ export class VisualizationEngine implements BaseEngine {
         if (this.mode === 'guided' && scene && scene.steps && this.currentGuidedStepIndex < scene.steps.length) {
             return scene.steps[this.currentGuidedStepIndex];
         }
-        return '';
+        return scene?.description || '';
     }
 
     private endSceneDisplay(): void {
-        this.sceneEndTime = Date.now();
         this.phase = 'questions';
 
         if (this.sceneTimeout) {
@@ -284,17 +278,7 @@ export class VisualizationEngine implements BaseEngine {
         }
 
         const scene = this.scenes[this.currentSceneIndex];
-        const recallTime = (this.sceneEndTime - this.sceneStartTime) / 1000;
-
-        // Send scene_completed with RecallTime to backend
-        this.callbacks.onAction({
-            action: 'scene_completed',
-            customData: {
-                sceneId: scene.sceneId,
-                recallTimeSeconds: recallTime
-            },
-            timestamp: new Date()
-        });
+        if (this.guidedStepTimer) clearTimeout(this.guidedStepTimer);
 
         if (scene.questions.length === 0) {
             this.currentSceneIndex++;
@@ -313,6 +297,8 @@ export class VisualizationEngine implements BaseEngine {
     }
 
     pause(): void {
+        if (!this.state.isRunning || this.state.isPaused) return;
+        this.stepRemainingMs = Math.max(0, this.stepDeadline - Date.now());
         this.state.isPaused = true;
         if (this.sceneTimeout) clearTimeout(this.sceneTimeout);
         if (this.guidedStepTimer) clearTimeout(this.guidedStepTimer);
@@ -321,17 +307,18 @@ export class VisualizationEngine implements BaseEngine {
     }
 
     resume(): void {
+        if (!this.state.isRunning || !this.state.isPaused) return;
         this.state.isPaused = false;
 
         // Resume scene timer if in scene phase
         if (this.phase === 'scene') {
-            if (this.mode === 'guided') {
+            if (this.mode === 'guided' && this.getCurrentScene()?.steps?.length) {
                 // Resume guided steps (simple restart of current step duration for now)
                 const scene = this.getCurrentScene();
                 if (scene) {
                     const stepDuration = scene.stepDurationMs || 3000;
-                    // Note: Ideally we should track remaining time, but restarting step is acceptable
-                    this.guidedStepTimer = setTimeout(() => this.continueGuidedSteps(scene, stepDuration), stepDuration);
+                    this.stepDeadline = Date.now() + this.stepRemainingMs;
+                    this.guidedStepTimer = setTimeout(() => this.continueGuidedSteps(scene, stepDuration), this.stepRemainingMs);
                 }
             } else if (this.sceneDisplayRemaining > 0) {
                 this.sceneTimeout = setTimeout(() => {
@@ -355,6 +342,7 @@ export class VisualizationEngine implements BaseEngine {
             this.endSceneDisplay();
         } else {
             this.updateGuidedStepState();
+            this.stepDeadline = Date.now() + stepDuration;
             this.guidedStepTimer = setTimeout(() => this.continueGuidedSteps(scene, stepDuration), stepDuration);
         }
     }
@@ -405,7 +393,7 @@ export class VisualizationEngine implements BaseEngine {
     }
 
     handleInput(input: any): void {
-        if (!input || typeof input !== 'object' || this.state.isCompleted) return;
+        if (!input || typeof input !== 'object' || !this.state.isRunning || this.state.isPaused || this.state.isCompleted) return;
 
         // Skip scene display early
         if (input.action === 'skip_scene' && this.phase === 'scene') {
@@ -425,7 +413,18 @@ export class VisualizationEngine implements BaseEngine {
         const scene = this.scenes[this.currentSceneIndex];
         const question = scene.questions[this.currentQuestionIndex];
 
-        if (this.serverAuthoritative && !question.correctAnswer?.trim()) {
+        if (this.previewOnly) {
+            this.showingFeedback = true;
+            this.answerEvaluated = false;
+            this.lastAnswer = answer;
+            this.lastAnswerCorrect = false;
+            this.correctAnswer = '';
+            this.state.currentStep++;
+            this.callbacks.onStateChange({ ...this.state });
+            return;
+        }
+
+        if (this.serverAuthoritative) {
             this.pendingServerAnswer = {
                 questionId: question.questionId,
                 answer,
@@ -538,7 +537,7 @@ export class VisualizationEngine implements BaseEngine {
         const pending = this.pendingServerAnswer;
         if (!pending) return;
 
-        if (response?.isValid === false) {
+        if (response?.isValid !== true || (typeof response.isCorrect !== 'boolean' && response.isCorrect !== null)) {
             this.pendingServerAnswer = null;
             this.showingFeedback = false;
             this.lastAnswer = '';
@@ -606,6 +605,8 @@ export class VisualizationEngine implements BaseEngine {
             completedSteps: totalQuestions,
             errors: this.state.errors,
             details: {
+                measurementStatus: !this.previewOnly && this.questionAnswers.length > 0
+                    && this.questionAnswers.length === totalQuestions ? 'Measured' : 'NotMeasured',
                 scenesCompleted: this.scenes.length,
                 answers: this.questionAnswers
             }
