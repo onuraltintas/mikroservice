@@ -2,6 +2,13 @@ import { fakeAsync, tick } from '@angular/core/testing';
 import { VocabularyBuilderEngine } from './vocabulary-builder.engine';
 
 describe('VocabularyBuilderEngine server validation contract', () => {
+  it('ignores delayed acknowledgements after destroy and cannot resume a stopped timer', fakeAsync(() => {
+    const engine = createQuizEngine([], []); (engine as any).serverAuthoritative = true; engine.timeLimitPerWord = 2;
+    engine.start(); engine.submitQuizAnswer(engine.getQuizOptions()[0].letter); engine.destroy();
+    engine.applyServerResponse({ isValid: true, isCorrect: true }); expect(engine.getCorrectCount()).toBe(0);
+    engine.reset(); engine.start(); engine.pause(); engine.stop(); engine.resume(); tick(3000);
+    expect(engine.isAwaitingPersistence()).toBeFalse(); expect(engine.state.isRunning).toBeFalse(); engine.destroy();
+  }));
   it('defers acknowledged learning advancement until resume so next response time is active', fakeAsync(() => {
     const actions: any[] = []; const engine = new VocabularyBuilderEngine();
     engine.initialize({ serverAuthoritative: true, mode: 'learning', words: [{ id: 'a', word: 'a', definition: 'b' }, { id: 'b', word: 'c', definition: 'd' }] } as any, createCallbacks(actions, []));
