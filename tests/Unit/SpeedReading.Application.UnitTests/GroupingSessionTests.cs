@@ -9,6 +9,50 @@ namespace SpeedReading.Application.UnitTests;
 
 public sealed class GroupingSessionTests
 {
+    [Theory]
+    [InlineData("""{"engineType":"word_highlight","engineConfig":{"content":{"chunkSize":0}}}""")]
+    [InlineData("""{"engineType":"word_highlight","engineConfig":{"timing":{"durationMs":0}}}""")]
+    [InlineData("""{"engineType":"word_highlight","engineConfig":{"timing":{"delayMs":-1}}}""")]
+    [InlineData("""{"engineType":"word_highlight","engineConfig":{"timing":{"durationMs":10001}}}""")]
+    public void Rejects_invalid_legacy_grouping_controls(string configuration)
+    {
+        var validate = () => ExerciseConfigurationRules.ValidateActiveConfiguration(configuration, "word_highlight");
+        validate.Should().Throw<ArgumentException>();
+    }
+
+    [Fact]
+    public async Task Preserves_root_pacer_priority_and_explicit_zero_nested_delay()
+    {
+        await using var db = Context();
+        var (service, student, exercise) = await Seed(db,
+            """{"engineType":"word_highlight","pacer":{"chunkSize":3},"timing":{"durationMs":850,"delayMs":450},"engineConfig":{"mode":"chunking","content":{"chunkSize":2},"timing":{"delayMs":0}}}""");
+        db.ReadingTexts.Add(ReadingText.Create(Guid.NewGuid(), "Metin", "bir iki üç dört beş altı", difficultyLevel: 3));
+        await db.SaveChangesAsync();
+        var started = await service.StartAsync(student, new() { ExerciseId = exercise });
+        started.InitialData.GetProperty("groupingChunkSize").GetInt32().Should().Be(3);
+        started.InitialData.GetProperty("readingMinimumMs").GetInt32().Should().Be(1700);
+    }
+
+    [Fact]
+    public async Task Deadline_marks_grouping_partial_even_when_client_claims_full_completion()
+    {
+        await using var db = Context();
+        var (service, student, exercise) = await Seed(db,
+            """{"engineType":"word_highlight","engineConfig":{"mode":"chunking","pacer":{"chunkSize":2,"speedWpm":200},"timing":{"timeLimitSec":1}}}""");
+        db.ReadingTexts.Add(ReadingText.Create(Guid.NewGuid(), "Metin", "bir iki üç dört beş altı", difficultyLevel: 3));
+        await db.SaveChangesAsync();
+        var started = await service.StartAsync(student, new() { ExerciseId = exercise });
+        await service.ValidateActionAsync(student, started.SessionId, new() { Action = "start_reading" });
+        var session = await db.ExerciseSessions.SingleAsync();
+        var state = System.Text.Json.Nodes.JsonNode.Parse(session.SessionDataJson)!;
+        state["readingStartTime"] = DateTime.UtcNow.AddSeconds(-2);
+        session.SetState(state.ToJsonString());
+        await db.SaveChangesAsync();
+        await service.ValidateActionAsync(student, started.SessionId, new() { Action = "finish_reading" });
+        var result = await service.CompleteAsync(student, started.SessionId, new());
+        result.DetailedResults.GetProperty("readingIncomplete").GetBoolean().Should().BeTrue();
+        result.DetailedResults.GetProperty("groupingCompletionPercent").GetDecimal().Should().BeLessThan(100);
+    }
     [Fact]
     public async Task Rejects_explicit_wrong_level_text()
     {
