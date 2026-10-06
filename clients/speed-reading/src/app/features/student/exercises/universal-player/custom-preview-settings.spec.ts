@@ -9,6 +9,11 @@ import { TestBed } from '@angular/core/testing';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 
 describe('Custom preview settings safety', () => {
+  it('uses grouping engine pace rather than unrelated legacy speed aliases', () => {
+    const controls = getCustomPreviewControls({ engineType: 'word_highlight', engineConfig: {
+      wpm: 900, pacer: { speedWpm: 200 }, fading: { speedWpm: 800 } } });
+    expect(controls.find(control => control.key === 'speedWpm')?.value).toBe(200);
+  });
   it('loads legacy grouping size and display cycle into custom defaults', () => {
     const config = { engineType: 'word_highlight', engineConfig: {
       content: { chunkSize: 2 }, timing: { durationMs: 850, delayMs: 450 } } };

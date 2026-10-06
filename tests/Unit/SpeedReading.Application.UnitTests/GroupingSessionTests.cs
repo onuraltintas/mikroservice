@@ -20,17 +20,43 @@ public sealed class GroupingSessionTests
         validate.Should().Throw<ArgumentException>();
     }
 
-    [Fact]
-    public async Task Preserves_root_pacer_priority_and_explicit_zero_nested_delay()
+    [Theory]
+    [InlineData("delayMs")]
+    [InlineData("DelayMs")]
+    public async Task Preserves_root_pacer_priority_and_explicit_zero_nested_delay(string delayName)
     {
         await using var db = Context();
         var (service, student, exercise) = await Seed(db,
-            """{"engineType":"word_highlight","pacer":{"chunkSize":3},"timing":{"durationMs":850,"delayMs":450},"engineConfig":{"mode":"chunking","content":{"chunkSize":2},"timing":{"delayMs":0}}}""");
+            """{"engineType":"word_highlight","pacer":{"chunkSize":3},"timing":{"durationMs":850,"delayMs":450},"engineConfig":{"mode":"chunking","content":{"chunkSize":2},"timing":{"DELAY_NAME":0}}}""".Replace("DELAY_NAME", delayName));
         db.ReadingTexts.Add(ReadingText.Create(Guid.NewGuid(), "Metin", "bir iki üç dört beş altı", difficultyLevel: 3));
         await db.SaveChangesAsync();
         var started = await service.StartAsync(student, new() { ExerciseId = exercise });
         started.InitialData.GetProperty("groupingChunkSize").GetInt32().Should().Be(3);
         started.InitialData.GetProperty("readingMinimumMs").GetInt32().Should().Be(1700);
+    }
+
+    [Fact]
+    public async Task Rejects_direct_completion_of_legacy_unverified_grouping()
+    {
+        await using var db = Context();
+        var (service, student, exercise) = await Seed(db);
+        db.ReadingTexts.Add(ReadingText.Create(Guid.NewGuid(), "Metin", "bir iki üç dört", difficultyLevel: 3));
+        await db.SaveChangesAsync();
+        var started = await service.StartAsync(student, new() { ExerciseId = exercise });
+        var session = await db.ExerciseSessions.SingleAsync();
+        var state = System.Text.Json.Nodes.JsonNode.Parse(session.SessionDataJson)!;
+        state["groupingDisplayPaceWpm"] = 0;
+        state["readingMinimumMs"] = 0;
+        state["readingStartTime"] = DateTime.UtcNow.AddSeconds(-2);
+        session.SetState(state.ToJsonString());
+        await db.SaveChangesAsync();
+        (await service.ValidateActionAsync(student, started.SessionId, new() { Action = "finish_reading" })).IsValid.Should().BeFalse();
+        state["readingEndTime"] = DateTime.UtcNow;
+        session.SetState(state.ToJsonString());
+        await db.SaveChangesAsync();
+        var complete = () => service.CompleteAsync(student, started.SessionId, new());
+        await complete.Should().ThrowAsync<EduPlatform.Shared.Kernel.Exceptions.BusinessRuleException>();
+        db.ExerciseSessionResults.Should().BeEmpty();
     }
 
     [Fact]
