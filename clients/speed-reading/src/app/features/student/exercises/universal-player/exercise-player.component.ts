@@ -3599,12 +3599,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
 
   isScanTargetFound(target: string): boolean {
     if (this.engine?.engineType === 'scan_find') {
-      const words = (this.engine as ScanFindEngine).getWords?.() || [];
-      // Check if at least one instance of this target word has been found
-      return words.some(w => {
-        const cleanWord = w.text.replace(/[.,;!?:'"()]/g, '').toLowerCase();
-        return cleanWord === target.toLowerCase() && w.found;
-      });
+      return (this.engine as ScanFindEngine).isTargetFound(target);
     }
     return false;
   }

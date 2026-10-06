@@ -209,6 +209,11 @@ export class ScanFindEngine implements BaseEngine {
         return this.targetWords;
     }
 
+    isTargetFound(target: string): boolean {
+        return this.foundUniqueWordsInRound.has(
+            this.normalizeWord(target, this.config.targets?.caseSensitive === true));
+    }
+
     start(): void {
         this.state.isRunning = true;
         this.state.isPaused = false;
