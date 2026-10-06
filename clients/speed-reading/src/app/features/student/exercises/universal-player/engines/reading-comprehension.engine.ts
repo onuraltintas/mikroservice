@@ -74,6 +74,7 @@ export class ReadingComprehensionEngine implements BaseEngine {
 
     constructor(engineType: 'reading_comprehension' | 'free_reading' = 'reading_comprehension') {
         this.engineType = engineType;
+        this.displayName = engineType === 'free_reading' ? 'Serbest Okuma' : 'Anlama Testi';
     }
 
     // Default text pool for testing (fallback only)
@@ -98,6 +99,7 @@ export class ReadingComprehensionEngine implements BaseEngine {
     ];
 
     initialize(config: ReadingComprehensionConfig, callbacks: EngineCallbacks): void {
+        clearInterval(this.timerInterval);
         this.callbacks = callbacks;
 
         // Debug full config to see available keys
@@ -248,7 +250,7 @@ export class ReadingComprehensionEngine implements BaseEngine {
     }
 
     pause(): void {
-        if (this.state.isPaused) return;
+        if (!this.state.isRunning || this.state.isPaused) return;
         this.state.isPaused = true;
         this.pauseStartTime = Date.now();
         this.callbacks.onPause();
@@ -256,7 +258,7 @@ export class ReadingComprehensionEngine implements BaseEngine {
     }
 
     resume(): void {
-        if (!this.state.isPaused) return;
+        if (!this.state.isRunning || !this.state.isPaused) return;
 
         // Adjust startTime by pause duration
         const pauseDuration = Date.now() - this.pauseStartTime;
@@ -270,6 +272,7 @@ export class ReadingComprehensionEngine implements BaseEngine {
     stop(): void {
         clearInterval(this.timerInterval);
         this.state.isRunning = false;
+        this.state.isPaused = false;
         this.callbacks.onStateChange({ ...this.state });
     }
 
@@ -296,6 +299,7 @@ export class ReadingComprehensionEngine implements BaseEngine {
 
     destroy(): void {
         clearInterval(this.timerInterval);
+        if (this.state) { this.state.isRunning = false; this.state.isPaused = false; }
     }
 
     handleInput(input: any): void {
