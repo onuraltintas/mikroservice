@@ -1,6 +1,7 @@
 import { fakeAsync, tick } from '@angular/core/testing';
 import { EngineFactory } from './engine-factory';
 import { EngineCallbacks, EngineResult } from './base-engine.interface';
+import { ExercisePlayerComponent } from '../exercise-player.component';
 
 describe('Skimming inspection', () => {
   let result: EngineResult | undefined;
@@ -35,6 +36,22 @@ describe('Skimming inspection', () => {
     const engine = EngineFactory.create('skimming')!;
     engine.initialize({ serverAuthoritative: true, engineConfig: { content: { text: 'Katalog' } } }, callbacks);
     engine.start(); expect(errors.length).toBe(1); expect(engine.state.isRunning).toBeFalse();
+    engine.destroy();
+  });
+  it('accepts the player-normalized owned text object without falling back to catalog content', () => {
+    const player = Object.create(ExercisePlayerComponent.prototype) as any;
+    const normalized = player.normalizeSessionConfiguration({ engineConfig: { content: { text: 'Katalog' } } },
+      { content: 'Doğrulanmış metin', skimmingProtocolVersion: 1, readingMinimumMs: 0, readingMaximumMs: 1000 });
+    const engine = EngineFactory.create('skimming')! as any;
+    engine.initialize({ ...normalized, ...normalized.engineConfig, serverAuthoritative: true }, callbacks);
+    expect(engine.getText()).toBe('Doğrulanmış metin');
+    engine.destroy();
+  });
+  it('keeps fetched preview text aligned with its questions rather than the catalog example', () => {
+    const engine = EngineFactory.create('skimming')! as any;
+    engine.initialize({ readingTextContent: 'Getirilen metin', content: 'Getirilen metin',
+      engineConfig: { content: { text: 'Katalog' } } }, callbacks);
+    expect(engine.getText()).toBe('Getirilen metin');
     engine.destroy();
   });
   it('excludes paused time and moves to questions when the inspection deadline expires', fakeAsync(() => {

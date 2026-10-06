@@ -2,6 +2,18 @@ import { ExercisePlayerComponent } from './exercise-player.component';
 import { of } from 'rxjs';
 
 describe('reading result semantics', () => {
+  it('retains skimming inspection duration and main idea semantics after preview questions', () => {
+    const player = Object.create(ExercisePlayerComponent.prototype) as any;
+    player.engine = { engineType: 'skimming' }; player.engineState = { timeElapsed: 6000 };
+    player.questionAnswers = [{ isCorrect: true, timeSpent: 1, targetTime: 10 }];
+    player.comprehensionQuestions = [{}]; player.readingIncomplete = false; player.readingWpm = 0;
+    player.stopQuestionTimer = () => undefined; player.saveResult = () => undefined;
+    player.cdr = { detectChanges: () => undefined };
+    player.finishQuestionPhase();
+    expect(player.result.details.inspectionTimeMs).toBe(6000);
+    expect(player.result.details.wpm).toBeNull();
+    expect(player.result.details.performanceLevel).toBe('Ana fikir değerlendirmesi');
+  });
   it('does not call a skimming inspection reading-speed measurement', () => {
     const player = Object.create(ExercisePlayerComponent.prototype) as any;
     player.engine = { engineType: 'skimming', getText: () => 'Ana fikir metni' };
