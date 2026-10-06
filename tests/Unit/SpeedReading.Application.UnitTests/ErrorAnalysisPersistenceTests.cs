@@ -66,7 +66,11 @@ public sealed class ErrorAnalysisPersistenceTests
         Assert.False((await service.ValidateActionAsync(user, started.SessionId, wrong)).IsCorrect);
         await service.ValidateActionAsync(user, started.SessionId, wrong);
         Assert.True((await service.ValidateActionAsync(user, started.SessionId, new() { Action = "error_analysis_select", Index = 3 })).IsCorrect);
-        var result = await service.CompleteAsync(user, started.SessionId, new());
+        var result = await service.CompleteAsync(user, started.SessionId, new() { CustomData = new() {
+            ["score"] = System.Text.Json.JsonSerializer.SerializeToElement(100),
+            ["accuracy"] = System.Text.Json.JsonSerializer.SerializeToElement(100),
+            ["foundErrors"] = System.Text.Json.JsonSerializer.SerializeToElement(1000)
+        } });
         Assert.Equal(50m, result.Accuracy); Assert.Equal(95m, result.Score); Assert.Null(result.RawWPM);
         Assert.Single(db.ExerciseSessionResults);
         var replay = await service.CompleteAsync(user, started.SessionId, new());
