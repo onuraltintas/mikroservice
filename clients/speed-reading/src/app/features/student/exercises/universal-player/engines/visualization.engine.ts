@@ -58,7 +58,7 @@ export class VisualizationEngine implements BaseEngine {
 
     private stepDeadline = 0;
     private stepRemainingMs = 0;
-    private questionAnswers: { questionId: string; answer: string; isCorrect: boolean; }[] = [];
+    private questionAnswers: { questionId: string; answer: string; isCorrect: boolean | null; }[] = [];
 
     private timerInterval: any;
     private sceneTimeout: any;
@@ -460,7 +460,7 @@ export class VisualizationEngine implements BaseEngine {
         this.showingFeedback = true;
         this.answerEvaluated = true;
         this.lastAnswer = answer;
-        this.lastAnswerCorrect = isCorrect;
+        this.lastAnswerCorrect = isCorrect === true;
         this.correctAnswer = expectedAnswer;
 
         this.questionAnswers.push({
@@ -553,10 +553,12 @@ export class VisualizationEngine implements BaseEngine {
         }
 
         const isAssessment = response?.isCorrect === null || response?.isCorrect === undefined;
-        const isCorrect = response?.isCorrect === true;
-        this.lastAnswerCorrect = isCorrect;
+        const isCorrect = isAssessment ? null : response.isCorrect === true;
+        this.lastAnswerCorrect = isCorrect === true;
         this.answerEvaluated = !isAssessment;
-        this.correctAnswer = isAssessment ? '' : String(response?.correctAnswer || '');
+        const answerKey = String(response?.correctAnswer || '').trim().toUpperCase();
+        const optionIndex = ['A', 'B', 'C', 'D'].indexOf(answerKey);
+        this.correctAnswer = isAssessment ? '' : this.getCurrentQuestion()?.options[optionIndex] || String(response?.correctAnswer || '');
         this.questionAnswers.push({
             questionId: pending.questionId,
             answer: pending.answer,
@@ -569,7 +571,7 @@ export class VisualizationEngine implements BaseEngine {
         }
         this.state.currentStep++;
         this.pendingServerAnswer = null;
-        this.callbacks.onStepComplete(this.state.currentStep, isCorrect);
+        this.callbacks.onStepComplete(this.state.currentStep, isCorrect === true);
         this.callbacks.onStateChange({
             ...this.state,
             phase: 'questions',
@@ -606,7 +608,8 @@ export class VisualizationEngine implements BaseEngine {
             errors: this.state.errors,
             details: {
                 measurementStatus: !this.previewOnly && this.questionAnswers.length > 0
-                    && this.questionAnswers.length === totalQuestions ? 'Measured' : 'NotMeasured',
+                    && this.questionAnswers.length === totalQuestions
+                    && this.questionAnswers.every(answer => typeof answer.isCorrect === 'boolean') ? 'Measured' : 'NotMeasured',
                 scenesCompleted: this.scenes.length,
                 answers: this.questionAnswers
             }
