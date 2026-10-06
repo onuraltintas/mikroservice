@@ -368,33 +368,28 @@ export class SubvocalizationReductionEngine implements BaseEngine {
         this.state.timeElapsed = Date.now() - this.startTime;
 
         const readingTimeMs = this.readingEndTime - this.readingStartTime;
-        const readingTimeMinutes = readingTimeMs / 60000;
-        const actualWpm = readingTimeMinutes > 0 ? Math.round(this.words.length / readingTimeMinutes) : 0;
-
         const correctCount = this.answers.filter(a => a.isCorrect).length;
-        const comprehensionScore = this.questions.length > 0
+        const comprehensionScore = this.questions.length > 0 && this.answers.length === this.questions.length
+            && this.answers.every(answer => answer.serverValidated === true)
             ? Math.round((correctCount / this.questions.length) * 100)
-            : 100;
-
-        const speedScore = Math.min(100, Math.round((actualWpm / this.config.wpm) * 100));
-        const finalScore = Math.round((speedScore * 0.5) + (comprehensionScore * 0.5));
+            : null;
+        const finalScore = comprehensionScore ?? 0;
 
         this.state.score = finalScore;
-        this.state.accuracy = comprehensionScore;
+        this.state.accuracy = comprehensionScore ?? 0;
 
         const result: EngineResult = {
             score: finalScore,
-            accuracy: comprehensionScore,
+            accuracy: comprehensionScore ?? 0,
             totalTime: this.state.timeElapsed,
             totalSteps: this.state.totalSteps,
             completedSteps: this.state.totalSteps,
             errors: 0,
             details: {
-                wpm: actualWpm,
-                targetWpm: this.config.wpm,
+                displayPaceWpm: Math.round(60000 / this.config.msPerWord),
+                measurementStatus: comprehensionScore === null ? 'NotMeasured' : 'Measured',
                 readingTimeMs: readingTimeMs,
                 wordCount: this.words.length,
-                speedScore: speedScore,
                 comprehensionScore: comprehensionScore,
                 correctAnswers: correctCount,
                 totalQuestions: this.questions.length,
