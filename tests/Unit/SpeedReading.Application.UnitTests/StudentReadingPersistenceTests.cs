@@ -24,6 +24,45 @@ public sealed class StudentReadingPersistenceTests
     [InlineData(0)]
     [InlineData(1)]
     [InlineData(2)]
+    public async Task Comprehension_server_enforces_reading_time_bounds(int scenario)
+    {
+        await using var context = CreateContext();
+        var student = Guid.NewGuid();
+        var type = Guid.NewGuid();
+        var exercise = Guid.NewGuid();
+        var text = Guid.NewGuid();
+        context.ExerciseTypes.Add(ExerciseType.Create(type, "Anlama", "Anlama", "reading_comprehension"));
+        context.Exercises.Add(Exercise.Create("Anlama", "reading", """{"engineConfig":{"timing":{"minReadingTimeMs":1000,"maxReadingTimeMs":5000}}}""", 3, student, type, id: exercise));
+        context.ReadingTexts.Add(ReadingText.Create(text, "Text", string.Join(" ", Enumerable.Repeat("word", 100)), difficultyLevel: 3));
+        context.ReadingQuestions.Add(ReadingQuestion.Create(Guid.NewGuid(), text, "Soru", "A", 0, 1, 1,
+            optionA: "A", optionB: "B", optionC: "C", optionD: "D"));
+        await context.SaveChangesAsync();
+        var service = CreateExerciseSessionService(context);
+        var started = await service.StartAsync(student, new StartExerciseSessionRequest { ExerciseId = exercise });
+        if (scenario != 0)
+        {
+            var session = await context.ExerciseSessions.SingleAsync();
+            var state = System.Text.Json.Nodes.JsonNode.Parse(session.SessionDataJson)!;
+            state["readingStartTime"] = DateTime.UtcNow.AddMilliseconds(scenario == 1 ? -100 : -6000);
+            session.SetState(state.ToJsonString());
+            await context.SaveChangesAsync();
+        }
+        var response = await service.ValidateActionAsync(student, started.SessionId,
+            new ExerciseActionRequest { Action = "finish_reading", IsTimeout = false });
+        if (scenario < 2) response.IsValid.Should().BeFalse();
+        else
+        {
+            response.IsValid.Should().BeTrue();
+            response.CurrentWPM.Should().BeNull();
+            var state = JsonDocument.Parse((await context.ExerciseSessions.SingleAsync()).SessionDataJson);
+            state.RootElement.GetProperty("readingIncomplete").GetBoolean().Should().BeTrue();
+        }
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    [InlineData(2)]
     public async Task Comprehension_selection_requires_level_and_prefers_unread_text(int scenario)
     {
         await using var context = CreateContext();
