@@ -19,4 +19,12 @@ public sealed class SkimmingConfigurationTests
     {
         ExerciseConfigurationRules.ValidateActiveConfiguration("""{"engineType":"skimming","timing":{"minReadingTimeMs":3000,"maxReadingTimeMs":90000},"visuals":{"fontSize":"24px"}}""", "skimming");
     }
+
+    [Theory]
+    [InlineData("{\"engineType\":\"skimming\",\"timing\":{\"minReadingTimeMs\":100000}}")]
+    [InlineData("{\"engineType\":\"skimming\",\"timeLimitSeconds\":2}")]
+    public void RejectsInvalidEffectiveDefaultWindow(string configuration)
+    {
+        Assert.Throws<ArgumentException>(() => ExerciseConfigurationRules.ValidateActiveConfiguration(configuration, "skimming"));
+    }
 }
