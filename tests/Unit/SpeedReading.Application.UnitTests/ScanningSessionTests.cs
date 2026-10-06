@@ -41,6 +41,7 @@ public sealed class ScanningSessionTests
         var result = await service.CompleteAsync(student, started.SessionId, new());
         result.CorrectCount.Should().Be(2);
         result.IncorrectCount.Should().Be(1);
+        result.Score.Should().Be(90);
         result.RawWPM.Should().BeNull();
         result.WordsRead.Should().BeNull();
         db.ReadingSessions.Should().BeEmpty();
@@ -148,6 +149,28 @@ public sealed class ScanningSessionTests
         result.RawWPM.Should().BeNull();
         result.WeightedKDP.Should().BeNull();
         result.WordsRead.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task Search_time_is_frozen_on_the_last_validated_target_not_the_completion_request()
+    {
+        await using var db = Context();
+        var (service, student, started) = await Start(db);
+        await service.ValidateActionAsync(student, started.SessionId, new() { Action = "scan_start" });
+        var session = await db.ExerciseSessions.SingleAsync();
+        var state = JsonNode.Parse(session.SessionDataJson)!;
+        state["timingStartedAt"] = DateTime.UtcNow.AddSeconds(-2);
+        session.SetState(state.ToJsonString());
+        await db.SaveChangesAsync();
+        await service.ValidateActionAsync(student, started.SessionId, new() { Action = "scan_click", Index = 0, Number = 0 });
+        await service.ValidateActionAsync(student, started.SessionId, new() { Action = "scan_click", Index = 1, Number = 0 });
+        state = JsonNode.Parse(session.SessionDataJson)!;
+        state["timingStartedAt"] = DateTime.UtcNow.AddSeconds(-8);
+        session.SetState(state.ToJsonString());
+        await db.SaveChangesAsync();
+        var result = await service.CompleteAsync(student, started.SessionId, new());
+        result.TimeSpentSeconds.Should().Be(2);
+        result.DetailedResults.GetProperty("scanningElapsedMs").GetInt64().Should().BeInRange(1900, 3000);
     }
 
     private static OwnedSpeedReadingDbContext Context() => new(new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>()
