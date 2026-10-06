@@ -12,6 +12,20 @@ namespace SpeedReading.Application.UnitTests;
 public sealed class FocusPersistenceTests
 {
     [Fact]
+    public async Task Pause_before_focus_start_does_not_reduce_exercise_active_time()
+    {
+        await using var db = Context(); var (student, exercise) = await Seed(db);
+        var service = Service<ISpeedReadingExerciseSessions>(db, "OwnedSpeedReadingExerciseSessions");
+        var started = await service.StartAsync(student, new() { ExerciseId = exercise });
+        await service.PauseAsync(student, started.SessionId);
+        var data = JsonNode.Parse((await db.ExerciseSessions.SingleAsync()).SessionDataJson)!;
+        Assert.Null(data["focusPausedAt"]);
+        await service.ResumeAsync(student, started.SessionId);
+        await service.ValidateActionAsync(student, started.SessionId, new() { Action = "focus_start" });
+        await Elapse(db, 3);
+        Assert.True((await service.ValidateActionAsync(student, started.SessionId, new() { Action = "complete" })).IsValid);
+    }
+    [Fact]
     public async Task Short_pauses_are_accumulated_in_milliseconds_and_do_not_allow_early_completion()
     {
         await using var db = Context(); var (student, exercise) = await Seed(db);
