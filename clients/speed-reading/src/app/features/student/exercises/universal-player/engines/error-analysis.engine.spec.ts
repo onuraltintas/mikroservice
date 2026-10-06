@@ -1,4 +1,5 @@
 import { ErrorAnalysisEngine } from './error-analysis.engine';
+import { fakeAsync, tick } from '@angular/core/testing';
 
 function callbacks(onComplete: (result: any) => void = () => undefined) {
   return {
@@ -14,6 +15,23 @@ function callbacks(onComplete: (result: any) => void = () => undefined) {
 }
 
 describe('ErrorAnalysisEngine', () => {
+  it('rejects empty or inconsistent error targets before starting', () => {
+    const errors: string[] = []; const cb: any = callbacks(); cb.onError = (error: string) => { errors.push(error); };
+    const engine = new ErrorAnalysisEngine();
+    engine.initialize({ words: [{ index: 0, text: 'metin' }], errors: [{ wordIndex: 9 }] } as any, cb);
+    engine.start(); expect(engine.state.isRunning).toBeFalse(); expect(errors.length).toBe(1); engine.destroy();
+  });
+  it('does not permit hints or completion while paused', () => {
+    let completions = 0; const engine = new ErrorAnalysisEngine();
+    engine.initialize({ words: [{ index: 0, text: 'yanlış' }], errors: [{ wordIndex: 0, originalWord: 'doğru', errorWord: 'yanlış' }] }, callbacks(() => completions++));
+    engine.start(); engine.pause(); expect(engine.useHint()).toBeNull(); engine.forceComplete();
+    expect(completions).toBe(0); engine.destroy(); expect(engine.state.isRunning).toBeFalse();
+  });
+  it('clears old timers on initialization and cannot restart completed work', fakeAsync(() => {
+    const engine = new ErrorAnalysisEngine(); const config = { words: [{ index: 0, text: 'yanlış' }], errors: [{ wordIndex: 0, originalWord: 'doğru', errorWord: 'yanlış' }] };
+    engine.initialize(config, callbacks()); engine.start(); tick(500); engine.initialize(config, callbacks()); tick(500);
+    expect(engine.state.timeElapsed).toBe(0); engine.start(); engine.forceComplete(); engine.start(); expect(engine.state.isRunning).toBeFalse(); engine.destroy();
+  }));
   it('reads words and errors from nested engine configuration', () => {
     const engine = new ErrorAnalysisEngine();
     engine.initialize({
