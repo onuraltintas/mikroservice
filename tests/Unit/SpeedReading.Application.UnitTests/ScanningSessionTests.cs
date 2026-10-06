@@ -111,6 +111,23 @@ public sealed class ScanningSessionTests
         fresh.TotalSteps.Should().Be(2);
     }
 
+    [Fact]
+    public async Task Historical_scanning_results_do_not_expose_reading_metrics()
+    {
+        await using var db = Context();
+        var (service, student, started) = await Start(db);
+        var session = await db.ExerciseSessions.SingleAsync();
+        session.Complete(DateTime.UtcNow);
+        db.ExerciseSessionResults.Add(SpeedReading.Domain.Sessions.ExerciseSessionResult.Create(
+            Guid.NewGuid(), session.Id, student, session.ExerciseId, session.ReadingTextId,
+            100, 20, 300, 100, 300, 100, DateTime.UtcNow, isMeasured: true));
+        await db.SaveChangesAsync();
+        var result = await service.CompleteAsync(student, started.SessionId, new());
+        result.RawWPM.Should().BeNull();
+        result.WeightedKDP.Should().BeNull();
+        result.WordsRead.Should().BeNull();
+    }
+
     private static OwnedSpeedReadingDbContext Context() => new(new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>()
         .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
 
