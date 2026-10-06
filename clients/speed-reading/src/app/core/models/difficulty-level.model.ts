@@ -345,7 +345,7 @@ export const DIFFICULTY_LEVELS: Record<string, DifficultyLevel[]> = {
       description: 'Kısa paragraf',
       icon: 'article',
       color: '#4caf50',
-      characteristics: ['Kısa paragraf', '3 anahtar kelime', 'Bol süre']
+      characteristics: ['Kısa paragraf', 'Ana fikri belirleme', 'Bol süre']
     },
     {
       level: 2,
@@ -354,7 +354,7 @@ export const DIFFICULTY_LEVELS: Record<string, DifficultyLevel[]> = {
       description: 'Orta paragraf',
       icon: 'description',
       color: '#8bc34a',
-      characteristics: ['Orta paragraf', '5 anahtar kelime', 'Yeterli süre']
+      characteristics: ['Orta paragraf', 'Ana fikri belirleme', 'Yeterli süre']
     },
     {
       level: 3,
@@ -363,7 +363,7 @@ export const DIFFICULTY_LEVELS: Record<string, DifficultyLevel[]> = {
       description: 'Uzun paragraf',
       icon: 'subject',
       color: '#ff9800',
-      characteristics: ['Uzun paragraf', '7 anahtar kelime', 'Orta süre'],
+      characteristics: ['Uzun paragraf', 'Ana fikri belirleme', 'Orta süre'],
       recommended: true
     },
     {
@@ -373,7 +373,7 @@ export const DIFFICULTY_LEVELS: Record<string, DifficultyLevel[]> = {
       description: 'Çok uzun metin',
       icon: 'menu_book',
       color: '#f44336',
-      characteristics: ['Çok uzun metin', '10 anahtar kelime', 'Az süre']
+      characteristics: ['Çok uzun metin', 'Ana fikri belirleme', 'Az süre']
     },
     {
       level: 5,
@@ -382,7 +382,7 @@ export const DIFFICULTY_LEVELS: Record<string, DifficultyLevel[]> = {
       description: 'Maksimum metin',
       icon: 'auto_stories',
       color: '#9c27b0',
-      characteristics: ['Maksimum metin', '15 anahtar kelime', 'Zaman baskısı']
+      characteristics: ['Maksimum metin', 'Ana fikri belirleme', 'Zaman baskısı']
     }
   ],
 

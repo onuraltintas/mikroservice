@@ -165,7 +165,28 @@ public static class ExerciseConfigurationRules
                     ValidateWordHighlightConfiguration(nested.Value);
                 ValidateEffectiveWordHighlightConfiguration(root, nested);
             }
-            if (configured is "scan_find" or "scanning" or "skimming")
+            if (configured == "skimming")
+            {
+                ValidateReadingConfiguration(root);
+                if (nested.HasValue)
+                    ValidateReadingConfiguration(nested.Value);
+                ValidateEffectiveReadingConfiguration(root, nested);
+                var minimum = nested.HasValue ? ReadOptionalInt(TryGetObject(nested.Value, "timing") ?? nested.Value, "minReadingTimeMs") : null;
+                minimum ??= ReadOptionalInt(TryGetObject(root, "timing") ?? root, "minReadingTimeMs");
+                var maximum = nested.HasValue ? ReadOptionalInt(TryGetObject(nested.Value, "timing") ?? nested.Value, "maxReadingTimeMs") : null;
+                maximum ??= ReadOptionalInt(TryGetObject(root, "timing") ?? root, "maxReadingTimeMs");
+                var effective = nested ?? root;
+                var seconds = ReadOptionalInt(effective, "timeLimitSeconds") ?? ReadOptionalInt(effective, "timeLimit")
+                    ?? ReadOptionalInt(TryGetObject(effective, "rules") ?? effective, "timeLimit")
+                    ?? ReadOptionalInt(TryGetObject(effective, "timing") ?? effective, "timeLimitSec")
+                    ?? ReadOptionalInt(root, "timeLimitSeconds") ?? ReadOptionalInt(root, "timeLimit")
+                    ?? ReadOptionalInt(TryGetObject(root, "rules") ?? root, "timeLimit")
+                    ?? ReadOptionalInt(TryGetObject(root, "timing") ?? root, "timeLimitSec") ?? 90;
+                var effectiveMaximum = maximum ?? Math.Clamp(seconds, 1, 3600) * 1000;
+                if (effectiveMaximum <= (minimum ?? 3000))
+                    throw new ArgumentException("Göz gezdirme için maksimum inceleme süresi minimum süreden büyük olmalıdır.");
+            }
+            if (configured is "scan_find" or "scanning")
             {
                 ValidateScanConfiguration(root);
                 if (nested.HasValue)

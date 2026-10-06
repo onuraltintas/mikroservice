@@ -676,9 +676,8 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: readingText => {
-          const questions = readingText.questions ?? [];
-          this.comprehensionQuestions = questions;
           this.backendSessionConfig = this.createPreviewReadingConfig(readingText);
+          this.comprehensionQuestions = this.backendSessionConfig['questions'] as any[];
           this.initializePreviewEngine();
         },
         error: error => {
@@ -713,7 +712,10 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     const content = typeof readingText?.content === 'string' ? readingText.content : '';
     const title = typeof readingText?.title === 'string' ? readingText.title : '';
     const wordCount = Number(readingText?.wordCount) || content.split(/\s+/).filter(Boolean).length;
-    const questions = Array.isArray(readingText?.questions) ? readingText.questions : [];
+    const availableQuestions = Array.isArray(readingText?.questions) ? readingText.questions : [];
+    const questions = this.parsedConfig?.['engineType'] === 'skimming'
+      ? availableQuestions.filter((question: any) => Number(question.type ?? question.questionType ?? question.QuestionType) === 1)
+      : availableQuestions;
     const existingContent = this.parsedConfig?.['content'];
     const contentConfig = existingContent && typeof existingContent === 'object'
       ? existingContent

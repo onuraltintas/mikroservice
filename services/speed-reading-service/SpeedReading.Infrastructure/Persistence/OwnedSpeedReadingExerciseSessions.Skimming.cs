@@ -23,7 +23,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions
             ?? ReadNonNegativeInt(rootTiming, "minReadingTimeMs") ?? 3000, 0, 3_600_000);
         state.ReadingMaximumMs = Math.Clamp(ReadPositiveInt(timing, "maxReadingTimeMs")
             ?? ReadPositiveInt(rootTiming, "maxReadingTimeMs")
-            ?? (ReadGridTimeLimit(config) ?? ReadGridTimeLimit(root) ?? 90) * 1000, 1000, 3_600_000);
+            ?? Math.Clamp(ReadGridTimeLimit(config) ?? ReadGridTimeLimit(root) ?? 90, 1, 3600) * 1000, 1000, 3_600_000);
         if (state.ReadingMinimumMs >= state.ReadingMaximumMs)
             throw new BusinessRuleException("ExerciseSession.SkimmingTimingInvalid",
                 "Minimum inceleme süresi, süre sınırından kısa olmalıdır.");
