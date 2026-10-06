@@ -16,6 +16,18 @@ const callbacks: EngineCallbacks = {
 };
 
 describe('reading pacer runtime safety', () => {
+  it('applies legacy catalogue content grouping including a short final group', () => {
+    const engine = new WordHighlightEngine();
+    engine.initialize({ engineConfig: { mode: 'chunking', content: { text: 'bir iki üç dört beş', chunkSize: 2 } } } as any, callbacks);
+    expect(engine.getChunks().map(chunk => chunk.words)).toEqual([['bir', 'iki'], ['üç', 'dört'], ['beş']]);
+  });
+
+  it('keeps explicit pacer grouping ahead of legacy content grouping', () => {
+    const engine = new WordHighlightEngine();
+    engine.initialize({ content: { text: 'bir iki üç', chunkSize: 2 }, pacer: { chunkSize: 3 } } as any, callbacks);
+    expect(engine.getChunks().map(chunk => chunk.words.length)).toEqual([3]);
+  });
+
   it('does not truncate a server RSVP text to 500 words', () => {
     const engine = new TextStreamEngine();
     engine.initialize({ mode: 'rsvp', words: Array(501).fill('word') } as any, callbacks);
