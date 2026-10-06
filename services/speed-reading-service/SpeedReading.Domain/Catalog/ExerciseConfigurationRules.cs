@@ -462,7 +462,7 @@ public static class ExerciseConfigurationRules
         if (engineType == "regression_reduction")
         {
             ValidateOptionalIntRange(config, "wordDelayMs", 40, 10_000, "Kelime gecikmesi");
-            ValidateOptionalEnum(config, "maskingType", ["none", "fade", "trailing", "contingent", "ior"], "Maskeleme türü");
+            ValidateOptionalEnum(config, "maskingType", ["none", "fade", "trailing"], "Maskeleme türü");
             return;
         }
 

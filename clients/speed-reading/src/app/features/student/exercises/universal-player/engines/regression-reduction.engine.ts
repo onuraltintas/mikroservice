@@ -10,7 +10,7 @@ import { boundedInteger, caseInsensitiveField, recordOrEmpty, resolveReadingText
 export interface RegressionConfig extends EngineConfig {
     mode: string;
     wpm: number;
-    maskingType: 'none' | 'fade' | 'trailing' | 'contingent' | 'ior';
+    maskingType: 'none' | 'fade' | 'trailing';
     maskingEnabled: boolean;
     wordDelayMs?: number;
     chunkSize?: number; // Kelime grubu boyutu (1, 2, veya 3)
@@ -69,7 +69,7 @@ export class RegressionReductionEngine implements BaseEngine {
             wpm: boundedInteger(read('wpm') ?? read('targetWpm'), 200, 20, 1500),
             wordDelayMs: boundedInteger(read('wordDelayMs'), 0, 0, 10000),
             chunkSize: boundedInteger(read('chunkSize'), 1, 1, 10),
-            maskingType: ['none', 'fade', 'trailing', 'contingent', 'ior'].includes(read('maskingType'))
+            maskingType: ['none', 'fade', 'trailing'].includes(read('maskingType'))
                 ? read('maskingType') : 'none'
         } as RegressionConfig;
 
