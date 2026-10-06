@@ -1214,7 +1214,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
           }
 
           // Sadece kullanıcı input gerektiren egzersizlerde validation yap
-          const onResponse = engineType === 'regression_reduction' && action.action === 'finish_reading'
+          const onResponse = ['regression_reduction', 'subvocalization_reduction'].includes(engineType || '') && action.action === 'finish_reading'
             ? (response: ValidationResponse) => {
               if (!response.isValid) throw new Error(response.message || 'Okuma aşaması kaydedilemedi.');
               this.readingTrackingFinished = true;
@@ -2271,10 +2271,13 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   }
 
   submitRegressionAnswer(option: string): void {
-    const question = this.getRegressionCurrentQuestion();
+    this.submitPacedReadingAnswer(option, this.getRegressionCurrentQuestion(), this.getRegressionPhase());
+  }
+
+  private submitPacedReadingAnswer(option: string, question: any, phase: string): void {
     if (!question || this.questionSubmissionPending || this.questionFeedback
       || !this.engineState.isRunning || this.engineState.isPaused
-      || this.getRegressionPhase() !== 'answering' || !['A', 'B', 'C', 'D'].includes(option)) return;
+      || phase !== 'answering' || !['A', 'B', 'C', 'D'].includes(option)) return;
     if (this.sessionId === 'preview-mode') {
       this.selectedAnswer = option;
       this.questionFeedback = { question, isCorrect: null };
@@ -2294,7 +2297,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     this.questionSubmissionPending = true;
     this.selectedAnswer = option;
     void this.enqueueAction({ action: 'answer_question', questionId, answer: option, timestamp: new Date() }, response => {
-      if (!response.isValid) throw new Error(response.message || 'Cevap kaydedilemedi.');
+      if (!response.isValid || typeof response.isCorrect !== 'boolean') throw new Error(response.message || 'Cevap kaydedilemedi.');
       const correctAnswer = this.isAssessmentMode ? undefined : response.correctAnswer;
       this.questionFeedback = { question, isCorrect: this.isAssessmentMode ? null : response.isCorrect ?? null,
         correctAnswer, explanation: this.isAssessmentMode ? undefined : response.explanation };
@@ -2382,9 +2385,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   }
 
   submitSubvocAnswer(answer: string): void {
-    this.engine?.handleInput({ type: 'answer', answer });
-    this.selectedAnswer = null; // Reset for next question
-    this.cdr.detectChanges();
+    this.submitPacedReadingAnswer(answer, this.getSubvocCurrentQuestion(), this.getSubvocPhase());
   }
 
   isSubvocShowingFeedback(): boolean {
@@ -2404,6 +2405,9 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   }
 
   nextSubvocQuestion(): void {
+    if (this.questionSubmissionPending) return;
+    this.selectedAnswer = null;
+    this.questionFeedback = null;
     (this.engine as any)?.nextQuestion?.();
     this.cdr.detectChanges();
   }
@@ -3035,7 +3039,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   }
 
   private isMeasuredClientResult(result: EngineResult): boolean {
-    if (this.engine?.engineType === 'regression_reduction')
+    if (['regression_reduction', 'subvocalization_reduction'].includes(this.engine?.engineType || ''))
       return result.details?.measurementStatus === 'Measured' && result.details?.comprehensionScore != null;
     if (this.engine?.engineType === 'motion_path' && result.details?.serverValidatedFixation)
       return true;

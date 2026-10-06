@@ -282,12 +282,13 @@ export class SubvocalizationReductionEngine implements BaseEngine {
         }
 
         if (this.phase === 'answering' && input.type === 'answer') {
-            if (this.showingFeedback) return; // Prevent double submit
+            if (this.showingFeedback || !this.state.isRunning || this.state.isPaused) return;
+            if (input.previewOnly !== true && (input.serverValidated !== true || typeof input.isCorrect !== 'boolean')) return;
 
             const question = this.questions[this.currentQuestionIndex];
             if (!question) return;
-            const correctAnswer = question.CorrectAnswer || question.correctAnswer;
-            const isCorrect = input.answer === correctAnswer;
+            const correctAnswer = input.correctAnswer;
+            const isCorrect = input.previewOnly === true ? null : input.isCorrect;
 
             // Set Feedback State
             this.showingFeedback = true;
@@ -296,24 +297,17 @@ export class SubvocalizationReductionEngine implements BaseEngine {
             this.currentCorrectAnswer = correctAnswer;
 
             this.answers.push({
-                questionId: question.QuestionId || question.questionId,
+                questionId: question.QuestionId || question.questionId || question.Id || question.id,
                 questionText: question.QuestionText || question.questionText,
                 userAnswer: input.answer,
                 correctAnswer: correctAnswer,
-                isCorrect: isCorrect
+                isCorrect: isCorrect,
+                serverValidated: input.previewOnly !== true && input.serverValidated === true
             });
 
             if (isCorrect) {
                 this.state.score += Math.round(100 / this.questions.length);
             }
-
-            this.callbacks.onAction({
-                action: 'answer_question',
-                questionId: question.QuestionId || question.questionId,
-                answer: input.answer,
-                isCorrect: isCorrect,
-                timestamp: new Date()
-            });
 
             // Do NOT advance yet, wait for nextQuestion()
             this.callbacks.onStateChange({ ...this.state });
