@@ -93,6 +93,7 @@ export class VocabularyBuilderEngine implements BaseEngine {
     private wordStartTime = 0;
     private wordDeadline = 0;
     private configurationError = '';
+    private advanceOnResume = false;
 
     // ==================== LIFECYCLE ====================
 
@@ -118,8 +119,8 @@ export class VocabularyBuilderEngine implements BaseEngine {
         const rawWords = Array.isArray(configuredWords) ? configuredWords.slice(0, 500) : [];
         this.words = rawWords.map((w: any) => ({
             id: w.id || w.Id,
-            word: w.word || w.Word,
-            definition: w.definition || w.Definition,
+            word: w.word ?? w.Word ?? '',
+            definition: w.definition ?? w.Definition ?? '',
             exampleSentence: w.exampleSentence || w.ExampleSentence,
             synonyms: w.synonyms || w.Synonyms,
             antonyms: w.antonyms || w.Antonyms,
@@ -293,6 +294,10 @@ export class VocabularyBuilderEngine implements BaseEngine {
         }
         this.callbacks.onResume();
         this.callbacks.onStateChange({ ...this.state });
+        if (this.advanceOnResume) {
+            this.advanceOnResume = false;
+            this.nextWord();
+        }
     }
 
     stop(): void {
@@ -313,6 +318,7 @@ export class VocabularyBuilderEngine implements BaseEngine {
         this.correctAnswer = '';
         this.currentQuizOptions = [];
         this.pendingQuizAnswer = null;
+        this.advanceOnResume = false;
 
         this.state = {
             isRunning: false,
@@ -616,7 +622,10 @@ export class VocabularyBuilderEngine implements BaseEngine {
         this.lastAnswerCorrect = isCorrect;
         this.callbacks.onStepComplete(this.state.currentStep, isCorrect);
         this.callbacks.onStateChange({ ...this.state });
-        if (this.mode !== 'quiz') this.nextWord();
+        if (this.mode !== 'quiz') {
+            if (this.state.isPaused) this.advanceOnResume = true;
+            else this.nextWord();
+        }
     }
 
     isShowingFeedback(): boolean {
@@ -696,7 +705,7 @@ export class VocabularyBuilderEngine implements BaseEngine {
         return this.mode;
     }
     private canRespond(): boolean {
-        return this.state.isRunning && !this.state.isPaused && !this.state.isCompleted && !this.pendingQuizAnswer;
+        return this.state.isRunning && !this.state.isPaused && !this.state.isCompleted && !this.pendingQuizAnswer && !this.advanceOnResume;
     }
 
     getCorrectCount(): number {
