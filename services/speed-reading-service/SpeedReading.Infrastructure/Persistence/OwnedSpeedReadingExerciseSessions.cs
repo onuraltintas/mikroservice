@@ -137,7 +137,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         if (request.ReadingTextId.HasValue && assessmentSnapshot is null)
         {
             var strictTextLevel = IsGrouping(new SessionState { EngineType = exerciseEngineType, ExerciseTypeName = exerciseTypeName })
-                || ExerciseConfigurationRules.NormalizeEngineType(exerciseEngineType) is "text_fade" or "regression_reduction";
+                || ExerciseConfigurationRules.NormalizeEngineType(exerciseEngineType) is "text_fade" or "regression_reduction" or "subvocalization_reduction";
             var readingTextMatches = await db.ReadingTexts
                 .AsNoTracking()
                 .AnyAsync(item => item.Id == request.ReadingTextId.Value
@@ -313,6 +313,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                     && exerciseTypeName.Equals("Chunking", StringComparison.OrdinalIgnoreCase);
                 var isTextFade = normalizedEngineType == "text_fade";
                 var isRegression = normalizedEngineType == "regression_reduction";
+                var isSubvocalization = normalizedEngineType == "subvocalization_reduction";
                 var requiresScorableQuestions = ExerciseConfigurationRules.ResolveReadingPurpose(
                     normalizedEngineType,
                     ReadString(ReadObject(parsedConfiguration, "engineConfig"), "readingPurpose")
@@ -323,7 +324,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                     .Where(item => item.IsActive
                         && !item.IsDeleted
                         && item.Content != string.Empty
-                        && (!(isComprehension || isScanning || isGrouping || isTextFade || isRegression) || item.DifficultyLevel == difficultyLevel)
+                        && (!(isComprehension || isScanning || isGrouping || isTextFade || isRegression || isSubvocalization) || item.DifficultyLevel == difficultyLevel)
                         && (!profileAgeGroupId.HasValue
                             || item.TargetAgeGroupId == null
                             || item.TargetAgeGroupId == profileAgeGroupId.Value)
@@ -335,7 +336,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                                 || question.CorrectAnswer.Trim().ToUpper() == "B"
                                 || question.CorrectAnswer.Trim().ToUpper() == "C"
                                 || question.CorrectAnswer.Trim().ToUpper() == "D"))))
-                    .OrderBy(item => isScanning || isGrouping || isTextFade || isRegression
+                    .OrderBy(item => isScanning || isGrouping || isTextFade || isRegression || isSubvocalization
                         ? db.ExerciseSessions.Count(history => history.StudentId == studentId && history.ReadingTextId == item.Id)
                         : isComprehension
                         ? db.ReadingSessions.Count(history => history.UserId == studentId && history.ReadingTextId == item.Id)
@@ -351,6 +352,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                     throw new InvalidOperationException("Seçilen Metin Solma seviyesine uygun aktif metin bulunamadı.");
                 if (isRegression && !readingTextId.HasValue)
                     throw new InvalidOperationException("Seçilen Regresyon Azaltma seviyesine uygun aktif metin bulunamadı.");
+                if (isSubvocalization && !readingTextId.HasValue)
+                    throw new InvalidOperationException("Seçilen İç Ses Azaltma seviyesine uygun aktif metin bulunamadı.");
             }
 
             var state = await CreateSessionStateAsync(
@@ -655,7 +658,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         var accuracy = IsScanning(state) ? ScanningAccuracy(state)
             : SpeedReadingExerciseSessionRules.CalculateAccuracy(session.CorrectCount, session.IncorrectCount);
         var wordsRead = state.Tachistoscope is not null || IsScanning(state)
-            || IsEngineType(state.EngineType, "regression_reduction") ? null : state.WordCount > 0 ? (int?)state.WordCount : null;
+            || IsEngineType(state.EngineType, "regression_reduction") || IsEngineType(state.EngineType, "subvocalization_reduction")
+            ? null : state.WordCount > 0 ? (int?)state.WordCount : null;
         var adaptiveTransferResult = IsAdaptiveFluency(state)
             ? state.AdaptiveStageResults.SingleOrDefault(item => item.Stage == 3)
             : null;
@@ -2689,6 +2693,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
     private static bool SupportsServerReadingMeasurement(SessionState state) =>
         state.Tachistoscope is null && IsReadingExerciseFlow(state)
         && !state.ReadingIncomplete
+        && !IsEngineType(state.EngineType, "subvocalization_reduction")
         && state.EngineType is not ("word_highlight" or "text_stream" or "text_fade" or "regression_reduction" or "scan_find" or "scanning" or "skimming")
         && state.ReadingStartTime.HasValue
         && state.ReadingEndTime.HasValue;
