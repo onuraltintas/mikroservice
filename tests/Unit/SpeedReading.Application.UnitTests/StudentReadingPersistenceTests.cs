@@ -1514,6 +1514,22 @@ public sealed class StudentReadingPersistenceTests
             studentId,
             new StartExerciseSessionRequest { ExerciseId = secondExerciseId, ReadingTextId = secondTextId },
             CancellationToken.None);
+        foreach (var (db, service, started) in new[]
+        {
+            (firstContext, firstService, firstStarted),
+            (secondContext, secondService, secondStarted)
+        })
+        {
+            await service.ValidateActionAsync(studentId, started.SessionId,
+                new ExerciseActionRequest { Action = "start_reading" }, CancellationToken.None);
+            var session = await db.ExerciseSessions.SingleAsync(item => item.Id == started.SessionId);
+            var state = System.Text.Json.Nodes.JsonNode.Parse(session.SessionDataJson)!;
+            state["readingStartTime"] = DateTime.UtcNow.AddSeconds(-5);
+            session.SetState(state.ToJsonString());
+            await db.SaveChangesAsync();
+            await service.ValidateActionAsync(studentId, started.SessionId,
+                new ExerciseActionRequest { Action = "finish_reading" }, CancellationToken.None);
+        }
         await firstService.ValidateActionAsync(
             studentId,
             firstStarted.SessionId,

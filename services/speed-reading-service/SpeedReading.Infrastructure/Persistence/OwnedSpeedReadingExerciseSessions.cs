@@ -556,6 +556,17 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         if (state.Questions.Count > 0 && answers.Count != state.Questions.Count)
             throw IncompleteSession("All questions in the session must be answered.");
 
+        if (ExerciseConfigurationRules.NormalizeEngineType(state.EngineType) == "reading_comprehension")
+        {
+            var readingMs = state.ReadingStartTime.HasValue && state.ReadingEndTime.HasValue
+                ? (state.ReadingEndTime.Value - state.ReadingStartTime.Value).TotalMilliseconds
+                    - (state.ReadingPausedMilliseconds ?? state.ReadingPausedSeconds * 1000L)
+                : -1;
+            // Answers can be retained, but cannot prove that the reading phase was completed.
+            state.ReadingIncomplete |= readingMs < state.ReadingMinimumMs
+                || (state.ReadingMaximumMs > 0 && readingMs >= state.ReadingMaximumMs);
+        }
+
         if (request.CustomData is not null)
         {
             var previousCustomData = ParseJsonOrEmpty(session.CustomDataJson ?? "{}");
