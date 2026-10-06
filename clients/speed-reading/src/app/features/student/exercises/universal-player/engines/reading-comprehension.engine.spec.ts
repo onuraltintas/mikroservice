@@ -130,8 +130,24 @@ describe('ReadingComprehensionEngine', () => {
     const engine = new ReadingComprehensionEngine();
     engine.initialize({ content: 'Bir iki.', timing: { minReadingTimeMs: 0 } }, callbacks(() => undefined));
 
+    expect(engine.canComplete()).toBeFalse();
+    engine.start();
     expect(engine.canComplete()).toBeTrue();
+    engine.destroy();
   });
+
+  it('does not bypass minimum time by scrolling and disables completion while paused', fakeAsync(() => {
+    const engine = new ReadingComprehensionEngine();
+    engine.initialize({ content: 'Bir iki üç.', timing: { minReadingTimeMs: 1000 } }, callbacks(() => undefined));
+    engine.start();
+    engine.handleInput({ scrollProgress: 100 });
+    expect(engine.canComplete()).toBeFalse();
+    tick(1000);
+    expect(engine.canComplete()).toBeTrue();
+    engine.pause();
+    expect(engine.canComplete()).toBeFalse();
+    engine.destroy();
+  }));
 
   it('normalizes malformed text and word count without throwing', () => {
     const engine = new ReadingComprehensionEngine();
