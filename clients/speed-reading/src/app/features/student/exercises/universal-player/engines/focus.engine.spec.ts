@@ -8,6 +8,13 @@ function callbacks() {
 }
 
 describe('FocusEngine timing', () => {
+  it('derives targets from the effective N-back rule and does not claim validated d-prime', () => {
+    const engine = new FocusEngine();
+    engine.initialize({ Mode: 'position', NLevel: 2, PositionSequence: [1, 2, 1], PositionTargetIndices: [1] } as any, callbacks());
+    expect(engine.config.PositionTargetIndices).toEqual([2]);
+    expect(engine.getResult().details.dPrime).toBeUndefined();
+    engine.destroy();
+  });
   it('does not reveal a repeated stimulus while paused in its transition', fakeAsync(() => {
     const engine = new FocusEngine();
     engine.initialize({ Mode: 'position', SpeedMs: 1000, PositionSequence: [1, 1, 2] } as any, callbacks());
