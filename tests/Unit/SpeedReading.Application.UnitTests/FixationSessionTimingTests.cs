@@ -9,6 +9,31 @@ namespace SpeedReading.Application.UnitTests;
 
 public sealed class FixationSessionTimingTests
 {
+    [Fact]
+    public async Task Restarts_legacy_fixation_without_mixing_old_round_history()
+    {
+        await using var db = CreateDb();
+        var (service, student, started) = await Start(db);
+        var session = await db.ExerciseSessions.SingleAsync();
+        var state = JsonNode.Parse(session.SessionDataJson)!;
+        state.AsObject().Remove("fixationProtocolVersion");
+        session.SetState(state.ToJsonString()); await db.SaveChangesAsync();
+        var restarted = await service.StartAsync(student, new() { ExerciseId = started.ExerciseId });
+        Assert.NotEqual(started.SessionId, restarted.SessionId);
+        Assert.Equal(1, restarted.InitialData.GetProperty("fixationProtocolVersion").GetInt32());
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Legacy_history_is_not_published_as_an_empty_measurement(bool assessment)
+    {
+        var owned = typeof(OwnedSpeedReadingDbContext).Assembly.GetType("SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingExerciseSessions")!;
+        var state = owned.GetMethod("DeserializeState", BindingFlags.Static | BindingFlags.NonPublic)!.Invoke(null,
+            [$$"""{"engineType":"motion_path","fixationPeripheralCount":2,"isAssessmentMode":{{assessment.ToString().ToLowerInvariant()}}}"""])!;
+        var json = (System.Text.Json.JsonElement)owned.GetMethod("ToPublicJson", BindingFlags.Static | BindingFlags.NonPublic)!.Invoke(null, [state])!;
+        Assert.False(json.TryGetProperty("fixationRoundResults", out _));
+    }
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
