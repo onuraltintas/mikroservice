@@ -3,6 +3,52 @@ import { EngineCallbacks, EngineResult } from './base-engine.interface';
 import { SubvocalizationReductionEngine } from './subvocalization-reduction.engine';
 
 describe('subvocalization measurement', () => {
+  const noOp = () => undefined;
+  function withQuestion(onComplete: (result: EngineResult) => void = noOp): SubvocalizationReductionEngine {
+    const engine = new SubvocalizationReductionEngine();
+    engine.initialize({ readingTextContent: 'bir', wpm: 600,
+      questions: [{ id: 'q1', correctAnswer: 'B' }] } as any, {
+      onStart: noOp, onPause: noOp, onResume: noOp, onComplete, onError: noOp,
+      onStateChange: noOp, onStepComplete: noOp, onAction: noOp
+    });
+    return engine;
+  }
+
+  it('ignores client answer keys and incomplete validation responses', fakeAsync(() => {
+    const engine = withQuestion();
+    engine.start(); tick(100);
+    engine.handleInput({ type: 'answer', answer: 'B' });
+    expect(engine.showingFeedback).toBeFalse();
+    engine.handleInput({ type: 'answer', answer: 'A', serverValidated: true });
+    expect(engine.showingFeedback).toBeFalse();
+    engine.destroy();
+  }));
+
+  it('scores only server-confirmed answers without emitting a second answer action', fakeAsync(() => {
+    let result: EngineResult | undefined;
+    const engine = withQuestion(value => result = value);
+    engine.start(); tick(100);
+    engine.handleInput({ type: 'answer', answer: 'A', serverValidated: true, isCorrect: true, correctAnswer: 'A' });
+    expect(engine.showingFeedback).toBeTrue();
+    engine.nextQuestion();
+    expect(result!.score).toBe(100);
+    expect(result!.details.answers[0].questionId).toBe('q1');
+    expect(result!.details.measurementStatus).toBe('Measured');
+    expect(result!.details.wpm).toBeUndefined();
+    engine.destroy();
+  }));
+
+  it('allows preview answers without claiming measured comprehension', fakeAsync(() => {
+    let result: EngineResult | undefined;
+    const engine = withQuestion(value => result = value);
+    engine.start(); tick(100);
+    engine.handleInput({ type: 'answer', answer: 'A', previewOnly: true });
+    engine.nextQuestion();
+    expect(result!.details.comprehensionScore).toBeNull();
+    expect(result!.details.measurementStatus).toBe('NotMeasured');
+    engine.destroy();
+  }));
+
   function createEngine(text: string, chunkSize = 1): SubvocalizationReductionEngine {
     const engine = new SubvocalizationReductionEngine();
     engine.initialize({ readingTextContent: text, wpm: 600, chunkSize } as any, {
