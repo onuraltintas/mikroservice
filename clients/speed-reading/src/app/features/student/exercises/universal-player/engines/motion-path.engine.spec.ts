@@ -16,6 +16,31 @@ function callbacks(onComplete: (result: EngineResult) => void): EngineCallbacks 
 }
 
 describe('MotionPathEngine', () => {
+  it('uses the configured saccade interval and generated target count', fakeAsync(() => {
+    const engine = new MotionPathEngine();
+    engine.initialize({ mode: 'saccade', content: { points: 3 }, movement: { jumpIntervalMs: 200 } } as any,
+      callbacks(() => undefined));
+    expect(engine.state.totalSteps).toBe(3);
+    engine.start(); tick(199);
+    expect(engine.state.targetCount || 0).toBe(0);
+    tick(1); expect(engine.state.targetCount).toBe(1);
+    engine.destroy();
+  }));
+  it('counts timed saccade transitions without inventing accuracy or click responses', fakeAsync(() => {
+    const engine = new MotionPathEngine();
+    const actions: any[] = [];
+    let result: EngineResult | undefined;
+    engine.initialize({ mode: 'saccade', timing: { durationSeconds: 5 }, movement: { jumpIntervalMs: 100 } } as any,
+      { ...callbacks(value => result = value), onAction: action => actions.push(action) });
+    engine.start(); tick(250);
+    expect(engine.state.currentStep).toBe(2);
+    expect(actions[0].action).toBe('target_advanced');
+    expect(actions[0].responseTime).toBeUndefined();
+    tick(5000);
+    expect(result?.accuracy).toBe(0);
+    expect(result?.details?.measurementStatus).toBe('NotMeasured');
+    engine.destroy();
+  }));
   it('does not expire a scored fixation round while waiting for its answer', fakeAsync(() => {
     const engine = new MotionPathEngine();
     let completed = false;
