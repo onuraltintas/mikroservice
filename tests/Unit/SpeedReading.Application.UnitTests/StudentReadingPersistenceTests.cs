@@ -46,6 +46,9 @@ public sealed class StudentReadingPersistenceTests
         state["readingEndTime"] = DateTime.UtcNow.AddSeconds(-1);
         session.SetState(state.ToJsonString());
         await context.SaveChangesAsync();
+        await service.ValidateActionAsync(student, started.SessionId, new ExerciseActionRequest { Action = "scan_start" });
+        for (var index = 0; index < 4; index++)
+            await service.ValidateActionAsync(student, started.SessionId, new ExerciseActionRequest { Action = "scan_click", Index = index, Number = 0 });
         var result = await service.CompleteAsync(student, started.SessionId, new CompleteExerciseSessionRequest());
         result.RawWPM.Should().BeNull();
     }

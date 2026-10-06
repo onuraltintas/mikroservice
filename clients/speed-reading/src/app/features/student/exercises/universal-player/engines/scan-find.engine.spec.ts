@@ -16,6 +16,38 @@ function callbacks(onComplete: (result: EngineResult) => void): EngineCallbacks 
 }
 
 describe('ScanFindEngine', () => {
+  it('waits for server acknowledgement before counting or completing a target', () => {
+    let result: EngineResult | undefined;
+    const actions: any[] = [];
+    const engine = new ScanFindEngine();
+    engine.initialize({
+      serverAuthoritative: true,
+      scanningRounds: [{ textContent: 'ışık', targets: ['ışık'], foundTargets: [] }]
+    }, { ...callbacks(value => result = value), onAction: action => actions.push(action) });
+    engine.start();
+    expect(actions[0].action).toBe('scan_start');
+    engine.handleWordClick(0);
+    expect(engine.state.currentStep).toBe(0);
+    engine.reconcileServerResponse(actions[0], {
+      isValid: true, isCompleted: false, feedbackData: {
+        scanningRounds: [{ textContent: 'ışık', targets: ['ışık'], foundTargets: [] }], currentRound: 0,
+        totalSteps: 1, correctCount: 0, incorrectCount: 0, searchTimeMs: 0
+      }
+    });
+    engine.handleWordClick(0);
+    expect(actions[1]).toEqual(jasmine.objectContaining({ action: 'scan_click', index: 0, number: 0 }));
+    expect(result).toBeUndefined();
+    engine.reconcileServerResponse(actions[1], {
+      isValid: true, isCompleted: true, feedbackData: {
+        scanningRounds: [{ textContent: 'ışık', targets: ['ışık'], foundTargets: ['ışık'] }], currentRound: 1,
+        totalSteps: 1, correctCount: 1, incorrectCount: 0, searchTimeMs: 250
+      }
+    });
+    expect(result?.completedSteps).toBe(1);
+    expect(result?.totalTime).toBe(250);
+    engine.destroy();
+  });
+
   it('matches Turkish casing and surrounding punctuation', () => {
     let result: EngineResult | undefined;
     const engine = new ScanFindEngine();
