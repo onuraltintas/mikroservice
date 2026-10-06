@@ -8,6 +8,33 @@ function callbacks() {
 }
 
 describe('FocusEngine timing', () => {
+  it('does not reveal a repeated stimulus while paused in its transition', fakeAsync(() => {
+    const engine = new FocusEngine();
+    engine.initialize({ Mode: 'position', SpeedMs: 1000, PositionSequence: [1, 1, 2] } as any, callbacks());
+    engine.start(); tick(1000); tick(50); engine.pause(); tick(500);
+    expect(engine.state.currentStep).toBe(0);
+    engine.resume(); tick(100);
+    expect(engine.state.currentStep).toBe(1);
+    engine.destroy();
+  }));
+  it('ignores a second start while already running', fakeAsync(() => {
+    const engine = new FocusEngine(); let starts = 0;
+    engine.initialize({ Mode: 'position', SpeedMs: 1000, PositionSequence: [1, 2, 3] } as any,
+      { ...callbacks(), onStart: () => starts++ });
+    engine.start(); engine.start();
+    expect(starts).toBe(1);
+    engine.destroy();
+  }));
+
+  it('reports the same accuracy in live state and final result', fakeAsync(() => {
+    const engine = new FocusEngine();
+    engine.initialize({ Mode: 'position', NLevel: 1, SpeedMs: 1000, PositionSequence: [1, 2, 2] } as any, callbacks());
+    engine.start(); tick(1000);
+    engine.handleInput({ type: 'position_match' });
+    expect(engine.getResult().accuracy).toBe(engine.state.accuracy);
+    engine.destroy();
+  }));
+
   it('shows the first stimulus for exactly one configured interval', fakeAsync(() => {
     const engine = new FocusEngine();
     engine.initialize({ Mode: 'position', SpeedMs: 1000, PositionSequence: [1, 2, 3] } as any, callbacks());
