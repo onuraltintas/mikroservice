@@ -171,4 +171,11 @@ describe('VisualizationEngine', () => {
     expect(engine.showingFeedback).toBeFalse(); expect(engine.lastAnswer).toBe('');
     engine.destroy();
   });
+
+  it('advances an expired static scene when resuming after a delayed timer', fakeAsync(() => {
+    const engine = new VisualizationEngine(); engine.initialize({ scenes: [scene] } as any, callbacks()); engine.start();
+    const started = Date.now(); spyOn(Date, 'now').and.returnValue(started + 5000);
+    engine.pause(); engine.resume(); tick(0);
+    expect(engine.getPhase()).toBe('questions'); engine.destroy();
+  }));
 });

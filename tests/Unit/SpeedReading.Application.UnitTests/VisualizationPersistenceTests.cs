@@ -128,4 +128,23 @@ public sealed class VisualizationPersistenceTests
         var scenes = started.InitialData.GetProperty("visualizationScenes").EnumerateArray().ToArray();
         Assert.Equal(2, scenes.Length); Assert.DoesNotContain(scenes, scene => scene.GetProperty("description").GetString() == "Başka yaş");
     }
+
+    [Fact]
+    public async Task Linked_reading_questions_do_not_replace_visualization_scene_questions_or_metrics()
+    {
+        await using var db = Context(); var student = Guid.NewGuid();
+        var type = ExerciseType.Create(Guid.NewGuid(), "Visualization", "Görselleştirme", "visualization");
+        var exercise = Exercise.Create("Görselleştirme", "strategy", "{}", 3, student, type.Id);
+        var scene = VisualizationScene.Create(Guid.NewGuid(), exercise.Id, "Kırmızı bir ev", null, 5, 0, 3, null, student, DateTime.UtcNow);
+        var question = VisualizationQuestion.Create(Guid.NewGuid(), scene.Id, "Ev ne renk?", """["Kırmızı","Mavi"]""", "A", "color", 0, null, student, DateTime.UtcNow);
+        var text = ReadingText.Create(Guid.NewGuid(), "Bağlı metin", "bir iki üç", difficultyLevel: 3);
+        db.ExerciseTypes.Add(type); db.Exercises.Add(exercise); db.VisualizationScenes.Add(scene); db.VisualizationQuestions.Add(question);
+        db.ReadingTexts.Add(text); db.ReadingQuestions.Add(ReadingQuestion.Create(Guid.NewGuid(), text.Id, "Metin sorusu", "A", 0, 1, 3, optionA: "Bir", optionB: "İki"));
+        await db.SaveChangesAsync(); var service = Service(db);
+        var started = await service.StartAsync(student, new() { ExerciseId = exercise.Id, ReadingTextId = text.Id });
+        Assert.Single(started.InitialData.GetProperty("visualizationScenes").EnumerateArray());
+        Assert.True((await service.ValidateActionAsync(student, started.SessionId, new() { Action = "answer_question", QuestionId = question.Id, Answer = "A" })).IsCorrect);
+        var result = await service.CompleteAsync(student, started.SessionId, new());
+        Assert.Null(result.RawWPM); Assert.Null(result.WordsRead); Assert.Equal(100m, result.ComprehensionScore);
+    }
 }
