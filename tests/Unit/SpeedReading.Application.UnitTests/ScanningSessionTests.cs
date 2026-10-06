@@ -57,6 +57,8 @@ public sealed class ScanningSessionTests
         var result = await service.CompleteAsync(student, started.SessionId, new());
         result.CorrectCount.Should().Be(1);
         result.XpGained.Should().Be(0);
+        result.Accuracy.Should().Be(50);
+        (await service.CompleteAsync(student, started.SessionId, new())).XpGained.Should().Be(0);
     }
 
     [Fact]
@@ -76,18 +78,26 @@ public sealed class ScanningSessionTests
         await start.Should().ThrowAsync<BusinessRuleException>();
     }
 
+    [Fact]
+    public async Task Does_not_fall_back_to_a_different_difficulty()
+    {
+        await using var db = Context();
+        var start = () => Start(db, textLevel: 1);
+        await start.Should().ThrowAsync<BusinessRuleException>();
+    }
+
     private static OwnedSpeedReadingDbContext Context() => new(new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>()
         .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
 
     private static async Task<(ISpeedReadingExerciseSessions Service, Guid Student, StartExerciseSessionResponse Started)> Start(
-        OwnedSpeedReadingDbContext db, string? config = null)
+        OwnedSpeedReadingDbContext db, string? config = null, int textLevel = 3)
     {
         var student = Guid.NewGuid();
         var type = Guid.NewGuid();
         var exercise = Guid.NewGuid();
         db.ExerciseTypes.Add(ExerciseType.Create(type, "Scanning", "Tarama", "scanning"));
         db.Exercises.Add(Exercise.Create("Tarama", "reading", config ?? """{"engineConfig":{"targets":{"words":["ışık","inci"]},"timeLimit":10}}""", 3, student, type, id: exercise));
-        db.ReadingTexts.Add(ReadingText.Create(Guid.NewGuid(), "Metin", "“IŞIK” [İNCİ] kelime", difficultyLevel: 3));
+        db.ReadingTexts.Add(ReadingText.Create(Guid.NewGuid(), "Metin", "“IŞIK” [İNCİ] kelime", difficultyLevel: textLevel));
         await db.SaveChangesAsync();
         var ownedType = typeof(OwnedSpeedReadingDbContext).Assembly.GetType("SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingExerciseSessions")!;
         var service = (ISpeedReadingExerciseSessions)Activator.CreateInstance(ownedType, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, [db], null)!;
