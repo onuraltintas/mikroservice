@@ -1872,7 +1872,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     const question = this.getCurrentQuestion();
     if (!question || this.questionFeedback || this.questionSubmissionPending) return;
 
-    const questionId = question.QuestionId || question.questionId;
+    const questionId = question.QuestionId || question.questionId || question.Id || question.id;
     if (!questionId) {
       this.showToast('Soru kimliği bulunamadı; cevap kaydedilemedi.', 'error');
       return;

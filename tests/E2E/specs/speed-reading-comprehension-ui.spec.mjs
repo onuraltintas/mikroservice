@@ -36,7 +36,7 @@ async function prepare(page, role = 'Admin') {
       questions: [{ id: questionId, questionText: 'Metinde ne anlatılıyor?', correctAnswer: 'A', optionA: 'Okuma', optionB: 'Spor', optionC: 'Müzik', optionD: 'Uyku' }]
     };
     else if (path.includes('/profile/status')) response = { hasAgeGroupConfiguration: true };
-    else if (path.includes('/my-modules')) response = { hasSpeedReading: true };
+    else if (path.endsWith('/my-modules')) response = { hasSpeedReading: true };
     else response = { items: [], totalCount: 0 };
     await route.fulfill({ json: response });
   });
@@ -105,4 +105,28 @@ test('invalid duration cannot launch and reset restores catalogue settings', asy
   await dialog.getByRole('button', { name: 'Varsayılana dön' }).click();
   await expect(dialog.getByLabel('Minimum okuma süresi (saniye)')).toHaveValue('1');
   await expect(dialog.getByLabel('Satır aralığı (%)')).toHaveValue('180');
+});
+
+test('teacher can preview and paused time does not unlock completion', async ({ page }) => {
+  const { writes, errors } = await prepare(page, 'Teacher');
+  await page.clock.install();
+  await openCustom(page);
+  const finish = page.locator('.complete-reading-btn');
+  const pause = page.locator('.reading-comprehension-container .game-header button').first();
+  await pause.click();
+  await page.clock.runFor(3000);
+  await expect(finish).toBeDisabled();
+  await expect(page.locator('.reading-text-area')).toHaveClass(/paused/);
+  await pause.click();
+  await page.clock.runFor(2100);
+  await expect(finish).toBeEnabled();
+  await finish.click();
+  await answer(page);
+  expect(writes).toEqual([]);
+  expect(errors).toEqual([]);
+});
+
+test('student does not see staff custom-preview actions', async ({ page }) => {
+  await prepare(page, 'Student');
+  await expect(page.getByRole('button', { name: 'Özel ayarlarla dene' })).toHaveCount(0);
 });
