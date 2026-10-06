@@ -86,7 +86,11 @@ export function getCustomPreviewControls(configuration: Record<string, unknown>)
       );
       return controls;
     }
-    case 'focus': return [control('speedMs', 'Uyaran süresi (ms)', 100, 10000, read('SpeedMs') ?? read('FocusSpeedMs') ?? 1500)];
+    case 'focus': return [
+      control('speedMs', 'Uyaran süresi (ms)', 100, 10000, read('SpeedMs') ?? read('FocusSpeedMs') ?? 1500),
+      control('nLevel', 'N-back adım sayısı', 1, 5, read('NLevel') ?? read('FocusNLevel') ?? 1),
+      control('gridSize', 'Tablo boyutu', 3, 7, read('GridSize') ?? 3)
+    ];
     case 'vocabulary_builder': return read('mode') === 'quiz'
       ? [control('timeLimitPerWord', 'Kelime başına süre (saniye; 0: sınırsız)', 0, 3600, read('timeLimitPerWord') ?? 0)] : [];
     case 'visual_expansion': return [
@@ -256,6 +260,14 @@ export function applyCustomPreviewSettings<T extends Record<string, unknown>>(
     return result;
   }
   if (engine === 'focus' || engine === 'vocabulary_builder') {
+    if (engine === 'focus') {
+      for (const [controlKey, settingKey] of [['nLevel', 'NLevel'], ['gridSize', 'GridSize']]) {
+        if (validated[controlKey] !== undefined) {
+          settings[settingKey] = validated[controlKey];
+          updateSessions({ [settingKey]: validated[controlKey] });
+        }
+      }
+    }
     const key = engine === 'focus' ? 'SpeedMs' : 'timeLimitPerWord';
     const value = validated[engine === 'focus' ? 'speedMs' : key];
     if (value !== undefined) {
