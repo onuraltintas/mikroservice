@@ -330,12 +330,9 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   questionStartTime = 0;
 
   // Visual Expansion specific
-  expansionAnswerLeft = '';
-  expansionAnswerRight = '';
+  expansionAnswers: string[] = [];
   expansionFeedback: { isCorrect: boolean; correctAnswer: string } | null = null;
   currentHintIndex: number | null = null; // For Error Analysis Hint Highlight
-  @ViewChild('expansionLeftInput') expansionLeftInput?: ElementRef<HTMLInputElement>;
-  @ViewChild('expansionRightInput') expansionRightInput?: ElementRef<HTMLInputElement>;
   @ViewChild('visualExpansionArea') visualExpansionArea?: ElementRef<HTMLDivElement>;
 
   // Peripheral Vision Input
@@ -1711,8 +1708,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     this.questionFeedback = null;
     this.tachistoscopeAnswer = '';
     this.tachistoscopeFeedback = null;
-    this.expansionAnswerLeft = '';
-    this.expansionAnswerRight = '';
+    this.expansionAnswers = [];
     this.expansionFeedback = null;
     this.sessionId = null;
     this.backendSessionConfig = null;
@@ -2983,73 +2979,39 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     return total - correct;
   }
 
+  getExpansionAnswerSlots(): number[] {
+    const count = (this.engine as VisualExpansionEngine)?.getExpectedAnswerCount?.() || 0;
+    return Array.from({ length: count }, (_, index) => index);
+  }
+
+  getExpansionAnswerLabel(index: number): string {
+    const pattern = (this.engine as VisualExpansionEngine)?.getPattern?.();
+    const labels = pattern === 'radial' ? ['Üst sol', 'Üst sağ', 'Alt sol', 'Alt sağ']
+      : pattern === 'vertical' ? ['Üst', 'Alt'] : ['Sol', 'Sağ'];
+    return labels[index] || `Uyaran ${index + 1}`;
+  }
+
+  getExpansionAnswerMaxLength(index: number): number {
+    return Math.max(1, (this.engine as VisualExpansionEngine)?.getLastShownStimuli?.()[index]?.length || 1);
+  }
+
+  canSubmitExpansionAnswer(): boolean {
+    const engine = this.engine as VisualExpansionEngine;
+    const count = engine?.getExpectedAnswerCount?.() || 0;
+    return !!engine?.isWaitingForInput && !engine.state.isPaused && count > 0
+      && this.expansionAnswers.length === count
+      && this.getExpansionAnswerSlots().every(index => !!this.expansionAnswers[index]?.trim());
+  }
+
   submitExpansionAnswer(): void {
-    const engine = this.engine;
-    if (!engine || engine.engineType !== 'visual_expansion') return;
-
-    const answers = [this.expansionAnswerLeft, this.expansionAnswerRight];
-    const lastShown = (engine as any).getLastShownStimuli?.() || [];
-
-    // Motora cevabı gönder
-    engine.handleInput({ answers });
-
-    // Doğruluğu kontrol et ve feedback göster (sadece hata durumunda)
-    const isCorrect = answers.every((a, i) =>
-      a.toUpperCase().trim() === (lastShown[i] || '').toUpperCase()
-    );
-
-    if (!isCorrect) {
-      this.expansionFeedback = {
-        isCorrect: false,
-        correctAnswer: lastShown.join(' - ')
-      };
-
-      // Hata durumunda motoru duraklat ki kullanıcı feedback'i okuyabilsin
-      engine.pause();
-
-      // Feedback'i 2 saniye sonra temizle
-      setTimeout(() => {
-        this.expansionFeedback = null;
-        // Yanlış cevapta 2sn bekledikten sonra inputları temizle
-        this.expansionAnswerLeft = '';
-        this.expansionAnswerRight = '';
-
-        // Motoru devam ettir
-        engine.resume();
-
-        this.cdr.detectChanges();
-      }, 2000);
-    } else {
-      // Doğruysa feedback gösterme ve HEMEN temizle
-      this.expansionFeedback = null;
-      this.expansionAnswerLeft = '';
-      this.expansionAnswerRight = '';
-    }
-
+    if (this.engine?.engineType !== 'visual_expansion' || !this.canSubmitExpansionAnswer()) return;
+    this.engine.handleInput({ answers: this.expansionAnswers.map(answer => answer.trim()) });
+    this.expansionAnswers = [];
     this.cdr.detectChanges();
   }
 
-  onExpansionInputChange(position: 'left' | 'right', event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const value = input.value;
-
-    if (position === 'left' && value.length === 1) {
-      // Sol input dolduysa sağ input'a geç
-      setTimeout(() => {
-        this.expansionRightInput?.nativeElement.focus();
-      }, 0);
-    } else if (position === 'right' && value.length === 1 && this.expansionAnswerLeft) {
-      // Her iki input da doluysa otomatik gönder
-      setTimeout(() => {
-        this.submitExpansionAnswer();
-      }, 100);
-    }
-  }
-
   focusExpansionInput(): void {
-    setTimeout(() => {
-      this.expansionLeftInput?.nativeElement.focus();
-    }, 100);
+    setTimeout(() => this.visualExpansionArea?.nativeElement.querySelector<HTMLInputElement>('input')?.focus(), 100);
   }
 
   getWpm(): number {

@@ -600,20 +600,17 @@
             <!-- Cevap Giriş Alanı -->
             <div class="expansion-answer-area" *ngIf="isExpansionWaitingInput()"
                 [class.wrong-answer]="expansionFeedback && !expansionFeedback.isCorrect">
-                <div class="answer-prompt">Gördüğünüz karakterleri yazın:</div>
+                <div class="answer-prompt">Gördüğünüz uyaranları konumlarına göre yazın:</div>
                 <div class="answer-inputs">
-                    <input type="text" class="char-input" [(ngModel)]="expansionAnswerLeft" maxlength="1"
-                        placeholder="Sol" (input)="onExpansionInputChange('left', $event)"
-                        (keydown.enter)="submitExpansionAnswer()" #expansionLeftInput autofocus autocomplete="off"
-                        autocorrect="off" autocapitalize="characters" spellcheck="false"
-                        [class.invalid-input]="expansionFeedback && !expansionFeedback.isCorrect">
-                    <input type="text" class="char-input" [(ngModel)]="expansionAnswerRight" maxlength="1"
-                        placeholder="Sağ" (input)="onExpansionInputChange('right', $event)"
-                        (keydown.enter)="submitExpansionAnswer()" #expansionRightInput autocomplete="off"
-                        autocorrect="off" autocapitalize="characters" spellcheck="false"
-                        [class.invalid-input]="expansionFeedback && !expansionFeedback.isCorrect">
+                    <input *ngFor="let index of getExpansionAnswerSlots(); trackBy: trackByIdx" type="text"
+                        class="char-input" [(ngModel)]="expansionAnswers[index]"
+                        [attr.maxlength]="getExpansionAnswerMaxLength(index)"
+                        [attr.aria-label]="getExpansionAnswerLabel(index)" [placeholder]="getExpansionAnswerLabel(index)"
+                        [style.width.em]="getExpansionAnswerMaxLength(index) + 3"
+                        [disabled]="engineState.isPaused" (keydown.enter)="submitExpansionAnswer()"
+                        autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false">
                 </div>
-                <button class="submit-answer-btn" (click)="submitExpansionAnswer()">
+                <button class="submit-answer-btn" [disabled]="!canSubmitExpansionAnswer()" (click)="submitExpansionAnswer()">
                     <span class="material-icons">send</span>
                     Onayla
                 </button>

@@ -639,6 +639,10 @@ export class VisualExpansionEngine implements BaseEngine {
         return this.lastShownStimuli.length;
     }
 
+    getPattern(): string {
+        return this.config.expansion.pattern;
+    }
+
     getCurrentDisplayDurationMs(): number {
         return this.config.timing.durationMs;
     }
