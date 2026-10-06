@@ -5,7 +5,10 @@ using EduPlatform.Shared.Kernel.Exceptions;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using SpeedReading.Application.ExerciseSessions;
+using SpeedReading.Application.Content;
 using SpeedReading.Domain.Catalog;
+using SpeedReading.Domain.LearningPaths;
+using SpeedReading.Domain.Programs;
 using SpeedReading.Infrastructure.Persistence;
 
 namespace SpeedReading.Application.UnitTests;
@@ -32,6 +35,9 @@ public sealed class ScanningSessionTests
         var early = () => service.CompleteAsync(student, started.SessionId, new());
         await early.Should().ThrowAsync<BusinessRuleException>();
         (await service.ValidateActionAsync(student, started.SessionId, new() { Action = "scan_click", Index = 1, Number = 0 })).IsCompleted.Should().BeTrue();
+        var recovery = await service.ValidateActionAsync(student, started.SessionId, new() { Action = "scan_start" });
+        recovery.IsValid.Should().BeTrue();
+        recovery.IsCompleted.Should().BeTrue();
         var result = await service.CompleteAsync(student, started.SessionId, new());
         result.CorrectCount.Should().Be(2);
         result.IncorrectCount.Should().Be(1);
@@ -59,6 +65,22 @@ public sealed class ScanningSessionTests
         result.XpGained.Should().Be(0);
         result.Accuracy.Should().Be(50);
         (await service.CompleteAsync(student, started.SessionId, new())).XpGained.Should().Be(0);
+        var now = DateTime.UtcNow;
+        var template = ProgramTemplate.Import(Guid.NewGuid(), "Program", "", Guid.NewGuid(), 0, 100,
+            "{}", 1, 2, 5, 1, 2, true, 1, 0, null, false, now, null, null, null);
+        db.ProgramTemplates.Add(template);
+        var progress = StudentProgramProgress.Start(Guid.NewGuid(), student, template, 0, 0, student, now, true);
+        db.StudentProgramProgresses.Add(progress);
+        db.Entry(progress).Property(item => item.DaysCompleted).CurrentValue = 7;
+        var item = PersonalizedLearningPathItem.Import(Guid.NewGuid(), student, null, 0, "Exercise", started.ExerciseId,
+            "Tarama", 3, 1, false, null, null, null, true, false, null, null, now.AddMinutes(-1), null, null, null);
+        db.PersonalizedLearningPathItems.Add(item);
+        await db.SaveChangesAsync();
+        var pathType = typeof(OwnedSpeedReadingDbContext).Assembly.GetType("SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingLearningPaths")!;
+        var paths = (ILegacySpeedReadingLearningPaths)Activator.CreateInstance(pathType, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, [db], null)!;
+        var advance = () => paths.CompletePersonalizedPathItemAsync(student, item.Id, started.SessionId);
+        (await advance.Should().ThrowAsync<BusinessRuleException>()).Which.Code.Should().Be("LearningPath.IncompleteSession");
+        item.IsCompleted.Should().BeFalse();
     }
 
     [Fact]
