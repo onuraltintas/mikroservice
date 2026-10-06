@@ -298,6 +298,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                 var normalizedEngineType = ExerciseConfigurationRules.NormalizeEngineType(exerciseEngineType);
                 var isComprehension = normalizedEngineType == "reading_comprehension";
                 var isScanning = normalizedEngineType is "scan_find" or "scanning" or "skimming";
+                var isGrouping = normalizedEngineType == "word_highlight"
+                    && exerciseTypeName.Equals("Chunking", StringComparison.OrdinalIgnoreCase);
                 var requiresScorableQuestions = ExerciseConfigurationRules.ResolveReadingPurpose(
                     normalizedEngineType,
                     ReadString(ReadObject(parsedConfiguration, "engineConfig"), "readingPurpose")
@@ -308,7 +310,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                     .Where(item => item.IsActive
                         && !item.IsDeleted
                         && item.Content != string.Empty
-                        && (!(isComprehension || isScanning) || item.DifficultyLevel == difficultyLevel)
+                        && (!(isComprehension || isScanning || isGrouping) || item.DifficultyLevel == difficultyLevel)
                         && (!profileAgeGroupId.HasValue
                             || item.TargetAgeGroupId == null
                             || item.TargetAgeGroupId == profileAgeGroupId.Value)
@@ -320,7 +322,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                                 || question.CorrectAnswer.Trim().ToUpper() == "B"
                                 || question.CorrectAnswer.Trim().ToUpper() == "C"
                                 || question.CorrectAnswer.Trim().ToUpper() == "D"))))
-                    .OrderBy(item => isScanning
+                    .OrderBy(item => isScanning || isGrouping
                         ? db.ExerciseSessions.Count(history => history.StudentId == studentId && history.ReadingTextId == item.Id)
                         : isComprehension
                         ? db.ReadingSessions.Count(history => history.UserId == studentId && history.ReadingTextId == item.Id)
@@ -330,6 +332,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                     .ThenBy(item => item.Id)
                     .Select(item => (Guid?)item.Id)
                     .FirstOrDefaultAsync(token);
+                if (isGrouping && !readingTextId.HasValue)
+                    throw new InvalidOperationException("Seçilen Gruplama seviyesine uygun aktif metin bulunamadı.");
             }
 
             var state = await CreateSessionStateAsync(
