@@ -44,6 +44,11 @@ describe('reading behavior engines', () => {
 
     expect(engine.state.isCompleted).toBeTrue();
     expect(result.completedSteps).toBe(1);
+    expect(result.details.wpm).toBeUndefined();
+    expect(result.details.displayPaceWpm).toBe(1500);
+    expect(result.details.comprehensionScore).toBeNull();
+    expect(result.accuracy).toBe(0);
+    expect(result.details.measurementStatus).toBe('NotMeasured');
     engine.destroy();
   }));
 
