@@ -10,6 +10,33 @@ namespace SpeedReading.Application.UnitTests;
 public sealed class GroupingSessionTests
 {
     [Fact]
+    public async Task Requires_reading_tracking_and_keeps_tempo_separate_from_measurement()
+    {
+        await using var db = Context();
+        var (service, student, exercise) = await Seed(db);
+        db.ReadingTexts.Add(ReadingText.Create(Guid.NewGuid(), "Metin", "bir iki üç dört", difficultyLevel: 3));
+        await db.SaveChangesAsync();
+        var started = await service.StartAsync(student, new() { ExerciseId = exercise });
+        var early = () => service.CompleteAsync(student, started.SessionId, new());
+        await early.Should().ThrowAsync<EduPlatform.Shared.Kernel.Exceptions.BusinessRuleException>();
+        (await service.ValidateActionAsync(student, started.SessionId, new() { Action = "start_reading" })).IsValid.Should().BeTrue();
+        (await service.ValidateActionAsync(student, started.SessionId, new() { Action = "finish_reading" })).IsValid.Should().BeFalse();
+        var session = await db.ExerciseSessions.SingleAsync();
+        var state = System.Text.Json.Nodes.JsonNode.Parse(session.SessionDataJson)!;
+        state["readingStartTime"] = DateTime.UtcNow.AddSeconds(-2);
+        session.SetState(state.ToJsonString());
+        await db.SaveChangesAsync();
+        (await service.ValidateActionAsync(student, started.SessionId, new() { Action = "finish_reading" })).IsValid.Should().BeTrue();
+        var result = await service.CompleteAsync(student, started.SessionId, new());
+        result.RawWPM.Should().BeNull();
+        result.Accuracy.Should().BeNull();
+        result.XpGained.Should().Be(0);
+        result.DetailedResults.GetProperty("groupingDisplayPaceWpm").GetDecimal().Should().Be(200);
+        result.DetailedResults.GetProperty("groupingCompletionPercent").GetDecimal().Should().Be(100);
+        (await service.CompleteAsync(student, started.SessionId, new())).RawWPM.Should().BeNull();
+        db.ExerciseSessionResults.Should().ContainSingle();
+    }
+    [Fact]
     public async Task Does_not_fall_back_to_a_different_text_level()
     {
         await using var db = Context();
