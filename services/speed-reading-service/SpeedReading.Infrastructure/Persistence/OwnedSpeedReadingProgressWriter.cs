@@ -36,7 +36,15 @@ internal sealed class OwnedSpeedReadingProgressWriter(OwnedSpeedReadingDbContext
                 "The submitted session does not belong to the requested exercise or reading text.");
         }
 
-        return ToSummary(result);
+        var exerciseType = await (from exercise in db.Exercises.AsNoTracking()
+            join type in db.ExerciseTypes.AsNoTracking() on exercise.ExerciseTypeId equals type.Id
+            where exercise.Id == result.ExerciseId
+            select type).SingleOrDefaultAsync(cancellationToken);
+        var isVisualization = exerciseType is not null
+            && (exerciseType.EngineType.Equals("visualization", StringComparison.OrdinalIgnoreCase)
+                || exerciseType.Name.Contains("visualization", StringComparison.OrdinalIgnoreCase)
+                || exerciseType.Name.Contains("visualisation", StringComparison.OrdinalIgnoreCase));
+        return ToSummary(result, isVisualization);
     }
 
     private static void ValidateRequest(
@@ -50,15 +58,15 @@ internal sealed class OwnedSpeedReadingProgressWriter(OwnedSpeedReadingDbContext
         SpeedReadingProgressWriteRules.RequireAuthoritativeSession(request.SessionId);
     }
 
-    private static ExerciseResultSummary ToSummary(ExerciseSessionResult result) => new(
+    private static ExerciseResultSummary ToSummary(ExerciseSessionResult result, bool isVisualization) => new(
         result.Id,
         result.ExerciseId,
         result.ReadingTextId,
-        result.WordsRead,
+        isVisualization ? 0 : result.WordsRead,
         result.TimeSpentSeconds,
-        result.IsMeasured && result.RawWpm > 0 ? result.RawWpm : null,
+        !isVisualization && result.IsMeasured && result.RawWpm > 0 ? result.RawWpm : null,
         result.IsMeasured && result.ReadingTextId.HasValue ? result.ComprehensionScore : null,
-        result.IsMeasured && result.RawWpm > 0 ? result.WeightedKdp : null,
+        !isVisualization && result.IsMeasured && result.RawWpm > 0 ? result.WeightedKdp : null,
         result.CompletedAt,
         result.IsMeasured ? "Measured" : "NotMeasured");
 }
