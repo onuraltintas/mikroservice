@@ -15,6 +15,17 @@ function callbacks(onComplete: (result: any) => void = () => undefined) {
 }
 
 describe('ErrorAnalysisEngine', () => {
+  it('can retry a failed start with the same action and ignores an old session response', () => {
+    const actions: any[] = []; const engine = new ErrorAnalysisEngine();
+    const config = { serverAuthoritative: true, totalSteps: 1, words: [{ index: 3, text: 'yanlız' }] };
+    const cb = { ...callbacks(), onAction: (action: any) => actions.push(action) };
+    engine.initialize(config, cb); engine.start();
+    engine.reconcileServerResponse(actions[0], { isValid: false });
+    (engine as any).retryServerAction(); expect(actions[1]).toBe(actions[0]);
+    engine.initialize(config, cb); engine.start();
+    engine.reconcileServerResponse(actions[0], { isValid: true, isCompleted: true, feedbackData: {} });
+    expect(engine.state.isCompleted).toBeFalse(); expect(engine.isAwaitingServer()).toBeTrue(); engine.destroy();
+  });
   it('rejects a non-string word without throwing', () => {
     const engine = new ErrorAnalysisEngine();
     engine.initialize({ words: [{ index: 0, text: 123 }], errors: [{ wordIndex: 0 }] } as any, callbacks());
