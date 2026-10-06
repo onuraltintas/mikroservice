@@ -113,7 +113,7 @@ describe('reading phase timing', () => {
     expect(player.sessionService.resumeSession).toHaveBeenCalledWith('owned-reading');
   }));
 
-  it('does not include regression question time in local reading WPM', fakeAsync(() => {
+  it('keeps regression exposure time separate without claiming measured reading WPM', fakeAsync(() => {
     let result: any;
     const callbacks: EngineCallbacks = {
       onStart: () => undefined, onPause: () => undefined, onResume: () => undefined,
@@ -128,7 +128,9 @@ describe('reading phase timing', () => {
     expect(engine.getPhase()).toBe('answering');
     tick(60000);
     (engine as any).complete();
-    expect(result.details.wpm).toBe(45);
+    expect(result.details.wpm).toBeUndefined();
+    expect(result.details.displayPaceWpm).toBe(60);
+    expect(result.details.readingTimeMs).toBe(3000);
     engine.destroy();
   }));
 });
