@@ -185,6 +185,11 @@ internal sealed class OwnedSpeedReadingDailyProgress(
             .AsNoTracking()
             .SingleOrDefaultAsync(item => item.Id == sessionId && item.StudentId == userId, cancellationToken)
             ?? throw new KeyNotFoundException("Completed exercise session not found.");
+        using var sessionState = JsonDocument.Parse(authoritativeSession.SessionDataJson);
+        if (sessionState.RootElement.TryGetProperty("readingIncomplete", out var incomplete)
+            && incomplete.ValueKind == JsonValueKind.True)
+            throw new BusinessRuleException("DailyProgress.IncompleteReading",
+                "Okuma tamamlanmadığı için günlük ilerlemeye eklenemez. Egzersizi yeniden tamamlayın.");
         var isMeasured = sessionResult.IsMeasured;
         var score = isMeasured ? Math.Clamp(sessionResult.Score, 0, 100) : 0;
         var duration = SpeedReadingDailyProgressRules.ValidateDuration(

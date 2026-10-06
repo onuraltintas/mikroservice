@@ -621,7 +621,7 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
             ? SpeedReadingExerciseSessionRules.CalculateCompositeScore(comprehension, rawWpm)
             : accuracy;
         var weightedKdp = rawWpm.HasValue ? Math.Round(rawWpm.Value * comprehension / 100, 2) : (decimal?)null;
-        var xpAwarded = measurementStatus == SpeedReadingMeasurementStatus.Measured
+        var xpAwarded = measurementStatus == SpeedReadingMeasurementStatus.Measured && !state.ReadingIncomplete
             ? SpeedReadingExerciseSessionRules.CalculateXp(score ?? 0, accuracy, timeSpent)
             : 0;
         state.FinalWpm = rawWpm;
@@ -661,7 +661,7 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
                 comprehension,
                 now);
         }
-        if (session.StudentAssignmentId.HasValue)
+        if (session.StudentAssignmentId.HasValue && !state.ReadingIncomplete)
         {
             var studentAssignment = await db.StudentAssignments.SingleOrDefaultAsync(
                 item => item.Id == session.StudentAssignmentId.Value
@@ -671,7 +671,7 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
             studentAssignment?.Complete(result.Id, score ?? 0, weightedKdp ?? 0, now);
         }
 
-        var isVerifiedCompletion = measurementStatus == SpeedReadingMeasurementStatus.Measured
+        var isVerifiedCompletion = measurementStatus == SpeedReadingMeasurementStatus.Measured && !state.ReadingIncomplete
             && (state.VocabularyWords.Count == 0 || state.VocabularyMode == "quiz");
         if (!isAssessmentSession && isVerifiedCompletion)
         {
