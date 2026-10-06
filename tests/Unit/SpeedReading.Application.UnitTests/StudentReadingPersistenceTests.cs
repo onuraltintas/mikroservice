@@ -22,6 +22,35 @@ namespace SpeedReading.Application.UnitTests;
 public sealed class StudentReadingPersistenceTests
 {
     [Theory]
+    [InlineData("scanning")]
+    [InlineData("scan_find")]
+    public async Task Scanning_selects_matching_level_and_never_reports_reading_wpm(string engine)
+    {
+        await using var context = CreateContext();
+        var student = Guid.NewGuid();
+        var exercise = Guid.NewGuid();
+        var type = Guid.NewGuid();
+        var wrong = Guid.Parse("00000000-0000-0000-0000-000000000001");
+        var matching = Guid.Parse("00000000-0000-0000-0000-000000000002");
+        context.ExerciseTypes.Add(ExerciseType.Create(type, "Tarama", "Tarama", engine));
+        context.Exercises.Add(Exercise.Create("Tarama", "reading", "{}", 3, student, type, id: exercise));
+        context.ReadingTexts.Add(ReadingText.Create(wrong, "Wrong", "bir iki üç dört", difficultyLevel: 1));
+        context.ReadingTexts.Add(ReadingText.Create(matching, "Matching", "bir iki üç dört", difficultyLevel: 3));
+        await context.SaveChangesAsync();
+        var service = CreateExerciseSessionService(context);
+        var started = await service.StartAsync(student, new StartExerciseSessionRequest { ExerciseId = exercise });
+        var session = await context.ExerciseSessions.SingleAsync();
+        var state = System.Text.Json.Nodes.JsonNode.Parse(session.SessionDataJson)!;
+        state["readingTextId"]!.GetValue<Guid>().Should().Be(matching);
+        state["readingStartTime"] = DateTime.UtcNow.AddSeconds(-10);
+        state["readingEndTime"] = DateTime.UtcNow.AddSeconds(-1);
+        session.SetState(state.ToJsonString());
+        await context.SaveChangesAsync();
+        var result = await service.CompleteAsync(student, started.SessionId, new CompleteExerciseSessionRequest());
+        result.RawWPM.Should().BeNull();
+    }
+
+    [Theory]
     [InlineData(false)]
     [InlineData(true)]
     public async Task Comprehension_wpm_uses_actual_words_and_fractional_active_seconds(bool paused)
