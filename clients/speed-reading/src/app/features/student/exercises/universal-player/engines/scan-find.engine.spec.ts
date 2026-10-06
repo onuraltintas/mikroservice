@@ -16,6 +16,20 @@ function callbacks(onComplete: (result: EngineResult) => void): EngineCallbacks 
 }
 
 describe('ScanFindEngine', () => {
+  it('clears timed-out result metadata on reset', fakeAsync(() => {
+    const results: EngineResult[] = [];
+    const engine = new ScanFindEngine();
+    engine.initialize({ content: { text: 'one' }, targets: { words: ['one'] }, timeLimitSeconds: 1 },
+      callbacks(result => results.push(result)));
+    engine.start();
+    tick(1100);
+    expect(results[0].details.incomplete).toBeTrue();
+    engine.reset();
+    engine.start();
+    engine.handleWordClick(0);
+    expect(results[1].details.incomplete).toBeFalse();
+    engine.destroy();
+  }));
   it('waits for server acknowledgement before counting or completing a target', () => {
     let result: EngineResult | undefined;
     const actions: any[] = [];
