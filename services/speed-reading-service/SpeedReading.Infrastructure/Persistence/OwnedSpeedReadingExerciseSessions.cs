@@ -3228,15 +3228,16 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             }, JsonOptions);
         }
         var result = JsonSerializer.SerializeToElement(json, JsonOptions);
-        if (state.IsAssessmentMode) return SpeedReadingContentSecurity.SanitizeFocusAssessmentJson(result);
-        var sanitized = JsonSerializer.SerializeToNode(RemoveAssessmentKeys(result), JsonOptions)!.AsObject();
+        var sanitized = JsonSerializer.SerializeToNode(state.IsAssessmentMode
+            ? SpeedReadingContentSecurity.SanitizeFocusAssessmentJson(result)
+            : RemoveAssessmentKeys(result), JsonOptions)!.AsObject();
         if (IsVisualExpansionExercise(state) && state.VisualExpansionProtocolVersion != 1)
         {
             sanitized.Remove("visualExpansionRoundResults");
             sanitized.Remove("visualExpansionMaxPresentedDistance");
             sanitized.Remove("visualExpansionAverageResponseTimeMs");
         }
-        if (state.Tachistoscope is { } completed && completed.Round == completed.Count)
+        if (!state.IsAssessmentMode && state.Tachistoscope is { } completed && completed.Round == completed.Count)
             sanitized["tachistoscope"]!["trials"] = JsonSerializer.SerializeToNode(completed.Trials, JsonOptions);
         return JsonSerializer.SerializeToElement(sanitized, JsonOptions);
     }
