@@ -12,7 +12,7 @@ namespace SpeedReading.Infrastructure.Persistence;
 internal sealed partial class OwnedSpeedReadingExerciseSessions
 {
     private static bool IsScanning(SessionState state) =>
-        ExerciseConfigurationRules.NormalizeEngineType(state.EngineType) is "scan_find" or "scanning" or "skimming";
+        ExerciseConfigurationRules.NormalizeEngineType(state.EngineType) is "scan_find" or "scanning";
 
     private static string NormalizeScanningWord(string word, bool caseSensitive)
     {

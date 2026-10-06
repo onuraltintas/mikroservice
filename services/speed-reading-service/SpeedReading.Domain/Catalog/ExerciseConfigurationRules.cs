@@ -58,7 +58,7 @@ public static class ExerciseConfigurationRules
         var purpose = configuredPurpose?.Trim().ToLowerInvariant();
         if (purpose is not (null or "practice" or "evaluation"))
             throw new ArgumentException("Okuma amacı practice veya evaluation olmalıdır.", nameof(configuredPurpose));
-        if (assessment || engine is "reading_comprehension" or "exam_simulation" or "adaptive_fluency")
+        if (assessment || engine is "reading_comprehension" or "exam_simulation" or "adaptive_fluency" or "skimming")
             return "evaluation";
         return purpose ?? "practice";
     }

@@ -110,10 +110,10 @@ public sealed class ScanningSessionTests
     }
 
     [Fact]
-    public async Task Skimming_alias_uses_the_same_validated_protocol()
+    public async Task Scanning_alias_uses_the_validated_search_protocol()
     {
         await using var db = Context();
-        var (service, student, started) = await Start(db, engine: "skimming");
+        var (service, student, started) = await Start(db, engine: "scanning");
         (await service.ValidateActionAsync(student, started.SessionId, new() { Action = "scan_start" })).IsValid.Should().BeTrue();
         (await service.ValidateActionAsync(student, started.SessionId, new() { Action = "advance" })).IsValid.Should().BeFalse();
     }

@@ -100,7 +100,7 @@ public sealed class SkimmingSessionTests
         var text = ReadingText.Create(Guid.NewGuid(), "Okuma", "Kitaplar öğrenmeyi destekler. Okuma yeni düşünceler kazandırır.", difficultyLevel: level);
         var question = Guid.NewGuid();
         db.ExerciseTypes.Add(type); db.Exercises.Add(exercise); db.ReadingTexts.Add(text);
-        db.ReadingQuestions.Add(ReadingQuestion.Create(question, text.Id, "Metnin ana fikri nedir?", "A", 0, questionType,
+        db.ReadingQuestions.Add(ReadingQuestion.Create(question, text.Id, "Metnin ana fikri nedir?", "A", 0, questionType, 2, 3,
             optionA: "Okumanın katkısı", optionB: "Ulaşım", optionC: "Spor", optionD: "Hava"));
         db.ReadingQuestions.Add(ReadingQuestion.Create(Guid.NewGuid(), text.Id, "Ayrıntı", "B", 1, 3,
             optionA: "A", optionB: "B", optionC: "C", optionD: "D"));

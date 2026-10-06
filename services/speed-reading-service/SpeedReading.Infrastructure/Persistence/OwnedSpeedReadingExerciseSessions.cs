@@ -143,7 +143,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             var maximumWords = isFreeText ? ReadPositiveInt(explicitContent, "maxWordCount") ?? ReadPositiveInt(ReadObject(explicitConfig, "content"), "maxWordCount") ?? 0 : 0;
             var strictTextLevel = IsGrouping(new SessionState { EngineType = exerciseEngineType, ExerciseTypeName = exerciseTypeName })
                 || IsRsvp(exerciseTypeName, exerciseEngineType, explicitConfig)
-                || ExerciseConfigurationRules.NormalizeEngineType(exerciseEngineType) is "free_reading" or "text_fade" or "regression_reduction" or "subvocalization_reduction";
+                || ExerciseConfigurationRules.NormalizeEngineType(exerciseEngineType) is "free_reading" or "text_fade" or "regression_reduction" or "subvocalization_reduction" or "skimming";
             var readingTextMatches = await db.ReadingTexts
                 .AsNoTracking()
                 .AnyAsync(item => item.Id == request.ReadingTextId.Value
@@ -244,6 +244,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                         && DeserializeState(matchingSession.SessionDataJson).FadeDisplayPaceWpm <= 0)
                     || (IsRsvp(exerciseTypeName, exerciseEngineType, ParseJsonOrEmpty(configurationJson))
                         && DeserializeState(matchingSession.SessionDataJson).RsvpProtocolVersion != 1)
+                    || (IsSkimming(new SessionState { EngineType = exerciseEngineType })
+                        && DeserializeState(matchingSession.SessionDataJson).SkimmingProtocolVersion != 1)
                     || (IsVisualExpansionExercise(DeserializeState(matchingSession.SessionDataJson))
                         && DeserializeState(matchingSession.SessionDataJson).VisualExpansionProtocolVersion != 1)
                     || (IsValidatedFixation(DeserializeState(matchingSession.SessionDataJson))
@@ -322,6 +324,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                 var freeMinimumWords = isFreeReading ? ReadPositiveInt(freeContent, "minWordCount") ?? ReadPositiveInt(ReadObject(parsedConfiguration, "content"), "minWordCount") ?? 0 : 0;
                 var freeMaximumWords = isFreeReading ? ReadPositiveInt(freeContent, "maxWordCount") ?? ReadPositiveInt(ReadObject(parsedConfiguration, "content"), "maxWordCount") ?? 0 : 0;
                 var isScanning = normalizedEngineType is "scan_find" or "scanning" or "skimming";
+                var isSkimming = normalizedEngineType == "skimming";
                 var isGrouping = normalizedEngineType == "word_highlight"
                     && exerciseTypeName.Equals("Chunking", StringComparison.OrdinalIgnoreCase);
                 var isTextFade = normalizedEngineType == "text_fade";
@@ -344,6 +347,11 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                             || item.TargetAgeGroupId == null
                             || item.TargetAgeGroupId == profileAgeGroupId.Value)
                         && (item.ExerciseId == null || item.ExerciseId == request.ExerciseId)
+                        && (!isSkimming || db.ReadingQuestions.Any(question => question.ReadingTextId == item.Id
+                            && !question.IsDeleted && question.Type == 1
+                            && (question.CorrectAnswer.Trim().ToUpper() == "A" || question.CorrectAnswer.Trim().ToUpper() == "B"
+                                || question.CorrectAnswer.Trim().ToUpper() == "C" || question.CorrectAnswer.Trim().ToUpper() == "D")
+                            && question.OptionA.Trim() != "" && question.OptionB.Trim() != "" && question.OptionC.Trim() != "" && question.OptionD.Trim() != ""))
                         && (!requiresScorableQuestions || db.ReadingQuestions.Any(question =>
                             question.ReadingTextId == item.Id
                             && !question.IsDeleted
@@ -580,6 +588,9 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             || !state.ReadingEndTime.HasValue || state.ReadingMinimumMs <= 0))
             throw IncompleteSession("RSVP gösterimi doğrulanmadan oturum kaydedilemez. Egzersizi yeniden başlatın.");
 
+        if (IsSkimming(state) && (state.SkimmingProtocolVersion != 1 || !state.ReadingStartTime.HasValue
+            || !state.ReadingEndTime.HasValue))
+            throw IncompleteSession("Göz Gezdirme incelemesi doğrulanmadan oturum tamamlanamaz.");
         if (IsScanning(state))
         {
             if (state.ScanningRounds.Count == 0)
@@ -691,7 +702,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             : IsScanning(state) ? ScanningAccuracy(state)
             : SpeedReadingExerciseSessionRules.CalculateAccuracy(session.CorrectCount, session.IncorrectCount);
         var wordsRead = state.Tachistoscope is not null || IsScanning(state)
-            || IsRsvp(state) || IsErrorAnalysis(state) || IsVocabularyState(state)
+            || IsRsvp(state) || IsSkimming(state) || IsErrorAnalysis(state) || IsVocabularyState(state)
             || IsFocusExercise(state)
             || IsVisualizationExercise(state.ExerciseTypeName) || IsEngineType(state.EngineType, "visualization")
             || IsEngineType(state.EngineType, "regression_reduction") || IsEngineType(state.EngineType, "subvocalization_reduction")
@@ -1267,7 +1278,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             state.ReadingMaximumMs = ReadPositiveInt(timing, "maxReadingTimeMs")
                 ?? ReadPositiveInt(rootTiming, "maxReadingTimeMs") ?? 0;
         }
-        if (IsReadingExerciseFlow(state) && state.EngineType is not ("scan_find" or "scanning" or "skimming"))
+        if (IsReadingExerciseFlow(state) && state.EngineType is not ("scan_find" or "scanning"))
             state.ReadingPurpose = ExerciseConfigurationRules.ResolveReadingPurpose(
                 exerciseEngineType,
                 ReadString(effectiveConfig, "readingPurpose") ?? ReadString(config, "readingPurpose"),
@@ -1442,7 +1453,10 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             var readingText = await db.ReadingTexts.AsNoTracking()
                 .SingleOrDefaultAsync(item => item.Id == readingTextId.Value
                     && item.IsActive
-                    && !item.IsDeleted,
+                    && !item.IsDeleted
+                    && (!IsSkimming(state) || item.DifficultyLevel == difficultyLevel
+                        && (item.ExerciseId == null || item.ExerciseId == exerciseId)
+                        && (!profileAgeGroupId.HasValue || item.TargetAgeGroupId == null || item.TargetAgeGroupId == profileAgeGroupId.Value)),
                     cancellationToken)
                 ?? throw new KeyNotFoundException("Reading text not found.");
             state.ReadingTextId = readingText.Id;
@@ -1662,6 +1676,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         if (IsRsvp(state)) InitializeRsvp(state, config, effectiveConfig);
         if (state.Tachistoscope is { } tachistoscope) state.TotalSteps = tachistoscope.Count;
         if (IsScanning(state)) InitializeScanning(state, effectiveConfig);
+        if (IsSkimming(state)) InitializeSkimming(state, effectiveConfig, config);
         if (IsErrorAnalysis(state)) InitializeErrorAnalysis(state, effectiveConfig);
         if (IsGrouping(state))
         {
@@ -1743,7 +1758,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
     {
         if (IsAdaptiveFluency(state))
             return FinishAdaptiveStage(session, state, now);
-        if (ExerciseConfigurationRules.NormalizeEngineType(state.EngineType) is "reading_comprehension" or "free_reading" || IsGrouping(state) || IsTextFade(state) || IsRsvp(state))
+        if (ExerciseConfigurationRules.NormalizeEngineType(state.EngineType) is "reading_comprehension" or "free_reading" || IsGrouping(state) || IsTextFade(state) || IsRsvp(state) || IsSkimming(state))
         {
             if (IsRsvp(state) && state.RsvpProtocolVersion != 1)
                 return Invalid("Bu eski RSVP oturumu doğrulanamıyor. Egzersizi yeniden başlatın.");
@@ -1751,6 +1766,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                 return Invalid("Bu eski egzersiz oturumu doğrulanamıyor. Egzersizi yeniden başlatın.");
             if (!state.ReadingStartTime.HasValue)
                 return Invalid("Önce okumayı başlatın.");
+            if (IsSkimming(state) && state.SkimmingProtocolVersion != 1)
+                return Invalid("Göz Gezdirme oturumunu yeniden başlatın.");
             if (!state.ReadingEndTime.HasValue)
             {
                 var elapsedMs = Math.Max(0, (now - state.ReadingStartTime.Value).TotalMilliseconds
@@ -1768,6 +1785,9 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         {
             state.ReadingEndTime = now;
             state.ReadingIncomplete = incomplete;
+            if (IsSkimming(state))
+                state.SkimmingInspectionMs = (int)Math.Min(state.ReadingMaximumMs, Math.Max(0,
+                    (now - state.ReadingStartTime.Value).TotalMilliseconds - (state.ReadingPausedMilliseconds ?? 0)));
             if (IsRsvp(state)) {
                 var elapsedMs = Math.Max(0, (now - state.ReadingStartTime.Value).TotalMilliseconds
                     - (state.ReadingPausedMilliseconds ?? 0));
@@ -2145,6 +2165,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         SessionState state,
         ExerciseActionRequest request)
     {
+        if (IsSkimming(state) && (state.SkimmingProtocolVersion != 1 || !state.ReadingEndTime.HasValue))
+            return Invalid("Önce metin incelemesini tamamlayın.");
         if (!request.QuestionId.HasValue
             || (!request.IsTimeout && string.IsNullOrWhiteSpace(request.Answer)))
             return Invalid("Soru ID ve cevap gereklidir.");
@@ -2738,7 +2760,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
     }
 
     private static bool IsTimedOut(ExerciseSession session, SessionState state, DateTime now) =>
-        !IsErrorAnalysis(state) && !IsScanning(state) && !(state.TimingStartsOnAction && !state.TimingStartedAt.HasValue)
+        !IsErrorAnalysis(state) && !IsScanning(state) && !IsSkimming(state) && !(state.TimingStartsOnAction && !state.TimingStartedAt.HasValue)
         && session.IsTimedOut(now, state.TimingStartedAt, state.TimingPausedSecondsBeforeStart);
 
     private static void EnsureTimingStarted(
@@ -3629,6 +3651,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         public bool ReadingIncomplete { get; set; }
         public string TextStreamMode { get; set; } = string.Empty;
         public int RsvpProtocolVersion { get; set; }
+        public int SkimmingProtocolVersion { get; set; }
+        public int SkimmingInspectionMs { get; set; }
         public int RsvpDisplayDurationMs { get; set; }
         public int RsvpGapMs { get; set; }
         public int RsvpFixationMs { get; set; }
