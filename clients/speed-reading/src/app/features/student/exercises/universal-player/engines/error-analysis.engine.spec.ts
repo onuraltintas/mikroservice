@@ -15,6 +15,40 @@ function callbacks(onComplete: (result: any) => void = () => undefined) {
 }
 
 describe('ErrorAnalysisEngine', () => {
+  it('scores false alarms and presents corrections without overwriting the final accuracy', () => {
+    let result: any; const engine = new ErrorAnalysisEngine();
+    engine.initialize({ words: [{ index: 3, text: 'yanlız' }, { index: 8, text: 'bugün' }],
+      errors: [{ wordIndex: 3, originalWord: 'yalnız', errorWord: 'yanlız', explanation: 'Yazım hatası' }] }, callbacks(value => result = value));
+    engine.start(); engine.handleInput({ type: 'select_word', wordIndex: 8 });
+    engine.handleInput({ type: 'select_word', wordIndex: 8 }); expect(engine.getFalseAlarmCount()).toBe(1);
+    expect(engine.getWordFeedback(8)?.isError).toBeFalse(); expect(engine.getWordFeedback(3)).toBeNull();
+    engine.handleInput({ type: 'select_word', wordIndex: 3 });
+    expect(result.score).toBe(95); expect(result.accuracy).toBe(50); expect(engine.state.accuracy).toBe(50);
+    expect(engine.isWordFoundError(3)).toBeTrue(); expect(engine.isWordFalseAlarm(8)).toBeTrue();
+    expect(engine.getWordFeedback(3)?.explanation).toBe('Yazım hatası'); expect(engine.getRemainingErrors()).toBe(0);
+    expect(engine.getErrors().length).toBe(1); expect(engine.isWordError(3)).toBeTrue(); engine.destroy();
+  });
+  it('validates mismatched error content and malformed word entries safely', () => {
+    for (const words of [[null], [{ index: 3, text: 'doğru' }]]) {
+      const engine = new ErrorAnalysisEngine();
+      expect(() => engine.initialize({ words, errors: [{ wordIndex: 3, originalWord: 'yalnız', errorWord: 'yanlız' }] } as any, callbacks())).not.toThrow();
+      expect(() => engine.start()).not.toThrow(); expect(engine.state.isRunning).toBeFalse(); engine.destroy();
+    }
+  });
+  it('forwards hints and manual finish without trusting a client answer key', () => {
+    const actions: any[] = []; const engine = new ErrorAnalysisEngine(); let result: any;
+    engine.initialize({ serverAuthoritative: true, totalSteps: 1, words: [{ index: 3, text: 'yanlız' }] },
+      { ...callbacks(value => result = value), onAction: action => actions.push(action) });
+    engine.start(); engine.pause(); expect(engine.state.isPaused).toBeFalse();
+    engine.reconcileServerResponse(actions[0], { isValid: true, feedbackData: { selected: [], found: [], falseAlarms: [] } });
+    engine.useHint(); expect(actions[1].action).toBe('error_analysis_hint');
+    engine.reconcileServerResponse(actions[1], { isValid: true, feedbackData: { selected: [], found: [], falseAlarms: [], hintIndex: 3, hintUsedCount: 1 } });
+    expect(engine.getHintIndex()).toBe(3); engine.forceComplete(); expect(actions[2].action).toBe('error_analysis_finish');
+    engine.reconcileServerResponse(actions[2], { isValid: true, isCompleted: true, feedbackData: { selected: [], found: [], falseAlarms: [], hintUsedCount: 1,
+      errors: [{ wordIndex: 3, originalWord: 'yalnız', errorWord: 'yanlız' }] } });
+    expect(result.details.assisted).toBeTrue(); expect(engine.getMissedErrors().length).toBe(1);
+    engine.stop(); expect(engine.getPhase()).toBe('completed'); engine.reset(); expect(engine.hasFailedAction()).toBeFalse(); engine.destroy();
+  });
   it('can retry a failed start with the same action and ignores an old session response', () => {
     const actions: any[] = []; const engine = new ErrorAnalysisEngine();
     const config = { serverAuthoritative: true, totalSteps: 1, words: [{ index: 3, text: 'yanlız' }] };
@@ -87,7 +121,7 @@ describe('ErrorAnalysisEngine', () => {
   it('ignores invalid word positions', () => {
     const engine = new ErrorAnalysisEngine();
     engine.initialize({
-      words: [{ index: 0, text: 'kelime' }],
+      words: [{ index: 0, text: 'kelimee' }],
       errors: [{ wordIndex: 0, originalWord: 'kelime', errorWord: 'kelimee' }]
     }, callbacks());
     engine.start();
