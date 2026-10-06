@@ -3392,7 +3392,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   }
 
   getComprehensionFontSize(): string {
-    if (this.engine?.engineType === 'reading_comprehension' || this.engine?.engineType === 'exam_simulation' || this.engine?.engineType === 'adaptive_fluency') {
+    if (this.engine?.engineType === 'reading_comprehension' || this.engine?.engineType === 'free_reading' || this.engine?.engineType === 'exam_simulation' || this.engine?.engineType === 'adaptive_fluency') {
       return (this.engine as any).getFontSize?.() || 'medium';
     }
     return 'medium';
@@ -3430,14 +3430,14 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       this.readingScrollProgress = Math.min(100, Math.max(0, scrollPercent));
 
       // Notify engine about scroll progress
-      if (this.engine?.engineType === 'reading_comprehension' || this.engine?.engineType === 'exam_simulation' || this.engine?.engineType === 'adaptive_fluency') {
+      if (this.engine?.engineType === 'reading_comprehension' || this.engine?.engineType === 'free_reading' || this.engine?.engineType === 'exam_simulation' || this.engine?.engineType === 'adaptive_fluency') {
         this.engine.handleInput({ scrollProgress: this.readingScrollProgress });
       }
     }
   }
 
   completeReading(): void {
-    if (this.engine?.engineType === 'reading_comprehension' || this.engine?.engineType === 'exam_simulation' || this.engine?.engineType === 'adaptive_fluency') {
+    if (this.engine?.engineType === 'reading_comprehension' || this.engine?.engineType === 'free_reading' || this.engine?.engineType === 'exam_simulation' || this.engine?.engineType === 'adaptive_fluency') {
       (this.engine as any).completeReading();
     }
   }

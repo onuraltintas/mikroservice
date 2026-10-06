@@ -547,7 +547,7 @@
 
             <button class="complete-reading-btn" (click)="completeReading()" [disabled]="!canCompleteReading()">
                 <span class="material-icons">done</span>
-                Okudum, Sorulara Geç
+                {{ comprehensionQuestions.length ? 'Okudum, Sorulara Geç' : 'Okumayı Bitir' }}
             </button>
         </div>
     </div>
@@ -1732,7 +1732,8 @@
                 <div class="result-box wpm-box">
                     <span class="material-icons">speed</span>
                     <div class="result-value">{{ result?.details?.wpm }} WPM</div>
-                    <div class="result-label">Dakikada Kelime</div>
+                    <div class="result-label">Okuma temposu (kelime/dakika)</div>
+                    <p *ngIf="result?.details?.comprehensionScore == null">Anlama ölçülmedi; tempo, okumayı bitirdiğiniz beyanına dayanır.</p>
                 </div>
             </div>
 

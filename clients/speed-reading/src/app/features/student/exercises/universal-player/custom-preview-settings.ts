@@ -79,7 +79,7 @@ export function getCustomPreviewControls(configuration: Record<string, unknown>)
       const display = mergeCaseInsensitiveRecords(configuration, settings, 'display');
       const controls: PreviewControl[] = [{ key: 'fontSize', label: 'Metin boyutu', min: 0, max: 0, value: String(display['fontsize'] ?? 'medium').toLowerCase(),
         options: [{ value: 'small', label: 'Küçük' }, { value: 'medium', label: 'Orta' }, { value: 'large', label: 'Büyük' }] }];
-      if (configuration['engineType'] === 'reading_comprehension') controls.push(
+      if (['reading_comprehension', 'free_reading'].includes(String(configuration['engineType']))) controls.push(
         { ...control('minReadingTimeSec', 'Minimum okuma süresi (saniye)', 0, 3600, Number(timing['minreadingtimems'] ?? 0) / 1000), step: 0.001 },
         { ...control('maxReadingTimeSec', 'Maksimum okuma süresi (saniye; 0: sınırsız)', 0, 3600, Number(timing['maxreadingtimems'] ?? 0) / 1000), step: 0.001 },
         control('lineHeightPercent', 'Satır aralığı (%)', 100, 300, Math.round(Number(display['lineheight'] ?? 1.8) * 100))
