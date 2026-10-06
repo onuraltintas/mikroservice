@@ -1,6 +1,30 @@
 import { ExercisePlayerComponent } from './exercise-player.component';
+import { of } from 'rxjs';
 
 describe('reading result semantics', () => {
+  it('uses authoritative fade partial results and does not advance daily progress', () => {
+    const player = Object.create(ExercisePlayerComponent.prototype) as any;
+    player.engine = { engineType: 'text_fade', getWpm: () => 200 };
+    player.engineState = { totalSteps: 6 };
+    player.parsedConfig = {};
+    player.questionAnswers = [];
+    player.sessionId = 'session';
+    player.exercise = { id: 'exercise' };
+    player.isPreviewSession = () => false;
+    player.isTachistoscopeMode = () => false;
+    player.showToast = () => undefined;
+    player.cdr = { detectChanges: () => undefined };
+    player.completeDailyProgress = jasmine.createSpy('daily');
+    player.sessionService = { completeSession: () => of({ score: null, accuracy: null, rawWPM: null,
+      detailedResults: { fadeDisplayPaceWpm: 300, fadeCompletionPercent: 33.33, readingIncomplete: true } }) };
+    player.result = { score: 0, accuracy: 0, errors: 0, totalSteps: 6, completedSteps: 6,
+      details: { displayPaceWpm: 200, completionPercent: 100, incomplete: false } };
+    player.saveResult(player.result);
+    expect(player.result.details.displayPaceWpm).toBe(300);
+    expect(player.result.details.completionPercent).toBe(33.33);
+    expect(player.result.details.incomplete).toBeTrue();
+    expect(player.completeDailyProgress).not.toHaveBeenCalled();
+  });
   it('keeps grouping completion separate from accuracy and flags partial daily progress', () => {
     const player = Object.create(ExercisePlayerComponent.prototype) as any;
     player.engine = { engineType: 'word_highlight', getWpm: () => 200 };
