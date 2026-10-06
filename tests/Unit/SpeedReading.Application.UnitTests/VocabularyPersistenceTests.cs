@@ -11,6 +11,17 @@ namespace SpeedReading.Application.UnitTests;
 public sealed class VocabularyPersistenceTests
 {
     [Fact]
+    public async Task Default_configuration_uses_central_words_and_rejects_empty_catalog()
+    {
+        await using var db = Context(); var student = Guid.NewGuid();
+        var exercise = await Seed(db, student, "learning", defaultPool: true);
+        var started = await Service(db).StartAsync(student, new() { ExerciseId = exercise });
+        Assert.Equal(4, started.InitialData.GetProperty("vocabularyWords").GetArrayLength());
+        db.VocabularyItems.RemoveRange(db.VocabularyItems); await db.SaveChangesAsync();
+        await Assert.ThrowsAsync<InvalidOperationException>(() => Service(db).StartAsync(student, new() { ExerciseId = exercise }));
+        Assert.Single(db.ExerciseSessions);
+    }
+    [Fact]
     public async Task Historical_vocabulary_results_do_not_expose_reading_metrics()
     {
         await using var db = Context(); var student = Guid.NewGuid(); var exercise = await Seed(db, student, "learning");
@@ -102,11 +113,11 @@ public sealed class VocabularyPersistenceTests
     }
 
     private static OwnedSpeedReadingDbContext Context() => new(new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>().UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
-    private static async Task<Guid> Seed(OwnedSpeedReadingDbContext db, Guid user, string mode, bool duplicate = false)
+    private static async Task<Guid> Seed(OwnedSpeedReadingDbContext db, Guid user, string mode, bool duplicate = false, bool defaultPool = false)
     {
         var type = ExerciseType.Create(Guid.NewGuid(), "Vocabulary", "Kelime Hazinesi", "vocabulary_builder");
         var exercise = Exercise.Create("Kelime Hazinesi", "vocabulary_builder", JsonSerializer.Serialize(new {
-            engineType = "vocabulary_builder", engineConfig = new { mode, vocabulary = new { count = 4, difficultyLevel = 2 } }
+            engineType = "vocabulary_builder", engineConfig = new { mode, vocabulary = defaultPool ? null : new { count = 4, difficultyLevel = 2 } }
         }), 2, user, type.Id);
         db.ExerciseTypes.Add(type); db.Exercises.Add(exercise);
         for (var i = 0; i < 4; i++) db.VocabularyItems.Add(VocabularyItem.Create(Guid.NewGuid(), "Kelime" + i, duplicate ? "aynı" : "Anlam" + i, null, null, null, "Genel", 2, null, user, DateTime.UtcNow));
