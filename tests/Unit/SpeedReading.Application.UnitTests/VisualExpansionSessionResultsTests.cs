@@ -10,6 +10,28 @@ namespace SpeedReading.Application.UnitTests;
 public sealed class VisualExpansionSessionResultsTests
 {
     [Fact]
+    public async Task Restarts_legacy_attempt_instead_of_publishing_an_incomplete_verified_history()
+    {
+        await using var db = new OwnedSpeedReadingDbContext(new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
+        var student = Guid.NewGuid();
+        var type = ExerciseType.Create(Guid.NewGuid(), "VisualExpansion", "Görsel Genişleme", "visual_expansion");
+        var exercise = Exercise.Create("Görsel Genişleme", "attention", """{"engineType":"visual_expansion","rounds":2}""", 1, student, type.Id);
+        db.ExerciseTypes.Add(type); db.Exercises.Add(exercise); await db.SaveChangesAsync();
+        var owned = typeof(OwnedSpeedReadingDbContext).Assembly.GetType("SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingExerciseSessions")!;
+        var service = (ISpeedReadingExerciseSessions)Activator.CreateInstance(owned,
+            BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, [db], null)!;
+        var started = await service.StartAsync(student, new() { ExerciseId = exercise.Id });
+        var session = await db.ExerciseSessions.SingleAsync();
+        var state = JsonNode.Parse(session.SessionDataJson)!.AsObject();
+        state.Remove("visualExpansionProtocolVersion"); state["visualExpansionRound"] = 2;
+        session.SetState(state.ToJsonString()); await db.SaveChangesAsync();
+        await Assert.ThrowsAsync<EduPlatform.Shared.Kernel.Exceptions.BusinessRuleException>(() => service.CompleteAsync(student, started.SessionId, new()));
+        var restarted = await service.StartAsync(student, new() { ExerciseId = exercise.Id });
+        Assert.NotEqual(started.SessionId, restarted.SessionId);
+        Assert.Equal(0, restarted.InitialData.GetProperty("visualExpansionRound").GetInt32());
+    }
+    [Fact]
     public async Task Stores_verified_rounds_without_measured_reading_speed_or_client_forged_metrics()
     {
         await using var db = new OwnedSpeedReadingDbContext(new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>()
@@ -32,7 +54,17 @@ public sealed class VisualExpansionSessionResultsTests
             var expected = present.FeedbackData!.Value.GetProperty("stimuli").EnumerateArray().Select(item => item.GetString()!).ToList();
             var session = await db.ExerciseSessions.SingleAsync();
             var state = JsonNode.Parse(session.SessionDataJson)!;
-            state["visualExpansionPresentedAt"] = DateTime.UtcNow.AddMilliseconds(-600);
+            if (round == 0)
+            {
+                await service.PauseAsync(student, started.SessionId);
+                state = JsonNode.Parse(session.SessionDataJson)!;
+                state["visualExpansionPausedAt"] = DateTime.UtcNow.AddMilliseconds(-2000);
+                state["visualExpansionPresentedAt"] = DateTime.UtcNow.AddMilliseconds(-2600);
+                session.SetState(state.ToJsonString()); await db.SaveChangesAsync();
+                await service.ResumeAsync(student, started.SessionId);
+                state = JsonNode.Parse(session.SessionDataJson)!;
+            }
+            else state["visualExpansionPresentedAt"] = DateTime.UtcNow.AddMilliseconds(-600);
             session.SetState(state.ToJsonString()); await db.SaveChangesAsync();
             var answer = await service.ValidateActionAsync(student, started.SessionId,
                 new() { Action = "visual_expansion_answer", Answers = round == 0 ? expected : ["?", "?"] });
