@@ -64,8 +64,10 @@ public sealed class SubvocalizationPersistenceTests
         await using var db = Context(); var student = Guid.NewGuid(); var exercise = Seed(db, student);
         var text = ReadingText.Create(Guid.NewGuid(), "Wrong", "bir iki", difficultyLevel: 1);
         db.ReadingTexts.Add(text); await db.SaveChangesAsync();
-        await Assert.ThrowsAnyAsync<Exception>(() => Service(db).StartAsync(student,
-            new() { ExerciseId = exercise.Id, ReadingTextId = explicitText ? text.Id : null }));
+        var start = () => Service(db).StartAsync(student,
+            new() { ExerciseId = exercise.Id, ReadingTextId = explicitText ? text.Id : null });
+        if (explicitText) await Assert.ThrowsAsync<KeyNotFoundException>(start);
+        else await Assert.ThrowsAsync<InvalidOperationException>(start);
         Assert.Empty(await db.ExerciseSessions.ToListAsync());
     }
 

@@ -946,7 +946,7 @@
                 {{ hasTimeLimit() ? formatTime(getRemainingTimeMs()) : formatTime(engineState.timeElapsed) }}
             </div>
 
-            <div class="subvoc-pulse-rhythm">
+            <div class="subvoc-pulse-rhythm" *ngIf="isSubvocMetronomeEnabled()" aria-label="Görsel ritim yardımcısı">
                 <div *ngFor="let num of [1, 2, 3, 4]" class="rhythm-dot"
                     [class.active]="(engineState.metronomeStep || 0) === num">
                     {{ num }}
@@ -956,7 +956,7 @@
             <!-- WPM Real-time -->
             <div class="wpm-badge">
                 <span class="material-icons">speed</span>
-                <span>{{ getSubvocCurrentWpm() }} WPM</span>
+                <span>Tempo: {{ getSubvocCurrentWpm() }} kelime/dakika</span>
             </div>
 
             <div *ngIf="isSubvocMetronomeBeat()" class="visual-metronome-indicator">
@@ -971,8 +971,11 @@
             </button>
         </div>
 
-        <div class="subvoc-display-area highlight-mode" #subvocDisplayArea [class.paused]="engineState.isPaused">
-            <div class="highlight-display">
+        <div class="subvoc-display-area" #subvocDisplayArea [class.paused]="engineState.isPaused"
+            [class.highlight-mode]="getSubvocDisplayMode() === 'highlight'"
+            [class.rsvp-mode]="getSubvocDisplayMode() === 'rsvp'"
+            [class.chunk-mode]="getSubvocDisplayMode() === 'chunk'">
+            <div class="highlight-display" *ngIf="getSubvocDisplayMode() === 'highlight'">
                 <div class="highlight-text-content">
                     <span *ngFor="let word of getSubvocWords(); let i = index; trackBy: trackByIdx" class="subvoc-word"
                         [class.active]="i > (getSubvocCurrentWordIndex() - getSubvocChunkSize()) && i <= getSubvocCurrentWordIndex()"
@@ -981,20 +984,22 @@
                     </span>
                 </div>
             </div>
+            <div class="subvoc-current-chunk" *ngIf="getSubvocDisplayMode() !== 'highlight'">{{ getSubvocCurrentChunk() }}</div>
+            <div *ngIf="getSubvocDisplayMode() === 'chunk'">İlerleme: %{{ getSubvocProgress() }}</div>
         </div>
 
         <div class="subvoc-footer">
             <div class="mode-info">
                 <span class="material-icons">spatial_audio_off</span>
-                <span>Metot: Eşzamanlı Görev (Concurrent Task)</span>
+                <span>Tempoya uyumlu okuma pratiği</span>
             </div>
             <div class="target-info">
                 <span class="material-icons">trending_up</span>
-                <span>Hedef: {{ getSubvocTargetWpm() }} WPM</span>
+                <span>Gösterim temposu: {{ getSubvocTargetWpm() }} kelime/dakika</span>
             </div>
             <div class="tip-info">
                 <span class="material-icons">campaign</span>
-                <span>'1-2-3-4' diye saymak seslendirmeyi engeller.</span>
+                <span>Anlamayı korumaya odaklanın. Bu çalışma iç ses azalmasını veya gerçek okuma hızını ölçmez.</span>
             </div>
         </div>
     </div>
@@ -1024,7 +1029,7 @@
             <div class="header-right">
                 <div class="wpm-badge wpm-badge--compact">
                     <span class="material-icons">speed</span>
-                    <span>{{ getSubvocCurrentWpm() }} WPM</span>
+                    <span>Gösterim temposu: {{ getSubvocCurrentWpm() }} kelime/dakika</span>
                 </div>
             </div>
         </div>
@@ -1050,7 +1055,7 @@
             <!-- Answer Options (Learning Phase) -->
             <div class="modern-options" *ngIf="!isSubvocShowingFeedback()">
                 <button *ngFor="let option of ['A', 'B', 'C', 'D']" class="modern-option-btn"
-                    (click)="submitSubvocAnswer(option)">
+                    [disabled]="questionSubmissionPending || engineState.isPaused" (click)="submitSubvocAnswer(option)">
                     <span class="option-letter">{{ option }}</span>
                     <span class="option-text">{{ getSubvocCurrentQuestion()['Option' + option] ||
                         getSubvocCurrentQuestion()['option' + option] }}</span>
@@ -1060,22 +1065,24 @@
 
             <!-- Feedback Phase -->
             <div class="feedback-options" *ngIf="isSubvocShowingFeedback()">
+                <p *ngIf="sessionId === 'preview-mode'">Önizleme: cevap değerlendirilmedi.</p>
+                <p *ngIf="isAssessmentMode">Cevabınız kaydedildi.</p>
                 <div *ngFor="let option of ['A', 'B', 'C', 'D']" class="feedback-option"
                     [class.selected]="option === getSubvocLastAnswer()"
                     [class.correct]="option === getSubvocCorrectAnswer()"
-                    [class.wrong]="option === getSubvocLastAnswer() && option !== getSubvocCorrectAnswer()">
+                    [class.wrong]="questionFeedback?.isCorrect === false && option === getSubvocLastAnswer()">
                     <span class="option-letter">{{ option }}</span>
                     <span class="option-text">{{ getSubvocCurrentQuestion()['Option' + option] ||
                         getSubvocCurrentQuestion()['option' + option] }}</span>
                     <span class="material-icons" class="feedback-icon" *ngIf="option === getSubvocCorrectAnswer()">check_circle</span>
                     <span class="material-icons feedback-icon"
-                        *ngIf="option === getSubvocLastAnswer() && option !== getSubvocCorrectAnswer()">cancel</span>
+                        *ngIf="questionFeedback?.isCorrect === false && option === getSubvocLastAnswer()">cancel</span>
                 </div>
             </div>
 
             <!-- Next Button -->
             <button class="ep-btn ep-btn--primary" class="next-question-btn" *ngIf="isSubvocShowingFeedback()"
-                (click)="nextSubvocQuestion()">
+                [disabled]="questionSubmissionPending || engineState.isPaused" (click)="nextSubvocQuestion()">
                 <span>{{ (getSubvocCurrentQuestionIndex() + 1) >= getSubvocQuestionCount() ? 'Tamamla' : 'Sonraki Soru'
                     }}</span>
                 <span class="material-icons">arrow_forward</span>

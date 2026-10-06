@@ -4500,7 +4500,7 @@ h1 {
         overflow-y: auto;
         scroll-behavior: smooth;
 
-        &.rsvp-mode {
+        &.rsvp-mode, &.chunk-mode {
             align-items: center;
             justify-content: center;
             overflow: hidden;
@@ -4531,6 +4531,13 @@ h1 {
 
 
     // Highlight Mode Styles
+    .subvoc-current-chunk {
+        font-size: clamp(24px, 5vw, 40px);
+        text-align: center;
+        overflow-wrap: anywhere;
+        margin: auto;
+    }
+
     .highlight-display {
         width: 100%;
 

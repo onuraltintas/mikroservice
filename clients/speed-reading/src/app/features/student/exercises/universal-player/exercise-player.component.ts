@@ -1431,7 +1431,8 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
 
   private enqueueAction(
     action: ActionData,
-    onResponse?: (response: ValidationResponse) => void): Promise<void> {
+    onResponse?: (response: ValidationResponse) => void,
+    persistFailure = true): Promise<void> {
     if (!this.sessionId || this.sessionId === 'preview-mode') {
       return Promise.resolve();
     }
@@ -1479,7 +1480,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
 
     this.actionQueue = queued;
     void queued.catch(error => {
-      recordActionFailure(this.actionFailureState, actionGeneration, error);
+      if (persistFailure) recordActionFailure(this.actionFailureState, actionGeneration, error);
       console.error('[ExercisePlayer] Action validation error:', error);
     });
     return queued;
@@ -2309,7 +2310,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       this.engine?.handleInput({ type: 'answer', answer: option, serverValidated: true,
         isCorrect: response.isCorrect, correctAnswer });
       this.cdr.detectChanges();
-    }).catch(error => {
+    }, this.engine?.engineType !== 'subvocalization_reduction').catch(error => {
       this.questionSubmissionPending = false;
       this.showToast(error?.message || 'Cevap kaydedilemedi; lütfen yeniden deneyin.', 'error');
       this.cdr.detectChanges();
@@ -2382,6 +2383,10 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
 
   isSubvocMetronomeBeat(): boolean {
     return (this.engine?.state as any)?.metronomeBeat || false;
+  }
+
+  isSubvocMetronomeEnabled(): boolean {
+    return (this.engine as SubvocalizationReductionEngine)?.isMetronomeEnabled?.() || false;
   }
 
   submitSubvocAnswer(answer: string): void {
