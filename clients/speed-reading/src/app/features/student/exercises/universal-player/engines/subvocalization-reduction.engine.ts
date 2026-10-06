@@ -110,6 +110,10 @@ export class SubvocalizationReductionEngine implements BaseEngine {
 
     start(): void {
         if (this.state.isRunning || this.state.isCompleted) return;
+        if (this.words.length === 0) {
+            this.callbacks.onError('Bu egzersiz için okuma metni bulunamadı.');
+            return;
+        }
         this.cleanup();
         this.state.isRunning = true;
         this.state.isPaused = false;

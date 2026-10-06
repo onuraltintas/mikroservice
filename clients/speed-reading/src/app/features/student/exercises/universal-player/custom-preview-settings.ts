@@ -120,10 +120,13 @@ export function getCustomPreviewControls(configuration: Record<string, unknown>)
       const duration = boundedInteger(timing['durationms'], 0, 0, 10000);
       const legacyTempo = grouping && duration > 0
         ? Math.max(20, Math.min(1500, Math.round(60000 * boundedInteger(groupSize, 1, 1, 10) /
-          (duration + boundedInteger(timing['delayms'], 0, 0, 10000))))) : 200;
+          (duration + boundedInteger(timing['delayms'], 0, 0, 10000)))))
+        : configuration['engineType'] === 'subvocalization_reduction'
+          ? Math.round(60000 / boundedInteger(read('msPerWord'), 300, 40, 3000)) : 200;
       const pace = grouping ? read('targetWpm') ?? pacer['speedwpm'] ?? legacyTempo
         : read('targetWpm') ?? read('wpm') ?? pacer['speedwpm'] ?? fading['speedwpm'] ?? legacyTempo;
-      const controls = [control('speedWpm', grouping ? 'Gösterim temposu (kelime/dakika)' : 'Okuma hızı (kelime/dakika)', 20, 1500, pace)];
+      const controls = [control('speedWpm', grouping || configuration['engineType'] === 'subvocalization_reduction'
+        ? 'Gösterim temposu (kelime/dakika)' : 'Okuma hızı (kelime/dakika)', 20, 1500, pace)];
       if (configuration['engineType'] !== 'text_fade') controls.push(control('chunkSize', 'Kelime grubu', 1, 10, groupSize));
       return controls;
     }
