@@ -3030,6 +3030,8 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   }
 
   private isMeasuredClientResult(result: EngineResult): boolean {
+    if (this.engine?.engineType === 'regression_reduction')
+      return result.details?.measurementStatus === 'Measured' && result.details?.comprehensionScore != null;
     if (this.engine?.engineType === 'motion_path' && result.details?.serverValidatedFixation)
       return true;
     if (this.questionAnswers.length > 0
