@@ -247,8 +247,10 @@ public sealed class StudentReadingPersistenceTests
         if (timedOut) result.XpGained.Should().Be(0);
     }
 
-    [Fact]
-    public async Task Comprehension_answers_without_finished_reading_do_not_generate_wpm()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Comprehension_answers_without_valid_reading_cannot_award_progress(bool belowMinimum)
     {
         await using var context = CreateContext();
         var studentId = Guid.NewGuid();
@@ -257,17 +259,26 @@ public sealed class StudentReadingPersistenceTests
         var textId = Guid.NewGuid();
         var questionId = Guid.NewGuid();
         context.ExerciseTypes.Add(ExerciseType.Create(typeId, "Comprehension", "Reading", "reading_comprehension"));
-        context.Exercises.Add(Exercise.Create("Reading", "reading_comprehension", "{}", 1, studentId, typeId, id: exerciseId));
+        context.Exercises.Add(Exercise.Create("Reading", "reading_comprehension", """{"timing":{"minReadingTimeMs":1000}}""", 1, studentId, typeId, id: exerciseId));
         context.ReadingTexts.Add(ReadingText.Create(textId, "Text", "A short reading text.", difficultyLevel: 1, exerciseId: exerciseId));
         context.ReadingQuestions.Add(ReadingQuestion.Create(questionId, textId, "Question", "A",
             orderIndex: 0, type: 1, bloomLevel: 1,
             optionA: "Yes", optionB: "No", optionC: "Other", optionD: "None"));
+        var assignment = Assignment.Create(Guid.NewGuid(), exerciseId, textId, "Ödev", null, DateTime.UtcNow.AddDays(1));
+        var studentAssignment = StudentAssignment.Assign(assignment.Id, studentId);
+        context.Assignments.Add(assignment);
+        context.StudentAssignments.Add(studentAssignment);
         await context.SaveChangesAsync();
         var service = CreateExerciseSessionService(context);
-        var started = await service.StartAsync(studentId, new StartExerciseSessionRequest { ExerciseId = exerciseId });
+        var started = await service.StartAsync(studentId, new StartExerciseSessionRequest { ExerciseId = exerciseId, StudentAssignmentId = studentAssignment.Id });
         var session = await context.ExerciseSessions.SingleAsync();
         var state = System.Text.Json.Nodes.JsonNode.Parse(session.SessionDataJson)!;
         state["timingStartedAt"] = DateTime.UtcNow.AddSeconds(-30);
+        if (belowMinimum)
+        {
+            state["readingStartTime"] = DateTime.UtcNow.AddSeconds(-10);
+            state["readingEndTime"] = DateTime.UtcNow.AddSeconds(-9.9);
+        }
         session.SetState(state.ToJsonString());
         await context.SaveChangesAsync();
         await service.ValidateActionAsync(studentId, started.SessionId,
@@ -275,6 +286,9 @@ public sealed class StudentReadingPersistenceTests
         var result = await service.CompleteAsync(studentId, started.SessionId, new CompleteExerciseSessionRequest());
         result.ComprehensionScore.Should().Be(100);
         result.RawWPM.Should().BeNull();
+        result.XpGained.Should().Be(0);
+        studentAssignment.IsCompleted.Should().BeFalse();
+        JsonDocument.Parse(session.SessionDataJson).RootElement.GetProperty("readingIncomplete").GetBoolean().Should().BeTrue();
     }
 
     [Fact]
