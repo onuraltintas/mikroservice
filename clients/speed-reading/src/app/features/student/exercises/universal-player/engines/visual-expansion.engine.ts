@@ -643,6 +643,19 @@ export class VisualExpansionEngine implements BaseEngine {
         return this.config.expansion.pattern;
     }
 
+    getRelativeDistancePercent(): number {
+        return this.currentDegrees / 60 * 100;
+    }
+
+    getStimulusSizeCss(): string {
+        const size = this.config.visuals?.stimulusSize || '2rem';
+        const match = /^(\d+(?:\.\d+)?)(px|rem)$/.exec(size);
+        if (!match) return '2rem';
+        const value = Number(match[1]);
+        return match[2] === 'px' ? `${Math.max(16, Math.min(64, value))}px`
+            : `${Math.max(1, Math.min(4, value))}rem`;
+    }
+
     getCurrentDisplayDurationMs(): number {
         return this.config.timing.durationMs;
     }

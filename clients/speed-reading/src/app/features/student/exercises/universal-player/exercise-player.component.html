@@ -589,24 +589,23 @@
             <div class="center-fixation">
                 <span *ngIf="getCenterPointType() === 'cross'" class="center-cross" aria-hidden="true"></span>
                 <div *ngIf="getCenterPointType() === 'dot'" class="center-dot"></div>
+                <div *ngIf="getCenterPointType() === 'circle'" class="center-circle"></div>
             </div>
 
             <!-- Uyaranlar (Karakterler) -->
             <div *ngFor="let stim of getExpansionStimuli(); trackBy: trackByIdx" class="expansion-stimulus"
-                [style.left.%]="stim.x" [style.top.%]="stim.y">
+                [style.left.%]="stim.x" [style.top.%]="stim.y" [style.fontSize]="getExpansionStimulusSize()">
                 {{ stim.content }}
             </div>
 
             <!-- Cevap Giriş Alanı -->
-            <div class="expansion-answer-area" *ngIf="isExpansionWaitingInput()"
-                [class.wrong-answer]="expansionFeedback && !expansionFeedback.isCorrect">
+            <div class="expansion-answer-area" *ngIf="isExpansionWaitingInput()">
                 <div class="answer-prompt">Gördüğünüz uyaranları konumlarına göre yazın:</div>
                 <div class="answer-inputs">
                     <input *ngFor="let index of getExpansionAnswerSlots(); trackBy: trackByIdx" type="text"
                         class="char-input" [(ngModel)]="expansionAnswers[index]"
                         [attr.maxlength]="getExpansionAnswerMaxLength(index)"
                         [attr.aria-label]="getExpansionAnswerLabel(index)" [placeholder]="getExpansionAnswerLabel(index)"
-                        [style.width.em]="getExpansionAnswerMaxLength(index) + 3"
                         [disabled]="engineState.isPaused" (keydown.enter)="submitExpansionAnswer()"
                         autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false">
                 </div>
@@ -615,18 +614,13 @@
                     Onayla
                 </button>
 
-                <!-- Feedback (Sadece yanlışsa gösterilir) -->
-                <div *ngIf="expansionFeedback && !expansionFeedback.isCorrect" class="expansion-feedback wrong">
-                    <span class="material-icons">cancel</span>
-                    <span>Doğru: {{ expansionFeedback.correctAnswer }}</span>
-                </div>
             </div>
         </div>
 
         <div class="game-stats">
             <div class="stat">
-                <span class="label">Görüş Açısı</span>
-                <span class="value">{{ getCurrentDegrees() | number:'1.1-1' }}°</span>
+                <span class="label">Göreli uzaklık</span>
+                <span class="value">{{ getExpansionRelativeDistance() | number:'1.0-0' }}%</span>
             </div>
             <div class="stat correct-stat">
                 <span class="label">Doğru</span>
@@ -1632,6 +1626,15 @@
                     <div class="stat-value">{{ result?.details?.comprehensionScore }}%</div>
                     <div class="stat-label">Anlama</div>
                 </div>
+            </div>
+            <div class="stats-row" *ngIf="engine?.engineType === 'visual_expansion'">
+                <div class="stat-card"><div class="stat-value">{{ (result?.details?.maxDegreesReached || 0) / 60 * 100 | number:'1.0-0' }}%</div><div class="stat-label">En büyük göreli uzaklık</div></div>
+                <div class="stat-card"><div class="stat-value">{{ result?.details?.averageResponseTimeMs }} ms</div><div class="stat-label">Ortalama cevap süresi</div></div>
+                <div class="stat-card"><div class="stat-value">{{ result?.details?.roundResults?.length }}</div><div class="stat-label">Tamamlanan tur</div></div>
+            </div>
+            <div class="measurement-not-available" *ngIf="engine?.engineType === 'visual_expansion'">
+                Uzaklık ekrandaki göreli konumdur; fiziksel görüş açısı veya okuma hızı ölçümü değildir.
+                Cevap süresi uyaran gizlendikten sonraki yanıtlama süresidir; kayıtlı oturumlarda ağ gecikmesi de etkileyebilir.
             </div>
             <div class="measurement-not-available" *ngIf="result?.details?.displayPaceWpm">
                 {{ getReadingMeasurementMessage() }}

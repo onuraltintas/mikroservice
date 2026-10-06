@@ -234,7 +234,9 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                     || (IsGrouping(DeserializeState(matchingSession.SessionDataJson))
                         && DeserializeState(matchingSession.SessionDataJson).GroupingDisplayPaceWpm <= 0)
                     || (IsTextFade(DeserializeState(matchingSession.SessionDataJson))
-                        && DeserializeState(matchingSession.SessionDataJson).FadeDisplayPaceWpm <= 0)))
+                        && DeserializeState(matchingSession.SessionDataJson).FadeDisplayPaceWpm <= 0)
+                    || (IsVisualExpansionExercise(DeserializeState(matchingSession.SessionDataJson))
+                        && DeserializeState(matchingSession.SessionDataJson).VisualExpansionProtocolVersion != 1)))
             {
                 // Legacy client-scored attempts cannot be verified by the new round protocol.
                 // Preserve their history, but start a fresh authoritative attempt.
@@ -576,7 +578,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             }
         }
         if (IsVisualExpansionExercise(state)
-            && state.VisualExpansionRound < state.TotalSteps)
+            && (state.VisualExpansionProtocolVersion != 1 || state.VisualExpansionRound < state.TotalSteps
+                || state.VisualExpansionRoundResults.Count != state.TotalSteps))
             throw IncompleteSession("All visual expansion rounds must be validated before completion.");
         if (IsValidatedFixation(state) && !state.FocusCompleted)
             throw IncompleteSession("All fixation rounds must be validated before completion.");
@@ -1267,6 +1270,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             || IsEngineType(exerciseEngineType, "visual_expansion"))
         {
             var visualConfig = engineConfig.ValueKind == JsonValueKind.Object ? engineConfig : config;
+            state.VisualExpansionProtocolVersion = 1;
             var expansion = ReadObject(visualConfig, "expansion");
             var content = ReadObject(visualConfig, "content");
             var timing = ReadObject(visualConfig, "timing");
@@ -3226,6 +3230,12 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         var result = JsonSerializer.SerializeToElement(json, JsonOptions);
         if (state.IsAssessmentMode) return SpeedReadingContentSecurity.SanitizeFocusAssessmentJson(result);
         var sanitized = JsonSerializer.SerializeToNode(RemoveAssessmentKeys(result), JsonOptions)!.AsObject();
+        if (IsVisualExpansionExercise(state) && state.VisualExpansionProtocolVersion != 1)
+        {
+            sanitized.Remove("visualExpansionRoundResults");
+            sanitized.Remove("visualExpansionMaxPresentedDistance");
+            sanitized.Remove("visualExpansionAverageResponseTimeMs");
+        }
         if (state.Tachistoscope is { } completed && completed.Round == completed.Count)
             sanitized["tachistoscope"]!["trials"] = JsonSerializer.SerializeToNode(completed.Trials, JsonOptions);
         return JsonSerializer.SerializeToElement(sanitized, JsonOptions);
@@ -3496,6 +3506,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         public List<FocusResponse> FocusResponses { get; set; } = [];
         public bool FocusCompleted { get; set; }
         public string VisualExpansionStimulusType { get; set; } = "letter";
+        public int VisualExpansionProtocolVersion { get; set; }
         public List<VisualExpansionRoundState> VisualExpansionRoundResults { get; set; } = [];
         public int VisualExpansionMaxPresentedDistance { get; set; }
         public int VisualExpansionAverageResponseTimeMs { get; set; }

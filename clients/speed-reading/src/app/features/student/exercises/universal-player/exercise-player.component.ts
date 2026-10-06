@@ -331,7 +331,6 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
 
   // Visual Expansion specific
   expansionAnswers: string[] = [];
-  expansionFeedback: { isCorrect: boolean; correctAnswer: string } | null = null;
   currentHintIndex: number | null = null; // For Error Analysis Hint Highlight
   @ViewChild('visualExpansionArea') visualExpansionArea?: ElementRef<HTMLDivElement>;
 
@@ -1709,7 +1708,6 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     this.tachistoscopeAnswer = '';
     this.tachistoscopeFeedback = null;
     this.expansionAnswers = [];
-    this.expansionFeedback = null;
     this.sessionId = null;
     this.backendSessionConfig = null;
 
@@ -2947,7 +2945,6 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     const engine = this.engine;
     const isVisible = (engine as any)?.isStimulusVisible || false;
     const isWaiting = (engine as any)?.isWaitingForInput || false;
-    const hasFeedback = !!this.expansionFeedback;
 
     // Uyaran (karakterler) ekrandayken cevap alanı gösterilmemeli
     if (isVisible) return false;
@@ -2958,12 +2955,15 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     }
     this.wasWaitingForInput = isWaiting;
 
-    // Ya giriş bekliyorsak ya da yanlış cevap sonrası feedback gösteriyorsak görünür kalmalı
-    return isWaiting || hasFeedback;
+    return isWaiting;
   }
 
-  getCurrentDegrees(): number {
-    return (this.engine as any)?.currentDegrees || 5;
+  getExpansionRelativeDistance(): number {
+    return (this.engine as VisualExpansionEngine)?.getRelativeDistancePercent?.() || 0;
+  }
+
+  getExpansionStimulusSize(): string {
+    return (this.engine as VisualExpansionEngine)?.getStimulusSizeCss?.() || '2rem';
   }
 
   getExpansionCorrectCount(): number {
@@ -3202,6 +3202,11 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
               displayPaceWpm: sessionResult.detailedResults.fadeDisplayPaceWpm,
               completionPercent: sessionResult.detailedResults.fadeCompletionPercent,
               incomplete: sessionResult.detailedResults.readingIncomplete === true
+            } : {}),
+            ...(this.engine?.engineType === 'visual_expansion' && sessionResult.detailedResults?.visualExpansionRoundResults ? {
+              maxDegreesReached: sessionResult.detailedResults.visualExpansionMaxPresentedDistance,
+              averageResponseTimeMs: sessionResult.detailedResults.visualExpansionAverageResponseTimeMs,
+              roundResults: sessionResult.detailedResults.visualExpansionRoundResults
             } : {})
           }
         };
