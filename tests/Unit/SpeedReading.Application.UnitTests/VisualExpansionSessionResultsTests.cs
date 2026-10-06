@@ -9,6 +9,15 @@ namespace SpeedReading.Application.UnitTests;
 
 public sealed class VisualExpansionSessionResultsTests
 {
+    [Fact]
+    public void Assessment_public_state_does_not_restore_tachistoscope_answer_keys()
+    {
+        var owned = typeof(OwnedSpeedReadingDbContext).Assembly.GetType("SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingExerciseSessions")!;
+        var state = owned.GetMethod("DeserializeState", BindingFlags.Static | BindingFlags.NonPublic)!.Invoke(null,
+            ["""{"engineType":"tachistoscope","isAssessmentMode":true,"tachistoscope":{"round":1,"count":1,"trials":[{"stimulus":"EV","userAnswer":"EV","isCorrect":true,"responseTimeMs":100,"displayDurationMs":100}]}}"""])!;
+        var json = (System.Text.Json.JsonElement)owned.GetMethod("ToPublicJson", BindingFlags.Static | BindingFlags.NonPublic)!.Invoke(null, [state])!;
+        Assert.False(json.GetProperty("tachistoscope").GetProperty("trials")[0].TryGetProperty("isCorrect", out _));
+    }
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
