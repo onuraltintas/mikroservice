@@ -130,6 +130,28 @@ public sealed class VisualizationPersistenceTests
     }
 
     [Fact]
+    public async Task Legacy_visualization_results_hide_reading_metrics_on_replay_and_summary()
+    {
+        await using var db = Context(); var student = Guid.NewGuid();
+        var type = ExerciseType.Create(Guid.NewGuid(), "Visualization", "Görselleştirme", "visualization");
+        var exercise = Exercise.Create("Görselleştirme", "strategy", "{}", 3, student, type.Id);
+        db.ExerciseTypes.Add(type); db.Exercises.Add(exercise);
+        db.VisualizationScenes.Add(VisualizationScene.Create(Guid.NewGuid(), exercise.Id, "Sahne", null, 5, 0, 3, null, student, DateTime.UtcNow));
+        await db.SaveChangesAsync(); var service = Service(db);
+        var started = await service.StartAsync(student, new() { ExerciseId = exercise.Id });
+        db.ExerciseSessionResults.Add(SpeedReading.Domain.Sessions.ExerciseSessionResult.Create(Guid.NewGuid(), started.SessionId,
+            student, exercise.Id, null, 50, 10, 300m, 100m, 300m, 100m, DateTime.UtcNow));
+        await db.SaveChangesAsync();
+        var replay = await service.CompleteAsync(student, started.SessionId, new());
+        Assert.Null(replay.RawWPM); Assert.Null(replay.WordsRead); Assert.Null(replay.WeightedKDP);
+        var writer = (SpeedReading.Application.Progress.ISpeedReadingProgressWriter)Activator.CreateInstance(typeof(OwnedSpeedReadingDbContext).Assembly
+            .GetType("SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingProgressWriter")!,
+            BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, [db], null)!;
+        var summary = await writer.CreateExerciseResultAsync(student, new(exercise.Id, null, 0, 0, 0, 0, 0, null, null, SessionId: started.SessionId), "visualization-legacy-result");
+        Assert.Null(summary.RawWpm); Assert.Equal(0, summary.WordsRead); Assert.Null(summary.WeightedKdp);
+    }
+
+    [Fact]
     public async Task Linked_reading_questions_do_not_replace_visualization_scene_questions_or_metrics()
     {
         await using var db = Context(); var student = Guid.NewGuid();
