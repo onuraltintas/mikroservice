@@ -9,6 +9,7 @@ using SpeedReading.Application.AdaptiveText;
 using SpeedReading.Application.Content;
 using SpeedReading.Domain.Assessment;
 using SpeedReading.Domain.Catalog;
+using SpeedReading.Domain.Assignments;
 using SpeedReading.Domain.Gamification;
 using SpeedReading.Domain.Profiles;
 using SpeedReading.Domain.Sessions;
@@ -224,9 +225,13 @@ public sealed class StudentReadingPersistenceTests
         context.ReadingQuestions.Add(ReadingQuestion.Create(questionId, textId, "Question", "A",
             orderIndex: 0, type: 1, bloomLevel: 1,
             optionA: "Yes", optionB: "No", optionC: "Other", optionD: "None"));
+        var assignment = Assignment.Create(Guid.NewGuid(), exerciseId, textId, "Ödev", null, DateTime.UtcNow.AddDays(1));
+        var studentAssignment = StudentAssignment.Assign(assignment.Id, studentId);
+        context.Assignments.Add(assignment);
+        context.StudentAssignments.Add(studentAssignment);
         await context.SaveChangesAsync();
         var service = CreateExerciseSessionService(context);
-        var started = await service.StartAsync(studentId, new StartExerciseSessionRequest { ExerciseId = exerciseId });
+        var started = await service.StartAsync(studentId, new StartExerciseSessionRequest { ExerciseId = exerciseId, StudentAssignmentId = studentAssignment.Id });
         var session = await context.ExerciseSessions.SingleAsync();
         var state = System.Text.Json.Nodes.JsonNode.Parse(session.SessionDataJson)!;
         state["readingStartTime"] = DateTime.UtcNow.AddSeconds(-30);
@@ -238,6 +243,8 @@ public sealed class StudentReadingPersistenceTests
             new ExerciseActionRequest { Action = "answer_question", QuestionId = questionId, Answer = "A" });
         var result = await service.CompleteAsync(studentId, started.SessionId, new CompleteExerciseSessionRequest());
         result.RawWPM.Should().BeNull();
+        studentAssignment.IsCompleted.Should().Be(!timedOut);
+        if (timedOut) result.XpGained.Should().Be(0);
     }
 
     [Fact]
