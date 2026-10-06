@@ -57,9 +57,36 @@ public sealed class SkimmingSessionTests
         (await service.ValidateActionAsync(student, start.SessionId, new() { Action = "finish_reading" })).IsValid.Should().BeFalse();
         (await service.ValidateActionAsync(student, start.SessionId, new() { Action = "answer_question", QuestionId = question, Answer = "A" })).IsValid.Should().BeFalse();
         await service.ValidateActionAsync(student, start.SessionId, new() { Action = "start_reading" });
+        (await service.ValidateActionAsync(student, start.SessionId, new() { Action = "finish_reading", IsTimeout = true })).IsValid.Should().BeFalse();
         (await service.ValidateActionAsync(student, start.SessionId, new() { Action = "finish_reading" })).IsValid.Should().BeFalse();
         await ((Func<Task>)(async () => await service.CompleteAsync(student, start.SessionId, new())))
             .Should().ThrowAsync<BusinessRuleException>();
+    }
+
+    [Fact]
+    public async Task Rejects_question_metadata_that_would_fail_result_persistence()
+    {
+        await using var db = Context();
+        var (service, student, exercise, _, question) = await Seed(db);
+        db.Entry(await db.ReadingQuestions.SingleAsync(item => item.Id == question)).Property(item => item.BloomLevel).CurrentValue = 0;
+        await db.SaveChangesAsync();
+        await ((Func<Task>)(async () => await service.StartAsync(student, new() { ExerciseId = exercise })))
+            .Should().ThrowAsync<Exception>();
+    }
+
+    [Fact]
+    public async Task Legacy_search_session_is_retained_but_replaced_with_inspection_protocol()
+    {
+        await using var db = Context();
+        var (service, student, exercise, _, _) = await Seed(db);
+        var first = await service.StartAsync(student, new() { ExerciseId = exercise });
+        var old = await db.ExerciseSessions.SingleAsync();
+        var state = JsonNode.Parse(old.SessionDataJson)!; state.AsObject().Remove("skimmingProtocolVersion");
+        old.SetState(state.ToJsonString()); await db.SaveChangesAsync();
+        var second = await service.StartAsync(student, new() { ExerciseId = exercise });
+        second.SessionId.Should().NotBe(first.SessionId);
+        (await db.ExerciseSessions.SingleAsync(item => item.Id == first.SessionId)).Status
+            .Should().Be(SpeedReading.Domain.Sessions.ExerciseSessionStatus.Abandoned);
     }
 
     [Theory]
