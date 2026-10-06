@@ -20,6 +20,8 @@ public sealed class FreeReadingPersistenceTests
         await db.SaveChangesAsync(); var service = Service(db);
         var first = await service.StartAsync(user, new() { ExerciseId = exercise });
         Assert.Equal(firstId, (await db.ExerciseSessions.SingleAsync()).ReadingTextId);
+        var session = await db.ExerciseSessions.SingleAsync(); var state = JsonNode.Parse(session.SessionDataJson)!;
+        state["readingStartTime"] = DateTime.UtcNow.AddSeconds(-30); session.SetState(state.ToJsonString()); await db.SaveChangesAsync();
         await service.ValidateActionAsync(user, first.SessionId, new() { Action = "finish_reading" });
         await service.CompleteAsync(user, first.SessionId, new());
         var second = await service.StartAsync(user, new() { ExerciseId = exercise });

@@ -137,7 +137,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         if (request.ReadingTextId.HasValue && assessmentSnapshot is null)
         {
             var strictTextLevel = IsGrouping(new SessionState { EngineType = exerciseEngineType, ExerciseTypeName = exerciseTypeName })
-                || ExerciseConfigurationRules.NormalizeEngineType(exerciseEngineType) is "text_fade" or "regression_reduction" or "subvocalization_reduction";
+                || ExerciseConfigurationRules.NormalizeEngineType(exerciseEngineType) is "free_reading" or "text_fade" or "regression_reduction" or "subvocalization_reduction";
             var readingTextMatches = await db.ReadingTexts
                 .AsNoTracking()
                 .AnyAsync(item => item.Id == request.ReadingTextId.Value
@@ -308,6 +308,10 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             {
                 var normalizedEngineType = ExerciseConfigurationRules.NormalizeEngineType(exerciseEngineType);
                 var isComprehension = normalizedEngineType == "reading_comprehension";
+                var isFreeReading = normalizedEngineType == "free_reading";
+                var freeContent = ReadObject(ReadObject(parsedConfiguration, "engineConfig"), "content");
+                var freeMinimumWords = isFreeReading ? ReadPositiveInt(freeContent, "minWordCount") ?? ReadPositiveInt(ReadObject(parsedConfiguration, "content"), "minWordCount") ?? 0 : 0;
+                var freeMaximumWords = isFreeReading ? ReadPositiveInt(freeContent, "maxWordCount") ?? ReadPositiveInt(ReadObject(parsedConfiguration, "content"), "maxWordCount") ?? 0 : 0;
                 var isScanning = normalizedEngineType is "scan_find" or "scanning" or "skimming";
                 var isGrouping = normalizedEngineType == "word_highlight"
                     && exerciseTypeName.Equals("Chunking", StringComparison.OrdinalIgnoreCase);
@@ -324,7 +328,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                     .Where(item => item.IsActive
                         && !item.IsDeleted
                         && item.Content != string.Empty
-                        && (!(isComprehension || isScanning || isGrouping || isTextFade || isRegression || isSubvocalization) || item.DifficultyLevel == difficultyLevel)
+                        && (!(isFreeReading || isComprehension || isScanning || isGrouping || isTextFade || isRegression || isSubvocalization) || item.DifficultyLevel == difficultyLevel)
+                        && (!isFreeReading || (item.WordCount >= freeMinimumWords && (freeMaximumWords == 0 || item.WordCount <= freeMaximumWords)))
                         && (!profileAgeGroupId.HasValue
                             || item.TargetAgeGroupId == null
                             || item.TargetAgeGroupId == profileAgeGroupId.Value)
@@ -336,7 +341,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                                 || question.CorrectAnswer.Trim().ToUpper() == "B"
                                 || question.CorrectAnswer.Trim().ToUpper() == "C"
                                 || question.CorrectAnswer.Trim().ToUpper() == "D"))))
-                    .OrderBy(item => isScanning || isGrouping || isTextFade || isRegression || isSubvocalization
+                    .OrderBy(item => isFreeReading || isScanning || isGrouping || isTextFade || isRegression || isSubvocalization
                         ? db.ExerciseSessions.Count(history => history.StudentId == studentId && history.ReadingTextId == item.Id)
                         : isComprehension
                         ? db.ReadingSessions.Count(history => history.UserId == studentId && history.ReadingTextId == item.Id)
@@ -608,7 +613,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         if (state.Questions.Count > 0 && answers.Count != state.Questions.Count)
             throw IncompleteSession("All questions in the session must be answered.");
 
-        if (ExerciseConfigurationRules.NormalizeEngineType(state.EngineType) == "reading_comprehension")
+        if (ExerciseConfigurationRules.NormalizeEngineType(state.EngineType) is "reading_comprehension" or "free_reading")
         {
             var readingMs = state.ReadingStartTime.HasValue && state.ReadingEndTime.HasValue
                 ? (state.ReadingEndTime.Value - state.ReadingStartTime.Value).TotalMilliseconds
@@ -1224,7 +1229,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         };
         var engineConfig = ReadObject(config, "engineConfig");
         var effectiveConfig = engineConfig.ValueKind == JsonValueKind.Object ? engineConfig : config;
-        if (ExerciseConfigurationRules.NormalizeEngineType(exerciseEngineType) == "reading_comprehension")
+        if (ExerciseConfigurationRules.NormalizeEngineType(exerciseEngineType) is "reading_comprehension" or "free_reading")
         {
             state.ReadingPausedMilliseconds = 0;
             var timing = ReadObject(effectiveConfig, "timing");
@@ -1710,7 +1715,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
     {
         if (IsAdaptiveFluency(state))
             return FinishAdaptiveStage(session, state, now);
-        if (ExerciseConfigurationRules.NormalizeEngineType(state.EngineType) == "reading_comprehension" || IsGrouping(state) || IsTextFade(state))
+        if (ExerciseConfigurationRules.NormalizeEngineType(state.EngineType) is "reading_comprehension" or "free_reading" || IsGrouping(state) || IsTextFade(state))
         {
             if ((IsGrouping(state) || IsTextFade(state)) && (DisplayPace(state) <= 0 || state.ReadingMinimumMs <= 0))
                 return Invalid("Bu eski egzersiz oturumu doğrulanamıyor. Egzersizi yeniden başlatın.");
