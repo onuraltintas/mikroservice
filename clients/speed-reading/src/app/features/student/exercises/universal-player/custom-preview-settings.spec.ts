@@ -174,6 +174,15 @@ describe('Custom preview settings safety', () => {
     expect(result.engineConfig.targets).toEqual(config.engineConfig.targets);
     expect(() => applyCustomPreviewSettings(config, { timeLimitSec: 0 }, context)).toThrow();
   });
+  it('explains that RSVP timing controls presentation rather than measured reading speed', () => {
+    TestBed.configureTestingModule({ providers: [
+      { provide: MAT_DIALOG_DATA, useValue: { engineType: 'text_stream', engineConfig: { mode: 'RSVP' } } },
+      { provide: MatDialogRef, useValue: { close: jasmine.createSpy('close') } }
+    ] });
+    const fixture = TestBed.createComponent(CustomPreviewDialogComponent);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Gösterim temposu gerçek okuma hızı ölçümü değildir');
+  });
   it('shows recorded defaults and resets custom inputs without saving them', () => {
     const close = jasmine.createSpy('close');
     TestBed.configureTestingModule({ providers: [
