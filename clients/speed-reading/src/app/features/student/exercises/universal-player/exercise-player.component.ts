@@ -332,7 +332,6 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
 
   // Visual Expansion specific
   expansionAnswers: string[] = [];
-  currentHintIndex: number | null = null; // For Error Analysis Hint Highlight
   @ViewChild('visualExpansionArea') visualExpansionArea?: ElementRef<HTMLDivElement>;
 
   // Peripheral Vision Input
@@ -1667,7 +1666,8 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
 
   async togglePause(): Promise<void> {
     if (this.isPauseTransitionPending) return;
-    if ((this.isTachistoscopeMode() || this.shouldTrackReading() || this.isFixationMode() || this.engine?.engineType === 'scan_find' || this.engine?.engineType === 'visual_expansion') && this.sessionId && this.sessionId !== 'preview-mode') {
+    if (this.engine?.engineType === 'error_analysis' && (this.engine as ErrorAnalysisEngine).isAwaitingServer()) return;
+    if ((this.isTachistoscopeMode() || this.shouldTrackReading() || this.isFixationMode() || this.engine?.engineType === 'error_analysis' || this.engine?.engineType === 'scan_find' || this.engine?.engineType === 'visual_expansion') && this.sessionId && this.sessionId !== 'preview-mode') {
       this.isPauseTransitionPending = true;
       const resuming = this.engineState.isPaused;
       if (!resuming) this.engine?.pause();
@@ -3804,6 +3804,9 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     }
     return [];
   }
+  getErrorAnalysisReview() {
+    return this.engine?.engineType === 'error_analysis' ? (this.engine as ErrorAnalysisEngine).getErrors() : [];
+  }
 
   getErrorAnalysisErrorCount(): number {
     if (this.engine?.engineType === 'error_analysis') {
@@ -3873,5 +3876,11 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   }
   isErrorAnalysisPending(): boolean {
     return this.engine?.engineType === 'error_analysis' && (this.engine as ErrorAnalysisEngine).isAwaitingServer();
+  }
+  hasErrorAnalysisFailure(): boolean {
+    return this.engine?.engineType === 'error_analysis' && (this.engine as ErrorAnalysisEngine).hasFailedAction();
+  }
+  retryErrorAnalysisAction(): void {
+    if (this.engine?.engineType === 'error_analysis') (this.engine as ErrorAnalysisEngine).retryServerAction();
   }
 }

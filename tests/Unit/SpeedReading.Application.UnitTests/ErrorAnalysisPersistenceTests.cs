@@ -8,9 +8,43 @@ namespace SpeedReading.Application.UnitTests;
 
 public sealed class ErrorAnalysisPersistenceTests
 {
+    [Fact]
+    public async Task Unsupported_or_duplicate_selections_cannot_invent_progress_and_hints_are_idempotent()
+    {
+        await using var db = Context(); var user = Guid.NewGuid(); var id = await Seed(db, user);
+        var service = Service(db); var start = await service.StartAsync(user, new() { ExerciseId = id });
+        Assert.False((await service.ValidateActionAsync(user, start.SessionId, new() { Action = "advance" })).IsValid);
+        Assert.False((await service.ValidateActionAsync(user, start.SessionId, new() { Action = "error_analysis_select", Index = 3 })).IsValid);
+        await Assert.ThrowsAnyAsync<Exception>(() => service.CompleteAsync(user, start.SessionId, new()));
+        await service.ValidateActionAsync(user, start.SessionId, new() { Action = "error_analysis_start" });
+        Assert.False((await service.ValidateActionAsync(user, start.SessionId, new() { Action = "error_analysis_select", Index = 99 })).IsValid);
+        var hint = new ExerciseActionRequest { Action = "error_analysis_hint", ActionId = Guid.NewGuid() };
+        await service.ValidateActionAsync(user, start.SessionId, hint); await service.ValidateActionAsync(user, start.SessionId, hint);
+        await service.ValidateActionAsync(user, start.SessionId, new() { Action = "error_analysis_select", Index = 8 });
+        Assert.False((await service.ValidateActionAsync(user, start.SessionId, new() { Action = "error_analysis_select", Index = 8 })).IsValid);
+        await service.ValidateActionAsync(user, start.SessionId, new() { Action = "error_analysis_finish" });
+        var result = await service.CompleteAsync(user, start.SessionId, new());
+        Assert.Equal(1, result.IncorrectCount); Assert.Equal(1, result.DetailedResults.GetProperty("errorAnalysisHints").GetInt32());
+        Assert.True(result.DetailedResults.TryGetProperty("errorAnalysisErrors", out _));
+    }
+    [Fact]
+    public async Task Server_time_limit_finishes_without_accepting_late_selection()
+    {
+        await using var db = Context(); var user = Guid.NewGuid(); var id = await Seed(db, user);
+        var service = Service(db); var start = await service.StartAsync(user, new() { ExerciseId = id });
+        await service.ValidateActionAsync(user, start.SessionId, new() { Action = "error_analysis_start" });
+        var session = await db.ExerciseSessions.SingleAsync(); var state = System.Text.Json.Nodes.JsonNode.Parse(session.SessionDataJson)!;
+        state["timingStartedAt"] = DateTime.UtcNow.AddSeconds(-200); session.SetState(state.ToJsonString()); await db.SaveChangesAsync();
+        var response = await service.ValidateActionAsync(user, start.SessionId, new() { Action = "error_analysis_select", Index = 3 });
+        Assert.True(response.IsCompleted); Assert.Null(response.IsCorrect);
+        var result = await service.CompleteAsync(user, start.SessionId, new());
+        Assert.Equal(180, result.TimeSpentSeconds); Assert.Equal(0m, result.Score); Assert.Equal(0, result.CorrectCount);
+    }
     [Theory]
     [InlineData("ErrorAnalysis")]
     [InlineData("ERROR_ANALYSIS")]
+    [InlineData("error-analysis")]
+    [InlineData("error analysis")]
     public void Nested_or_aliased_engine_configuration_cannot_expose_answer_keys(string engine)
     {
         var json = System.Text.Json.JsonSerializer.Serialize(new { engineConfig = new { engineType = engine,

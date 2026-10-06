@@ -68,12 +68,12 @@ export class ErrorAnalysisEngine implements BaseEngine {
 
     private phase: ErrorAnalysisPhase = 'idle';
     private timerInterval: any = null;
-    private startTime: Date | null = null;
     private lastTick = 0;
     private timeLimitMs = 180_000;
     private serverAuthoritative = false;
     private serverStarted = false;
     private pendingAction: any = null;
+    private failedAction: any = null;
     private hintIndex: number | null = null;
 
     constructor() {
@@ -107,7 +107,7 @@ export class ErrorAnalysisEngine implements BaseEngine {
             ?? caseInsensitiveField(nested, name)
             ?? caseInsensitiveField(root, name);
         this.serverAuthoritative = config['serverAuthoritative'] === true;
-        this.serverStarted = false; this.pendingAction = null; this.hintIndex = null;
+        this.serverStarted = false; this.pendingAction = null; this.failedAction = null; this.hintIndex = null;
         const timing = mergeCaseInsensitiveRecords(root, nested, 'timing');
         const seconds = Number(read('timeLimitSeconds') ?? read('timeLimit') ?? timing['timelimitsec'] ?? 180);
         this.timeLimitMs = Number.isFinite(seconds) && seconds > 0 ? Math.min(3600, seconds) * 1000 : 180_000;
@@ -118,21 +118,25 @@ export class ErrorAnalysisEngine implements BaseEngine {
 
         // Parse words
         const rawWords = read('words');
-        this.words = (Array.isArray(rawWords) ? rawWords : []).slice(0, 10_000).map((w: any) => ({
-            index: w.Index ?? w.index ?? 0,
-            text: w.Text || w.text || '',
+        this.words = (Array.isArray(rawWords) ? rawWords : []).slice(0, 10_000).map((value: any) => {
+            const w = recordOrEmpty(value);
+            return {
+            index: w['Index'] ?? w['index'] ?? NaN,
+            text: w['Text'] ?? w['text'] ?? '',
             isSelected: false
-        }));
+        } as WordInfo; });
 
         // Parse errors
         const rawErrors = read('errors');
-        this.errors = (Array.isArray(rawErrors) ? rawErrors : []).slice(0, 1_000).map((e: any) => ({
-            wordIndex: e.WordIndex ?? e.wordIndex ?? 0,
-            originalWord: e.OriginalWord || e.originalWord || '',
-            errorWord: e.ErrorWord || e.errorWord || '',
-            errorType: e.ErrorType || e.errorType || 'spelling',
-            explanation: e.Explanation || e.explanation || ''
-        }));
+        this.errors = (Array.isArray(rawErrors) ? rawErrors : []).slice(0, 1_000).map((value: any) => {
+            const e = recordOrEmpty(value);
+            return {
+            wordIndex: e['WordIndex'] ?? e['wordIndex'] ?? NaN,
+            originalWord: e['OriginalWord'] ?? e['originalWord'] ?? '',
+            errorWord: e['ErrorWord'] ?? e['errorWord'] ?? '',
+            errorType: e['ErrorType'] ?? e['errorType'] ?? 'spelling',
+            explanation: e['Explanation'] ?? e['explanation'] ?? ''
+        } as ErrorInfo; });
 
         this.errorCount = this.serverAuthoritative ? Number(read('totalSteps') ?? this.errors.length) : this.errors.length;
 
@@ -156,14 +160,17 @@ export class ErrorAnalysisEngine implements BaseEngine {
         if (!this.words.length || !this.errorCount || indices.size !== this.words.length
             || this.words.some(word => !Number.isInteger(word.index) || word.index < 0 || typeof word.text !== 'string' || !word.text.trim())
             || new Set(this.errors.map(error => error.wordIndex)).size !== this.errors.length
-            || this.errors.some(error => !indices.has(error.wordIndex))) {
+            || this.errors.some(error => !indices.has(error.wordIndex)
+                || typeof error.originalWord !== 'string' || !error.originalWord.trim()
+                || typeof error.errorWord !== 'string' || !error.errorWord.trim()
+                || error.originalWord === error.errorWord
+                || this.words.find(word => word.index === error.wordIndex)?.text !== error.errorWord)) {
             this.callbacks?.onError?.('Hata analizi içeriği eksik veya tutarsız. Lütfen farklı bir egzersiz seçin.');
             return;
         }
 
         this.state.isRunning = true;
         this.phase = 'active';
-        this.startTime = new Date();
 
         this.startTimer();
 
@@ -174,7 +181,7 @@ export class ErrorAnalysisEngine implements BaseEngine {
     }
 
     pause(): void {
-        if (!this.state.isRunning || this.state.isPaused) return;
+        if (!this.state.isRunning || this.state.isPaused || this.pendingAction) return;
         this.updateElapsed();
         this.state.isPaused = true;
         this.stopTimer();
@@ -210,7 +217,7 @@ export class ErrorAnalysisEngine implements BaseEngine {
         this.selectedWords = new Set();
         this.hintUsedCount = 0;
         this.phase = 'idle';
-        this.pendingAction = null; this.serverStarted = false; this.hintIndex = null;
+        this.pendingAction = null; this.failedAction = null; this.serverStarted = false; this.hintIndex = null;
         this.state = {
             ...this.getInitialState(),
             totalSteps: this.errorCount
@@ -343,7 +350,7 @@ export class ErrorAnalysisEngine implements BaseEngine {
             if (!this.state.isPaused) {
                 this.updateElapsed();
                 this.callbacks?.onStateChange?.(this.state);
-                if (this.state.timeElapsed >= this.timeLimitMs && !this.pendingAction) this.forceComplete();
+                if (this.state.timeElapsed >= this.timeLimitMs && !this.pendingAction && !this.failedAction) this.forceComplete();
             }
         }, 100);
     }
@@ -357,8 +364,8 @@ export class ErrorAnalysisEngine implements BaseEngine {
     }
 
     private submitAction(action: string, index?: number): void {
-        if (this.pendingAction) return;
-        this.pendingAction = { action, index, timestamp: new Date() };
+        if (this.pendingAction || this.failedAction) return;
+        this.pendingAction = { action, index, timestamp: new Date(), actionId: crypto.randomUUID() };
         this.callbacks?.onAction?.(this.pendingAction);
     }
 
@@ -366,8 +373,10 @@ export class ErrorAnalysisEngine implements BaseEngine {
         if (action !== this.pendingAction || !this.state.isRunning || this.state.isCompleted) return;
         this.pendingAction = null;
         if (!response?.isValid || !response.feedbackData) {
+            this.failedAction = action;
             this.callbacks?.onError?.(response?.message || 'Seçiminiz kaydedilemedi. Lütfen tekrar deneyin.'); return;
         }
+        this.failedAction = null;
         const data = response.feedbackData;
         if (Array.isArray(data.errors)) this.errors = data.errors;
         this.serverStarted = true;
@@ -382,6 +391,12 @@ export class ErrorAnalysisEngine implements BaseEngine {
     }
 
     isAwaitingServer(): boolean { return !!this.pendingAction; }
+    hasFailedAction(): boolean { return !!this.failedAction; }
+    retryServerAction(): void {
+        if (!this.failedAction || this.pendingAction || !this.state.isRunning || this.state.isPaused) return;
+        this.pendingAction = this.failedAction; this.failedAction = null;
+        this.callbacks?.onAction?.(this.pendingAction);
+    }
     getHintIndex(): number | null { return this.hintIndex; }
 
     private stopTimer(): void {

@@ -688,6 +688,10 @@
     <!-- Exercise Running - Error Analysis (Hata Analizi / Proofreading) -->
     <div *ngIf="engine && engineState.isRunning && engine.engineType === 'error_analysis' && getErrorAnalysisPhase() === 'active'"
         class="game-container error-analysis-container">
+        <p *ngIf="hasErrorAnalysisFailure()" role="alert">Seçiminiz kaydedilemedi.
+            <button type="button" class="ep-btn ep-btn--ghost" (click)="retryErrorAnalysisAction()"
+                [disabled]="engineState.isPaused || isErrorAnalysisPending()">Seçimi tekrar gönder</button>
+        </p>
         <div class="game-header">
             <div class="timer">
                 <span class="material-icons">spellcheck</span>
@@ -743,7 +747,7 @@
                     }}</span>
             </div>
 
-            <button class="ep-btn ep-btn--ghost hint-btn" (click)="useErrorAnalysisHint()"
+            <button type="button" aria-label="İpucu" class="ep-btn ep-btn--ghost hint-btn" (click)="useErrorAnalysisHint()"
                 [disabled]="engineState.isPaused || isErrorAnalysisPending() || getErrorAnalysisFoundCount() === getErrorAnalysisErrorCount()">
                 <span class="material-icons">lightbulb</span>
                 İpucu
@@ -1650,6 +1654,13 @@
                     <div class="stat-card"><div class="stat-value">{{ result?.details?.hintUsedCount }}</div><div class="stat-label">Kullanılan ipucu</div></div>
                 </div>
                 <p class="measurement-not-available">Hata bulma alıştırmasıdır; okuma hızı ve anlama ölçülmez. {{ result?.details?.assisted ? 'Bu çalışma ipucu desteğiyle tamamlandı.' : '' }}</p>
+                <section *ngIf="getErrorAnalysisReview().length" aria-label="Hata düzeltmeleri">
+                    <h3>Hata düzeltmeleri</h3>
+                    <p *ngFor="let item of getErrorAnalysisReview()">
+                        {{ item.errorWord }} → {{ item.originalWord }} · {{ isErrorWordFoundError(item.wordIndex) ? 'Bulundu' : 'Kaçırıldı' }}
+                        <span *ngIf="item.explanation"> — {{ item.explanation }}</span>
+                    </p>
+                </section>
             </div>
             <div class="stats-row" *ngIf="isFixationMode() && result?.details?.averageResponseTimeMs != null">
                 <div class="stat-card"><div class="stat-value">{{ result?.details?.averageResponseTimeMs }} ms</div><div class="stat-label">Ortalama cevap süresi</div></div>

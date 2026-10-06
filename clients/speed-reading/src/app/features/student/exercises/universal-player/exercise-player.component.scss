@@ -7006,27 +7006,9 @@ h1 {
         background-color: #fff9c4 !important;
         color: #333 !important;
         box-shadow: 0 0 0 2px #ffb74d;
-        animation: hintPulse 1.5s infinite;
         z-index: 10;
         position: relative;
         border-radius: 4px;
-    }
-}
-
-@keyframes hintPulse {
-    0% {
-        transform: scale(1);
-        box-shadow: 0 0 0 2px #ffb74d;
-    }
-
-    50% {
-        transform: scale(1.1);
-        box-shadow: 0 0 10px 2px #ffb74d;
-    }
-
-    100% {
-        transform: scale(1);
-        box-shadow: 0 0 0 2px #ffb74d;
     }
 }
 

@@ -108,9 +108,7 @@ public static class SpeedReadingContentSecurity
         try
         {
             var node = JsonNode.Parse(element.GetRawText());
-            if (node is JsonObject root && root.Any(property => property.Key.Equals("engineType", StringComparison.OrdinalIgnoreCase)
-                && property.Value is JsonValue value && value.TryGetValue<string>(out var engine) && engine == "error_analysis"))
-                RemoveProofreadingKeys(root);
+            if (ContainsProofreadingEngine(node)) RemoveProofreadingKeys(node);
             RemoveAnswerKeys(node, removeExplanations, removeFocusSequences);
             using var document = JsonDocument.Parse(node?.ToJsonString() ?? "{}");
             return document.RootElement.Clone();
@@ -120,6 +118,12 @@ public static class SpeedReadingContentSecurity
             return JsonSerializer.SerializeToElement(new { });
         }
     }
+
+    private static bool ContainsProofreadingEngine(JsonNode? node) => node is JsonObject obj && obj.Any(property =>
+        property.Key.Equals("engineType", StringComparison.OrdinalIgnoreCase)
+        && property.Value is JsonValue value && value.TryGetValue<string>(out var engine)
+        && engine.Trim().Replace("_", "").Replace("-", "").Replace(" ", "").Equals("erroranalysis", StringComparison.OrdinalIgnoreCase)
+        || ContainsProofreadingEngine(property.Value));
 
     private static void RemoveProofreadingKeys(JsonNode? node)
     {
