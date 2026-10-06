@@ -2228,49 +2228,28 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   }
 
   getRegressionChunkSize(): number {
-    // Backend config'den chunkSize al
-    const engineConfig = this.backendSessionConfig?.EngineConfig || this.backendSessionConfig?.engineConfig || {};
-    return engineConfig.chunkSize || 1;
+    return (this.engine as RegressionReductionEngine)?.getChunkSize?.() || 1;
   }
 
   getRegressionWpm(): number {
-    const engineConfig = this.backendSessionConfig?.EngineConfig || this.backendSessionConfig?.engineConfig || {};
+    return (this.engine as RegressionReductionEngine)?.getDisplayPaceWpm?.() || 0;
+  }
 
-    // If wordDelayMs is present, it's the source of truth (likely adjusted by masking)
-    if (engineConfig.wordDelayMs && engineConfig.wordDelayMs > 0) {
-      return Math.round(60000 / engineConfig.wordDelayMs);
-    }
-
-    return engineConfig.wpm || 0;
+  getRegressionBackwardClickCount(): number {
+    return (this.engine as RegressionReductionEngine)?.getBackwardClickCount?.() || 0;
   }
 
   isWordInActiveChunk(wordIndex: number): boolean {
     const activeIndex = this.getRegressionActiveIndex();
-    const chunkSize = this.getRegressionChunkSize();
-
-    // Aktif index boşsa işlem yapma
     if (activeIndex < 0) return false;
-
-    // Chunk size 1 ise sadece o kelime
-    if (chunkSize <= 1) return wordIndex === activeIndex;
-
-    // Chunk size > 1 ise aralık kontrolü
-    // Engine currentWordIndex'i chunk'ın son kelimesi olarak güncelliyor
-    const startChunkIndex = Math.max(0, activeIndex - chunkSize + 1);
+    const startChunkIndex = (this.engine as RegressionReductionEngine).getCurrentChunkStart();
     return wordIndex >= startChunkIndex && wordIndex <= activeIndex;
   }
 
   isWordInTrailingMask(wordIndex: number): boolean {
     const activeIndex = this.getRegressionActiveIndex();
-    const chunkSize = this.getRegressionChunkSize();
-
     if (activeIndex < 0) return false;
-
-    // Chunk size 1 ise aktif indexten öncekiler
-    if (chunkSize <= 1) return wordIndex < activeIndex;
-
-    // Chunk size > 1 ise chunk başlangıcından öncekiler maskelenir
-    const startChunkIndex = Math.max(0, activeIndex - chunkSize + 1);
+    const startChunkIndex = (this.engine as RegressionReductionEngine).getCurrentChunkStart();
     return wordIndex < startChunkIndex;
   }
 
@@ -2283,12 +2262,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   }
 
   onRegressionWordClick(index: number): void {
-    const activeIndex = this.getRegressionActiveIndex();
-    if (index < activeIndex) {
-      // User clicked a previous word -> Regression detected!
-      this.engine?.handleInput({ type: 'regression', wordIndex: index });
-      this.showToast('Geri dönüş (Regresyon) tespit edildi!', 'warn', 1000);
-    }
+    this.engine?.handleInput({ type: 'regression', wordIndex: index });
   }
 
   submitRegressionAnswer(option: string): void {

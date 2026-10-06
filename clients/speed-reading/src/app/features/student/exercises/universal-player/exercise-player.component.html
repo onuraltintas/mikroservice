@@ -765,7 +765,7 @@
             </div>
             <div class="regression-badge" [class.has-errors]="engineState.errors > 0">
                 <span class="material-icons">sync_problem</span>
-                <span>Geri Dönüş: {{ engineState.errors }}</span>
+                <span>Önceki kelimeye tıklama: {{ getRegressionBackwardClickCount() }}</span>
             </div>
             <button class="ep-btn ep-btn--icon" (click)="togglePause()">
                 <span class="material-icons">{{ engineState.isPaused ? 'play_arrow' : 'pause' }}</span>
@@ -790,7 +790,7 @@
         <div class="regression-footer">
             <div class="wpm-info">
                 <span class="material-icons">speed</span>
-                <span>Hız: {{ getRegressionWpm() }} WPM</span>
+                <span>Gösterim temposu: {{ getRegressionWpm() }} kelime/dk (ölçülen okuma hızı değildir)</span>
             </div>
             <div class="masking-info">
                 <span class="material-icons">visibility_off</span>
@@ -802,8 +802,7 @@
             </div>
             <div class="tip-info">
                 <span class="material-icons">info</span>
-                <span>{{ getRegressionChunkSize() > 1 ? 'Kelime gruplarına odaklanın. Geri bakmayın.' : 'Geriye bakmadan
-                    ilerleyin.' }}</span>
+                <span>Kelime gruplarını takip edin. Anlamak için yeniden okumak gerekebilir; bu egzersiz göz hareketlerini ölçmez.</span>
             </div>
         </div>
     </div>
@@ -821,7 +820,7 @@
             </div>
             <div class="regression-badge" [class.has-errors]="engineState.errors > 0">
                 <span class="material-icons">sync_problem</span>
-                <span>Geri Dönüş: {{ engineState.errors }}</span>
+                <span>Önceki kelimeye tıklama: {{ getRegressionBackwardClickCount() }}</span>
             </div>
         </div>
 
