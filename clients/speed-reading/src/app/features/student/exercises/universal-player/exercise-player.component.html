@@ -476,6 +476,7 @@
             <div class="text-content">
                 <ng-container *ngFor="let chunk of getChunksForDisplay(); let chunkIdx = index">
                     <span class="chunk-group" [class.highlight]="chunkIdx === getCurrentChunkIndex()"
+                        [style.background]="chunkIdx === getCurrentChunkIndex() ? getHighlightColor() : null"
                         [class.passed]="chunkIdx < getCurrentChunkIndex()"
                         [class.upcoming]="chunkIdx > getCurrentChunkIndex()"
                         [ngClass]="'font-' + getHighlightFontSize()">

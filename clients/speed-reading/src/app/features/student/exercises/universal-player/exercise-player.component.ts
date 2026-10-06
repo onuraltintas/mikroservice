@@ -2923,6 +2923,11 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     return 'medium';
   }
 
+  getHighlightColor(): string {
+    return this.engine?.engineType === 'word_highlight'
+      ? (this.engine as WordHighlightEngine).getHighlightColor() : '#fef08a';
+  }
+
   getChunksForDisplay(): any[] {
     return (this.engine as WordHighlightEngine)?.getChunks?.() || [];
   }

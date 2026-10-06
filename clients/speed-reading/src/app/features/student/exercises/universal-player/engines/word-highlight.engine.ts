@@ -24,6 +24,7 @@ export interface WordHighlightConfig extends EngineConfig {
         lineHeight: number;
         fontFamily: string;
         width: string;
+        highlightcolor?: string;
     };
     timing?: {
         timeLimitSec?: number;
@@ -292,4 +293,9 @@ export class WordHighlightEngine implements BaseEngine {
     getWpm(): number { return this.config.pacer?.speedWpm || 200; }
     shouldAutoScroll(): boolean { return this.config.pacer?.autoScroll !== false; }
     getHighlightFontSize(): string { return this.config.visuals?.fontSize || 'medium'; }
+    getHighlightColor(): string {
+        const colors: Record<string, string> = { yellow: '#fef08a', blue: '#dbeafe', green: '#dcfce7', pink: '#fce7f3' };
+        const selected = this.config.visuals?.highlightcolor || 'yellow';
+        return Object.hasOwn(colors, selected) ? colors[selected] : colors['yellow'];
+    }
 }
