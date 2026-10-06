@@ -17,6 +17,16 @@ function callbacks(onComplete: (result: any) => void = () => undefined): EngineC
 }
 
 describe('reading behavior engines', () => {
+  it('does not complete regression questions using a client answer key', fakeAsync(() => {
+    const engine = new RegressionReductionEngine();
+    engine.initialize({ readingTextContent: 'bir', wordDelayMs: 100,
+      questions: [{ questionId: 'q1', correctAnswer: 'A' }] } as any, callbacks());
+    engine.start(); tick(100);
+    engine.handleInput({ type: 'answer', answer: 'A' });
+    expect(engine.state.isCompleted).toBeFalse();
+    expect(engine.getAnswers().length).toBe(0);
+    engine.destroy();
+  }));
   it('records only earlier-chunk clicks while running without penalizing comprehension', fakeAsync(() => {
     let result: any;
     const engine = new RegressionReductionEngine();
