@@ -1649,6 +1649,9 @@
             </div>
 
             <!-- XP and Level Row -->
+            <div class="measurement-not-available" *ngIf="result?.details?.timedOut">
+                Okuma süresi doldu. Anlama cevapları kaydedildi; okuma hızı ölçülmedi ve program/ödev ilerlemesi verilmedi.
+            </div>
             <div class="rewards-row" *ngIf="engine?.engineType !== 'grid_interaction' && (sessionResult?.xpGained || sessionResult?.leveledUp)">
                 <div class="xp-earned" *ngIf="sessionResult?.xpGained">
                     <span class="material-icons">bolt</span>

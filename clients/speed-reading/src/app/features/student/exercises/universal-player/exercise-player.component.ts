@@ -319,6 +319,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   }[] = [];
   private adaptiveQuestionHistory: any[] = [];
   readingWpm = 0;
+  private readingIncomplete = false;
   exercisePhase: 'reading' | 'questions' | 'completed' = 'reading';
   selectedAnswer: string | null = null;
   questionFeedback: { isCorrect: boolean | null; correctAnswer?: string; explanation?: string; question?: any } | null = null;
@@ -1031,6 +1032,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
         },
         onComplete: (result) => {
           this.stopTimer();
+          this.readingIncomplete = result.details?.timedOut === true;
 
           if (this.engine?.engineType === 'adaptive_fluency') {
             this.handleAdaptiveReadingCompleted(result);
@@ -1072,7 +1074,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
 
             const readingTimeMinutes = (result.totalTime / 1000) / 60;
             // If engine calculated WPM (like RSVP), use it, otherwise calc
-            this.readingWpm = (this.engine as any).getCurrentWPM?.() ||
+            this.readingWpm = this.readingIncomplete ? 0 : (this.engine as any).getCurrentWPM?.() ||
               (readingTimeMinutes > 0 ? Math.round(wordCount / readingTimeMinutes) : 0);
 
             this.exercisePhase = 'questions';
@@ -1695,6 +1697,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     this.exercisePhase = 'reading';
     this.currentQuestionIndex = 0;
     this.readingWpm = 0;
+    this.readingIncomplete = false;
     this.readingTrackingStarted = false;
     this.readingTrackingFinished = false;
     this.readingTrackingStartCompleted = false;
@@ -2062,12 +2065,13 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       completedSteps: totalQuestions,
       errors: totalQuestions - correctCount,
       details: {
-        wpm: this.readingWpm,
+        wpm: this.readingIncomplete ? null : this.readingWpm,
+        timedOut: this.readingIncomplete,
         targetWpm: this.getTargetWpm(),
         comprehensionScore: comprehensionAccuracy,
         correctAnswers: correctCount,
         totalQuestions: totalQuestions,
-        performanceLevel: this.getPerformanceLevel(this.readingWpm, comprehensionAccuracy),
+        performanceLevel: this.readingIncomplete ? 'Okuma tamamlanmadı' : this.getPerformanceLevel(this.readingWpm, comprehensionAccuracy),
         // Time statistics
         totalTimeSpent,
         averageTimePerQuestion,
