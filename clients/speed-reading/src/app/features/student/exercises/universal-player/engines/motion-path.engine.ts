@@ -596,7 +596,7 @@ export class MotionPathEngine implements BaseEngine {
         // Track completed targets count for display
         this.state.targetCount = (this.state.targetCount || 0) + 1;
 
-        // In time-based mode, currentStep is managed by the timer
+        // Count completed transitions even when the target sequence loops in timed mode.
         this.state.currentStep = this.state.targetCount;
         this.callbacks.onStepComplete(this.currentTargetIndex, true);
 
