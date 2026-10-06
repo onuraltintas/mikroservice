@@ -232,6 +232,26 @@ describe('ScanFindEngine', () => {
     expect(result).toEqual(jasmine.objectContaining({ accuracy: 100, totalSteps: 2, completedSteps: 2 }));
   });
 
+  it('counts generated targets across all custom preview rounds', () => {
+    let result: EngineResult | undefined;
+    const engine = new ScanFindEngine();
+    engine.initialize({
+      targetCount: 2,
+      scanningRounds: [
+        { textContent: 'one two', targets: [] },
+        { textContent: 'three four', targets: [] }
+      ]
+    } as any, callbacks(value => result = value));
+
+    expect(engine.state.totalSteps).toBe(4);
+    engine.start();
+    engine.handleWordClick(0);
+    engine.handleWordClick(1);
+    engine.handleWordClick(0);
+    engine.handleWordClick(1);
+    expect(result).toEqual(jasmine.objectContaining({ accuracy: 100, totalSteps: 4, completedSteps: 4 }));
+  });
+
   it('restores found targets in the current resumed round', () => {
     const engine = new ScanFindEngine();
     engine.initialize({
