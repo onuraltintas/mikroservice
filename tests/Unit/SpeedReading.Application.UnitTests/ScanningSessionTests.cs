@@ -86,16 +86,41 @@ public sealed class ScanningSessionTests
         await start.Should().ThrowAsync<BusinessRuleException>();
     }
 
+    [Fact]
+    public async Task Skimming_alias_uses_the_same_validated_protocol()
+    {
+        await using var db = Context();
+        var (service, student, started) = await Start(db, engine: "skimming");
+        (await service.ValidateActionAsync(student, started.SessionId, new() { Action = "scan_start" })).IsValid.Should().BeTrue();
+        (await service.ValidateActionAsync(student, started.SessionId, new() { Action = "advance" })).IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task Legacy_unverified_session_is_preserved_and_replaced_on_start()
+    {
+        await using var db = Context();
+        var (service, student, started) = await Start(db);
+        var old = await db.ExerciseSessions.SingleAsync();
+        var state = JsonNode.Parse(old.SessionDataJson)!;
+        state.AsObject().Remove("scanningRounds");
+        old.SetState(state.ToJsonString());
+        await db.SaveChangesAsync();
+        var fresh = await service.StartAsync(student, new() { ExerciseId = started.ExerciseId });
+        fresh.SessionId.Should().NotBe(started.SessionId);
+        (await db.ExerciseSessions.SingleAsync(item => item.Id == old.Id)).Status.Should().Be(SpeedReading.Domain.Sessions.ExerciseSessionStatus.Abandoned);
+        fresh.TotalSteps.Should().Be(2);
+    }
+
     private static OwnedSpeedReadingDbContext Context() => new(new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>()
         .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
 
     private static async Task<(ISpeedReadingExerciseSessions Service, Guid Student, StartExerciseSessionResponse Started)> Start(
-        OwnedSpeedReadingDbContext db, string? config = null, int textLevel = 3)
+        OwnedSpeedReadingDbContext db, string? config = null, int textLevel = 3, string engine = "scanning")
     {
         var student = Guid.NewGuid();
         var type = Guid.NewGuid();
         var exercise = Guid.NewGuid();
-        db.ExerciseTypes.Add(ExerciseType.Create(type, "Scanning", "Tarama", "scanning"));
+        db.ExerciseTypes.Add(ExerciseType.Create(type, "Scanning", "Tarama", engine));
         db.Exercises.Add(Exercise.Create("Tarama", "reading", config ?? """{"engineConfig":{"targets":{"words":["ışık","inci"]},"timeLimit":10}}""", 3, student, type, id: exercise));
         db.ReadingTexts.Add(ReadingText.Create(Guid.NewGuid(), "Metin", "“IŞIK” [İNCİ] kelime", difficultyLevel: textLevel));
         await db.SaveChangesAsync();
