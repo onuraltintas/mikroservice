@@ -112,11 +112,6 @@ export class TextFadeEngine implements BaseEngine {
         this.timerInterval = setInterval(() => {
             if (!this.state.isPaused) {
                 this.state.timeElapsed = Date.now() - this.startTime;
-                // Calculate current WPM based on words read
-                const elapsedMinutes = this.state.timeElapsed / 60000;
-                if (elapsedMinutes > 0 && this.state.currentStep > 0) {
-                    this.state.currentWPM = Math.round(this.state.currentStep / elapsedMinutes);
-                }
                 this.callbacks.onStateChange({ ...this.state });
             }
         }, 100);

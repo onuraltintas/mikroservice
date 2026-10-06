@@ -429,16 +429,9 @@
         </div>
 
         <div class="game-stats">
-            <div class="stat wpm-stat">
-                <span class="label">Hız</span>
-                <span class="value" [class.fast]="(engineState.currentWPM || 0) >= (engineState.targetWPM || 200)"
-                    [class.slow]="(engineState.currentWPM || 0) < ((engineState.targetWPM || 200) * 0.8)">
-                    {{ engineState.currentWPM || 0 }} <small>WPM</small>
-                </span>
-            </div>
             <div class="stat target-stat">
-                <span class="label">Hedef</span>
-                <span class="value">{{ engineState.targetWPM || 0 }} <small>WPM</small></span>
+                <span class="label">Gösterim temposu</span>
+                <span class="value">{{ getWpm() }} <small>kelime/dk (tempo)</small></span>
             </div>
             <div class="stat">
                 <span class="label">İlerleme</span>
