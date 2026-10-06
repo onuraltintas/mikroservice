@@ -137,7 +137,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         if (request.ReadingTextId.HasValue && assessmentSnapshot is null)
         {
             var strictTextLevel = IsGrouping(new SessionState { EngineType = exerciseEngineType, ExerciseTypeName = exerciseTypeName })
-                || ExerciseConfigurationRules.NormalizeEngineType(exerciseEngineType) == "text_fade";
+                || ExerciseConfigurationRules.NormalizeEngineType(exerciseEngineType) is "text_fade" or "regression_reduction";
             var readingTextMatches = await db.ReadingTexts
                 .AsNoTracking()
                 .AnyAsync(item => item.Id == request.ReadingTextId.Value
@@ -312,6 +312,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                 var isGrouping = normalizedEngineType == "word_highlight"
                     && exerciseTypeName.Equals("Chunking", StringComparison.OrdinalIgnoreCase);
                 var isTextFade = normalizedEngineType == "text_fade";
+                var isRegression = normalizedEngineType == "regression_reduction";
                 var requiresScorableQuestions = ExerciseConfigurationRules.ResolveReadingPurpose(
                     normalizedEngineType,
                     ReadString(ReadObject(parsedConfiguration, "engineConfig"), "readingPurpose")
@@ -322,7 +323,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                     .Where(item => item.IsActive
                         && !item.IsDeleted
                         && item.Content != string.Empty
-                        && (!(isComprehension || isScanning || isGrouping || isTextFade) || item.DifficultyLevel == difficultyLevel)
+                        && (!(isComprehension || isScanning || isGrouping || isTextFade || isRegression) || item.DifficultyLevel == difficultyLevel)
                         && (!profileAgeGroupId.HasValue
                             || item.TargetAgeGroupId == null
                             || item.TargetAgeGroupId == profileAgeGroupId.Value)
@@ -334,7 +335,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                                 || question.CorrectAnswer.Trim().ToUpper() == "B"
                                 || question.CorrectAnswer.Trim().ToUpper() == "C"
                                 || question.CorrectAnswer.Trim().ToUpper() == "D"))))
-                    .OrderBy(item => isScanning || isGrouping || isTextFade
+                    .OrderBy(item => isScanning || isGrouping || isTextFade || isRegression
                         ? db.ExerciseSessions.Count(history => history.StudentId == studentId && history.ReadingTextId == item.Id)
                         : isComprehension
                         ? db.ReadingSessions.Count(history => history.UserId == studentId && history.ReadingTextId == item.Id)
@@ -348,6 +349,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                     throw new InvalidOperationException("Seçilen Gruplama seviyesine uygun aktif metin bulunamadı.");
                 if (isTextFade && !readingTextId.HasValue)
                     throw new InvalidOperationException("Seçilen Metin Solma seviyesine uygun aktif metin bulunamadı.");
+                if (isRegression && !readingTextId.HasValue)
+                    throw new InvalidOperationException("Seçilen Regresyon Azaltma seviyesine uygun aktif metin bulunamadı.");
             }
 
             var state = await CreateSessionStateAsync(
