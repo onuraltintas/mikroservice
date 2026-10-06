@@ -66,6 +66,9 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions
     private static bool ScanningComplete(SessionState state) =>
         state.ScanningRounds.Count > 0 && state.CurrentRound >= state.ScanningRounds.Count;
 
+    private static decimal ScanningAccuracy(SessionState state) => state.TotalSteps > 0
+        ? Math.Round(100m * state.ScanningRounds.Sum(round => round.FoundTargets.Count) / state.TotalSteps, 2) : 0;
+
     private static bool ScanningExpired(ExerciseSession session, SessionState state, DateTime now) =>
         !ScanningComplete(state) && state.TimingStartedAt.HasValue && state.TimeLimitSeconds.HasValue
         && (now - state.TimingStartedAt.Value).TotalSeconds - GetTimingPausedSeconds(session, state) >= state.TimeLimitSeconds.Value;

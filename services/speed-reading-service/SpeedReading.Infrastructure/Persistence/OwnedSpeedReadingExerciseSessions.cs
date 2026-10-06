@@ -295,6 +295,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             {
                 var normalizedEngineType = ExerciseConfigurationRules.NormalizeEngineType(exerciseEngineType);
                 var isComprehension = normalizedEngineType == "reading_comprehension";
+                var isScanning = normalizedEngineType is "scan_find" or "scanning";
                 var requiresScorableQuestions = ExerciseConfigurationRules.ResolveReadingPurpose(
                     normalizedEngineType,
                     ReadString(ReadObject(parsedConfiguration, "engineConfig"), "readingPurpose")
@@ -305,7 +306,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                     .Where(item => item.IsActive
                         && !item.IsDeleted
                         && item.Content != string.Empty
-                        && (!isComprehension || item.DifficultyLevel == difficultyLevel)
+                        && (!(isComprehension || isScanning) || item.DifficultyLevel == difficultyLevel)
                         && (!profileAgeGroupId.HasValue
                             || item.TargetAgeGroupId == null
                             || item.TargetAgeGroupId == profileAgeGroupId.Value)
@@ -317,7 +318,9 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                                 || question.CorrectAnswer.Trim().ToUpper() == "B"
                                 || question.CorrectAnswer.Trim().ToUpper() == "C"
                                 || question.CorrectAnswer.Trim().ToUpper() == "D"))))
-                    .OrderBy(item => isComprehension
+                    .OrderBy(item => isScanning
+                        ? db.ExerciseSessions.Count(history => history.StudentId == studentId && history.ReadingTextId == item.Id)
+                        : isComprehension
                         ? db.ReadingSessions.Count(history => history.UserId == studentId && history.ReadingTextId == item.Id)
                         : 0)
                     .ThenByDescending(item => item.ExerciseId == request.ExerciseId)
@@ -614,9 +617,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             state.ReadingStartTime,
             state.ReadingEndTime,
             pausedReadingSeconds);
-        var accuracy = SpeedReadingExerciseSessionRules.CalculateAccuracy(
-            session.CorrectCount,
-            session.IncorrectCount);
+        var accuracy = IsScanning(state) ? ScanningAccuracy(state)
+            : SpeedReadingExerciseSessionRules.CalculateAccuracy(session.CorrectCount, session.IncorrectCount);
         var wordsRead = state.Tachistoscope is not null || IsScanning(state) ? null : state.WordCount > 0 ? (int?)state.WordCount : null;
         var adaptiveTransferResult = IsAdaptiveFluency(state)
             ? state.AdaptiveStageResults.SingleOrDefault(item => item.Stage == 3)
@@ -2998,7 +3000,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             session.CorrectCount,
             session.IncorrectCount,
             result.IsMeasured
-                ? SpeedReadingExerciseSessionRules.CalculateAccuracy(session.CorrectCount, session.IncorrectCount)
+                ? IsScanning(state) ? ScanningAccuracy(state)
+                    : SpeedReadingExerciseSessionRules.CalculateAccuracy(session.CorrectCount, session.IncorrectCount)
                 : null,
             result.TimeSpentSeconds,
             result.IsMeasured ? score ?? result.Score : null,
