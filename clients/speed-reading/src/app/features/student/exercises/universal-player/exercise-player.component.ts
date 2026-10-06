@@ -3235,6 +3235,11 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
               displayPaceWpm: sessionResult.detailedResults.groupingDisplayPaceWpm,
               completionPercent: sessionResult.detailedResults.groupingCompletionPercent,
               incomplete: sessionResult.detailedResults.readingIncomplete === true
+            } : {}),
+            ...(sessionResult.detailedResults?.fadeDisplayPaceWpm > 0 ? {
+              displayPaceWpm: sessionResult.detailedResults.fadeDisplayPaceWpm,
+              completionPercent: sessionResult.detailedResults.fadeCompletionPercent,
+              incomplete: sessionResult.detailedResults.readingIncomplete === true
             } : {})
           }
         };
