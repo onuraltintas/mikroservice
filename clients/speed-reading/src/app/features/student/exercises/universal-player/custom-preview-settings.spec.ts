@@ -10,6 +10,15 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 
 describe('Custom preview settings safety', () => {
   const context = { roles: ['Admin'], preview: true };
+  it('supports scanning catalogue alias and applies target and visual overrides only in preview', () => {
+    const config = { engineType: 'scanning', engineConfig: { targetCount: 3, timeLimit: 90 } };
+    expect(getCustomPreviewControls(config).map(control => control.key)).toEqual(['timeLimitSec', 'targetCount', 'fontSizePx']);
+    const result = applyCustomPreviewSettings(config, { timeLimitSec: 20, targetCount: 2, fontSizePx: 28 }, context);
+    expect((result.engineConfig as any).targetCount).toBe(2);
+    expect((result.engineConfig as any).visuals.fontSize).toBe('28px');
+    expect(config.engineConfig.targetCount).toBe(3);
+    expect(applyCustomPreviewSettings(config, { targetCount: 2 }, { roles: ['Student'], preview: true })).toBe(config);
+  });
   it('preserves millisecond precision when the dialog submits fractional-second defaults', () => {
     const config = { engineType: 'reading_comprehension', engineConfig: { timing: { minReadingTimeMs: 1500, maxReadingTimeMs: 5500 } } };
     const values = Object.fromEntries(getCustomPreviewControls(config).map(control => [control.key, control.value]));

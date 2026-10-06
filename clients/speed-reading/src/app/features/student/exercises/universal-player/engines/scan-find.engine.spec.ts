@@ -16,6 +16,13 @@ function callbacks(onComplete: (result: EngineResult) => void): EngineCallbacks 
 }
 
 describe('ScanFindEngine', () => {
+  it('uses target count with actual preview text and never starts an empty task', () => {
+    const engine = new ScanFindEngine();
+    engine.initialize({ content: { text: 'IŞIK İNCİ kelime' }, targetCount: 2 }, callbacks(() => undefined));
+    expect(engine.getTargetWords().length).toBe(2);
+    expect(engine.state.totalSteps).toBe(2);
+    engine.destroy();
+  });
   it('clears timed-out result metadata on reset', fakeAsync(() => {
     const results: EngineResult[] = [];
     const engine = new ScanFindEngine();
