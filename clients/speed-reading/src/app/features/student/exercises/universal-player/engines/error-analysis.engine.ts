@@ -91,6 +91,7 @@ export class ErrorAnalysisEngine implements BaseEngine {
     }
 
     initialize(config: ErrorAnalysisConfig, callbacks: EngineCallbacks): void {
+        this.stopTimer();
         this.callbacks = callbacks;
         const root = recordOrEmpty(config);
         const nested = recordOrEmpty(caseInsensitiveField(root, 'engineConfig'));
@@ -141,7 +142,15 @@ export class ErrorAnalysisEngine implements BaseEngine {
     }
 
     start(): void {
-        if (this.state.isRunning) return;
+        if (this.state.isRunning || this.state.isCompleted) return;
+        const indices = new Set(this.words.map(word => word.index));
+        if (!this.words.length || !this.errorCount || indices.size !== this.words.length
+            || this.words.some(word => !Number.isInteger(word.index) || word.index < 0 || !word.text.trim())
+            || new Set(this.errors.map(error => error.wordIndex)).size !== this.errors.length
+            || this.errors.some(error => !indices.has(error.wordIndex))) {
+            this.callbacks?.onError?.('Hata analizi içeriği eksik veya tutarsız. Lütfen farklı bir egzersiz seçin.');
+            return;
+        }
 
         this.state.isRunning = true;
         this.phase = 'active';
@@ -165,7 +174,7 @@ export class ErrorAnalysisEngine implements BaseEngine {
     }
 
     resume(): void {
-        if (!this.state.isPaused) return;
+        if (!this.state.isRunning || !this.state.isPaused) return;
 
         this.state.isPaused = false;
         this.startTimer();
@@ -200,6 +209,9 @@ export class ErrorAnalysisEngine implements BaseEngine {
 
     destroy(): void {
         this.stopTimer();
+        this.state.isRunning = false;
+        this.state.isPaused = false;
+        this.phase = 'completed';
     }
 
     handleInput(input: any): void {
@@ -392,7 +404,7 @@ export class ErrorAnalysisEngine implements BaseEngine {
 
     // For manual completion (timeout or give up)
     forceComplete(): void {
-        if (this.phase !== 'active') return;
+        if (this.phase !== 'active' || this.state.isPaused || !this.state.isRunning) return;
         this.completeExercise();
     }
 
@@ -402,7 +414,7 @@ export class ErrorAnalysisEngine implements BaseEngine {
     }
 
     useHint(): number | null {
-        if (this.phase !== 'active') return null;
+        if (this.phase !== 'active' || this.state.isPaused || !this.state.isRunning) return null;
 
         const missedErrors = this.getMissedErrors();
         if (missedErrors.length === 0) return null;
