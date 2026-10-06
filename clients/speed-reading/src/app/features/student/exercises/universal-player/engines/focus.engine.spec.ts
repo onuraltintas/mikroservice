@@ -8,6 +8,15 @@ function callbacks() {
 }
 
 describe('FocusEngine timing', () => {
+  it('routes legacy position matches only to position and bounds completed steps', fakeAsync(() => {
+    const engine = new FocusEngine(); const actions: any[] = [];
+    engine.initialize({ Mode: 'position', SpeedMs: 1000, PositionSequence: [1, 2, 1] } as any,
+      { ...callbacks(), onAction: action => actions.push(action) });
+    engine.start(); engine.handleInput({ type: 'match' });
+    expect(actions.filter(action => action.action === 'word_match').length).toBe(0);
+    expect(actions.filter(action => action.action === 'position_match').length).toBe(1);
+    tick(3000); expect(engine.getResult().completedSteps).toBe(3); engine.destroy();
+  }));
   for (const configuration of [
     { Mode: 'unknown', PositionSequence: [1, 2, 1] },
     { Mode: 'dual', PositionSequence: [1, 2, 1], WordSequence: ['a'] },
