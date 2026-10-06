@@ -2,6 +2,51 @@ import { fakeAsync, tick } from '@angular/core/testing';
 import { VocabularyBuilderEngine } from './vocabulary-builder.engine';
 
 describe('VocabularyBuilderEngine server validation contract', () => {
+  it('defers acknowledged learning advancement until resume so next response time is active', fakeAsync(() => {
+    const actions: any[] = []; const engine = new VocabularyBuilderEngine();
+    engine.initialize({ serverAuthoritative: true, mode: 'learning', words: [{ id: 'a', word: 'a', definition: 'b' }, { id: 'b', word: 'c', definition: 'd' }] } as any, createCallbacks(actions, []));
+    engine.start(); tick(200); engine.markAsKnown(); engine.pause(); tick(500);
+    engine.applyServerResponse({ isValid: true, isCorrect: true, feedbackData: { box: 2 } });
+    expect(engine.getCurrentWord()?.id).toBe('a'); tick(500); engine.resume(); tick(200); engine.markAsKnown();
+    expect(actions[1].responseTime).toBe(200); engine.destroy();
+  }));
+  it('rejects missing or duplicate words and safely exposes empty results', () => {
+    for (const words of [[], [{ id: 'a', word: '', definition: 'b' }], [{ id: 'a', word: 'x', definition: 'y' }, { id: 'a', word: 'z', definition: 't' }]]) {
+      const errors: string[] = []; const engine = new VocabularyBuilderEngine();
+      engine.initialize({ mode: 'learning', words } as any, createCallbacks([], errors)); engine.pause(); engine.resume(); engine.start();
+      expect(errors.length).toBe(1); expect(engine.state.isRunning).toBeFalse(); expect(engine.getQuizQuestion()).toBe(words[0]?.word ?? ''); engine.destroy();
+    }
+  });
+  it('excludes pause time from quiz response duration and blocks input while paused', fakeAsync(() => {
+    const actions: any[] = []; const engine = createQuizEngine(actions, []); engine.start();
+    tick(300); engine.pause(); engine.pause(); tick(1000); engine.submitQuizAnswer('A'); expect(actions.length).toBe(0);
+    engine.resume(); engine.resume(); tick(200); engine.submitQuizAnswer(engine.getCorrectAnswer());
+    expect(actions[0].responseTime).toBe(500); engine.destroy();
+  }));
+  it('shows learning progress, tracks unknown words, and ignores late feedback after stop', () => {
+    const engine = new VocabularyBuilderEngine(); const id = crypto.randomUUID();
+    engine.initialize({ mode: 'review', previewOnly: true, words: [{ id, word: 'a', definition: 'b' }, { id: crypto.randomUUID(), word: 'c', definition: 'd' }] } as any, createCallbacks([], []));
+    engine.start(); engine.showDefinition(); expect(engine.isShowingDefinition()).toBeTrue();
+    engine.markAsUnknown(); expect(engine.getIncorrectCount()).toBe(1); expect(engine.getWordBox(id)).toBe(1);
+    expect(engine.getProgress()).toEqual({ current: 2, total: 2 });
+    engine.markAsKnown(); expect(engine.getCorrectCount()).toBe(1); expect(engine.getResult().accuracy).toBe(50);
+    expect(engine.getCurrentWord()).toBeNull(); engine.reset(); expect(engine.state.currentStep).toBe(0);
+    engine.start(); engine.stop(); engine.applyServerResponse({ isValid: true, isCorrect: true });
+    expect(engine.getCorrectCount()).toBe(0); engine.destroy();
+  });
+  it('generates real word options in definition-to-word mode and records a correct preview answer', () => {
+    const engine = createQuizEngine([], []); (engine as any).quizType = 'definition_to_word';
+    engine.start(); expect(engine.getQuizQuestion()).toBe('Öğrenme isteği');
+    expect(engine.getQuizOptions().some(option => option.text.startsWith('Option '))).toBeFalse();
+    engine.submitQuizAnswer(engine.getCorrectAnswer()); expect(engine.getLastAnswerCorrect()).toBeTrue();
+    expect(engine.getCorrectCount()).toBe(1); engine.nextQuizQuestion(); engine.destroy();
+  });
+  it('does not score a malformed server acknowledgement', () => {
+    const engine = createQuizEngine([], []); (engine as any).serverAuthoritative = true;
+    engine.start(); engine.submitQuizAnswer(engine.getQuizOptions()[0].letter);
+    engine.applyServerResponse({ isValid: true }); expect(engine.state.currentStep).toBe(0);
+    expect(engine.isAwaitingPersistence()).toBeFalse(); engine.destroy();
+  });
   it('does not restart timeout while a rejected pending answer is paused', fakeAsync(() => {
     const actions: any[] = []; const engine = createQuizEngine(actions, []);
     (engine as any).serverAuthoritative = true; engine.timeLimitPerWord = 2;
