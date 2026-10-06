@@ -2267,22 +2267,45 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
 
   submitRegressionAnswer(option: string): void {
     const question = this.getRegressionCurrentQuestion();
-    const correctAnswer = question?.CorrectAnswer || question?.correctAnswer;
-
-    // Feedback göster - soruyu da sakla çünkü engine index'i artıracak
-    this.questionFeedback = {
-      isCorrect: option === correctAnswer,
-      correctAnswer: correctAnswer,
-      explanation: question?.Explanation || question?.explanation,
-      // Mevcut soruyu sakla
-      question: question
-    };
-
+    if (!question || this.questionSubmissionPending || this.questionFeedback
+      || !this.engineState.isRunning || this.engineState.isPaused
+      || this.getRegressionPhase() !== 'answering' || !['A', 'B', 'C', 'D'].includes(option)) return;
+    if (this.sessionId === 'preview-mode') {
+      this.selectedAnswer = option;
+      this.questionFeedback = { question, isCorrect: null };
+      this.engine?.handleInput({ type: 'answer', answer: option, previewOnly: true });
+      this.cdr.detectChanges();
+      return;
+    }
+    if (!this.sessionId) {
+      this.showToast('Cevabı doğrulamak için geçerli bir oturum gerekir.', 'error');
+      return;
+    }
+    const questionId = question.QuestionId || question.questionId || question.Id || question.id;
+    if (!questionId) {
+      this.showToast('Soru kimliği bulunamadı; cevap kaydedilemedi.', 'error');
+      return;
+    }
+    this.questionSubmissionPending = true;
     this.selectedAnswer = option;
-
-    // Engine'e cevabı gönder (bu index'i artıracak)
-    this.engine?.handleInput({ type: 'answer', answer: option });
-
+    void this.enqueueAction({ action: 'answer_question', questionId, answer: option, timestamp: new Date() }, response => {
+      if (!response.isValid) throw new Error(response.message || 'Cevap kaydedilemedi.');
+      const correctAnswer = this.isAssessmentMode ? undefined : response.correctAnswer;
+      this.questionFeedback = { question, isCorrect: this.isAssessmentMode ? null : response.isCorrect ?? null,
+        correctAnswer, explanation: this.isAssessmentMode ? undefined : response.explanation };
+      if (!this.questionAnswers.some(answer => answer.questionId === questionId)) {
+        this.questionAnswers.push({ questionId, selectedAnswer: option, isCorrect: response.isCorrect === true,
+          timeSpent: 0, targetTime: 0, questionText: question.QuestionText || question.questionText, correctAnswer });
+      }
+      this.questionSubmissionPending = false;
+      this.engine?.handleInput({ type: 'answer', answer: option, serverValidated: true,
+        isCorrect: response.isCorrect, correctAnswer });
+      this.cdr.detectChanges();
+    }).catch(error => {
+      this.questionSubmissionPending = false;
+      this.showToast(error?.message || 'Cevap kaydedilemedi; lütfen yeniden deneyin.', 'error');
+      this.cdr.detectChanges();
+    });
     this.cdr.detectChanges();
   }
 

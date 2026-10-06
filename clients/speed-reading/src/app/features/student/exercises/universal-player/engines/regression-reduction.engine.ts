@@ -222,14 +222,15 @@ export class RegressionReductionEngine implements BaseEngine {
         if (!input || typeof input !== 'object' || this.state.isCompleted) return;
 
         if (this.phase === 'answering' && input.type === 'answer') {
+            if ((input.serverValidated !== true && input.previewOnly !== true) || !this.state.isRunning) return;
             const question = this.questions[this.currentQuestionIndex];
             if (!question) return;
-            const correctAnswer = question.CorrectAnswer || question.correctAnswer;
-            const isCorrect = input.answer === correctAnswer;
+            const correctAnswer = input.correctAnswer;
+            const isCorrect = input.previewOnly === true || typeof input.isCorrect !== 'boolean' ? null : input.isCorrect;
 
             // Cevabı kaydet
             this.answers.push({
-                questionId: question.QuestionId || question.questionId,
+                questionId: question.QuestionId || question.questionId || question.Id || question.id,
                 questionText: question.QuestionText || question.questionText,
                 userAnswer: input.answer,
                 correctAnswer: correctAnswer,
@@ -240,15 +241,6 @@ export class RegressionReductionEngine implements BaseEngine {
             if (isCorrect) {
                 this.state.score += Math.round(100 / this.questions.length);
             }
-
-            // Notify backend
-            this.callbacks.onAction({
-                action: 'answer_question',
-                questionId: question.QuestionId || question.questionId,
-                answer: input.answer,
-                isCorrect: isCorrect,
-                timestamp: new Date()
-            });
 
             this.currentQuestionIndex++;
             this.state.currentStep = this.words.length + this.currentQuestionIndex;
@@ -288,7 +280,8 @@ export class RegressionReductionEngine implements BaseEngine {
 
         // Anlama skorunu hesapla
         const correctCount = this.answers.filter(a => a.isCorrect).length;
-        const comprehensionScore = this.questions.length > 0
+        const comprehensionScore = this.questions.length > 0 && this.answers.length === this.questions.length
+            && this.answers.every(answer => typeof answer.isCorrect === 'boolean')
             ? Math.round((correctCount / this.questions.length) * 100)
             : null;
 
@@ -307,7 +300,7 @@ export class RegressionReductionEngine implements BaseEngine {
             details: {
                 displayPaceWpm: this.config.wordDelayMs ? Math.round(60000 / this.config.wordDelayMs) : this.config.wpm,
                 readingTimeMs: this.readingTimeMs,
-                measurementStatus: this.questions.length > 0 ? 'Measured' : 'NotMeasured',
+                measurementStatus: comprehensionScore !== null ? 'Measured' : 'NotMeasured',
                 backwardClickCount: this.backwardClickCount,
                 comprehensionScore: comprehensionScore,
                 correctAnswers: correctCount,

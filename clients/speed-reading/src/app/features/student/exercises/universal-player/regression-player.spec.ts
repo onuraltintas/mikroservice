@@ -4,6 +4,36 @@ import { RegressionReductionEngine } from './engines/regression-reduction.engine
 import { Subject } from 'rxjs';
 
 describe('regression player configuration', () => {
+  it('allows unmeasured preview answers and supports catalog question id aliases', () => {
+    const player = Object.create(ExercisePlayerComponent.prototype) as any;
+    player.engineState = { isRunning: true, isPaused: false }; player.questionFeedback = null;
+    player.engine = { getCurrentQuestion: () => ({ id: 'q1' }), getPhase: () => 'answering', handleInput: jasmine.createSpy('answer') };
+    player.sessionId = 'preview-mode'; player.cdr = { detectChanges: () => undefined };
+    player.showToast = jasmine.createSpy('toast');
+    player.submitRegressionAnswer('A');
+    expect(player.engine.handleInput).toHaveBeenCalledWith(jasmine.objectContaining({ previewOnly: true }));
+  });
+  it('leaves the question retryable on server rejection and hides assessment answer feedback', async () => {
+    const player = Object.create(ExercisePlayerComponent.prototype) as any;
+    const question = { questionId: 'q1' };
+    player.engineState = { isRunning: true, isPaused: false };
+    player.engine = { getCurrentQuestion: () => question, getPhase: () => 'answering', handleInput: jasmine.createSpy('answer') };
+    player.questionSubmissionPending = false; player.questionFeedback = null;
+    player.questionAnswers = []; player.sessionId = 'session'; player.isAssessmentMode = true;
+    player.cdr = { detectChanges: () => undefined }; player.showToast = jasmine.createSpy('toast');
+    player.enqueueAction = (_action: any, apply: any) => Promise.resolve().then(() => apply({ isValid: false }));
+    player.submitRegressionAnswer('A');
+    await Promise.resolve(); await Promise.resolve(); await Promise.resolve();
+    expect(player.questionSubmissionPending).toBeFalse();
+    expect(player.engine.handleInput).not.toHaveBeenCalled();
+    expect(player.questionFeedback).toBeNull();
+    player.enqueueAction = (_action: any, apply: any) => Promise.resolve().then(() => apply({ isValid: true, isCorrect: true, correctAnswer: 'A', explanation: 'secret' }));
+    player.submitRegressionAnswer('A');
+    await Promise.resolve(); await Promise.resolve();
+    expect(player.questionFeedback.isCorrect).toBeNull();
+    expect(player.questionFeedback.correctAnswer).toBeUndefined();
+    expect(player.questionFeedback.explanation).toBeUndefined();
+  });
   it('waits for server validation, blocks duplicate submissions and records verified answers', async () => {
     const response = new Subject<any>();
     const player = Object.create(ExercisePlayerComponent.prototype) as any;

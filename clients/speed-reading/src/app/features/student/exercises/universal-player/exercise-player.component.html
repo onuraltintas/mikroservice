@@ -835,7 +835,7 @@
                     [class.selected]="selectedAnswer === option"
                     [class.correct]="questionFeedback?.isCorrect === true && questionFeedback?.correctAnswer === option"
                     [class.wrong]="questionFeedback?.isCorrect === false && selectedAnswer === option"
-                    [disabled]="questionFeedback !== null" (click)="!questionFeedback && (selectedAnswer = option)">
+                    [disabled]="questionFeedback !== null || questionSubmissionPending || engineState.isPaused" (click)="!questionFeedback && (selectedAnswer = option)">
                     <span class="option-label">{{ option }}</span>
                     <span class="option-text">{{ (questionFeedback?.question || getRegressionCurrentQuestion())['Option'
                         + option] ||
@@ -848,7 +848,7 @@
 
             <!-- Cevabı Gönder butonu - feedback yokken -->
             <button class="ep-btn ep-btn--primary" class="submit-answer-btn" *ngIf="!questionFeedback"
-                [disabled]="!selectedAnswer" (click)="submitRegressionAnswer(selectedAnswer!)">
+                [disabled]="!selectedAnswer || questionSubmissionPending || engineState.isPaused" (click)="submitRegressionAnswer(selectedAnswer!)">
                 <span class="material-icons">check</span>
                 Cevabı Gönder
             </button>

@@ -41,7 +41,7 @@ describe('reading behavior engines', () => {
     engine.resume();
     engine.handleInput({ type: 'regression', wordIndex: 0 });
     tick(100);
-    engine.handleInput({ type: 'answer', answer: 'A' });
+    engine.handleInput({ type: 'answer', answer: 'A', serverValidated: true, isCorrect: true });
     expect(result.details.backwardClickCount).toBe(1);
     expect(result.errors).toBe(0);
     expect(result.score).toBe(100);
