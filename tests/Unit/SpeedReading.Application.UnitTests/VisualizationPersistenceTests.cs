@@ -1,7 +1,7 @@
 using System.Reflection;
-using FluentAssertions;
+using System.Text.Json.Nodes;
 using Microsoft.EntityFrameworkCore;
-using SpeedReading.Application.Visualization;
+using SpeedReading.Application.ExerciseSessions;
 using SpeedReading.Domain.Catalog;
 using SpeedReading.Domain.Visualization;
 using SpeedReading.Infrastructure.Persistence;
@@ -10,41 +10,40 @@ namespace SpeedReading.Application.UnitTests;
 
 public sealed class VisualizationPersistenceTests
 {
+    private static OwnedSpeedReadingDbContext Context() => new(new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>()
+        .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
+    private static ISpeedReadingExerciseSessions Service(OwnedSpeedReadingDbContext db) =>
+        (ISpeedReadingExerciseSessions)Activator.CreateInstance(typeof(OwnedSpeedReadingDbContext).Assembly
+            .GetType("SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingExerciseSessions")!,
+            BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, [db], null)!;
+
     [Fact]
-    public async Task Admin_scene_listing_survives_malformed_question_options()
+    public async Task Selects_only_matching_level_scenes_and_records_server_answers_without_wpm()
     {
-        var options = new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>()
-            .UseInMemoryDatabase(Guid.NewGuid().ToString())
-            .Options;
-        await using var context = new OwnedSpeedReadingDbContext(options);
+        await using var db = Context(); var student = Guid.NewGuid();
+        var type = ExerciseType.Create(Guid.NewGuid(), "Visualization", "Görselleştirme", "visualization");
+        var exercise = Exercise.Create("Görselleştirme", "strategy", "{}", 3, student, type.Id);
+        db.ExerciseTypes.Add(type); db.Exercises.Add(exercise);
+        var wrong = VisualizationScene.Create(Guid.NewGuid(), exercise.Id, "Yanlış seviye", null, 5, 0, 1, null, student, DateTime.UtcNow);
+        var scene = VisualizationScene.Create(Guid.NewGuid(), exercise.Id, "Doğru seviye", null, 5, 1, 3, null, student, DateTime.UtcNow);
+        db.VisualizationScenes.AddRange(wrong, scene);
+        await db.SaveChangesAsync();
+        var service = Service(db); var started = await service.StartAsync(student, new() { ExerciseId = exercise.Id });
+        var state = JsonNode.Parse((await db.ExerciseSessions.SingleAsync()).SessionDataJson)!;
+        Assert.Single(state["visualizationScenes"]!.AsArray());
+        Assert.Equal(scene.Id.ToString("D"), state["visualizationScenes"]![0]!["sceneId"]!.GetValue<string>());
+        var result = await service.CompleteAsync(student, started.SessionId, new());
+        Assert.Null(result.RawWPM); Assert.Null(result.ComprehensionScore);
+    }
 
-        var actorId = Guid.NewGuid();
-        var exerciseTypeId = Guid.NewGuid();
-        var exerciseId = Guid.NewGuid();
-        var sceneId = Guid.NewGuid();
-        context.ExerciseTypes.Add(ExerciseType.Create(
-            exerciseTypeId, "visualization", "Görselleştirme", "visualization"));
-        context.Exercises.Add(Exercise.Create(
-            "Görsel takip", "visualization", "{}", 1, actorId, exerciseTypeId, exerciseId));
-        context.VisualizationScenes.Add(VisualizationScene.Create(
-            sceneId, exerciseId, "Sahne", null, 30, 0, 1, null, actorId, DateTime.UtcNow));
-        context.VisualizationQuestions.Add(VisualizationQuestion.Create(
-            Guid.NewGuid(), sceneId, "Ne gördünüz?", "{}", "A", "detail", 0, null, actorId, DateTime.UtcNow));
-        await context.SaveChangesAsync();
-
-        var serviceType = typeof(OwnedSpeedReadingDbContext).Assembly
-            .GetType("SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingVisualization")!;
-        var service = (ISpeedReadingVisualization)Activator.CreateInstance(
-            serviceType,
-            BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
-            binder: null,
-            args: [context],
-            culture: null)!;
-
-        var result = await service.GetAdminScenesAsync(1, 25, null, null, CancellationToken.None);
-
-        result.Items.Should().ContainSingle();
-        result.Items[0].Questions.Should().ContainSingle();
-        result.Items[0].Questions[0].Options.Should().BeEmpty();
+    [Fact]
+    public async Task Rejects_empty_scene_catalog_before_creating_a_session()
+    {
+        await using var db = Context(); var student = Guid.NewGuid();
+        var type = ExerciseType.Create(Guid.NewGuid(), "Visualization", "Görselleştirme", "visualization");
+        var exercise = Exercise.Create("Görselleştirme", "strategy", "{}", 3, student, type.Id);
+        db.ExerciseTypes.Add(type); db.Exercises.Add(exercise); await db.SaveChangesAsync();
+        await Assert.ThrowsAsync<InvalidOperationException>(() => Service(db).StartAsync(student, new() { ExerciseId = exercise.Id }));
+        Assert.Empty(await db.ExerciseSessions.ToListAsync());
     }
 }
