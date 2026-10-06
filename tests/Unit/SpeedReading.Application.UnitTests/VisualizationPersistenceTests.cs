@@ -63,4 +63,41 @@ public sealed class VisualizationPersistenceTests
         await Assert.ThrowsAsync<InvalidOperationException>(() => Service(db).StartAsync(student, new() { ExerciseId = exercise.Id }));
         Assert.Empty(await db.ExerciseSessions.ToListAsync());
     }
+
+    [Fact]
+    public async Task Configured_scene_selection_uses_declared_level_and_excludes_blank_content()
+    {
+        await using var db = Context(); var student = Guid.NewGuid();
+        var type = ExerciseType.Create(Guid.NewGuid(), "Visualization", "Görselleştirme", "visualization");
+        var exercise = Exercise.Create("Görselleştirme", "strategy",
+            """{"scenes":[{"sceneId":"wrong","description":"Yanlış","difficultyLevel":1},{"sceneId":"blank","description":" "},{"sceneId":"right","description":"Doğru","difficultyLevel":3}]}""",
+            3, student, type.Id);
+        db.ExerciseTypes.Add(type); db.Exercises.Add(exercise); await db.SaveChangesAsync();
+        var started = await Service(db).StartAsync(student, new() { ExerciseId = exercise.Id });
+        var scenes = JsonNode.Parse(started.InitialData.GetRawText())!["visualizationScenes"]!.AsArray();
+        Assert.Single(scenes); Assert.Equal("right", scenes[0]!["sceneId"]!.GetValue<string>());
+    }
+
+    [Fact]
+    public async Task Server_answer_keys_are_hidden_and_completion_is_idempotent_without_reading_speed()
+    {
+        await using var db = Context(); var student = Guid.NewGuid();
+        var type = ExerciseType.Create(Guid.NewGuid(), "Visualization", "Görselleştirme", "visualization");
+        var exercise = Exercise.Create("Görselleştirme", "strategy", "{}", 3, student, type.Id);
+        var scene = VisualizationScene.Create(Guid.NewGuid(), exercise.Id, "Kırmızı bir ev", null, 5, 0, 3, null, student, DateTime.UtcNow);
+        var question = VisualizationQuestion.Create(Guid.NewGuid(), scene.Id, "Ev ne renk?", """["Kırmızı","Mavi"]""", "A", "detail", 0, null, student, DateTime.UtcNow);
+        db.ExerciseTypes.Add(type); db.Exercises.Add(exercise); db.VisualizationScenes.Add(scene); db.VisualizationQuestions.Add(question);
+        await db.SaveChangesAsync(); var service = Service(db);
+        var started = await service.StartAsync(student, new() { ExerciseId = exercise.Id });
+        Assert.DoesNotContain("correctAnswer", started.InitialData.GetRawText(), StringComparison.OrdinalIgnoreCase);
+        await Assert.ThrowsAsync<KeyNotFoundException>(() => service.ValidateActionAsync(Guid.NewGuid(), started.SessionId,
+            new() { Action = "answer_question", QuestionId = question.Id, Answer = "A" }));
+        var request = new ExerciseActionRequest { Action = "answer_question", QuestionId = question.Id, Answer = "A" };
+        Assert.True((await service.ValidateActionAsync(student, started.SessionId, request)).IsCorrect);
+        Assert.True((await service.ValidateActionAsync(student, started.SessionId, request)).IsValid);
+        var result = await service.CompleteAsync(student, started.SessionId, new());
+        Assert.Null(result.RawWPM); Assert.Equal(100m, result.ComprehensionScore);
+        Assert.Equal(result.ComprehensionScore, (await service.CompleteAsync(student, started.SessionId, new())).ComprehensionScore);
+        Assert.Single(await db.ExerciseSessionResults.ToListAsync());
+    }
 }
