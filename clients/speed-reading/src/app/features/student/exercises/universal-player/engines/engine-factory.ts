@@ -11,6 +11,7 @@ import { TextFadeEngine } from './text-fade.engine';
 import { WordHighlightEngine } from './word-highlight.engine';
 import { VisualExpansionEngine } from './visual-expansion.engine';
 import { ScanFindEngine } from './scan-find.engine';
+import { SkimmingEngine } from './skimming.engine';
 import { ReadingComprehensionEngine } from './reading-comprehension.engine';
 import { RegressionReductionEngine } from './regression-reduction.engine';
 import { SubvocalizationReductionEngine } from './subvocalization-reduction.engine';
@@ -43,7 +44,7 @@ export type EngineType =
     | 'error_analysis'              // Error Analysis (Hata Analizi / Proofreading)
     | 'adaptive_fluency'            // Comprehension-preserving repeated and transfer reading
     | 'scanning'                   // Alias for scan_find
-    | 'skimming';                  // Alias for scan_find (Skimming)
+    | 'skimming';                  // Timed main-idea inspection
 
 // Engine constructor type
 type EngineConstructor = new () => BaseEngine;
@@ -69,7 +70,7 @@ const engineRegistry: Partial<Record<EngineType, EngineConstructor>> = {
     'error_analysis': ErrorAnalysisEngine,
     'adaptive_fluency': AdaptiveFluencyEngine,
     'scanning': ScanFindEngine,
-    'skimming': ScanFindEngine, // Fix for Skimming exercise type alias
+    'skimming': SkimmingEngine,
 };
 
 export class EngineFactory {
