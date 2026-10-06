@@ -10,6 +10,25 @@ namespace SpeedReading.Application.UnitTests;
 
 public sealed class VocabularyPersistenceTests
 {
+    [Fact]
+    public async Task Review_ignores_older_due_row_when_latest_progress_is_not_due()
+    {
+        await using var db = Context(); var student = Guid.NewGuid(); var exercise = await Seed(db, student, "review");
+        var word = await db.VocabularyItems.FirstAsync();
+        db.UserVocabularyProgresses.Add(UserVocabularyProgress.Create(Guid.NewGuid(), student, word.Id, DateTime.UtcNow.AddDays(-4)));
+        var latest = UserVocabularyProgress.Create(Guid.NewGuid(), student, word.Id, DateTime.UtcNow);
+        latest.Review(true, student, DateTime.UtcNow); db.UserVocabularyProgresses.Add(latest); await db.SaveChangesAsync();
+        await Assert.ThrowsAsync<InvalidOperationException>(() => Service(db).StartAsync(student, new() { ExerciseId = exercise }));
+    }
+    [Fact]
+    public async Task Quiz_uses_unique_content_without_rejecting_mixed_pool()
+    {
+        await using var db = Context(); var student = Guid.NewGuid(); var exercise = await Seed(db, student, "quiz", duplicate: true);
+        db.VocabularyItems.Add(VocabularyItem.Create(Guid.NewGuid(), "farklı", "farklı anlam", null, null, null, "Genel", 2, null, student, DateTime.UtcNow));
+        await db.SaveChangesAsync();
+        var result = await Service(db).StartAsync(student, new() { ExerciseId = exercise });
+        Assert.Equal(2, result.InitialData.GetProperty("vocabularyWords").GetArrayLength());
+    }
     private static ISpeedReadingExerciseSessions Service(OwnedSpeedReadingDbContext db) =>
         (ISpeedReadingExerciseSessions)Activator.CreateInstance(typeof(OwnedSpeedReadingDbContext).Assembly
             .GetType("SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingExerciseSessions")!,
