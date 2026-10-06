@@ -1126,6 +1126,15 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         };
         var engineConfig = ReadObject(config, "engineConfig");
         var effectiveConfig = engineConfig.ValueKind == JsonValueKind.Object ? engineConfig : config;
+        if (ExerciseConfigurationRules.NormalizeEngineType(exerciseEngineType) == "reading_comprehension")
+        {
+            var timing = ReadObject(effectiveConfig, "timing");
+            var rootTiming = ReadObject(config, "timing");
+            state.ReadingMinimumMs = ReadPositiveInt(timing, "minReadingTimeMs")
+                ?? ReadPositiveInt(rootTiming, "minReadingTimeMs") ?? 0;
+            state.ReadingMaximumMs = ReadPositiveInt(timing, "maxReadingTimeMs")
+                ?? ReadPositiveInt(rootTiming, "maxReadingTimeMs") ?? 0;
+        }
         if (IsReadingExerciseFlow(state) && state.EngineType is not ("scan_find" or "scanning" or "skimming"))
             state.ReadingPurpose = ExerciseConfigurationRules.ResolveReadingPurpose(
                 exerciseEngineType,
@@ -1528,6 +1537,19 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
     {
         if (IsAdaptiveFluency(state))
             return FinishAdaptiveStage(session, state, now);
+        if (ExerciseConfigurationRules.NormalizeEngineType(state.EngineType) == "reading_comprehension")
+        {
+            if (!state.ReadingStartTime.HasValue)
+                return Invalid("Önce okumayı başlatın.");
+            if (!state.ReadingEndTime.HasValue)
+            {
+                var elapsedMs = Math.Max(0, (now - state.ReadingStartTime.Value).TotalMilliseconds
+                    - state.ReadingPausedSeconds * 1000d);
+                if (!incomplete && elapsedMs < state.ReadingMinimumMs)
+                    return Invalid("Minimum okuma süresi henüz dolmadı.");
+                incomplete |= state.ReadingMaximumMs > 0 && elapsedMs >= state.ReadingMaximumMs;
+            }
+        }
         EnsureTimingStarted(session, state, now);
         state.ReadingStartTime ??= state.TimingStartedAt ?? now;
         if (!state.ReadingEndTime.HasValue)
@@ -3246,6 +3268,8 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         public string? ReadingPurpose { get; set; }
         public DateTime? ReadingPausedAt { get; set; }
         public int ReadingPausedSeconds { get; set; }
+        public int ReadingMinimumMs { get; set; }
+        public int ReadingMaximumMs { get; set; }
         public decimal? FinalWpm { get; set; }
         public decimal? ComprehensionScore { get; set; }
         public decimal? WeightedKdp { get; set; }
