@@ -461,7 +461,7 @@
                 {{ hasTimeLimit() ? formatTime(getRemainingTimeMs()) : formatTime(engineState.timeElapsed) }}
             </div>
             <div class="progress-info">
-                <span>Kelime {{ engineState.currentStep }} / {{ engineState.totalSteps }}</span>
+                <span>Grup {{ engineState.currentStep }} / {{ engineState.totalSteps }}</span>
                 <div class="ep-progress-bar"><div class="ep-progress-bar__fill" [style.width.%]="getProgressPercent()"></div></div>
             </div>
             <button class="ep-btn ep-btn--icon" (click)="togglePause()">
@@ -489,8 +489,8 @@
 
         <div class="game-stats">
             <div class="stat">
-                <span class="label">Hız</span>
-                <span class="value">{{ getWpm() || 200 }} WPM</span>
+                <span class="label">Gösterim temposu</span>
+                <span class="value">{{ getWpm() || 200 | number:'1.0-0' }} kelime/dk (tempo)</span>
             </div>
             <div class="stat">
                 <span class="label">İlerleme</span>
@@ -1629,6 +1629,10 @@
             </div>
 
             <div class="stats-row" *ngIf="result?.details?.displayPaceWpm">
+                <div class="stat-card" *ngIf="result?.details?.completionPercent != null">
+                    <div class="stat-value">{{ result?.details?.completionPercent | number:'1.0-0' }}%</div>
+                    <div class="stat-label">Tamamlanan gösterim</div>
+                </div>
                 <div class="stat-card">
                     <div class="stat-value">{{ result?.details?.displayPaceWpm }}</div>
                     <div class="stat-label">Gösterim temposu (kelime/dk)</div>
@@ -1640,6 +1644,9 @@
             </div>
             <div class="measurement-not-available" *ngIf="result?.details?.displayPaceWpm">
                 {{ getReadingMeasurementMessage() }}
+            </div>
+            <div class="measurement-not-available" *ngIf="result?.details?.displayPaceWpm && result?.details?.incomplete">
+                Gösterim yarım kaldı. Bu sonuç program veya ödev tamamlanması olarak sayılmaz.
             </div>
             <div class="measurement-not-available" *ngIf="result?.details?.measurementStatus === 'NotMeasured' && !result?.details?.displayPaceWpm">
                 Egzersiz tamamlandı ve kaydedildi. Bu egzersizdeki harf yanıtları sunucuda doğrulanmadığı için

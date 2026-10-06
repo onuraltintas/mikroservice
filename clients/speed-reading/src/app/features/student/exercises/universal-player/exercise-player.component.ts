@@ -3105,7 +3105,11 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
 
   private normalizeEngineResultForDisplay(result: EngineResult): EngineResult {
     const paced = this.isPacedReadingEngine();
-    const details = { ...(result.details || {}), ...(paced ? { wpm: null, displayPaceWpm: this.getWpm() } : {}) };
+    const details = { ...(result.details || {}), ...(paced ? {
+      wpm: null, displayPaceWpm: this.getWpm(),
+      completionPercent: result.totalSteps > 0 ? Math.round(result.completedSteps / result.totalSteps * 100) : 0,
+      incomplete: result.details?.timedOut === true
+    } : {}) };
     if (this.isMeasuredClientResult(result)) {
       return {
         ...result,
@@ -3222,7 +3226,12 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
             wpm: sessionResult.rawWPM ?? null,
             comprehensionScore: sessionResult.comprehensionScore ?? null,
             weightedKDP: sessionResult.weightedKDP ?? null,
-            measurementStatus: sessionResult.measurementStatus
+            measurementStatus: sessionResult.measurementStatus,
+            ...(sessionResult.detailedResults?.groupingDisplayPaceWpm > 0 ? {
+              displayPaceWpm: sessionResult.detailedResults.groupingDisplayPaceWpm,
+              completionPercent: sessionResult.detailedResults.groupingCompletionPercent,
+              incomplete: sessionResult.detailedResults.readingIncomplete === true
+            } : {})
           }
         };
         this.cdr.detectChanges();
@@ -3245,7 +3254,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
           this.submitReviewResult(sessionResult.sessionId);
         }
 
-        const incomplete = (this.engine?.engineType === 'scan_find') && result.details?.incomplete === true;
+        const incomplete = this.result?.details?.incomplete === true || this.readingIncomplete === true;
         if (!incomplete && !isAssessmentMode && this.pathItemId && this.sessionId) {
           this.learningPathService.completePersonalizedPathItem(this.pathItemId, this.sessionId)
             .subscribe({
