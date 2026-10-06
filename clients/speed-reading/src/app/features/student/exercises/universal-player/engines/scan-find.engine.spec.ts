@@ -16,6 +16,20 @@ function callbacks(onComplete: (result: EngineResult) => void): EngineCallbacks 
 }
 
 describe('ScanFindEngine', () => {
+  it('matches Turkish casing and surrounding punctuation', () => {
+    let result: EngineResult | undefined;
+    const engine = new ScanFindEngine();
+    engine.initialize({
+      content: { text: '“IŞIK” [İNCİ]', wordCount: 2 },
+      targets: { words: ['ışık', 'inci'], caseSensitive: false }
+    }, callbacks(value => result = value));
+    engine.start();
+    engine.handleWordClick(0);
+    engine.handleWordClick(1);
+    expect(result?.accuracy).toBe(100);
+    engine.destroy();
+  });
+
   it('deduplicates targets and completes after the unique target is found', () => {
     let result: EngineResult | undefined;
     const engine = new ScanFindEngine();
