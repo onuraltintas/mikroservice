@@ -9,6 +9,16 @@ import { TestBed } from '@angular/core/testing';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 
 describe('Custom preview settings safety', () => {
+  it('offers inspection time rather than word-search targets for skimming', () => {
+    const config = { engineType: 'skimming', engineConfig: { timing: { minReadingTimeMs: 3000, maxReadingTimeMs: 45000 }, targets: { words: ['eski'] } } };
+    const controls = getCustomPreviewControls(config);
+    expect(controls.map(item => item.key)).toEqual(['timeLimitSec', 'fontSizePx']);
+    expect(controls[0].value).toBe(45);
+    const result = applyCustomPreviewSettings(config, { timeLimitSec: 20, fontSizePx: 28 }, { roles: ['Teacher'], preview: true });
+    expect(result.engineConfig['timing']).toEqual({ minReadingTimeMs: 3000, maxReadingTimeMs: 20000 });
+    expect(result.engineConfig['targets']).toEqual(config.engineConfig.targets);
+    expect(() => applyCustomPreviewSettings(config, { timeLimitSec: 2 }, { roles: ['Teacher'], preview: true })).toThrow();
+  });
   it('rejects inherited unsafe focus bounds before generating mode-only previews', () => {
     for (const overrides of [{ totalSteps: 501 }, { nLevel: 6 }, { gridSize: 8 }]) {
       expect(() => applyCustomPreviewSettings({ engineType: 'focus', engineConfig: { ...overrides } }, { mode: 'dual' }, { roles: ['Teacher'], preview: true })).toThrow();

@@ -2,6 +2,17 @@ import { ExercisePlayerComponent } from './exercise-player.component';
 import { of } from 'rxjs';
 
 describe('reading result semantics', () => {
+  it('does not call a skimming inspection reading-speed measurement', () => {
+    const player = Object.create(ExercisePlayerComponent.prototype) as any;
+    player.engine = { engineType: 'skimming', getText: () => 'Ana fikir metni' };
+    player.questionAnswers = [];
+    const result = player.normalizeEngineResultForDisplay({ score: 0, accuracy: 0, totalTime: 6000, totalSteps: 1,
+      completedSteps: 1, errors: 0, details: { wpm: 999 } });
+    expect(result.details.wpm).toBeNull();
+    expect(result.details.measurementStatus).toBe('NotMeasured');
+    expect(player.getComprehensionText()).toBe('Ana fikir metni');
+    expect(player.getCurrentReadingWpm()).toBe(0);
+  });
   it('uses authoritative RSVP presentation metrics without marking partial daily progress complete', () => {
     const player = Object.create(ExercisePlayerComponent.prototype) as any;
     player.engine = { engineType: 'text_stream', getMode: () => 'rsvp' };
