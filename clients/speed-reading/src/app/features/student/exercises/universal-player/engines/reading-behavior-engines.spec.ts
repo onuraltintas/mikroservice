@@ -17,6 +17,40 @@ function callbacks(onComplete: (result: any) => void = () => undefined): EngineC
 }
 
 describe('reading behavior engines', () => {
+  it('shows the first regression chunk immediately and exposes the partial last chunk proportionally', fakeAsync(() => {
+    let result: any;
+    const engine = new RegressionReductionEngine();
+    engine.initialize({ readingTextContent: 'bir iki üç', wordDelayMs: 100, chunkSize: 2 } as any,
+      callbacks(value => result = value));
+    engine.start();
+    expect(engine.getCurrentWordIndex()).toBe(1);
+    tick(200);
+    expect(engine.getCurrentWordIndex()).toBe(2);
+    expect(engine.state.isCompleted).toBeFalse();
+    tick(100);
+    expect(engine.state.isCompleted).toBeTrue();
+    expect(result.details.readingTimeMs).toBe(300);
+    expect(result.totalTime).toBe(300);
+    engine.destroy();
+  }));
+
+  it('preserves the remaining regression chunk exposure across pause', fakeAsync(() => {
+    const engine = new RegressionReductionEngine();
+    engine.initialize({ readingTextContent: 'bir iki', wordDelayMs: 100 } as any, callbacks());
+    engine.start();
+    tick(60);
+    engine.pause();
+    tick(1000);
+    engine.resume();
+    tick(39);
+    expect(engine.getCurrentWordIndex()).toBe(0);
+    tick(1);
+    expect(engine.getCurrentWordIndex()).toBe(1);
+    tick(100);
+    expect(engine.state.timeElapsed).toBe(200);
+    engine.destroy();
+  }));
+
   it('reads regression content and pacing from nested engine configuration', () => {
     const engine = new RegressionReductionEngine();
 
