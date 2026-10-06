@@ -161,7 +161,8 @@ export class MotionPathEngine implements BaseEngine {
             : (typeof durationSecondsValue === 'number' && durationSecondsValue > 0
                 ? boundedInteger(durationSecondsValue, 60, 5, 3600) : 0);
         const holdMs = boundedInteger(
-            field(timing, 'holdMs') ?? field(movement, 'fixationTimeMs'),
+            (mode === 'saccade' ? field(movement, 'jumpIntervalMs') : undefined)
+                ?? field(timing, 'holdMs') ?? field(movement, 'fixationTimeMs'),
             mode === 'fixation' ? 2000 : 1000, 50, 10000);
 
         this.currentMode = mode;
@@ -229,7 +230,7 @@ export class MotionPathEngine implements BaseEngine {
         const pointSize = boundedInteger(field(content, 'pointSize'), 36, 8, 200);
 
         const targets = [];
-        const count = 40; // Generate a batch to loop through
+        const count = boundedInteger(field(content, 'points'), 40, 1, 500);
 
         // Content Generators
         const getVal = () => {
@@ -572,20 +573,20 @@ export class MotionPathEngine implements BaseEngine {
 
         this.jumpInterval = setTimeout(() => {
             if (!this.state.isRunning || this.state.isPaused) return;
-            this.onTargetAction();
+            this.onTargetAction(true);
         }, holdMs);
     }
 
-    private onTargetAction(): void {
+    private onTargetAction(automatic = false): void {
         if (this.jumpInterval) clearTimeout(this.jumpInterval);
 
         const responseTime = Date.now() - this.fixationStartTime;
         const target = this.saccadeTargets[this.currentTargetIndex];
 
         this.callbacks.onAction({
-            action: 'target_clicked',
+            action: automatic ? 'target_advanced' : 'target_clicked',
             number: target.Number || target.number,
-            responseTime: responseTime,
+            ...(automatic ? {} : { responseTime }),
             timestamp: new Date().toISOString()
         });
 
@@ -596,9 +597,7 @@ export class MotionPathEngine implements BaseEngine {
         this.state.targetCount = (this.state.targetCount || 0) + 1;
 
         // In time-based mode, currentStep is managed by the timer
-        if (!this.isTimeBased) {
-            this.state.currentStep = this.currentTargetIndex;
-        }
+        this.state.currentStep = this.state.targetCount;
         this.callbacks.onStepComplete(this.currentTargetIndex, true);
 
         this.showNextSaccadeTarget();
@@ -986,7 +985,7 @@ export class MotionPathEngine implements BaseEngine {
     private complete(reason: string = 'unknown'): void {
         if (this.state.isCompleted) return;
         const completedAccuracy = this.fixationResults.reduce((sum, item) => sum + item.accuracy, 0);
-        const accuracy = this.totalPeripheralTests > 0
+        const accuracy = this.currentMode === 'saccade' ? 0 : this.totalPeripheralTests > 0
             ? Math.round(completedAccuracy / this.totalPeripheralTests)
             : 100;
         const errors = this.getIncorrectCount() + (this.awaitingPeripheralInput ? 1 : 0);
@@ -1005,6 +1004,11 @@ export class MotionPathEngine implements BaseEngine {
             completedSteps: this.state.currentStep,
             errors,
             details: {
+                ...(this.currentMode === 'saccade' ? {
+                    measurementStatus: 'NotMeasured',
+                    targetCount: this.state.targetCount || 0,
+                    targetIntervalMs: this.config.movement?.fixationTimeMs
+                } : {}),
                 fixationResults: this.fixationResults,
                 serverValidatedFixation: this.serverAuthoritativeFixation
             }
