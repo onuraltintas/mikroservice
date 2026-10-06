@@ -10,7 +10,7 @@
  */
 
 import { BaseEngine, EngineConfig, EngineState, EngineResult, EngineCallbacks } from './base-engine.interface';
-import { boundedInteger, boundedText, caseInsensitiveField, recordOrEmpty } from './reading-pacer-safety';
+import { boundedInteger, caseInsensitiveField, recordOrEmpty } from './reading-pacer-safety';
 
 // ==================== INTERFACES ====================
 
@@ -84,7 +84,6 @@ export class VocabularyBuilderEngine implements BaseEngine {
 
     // Persistence (Local Spaced Repetition)
     private userProgress: Record<string, WordProgress> = {};
-    private userId: string = 'guest';
 
     // Timers
     private startTime = 0;
@@ -110,8 +109,6 @@ export class VocabularyBuilderEngine implements BaseEngine {
         this.previewOnly = root['previewOnly'] === true;
         this.serverAuthoritative = !this.previewOnly && read('serverAuthoritative') === true;
 
-        // userId mapping (fallback to guest)
-        this.userId = boundedText(read('userId'), 'guest', 100) || 'guest';
         this.userProgress = {};
 
         // Parse words (handle PascalCase from backend)
@@ -281,7 +278,7 @@ export class VocabularyBuilderEngine implements BaseEngine {
     }
 
     resume(): void {
-        if (!this.state.isPaused) return;
+        if (!this.state.isRunning || !this.state.isPaused) return;
 
         // Adjust startTime by pause duration
         const pauseDuration = Date.now() - this.pauseStartTime;
@@ -304,6 +301,9 @@ export class VocabularyBuilderEngine implements BaseEngine {
         this.clearWordTimer();
         if (this.timerInterval) clearInterval(this.timerInterval);
         this.state.isRunning = false;
+        this.state.isPaused = false;
+        this.pendingQuizAnswer = null;
+        this.advanceOnResume = false;
         this.callbacks.onStateChange({ ...this.state });
     }
 
@@ -336,8 +336,7 @@ export class VocabularyBuilderEngine implements BaseEngine {
     }
 
     destroy(): void {
-        this.clearWordTimer();
-        if (this.timerInterval) clearInterval(this.timerInterval);
+        this.stop();
     }
 
     handleInput(input: any): void {
@@ -644,7 +643,7 @@ export class VocabularyBuilderEngine implements BaseEngine {
     }
 
     nextQuizQuestion(): void {
-        if (!this.showingFeedback || this.pendingQuizAnswer || this.state.isCompleted) return;
+        if (!this.state.isRunning || this.state.isPaused || !this.showingFeedback || this.pendingQuizAnswer || this.state.isCompleted) return;
         this.showingFeedback = false;
         this.nextWord();
     }

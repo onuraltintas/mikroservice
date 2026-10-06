@@ -1496,7 +1496,7 @@
                         <p class="correct-definition">{{ getVocabCurrentWord().definition }}</p>
                     </div>
 
-                    <button class="ep-btn ep-btn--primary" class="next-btn" (click)="nextVocabQuizQuestion()">
+                    <button class="ep-btn ep-btn--primary" class="next-btn" [disabled]="engineState.isPaused || isVocabAwaitingPersistence()" (click)="nextVocabQuizQuestion()">
                         Sonraki Kelime
                         <span class="material-icons">arrow_forward</span>
                     </button>

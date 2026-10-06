@@ -661,6 +661,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         var accuracy = IsScanning(state) ? ScanningAccuracy(state)
             : SpeedReadingExerciseSessionRules.CalculateAccuracy(session.CorrectCount, session.IncorrectCount);
         var wordsRead = state.Tachistoscope is not null || IsScanning(state)
+            || IsVocabularyState(state)
             || IsFocusExercise(state)
             || IsVisualizationExercise(state.ExerciseTypeName) || IsEngineType(state.EngineType, "visualization")
             || IsEngineType(state.EngineType, "regression_reduction") || IsEngineType(state.EngineType, "subvocalization_reduction")
@@ -1265,7 +1266,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                 studentId,
                 state.VocabularyMode,
                 cancellationToken);
-            if (state.VocabularyWords.Count == 0 && (state.VocabularyMode == "review" || ReadObject(effectiveConfig, "vocabulary").ValueKind == JsonValueKind.Object || ReadGuidArray(effectiveConfig, "vocabularyItemIds").Length > 0))
+            if (state.VocabularyWords.Count == 0)
                 throw new InvalidOperationException(state.VocabularyMode == "review"
                     ? "Şu anda tekrar zamanı gelen kelimeniz yok." : "Seçilen ayarlara uygun kelime bulunamadı.");
             if (state.VocabularyMode == "quiz" && state.VocabularyWords.Count > 0
@@ -2732,6 +2733,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
 
     private static bool SupportsServerReadingMeasurement(SessionState state) =>
         state.Tachistoscope is null && IsReadingExerciseFlow(state)
+        && !IsVocabularyState(state)
         && !IsFocusExercise(state)
         && !IsVisualizationExercise(state.ExerciseTypeName) && !IsEngineType(state.EngineType, "visualization")
         && !state.ReadingIncomplete
@@ -2857,6 +2859,10 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         exerciseTypeName.Contains("visualization", StringComparison.OrdinalIgnoreCase)
         || exerciseTypeName.Contains("visualisation", StringComparison.OrdinalIgnoreCase);
 
+    private static bool IsVocabularyState(SessionState state) =>
+        state.VocabularyWords.Count > 0 || state.ExerciseTypeName.Contains("vocabulary", StringComparison.OrdinalIgnoreCase)
+        || state.EngineType.Equals("vocabulary_builder", StringComparison.OrdinalIgnoreCase);
+
     private static bool IsVocabularyExercise(string exerciseTypeName, JsonElement config) =>
         exerciseTypeName.Contains("vocabulary", StringComparison.OrdinalIgnoreCase)
         || exerciseTypeName.Contains("kelime", StringComparison.OrdinalIgnoreCase)
@@ -2885,8 +2891,6 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             .Concat(ReadGuidArray(vocabulary, "itemIds"))
             .Distinct()
             .ToArray();
-        if (configuredIds.Length == 0 && vocabulary.ValueKind != JsonValueKind.Object)
-            return [];
 
         var query = db.VocabularyItems.AsNoTracking()
             .Where(item => !item.IsDeleted
@@ -3246,10 +3250,10 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                 : null,
             result.TimeSpentSeconds,
             result.IsMeasured ? score ?? result.Score : null,
-            IsScanning(state) || IsFocusExercise(state) || IsVisualizationExercise(state.ExerciseTypeName) || IsEngineType(state.EngineType, "visualization") || result.WordsRead == 0 ? null : result.WordsRead,
-            !IsScanning(state) && !IsFocusExercise(state) && !IsVisualizationExercise(state.ExerciseTypeName) && !IsEngineType(state.EngineType, "visualization") && result.IsMeasured && result.RawWpm > 0 ? result.RawWpm : null,
+            IsVocabularyState(state) || IsScanning(state) || IsFocusExercise(state) || IsVisualizationExercise(state.ExerciseTypeName) || IsEngineType(state.EngineType, "visualization") || result.WordsRead == 0 ? null : result.WordsRead,
+            !IsVocabularyState(state) && !IsScanning(state) && !IsFocusExercise(state) && !IsVisualizationExercise(state.ExerciseTypeName) && !IsEngineType(state.EngineType, "visualization") && result.IsMeasured && result.RawWpm > 0 ? result.RawWpm : null,
             result.IsMeasured && state.Questions.Count > 0 ? result.ComprehensionScore : null,
-            !IsScanning(state) && !IsFocusExercise(state) && !IsVisualizationExercise(state.ExerciseTypeName) && !IsEngineType(state.EngineType, "visualization") && result.IsMeasured && result.RawWpm > 0 ? result.WeightedKdp : null,
+            !IsVocabularyState(state) && !IsScanning(state) && !IsFocusExercise(state) && !IsVisualizationExercise(state.ExerciseTypeName) && !IsEngineType(state.EngineType, "visualization") && result.IsMeasured && result.RawWpm > 0 ? result.WeightedKdp : null,
             xp ?? (result.IsMeasured && !state.ReadingIncomplete
                 ? SpeedReadingExerciseSessionRules.CalculateXp(
                     score ?? result.Score,

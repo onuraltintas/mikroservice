@@ -18,7 +18,7 @@ public sealed class VocabularyPersistenceTests
         var started = await Service(db).StartAsync(student, new() { ExerciseId = exercise });
         Assert.Equal(4, started.InitialData.GetProperty("vocabularyWords").GetArrayLength());
         db.VocabularyItems.RemoveRange(db.VocabularyItems); await db.SaveChangesAsync();
-        await Assert.ThrowsAsync<InvalidOperationException>(() => Service(db).StartAsync(student, new() { ExerciseId = exercise }));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => Service(db).StartAsync(Guid.NewGuid(), new() { ExerciseId = exercise }));
         Assert.Single(db.ExerciseSessions);
     }
     [Fact]

@@ -51,7 +51,10 @@ internal sealed class OwnedSpeedReadingProgressWriter(OwnedSpeedReadingDbContext
                 || exerciseType.Name.Contains("focus", StringComparison.OrdinalIgnoreCase)
                 || exerciseType.Name.Contains("attention", StringComparison.OrdinalIgnoreCase)
                 || exerciseType.Name.Contains("fixation", StringComparison.OrdinalIgnoreCase));
-        return ToSummary(result, isVisualization || isFocus);
+        var isVocabulary = exerciseType is not null
+            && (exerciseType.EngineType.Equals("vocabulary_builder", StringComparison.OrdinalIgnoreCase)
+                || exerciseType.Name.Contains("vocabulary", StringComparison.OrdinalIgnoreCase));
+        return ToSummary(result, isVisualization || isFocus || isVocabulary);
     }
 
     private static void ValidateRequest(
