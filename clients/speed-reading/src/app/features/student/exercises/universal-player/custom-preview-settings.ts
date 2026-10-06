@@ -90,7 +90,7 @@ export function getCustomPreviewControls(configuration: Record<string, unknown>)
     case 'vocabulary_builder': return read('mode') === 'quiz'
       ? [control('timeLimitPerWord', 'Kelime başına süre (saniye; 0: sınırsız)', 0, 3600, read('timeLimitPerWord') ?? 0)] : [];
     case 'visual_expansion': return [
-      control('displayDurationMs', 'Gösterim süresi (ms)', 50, 5000, timing['durationms'] || read('VisualExpansionDisplayDurationMs') || 250),
+      control('displayDurationMs', 'Gösterim süresi (ms)', 100, 5000, read('displayDurationMs') || timing['durationms'] || read('VisualExpansionDisplayDurationMs') || 250),
       control('intervalMs', 'Gösterimler arası bekleme (ms)', 50, 10000, timing['intervalms'] || 1500)
     ];
     case 'text_stream': return [
@@ -262,7 +262,11 @@ export function applyCustomPreviewSettings<T extends Record<string, unknown>>(
     return result;
   }
   if (engine === 'visual_expansion') {
-    if (validated['displayDurationMs'] !== undefined) merge('timing', { durationMs: validated['displayDurationMs'] });
+    if (validated['displayDurationMs'] !== undefined) {
+      merge('timing', { durationMs: validated['displayDurationMs'] });
+      settings['displayDurationMs'] = validated['displayDurationMs'];
+      Object.assign(result, { displayDurationMs: validated['displayDurationMs'] });
+    }
     if (validated['intervalMs'] !== undefined) merge('timing', { intervalMs: validated['intervalMs'] });
     return result;
   }

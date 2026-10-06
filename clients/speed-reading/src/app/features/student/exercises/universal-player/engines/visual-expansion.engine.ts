@@ -13,7 +13,7 @@ import { visualAngleToAxisOffsetPercent } from './visual-expansion-position';
 export interface VisualExpansionConfig extends EngineConfig {
     expansion: {
         level: number;
-        pattern: 'horizontal' | 'vertical' | 'radial' | 'random';
+        pattern: 'horizontal' | 'vertical' | 'radial';
         stimulusType: 'letter' | 'number' | 'symbol' | 'word';
         symmetry: boolean;
         startDegrees?: number;
@@ -113,6 +113,10 @@ export class VisualExpansionEngine implements BaseEngine {
             || contentConfig.stimulusType
             || this.config.expansion?.stimulusType
             || 'letter';
+        if (!['horizontal', 'vertical', 'radial'].includes(configuredPattern)
+            || !['letter', 'number', 'symbol', 'word'].includes(configuredStimulusType)) {
+            throw new Error('Görsel genişleme deseni veya uyaran türü desteklenmiyor.');
+        }
         this.config.expansion = {
             ...(this.config.expansion || {}),
             level: this.config.expansion?.level || backendConfig.difficultyLevel || 1,
@@ -451,37 +455,15 @@ export class VisualExpansionEngine implements BaseEngine {
         const xOffset = visualAngleToAxisOffsetPercent(this.currentDegrees, bounds.width, radial);
         const yOffset = visualAngleToAxisOffsetPercent(this.currentDegrees, bounds.height, radial);
 
-        const chars = "ABCDEFGHKLMNPRSTUVYZ"; // Karışıklık yaratabilecek I,O,Q çıkarıldı
-        const numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9];
-
-        // Kullanılan karakterleri takip et (aynı turda ve önceki turdan gelen tekrarları önle)
-        const usedInThisTurn: string[] = [];
-        const previousChars = this.lastShownStimuli.map(s => s.toUpperCase());
-
-        /**
-         * Benzersiz karakter üretir
-         * - Aynı turda kullanılan karakterleri tekrar kullanmaz
-         * - Önceki turda gösterilen karakterleri tekrar kullanmaz
-         */
+        const pool = type === 'number' ? ['1','2','3','4','5','6','7','8','9']
+            : type === 'symbol' ? ['★','●','▲','■','◆','+','×','÷']
+            : type === 'word' ? ['EV','SU','GÜN','YOL','KUŞ','AY','EL','DAĞ']
+            : [...'ABCDEFGHKLMNPRSTUVYZ'];
+        // Match the server pools; each presentation contains distinct stimuli.
+        const available = [...pool];
         const getUniqueContent = (): string => {
-            let content: string;
-            let attempts = 0;
-            const maxAttempts = 50; // Sonsuz döngü önleme
-
-            do {
-                if (type === 'number') {
-                    content = numbers[Math.floor(Math.random() * numbers.length)].toString();
-                } else {
-                    content = chars[Math.floor(Math.random() * chars.length)];
-                }
-                attempts++;
-            } while (
-                (usedInThisTurn.includes(content) || previousChars.includes(content)) &&
-                attempts < maxAttempts
-            );
-
-            usedInThisTurn.push(content);
-            return content;
+            const index = Math.floor(Math.random() * available.length);
+            return available.splice(index, 1)[0];
         };
 
         // Sınır kontrolü - karakterler egzersiz alanı dışına çıkmasın

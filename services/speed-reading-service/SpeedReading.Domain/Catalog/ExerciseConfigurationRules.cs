@@ -299,6 +299,11 @@ public static class ExerciseConfigurationRules
 
     private static void ValidateVisualExpansionConfiguration(JsonElement config)
     {
+        ValidateOptionalEnum(config, "pattern", ["horizontal", "vertical", "radial"], "Görsel genişleme deseni");
+        ValidateOptionalEnum(config, "mode", ["horizontal", "vertical", "radial"], "Görsel genişleme deseni");
+        var content = TryGetObject(config, "content");
+        if (content.HasValue)
+            ValidateOptionalEnum(content.Value, "stimulusType", ["letter", "number", "symbol", "word"], "Görsel genişleme uyaran türü");
         ValidateOptionalIntRange(config, "rounds", 1, 100, "Görsel genişleme tur sayısı");
         ValidateOptionalIntRange(config, "totalSteps", 1, 100, "Görsel genişleme tur sayısı");
         ValidateOptionalIntRange(config, "itemCount", 1, 100, "Görsel genişleme tur sayısı");
@@ -309,6 +314,11 @@ public static class ExerciseConfigurationRules
             ValidateOptionalIntRange(timing.Value, "durationMs", 100, 5_000, "Görsel genişleme gösterim süresi");
 
         var expansion = TryGetObject(config, "expansion");
+        if (expansion.HasValue)
+        {
+            ValidateOptionalEnum(expansion.Value, "pattern", ["horizontal", "vertical", "radial"], "Görsel genişleme deseni");
+            ValidateOptionalEnum(expansion.Value, "stimulusType", ["letter", "number", "symbol", "word"], "Görsel genişleme uyaran türü");
+        }
         ValidateOptionalIntRange(config, "startDegrees", 2, 60, "Görsel genişleme başlangıç açısı");
         ValidateOptionalIntRange(config, "targetDegrees", 2, 60, "Görsel genişleme hedef açısı");
         if (expansion.HasValue)
