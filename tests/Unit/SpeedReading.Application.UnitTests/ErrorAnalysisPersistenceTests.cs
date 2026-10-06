@@ -8,6 +8,16 @@ namespace SpeedReading.Application.UnitTests;
 
 public sealed class ErrorAnalysisPersistenceTests
 {
+    [Theory]
+    [InlineData("ErrorAnalysis")]
+    [InlineData("ERROR_ANALYSIS")]
+    public void Nested_or_aliased_engine_configuration_cannot_expose_answer_keys(string engine)
+    {
+        var json = System.Text.Json.JsonSerializer.Serialize(new { engineConfig = new { engineType = engine,
+            errors = new[] { new { wordIndex = 3, originalWord = "yalnız", errorWord = "yanlız" } }, originalText = "yalnız" } });
+        var sanitized = SpeedReading.Application.Content.SpeedReadingContentSecurity.SanitizeExerciseConfiguration(json);
+        Assert.DoesNotContain("originalWord", sanitized); Assert.DoesNotContain("originalText", sanitized);
+    }
     [Fact]
     public async Task Server_validates_selection_and_ignores_forged_score()
     {
