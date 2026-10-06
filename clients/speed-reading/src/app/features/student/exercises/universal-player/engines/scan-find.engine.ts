@@ -30,7 +30,7 @@ export interface ScanFindConfig extends EngineConfig {
     targets?: {
         words: string[];      // Aranacak kelimeler
         caseSensitive?: boolean;
-        mode?: 'find_all' | 'find_any'; // Tüm geçişleri mi bulacak, yoksa kelime listesindekilerin herbirini bir kez mi?
+        mode?: 'find_all' | 'find_any'; // Her hedefi bir kez veya hedeflerden herhangi birini bul.
     };
     timing?: {
         timeLimitSec?: number;
@@ -111,7 +111,7 @@ export class ScanFindEngine implements BaseEngine {
         const timing = recordOrEmpty(this.config.timing);
         const backend = this.config as any;
         const caseSensitive = targets['caseSensitive'] === true;
-        const normalizeTarget = (word: string) => caseSensitive ? word : word.toLowerCase();
+        const normalizeTarget = (word: string) => this.normalizeWord(word, caseSensitive);
         this.config.content = {
             source: typeof content['source'] === 'string' ? content['source'] : 'random_text',
             text: typeof content['text'] === 'string' || typeof backend.ReadingTextContent === 'string' || typeof backend.readingTextContent === 'string'
@@ -148,6 +148,11 @@ export class ScanFindEngine implements BaseEngine {
             : targets.length;
     }
 
+    private normalizeWord(word: string, caseSensitive: boolean): string {
+        const clean = word.normalize('NFC').replace(/^[\p{P}\p{S}]+|[\p{P}\p{S}]+$/gu, '');
+        return caseSensitive ? clean : clean.toLocaleLowerCase('tr-TR');
+    }
+
     private generateContent(): void {
         let rawText = "";
         let targetWordsList: string[] = [];
@@ -173,7 +178,7 @@ export class ScanFindEngine implements BaseEngine {
         }
 
         const caseSensitive = this.config.targets?.caseSensitive || false;
-        this.targetWords = [...new Set(targetWordsList.map(w => caseSensitive ? w : w.toLowerCase()))];
+        this.targetWords = [...new Set(targetWordsList.map(w => this.normalizeWord(w, caseSensitive)))];
         const restoredTargets = (currentRound?.foundTargets || [])
             .filter(word => this.targetWords.includes(word));
         this.foundUniqueWordsInRound = new Set(
@@ -182,8 +187,7 @@ export class ScanFindEngine implements BaseEngine {
         const splitWords = rawText.split(/\s+/).filter(w => w.length > 0);
 
         this.words = splitWords.map((w, index) => {
-            const cleanWord = w.replace(/[.,;!?:'"()]/g, '');
-            const checkWord = caseSensitive ? cleanWord : cleanWord.toLowerCase();
+            const checkWord = this.normalizeWord(w, caseSensitive);
             const isTarget = this.targetWords.includes(checkWord);
 
             return {
@@ -244,8 +248,7 @@ export class ScanFindEngine implements BaseEngine {
 
             // Track unique word discovery
             const caseSensitive = this.config.targets?.caseSensitive || false;
-            const cleanText = word.text.replace(/[.,;!?:'"()]/g, '');
-            const checkWord = caseSensitive ? cleanText : cleanText.toLowerCase();
+            const checkWord = this.normalizeWord(word.text, caseSensitive);
 
             if (!this.foundUniqueWordsInRound.has(checkWord)) {
                 this.foundUniqueWordsInRound.add(checkWord);
