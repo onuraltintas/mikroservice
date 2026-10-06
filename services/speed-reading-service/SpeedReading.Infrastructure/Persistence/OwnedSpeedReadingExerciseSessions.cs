@@ -449,7 +449,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                 "visual_expansion_present" => PresentVisualExpansion(session, state, now),
                 "visual_expansion_answer" => AnswerVisualExpansion(session, state, request, now),
                 "fixation_present" => PresentFixation(session, state, now),
-                "fixation_answer" => AnswerFixation(session, state, request),
+                "fixation_answer" => AnswerFixation(session, state, request, now),
                 "tachistoscope_present" => PresentTachistoscope(state, request, now),
                 "tachistoscope_answer" => AnswerTachistoscope(session, state, request, now),
                 "answer_question" => AnswerQuestion(session, state, request),
@@ -1004,6 +1004,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             state.ReadingPausedAt = now;
         if (IsVisualExpansionExercise(state) && state.VisualExpansionPresentedAt.HasValue)
             state.VisualExpansionPausedAt = now;
+        if (IsValidatedFixation(state) && state.FixationPresentedAt.HasValue)
+            state.FixationPausedAt = now;
         session.SetState(JsonSerializer.Serialize(state, JsonOptions), session.CustomDataJson);
         await db.SaveChangesAsync(cancellationToken);
     }
@@ -1014,6 +1016,11 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         var now = DateTime.UtcNow;
         var state = DeserializeState(session.SessionDataJson);
         session.Resume(now);
+        if (state.FixationPausedAt.HasValue)
+        {
+            state.FixationPausedMilliseconds += (long)Math.Max(0, (now - state.FixationPausedAt.Value).TotalMilliseconds);
+            state.FixationPausedAt = null;
+        }
         if (state.VisualExpansionPausedAt.HasValue)
         {
             state.VisualExpansionPausedMilliseconds += (long)Math.Max(0, (now - state.VisualExpansionPausedAt.Value).TotalMilliseconds);
@@ -1938,6 +1945,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             state.FixationExpectedStimuli = VisualExpansionRoundRules.CreateStimuli(
                 session.Id.GetHashCode(), state.FixationRound, "letter", state.FixationPeripheralCount).ToArray();
             state.FixationPresentedAt = now.ToUniversalTime();
+            state.FixationPausedMilliseconds = 0;
+            state.FixationPausedAt = null;
         }
 
         var feedback = JsonSerializer.SerializeToElement(new
@@ -1950,23 +1959,32 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
     }
 
     private static ExerciseActionValidationResponse AnswerFixation(
-        ExerciseSession session, SessionState state, ExerciseActionRequest request)
+        ExerciseSession session, SessionState state, ExerciseActionRequest request, DateTime now)
     {
         if (!IsValidatedFixation(state) || state.FixationExpectedStimuli.Length == 0
             || !state.FixationPresentedAt.HasValue)
             return Invalid("No fixation round is awaiting an answer.");
 
+        // The client first moves the target (150 ms), then shows its cue (200 ms).
+        var exposureMs = state.FixationHoldMs + 350;
+        var elapsedMs = Math.Max(0, (now.ToUniversalTime() - state.FixationPresentedAt.Value).TotalMilliseconds
+            - state.FixationPausedMilliseconds);
+        if (elapsedMs < exposureMs)
+            return Invalid("Sabitleme gösterimi henüz tamamlanmadı.");
+        var responseTimeMs = (int)Math.Min(int.MaxValue, Math.Round(elapsedMs - exposureMs));
         var expected = state.FixationExpectedStimuli.Select(item => item.Trim().ToUpperInvariant()).Order().ToArray();
         var submitted = (request.Answers ?? []).Select(item => item.Trim().ToUpperInvariant()).Order().ToArray();
         var isCorrect = expected.SequenceEqual(submitted);
         session.Advance(isCorrect);
+        state.FixationRoundResults.Add(new FixationRoundState(state.FixationRound + 1, state.FixationHoldMs, responseTimeMs, isCorrect));
         state.FixationRound++;
         state.FixationExpectedStimuli = [];
         state.FixationPresentedAt = null;
         state.FocusCompleted = state.FixationRound >= state.TotalSteps;
         return Valid("Sabitleme yanıtı kaydedildi.", state.FixationRound,
             isCompleted: state.FocusCompleted,
-            isCorrect: session.AssessmentAttemptId.HasValue ? null : isCorrect);
+            isCorrect: session.AssessmentAttemptId.HasValue ? null : isCorrect,
+            feedbackData: JsonSerializer.SerializeToElement(new { responseTimeMs }, JsonOptions));
     }
 
     private static int CalculateVisualExpansionDegrees(SessionState state, int round)
@@ -3424,6 +3442,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         new(false, message, null, null, null, false, false, null, null, null, null);
 
     private sealed record VisualExpansionRoundState(int Round, int Distance, int DisplayDurationMs, int ResponseTimeMs, bool IsCorrect);
+    private sealed record FixationRoundState(int Round, int HoldMs, int ResponseTimeMs, bool IsCorrect);
 
     private sealed class SessionState
     {
@@ -3527,6 +3546,9 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         public int FixationRound { get; set; }
         public string[] FixationExpectedStimuli { get; set; } = [];
         public DateTime? FixationPresentedAt { get; set; }
+        public DateTime? FixationPausedAt { get; set; }
+        public long FixationPausedMilliseconds { get; set; }
+        public List<FixationRoundState> FixationRoundResults { get; set; } = [];
         public List<SessionQuestion> Questions { get; set; } = [];
         public List<SessionAnswer> Answers { get; set; } = [];
         public List<ScanningRound> ScanningRounds { get; set; } = [];

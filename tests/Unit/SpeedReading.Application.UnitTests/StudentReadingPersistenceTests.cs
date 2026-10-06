@@ -995,6 +995,10 @@ public sealed class StudentReadingPersistenceTests
             new ExerciseActionRequest { Action = "fixation_present" }, CancellationToken.None);
         retry.FeedbackData!.Value.GetProperty("stimuli").EnumerateArray()
             .Select(item => item.GetString()!).Should().Equal(stimuli);
+        var fixationSession = await context.ExerciseSessions.SingleAsync();
+        var fixationState = System.Text.Json.Nodes.JsonNode.Parse(fixationSession.SessionDataJson)!;
+        fixationState["fixationPresentedAt"] = DateTime.UtcNow.AddSeconds(-1);
+        fixationSession.SetState(fixationState.ToJsonString()); await context.SaveChangesAsync();
         var prematureCompletion = () => service.CompleteAsync(studentId, started.SessionId,
             new CompleteExerciseSessionRequest(), CancellationToken.None);
         await prematureCompletion.Should().ThrowAsync<Exception>();
@@ -1010,6 +1014,9 @@ public sealed class StudentReadingPersistenceTests
             new ExerciseActionRequest { Action = "fixation_present" }, CancellationToken.None);
         var correctStimuli = second.FeedbackData!.Value.GetProperty("stimuli")
             .EnumerateArray().Select(item => item.GetString()!).ToList();
+        fixationState = System.Text.Json.Nodes.JsonNode.Parse(fixationSession.SessionDataJson)!;
+        fixationState["fixationPresentedAt"] = DateTime.UtcNow.AddSeconds(-1);
+        fixationSession.SetState(fixationState.ToJsonString()); await context.SaveChangesAsync();
         var correct = await service.ValidateActionAsync(studentId, started.SessionId,
             new ExerciseActionRequest { Action = "fixation_answer", Answers = correctStimuli }, CancellationToken.None);
         correct.IsCorrect.Should().BeTrue();
