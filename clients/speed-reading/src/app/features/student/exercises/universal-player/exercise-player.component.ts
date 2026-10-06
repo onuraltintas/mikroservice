@@ -1432,7 +1432,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   private enqueueAction(
     action: ActionData,
     onResponse?: (response: ValidationResponse) => void,
-    persistFailure = true): Promise<void> {
+    persistFailure = !(this.engine?.engineType === 'visualization' && action.action === 'answer_question')): Promise<void> {
     if (!this.sessionId || this.sessionId === 'preview-mode') {
       return Promise.resolve();
     }

@@ -69,7 +69,6 @@ export class VisualizationEngine implements BaseEngine {
         return this.sceneDisplayTotal > 0
             ? Math.min(100, Math.max(0, this.sceneDisplayRemaining / this.sceneDisplayTotal * 100)) : 0;
     }
-    private serverAuthoritative = false;
     private previewOnly = false;
     private pendingServerAnswer: { questionId: string; answer: string; sceneId: string } | null = null;
     private answerEvaluated = false;
@@ -96,7 +95,6 @@ export class VisualizationEngine implements BaseEngine {
         const mode = read('mode');
         this.mode = ['static', 'guided', 'flash'].includes(mode) ? mode : 'static';
         this.previewOnly = root['previewOnly'] === true;
-        this.serverAuthoritative = !this.previewOnly;
 
         // Get scenes from config (try both cases)
         const configuredScenes = read('scenes');
@@ -424,7 +422,7 @@ export class VisualizationEngine implements BaseEngine {
             return;
         }
 
-        if (this.serverAuthoritative) {
+        {
             this.pendingServerAnswer = {
                 questionId: question.questionId,
                 answer,
@@ -451,49 +449,6 @@ export class VisualizationEngine implements BaseEngine {
             return;
         }
 
-        const expectedAnswer = question.correctAnswer?.trim() ?? '';
-        const normalizedAnswer = String(answer ?? '').trim();
-        const isCorrect = expectedAnswer.length > 0
-            && expectedAnswer.toLowerCase() === normalizedAnswer.toLowerCase();
-
-        // Store feedback state
-        this.showingFeedback = true;
-        this.answerEvaluated = true;
-        this.lastAnswer = answer;
-        this.lastAnswerCorrect = isCorrect === true;
-        this.correctAnswer = expectedAnswer;
-
-        this.questionAnswers.push({
-            questionId: question.questionId,
-            answer: answer,
-            isCorrect: isCorrect
-        });
-
-        if (isCorrect) {
-            this.state.score++;
-        } else {
-            this.state.errors++;
-        }
-        this.state.currentStep++;
-
-        // Notify backend
-        this.callbacks.onAction({
-            action: 'answer_question',
-            questionId: question.questionId,
-            answer: answer,
-            customData: {
-                sceneId: scene.sceneId
-            },
-            timestamp: new Date()
-        });
-
-        this.callbacks.onStepComplete(this.state.currentStep, isCorrect);
-        this.callbacks.onStateChange({
-            ...this.state,
-            phase: 'questions',
-            currentSceneIndex: this.currentSceneIndex,
-            currentQuestionIndex: this.currentQuestionIndex
-        } as any);
     }
 
     private toOptionLetter(question: VisualizationQuestion, answer: string): string {
@@ -505,7 +460,7 @@ export class VisualizationEngine implements BaseEngine {
 
     // Called when user clicks "Next Question" button
     nextQuestion(): void {
-        if (!this.showingFeedback || this.pendingServerAnswer) return;
+        if (!this.state.isRunning || this.state.isPaused || !this.showingFeedback || this.pendingServerAnswer) return;
 
         this.showingFeedback = false;
         this.lastAnswer = '';
