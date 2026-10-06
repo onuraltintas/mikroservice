@@ -24,6 +24,7 @@ interface VocabularyWord {
     category: string;
     difficultyLevel: number;
     questionType?: 'word' | 'definition';
+    box?: number;
 }
 
 interface VocabularyConfig extends EngineConfig {
@@ -90,10 +91,13 @@ export class VocabularyBuilderEngine implements BaseEngine {
     private pauseStartTime = 0;
     private timerInterval: any;
     private wordStartTime = 0;
+    private wordDeadline = 0;
+    private configurationError = '';
 
     // ==================== LIFECYCLE ====================
 
     initialize(config: VocabularyConfig, callbacks: EngineCallbacks): void {
+        if (this.state) this.reset();
         this.callbacks = callbacks;
         const root = recordOrEmpty(config);
         const nested = recordOrEmpty(caseInsensitiveField(root, 'engineConfig'));
@@ -107,7 +111,7 @@ export class VocabularyBuilderEngine implements BaseEngine {
 
         // userId mapping (fallback to guest)
         this.userId = boundedText(read('userId'), 'guest', 100) || 'guest';
-        if (!this.previewOnly) this.loadProgress();
+        this.userProgress = {};
 
         // Parse words (handle PascalCase from backend)
         const configuredWords = read('words');
@@ -121,7 +125,8 @@ export class VocabularyBuilderEngine implements BaseEngine {
             antonyms: w.antonyms || w.Antonyms,
             category: w.category || w.Category,
             difficultyLevel: w.difficultyLevel || w.DifficultyLevel,
-            questionType: w.questionType || w.QuestionType
+            questionType: w.questionType || w.QuestionType,
+            box: w.box || w.Box
         }));
 
         const mode = read('mode');
@@ -131,6 +136,15 @@ export class VocabularyBuilderEngine implements BaseEngine {
             ? quizType : 'mixed';
         this.currentWordIndex = boundedInteger(read('currentWordIndex'), 0, 0, Math.max(0, this.words.length - 1));
         this.timeLimitPerWord = boundedInteger(read('timeLimitPerWord'), 0, 0, 3_600);
+        this.configurationError = this.words.length === 0 || this.words.some(word => !word.id || !word.word?.trim() || !word.definition?.trim())
+            || new Set(this.words.map(word => word.id)).size !== this.words.length
+            || (this.mode === 'quiz' && (this.words.length < 2
+                || new Set(this.words.map(word => word.word.trim().toLocaleLowerCase('tr'))).size !== this.words.length
+                || new Set(this.words.map(word => word.definition.trim().toLocaleLowerCase('tr'))).size !== this.words.length))
+            ? 'Kelime havuzu eksik veya belirsiz. Lütfen farklı bir kelime grubu seçin.' : '';
+        for (const word of this.words) this.userProgress[word.id] = {
+            box: boundedInteger(word.box, 1, 1, 5), lastSeen: 0, nextDue: 0, consecutiveCorrect: 0
+        };
 
         // Initialize state
         this.state = {
@@ -149,8 +163,8 @@ export class VocabularyBuilderEngine implements BaseEngine {
 
     start(): void {
         if (this.state.isRunning || this.state.isCompleted) return;
-        if (this.words.length === 0) {
-            console.error('[VocabularyBuilderEngine] No words to display');
+        if (this.configurationError) {
+            this.callbacks.onError(this.configurationError);
             return;
         }
 
@@ -181,16 +195,17 @@ export class VocabularyBuilderEngine implements BaseEngine {
         }
     }
 
-    private startWordTimer(): void {
+    private startWordTimer(remainingMs = this.timeLimitPerWord * 1000): void {
         this.clearWordTimer();
         if (this.timeLimitPerWord > 0 && this.mode === 'quiz') {
-            this.wordTimeRemaining = this.timeLimitPerWord;
+            this.wordDeadline = Date.now() + remainingMs;
+            this.wordTimeRemaining = Math.ceil(remainingMs / 1000);
             this.wordTimer = setInterval(() => {
-                this.wordTimeRemaining--;
+                this.wordTimeRemaining = Math.max(0, Math.ceil((this.wordDeadline - Date.now()) / 1000));
                 if (this.wordTimeRemaining <= 0) {
                     this.handleTimeout();
                 }
-            }, 1000);
+            }, 100);
         }
     }
 
@@ -256,7 +271,7 @@ export class VocabularyBuilderEngine implements BaseEngine {
     }
 
     pause(): void {
-        if (this.state.isPaused) return;
+        if (!this.state.isRunning || this.state.isPaused) return;
         this.clearWordTimer();
         this.state.isPaused = true;
         this.pauseStartTime = Date.now();
@@ -270,10 +285,11 @@ export class VocabularyBuilderEngine implements BaseEngine {
         // Adjust startTime by pause duration
         const pauseDuration = Date.now() - this.pauseStartTime;
         this.startTime += pauseDuration;
+        this.wordStartTime += pauseDuration;
 
         this.state.isPaused = false;
         if (this.mode === 'quiz' && this.timeLimitPerWord > 0 && !this.showingFeedback && this.wordTimeRemaining > 0) {
-            this.startWordTimer(); // Simplistic resume, resets interval but uses remaining time
+            this.startWordTimer(Math.max(0, this.wordDeadline - this.pauseStartTime));
         }
         this.callbacks.onResume();
         this.callbacks.onStateChange({ ...this.state });
@@ -374,14 +390,16 @@ export class VocabularyBuilderEngine implements BaseEngine {
     }
 
     markAsKnown(): void {
+        if (!this.canRespond()) return;
         const word = this.getCurrentWord();
-        if (word) this.updateLeitnerBox(word.id, true);
+        if (word && !this.serverAuthoritative) this.updateLeitnerBox(word.id, true);
         this.recordResponse(true);
     }
 
     markAsUnknown(): void {
+        if (!this.canRespond()) return;
         const word = this.getCurrentWord();
-        if (word) this.updateLeitnerBox(word.id, false);
+        if (word && !this.serverAuthoritative) this.updateLeitnerBox(word.id, false);
         this.recordResponse(false);
     }
 
@@ -390,6 +408,12 @@ export class VocabularyBuilderEngine implements BaseEngine {
         if (!word) return;
 
         const responseTime = Date.now() - this.wordStartTime;
+        if (this.serverAuthoritative) {
+            this.pendingQuizAnswer = { word, responseTime };
+            this.callbacks.onAction({ action: isCorrect ? 'mark_known' : 'mark_unknown', wordId: word.id, responseTime, timestamp: new Date() });
+            this.callbacks.onStateChange({ ...this.state });
+            return;
+        }
 
         this.responses.push({
             wordId: word.id,
@@ -471,14 +495,6 @@ export class VocabularyBuilderEngine implements BaseEngine {
             });
         });
 
-        // Ensure we have 4 options (fallback if too few words)
-        if (options.length < 4) {
-            const placeholders = ['Option A', 'Option B', 'Option C', 'Option D'];
-            while (options.length < 4) {
-                options.push({ letter: '', text: placeholders[options.length], isCorrect: false });
-            }
-        }
-
         // Shuffle and assign letters
         options.sort(() => Math.random() - 0.5);
         const letters = ['A', 'B', 'C', 'D'];
@@ -501,7 +517,7 @@ export class VocabularyBuilderEngine implements BaseEngine {
     }
 
     submitQuizAnswer(letter: string): void {
-        if (this.showingFeedback) return;
+        if (!this.canRespond() || this.showingFeedback) return;
         const selectedOption = this.currentQuizOptions.find(option => option.letter === letter);
         if (!selectedOption?.text) {
             this.callbacks.onError('Geçerli bir seçenek seçilmelidir.');
@@ -575,10 +591,10 @@ export class VocabularyBuilderEngine implements BaseEngine {
 
     applyServerResponse(response: any): void {
         const pending = this.pendingQuizAnswer;
-        if (!pending) return;
+        if (!pending || !this.state.isRunning || this.state.isCompleted) return;
         this.pendingQuizAnswer = null;
 
-        if (response?.isValid === false) {
+        if (response?.isValid !== true) {
             this.showingFeedback = false;
             this.lastAnswerCorrect = false;
             this.startWordTimer();
@@ -587,7 +603,7 @@ export class VocabularyBuilderEngine implements BaseEngine {
         }
 
         const isCorrect = response?.isCorrect === true;
-        this.updateLeitnerBox(pending.word.id, isCorrect);
+        this.userProgress[pending.word.id].box = boundedInteger(response?.feedbackData?.box, this.getWordBox(pending.word.id), 1, 5);
         this.responses.push({
             wordId: pending.word.id,
             word: pending.word.word,
@@ -600,6 +616,7 @@ export class VocabularyBuilderEngine implements BaseEngine {
         this.lastAnswerCorrect = isCorrect;
         this.callbacks.onStepComplete(this.state.currentStep, isCorrect);
         this.callbacks.onStateChange({ ...this.state });
+        if (this.mode !== 'quiz') this.nextWord();
     }
 
     isShowingFeedback(): boolean {
@@ -670,7 +687,7 @@ export class VocabularyBuilderEngine implements BaseEngine {
         const intervalMs = (intervals[progress.box - 1] || 0) * 24 * 60 * 60 * 1000;
         progress.nextDue = Date.now() + intervalMs;
 
-        this.saveProgress();
+        // Preview progress remains in memory; persisted progress is server-owned.
     }
 
     // ==================== COMPLETION ====================
@@ -694,6 +711,9 @@ export class VocabularyBuilderEngine implements BaseEngine {
 
     getMode(): string {
         return this.mode;
+    }
+    private canRespond(): boolean {
+        return this.state.isRunning && !this.state.isPaused && !this.state.isCompleted && !this.pendingQuizAnswer;
     }
 
     getCorrectCount(): number {
