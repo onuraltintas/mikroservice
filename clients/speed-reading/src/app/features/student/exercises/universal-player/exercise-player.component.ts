@@ -1326,7 +1326,8 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
           || this.backendSessionConfig?.VocabularyWords
           || this.backendSessionConfig?.words
           || this.backendSessionConfig?.Words
-          || this.parsedConfig?.engineConfig?.['words'],
+          || ((!this.sessionId || this.sessionId === 'preview-mode' || this.isPreviewSession())
+            ? this.parsedConfig?.engineConfig?.['words'] : undefined),
         serverAuthoritative: !!this.sessionId && this.sessionId !== 'preview-mode',
         previewOnly: this.sessionId === 'preview-mode',
         getRenderBounds: () => {
@@ -2870,7 +2871,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
 
   isTachistoscopeMode(): boolean {
     return this.engine?.engineType === 'text_stream'
-      && (this.exercise?.exerciseTypeName === 'Tachistoscope'
+      && (this.exercise?.exerciseTypeName?.toLowerCase() === 'tachistoscope'
         || (this.engine as TextStreamEngine).getMode() !== 'rsvp');
   }
 

@@ -96,6 +96,7 @@ export class TextStreamEngine implements BaseEngine {
     private currentDurationMs = 500;
     private initialDurationMs = 500;
     private serverAuthoritative = false;
+    private ownedRsvp = false;
     private awaitingServer = false;
     private pendingAnswer = '';
     private pendingStimulus = '';
@@ -153,15 +154,18 @@ export class TextStreamEngine implements BaseEngine {
             this.config.adaptive.minDurationMs,
             this.config.adaptive.maxDurationMs);
         this.config.timing.intervalMs = boundedInteger(timing['intervalms'], 0, 0, 10000);
+        this.ownedRsvp = root.serverAuthoritative === true && this.isRsvpMode();
+        if (this.ownedRsvp && root.rsvpProtocolVersion === 1) {
+            this.config.timing.intervalMs = boundedInteger(root.rsvpGapMs, 0, 0, 10000);
+            this.config.visuals.showFixation = root.rsvpFixationMs === 300;
+        }
         const contentItems = caseInsensitiveField(content, 'items');
         this.config.content.items = Array.isArray(contentItems)
             ? contentItems.filter(item => typeof item === 'string').slice(0, 500)
             : undefined;
 
         // Backend property normalization (handle PascalCase vs camelCase)
-        const ownedWords = root.serverAuthoritative === true && this.isRsvpMode()
-            ? caseInsensitiveField(root, 'words') : undefined;
-        const rawStimuli = ownedWords ?? caseInsensitiveField(nested, 'stimuli')
+        const rawStimuli = this.ownedRsvp ? (caseInsensitiveField(root, 'words') ?? []) : caseInsensitiveField(nested, 'stimuli')
             ?? caseInsensitiveField(nested, 'words')
             ?? caseInsensitiveField(nested, 'chunks')
             ?? caseInsensitiveField(root, 'stimuli')
@@ -171,7 +175,8 @@ export class TextStreamEngine implements BaseEngine {
             ? rawStimuli.filter(item => typeof item === 'string' || (item && typeof item === 'object')).slice(0, this.isRsvpMode() ? 100_000 : 500)
             : undefined;
         const displayDuration = boundedInteger(
-            caseInsensitiveField(nested, 'displayDurationMs')
+            (this.ownedRsvp && root.rsvpProtocolVersion === 1 ? root.rsvpDisplayDurationMs : undefined)
+            ?? caseInsensitiveField(nested, 'displayDurationMs')
             ?? caseInsensitiveField(nested, 'intervalMs')
             ?? caseInsensitiveField(root, 'displayDurationMs')
             ?? caseInsensitiveField(root, 'intervalMs')
@@ -234,6 +239,10 @@ export class TextStreamEngine implements BaseEngine {
         }
 
         // Priority 2: Config'den gelen custom items
+        if (this.ownedRsvp) {
+            this.stimuli = [];
+            return;
+        }
         const count = this.config.TotalStimuli || this.config.content?.count || 20;
         const type = this.config.content?.type || 'word';
         const source = this.config.content?.source || 'random_pool';
@@ -804,7 +813,7 @@ export class TextStreamEngine implements BaseEngine {
     }
 
     getMode(): string {
-        return this.config.mode || 'tachistoscope';
+        return this.isRsvpMode() ? 'rsvp' : this.config.mode === 'rsvp' ? 'tachistoscope' : this.config.mode || 'tachistoscope';
     }
 
     getCurrentDuration(): number {
