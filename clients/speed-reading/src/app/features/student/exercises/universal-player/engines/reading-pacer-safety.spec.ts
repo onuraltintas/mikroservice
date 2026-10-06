@@ -16,6 +16,13 @@ const callbacks: EngineCallbacks = {
 };
 
 describe('reading pacer runtime safety', () => {
+  it('uses supported catalogue highlight colors and safely defaults invalid colors', () => {
+    const engine = new WordHighlightEngine();
+    engine.initialize({ content: { text: 'bir iki' }, visuals: { highlightColor: 'blue' } } as any, callbacks);
+    expect(engine.getHighlightColor()).toBe('#dbeafe');
+    engine.initialize({ content: { text: 'bir iki' }, visuals: { highlightColor: 'invalid' } } as any, callbacks);
+    expect(engine.getHighlightColor()).toBe('#fef08a');
+  });
   it('applies legacy catalogue content grouping including a short final group', () => {
     const engine = new WordHighlightEngine();
     engine.initialize({ engineConfig: { mode: 'chunking', content: { text: 'bir iki üç dört beş', chunkSize: 2 } } } as any, callbacks);
