@@ -10,6 +10,13 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 
 describe('Custom preview settings safety', () => {
   const context = { roles: ['Admin'], preview: true };
+  it('preserves millisecond precision when the dialog submits fractional-second defaults', () => {
+    const config = { engineType: 'reading_comprehension', engineConfig: { timing: { minReadingTimeMs: 1500, maxReadingTimeMs: 5500 } } };
+    const values = Object.fromEntries(getCustomPreviewControls(config).map(control => [control.key, control.value]));
+    const result = applyCustomPreviewSettings(config, values, context);
+    expect(result.engineConfig.timing).toEqual({ minReadingTimeMs: 1500, maxReadingTimeMs: 5500 });
+    expect(() => applyCustomPreviewSettings(config, { minReadingTimeSec: 1.5001 }, context)).toThrow();
+  });
   it('exposes comprehension duration and line spacing controls', () => {
     const controls = getCustomPreviewControls({ engineType: 'reading_comprehension', engineConfig: {
       timing: { minReadingTimeMs: 2000, maxReadingTimeMs: 60000 }, display: { lineHeight: 2.2 }
