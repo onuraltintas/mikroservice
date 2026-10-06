@@ -23,8 +23,16 @@ Bu adım henüz PostgreSQL veya uçtan uca tarayıcı doğrulaması değildir.
 
 ## Sıradaki işler — henüz tamamlanmadı
 
-1. Mod, N-back seviyesi, tablo boyutu ve tur sayısı için özel ayarların genişletilmesi; mod/dizi uyumluluğu ve geçersiz içerik doğrulaması.
-2. İkili mod D-prime ölçümünün düzeltilmesi veya doğrulanana kadar sunumdan kaldırılması; sunucu/istemci ölçüm tutarlılığı.
+### İkinci adım ilerlemesi
+
+- Özel ayarlara N-back seviyesi (1–5) ve tablo boyutu (3–7) eklendi; katalog değiştirilmeden etkin SessionData'ya uygulanır. Uyaran süresi kontrolü korunur.
+- İstemci hedef indekslerini etkin N-back ve diziden türetir; eski ayarlardan taşınmış indeksler yeni seviyeyi bozmaz.
+- Doğrulanmamış D-prime, hit-rate ve false-alarm-rate sonuç sunumundan kaldırıldı; buna ait artık kullanılmayan hesaplama kodu temizlendi.
+- İlgili 32 özel ayar ve 7 Odaklanma testi geçti. Bu değişiklikler sunucu tamamlanma/WPM kurallarını henüz değiştirmiyor.
+- Son tam arayüz regresyonu: 595/595 geçti; bağımsız TypeScript incelemesinde engelleyici bulgu yok.
+
+1. Mod ve tur sayısı için özel ayarların genişletilmesi; mod/dizi uyumluluğu ve geçersiz içerik doğrulaması. N-back ve tablo boyutu kontrolleri tamamlandı.
+2. Sunucu/istemci ölçüm tutarlılığı. D-prime sunumdan kaldırıldı.
 3. Hiç cevap verilmeden süresi dolan geçerli oturumun güvenli tamamlanması. Erken tamamlamayı açacak şekilde yalnız cevap şartı kaldırılmamalı.
 4. Odaklanmanın yeni ve geçmiş sonuçlarında bağlı metin olsa bile WPM/kelime sayısı üretiminin açıkça dışlanması.
 5. Oturum yeniden yapılandırma ve geç sunucu cevaplarının kalan yaşam döngüsü kontrolleri.
