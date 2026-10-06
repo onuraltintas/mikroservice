@@ -175,7 +175,10 @@ export class FocusEngine implements BaseEngine {
     private deriveTargetIndices(sequence: readonly unknown[], nLevel: number): number[] {
         const targets: number[] = [];
         for (let index = Math.max(1, nLevel); index < sequence.length; index++) {
-            if (sequence[index] === sequence[index - nLevel]) {
+            const value = sequence[index];
+            const previous = sequence[index - nLevel];
+            if (typeof value === 'string' && typeof previous === 'string'
+                ? value.toUpperCase() === previous.toUpperCase() : value === previous) {
                 targets.push(index);
             }
         }
@@ -415,7 +418,7 @@ export class FocusEngine implements BaseEngine {
         }
 
         // Handle word match (for word and dual modes)
-        if (input.type === 'word_match' || input.type === 'match') {
+        if (input.type === 'word_match' || (input.type === 'match' && this.mode !== 'position')) {
             if (this.hasRespondedWord) return;
             this.hasRespondedWord = true;
 
@@ -491,6 +494,10 @@ export class FocusEngine implements BaseEngine {
         if (response?.isValid === false && (actionName === 'position_match' || actionName === 'word_match')) {
             const channel = actionName === 'position_match' ? 'position' : 'word';
             const index = Number(action?.index);
+            if (index === this.currentIndex) {
+                if (channel === 'position') this.hasRespondedPosition = false;
+                else this.hasRespondedWord = false;
+            }
             const wasTarget = Number.isInteger(index)
                 && (channel === 'position'
                     ? this.config.PositionTargetIndices?.includes(index)
@@ -678,7 +685,7 @@ export class FocusEngine implements BaseEngine {
             accuracy: Math.round(accuracy),
             totalTime: this.state.timeElapsed,
             totalSteps: totalTrials,
-            completedSteps: this.currentIndex + 1,
+            completedSteps: Math.min(totalTrials, Math.max(0, this.currentIndex + 1)),
             errors: this.state.errors,
             details: {
                 mode: this.mode,

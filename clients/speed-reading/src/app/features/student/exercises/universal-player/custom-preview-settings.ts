@@ -276,6 +276,10 @@ export function applyCustomPreviewSettings<T extends Record<string, unknown>>(
       const nLevel = validated['nLevel'] ?? Number(read('NLevel') ?? read('FocusNLevel') ?? 1);
       const gridSize = validated['gridSize'] ?? Number(read('GridSize') ?? 3);
       const count = validated['totalSteps'] ?? Math.max(nLevel + 1, Number(controls.find(control => control.key === 'totalSteps')?.value ?? 20));
+      for (const [value, minimum, maximum] of [[nLevel, 1, 5], [gridSize, 3, 7], [count, 2, 500]]) {
+        if (!Number.isInteger(value) || value < minimum || value > maximum)
+          throw new Error('Odaklanma ayarları geçerli sınırlar içinde olmalıdır.');
+      }
       if (count <= nLevel) throw new Error('Uyaran sayısı N-back adım sayısından büyük olmalıdır.');
       const configuredWords = read('WordSequence');
       const wordPool = Array.isArray(configuredWords) ? [...new Set(configuredWords.filter((word): word is string => typeof word === 'string' && word.trim().length > 0))] : [];

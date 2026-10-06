@@ -44,7 +44,14 @@ internal sealed class OwnedSpeedReadingProgressWriter(OwnedSpeedReadingDbContext
             && (exerciseType.EngineType.Equals("visualization", StringComparison.OrdinalIgnoreCase)
                 || exerciseType.Name.Contains("visualization", StringComparison.OrdinalIgnoreCase)
                 || exerciseType.Name.Contains("visualisation", StringComparison.OrdinalIgnoreCase));
-        return ToSummary(result, isVisualization);
+        var isFocus = exerciseType is not null
+            && (exerciseType.EngineType.Equals("focus", StringComparison.OrdinalIgnoreCase)
+                || exerciseType.EngineType.Equals("attention_training", StringComparison.OrdinalIgnoreCase)
+                || exerciseType.EngineType.Equals("motion_path", StringComparison.OrdinalIgnoreCase)
+                || exerciseType.Name.Contains("focus", StringComparison.OrdinalIgnoreCase)
+                || exerciseType.Name.Contains("attention", StringComparison.OrdinalIgnoreCase)
+                || exerciseType.Name.Contains("fixation", StringComparison.OrdinalIgnoreCase));
+        return ToSummary(result, isVisualization || isFocus);
     }
 
     private static void ValidateRequest(
@@ -58,15 +65,15 @@ internal sealed class OwnedSpeedReadingProgressWriter(OwnedSpeedReadingDbContext
         SpeedReadingProgressWriteRules.RequireAuthoritativeSession(request.SessionId);
     }
 
-    private static ExerciseResultSummary ToSummary(ExerciseSessionResult result, bool isVisualization) => new(
+    private static ExerciseResultSummary ToSummary(ExerciseSessionResult result, bool suppressReadingMetrics) => new(
         result.Id,
         result.ExerciseId,
         result.ReadingTextId,
-        isVisualization ? 0 : result.WordsRead,
+        suppressReadingMetrics ? 0 : result.WordsRead,
         result.TimeSpentSeconds,
-        !isVisualization && result.IsMeasured && result.RawWpm > 0 ? result.RawWpm : null,
+        !suppressReadingMetrics && result.IsMeasured && result.RawWpm > 0 ? result.RawWpm : null,
         result.IsMeasured && result.ReadingTextId.HasValue ? result.ComprehensionScore : null,
-        !isVisualization && result.IsMeasured && result.RawWpm > 0 ? result.WeightedKdp : null,
+        !suppressReadingMetrics && result.IsMeasured && result.RawWpm > 0 ? result.WeightedKdp : null,
         result.CompletedAt,
         result.IsMeasured ? "Measured" : "NotMeasured");
 }

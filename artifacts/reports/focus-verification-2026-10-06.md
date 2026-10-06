@@ -1,4 +1,23 @@
-# Odaklanma düzeltmeleri — 6 Ekim 2026
+# Odaklanma düzeltmeleri - 6 Ekim 2026
+
+## Nihai durum — önceki ara notların yerine geçer
+
+Odaklanma düzeltme planı yerel geliştirme kapsamında tamamlandı.
+
+- Özel ayarlar: konum/kelime/çift kanal, N-back 1–5, tablo 3–7, süre 100–10000 ms ve tur 2–500. Tur sayısı N-back seviyesini aşar; geçersiz etkin ayarlar dizi üretiminden önce reddedilir. Katalog değişmez; yalnız hız değişimi diziyi korur.
+- Yaşam döngüsü: ilk uyaran, tekrarlanan hücre geçişi, duraklatma/devam, yeniden başlatma ve geç cevaplar doğrulandı. Geçişte yanıt alınmaz. Eski match girdisi tek kanala gider; tamamlanan adım toplamı aşmaz; reddedilen mevcut yanıt tekrar denenebilir.
+- Sunucu gerçek N-back dizisinden hedef hesaplar; çelişen hedef indeksleri reddedilir. Yanıtsız ama süresi dolmuş oturum tamamlanır, erken tamamlama engellenir. Değerlendirmede tüm uyaranlar ve son yanıt penceresi gereklidir.
+- Duraklamalar milisaniye hassasiyetindedir; başlatmadan önceki duraklama etkin süreden düşülmez.
+- Yeni/geçmiş sonuç ve özetlerde Odaklanma WPM, ağırlıklı WPM veya okunan kelime üretmez. Doğruluk isabet/(isabet+kaçırılan hedef+yanlış alarm) oranıdır. D-prime iddiası kaldırıldı. Bu teknik doğrulama, okuma becerisine bilimsel aktarım etkisini kanıtlamaz.
+- Kelime karşılaştırması büyük/küçük harften bağımsızdır. JavaScript ile .NET'in uç Unicode karşılaştırmaları birebir eşdeğer değildir; mevcut Türkçe havuz dışı içerikte ek sınır testi gerekir.
+
+Son doğrulamalar: arayüz **605/605**, sunucu **886/886**, gerçek PostgreSQL **3/3**, masaüstü/mobil **8/8** geçti. Tarayıcı testleri gerçek Angular arayüzünü, kontrollü Identity/API yanıtlarıyla çalıştırır; canlı oturum testi değildir.
+
+Üretim derlemesi geçti. Ortak player SCSS'inde mevcut 120 kB uyarı bütçesi 8,56 kB aşılıyor; derlemeyi engellemiyor ve bu kapsam dışında. Bağımsız TypeScript/C# incelemelerinin kapsam içi bulguları düzeltildi.
+
+Yerel TDD commitleri oluşturuldu. Bu turda GitHub'a gönderilmedi ve canlıya alınmadı. Kapsam dışı TextFade değişiklikleri korundu.
+
+## Tarihsel ara aşama notları (aşağıdaki eksikler artık kapatıldı)
 
 ## Tamamlanan adım: zamanlama ve istemci tutarlılığı
 

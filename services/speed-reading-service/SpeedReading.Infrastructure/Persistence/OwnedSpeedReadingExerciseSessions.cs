@@ -464,7 +464,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                 "position_match" => ValidateFocusMatch(session, state, request, "position", now),
                 "word_match" => ValidateFocusMatch(session, state, request, "word", now),
                 "match_attempt" => ValidateFocusMatch(session, state, request, "position", now),
-                "complete" when IsFocusExercise(state) => CompleteFocus(session, state),
+                "complete" when IsFocusExercise(state) => CompleteFocus(session, state, now),
                 "advance" => Advance(session, state),
                 "grid_click" when state.CurrentNumber.HasValue => ClickGrid(session, state, request),
                 "grid_click" => Invalid("Grid cell action is not valid for this exercise."),
@@ -647,7 +647,9 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         var pausedReadingSeconds = state.ReadingStartTime.HasValue
             ? state.ReadingPausedSeconds
             : GetTimingPausedSeconds(session, state);
-        var timeSpent = IsScanning(state) && state.ScanningElapsedMs.HasValue
+        var timeSpent = IsFocusExercise(state) && state.FocusStartTime.HasValue
+            ? Math.Max(0, (int)Math.Round(((now - state.FocusStartTime.Value).TotalMilliseconds - state.FocusPausedMilliseconds) / 1000d))
+            : IsScanning(state) && state.ScanningElapsedMs.HasValue
             ? Math.Max(0, (int)Math.Round(state.ScanningElapsedMs.Value / 1000d))
             : SpeedReadingExerciseSessionRules.CalculateReadingSeconds(
             GetTimingStartTime(session, state, now),
@@ -658,6 +660,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         var accuracy = IsScanning(state) ? ScanningAccuracy(state)
             : SpeedReadingExerciseSessionRules.CalculateAccuracy(session.CorrectCount, session.IncorrectCount);
         var wordsRead = state.Tachistoscope is not null || IsScanning(state)
+            || IsFocusExercise(state)
             || IsVisualizationExercise(state.ExerciseTypeName) || IsEngineType(state.EngineType, "visualization")
             || IsEngineType(state.EngineType, "regression_reduction") || IsEngineType(state.EngineType, "subvocalization_reduction")
             ? null : state.WordCount > 0 ? (int?)state.WordCount : null;
@@ -1004,6 +1007,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         var now = DateTime.UtcNow;
         var state = DeserializeState(session.SessionDataJson);
         session.Pause(now);
+        if (IsFocusExercise(state) && state.FocusStartTime.HasValue)
+            state.FocusPausedAt = now;
         if (state.Tachistoscope is { } tachistoscope)
         {
             InvalidateTachistoscopePresentations(session);
@@ -1028,6 +1033,11 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         var now = DateTime.UtcNow;
         var state = DeserializeState(session.SessionDataJson);
         session.Resume(now);
+        if (state.FocusPausedAt.HasValue)
+        {
+            state.FocusPausedMilliseconds += (long)Math.Max(0, (now - state.FocusPausedAt.Value).TotalMilliseconds);
+            state.FocusPausedAt = null;
+        }
         if (state.FixationPausedAt.HasValue)
         {
             state.FixationPausedMilliseconds += (long)Math.Max(0, (now - state.FixationPausedAt.Value).TotalMilliseconds);
@@ -1565,6 +1575,17 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                 state.TotalSteps,
                 Math.Max(state.PositionSequence.Length, state.WordSequence.Length));
             state.TotalSteps = Math.Clamp(state.TotalSteps, 1, 500);
+            if (!IsEngineType(exerciseEngineType, "motion_path")
+                && (!new[] { "position", "word", "dual" }.Contains(state.FocusMode, StringComparer.OrdinalIgnoreCase)
+                    || state.TotalSteps <= state.FocusNLevel
+                    || (needsWords && (state.WordSequence.Length != state.TotalSteps || state.WordSequence.Any(string.IsNullOrWhiteSpace)))
+                    || (needsPositions && (state.PositionSequence.Length != state.TotalSteps
+                        || state.PositionSequence.Any(position => position < 1 || position > state.GridSize * state.GridSize)))))
+                throw new InvalidOperationException("Odaklanma ayarları veya uyaran dizisi geçersiz.");
+            if (!IsEngineType(exerciseEngineType, "motion_path")
+                && FocusChannels(state).Any(channel => (channel == "position" ? state.PositionTargetIndices : state.WordTargetIndices)
+                    .Any(index => index < state.FocusNLevel || index >= state.TotalSteps || !IsFocusTarget(state, channel, index))))
+                throw new InvalidOperationException("Focus target indices contradict the stimulus sequence.");
         }
 
         if (IsVisualExpansionExercise(exerciseTypeName)
@@ -2035,13 +2056,14 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         var speedMs = Math.Max(1, state.FocusSpeedMs);
         var focusStart = state.FocusStartTime ?? session.StartTime;
         var expectedIndex = FocusTrialTimingRules.ExpectedIndex(
-            focusStart, now, GetTimingPausedSeconds(session, state), speedMs, state.TotalSteps);
+            focusStart.AddMilliseconds(state.FocusPausedMilliseconds), now, 0, speedMs, state.TotalSteps);
         if (!FocusTrialTimingRules.CanPresent(index, state.FocusPresentedIndex, expectedIndex))
             return Invalid("Focus step arrived outside its trial time window.");
 
         state.FocusPresentedIndex = index;
         state.FocusPresentedAt = now.ToUniversalTime();
         state.FocusPausedSecondsAtPresentation = session.TotalPausedSeconds;
+        state.FocusPausedMillisecondsAtPresentation = state.FocusPausedMilliseconds;
         var feedback = JsonSerializer.SerializeToElement(new
         {
             index,
@@ -2336,9 +2358,9 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                 return Invalid("Focus response does not match the currently presented trial.");
             if (state.FocusPresentedAt.HasValue
                 && !FocusTrialTimingRules.IsAssessmentResponseOnTime(
-                    state.FocusPresentedAt.Value,
+                    state.FocusPresentedAt.Value.AddMilliseconds(Math.Max(0, state.FocusPausedMilliseconds - state.FocusPausedMillisecondsAtPresentation)),
                     now,
-                    Math.Max(0, session.TotalPausedSeconds - state.FocusPausedSecondsAtPresentation),
+                    0,
                     speedMs))
                 return Invalid("Focus response arrived after the trial window.");
         }
@@ -2346,7 +2368,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         {
             var focusStart = state.FocusStartTime ?? session.StartTime;
             var expectedIndex = FocusTrialTimingRules.ExpectedIndex(
-                focusStart, now, GetTimingPausedSeconds(session, state), speedMs, state.TotalSteps);
+                focusStart.AddMilliseconds(state.FocusPausedMilliseconds), now, 0, speedMs, state.TotalSteps);
             if (index < expectedIndex - 1 || index > expectedIndex + 1)
                 return Invalid("Focus response arrived outside its trial time window.");
         }
@@ -2375,7 +2397,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
 
     private static ExerciseActionValidationResponse CompleteFocus(
         ExerciseSession session,
-        SessionState state)
+        SessionState state,
+        DateTime now)
     {
         if (!IsFocusExercise(state))
             return AdvanceGeneric(session);
@@ -2383,8 +2406,16 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             return Invalid("Focus exercise data is unavailable for server validation.");
         if (state.IsAssessmentMode && state.FocusPresentedIndex < state.TotalSteps - 1)
             return Invalid("All focus trials must be presented before completion.");
-        if (!state.IsAssessmentMode && state.FocusResponses.Count == 0)
-            return Invalid("At least one focus response is required before completion.");
+        if (!state.FocusStartTime.HasValue)
+            return Invalid("Focus exercise has not been started.");
+        var activeMilliseconds = (now - state.FocusStartTime.Value).TotalMilliseconds
+            - state.FocusPausedMilliseconds;
+        if (!state.IsAssessmentMode && activeMilliseconds < (double)state.TotalSteps * state.FocusSpeedMs)
+            return Invalid("All focus stimulus windows must elapse before completion.");
+        if (state.IsAssessmentMode && (!state.FocusPresentedAt.HasValue
+            || (now - state.FocusPresentedAt.Value).TotalMilliseconds
+                - Math.Max(0, state.FocusPausedMilliseconds - state.FocusPausedMillisecondsAtPresentation) < state.FocusSpeedMs))
+            return Invalid("The final focus stimulus window must elapse before completion.");
         if (!state.FocusCompleted)
         {
             foreach (var channel in FocusChannels(state))
@@ -2496,12 +2527,6 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
 
     private static bool IsFocusTarget(SessionState state, string channel, int index)
     {
-        var configuredTargets = channel == "position"
-            ? state.PositionTargetIndices
-            : state.WordTargetIndices;
-        if (configuredTargets.Length > 0)
-            return configuredTargets.Contains(index);
-
         var nLevel = Math.Max(1, state.FocusNLevel);
         if (index < nLevel)
             return false;
@@ -2695,6 +2720,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
 
     private static bool SupportsServerReadingMeasurement(SessionState state) =>
         state.Tachistoscope is null && IsReadingExerciseFlow(state)
+        && !IsFocusExercise(state)
         && !IsVisualizationExercise(state.ExerciseTypeName) && !IsEngineType(state.EngineType, "visualization")
         && !state.ReadingIncomplete
         && !IsEngineType(state.EngineType, "subvocalization_reduction")
@@ -3181,10 +3207,10 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                 : null,
             result.TimeSpentSeconds,
             result.IsMeasured ? score ?? result.Score : null,
-            IsScanning(state) || IsVisualizationExercise(state.ExerciseTypeName) || IsEngineType(state.EngineType, "visualization") || result.WordsRead == 0 ? null : result.WordsRead,
-            !IsScanning(state) && !IsVisualizationExercise(state.ExerciseTypeName) && !IsEngineType(state.EngineType, "visualization") && result.IsMeasured && result.RawWpm > 0 ? result.RawWpm : null,
+            IsScanning(state) || IsFocusExercise(state) || IsVisualizationExercise(state.ExerciseTypeName) || IsEngineType(state.EngineType, "visualization") || result.WordsRead == 0 ? null : result.WordsRead,
+            !IsScanning(state) && !IsFocusExercise(state) && !IsVisualizationExercise(state.ExerciseTypeName) && !IsEngineType(state.EngineType, "visualization") && result.IsMeasured && result.RawWpm > 0 ? result.RawWpm : null,
             result.IsMeasured && state.Questions.Count > 0 ? result.ComprehensionScore : null,
-            !IsScanning(state) && !IsVisualizationExercise(state.ExerciseTypeName) && !IsEngineType(state.EngineType, "visualization") && result.IsMeasured && result.RawWpm > 0 ? result.WeightedKdp : null,
+            !IsScanning(state) && !IsFocusExercise(state) && !IsVisualizationExercise(state.ExerciseTypeName) && !IsEngineType(state.EngineType, "visualization") && result.IsMeasured && result.RawWpm > 0 ? result.WeightedKdp : null,
             xp ?? (result.IsMeasured && !state.ReadingIncomplete
                 ? SpeedReadingExerciseSessionRules.CalculateXp(
                     score ?? result.Score,
@@ -3550,6 +3576,9 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         public int FocusNLevel { get; set; } = 1;
         public int FocusSpeedMs { get; set; } = 1500;
         public DateTime? FocusStartTime { get; set; }
+        public DateTime? FocusPausedAt { get; set; }
+        public long FocusPausedMilliseconds { get; set; }
+        public long FocusPausedMillisecondsAtPresentation { get; set; }
         public int[] PositionSequence { get; set; } = [];
         public string[] WordSequence { get; set; } = [];
         public int FocusPresentedIndex { get; set; } = -1;
