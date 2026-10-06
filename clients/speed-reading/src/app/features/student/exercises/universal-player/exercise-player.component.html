@@ -1627,6 +1627,14 @@
                     <div class="stat-label">Anlama</div>
                 </div>
             </div>
+            <div class="stats-row" *ngIf="isFixationMode() && result?.details?.averageResponseTimeMs != null">
+                <div class="stat-card"><div class="stat-value">{{ result?.details?.averageResponseTimeMs }} ms</div><div class="stat-label">Ortalama cevap süresi</div></div>
+                <div class="stat-card"><div class="stat-value">{{ result?.details?.fixationResults?.length }}</div><div class="stat-label">Doğrulanmış tur</div></div>
+            </div>
+            <div class="measurement-not-available" *ngIf="isFixationMode()">
+                Bu çalışma harf tanıma doğruluğunu ölçer; gözün gerçekten sabit kaldığını veya okuma hızını ölçmez.
+                Kayıtlı cevap süresine ağ gecikmesi etki edebilir; duraklama süresi hariç tutulur.
+            </div>
             <div class="stats-row" *ngIf="engine?.engineType === 'visual_expansion'">
                 <div class="stat-card"><div class="stat-value">{{ (result?.details?.maxDegreesReached || 0) / 60 * 100 | number:'1.0-0' }}%</div><div class="stat-label">En büyük göreli uzaklık</div></div>
                 <div class="stat-card"><div class="stat-value">{{ result?.details?.averageResponseTimeMs }} ms</div><div class="stat-label">Ortalama cevap süresi</div></div>
