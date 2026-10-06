@@ -16,6 +16,17 @@ function callbacks(onComplete: (result: EngineResult) => void): EngineCallbacks 
 }
 
 describe('MotionPathEngine', () => {
+  it('does not expire a scored fixation round while waiting for its answer', fakeAsync(() => {
+    const engine = new MotionPathEngine();
+    let completed = false;
+    engine.initialize({ mode: 'fixation', content: { points: 2, peripheralCount: 1 },
+      timing: { durationSeconds: 5, holdMs: 50 } }, callbacks(() => completed = true));
+    expect(engine.state.totalSteps).toBe(2);
+    engine.start(); tick(6000);
+    expect(completed).toBeFalse();
+    expect(engine.isAwaitingInput()).toBeTrue();
+    engine.destroy();
+  }));
   it('shows a new fixation point before letters and hides both during the answer', fakeAsync(() => {
     const engine = new MotionPathEngine();
     engine.initialize({ mode: 'fixation', content: { points: 2, peripheralCount: 1 }, timing: { holdMs: 50 } }, callbacks(() => undefined));
