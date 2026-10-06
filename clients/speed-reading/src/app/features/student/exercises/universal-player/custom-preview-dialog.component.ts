@@ -17,7 +17,7 @@ import { applyCustomPreviewSettings, getCustomPreviewControls, PreviewControl } 
         @for (option of control.options; track option.value) { <option [value]="option.value">{{ option.label }}</option> }
       </select>
       } @else {
-      <input [id]="'preview-' + control.key" type="number" [min]="control.min" [max]="control.max" step="1" [(ngModel)]="values[control.key]">
+      <input [id]="'preview-' + control.key" type="number" [min]="control.min" [max]="control.max" [step]="control.step ?? 1" [(ngModel)]="values[control.key]">
       <small>{{ control.min }}–{{ control.max }}</small>
       }
       }

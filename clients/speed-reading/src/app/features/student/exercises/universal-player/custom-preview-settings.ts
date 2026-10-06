@@ -13,6 +13,7 @@ export interface PreviewControl {
   min: number;
   max: number;
   value: number | string;
+  step?: number;
   options?: { value: string; label: string }[];
 }
 
@@ -66,8 +67,8 @@ export function getCustomPreviewControls(configuration: Record<string, unknown>)
       const controls: PreviewControl[] = [{ key: 'fontSize', label: 'Metin boyutu', min: 0, max: 0, value: String(display['fontsize'] ?? 'medium').toLowerCase(),
         options: [{ value: 'small', label: 'Küçük' }, { value: 'medium', label: 'Orta' }, { value: 'large', label: 'Büyük' }] }];
       if (configuration['engineType'] === 'reading_comprehension') controls.push(
-        control('minReadingTimeSec', 'Minimum okuma süresi (saniye)', 0, 3600, Number(timing['minreadingtimems'] ?? 0) / 1000),
-        control('maxReadingTimeSec', 'Maksimum okuma süresi (saniye; 0: sınırsız)', 0, 3600, Number(timing['maxreadingtimems'] ?? 0) / 1000),
+        { ...control('minReadingTimeSec', 'Minimum okuma süresi (saniye)', 0, 3600, Number(timing['minreadingtimems'] ?? 0) / 1000), step: 0.001 },
+        { ...control('maxReadingTimeSec', 'Maksimum okuma süresi (saniye; 0: sınırsız)', 0, 3600, Number(timing['maxreadingtimems'] ?? 0) / 1000), step: 0.001 },
         control('lineHeightPercent', 'Satır aralığı (%)', 100, 300, Math.round(Number(display['lineheight'] ?? 1.8) * 100))
       );
       return controls;
@@ -118,10 +119,11 @@ export function applyCustomPreviewSettings<T extends Record<string, unknown>>(
   if (fontControl) {
     const value = values['fontSize'];
     const numeric: Record<string, number> = {};
-    for (const { key, min, max, label } of controls.filter(control => !control.options)) {
+    for (const { key, min, max, label, step } of controls.filter(control => !control.options)) {
       const input = values[key];
       if (input === undefined) continue;
-      if (typeof input !== 'number' || !Number.isInteger(input) || input < min || input > max)
+      const scaled = typeof input === 'number' ? input * (step === 0.001 ? 1000 : 1) : NaN;
+      if (typeof input !== 'number' || !Number.isFinite(input) || Math.abs(scaled - Math.round(scaled)) > 1e-7 || input < min || input > max)
         throw new Error(`${label} için geçerli bir değer girin (${min}-${max}).`);
       numeric[key] = input;
     }
@@ -136,8 +138,8 @@ export function applyCustomPreviewSettings<T extends Record<string, unknown>>(
     if (Object.keys(displayOverrides).length) settings['display'] = overrideFields({ ...recordOrEmpty(caseInsensitiveField(configuration, 'display')), ...recordOrEmpty(caseInsensitiveField(settings, 'display')) }, displayOverrides);
     if (numeric['minReadingTimeSec'] !== undefined || numeric['maxReadingTimeSec'] !== undefined) {
       const timing = mergeCaseInsensitiveRecords(configuration, settings, 'timing');
-      const minimum = numeric['minReadingTimeSec'] === undefined ? Number(timing['minreadingtimems'] ?? 0) : numeric['minReadingTimeSec'] * 1000;
-      const maximum = numeric['maxReadingTimeSec'] === undefined ? Number(timing['maxreadingtimems'] ?? 0) : numeric['maxReadingTimeSec'] * 1000;
+      const minimum = numeric['minReadingTimeSec'] === undefined ? Number(timing['minreadingtimems'] ?? 0) : Math.round(numeric['minReadingTimeSec'] * 1000);
+      const maximum = numeric['maxReadingTimeSec'] === undefined ? Number(timing['maxreadingtimems'] ?? 0) : Math.round(numeric['maxReadingTimeSec'] * 1000);
       if (maximum > 0 && maximum < minimum) throw new Error('Maksimum okuma süresi minimum süreden kısa olamaz.');
       settings['timing'] = overrideFields({ ...recordOrEmpty(caseInsensitiveField(configuration, 'timing')), ...recordOrEmpty(caseInsensitiveField(settings, 'timing')) }, { minReadingTimeMs: minimum, maxReadingTimeMs: maximum });
     }
