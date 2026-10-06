@@ -11,6 +11,39 @@ namespace SpeedReading.Application.UnitTests;
 
 public sealed class FocusPersistenceTests
 {
+    [Fact]
+    public async Task Short_pauses_are_accumulated_in_milliseconds_and_do_not_allow_early_completion()
+    {
+        await using var db = Context(); var (student, exercise) = await Seed(db);
+        var service = Service<ISpeedReadingExerciseSessions>(db, "OwnedSpeedReadingExerciseSessions");
+        var started = await service.StartAsync(student, new() { ExerciseId = exercise });
+        await service.ValidateActionAsync(student, started.SessionId, new() { Action = "focus_start" });
+        await Elapse(db, 4);
+        for (var index = 0; index < 4; index++) {
+            await service.PauseAsync(student, started.SessionId);
+            var session = await db.ExerciseSessions.SingleAsync(); var state = JsonNode.Parse(session.SessionDataJson)!;
+            state["focusPausedAt"] = DateTime.UtcNow.AddMilliseconds(-400);
+            session.SetState(state.ToJsonString(), session.CustomDataJson);
+            typeof(ExerciseSession).GetProperty(nameof(ExerciseSession.PausedAt))!.SetValue(session, DateTime.UtcNow.AddMilliseconds(-400));
+            await db.SaveChangesAsync(); await service.ResumeAsync(student, started.SessionId);
+        }
+        Assert.False((await service.ValidateActionAsync(student, started.SessionId, new() { Action = "complete" })).IsValid);
+        var data = JsonNode.Parse((await db.ExerciseSessions.SingleAsync()).SessionDataJson)!;
+        Assert.True(data["focusPausedMilliseconds"]!.GetValue<long>() >= 1600);
+    }
+
+    [Theory]
+    [InlineData("[0]")]
+    [InlineData("[99]")]
+    [InlineData("[1]")]
+    public async Task Contradictory_focus_target_hints_cannot_start(string targets)
+    {
+        await using var db = Context(); var (student, exercise) = await Seed(db, config:
+            $$$"""{"engineType":"focus","totalSteps":3,"positionSequence":[1,2,1],"positionTargetIndices":{{{targets}}}}""");
+        var service = Service<ISpeedReadingExerciseSessions>(db, "OwnedSpeedReadingExerciseSessions");
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.StartAsync(student, new() { ExerciseId = exercise }));
+    }
+
     private static T Service<T>(OwnedSpeedReadingDbContext db, string name) => (T)Activator.CreateInstance(
         typeof(OwnedSpeedReadingDbContext).Assembly.GetType("SpeedReading.Infrastructure.Persistence." + name)!,
         BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, [db], null)!;
