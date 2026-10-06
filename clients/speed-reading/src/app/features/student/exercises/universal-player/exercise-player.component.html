@@ -1632,7 +1632,8 @@
                 <div class="stat-card"><div class="stat-value">{{ result?.details?.fixationResults?.length }}</div><div class="stat-label">Doğrulanmış tur</div></div>
             </div>
             <div class="measurement-not-available" *ngIf="isFixationMode()">
-                Bu çalışma harf tanıma doğruluğunu ölçer; gözün gerçekten sabit kaldığını veya okuma hızını ölçmez.
+                Yanıtlı çalışma harf tanıma doğruluğunu ölçer; harfsiz çalışma yalnız izleme alıştırmasıdır.
+                Gözün gerçekten sabit kaldığı veya okuma hızı ölçülmez.
                 Kayıtlı cevap süresine ağ gecikmesi etki edebilir; duraklama süresi hariç tutulur.
             </div>
             <div class="stats-row" *ngIf="engine?.engineType === 'visual_expansion'">
