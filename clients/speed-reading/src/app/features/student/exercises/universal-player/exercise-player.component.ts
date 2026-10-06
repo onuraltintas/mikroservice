@@ -1214,7 +1214,12 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
           }
 
           // Sadece kullanıcı input gerektiren egzersizlerde validation yap
-          const onResponse = (engineType === 'focus' || engineType === 'attention_training')
+          const onResponse = engineType === 'regression_reduction' && action.action === 'finish_reading'
+            ? (response: ValidationResponse) => {
+              if (!response.isValid) throw new Error(response.message || 'Okuma aşaması kaydedilemedi.');
+              this.readingTrackingFinished = true;
+            }
+            : (engineType === 'focus' || engineType === 'attention_training')
             ? (response: ValidationResponse) =>
               (this.engine as FocusEngine).reconcileServerResponse(action, response)
             : engineType === 'visualization'

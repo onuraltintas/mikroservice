@@ -14,7 +14,8 @@ async function prepare(page, role = 'Admin', withQuestions = false) {
   page.on('pageerror', error => errors.push(error.message));
   await page.addInitScript(() => localStorage.setItem('currentUser', JSON.stringify({ id: 'test-user' })));
   const exercise = { id: exerciseId, exerciseTypeId: typeId, title: 'Regresyon testi', difficultyLevel: 3,
-    exerciseTypeName: 'RegressionReduction', configurationJson: JSON.stringify(configuration) };
+    exerciseTypeName: 'RegressionReduction', configurationJson: JSON.stringify(withQuestions
+      ? { ...configuration, engineConfig: { ...configuration.engineConfig, readingPurpose: 'evaluation' } } : configuration) };
   await page.route('**/api/**', async route => {
     const request = route.request(), path = new URL(request.url()).pathname;
     let response = { items: [], totalCount: 0 };
@@ -50,8 +51,21 @@ for (const role of ['Admin', 'Teacher']) test(`${role} custom preview displays e
   await pause.click(); await page.clock.runFor(1000);
   await expect(page.locator('.regression-word.active')).toHaveText(['bir', 'iki']);
   await pause.click(); await page.clock.runFor(501);
-  await expect(page.getByRole('status').filter({ hasText: 'Önizleme sonucu - kaydedilmedi.' })).toBeVisible();
+  await expect(page.getByRole('status').filter({ hasText: /Önizleme sonucu.*kaydedilmedi/ })).toBeVisible();
   await expect(page.locator('.stat-label').filter({ hasText: /^WPM$|^Okuma hızı$/ })).toHaveCount(0);
+  expect(writes).toEqual([]); expect(errors).toEqual([]);
+});
+
+test('teacher question preview remains unmeasured and never writes answers', async ({ page }) => {
+  const { errors, writes } = await prepare(page, 'Teacher', true);
+  await page.getByRole('button', { name: 'Özel ayarlarla dene' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Denemeyi başlat' }).click();
+  await page.locator('.start-button-large').click();
+  await expect(page.locator('.regression-question-container')).toBeVisible();
+  await page.locator('.regression-question-container .option-button').first().click();
+  await page.locator('.regression-question-container .submit-answer-btn').click();
+  await expect(page.getByRole('status').filter({ hasText: /Önizleme sonucu.*kaydedilmedi/ })).toBeVisible();
+  await expect(page.getByText('Anlama ölçülmedi.', { exact: false })).toBeVisible();
   expect(writes).toEqual([]); expect(errors).toEqual([]);
 });
 
