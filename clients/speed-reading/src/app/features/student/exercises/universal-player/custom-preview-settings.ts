@@ -101,8 +101,15 @@ export function getCustomPreviewControls(configuration: Record<string, unknown>)
     ];
     default: {
       if (!CUSTOM_PREVIEW_ENGINES.some(type => type === configuration['engineType'])) return [];
-      const controls = [control('speedWpm', 'Okuma hızı (kelime/dakika)', 20, 1500, read('targetWpm') ?? read('wpm') ?? pacer['speedwpm'] ?? fading['speedwpm'] ?? 200)];
-      if (configuration['engineType'] !== 'text_fade') controls.push(control('chunkSize', 'Kelime grubu', 1, 10, read('chunkSize') ?? pacer['chunksize'] ?? 1));
+      const grouping = configuration['engineType'] === 'word_highlight';
+      const content = mergeCaseInsensitiveRecords(configuration, settings, 'content');
+      const groupSize = read('chunkSize') ?? pacer['chunksize'] ?? (grouping ? content['chunksize'] : undefined) ?? 1;
+      const duration = boundedInteger(timing['durationms'], 0, 0, 10000);
+      const legacyTempo = grouping && duration > 0
+        ? Math.max(20, Math.min(1500, Math.round(60000 * boundedInteger(groupSize, 1, 1, 10) /
+          (duration + boundedInteger(timing['delayms'], 0, 0, 10000))))) : 200;
+      const controls = [control('speedWpm', grouping ? 'Gösterim temposu (kelime/dakika)' : 'Okuma hızı (kelime/dakika)', 20, 1500, read('targetWpm') ?? read('wpm') ?? pacer['speedwpm'] ?? fading['speedwpm'] ?? legacyTempo)];
+      if (configuration['engineType'] !== 'text_fade') controls.push(control('chunkSize', 'Kelime grubu', 1, 10, groupSize));
       return controls;
     }
   }
