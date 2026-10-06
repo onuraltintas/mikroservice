@@ -224,8 +224,10 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                 item.AssessmentAttemptId == request.AssessmentAttemptId
                 && item.StudentAssignmentId == request.StudentAssignmentId);
             if (matchingSession is not null
-                && IsTachistoscope(exerciseTypeName, exerciseEngineType, ParseJsonOrEmpty(configurationJson))
-                && DeserializeState(matchingSession.SessionDataJson).Tachistoscope is null)
+                && ((IsTachistoscope(exerciseTypeName, exerciseEngineType, ParseJsonOrEmpty(configurationJson))
+                        && DeserializeState(matchingSession.SessionDataJson).Tachistoscope is null)
+                    || (IsScanning(new SessionState { EngineType = exerciseEngineType })
+                        && DeserializeState(matchingSession.SessionDataJson).ScanningRounds.Count == 0)))
             {
                 // Legacy client-scored attempts cannot be verified by the new round protocol.
                 // Preserve their history, but start a fresh authoritative attempt.
@@ -295,7 +297,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             {
                 var normalizedEngineType = ExerciseConfigurationRules.NormalizeEngineType(exerciseEngineType);
                 var isComprehension = normalizedEngineType == "reading_comprehension";
-                var isScanning = normalizedEngineType is "scan_find" or "scanning";
+                var isScanning = normalizedEngineType is "scan_find" or "scanning" or "skimming";
                 var requiresScorableQuestions = ExerciseConfigurationRules.ResolveReadingPurpose(
                     normalizedEngineType,
                     ReadString(ReadObject(parsedConfiguration, "engineConfig"), "readingPurpose")
