@@ -527,6 +527,9 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         if (existingResult is not null)
             return ToResult(existingResult, session, state);
 
+        if (IsGrouping(state) && (!state.ReadingStartTime.HasValue || !state.ReadingEndTime.HasValue))
+            throw IncompleteSession("Gruplama gösterimi tamamlanmadan oturum kaydedilemez.");
+
         if (IsScanning(state))
         {
             if (state.ScanningRounds.Count == 0)
@@ -1547,6 +1550,24 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             state.TotalSteps = state.Words.Length;
         if (state.Tachistoscope is { } tachistoscope) state.TotalSteps = tachistoscope.Count;
         if (IsScanning(state)) InitializeScanning(state, effectiveConfig);
+        if (IsGrouping(state))
+        {
+            var pacer = ReadObject(effectiveConfig, "pacer");
+            var content = ReadObject(effectiveConfig, "content");
+            var timing = ReadObject(effectiveConfig, "timing");
+            state.GroupingChunkSize = Math.Clamp(ReadPositiveInt(effectiveConfig, "chunkSize")
+                ?? ReadPositiveInt(config, "chunkSize") ?? ReadPositiveInt(pacer, "chunkSize")
+                ?? ReadPositiveInt(content, "chunkSize") ?? 1, 1, 10);
+            var explicitWpm = ReadPositiveInt(effectiveConfig, "targetWpm")
+                ?? ReadPositiveInt(config, "targetWpm") ?? ReadPositiveInt(pacer, "speedWpm");
+            var duration = ReadPositiveInt(timing, "durationMs");
+            state.GroupingDisplayPaceWpm = explicitWpm.HasValue ? Math.Clamp(explicitWpm.Value, 20, 1500)
+                : duration.HasValue ? Math.Clamp(60000m * state.GroupingChunkSize /
+                    (duration.Value + (ReadPositiveInt(timing, "delayMs") ?? 0)), 20, 1500) : 200;
+            state.ReadingMinimumMs = (int)Math.Ceiling(state.Words.Length * 60000m / state.GroupingDisplayPaceWpm);
+            state.ReadingPausedMilliseconds = 0;
+            state.TotalSteps = (int)Math.Ceiling((decimal)state.Words.Length / state.GroupingChunkSize);
+        }
         state.CustomData = customData;
         return state;
     }
@@ -1581,7 +1602,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
     {
         if (IsAdaptiveFluency(state))
             return FinishAdaptiveStage(session, state, now);
-        if (ExerciseConfigurationRules.NormalizeEngineType(state.EngineType) == "reading_comprehension")
+        if (ExerciseConfigurationRules.NormalizeEngineType(state.EngineType) == "reading_comprehension" || IsGrouping(state))
         {
             if (!state.ReadingStartTime.HasValue)
                 return Invalid("Önce okumayı başlatın.");
@@ -1600,6 +1621,13 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         {
             state.ReadingEndTime = now;
             state.ReadingIncomplete = incomplete;
+            if (IsGrouping(state))
+            {
+                var elapsedMs = Math.Max(0, (now - state.ReadingStartTime.Value).TotalMilliseconds
+                    - (state.ReadingPausedMilliseconds ?? state.ReadingPausedSeconds * 1000L));
+                state.GroupingCompletionPercent = incomplete
+                    ? Math.Min(99, Math.Round((decimal)elapsedMs / Math.Max(1, state.ReadingMinimumMs) * 100, 2)) : 100;
+            }
         }
         session.SetCurrentStep(Math.Max(session.CurrentStep, 1));
         var seconds = SpeedReadingExerciseSessionRules.CalculateReadingSeconds(
@@ -2565,6 +2593,10 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         && state.ReadingStartTime.HasValue
         && state.ReadingEndTime.HasValue;
 
+    private static bool IsGrouping(SessionState state) =>
+        ExerciseConfigurationRules.NormalizeEngineType(state.EngineType) == "word_highlight"
+        && state.ExerciseTypeName.Equals("Chunking", StringComparison.OrdinalIgnoreCase);
+
     private static bool HasFocusStimulus(SessionState state) =>
         state.FocusMode.Equals("word", StringComparison.OrdinalIgnoreCase)
             ? state.WordSequence.Length >= state.TotalSteps
@@ -3318,6 +3350,9 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         public DateTime? ReadingStartTime { get; set; }
         public DateTime? ReadingEndTime { get; set; }
         public bool ReadingIncomplete { get; set; }
+        public int GroupingChunkSize { get; set; }
+        public decimal GroupingDisplayPaceWpm { get; set; }
+        public decimal GroupingCompletionPercent { get; set; }
         public string? ReadingPurpose { get; set; }
         public DateTime? ReadingPausedAt { get; set; }
         public int ReadingPausedSeconds { get; set; }
