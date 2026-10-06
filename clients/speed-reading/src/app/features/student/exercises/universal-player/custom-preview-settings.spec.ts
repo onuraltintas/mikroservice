@@ -9,6 +9,11 @@ import { TestBed } from '@angular/core/testing';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 
 describe('Custom preview settings safety', () => {
+  it('rejects inherited unsafe focus bounds before generating mode-only previews', () => {
+    for (const overrides of [{ totalSteps: 501 }, { nLevel: 6 }, { gridSize: 8 }]) {
+      expect(() => applyCustomPreviewSettings({ engineType: 'focus', engineConfig: { ...overrides } }, { mode: 'dual' }, { roles: ['Teacher'], preview: true })).toThrow();
+    }
+  });
   it('switches focus mode and creates the requested compatible preview trials', () => {
     const config = { engineType: 'focus', engineConfig: { SessionData: { Mode: 'position', PositionSequence: [1, 2, 1] } } };
     const changed = applyCustomPreviewSettings(config, { mode: 'dual', totalSteps: 6, nLevel: 2, gridSize: 4 }, { roles: ['Teacher'], preview: true });
