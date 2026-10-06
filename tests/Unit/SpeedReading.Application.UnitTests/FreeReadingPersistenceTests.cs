@@ -9,6 +9,16 @@ namespace SpeedReading.Application.UnitTests;
 
 public sealed class FreeReadingPersistenceTests
 {
+    [Theory]
+    [InlineData(2)]
+    [InlineData(201)]
+    public async Task Explicit_text_cannot_bypass_length_limits(int words)
+    {
+        await using var db = Context(); var user = Guid.NewGuid(); var exercise = await Seed(db, user);
+        var text = Text(Guid.NewGuid(), exercise, 2, words); db.ReadingTexts.Add(text); await db.SaveChangesAsync();
+        await Assert.ThrowsAsync<KeyNotFoundException>(() => Service(db).StartAsync(user, new() { ExerciseId = exercise, ReadingTextId = text.Id }));
+        Assert.Empty(db.ExerciseSessions);
+    }
     [Fact]
     public async Task Selection_respects_level_length_and_rotates_read_texts()
     {
@@ -58,7 +68,7 @@ public sealed class FreeReadingPersistenceTests
     private static async Task<Guid> Seed(OwnedSpeedReadingDbContext db, Guid user)
     {
         var type = ExerciseType.Create(Guid.NewGuid(), "FreeReading", "Serbest Okuma", "free_reading");
-        var exercise = Exercise.Create("Serbest Okuma", "free_reading", "{\"engineType\":\"free_reading\",\"engineConfig\":{\"content\":{\"minWordCount\":50},\"timing\":{\"minReadingTimeMs\":3000,\"maxReadingTimeMs\":60000}}}", 2, user, type.Id);
+        var exercise = Exercise.Create("Serbest Okuma", "free_reading", "{\"engineType\":\"free_reading\",\"engineConfig\":{\"content\":{\"minWordCount\":50,\"maxWordCount\":200},\"timing\":{\"minReadingTimeMs\":3000,\"maxReadingTimeMs\":60000}}}", 2, user, type.Id);
         db.ExerciseTypes.Add(type); db.Exercises.Add(exercise); await db.SaveChangesAsync(); return exercise.Id;
     }
 }
