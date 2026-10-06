@@ -24,6 +24,16 @@ describe('subvocalization measurement', () => {
     engine.destroy();
   }));
 
+  it('accepts an acknowledged answer while a pending request was paused', fakeAsync(() => {
+    const engine = withQuestion();
+    engine.start(); tick(100); engine.pause();
+    engine.handleInput({ type: 'answer', answer: 'A', serverValidated: true, isCorrect: true });
+    expect(engine.showingFeedback).toBeTrue();
+    engine.resume(); engine.nextQuestion();
+    expect(engine.state.isCompleted).toBeTrue();
+    engine.destroy();
+  }));
+
   it('scores only server-confirmed answers without emitting a second answer action', fakeAsync(() => {
     let result: EngineResult | undefined;
     const engine = withQuestion(value => result = value);
@@ -46,6 +56,47 @@ describe('subvocalization measurement', () => {
     engine.nextQuestion();
     expect(result!.details.comprehensionScore).toBeNull();
     expect(result!.details.measurementStatus).toBe('NotMeasured');
+    engine.destroy();
+  }));
+
+  it('uses one effective tempo even when legacy duration disagrees', fakeAsync(() => {
+    const engine = new SubvocalizationReductionEngine();
+    engine.initialize({ readingTextContent: 'bir iki', targetWpm: 600, msPerWord: 500 } as any, {
+      onStart: noOp, onPause: noOp, onResume: noOp, onComplete: noOp, onError: noOp,
+      onStateChange: noOp, onStepComplete: noOp, onAction: noOp
+    });
+    engine.start(); tick(100);
+    expect(engine.getCurrentWordIndex()).toBe(1);
+    expect(engine.getCurrentWpm()).toBe(600);
+    engine.destroy();
+  }));
+
+  it('supports legacy duration without an explicit target and keeps the displayed tempo constant', fakeAsync(() => {
+    const engine = new SubvocalizationReductionEngine();
+    engine.initialize({ readingTextContent: Array(100).fill('word').join(' '), msPerWord: 100, chunkSize: 3 } as any, {
+      onStart: noOp, onPause: noOp, onResume: noOp, onComplete: noOp, onError: noOp,
+      onStateChange: noOp, onStepComplete: noOp, onAction: noOp
+    });
+    engine.start(); tick(3500);
+    expect(engine.getTargetWpm()).toBe(600);
+    expect(engine.getCurrentWpm()).toBe(600);
+    engine.destroy();
+  }));
+
+  it('shows visual rhythm only when explicitly enabled and pauses it', fakeAsync(() => {
+    const engine = new SubvocalizationReductionEngine();
+    engine.initialize({ readingTextContent: Array(100).fill('word').join(' '),
+      metronomeEnabled: true, visualMetronome: true, metronomeBpm: 120 } as any, {
+      onStart: noOp, onPause: noOp, onResume: noOp, onComplete: noOp, onError: noOp,
+      onStateChange: noOp, onStepComplete: noOp, onAction: noOp
+    });
+    engine.start();
+    expect((engine.state as any).metronomeBeat).toBeTrue();
+    const step = (engine.state as any).metronomeStep;
+    engine.pause(); tick(1000);
+    expect((engine.state as any).metronomeStep).toBe(step);
+    engine.resume(); tick(500);
+    expect((engine.state as any).metronomeStep).not.toBe(step);
     engine.destroy();
   }));
 
