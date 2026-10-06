@@ -30,6 +30,21 @@ describe('visual expansion answer UI', () => {
     value.submitExpansionAnswer();
     expect(value.engine.handleInput).not.toHaveBeenCalled();
   });
+  it('synchronizes owned pause/resume and exit cancellation with the server', async () => {
+    const value = player(['A','B']);
+    value.sessionId = 'session'; value.actionQueue = Promise.resolve();
+    value.engineState = { isPaused: false, isRunning: true, isCompleted: false };
+    value.isTachistoscopeMode = () => false; value.shouldTrackReading = () => false;
+    value.engine.pause = () => value.engineState.isPaused = true;
+    value.engine.resume = () => value.engineState.isPaused = false;
+    value.sessionService = { pauseSession: jasmine.createSpy('pause').and.returnValue(of({})),
+      resumeSession: jasmine.createSpy('resume').and.returnValue(of({})) };
+    await value.goBack();
+    expect(value.sessionService.pauseSession).toHaveBeenCalledWith('session');
+    await value.cancelExit();
+    expect(value.sessionService.resumeSession).toHaveBeenCalledWith('session');
+    expect(value.engineState.isPaused).toBeFalse();
+  });
   it('uses verified server round summaries instead of local preview estimates', () => {
     const value = player(['A','B']);
     value.sessionId = 'session'; value.exercise = { id: 'exercise' };
