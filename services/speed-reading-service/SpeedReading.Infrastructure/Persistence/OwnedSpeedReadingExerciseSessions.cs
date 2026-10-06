@@ -136,11 +136,13 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
 
         if (request.ReadingTextId.HasValue && assessmentSnapshot is null)
         {
+            var grouping = IsGrouping(new SessionState { EngineType = exerciseEngineType, ExerciseTypeName = exerciseTypeName });
             var readingTextMatches = await db.ReadingTexts
                 .AsNoTracking()
                 .AnyAsync(item => item.Id == request.ReadingTextId.Value
                     && item.IsActive
                     && !item.IsDeleted
+                    && (!grouping || item.DifficultyLevel == difficultyLevel)
                     && (!profileAgeGroupId.HasValue
                         || item.TargetAgeGroupId == null
                         || item.TargetAgeGroupId == profileAgeGroupId.Value)
@@ -227,7 +229,9 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                 && ((IsTachistoscope(exerciseTypeName, exerciseEngineType, ParseJsonOrEmpty(configurationJson))
                         && DeserializeState(matchingSession.SessionDataJson).Tachistoscope is null)
                     || (IsScanning(new SessionState { EngineType = exerciseEngineType })
-                        && DeserializeState(matchingSession.SessionDataJson).ScanningRounds.Count == 0)))
+                        && DeserializeState(matchingSession.SessionDataJson).ScanningRounds.Count == 0)
+                    || (IsGrouping(DeserializeState(matchingSession.SessionDataJson))
+                        && DeserializeState(matchingSession.SessionDataJson).GroupingDisplayPaceWpm <= 0)))
             {
                 // Legacy client-scored attempts cannot be verified by the new round protocol.
                 // Preserve their history, but start a fresh authoritative attempt.
@@ -1557,13 +1561,17 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             var timing = ReadObject(effectiveConfig, "timing");
             state.GroupingChunkSize = Math.Clamp(ReadPositiveInt(effectiveConfig, "chunkSize")
                 ?? ReadPositiveInt(config, "chunkSize") ?? ReadPositiveInt(pacer, "chunkSize")
-                ?? ReadPositiveInt(content, "chunkSize") ?? 1, 1, 10);
+                ?? ReadPositiveInt(content, "chunkSize") ?? ReadPositiveInt(ReadObject(config, "pacer"), "chunkSize")
+                ?? ReadPositiveInt(ReadObject(config, "content"), "chunkSize") ?? 1, 1, 10);
             var explicitWpm = ReadPositiveInt(effectiveConfig, "targetWpm")
-                ?? ReadPositiveInt(config, "targetWpm") ?? ReadPositiveInt(pacer, "speedWpm");
-            var duration = ReadPositiveInt(timing, "durationMs");
+                ?? ReadPositiveInt(config, "targetWpm") ?? ReadPositiveInt(pacer, "speedWpm")
+                ?? ReadPositiveInt(ReadObject(config, "pacer"), "speedWpm");
+            var rootTiming = ReadObject(config, "timing");
+            var duration = ReadPositiveInt(timing, "durationMs") ?? ReadPositiveInt(rootTiming, "durationMs");
+            var delay = Math.Clamp(ReadPositiveInt(timing, "delayMs") ?? ReadPositiveInt(rootTiming, "delayMs") ?? 0, 0, 10000);
             state.GroupingDisplayPaceWpm = explicitWpm.HasValue ? Math.Clamp(explicitWpm.Value, 20, 1500)
                 : duration.HasValue ? Math.Clamp(60000m * state.GroupingChunkSize /
-                    (duration.Value + (ReadPositiveInt(timing, "delayMs") ?? 0)), 20, 1500) : 200;
+                    (Math.Clamp(duration.Value, 1, 10000) + delay), 20, 1500) : 200;
             state.ReadingMinimumMs = (int)Math.Ceiling(state.Words.Length * 60000m / state.GroupingDisplayPaceWpm);
             state.ReadingPausedMilliseconds = 0;
             state.TotalSteps = (int)Math.Ceiling((decimal)state.Words.Length / state.GroupingChunkSize);
