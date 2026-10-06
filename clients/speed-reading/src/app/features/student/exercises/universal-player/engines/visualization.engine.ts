@@ -90,6 +90,7 @@ export class VisualizationEngine implements BaseEngine {
     public correctAnswer = '';
 
     initialize(config: VisualizationConfig, callbacks: EngineCallbacks): void {
+        this.cleanup();
         this.callbacks = callbacks;
         const root = recordOrEmpty(config);
         const nested = recordOrEmpty(caseInsensitiveField(root, 'engineConfig'));
@@ -147,13 +148,17 @@ export class VisualizationEngine implements BaseEngine {
         this.questionAnswers = [];
         this.pendingServerAnswer = null;
         this.answerEvaluated = false;
+        this.showingFeedback = false;
+        this.lastAnswer = '';
+        this.lastAnswerCorrect = false;
+        this.correctAnswer = '';
 
     }
 
     start(): void {
         if (this.state.isRunning || this.state.isCompleted) return;
         if (this.scenes.length === 0) {
-            console.error('[VisualizationEngine] No scenes to display');
+            this.callbacks.onError('Görselleştirme için uygun sahne bulunamadı. Lütfen başka bir egzersiz seçin.');
             return;
         }
 
@@ -517,6 +522,7 @@ export class VisualizationEngine implements BaseEngine {
 
     /** Applies an accepted answer from the authoritative session endpoint. */
     applyServerResponse(response: any): void {
+        if (!this.state.isRunning || this.state.isCompleted) return;
         const pending = this.pendingServerAnswer;
         if (!pending) return;
 
