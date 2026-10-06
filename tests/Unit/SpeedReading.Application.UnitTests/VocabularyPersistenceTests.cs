@@ -11,6 +11,16 @@ namespace SpeedReading.Application.UnitTests;
 public sealed class VocabularyPersistenceTests
 {
     [Fact]
+    public async Task Historical_vocabulary_results_do_not_expose_reading_metrics()
+    {
+        await using var db = Context(); var student = Guid.NewGuid(); var exercise = await Seed(db, student, "learning");
+        var service = Service(db); var started = await service.StartAsync(student, new() { ExerciseId = exercise });
+        db.ExerciseSessionResults.Add(SpeedReading.Domain.Sessions.ExerciseSessionResult.Create(Guid.NewGuid(), started.SessionId, student, exercise, null, 50, 10, 300, 100, 300, 100, DateTime.UtcNow));
+        await db.SaveChangesAsync();
+        var replay = await service.CompleteAsync(student, started.SessionId, new());
+        Assert.Null(replay.RawWPM); Assert.Null(replay.WordsRead); Assert.Null(replay.WeightedKDP);
+    }
+    [Fact]
     public async Task Review_ignores_older_due_row_when_latest_progress_is_not_due()
     {
         await using var db = Context(); var student = Guid.NewGuid(); var exercise = await Seed(db, student, "review");
