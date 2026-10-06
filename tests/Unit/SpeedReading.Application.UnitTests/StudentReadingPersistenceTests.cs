@@ -21,6 +21,43 @@ namespace SpeedReading.Application.UnitTests;
 public sealed class StudentReadingPersistenceTests
 {
     [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    [InlineData(2)]
+    public async Task Comprehension_selection_requires_level_and_prefers_unread_text(int scenario)
+    {
+        await using var context = CreateContext();
+        var student = Guid.NewGuid();
+        var exercise = Guid.NewGuid();
+        var type = Guid.NewGuid();
+        var first = Guid.Parse("00000000-0000-0000-0000-000000000001");
+        var second = Guid.Parse("ffffffff-ffff-ffff-ffff-ffffffffffff");
+        context.ExerciseTypes.Add(ExerciseType.Create(type, "Anlama", "Anlama", "reading_comprehension"));
+        context.Exercises.Add(Exercise.Create("Anlama", "reading", "{}", 3, student, type, id: exercise));
+        context.ReadingTexts.AddRange(
+            ReadingText.Create(first, "First", "Birinci okuma metni.", exerciseId: exercise,
+                difficultyLevel: scenario == 1 ? 3 : 1),
+            ReadingText.Create(second, "Second", "İkinci okuma metni.",
+                difficultyLevel: scenario == 2 ? 1 : 3));
+        foreach (var id in new[] { first, second })
+            context.ReadingQuestions.Add(ReadingQuestion.Create(Guid.NewGuid(), id, "Soru", "A", 0, 1, 1,
+                optionA: "A", optionB: "B", optionC: "C", optionD: "D"));
+        if (scenario == 1)
+            context.ReadingSessions.Add(ReadingSession.Import(Guid.NewGuid(), student, first,
+                60, 100, 1, 1, 100, 100, DateTime.UtcNow, DateTime.UtcNow, null, null, null));
+        await context.SaveChangesAsync();
+        var service = CreateExerciseSessionService(context);
+        if (scenario == 2)
+        {
+            var action = () => service.StartAsync(student, new StartExerciseSessionRequest { ExerciseId = exercise });
+            await action.Should().ThrowAsync<BusinessRuleException>();
+            return;
+        }
+        var started = await service.StartAsync(student, new StartExerciseSessionRequest { ExerciseId = exercise });
+        (await context.ExerciseSessions.SingleAsync(item => item.Id == started.SessionId)).ReadingTextId.Should().Be(second);
+    }
+
+    [Theory]
     [InlineData("practice", 0)]
     [InlineData("evaluation", 1)]
     public async Task Reading_purpose_controls_questions_in_owned_snapshot(string purpose, int expectedQuestions)
