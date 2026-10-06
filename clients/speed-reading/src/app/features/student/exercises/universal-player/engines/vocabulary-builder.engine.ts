@@ -594,10 +594,10 @@ export class VocabularyBuilderEngine implements BaseEngine {
         if (!pending || !this.state.isRunning || this.state.isCompleted) return;
         this.pendingQuizAnswer = null;
 
-        if (response?.isValid !== true) {
+        if (response?.isValid !== true || typeof response.isCorrect !== 'boolean') {
             this.showingFeedback = false;
             this.lastAnswerCorrect = false;
-            this.startWordTimer();
+            if (!this.state.isPaused) this.startWordTimer(Math.max(0, this.wordDeadline - Date.now()));
             this.callbacks.onStateChange({ ...this.state });
             return;
         }
@@ -622,6 +622,9 @@ export class VocabularyBuilderEngine implements BaseEngine {
     isShowingFeedback(): boolean {
         return this.showingFeedback;
     }
+    isAwaitingPersistence(): boolean {
+        return this.pendingQuizAnswer !== null;
+    }
 
     getLastAnswerCorrect(): boolean {
         return this.lastAnswerCorrect;
@@ -638,26 +641,6 @@ export class VocabularyBuilderEngine implements BaseEngine {
     }
 
     // ==================== SPACED REPETITION (LEITNER) ====================
-
-    private loadProgress(): void {
-        try {
-            const data = localStorage.getItem(`vocab_progress_${this.userId}`);
-            if (data) {
-                this.userProgress = JSON.parse(data);
-            }
-        } catch (e) {
-            console.error('[VocabularyBuilderEngine] Error loading progress', e);
-        }
-    }
-
-    private saveProgress(): void {
-        if (this.previewOnly) return;
-        try {
-            localStorage.setItem(`vocab_progress_${this.userId}`, JSON.stringify(this.userProgress));
-        } catch (e) {
-            console.error('[VocabularyBuilderEngine] Error saving progress', e);
-        }
-    }
 
     private updateLeitnerBox(wordId: string, isCorrect: boolean): void {
         if (!this.userProgress[wordId]) {
