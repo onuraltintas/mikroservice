@@ -531,7 +531,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         if (existingResult is not null)
             return ToResult(existingResult, session, state);
 
-        if (IsGrouping(state) && (!state.ReadingStartTime.HasValue || !state.ReadingEndTime.HasValue))
+        if (IsGrouping(state) && (state.GroupingDisplayPaceWpm <= 0 || state.ReadingMinimumMs <= 0
+            || !state.ReadingStartTime.HasValue || !state.ReadingEndTime.HasValue))
             throw IncompleteSession("Gruplama gösterimi tamamlanmadan oturum kaydedilemez.");
 
         if (IsScanning(state))
@@ -1568,8 +1569,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                 ?? ReadPositiveInt(ReadObject(config, "pacer"), "speedWpm");
             var rootTiming = ReadObject(config, "timing");
             var duration = ReadPositiveInt(timing, "durationMs") ?? ReadPositiveInt(rootTiming, "durationMs");
-            var delay = timing.ValueKind == JsonValueKind.Object && timing.TryGetProperty("delayMs", out var nestedDelay)
-                && nestedDelay.TryGetInt32(out var delayValue) ? delayValue : ReadPositiveInt(rootTiming, "delayMs") ?? 0;
+            var delay = ReadNonNegativeInt(timing, "delayMs") ?? ReadNonNegativeInt(rootTiming, "delayMs") ?? 0;
             delay = Math.Clamp(delay, 0, 10000);
             state.GroupingDisplayPaceWpm = explicitWpm.HasValue ? Math.Clamp(explicitWpm.Value, 20, 1500)
                 : duration.HasValue ? Math.Clamp(60000m * state.GroupingChunkSize /
@@ -1616,6 +1616,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             return FinishAdaptiveStage(session, state, now);
         if (ExerciseConfigurationRules.NormalizeEngineType(state.EngineType) == "reading_comprehension" || IsGrouping(state))
         {
+            if (IsGrouping(state) && (state.GroupingDisplayPaceWpm <= 0 || state.ReadingMinimumMs <= 0))
+                return Invalid("Bu eski egzersiz oturumu doğrulanamıyor. Egzersizi yeniden başlatın.");
             if (!state.ReadingStartTime.HasValue)
                 return Invalid("Önce okumayı başlatın.");
             if (!state.ReadingEndTime.HasValue)
@@ -3183,6 +3185,16 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                 && value > 0)
                 return value;
         }
+        return null;
+    }
+
+    private static int? ReadNonNegativeInt(JsonElement element, string propertyName)
+    {
+        if (element.ValueKind != JsonValueKind.Object) return null;
+        foreach (var property in element.EnumerateObject())
+            if (property.Name.Equals(propertyName, StringComparison.OrdinalIgnoreCase)
+                && property.Value.TryGetInt32(out var value) && value >= 0)
+                return value;
         return null;
     }
 
