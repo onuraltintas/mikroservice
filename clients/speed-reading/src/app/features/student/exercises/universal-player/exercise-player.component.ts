@@ -2090,12 +2090,14 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       errors: totalQuestions - correctCount,
       details: {
         wpm: this.readingIncomplete || this.engine?.engineType === 'skimming' ? null : this.readingWpm,
+        ...(this.engine?.engineType === 'skimming' ? { inspectionTimeMs: this.engineState.timeElapsed } : {}),
         timedOut: this.readingIncomplete,
         targetWpm: this.getTargetWpm(),
         comprehensionScore: comprehensionAccuracy,
         correctAnswers: correctCount,
         totalQuestions: totalQuestions,
-        performanceLevel: this.readingIncomplete ? 'Okuma tamamlanmadı' : this.getPerformanceLevel(this.readingWpm, comprehensionAccuracy),
+        performanceLevel: this.engine?.engineType === 'skimming' ? 'Ana fikir değerlendirmesi'
+          : this.readingIncomplete ? 'Okuma tamamlanmadı' : this.getPerformanceLevel(this.readingWpm, comprehensionAccuracy),
         // Time statistics
         totalTimeSpent,
         averageTimePerQuestion,

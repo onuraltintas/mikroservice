@@ -25,9 +25,10 @@ export class SkimmingEngine implements BaseEngine {
     const owned = config['serverAuthoritative'] === true;
     const content = caseInsensitiveField(config, 'content');
     const previewContent = caseInsensitiveField(nested, 'content') ?? content;
-    this.text = boundedText(owned ? content : (typeof previewContent === 'string' ? previewContent
-      : caseInsensitiveField(recordOrEmpty(previewContent), 'text'))
-      ?? caseInsensitiveField(config, 'readingTextContent'), '').trim();
+    const ownedText = caseInsensitiveField(config, 'readingTextContent') ?? (typeof content === 'string' ? content
+      : caseInsensitiveField(recordOrEmpty(content), 'text'));
+    this.text = boundedText(owned ? ownedText : ownedText ?? (typeof previewContent === 'string' ? previewContent
+      : caseInsensitiveField(recordOrEmpty(previewContent), 'text')), '').trim();
     this.title = boundedText(caseInsensitiveField(config, 'readingTextTitle'), '');
     this.minimumMs = boundedInteger(owned ? config['readingMinimumMs'] : timing['minreadingtimems'], 3000, 0, 3_600_000);
     const seconds = caseInsensitiveField(nested, 'timeLimitSeconds') ?? caseInsensitiveField(nested, 'timeLimit')
