@@ -4,6 +4,14 @@ import { RegressionReductionEngine } from './engines/regression-reduction.engine
 import { Subject } from 'rxjs';
 
 describe('regression player configuration', () => {
+  it('does not normalize unmeasured preview answers into measured comprehension', () => {
+    const player = Object.create(ExercisePlayerComponent.prototype) as any;
+    player.engine = { engineType: 'regression_reduction' };
+    player.questionAnswers = [];
+    const result = { score: 0, accuracy: 0, details: { measurementStatus: 'NotMeasured',
+      comprehensionScore: null, totalQuestions: 1, answers: [{ isCorrect: null }] } };
+    expect(player.isMeasuredClientResult(result)).toBeFalse();
+  });
   it('allows unmeasured preview answers and supports catalog question id aliases', () => {
     const player = Object.create(ExercisePlayerComponent.prototype) as any;
     player.engineState = { isRunning: true, isPaused: false }; player.questionFeedback = null;
