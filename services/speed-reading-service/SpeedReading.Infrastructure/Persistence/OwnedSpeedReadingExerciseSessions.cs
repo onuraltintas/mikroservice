@@ -294,6 +294,7 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
                 && requiresReadingText)
             {
                 var normalizedEngineType = ExerciseConfigurationRules.NormalizeEngineType(exerciseEngineType);
+                var isComprehension = normalizedEngineType == "reading_comprehension";
                 var requiresScorableQuestions = ExerciseConfigurationRules.ResolveReadingPurpose(
                     normalizedEngineType,
                     ReadString(ReadObject(parsedConfiguration, "engineConfig"), "readingPurpose")
@@ -304,6 +305,7 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
                     .Where(item => item.IsActive
                         && !item.IsDeleted
                         && item.Content != string.Empty
+                        && (!isComprehension || item.DifficultyLevel == difficultyLevel)
                         && (!profileAgeGroupId.HasValue
                             || item.TargetAgeGroupId == null
                             || item.TargetAgeGroupId == profileAgeGroupId.Value)
@@ -315,7 +317,10 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
                                 || question.CorrectAnswer.Trim().ToUpper() == "B"
                                 || question.CorrectAnswer.Trim().ToUpper() == "C"
                                 || question.CorrectAnswer.Trim().ToUpper() == "D"))))
-                    .OrderByDescending(item => item.ExerciseId == request.ExerciseId)
+                    .OrderBy(item => isComprehension
+                        ? db.ReadingSessions.Count(history => history.UserId == studentId && history.ReadingTextId == item.Id)
+                        : 0)
+                    .ThenByDescending(item => item.ExerciseId == request.ExerciseId)
                     .ThenByDescending(item => item.DifficultyLevel == difficultyLevel)
                     .ThenBy(item => item.Id)
                     .Select(item => (Guid?)item.Id)
