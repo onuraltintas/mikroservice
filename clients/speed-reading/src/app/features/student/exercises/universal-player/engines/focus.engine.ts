@@ -70,6 +70,9 @@ export class FocusEngine implements BaseEngine {
     private expectedTime = 0;
     private nextStepTime = 0;
     private assessmentStepTimeout: any;
+    private transitionTimeout: any;
+    private assessmentRemainingMs = 0;
+    private assessmentDeadline = 0;
     private awaitingAssessmentStep = false;
 
     initialize(config: EngineConfig, callbacks: EngineCallbacks): void {
@@ -195,7 +198,6 @@ export class FocusEngine implements BaseEngine {
         }
 
         this.expectedTime = Date.now();
-        this.calculateNextStepTime();
         this.advanceStep();
         if (!this.state.isRunning || this.state.isCompleted) return;
 
@@ -258,7 +260,9 @@ export class FocusEngine implements BaseEngine {
             this.isTransitioning = true;
             this.callbacks.onStateChange({ ...this.state });
 
-            setTimeout(() => {
+            this.transitionTimeout = setTimeout(() => {
+                this.transitionTimeout = null;
+                if (!this.state.isRunning || this.state.isCompleted) return;
                 this.isTransitioning = false;
                 this.showStep(nextPosition, nextWord);
             }, 150); // 150ms blink
@@ -451,6 +455,7 @@ export class FocusEngine implements BaseEngine {
                 this.showStep(
                     feedback.position == null ? undefined : Number(feedback.position),
                     feedback.word == null ? undefined : String(feedback.word));
+                this.assessmentRemainingMs = Math.max(1, this.config.SpeedMs);
                 this.scheduleNextAssessmentStep();
                 return;
             }
@@ -520,10 +525,11 @@ export class FocusEngine implements BaseEngine {
         if (!this.assessmentMode || !this.state.isRunning || this.state.isPaused || this.awaitingAssessmentStep)
             return;
 
+        this.assessmentDeadline = Date.now() + this.assessmentRemainingMs;
         this.assessmentStepTimeout = setTimeout(() => {
             this.assessmentStepTimeout = null;
             if (this.state.isRunning && !this.state.isPaused) this.advanceStep();
-        }, Math.max(1, this.config.SpeedMs));
+        }, this.assessmentRemainingMs);
     }
 
     pause(): void {
@@ -531,6 +537,7 @@ export class FocusEngine implements BaseEngine {
         this.state.isPaused = true;
         this.pauseStartTime = Date.now();
         if (this.assessmentStepTimeout) {
+            this.assessmentRemainingMs = Math.max(0, this.assessmentDeadline - Date.now());
             clearTimeout(this.assessmentStepTimeout);
             this.assessmentStepTimeout = null;
         }
@@ -558,6 +565,9 @@ export class FocusEngine implements BaseEngine {
         clearInterval(this.pacerInterval);
         if (this.assessmentStepTimeout) clearTimeout(this.assessmentStepTimeout);
         this.assessmentStepTimeout = null;
+        if (this.transitionTimeout) clearTimeout(this.transitionTimeout);
+        this.transitionTimeout = null;
+        this.isTransitioning = false;
     }
 
     reset(): void {
