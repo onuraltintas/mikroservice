@@ -11,9 +11,10 @@ namespace Identity.API.IntegrationTests;
 public sealed class SpeedReadingRegressionPostgresTests(PostgresFixture postgres)
 {
     [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public async Task PersistsServerAnswersWithoutInventingReadingSpeed(bool hasQuestions)
+    [InlineData(false, "regression_reduction")]
+    [InlineData(true, "regression_reduction")]
+    [InlineData(false, "Regression-Reduction")]
+    public async Task PersistsServerAnswersWithoutInventingReadingSpeed(bool hasQuestions, string engineType)
     {
         await using var db = new OwnedSpeedReadingDbContext(new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>()
             .UseNpgsql(postgres.ConnectionString).Options);
@@ -23,7 +24,7 @@ public sealed class SpeedReadingRegressionPostgresTests(PostgresFixture postgres
         {
             await db.Database.EnsureCreatedAsync();
             var student = Guid.NewGuid();
-            var type = ExerciseType.Create(Guid.NewGuid(), "RegressionReduction", "Regresyon", "regression_reduction");
+            var type = ExerciseType.Create(Guid.NewGuid(), "RegressionReduction", "Regresyon", engineType);
             var config = hasQuestions
                 ? """{"engineType":"regression_reduction","engineConfig":{"readingPurpose":"evaluation"}}"""
                 : "{}";
