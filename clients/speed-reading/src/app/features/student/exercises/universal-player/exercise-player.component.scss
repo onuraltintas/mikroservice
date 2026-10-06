@@ -6837,6 +6837,10 @@ h1 {
 }
 
 .error-word {
+    font: inherit;
+    color: inherit;
+    background: transparent;
+    &:focus-visible { outline: 2px solid #4f46e5; outline-offset: 2px; }
     display: inline-block;
     padding: 1px 2px; // Reduced padding further
     margin: 0; // Removed margin to close gaps

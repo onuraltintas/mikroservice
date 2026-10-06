@@ -695,7 +695,7 @@
             </div>
             <div class="progress-info">
                 <span>Bulunan: {{ getErrorAnalysisFoundCount() }} / {{ getErrorAnalysisErrorCount() }}</span>
-                <div class="ep-progress-bar"><div class="ep-progress-bar__fill" [style.width.%]="(getErrorAnalysisFoundCount() / getErrorAnalysisErrorCount()) * 100"></div></div>
+                <div class="ep-progress-bar"><div class="ep-progress-bar__fill" [style.width.%]="getErrorAnalysisErrorCount() ? (getErrorAnalysisFoundCount() / getErrorAnalysisErrorCount()) * 100 : 0"></div></div>
             </div>
 
             <button class="ep-btn ep-btn--icon" (click)="togglePause()">
@@ -716,12 +716,14 @@
         <!-- Text Area with Clickable Words -->
         <div class="error-text-area" [class.paused]="engineState.isPaused">
             <div class="error-text-content" [ngClass]="'font-' + getErrorAnalysisFontSize()">
-                <span *ngFor="let word of getErrorAnalysisWords(); let i = index; trackBy: trackByIdx"
-                    class="error-word" [class.selected]="isErrorWordSelected(i)"
-                    [class.found-error]="isErrorWordFoundError(i)" [class.false-alarm]="isErrorWordFalseAlarm(i)"
-                    [class.hint]="isErrorWordHint(i)" (click)="onErrorWordClick(i)">
+                <button type="button" *ngFor="let word of getErrorAnalysisWords(); trackBy: trackByIdx"
+                    class="error-word" [class.selected]="isErrorWordSelected(word.index)"
+                    [class.found-error]="isErrorWordFoundError(word.index)" [class.false-alarm]="isErrorWordFalseAlarm(word.index)"
+                    [class.hint]="isErrorWordHint(word.index)" (click)="onErrorWordClick(word.index)"
+                    [disabled]="engineState.isPaused || isErrorWordSelected(word.index) || isErrorAnalysisPending()"
+                    [attr.aria-pressed]="isErrorWordSelected(word.index)">
                     {{ word.text }}
-                </span>
+                </button>
             </div>
         </div>
 
@@ -742,10 +744,12 @@
             </div>
 
             <button class="ep-btn ep-btn--ghost hint-btn" (click)="useErrorAnalysisHint()"
-                [disabled]="getErrorAnalysisFoundCount() === getErrorAnalysisErrorCount()">
+                [disabled]="engineState.isPaused || isErrorAnalysisPending() || getErrorAnalysisFoundCount() === getErrorAnalysisErrorCount()">
                 <span class="material-icons">lightbulb</span>
                 İpucu
             </button>
+            <button type="button" class="ep-btn ep-btn--ghost" (click)="forceCompleteErrorAnalysis()"
+                [disabled]="engineState.isPaused || isErrorAnalysisPending()">Bitir ve sonucu gör</button>
 
 
         </div>
@@ -1637,6 +1641,15 @@
                     <div class="stat-value">{{ result?.details?.comprehensionScore }}%</div>
                     <div class="stat-label">Anlama</div>
                 </div>
+            </div>
+            <div *ngIf="engine?.engineType === 'error_analysis'">
+                <div class="stats-row">
+                    <div class="stat-card"><div class="stat-value">{{ result?.details?.foundErrors }}</div><div class="stat-label">Bulunan hata</div></div>
+                    <div class="stat-card"><div class="stat-value">{{ result?.details?.missedErrors }}</div><div class="stat-label">Kaçırılan hata</div></div>
+                    <div class="stat-card"><div class="stat-value">{{ result?.details?.falseAlarms }}</div><div class="stat-label">Yanlış seçim</div></div>
+                    <div class="stat-card"><div class="stat-value">{{ result?.details?.hintUsedCount }}</div><div class="stat-label">Kullanılan ipucu</div></div>
+                </div>
+                <p class="measurement-not-available">Hata bulma alıştırmasıdır; okuma hızı ve anlama ölçülmez. {{ result?.details?.assisted ? 'Bu çalışma ipucu desteğiyle tamamlandı.' : '' }}</p>
             </div>
             <div class="stats-row" *ngIf="isFixationMode() && result?.details?.averageResponseTimeMs != null">
                 <div class="stat-card"><div class="stat-value">{{ result?.details?.averageResponseTimeMs }} ms</div><div class="stat-label">Ortalama cevap süresi</div></div>

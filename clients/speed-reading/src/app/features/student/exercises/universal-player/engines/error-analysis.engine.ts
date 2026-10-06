@@ -1,10 +1,8 @@
 /**
  * Error Analysis Engine (Hata Analizi / Proofreading)
  * 
- * Akademik Temeller:
- * - Miscue Analysis (Goodman, 1965)
- * - Cambridge Assessment proofreading tasks
- * - Signal Detection Theory (hits, misses, false alarms)
+ * Metindeki hazırlanmış hataları bulma alıştırmasıdır.
+ * Bulunan/kaçırılan hata ve yanlış seçim raporlanır; klinik ölçüm veya d-prime hesaplaması değildir.
  * 
  * Egzersiz Akışı:
  * 1. Hatalı metin göster
@@ -71,6 +69,12 @@ export class ErrorAnalysisEngine implements BaseEngine {
     private phase: ErrorAnalysisPhase = 'idle';
     private timerInterval: any = null;
     private startTime: Date | null = null;
+    private lastTick = 0;
+    private timeLimitMs = 180_000;
+    private serverAuthoritative = false;
+    private serverStarted = false;
+    private pendingAction: any = null;
+    private hintIndex: number | null = null;
 
     constructor() {
         this.state = this.getInitialState();
@@ -102,6 +106,11 @@ export class ErrorAnalysisEngine implements BaseEngine {
         const read = (name: string) => caseInsensitiveField(sessionData, name)
             ?? caseInsensitiveField(nested, name)
             ?? caseInsensitiveField(root, name);
+        this.serverAuthoritative = config['serverAuthoritative'] === true;
+        this.serverStarted = false; this.pendingAction = null; this.hintIndex = null;
+        const timing = mergeCaseInsensitiveRecords(root, nested, 'timing');
+        const seconds = Number(read('timeLimitSeconds') ?? read('timeLimit') ?? timing['timelimitsec'] ?? 180);
+        this.timeLimitMs = Number.isFinite(seconds) && seconds > 0 ? Math.min(3600, seconds) * 1000 : 180_000;
 
         // Parse config with PascalCase fallback
         this.textWithErrors = boundedText(read('textWithErrors'), '');
@@ -125,7 +134,7 @@ export class ErrorAnalysisEngine implements BaseEngine {
             explanation: e.Explanation || e.explanation || ''
         }));
 
-        this.errorCount = this.errors.length;
+        this.errorCount = this.serverAuthoritative ? Number(read('totalSteps') ?? this.errors.length) : this.errors.length;
 
         // Reset tracking
         this.foundErrors = [];
@@ -145,7 +154,7 @@ export class ErrorAnalysisEngine implements BaseEngine {
         if (this.state.isRunning || this.state.isCompleted) return;
         const indices = new Set(this.words.map(word => word.index));
         if (!this.words.length || !this.errorCount || indices.size !== this.words.length
-            || this.words.some(word => !Number.isInteger(word.index) || word.index < 0 || !word.text.trim())
+            || this.words.some(word => !Number.isInteger(word.index) || word.index < 0 || typeof word.text !== 'string' || !word.text.trim())
             || new Set(this.errors.map(error => error.wordIndex)).size !== this.errors.length
             || this.errors.some(error => !indices.has(error.wordIndex))) {
             this.callbacks?.onError?.('Hata analizi içeriği eksik veya tutarsız. Lütfen farklı bir egzersiz seçin.');
@@ -160,12 +169,13 @@ export class ErrorAnalysisEngine implements BaseEngine {
 
         this.callbacks?.onStart?.();
         this.callbacks?.onStateChange?.(this.state);
+        if (this.serverAuthoritative) this.submitAction('error_analysis_start');
 
     }
 
     pause(): void {
         if (!this.state.isRunning || this.state.isPaused) return;
-
+        this.updateElapsed();
         this.state.isPaused = true;
         this.stopTimer();
 
@@ -188,6 +198,7 @@ export class ErrorAnalysisEngine implements BaseEngine {
         this.state.isRunning = false;
         this.state.isPaused = false;
         this.phase = 'completed';
+        this.pendingAction = null;
 
         this.callbacks?.onStateChange?.(this.state);
     }
@@ -199,6 +210,7 @@ export class ErrorAnalysisEngine implements BaseEngine {
         this.selectedWords = new Set();
         this.hintUsedCount = 0;
         this.phase = 'idle';
+        this.pendingAction = null; this.serverStarted = false; this.hintIndex = null;
         this.state = {
             ...this.getInitialState(),
             totalSteps: this.errorCount
@@ -212,6 +224,7 @@ export class ErrorAnalysisEngine implements BaseEngine {
         this.state.isRunning = false;
         this.state.isPaused = false;
         this.phase = 'completed';
+        this.pendingAction = null;
     }
 
     handleInput(input: any): void {
@@ -224,6 +237,10 @@ export class ErrorAnalysisEngine implements BaseEngine {
 
     private handleWordSelection(wordIndex: number): void {
         if (!Number.isInteger(wordIndex) || !this.words.some(word => word.index === wordIndex)) return;
+        if (this.serverAuthoritative) {
+            if (!this.serverStarted || this.pendingAction || this.selectedWords.has(wordIndex)) return;
+            this.submitAction('error_analysis_select', wordIndex); return;
+        }
 
         // Already selected?
         if (this.selectedWords.has(wordIndex)) {
@@ -231,6 +248,7 @@ export class ErrorAnalysisEngine implements BaseEngine {
         }
 
         this.selectedWords.add(wordIndex);
+        this.hintIndex = null;
 
         // Check if this is a real error
         const error = this.errors.find(e => e.wordIndex === wordIndex);
@@ -245,6 +263,7 @@ export class ErrorAnalysisEngine implements BaseEngine {
             // Check if all errors found
             if (this.foundErrors.length >= this.errorCount) {
                 this.completeExercise();
+                return;
             }
         } else {
             // False alarm
@@ -265,12 +284,13 @@ export class ErrorAnalysisEngine implements BaseEngine {
 
     private completeExercise(): void {
         if (this.state.isCompleted) return;
+        this.updateElapsed();
         this.stopTimer();
         this.phase = 'completed';
         this.state.isRunning = false;
         this.state.isCompleted = true;
 
-        // Calculate final score using Signal Detection Theory
+        // Exercise-specific hit-rate score; not a standardized sensitivity measure.
         const hits = this.foundErrors.length;
         const misses = this.errorCount - hits;
         const falseAlarmCount = this.falseAlarms.length;
@@ -300,6 +320,9 @@ export class ErrorAnalysisEngine implements BaseEngine {
                 foundErrors: this.foundErrors.length,
                 missedErrors: misses,
                 falseAlarms: falseAlarmCount,
+                hintUsedCount: this.hintUsedCount,
+                assisted: this.hintUsedCount > 0,
+                measurementKind: 'proofreading',
                 hitRate: Math.round(hitRate * 100),
                 precision: (hits + falseAlarmCount) > 0
                     ? Math.round((hits / (hits + falseAlarmCount)) * 100)
@@ -315,14 +338,51 @@ export class ErrorAnalysisEngine implements BaseEngine {
 
     private startTimer(): void {
         if (this.timerInterval) return;
-
+        this.lastTick = Date.now();
         this.timerInterval = setInterval(() => {
             if (!this.state.isPaused) {
-                this.state.timeElapsed += 100;
+                this.updateElapsed();
                 this.callbacks?.onStateChange?.(this.state);
+                if (this.state.timeElapsed >= this.timeLimitMs && !this.pendingAction) this.forceComplete();
             }
         }, 100);
     }
+
+    private updateElapsed(): void {
+        if (this.state.isRunning && !this.state.isPaused && this.lastTick) {
+            const now = Date.now();
+            this.state.timeElapsed = Math.min(this.timeLimitMs, this.state.timeElapsed + Math.max(0, now - this.lastTick));
+            this.lastTick = now;
+        }
+    }
+
+    private submitAction(action: string, index?: number): void {
+        if (this.pendingAction) return;
+        this.pendingAction = { action, index, timestamp: new Date() };
+        this.callbacks?.onAction?.(this.pendingAction);
+    }
+
+    reconcileServerResponse(action: any, response: any): void {
+        if (action !== this.pendingAction || !this.state.isRunning || this.state.isCompleted) return;
+        this.pendingAction = null;
+        if (!response?.isValid || !response.feedbackData) {
+            this.callbacks?.onError?.(response?.message || 'Seçiminiz kaydedilemedi. Lütfen tekrar deneyin.'); return;
+        }
+        const data = response.feedbackData;
+        if (Array.isArray(data.errors)) this.errors = data.errors;
+        this.serverStarted = true;
+        this.selectedWords = new Set(data.selected ?? []);
+        this.foundErrors = data.found ?? []; this.falseAlarms = data.falseAlarms ?? [];
+        this.hintUsedCount = data.hintUsedCount ?? 0;
+        this.hintIndex = typeof data.hintIndex === 'number' ? data.hintIndex : null;
+        this.state.currentStep = this.foundErrors.length; this.state.errors = this.falseAlarms.length;
+        this.state.timeElapsed = data.timeElapsed ?? this.state.timeElapsed; this.lastTick = Date.now();
+        if (response.isCompleted) this.completeExercise();
+        else { this.state.accuracy = data.accuracy ?? 0; this.callbacks?.onStateChange?.(this.state); }
+    }
+
+    isAwaitingServer(): boolean { return !!this.pendingAction; }
+    getHintIndex(): number | null { return this.hintIndex; }
 
     private stopTimer(): void {
         if (this.timerInterval) {
@@ -405,6 +465,11 @@ export class ErrorAnalysisEngine implements BaseEngine {
     // For manual completion (timeout or give up)
     forceComplete(): void {
         if (this.phase !== 'active' || this.state.isPaused || !this.state.isRunning) return;
+        if (this.serverAuthoritative) {
+            if (!this.serverStarted) this.submitAction('error_analysis_start');
+            else this.submitAction('error_analysis_finish');
+            return;
+        }
         this.completeExercise();
     }
 
@@ -415,6 +480,10 @@ export class ErrorAnalysisEngine implements BaseEngine {
 
     useHint(): number | null {
         if (this.phase !== 'active' || this.state.isPaused || !this.state.isRunning) return null;
+        if (this.serverAuthoritative) {
+            if (this.serverStarted) this.submitAction('error_analysis_hint');
+            return null;
+        }
 
         const missedErrors = this.getMissedErrors();
         if (missedErrors.length === 0) return null;
@@ -424,6 +493,7 @@ export class ErrorAnalysisEngine implements BaseEngine {
         const randomError = missedErrors[randomIndex];
 
         this.hintUsedCount++;
+        this.hintIndex = randomError.wordIndex;
 
         // Return index to highlight
         return randomError.wordIndex;

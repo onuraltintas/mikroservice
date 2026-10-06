@@ -36,6 +36,7 @@ import { ReadingComprehensionEngine } from './engines/reading-comprehension.engi
 import { VisualExpansionEngine } from './engines/visual-expansion.engine';
 import { MotionPathEngine } from './engines/motion-path.engine';
 import { ScanFindEngine } from './engines/scan-find.engine';
+import { ErrorAnalysisEngine } from './engines/error-analysis.engine';
 import { RegressionReductionEngine } from './engines/regression-reduction.engine';
 import { SubvocalizationReductionEngine } from './engines/subvocalization-reduction.engine';
 import { VisualizationEngine } from './engines/visualization.engine';
@@ -1101,6 +1102,9 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
           this.waitForPendingActions(() => this.finishReadingTracking(finalizeCompletion, result.details?.timedOut === true));
         },
         onError: (error) => {
+          if (this.engine?.engineType === 'error_analysis' && this.engine.state.isRunning) {
+            this.toaster.error(error); this.cdr.detectChanges(); return;
+          }
           this.error = error;
           this.stopTimer(); // Stop timer on error
           this.cdr.detectChanges();
@@ -1153,6 +1157,12 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
           if (this.isTachistoscopeMode() && !this.isAssessmentMode) this.refreshTachistoscopeFeedback();
         },
         onAction: (action) => {
+          if (this.engine?.engineType === 'error_analysis') {
+            const errorEngine = this.engine as ErrorAnalysisEngine;
+            void this.enqueueAction(action as ActionData, response => errorEngine.reconcileServerResponse(action, response), false)
+              .catch(() => errorEngine.reconcileServerResponse(action, { isValid: false }));
+            return;
+          }
           // Backend motoruna aksiyonu bildir
 
           // Pasif gözlem/okuma bazlı egzersizlerde her adımda validation yapma
@@ -1312,7 +1322,8 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
           || this.backendSessionConfig?.visualizationScenes
           || this.parsedConfig?.['scenes']
           || this.parsedConfig?.['Scenes'],
-        words: this.backendSessionConfig?.vocabularyWords
+        words: this.backendSessionConfig?.errorAnalysisWords
+          || this.backendSessionConfig?.vocabularyWords
           || this.backendSessionConfig?.VocabularyWords
           || this.backendSessionConfig?.words
           || this.backendSessionConfig?.Words
@@ -3197,6 +3208,14 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
           accuracy: sessionResult.accuracy ?? 0,
           details: {
             ...((this.result || result).details || {}),
+            ...(this.engine?.engineType === 'error_analysis' && sessionResult.detailedResults?.errorAnalysisFound ? {
+              totalErrors: sessionResult.detailedResults.totalSteps,
+              foundErrors: sessionResult.detailedResults.errorAnalysisFound.length,
+              missedErrors: sessionResult.detailedResults.totalSteps - sessionResult.detailedResults.errorAnalysisFound.length,
+              falseAlarms: sessionResult.detailedResults.errorAnalysisFalseAlarms?.length ?? 0,
+              hintUsedCount: sessionResult.detailedResults.errorAnalysisHints ?? 0,
+              assisted: (sessionResult.detailedResults.errorAnalysisHints ?? 0) > 0
+            } : {}),
             ...(tachistoscope ? {
               trials,
               correctCount: sessionResult.correctCount,
@@ -3832,17 +3851,6 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     if (this.engine?.engineType === 'error_analysis') {
       this.engine.handleInput({ type: 'select_word', wordIndex: index });
       this.cdr.detectChanges();
-
-      // Auto-complete if all errors are found
-      const foundCount = this.getErrorAnalysisFoundCount();
-      const totalCount = this.getErrorAnalysisErrorCount();
-
-      if (totalCount > 0 && foundCount >= totalCount) {
-        // Add a small delay for the user to see the last success animation
-        setTimeout(() => {
-          this.forceCompleteErrorAnalysis();
-        }, 500);
-      }
     }
   }
 
@@ -3855,21 +3863,15 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
 
   useErrorAnalysisHint(): void {
     if (this.engine?.engineType === 'error_analysis') {
-      const hintIndex = (this.engine as any).useHint?.();
-      if (typeof hintIndex === 'number') {
-        this.currentHintIndex = hintIndex;
-        this.cdr.detectChanges();
-
-        // Highlight for 2 seconds then clear
-        setTimeout(() => {
-          this.currentHintIndex = null;
-          this.cdr.detectChanges();
-        }, 2000);
-      }
+      (this.engine as ErrorAnalysisEngine).useHint();
+      this.cdr.detectChanges();
     }
   }
 
   isErrorWordHint(index: number): boolean {
-    return this.currentHintIndex === index;
+    return this.engine?.engineType === 'error_analysis' && (this.engine as ErrorAnalysisEngine).getHintIndex() === index;
+  }
+  isErrorAnalysisPending(): boolean {
+    return this.engine?.engineType === 'error_analysis' && (this.engine as ErrorAnalysisEngine).isAwaitingServer();
   }
 }
