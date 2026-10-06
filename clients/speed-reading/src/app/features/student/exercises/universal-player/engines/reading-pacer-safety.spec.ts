@@ -16,6 +16,24 @@ const callbacks: EngineCallbacks = {
 };
 
 describe('reading pacer runtime safety', () => {
+  it('marks fade deadlines partial and excludes pauses including the initial lag', fakeAsync(() => {
+    let result: any;
+    const engine = new TextFadeEngine();
+    engine.initialize({ content: { text: 'bir iki üç dört' }, fading: { speedWpm: 200, lagMs: 300 },
+      timing: { timeLimitSec: 1 } } as any, { ...callbacks, onComplete: value => result = value });
+    engine.start();
+    tick(100);
+    engine.pause();
+    tick(2000);
+    expect(result).toBeUndefined();
+    engine.resume();
+    tick(950);
+    expect(result?.details.timedOut).toBeTrue();
+    expect(result?.completedSteps).toBeLessThan(4);
+    expect(result?.totalTime).toBeLessThan(1500);
+    expect(result?.details.wpm).toBeNull();
+    engine.destroy();
+  }));
   it('does not report automatically faded words as measured reading WPM', fakeAsync(() => {
     const engine = new TextFadeEngine();
     engine.initialize({ content: { text: 'bir iki üç dört' }, fading: { speedWpm: 200, lagMs: 0 } } as any, callbacks);

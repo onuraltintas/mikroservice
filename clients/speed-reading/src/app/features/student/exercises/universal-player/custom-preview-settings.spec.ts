@@ -9,6 +9,18 @@ import { TestBed } from '@angular/core/testing';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 
 describe('Custom preview settings safety', () => {
+  it('offers fade pace lag deadline and font controls with engine-compatible defaults', () => {
+    const config = { engineType: 'text_fade', engineConfig: { wpm: 900, pacer: { speedWpm: 800 },
+      fading: { speedWpm: 200, lagMs: 0 }, timing: { timeLimitSec: 10 }, visuals: { fontSize: 'large' } } };
+    const controls = getCustomPreviewControls(config);
+    expect(controls.map(control => control.key)).toEqual(['speedWpm', 'lagMs', 'timeLimitSec', 'fontSizePx']);
+    expect(controls.map(control => control.value)).toEqual([200, 0, 10, 24]);
+    const applied: any = applyCustomPreviewSettings(config, { speedWpm: 300, lagMs: 500, timeLimitSec: 2, fontSizePx: 28 }, { roles: ['Admin'], preview: true });
+    expect(applied.engineConfig.fading).toEqual({ speedWpm: 300, lagMs: 500 });
+    expect(applied.engineConfig.timing.timeLimitSec).toBe(2);
+    expect(applied.engineConfig.visuals.fontSize).toBe('28px');
+    expect(config.engineConfig.fading.lagMs).toBe(0);
+  });
   it('uses grouping engine pace rather than unrelated legacy speed aliases', () => {
     const controls = getCustomPreviewControls({ engineType: 'word_highlight', engineConfig: {
       wpm: 900, pacer: { speedWpm: 200 }, fading: { speedWpm: 800 } } });
