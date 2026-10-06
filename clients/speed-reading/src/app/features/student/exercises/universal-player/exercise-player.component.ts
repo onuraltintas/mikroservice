@@ -1654,7 +1654,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
 
   async togglePause(): Promise<void> {
     if (this.isPauseTransitionPending) return;
-    if ((this.isTachistoscopeMode() || this.shouldTrackReading()) && this.sessionId && this.sessionId !== 'preview-mode') {
+    if ((this.isTachistoscopeMode() || this.shouldTrackReading() || this.engine?.engineType === 'scan_find') && this.sessionId && this.sessionId !== 'preview-mode') {
       this.isPauseTransitionPending = true;
       const resuming = this.engineState.isPaused;
       if (!resuming) this.engine?.pause();
@@ -1742,7 +1742,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   async goBack(): Promise<void> {
     // Eğer egzersiz çalışıyorsa, onay iste
     if (this.engineState.isRunning && !this.engineState.isCompleted) {
-      if (this.isTachistoscopeMode() || this.shouldTrackReading()) {
+      if (this.isTachistoscopeMode() || this.shouldTrackReading() || this.engine?.engineType === 'scan_find') {
         if (this.isPauseTransitionPending) return;
         if (!this.engineState.isPaused) await this.togglePause();
       } else this.engine?.pause();
@@ -1755,7 +1755,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   async cancelExit(): Promise<void> {
     if (this.isPauseTransitionPending) return;
     this.showExitConfirm = false;
-    if (this.isTachistoscopeMode() || this.shouldTrackReading()) {
+    if (this.isTachistoscopeMode() || this.shouldTrackReading() || this.engine?.engineType === 'scan_find') {
       if (this.engineState.isPaused) await this.togglePause();
     } else this.engine?.resume();
   }

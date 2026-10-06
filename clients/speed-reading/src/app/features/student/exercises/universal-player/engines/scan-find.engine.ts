@@ -332,9 +332,6 @@ export class ScanFindEngine implements BaseEngine {
     private nextRound(): void {
         this.totalFoundUniqueAcrossRounds += this.foundCount;
         this.foundUniqueWordsInRound.clear();
-        this.awaitingServer = false;
-        this.serverStarted = false;
-        this.timedOut = false;
         this.currentRoundIndex++;
 
         if (this.config.scanningRounds && this.currentRoundIndex < this.config.scanningRounds.length) {
@@ -396,6 +393,9 @@ export class ScanFindEngine implements BaseEngine {
         };
         this.currentRoundIndex = 0;
         this.foundCount = 0;
+        this.awaitingServer = false;
+        this.serverStarted = false;
+        this.timedOut = false;
         this.totalFoundUniqueAcrossRounds = 0;
         this.foundUniqueWordsInRound.clear();
         this.generateContent();
