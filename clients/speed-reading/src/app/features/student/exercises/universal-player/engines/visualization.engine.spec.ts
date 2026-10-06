@@ -1,4 +1,5 @@
 import { VisualizationEngine } from './visualization.engine';
+import { fakeAsync, tick } from '@angular/core/testing';
 
 function callbacks(onComplete: (result: any) => void = () => undefined) {
   return {
@@ -76,5 +77,51 @@ describe('VisualizationEngine', () => {
     expect(engine.state.isCompleted).toBeTrue();
     expect(completions).toBe(1);
     engine.destroy();
+  });
+
+  it('keeps preview answers unmeasured without emitting persistence actions', () => {
+    let result: any; const actions: any[] = [];
+    const engine = new VisualizationEngine();
+    engine.initialize({ previewOnly: true, scenes: [scene] } as any,
+      { ...callbacks(value => result = value), onAction: action => actions.push(action) });
+    engine.start(); engine.handleInput({ action: 'skip_scene' });
+    engine.handleInput({ type: 'answer', answer: 'A' }); engine.nextQuestion();
+    expect(engine.isAnswerEvaluated()).toBeFalse();
+    expect(result.details.measurementStatus).toBe('NotMeasured');
+    expect(actions).toEqual([]);
+  });
+
+  it('resumes a guided step with its remaining time and excludes pauses', fakeAsync(() => {
+    const engine = new VisualizationEngine();
+    engine.initialize({ mode: 'guided', scenes: [{ ...scene, steps: ['ilk', 'son'], stepDurationMs: 1000 }] } as any, callbacks());
+    engine.start(); tick(400); engine.pause(); tick(3000); engine.resume();
+    tick(599); expect(engine.getGuidedStepText()).toBe('ilk');
+    tick(1); expect(engine.getGuidedStepText()).toBe('son');
+    tick(1000); expect(engine.getPhase()).toBe('questions');
+    expect(engine.state.timeElapsed).toBe(2000);
+    engine.destroy();
+  }));
+
+  it('uses the description when a guided scene has no steps', () => {
+    const engine = new VisualizationEngine();
+    engine.initialize({ mode: 'guided', scenes: [scene] } as any, callbacks());
+    engine.start(); expect(engine.getGuidedStepText()).toBe(scene.description); engine.destroy();
+  });
+
+  it('rejects incomplete server responses and permits a retry', () => {
+    const engine = new VisualizationEngine();
+    engine.initialize({ serverAuthoritative: true, scenes: [{ ...scene, questions: [{ ...scene.questions[0], correctAnswer: '' }] }] } as any, callbacks());
+    engine.start(); engine.handleInput({ action: 'skip_scene' });
+    engine.handleInput({ type: 'answer', answer: 'A' }); engine.applyServerResponse({});
+    expect(engine.state.currentStep).toBe(0); expect(engine.isAnswerPending()).toBeFalse();
+    engine.handleInput({ type: 'answer', answer: 'A' });
+    engine.applyServerResponse({ isValid: true, isCorrect: true });
+    expect(engine.state.currentStep).toBe(1); engine.destroy();
+  });
+
+  it('ignores answer and skip inputs while paused', () => {
+    const engine = new VisualizationEngine(); engine.initialize({ scenes: [scene] } as any, callbacks());
+    engine.start(); engine.pause(); engine.handleInput({ action: 'skip_scene' });
+    expect(engine.getPhase()).toBe('scene'); engine.destroy();
   });
 });
