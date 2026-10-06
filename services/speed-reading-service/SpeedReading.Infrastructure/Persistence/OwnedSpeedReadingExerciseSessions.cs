@@ -17,7 +17,7 @@ namespace SpeedReading.Infrastructure.Persistence;
 /// Core exercise/session use case backed only by the owned Speed Reading
 /// database. Verified completion also updates gamification in the same unit of work.
 /// </summary>
-internal sealed class OwnedSpeedReadingExerciseSessions(
+internal sealed partial class OwnedSpeedReadingExerciseSessions(
     OwnedSpeedReadingDbContext db) : ISpeedReadingExerciseSessions
 {
     private const string TimeoutAnswer = "__timeout__";
@@ -412,7 +412,9 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
             throw new InvalidOperationException("Actions can only be submitted to an active session.");
 
         var actionName = request.Action?.Trim().ToLowerInvariant();
-        var response = state.Tachistoscope is not null && actionName is not ("tachistoscope_present" or "tachistoscope_answer")
+        var response = IsScanning(state)
+            ? ValidateScanning(session, state, request, now)
+            : state.Tachistoscope is not null && actionName is not ("tachistoscope_present" or "tachistoscope_answer")
             ? Invalid("Takistoskop yalnız doğrulanmış tur aksiyonlarıyla ilerler.")
             : actionName == "vocabulary_review"
             ? await ReviewVocabularyAsync(session, state, request, studentId, now, cancellationToken)
@@ -516,6 +518,16 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         if (existingResult is not null)
             return ToResult(existingResult, session, state);
 
+        if (IsScanning(state))
+        {
+            if (state.ScanningRounds.Count == 0)
+                throw IncompleteSession("Bu tarama oturumu doğrulanmış hedef içermiyor. Egzersizi yeniden açın.");
+            if (ScanningExpired(session, state, now)) state.ReadingIncomplete = true;
+            if (!ScanningComplete(state) && !state.ReadingIncomplete)
+                throw IncompleteSession("Tarama hedefleri doğrulanmadan oturum tamamlanamaz.");
+            state.Questions.Clear();
+        }
+
         if (state.CurrentNumber.HasValue && state.CurrentNumber.Value <= state.TotalSteps)
             throw IncompleteSession("All grid targets must be completed before the session can be completed.");
         if ((state.Tachistoscope is not null || state.ExerciseTypeName.Equals("Tachistoscope", StringComparison.OrdinalIgnoreCase))
@@ -605,7 +617,7 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         var accuracy = SpeedReadingExerciseSessionRules.CalculateAccuracy(
             session.CorrectCount,
             session.IncorrectCount);
-        var wordsRead = state.Tachistoscope is not null ? null : state.WordCount > 0 ? (int?)state.WordCount : null;
+        var wordsRead = state.Tachistoscope is not null || IsScanning(state) ? null : state.WordCount > 0 ? (int?)state.WordCount : null;
         var adaptiveTransferResult = IsAdaptiveFluency(state)
             ? state.AdaptiveStageResults.SingleOrDefault(item => item.Stage == 3)
             : null;
@@ -662,6 +674,7 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         db.ExerciseSessionResults.Add(result);
         if (!isAssessmentSession
             && session.ReadingTextId is not null
+            && !IsScanning(state)
             && IsReadingExerciseFlow(state))
         {
             AddReadingSessionRecord(
@@ -1519,6 +1532,7 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         if (exerciseTypeName.Equals("RSVP", StringComparison.OrdinalIgnoreCase) && state.Words.Length > 0)
             state.TotalSteps = state.Words.Length;
         if (state.Tachistoscope is { } tachistoscope) state.TotalSteps = tachistoscope.Count;
+        if (IsScanning(state)) InitializeScanning(state, effectiveConfig);
         state.CustomData = customData;
         return state;
     }
@@ -2493,7 +2507,7 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
     }
 
     private static bool IsTimedOut(ExerciseSession session, SessionState state, DateTime now) =>
-        !(state.TimingStartsOnAction && !state.TimingStartedAt.HasValue)
+        !IsScanning(state) && !(state.TimingStartsOnAction && !state.TimingStartedAt.HasValue)
         && session.IsTimedOut(now, state.TimingStartedAt, state.TimingPausedSecondsBeforeStart);
 
     private static void EnsureTimingStarted(
@@ -2992,7 +3006,7 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
             result.IsMeasured && result.RawWpm > 0 ? result.RawWpm : null,
             result.IsMeasured && state.Questions.Count > 0 ? result.ComprehensionScore : null,
             result.IsMeasured && result.RawWpm > 0 ? result.WeightedKdp : null,
-            xp ?? (result.IsMeasured
+            xp ?? (result.IsMeasured && !state.ReadingIncomplete
                 ? SpeedReadingExerciseSessionRules.CalculateXp(
                     score ?? result.Score,
                     result.ComprehensionScore,
@@ -3357,6 +3371,10 @@ internal sealed class OwnedSpeedReadingExerciseSessions(
         public DateTime? FixationPresentedAt { get; set; }
         public List<SessionQuestion> Questions { get; set; } = [];
         public List<SessionAnswer> Answers { get; set; } = [];
+        public List<ScanningRound> ScanningRounds { get; set; } = [];
+        public int CurrentRound { get; set; }
+        public bool ScanningCaseSensitive { get; set; }
+        public bool ScanningFindAny { get; set; }
         public List<VisualizationSceneState> VisualizationScenes { get; set; } = [];
         public string VocabularyMode { get; set; } = "learning";
         public string VocabularyQuizType { get; set; } = "mixed";
