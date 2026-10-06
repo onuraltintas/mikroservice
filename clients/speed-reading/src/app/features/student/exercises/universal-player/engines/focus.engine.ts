@@ -71,6 +71,9 @@ export class FocusEngine implements BaseEngine {
     private nextStepTime = 0;
     private assessmentStepTimeout: any;
     private transitionTimeout: any;
+    private pendingTransition: (() => void) | null = null;
+    private transitionDeadline = 0;
+    private transitionRemainingMs = 0;
     private assessmentRemainingMs = 0;
     private assessmentDeadline = 0;
     private awaitingAssessmentStep = false;
@@ -168,6 +171,7 @@ export class FocusEngine implements BaseEngine {
     }
 
     start(): void {
+        if (this.state.isRunning || this.state.isCompleted) return;
         if (this.sequenceLength <= 0) {
             this.callbacks.onError('N-back uyaran dizisi alınamadı. Egzersiz yapılandırmasını kontrol edin.');
             return;
@@ -205,6 +209,7 @@ export class FocusEngine implements BaseEngine {
             if (this.state.isRunning
                 && !this.state.isPaused
                 && !this.state.isCompleted
+                && !this.isTransitioning
                 && Date.now() >= this.nextStepTime) {
                 this.advanceStep();
             }
@@ -260,12 +265,12 @@ export class FocusEngine implements BaseEngine {
             this.isTransitioning = true;
             this.callbacks.onStateChange({ ...this.state });
 
-            this.transitionTimeout = setTimeout(() => {
-                this.transitionTimeout = null;
-                if (!this.state.isRunning || this.state.isCompleted) return;
+            this.pendingTransition = () => {
                 this.isTransitioning = false;
                 this.showStep(nextPosition, nextWord);
-            }, 150); // 150ms blink
+            };
+            this.transitionRemainingMs = 150;
+            this.scheduleTransition();
         } else {
             this.showStep(nextPosition, nextWord);
         }
@@ -512,11 +517,20 @@ export class FocusEngine implements BaseEngine {
     }
 
     private updateAccuracy(): void {
-        const totalTrials = this.currentIndex + 1;
-        if (totalTrials <= 0) return;
+        const responses = this.hits + this.falseAlarms + this.misses;
+        this.state.accuracy = responses > 0 ? Math.round(100 * this.hits / responses) : 0;
+    }
 
-        const errors = this.falseAlarms + this.misses;
-        this.state.accuracy = Math.round(100 * (1 - (errors / (totalTrials * (this.mode === 'dual' ? 2 : 1) || 1))));
+    private scheduleTransition(): void {
+        if (!this.pendingTransition || !this.state.isRunning || this.state.isPaused) return;
+        this.transitionDeadline = Date.now() + this.transitionRemainingMs;
+        this.transitionTimeout = setTimeout(() => {
+            this.transitionTimeout = null;
+            if (!this.state.isRunning || this.state.isPaused) return;
+            const transition = this.pendingTransition;
+            this.pendingTransition = null;
+            transition?.();
+        }, this.transitionRemainingMs);
     }
 
     private scheduleNextAssessmentStep(): void {
@@ -536,6 +550,11 @@ export class FocusEngine implements BaseEngine {
         if (this.state.isPaused) return;
         this.state.isPaused = true;
         this.pauseStartTime = Date.now();
+        if (this.transitionTimeout) {
+            this.transitionRemainingMs = Math.max(0, this.transitionDeadline - Date.now());
+            clearTimeout(this.transitionTimeout);
+            this.transitionTimeout = null;
+        }
         if (this.assessmentStepTimeout) {
             this.assessmentRemainingMs = Math.max(0, this.assessmentDeadline - Date.now());
             clearTimeout(this.assessmentStepTimeout);
@@ -554,6 +573,7 @@ export class FocusEngine implements BaseEngine {
         this.nextStepTime += pauseDuration;
 
         this.state.isPaused = false;
+        this.scheduleTransition();
         this.scheduleNextAssessmentStep();
         this.callbacks.onResume();
         this.callbacks.onStateChange({ ...this.state });
@@ -567,6 +587,7 @@ export class FocusEngine implements BaseEngine {
         this.assessmentStepTimeout = null;
         if (this.transitionTimeout) clearTimeout(this.transitionTimeout);
         this.transitionTimeout = null;
+        this.pendingTransition = null;
         this.isTransitioning = false;
     }
 
