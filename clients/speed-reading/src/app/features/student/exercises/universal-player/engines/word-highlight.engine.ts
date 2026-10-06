@@ -102,7 +102,7 @@ export class WordHighlightEngine implements BaseEngine {
         const backendChunks = root.serverAuthoritative === true ? []
             : boundedStringArray(caseInsensitiveField(nested, 'chunks') ?? caseInsensitiveField(root, 'chunks'));
         const chunkSize = boundedInteger(caseInsensitiveField(nested, 'chunkSize')
-            ?? caseInsensitiveField(root, 'chunkSize') ?? pacer['chunksize'], 1, 1, 10);
+            ?? caseInsensitiveField(root, 'chunkSize') ?? pacer['chunksize'] ?? content['chunksize'], 1, 1, 10);
         const targetWpm = boundedInteger(caseInsensitiveField(nested, 'targetWpm')
             ?? caseInsensitiveField(root, 'targetWpm') ?? pacer['speedwpm'], 200, 20, 1500);
         {
