@@ -21,6 +21,43 @@ namespace SpeedReading.Application.UnitTests;
 public sealed class StudentReadingPersistenceTests
 {
     [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Comprehension_wpm_uses_actual_words_and_fractional_active_seconds(bool paused)
+    {
+        await using var context = CreateContext();
+        var student = Guid.NewGuid();
+        var exercise = Guid.NewGuid();
+        var type = Guid.NewGuid();
+        var text = Guid.NewGuid();
+        var question = Guid.NewGuid();
+        context.ExerciseTypes.Add(ExerciseType.Create(type, "Anlama", "Anlama", "reading_comprehension"));
+        context.Exercises.Add(Exercise.Create("Anlama", "reading", "{}", 3, student, type, id: exercise));
+        var readingText = ReadingText.Create(text, "Text", string.Join(" ", Enumerable.Repeat("word", 20)), difficultyLevel: 3);
+        context.ReadingTexts.Add(readingText);
+        context.Entry(readingText).Property(item => item.WordCount).CurrentValue = 999;
+        context.ReadingQuestions.Add(ReadingQuestion.Create(question, text, "Soru", "A", 0, 1, 1,
+            optionA: "A", optionB: "B", optionC: "C", optionD: "D"));
+        await context.SaveChangesAsync();
+        var service = CreateExerciseSessionService(context);
+        var started = await service.StartAsync(student, new StartExerciseSessionRequest { ExerciseId = exercise });
+        var session = await context.ExerciseSessions.SingleAsync();
+        var state = System.Text.Json.Nodes.JsonNode.Parse(session.SessionDataJson)!;
+        var end = DateTime.UtcNow.AddSeconds(-60);
+        state["readingStartTime"] = end.AddMilliseconds(paused ? -4000 : -3500);
+        state["readingEndTime"] = end;
+        state["readingPausedMilliseconds"] = paused ? 500 : 0;
+        session.SetState(state.ToJsonString());
+        await context.SaveChangesAsync();
+        var response = await service.ValidateActionAsync(student, started.SessionId, new ExerciseActionRequest { Action = "finish_reading" });
+        response.CurrentWPM.Should().Be(342.86m);
+        await service.ValidateActionAsync(student, started.SessionId, new ExerciseActionRequest { Action = "answer_question", QuestionId = question, Answer = "A" });
+        var result = await service.CompleteAsync(student, started.SessionId, new CompleteExerciseSessionRequest());
+        result.RawWPM.Should().Be(342.86m);
+        result.WordsRead.Should().Be(20);
+    }
+
+    [Theory]
     [InlineData(0)]
     [InlineData(1)]
     [InlineData(2)]
