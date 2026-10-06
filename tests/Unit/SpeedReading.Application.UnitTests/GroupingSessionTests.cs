@@ -10,6 +10,47 @@ namespace SpeedReading.Application.UnitTests;
 public sealed class GroupingSessionTests
 {
     [Fact]
+    public async Task Rejects_explicit_wrong_level_text()
+    {
+        await using var db = Context();
+        var (service, student, exercise) = await Seed(db);
+        var text = ReadingText.Create(Guid.NewGuid(), "Yanlış", "bir iki", difficultyLevel: 1);
+        db.ReadingTexts.Add(text);
+        await db.SaveChangesAsync();
+        var start = () => service.StartAsync(student, new() { ExerciseId = exercise, ReadingTextId = text.Id });
+        await start.Should().ThrowAsync<KeyNotFoundException>();
+    }
+
+    [Fact]
+    public async Task Root_legacy_timing_matches_the_frontend_display_cycle()
+    {
+        await using var db = Context();
+        var (service, student, exercise) = await Seed(db,
+            """{"engineType":"word_highlight","timing":{"durationMs":850,"delayMs":450},"engineConfig":{"mode":"chunking","content":{"chunkSize":2}}}""");
+        db.ReadingTexts.Add(ReadingText.Create(Guid.NewGuid(), "Metin", "bir iki üç dört", difficultyLevel: 3));
+        await db.SaveChangesAsync();
+        var started = await service.StartAsync(student, new() { ExerciseId = exercise });
+        started.InitialData.GetProperty("readingMinimumMs").GetInt32().Should().Be(2600);
+    }
+
+    [Fact]
+    public async Task Restarts_legacy_active_grouping_without_verifiable_timing()
+    {
+        await using var db = Context();
+        var (service, student, exercise) = await Seed(db);
+        db.ReadingTexts.Add(ReadingText.Create(Guid.NewGuid(), "Metin", "bir iki üç dört", difficultyLevel: 3));
+        await db.SaveChangesAsync();
+        var old = await service.StartAsync(student, new() { ExerciseId = exercise });
+        var session = await db.ExerciseSessions.SingleAsync();
+        var state = System.Text.Json.Nodes.JsonNode.Parse(session.SessionDataJson)!;
+        state.AsObject().Remove("groupingDisplayPaceWpm");
+        state.AsObject().Remove("readingMinimumMs");
+        session.SetState(state.ToJsonString());
+        await db.SaveChangesAsync();
+        var restarted = await service.StartAsync(student, new() { ExerciseId = exercise });
+        restarted.SessionId.Should().NotBe(old.SessionId);
+    }
+    [Fact]
     public async Task Requires_reading_tracking_and_keeps_tempo_separate_from_measurement()
     {
         await using var db = Context();
@@ -69,14 +110,14 @@ public sealed class GroupingSessionTests
     private static OwnedSpeedReadingDbContext Context() => new(new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>()
         .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
 
-    private static async Task<(ISpeedReadingExerciseSessions Service, Guid Student, Guid Exercise)> Seed(OwnedSpeedReadingDbContext db)
+    private static async Task<(ISpeedReadingExerciseSessions Service, Guid Student, Guid Exercise)> Seed(OwnedSpeedReadingDbContext db, string? config = null)
     {
         var student = Guid.NewGuid();
         var type = Guid.NewGuid();
         var exercise = Guid.NewGuid();
         db.ExerciseTypes.Add(ExerciseType.Create(type, "Chunking", "Gruplama", "word_highlight"));
         db.Exercises.Add(Exercise.Create("Gruplama", "reading",
-            """{"engineType":"word_highlight","engineConfig":{"mode":"chunking","pacer":{"chunkSize":2,"speedWpm":200}}}""",
+            config ?? """{"engineType":"word_highlight","engineConfig":{"mode":"chunking","pacer":{"chunkSize":2,"speedWpm":200}}}""",
             3, student, type, id: exercise));
         await db.SaveChangesAsync();
         var ownedType = typeof(OwnedSpeedReadingDbContext).Assembly.GetType("SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingExerciseSessions")!;
