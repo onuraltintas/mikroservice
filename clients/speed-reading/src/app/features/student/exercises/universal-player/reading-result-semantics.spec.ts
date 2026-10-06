@@ -1,6 +1,17 @@
 import { ExercisePlayerComponent } from './exercise-player.component';
 
 describe('reading result semantics', () => {
+  it('keeps grouping completion separate from accuracy and flags partial daily progress', () => {
+    const player = Object.create(ExercisePlayerComponent.prototype) as any;
+    player.engine = { engineType: 'word_highlight', getWpm: () => 200 };
+    player.questionAnswers = [];
+    const result = player.normalizeEngineResultForDisplay({ score: 50, accuracy: 50, totalTime: 1000,
+      totalSteps: 4, completedSteps: 2, errors: 0, details: { timedOut: true } });
+    expect(result.details.completionPercent).toBe(50);
+    expect(result.details.incomplete).toBeTrue();
+    expect(result.accuracy).toBe(0);
+    expect(result.details.comprehensionScore).toBeNull();
+  });
   it('retains incomplete reading after questions without fabricating speed', () => {
     const player = Object.create(ExercisePlayerComponent.prototype) as any;
     player.engine = { engineType: 'reading_comprehension' };
