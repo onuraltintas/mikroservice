@@ -41,6 +41,8 @@ export class RegressionReductionEngine implements BaseEngine {
     private pauseStartTime = 0;
     private timerInterval: any;
     private pacerInterval: any;
+    private chunkDeadline = 0;
+    private remainingChunkMs = 0;
 
     private words: string[] = [];
     private currentWordIndex = -1;
@@ -102,52 +104,42 @@ export class RegressionReductionEngine implements BaseEngine {
         }, 100);
 
         if (this.phase === 'reading') {
-            this.startPacer();
+            this.advanceChunk();
         }
     }
 
     private startPacer(): void {
-        const chunkSize = this.config.chunkSize || 1;
-
-        // Calculate milliseconds per chunk
-        // If specific wordDelayMs provided by backend (e.g. for masking), use it
-        // Otherwise calculate from WPM
-        let msPerChunk: number;
-        if (this.config.wordDelayMs && this.config.wordDelayMs > 0) {
-            msPerChunk = this.config.wordDelayMs * chunkSize;
-        } else {
-            const wpm = this.config.wpm || 200;
-            msPerChunk = (60000 / wpm) * chunkSize;
-        }
-
-
-
-        this.pacerInterval = setInterval(() => {
+        this.chunkDeadline = Date.now() + this.remainingChunkMs;
+        this.pacerInterval = setTimeout(() => {
             if (!this.state.isPaused && this.phase === 'reading') {
                 this.advanceChunk();
             }
-        }, msPerChunk);
+        }, this.remainingChunkMs);
     }
 
     private advanceChunk(): void {
         const chunkSize = this.config.chunkSize || 1;
 
-        // chunkSize kadar kelime ilerle
-        this.currentWordIndex += chunkSize;
-        this.state.currentStep = Math.min(this.currentWordIndex + 1, this.words.length);
-
-        if (this.currentWordIndex >= this.words.length) {
+        const nextStart = this.currentWordIndex + 1;
+        if (nextStart >= this.words.length) {
             this.finishReading();
             return;
         }
+
+        const visibleWords = Math.min(chunkSize, this.words.length - nextStart);
+        this.currentWordIndex = nextStart + visibleWords - 1;
+        this.state.currentStep = this.currentWordIndex + 1;
+        this.remainingChunkMs = visibleWords * (this.config.wordDelayMs || 60000 / this.config.wpm);
+        this.startPacer();
 
         this.callbacks.onStepComplete(this.state.currentStep, true);
         this.callbacks.onStateChange({ ...this.state });
     }
 
     private finishReading(): void {
-        clearInterval(this.pacerInterval);
+        clearTimeout(this.pacerInterval);
         this.readingTimeMs = Date.now() - this.startTime;
+        this.state.timeElapsed = this.readingTimeMs;
         this.phase = 'answering';
         this.currentQuestionIndex = 0;
 
@@ -163,9 +155,13 @@ export class RegressionReductionEngine implements BaseEngine {
     }
 
     pause(): void {
-        if (this.state.isPaused) return;
+        if (!this.state.isRunning || this.state.isPaused) return;
         this.state.isPaused = true;
         this.pauseStartTime = Date.now();
+        if (this.phase === 'reading') {
+            this.remainingChunkMs = Math.max(0, this.chunkDeadline - this.pauseStartTime);
+            clearTimeout(this.pacerInterval);
+        }
         this.callbacks.onPause();
         this.callbacks.onStateChange({ ...this.state });
     }
@@ -178,6 +174,7 @@ export class RegressionReductionEngine implements BaseEngine {
         this.startTime += pauseDuration;
 
         this.state.isPaused = false;
+        if (this.phase === 'reading') this.startPacer();
         this.callbacks.onResume();
         this.callbacks.onStateChange({ ...this.state });
     }
@@ -185,7 +182,7 @@ export class RegressionReductionEngine implements BaseEngine {
     stop(): void {
         this.state.isRunning = false;
         clearInterval(this.timerInterval);
-        clearInterval(this.pacerInterval);
+        clearTimeout(this.pacerInterval);
         this.callbacks.onStateChange({ ...this.state });
     }
 
@@ -206,6 +203,9 @@ export class RegressionReductionEngine implements BaseEngine {
         this.phase = 'reading';
         this.currentQuestionIndex = 0;
         this.answers = [];
+        this.readingTimeMs = 0;
+        this.remainingChunkMs = 0;
+        this.chunkDeadline = 0;
         this.callbacks.onStateChange({ ...this.state });
     }
 
@@ -278,6 +278,8 @@ export class RegressionReductionEngine implements BaseEngine {
         this.state.isRunning = false;
         this.phase = 'completed';
         clearInterval(this.timerInterval);
+        clearTimeout(this.pacerInterval);
+        this.state.timeElapsed = Date.now() - this.startTime;
 
         // Anlama skorunu hesapla
         const correctCount = this.answers.filter(a => a.isCorrect).length;
