@@ -64,14 +64,15 @@ public sealed class VisualizationPersistenceTests
         Assert.Empty(await db.ExerciseSessions.ToListAsync());
     }
 
-    [Fact]
-    public async Task Configured_scene_selection_uses_declared_level_and_excludes_blank_content()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Configured_scene_selection_uses_declared_level_and_excludes_blank_content(bool nested)
     {
         await using var db = Context(); var student = Guid.NewGuid();
         var type = ExerciseType.Create(Guid.NewGuid(), "Visualization", "Görselleştirme", "visualization");
-        var exercise = Exercise.Create("Görselleştirme", "strategy",
-            """{"scenes":[{"sceneId":"wrong","description":"Yanlış","difficultyLevel":1},{"sceneId":"blank","description":" "},{"sceneId":"right","description":"Doğru","difficultyLevel":3}]}""",
-            3, student, type.Id);
+        var config = """{"scenes":[{"sceneId":"wrong","description":"Yanlış","difficultyLevel":1},{"sceneId":"blank","description":" "},{"sceneId":"right","description":"Doğru","difficultyLevel":3}]}""";
+        var exercise = Exercise.Create("Görselleştirme", "strategy", nested ? "{\"engineConfig\":" + config + "}" : config, 3, student, type.Id);
         db.ExerciseTypes.Add(type); db.Exercises.Add(exercise); await db.SaveChangesAsync();
         var started = await Service(db).StartAsync(student, new() { ExerciseId = exercise.Id });
         var scenes = JsonNode.Parse(started.InitialData.GetRawText())!["visualizationScenes"]!.AsArray();
