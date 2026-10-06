@@ -3,8 +3,8 @@
  * Görsel Genişletme / Periferik Görüş egzersizleri için.
  * Merkezde fiksasyon noktası, kenarlarda anlık beliren uyaranlar.
  * 
- * Bilimsel Temel: Kullanıcının periferik görüşünü genişletmek için
- * görüş açısı (derece) tabanlı hesaplama ve adaptif zorluk kullanır.
+ * Relative screen-distance attention practice; not a calibrated visual-field
+ * measurement or a reading-speed assessment.
  */
 
 import { BaseEngine, EngineConfig, EngineState, EngineResult, EngineCallbacks } from './base-engine.interface';
@@ -51,6 +51,9 @@ export class VisualExpansionEngine implements BaseEngine {
     private timerInterval: any;
     private stimulusInterval: any;
     private hideTimeout: any;
+    private visibleUntil = 0;
+    private remainingExposureMs = 0;
+    private initialDurationMs = 250;
 
     // Bilimsel Durum
     currentDegrees = 5;
@@ -166,6 +169,7 @@ export class VisualExpansionEngine implements BaseEngine {
             this.config.timing = this.config.timing || {} as any;
             this.config.timing.durationMs = displayDurationMs;
         }
+        this.initialDurationMs = this.config.timing.durationMs;
 
         // Yaş grubu ve zorluk seviyesi
         // Backend artık AgeGroupConfiguration tablosundan dinamik olarak yaş grubu adını gönderiyor
@@ -219,7 +223,7 @@ export class VisualExpansionEngine implements BaseEngine {
             return;
         }
 
-        if (this.state.isPaused) return;
+        if (this.state.isPaused || !this.state.isRunning || this.awaitingServer) return;
 
         const interval = this.config.timing?.intervalMs || 1500;
         this.stimulusInterval = setTimeout(() => {
@@ -236,15 +240,16 @@ export class VisualExpansionEngine implements BaseEngine {
 
     private showStimulus(): void {
         this.generateStimuli();
+        this.maxDegreesReached = Math.max(this.maxDegreesReached, this.currentDegrees);
         this.isStimulusVisible = true;
         this.isWaitingForInput = false;
         this.callbacks.onStateChange({ ...this.state });
 
         const duration = this.config.timing?.durationMs || 250;
 
-        this.hideTimeout = setTimeout(() => {
-            this.hideStimulus();
-        }, duration);
+        this.remainingExposureMs = duration;
+        this.visibleUntil = Date.now() + duration;
+        this.hideTimeout = setTimeout(() => this.hideStimulus(), duration);
     }
 
     private hideStimulus(): void {
@@ -265,7 +270,7 @@ export class VisualExpansionEngine implements BaseEngine {
      * @param answers Kullanıcının girdiği karakterler (sol, sağ sırasıyla)
      */
     handleInput(input: { answers?: string[] }): void {
-        if (!this.isWaitingForInput || !input.answers) return;
+        if (!this.state.isRunning || this.state.isPaused || this.awaitingServer || !this.isWaitingForInput || !input.answers) return;
 
         if (this.serverAuthoritative) {
             this.isWaitingForInput = false;
@@ -293,7 +298,7 @@ export class VisualExpansionEngine implements BaseEngine {
             }
         }
 
-        const isFullyCorrect = correctCount === correctAnswers.length;
+        const isFullyCorrect = userAnswers.length === correctAnswers.length && correctCount === correctAnswers.length;
         this.totalAnswers++;
 
         // Detaylı tur sonucunu kaydet
@@ -325,7 +330,6 @@ export class VisualExpansionEngine implements BaseEngine {
             this.state.errors++;
         }
 
-        this.maxDegreesReached = Math.max(this.maxDegreesReached, this.currentDegrees);
         this.state.currentStep++;
         this.state.accuracy = this.totalAnswers > 0
             ? Math.round((this.correctAnswers / this.totalAnswers) * 100)
@@ -377,11 +381,13 @@ export class VisualExpansionEngine implements BaseEngine {
                 this.config.timing.durationMs = displayDurationMs;
             }
             this.currentStimuli = this.positionStimuli(stimuli.map(String));
+            this.maxDegreesReached = Math.max(this.maxDegreesReached, this.currentDegrees);
             this.isStimulusVisible = true;
+            this.remainingExposureMs = Number(response?.feedbackData?.displayDurationMs) || this.config.timing.durationMs;
+            this.visibleUntil = Date.now() + this.remainingExposureMs;
             this.callbacks.onStateChange({ ...this.state });
-            this.hideTimeout = setTimeout(
-                () => this.hideStimulus(),
-                Number(response?.feedbackData?.displayDurationMs) || this.config.timing?.durationMs || 250);
+            if (!this.state.isPaused)
+                this.hideTimeout = setTimeout(() => this.hideStimulus(), this.remainingExposureMs);
             return;
         }
 
@@ -399,7 +405,7 @@ export class VisualExpansionEngine implements BaseEngine {
                     && submittedAnswers.every((value, index) => value === expectedAnswers[index])
                 : serverCorrect === true;
             const correctAnswers = this.lastShownStimuli.map(value => value.toUpperCase());
-            const responseTimeMs = Date.now() - this.stimulusShownTime;
+            const responseTimeMs = Number(response?.feedbackData?.responseTimeMs ?? Date.now() - this.stimulusShownTime);
             this.totalAnswers++;
             if (isCorrect) this.correctAnswers++; else this.state.errors++;
             this.roundResults.push({
@@ -512,6 +518,7 @@ export class VisualExpansionEngine implements BaseEngine {
         if (this.state.isPaused) return;
         this.state.isPaused = true;
         this.pauseStartTime = Date.now();
+        if (this.isStimulusVisible) this.remainingExposureMs = Math.max(0, this.visibleUntil - Date.now());
         clearTimeout(this.stimulusInterval);
         clearTimeout(this.hideTimeout);
         this.callbacks.onPause();
@@ -524,11 +531,15 @@ export class VisualExpansionEngine implements BaseEngine {
         // Adjust startTime to account for pause duration
         const pauseDuration = Date.now() - this.pauseStartTime;
         this.startTime += pauseDuration;
+        if (this.isWaitingForInput) this.stimulusShownTime += pauseDuration;
 
         this.state.isPaused = false;
         this.callbacks.onResume();
         this.callbacks.onStateChange({ ...this.state });
-        if (!this.isWaitingForInput) {
+        if (this.isStimulusVisible) {
+            this.visibleUntil = Date.now() + this.remainingExposureMs;
+            this.hideTimeout = setTimeout(() => this.hideStimulus(), this.remainingExposureMs);
+        } else if (!this.isWaitingForInput && !this.awaitingServer) {
             this.scheduleNextStimulus();
         }
     }
@@ -557,6 +568,12 @@ export class VisualExpansionEngine implements BaseEngine {
         this.correctAnswers = 0;
         this.totalAnswers = 0;
         this.roundResults = [];
+        this.maxDegreesReached = this.startDegrees;
+        this.config.timing.durationMs = this.initialDurationMs;
+        this.lastShownStimuli = [];
+        this.currentStimuli = [];
+        this.pendingAnswers = [];
+        this.awaitingServer = false;
         this.isStimulusVisible = false;
         this.isWaitingForInput = false;
         this.callbacks.onStateChange({ ...this.state });
@@ -567,6 +584,7 @@ export class VisualExpansionEngine implements BaseEngine {
     }
 
     private complete(): void {
+        this.state.timeElapsed = Math.max(0, Date.now() - this.startTime);
         this.state.isCompleted = true;
         this.state.isRunning = false;
         this.state.score = this.state.accuracy;
@@ -610,7 +628,7 @@ export class VisualExpansionEngine implements BaseEngine {
 
     // Public Helpers
     getCurrentStimuli() {
-        return this.isStimulusVisible ? this.currentStimuli : [];
+        return this.isStimulusVisible && !this.state.isPaused ? this.currentStimuli : [];
     }
 
     getCenterPointType() {

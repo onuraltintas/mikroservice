@@ -657,6 +657,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             session.IncorrectCount,
             hasValidWpm: (rawWpmCandidate.HasValue && SupportsServerReadingMeasurement(state))
                 || (IsFocusExercise(state) && state.FocusCompleted && HasFocusStimulus(state))
+                || (IsVisualExpansionExercise(state) && state.VisualExpansionRound >= state.TotalSteps
+                    && state.VisualExpansionRoundResults.Count == state.TotalSteps)
                 || (IsValidatedFixation(state) && state.FocusCompleted && session.CurrentStep > 0));
         var rawWpm = measurementStatus == SpeedReadingMeasurementStatus.Measured
             ? rawWpmCandidate
@@ -997,6 +999,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         }
         if (IsScanning(state) || state.ReadingStartTime.HasValue && !state.ReadingEndTime.HasValue)
             state.ReadingPausedAt = now;
+        if (IsVisualExpansionExercise(state) && state.VisualExpansionPresentedAt.HasValue)
+            state.VisualExpansionPausedAt = now;
         session.SetState(JsonSerializer.Serialize(state, JsonOptions), session.CustomDataJson);
         await db.SaveChangesAsync(cancellationToken);
     }
@@ -1007,6 +1011,11 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         var now = DateTime.UtcNow;
         var state = DeserializeState(session.SessionDataJson);
         session.Resume(now);
+        if (state.VisualExpansionPausedAt.HasValue)
+        {
+            state.VisualExpansionPausedMilliseconds += (long)Math.Max(0, (now - state.VisualExpansionPausedAt.Value).TotalMilliseconds);
+            state.VisualExpansionPausedAt = null;
+        }
         if (state.ReadingPausedAt.HasValue)
         {
             if (state.ReadingPausedMilliseconds.HasValue)
@@ -1844,6 +1853,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             state.VisualExpansionStimulusType,
             state.VisualExpansionPattern.Equals("radial", StringComparison.OrdinalIgnoreCase) ? 4 : 2).ToArray();
         state.VisualExpansionPresentedAt = now.ToUniversalTime();
+        state.VisualExpansionPausedMilliseconds = 0;
+        state.VisualExpansionPausedAt = null;
         state.VisualExpansionPausedSecondsAtPresentation = session.TotalPausedSeconds;
         var feedback = JsonSerializer.SerializeToElement(new
         {
@@ -1868,7 +1879,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
 
         var elapsedMs = (int)Math.Round(Math.Max(0,
             (now.ToUniversalTime() - state.VisualExpansionPresentedAt.Value).TotalMilliseconds
-            - Math.Max(0, session.TotalPausedSeconds - state.VisualExpansionPausedSecondsAtPresentation) * 1000d));
+            - state.VisualExpansionPausedMilliseconds));
         var result = VisualExpansionRoundRules.Evaluate(
             state.VisualExpansionExpectedStimuli,
             request.Answers ?? [],
@@ -1887,6 +1898,12 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         }
 
         session.Advance(result.IsCorrect);
+        var responseTimeMs = Math.Max(0, elapsedMs - state.VisualExpansionDisplayDurationMs);
+        state.VisualExpansionRoundResults.Add(new VisualExpansionRoundState(
+            state.VisualExpansionRound + 1, state.VisualExpansionCurrentDegrees,
+            state.VisualExpansionDisplayDurationMs, responseTimeMs, result.IsCorrect));
+        state.VisualExpansionMaxPresentedDistance = Math.Max(state.VisualExpansionMaxPresentedDistance, state.VisualExpansionCurrentDegrees);
+        state.VisualExpansionAverageResponseTimeMs = (int)Math.Round(state.VisualExpansionRoundResults.Average(item => item.ResponseTimeMs));
         state.VisualExpansionRound++;
         var nextDifficulty = VisualExpansionRoundRules.AdvanceDifficulty(
             state.VisualExpansionCurrentDegrees,
@@ -1901,7 +1918,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             session.AssessmentAttemptId.HasValue ? "Yanıt kaydedildi." : result.IsCorrect ? "Doğru." : "Yanlış.",
             state.VisualExpansionRound,
             isCompleted: state.VisualExpansionRound >= state.TotalSteps,
-            isCorrect: session.AssessmentAttemptId.HasValue ? null : result.IsCorrect);
+            isCorrect: session.AssessmentAttemptId.HasValue ? null : result.IsCorrect,
+            feedbackData: JsonSerializer.SerializeToElement(new { responseTimeMs }, JsonOptions));
     }
 
     private static ExerciseActionValidationResponse PresentFixation(
@@ -3394,6 +3412,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
     private static ExerciseActionValidationResponse Invalid(string message) =>
         new(false, message, null, null, null, false, false, null, null, null, null);
 
+    private sealed record VisualExpansionRoundState(int Round, int Distance, int DisplayDurationMs, int ResponseTimeMs, bool IsCorrect);
+
     private sealed class SessionState
     {
         public Guid ExerciseId { get; set; }
@@ -3476,6 +3496,11 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         public List<FocusResponse> FocusResponses { get; set; } = [];
         public bool FocusCompleted { get; set; }
         public string VisualExpansionStimulusType { get; set; } = "letter";
+        public List<VisualExpansionRoundState> VisualExpansionRoundResults { get; set; } = [];
+        public int VisualExpansionMaxPresentedDistance { get; set; }
+        public int VisualExpansionAverageResponseTimeMs { get; set; }
+        public long VisualExpansionPausedMilliseconds { get; set; }
+        public DateTime? VisualExpansionPausedAt { get; set; }
         public string VisualExpansionPattern { get; set; } = "horizontal";
         public int VisualExpansionDisplayDurationMs { get; set; } = 250;
         public int VisualExpansionStartDegrees { get; set; } = 4;
