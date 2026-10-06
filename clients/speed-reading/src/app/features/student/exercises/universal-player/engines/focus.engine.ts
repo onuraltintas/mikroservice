@@ -8,6 +8,7 @@
  */
 
 import { BaseEngine, EngineConfig, EngineState, EngineCallbacks } from './base-engine.interface';
+import { caseInsensitiveField, recordOrEmpty } from './reading-pacer-safety';
 
 interface MentalRegistrationConfig extends EngineConfig {
     Mode: string;              // "position" | "word" | "dual"
@@ -77,36 +78,45 @@ export class FocusEngine implements BaseEngine {
     private assessmentRemainingMs = 0;
     private assessmentDeadline = 0;
     private awaitingAssessmentStep = false;
+    private configurationError = '';
 
     initialize(config: EngineConfig, callbacks: EngineCallbacks): void {
         this.callbacks = callbacks;
-
-        const backendData = (config as any).SessionData || config;
-        const nLevel = Number(backendData.NLevel ?? backendData.nLevel ?? 1) || 1;
+        this.reset();
+        this.configurationError = '';
+        const root = recordOrEmpty(config);
+        const nested = recordOrEmpty(caseInsensitiveField(root, 'engineConfig'));
+        const session = recordOrEmpty(caseInsensitiveField(nested, 'sessionData') ?? caseInsensitiveField(root, 'sessionData'));
+        const read = (...names: string[]) => {
+            for (const source of [session, nested, root]) {
+                for (const name of names) { const value = caseInsensitiveField(source, name); if (value !== undefined) return value; }
+            }
+            return undefined;
+        };
+        const backendData = {
+            NLevel: read('NLevel', 'FocusNLevel'), WordSequence: read('WordSequence'), PositionSequence: read('PositionSequence'),
+            TotalSteps: read('TotalSteps'), Mode: read('Mode', 'FocusMode'), SpeedMs: read('SpeedMs', 'FocusSpeedMs'), GridSize: read('GridSize'),
+            IsAssessmentMode: root['previewOnly'] === true ? false : read('IsAssessmentMode', 'AssessmentMode')
+        };
+        const nLevel = Number(backendData.NLevel ?? 1);
         const wordSequence = Array.isArray(backendData.WordSequence)
             ? backendData.WordSequence
-            : (Array.isArray(backendData.wordSequence) ? backendData.wordSequence : []);
+            : [];
         const positionSequence = Array.isArray(backendData.PositionSequence)
             ? backendData.PositionSequence
-            : (Array.isArray(backendData.positionSequence) ? backendData.positionSequence : []);
+            : [];
         const configuredTotalSteps = Number(
-            backendData.TotalSteps ?? backendData.totalSteps ?? (config as any).totalSteps ?? 0);
+            backendData.TotalSteps ?? 0);
         const assessmentMode = backendData.IsAssessmentMode === true
-            || backendData.isAssessmentMode === true
-            || (config as any).AssessmentMode === true
-            || (config as any).assessmentMode === true;
+            ;
 
         this.config = {
             ...config,
             AssessmentMode: assessmentMode,
-            Mode: backendData.Mode || backendData.mode || backendData.FocusMode || 'position',
+            Mode: String(backendData.Mode ?? 'position').toLowerCase(),
             NLevel: nLevel,
-            SpeedMs: backendData.SpeedMs
-                || backendData.speedMs
-                || backendData.FocusSpeedMs
-                || backendData.focusSpeedMs
-                || 1500,
-            GridSize: backendData.GridSize || backendData.gridSize || 3,
+            SpeedMs: Number(backendData.SpeedMs ?? 1500),
+            GridSize: Number(backendData.GridSize ?? 3),
             WordSequence: wordSequence,
             // Target arrays are optional presentation hints. The server is
             // always the scoring authority; public payloads omit configured
@@ -140,6 +150,18 @@ export class FocusEngine implements BaseEngine {
             this.sequenceLength = configuredTotalSteps;
         }
 
+        const usesWords = this.mode === 'word' || this.mode === 'dual';
+        const usesPositions = this.mode === 'position' || this.mode === 'dual';
+        if (!['position', 'word', 'dual'].includes(this.mode)
+            || !Number.isInteger(nLevel) || nLevel < 1 || nLevel > 5
+            || !Number.isInteger(this.config.GridSize) || this.config.GridSize < 3 || this.config.GridSize > 7
+            || !Number.isInteger(this.config.SpeedMs) || this.config.SpeedMs < 100 || this.config.SpeedMs > 10000
+            || this.sequenceLength <= nLevel || this.sequenceLength > 500
+            || (!assessmentMode && (usesWords && (wordSequence.length !== this.sequenceLength || wordSequence.some(word => typeof word !== 'string' || !word.trim()))
+                || usesPositions && (positionSequence.length !== this.sequenceLength || positionSequence.some(position => !Number.isInteger(position) || position < 1 || position > this.config.GridSize ** 2))))) {
+            this.configurationError = 'Odaklanma ayarları veya uyaran dizisi geçersiz. Lütfen ayarları kontrol edin.';
+        }
+
         this.state.totalSteps = this.sequenceLength;
         this.state.currentStep = 0;
 
@@ -162,8 +184,8 @@ export class FocusEngine implements BaseEngine {
 
     start(): void {
         if (this.state.isRunning || this.state.isCompleted) return;
-        if (this.sequenceLength <= 0) {
-            this.callbacks.onError('N-back uyaran dizisi alınamadı. Egzersiz yapılandırmasını kontrol edin.');
+        if (this.configurationError || this.sequenceLength <= 0) {
+            this.callbacks.onError(this.configurationError || 'N-back uyaran dizisi alınamadı. Egzersiz yapılandırmasını kontrol edin.');
             return;
         }
 
@@ -336,7 +358,7 @@ export class FocusEngine implements BaseEngine {
     }
 
     handleInput(input: any): void {
-        if (!this.state.isRunning || this.state.isPaused || this.state.isCompleted) return;
+        if (!this.state.isRunning || this.state.isPaused || this.state.isCompleted || this.isTransitioning) return;
 
         // Assessment attempts must not expose client-derived correctness or
         // feedback. The server records and scores the action; the client only
@@ -432,6 +454,7 @@ export class FocusEngine implements BaseEngine {
      * counters are reconciled as soon as the validation response arrives.
      */
     reconcileServerResponse(action: any, response: any): void {
+        if (!this.state.isRunning || this.state.isCompleted) return;
         if (this.assessmentMode) {
             const actionName = String(action?.action || '').toLowerCase();
             if (actionName === 'focus_step') {
@@ -601,7 +624,9 @@ export class FocusEngine implements BaseEngine {
         this.hits = 0;
         this.misses = 0;
         this.falseAlarms = 0;
-        this.callbacks.onStateChange({ ...this.state });
+        this.hasRespondedPosition = false;
+        this.hasRespondedWord = false;
+        this.callbacks.onStateChange?.({ ...this.state });
     }
 
     destroy(): void {

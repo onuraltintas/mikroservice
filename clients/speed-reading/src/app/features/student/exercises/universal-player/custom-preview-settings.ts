@@ -89,7 +89,12 @@ export function getCustomPreviewControls(configuration: Record<string, unknown>)
     case 'focus': return [
       control('speedMs', 'Uyaran süresi (ms)', 100, 10000, read('SpeedMs') ?? read('FocusSpeedMs') ?? 1500),
       control('nLevel', 'N-back adım sayısı', 1, 5, read('NLevel') ?? read('FocusNLevel') ?? 1),
-      control('gridSize', 'Tablo boyutu', 3, 7, read('GridSize') ?? 3)
+      control('gridSize', 'Tablo boyutu', 3, 7, read('GridSize') ?? 3),
+      control('totalSteps', 'Uyaran sayısı', 2, 500, read('TotalSteps') ?? Math.max(
+        Array.isArray(read('PositionSequence')) ? (read('PositionSequence') as unknown[]).length : 0,
+        Array.isArray(read('WordSequence')) ? (read('WordSequence') as unknown[]).length : 0, 20)),
+      { key: 'mode', label: 'Çalışma modu', min: 0, max: 0, value: String(read('Mode') ?? read('FocusMode') ?? 'position'),
+        options: [{ value: 'position', label: 'Konum' }, { value: 'word', label: 'Kelime' }, { value: 'dual', label: 'Konum ve kelime' }] }
     ];
     case 'vocabulary_builder': return read('mode') === 'quiz'
       ? [control('timeLimitPerWord', 'Kelime başına süre (saniye; 0: sınırsız)', 0, 3600, read('timeLimitPerWord') ?? 0)] : [];
@@ -182,6 +187,7 @@ export function applyCustomPreviewSettings<T extends Record<string, unknown>>(
   }
   const validated: Record<string, number> = {};
   for (const { key, min, max, label } of controls) {
+    if (engine === 'focus' && key === 'mode') continue;
     if (values[key] === undefined) continue;
     if (key === 'chunkSize' && engine === 'text_fade') continue;
     const value = values[key];
@@ -190,7 +196,10 @@ export function applyCustomPreviewSettings<T extends Record<string, unknown>>(
     }
     validated[key] = value;
   }
-  if (!Object.keys(validated).length) return configuration;
+  const modeControl = engine === 'focus' ? controls.find(control => control.key === 'mode') : undefined;
+  if (modeControl && values['mode'] !== undefined && !modeControl.options?.some(option => option.value === values['mode']))
+    throw new Error('Geçerli bir çalışma modu seçin.');
+  if (!Object.keys(validated).length && values['mode'] === undefined) return configuration;
   const result = structuredClone(configuration);
   const nested = result['engineConfig'];
   const settings: Record<string, unknown> = nested && typeof nested === 'object' && !Array.isArray(nested)
@@ -200,7 +209,7 @@ export function applyCustomPreviewSettings<T extends Record<string, unknown>>(
     const original = { ...recordOrEmpty(caseInsensitiveField(configuration, name)), ...recordOrEmpty(caseInsensitiveField(settings, name)) };
     settings[name] = overrideFields(original, entries);
   };
-  const updateSessions = (entries: Record<string, number>) => {
+  const updateSessions = (entries: Record<string, unknown>) => {
     for (const container of [result as Record<string, unknown>, settings]) {
       for (const key of Object.keys(container)) {
         if (key.toLowerCase() === 'sessiondata') container[key] = overrideFields(container[key], entries);
@@ -260,12 +269,37 @@ export function applyCustomPreviewSettings<T extends Record<string, unknown>>(
     return result;
   }
   if (engine === 'focus' || engine === 'vocabulary_builder') {
-    if (engine === 'focus') {
-      for (const [controlKey, settingKey] of [['nLevel', 'NLevel'], ['gridSize', 'GridSize']]) {
-        if (validated[controlKey] !== undefined) {
-          settings[settingKey] = validated[controlKey];
-          updateSessions({ [settingKey]: validated[controlKey] });
+    if (engine === 'focus' && (values['mode'] !== undefined || ['nLevel', 'gridSize', 'totalSteps'].some(key => validated[key] !== undefined))) {
+      const originalSession = recordOrEmpty(caseInsensitiveField(settings, 'sessionData') ?? caseInsensitiveField(result, 'sessionData'));
+      const read = (name: string) => caseInsensitiveField(originalSession, name) ?? caseInsensitiveField(settings, name) ?? caseInsensitiveField(result, name);
+      const mode = String(values['mode'] ?? modeControl?.value ?? 'position');
+      const nLevel = validated['nLevel'] ?? Number(read('NLevel') ?? read('FocusNLevel') ?? 1);
+      const gridSize = validated['gridSize'] ?? Number(read('GridSize') ?? 3);
+      const count = validated['totalSteps'] ?? Math.max(nLevel + 1, Number(controls.find(control => control.key === 'totalSteps')?.value ?? 20));
+      if (count <= nLevel) throw new Error('Uyaran sayısı N-back adım sayısından büyük olmalıdır.');
+      const configuredWords = read('WordSequence');
+      const wordPool = Array.isArray(configuredWords) ? [...new Set(configuredWords.filter((word): word is string => typeof word === 'string' && word.trim().length > 0))] : [];
+      // Preview stimuli only; normal sessions continue to use server-owned sequences.
+      const pool = wordPool.length > 1 ? wordPool : ['kitap', 'kalem', 'masa', 'bulut', 'deniz', 'orman'];
+      const create = <T>(choices: T[]): T[] => {
+        const sequence: T[] = [];
+        for (let index = 0; index < count; index++) {
+          if (index >= nLevel && (index === nLevel || Math.random() < 0.25)) sequence.push(sequence[index - nLevel]);
+          else {
+            const candidates = choices.filter(choice => index < nLevel || choice !== sequence[index - nLevel]);
+            sequence.push(candidates[Math.floor(Math.random() * candidates.length)]);
+          }
         }
+        return sequence;
+      };
+      const entries = { Mode: mode, FocusMode: mode, NLevel: nLevel, FocusNLevel: nLevel, GridSize: gridSize,
+        TotalSteps: count, PositionSequence: mode === 'word' ? [] : create(Array.from({ length: gridSize * gridSize }, (_, index) => index + 1)),
+        WordSequence: mode === 'position' ? [] : create(pool), WordTargetIndices: [], PositionTargetIndices: [] };
+      Object.assign(settings, overrideFields(settings, entries));
+      updateSessions(entries);
+      // Lowercase duplicates must not override effective preview values in the player.
+      for (const name of Object.keys(entries)) {
+        for (const key of Object.keys(settings)) if (key !== name && key.toLowerCase() === name.toLowerCase()) delete settings[key];
       }
     }
     const key = engine === 'focus' ? 'SpeedMs' : 'timeLimitPerWord';
