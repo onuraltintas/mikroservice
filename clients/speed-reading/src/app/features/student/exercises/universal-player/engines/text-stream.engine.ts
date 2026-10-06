@@ -71,6 +71,9 @@ export class TextStreamEngine implements BaseEngine {
     private pauseStartTime = 0;
     private timerInterval: any;
     private stimulusTimeout: any;
+    private stimulusCallback: (() => void) | null = null;
+    private stimulusEndsAt = 0;
+    private stimulusRemainingMs = 0;
     private transitionTimeout: any;
     private transitionCallback: (() => void) | null = null;
     private transitionEndsAt = 0;
@@ -132,7 +135,7 @@ export class TextStreamEngine implements BaseEngine {
         this.config = {
             ...root,
             ...nested,
-            mode: caseInsensitiveField(nested, 'mode') ?? caseInsensitiveField(root, 'mode'),
+            mode: String(caseInsensitiveField(nested, 'mode') ?? caseInsensitiveField(root, 'mode') ?? '').toLowerCase(),
             timing,
             content,
             visuals: {
@@ -156,7 +159,9 @@ export class TextStreamEngine implements BaseEngine {
             : undefined;
 
         // Backend property normalization (handle PascalCase vs camelCase)
-        const rawStimuli = caseInsensitiveField(nested, 'stimuli')
+        const ownedWords = root.serverAuthoritative === true && this.isRsvpMode()
+            ? caseInsensitiveField(root, 'words') : undefined;
+        const rawStimuli = ownedWords ?? caseInsensitiveField(nested, 'stimuli')
             ?? caseInsensitiveField(nested, 'words')
             ?? caseInsensitiveField(nested, 'chunks')
             ?? caseInsensitiveField(root, 'stimuli')
@@ -240,6 +245,11 @@ export class TextStreamEngine implements BaseEngine {
                 .map(item => item.slice(0, 1000));
             this.contentPool = [...this.config.content.items];
             if (!this.isRsvpMode()) this.stimuli = new Array(count).fill('');
+            return;
+        }
+
+        if (this.isRsvpMode()) {
+            this.stimuli = [];
             return;
         }
 
@@ -339,6 +349,10 @@ export class TextStreamEngine implements BaseEngine {
 
     start(): void {
         if (this.state.isRunning || this.state.isCompleted) return;
+        if (this.isRsvpMode() && this.stimuli.length === 0) {
+            this.callbacks.onError('RSVP için uygun metin bulunamadı. Lütfen yeniden deneyin.');
+            return;
+        }
         this.state.isRunning = true;
         this.state.isPaused = false;
         this.startTime = Date.now();
@@ -355,6 +369,8 @@ export class TextStreamEngine implements BaseEngine {
         this.timerInterval = setInterval(() => {
             if (!this.state.isPaused) {
                 this.state.timeElapsed = Date.now() - this.startTime;
+                if (this.isRsvpMode()) this.state.remainingSeconds = Math.max(0,
+                    Math.ceil((this.getPresentationDurationMs() - this.state.timeElapsed) / 1000));
                 this.callbacks.onStateChange({ ...this.state });
             }
         }, 100);
@@ -387,7 +403,7 @@ export class TextStreamEngine implements BaseEngine {
             this.currentStimulus = '';
             this.callbacks.onStateChange({ ...this.state });
 
-            this.stimulusTimeout = setTimeout(() => {
+            this.scheduleStimulus(() => {
                 this.isShowingFixation = false;
                 this.showStimulus();
             }, 300); // Fixation duration
@@ -420,7 +436,7 @@ export class TextStreamEngine implements BaseEngine {
         this.callbacks.onStateChange({ ...this.state });
 
         // Hide after duration
-        this.stimulusTimeout = setTimeout(() => {
+        this.scheduleStimulus(() => {
             this.isShowingStimulus = false;
 
             if (this.isRsvpMode()) {
@@ -435,8 +451,9 @@ export class TextStreamEngine implements BaseEngine {
     }
 
     private isRsvpMode(): boolean {
-        if ((this.config as any).exerciseTypeName === 'Tachistoscope') return false;
-        return this.config.mode === 'rsvp' || (this.config as any).exerciseTypeName === 'RSVP';
+        const type = String(this.config['exerciseTypeName'] ?? '').toLowerCase();
+        if (type === 'tachistoscope') return false;
+        return this.config.mode === 'rsvp' || type === 'rsvp';
     }
 
     private handleAutoAdvance(): void {
@@ -475,11 +492,24 @@ export class TextStreamEngine implements BaseEngine {
         }, delayMs);
     }
 
+    private scheduleStimulus(callback: () => void, delayMs: number): void {
+        clearTimeout(this.stimulusTimeout);
+        this.stimulusCallback = callback;
+        this.stimulusRemainingMs = delayMs;
+        this.stimulusEndsAt = Date.now() + delayMs;
+        this.stimulusTimeout = setTimeout(() => {
+            this.stimulusCallback = null;
+            callback();
+        }, delayMs);
+    }
+
     pause(): void {
         if (this.state.isPaused) return;
         this.state.isPaused = true;
         this.pauseStartTime = Date.now();
         clearTimeout(this.stimulusTimeout);
+        if (this.isRsvpMode() && this.stimulusCallback)
+            this.stimulusRemainingMs = Math.max(0, this.stimulusEndsAt - this.pauseStartTime);
         if (!this.isRsvpMode()) {
             this.isShowingStimulus = false;
             this.isShowingFixation = false;
@@ -508,6 +538,8 @@ export class TextStreamEngine implements BaseEngine {
         if (this.serverAuthoritative) {
             this.awaitingServer = false;
             this.showNextStimulus();
+        } else if (this.isRsvpMode() && this.stimulusCallback) {
+            this.scheduleStimulus(this.stimulusCallback, this.stimulusRemainingMs);
         } else if (this.isWaitingForAnswer) {
             // Continue waiting for answer
             this.callbacks.onStateChange({ ...this.state });
@@ -524,6 +556,7 @@ export class TextStreamEngine implements BaseEngine {
         this.state.isRunning = false;
         clearInterval(this.timerInterval);
         clearTimeout(this.stimulusTimeout);
+        this.stimulusCallback = null;
         clearTimeout(this.transitionTimeout);
         this.transitionCallback = null;
         this.transitionRemainingMs = 0;
@@ -702,6 +735,7 @@ export class TextStreamEngine implements BaseEngine {
         if (this.startTime) this.state.timeElapsed = Date.now() - this.startTime - (this.state.isPaused ? Date.now() - this.pauseStartTime : 0);
         clearInterval(this.timerInterval);
         clearTimeout(this.stimulusTimeout);
+        this.stimulusCallback = null;
         clearTimeout(this.transitionTimeout);
         this.transitionCallback = null;
 
@@ -778,11 +812,15 @@ export class TextStreamEngine implements BaseEngine {
     }
 
     getDisplayPaceWpm(): number {
-        const count = this.stimuli.length;
         const words = this.stimuli.reduce((total, text) => total + text.split(/\s+/).filter(Boolean).length, 0);
-        const milliseconds = count * (this.currentDurationMs + (this.config.visuals?.showFixation !== false ? 300 : 0))
-            + Math.max(0, count - 1) * (this.config.timing?.intervalMs || 0);
+        const milliseconds = this.getPresentationDurationMs();
         return milliseconds > 0 ? Math.round(words * 60_000 / milliseconds) : 0;
+    }
+
+    getPresentationDurationMs(): number {
+        const count = this.stimuli.length;
+        return count * (this.currentDurationMs + (this.config.visuals?.showFixation !== false ? 300 : 0))
+            + Math.max(0, count - 1) * (this.config.timing?.intervalMs || 0);
     }
 
     getLastTrialResult(): TrialRecord | null {

@@ -51,6 +51,7 @@ describe('RSVP presentation', () => {
   }));
 
   it('does not impose a second player deadline on RSVP', fakeAsync(() => {
+    engine.initialize({ mode: 'rsvp', words: ['bir'] } as any, callbacks);
     const player = Object.create(ExercisePlayerComponent.prototype) as any;
     player.engine = { engineType: 'text_stream', getMode: () => 'rsvp', finish: jasmine.createSpy('finish') };
     player.exercise = { exerciseTypeName: 'RSVP' };

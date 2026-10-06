@@ -1345,7 +1345,10 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
 
       // --- Timer Initialization for RSVP / Duration Based Mode ---
       // If the exercise has a defined duration (implied by word count * interval for RSVP), setup the timer
-      if (!this.isTachistoscopeMode() && engineConfig.words && Array.isArray(engineConfig.words) && engineConfig.words.length > 0 && engineConfig.intervalMs) {
+      if (this.engine.engineType === 'text_stream' && !this.isTachistoscopeMode()) {
+        this.totalDurationSeconds = Math.ceil((this.engine as TextStreamEngine).getPresentationDurationMs() / 1000);
+        this.engineState.remainingSeconds = this.totalDurationSeconds;
+      } else if (!this.isTachistoscopeMode() && engineConfig.words && Array.isArray(engineConfig.words) && engineConfig.words.length > 0 && engineConfig.intervalMs) {
         const wordCount = engineConfig.words.length;
         const interval = engineConfig.intervalMs;
         // Total duration in seconds (Rounded up)
@@ -1632,6 +1635,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
 
   private startTimer(): void {
     if (this.activeTimer) return;
+    if (this.engine?.engineType === 'text_stream' && !this.isTachistoscopeMode()) return;
 
     // Sadece remainingSeconds initialize edilmişse timer başlat
     if (this.engineState.remainingSeconds === undefined || this.engineState.remainingSeconds <= 0) return;
