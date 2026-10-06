@@ -247,7 +247,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                 {
                     var upgradedState = await CreateSessionStateAsync(request.ExerciseId, exerciseTypeName,
                         exerciseEngineType, difficultyLevel, configurationJson, null, assessmentSnapshot,
-                        true, request.CustomData, profileAgeGroupId, token);
+                        true, request.CustomData, profileAgeGroupId, studentId, token);
                     legacySession.RestartForVerification(upgradedState.TotalSteps, upgradedState.TimeLimitSeconds,
                         JsonSerializer.Serialize(upgradedState, JsonOptions), DateTime.UtcNow);
                     await db.SaveChangesAsync(token);
@@ -367,6 +367,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                 request.AssessmentAttemptId.HasValue,
                 request.CustomData,
                 profileAgeGroupId,
+                studentId,
                 token);
             var now = DateTime.UtcNow;
             var session = ExerciseSession.Start(
@@ -1205,6 +1206,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         bool isAssessmentMode,
         Dictionary<string, JsonElement>? customData,
         Guid? profileAgeGroupId,
+        Guid studentId,
         CancellationToken cancellationToken)
     {
         var config = ParseJsonOrEmpty(configurationJson);
@@ -1260,7 +1262,17 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                 effectiveConfig,
                 profileAgeGroupId,
                 difficultyLevel,
+                studentId,
+                state.VocabularyMode,
                 cancellationToken);
+            if (state.VocabularyWords.Count == 0 && (state.VocabularyMode == "review" || ReadObject(effectiveConfig, "vocabulary").ValueKind == JsonValueKind.Object || ReadGuidArray(effectiveConfig, "vocabularyItemIds").Length > 0))
+                throw new InvalidOperationException(state.VocabularyMode == "review"
+                    ? "Şu anda tekrar zamanı gelen kelimeniz yok." : "Seçilen ayarlara uygun kelime bulunamadı.");
+            if (state.VocabularyMode == "quiz" && state.VocabularyWords.Count > 0
+                && (state.VocabularyWords.Count < 2
+                    || state.VocabularyWords.Select(w => w.Word).Distinct(StringComparer.OrdinalIgnoreCase).Count() != state.VocabularyWords.Count
+                    || state.VocabularyWords.Select(w => w.Definition).Distinct(StringComparer.OrdinalIgnoreCase).Count() != state.VocabularyWords.Count))
+                throw new InvalidOperationException("Quiz kelimeleri veya anlamları belirsiz; farklı bir kelime grubu seçin.");
             for (var index = 0; index < state.VocabularyWords.Count; index++)
             {
                 state.VocabularyWords[index].QuestionType = state.VocabularyQuizType switch
@@ -2864,6 +2876,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         JsonElement config,
         Guid? profileAgeGroupId,
         int exerciseDifficultyLevel,
+        Guid studentId,
+        string mode,
         CancellationToken cancellationToken)
     {
         var vocabulary = ReadObject(config, "vocabulary");
@@ -2878,15 +2892,22 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             .Where(item => !item.IsDeleted
                 && (item.TargetAgeGroupId == null
                     || (profileAgeGroupId.HasValue && item.TargetAgeGroupId == profileAgeGroupId.Value)));
+        var progressQuery = db.UserVocabularyProgresses.AsNoTracking().Where(p => p.UserId == studentId && !p.IsDeleted);
+        if (mode == "review") {
+            var now = DateTime.UtcNow;
+            query = query.Where(item => progressQuery.Any(p => p.VocabularyItemId == item.Id && p.NextReviewDate <= now));
+        }
         if (configuredIds.Length > 0)
         {
             var items = await query.Where(item => configuredIds.Contains(item.Id))
                 .ToListAsync(cancellationToken);
             var byId = items.ToDictionary(item => item.Id);
-            return configuredIds
+            var selected = configuredIds
                 .Where(byId.ContainsKey)
                 .Select(id => ToVocabularyWordState(byId[id]))
                 .ToList();
+            await ApplyVocabularyBoxesAsync(selected, studentId, cancellationToken);
+            return selected;
         }
 
         var category = ReadString(vocabulary, "category");
@@ -2897,9 +2918,19 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         if (difficulty is >= 1 and <= 5)
             query = query.Where(item => item.DifficultyLevel == difficulty);
 
-        return (await query.OrderBy(item => item.Word).Take(count).ToListAsync(cancellationToken))
+        var candidates = await query.ToListAsync(cancellationToken);
+        var selectedWords = candidates.OrderBy(_ => Guid.NewGuid()).Take(count)
             .Select(ToVocabularyWordState)
             .ToList();
+        await ApplyVocabularyBoxesAsync(selectedWords, studentId, cancellationToken);
+        return selectedWords;
+    }
+
+    private async Task ApplyVocabularyBoxesAsync(List<VocabularyWordState> words, Guid studentId, CancellationToken cancellationToken)
+    {
+        var ids = words.Select(w => w.Id).ToList();
+        var progress = await db.UserVocabularyProgresses.AsNoTracking().Where(p => p.UserId == studentId && !p.IsDeleted && ids.Contains(p.VocabularyItemId)).ToListAsync(cancellationToken);
+        foreach (var word in words) word.Box = progress.Where(p => p.VocabularyItemId == word.Id).OrderByDescending(p => p.CreatedAt).FirstOrDefault()?.Box ?? 1;
     }
 
     private static VocabularyWordState ToVocabularyWordState(VocabularyItem item) => new()
@@ -3661,6 +3692,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
 
     private sealed class VocabularyWordState
     {
+        public int Box { get; set; } = 1;
         public Guid Id { get; set; }
         public string Word { get; set; } = string.Empty;
         public string Definition { get; set; } = string.Empty;

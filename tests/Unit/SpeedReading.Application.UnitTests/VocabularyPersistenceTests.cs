@@ -61,9 +61,11 @@ public sealed class VocabularyPersistenceTests
                 ["questionType"] = word.GetProperty("questionType").Clone(),
                 ["selectedAnswer"] = word.GetProperty(word.GetProperty("questionType").GetString() == "word" ? "definition" : "word").Clone()
             };
-            var action = new ExerciseActionRequest { Action = "vocabulary_review", CustomData = custom };
+            var action = new ExerciseActionRequest { ActionId = Guid.NewGuid(), Action = "vocabulary_review", CustomData = custom };
+            var response = await service.ValidateActionAsync(student, started.SessionId, action);
+            Assert.True(response.IsValid, response.Message);
             Assert.True((await service.ValidateActionAsync(student, started.SessionId, action)).IsValid);
-            Assert.False((await service.ValidateActionAsync(student, started.SessionId, action)).IsValid);
+            Assert.False((await service.ValidateActionAsync(student, started.SessionId, new() { ActionId = Guid.NewGuid(), Action = action.Action, CustomData = custom })).IsValid);
         }
         var result = await service.CompleteAsync(student, started.SessionId, new());
         Assert.Null(result.RawWPM); Assert.Null(result.WordsRead); Assert.Equal(100m, result.Accuracy);
