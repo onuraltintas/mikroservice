@@ -8,6 +8,37 @@ function callbacks() {
 }
 
 describe('FocusEngine timing', () => {
+  for (const configuration of [
+    { Mode: 'unknown', PositionSequence: [1, 2, 1] },
+    { Mode: 'dual', PositionSequence: [1, 2, 1], WordSequence: ['a'] },
+    { Mode: 'position', GridSize: 3, PositionSequence: [1, 10, 1] },
+    { Mode: 'word', WordSequence: ['a', '', 'a'] }
+  ]) {
+    it('rejects incompatible focus content before starting ' + JSON.stringify(configuration), () => {
+      const engine = new FocusEngine(); let errors = 0;
+      engine.initialize(configuration as any, { ...callbacks(), onError: () => errors++ });
+      engine.start(); expect(errors).toBe(1); expect(engine.state.isRunning).toBeFalse(); engine.destroy();
+    });
+  }
+
+  it('reads lowercase session aliases and resets stopped sessions before reinitialization', fakeAsync(() => {
+    const engine = new FocusEngine();
+    engine.initialize({ sessionData: { focusMode: 'word', focusNLevel: 2, focusSpeedMs: 1000, wordSequence: ['a', 'b', 'a'] } } as any, callbacks());
+    expect(engine.mode).toBe('word'); expect(engine.nLevel).toBe(2);
+    engine.start(); tick(3000);
+    engine.initialize({ Mode: 'position', PositionSequence: [1, 2, 1] } as any, callbacks());
+    expect(engine.state.isCompleted).toBeFalse(); expect(engine.hits).toBe(0);
+    engine.reconcileServerResponse({ action: 'position_match', index: 0 }, { isValid: true, feedbackData: { hits: 5, misses: 0, falseAlarms: 0 } });
+    expect(engine.hits).toBe(0); engine.destroy();
+  }));
+
+  it('does not accept a response before a repeated stimulus becomes visible', fakeAsync(() => {
+    const engine = new FocusEngine(); const actions: any[] = [];
+    engine.initialize({ Mode: 'position', PositionSequence: [1, 1, 2], SpeedMs: 1000 } as any, { ...callbacks(), onAction: action => actions.push(action) });
+    engine.start(); tick(1000); engine.handleInput({ type: 'position_match' });
+    expect(actions.some(action => action.action === 'position_match')).toBeFalse();
+    engine.destroy();
+  }));
   it('derives targets from the effective N-back rule and does not claim validated d-prime', () => {
     const engine = new FocusEngine();
     engine.initialize({ Mode: 'position', NLevel: 2, PositionSequence: [1, 2, 1], PositionTargetIndices: [1] } as any, callbacks());

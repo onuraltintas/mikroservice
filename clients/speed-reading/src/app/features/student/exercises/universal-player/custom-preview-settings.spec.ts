@@ -9,6 +9,18 @@ import { TestBed } from '@angular/core/testing';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 
 describe('Custom preview settings safety', () => {
+  it('switches focus mode and creates the requested compatible preview trials', () => {
+    const config = { engineType: 'focus', engineConfig: { SessionData: { Mode: 'position', PositionSequence: [1, 2, 1] } } };
+    const changed = applyCustomPreviewSettings(config, { mode: 'dual', totalSteps: 6, nLevel: 2, gridSize: 4 }, { roles: ['Teacher'], preview: true });
+    const engine = new FocusEngine();
+    engine.initialize({ ...changed, ...changed.engineConfig, previewOnly: true } as any, {} as any);
+    expect(engine.mode).toBe('dual'); expect(engine.state.totalSteps).toBe(6);
+    expect(engine.config.WordSequence?.length).toBe(6);
+    expect(engine.config.PositionSequence?.every(position => position >= 1 && position <= 16)).toBeTrue();
+    expect(() => applyCustomPreviewSettings(config, { mode: 'invalid' }, { roles: ['Admin'], preview: true })).toThrow();
+    expect(() => applyCustomPreviewSettings(config, { totalSteps: 2, nLevel: 2 }, { roles: ['Admin'], preview: true })).toThrow();
+    expect(config.engineConfig.SessionData.Mode).toBe('position');
+  });
   it('offers and applies focus N-back and grid settings without mutating the catalogue', () => {
     const config = { engineType: 'focus', engineConfig: { SessionData: { NLevel: 1, GridSize: 3, PositionSequence: [1, 2, 1] } } };
     expect(getCustomPreviewControls(config).map(control => control.key)).toContain('nLevel');
