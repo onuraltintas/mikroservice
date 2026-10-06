@@ -283,30 +283,28 @@ export class RegressionReductionEngine implements BaseEngine {
         const correctCount = this.answers.filter(a => a.isCorrect).length;
         const comprehensionScore = this.questions.length > 0
             ? Math.round((correctCount / this.questions.length) * 100)
-            : 100;
+            : null;
 
         // Regresyon skorunu hesapla
         const regressionScore = Math.max(0, 100 - (this.state.errors * 5));
 
         // Genel skor: %40 regresyon + %60 anlama
-        const finalScore = Math.round((regressionScore * 0.4) + (comprehensionScore * 0.6));
+        const finalScore = comprehensionScore === null ? 0 : Math.round((regressionScore * 0.4) + (comprehensionScore * 0.6));
         this.state.score = finalScore;
-        this.state.accuracy = comprehensionScore;
+        this.state.accuracy = comprehensionScore ?? 0;
         this.state.currentStep = this.state.totalSteps;
-
-        // WPM hesapla
-        const readingTimeMinutes = this.readingTimeMs / 60000;
-        const wpm = readingTimeMinutes > 0 ? Math.round(this.words.length / readingTimeMinutes) : 0;
 
         const result: EngineResult = {
             score: finalScore,
-            accuracy: comprehensionScore,
+            accuracy: comprehensionScore ?? 0,
             totalTime: this.state.timeElapsed,
             totalSteps: this.state.totalSteps,
             completedSteps: this.state.totalSteps,
             errors: this.state.errors,
             details: {
-                wpm: wpm,
+                displayPaceWpm: this.config.wordDelayMs ? Math.round(60000 / this.config.wordDelayMs) : this.config.wpm,
+                readingTimeMs: this.readingTimeMs,
+                measurementStatus: this.questions.length > 0 ? 'Measured' : 'NotMeasured',
                 regressionCount: this.state.errors,
                 comprehensionScore: comprehensionScore,
                 correctAnswers: correctCount,
