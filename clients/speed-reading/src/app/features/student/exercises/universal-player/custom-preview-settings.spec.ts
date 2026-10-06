@@ -9,6 +9,16 @@ import { TestBed } from '@angular/core/testing';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 
 describe('Custom preview settings safety', () => {
+  it('offers and applies focus N-back and grid settings without mutating the catalogue', () => {
+    const config = { engineType: 'focus', engineConfig: { SessionData: { NLevel: 1, GridSize: 3, PositionSequence: [1, 2, 1] } } };
+    expect(getCustomPreviewControls(config).map(control => control.key)).toContain('nLevel');
+    expect(getCustomPreviewControls(config).map(control => control.key)).toContain('gridSize');
+    const changed = applyCustomPreviewSettings(config, { nLevel: 2, gridSize: 4 }, { roles: ['Teacher'], preview: true });
+    const engine = new FocusEngine();
+    engine.initialize({ ...changed, ...changed.engineConfig } as any, {} as any);
+    expect(engine.nLevel).toBe(2); expect(engine.gridSize).toBe(4);
+    expect(config.engineConfig.SessionData.NLevel).toBe(1);
+  });
   it('offers fade pace lag deadline and font controls with engine-compatible defaults', () => {
     const config = { engineType: 'text_fade', engineConfig: { wpm: 900, pacer: { speedWpm: 800 },
       fading: { speedWpm: 200, lagMs: 0 }, timing: { timeLimitSec: 10 }, visuals: { fontSize: 'large' } } };
