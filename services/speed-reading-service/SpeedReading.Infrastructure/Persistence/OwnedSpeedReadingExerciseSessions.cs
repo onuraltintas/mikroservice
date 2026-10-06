@@ -2685,7 +2685,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
     private static bool SupportsServerReadingMeasurement(SessionState state) =>
         state.Tachistoscope is null && IsReadingExerciseFlow(state)
         && !state.ReadingIncomplete
-        && state.EngineType is not ("word_highlight" or "text_stream" or "text_fade" or "scan_find" or "scanning" or "skimming")
+        && state.EngineType is not ("word_highlight" or "text_stream" or "text_fade" or "regression_reduction" or "scan_find" or "scanning" or "skimming")
         && state.ReadingStartTime.HasValue
         && state.ReadingEndTime.HasValue;
 
