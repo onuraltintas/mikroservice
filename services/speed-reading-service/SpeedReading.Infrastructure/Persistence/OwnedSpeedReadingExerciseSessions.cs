@@ -3007,10 +3007,10 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                 : null,
             result.TimeSpentSeconds,
             result.IsMeasured ? score ?? result.Score : null,
-            result.WordsRead == 0 ? null : result.WordsRead,
-            result.IsMeasured && result.RawWpm > 0 ? result.RawWpm : null,
+            IsScanning(state) || result.WordsRead == 0 ? null : result.WordsRead,
+            !IsScanning(state) && result.IsMeasured && result.RawWpm > 0 ? result.RawWpm : null,
             result.IsMeasured && state.Questions.Count > 0 ? result.ComprehensionScore : null,
-            result.IsMeasured && result.RawWpm > 0 ? result.WeightedKdp : null,
+            !IsScanning(state) && result.IsMeasured && result.RawWpm > 0 ? result.WeightedKdp : null,
             xp ?? (result.IsMeasured && !state.ReadingIncomplete
                 ? SpeedReadingExerciseSessionRules.CalculateXp(
                     score ?? result.Score,
