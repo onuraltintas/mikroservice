@@ -3243,6 +3243,12 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
               completionPercent: sessionResult.detailedResults.fadeCompletionPercent,
               incomplete: sessionResult.detailedResults.readingIncomplete === true
             } : {}),
+            ...(sessionResult.detailedResults?.rsvpDisplayPaceWpm > 0 ? {
+              displayPaceWpm: sessionResult.detailedResults.rsvpDisplayPaceWpm,
+              completionPercent: sessionResult.detailedResults.rsvpCompletionPercent,
+              rsvpPresentedWords: sessionResult.detailedResults.rsvpPresentedWords,
+              incomplete: sessionResult.detailedResults.readingIncomplete === true
+            } : {}),
             ...(this.isFixationMode() && sessionResult.detailedResults?.fixationRoundResults?.length ? {
               fixationResults: sessionResult.detailedResults.fixationRoundResults,
               averageResponseTimeMs: Math.round(sessionResult.detailedResults.fixationRoundResults.reduce(

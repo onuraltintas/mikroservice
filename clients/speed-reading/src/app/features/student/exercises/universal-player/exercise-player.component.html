@@ -386,8 +386,8 @@
 
         <div class="game-stats">
             <div class="stat">
-                <span class="label">{{ isTachistoscopeMode() ? 'Gösterim süresi' : 'Hız' }}</span>
-                <span class="value">{{ isTachistoscopeMode() ? getCurrentDuration() : getCurrentTextStreamWpm() }} {{ isTachistoscopeMode() ? 'ms' : 'WPM' }}</span>
+                <span class="label">{{ isTachistoscopeMode() ? 'Gösterim süresi' : 'Gösterim temposu' }}</span>
+                <span class="value">{{ isTachistoscopeMode() ? getCurrentDuration() : getCurrentTextStreamWpm() }} {{ isTachistoscopeMode() ? 'ms' : 'kelime/dk' }}</span>
             </div>
         </div>
     </div>
@@ -1636,6 +1636,10 @@
                 <div class="stat-card" *ngIf="result?.details?.completionPercent != null">
                     <div class="stat-value">{{ result?.details?.completionPercent | number:'1.0-0' }}%</div>
                     <div class="stat-label">Tamamlanan gösterim</div>
+                </div>
+                <div class="stat-card" *ngIf="result?.details?.rsvpPresentedWords != null">
+                    <div class="stat-value">{{ result?.details?.rsvpPresentedWords }}</div>
+                    <div class="stat-label">Tahmini gösterilen kelime</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-value">{{ result?.details?.displayPaceWpm }}</div>

@@ -980,7 +980,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             || answer.Answer.Trim().Equals(TimeoutAnswer, StringComparison.OrdinalIgnoreCase));
 
     private static bool IsReadingExerciseFlow(SessionState state) =>
-        IsReadingExerciseFlow(state.ExerciseTypeName, state.EngineType, default)
+        IsRsvp(state) || IsReadingExerciseFlow(state.ExerciseTypeName, state.EngineType, default)
         || IsAdaptiveFluency(state);
 
     private static bool IsReadingExerciseFlow(

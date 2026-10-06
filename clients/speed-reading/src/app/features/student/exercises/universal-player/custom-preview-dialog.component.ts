@@ -2,6 +2,7 @@ import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { applyCustomPreviewSettings, getCustomPreviewControls, PreviewControl } from './custom-preview-settings';
+import { caseInsensitiveField, recordOrEmpty } from './engines/reading-pacer-safety';
 
 @Component({
   standalone: true,
@@ -9,6 +10,9 @@ import { applyCustomPreviewSettings, getCustomPreviewControls, PreviewControl } 
   template: `
     <h2 mat-dialog-title>Özel ayarlarla dene</h2>
     <mat-dialog-content>
+      @if (isRsvp) {
+        <p>Gösterim süresi, kelimeler arası bekleme ve varsa 300 ms sabitleme süresi birlikte gösterim temposunu belirler. Gösterim temposu gerçek okuma hızı ölçümü değildir.</p>
+      }
       <p>Bu ayarlar yalnız bu önizlemeye uygulanır. Kayıtlı egzersiz ve ilerlemeniz değişmez.</p>
       @for (control of controls; track control.key) {
       <label [for]="'preview-' + control.key">{{ control.label }}</label>
@@ -33,6 +37,12 @@ import { applyCustomPreviewSettings, getCustomPreviewControls, PreviewControl } 
 })
 export class CustomPreviewDialogComponent {
   readonly configuration = inject<Record<string, unknown>>(MAT_DIALOG_DATA);
+  get isRsvp(): boolean {
+    const type = String(caseInsensitiveField(this.configuration, 'exerciseTypeName') ?? '').toLowerCase();
+    const mode = String(caseInsensitiveField(recordOrEmpty(caseInsensitiveField(this.configuration, 'engineConfig')), 'mode')
+      ?? caseInsensitiveField(this.configuration, 'mode') ?? '').toLowerCase();
+    return type !== 'tachistoscope' && (type === 'rsvp' || mode === 'rsvp');
+  }
   private readonly dialog = inject(MatDialogRef<CustomPreviewDialogComponent>);
   controls: PreviewControl[] = [];
   values: Record<string, number | string> = {};
