@@ -38,6 +38,18 @@ public sealed class ExamSessionTests
         Assert.Equal(1, await db.ExerciseSessionResults.CountAsync());
     }
 
+    [Fact]
+    public async Task UsesConfiguredQuestionDuration()
+    {
+        await using var db = Context();
+        var (service, student, exercise, _, _) = await Seed(db, 3);
+        var record = await db.Exercises.SingleAsync();
+        record.Update(record.Title, record.Description, record.TypeCode, """{"engineConfig":{"timing":{"questionTimeSeconds":30}}}""", 3, record.ExerciseTypeId, null, student, DateTime.UtcNow);
+        await db.SaveChangesAsync();
+        var start = await service.StartAsync(student, new() { ExerciseId = exercise });
+        Assert.Equal(30, start.InitialData.GetProperty("examQuestionTimeSeconds").GetInt32());
+    }
+
     private static OwnedSpeedReadingDbContext Context() => new(new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>()
         .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
 
