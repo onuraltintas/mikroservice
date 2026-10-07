@@ -1655,7 +1655,7 @@
                     <div class="stat-label">Tahmini gösterilen kelime</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value">{{ result?.details?.displayPaceWpm }}</div>
+                    <div class="stat-value">{{ result?.details?.displayPaceWpm | number:'1.0-0' }}</div>
                     <div class="stat-label">Gösterim temposu (kelime/dk)</div>
                 </div>
                 <div class="stat-card" *ngIf="result?.details?.comprehensionScore != null">
