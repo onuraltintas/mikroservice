@@ -216,7 +216,7 @@ export function applyCustomPreviewSettings<T extends Record<string, unknown>>(
   const modeControl = engine === 'focus' ? controls.find(control => control.key === 'mode') : undefined;
   if (modeControl && values['mode'] !== undefined && !modeControl.options?.some(option => option.value === values['mode']))
     throw new Error('Geçerli bir çalışma modu seçin.');
-  if (!Object.keys(validated).length && values['mode'] === undefined) return configuration;
+  if (!Object.keys(validated).length && values['mode'] === undefined && !(engine === 'motion_path' && values['pathType'] !== undefined)) return configuration;
   const result = structuredClone(configuration);
   const nested = result['engineConfig'];
   const settings: Record<string, unknown> = nested && typeof nested === 'object' && !Array.isArray(nested)
@@ -356,6 +356,11 @@ export function applyCustomPreviewSettings<T extends Record<string, unknown>>(
       merge('timing', { durationSeconds: validated['durationSeconds'] });
       const timingConfig = recordOrEmpty(settings['timing']);
       for (const key of Object.keys(timingConfig)) if (['durationms', 'totaldurationseconds'].includes(key.toLowerCase())) delete timingConfig[key];
+      if (caseInsensitiveField(configuration, 'timing') !== undefined) {
+        const inherited = recordOrEmpty(caseInsensitiveField(configuration, 'timing'));
+        if (caseInsensitiveField(inherited, 'durationMs') !== undefined) timingConfig['durationMs'] = validated['durationSeconds'] * 1000;
+        if (caseInsensitiveField(inherited, 'totalDurationSeconds') !== undefined) timingConfig['totalDurationSeconds'] = validated['durationSeconds'];
+      }
     }
     if (values['pathType'] !== undefined) settings['path'] = overrideFields(
       { ...recordOrEmpty(caseInsensitiveField(configuration, 'path')), ...recordOrEmpty(caseInsensitiveField(settings, 'path')) }, { type: values['pathType'] });
@@ -366,6 +371,7 @@ export function applyCustomPreviewSettings<T extends Record<string, unknown>>(
       if (caseInsensitiveField(mergeCaseInsensitiveRecords(configuration, settings, 'timing'), 'speedMs') !== undefined) {
         merge('timing', {});
         for (const key of Object.keys(recordOrEmpty(settings['timing']))) if (key.toLowerCase() === 'speedms') delete (settings['timing'] as any)[key];
+        (settings['timing'] as Record<string, unknown>)['speedMs'] = 0;
       }
     }
     if (validated['jumpIntervalMs'] !== undefined) merge('movement', { jumpIntervalMs: validated['jumpIntervalMs'] });

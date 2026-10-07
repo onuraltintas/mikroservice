@@ -264,8 +264,12 @@
 
                     <!-- Focus Point / Target -->
                     <div class="target-dot" [style.width.px]="getFixationPointSize()"
+                        [style.background-color]="getTrackingTarget()?.color"
+                        [style.border-radius]="getTrackingTarget()?.type === 'arrow' ? '8px' : null"
                         [style.height.px]="getFixationPointSize()" [class.paused]="engineState.isPaused"
                         [class.has-value]="getSaccadeValue()">
+                        <span *ngIf="getTrackingTarget()?.type === 'arrow'" aria-hidden="true">➜</span>
+                        <span *ngIf="getTrackingTarget()?.type === 'circle'" aria-hidden="true">○</span>
                         <span class="dot-value" *ngIf="getSaccadeValue()" [style.font-size.px]="getSaccadeFontSize()">{{
                             getSaccadeValue() }}</span>
                     </div>
@@ -1701,8 +1705,13 @@
                     Anlama ölçülmedi. Görselleştirme egzersizi gerçek okuma hızı veya zihinsel görüntü kalitesi ölçmez.
                 </ng-container>
                 <ng-template #otherUnmeasuredExercise>
+                <ng-container *ngIf="engine?.engineType === 'motion_path' && !isFixationMode() && !isSaccadeMode(); else otherUnmeasuredMessage">
+                    Takip oturumu tamamlandı. Göz hareketleri ölçülmedi; takip doğruluğu ve okuma hızı (WPM) hesaplanmaz.
+                </ng-container>
+                <ng-template #otherUnmeasuredMessage>
                 Egzersiz tamamlandı ve kaydedildi. Bu egzersizdeki harf yanıtları sunucuda doğrulanmadığı için
                 seviye tespit puanına dahil edilmez; WPM ölçülmez.
+                </ng-template>
                 </ng-template>
             </div>
 

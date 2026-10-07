@@ -196,10 +196,10 @@ describe('MotionPathEngine', () => {
     }, callbacks(value => result = value));
 
     engine.start();
-    tick(400);
+    tick(399);
     const expected = engine.getPeripheralChars()[0]?.char;
     const wrong = expected === 'A' ? 'B' : 'A';
-    tick(50);
+    tick(51);
     engine.handleInput({ type: 'keypress', key: wrong });
     engine.handleInput({ type: 'enter', key: 'Enter' });
     tick(1200);

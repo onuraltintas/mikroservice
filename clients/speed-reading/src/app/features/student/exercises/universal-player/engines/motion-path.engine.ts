@@ -75,6 +75,8 @@ export class MotionPathEngine implements BaseEngine {
     private angle = 0;
     private lastFrameTime = 0;
     private trackingCycleMs = 0;
+    private nextJumpAt = 0;
+    private jumpRemainingMs = 0;
     private direction = 1;
     private isJumping = false;
 
@@ -150,7 +152,9 @@ export class MotionPathEngine implements BaseEngine {
         const pathType = typeof field(path, 'type') === 'string' ? String(field(path, 'type')).toLowerCase() : '';
         const targetType = typeof field(target, 'type') === 'string' ? String(field(target, 'type')).toLowerCase() : '';
         const targetSize = typeof field(target, 'size') === 'string' ? String(field(target, 'size')).toLowerCase() : '';
-        const configuredMode = field(nestedConfig, 'mode') ?? field(backendConfig, 'mode');
+        const typeName = String(field(backendConfig, 'exerciseTypeName') ?? '').replace(/[^a-z]/gi, '').toLowerCase();
+        const configuredMode = field(nestedConfig, 'mode') ?? field(backendConfig, 'mode')
+            ?? (typeName === 'eyetracking' ? 'tracking' : undefined);
         const rawMode = typeof configuredMode === 'string' ? configuredMode.toLowerCase() : '';
         const mode = ['fixation', 'saccade', 'tracking'].includes(rawMode)
             ? rawMode : 'fixation';
@@ -159,7 +163,7 @@ export class MotionPathEngine implements BaseEngine {
             ? boundedInteger(durationMsValue, 60_000, 5_000, 3_600_000) : 0;
         const durationSecondsValue = field(timing, 'totalDurationSeconds') ?? field(timing, 'durationSeconds');
         const durationSeconds = durationMs > 0
-            ? Math.round(durationMs / 1000)
+            ? Math.ceil(durationMs / 1000)
             : (typeof durationSecondsValue === 'number' && durationSecondsValue > 0
                 ? boundedInteger(durationSecondsValue, 60, 5, 3600) : 0);
         const holdMs = boundedInteger(
@@ -168,7 +172,7 @@ export class MotionPathEngine implements BaseEngine {
             mode === 'fixation' ? 2000 : 1000, 50, 10000);
 
         this.currentMode = mode;
-        this.trackingCycleMs = typeof field(timing, 'speedMs') === 'number'
+        this.trackingCycleMs = typeof field(timing, 'speedMs') === 'number' && field(timing, 'speedMs') > 0
             ? boundedInteger(field(timing, 'speedMs'), 3000, 50, 60000) : 0;
         this.isTimeBased = durationSeconds > 0;
         this.durationSeconds = durationSeconds;
@@ -212,7 +216,8 @@ export class MotionPathEngine implements BaseEngine {
             const peripheralCount = boundedInteger(field(content, 'peripheralCount') ?? field(fixation, 'peripheralCount'), 0, 0, 4);
             // Answered fixation rounds finish by verified point count, not by a timer while answering.
             if (mode === 'fixation' && peripheralCount > 0) this.isTimeBased = false;
-            const pointSize = boundedInteger(field(content, 'pointSize') ?? field(fixation, 'pointSize'), 36, 8, 200);
+            const namedSize = targetSize === 'small' ? 24 : targetSize === 'large' ? 48 : 36;
+            const pointSize = boundedInteger(field(content, 'pointSize') ?? field(fixation, 'pointSize'), mode === 'tracking' ? namedSize : 36, 8, 200);
             const configuredPoints = boundedInteger(field(content, 'points') ?? field(fixation, 'points'), 10, 1, 500);
             const points = this.isTimeBased
                 ? Math.min(500, Math.max(1, Math.floor((durationSeconds * 1000) / holdMs)))
@@ -373,9 +378,9 @@ export class MotionPathEngine implements BaseEngine {
     private resetPosition(): void {
         const pathType = this.config.path?.type;
         if (pathType === 'horizontal') {
-            this.targetX = 0; this.targetY = 50;
+            this.targetX = 5; this.targetY = 50;
         } else if (pathType === 'vertical') {
-            this.targetX = 50; this.targetY = 0;
+            this.targetX = 50; this.targetY = 10;
         } else if (pathType === 'two_point_jump') {
             this.targetX = 20; this.targetY = 50;
         } else {
@@ -628,8 +633,9 @@ export class MotionPathEngine implements BaseEngine {
 
         if (pathType === 'horizontal') {
             const speed = 0.5 + (speedLevel * 0.3);
-            this.targetX += speed * this.direction * frames;
-            if (this.targetX >= 95 || this.targetX <= 5) {
+            this.targetX += (this.trackingCycleMs > 0 ? 180 * elapsedMs / this.trackingCycleMs : speed * frames) * this.direction;
+            while ((this.direction > 0 && this.targetX >= 95) || (this.direction < 0 && this.targetX <= 5)) {
+                this.targetX = this.direction > 0 ? 190 - this.targetX : 10 - this.targetX;
                 this.direction *= -1;
                 this.state.currentStep++;
                 if (this.completeTrackingIfNeeded()) return;
@@ -637,8 +643,9 @@ export class MotionPathEngine implements BaseEngine {
         }
         else if (pathType === 'vertical') {
             const speed = 0.5 + (speedLevel * 0.3);
-            this.targetY += speed * this.direction * frames;
-            if (this.targetY >= 90 || this.targetY <= 10) {
+            this.targetY += (this.trackingCycleMs > 0 ? 160 * elapsedMs / this.trackingCycleMs : speed * frames) * this.direction;
+            while ((this.direction > 0 && this.targetY >= 90) || (this.direction < 0 && this.targetY <= 10)) {
+                this.targetY = this.direction > 0 ? 180 - this.targetY : 20 - this.targetY;
                 this.direction *= -1;
                 this.state.currentStep++;
                 if (this.completeTrackingIfNeeded()) return;
@@ -680,9 +687,14 @@ export class MotionPathEngine implements BaseEngine {
         const interval = this.config.movement?.jumpIntervalMs || 1000;
         if (jumpImmediately) this.jump();
         if (!this.state.isRunning) return;
-        this.jumpInterval = setInterval(() => {
-            if (!this.state.isPaused) this.jump();
-        }, interval);
+        const delay = jumpImmediately ? interval : this.jumpRemainingMs;
+        this.nextJumpAt = Date.now() + delay;
+        this.jumpInterval = setTimeout(() => {
+            if (!this.state.isRunning || this.state.isPaused) return;
+            this.jump();
+            this.jumpRemainingMs = interval;
+            if (this.state.isRunning) this.startJumping(false);
+        }, delay);
     }
 
     private jump(): void {
@@ -703,6 +715,7 @@ export class MotionPathEngine implements BaseEngine {
         if (this.state.isPaused) return;
         this.state.isPaused = true;
         this.pauseStartTime = Date.now();
+        this.jumpRemainingMs = Math.max(0, this.nextJumpAt - this.pauseStartTime);
         if (this.animationFrame) cancelAnimationFrame(this.animationFrame);
         if (this.jumpInterval) {
             clearTimeout(this.jumpInterval);

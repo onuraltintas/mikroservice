@@ -477,6 +477,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             ? await ReviewVocabularyAsync(session, state, request, studentId, now, cancellationToken)
             : actionName switch
             {
+                "tracking_start" when IsObservationOnlyMotionPath(state) && state.TextStreamMode.Equals("tracking", StringComparison.OrdinalIgnoreCase)
+                    => Valid("Takip başlatıldı.", session.CurrentStep),
                 "start_reading" => StartReading(session, state, now),
                 "finish_reading" => FinishReading(session, state, now, request.IsTimeout),
                 "adaptive_next_stage" => AdvanceAdaptiveStage(session, state),
@@ -612,6 +614,10 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             throw IncompleteSession("All tachistoscope rounds must be validated before completion.");
         if (IsFocusExercise(state) && !state.FocusCompleted)
         {
+            if (state.TrackingDurationSeconds > 0 && (session.Status == OwnedExerciseSessionStatus.Paused || !state.TimingStartedAt.HasValue
+                || (now - state.TimingStartedAt.Value).TotalSeconds
+                    - Math.Max(0, session.TotalPausedSeconds - state.TimingPausedSecondsBeforeStart) < state.TrackingDurationSeconds))
+                throw IncompleteSession("Takip süresi tamamlanmadan oturum bitirilemez.");
             if (IsObservationOnlyMotionPath(state) && state.FixationPeripheralCount == 0)
             {
                 // motion_path is a timed, observation-only exercise. It has
@@ -1267,7 +1273,17 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         };
         var engineConfig = ReadObject(config, "engineConfig");
         var effectiveConfig = engineConfig.ValueKind == JsonValueKind.Object ? engineConfig : config;
-        state.TextStreamMode = ReadString(effectiveConfig, "mode") ?? ReadString(config, "mode") ?? string.Empty;
+        state.TextStreamMode = ReadString(effectiveConfig, "mode") ?? ReadString(config, "mode")
+            ?? (exerciseTypeName.Replace(" ", "").Replace("_", "").Replace("-", "").Equals("EyeTracking", StringComparison.OrdinalIgnoreCase) ? "tracking" : string.Empty);
+        if (IsEngineType(exerciseEngineType, "motion_path") && state.TextStreamMode.Equals("tracking", StringComparison.OrdinalIgnoreCase))
+        {
+            var timing = ReadObject(effectiveConfig, "timing");
+            var rootTiming = ReadObject(config, "timing");
+            state.TrackingDurationSeconds = (ReadPositiveInt(timing, "durationMs") ?? ReadPositiveInt(rootTiming, "durationMs")) is { } durationMs
+                ? (int)Math.Ceiling(durationMs / 1000d)
+                : ReadPositiveInt(timing, "totalDurationSeconds") ?? ReadPositiveInt(rootTiming, "totalDurationSeconds")
+                    ?? ReadPositiveInt(timing, "durationSeconds") ?? ReadPositiveInt(rootTiming, "durationSeconds") ?? 0;
+        }
         if (ExerciseConfigurationRules.NormalizeEngineType(exerciseEngineType) is "reading_comprehension" or "free_reading")
         {
             state.ReadingPausedMilliseconds = 0;
@@ -3652,6 +3668,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         public DateTime? ReadingEndTime { get; set; }
         public bool ReadingIncomplete { get; set; }
         public string TextStreamMode { get; set; } = string.Empty;
+        public int TrackingDurationSeconds { get; set; }
         public int RsvpProtocolVersion { get; set; }
         public int SkimmingProtocolVersion { get; set; }
         public int SkimmingInspectionMs { get; set; }

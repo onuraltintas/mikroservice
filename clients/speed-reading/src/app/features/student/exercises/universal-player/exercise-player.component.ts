@@ -1275,7 +1275,9 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
         ...(engineType === 'grid_interaction' ? this.schulteSettings : {}),
         exerciseTypeName: this.exercise?.exerciseTypeName,
         mode: engineType === 'motion_path'
-          ? (this.parsedConfig?.engineConfig?.['mode'] || this.parsedConfig?.['mode'] || 'fixation')
+          ? (this.parsedConfig?.engineConfig?.['mode'] || this.parsedConfig?.['mode']
+            || this.backendSessionConfig?.['textStreamMode']
+            || (this.exercise?.exerciseTypeName?.replace(/[^a-z]/gi, '').toLowerCase() === 'eyetracking' ? 'tracking' : 'fixation'))
           : (this.backendSessionConfig?.FocusMode
             || this.backendSessionConfig?.focusMode
             || this.backendSessionConfig?.mode
@@ -1590,6 +1592,16 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       return;
     }
 
+    if (this.engine instanceof MotionPathEngine && this.engine.getMode() === 'tracking' && !this.isPreviewSession()) {
+      try {
+        let valid = false;
+        await this.enqueueAction({ action: 'tracking_start', timestamp: new Date() } as ActionData, response => valid = response.isValid);
+        if (!valid) return;
+      } catch (error) {
+        this.error = this.getActionValidationErrorMessage(error);
+        return;
+      }
+    }
     this.startReadingTracking(() => this.engine?.start());
 
     // Calculate line breaks for Subvocalization Reduction to prevent cross-line chunks
@@ -2736,6 +2748,11 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   isSaccadeMode(): boolean {
     return this.engine?.engineType === 'motion_path'
       && (this.engine as MotionPathEngine).getMode() === 'saccade';
+  }
+
+  getTrackingTarget(): { type: string; color?: string } | null {
+    return this.engine instanceof MotionPathEngine && this.engine.getMode() === 'tracking'
+      ? this.engine.getTargetConfig() : null;
   }
 
   getFixationLastChars(): string {

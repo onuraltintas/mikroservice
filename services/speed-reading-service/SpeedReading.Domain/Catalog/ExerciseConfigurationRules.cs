@@ -665,6 +665,7 @@ public static class ExerciseConfigurationRules
             ValidateOptionalIntRange(timing, "durationSeconds", 5, 3_600, "Göz hareketi toplam süresi");
             ValidateOptionalIntRange(timing, "totalDurationSeconds", 5, 3_600, "Göz hareketi toplam süresi");
             ValidateOptionalIntRange(timing, "holdMs", 50, 10_000, "Göz hareketi bekleme süresi");
+            ValidateOptionalIntRange(timing, "speedMs", 50, 60_000, "Takip döngüsü süresi");
         }
         if (TryGetObject(config, "content") is { } content)
         {
