@@ -84,6 +84,10 @@ export function getCustomPreviewControls(configuration: Record<string, unknown>)
         { ...control('maxReadingTimeSec', 'Maksimum okuma süresi (saniye; 0: sınırsız)', 0, 3600, Number(timing['maxreadingtimems'] ?? 0) / 1000), step: 0.001 },
         control('lineHeightPercent', 'Satır aralığı (%)', 100, 300, Math.round(Number(display['lineheight'] ?? 1.8) * 100))
       );
+      if (configuration['engineType'] === 'exam_simulation') controls.push(
+        control('questionTimeSeconds', 'Soru başına süre (saniye)', 1, 3600, timing['questiontimeseconds'] ?? 60),
+        control('lineHeightPercent', 'Satır aralığı (%)', 100, 300, Math.round(Number(display['lineheight'] ?? 1.8) * 100))
+      );
       return controls;
     }
     case 'focus': return [
@@ -191,6 +195,9 @@ export function applyCustomPreviewSettings<T extends Record<string, unknown>>(
     const displayOverrides: Record<string, unknown> = {};
     if (value !== undefined) displayOverrides['fontSize'] = value;
     if (numeric['lineHeightPercent'] !== undefined) displayOverrides['lineHeight'] = numeric['lineHeightPercent'] / 100;
+    if (numeric['questionTimeSeconds'] !== undefined) settings['timing'] = overrideFields(
+      { ...recordOrEmpty(caseInsensitiveField(configuration, 'timing')), ...recordOrEmpty(caseInsensitiveField(settings, 'timing')) },
+      { questionTimeSeconds: numeric['questionTimeSeconds'] });
     if (Object.keys(displayOverrides).length) settings['display'] = overrideFields({ ...recordOrEmpty(caseInsensitiveField(configuration, 'display')), ...recordOrEmpty(caseInsensitiveField(settings, 'display')) }, displayOverrides);
     if (numeric['minReadingTimeSec'] !== undefined || numeric['maxReadingTimeSec'] !== undefined) {
       const timing = mergeCaseInsensitiveRecords(configuration, settings, 'timing');

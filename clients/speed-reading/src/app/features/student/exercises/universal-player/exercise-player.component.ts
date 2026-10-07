@@ -330,6 +330,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   questionTimeRemaining = 0;
   questionTimerInterval: any = null;
   questionStartTime = 0;
+  private questionTimerGeneration = 0;
 
   // Visual Expansion specific
   expansionAnswers: string[] = [];
@@ -856,7 +857,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
    * does not submit an already-recorded answer again.
    */
   private restoreAssessmentQuestionProgress(initialData: any): void {
-    if (!this.isAssessmentMode || !this.comprehensionQuestions.length) return;
+    if ((!this.isAssessmentMode && this.backendSessionConfig?.engineType !== 'exam_simulation') || !this.comprehensionQuestions.length) return;
 
     const state = this.isRecord(initialData) ? initialData : {};
     const answers = state['answers'] ?? state['Answers'];
@@ -1582,11 +1583,14 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     // Questions include their own paragraph content
     if (this.engine?.engineType === 'exam_simulation' && this.comprehensionQuestions.length > 0) {
       this.exercisePhase = 'questions';
-      this.currentQuestionIndex = 0;
-      this.questionAnswers = [];
+      if (!this.questionAnswers.length) this.currentQuestionIndex = 0;
       this.selectedAnswer = null;
       this.questionFeedback = null;
       this.engineState.isRunning = true;
+      if (this.questionAnswers.length >= this.comprehensionQuestions.length) {
+        this.finishQuestionPhase();
+        return;
+      }
       this.startQuestionTimer();
       this.cdr.detectChanges();
       return;
@@ -1688,6 +1692,10 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   }
 
   async togglePause(): Promise<void> {
+    if (this.engine?.engineType === 'exam_simulation') {
+      this.showToast('Sınav sırasında süre durdurulamaz.', 'info');
+      return;
+    }
     if (this.isPauseTransitionPending) return;
     if (this.engine?.engineType === 'error_analysis' && (this.engine as ErrorAnalysisEngine).isAwaitingServer()) return;
     if ((this.isTachistoscopeMode() || this.shouldTrackReading() || this.isFixationMode() || this.engine?.engineType === 'error_analysis' || this.engine?.engineType === 'scan_find' || this.engine?.engineType === 'visual_expansion') && this.sessionId && this.sessionId !== 'preview-mode') {
@@ -1917,7 +1925,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       return;
     }
 
-    const targetTime = question.TargetTimeSeconds || question.targetTimeSeconds || 60;
+    const targetTime = this.getQuestionTimeLimit(question);
     const timeSpent = isTimeout
       ? targetTime
       : Math.max(0, targetTime - this.questionTimeRemaining);
@@ -1938,6 +1946,9 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       }
 
       const isCorrect = response.isCorrect === true;
+      const serverExamFeedback = this.engine?.engineType === 'exam_simulation' ? response.feedbackData : null;
+      const answerTimedOut = isTimeout || serverExamFeedback?.timedOut === true;
+      const answerTimeSpent = typeof serverExamFeedback?.responseTimeSeconds === 'number' ? serverExamFeedback.responseTimeSeconds : timeSpent;
       this.questionFeedback = {
         isCorrect: this.isAssessmentMode ? null : response.isCorrect ?? false,
         correctAnswer: this.isAssessmentMode ? undefined : response.correctAnswer,
@@ -1948,9 +1959,9 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       if (!this.questionAnswers.some(item => item.questionId === questionId)) {
         this.questionAnswers.push({
           questionId,
-          selectedAnswer: isTimeout ? '' : answer,
+          selectedAnswer: answerTimedOut ? '' : answer,
           isCorrect,
-          timeSpent,
+          timeSpent: answerTimeSpent,
           targetTime,
           questionText: question.QuestionText || question.questionText || question.Text || question.text,
           correctAnswer: this.isAssessmentMode ? undefined : response.correctAnswer
@@ -2019,15 +2030,45 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   }
 
   // Question Timer Methods
-  startQuestionTimer(): void {
+  private getQuestionTimeLimit(question: any): number {
+    if (this.engine?.engineType === 'exam_simulation') {
+      const seconds = this.backendSessionConfig?.examQuestionTimeSeconds
+        ?? this.parsedConfig?.['engineConfig']?.['timing']?.questionTimeSeconds
+        ?? this.parsedConfig?.['timing']?.questionTimeSeconds ?? 60;
+      return typeof seconds === 'number' && Number.isFinite(seconds) ? Math.min(3600, Math.max(1, Math.round(seconds))) : 60;
+    }
+    return question.TargetTimeSeconds || question.targetTimeSeconds || 60;
+  }
+
+  async startQuestionTimer(): Promise<void> {
     this.stopQuestionTimer();
+    const generation = this.questionTimerGeneration;
     const question = this.getCurrentQuestion();
     if (!question) return;
-
-    // Get target time from question (Backend calculates this based on word count)
-    const targetTime = question.TargetTimeSeconds || question.targetTimeSeconds || 60;
-    this.questionTimeRemaining = targetTime;
-    this.questionStartTime = Date.now();
+    if (this.engine?.engineType === 'exam_simulation' && !this.isPreviewSession()) {
+      this.questionSubmissionPending = true;
+      try {
+        let valid = false;
+        await this.enqueueAction({ action: 'exam_question_start', questionId: question.QuestionId || question.questionId || question.Id || question.id,
+          timestamp: new Date() } as ActionData, response => {
+            valid = response.isValid;
+            if (valid && typeof response.feedbackData?.remainingSeconds === 'number')
+              question.examRemainingSeconds = response.feedbackData.remainingSeconds;
+          });
+        if (!valid || generation !== this.questionTimerGeneration || question !== this.getCurrentQuestion()) return;
+      } catch (error) {
+        this.error = this.getActionValidationErrorMessage(error);
+        return;
+      } finally {
+        this.questionSubmissionPending = false;
+        this.cdr.detectChanges();
+      }
+    }
+    const targetTime = this.getQuestionTimeLimit(question);
+    const remaining = this.engine?.engineType === 'exam_simulation' && typeof question.examRemainingSeconds === 'number'
+      ? Math.max(0, Math.min(targetTime, question.examRemainingSeconds)) : targetTime;
+    this.questionTimeRemaining = remaining;
+    this.questionStartTime = Date.now() - (targetTime - remaining) * 1000;
 
     this.questionTimerInterval = setInterval(() => {
       if (this.questionFeedback) {
@@ -2049,6 +2090,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   }
 
   stopQuestionTimer(): void {
+    this.questionTimerGeneration = (this.questionTimerGeneration || 0) + 1;
     if (this.questionTimerInterval) {
       clearInterval(this.questionTimerInterval);
       this.questionTimerInterval = null;
@@ -2099,19 +2141,20 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     this.result = {
       score: comprehensionAccuracy,
       accuracy: comprehensionAccuracy,
-      totalTime: this.engineState.timeElapsed,
+      totalTime: this.engine?.engineType === 'exam_simulation' ? totalTimeSpent * 1000 : this.engineState.timeElapsed,
       totalSteps: totalQuestions,
       completedSteps: totalQuestions,
       errors: totalQuestions - correctCount,
       details: {
-        wpm: this.readingIncomplete || this.engine?.engineType === 'skimming' ? null : this.readingWpm,
+        wpm: this.readingIncomplete || ['skimming', 'exam_simulation'].includes(this.engine?.engineType || '') ? null : this.readingWpm,
         ...(this.engine?.engineType === 'skimming' ? { inspectionTimeMs: this.engineState.timeElapsed } : {}),
         timedOut: this.readingIncomplete,
         targetWpm: this.getTargetWpm(),
         comprehensionScore: comprehensionAccuracy,
         correctAnswers: correctCount,
         totalQuestions: totalQuestions,
-        performanceLevel: this.engine?.engineType === 'skimming' ? 'Ana fikir değerlendirmesi'
+        performanceLevel: this.engine?.engineType === 'exam_simulation' ? 'Süreli paragraf değerlendirmesi'
+          : this.engine?.engineType === 'skimming' ? 'Ana fikir değerlendirmesi'
           : this.readingIncomplete ? 'Okuma tamamlanmadı' : this.getPerformanceLevel(this.readingWpm, comprehensionAccuracy),
         // Time statistics
         totalTimeSpent,

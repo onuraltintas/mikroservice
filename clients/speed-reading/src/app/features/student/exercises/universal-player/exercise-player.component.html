@@ -898,11 +898,6 @@
                 <span class="countdown-value">{{ questionTimeRemaining }}</span>
                 <span class="countdown-label">sn</span>
             </div>
-            <!-- Show Target WPM for Exam Simulation -->
-            <div class="wpm-badge target" *ngIf="engine?.engineType === 'exam_simulation'">
-                <span class="material-icons">track_changes</span>
-                Hedef: {{ getTargetWpm() }} WPM
-            </div>
             <!-- Show Actual WPM for other reading exercises -->
             <div class="wpm-badge" *ngIf="isPacedReadingEngine()">
                 <span class="material-icons">speed</span>

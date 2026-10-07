@@ -319,6 +319,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             {
                 var normalizedEngineType = ExerciseConfigurationRules.NormalizeEngineType(exerciseEngineType);
                 var isComprehension = normalizedEngineType == "reading_comprehension";
+                var isExam = normalizedEngineType == "exam_simulation";
                 var isFreeReading = normalizedEngineType == "free_reading";
                 var freeContent = ReadObject(ReadObject(parsedConfiguration, "engineConfig"), "content");
                 var freeMinimumWords = isFreeReading ? ReadPositiveInt(freeContent, "minWordCount") ?? ReadPositiveInt(ReadObject(parsedConfiguration, "content"), "minWordCount") ?? 0 : 0;
@@ -341,7 +342,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                     .Where(item => item.IsActive
                         && !item.IsDeleted
                         && item.Content != string.Empty
-                        && (!(isFreeReading || isComprehension || isScanning || isGrouping || isTextFade || isRegression || isSubvocalization || isRsvp) || item.DifficultyLevel == difficultyLevel)
+                        && (!(isExam || isFreeReading || isComprehension || isScanning || isGrouping || isTextFade || isRegression || isSubvocalization || isRsvp) || item.DifficultyLevel == difficultyLevel)
                         && (!isFreeReading || (item.WordCount >= freeMinimumWords && (freeMaximumWords == 0 || item.WordCount <= freeMaximumWords)))
                         && (!profileAgeGroupId.HasValue
                             || item.TargetAgeGroupId == null
@@ -359,7 +360,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                                 || question.CorrectAnswer.Trim().ToUpper() == "B"
                                 || question.CorrectAnswer.Trim().ToUpper() == "C"
                                 || question.CorrectAnswer.Trim().ToUpper() == "D"))))
-                    .OrderBy(item => isFreeReading || isScanning || isGrouping || isTextFade || isRegression || isSubvocalization || isRsvp
+                    .OrderBy(item => isExam || isFreeReading || isScanning || isGrouping || isTextFade || isRegression || isSubvocalization || isRsvp
                         ? db.ExerciseSessions.Count(history => history.StudentId == studentId && history.ReadingTextId == item.Id)
                         : isComprehension
                         ? db.ReadingSessions.Count(history => history.UserId == studentId && history.ReadingTextId == item.Id)
@@ -490,7 +491,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                 "fixation_answer" => AnswerFixation(session, state, request, now),
                 "tachistoscope_present" => PresentTachistoscope(state, request, now),
                 "tachistoscope_answer" => AnswerTachistoscope(session, state, request, now),
-                "answer_question" => AnswerQuestion(session, state, request),
+                "exam_question_start" when IsEngineType(state.EngineType, "exam_simulation") => StartExamQuestion(session, state, request, now),
+                "answer_question" => AnswerQuestion(session, state, request, now),
                 "position_match" => ValidateFocusMatch(session, state, request, "position", now),
                 "word_match" => ValidateFocusMatch(session, state, request, "word", now),
                 "match_attempt" => ValidateFocusMatch(session, state, request, "position", now),
@@ -648,6 +650,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         if (string.Equals(state.ExerciseTypeName, "Tachistoscope", StringComparison.OrdinalIgnoreCase))
             state.Questions.Clear();
 
+        if (IsEngineType(state.EngineType, "exam_simulation") && state.Answers.Count != state.Questions.Count)
+            throw IncompleteSession("Sınav soruları doğrulanmış soru akışıyla tamamlanmalıdır.");
         var answers = ResolveAnswers(session, state, request.QuestionAnswers);
         PersistSessionAnswers(session);
         if (state.Questions.Count > 0 && answers.Count != state.Questions.Count)
@@ -1273,6 +1277,9 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         };
         var engineConfig = ReadObject(config, "engineConfig");
         var effectiveConfig = engineConfig.ValueKind == JsonValueKind.Object ? engineConfig : config;
+        if (IsEngineType(exerciseEngineType, "exam_simulation"))
+            state.ExamQuestionTimeSeconds = Math.Clamp(ReadPositiveInt(ReadObject(effectiveConfig, "timing"), "questionTimeSeconds")
+                ?? ReadPositiveInt(ReadObject(config, "timing"), "questionTimeSeconds") ?? 60, 1, 3600);
         state.TextStreamMode = ReadString(effectiveConfig, "mode") ?? ReadString(config, "mode")
             ?? (exerciseTypeName.Replace(" ", "").Replace("_", "").Replace("-", "").Equals("EyeTracking", StringComparison.OrdinalIgnoreCase) ? "tracking" : string.Empty);
         if (IsEngineType(exerciseEngineType, "motion_path") && state.TextStreamMode.Equals("tracking", StringComparison.OrdinalIgnoreCase))
@@ -1470,7 +1477,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                 .SingleOrDefaultAsync(item => item.Id == readingTextId.Value
                     && item.IsActive
                     && !item.IsDeleted
-                    && (!IsSkimming(state) || item.DifficultyLevel == difficultyLevel
+                    && (!(IsSkimming(state) || IsEngineType(state.EngineType, "exam_simulation")) || item.DifficultyLevel == difficultyLevel
                         && (item.ExerciseId == null || item.ExerciseId == exerciseId)
                         && (!profileAgeGroupId.HasValue || item.TargetAgeGroupId == null || item.TargetAgeGroupId == profileAgeGroupId.Value)),
                     cancellationToken)
@@ -2178,10 +2185,32 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         return Valid("Odak uyaranı hazır.", index, feedbackData: feedback);
     }
 
+    private static ExerciseActionValidationResponse StartExamQuestion(
+        ExerciseSession session, SessionState state, ExerciseActionRequest request, DateTime now)
+    {
+        if (session.Status != OwnedExerciseSessionStatus.Active)
+            return Invalid("Sınav duraklatılmışken soru başlatılamaz.");
+        var next = state.Questions.FirstOrDefault(question => state.Answers.All(answer => answer.QuestionId != question.QuestionId));
+        if (next is null || request.QuestionId != next.QuestionId)
+            return Invalid("Sıradaki sınav sorusunu başlatın.");
+        if (state.ExamQuestionId != next.QuestionId || !state.ExamQuestionStartedAt.HasValue)
+        {
+            state.ExamQuestionId = next.QuestionId;
+            state.ExamQuestionStartedAt = now;
+            state.ExamPausedSecondsAtStart = session.TotalPausedSeconds;
+        }
+        var elapsed = Math.Max(0, (now - state.ExamQuestionStartedAt!.Value).TotalSeconds
+            - Math.Max(0, session.TotalPausedSeconds - state.ExamPausedSecondsAtStart));
+        var remainingSeconds = (int)Math.Ceiling(Math.Max(0, state.ExamQuestionTimeSeconds - elapsed));
+        return Valid("Sınav sorusu başlatıldı.", session.CurrentStep,
+            feedbackData: JsonSerializer.SerializeToElement(new { remainingSeconds }, JsonOptions));
+    }
+
     private static ExerciseActionValidationResponse AnswerQuestion(
         ExerciseSession session,
         SessionState state,
-        ExerciseActionRequest request)
+        ExerciseActionRequest request,
+        DateTime now)
     {
         if (IsSkimming(state) && (state.SkimmingProtocolVersion != 1 || !state.ReadingEndTime.HasValue))
             return Invalid("Önce metin incelemesini tamamlayın.");
@@ -2212,19 +2241,33 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                 null);
         }
 
-        var answer = request.IsTimeout
+        var exam = IsEngineType(state.EngineType, "exam_simulation");
+        var responseSeconds = Math.Max(0, (request.ResponseTime ?? 0) / 1000);
+        var timedOut = request.IsTimeout;
+        if (exam)
+        {
+            if (state.ExamQuestionId != question.QuestionId || !state.ExamQuestionStartedAt.HasValue)
+                return Invalid("Önce sınav sorusunu başlatın.");
+            var elapsed = Math.Max(0, (now - state.ExamQuestionStartedAt.Value).TotalSeconds
+                - Math.Max(0, session.TotalPausedSeconds - state.ExamPausedSecondsAtStart));
+            if (request.IsTimeout && elapsed < state.ExamQuestionTimeSeconds)
+                return Invalid("Soru süresi henüz dolmadı.");
+            timedOut |= elapsed >= state.ExamQuestionTimeSeconds;
+            responseSeconds = (int)Math.Min(state.ExamQuestionTimeSeconds, elapsed);
+        }
+        var answer = timedOut
             ? TimeoutAnswer
             : NormalizeOptionAnswer(request.Answer);
         if (answer is null)
             return Invalid("Cevap A, B, C veya D olmalıdır.");
 
-        var isCorrect = !request.IsTimeout
+        var isCorrect = !timedOut
             && string.Equals(answer, question.CorrectAnswer.Trim(), StringComparison.OrdinalIgnoreCase);
         session.RecordAnswer(
             question.QuestionId,
             answer,
             isCorrect,
-            Math.Max(0, (request.ResponseTime ?? 0) / 1000),
+            responseSeconds,
             question.BloomLevel,
             question.QuestionType);
         state.Answers.Add(new SessionAnswer
@@ -2232,7 +2275,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             QuestionId = question.QuestionId,
             Answer = answer,
             IsCorrect = isCorrect,
-            TimeSpentSeconds = Math.Max(0, (request.ResponseTime ?? 0) / 1000),
+            TimeSpentSeconds = responseSeconds,
             BloomLevel = question.BloomLevel,
             OrderIndex = question.OrderIndex,
             QuestionType = question.QuestionType
@@ -2240,7 +2283,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         var isAssessment = session.AssessmentAttemptId.HasValue;
         return new ExerciseActionValidationResponse(
             true,
-            request.IsTimeout
+            timedOut
                 ? (isAssessment ? "Süre doldu; cevap kaydedildi." : "Süre doldu!")
                 : (isAssessment ? "Cevap kaydedildi." : (isCorrect ? "Doğru cevap!" : "Yanlış cevap.")),
             null,
@@ -2251,7 +2294,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             isAssessment ? null : question.CorrectAnswer,
             isAssessment ? null : question.Explanation,
             null,
-            null);
+            exam ? JsonSerializer.SerializeToElement(new { timedOut, responseTimeSeconds = responseSeconds }, JsonOptions) : null);
     }
 
     private static ExerciseActionValidationResponse Advance(ExerciseSession session, SessionState state)
@@ -2817,6 +2860,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
 
     private static bool SupportsServerReadingMeasurement(SessionState state) =>
         state.Tachistoscope is null && IsReadingExerciseFlow(state)
+        && !IsEngineType(state.EngineType, "exam_simulation")
         && !IsVocabularyState(state)
         && !IsFocusExercise(state)
         && !IsVisualizationExercise(state.ExerciseTypeName) && !IsEngineType(state.EngineType, "visualization")
@@ -3689,6 +3733,10 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         public int ReadingPausedSeconds { get; set; }
         public long? ReadingPausedMilliseconds { get; set; }
         public int ReadingMinimumMs { get; set; }
+        public Guid? ExamQuestionId { get; set; }
+        public DateTime? ExamQuestionStartedAt { get; set; }
+        public int ExamPausedSecondsAtStart { get; set; }
+        public int ExamQuestionTimeSeconds { get; set; } = 60;
         public int ReadingMaximumMs { get; set; }
         public decimal? FinalWpm { get; set; }
         public decimal? ComprehensionScore { get; set; }
