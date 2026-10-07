@@ -4,7 +4,7 @@ test('tracking starts after validation and reports no measured gaze or WPM', asy
   const typeId = '76000000-0000-4000-8000-000000000002';
   let starts = 0, completed = 0; const errors = [];
   const configuration = { engineType: 'motion_path', engineConfig: { mode: 'tracking',
-    path: { type: 'circle' }, timing: { durationSeconds: 5, speedMs: 1250 }, content: { pointSize: 48 } } };
+    path: { type: 'circle' }, target: { type: 'arrow', color: '#ff0000', size: 'large' }, timing: { durationSeconds: 5, speedMs: 1250 } } };
   page.on('pageerror', error => errors.push(error.message));
   await page.addInitScript(() => localStorage.setItem('currentUser', JSON.stringify({ id: 'test-user' })));
   await page.route('**/api/**', async route => {
@@ -23,6 +23,8 @@ test('tracking starts after validation and reports no measured gaze or WPM', asy
   await page.locator('.start-button-large').click();
   await expect(page.locator('.tracking-instruction')).toContainText('Gözlerinizle noktayı takip edin');
   await expect(page.locator('.target-dot')).toHaveCSS('width', '48px');
+  await expect(page.locator('.target-dot')).toHaveCSS('background-color', 'rgb(255, 0, 0)');
+  await expect(page.locator('.target-dot')).toContainText('➜');
   await expect.poll(() => completed, { timeout: 15000 }).toBe(1);
   await expect(page.getByText('Göz hareketleri ölçülmedi', { exact: false })).toBeVisible();
   expect(starts).toBe(1); expect(errors).toEqual([]);
