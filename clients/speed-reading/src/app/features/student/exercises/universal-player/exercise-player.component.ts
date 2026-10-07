@@ -64,6 +64,7 @@ interface ExerciseData {
   difficultyLevel: number;
   configurationJson: string;
   exerciseTypeName?: string;
+  targetAgeGroupId?: string;
 }
 
 interface ParsedConfig {
@@ -669,25 +670,139 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
 
     const readingTextId = this.getConfiguredReadingTextId();
     if (!readingTextId) {
-      this.initializePreviewEngine();
+      if (!this.previewRequiresReadingText()) {
+        this.initializePreviewEngine();
+        return;
+      }
+      const level = Number(this.exercise?.difficultyLevel) || 1;
+      this.exerciseService.getReadingTexts(undefined, undefined, level, this.previewRequiresQuestions())
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: texts => {
+            const candidates = texts.filter((text: any) => text.isActive !== false
+              && Number(text.difficultyLevel) === level
+              && this.previewTextMatchesAge(text)
+              && (!text.exerciseId || text.exerciseId === this.exercise?.id));
+            const uses = this.getPreviewTextUses();
+            const ordered = candidates.map(text => ({ text, tie: Math.random() }))
+              .sort((a, b) => (uses.get(a.text.id) || 0) - (uses.get(b.text.id) || 0) || a.tie - b.tie)
+              .map(item => item.text.id);
+            this.loadPreviewReadingText(ordered.shift() || '', uses, ordered);
+          },
+          error: () => this.failPreviewReadingText()
+        });
       return;
     }
+    this.loadPreviewReadingText(readingTextId);
+  }
 
+  private loadPreviewReadingText(readingTextId: string, uses?: Map<string, number>, remaining: string[] = []): void {
+    const retry = () => remaining.length
+      ? this.loadPreviewReadingText(remaining.shift()!, uses, remaining)
+      : this.failPreviewReadingText();
+    if (!readingTextId) { retry(); return; }
     this.exerciseService.getReadingText(readingTextId)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: readingText => {
+          if (!(readingText.content || '').trim() || (readingText as any).isActive === false
+            || Number(readingText.difficultyLevel) !== (Number(this.exercise?.difficultyLevel) || 1)
+            || !this.previewTextMatchesAge(readingText)
+            || ((readingText as any).exerciseId && (readingText as any).exerciseId !== this.exercise?.id)) {
+            retry();
+            return;
+          }
           this.backendSessionConfig = this.createPreviewReadingConfig(readingText);
           this.comprehensionQuestions = this.backendSessionConfig['questions'] as any[];
-          this.initializePreviewEngine();
+          if (this.previewRequiresQuestions() && !this.comprehensionQuestions.length) {
+            retry();
+            return;
+          }
+          uses?.set(readingTextId, (uses.get(readingTextId) || 0) + 1);
+          if (this.parsedConfig?.['engineType'] === 'adaptive_fluency') {
+            this.loadPreviewTransferText(readingTextId);
+          } else {
+            this.initializePreviewEngine();
+          }
         },
-        error: error => {
-          // A preview remains usable with the exercise's own configuration if
-          // an optional reading-text lookup is unavailable.
-          console.warn('[ExercisePlayer] Preview reading text could not be loaded:', error);
-          this.initializePreviewEngine();
-        }
+        error: retry
       });
+  }
+
+  private getPreviewTextUses(): Map<string, number> {
+    const key = `${this.authService?.currentUserValue?.id || 'preview'}:${this.exercise?.id}`;
+    let uses = ExercisePlayerComponent.previewReadingUses.get(key);
+    if (!uses) {
+      uses = new Map<string, number>();
+      ExercisePlayerComponent.previewReadingUses.set(key, uses);
+    }
+    return uses;
+  }
+
+  private loadPreviewTransferText(primaryId: string): void {
+    const level = Number(this.exercise?.difficultyLevel) || 1;
+    this.exerciseService.getReadingTexts(undefined, undefined, level, true)
+      .pipe(takeUntil(this.destroy$)).subscribe({
+        next: texts => {
+          const ids = texts.filter((text: any) => text.id !== primaryId && text.isActive !== false
+            && this.previewTextMatchesAge(text)
+            && Number(text.difficultyLevel) === level && (!text.exerciseId || text.exerciseId === this.exercise?.id))
+            .map(text => text.id);
+          const loadNext = (): void => {
+            const id = ids.shift();
+            if (!id) { this.failPreviewReadingText(); return; }
+            this.exerciseService.getReadingText(id).pipe(takeUntil(this.destroy$)).subscribe({
+              next: text => {
+                const config = this.createPreviewReadingConfig(text);
+                if (!text.content?.trim() || (text as any).isActive === false
+                  || Number(text.difficultyLevel) !== level
+                  || !this.previewTextMatchesAge(text)
+                  || ((text as any).exerciseId && (text as any).exerciseId !== this.exercise?.id)
+                  || !(config['questions'] as any[]).length) { loadNext(); return; }
+                Object.assign(this.backendSessionConfig, {
+                  content: this.backendSessionConfig['readingTextContent'],
+                  adaptiveTransferContent: text.content,
+                  adaptiveTransferTitle: text.title,
+                  adaptiveTransferWordCount: config['wordCount'],
+                  adaptiveTransferQuestions: config['questions']
+                });
+                this.backendSessionConfig['engineConfig'] = {
+                  ...this.parsedConfig?.['engineConfig'],
+                  ...this.backendSessionConfig
+                };
+                this.initializePreviewEngine();
+              }, error: loadNext
+            });
+          };
+          loadNext();
+        }, error: () => this.failPreviewReadingText()
+      });
+  }
+
+  private static readonly previewReadingUses = new Map<string, Map<string, number>>();
+
+  private previewTextMatchesAge(text: any): boolean {
+    const ageGroup = this.exercise?.targetAgeGroupId;
+    return !ageGroup || !text.targetAgeGroupConfigurationId || text.targetAgeGroupConfigurationId === ageGroup;
+  }
+
+  private previewRequiresReadingText(): boolean {
+    const type = this.parsedConfig?.['engineType'] || '';
+    return ['word_highlight', 'word_group', 'adaptive_fluency', 'text_fade', 'reading_comprehension', 'free_reading', 'exam_simulation',
+      'scanning', 'scan_find', 'skimming', 'regression_reduction', 'subvocalization_reduction'].includes(type)
+      || (type === 'text_stream' && this.exercise?.exerciseTypeName?.toLowerCase() !== 'tachistoscope'
+        && (this.exercise?.exerciseTypeName?.toLowerCase().includes('rsvp')
+          || String(this.parsedConfig?.['engineConfig']?.['mode'] ?? this.parsedConfig?.['mode']).toLowerCase() === 'rsvp'));
+  }
+
+  private previewRequiresQuestions(): boolean {
+    return ['reading_comprehension', 'exam_simulation', 'adaptive_fluency', 'skimming'].includes(this.parsedConfig?.['engineType'] || '')
+      || (this.parsedConfig?.['engineConfig']?.['readingPurpose'] ?? this.parsedConfig?.['readingPurpose']) === 'evaluation';
+  }
+
+  private failPreviewReadingText(): void {
+    this.error = 'Bu egzersize uygun yayımlanmış metin yüklenemedi. Metin ve gerekiyorsa sorularını kontrol edin.';
+    this.finishLoading();
   }
 
   private initializePreviewEngine(): void {
@@ -3107,6 +3222,13 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       && this.getExpansionAnswerSlots().every(index => !!this.expansionAnswers[index]?.trim());
   }
 
+  onExpansionAnswerInput(index: number, event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if ((event as InputEvent).isComposing || this.engineState.isPaused
+      || input.value.length < this.getExpansionAnswerMaxLength(index)) return;
+    this.visualExpansionArea?.nativeElement.querySelectorAll<HTMLInputElement>('.char-input')[index + 1]?.focus();
+  }
+
   submitExpansionAnswer(): void {
     if (this.engine?.engineType !== 'visual_expansion' || !this.canSubmitExpansionAnswer()) return;
     this.engine.handleInput({ answers: this.expansionAnswers.map(answer => answer.trim()) });
@@ -3221,13 +3343,6 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       { pos: 0.66, r: 255, g: 152, b: 0 },  // Turuncu
       { pos: 1, r: 244, g: 67, b: 54 }      // Kırmızı
     ];
-
-  onExpansionAnswerInput(index: number, event: Event): void {
-    const input = event.target as HTMLInputElement;
-    if ((event as InputEvent).isComposing || this.engineState.isPaused
-      || input.value.length < this.getExpansionAnswerMaxLength(index)) return;
-    this.visualExpansionArea?.nativeElement.querySelectorAll<HTMLInputElement>('.char-input')[index + 1]?.focus();
-  }
 
     // İki renk arasında interpolasyon
     for (let i = 0; i < colors.length - 1; i++) {

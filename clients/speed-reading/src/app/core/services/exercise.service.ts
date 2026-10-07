@@ -176,12 +176,14 @@ export class ExerciseService {
    * Backend returns: ApiResponse<ReadingText[]>
    * Service receives: ReadingText[] (auto-unwrapped)
    */
-  getReadingTexts(exerciseId?: string, category?: string, difficultyLevel?: number): Observable<ReadingText[]> {
+  getReadingTexts(exerciseId?: string, category?: string, difficultyLevel?: number, onlyWithQuestions = false): Observable<ReadingText[]> {
     let url = `${this.API_URL}/reading-texts`;
     const params: string[] = [];
     if (exerciseId) params.push(`exerciseId=${exerciseId}`);
     if (category) params.push(`category=${category}`);
     if (difficultyLevel !== undefined) params.push(`difficultyLevel=${difficultyLevel}`);
+    params.push('isActive=true');
+    if (onlyWithQuestions) params.push('onlyWithQuestions=true');
     if (params.length > 0) url += `?${params.join('&')}`;
     return this.http.get<ReadingText[]>(url);
   }

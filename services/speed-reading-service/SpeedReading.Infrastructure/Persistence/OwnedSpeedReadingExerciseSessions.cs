@@ -141,7 +141,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             var isFreeText = ExerciseConfigurationRules.NormalizeEngineType(exerciseEngineType) == "free_reading";
             var minimumWords = isFreeText ? ReadPositiveInt(explicitContent, "minWordCount") ?? ReadPositiveInt(ReadObject(explicitConfig, "content"), "minWordCount") ?? 0 : 0;
             var maximumWords = isFreeText ? ReadPositiveInt(explicitContent, "maxWordCount") ?? ReadPositiveInt(ReadObject(explicitConfig, "content"), "maxWordCount") ?? 0 : 0;
-            var strictTextLevel = IsGrouping(new SessionState { EngineType = exerciseEngineType, ExerciseTypeName = exerciseTypeName })
+            var strictTextLevel = IsEngineType(exerciseEngineType, "word_highlight") || IsGrouping(new SessionState { EngineType = exerciseEngineType, ExerciseTypeName = exerciseTypeName })
                 || IsRsvp(exerciseTypeName, exerciseEngineType, explicitConfig)
                 || ExerciseConfigurationRules.NormalizeEngineType(exerciseEngineType) is "free_reading" or "text_fade" or "regression_reduction" or "subvocalization_reduction" or "skimming";
             var readingTextMatches = await db.ReadingTexts
@@ -326,8 +326,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                 var freeMaximumWords = isFreeReading ? ReadPositiveInt(freeContent, "maxWordCount") ?? ReadPositiveInt(ReadObject(parsedConfiguration, "content"), "maxWordCount") ?? 0 : 0;
                 var isScanning = normalizedEngineType is "scan_find" or "scanning" or "skimming";
                 var isSkimming = normalizedEngineType == "skimming";
-                var isGrouping = normalizedEngineType == "word_highlight"
-                    && exerciseTypeName.Equals("Chunking", StringComparison.OrdinalIgnoreCase);
+                var isGrouping = normalizedEngineType == "word_highlight";
                 var isTextFade = normalizedEngineType == "text_fade";
                 var isRsvp = IsRsvp(exerciseTypeName, exerciseEngineType, parsedConfiguration);
                 var isRegression = normalizedEngineType == "regression_reduction";
@@ -371,7 +370,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                     .Select(item => (Guid?)item.Id)
                     .FirstOrDefaultAsync(token);
                 if (isGrouping && !readingTextId.HasValue)
-                    throw new InvalidOperationException("Seçilen Gruplama seviyesine uygun aktif metin bulunamadı.");
+                    throw new InvalidOperationException("Seçilen egzersiz seviyesine uygun aktif metin bulunamadı.");
                 if (isRsvp && !readingTextId.HasValue)
                     throw new InvalidOperationException("Seçilen RSVP seviyesine uygun aktif metin bulunamadı.");
                 if (isTextFade && !readingTextId.HasValue)
