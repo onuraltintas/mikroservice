@@ -16,6 +16,7 @@
 - Canlı SPA yolları, yeni service worker sürüm işareti ve frontend konteynır sağlığı doğrulandı.
 - Backend `/health/ready`: Healthy.
 - Oturumsuz `/api/speed-reading/student-program/my-programs`: 401; erişim koruması devrede.
+- Yayın sonrası 08:05–08:19 UTC arasında birer dakika aralıkla 15 kontrol: tamamında Healthy ve HTTP 200; örneklenen sayfa yanıtları 42–136 ms. Son bir dakikalık backend günlüklerinde `fail:`/`Unhandled exception` işaretleri görülmedi. Bu kontrol tüm kullanıcı işlemlerinin hata oranı ölçümü değildir.
 
 Tarayıcı regresyonları yerel mock API ile, PostgreSQL testleri geçici Testcontainers veritabanında çalıştırıldı. Canlıda gerçek kullanıcı hesabıyla tüm egzersizlerin uçtan uca tamamlandığı iddia edilmez.
 
