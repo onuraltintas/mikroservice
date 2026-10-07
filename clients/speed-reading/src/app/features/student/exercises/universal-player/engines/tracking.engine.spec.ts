@@ -10,6 +10,16 @@ describe('Tracking motion timing', () => {
     onAction: () => undefined, onError: () => undefined, onComplete: value => result = value };
   beforeEach(() => result = undefined);
 
+  it('uses tracking for legacy EyeTracking configuration and cycle timing on horizontal paths', () => {
+    spyOn(window, 'requestAnimationFrame').and.returnValue(1);
+    let now = 1000; spyOn(Date, 'now').and.callFake(() => now);
+    const engine = new MotionPathEngine();
+    engine.initialize({ exerciseTypeName: 'EyeTracking', path: { type: 'horizontal' }, timing: { speedMs: 1000, durationSeconds: 60 } }, callbacks);
+    expect(engine.getMode()).toBe('tracking');
+    engine.start(); now += 250; (engine as any).animate();
+    expect(engine.getTargetPosition().x).toBeCloseTo(50, 5); engine.destroy();
+  });
+
   it('uses the chosen speed level when custom settings disable legacy cycle speed', () => {
     spyOn(window, 'requestAnimationFrame').and.returnValue(1);
     let now = 1000; spyOn(Date, 'now').and.callFake(() => now);

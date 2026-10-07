@@ -13,13 +13,16 @@ public sealed class TrackingSessionTests
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public async Task RejectsEarlyCompletionThenPersistsAnUnmeasuredTimedSession(bool rootTiming)
+    [InlineData(null)]
+    public async Task RejectsEarlyCompletionThenPersistsAnUnmeasuredTimedSession(bool? rootTiming)
     {
         await using var db = new OwnedSpeedReadingDbContext(new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>()
             .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
         var student = Guid.NewGuid();
         var type = ExerciseType.Create(Guid.NewGuid(), "EyeTracking", "Takip", "motion_path");
-        var exercise = Exercise.Create("Takip", "motion_path", rootTiming
+        var exercise = Exercise.Create("Takip", "motion_path", rootTiming is null
+            ? """{"timing":{"durationSeconds":5},"path":{"type":"circle"}}"""
+            : rootTiming.Value
             ? """{"timing":{"durationSeconds":5},"engineConfig":{"mode":"tracking","path":{"type":"circle"}}}"""
             : """{"mode":"tracking","timing":{"durationSeconds":5},"path":{"type":"circle"}}""", 1, student, type.Id);
         db.ExerciseTypes.Add(type); db.Exercises.Add(exercise); await db.SaveChangesAsync();
@@ -27,6 +30,7 @@ public sealed class TrackingSessionTests
         var service = (ISpeedReadingExerciseSessions)Activator.CreateInstance(implementation,
             BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, [db], null)!;
         var start = await service.StartAsync(student, new() { ExerciseId = exercise.Id });
+        Assert.Equal("tracking", start.InitialData.GetProperty("textStreamMode").GetString());
         await Assert.ThrowsAsync<BusinessRuleException>(() => service.CompleteAsync(student, start.SessionId, new()));
         Assert.True((await service.ValidateActionAsync(student, start.SessionId, new() { Action = "tracking_start" })).IsValid);
         await Assert.ThrowsAsync<BusinessRuleException>(() => service.CompleteAsync(student, start.SessionId, new()));
