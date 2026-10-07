@@ -54,7 +54,8 @@ public sealed class ExamSessionTests
         var state = JsonNode.Parse(session.SessionDataJson)!;
         state["examQuestionStartedAt"] = DateTime.UtcNow.AddSeconds(-61);
         session.SetState(state.ToJsonString()); await db.SaveChangesAsync();
-        await service.ValidateActionAsync(student, start.SessionId, new() { Action = "exam_question_start", QuestionId = question });
+        var repeatedStart = await service.ValidateActionAsync(student, start.SessionId, new() { Action = "exam_question_start", QuestionId = question });
+        Assert.Equal(0, repeatedStart.FeedbackData!.Value.GetProperty("remainingSeconds").GetInt32());
         var answer = await service.ValidateActionAsync(student, start.SessionId, new() { Action = "answer_question", QuestionId = question, Answer = "A" });
         Assert.False(answer.IsCorrect);
         Assert.True(answer.FeedbackData!.Value.GetProperty("timedOut").GetBoolean());
