@@ -2958,14 +2958,18 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
         correctAnswer: lastTrial.stimulus
       };
 
-      // Clear feedback after delay - increased to 1.2s
-      setTimeout(() => {
-        this.tachistoscopeFeedback = null;
-        this.cdr.detectChanges();
-      }, 1200);
     }
 
     this.cdr.detectChanges();
+  }
+
+  isShowingTachistoscopeFeedback(): boolean {
+    return !!this.tachistoscopeFeedback && !this.isAssessmentMode
+      && !this.isShowingFixation() && !this.isShowingStimulus() && !this.isWaitingForAnswer();
+  }
+
+  getTachistoscopeCorrectCount(): number {
+    return (this.engine as TextStreamEngine)?.getCorrectCount?.() || 0;
   }
 
   // Text Fade helpers

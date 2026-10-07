@@ -34,7 +34,9 @@ describe('Tachistoscope runtime', () => {
     engine.start();
     tick(100);
     engine.handleInput({ answer: engine.getCurrentStimulus() });
-    tick(75);
+    tick(599);
+    expect(engine.isShowingContent()).toBeFalse();
+    tick(1);
     expect(engine.isShowingContent()).toBeTrue();
     engine.pause();
     expect(engine.isShowingContent()).toBeFalse();
@@ -73,7 +75,7 @@ describe('Tachistoscope runtime', () => {
     for (let round = 0; round < 2; round++) {
       tick(engine.getCurrentDuration());
       engine.handleInput({ answer: engine.getCurrentStimulus() });
-      tick(0);
+      tick(600);
     }
     expect(engine.getCurrentDuration()).toBe(450);
     expect(engine.getCurrentStimulus().length).toBe(4);
@@ -85,12 +87,15 @@ describe('Tachistoscope runtime', () => {
       tachistoscope: { count: 3, round: 2, correctCount: 1, incorrectCount: 1, displayDurationMs: 50 } });
     engine.start();
     expect(engine.state.currentStep).toBe(2);
+    expect(engine.getCorrectCount()).toBe(1);
+    expect(engine.state.errors).toBe(1);
     engine.reconcileServerResponse(actions[0], { isValid: true,
       feedbackData: { round: 2, stimulus: 'bir', displayDurationMs: 50 } });
     tick(50); engine.handleInput({ answer: 'bir' });
     engine.reconcileServerResponse(actions[1], { isValid: true, isCorrect: true,
       feedbackData: { round: 3 } });
-    tick(500);
+    expect(engine.getCorrectCount()).toBe(2);
+    tick(600);
     expect(result()?.accuracy).toBe(67);
     expect(result()?.errors).toBe(1);
     engine.destroy();
@@ -118,7 +123,7 @@ describe('Tachistoscope runtime', () => {
     engine.reconcileServerResponse(answer, { isValid: true, isCorrect: true, isCompleted: true,
       feedbackData: { round: 1, displayDurationMs: 50, targetLength: 2,
         trial: { stimulus: 'İZ', userAnswer: 'iz', isCorrect: true, responseTimeMs: 100, displayDurationMs: 50 } } });
-    tick(500);
+    tick(600);
     expect(result()?.accuracy).toBe(100);
     expect(result()?.details.wpm).toBeNull();
     engine.destroy();

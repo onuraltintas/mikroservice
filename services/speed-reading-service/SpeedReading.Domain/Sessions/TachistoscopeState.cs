@@ -37,6 +37,8 @@ public sealed class TachistoscopeState
         if (candidates.Length == 0) throw new InvalidOperationException("Takistoskop için uygun içerik bulunamadı.");
         var distance = candidates.Min(word => Math.Abs(word.Length - TargetLength));
         candidates = candidates.Where(word => Math.Abs(word.Length - TargetLength) == distance).ToArray();
+        var minimumUses = candidates.Min(word => Trials.Count(trial => Normalize(trial.Stimulus) == Normalize(word)));
+        candidates = candidates.Where(word => Trials.Count(trial => Normalize(trial.Stimulus) == Normalize(word)) == minimumUses).ToArray();
         return candidates[Random.Shared.Next(candidates.Length)];
     }
 

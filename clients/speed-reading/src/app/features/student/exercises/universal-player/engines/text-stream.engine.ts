@@ -306,6 +306,9 @@ export class TextStreamEngine implements BaseEngine {
         }
         const distance = Math.min(...candidates.map(word => Math.abs(word.length - this.targetLength)));
         candidates = candidates.filter(word => Math.abs(word.length - this.targetLength) === distance);
+        const uses = (word: string) => this.trials.filter(trial => trial.stimulus.toLocaleLowerCase('tr-TR') === word.toLocaleLowerCase('tr-TR')).length;
+        const minimumUses = Math.min(...candidates.map(uses));
+        candidates = candidates.filter(word => uses(word) === minimumUses);
         return candidates[Math.floor(Math.random() * candidates.length)];
     }
 
@@ -353,7 +356,7 @@ export class TextStreamEngine implements BaseEngine {
         this.callbacks.onStateChange({ ...this.state });
         if (this.state.isPaused) return;
         this.scheduleTransition(() => this.showNextStimulus(),
-            this.currentStimulusIndex >= this.stimuli.length ? 500 : this.config.timing.intervalMs);
+            Math.max(600, this.config.timing.intervalMs));
     }
 
     start(): void {
@@ -681,10 +684,10 @@ export class TextStreamEngine implements BaseEngine {
 
         // Check completion or continue
         if (this.currentStimulusIndex >= this.stimuli.length) {
-            this.scheduleTransition(() => this.complete(), 500);
+            this.scheduleTransition(() => this.complete(), 600);
         } else {
             // Respect the configured interval before the next stimulus.
-            this.scheduleTransition(() => this.showNextStimulus(), this.config.timing.intervalMs);
+            this.scheduleTransition(() => this.showNextStimulus(), Math.max(600, this.config.timing.intervalMs));
         }
     }
 
@@ -834,5 +837,9 @@ export class TextStreamEngine implements BaseEngine {
 
     getLastTrialResult(): TrialRecord | null {
         return this.trials.length > 0 ? this.trials[this.trials.length - 1] : null;
+    }
+
+    getCorrectCount(): number {
+        return this.correctCount;
     }
 }

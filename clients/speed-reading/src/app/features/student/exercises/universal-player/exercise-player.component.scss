@@ -1218,6 +1218,23 @@
     margin: 24px 0;
     position: relative;
     padding: 32px;
+
+    > .fixation-cross,
+    > .stimulus-display {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        overflow-wrap: anywhere;
+    }
+
+    > .feedback-display {
+        max-width: 100%;
+        text-align: center;
+        overflow-wrap: anywhere;
+    }
 }
 
 .fixation-cross {

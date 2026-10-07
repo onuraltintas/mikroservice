@@ -374,7 +374,7 @@
             </div>
 
             <!-- Feedback Display -->
-            <div *ngIf="tachistoscopeFeedback" class="feedback-display"
+            <div *ngIf="tachistoscopeFeedback && isShowingTachistoscopeFeedback()" class="feedback-display"
                 [class.correct]="tachistoscopeFeedback.isCorrect" [class.wrong]="!tachistoscopeFeedback.isCorrect">
                 <span class="material-icons">{{ tachistoscopeFeedback.isCorrect ? 'check_circle' : 'cancel' }}</span>
                 <span>{{ tachistoscopeFeedback.isCorrect ? 'Doğru!' : 'Yanlış: ' + tachistoscopeFeedback.correctAnswer
@@ -382,13 +382,17 @@
             </div>
 
             <!-- Empty state -->
-            <div *ngIf="!isShowingFixation() && !isShowingStimulus() && !isWaitingForAnswer() && !tachistoscopeFeedback"
+            <div *ngIf="!isShowingFixation() && !isShowingStimulus() && !isWaitingForAnswer() && !isShowingTachistoscopeFeedback()"
                 class="waiting-state">
                 <div class="pulse-dot"></div>
             </div>
         </div>
 
         <div class="game-stats">
+            <ng-container *ngIf="isTachistoscopeMode() && !isAssessmentMode">
+                <div class="stat"><span class="label">Doğru</span><span class="value">{{ getTachistoscopeCorrectCount() }}</span></div>
+                <div class="stat"><span class="label">Yanlış</span><span class="value">{{ engineState.errors }}</span></div>
+            </ng-container>
             <div class="stat">
                 <span class="label">{{ isTachistoscopeMode() ? 'Gösterim süresi' : 'Gösterim temposu' }}</span>
                 <span class="value">{{ isTachistoscopeMode() ? getCurrentDuration() : getCurrentTextStreamWpm() }} {{ isTachistoscopeMode() ? 'ms' : 'kelime/dk' }}</span>
