@@ -2,6 +2,14 @@ import { ExercisePlayerComponent } from './exercise-player.component';
 import { getCustomPreviewControls } from './custom-preview-settings';
 
 describe('exam presentation', () => {
+  it('restores exam answers after refreshing the page', () => {
+    const player = Object.create(ExercisePlayerComponent.prototype) as any;
+    player.isAssessmentMode = false; player.backendSessionConfig = { engineType: 'exam_simulation' }; player.questionAnswers = []; player.currentQuestionIndex = 0;
+    player.comprehensionQuestions = [{ questionId: 'one' }, { questionId: 'two' }];
+    player.restoreAssessmentQuestionProgress({ answers: [{ questionId: 'one', answer: 'A', isCorrect: true, timeSpentSeconds: 3 }] });
+    expect(player.questionAnswers.length).toBe(1);
+    expect(player.currentQuestionIndex).toBe(1);
+  });
   it('does not install a timer after a pending question start was cancelled', async () => {
     const player = Object.create(ExercisePlayerComponent.prototype) as any;
     player.engine = { engineType: 'exam_simulation' }; player.currentQuestionIndex = 0;
