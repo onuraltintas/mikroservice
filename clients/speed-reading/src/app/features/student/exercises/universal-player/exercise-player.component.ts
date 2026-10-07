@@ -1849,7 +1849,8 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   getQuestionContent(): string {
     const q = this.getCurrentQuestion();
     if (!q) return '';
-    return q.Content || q.content || q.Paragraph || q.paragraph || q.Text || q.text || '';
+    return q.Content || q.content || q.Paragraph || q.paragraph || q.Text || q.text
+      || (this.engine?.engineType === 'exam_simulation' ? this.getComprehensionText() : '');
   }
 
   // Helper to get target WPM from config
@@ -3468,7 +3469,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   }
 
   getCurrentReadingWpm(): number {
-    if (this.engine?.engineType === 'reading_comprehension' || this.engine?.engineType === 'free_reading') return 0;
+    if (this.engine?.engineType === 'reading_comprehension' || this.engine?.engineType === 'free_reading' || this.engine?.engineType === 'exam_simulation') return 0;
     if (this.engine?.engineType === 'reading_comprehension' || this.engine?.engineType === 'exam_simulation' || this.engine?.engineType === 'adaptive_fluency') {
       const wordCount = (this.engine as any).getWordCount?.() || 0;
       const timeMinutes = this.engineState.timeElapsed / 1000 / 60;
