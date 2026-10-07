@@ -75,6 +75,9 @@ export class RegressionReductionEngine implements BaseEngine {
 
         // Load content
         const text = resolveReadingText({ ...sessionData, ...root }, '');
+        if (!text.trim()) {
+            throw new Error('Regresyon Azaltma için geçerli bir metin yüklenemedi.');
+        }
         this.words = text.split(/\s+/).filter((w: string) => w.length > 0);
         const questions = read('questions');
         this.questions = Array.isArray(questions)

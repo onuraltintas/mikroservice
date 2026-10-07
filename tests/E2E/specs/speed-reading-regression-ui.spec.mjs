@@ -9,13 +9,14 @@ const question = { questionId, questionText: 'Metindeki ilk kelime hangisi?', op
 const configuration = { engineType: 'regression_reduction', readingTextId: textId,
   engineConfig: { wpm: 600, chunkSize: 2, maskingType: 'trailing' } };
 
-async function prepare(page, role = 'Admin', withQuestions = false) {
+async function prepare(page, role = 'Admin', withQuestions = false, unpinned = false) {
   const errors = [], writes = [];
   page.on('pageerror', error => errors.push(error.message));
   await page.addInitScript(() => localStorage.setItem('currentUser', JSON.stringify({ id: 'test-user' })));
   const exercise = { id: exerciseId, exerciseTypeId: typeId, title: 'Regresyon testi', difficultyLevel: 3,
     exerciseTypeName: 'RegressionReduction', configurationJson: JSON.stringify(withQuestions
-      ? { ...configuration, engineConfig: { ...configuration.engineConfig, readingPurpose: 'evaluation' } } : configuration) };
+      ? { ...configuration, engineConfig: { ...configuration.engineConfig, readingPurpose: 'evaluation' } }
+      : unpinned ? { ...configuration, readingTextId: undefined } : configuration) };
   await page.route('**/api/**', async route => {
     const request = route.request(), path = new URL(request.url()).pathname;
     let response = { items: [], totalCount: 0 };
@@ -28,7 +29,8 @@ async function prepare(page, role = 'Admin', withQuestions = false) {
     } else if (path.endsWith('/exercise-types')) response = { items: [{ id: typeId, name: 'RegressionReduction', displayName: 'Regresyon Azaltma', engineType: 'regression_reduction', isActive: true }], totalCount: 1 };
     else if (path.endsWith(`/exercises/${exerciseId}`)) response = exercise;
     else if (path.endsWith('/exercises')) response = { items: [exercise], totalCount: 1 };
-    else if (path.endsWith(`/reading-texts/${textId}`)) response = { id: textId, content: 'bir iki üç dört beş', wordCount: 5, questions: withQuestions ? [question] : [] };
+    else if (path.endsWith('/reading-texts')) response = [{ id: textId, difficultyLevel: 3, isActive: true }];
+    else if (path.endsWith(`/reading-texts/${textId}`)) response = { id: textId, content: 'bir iki üç dört beş', difficultyLevel: 3, isActive: true, wordCount: 5, questions: withQuestions ? [question] : [] };
     else if (path.includes('/profile/status')) response = { hasAgeGroupConfiguration: true };
     else if (path.endsWith('/my-modules')) response = { hasSpeedReading: true };
     await route.fulfill({ json: response });
@@ -37,6 +39,18 @@ async function prepare(page, role = 'Admin', withQuestions = false) {
   await expect(page.getByRole('heading', { name: 'Regresyon Azaltma', exact: true })).toBeVisible();
   return { errors, writes };
 }
+
+test('admin preview loads catalogue text when exercise has no pinned text', async ({ page }) => {
+  await prepare(page, 'Admin', false, true);
+  await page.getByRole('button', { name: 'Özel ayarlarla dene' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Denemeyi başlat' }).click();
+  await expect(page.locator('.start-button-large')).toBeVisible();
+  await page.clock.install(); await page.clock.pauseAt(new Date());
+  await page.locator('.start-button-large').click();
+  await expect(page.locator('.regression-word')).toHaveCount(5);
+  await expect(page.locator('.regression-word.active')).toHaveCount(2);
+  await expect(page.getByRole('status').filter({ hasText: /Önizleme sonucu.*kaydedilmedi/ })).toHaveCount(0);
+});
 
 for (const role of ['Admin', 'Teacher']) test(`${role} custom preview displays effective pace, pauses and does not save results`, async ({ page }) => {
   const { errors, writes } = await prepare(page, role);
