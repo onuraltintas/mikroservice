@@ -26,7 +26,7 @@ async function prepare(page, role = 'Admin') {
     } else if (path.endsWith('/exercise-types')) response = { items: [{ id: typeId, name: 'Scanning', displayName: 'Tarama', engineType: 'scanning', isActive: true }], totalCount: 1 };
     else if (path.endsWith(`/exercises/${exerciseId}`)) response = exercise;
     else if (path.endsWith('/exercises')) response = { items: [exercise], totalCount: 1, pageNumber: 1, pageSize: 100 };
-    else if (path.endsWith(`/reading-texts/${textId}`)) response = { id: textId, title: 'Metin', content: '“IŞIK” [İNCİ] başka', wordCount: 3, questions: [] };
+    else if (path.endsWith(`/reading-texts/${textId}`)) response = { id: textId, title: 'Metin', content: '“IŞIK” [İNCİ] başka', difficultyLevel: 1, isActive: true, wordCount: 3, questions: [] };
     else if (path.includes('/profile/status')) response = { hasAgeGroupConfiguration: true };
     else if (path.endsWith('/my-modules')) response = { hasSpeedReading: true };
     await route.fulfill({ json: response });
@@ -54,6 +54,16 @@ test('custom targets, Turkish words and keyboard completion without preview writ
   await page.locator('.scan-word').first().focus();
   await page.keyboard.press('Enter');
   await expect(page.locator('.scan-word').first()).toHaveAttribute('aria-pressed', 'true');
+  const found = page.locator('.target-word.found');
+  await expect(found).toHaveCount(1);
+  await expect(found.locator('svg[aria-label="Bulundu"]')).toBeVisible();
+  await expect(found).not.toContainText('check_circle');
+  const fits = await found.evaluate(element => {
+    const chip = element.getBoundingClientRect();
+    const icon = element.querySelector('svg').getBoundingClientRect();
+    return icon.right <= chip.right && icon.left >= chip.left;
+  });
+  expect(fits).toBe(true);
   await page.locator('.scan-word').nth(1).click();
   await page.locator('.scan-word').nth(2).click();
   await expect(page.getByText('Önizleme sonucu — kaydedilmedi.', { exact: true })).toBeVisible();

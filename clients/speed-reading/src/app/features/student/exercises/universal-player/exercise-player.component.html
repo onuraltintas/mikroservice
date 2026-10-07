@@ -482,7 +482,7 @@
                         [class.passed]="chunkIdx < getCurrentChunkIndex()"
                         [class.upcoming]="chunkIdx > getCurrentChunkIndex()"
                         [ngClass]="'font-' + getHighlightFontSize()">
-                        <span *ngFor="let word of chunk.words" class="word-item">{{ word }}</span>
+                        <span *ngFor="let word of chunk.words" class="word-item">{{ word }} </span>
                     </span>
                     <div *ngIf="chunk.hasNewline" class="line-break"></div>
                 </ng-container>
@@ -681,8 +681,12 @@
             <div class="targets-list">
                 <span *ngFor="let target of getScanTargets()" class="target-word"
                     [class.found]="isScanTargetFound(target)">
-                    {{ target }}
-                    <span class="material-icons" *ngIf="isScanTargetFound(target)" class="found-icon">check_circle</span>
+                    <span class="target-label">{{ target }}</span>
+                    <svg *ngIf="isScanTargetFound(target)" class="found-icon" viewBox="0 0 24 24"
+                        role="img" aria-label="Bulundu" focusable="false">
+                        <path d="M5 12l4 4L19 6" fill="none" stroke="currentColor" stroke-width="3"
+                            stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
                 </span>
             </div>
         </div>
