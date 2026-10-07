@@ -9,6 +9,27 @@ describe('Tracking motion timing', () => {
     onAction: () => undefined, onError: () => undefined, onComplete: value => result = value };
   beforeEach(() => result = undefined);
 
+  it('uses ceiling consistently for millisecond duration and preserves remaining jump delay', fakeAsync(() => {
+    const engine = new MotionPathEngine();
+    engine.initialize({ mode: 'tracking', path: { type: 'two_point_jump' }, timing: { durationMs: 5100 }, movement: { jumpIntervalMs: 1000 } }, callbacks);
+    engine.start(); tick(900); engine.pause(); tick(2000); engine.resume();
+    tick(100); expect(engine.state.currentStep).toBe(2);
+    tick(4100); expect(result).toBeUndefined();
+    tick(900); expect(result).toBeDefined(); engine.destroy();
+  }));
+
+  it('keeps horizontal movement bounded after a long frame and restarts at a visible margin', () => {
+    spyOn(window, 'requestAnimationFrame').and.returnValue(1);
+    let now = 1000; spyOn(Date, 'now').and.callFake(() => now);
+    const engine = new MotionPathEngine();
+    engine.initialize({ mode: 'tracking', path: { type: 'horizontal' }, timing: { durationSeconds: 60 } }, callbacks);
+    engine.start();
+    expect(engine.getTargetPosition().x).toBeGreaterThanOrEqual(5);
+    now += 3000; (engine as any).animate();
+    expect(engine.getTargetPosition().x).toBeGreaterThanOrEqual(5);
+    expect(engine.getTargetPosition().x).toBeLessThanOrEqual(95); engine.destroy();
+  });
+
   it('moves the same distance for the same elapsed time at different frame rates', () => {
     spyOn(window, 'requestAnimationFrame').and.returnValue(1);
     let now = 1000; spyOn(Date, 'now').and.callFake(() => now);
