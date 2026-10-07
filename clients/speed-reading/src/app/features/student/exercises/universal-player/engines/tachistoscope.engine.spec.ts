@@ -3,6 +3,15 @@ import { EngineCallbacks, EngineResult } from './base-engine.interface';
 import { TextStreamEngine } from './text-stream.engine';
 
 describe('Tachistoscope runtime', () => {
+  it('prefers unused equally sized preview words', () => {
+    const { engine } = create({ Words: ['bir', 'iki', 'ses'], adaptive: { enabled: false } });
+    const runtime = engine as any;
+    runtime.currentStimulus = 'iki';
+    runtime.trials = [{ stimulus: 'bir' }, { stimulus: 'iki' }];
+    spyOn(Math, 'random').and.returnValue(0);
+    expect(runtime.selectPreviewStimulus()).toBe('ses');
+    engine.destroy();
+  });
   function create(config: Record<string, unknown>) {
     const actions: any[] = [];
     let result: EngineResult | undefined;

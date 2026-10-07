@@ -6,6 +6,15 @@ namespace SpeedReading.Application.UnitTests;
 public sealed class TachistoscopeRoundTests
 {
     [Fact]
+    public void Selection_prefers_least_used_words_of_the_appropriate_length()
+    {
+        var state = new TachistoscopeState { TargetLength = 3, AdaptiveEnabled = false, Pool = ["bir", "iki", "ses"] };
+        state.Record("bir", "bir", 100);
+        state.Record("iki", "iki", 100);
+        for (var i = 0; i < 50; i++) state.SelectStimulus().Should().Be("ses");
+    }
+
+    [Fact]
     public void Legacy_assessment_is_restarted_without_replacing_its_unique_session()
     {
         var attemptId = Guid.NewGuid();
