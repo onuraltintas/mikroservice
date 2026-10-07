@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Text.Json.Nodes;
 using Microsoft.EntityFrameworkCore;
 using SpeedReading.Application.ExerciseSessions;
 using SpeedReading.Domain.Catalog;
@@ -29,13 +30,36 @@ public sealed class ExamSessionTests
             new() { Action = "answer_question", QuestionId = question, Answer = "A", ResponseTime = 999999 })).IsValid);
         Assert.True((await service.ValidateActionAsync(student, start.SessionId,
             new() { Action = "exam_question_start", QuestionId = question })).IsValid);
+        Assert.False((await service.ValidateActionAsync(student, start.SessionId,
+            new() { Action = "answer_question", QuestionId = question, IsTimeout = true })).IsValid);
         Assert.True((await service.ValidateActionAsync(student, start.SessionId,
             new() { Action = "answer_question", QuestionId = question, Answer = "A", ResponseTime = 999999 })).IsValid);
         var result = await service.CompleteAsync(student, start.SessionId, new());
         Assert.Null(result.RawWPM);
         Assert.Equal(100, result.ComprehensionScore);
+        var state = JsonNode.Parse((await db.ExerciseSessions.SingleAsync()).SessionDataJson)!;
+        Assert.InRange(state["answers"]![0]!["timeSpentSeconds"]!.GetValue<int>(), 0, 5);
         await service.CompleteAsync(student, start.SessionId, new());
         Assert.Equal(1, await db.ExerciseSessionResults.CountAsync());
+    }
+
+    [Fact]
+    public async Task LateAnswerBecomesBlankAndRepeatedStartDoesNotResetClock()
+    {
+        await using var db = Context();
+        var (service, student, exercise, _, question) = await Seed(db, 3);
+        var start = await service.StartAsync(student, new() { ExerciseId = exercise });
+        await service.ValidateActionAsync(student, start.SessionId, new() { Action = "exam_question_start", QuestionId = question });
+        var session = await db.ExerciseSessions.SingleAsync();
+        var state = JsonNode.Parse(session.SessionDataJson)!;
+        state["examQuestionStartedAt"] = DateTime.UtcNow.AddSeconds(-61);
+        session.SetState(state.ToJsonString()); await db.SaveChangesAsync();
+        await service.ValidateActionAsync(student, start.SessionId, new() { Action = "exam_question_start", QuestionId = question });
+        var answer = await service.ValidateActionAsync(student, start.SessionId, new() { Action = "answer_question", QuestionId = question, Answer = "A" });
+        Assert.False(answer.IsCorrect);
+        Assert.True(answer.FeedbackData!.Value.GetProperty("timedOut").GetBoolean());
+        var result = await service.CompleteAsync(student, start.SessionId, new());
+        Assert.Equal(0, result.ComprehensionScore); Assert.Null(result.RawWPM);
     }
 
     [Fact]
