@@ -87,15 +87,15 @@ test('student server snapshot, acknowledgement and pause synchronization', async
   const actions = [];
   let found = [], pauses = 0, resumes = 0, completions = 0;
   await page.route(`**/api/**/exercises/${exerciseId}`, route => route.fulfill({ json: {
-    ...exercise, configurationJson: JSON.stringify({ engineType: 'skimming', engineConfig: { targetCount: 2, timeLimit: 90 } })
+    ...exercise, configurationJson: JSON.stringify({ engineType: 'scanning', engineConfig: { targetCount: 2, timeLimit: 90 } })
   } }));
   await page.route('**/api/**/exercise-sessions/**', async route => {
     const path = new URL(route.request().url()).pathname;
     let response;
     const rounds = () => [{ textContent: '“IŞIK” [İNCİ] başka', targets: ['ışık', 'inci'], foundTargets: [...found] }];
     if (path.endsWith('/start')) response = {
-      sessionId, exerciseId, totalSteps: 2, status: 'Active', configuration: { engineType: 'skimming', engineConfig: { timeLimit: 90 } },
-      initialData: { engineType: 'skimming', content: '“IŞIK” [İNCİ] başka', scanningRounds: rounds(), currentRound: 0, totalSteps: 2, timeLimitSeconds: 90 }
+      sessionId, exerciseId, totalSteps: 2, status: 'Active', configuration: { engineType: 'scanning', engineConfig: { timeLimit: 90 } },
+      initialData: { engineType: 'scanning', content: '“IŞIK” [İNCİ] başka', scanningRounds: rounds(), currentRound: 0, totalSteps: 2, timeLimitSeconds: 90 }
     };
     else if (path.endsWith('/validate')) {
       const action = route.request().postDataJSON();
