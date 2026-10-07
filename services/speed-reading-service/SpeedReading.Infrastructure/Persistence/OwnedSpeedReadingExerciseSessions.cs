@@ -711,7 +711,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         var accuracy = IsErrorAnalysis(state) ? ErrorAnalysisAccuracy(state)
             : IsScanning(state) ? ScanningAccuracy(state)
             : SpeedReadingExerciseSessionRules.CalculateAccuracy(session.CorrectCount, session.IncorrectCount);
-        var wordsRead = state.Tachistoscope is not null || IsScanning(state)
+        var wordsRead = state.Tachistoscope is not null || IsScanning(state) || IsTextFade(state)
             || IsRsvp(state) || IsSkimming(state) || IsErrorAnalysis(state) || IsVocabularyState(state)
             || IsFocusExercise(state)
             || IsVisualizationExercise(state.ExerciseTypeName) || IsEngineType(state.EngineType, "visualization")
