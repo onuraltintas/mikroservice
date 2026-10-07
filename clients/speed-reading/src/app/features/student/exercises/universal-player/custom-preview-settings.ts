@@ -110,7 +110,18 @@ export function getCustomPreviewControls(configuration: Record<string, unknown>)
     ];
     case 'motion_path': {
       const mode = String(read('mode') ?? 'fixation').toLowerCase();
-      if (mode === 'tracking') return [control('speedLevel', 'Hareket hızı seviyesi', 1, 5, movement['speedlevel'] ?? 1)];
+      if (mode === 'tracking') {
+        const path = mergeCaseInsensitiveRecords(configuration, settings, 'path');
+        const content = mergeCaseInsensitiveRecords(configuration, settings, 'content');
+        return [control('speedLevel', 'Hareket hızı seviyesi', 1, 5, movement['speedlevel'] ?? 1),
+          control('durationSeconds', 'Takip süresi (saniye)', 5, 3600, timing['durationms'] !== undefined
+            ? Number(timing['durationms']) / 1000 : timing['totaldurationseconds'] ?? timing['durationseconds'] ?? 60),
+          { key: 'pathType', label: 'Hareket yolu', min: 0, max: 0, value: String(path['type'] ?? 'horizontal'),
+            options: [{ value: 'horizontal', label: 'Yatay' }, { value: 'vertical', label: 'Dikey' },
+              { value: 'circle', label: 'Daire' }, { value: 'infinity8', label: 'Sekiz' },
+              { value: 'random_point', label: 'Rastgele noktalar' }, { value: 'two_point_jump', label: 'İki nokta' }] },
+          control('pointSize', 'Nokta boyutu (px)', 8, 200, content['pointsize'] ?? 36)];
+      }
       if (mode === 'saccade') return [control('jumpIntervalMs', 'Hedef geçiş aralığı (ms)', 50, 10000, movement['jumpintervalms'] ?? 1000)];
       return [control('holdMs', 'Odaklanma süresi (ms)', 50, 10000, timing['holdms'] ?? movement['fixationtimems'] ?? 2000)];
     }
@@ -192,6 +203,7 @@ export function applyCustomPreviewSettings<T extends Record<string, unknown>>(
   }
   const validated: Record<string, number> = {};
   for (const { key, min, max, label } of controls) {
+    if (engine === 'motion_path' && key === 'pathType') continue;
     if (engine === 'focus' && key === 'mode') continue;
     if (values[key] === undefined) continue;
     if (key === 'chunkSize' && engine === 'text_fade') continue;
@@ -338,8 +350,24 @@ export function applyCustomPreviewSettings<T extends Record<string, unknown>>(
     return result;
   }
   if (engine === 'motion_path') {
+    if (values['pathType'] !== undefined && !controls.find(control => control.key === 'pathType')?.options?.some(option => option.value === values['pathType']))
+      throw new Error('Geçerli bir hareket yolu seçin.');
+    if (validated['durationSeconds'] !== undefined) {
+      merge('timing', { durationSeconds: validated['durationSeconds'] });
+      const timingConfig = recordOrEmpty(settings['timing']);
+      for (const key of Object.keys(timingConfig)) if (['durationms', 'totaldurationseconds'].includes(key.toLowerCase())) delete timingConfig[key];
+    }
+    if (values['pathType'] !== undefined) settings['path'] = overrideFields(
+      { ...recordOrEmpty(caseInsensitiveField(configuration, 'path')), ...recordOrEmpty(caseInsensitiveField(settings, 'path')) }, { type: values['pathType'] });
+    if (validated['pointSize'] !== undefined) merge('content', { pointSize: validated['pointSize'] });
     if (validated['holdMs'] !== undefined) merge('timing', { holdMs: validated['holdMs'] });
-    if (validated['speedLevel'] !== undefined) merge('movement', { speedLevel: validated['speedLevel'] });
+    if (validated['speedLevel'] !== undefined) {
+      merge('movement', { speedLevel: validated['speedLevel'] });
+      if (caseInsensitiveField(mergeCaseInsensitiveRecords(configuration, settings, 'timing'), 'speedMs') !== undefined) {
+        merge('timing', {});
+        for (const key of Object.keys(recordOrEmpty(settings['timing']))) if (key.toLowerCase() === 'speedms') delete (settings['timing'] as any)[key];
+      }
+    }
     if (validated['jumpIntervalMs'] !== undefined) merge('movement', { jumpIntervalMs: validated['jumpIntervalMs'] });
     return result;
   }
