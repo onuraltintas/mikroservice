@@ -21,6 +21,21 @@ namespace SpeedReading.Application.UnitTests;
 
 public sealed class StudentReadingPersistenceTests
 {
+    [Fact]
+    public async Task Speed_reading_requires_matching_level_instead_of_falling_back_to_another_level()
+    {
+        await using var context = CreateContext();
+        var user = Guid.NewGuid();
+        var exercise = Guid.NewGuid();
+        var type = Guid.NewGuid();
+        context.ExerciseTypes.Add(ExerciseType.Create(type, "SpeedReading", "Hızlı Okuma", "word_highlight"));
+        context.Exercises.Add(Exercise.Create("Okuma", "reading", "{}", 3, user, type, id: exercise));
+        context.ReadingTexts.Add(ReadingText.Create(Guid.NewGuid(), "Wrong", "Yanlış seviyede katalog metni.", difficultyLevel: 1));
+        await context.SaveChangesAsync();
+        var action = () => CreateExerciseSessionService(context).StartAsync(user, new StartExerciseSessionRequest { ExerciseId = exercise });
+        await action.Should().ThrowAsync<InvalidOperationException>();
+    }
+
     [Theory]
     [InlineData("scanning")]
     [InlineData("scan_find")]
