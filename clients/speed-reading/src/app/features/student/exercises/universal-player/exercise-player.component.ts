@@ -3222,6 +3222,13 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       { pos: 1, r: 244, g: 67, b: 54 }      // Kırmızı
     ];
 
+  onExpansionAnswerInput(index: number, event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if ((event as InputEvent).isComposing || this.engineState.isPaused
+      || input.value.length < this.getExpansionAnswerMaxLength(index)) return;
+    this.visualExpansionArea?.nativeElement.querySelectorAll<HTMLInputElement>('.char-input')[index + 1]?.focus();
+  }
+
     // İki renk arasında interpolasyon
     for (let i = 0; i < colors.length - 1; i++) {
       if (value >= colors[i].pos && value <= colors[i + 1].pos) {

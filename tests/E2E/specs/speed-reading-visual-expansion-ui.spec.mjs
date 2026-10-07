@@ -58,6 +58,7 @@ for (const [pattern, type] of [['radial','word'], ['vertical','symbol']]) test(`
   await expect(submit).toBeDisabled();
   for (let index = 0; index < stimuli.length; index++) {
     await inputs.nth(index).fill(stimuli[index].trim());
+    if (index + 1 < stimuli.length) await expect(inputs.nth(index + 1)).toBeFocused();
     await page.clock.runFor(20);
     const bounds = await inputs.nth(index).boundingBox();
     expect(bounds.x).toBeGreaterThanOrEqual(0);
@@ -66,5 +67,7 @@ for (const [pattern, type] of [['radial','word'], ['vertical','symbol']]) test(`
   await expect(submit).toBeEnabled();
   await submit.click();
   await expect(page.getByText('Önizleme sonucu — kaydedilmedi.', { exact: true })).toBeVisible();
+  const responseTime = page.locator('.stat-card').filter({ hasText: 'Ortalama cevap süresi' }).locator('.stat-value');
+  await expect(responseTime).toHaveText(/\d+[.,]\d{2} sn/);
   expect(errors).toEqual([]); expect(writes).toEqual([]);
 });

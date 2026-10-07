@@ -618,6 +618,7 @@
                 <div class="answer-inputs">
                     <input *ngFor="let index of getExpansionAnswerSlots(); trackBy: trackByIdx" type="text"
                         class="char-input" [(ngModel)]="expansionAnswers[index]"
+                        (input)="onExpansionAnswerInput(index, $event)"
                         [attr.maxlength]="getExpansionAnswerMaxLength(index)"
                         [attr.aria-label]="getExpansionAnswerLabel(index)" [placeholder]="getExpansionAnswerLabel(index)"
                         [disabled]="engineState.isPaused" (keydown.enter)="submitExpansionAnswer()"
@@ -1690,7 +1691,7 @@
             </div>
             <div class="stats-row" *ngIf="engine?.engineType === 'visual_expansion'">
                 <div class="stat-card"><div class="stat-value">{{ (result?.details?.maxDegreesReached || 0) / 60 * 100 | number:'1.0-0' }}%</div><div class="stat-label">En büyük göreli uzaklık</div></div>
-                <div class="stat-card"><div class="stat-value">{{ result?.details?.averageResponseTimeMs }} ms</div><div class="stat-label">Ortalama cevap süresi</div></div>
+                <div class="stat-card"><div class="stat-value">{{ (result?.details?.averageResponseTimeMs || 0) / 1000 | number:'1.2-2' }} sn</div><div class="stat-label">Ortalama cevap süresi</div></div>
                 <div class="stat-card"><div class="stat-value">{{ result?.details?.roundResults?.length }}</div><div class="stat-label">Tamamlanan tur</div></div>
             </div>
             <div class="measurement-not-available" *ngIf="engine?.engineType === 'visual_expansion'">
