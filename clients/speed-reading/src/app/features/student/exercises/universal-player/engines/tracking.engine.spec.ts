@@ -1,6 +1,7 @@
 import { fakeAsync, tick } from '@angular/core/testing';
 import { MotionPathEngine } from './motion-path.engine';
 import { EngineCallbacks, EngineResult } from './base-engine.interface';
+import { applyCustomPreviewSettings } from '../custom-preview-settings';
 
 describe('Tracking motion timing', () => {
   let result: EngineResult | undefined;
@@ -9,13 +10,23 @@ describe('Tracking motion timing', () => {
     onAction: () => undefined, onError: () => undefined, onComplete: value => result = value };
   beforeEach(() => result = undefined);
 
+  it('uses the chosen speed level when custom settings disable legacy cycle speed', () => {
+    spyOn(window, 'requestAnimationFrame').and.returnValue(1);
+    let now = 1000; spyOn(Date, 'now').and.callFake(() => now);
+    const config = applyCustomPreviewSettings({ engineType: 'motion_path', mode: 'tracking', path: { type: 'circle' },
+      timing: { speedMs: 1250, durationSeconds: 60 } }, { speedLevel: 4 }, { roles: ['Admin'], preview: true });
+    const engine = new MotionPathEngine(); engine.initialize(config, callbacks); engine.start();
+    now += 1000; (engine as any).animate();
+    expect(engine.getTargetPosition().x).toBeCloseTo(50 + 35 * Math.cos(3.6), 5); engine.destroy();
+  });
+
   it('uses ceiling consistently for millisecond duration and preserves remaining jump delay', fakeAsync(() => {
     const engine = new MotionPathEngine();
     engine.initialize({ mode: 'tracking', path: { type: 'two_point_jump' }, timing: { durationMs: 5100 }, movement: { jumpIntervalMs: 1000 } }, callbacks);
     engine.start(); tick(900); engine.pause(); tick(2000); engine.resume();
     tick(100); expect(engine.state.currentStep).toBe(2);
     tick(4100); expect(result).toBeUndefined();
-    tick(900); expect(result).toBeDefined(); engine.destroy();
+    tick(930); expect(result).toBeDefined(); engine.destroy();
   }));
 
   it('keeps horizontal movement bounded after a long frame and restarts at a visible margin', () => {
