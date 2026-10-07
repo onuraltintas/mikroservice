@@ -73,6 +73,8 @@ export class MotionPathEngine implements BaseEngine {
     private targetX = 50;
     private targetY = 50;
     private angle = 0;
+    private lastFrameTime = 0;
+    private trackingCycleMs = 0;
     private direction = 1;
     private isJumping = false;
 
@@ -166,6 +168,8 @@ export class MotionPathEngine implements BaseEngine {
             mode === 'fixation' ? 2000 : 1000, 50, 10000);
 
         this.currentMode = mode;
+        this.trackingCycleMs = typeof field(timing, 'speedMs') === 'number'
+            ? boundedInteger(field(timing, 'speedMs'), 3000, 50, 60000) : 0;
         this.isTimeBased = durationSeconds > 0;
         this.durationSeconds = durationSeconds;
         this.config = {
@@ -310,6 +314,9 @@ export class MotionPathEngine implements BaseEngine {
         this.state.isRunning = true;
         this.state.isPaused = false;
         this.startTime = Date.now();
+        this.lastFrameTime = this.startTime;
+        this.angle = 0;
+        this.direction = 1;
         this.state.currentStep = 0;
         this.currentTargetIndex = 0;
         this.fixationResults = [];
@@ -614,10 +621,14 @@ export class MotionPathEngine implements BaseEngine {
 
         const pathType = this.config.path?.type;
         const speedLevel = this.config.movement?.speedLevel || 1;
+        const now = Date.now();
+        const elapsedMs = Math.max(0, now - this.lastFrameTime);
+        this.lastFrameTime = now;
+        const frames = elapsedMs / (1000 / 60);
 
         if (pathType === 'horizontal') {
             const speed = 0.5 + (speedLevel * 0.3);
-            this.targetX += speed * this.direction;
+            this.targetX += speed * this.direction * frames;
             if (this.targetX >= 95 || this.targetX <= 5) {
                 this.direction *= -1;
                 this.state.currentStep++;
@@ -626,7 +637,7 @@ export class MotionPathEngine implements BaseEngine {
         }
         else if (pathType === 'vertical') {
             const speed = 0.5 + (speedLevel * 0.3);
-            this.targetY += speed * this.direction;
+            this.targetY += speed * this.direction * frames;
             if (this.targetY >= 90 || this.targetY <= 10) {
                 this.direction *= -1;
                 this.state.currentStep++;
@@ -636,7 +647,7 @@ export class MotionPathEngine implements BaseEngine {
         else if (pathType === 'circle') {
             const speed = 0.02 + (speedLevel * 0.01);
             const previousCycle = Math.floor(this.angle / (Math.PI * 2));
-            this.angle += speed;
+            this.angle += this.trackingCycleMs > 0 ? elapsedMs * Math.PI * 2 / this.trackingCycleMs : speed * frames;
             const radius = 35;
             this.targetX = 50 + radius * Math.cos(this.angle);
             this.targetY = 50 + radius * Math.sin(this.angle);
@@ -648,7 +659,7 @@ export class MotionPathEngine implements BaseEngine {
         else if (pathType === 'infinity8') {
             const speed = 0.03 + (speedLevel * 0.01);
             const previousCycle = Math.floor(this.angle / (Math.PI * 2));
-            this.angle += speed;
+            this.angle += this.trackingCycleMs > 0 ? elapsedMs * Math.PI * 2 / this.trackingCycleMs : speed * frames;
             const scale = 2 / (3 - Math.cos(2 * this.angle));
             const x = scale * Math.cos(this.angle);
             const y = scale * Math.sin(2 * this.angle) / 2;
@@ -712,6 +723,7 @@ export class MotionPathEngine implements BaseEngine {
         // Adjust timers
         const pauseDuration = Date.now() - this.pauseStartTime;
         this.startTime += pauseDuration;
+        this.lastFrameTime = Date.now();
         this.fixationStartTime += pauseDuration;
 
         this.state.isPaused = false;
@@ -768,6 +780,8 @@ export class MotionPathEngine implements BaseEngine {
             currentValue: ''
         };
         this.fixationProgress = 0;
+        this.angle = 0;
+        this.direction = 1;
         this.peripheralChars = [];
         this.fixationResults = [];
         this.awaitingPeripheralInput = false;
@@ -985,7 +999,7 @@ export class MotionPathEngine implements BaseEngine {
     private complete(reason: string = 'unknown'): void {
         if (this.state.isCompleted) return;
         const completedAccuracy = this.fixationResults.reduce((sum, item) => sum + item.accuracy, 0);
-        const accuracy = this.currentMode === 'saccade' ? 0 : this.totalPeripheralTests > 0
+        const accuracy = this.currentMode === 'saccade' || this.currentMode === 'tracking' ? 0 : this.totalPeripheralTests > 0
             ? Math.round(completedAccuracy / this.totalPeripheralTests)
             : 100;
         const errors = this.getIncorrectCount() + (this.awaitingPeripheralInput ? 1 : 0);
@@ -1004,6 +1018,8 @@ export class MotionPathEngine implements BaseEngine {
             completedSteps: this.state.currentStep,
             errors,
             details: {
+                ...(this.currentMode === 'tracking' ? { measurementStatus: 'NotMeasured', wpm: null,
+                    trackingDurationMs: this.state.timeElapsed, completedTransitions: this.state.currentStep } : {}),
                 ...(this.currentMode === 'saccade' ? {
                     measurementStatus: 'NotMeasured',
                     targetCount: this.state.targetCount || 0,
