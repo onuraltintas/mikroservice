@@ -11,6 +11,7 @@ export interface Exercise {
   exerciseTypeColorCode?: string;
   difficultyLevel: number;
   targetAgeGroupId?: string;
+  targetAgeGroupConfigurationId?: string;
   targetAgeGroupName?: string;
   configurationJson?: string;
   createdAt?: Date;

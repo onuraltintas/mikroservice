@@ -114,6 +114,7 @@ export interface Exercise {
   exerciseTypeName: string;
   difficultyLevel: number;
   targetAgeGroupId?: string;
+  targetAgeGroupConfigurationId?: string;
   targetAgeGroupName?: string;
   configurationJson?: string;
 }

@@ -44,6 +44,7 @@ export class ExerciseLevelDialogComponent {
     }
 
     getAgeGroupId(ex: Exercise): string {
+        if (ex.targetAgeGroupConfigurationId) return ex.targetAgeGroupConfigurationId;
         if (ex.targetAgeGroupId) return ex.targetAgeGroupId;
         if (!ex.configurationJson) return '';
         try {
