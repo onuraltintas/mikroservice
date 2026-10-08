@@ -267,7 +267,7 @@ public sealed class StudentProgramProgress : AggregateRoot
                 weekChanged = true;
 
                 if (template.WeeksPerDifficultyIncrease > 0
-                    && CurrentWeek % template.WeeksPerDifficultyIncrease == 0
+                    && (CurrentWeek - 1) % template.WeeksPerDifficultyIncrease == 0
                     && CurrentDifficultyLevel < template.MaxDifficultyLevel)
                 {
                     CurrentDifficultyLevel++;

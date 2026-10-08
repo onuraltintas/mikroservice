@@ -602,7 +602,8 @@ internal sealed class OwnedSpeedReadingAssessment(
                 : await FindBaselineTemplateAsync(
                     profile.AgeGroupConfigurationId,
                     profile.TargetComprehension,
-                    cancellationToken);
+                    cancellationToken,
+                    assessmentLevel: profile.CurrentLevel);
             if (template is not null)
             {
                 await EnsureBaselineProgramAsync(
@@ -793,7 +794,8 @@ internal sealed class OwnedSpeedReadingAssessment(
         var template = await FindBaselineTemplateAsync(
             recommendationAgeGroupId,
             averageComprehension,
-            cancellationToken);
+            cancellationToken,
+            assessmentLevel: level);
 
         // A baseline assessment produces the recommendation and starts that
         // program for the student when no active program exists yet. Without
@@ -850,7 +852,8 @@ internal sealed class OwnedSpeedReadingAssessment(
                 var beginnerTemplate = await FindBaselineTemplateAsync(
                     profile.AgeGroupConfigurationId,
                     profile.TargetComprehension,
-                    cancellationToken);
+                    cancellationToken,
+                    assessmentLevel: 1);
                 if (beginnerTemplate is null)
                 {
                     throw new BusinessRuleException(
@@ -1055,7 +1058,8 @@ internal sealed class OwnedSpeedReadingAssessment(
     private async Task<ProgramTemplate?> FindBaselineTemplateAsync(
         Guid? ageGroupConfigurationId,
         decimal assessmentScore,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        int? assessmentLevel = null)
     {
         // Program templates are age-targeted. Do not silently assign another
         // age group's content when the student's profile has no age group.
@@ -1070,6 +1074,22 @@ internal sealed class OwnedSpeedReadingAssessment(
                 && item.ProgramType == 0
                 && (item.ExamType == null || item.ExamType == "")
                 && item.TargetAgeGroupConfigurationId == ageGroupConfigurationId.Value);
+
+        var candidates = await templates.OrderBy(item => item.DisplayOrder).ThenBy(item => item.Id)
+            .ToListAsync(cancellationToken);
+        var levelTemplates = candidates.Where(item =>
+        {
+            using var pattern = JsonDocument.Parse(item.WeeklyPatternJson);
+            return pattern.RootElement.TryGetProperty("placementLevel", out _);
+        }).ToList();
+        if (levelTemplates.Count > 0)
+        {
+            return levelTemplates.FirstOrDefault(item =>
+            {
+                using var pattern = JsonDocument.Parse(item.WeeklyPatternJson);
+                return pattern.RootElement.GetProperty("placementLevel").GetInt32() == assessmentLevel;
+            });
+        }
 
         return await templates
             .Where(item => item.MinAssessmentScore <= assessmentScore

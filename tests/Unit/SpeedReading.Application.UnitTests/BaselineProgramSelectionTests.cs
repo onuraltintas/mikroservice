@@ -69,6 +69,6 @@ public sealed class BaselineProgramSelectionTests
             "SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingAssessment")!;
         var service = Activator.CreateInstance(type, db, null)!;
         var method = type.GetMethod("FindBaselineTemplateAsync", BindingFlags.Instance | BindingFlags.NonPublic)!;
-        return await (Task<ProgramTemplate?>)method.Invoke(service, [age, score, CancellationToken.None])!;
+        return await (Task<ProgramTemplate?>)method.Invoke(service, [age, score, CancellationToken.None, null])!;
     }
 }
