@@ -942,7 +942,7 @@ internal sealed class OwnedSpeedReadingAssessment(
                 if (template is not null
                     && (attempt is null || attempt.Phase == AssessmentAttemptPhase.Baseline))
                 {
-                    assignment = await EnsureBaselineProgramCoreAsync(
+                    assignment = await TryAssignBaselineProgramAsync(
                         userId,
                         template,
                         completedAt,
@@ -978,7 +978,7 @@ internal sealed class OwnedSpeedReadingAssessment(
                     db,
                     userId,
                     cancellationToken);
-                var assignment = await EnsureBaselineProgramCoreAsync(
+                var assignment = await TryAssignBaselineProgramAsync(
                     userId,
                     template,
                     assignedAt,
@@ -988,6 +988,22 @@ internal sealed class OwnedSpeedReadingAssessment(
                     await transaction.CommitAsync(cancellationToken);
                 return assignment;
             });
+    }
+
+    private async Task<BaselineProgramAssignment?> TryAssignBaselineProgramAsync(
+        Guid userId, ProgramTemplate template, DateTime assignedAt, CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await EnsureBaselineProgramCoreAsync(userId, template, assignedAt, cancellationToken);
+        }
+        catch (BusinessRuleException exception) when (exception.Code is
+            "Program.ContentMissing" or "Program.DayEmpty" or "Program.ExerciseTypeMissing")
+        {
+            // Missing training content must not discard a completed assessment.
+            // A null assignment is shown as pending in the result screen.
+            return null;
+        }
     }
 
     private async Task<BaselineProgramAssignment> EnsureBaselineProgramCoreAsync(
@@ -1276,6 +1292,7 @@ internal sealed class OwnedSpeedReadingAssessment(
         string? createdBy,
         CancellationToken cancellationToken)
     {
+        var createdByUserId = Guid.TryParse(createdBy, out var actorId) ? actorId : Guid.Empty;
         var candidates = await (
             from exercise in db.Exercises.AsNoTracking()
             join exerciseType in db.ExerciseTypes.AsNoTracking()
@@ -1348,6 +1365,7 @@ internal sealed class OwnedSpeedReadingAssessment(
                 readingText.Title,
                 readingText.Content,
                 readingText.WordCount,
+                readingText.DifficultyLevel,
                 db.ReadingQuestions.Any(question =>
                     question.ReadingTextId == readingText.Id
                     && !question.IsDeleted
@@ -1386,6 +1404,18 @@ internal sealed class OwnedSpeedReadingAssessment(
                 item.Type))
             .ToListAsync(cancellationToken);
 
+        var priorTextCounts = await db.ExerciseSessions.AsNoTracking()
+            .Where(item => item.StudentId == createdByUserId && item.ReadingTextId.HasValue)
+            .GroupBy(item => item.ReadingTextId!.Value)
+            .Select(group => new { Id = group.Key, Count = group.Count() })
+            .ToDictionaryAsync(item => item.Id, item => item.Count, cancellationToken);
+        var priorReadingCounts = await db.ReadingSessions.AsNoTracking()
+            .Where(item => item.UserId == createdByUserId)
+            .GroupBy(item => item.ReadingTextId)
+            .Select(group => new { Id = group.Key, Count = group.Count() })
+            .ToListAsync(cancellationToken);
+        foreach (var count in priorReadingCounts)
+            priorTextCounts[count.Id] = priorTextCounts.GetValueOrDefault(count.Id) + count.Count;
         var usedReadingTextIds = new HashSet<Guid>();
         var result = new List<AssessmentAttemptExercise>(selected.Count);
         foreach (var (candidate, role) in selected)
@@ -1393,15 +1423,18 @@ internal sealed class OwnedSpeedReadingAssessment(
             Guid? readingTextId = null;
             AssessmentReadingTextSnapshot? readingTextSnapshot = null;
             IReadOnlyList<AssessmentQuestionSnapshot> questionSnapshots = [];
-            if (RequiresAssessmentReadingText(role, candidate.TypeName, candidate.EngineType))
+            if (RequiresAssessmentReadingText(role, candidate.TypeName, candidate.EngineType)
+                && !candidate.TypeName.Equals("Tachistoscope", StringComparison.OrdinalIgnoreCase))
             {
                 var requiresQuestions = role == "comprehension";
                 var text = readingTexts
                     .Where(item => (!requiresQuestions || item.HasQuestions)
+                        && item.DifficultyLevel == candidate.DifficultyLevel
                         && !usedReadingTextIds.Contains(item.Id)
                         && (item.ExerciseId == candidate.ExerciseId || item.ExerciseId is null))
                     .OrderBy(item => item.ExerciseId == candidate.ExerciseId ? 0 : 1)
-                    .ThenBy(item => item.Id)
+                    .ThenBy(item => priorTextCounts.GetValueOrDefault(item.Id))
+                    .ThenBy(item => Guid.NewGuid())
                     .FirstOrDefault();
                 if (text is null)
                     throw new InvalidOperationException(
@@ -1850,6 +1883,7 @@ internal sealed class OwnedSpeedReadingAssessment(
         string Title,
         string Content,
         int WordCount,
+        int DifficultyLevel,
         bool HasQuestions);
 
     private sealed record AssessmentExerciseRow(
