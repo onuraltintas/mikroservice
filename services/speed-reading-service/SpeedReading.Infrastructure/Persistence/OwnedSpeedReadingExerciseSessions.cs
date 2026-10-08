@@ -124,6 +124,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             exerciseEngineType = exerciseType.EngineType;
             configurationJson = exercise.ConfigurationJson;
             difficultyLevel = exercise.DifficultyLevel;
+            profileAgeGroupId ??= exercise.TargetAgeGroupId;
         }
 
         if (string.IsNullOrWhiteSpace(exerciseEngineType))
@@ -331,6 +332,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                 var isRsvp = IsRsvp(exerciseTypeName, exerciseEngineType, parsedConfiguration);
                 var isRegression = normalizedEngineType == "regression_reduction";
                 var isSubvocalization = normalizedEngineType == "subvocalization_reduction";
+                var isErrorAnalysis = normalizedEngineType == "error_analysis";
                 var requiresScorableQuestions = ExerciseConfigurationRules.ResolveReadingPurpose(
                     normalizedEngineType,
                     ReadString(ReadObject(parsedConfiguration, "engineConfig"), "readingPurpose")
@@ -341,7 +343,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                     .Where(item => item.IsActive
                         && !item.IsDeleted
                         && item.Content != string.Empty
-                        && (!(isExam || isFreeReading || isComprehension || isScanning || isGrouping || isTextFade || isRegression || isSubvocalization || isRsvp) || item.DifficultyLevel == difficultyLevel)
+                        && (!(isExam || isFreeReading || isComprehension || isScanning || isGrouping || isTextFade || isRegression || isSubvocalization || isRsvp || isErrorAnalysis) || item.DifficultyLevel == difficultyLevel)
                         && (!isFreeReading || (item.WordCount >= freeMinimumWords && (freeMaximumWords == 0 || item.WordCount <= freeMaximumWords)))
                         && (!profileAgeGroupId.HasValue
                             || item.TargetAgeGroupId == null
@@ -359,14 +361,11 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                                 || question.CorrectAnswer.Trim().ToUpper() == "B"
                                 || question.CorrectAnswer.Trim().ToUpper() == "C"
                                 || question.CorrectAnswer.Trim().ToUpper() == "D"))))
-                    .OrderBy(item => isExam || isFreeReading || isScanning || isGrouping || isTextFade || isRegression || isSubvocalization || isRsvp
-                        ? db.ExerciseSessions.Count(history => history.StudentId == studentId && history.ReadingTextId == item.Id)
-                        : isComprehension
-                        ? db.ReadingSessions.Count(history => history.UserId == studentId && history.ReadingTextId == item.Id)
-                        : 0)
+                    .OrderBy(item => db.ExerciseSessions.Count(history => history.StudentId == studentId && history.ReadingTextId == item.Id)
+                        + db.ReadingSessions.Count(history => history.UserId == studentId && history.ReadingTextId == item.Id))
                     .ThenByDescending(item => item.ExerciseId == request.ExerciseId)
                     .ThenByDescending(item => item.DifficultyLevel == difficultyLevel)
-                    .ThenBy(item => item.Id)
+                    .ThenBy(_ => Guid.NewGuid())
                     .Select(item => (Guid?)item.Id)
                     .FirstOrDefaultAsync(token);
                 if (isGrouping && !readingTextId.HasValue)
@@ -1009,6 +1008,9 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         JsonElement configuration)
     {
         if (IsTachistoscope(exerciseTypeName, exerciseEngineType, configuration)) return false;
+        if (exerciseEngineType == "error_analysis"
+            && ReadString(ReadObject(ReadObject(configuration, "engineConfig"), "content"), "source") == "reading_text")
+            return true;
         if (ReadingExerciseTypes.Contains(exerciseTypeName)
             || ReadingExerciseTypes.Contains(exerciseEngineType))
             return true;

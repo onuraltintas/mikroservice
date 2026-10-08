@@ -1,0 +1,1525 @@
+[
+  {
+    "id": "ae5aeab6-7483-5069-b61b-3be64238d016",
+    "type": "Comprehension",
+    "title": "Küçük Hikâyeyi Anla",
+    "description": "Çocuk yaş grubunda seçilen seviyeye uygun çalışma.",
+    "difficultyLevel": 1,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "reading_comprehension",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "comprehension",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 1
+    }
+  },
+  {
+    "id": "7bc87945-79fa-5b6a-9556-85d6064dffbd",
+    "type": "Comprehension",
+    "title": "Bilgiyi Keşfet",
+    "description": "Çocuk yaş grubunda seçilen seviyeye uygun çalışma.",
+    "difficultyLevel": 1,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "reading_comprehension",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "comprehension",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 1
+    }
+  },
+  {
+    "id": "aff1baaa-fc6b-5870-aaea-0013fb287d0d",
+    "type": "SpeedReading",
+    "title": "Tanıdık Kelimelerle Okuma",
+    "description": "Çocuk yaş grubunda seçilen seviyeye uygun çalışma.",
+    "difficultyLevel": 1,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "word_highlight",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "guided",
+        "pacer": {
+          "speedWpm": 100,
+          "chunkSize": 1
+        },
+        "readingPurpose": "practice"
+      },
+      "difficultyLevel": 1
+    }
+  },
+  {
+    "id": "c034a403-0215-51c1-8727-c6e690c5226f",
+    "type": "Chunking",
+    "title": "İkili Anlam Grupları",
+    "description": "Çocuk yaş grubunda seçilen seviyeye uygun çalışma.",
+    "difficultyLevel": 1,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "word_highlight",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "chunking",
+        "pacer": {
+          "speedWpm": 100,
+          "chunkSize": 2
+        },
+        "readingPurpose": "practice"
+      },
+      "difficultyLevel": 1
+    }
+  },
+  {
+    "id": "69916068-32f4-5353-8590-f1ba00e0e5a2",
+    "type": "Vocabulary",
+    "title": "Kelime Bahçesi",
+    "description": "Çocuk yaş grubunda seçilen seviyeye uygun çalışma.",
+    "difficultyLevel": 1,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "vocabulary_builder",
+      "engineConfig": {
+        "mode": "learning",
+        "quizType": "word_to_definition",
+        "timeLimitPerWord": 0,
+        "vocabulary": {
+          "count": 5,
+          "difficultyLevel": 1
+        }
+      },
+      "difficultyLevel": 1
+    }
+  },
+  {
+    "id": "3adf7625-c354-5a19-ad67-6208613d9812",
+    "type": "Vocabulary",
+    "title": "Kelimemi Seçiyorum",
+    "description": "Çocuk yaş grubunda seçilen seviyeye uygun çalışma.",
+    "difficultyLevel": 1,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "vocabulary_builder",
+      "engineConfig": {
+        "mode": "quiz",
+        "quizType": "word_to_definition",
+        "timeLimitPerWord": 0,
+        "vocabulary": {
+          "count": 5,
+          "difficultyLevel": 1
+        }
+      },
+      "difficultyLevel": 1
+    }
+  },
+  {
+    "id": "fa1d80ec-d8ed-5379-9a29-e2cfe8c51af7",
+    "type": "FreeReading",
+    "title": "Hikâyemi Seçiyorum",
+    "description": "Çocuk yaş grubunda seçilen seviyeye uygun çalışma.",
+    "difficultyLevel": 1,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "free_reading",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "free",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 1
+    }
+  },
+  {
+    "id": "256c80c2-ae0d-53a8-a7ee-0ad265b08996",
+    "type": "Scanning",
+    "title": "Sözcüğü Bul",
+    "description": "Çocuk yaş grubunda seçilen seviyeye uygun çalışma.",
+    "difficultyLevel": 1,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "scanning",
+      "engineConfig": {
+        "content": {
+          "source": "random_text"
+        },
+        "targetCount": 2,
+        "timeLimit": 90,
+        "targets": {
+          "mode": "find_all",
+          "caseSensitive": false
+        }
+      },
+      "difficultyLevel": 1
+    }
+  },
+  {
+    "id": "add57a25-c884-5851-b27f-8fe0fe413f6f",
+    "type": "SchulteTable",
+    "title": "Sayı Avcısı",
+    "description": "Dikkat oyunu. Çocuk yaş grubunda seçilen seviyeye uygun çalışma.",
+    "difficultyLevel": 1,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "grid_interaction",
+      "engineConfig": {
+        "gridSize": 3,
+        "sequenceType": "numeric",
+        "rules": {
+          "timeLimit": 90
+        }
+      },
+      "difficultyLevel": 1
+    }
+  },
+  {
+    "id": "1f9bcc44-6bf6-588e-a6c9-87fbcc57f5e6",
+    "type": "Focus",
+    "title": "Konum Belleği",
+    "description": "Dikkat oyunu. Çocuk yaş grubunda seçilen seviyeye uygun çalışma.",
+    "difficultyLevel": 1,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "focus",
+      "engineConfig": {
+        "mode": "position",
+        "nLevel": 1,
+        "totalSteps": 12,
+        "speedMs": 2500,
+        "gridSize": 3
+      },
+      "difficultyLevel": 1
+    }
+  },
+  {
+    "id": "6d05bc6b-136d-5a7d-98f3-d5d2330ad00c",
+    "type": "EyeTracking",
+    "title": "Hareketi Takip Et",
+    "description": "Dikkat oyunu. Çocuk yaş grubunda seçilen seviyeye uygun çalışma.",
+    "difficultyLevel": 1,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "motion_path",
+      "engineConfig": {
+        "mode": "tracking",
+        "path": {
+          "type": "circle"
+        },
+        "timing": {
+          "durationSeconds": 30,
+          "speedMs": 3000
+        },
+        "content": {
+          "type": "dot",
+          "pointSize": 36
+        }
+      },
+      "difficultyLevel": 1
+    }
+  },
+  {
+    "id": "c94edaba-0cec-522a-9752-3830c4c9be22",
+    "type": "Fixation",
+    "title": "Noktaya Odaklan",
+    "description": "Dikkat oyunu. Çocuk yaş grubunda seçilen seviyeye uygun çalışma.",
+    "difficultyLevel": 1,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "motion_path",
+      "engineConfig": {
+        "mode": "fixation",
+        "timing": {
+          "holdMs": 1000,
+          "durationSeconds": 30
+        },
+        "content": {
+          "type": "letter",
+          "points": 3,
+          "peripheralCount": 1,
+          "pointSize": 44
+        }
+      },
+      "difficultyLevel": 1
+    }
+  },
+  {
+    "id": "aeeca01f-1ce7-5689-9b60-fc7e919f4966",
+    "type": "Saccade",
+    "title": "Hedefler Arası Geçiş",
+    "description": "Dikkat oyunu. Çocuk yaş grubunda seçilen seviyeye uygun çalışma.",
+    "difficultyLevel": 1,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "motion_path",
+      "engineConfig": {
+        "mode": "saccade",
+        "timing": {
+          "holdMs": 900,
+          "durationSeconds": 30
+        },
+        "content": {
+          "type": "number",
+          "pattern": "horizontal",
+          "pointSize": 44
+        }
+      },
+      "difficultyLevel": 1
+    }
+  },
+  {
+    "id": "c159bff8-b3ee-556c-9fcc-6eab1cb62f0f",
+    "type": "VisualExpansion",
+    "title": "Çevredeki Harfler",
+    "description": "Dikkat oyunu. Çocuk yaş grubunda seçilen seviyeye uygun çalışma.",
+    "difficultyLevel": 1,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "visual_expansion",
+      "engineConfig": {
+        "mode": "horizontal",
+        "rounds": 10,
+        "displayDurationMs": 1200,
+        "startDegrees": 8,
+        "targetDegrees": 16,
+        "content": {
+          "stimulusType": "letter"
+        }
+      },
+      "difficultyLevel": 1
+    }
+  },
+  {
+    "id": "78ffc512-359c-518f-96eb-33bb5d007ec2",
+    "type": "Comprehension",
+    "title": "Olayları Anla",
+    "description": "Çocuk yaş grubunda seçilen seviyeye uygun çalışma.",
+    "difficultyLevel": 2,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "reading_comprehension",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "comprehension",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 2
+    }
+  },
+  {
+    "id": "06d125ec-3361-51a1-b2f7-f9709611473e",
+    "type": "Comprehension",
+    "title": "Neden Böyle Oldu?",
+    "description": "Çocuk yaş grubunda seçilen seviyeye uygun çalışma.",
+    "difficultyLevel": 2,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "reading_comprehension",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "comprehension",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 2
+    }
+  },
+  {
+    "id": "1c058d30-e5b1-5a67-85a8-a518b067a746",
+    "type": "SpeedReading",
+    "title": "Akıcı Cümleler",
+    "description": "Çocuk yaş grubunda seçilen seviyeye uygun çalışma.",
+    "difficultyLevel": 2,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "word_highlight",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "guided",
+        "pacer": {
+          "speedWpm": 130,
+          "chunkSize": 1
+        },
+        "readingPurpose": "practice"
+      },
+      "difficultyLevel": 2
+    }
+  },
+  {
+    "id": "42296217-4ce6-5acd-88a3-fe636cbffb30",
+    "type": "Chunking",
+    "title": "Üçlü Kelime Grupları",
+    "description": "Çocuk yaş grubunda seçilen seviyeye uygun çalışma.",
+    "difficultyLevel": 2,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "word_highlight",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "chunking",
+        "pacer": {
+          "speedWpm": 130,
+          "chunkSize": 3
+        },
+        "readingPurpose": "practice"
+      },
+      "difficultyLevel": 2
+    }
+  },
+  {
+    "id": "817d398a-046b-5764-83de-4d2edcdeaeca",
+    "type": "Vocabulary",
+    "title": "Bağlamdan Kelime",
+    "description": "Çocuk yaş grubunda seçilen seviyeye uygun çalışma.",
+    "difficultyLevel": 2,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "vocabulary_builder",
+      "engineConfig": {
+        "mode": "learning",
+        "quizType": "mixed",
+        "timeLimitPerWord": 0,
+        "vocabulary": {
+          "count": 6,
+          "difficultyLevel": 2
+        }
+      },
+      "difficultyLevel": 2
+    }
+  },
+  {
+    "id": "60720e23-e801-5728-9637-4aad270786cb",
+    "type": "Vocabulary",
+    "title": "Kelimeyi Hatırla",
+    "description": "Çocuk yaş grubunda seçilen seviyeye uygun çalışma.",
+    "difficultyLevel": 2,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "vocabulary_builder",
+      "engineConfig": {
+        "mode": "quiz",
+        "quizType": "mixed",
+        "timeLimitPerWord": 0,
+        "vocabulary": {
+          "count": 6,
+          "difficultyLevel": 2
+        }
+      },
+      "difficultyLevel": 2
+    }
+  },
+  {
+    "id": "23423d96-7976-5ece-9084-5b189d859cfd",
+    "type": "Scanning",
+    "title": "Metindeki İpuçları",
+    "description": "Çocuk yaş grubunda seçilen seviyeye uygun çalışma.",
+    "difficultyLevel": 2,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "scanning",
+      "engineConfig": {
+        "content": {
+          "source": "random_text"
+        },
+        "targetCount": 3,
+        "timeLimit": 90,
+        "targets": {
+          "mode": "find_all",
+          "caseSensitive": false
+        }
+      },
+      "difficultyLevel": 2
+    }
+  },
+  {
+    "id": "9450063e-4738-583c-9c53-240d6935ed88",
+    "type": "FreeReading",
+    "title": "Yeni Bir Hikâye",
+    "description": "Çocuk yaş grubunda seçilen seviyeye uygun çalışma.",
+    "difficultyLevel": 2,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "free_reading",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "free",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 2
+    }
+  },
+  {
+    "id": "3ea61ae4-3637-56d4-a6a6-a3d8057f406b",
+    "type": "SchulteTable",
+    "title": "Sayı Avcısı",
+    "description": "Dikkat oyunu. Çocuk yaş grubunda seçilen seviyeye uygun çalışma.",
+    "difficultyLevel": 2,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "grid_interaction",
+      "engineConfig": {
+        "gridSize": 3,
+        "sequenceType": "numeric",
+        "rules": {
+          "timeLimit": 75
+        }
+      },
+      "difficultyLevel": 2
+    }
+  },
+  {
+    "id": "eb968e3b-1d20-551c-bf84-0ce50acd7510",
+    "type": "Focus",
+    "title": "Konum Belleği",
+    "description": "Dikkat oyunu. Çocuk yaş grubunda seçilen seviyeye uygun çalışma.",
+    "difficultyLevel": 2,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "focus",
+      "engineConfig": {
+        "mode": "position",
+        "nLevel": 1,
+        "totalSteps": 16,
+        "speedMs": 2300,
+        "gridSize": 3
+      },
+      "difficultyLevel": 2
+    }
+  },
+  {
+    "id": "74f49a2e-2010-5bba-a5be-c939d13b687a",
+    "type": "EyeTracking",
+    "title": "Hareketi Takip Et",
+    "description": "Dikkat oyunu. Çocuk yaş grubunda seçilen seviyeye uygun çalışma.",
+    "difficultyLevel": 2,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "motion_path",
+      "engineConfig": {
+        "mode": "tracking",
+        "path": {
+          "type": "horizontal"
+        },
+        "timing": {
+          "durationSeconds": 40,
+          "speedMs": 2800
+        },
+        "content": {
+          "type": "dot",
+          "pointSize": 36
+        }
+      },
+      "difficultyLevel": 2
+    }
+  },
+  {
+    "id": "d2d2c9f8-a6e0-5e64-9a85-1134b85be859",
+    "type": "Fixation",
+    "title": "Noktaya Odaklan",
+    "description": "Dikkat oyunu. Çocuk yaş grubunda seçilen seviyeye uygun çalışma.",
+    "difficultyLevel": 2,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "motion_path",
+      "engineConfig": {
+        "mode": "fixation",
+        "timing": {
+          "holdMs": 900,
+          "durationSeconds": 35
+        },
+        "content": {
+          "type": "letter",
+          "points": 3,
+          "peripheralCount": 1,
+          "pointSize": 44
+        }
+      },
+      "difficultyLevel": 2
+    }
+  },
+  {
+    "id": "efd3f58d-5798-5baf-87a2-145dc2a6aaed",
+    "type": "Saccade",
+    "title": "Hedefler Arası Geçiş",
+    "description": "Dikkat oyunu. Çocuk yaş grubunda seçilen seviyeye uygun çalışma.",
+    "difficultyLevel": 2,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "motion_path",
+      "engineConfig": {
+        "mode": "saccade",
+        "timing": {
+          "holdMs": 800,
+          "durationSeconds": 35
+        },
+        "content": {
+          "type": "number",
+          "pattern": "horizontal",
+          "pointSize": 44
+        }
+      },
+      "difficultyLevel": 2
+    }
+  },
+  {
+    "id": "e9283521-69bc-58f4-b2b9-90341b43319e",
+    "type": "VisualExpansion",
+    "title": "Çevredeki Harfler",
+    "description": "Dikkat oyunu. Çocuk yaş grubunda seçilen seviyeye uygun çalışma.",
+    "difficultyLevel": 2,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "visual_expansion",
+      "engineConfig": {
+        "mode": "horizontal",
+        "rounds": 12,
+        "displayDurationMs": 1100,
+        "startDegrees": 8,
+        "targetDegrees": 18,
+        "content": {
+          "stimulusType": "letter"
+        }
+      },
+      "difficultyLevel": 2
+    }
+  },
+  {
+    "id": "d8bbdfdc-21ad-5872-a81b-9cf4c25c5d17",
+    "type": "Comprehension",
+    "title": "Paragrafı Anla",
+    "description": "Çocuk yaş grubunda seçilen seviyeye uygun çalışma.",
+    "difficultyLevel": 3,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "reading_comprehension",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "comprehension",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 3
+    }
+  },
+  {
+    "id": "f97886fc-96f9-5c76-a677-dd21e342ba4b",
+    "type": "Comprehension",
+    "title": "İpuçlarından Sonuca",
+    "description": "Çocuk yaş grubunda seçilen seviyeye uygun çalışma.",
+    "difficultyLevel": 3,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "reading_comprehension",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "comprehension",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 3
+    }
+  },
+  {
+    "id": "9bc800bb-a551-5ead-9fa3-7c406c33fffc",
+    "type": "SpeedReading",
+    "title": "Akıcı Paragraflar",
+    "description": "Çocuk yaş grubunda seçilen seviyeye uygun çalışma.",
+    "difficultyLevel": 3,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "word_highlight",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "guided",
+        "pacer": {
+          "speedWpm": 160,
+          "chunkSize": 1
+        },
+        "readingPurpose": "practice"
+      },
+      "difficultyLevel": 3
+    }
+  },
+  {
+    "id": "3e0c4ca7-b16d-5700-8e28-79724f53dd94",
+    "type": "Chunking",
+    "title": "Dörtlü Kelime Grupları",
+    "description": "Çocuk yaş grubunda seçilen seviyeye uygun çalışma.",
+    "difficultyLevel": 3,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "word_highlight",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "chunking",
+        "pacer": {
+          "speedWpm": 160,
+          "chunkSize": 4
+        },
+        "readingPurpose": "practice"
+      },
+      "difficultyLevel": 3
+    }
+  },
+  {
+    "id": "a908385f-9984-5881-bb56-9448b5eebd29",
+    "type": "Vocabulary",
+    "title": "Kelime Bağlantıları",
+    "description": "Çocuk yaş grubunda seçilen seviyeye uygun çalışma.",
+    "difficultyLevel": 3,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "vocabulary_builder",
+      "engineConfig": {
+        "mode": "learning",
+        "quizType": "mixed",
+        "timeLimitPerWord": 0,
+        "vocabulary": {
+          "count": 8,
+          "difficultyLevel": 3
+        }
+      },
+      "difficultyLevel": 3
+    }
+  },
+  {
+    "id": "de6d36a9-a659-5554-9650-0212cff53ee2",
+    "type": "Scanning",
+    "title": "Ana Bilgiyi Bul",
+    "description": "Çocuk yaş grubunda seçilen seviyeye uygun çalışma.",
+    "difficultyLevel": 3,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "scanning",
+      "engineConfig": {
+        "content": {
+          "source": "random_text"
+        },
+        "targetCount": 3,
+        "timeLimit": 120,
+        "targets": {
+          "mode": "find_all",
+          "caseSensitive": false
+        }
+      },
+      "difficultyLevel": 3
+    }
+  },
+  {
+    "id": "2f5ccf40-b4c8-5f5f-a472-88bd03480aca",
+    "type": "Skimming",
+    "title": "Metne İlk Bakış",
+    "description": "Çocuk yaş grubunda seçilen seviyeye uygun çalışma.",
+    "difficultyLevel": 3,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "skimming",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "skimming",
+        "rules": {
+          "timeLimit": 120
+        },
+        "timing": {
+          "minReadingTimeMs": 3000
+        },
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 3
+    }
+  },
+  {
+    "id": "aa4a55b1-3c0a-5751-baed-8ecc6ddc6e34",
+    "type": "FreeReading",
+    "title": "Kendi Hızımda Okuyorum",
+    "description": "Çocuk yaş grubunda seçilen seviyeye uygun çalışma.",
+    "difficultyLevel": 3,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "free_reading",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "free",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 3
+    }
+  },
+  {
+    "id": "c1fc2991-2b6e-5ae4-ad6d-aa62e0ef0abd",
+    "type": "SchulteTable",
+    "title": "Sayı Avcısı",
+    "description": "Dikkat oyunu. Çocuk yaş grubunda seçilen seviyeye uygun çalışma.",
+    "difficultyLevel": 3,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "grid_interaction",
+      "engineConfig": {
+        "gridSize": 4,
+        "sequenceType": "numeric",
+        "rules": {
+          "timeLimit": 120
+        }
+      },
+      "difficultyLevel": 3
+    }
+  },
+  {
+    "id": "cb0b533d-84bd-5d78-a06c-199b968f0bd8",
+    "type": "Focus",
+    "title": "Konum Belleği",
+    "description": "Dikkat oyunu. Çocuk yaş grubunda seçilen seviyeye uygun çalışma.",
+    "difficultyLevel": 3,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "focus",
+      "engineConfig": {
+        "mode": "position",
+        "nLevel": 1,
+        "totalSteps": 20,
+        "speedMs": 2100,
+        "gridSize": 3
+      },
+      "difficultyLevel": 3
+    }
+  },
+  {
+    "id": "350b5194-aaea-5674-8e7f-be637a8a830e",
+    "type": "EyeTracking",
+    "title": "Hareketi Takip Et",
+    "description": "Dikkat oyunu. Çocuk yaş grubunda seçilen seviyeye uygun çalışma.",
+    "difficultyLevel": 3,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "motion_path",
+      "engineConfig": {
+        "mode": "tracking",
+        "path": {
+          "type": "circle"
+        },
+        "timing": {
+          "durationSeconds": 45,
+          "speedMs": 2500
+        },
+        "content": {
+          "type": "dot",
+          "pointSize": 36
+        }
+      },
+      "difficultyLevel": 3
+    }
+  },
+  {
+    "id": "d9eaa96f-ea25-508b-8ec2-df4775e187e7",
+    "type": "Fixation",
+    "title": "Noktaya Odaklan",
+    "description": "Dikkat oyunu. Çocuk yaş grubunda seçilen seviyeye uygun çalışma.",
+    "difficultyLevel": 3,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "motion_path",
+      "engineConfig": {
+        "mode": "fixation",
+        "timing": {
+          "holdMs": 850,
+          "durationSeconds": 40
+        },
+        "content": {
+          "type": "letter",
+          "points": 4,
+          "peripheralCount": 1,
+          "pointSize": 44
+        }
+      },
+      "difficultyLevel": 3
+    }
+  },
+  {
+    "id": "6f062c54-97bc-5182-9ae5-be7474822339",
+    "type": "Saccade",
+    "title": "Hedefler Arası Geçiş",
+    "description": "Dikkat oyunu. Çocuk yaş grubunda seçilen seviyeye uygun çalışma.",
+    "difficultyLevel": 3,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "motion_path",
+      "engineConfig": {
+        "mode": "saccade",
+        "timing": {
+          "holdMs": 750,
+          "durationSeconds": 40
+        },
+        "content": {
+          "type": "number",
+          "pattern": "vertical",
+          "pointSize": 44
+        }
+      },
+      "difficultyLevel": 3
+    }
+  },
+  {
+    "id": "59bc27fb-6e9d-5327-acab-0d77f925c104",
+    "type": "VisualExpansion",
+    "title": "Çevredeki Harfler",
+    "description": "Dikkat oyunu. Çocuk yaş grubunda seçilen seviyeye uygun çalışma.",
+    "difficultyLevel": 3,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "visual_expansion",
+      "engineConfig": {
+        "mode": "horizontal",
+        "rounds": 14,
+        "displayDurationMs": 1000,
+        "startDegrees": 8,
+        "targetDegrees": 20,
+        "content": {
+          "stimulusType": "letter"
+        }
+      },
+      "difficultyLevel": 3
+    }
+  },
+  {
+    "id": "35ce8279-5f62-59f3-be9a-caee7504db2e",
+    "type": "Comprehension",
+    "title": "Cevabın Kanıtı",
+    "description": "Çocuk yaş grubunda seçilen seviyeye uygun çalışma.",
+    "difficultyLevel": 4,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "reading_comprehension",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "comprehension",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 4
+    }
+  },
+  {
+    "id": "1f1fb3f7-7f8c-5f7a-aead-f0d0949302e6",
+    "type": "Comprehension",
+    "title": "Ana Fikir ve Ayrıntı",
+    "description": "Çocuk yaş grubunda seçilen seviyeye uygun çalışma.",
+    "difficultyLevel": 4,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "reading_comprehension",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "comprehension",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 4
+    }
+  },
+  {
+    "id": "030538ee-839b-56c6-a3a2-2d9a78ead0d7",
+    "type": "SpeedReading",
+    "title": "Dengeli Okuma",
+    "description": "Çocuk yaş grubunda seçilen seviyeye uygun çalışma.",
+    "difficultyLevel": 4,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "word_highlight",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "guided",
+        "pacer": {
+          "speedWpm": 200,
+          "chunkSize": 1
+        },
+        "readingPurpose": "practice"
+      },
+      "difficultyLevel": 4
+    }
+  },
+  {
+    "id": "158e91aa-b6b4-50f9-afbc-752d59c9cd07",
+    "type": "Chunking",
+    "title": "Geniş Kelime Grupları",
+    "description": "Çocuk yaş grubunda seçilen seviyeye uygun çalışma.",
+    "difficultyLevel": 4,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "word_highlight",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "chunking",
+        "pacer": {
+          "speedWpm": 200,
+          "chunkSize": 4
+        },
+        "readingPurpose": "practice"
+      },
+      "difficultyLevel": 4
+    }
+  },
+  {
+    "id": "7e84e43a-1ff7-5d58-b5e6-6b6864c0bc92",
+    "type": "Vocabulary",
+    "title": "Kelime Anlamlarını Ayır",
+    "description": "Çocuk yaş grubunda seçilen seviyeye uygun çalışma.",
+    "difficultyLevel": 4,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "vocabulary_builder",
+      "engineConfig": {
+        "mode": "quiz",
+        "quizType": "mixed",
+        "timeLimitPerWord": 0,
+        "vocabulary": {
+          "count": 8,
+          "difficultyLevel": 4
+        }
+      },
+      "difficultyLevel": 4
+    }
+  },
+  {
+    "id": "bb016af4-2510-5bc0-8262-82a916e2a9ef",
+    "type": "Scanning",
+    "title": "Bilgi Dedektifi",
+    "description": "Çocuk yaş grubunda seçilen seviyeye uygun çalışma.",
+    "difficultyLevel": 4,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "scanning",
+      "engineConfig": {
+        "content": {
+          "source": "random_text"
+        },
+        "targetCount": 4,
+        "timeLimit": 150,
+        "targets": {
+          "mode": "find_all",
+          "caseSensitive": false
+        }
+      },
+      "difficultyLevel": 4
+    }
+  },
+  {
+    "id": "d1a4fac5-42db-587b-a429-015f922fa8d2",
+    "type": "Skimming",
+    "title": "Başlık ve Özet",
+    "description": "Çocuk yaş grubunda seçilen seviyeye uygun çalışma.",
+    "difficultyLevel": 4,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "skimming",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "skimming",
+        "rules": {
+          "timeLimit": 150
+        },
+        "timing": {
+          "minReadingTimeMs": 3000
+        },
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 4
+    }
+  },
+  {
+    "id": "ec753237-5029-5c23-a225-2be60945fd1e",
+    "type": "ErrorAnalysis",
+    "title": "Metni Kontrol Et",
+    "description": "Çocuk yaş grubunda seçilen seviyeye uygun çalışma.",
+    "difficultyLevel": 4,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "error_analysis",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "errorCount": 4,
+        "timeLimit": 240
+      },
+      "difficultyLevel": 4
+    }
+  },
+  {
+    "id": "e43c9878-8c70-51c0-b9fd-7526747fa5d9",
+    "type": "SchulteTable",
+    "title": "Sayı Avcısı",
+    "description": "Dikkat oyunu. Çocuk yaş grubunda seçilen seviyeye uygun çalışma.",
+    "difficultyLevel": 4,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "grid_interaction",
+      "engineConfig": {
+        "gridSize": 4,
+        "sequenceType": "numeric",
+        "rules": {
+          "timeLimit": 100
+        }
+      },
+      "difficultyLevel": 4
+    }
+  },
+  {
+    "id": "f05d5094-094d-5739-8a06-5d58cf39bb53",
+    "type": "Focus",
+    "title": "Konum Belleği",
+    "description": "Dikkat oyunu. Çocuk yaş grubunda seçilen seviyeye uygun çalışma.",
+    "difficultyLevel": 4,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "focus",
+      "engineConfig": {
+        "mode": "position",
+        "nLevel": 1,
+        "totalSteps": 24,
+        "speedMs": 2000,
+        "gridSize": 3
+      },
+      "difficultyLevel": 4
+    }
+  },
+  {
+    "id": "555c285c-8c6a-500c-8278-707acdcd6e9a",
+    "type": "EyeTracking",
+    "title": "Hareketi Takip Et",
+    "description": "Dikkat oyunu. Çocuk yaş grubunda seçilen seviyeye uygun çalışma.",
+    "difficultyLevel": 4,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "motion_path",
+      "engineConfig": {
+        "mode": "tracking",
+        "path": {
+          "type": "infinity8"
+        },
+        "timing": {
+          "durationSeconds": 45,
+          "speedMs": 3000
+        },
+        "content": {
+          "type": "dot",
+          "pointSize": 36
+        }
+      },
+      "difficultyLevel": 4
+    }
+  },
+  {
+    "id": "71a7618f-ea2f-524a-afc4-a6b902f5efe9",
+    "type": "Fixation",
+    "title": "Noktaya Odaklan",
+    "description": "Dikkat oyunu. Çocuk yaş grubunda seçilen seviyeye uygun çalışma.",
+    "difficultyLevel": 4,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "motion_path",
+      "engineConfig": {
+        "mode": "fixation",
+        "timing": {
+          "holdMs": 800,
+          "durationSeconds": 45
+        },
+        "content": {
+          "type": "letter",
+          "points": 4,
+          "peripheralCount": 1,
+          "pointSize": 44
+        }
+      },
+      "difficultyLevel": 4
+    }
+  },
+  {
+    "id": "b2cb492e-760a-562c-a47c-898aa420bbab",
+    "type": "Saccade",
+    "title": "Hedefler Arası Geçiş",
+    "description": "Dikkat oyunu. Çocuk yaş grubunda seçilen seviyeye uygun çalışma.",
+    "difficultyLevel": 4,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "motion_path",
+      "engineConfig": {
+        "mode": "saccade",
+        "timing": {
+          "holdMs": 700,
+          "durationSeconds": 45
+        },
+        "content": {
+          "type": "number",
+          "pattern": "horizontal",
+          "pointSize": 44
+        }
+      },
+      "difficultyLevel": 4
+    }
+  },
+  {
+    "id": "dd072bd5-f52b-5d9f-9229-a9d50d305664",
+    "type": "VisualExpansion",
+    "title": "Çevredeki Harfler",
+    "description": "Dikkat oyunu. Çocuk yaş grubunda seçilen seviyeye uygun çalışma.",
+    "difficultyLevel": 4,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "visual_expansion",
+      "engineConfig": {
+        "mode": "horizontal",
+        "rounds": 16,
+        "displayDurationMs": 950,
+        "startDegrees": 8,
+        "targetDegrees": 22,
+        "content": {
+          "stimulusType": "letter"
+        }
+      },
+      "difficultyLevel": 4
+    }
+  },
+  {
+    "id": "82dda6fd-00b0-555d-a689-29221f386915",
+    "type": "Comprehension",
+    "title": "Metnin Derin Anlamı",
+    "description": "Çocuk yaş grubunda seçilen seviyeye uygun çalışma.",
+    "difficultyLevel": 5,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "reading_comprehension",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "comprehension",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 5
+    }
+  },
+  {
+    "id": "f55aa9d9-7034-577e-a93b-ab42f2aa2381",
+    "type": "Comprehension",
+    "title": "Bilgileri Birleştir",
+    "description": "Çocuk yaş grubunda seçilen seviyeye uygun çalışma.",
+    "difficultyLevel": 5,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "reading_comprehension",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "comprehension",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 5
+    }
+  },
+  {
+    "id": "4230beb8-f60f-5c08-a757-acf22d0fa332",
+    "type": "SpeedReading",
+    "title": "Akıcılığı Koru",
+    "description": "Çocuk yaş grubunda seçilen seviyeye uygun çalışma.",
+    "difficultyLevel": 5,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "word_highlight",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "guided",
+        "pacer": {
+          "speedWpm": 230,
+          "chunkSize": 1
+        },
+        "readingPurpose": "practice"
+      },
+      "difficultyLevel": 5
+    }
+  },
+  {
+    "id": "0eef6d0b-f544-5111-ac12-deeb6a9d45f3",
+    "type": "Vocabulary",
+    "title": "Kelime Ustası",
+    "description": "Çocuk yaş grubunda seçilen seviyeye uygun çalışma.",
+    "difficultyLevel": 5,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "vocabulary_builder",
+      "engineConfig": {
+        "mode": "quiz",
+        "quizType": "mixed",
+        "timeLimitPerWord": 0,
+        "vocabulary": {
+          "count": 10,
+          "difficultyLevel": 5
+        }
+      },
+      "difficultyLevel": 5
+    }
+  },
+  {
+    "id": "e2ac97a6-6fe5-5dcf-9de2-d8361817407c",
+    "type": "Scanning",
+    "title": "Seçici Bilgi Arama",
+    "description": "Çocuk yaş grubunda seçilen seviyeye uygun çalışma.",
+    "difficultyLevel": 5,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "scanning",
+      "engineConfig": {
+        "content": {
+          "source": "random_text"
+        },
+        "targetCount": 5,
+        "timeLimit": 180,
+        "targets": {
+          "mode": "find_all",
+          "caseSensitive": false
+        }
+      },
+      "difficultyLevel": 5
+    }
+  },
+  {
+    "id": "00a29320-c7cf-5ac0-99e4-62226e911a2b",
+    "type": "Skimming",
+    "title": "Metnin Haritası",
+    "description": "Çocuk yaş grubunda seçilen seviyeye uygun çalışma.",
+    "difficultyLevel": 5,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "skimming",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "skimming",
+        "rules": {
+          "timeLimit": 180
+        },
+        "timing": {
+          "minReadingTimeMs": 3000
+        },
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 5
+    }
+  },
+  {
+    "id": "f3fe7294-505f-599a-97ee-50bc9f00bbf4",
+    "type": "ErrorAnalysis",
+    "title": "Dikkatli Editör",
+    "description": "Çocuk yaş grubunda seçilen seviyeye uygun çalışma.",
+    "difficultyLevel": 5,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "error_analysis",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "errorCount": 5,
+        "timeLimit": 240
+      },
+      "difficultyLevel": 5
+    }
+  },
+  {
+    "id": "754eacad-704d-569a-a2f3-39abb8c29ff6",
+    "type": "FreeReading",
+    "title": "Bağımsız Okuyucu",
+    "description": "Çocuk yaş grubunda seçilen seviyeye uygun çalışma.",
+    "difficultyLevel": 5,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "free_reading",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "free",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 5
+    }
+  },
+  {
+    "id": "670c82a7-66cc-5f2a-8feb-ae3002f02c2a",
+    "type": "SchulteTable",
+    "title": "Sayı Avcısı",
+    "description": "Dikkat oyunu. Çocuk yaş grubunda seçilen seviyeye uygun çalışma.",
+    "difficultyLevel": 5,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "grid_interaction",
+      "engineConfig": {
+        "gridSize": 5,
+        "sequenceType": "numeric",
+        "rules": {
+          "timeLimit": 150
+        }
+      },
+      "difficultyLevel": 5
+    }
+  },
+  {
+    "id": "730afda5-23eb-5323-b237-77b527c8a27c",
+    "type": "Focus",
+    "title": "Konum Belleği",
+    "description": "Dikkat oyunu. Çocuk yaş grubunda seçilen seviyeye uygun çalışma.",
+    "difficultyLevel": 5,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "focus",
+      "engineConfig": {
+        "mode": "position",
+        "nLevel": 1,
+        "totalSteps": 24,
+        "speedMs": 1800,
+        "gridSize": 3
+      },
+      "difficultyLevel": 5
+    }
+  },
+  {
+    "id": "098b2568-ea3f-5257-bda7-b5c263ed423f",
+    "type": "EyeTracking",
+    "title": "Hareketi Takip Et",
+    "description": "Dikkat oyunu. Çocuk yaş grubunda seçilen seviyeye uygun çalışma.",
+    "difficultyLevel": 5,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "motion_path",
+      "engineConfig": {
+        "mode": "tracking",
+        "path": {
+          "type": "infinity8"
+        },
+        "timing": {
+          "durationSeconds": 60,
+          "speedMs": 2800
+        },
+        "content": {
+          "type": "dot",
+          "pointSize": 36
+        }
+      },
+      "difficultyLevel": 5
+    }
+  },
+  {
+    "id": "113dce1d-f33d-5711-92e4-249f4af376cc",
+    "type": "Fixation",
+    "title": "Noktaya Odaklan",
+    "description": "Dikkat oyunu. Çocuk yaş grubunda seçilen seviyeye uygun çalışma.",
+    "difficultyLevel": 5,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "motion_path",
+      "engineConfig": {
+        "mode": "fixation",
+        "timing": {
+          "holdMs": 750,
+          "durationSeconds": 45
+        },
+        "content": {
+          "type": "letter",
+          "points": 5,
+          "peripheralCount": 1,
+          "pointSize": 44
+        }
+      },
+      "difficultyLevel": 5
+    }
+  },
+  {
+    "id": "67fb334c-878b-5cbb-bd12-bb353daf362e",
+    "type": "Saccade",
+    "title": "Hedefler Arası Geçiş",
+    "description": "Dikkat oyunu. Çocuk yaş grubunda seçilen seviyeye uygun çalışma.",
+    "difficultyLevel": 5,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "motion_path",
+      "engineConfig": {
+        "mode": "saccade",
+        "timing": {
+          "holdMs": 650,
+          "durationSeconds": 45
+        },
+        "content": {
+          "type": "number",
+          "pattern": "random",
+          "pointSize": 44
+        }
+      },
+      "difficultyLevel": 5
+    }
+  },
+  {
+    "id": "6dada25d-1303-5af9-8e5d-3a0bed836463",
+    "type": "VisualExpansion",
+    "title": "Çevredeki Harfler",
+    "description": "Dikkat oyunu. Çocuk yaş grubunda seçilen seviyeye uygun çalışma.",
+    "difficultyLevel": 5,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "visual_expansion",
+      "engineConfig": {
+        "mode": "horizontal",
+        "rounds": 18,
+        "displayDurationMs": 900,
+        "startDegrees": 8,
+        "targetDegrees": 24,
+        "content": {
+          "stimulusType": "letter"
+        }
+      },
+      "difficultyLevel": 5
+    }
+  }
+]

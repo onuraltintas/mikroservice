@@ -27,10 +27,11 @@ public sealed class RegressionTextSelectionTests
             BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, [db], null)!;
         await service.StartAsync(student, new StartExerciseSessionRequest { ExerciseId = exercise });
         var old = await db.ExerciseSessions.SingleAsync();
-        Assert.Equal(first, old.ReadingTextId);
+        Assert.Contains(old.ReadingTextId!.Value, new[] { first, second });
+        var remaining = old.ReadingTextId == first ? second : first;
         old.Abandon(DateTime.UtcNow); await db.SaveChangesAsync();
         var next = await service.StartAsync(student, new StartExerciseSessionRequest { ExerciseId = exercise });
-        Assert.Equal(second, (await db.ExerciseSessions.SingleAsync(session => session.Id == next.SessionId)).ReadingTextId);
+        Assert.Equal(remaining, (await db.ExerciseSessions.SingleAsync(session => session.Id == next.SessionId)).ReadingTextId);
     }
 
     [Theory]

@@ -29,13 +29,14 @@ public sealed class FreeReadingPersistenceTests
         db.ReadingTexts.AddRange(Text(shortId, exercise, 2, 2), Text(firstId, exercise, 2, 100), Text(secondId, exercise, 2, 100));
         await db.SaveChangesAsync(); var service = Service(db);
         var first = await service.StartAsync(user, new() { ExerciseId = exercise });
-        Assert.Equal(firstId, (await db.ExerciseSessions.SingleAsync()).ReadingTextId);
         var session = await db.ExerciseSessions.SingleAsync(); var state = JsonNode.Parse(session.SessionDataJson)!;
+        Assert.Contains(session.ReadingTextId!.Value, new[] { firstId, secondId });
+        var nextTextId = session.ReadingTextId == firstId ? secondId : firstId;
         state["readingStartTime"] = DateTime.UtcNow.AddSeconds(-30); session.SetState(state.ToJsonString()); await db.SaveChangesAsync();
         await service.ValidateActionAsync(user, first.SessionId, new() { Action = "finish_reading" });
         await service.CompleteAsync(user, first.SessionId, new());
         var second = await service.StartAsync(user, new() { ExerciseId = exercise });
-        Assert.Equal(secondId, (await db.ExerciseSessions.SingleAsync(s => s.Id == second.SessionId)).ReadingTextId);
+        Assert.Equal(nextTextId, (await db.ExerciseSessions.SingleAsync(s => s.Id == second.SessionId)).ReadingTextId);
     }
     [Fact]
     public async Task No_matching_level_does_not_fall_back_to_other_level()

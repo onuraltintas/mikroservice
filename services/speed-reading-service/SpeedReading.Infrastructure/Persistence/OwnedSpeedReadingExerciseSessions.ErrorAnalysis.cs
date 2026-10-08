@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using EduPlatform.Shared.Kernel.Exceptions;
 using SpeedReading.Application.ExerciseSessions;
 using SpeedReading.Domain.Catalog;
@@ -12,6 +13,29 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions
 
     private static void InitializeErrorAnalysis(SessionState state, JsonElement config)
     {
+        if (ReadString(ReadObject(config, "content"), "source") == "reading_text")
+        {
+            var generatedWords = SplitWords(state.Content)
+                .Select((text, index) => new ErrorAnalysisWord { Index = index, Text = text }).ToList();
+            var generatedErrors = new List<ErrorAnalysisError>();
+            var count = Math.Clamp(ReadPositiveInt(config, "errorCount") ?? 4, 1, 1000);
+            foreach (var word in generatedWords.Where(word => Regex.IsMatch(word.Text, @"\p{L}{4,}"))
+                .OrderBy(_ => Guid.NewGuid()).Take(count))
+            {
+                var match = Regex.Match(word.Text, @"\p{L}{4,}");
+                var original = word.Text;
+                word.Text = original.Remove(match.Index + match.Length - 1, 1);
+                generatedErrors.Add(new ErrorAnalysisError
+                {
+                    WordIndex = word.Index, OriginalWord = original, ErrorWord = word.Text,
+                    Explanation = $"Eksik harfi tamamlayın. Doğru yazım: {original}", ErrorType = "spelling"
+                });
+            }
+            config = JsonSerializer.SerializeToElement(new
+            {
+                words = generatedWords, errors = generatedErrors, timeLimit = ReadGridTimeLimit(config) ?? 240
+            }, JsonOptions);
+        }
         var words = ReadProperty(config, "words"); var errors = ReadProperty(config, "errors");
         if (words.ValueKind != JsonValueKind.Array || errors.ValueKind != JsonValueKind.Array
             || words.GetArrayLength() is < 1 or > 10000 || errors.GetArrayLength() is < 1 or > 1000)
