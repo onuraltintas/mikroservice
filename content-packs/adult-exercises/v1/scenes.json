@@ -1,0 +1,767 @@
+[
+  {
+    "id": "4d62b31c-467c-5c3d-a4c4-1a0b722f3d40",
+    "exerciseId": "0ff4c21e-703c-5354-bbd8-0ebc3fbd7d74",
+    "description": "Deniz, kurum kütüphanesi içinde bir masanın önünde duruyor. Masanın üzerinde mavi bir defter var. Bu nesnenin sağında bir sarı kalem, solunda ise küçük bir masa lambası bulunuyor. Pencere masanın arkasında, kapı odanın sol duvarında. Deniz önce lambayı açıyor, sonra defter nesnesini eline alıyor ve en son pencereye doğru dönüyor.",
+    "duration": 25,
+    "displayOrder": 0,
+    "difficultyLevel": 1,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000003",
+    "mode": "assessment",
+    "questions": [
+      {
+        "id": "e7083352-081d-53b2-aa92-23beccdec2b8",
+        "questionText": "Masadaki defter hangi renkteydi?",
+        "options": [
+          "mavi",
+          "yeşil",
+          "turuncu",
+          "mor"
+        ],
+        "correctAnswer": "A",
+        "questionType": "detail",
+        "displayOrder": 0
+      },
+      {
+        "id": "fe31680f-ace9-5286-b1d3-37b05f5445e3",
+        "questionText": "Defter nesnesinin solunda ne vardı?",
+        "options": [
+          "Pencere",
+          "Masa lambası",
+          "Sarı kalem",
+          "Kapı"
+        ],
+        "correctAnswer": "B",
+        "questionType": "spatial",
+        "displayOrder": 1
+      },
+      {
+        "id": "5a07509d-87a3-5594-928c-8d3e4bde76f2",
+        "questionText": "Deniz lambayı açtıktan hemen sonra ne yaptı?",
+        "options": [
+          "Kapıyı açtı",
+          "Sandalyeye oturdu",
+          "Defter nesnesini eline aldı",
+          "Pencereye doğru döndü"
+        ],
+        "correctAnswer": "C",
+        "questionType": "sequence",
+        "displayOrder": 2
+      }
+    ]
+  },
+  {
+    "id": "0dcc9499-4cbe-535d-9c8a-99b5ea9b80d3",
+    "exerciseId": "0ff4c21e-703c-5354-bbd8-0ebc3fbd7d74",
+    "description": "Ece, kurum kütüphanesi içinde bir masanın önünde duruyor. Masanın üzerinde yeşil bir dosya var. Bu nesnenin sağında bir beyaz kart, solunda ise küçük bir masa lambası bulunuyor. Pencere masanın arkasında, kapı odanın sol duvarında. Ece önce lambayı açıyor, sonra dosya nesnesini eline alıyor ve en son pencereye doğru dönüyor.",
+    "duration": 25,
+    "displayOrder": 1,
+    "difficultyLevel": 1,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000003",
+    "mode": "assessment",
+    "questions": [
+      {
+        "id": "adc04770-745f-5639-89e2-c25f39fcf32b",
+        "questionText": "Masadaki dosya hangi renkteydi?",
+        "options": [
+          "kırmızı",
+          "yeşil",
+          "turuncu",
+          "mor"
+        ],
+        "correctAnswer": "B",
+        "questionType": "detail",
+        "displayOrder": 0
+      },
+      {
+        "id": "56b8901b-5c4f-5a6d-8e80-6c3abc60f047",
+        "questionText": "Dosya nesnesinin solunda ne vardı?",
+        "options": [
+          "Kapı",
+          "Pencere",
+          "Masa lambası",
+          "Beyaz kart"
+        ],
+        "correctAnswer": "C",
+        "questionType": "spatial",
+        "displayOrder": 1
+      },
+      {
+        "id": "7f34c7e1-8ab2-5946-b489-85333b257688",
+        "questionText": "Ece lambayı açtıktan hemen sonra ne yaptı?",
+        "options": [
+          "Pencereye doğru döndü",
+          "Kapıyı açtı",
+          "Sandalyeye oturdu",
+          "Dosya nesnesini eline aldı"
+        ],
+        "correctAnswer": "D",
+        "questionType": "sequence",
+        "displayOrder": 2
+      }
+    ]
+  },
+  {
+    "id": "f9976589-fbe2-51a0-a053-7d05ad651db8",
+    "exerciseId": "0ff4c21e-703c-5354-bbd8-0ebc3fbd7d74",
+    "description": "Mert, kurum kütüphanesi içinde bir masanın önünde duruyor. Masanın üzerinde turuncu bir çanta var. Bu nesnenin sağında bir gri kutu, solunda ise küçük bir masa lambası bulunuyor. Pencere masanın arkasında, kapı odanın sol duvarında. Mert önce lambayı açıyor, sonra çanta nesnesini eline alıyor ve en son pencereye doğru dönüyor.",
+    "duration": 25,
+    "displayOrder": 2,
+    "difficultyLevel": 1,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000003",
+    "mode": "assessment",
+    "questions": [
+      {
+        "id": "178fd16f-c494-50c3-9911-26b3e10e5575",
+        "questionText": "Masadaki çanta hangi renkteydi?",
+        "options": [
+          "kırmızı",
+          "mavi",
+          "turuncu",
+          "mor"
+        ],
+        "correctAnswer": "C",
+        "questionType": "detail",
+        "displayOrder": 0
+      },
+      {
+        "id": "0275b537-54e0-5a1e-8367-5ebe318dca7a",
+        "questionText": "Çanta nesnesinin solunda ne vardı?",
+        "options": [
+          "Gri kutu",
+          "Kapı",
+          "Pencere",
+          "Masa lambası"
+        ],
+        "correctAnswer": "D",
+        "questionType": "spatial",
+        "displayOrder": 1
+      },
+      {
+        "id": "17971ab2-feac-54f4-8e60-39e56ce6802c",
+        "questionText": "Mert lambayı açtıktan hemen sonra ne yaptı?",
+        "options": [
+          "Çanta nesnesini eline aldı",
+          "Pencereye doğru döndü",
+          "Kapıyı açtı",
+          "Sandalyeye oturdu"
+        ],
+        "correctAnswer": "A",
+        "questionType": "sequence",
+        "displayOrder": 2
+      }
+    ]
+  },
+  {
+    "id": "c927e81f-e103-5188-910b-ad0b013f9f9f",
+    "exerciseId": "dbd93c87-2adb-538a-840b-0547a1d3b998",
+    "description": "Deniz, araştırma atölyesi içinde bir masanın önünde duruyor. Masanın üzerinde yeşil bir defter var. Bu nesnenin sağında bir sarı kalem, solunda ise küçük bir masa lambası bulunuyor. Pencere masanın arkasında, kapı odanın sol duvarında. Deniz önce lambayı açıyor, sonra defter nesnesini eline alıyor ve en son pencereye doğru dönüyor. Kapının yanında iki sandalye var; pencereye yakın olanın üzerinde bir mont duruyor.",
+    "duration": 30,
+    "displayOrder": 0,
+    "difficultyLevel": 2,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000003",
+    "mode": "assessment",
+    "questions": [
+      {
+        "id": "bfdc4a56-ad15-572b-80b9-d0cecf9c043c",
+        "questionText": "Masadaki defter hangi renkteydi?",
+        "options": [
+          "turuncu",
+          "mor",
+          "kırmızı",
+          "yeşil"
+        ],
+        "correctAnswer": "D",
+        "questionType": "detail",
+        "displayOrder": 0
+      },
+      {
+        "id": "bdd38d25-8a03-5f35-8afd-9548beb9302c",
+        "questionText": "Defter nesnesinin solunda ne vardı?",
+        "options": [
+          "Masa lambası",
+          "Sarı kalem",
+          "Kapı",
+          "Pencere"
+        ],
+        "correctAnswer": "A",
+        "questionType": "spatial",
+        "displayOrder": 1
+      },
+      {
+        "id": "01acccc5-1ad9-5f0c-afba-56f9095f528d",
+        "questionText": "Deniz lambayı açtıktan hemen sonra ne yaptı?",
+        "options": [
+          "Sandalyeye oturdu",
+          "Defter nesnesini eline aldı",
+          "Pencereye doğru döndü",
+          "Kapıyı açtı"
+        ],
+        "correctAnswer": "B",
+        "questionType": "sequence",
+        "displayOrder": 2
+      }
+    ]
+  },
+  {
+    "id": "f8e40bc3-d75e-50f0-87a1-c987844b32ce",
+    "exerciseId": "dbd93c87-2adb-538a-840b-0547a1d3b998",
+    "description": "Ece, araştırma atölyesi içinde bir masanın önünde duruyor. Masanın üzerinde turuncu bir dosya var. Bu nesnenin sağında bir beyaz kart, solunda ise küçük bir masa lambası bulunuyor. Pencere masanın arkasında, kapı odanın sol duvarında. Ece önce lambayı açıyor, sonra dosya nesnesini eline alıyor ve en son pencereye doğru dönüyor. Kapının yanında iki sandalye var; pencereye yakın olanın üzerinde bir mont duruyor.",
+    "duration": 30,
+    "displayOrder": 1,
+    "difficultyLevel": 2,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000003",
+    "mode": "assessment",
+    "questions": [
+      {
+        "id": "c7b2ee29-6cb8-5c03-8641-684a20caf132",
+        "questionText": "Masadaki dosya hangi renkteydi?",
+        "options": [
+          "turuncu",
+          "mor",
+          "kırmızı",
+          "mavi"
+        ],
+        "correctAnswer": "A",
+        "questionType": "detail",
+        "displayOrder": 0
+      },
+      {
+        "id": "30646177-5ea9-5432-a025-5ce5ed227221",
+        "questionText": "Dosya nesnesinin solunda ne vardı?",
+        "options": [
+          "Pencere",
+          "Masa lambası",
+          "Beyaz kart",
+          "Kapı"
+        ],
+        "correctAnswer": "B",
+        "questionType": "spatial",
+        "displayOrder": 1
+      },
+      {
+        "id": "51843519-7747-571d-999f-3840bdd49564",
+        "questionText": "Ece lambayı açtıktan hemen sonra ne yaptı?",
+        "options": [
+          "Kapıyı açtı",
+          "Sandalyeye oturdu",
+          "Dosya nesnesini eline aldı",
+          "Pencereye doğru döndü"
+        ],
+        "correctAnswer": "C",
+        "questionType": "sequence",
+        "displayOrder": 2
+      }
+    ]
+  },
+  {
+    "id": "3e999c7f-17f3-500c-ae7d-2856e080c6f4",
+    "exerciseId": "dbd93c87-2adb-538a-840b-0547a1d3b998",
+    "description": "Mert, araştırma atölyesi içinde bir masanın önünde duruyor. Masanın üzerinde mor bir çanta var. Bu nesnenin sağında bir gri kutu, solunda ise küçük bir masa lambası bulunuyor. Pencere masanın arkasında, kapı odanın sol duvarında. Mert önce lambayı açıyor, sonra çanta nesnesini eline alıyor ve en son pencereye doğru dönüyor. Kapının yanında iki sandalye var; pencereye yakın olanın üzerinde bir mont duruyor.",
+    "duration": 30,
+    "displayOrder": 2,
+    "difficultyLevel": 2,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000003",
+    "mode": "assessment",
+    "questions": [
+      {
+        "id": "d1a85d8f-f8b3-5698-a186-1e715b6c36e3",
+        "questionText": "Masadaki çanta hangi renkteydi?",
+        "options": [
+          "yeşil",
+          "mor",
+          "kırmızı",
+          "mavi"
+        ],
+        "correctAnswer": "B",
+        "questionType": "detail",
+        "displayOrder": 0
+      },
+      {
+        "id": "d172d2f9-9b8a-57e8-bcbf-5f0516ee9967",
+        "questionText": "Çanta nesnesinin solunda ne vardı?",
+        "options": [
+          "Kapı",
+          "Pencere",
+          "Masa lambası",
+          "Gri kutu"
+        ],
+        "correctAnswer": "C",
+        "questionType": "spatial",
+        "displayOrder": 1
+      },
+      {
+        "id": "fc9e64de-24f9-5e52-b06e-0c59a09cab12",
+        "questionText": "Mert lambayı açtıktan hemen sonra ne yaptı?",
+        "options": [
+          "Pencereye doğru döndü",
+          "Kapıyı açtı",
+          "Sandalyeye oturdu",
+          "Çanta nesnesini eline aldı"
+        ],
+        "correctAnswer": "D",
+        "questionType": "sequence",
+        "displayOrder": 2
+      }
+    ]
+  },
+  {
+    "id": "1598b321-ff8e-57f5-98a3-9dc3c54f585f",
+    "exerciseId": "b3f320f5-ff1b-5169-966d-f5af84c30910",
+    "description": "Deniz, ekip toplantı odası içinde bir masanın önünde duruyor. Masanın üzerinde turuncu bir defter var. Bu nesnenin sağında bir sarı kalem, solunda ise küçük bir masa lambası bulunuyor. Pencere masanın arkasında, kapı odanın sol duvarında. Deniz önce lambayı açıyor, sonra defter nesnesini eline alıyor ve en son pencereye doğru dönüyor. Kapının yanında üç sandalye ve üzerinde bir saat bulunan raf var. Saati gösteren raf pencerenin karşısındaki duvarda.",
+    "duration": 35,
+    "displayOrder": 0,
+    "difficultyLevel": 3,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000003",
+    "mode": "assessment",
+    "questions": [
+      {
+        "id": "066d14a1-dd08-59d5-8e72-a7c45aec9ea9",
+        "questionText": "Masadaki defter hangi renkteydi?",
+        "options": [
+          "kırmızı",
+          "mavi",
+          "turuncu",
+          "mor"
+        ],
+        "correctAnswer": "C",
+        "questionType": "detail",
+        "displayOrder": 0
+      },
+      {
+        "id": "0d684a1a-d01d-5472-a12b-f05b8917b4e6",
+        "questionText": "Defter nesnesinin solunda ne vardı?",
+        "options": [
+          "Sarı kalem",
+          "Kapı",
+          "Pencere",
+          "Masa lambası"
+        ],
+        "correctAnswer": "D",
+        "questionType": "spatial",
+        "displayOrder": 1
+      },
+      {
+        "id": "4b3c3a96-f584-5524-8f1b-b342f14f8c6a",
+        "questionText": "Deniz lambayı açtıktan hemen sonra ne yaptı?",
+        "options": [
+          "Defter nesnesini eline aldı",
+          "Pencereye doğru döndü",
+          "Kapıyı açtı",
+          "Sandalyeye oturdu"
+        ],
+        "correctAnswer": "A",
+        "questionType": "sequence",
+        "displayOrder": 2
+      }
+    ]
+  },
+  {
+    "id": "8b15a273-b13c-5142-83e1-f52c429322de",
+    "exerciseId": "b3f320f5-ff1b-5169-966d-f5af84c30910",
+    "description": "Ece, ekip toplantı odası içinde bir masanın önünde duruyor. Masanın üzerinde mor bir dosya var. Bu nesnenin sağında bir beyaz kart, solunda ise küçük bir masa lambası bulunuyor. Pencere masanın arkasında, kapı odanın sol duvarında. Ece önce lambayı açıyor, sonra dosya nesnesini eline alıyor ve en son pencereye doğru dönüyor. Kapının yanında üç sandalye ve üzerinde bir saat bulunan raf var. Saati gösteren raf pencerenin karşısındaki duvarda.",
+    "duration": 35,
+    "displayOrder": 1,
+    "difficultyLevel": 3,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000003",
+    "mode": "assessment",
+    "questions": [
+      {
+        "id": "b459ea66-f013-5b48-b6a8-a20d5114a1a7",
+        "questionText": "Masadaki dosya hangi renkteydi?",
+        "options": [
+          "kırmızı",
+          "mavi",
+          "yeşil",
+          "mor"
+        ],
+        "correctAnswer": "D",
+        "questionType": "detail",
+        "displayOrder": 0
+      },
+      {
+        "id": "6d74a25c-b0e2-5893-a25c-0cfdbdf454f4",
+        "questionText": "Dosya nesnesinin solunda ne vardı?",
+        "options": [
+          "Masa lambası",
+          "Beyaz kart",
+          "Kapı",
+          "Pencere"
+        ],
+        "correctAnswer": "A",
+        "questionType": "spatial",
+        "displayOrder": 1
+      },
+      {
+        "id": "c9c92a74-7616-54e1-b9cf-38553a27fb76",
+        "questionText": "Ece lambayı açtıktan hemen sonra ne yaptı?",
+        "options": [
+          "Sandalyeye oturdu",
+          "Dosya nesnesini eline aldı",
+          "Pencereye doğru döndü",
+          "Kapıyı açtı"
+        ],
+        "correctAnswer": "B",
+        "questionType": "sequence",
+        "displayOrder": 2
+      }
+    ]
+  },
+  {
+    "id": "3223f702-cf79-5811-86ac-a07ea0f072d4",
+    "exerciseId": "b3f320f5-ff1b-5169-966d-f5af84c30910",
+    "description": "Mert, ekip toplantı odası içinde bir masanın önünde duruyor. Masanın üzerinde kırmızı bir çanta var. Bu nesnenin sağında bir gri kutu, solunda ise küçük bir masa lambası bulunuyor. Pencere masanın arkasında, kapı odanın sol duvarında. Mert önce lambayı açıyor, sonra çanta nesnesini eline alıyor ve en son pencereye doğru dönüyor. Kapının yanında üç sandalye ve üzerinde bir saat bulunan raf var. Saati gösteren raf pencerenin karşısındaki duvarda.",
+    "duration": 35,
+    "displayOrder": 2,
+    "difficultyLevel": 3,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000003",
+    "mode": "assessment",
+    "questions": [
+      {
+        "id": "4359a8b1-e9aa-5266-bf74-92eaafdf70ad",
+        "questionText": "Masadaki çanta hangi renkteydi?",
+        "options": [
+          "kırmızı",
+          "mavi",
+          "yeşil",
+          "turuncu"
+        ],
+        "correctAnswer": "A",
+        "questionType": "detail",
+        "displayOrder": 0
+      },
+      {
+        "id": "76acf16c-a445-53ab-a4eb-a1327cde12a0",
+        "questionText": "Çanta nesnesinin solunda ne vardı?",
+        "options": [
+          "Pencere",
+          "Masa lambası",
+          "Gri kutu",
+          "Kapı"
+        ],
+        "correctAnswer": "B",
+        "questionType": "spatial",
+        "displayOrder": 1
+      },
+      {
+        "id": "321f82f0-111e-5cbd-945a-4d0a40283c89",
+        "questionText": "Mert lambayı açtıktan hemen sonra ne yaptı?",
+        "options": [
+          "Kapıyı açtı",
+          "Sandalyeye oturdu",
+          "Çanta nesnesini eline aldı",
+          "Pencereye doğru döndü"
+        ],
+        "correctAnswer": "C",
+        "questionType": "sequence",
+        "displayOrder": 2
+      }
+    ]
+  },
+  {
+    "id": "152b5a11-153d-5b74-9fe7-052011ee65c2",
+    "exerciseId": "b8bada25-64e7-5699-b190-bee49cbe6d3f",
+    "description": "Deniz, bilim merkezi içinde bir masanın önünde duruyor. Masanın üzerinde mor bir defter var. Bu nesnenin sağında bir sarı kalem, solunda ise küçük bir masa lambası bulunuyor. Pencere masanın arkasında, kapı odanın sol duvarında. Deniz önce lambayı açıyor, sonra defter nesnesini eline alıyor ve en son pencereye doğru dönüyor. Kapının yanındaki üç sandalyeden ortadakinin üzerinde bir mont bulunuyor. Raftaki kitapların arasında açık renkli bir kutu var; bu kutu masadaki nesnelerden farklı.",
+    "duration": 40,
+    "displayOrder": 0,
+    "difficultyLevel": 4,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000003",
+    "mode": "assessment",
+    "questions": [
+      {
+        "id": "599568e3-da45-591e-8ffe-07d5f43763ab",
+        "questionText": "Masadaki defter hangi renkteydi?",
+        "options": [
+          "yeşil",
+          "mor",
+          "kırmızı",
+          "mavi"
+        ],
+        "correctAnswer": "B",
+        "questionType": "detail",
+        "displayOrder": 0
+      },
+      {
+        "id": "e91e88d2-c42f-58b4-93f3-b05b5e079c89",
+        "questionText": "Defter nesnesinin solunda ne vardı?",
+        "options": [
+          "Kapı",
+          "Pencere",
+          "Masa lambası",
+          "Sarı kalem"
+        ],
+        "correctAnswer": "C",
+        "questionType": "spatial",
+        "displayOrder": 1
+      },
+      {
+        "id": "45de1f69-58d3-5994-8c3a-ce92aabf9bce",
+        "questionText": "Deniz lambayı açtıktan hemen sonra ne yaptı?",
+        "options": [
+          "Pencereye doğru döndü",
+          "Kapıyı açtı",
+          "Sandalyeye oturdu",
+          "Defter nesnesini eline aldı"
+        ],
+        "correctAnswer": "D",
+        "questionType": "sequence",
+        "displayOrder": 2
+      }
+    ]
+  },
+  {
+    "id": "3f7ad593-d2a0-543c-9468-383b53b3ac0d",
+    "exerciseId": "b8bada25-64e7-5699-b190-bee49cbe6d3f",
+    "description": "Ece, bilim merkezi içinde bir masanın önünde duruyor. Masanın üzerinde kırmızı bir dosya var. Bu nesnenin sağında bir beyaz kart, solunda ise küçük bir masa lambası bulunuyor. Pencere masanın arkasında, kapı odanın sol duvarında. Ece önce lambayı açıyor, sonra dosya nesnesini eline alıyor ve en son pencereye doğru dönüyor. Kapının yanındaki üç sandalyeden ortadakinin üzerinde bir mont bulunuyor. Raftaki kitapların arasında açık renkli bir kutu var; bu kutu masadaki nesnelerden farklı.",
+    "duration": 40,
+    "displayOrder": 1,
+    "difficultyLevel": 4,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000003",
+    "mode": "assessment",
+    "questions": [
+      {
+        "id": "f7e1a4b5-fd17-5021-8a9c-56b2bf9d3f7d",
+        "questionText": "Masadaki dosya hangi renkteydi?",
+        "options": [
+          "yeşil",
+          "turuncu",
+          "kırmızı",
+          "mavi"
+        ],
+        "correctAnswer": "C",
+        "questionType": "detail",
+        "displayOrder": 0
+      },
+      {
+        "id": "03c0f2f1-4277-503d-99bc-a4066245a1c9",
+        "questionText": "Dosya nesnesinin solunda ne vardı?",
+        "options": [
+          "Beyaz kart",
+          "Kapı",
+          "Pencere",
+          "Masa lambası"
+        ],
+        "correctAnswer": "D",
+        "questionType": "spatial",
+        "displayOrder": 1
+      },
+      {
+        "id": "5dd9b314-95d9-5c39-8c0e-187192d43e85",
+        "questionText": "Ece lambayı açtıktan hemen sonra ne yaptı?",
+        "options": [
+          "Dosya nesnesini eline aldı",
+          "Pencereye doğru döndü",
+          "Kapıyı açtı",
+          "Sandalyeye oturdu"
+        ],
+        "correctAnswer": "A",
+        "questionType": "sequence",
+        "displayOrder": 2
+      }
+    ]
+  },
+  {
+    "id": "f5ec5c61-cace-5ce2-89ed-f83ebb062ea9",
+    "exerciseId": "b8bada25-64e7-5699-b190-bee49cbe6d3f",
+    "description": "Mert, bilim merkezi içinde bir masanın önünde duruyor. Masanın üzerinde mavi bir çanta var. Bu nesnenin sağında bir gri kutu, solunda ise küçük bir masa lambası bulunuyor. Pencere masanın arkasında, kapı odanın sol duvarında. Mert önce lambayı açıyor, sonra çanta nesnesini eline alıyor ve en son pencereye doğru dönüyor. Kapının yanındaki üç sandalyeden ortadakinin üzerinde bir mont bulunuyor. Raftaki kitapların arasında açık renkli bir kutu var; bu kutu masadaki nesnelerden farklı.",
+    "duration": 40,
+    "displayOrder": 2,
+    "difficultyLevel": 4,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000003",
+    "mode": "assessment",
+    "questions": [
+      {
+        "id": "39ac27a4-801c-5bfb-8ca1-345879e9e06f",
+        "questionText": "Masadaki çanta hangi renkteydi?",
+        "options": [
+          "yeşil",
+          "turuncu",
+          "mor",
+          "mavi"
+        ],
+        "correctAnswer": "D",
+        "questionType": "detail",
+        "displayOrder": 0
+      },
+      {
+        "id": "208465c5-2fc1-5ea9-9794-91a9d9b79520",
+        "questionText": "Çanta nesnesinin solunda ne vardı?",
+        "options": [
+          "Masa lambası",
+          "Gri kutu",
+          "Kapı",
+          "Pencere"
+        ],
+        "correctAnswer": "A",
+        "questionType": "spatial",
+        "displayOrder": 1
+      },
+      {
+        "id": "d06c9638-439a-5393-9fbf-97ead14ede4b",
+        "questionText": "Mert lambayı açtıktan hemen sonra ne yaptı?",
+        "options": [
+          "Sandalyeye oturdu",
+          "Çanta nesnesini eline aldı",
+          "Pencereye doğru döndü",
+          "Kapıyı açtı"
+        ],
+        "correctAnswer": "B",
+        "questionType": "sequence",
+        "displayOrder": 2
+      }
+    ]
+  },
+  {
+    "id": "578d6064-afb0-52f1-8d0e-d321af598945",
+    "exerciseId": "31aa34b2-0f98-56f0-a905-4e65dc297f75",
+    "description": "Deniz, proje çalışma alanı içinde bir masanın önünde duruyor. Masanın üzerinde kırmızı bir defter var. Bu nesnenin sağında bir sarı kalem, solunda ise küçük bir masa lambası bulunuyor. Pencere masanın arkasında, kapı odanın sol duvarında. Deniz önce lambayı açıyor, sonra defter nesnesini eline alıyor ve en son pencereye doğru dönüyor. Kapının yanındaki üç sandalyeden ortadakinin üzerinde bir mont var. Pencerenin karşısındaki rafta dört kitap ve bir kutu bulunuyor. Masanın altındaki sepet boş, duvardaki saatin altındaki pano ise iki afiş taşıyor.",
+    "duration": 45,
+    "displayOrder": 0,
+    "difficultyLevel": 5,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000003",
+    "mode": "assessment",
+    "questions": [
+      {
+        "id": "0a9343bd-8343-5f3f-9611-f936cd84d53e",
+        "questionText": "Masadaki defter hangi renkteydi?",
+        "options": [
+          "kırmızı",
+          "mavi",
+          "yeşil",
+          "turuncu"
+        ],
+        "correctAnswer": "A",
+        "questionType": "detail",
+        "displayOrder": 0
+      },
+      {
+        "id": "e67c81d4-10e0-583a-9f73-fe4f1ee8ed03",
+        "questionText": "Defter nesnesinin solunda ne vardı?",
+        "options": [
+          "Pencere",
+          "Masa lambası",
+          "Sarı kalem",
+          "Kapı"
+        ],
+        "correctAnswer": "B",
+        "questionType": "spatial",
+        "displayOrder": 1
+      },
+      {
+        "id": "f91d7168-eeed-5268-8b88-62b399fa7c20",
+        "questionText": "Deniz lambayı açtıktan hemen sonra ne yaptı?",
+        "options": [
+          "Kapıyı açtı",
+          "Sandalyeye oturdu",
+          "Defter nesnesini eline aldı",
+          "Pencereye doğru döndü"
+        ],
+        "correctAnswer": "C",
+        "questionType": "sequence",
+        "displayOrder": 2
+      }
+    ]
+  },
+  {
+    "id": "9e79c686-31be-5ffa-88f9-17a66a7bb8d5",
+    "exerciseId": "31aa34b2-0f98-56f0-a905-4e65dc297f75",
+    "description": "Ece, proje çalışma alanı içinde bir masanın önünde duruyor. Masanın üzerinde mavi bir dosya var. Bu nesnenin sağında bir beyaz kart, solunda ise küçük bir masa lambası bulunuyor. Pencere masanın arkasında, kapı odanın sol duvarında. Ece önce lambayı açıyor, sonra dosya nesnesini eline alıyor ve en son pencereye doğru dönüyor. Kapının yanındaki üç sandalyeden ortadakinin üzerinde bir mont var. Pencerenin karşısındaki rafta dört kitap ve bir kutu bulunuyor. Masanın altındaki sepet boş, duvardaki saatin altındaki pano ise iki afiş taşıyor.",
+    "duration": 45,
+    "displayOrder": 1,
+    "difficultyLevel": 5,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000003",
+    "mode": "assessment",
+    "questions": [
+      {
+        "id": "65a0b8f6-e95f-5deb-a877-05c854f821d0",
+        "questionText": "Masadaki dosya hangi renkteydi?",
+        "options": [
+          "mor",
+          "mavi",
+          "yeşil",
+          "turuncu"
+        ],
+        "correctAnswer": "B",
+        "questionType": "detail",
+        "displayOrder": 0
+      },
+      {
+        "id": "aa7303d8-25c3-5fe1-81cc-4a3247ffae8d",
+        "questionText": "Dosya nesnesinin solunda ne vardı?",
+        "options": [
+          "Kapı",
+          "Pencere",
+          "Masa lambası",
+          "Beyaz kart"
+        ],
+        "correctAnswer": "C",
+        "questionType": "spatial",
+        "displayOrder": 1
+      },
+      {
+        "id": "b8f300b5-332c-57a3-a70f-9eb664d82ace",
+        "questionText": "Ece lambayı açtıktan hemen sonra ne yaptı?",
+        "options": [
+          "Pencereye doğru döndü",
+          "Kapıyı açtı",
+          "Sandalyeye oturdu",
+          "Dosya nesnesini eline aldı"
+        ],
+        "correctAnswer": "D",
+        "questionType": "sequence",
+        "displayOrder": 2
+      }
+    ]
+  },
+  {
+    "id": "f9c380fa-1abe-5e89-8e84-594b8a7e7735",
+    "exerciseId": "31aa34b2-0f98-56f0-a905-4e65dc297f75",
+    "description": "Mert, proje çalışma alanı içinde bir masanın önünde duruyor. Masanın üzerinde yeşil bir çanta var. Bu nesnenin sağında bir gri kutu, solunda ise küçük bir masa lambası bulunuyor. Pencere masanın arkasında, kapı odanın sol duvarında. Mert önce lambayı açıyor, sonra çanta nesnesini eline alıyor ve en son pencereye doğru dönüyor. Kapının yanındaki üç sandalyeden ortadakinin üzerinde bir mont var. Pencerenin karşısındaki rafta dört kitap ve bir kutu bulunuyor. Masanın altındaki sepet boş, duvardaki saatin altındaki pano ise iki afiş taşıyor.",
+    "duration": 45,
+    "displayOrder": 2,
+    "difficultyLevel": 5,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000003",
+    "mode": "assessment",
+    "questions": [
+      {
+        "id": "81d0c4dd-1aaf-5934-ab56-c3fba5e36061",
+        "questionText": "Masadaki çanta hangi renkteydi?",
+        "options": [
+          "mor",
+          "kırmızı",
+          "yeşil",
+          "turuncu"
+        ],
+        "correctAnswer": "C",
+        "questionType": "detail",
+        "displayOrder": 0
+      },
+      {
+        "id": "c9e29296-a87e-5a67-b77f-34f6f1776703",
+        "questionText": "Çanta nesnesinin solunda ne vardı?",
+        "options": [
+          "Gri kutu",
+          "Kapı",
+          "Pencere",
+          "Masa lambası"
+        ],
+        "correctAnswer": "D",
+        "questionType": "spatial",
+        "displayOrder": 1
+      },
+      {
+        "id": "b36213bf-1e5c-5863-9ae9-10a1dce5e881",
+        "questionText": "Mert lambayı açtıktan hemen sonra ne yaptı?",
+        "options": [
+          "Çanta nesnesini eline aldı",
+          "Pencereye doğru döndü",
+          "Kapıyı açtı",
+          "Sandalyeye oturdu"
+        ],
+        "correctAnswer": "A",
+        "questionType": "sequence",
+        "displayOrder": 2
+      }
+    ]
+  }
+]

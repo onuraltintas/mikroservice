@@ -10,7 +10,7 @@ public sealed class ChildExerciseCatalogTests
     [Theory]
     [InlineData("child-exercises", "10000000-0000-0000-0000-000000000001", 14, 70)]
     [InlineData("teen-exercises", "10000000-0000-0000-0000-000000000002", 15, 70)]
-    [InlineData("adult-exercises", "10000000-0000-0000-0000-000000000003", 15, 70)]
+    [InlineData("adult-exercises", "10000000-0000-0000-0000-000000000003", 21, 90)]
     [InlineData("young-adult-exercises", "10000000-0000-0000-0000-000000000004", 21, 90)]
     public void Catalog_entries_have_valid_unpinned_configurations(string pack, string ageGroupId, int typeCount, int count)
     {

@@ -10,14 +10,16 @@ namespace SpeedReading.Application.UnitTests;
 
 public sealed class YoungAdultCatalogSessionTests
 {
-    [Fact]
-    public async Task All_twenty_added_exercises_start_with_real_content_and_hidden_scene_answers()
+    [Theory]
+    [InlineData("young-adult-exercises", "10000000-0000-0000-0000-000000000004")]
+    [InlineData("adult-exercises", "10000000-0000-0000-0000-000000000003")]
+    public async Task All_twenty_added_exercises_start_with_real_content_and_hidden_scene_answers(string packName, string ageGroupId)
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);
         while (directory is not null && !Directory.Exists(Path.Combine(directory.FullName, "content-packs")))
             directory = directory.Parent;
         Assert.NotNull(directory);
-        var pack = Path.Combine(directory!.FullName, "content-packs", "young-adult-exercises", "v1");
+        var pack = Path.Combine(directory!.FullName, "content-packs", packName, "v1");
         using var catalog = JsonDocument.Parse(File.ReadAllText(Path.Combine(pack, "catalog.json")));
         using var sceneCatalog = JsonDocument.Parse(File.ReadAllText(Path.Combine(pack, "scenes.json")));
         var addedTypes = new[] { "Tachistoscope", "Visualization", "RSVP", "TextFading", "RegressionReduction", "SubvocalizationReduction" };
@@ -26,7 +28,7 @@ public sealed class YoungAdultCatalogSessionTests
         await using var db = new OwnedSpeedReadingDbContext(new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>()
             .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
         var actor = Guid.NewGuid();
-        var age = Guid.Parse("10000000-0000-0000-0000-000000000004");
+        var age = Guid.Parse(ageGroupId);
         var types = entries.GroupBy(e => e.GetProperty("type").GetString()!).ToDictionary(g => g.Key,
             g => ExerciseType.Create(Guid.NewGuid(), g.Key, g.Key, g.First().GetProperty("configuration").GetProperty("engineType").GetString()!));
         db.ExerciseTypes.AddRange(types.Values);
