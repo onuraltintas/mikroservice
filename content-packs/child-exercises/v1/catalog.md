@@ -1,6 +1,6 @@
 # Çocuk egzersiz kataloğu v1
 
-5 seviye, her seviyede 8 okuma/kelime ve 6 dikkat oyunu; toplam 70 kayıt.
+5 seviye, 18 tür ve toplam 84 kayıt. Seviye dağılımı: 16 / 16 / 16 / 18 / 18. Temel 70 kayda dört türden 14 yeni egzersiz eklenmiştir.
 
 Metin kimliği sabitlenmez. Yaş ve seviyeye uygun havuzdan iki okuma geçmişinde de kullanılmamış metin rastgele seçilir. Havuz tükenince en az kullanılan metinler arasından seçim yapılır. Başlatılıp bırakılan oturum da kullanım sayılır. Kelime etkinlikleri mevcut yaş/seviye kelime havuzunu kullanır.
 
@@ -100,3 +100,27 @@ Mevcut metin uzunlukları ve soruları korunur. Anlama ve değerlendirmeli serbe
 | Noktaya Odaklan | Fixation | `{"mode":"fixation","timing":{"holdMs":750,"durationSeconds":45},"content":{"type":"letter","points":5,"peripheralCount":1,"pointSize":44}}` |
 | Hedefler Arası Geçiş | Saccade | `{"mode":"saccade","timing":{"holdMs":650,"durationSeconds":45},"content":{"type":"number","pattern":"random","pointSize":44}}` |
 | Çevredeki Harfler | VisualExpansion | `{"mode":"horizontal","rounds":18,"displayDurationMs":900,"startDegrees":8,"targetDegrees":24,"content":{"stimulusType":"letter"}}` |
+
+
+## Eklenen dört tür (9–12 yaş)
+
+Toplam 84 egzersiz, 18 tür. Seviye dağılımı: 16 / 16 / 16 / 18 / 18. Önceki 70 kayıt korunur.
+
+| Tür | Seviye | Parametreler |
+|---|---|---|
+| Tachistoscope | 1 | `{"mode": "tachistoscope", "content": {"type": "number", "count": 8}, "timing": {"durationMs": 1500, "intervalMs": 750}, "adaptive": {"enabled": false, "minDurationMs": 200, "maxDurationMs": 2000}}` |
+| Visualization | 1 | `{"mode": "static"}` |
+| Tachistoscope | 2 | `{"mode": "tachistoscope", "content": {"type": "number", "count": 10}, "timing": {"durationMs": 1400, "intervalMs": 750}, "adaptive": {"enabled": false, "minDurationMs": 200, "maxDurationMs": 2000}}` |
+| Visualization | 2 | `{"mode": "static"}` |
+| Tachistoscope | 3 | `{"mode": "tachistoscope", "content": {"type": "number", "count": 12}, "timing": {"durationMs": 1300, "intervalMs": 750}, "adaptive": {"enabled": false, "minDurationMs": 200, "maxDurationMs": 2000}}` |
+| Visualization | 3 | `{"mode": "static"}` |
+| RSVP | 4 | `{"mode": "rsvp", "content": {"source": "reading_text"}, "timing": {"durationMs": 500, "intervalMs": 0}, "readingPurpose": "evaluation"}` |
+| Tachistoscope | 4 | `{"mode": "tachistoscope", "content": {"type": "number", "count": 14}, "timing": {"durationMs": 1200, "intervalMs": 750}, "adaptive": {"enabled": false, "minDurationMs": 200, "maxDurationMs": 2000}}` |
+| TextFading | 4 | `{"content": {"source": "reading_text"}, "fading": {"speedWpm": 120, "lagMs": 5000}, "timing": {"timeLimitSec": 0}, "readingPurpose": "evaluation"}` |
+| Visualization | 4 | `{"mode": "static"}` |
+| RSVP | 5 | `{"mode": "rsvp", "content": {"source": "reading_text"}, "timing": {"durationMs": 429, "intervalMs": 0}, "readingPurpose": "evaluation"}` |
+| Tachistoscope | 5 | `{"mode": "tachistoscope", "content": {"type": "number", "count": 16}, "timing": {"durationMs": 1100, "intervalMs": 750}, "adaptive": {"enabled": false, "minDurationMs": 200, "maxDurationMs": 2000}}` |
+| TextFading | 5 | `{"content": {"source": "reading_text"}, "fading": {"speedWpm": 140, "lagMs": 5000}, "timing": {"timeLimitSec": 0}, "readingPurpose": "evaluation"}` |
+| Visualization | 5 | `{"mode": "static"}` |
+
+Visualization: her seviyede üç metin sahnesi, her sahnede ayrıntı/konum/sıra için üç soru; toplam 15 sahne ve 45 soru. Gösterim süreleri 40/45/50/55/60 saniye. Tachistoscope sayı uzunluğu motor tarafından seviye+2 (3–7 basamak) olarak belirlenir. RSVP ve TextFading yalnızca 4–5. seviyelerde katalogda bulunur; isteğe bağlılık ayrı bir otomatik program filtresi değildir. Mevcut yaş/seviye ve kullanım geçmişi üzerinden metin seçimi kullanılır; kısa metin sınırı tanımlanmamıştır. TextFading duraklatılabilir; kaybolan kelimeleri aynı oturumda geri getiren bir katalog parametresi bulunmaz.

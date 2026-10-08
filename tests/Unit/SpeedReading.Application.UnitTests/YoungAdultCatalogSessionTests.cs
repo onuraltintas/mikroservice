@@ -14,7 +14,8 @@ public sealed class YoungAdultCatalogSessionTests
     [InlineData("young-adult-exercises", "10000000-0000-0000-0000-000000000004")]
     [InlineData("adult-exercises", "10000000-0000-0000-0000-000000000003")]
     [InlineData("teen-exercises", "10000000-0000-0000-0000-000000000002")]
-    public async Task All_twenty_added_exercises_start_with_real_content_and_hidden_scene_answers(string packName, string ageGroupId)
+    [InlineData("child-exercises", "10000000-0000-0000-0000-000000000001")]
+    public async Task Added_exercises_start_with_real_content_and_hidden_scene_answers(string packName, string ageGroupId)
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);
         while (directory is not null && !Directory.Exists(Path.Combine(directory.FullName, "content-packs")))
@@ -25,7 +26,7 @@ public sealed class YoungAdultCatalogSessionTests
         using var sceneCatalog = JsonDocument.Parse(File.ReadAllText(Path.Combine(pack, "scenes.json")));
         var addedTypes = new[] { "Tachistoscope", "Visualization", "RSVP", "TextFading", "RegressionReduction", "SubvocalizationReduction" };
         var entries = catalog.RootElement.EnumerateArray().Where(e => addedTypes.Contains(e.GetProperty("type").GetString())).ToArray();
-        Assert.Equal(20, entries.Length);
+        Assert.Equal(packName == "child-exercises" ? 14 : 20, entries.Length);
         await using var db = new OwnedSpeedReadingDbContext(new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>()
             .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
         var actor = Guid.NewGuid();

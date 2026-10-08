@@ -8,7 +8,7 @@ namespace SpeedReading.Application.UnitTests;
 public sealed class ChildExerciseCatalogTests
 {
     [Theory]
-    [InlineData("child-exercises", "10000000-0000-0000-0000-000000000001", 14, 70)]
+    [InlineData("child-exercises", "10000000-0000-0000-0000-000000000001", 18, 84)]
     [InlineData("teen-exercises", "10000000-0000-0000-0000-000000000002", 21, 90)]
     [InlineData("adult-exercises", "10000000-0000-0000-0000-000000000003", 21, 90)]
     [InlineData("young-adult-exercises", "10000000-0000-0000-0000-000000000004", 21, 90)]
@@ -25,7 +25,7 @@ public sealed class ChildExerciseCatalogTests
         Assert.Equal(count, entries.Select(entry => entry.GetProperty("id").GetGuid()).Distinct().Count());
         Assert.Equal(typeCount, entries.Select(entry => entry.GetProperty("type").GetString()).Distinct().Count());
         foreach (var level in Enumerable.Range(1, 5))
-            Assert.Equal(count == 90 ? new[] { 16, 16, 18, 20, 20 }[level - 1] : 14,
+            Assert.Equal(count == 90 ? new[] { 16, 16, 18, 20, 20 }[level - 1] : new[] { 16, 16, 16, 18, 18 }[level - 1],
                 entries.Count(entry => entry.GetProperty("difficultyLevel").GetInt32() == level));
         foreach (var entry in entries)
         {

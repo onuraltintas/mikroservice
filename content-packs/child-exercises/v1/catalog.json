@@ -1521,5 +1521,316 @@
       },
       "difficultyLevel": 5
     }
+  },
+  {
+    "id": "05d61659-42f6-5539-9efb-129a1d364cd7",
+    "type": "Tachistoscope",
+    "title": "Kısa Gösterimde Tanıma",
+    "description": "9–12 yaş grubuna uygun dikkat ve okuma çalışması.",
+    "difficultyLevel": 1,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "text_stream",
+      "engineConfig": {
+        "mode": "tachistoscope",
+        "content": {
+          "type": "number",
+          "count": 8
+        },
+        "timing": {
+          "durationMs": 1500,
+          "intervalMs": 750
+        },
+        "adaptive": {
+          "enabled": false,
+          "minDurationMs": 200,
+          "maxDurationMs": 2000
+        }
+      },
+      "difficultyLevel": 1
+    }
+  },
+  {
+    "id": "c193da78-7be5-5f32-a68e-dd95da6bfce8",
+    "type": "Visualization",
+    "title": "Sahneyi Zihninde Canlandır",
+    "description": "9–12 yaş grubuna uygun dikkat ve okuma çalışması.",
+    "difficultyLevel": 1,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "visualization",
+      "engineConfig": {
+        "mode": "static"
+      },
+      "difficultyLevel": 1
+    }
+  },
+  {
+    "id": "a9178cc6-96d4-51c3-a9e0-7050f44dcfed",
+    "type": "Tachistoscope",
+    "title": "Kısa Gösterimde Tanıma",
+    "description": "9–12 yaş grubuna uygun dikkat ve okuma çalışması.",
+    "difficultyLevel": 2,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "text_stream",
+      "engineConfig": {
+        "mode": "tachistoscope",
+        "content": {
+          "type": "number",
+          "count": 10
+        },
+        "timing": {
+          "durationMs": 1400,
+          "intervalMs": 750
+        },
+        "adaptive": {
+          "enabled": false,
+          "minDurationMs": 200,
+          "maxDurationMs": 2000
+        }
+      },
+      "difficultyLevel": 2
+    }
+  },
+  {
+    "id": "7f670cf9-0df1-5c19-b39e-00ce0fc9097d",
+    "type": "Visualization",
+    "title": "Sahneyi Zihninde Canlandır",
+    "description": "9–12 yaş grubuna uygun dikkat ve okuma çalışması.",
+    "difficultyLevel": 2,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "visualization",
+      "engineConfig": {
+        "mode": "static"
+      },
+      "difficultyLevel": 2
+    }
+  },
+  {
+    "id": "c3885bc4-0cea-5cc6-ae41-d9cb2890df57",
+    "type": "Tachistoscope",
+    "title": "Kısa Gösterimde Tanıma",
+    "description": "9–12 yaş grubuna uygun dikkat ve okuma çalışması.",
+    "difficultyLevel": 3,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "text_stream",
+      "engineConfig": {
+        "mode": "tachistoscope",
+        "content": {
+          "type": "number",
+          "count": 12
+        },
+        "timing": {
+          "durationMs": 1300,
+          "intervalMs": 750
+        },
+        "adaptive": {
+          "enabled": false,
+          "minDurationMs": 200,
+          "maxDurationMs": 2000
+        }
+      },
+      "difficultyLevel": 3
+    }
+  },
+  {
+    "id": "6bd342dd-ee8c-5cfa-837a-635f2c59170d",
+    "type": "Visualization",
+    "title": "Sahneyi Zihninde Canlandır",
+    "description": "9–12 yaş grubuna uygun dikkat ve okuma çalışması.",
+    "difficultyLevel": 3,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "visualization",
+      "engineConfig": {
+        "mode": "static"
+      },
+      "difficultyLevel": 3
+    }
+  },
+  {
+    "id": "09061d36-37ce-5719-ab5d-8e8c01c326fa",
+    "type": "RSVP",
+    "title": "Sıralı Kelime Gösterimi",
+    "description": "9–12 yaş grubuna uygun dikkat ve okuma çalışması. İleri seviyede isteğe bağlı tempo denemesi; anlama sorularıyla değerlendirilir.",
+    "difficultyLevel": 4,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "text_stream",
+      "engineConfig": {
+        "mode": "rsvp",
+        "content": {
+          "source": "reading_text"
+        },
+        "timing": {
+          "durationMs": 500,
+          "intervalMs": 0
+        },
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 4
+    }
+  },
+  {
+    "id": "ccd1b805-babd-53ff-825a-005edb3943cb",
+    "type": "Tachistoscope",
+    "title": "Kısa Gösterimde Tanıma",
+    "description": "9–12 yaş grubuna uygun dikkat ve okuma çalışması.",
+    "difficultyLevel": 4,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "text_stream",
+      "engineConfig": {
+        "mode": "tachistoscope",
+        "content": {
+          "type": "number",
+          "count": 14
+        },
+        "timing": {
+          "durationMs": 1200,
+          "intervalMs": 750
+        },
+        "adaptive": {
+          "enabled": false,
+          "minDurationMs": 200,
+          "maxDurationMs": 2000
+        }
+      },
+      "difficultyLevel": 4
+    }
+  },
+  {
+    "id": "b59e48d3-da80-5ce2-90fa-f784b78b9d9d",
+    "type": "TextFading",
+    "title": "Kaybolan Metinle Okuma",
+    "description": "9–12 yaş grubuna uygun dikkat ve okuma çalışması. İleri seviyede isteğe bağlı yavaş kaybolan metin çalışması.",
+    "difficultyLevel": 4,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "text_fade",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "fading": {
+          "speedWpm": 120,
+          "lagMs": 5000
+        },
+        "timing": {
+          "timeLimitSec": 0
+        },
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 4
+    }
+  },
+  {
+    "id": "5d75275b-a308-5e2c-96b2-fff56058f0cf",
+    "type": "Visualization",
+    "title": "Sahneyi Zihninde Canlandır",
+    "description": "9–12 yaş grubuna uygun dikkat ve okuma çalışması.",
+    "difficultyLevel": 4,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "visualization",
+      "engineConfig": {
+        "mode": "static"
+      },
+      "difficultyLevel": 4
+    }
+  },
+  {
+    "id": "bad94b71-5134-5273-b692-b2224311fa7b",
+    "type": "RSVP",
+    "title": "Sıralı Kelime Gösterimi",
+    "description": "9–12 yaş grubuna uygun dikkat ve okuma çalışması. İleri seviyede isteğe bağlı tempo denemesi; anlama sorularıyla değerlendirilir.",
+    "difficultyLevel": 5,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "text_stream",
+      "engineConfig": {
+        "mode": "rsvp",
+        "content": {
+          "source": "reading_text"
+        },
+        "timing": {
+          "durationMs": 429,
+          "intervalMs": 0
+        },
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 5
+    }
+  },
+  {
+    "id": "1acffa6b-c750-5021-9acd-9dcdf54e18d4",
+    "type": "Tachistoscope",
+    "title": "Kısa Gösterimde Tanıma",
+    "description": "9–12 yaş grubuna uygun dikkat ve okuma çalışması.",
+    "difficultyLevel": 5,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "text_stream",
+      "engineConfig": {
+        "mode": "tachistoscope",
+        "content": {
+          "type": "number",
+          "count": 16
+        },
+        "timing": {
+          "durationMs": 1100,
+          "intervalMs": 750
+        },
+        "adaptive": {
+          "enabled": false,
+          "minDurationMs": 200,
+          "maxDurationMs": 2000
+        }
+      },
+      "difficultyLevel": 5
+    }
+  },
+  {
+    "id": "41bbc0ee-6d42-53dc-bde6-c7f65c615d60",
+    "type": "TextFading",
+    "title": "Kaybolan Metinle Okuma",
+    "description": "9–12 yaş grubuna uygun dikkat ve okuma çalışması. İleri seviyede isteğe bağlı yavaş kaybolan metin çalışması.",
+    "difficultyLevel": 5,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "text_fade",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "fading": {
+          "speedWpm": 140,
+          "lagMs": 5000
+        },
+        "timing": {
+          "timeLimitSec": 0
+        },
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 5
+    }
+  },
+  {
+    "id": "c13e8f58-2f65-558c-a14e-e17581b436c5",
+    "type": "Visualization",
+    "title": "Sahneyi Zihninde Canlandır",
+    "description": "9–12 yaş grubuna uygun dikkat ve okuma çalışması.",
+    "difficultyLevel": 5,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "visualization",
+      "engineConfig": {
+        "mode": "static"
+      },
+      "difficultyLevel": 5
+    }
   }
 ]
