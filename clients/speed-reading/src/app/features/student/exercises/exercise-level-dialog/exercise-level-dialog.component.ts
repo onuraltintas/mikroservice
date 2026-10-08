@@ -29,38 +29,37 @@ export class ExerciseLevelDialogComponent {
         return 'hard';
     }
 
-    getAgeGroupName(ex: Exercise): string {
+    selectedAgeGroupId = '';
+    readonly ageGroups = [
+        { id: '10000000-0000-0000-0000-000000000001', name: 'Çocuk', cssClass: 'child' },
+        { id: '10000000-0000-0000-0000-000000000002', name: 'Genç', cssClass: 'teen' },
+        { id: '10000000-0000-0000-0000-000000000004', name: 'Genç yetişkin', cssClass: 'young-adult' },
+        { id: '10000000-0000-0000-0000-000000000003', name: 'Yetişkin', cssClass: 'adult' }
+    ];
+
+    get filteredExercises(): Exercise[] {
+        return this.selectedAgeGroupId
+            ? this.data.exercises.filter(ex => this.getAgeGroupId(ex) === this.selectedAgeGroupId)
+            : this.data.exercises;
+    }
+
+    getAgeGroupId(ex: Exercise): string {
+        if (ex.targetAgeGroupId) return ex.targetAgeGroupId;
         if (!ex.configurationJson) return '';
         try {
-            const config = JSON.parse(ex.configurationJson);
-            const ageGroupId = config.metadata?.targetAgeGroupId;
-
-            switch (ageGroupId) {
-                case '10000000-0000-0000-0000-000000000001': return 'Çocuk';
-                case '10000000-0000-0000-0000-000000000002': return 'Genç';
-                case '10000000-0000-0000-0000-000000000003': return 'Yetişkin';
-                default: return '';
-            }
+            return JSON.parse(ex.configurationJson).metadata?.targetAgeGroupId ?? '';
         } catch {
             return '';
         }
     }
 
-    getAgeGroupClass(ex: Exercise): string {
-        if (!ex.configurationJson) return '';
-        try {
-            const config = JSON.parse(ex.configurationJson);
-            const ageGroupId = config.metadata?.targetAgeGroupId;
+    getAgeGroupName(ex: Exercise): string {
+        return this.ageGroups.find(group => group.id === this.getAgeGroupId(ex))?.name
+            ?? ex.targetAgeGroupName ?? 'Genel';
+    }
 
-            switch (ageGroupId) {
-                case '10000000-0000-0000-0000-000000000001': return 'child';
-                case '10000000-0000-0000-0000-000000000002': return 'teen';
-                case '10000000-0000-0000-0000-000000000003': return 'adult';
-                default: return '';
-            }
-        } catch {
-            return '';
-        }
+    getAgeGroupClass(ex: Exercise): string {
+        return this.ageGroups.find(group => group.id === this.getAgeGroupId(ex))?.cssClass ?? '';
     }
 
     trackById(index: number, item: Exercise): string {

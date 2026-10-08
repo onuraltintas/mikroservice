@@ -5,8 +5,16 @@
 </h2>
 
 <mat-dialog-content>
+    <div class="age-filter">
+        <label for="exercise-age-group">Yaş grubu</label>
+        <select id="exercise-age-group" [value]="selectedAgeGroupId"
+            (change)="selectedAgeGroupId = $any($event.target).value">
+            <option value="">Tüm yaş grupları</option>
+            <option *ngFor="let group of ageGroups" [value]="group.id">{{ group.name }}</option>
+        </select>
+    </div>
     <div class="level-list">
-        <div *ngFor="let ex of data.exercises; trackBy: trackById" class="level-item" (click)="select(ex)">
+        <div *ngFor="let ex of filteredExercises; trackBy: trackById" class="level-item" (click)="select(ex)">
             <div class="level-info">
                 <div class="level-header">
                     <span class="level-badge" [ngClass]="getDifficultyClass(ex.difficultyLevel)">
@@ -26,6 +34,7 @@
             </button>
         </div>
     </div>
+    <p *ngIf="filteredExercises.length === 0" class="empty-state">Bu yaş grubunda kayıtlı egzersiz bulunmuyor.</p>
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">
