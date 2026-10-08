@@ -7,18 +7,21 @@ namespace SpeedReading.Application.UnitTests;
 
 public sealed class ChildExerciseCatalogTests
 {
-    [Fact]
-    public void All_seventy_catalog_entries_have_valid_unpinned_configurations()
+    [Theory]
+    [InlineData("child-exercises", "10000000-0000-0000-0000-000000000001", 14)]
+    [InlineData("teen-exercises", "10000000-0000-0000-0000-000000000002", 15)]
+    public void All_seventy_catalog_entries_have_valid_unpinned_configurations(string pack, string ageGroupId, int typeCount)
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);
         while (directory is not null && !Directory.Exists(Path.Combine(directory.FullName, "content-packs")))
             directory = directory.Parent;
         Assert.NotNull(directory);
         using var document = JsonDocument.Parse(File.ReadAllText(Path.Combine(directory!.FullName,
-            "content-packs", "child-exercises", "v1", "catalog.json")));
+            "content-packs", pack, "v1", "catalog.json")));
         var entries = document.RootElement.EnumerateArray().ToArray();
         Assert.Equal(70, entries.Length);
         Assert.Equal(70, entries.Select(entry => entry.GetProperty("id").GetGuid()).Distinct().Count());
+        Assert.Equal(typeCount, entries.Select(entry => entry.GetProperty("type").GetString()).Distinct().Count());
         foreach (var level in Enumerable.Range(1, 5))
             Assert.Equal(14, entries.Count(entry => entry.GetProperty("difficultyLevel").GetInt32() == level));
         foreach (var entry in entries)
@@ -26,7 +29,7 @@ public sealed class ChildExerciseCatalogTests
             var config = entry.GetProperty("configuration");
             ExerciseConfigurationRules.ValidateActiveConfiguration(config.GetRawText(), config.GetProperty("engineType").GetString()!);
             Assert.False(config.TryGetProperty("readingTextId", out _));
-            Assert.Equal(Guid.Parse("10000000-0000-0000-0000-000000000001"), entry.GetProperty("targetAgeGroupId").GetGuid());
+            Assert.Equal(Guid.Parse(ageGroupId), entry.GetProperty("targetAgeGroupId").GetGuid());
             var content = config.GetProperty("engineConfig");
             if (content.TryGetProperty("content", out var source))
             {
