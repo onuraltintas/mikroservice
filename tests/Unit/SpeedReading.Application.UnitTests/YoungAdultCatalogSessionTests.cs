@@ -13,6 +13,7 @@ public sealed class YoungAdultCatalogSessionTests
     [Theory]
     [InlineData("young-adult-exercises", "10000000-0000-0000-0000-000000000004")]
     [InlineData("adult-exercises", "10000000-0000-0000-0000-000000000003")]
+    [InlineData("teen-exercises", "10000000-0000-0000-0000-000000000002")]
     public async Task All_twenty_added_exercises_start_with_real_content_and_hidden_scene_answers(string packName, string ageGroupId)
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);
