@@ -10,6 +10,7 @@ public sealed class ChildExerciseCatalogTests
     [Theory]
     [InlineData("child-exercises", "10000000-0000-0000-0000-000000000001", 14)]
     [InlineData("teen-exercises", "10000000-0000-0000-0000-000000000002", 15)]
+    [InlineData("adult-exercises", "10000000-0000-0000-0000-000000000003", 15)]
     public void All_seventy_catalog_entries_have_valid_unpinned_configurations(string pack, string ageGroupId, int typeCount)
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);
