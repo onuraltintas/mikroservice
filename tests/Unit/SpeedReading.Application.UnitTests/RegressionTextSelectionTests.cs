@@ -35,17 +35,21 @@ public sealed class RegressionTextSelectionTests
     }
 
     [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public async Task DoesNotSilentlyUseAnotherLevelWhenMatchingTextIsMissing(bool explicitlySelected)
+    [InlineData(false, "RegressionReduction", "regression_reduction")]
+    [InlineData(true, "RegressionReduction", "regression_reduction")]
+    [InlineData(false, "Skimming", "skimming")]
+    [InlineData(true, "Skimming", "skimming")]
+    public async Task DoesNotSilentlyUseAnotherLevelWhenMatchingTextIsMissing(bool explicitlySelected, string typeName, string engine)
     {
         await using var db = new OwnedSpeedReadingDbContext(new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>()
             .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
         var student = Guid.NewGuid(); var exercise = Guid.NewGuid(); var type = Guid.NewGuid();
-        db.ExerciseTypes.Add(ExerciseType.Create(type, "Regresyon", "Regresyon", "regression_reduction"));
+        db.ExerciseTypes.Add(ExerciseType.Create(type, typeName, typeName, engine));
         db.Exercises.Add(Exercise.Create("Regresyon", "reading", "{}", 3, student, type, id: exercise));
         var wrongText = Guid.NewGuid();
         db.ReadingTexts.Add(ReadingText.Create(wrongText, "Wrong", "bir iki üç", difficultyLevel: 1));
+        db.ReadingQuestions.Add(ReadingQuestion.Create(Guid.NewGuid(), wrongText, "Soru?", "A", 0, 1, 1,
+            optionA: "bir", optionB: "iki", optionC: "üç", optionD: "dört"));
         await db.SaveChangesAsync();
         var serviceType = typeof(OwnedSpeedReadingDbContext).Assembly
             .GetType("SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingExerciseSessions")!;
@@ -55,6 +59,8 @@ public sealed class RegressionTextSelectionTests
             ReadingTextId = explicitlySelected ? wrongText : null };
         if (explicitlySelected)
             await Assert.ThrowsAsync<KeyNotFoundException>(() => service.StartAsync(student, request));
+        else if (engine == "skimming")
+            await Assert.ThrowsAsync<EduPlatform.Shared.Kernel.Exceptions.BusinessRuleException>(() => service.StartAsync(student, request));
         else
             await Assert.ThrowsAsync<InvalidOperationException>(() => service.StartAsync(student, request));
     }

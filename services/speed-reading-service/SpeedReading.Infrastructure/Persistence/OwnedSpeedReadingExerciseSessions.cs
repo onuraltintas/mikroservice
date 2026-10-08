@@ -343,7 +343,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                     .Where(item => item.IsActive
                         && !item.IsDeleted
                         && item.Content != string.Empty
-                        && (!(isExam || isFreeReading || isComprehension || isScanning || isGrouping || isTextFade || isRegression || isSubvocalization || isRsvp || isErrorAnalysis) || item.DifficultyLevel == difficultyLevel)
+                        && (!(isExam || isFreeReading || isComprehension || isSkimming || isScanning || isGrouping || isTextFade || isRegression || isSubvocalization || isRsvp || isErrorAnalysis) || item.DifficultyLevel == difficultyLevel)
                         && (!isFreeReading || (item.WordCount >= freeMinimumWords && (freeMaximumWords == 0 || item.WordCount <= freeMaximumWords)))
                         && (!profileAgeGroupId.HasValue
                             || item.TargetAgeGroupId == null
