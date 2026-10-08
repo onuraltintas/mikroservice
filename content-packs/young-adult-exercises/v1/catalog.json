@@ -1,0 +1,1978 @@
+[
+  {
+    "id": "617a2e9d-3aed-5afb-b20b-39bcbc2848ba",
+    "type": "Chunking",
+    "title": "Anlam Gruplarıyla Okuma",
+    "description": "17–21 yaş grubunda seviyeye uygun çalışma.",
+    "difficultyLevel": 1,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "word_highlight",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "chunking",
+        "pacer": {
+          "speedWpm": 180,
+          "chunkSize": 2
+        },
+        "readingPurpose": "practice"
+      },
+      "difficultyLevel": 1
+    }
+  },
+  {
+    "id": "02b7c970-24ac-5509-be55-6eaa84668631",
+    "type": "Comprehension",
+    "title": "Metin Üzerinde Düşün",
+    "description": "17–21 yaş grubunda seviyeye uygun çalışma.",
+    "difficultyLevel": 1,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "reading_comprehension",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "comprehension",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 1
+    }
+  },
+  {
+    "id": "8d5a3baa-e30f-546f-9205-1d1ffce5b8a6",
+    "type": "Comprehension",
+    "title": "Metni Anla",
+    "description": "17–21 yaş grubunda seviyeye uygun çalışma.",
+    "difficultyLevel": 1,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "reading_comprehension",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "comprehension",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 1
+    }
+  },
+  {
+    "id": "044e0883-df6e-560a-b50a-73406dd3292e",
+    "type": "EyeTracking",
+    "title": "Hareketi Takip Et",
+    "description": "Dikkat oyunu. 17–21 yaş grubunda seviyeye uygun çalışma.",
+    "difficultyLevel": 1,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "motion_path",
+      "engineConfig": {
+        "mode": "tracking",
+        "path": {
+          "type": "horizontal"
+        },
+        "timing": {
+          "durationSeconds": 40,
+          "speedMs": 3000
+        },
+        "content": {
+          "type": "dot",
+          "pointSize": 36
+        }
+      },
+      "difficultyLevel": 1
+    }
+  },
+  {
+    "id": "8b7b8e25-9274-5233-9f16-f06f06075be8",
+    "type": "Fixation",
+    "title": "Noktaya Odaklan",
+    "description": "Dikkat oyunu. 17–21 yaş grubunda seviyeye uygun çalışma.",
+    "difficultyLevel": 1,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "motion_path",
+      "engineConfig": {
+        "mode": "fixation",
+        "timing": {
+          "holdMs": 900,
+          "durationSeconds": 35
+        },
+        "content": {
+          "type": "letter",
+          "points": 3,
+          "peripheralCount": 1,
+          "pointSize": 44
+        }
+      },
+      "difficultyLevel": 1
+    }
+  },
+  {
+    "id": "fa53b143-e64f-5bcf-8986-ea5394047453",
+    "type": "Focus",
+    "title": "Konum Belleği",
+    "description": "Dikkat oyunu. 17–21 yaş grubunda seviyeye uygun çalışma.",
+    "difficultyLevel": 1,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "focus",
+      "engineConfig": {
+        "mode": "position",
+        "nLevel": 1,
+        "totalSteps": 16,
+        "speedMs": 2300,
+        "gridSize": 3
+      },
+      "difficultyLevel": 1
+    }
+  },
+  {
+    "id": "3abafca3-3ee3-5193-9f0e-1c574630e876",
+    "type": "FreeReading",
+    "title": "Bağımsız Metin Okuma",
+    "description": "17–21 yaş grubunda seviyeye uygun çalışma.",
+    "difficultyLevel": 1,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "free_reading",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "free",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 1
+    }
+  },
+  {
+    "id": "d3aabed8-260b-5372-9236-eab48522e9c6",
+    "type": "Saccade",
+    "title": "Hedefler Arası Geçiş",
+    "description": "Dikkat oyunu. 17–21 yaş grubunda seviyeye uygun çalışma.",
+    "difficultyLevel": 1,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "motion_path",
+      "engineConfig": {
+        "mode": "saccade",
+        "timing": {
+          "holdMs": 800,
+          "durationSeconds": 35
+        },
+        "content": {
+          "type": "number",
+          "pattern": "horizontal",
+          "pointSize": 44
+        }
+      },
+      "difficultyLevel": 1
+    }
+  },
+  {
+    "id": "2c38b331-499a-5ac9-aae3-aa124acac58a",
+    "type": "Scanning",
+    "title": "Metinde Hedefi Bul",
+    "description": "17–21 yaş grubunda seviyeye uygun çalışma.",
+    "difficultyLevel": 1,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "scanning",
+      "engineConfig": {
+        "content": {
+          "source": "random_text"
+        },
+        "targetCount": 3,
+        "timeLimit": 180,
+        "targets": {
+          "mode": "find_all",
+          "caseSensitive": false
+        }
+      },
+      "difficultyLevel": 1
+    }
+  },
+  {
+    "id": "b10650e6-3bd1-5228-86ed-6eeb60de5a97",
+    "type": "SchulteTable",
+    "title": "Sayı Avcısı",
+    "description": "Dikkat oyunu. 17–21 yaş grubunda seviyeye uygun çalışma.",
+    "difficultyLevel": 1,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "grid_interaction",
+      "engineConfig": {
+        "gridSize": 4,
+        "sequenceType": "numeric",
+        "rules": {
+          "timeLimit": 120
+        }
+      },
+      "difficultyLevel": 1
+    }
+  },
+  {
+    "id": "d7ebaa38-4780-5651-b09a-37082d9e23ab",
+    "type": "SpeedReading",
+    "title": "Dengeli Tempoda Okuma",
+    "description": "17–21 yaş grubunda seviyeye uygun çalışma.",
+    "difficultyLevel": 1,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "word_highlight",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "guided",
+        "pacer": {
+          "speedWpm": 180,
+          "chunkSize": 1
+        },
+        "readingPurpose": "practice"
+      },
+      "difficultyLevel": 1
+    }
+  },
+  {
+    "id": "df93417a-8c3d-5de7-9ace-8926620da66d",
+    "type": "Tachistoscope",
+    "title": "Kısa Gösterimde Tanıma",
+    "description": "17–21 yaş grubunda seviyeye uygun dikkat ve okuma çalışması.",
+    "difficultyLevel": 1,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "text_stream",
+      "engineConfig": {
+        "mode": "tachistoscope",
+        "content": {
+          "type": "number",
+          "count": 12
+        },
+        "timing": {
+          "durationMs": 800,
+          "intervalMs": 500
+        },
+        "adaptive": {
+          "enabled": false,
+          "minDurationMs": 200,
+          "maxDurationMs": 1500
+        }
+      },
+      "difficultyLevel": 1
+    }
+  },
+  {
+    "id": "383a2ffe-b397-59cf-a344-0d73a7159ab1",
+    "type": "VisualExpansion",
+    "title": "Çevredeki Harfler",
+    "description": "Dikkat oyunu. 17–21 yaş grubunda seviyeye uygun çalışma.",
+    "difficultyLevel": 1,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "visual_expansion",
+      "engineConfig": {
+        "mode": "horizontal",
+        "rounds": 12,
+        "displayDurationMs": 1100,
+        "startDegrees": 8,
+        "targetDegrees": 18,
+        "content": {
+          "stimulusType": "letter"
+        }
+      },
+      "difficultyLevel": 1
+    }
+  },
+  {
+    "id": "10fd88c2-b691-5252-be76-889197ac21af",
+    "type": "Visualization",
+    "title": "Sahneyi Zihninde Canlandır",
+    "description": "17–21 yaş grubunda seviyeye uygun dikkat ve okuma çalışması.",
+    "difficultyLevel": 1,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "visualization",
+      "engineConfig": {
+        "mode": "static"
+      },
+      "difficultyLevel": 1
+    }
+  },
+  {
+    "id": "f3220e75-9250-5dd5-9471-176e81b1d206",
+    "type": "Vocabulary",
+    "title": "Kelime Bilgisi Testi",
+    "description": "17–21 yaş grubunda seviyeye uygun çalışma.",
+    "difficultyLevel": 1,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "vocabulary_builder",
+      "engineConfig": {
+        "mode": "quiz",
+        "quizType": "word_to_definition",
+        "timeLimitPerWord": 0,
+        "vocabulary": {
+          "count": 8,
+          "difficultyLevel": 1
+        }
+      },
+      "difficultyLevel": 1
+    }
+  },
+  {
+    "id": "846e4e83-2553-5a19-b9f6-a50f47f2953a",
+    "type": "Vocabulary",
+    "title": "Kelime Öğrenme",
+    "description": "17–21 yaş grubunda seviyeye uygun çalışma.",
+    "difficultyLevel": 1,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "vocabulary_builder",
+      "engineConfig": {
+        "mode": "learning",
+        "quizType": "word_to_definition",
+        "timeLimitPerWord": 0,
+        "vocabulary": {
+          "count": 8,
+          "difficultyLevel": 1
+        }
+      },
+      "difficultyLevel": 1
+    }
+  },
+  {
+    "id": "c53fae0b-d606-539d-b02a-60d080fc8e75",
+    "type": "Chunking",
+    "title": "Anlam Gruplarıyla Okuma",
+    "description": "17–21 yaş grubunda seviyeye uygun çalışma.",
+    "difficultyLevel": 2,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "word_highlight",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "chunking",
+        "pacer": {
+          "speedWpm": 210,
+          "chunkSize": 3
+        },
+        "readingPurpose": "practice"
+      },
+      "difficultyLevel": 2
+    }
+  },
+  {
+    "id": "96b11146-d60f-5f1c-ba8f-276505b5de1b",
+    "type": "Comprehension",
+    "title": "Metin Üzerinde Düşün",
+    "description": "17–21 yaş grubunda seviyeye uygun çalışma.",
+    "difficultyLevel": 2,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "reading_comprehension",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "comprehension",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 2
+    }
+  },
+  {
+    "id": "7f959ef9-d35d-5537-9dec-74ce0f3c88fa",
+    "type": "Comprehension",
+    "title": "Metni Anla",
+    "description": "17–21 yaş grubunda seviyeye uygun çalışma.",
+    "difficultyLevel": 2,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "reading_comprehension",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "comprehension",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 2
+    }
+  },
+  {
+    "id": "15b9f327-47ef-5f93-bc29-de4edff6fb51",
+    "type": "EyeTracking",
+    "title": "Hareketi Takip Et",
+    "description": "Dikkat oyunu. 17–21 yaş grubunda seviyeye uygun çalışma.",
+    "difficultyLevel": 2,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "motion_path",
+      "engineConfig": {
+        "mode": "tracking",
+        "path": {
+          "type": "circle"
+        },
+        "timing": {
+          "durationSeconds": 45,
+          "speedMs": 2800
+        },
+        "content": {
+          "type": "dot",
+          "pointSize": 36
+        }
+      },
+      "difficultyLevel": 2
+    }
+  },
+  {
+    "id": "74094d00-1fce-5bb3-bb2b-c9a6f07b6ed4",
+    "type": "Fixation",
+    "title": "Noktaya Odaklan",
+    "description": "Dikkat oyunu. 17–21 yaş grubunda seviyeye uygun çalışma.",
+    "difficultyLevel": 2,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "motion_path",
+      "engineConfig": {
+        "mode": "fixation",
+        "timing": {
+          "holdMs": 850,
+          "durationSeconds": 40
+        },
+        "content": {
+          "type": "letter",
+          "points": 4,
+          "peripheralCount": 1,
+          "pointSize": 44
+        }
+      },
+      "difficultyLevel": 2
+    }
+  },
+  {
+    "id": "64a9789a-f515-58b9-b606-59f9a3ca68b3",
+    "type": "Focus",
+    "title": "Konum Belleği",
+    "description": "Dikkat oyunu. 17–21 yaş grubunda seviyeye uygun çalışma.",
+    "difficultyLevel": 2,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "focus",
+      "engineConfig": {
+        "mode": "position",
+        "nLevel": 1,
+        "totalSteps": 20,
+        "speedMs": 2100,
+        "gridSize": 3
+      },
+      "difficultyLevel": 2
+    }
+  },
+  {
+    "id": "f8d27484-c9b2-5ee7-a75b-9ac0c3667a9a",
+    "type": "FreeReading",
+    "title": "Bağımsız Metin Okuma",
+    "description": "17–21 yaş grubunda seviyeye uygun çalışma.",
+    "difficultyLevel": 2,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "free_reading",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "free",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 2
+    }
+  },
+  {
+    "id": "9fd33b56-157d-5525-9e6f-2bd7c7ab4b51",
+    "type": "Saccade",
+    "title": "Hedefler Arası Geçiş",
+    "description": "Dikkat oyunu. 17–21 yaş grubunda seviyeye uygun çalışma.",
+    "difficultyLevel": 2,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "motion_path",
+      "engineConfig": {
+        "mode": "saccade",
+        "timing": {
+          "holdMs": 750,
+          "durationSeconds": 40
+        },
+        "content": {
+          "type": "number",
+          "pattern": "vertical",
+          "pointSize": 44
+        }
+      },
+      "difficultyLevel": 2
+    }
+  },
+  {
+    "id": "b58da4f3-056f-5c1b-ad2c-42f947a30adf",
+    "type": "Scanning",
+    "title": "Metinde Hedefi Bul",
+    "description": "17–21 yaş grubunda seviyeye uygun çalışma.",
+    "difficultyLevel": 2,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "scanning",
+      "engineConfig": {
+        "content": {
+          "source": "random_text"
+        },
+        "targetCount": 4,
+        "timeLimit": 180,
+        "targets": {
+          "mode": "find_all",
+          "caseSensitive": false
+        }
+      },
+      "difficultyLevel": 2
+    }
+  },
+  {
+    "id": "61248859-b87b-5849-b175-7956c01a9b1a",
+    "type": "SchulteTable",
+    "title": "Sayı Avcısı",
+    "description": "Dikkat oyunu. 17–21 yaş grubunda seviyeye uygun çalışma.",
+    "difficultyLevel": 2,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "grid_interaction",
+      "engineConfig": {
+        "gridSize": 4,
+        "sequenceType": "numeric",
+        "rules": {
+          "timeLimit": 100
+        }
+      },
+      "difficultyLevel": 2
+    }
+  },
+  {
+    "id": "a27a5200-46f9-5850-9d03-1869f0dd2779",
+    "type": "SpeedReading",
+    "title": "Dengeli Tempoda Okuma",
+    "description": "17–21 yaş grubunda seviyeye uygun çalışma.",
+    "difficultyLevel": 2,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "word_highlight",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "guided",
+        "pacer": {
+          "speedWpm": 210,
+          "chunkSize": 1
+        },
+        "readingPurpose": "practice"
+      },
+      "difficultyLevel": 2
+    }
+  },
+  {
+    "id": "fe93e836-403f-528c-83fe-8c39fa422516",
+    "type": "Tachistoscope",
+    "title": "Kısa Gösterimde Tanıma",
+    "description": "17–21 yaş grubunda seviyeye uygun dikkat ve okuma çalışması.",
+    "difficultyLevel": 2,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "text_stream",
+      "engineConfig": {
+        "mode": "tachistoscope",
+        "content": {
+          "type": "number",
+          "count": 14
+        },
+        "timing": {
+          "durationMs": 700,
+          "intervalMs": 500
+        },
+        "adaptive": {
+          "enabled": false,
+          "minDurationMs": 200,
+          "maxDurationMs": 1500
+        }
+      },
+      "difficultyLevel": 2
+    }
+  },
+  {
+    "id": "92540438-4920-5168-a021-3b58011b275c",
+    "type": "VisualExpansion",
+    "title": "Çevredeki Harfler",
+    "description": "Dikkat oyunu. 17–21 yaş grubunda seviyeye uygun çalışma.",
+    "difficultyLevel": 2,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "visual_expansion",
+      "engineConfig": {
+        "mode": "horizontal",
+        "rounds": 14,
+        "displayDurationMs": 1000,
+        "startDegrees": 8,
+        "targetDegrees": 20,
+        "content": {
+          "stimulusType": "letter"
+        }
+      },
+      "difficultyLevel": 2
+    }
+  },
+  {
+    "id": "bf3e2cba-0c6b-5d9a-a07a-ce625c6f353f",
+    "type": "Visualization",
+    "title": "Sahneyi Zihninde Canlandır",
+    "description": "17–21 yaş grubunda seviyeye uygun dikkat ve okuma çalışması.",
+    "difficultyLevel": 2,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "visualization",
+      "engineConfig": {
+        "mode": "static"
+      },
+      "difficultyLevel": 2
+    }
+  },
+  {
+    "id": "6fd8ceba-ef93-59e3-8b30-37d6a5acf104",
+    "type": "Vocabulary",
+    "title": "Kelime Bilgisi Testi",
+    "description": "17–21 yaş grubunda seviyeye uygun çalışma.",
+    "difficultyLevel": 2,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "vocabulary_builder",
+      "engineConfig": {
+        "mode": "quiz",
+        "quizType": "mixed",
+        "timeLimitPerWord": 0,
+        "vocabulary": {
+          "count": 8,
+          "difficultyLevel": 2
+        }
+      },
+      "difficultyLevel": 2
+    }
+  },
+  {
+    "id": "e250cf1a-7b31-53f0-ab8c-be6e6b573ba6",
+    "type": "Vocabulary",
+    "title": "Kelime Öğrenme",
+    "description": "17–21 yaş grubunda seviyeye uygun çalışma.",
+    "difficultyLevel": 2,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "vocabulary_builder",
+      "engineConfig": {
+        "mode": "learning",
+        "quizType": "mixed",
+        "timeLimitPerWord": 0,
+        "vocabulary": {
+          "count": 8,
+          "difficultyLevel": 2
+        }
+      },
+      "difficultyLevel": 2
+    }
+  },
+  {
+    "id": "eb87713b-d508-5d54-8556-fe7f0765bd90",
+    "type": "Chunking",
+    "title": "Anlam Gruplarıyla Okuma",
+    "description": "17–21 yaş grubunda seviyeye uygun çalışma.",
+    "difficultyLevel": 3,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "word_highlight",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "chunking",
+        "pacer": {
+          "speedWpm": 240,
+          "chunkSize": 3
+        },
+        "readingPurpose": "practice"
+      },
+      "difficultyLevel": 3
+    }
+  },
+  {
+    "id": "dc7cea81-de71-52cf-9bc8-4184c2d11477",
+    "type": "Comprehension",
+    "title": "Metin Üzerinde Düşün",
+    "description": "17–21 yaş grubunda seviyeye uygun çalışma.",
+    "difficultyLevel": 3,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "reading_comprehension",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "comprehension",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 3
+    }
+  },
+  {
+    "id": "ee2cab8c-31a1-5ebe-9b53-dc95045d49de",
+    "type": "Comprehension",
+    "title": "Metni Anla",
+    "description": "17–21 yaş grubunda seviyeye uygun çalışma.",
+    "difficultyLevel": 3,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "reading_comprehension",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "comprehension",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 3
+    }
+  },
+  {
+    "id": "c1292ed5-2e91-54e6-8b08-5e2f788826e2",
+    "type": "EyeTracking",
+    "title": "Hareketi Takip Et",
+    "description": "Dikkat oyunu. 17–21 yaş grubunda seviyeye uygun çalışma.",
+    "difficultyLevel": 3,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "motion_path",
+      "engineConfig": {
+        "mode": "tracking",
+        "path": {
+          "type": "circle"
+        },
+        "timing": {
+          "durationSeconds": 45,
+          "speedMs": 2600
+        },
+        "content": {
+          "type": "dot",
+          "pointSize": 36
+        }
+      },
+      "difficultyLevel": 3
+    }
+  },
+  {
+    "id": "bee53326-518d-5271-a48e-30f3b987b78b",
+    "type": "Fixation",
+    "title": "Noktaya Odaklan",
+    "description": "Dikkat oyunu. 17–21 yaş grubunda seviyeye uygun çalışma.",
+    "difficultyLevel": 3,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "motion_path",
+      "engineConfig": {
+        "mode": "fixation",
+        "timing": {
+          "holdMs": 800,
+          "durationSeconds": 45
+        },
+        "content": {
+          "type": "letter",
+          "points": 4,
+          "peripheralCount": 1,
+          "pointSize": 44
+        }
+      },
+      "difficultyLevel": 3
+    }
+  },
+  {
+    "id": "69261140-377b-55d4-aba0-6e108980fd00",
+    "type": "Focus",
+    "title": "Konum Belleği",
+    "description": "Dikkat oyunu. 17–21 yaş grubunda seviyeye uygun çalışma.",
+    "difficultyLevel": 3,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "focus",
+      "engineConfig": {
+        "mode": "position",
+        "nLevel": 1,
+        "totalSteps": 24,
+        "speedMs": 2000,
+        "gridSize": 3
+      },
+      "difficultyLevel": 3
+    }
+  },
+  {
+    "id": "1370e6ef-3e26-5b2b-900e-3cab23fdc94e",
+    "type": "FreeReading",
+    "title": "Bağımsız Metin Okuma",
+    "description": "17–21 yaş grubunda seviyeye uygun çalışma.",
+    "difficultyLevel": 3,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "free_reading",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "free",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 3
+    }
+  },
+  {
+    "id": "edf49e6e-2c3f-5c60-a251-4545d3b574ff",
+    "type": "RSVP",
+    "title": "Sıralı Kelime Gösterimi",
+    "description": "17–21 yaş grubunda seviyeye uygun dikkat ve okuma çalışması.",
+    "difficultyLevel": 3,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "text_stream",
+      "engineConfig": {
+        "mode": "rsvp",
+        "content": {
+          "source": "reading_text"
+        },
+        "timing": {
+          "durationMs": 250,
+          "intervalMs": 0
+        },
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 3
+    }
+  },
+  {
+    "id": "1c633a1e-bd58-5f03-869c-779cb9e8decb",
+    "type": "Saccade",
+    "title": "Hedefler Arası Geçiş",
+    "description": "Dikkat oyunu. 17–21 yaş grubunda seviyeye uygun çalışma.",
+    "difficultyLevel": 3,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "motion_path",
+      "engineConfig": {
+        "mode": "saccade",
+        "timing": {
+          "holdMs": 700,
+          "durationSeconds": 45
+        },
+        "content": {
+          "type": "number",
+          "pattern": "horizontal",
+          "pointSize": 44
+        }
+      },
+      "difficultyLevel": 3
+    }
+  },
+  {
+    "id": "82619e69-6a22-503f-b271-e41b09202121",
+    "type": "Scanning",
+    "title": "Metinde Hedefi Bul",
+    "description": "17–21 yaş grubunda seviyeye uygun çalışma.",
+    "difficultyLevel": 3,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "scanning",
+      "engineConfig": {
+        "content": {
+          "source": "random_text"
+        },
+        "targetCount": 5,
+        "timeLimit": 180,
+        "targets": {
+          "mode": "find_all",
+          "caseSensitive": false
+        }
+      },
+      "difficultyLevel": 3
+    }
+  },
+  {
+    "id": "fc18cf9d-81a7-5645-b533-f5e0ae20d5bc",
+    "type": "SchulteTable",
+    "title": "Sayı Avcısı",
+    "description": "Dikkat oyunu. 17–21 yaş grubunda seviyeye uygun çalışma.",
+    "difficultyLevel": 3,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "grid_interaction",
+      "engineConfig": {
+        "gridSize": 5,
+        "sequenceType": "numeric",
+        "rules": {
+          "timeLimit": 150
+        }
+      },
+      "difficultyLevel": 3
+    }
+  },
+  {
+    "id": "5b407543-34d2-55c2-9be3-fb11ca93c2ca",
+    "type": "Skimming",
+    "title": "Metne Genel Bakış",
+    "description": "17–21 yaş grubunda seviyeye uygun çalışma.",
+    "difficultyLevel": 3,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "skimming",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "skimming",
+        "rules": {
+          "timeLimit": 180
+        },
+        "timing": {
+          "minReadingTimeMs": 3000
+        },
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 3
+    }
+  },
+  {
+    "id": "6e16adcb-1adf-5c16-be43-537131e9b10b",
+    "type": "SpeedReading",
+    "title": "Dengeli Tempoda Okuma",
+    "description": "17–21 yaş grubunda seviyeye uygun çalışma.",
+    "difficultyLevel": 3,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "word_highlight",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "guided",
+        "pacer": {
+          "speedWpm": 240,
+          "chunkSize": 1
+        },
+        "readingPurpose": "practice"
+      },
+      "difficultyLevel": 3
+    }
+  },
+  {
+    "id": "7c3ffebc-2b8c-57e4-9c89-9851fa3953f5",
+    "type": "Tachistoscope",
+    "title": "Kısa Gösterimde Tanıma",
+    "description": "17–21 yaş grubunda seviyeye uygun dikkat ve okuma çalışması.",
+    "difficultyLevel": 3,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "text_stream",
+      "engineConfig": {
+        "mode": "tachistoscope",
+        "content": {
+          "type": "number",
+          "count": 16
+        },
+        "timing": {
+          "durationMs": 600,
+          "intervalMs": 500
+        },
+        "adaptive": {
+          "enabled": false,
+          "minDurationMs": 200,
+          "maxDurationMs": 1500
+        }
+      },
+      "difficultyLevel": 3
+    }
+  },
+  {
+    "id": "b18bdbdf-e093-5bf0-91c1-228ebc0fbfd1",
+    "type": "TextFading",
+    "title": "Kaybolan Metinle Okuma",
+    "description": "17–21 yaş grubunda seviyeye uygun dikkat ve okuma çalışması.",
+    "difficultyLevel": 3,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "text_fade",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "fading": {
+          "speedWpm": 240,
+          "lagMs": 2000
+        },
+        "timing": {
+          "timeLimitSec": 0
+        },
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 3
+    }
+  },
+  {
+    "id": "9a09590a-0a4c-51d5-8b3d-ef884680bb38",
+    "type": "VisualExpansion",
+    "title": "Çevredeki Harfler",
+    "description": "Dikkat oyunu. 17–21 yaş grubunda seviyeye uygun çalışma.",
+    "difficultyLevel": 3,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "visual_expansion",
+      "engineConfig": {
+        "mode": "horizontal",
+        "rounds": 16,
+        "displayDurationMs": 950,
+        "startDegrees": 8,
+        "targetDegrees": 22,
+        "content": {
+          "stimulusType": "letter"
+        }
+      },
+      "difficultyLevel": 3
+    }
+  },
+  {
+    "id": "4a9620bf-06db-5c9f-9e8a-9052e481ebe8",
+    "type": "Visualization",
+    "title": "Sahneyi Zihninde Canlandır",
+    "description": "17–21 yaş grubunda seviyeye uygun dikkat ve okuma çalışması.",
+    "difficultyLevel": 3,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "visualization",
+      "engineConfig": {
+        "mode": "static"
+      },
+      "difficultyLevel": 3
+    }
+  },
+  {
+    "id": "bd994f7f-767d-5623-bb60-ba717dbe5bc9",
+    "type": "Vocabulary",
+    "title": "Kelime Bilgisi Testi",
+    "description": "17–21 yaş grubunda seviyeye uygun çalışma.",
+    "difficultyLevel": 3,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "vocabulary_builder",
+      "engineConfig": {
+        "mode": "quiz",
+        "quizType": "mixed",
+        "timeLimitPerWord": 0,
+        "vocabulary": {
+          "count": 10,
+          "difficultyLevel": 3
+        }
+      },
+      "difficultyLevel": 3
+    }
+  },
+  {
+    "id": "57d186e0-8756-5e69-aaa2-3dd457c931b9",
+    "type": "Chunking",
+    "title": "Anlam Gruplarıyla Okuma",
+    "description": "17–21 yaş grubunda seviyeye uygun çalışma.",
+    "difficultyLevel": 4,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "word_highlight",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "chunking",
+        "pacer": {
+          "speedWpm": 270,
+          "chunkSize": 4
+        },
+        "readingPurpose": "practice"
+      },
+      "difficultyLevel": 4
+    }
+  },
+  {
+    "id": "a339489a-5cdd-5e00-8b6a-f8e4114897fb",
+    "type": "Comprehension",
+    "title": "Metin Üzerinde Düşün",
+    "description": "17–21 yaş grubunda seviyeye uygun çalışma.",
+    "difficultyLevel": 4,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "reading_comprehension",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "comprehension",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 4
+    }
+  },
+  {
+    "id": "d47007eb-d1af-5a1c-82a9-e35db8770770",
+    "type": "Comprehension",
+    "title": "Metni Anla",
+    "description": "17–21 yaş grubunda seviyeye uygun çalışma.",
+    "difficultyLevel": 4,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "reading_comprehension",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "comprehension",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 4
+    }
+  },
+  {
+    "id": "ffc886e8-ccd3-5664-82bf-b51ec2e4702c",
+    "type": "ErrorAnalysis",
+    "title": "Eksik Harfi Bul",
+    "description": "17–21 yaş grubunda seviyeye uygun çalışma.",
+    "difficultyLevel": 4,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "error_analysis",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "errorCount": 5,
+        "timeLimit": 300
+      },
+      "difficultyLevel": 4
+    }
+  },
+  {
+    "id": "bcf0ad9b-9030-5979-b632-1b9e0049f914",
+    "type": "EyeTracking",
+    "title": "Hareketi Takip Et",
+    "description": "Dikkat oyunu. 17–21 yaş grubunda seviyeye uygun çalışma.",
+    "difficultyLevel": 4,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "motion_path",
+      "engineConfig": {
+        "mode": "tracking",
+        "path": {
+          "type": "infinity8"
+        },
+        "timing": {
+          "durationSeconds": 60,
+          "speedMs": 2500
+        },
+        "content": {
+          "type": "dot",
+          "pointSize": 36
+        }
+      },
+      "difficultyLevel": 4
+    }
+  },
+  {
+    "id": "44fa6fce-c58a-55ad-9f4c-5571d25a8148",
+    "type": "Fixation",
+    "title": "Noktaya Odaklan",
+    "description": "Dikkat oyunu. 17–21 yaş grubunda seviyeye uygun çalışma.",
+    "difficultyLevel": 4,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "motion_path",
+      "engineConfig": {
+        "mode": "fixation",
+        "timing": {
+          "holdMs": 750,
+          "durationSeconds": 45
+        },
+        "content": {
+          "type": "letter",
+          "points": 5,
+          "peripheralCount": 1,
+          "pointSize": 44
+        }
+      },
+      "difficultyLevel": 4
+    }
+  },
+  {
+    "id": "5f1dc195-0be9-5b0e-b3e1-8ca60a1bdfc6",
+    "type": "Focus",
+    "title": "Konum Belleği",
+    "description": "Dikkat oyunu. 17–21 yaş grubunda seviyeye uygun çalışma.",
+    "difficultyLevel": 4,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "focus",
+      "engineConfig": {
+        "mode": "position",
+        "nLevel": 1,
+        "totalSteps": 28,
+        "speedMs": 1800,
+        "gridSize": 3
+      },
+      "difficultyLevel": 4
+    }
+  },
+  {
+    "id": "67ea967a-8814-5cde-a143-269691eb6535",
+    "type": "RSVP",
+    "title": "Sıralı Kelime Gösterimi",
+    "description": "17–21 yaş grubunda seviyeye uygun dikkat ve okuma çalışması.",
+    "difficultyLevel": 4,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "text_stream",
+      "engineConfig": {
+        "mode": "rsvp",
+        "content": {
+          "source": "reading_text"
+        },
+        "timing": {
+          "durationMs": 222,
+          "intervalMs": 0
+        },
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 4
+    }
+  },
+  {
+    "id": "9245fea6-e9b1-5ba0-83e5-903381340702",
+    "type": "RegressionReduction",
+    "title": "Okuma Takibi ve Geri Dönüş Farkındalığı",
+    "description": "17–21 yaş grubunda seviyeye uygun çalışma. Geri dönüş veya iç sesi tamamen yok etmek başarı şartı değildir.",
+    "difficultyLevel": 4,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "regression_reduction",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "targetWpm": 270,
+        "wordDelayMs": 222,
+        "maskingType": "none",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 4
+    }
+  },
+  {
+    "id": "64fe8828-b439-5cff-b58f-0e9cd88198ad",
+    "type": "Saccade",
+    "title": "Hedefler Arası Geçiş",
+    "description": "Dikkat oyunu. 17–21 yaş grubunda seviyeye uygun çalışma.",
+    "difficultyLevel": 4,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "motion_path",
+      "engineConfig": {
+        "mode": "saccade",
+        "timing": {
+          "holdMs": 650,
+          "durationSeconds": 45
+        },
+        "content": {
+          "type": "number",
+          "pattern": "vertical",
+          "pointSize": 44
+        }
+      },
+      "difficultyLevel": 4
+    }
+  },
+  {
+    "id": "5169df96-15b0-58f0-a4a8-aeacf867f444",
+    "type": "Scanning",
+    "title": "Metinde Hedefi Bul",
+    "description": "17–21 yaş grubunda seviyeye uygun çalışma.",
+    "difficultyLevel": 4,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "scanning",
+      "engineConfig": {
+        "content": {
+          "source": "random_text"
+        },
+        "targetCount": 6,
+        "timeLimit": 180,
+        "targets": {
+          "mode": "find_all",
+          "caseSensitive": false
+        }
+      },
+      "difficultyLevel": 4
+    }
+  },
+  {
+    "id": "515cf27a-b306-5a37-86e8-4768512e076f",
+    "type": "SchulteTable",
+    "title": "Sayı Avcısı",
+    "description": "Dikkat oyunu. 17–21 yaş grubunda seviyeye uygun çalışma.",
+    "difficultyLevel": 4,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "grid_interaction",
+      "engineConfig": {
+        "gridSize": 5,
+        "sequenceType": "numeric",
+        "rules": {
+          "timeLimit": 120
+        }
+      },
+      "difficultyLevel": 4
+    }
+  },
+  {
+    "id": "4062647b-988d-566f-8f34-8d880bfe14a0",
+    "type": "Skimming",
+    "title": "Metne Genel Bakış",
+    "description": "17–21 yaş grubunda seviyeye uygun çalışma.",
+    "difficultyLevel": 4,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "skimming",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "skimming",
+        "rules": {
+          "timeLimit": 150
+        },
+        "timing": {
+          "minReadingTimeMs": 3000
+        },
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 4
+    }
+  },
+  {
+    "id": "79e32c19-71ce-5f68-802e-588d3d3b7182",
+    "type": "SpeedReading",
+    "title": "Dengeli Tempoda Okuma",
+    "description": "17–21 yaş grubunda seviyeye uygun çalışma.",
+    "difficultyLevel": 4,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "word_highlight",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "guided",
+        "pacer": {
+          "speedWpm": 270,
+          "chunkSize": 1
+        },
+        "readingPurpose": "practice"
+      },
+      "difficultyLevel": 4
+    }
+  },
+  {
+    "id": "082a3f49-6aee-596f-a1fa-7d61ea8b7b93",
+    "type": "SubvocalizationReduction",
+    "title": "İç Ses ve Okuma Ritmi",
+    "description": "17–21 yaş grubunda seviyeye uygun çalışma. Geri dönüş veya iç sesi tamamen yok etmek başarı şartı değildir.",
+    "difficultyLevel": 4,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "subvocalization_reduction",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "targetWpm": 270,
+        "msPerWord": 222,
+        "chunkSize": 1,
+        "displayMode": "highlight",
+        "metronomeEnabled": false,
+        "visualMetronome": false,
+        "metronomeBpm": 60,
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 4
+    }
+  },
+  {
+    "id": "111d3868-8a77-58f4-b57b-1c8dd5af9a5e",
+    "type": "Tachistoscope",
+    "title": "Kısa Gösterimde Tanıma",
+    "description": "17–21 yaş grubunda seviyeye uygun dikkat ve okuma çalışması.",
+    "difficultyLevel": 4,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "text_stream",
+      "engineConfig": {
+        "mode": "tachistoscope",
+        "content": {
+          "type": "number",
+          "count": 18
+        },
+        "timing": {
+          "durationMs": 550,
+          "intervalMs": 500
+        },
+        "adaptive": {
+          "enabled": false,
+          "minDurationMs": 200,
+          "maxDurationMs": 1500
+        }
+      },
+      "difficultyLevel": 4
+    }
+  },
+  {
+    "id": "81a83d67-b712-5211-aaae-b0e4bd622cd2",
+    "type": "TextFading",
+    "title": "Kaybolan Metinle Okuma",
+    "description": "17–21 yaş grubunda seviyeye uygun dikkat ve okuma çalışması.",
+    "difficultyLevel": 4,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "text_fade",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "fading": {
+          "speedWpm": 270,
+          "lagMs": 2000
+        },
+        "timing": {
+          "timeLimitSec": 0
+        },
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 4
+    }
+  },
+  {
+    "id": "2b68f647-27da-522b-ac9a-292395fda5be",
+    "type": "VisualExpansion",
+    "title": "Çevredeki Harfler",
+    "description": "Dikkat oyunu. 17–21 yaş grubunda seviyeye uygun çalışma.",
+    "difficultyLevel": 4,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "visual_expansion",
+      "engineConfig": {
+        "mode": "horizontal",
+        "rounds": 18,
+        "displayDurationMs": 900,
+        "startDegrees": 8,
+        "targetDegrees": 24,
+        "content": {
+          "stimulusType": "letter"
+        }
+      },
+      "difficultyLevel": 4
+    }
+  },
+  {
+    "id": "a7afcefc-8e1a-543e-bdcd-b3f9e14e2692",
+    "type": "Visualization",
+    "title": "Sahneyi Zihninde Canlandır",
+    "description": "17–21 yaş grubunda seviyeye uygun dikkat ve okuma çalışması.",
+    "difficultyLevel": 4,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "visualization",
+      "engineConfig": {
+        "mode": "static"
+      },
+      "difficultyLevel": 4
+    }
+  },
+  {
+    "id": "b4f28155-de18-5a51-b489-eb95d9f023cb",
+    "type": "Vocabulary",
+    "title": "Kelime Bilgisi Testi",
+    "description": "17–21 yaş grubunda seviyeye uygun çalışma.",
+    "difficultyLevel": 4,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "vocabulary_builder",
+      "engineConfig": {
+        "mode": "quiz",
+        "quizType": "mixed",
+        "timeLimitPerWord": 0,
+        "vocabulary": {
+          "count": 12,
+          "difficultyLevel": 4
+        }
+      },
+      "difficultyLevel": 4
+    }
+  },
+  {
+    "id": "3fad2018-c1e6-54e0-8e86-79dedadeb1ea",
+    "type": "Comprehension",
+    "title": "Metin Üzerinde Düşün",
+    "description": "17–21 yaş grubunda seviyeye uygun çalışma.",
+    "difficultyLevel": 5,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "reading_comprehension",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "comprehension",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 5
+    }
+  },
+  {
+    "id": "de8896ef-0e11-538b-9f9c-579b61ebf267",
+    "type": "Comprehension",
+    "title": "Metni Anla",
+    "description": "17–21 yaş grubunda seviyeye uygun çalışma.",
+    "difficultyLevel": 5,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "reading_comprehension",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "comprehension",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 5
+    }
+  },
+  {
+    "id": "88d37e8c-a1a9-558f-bb9e-d50513dda573",
+    "type": "ErrorAnalysis",
+    "title": "Eksik Harfi Bul",
+    "description": "17–21 yaş grubunda seviyeye uygun çalışma.",
+    "difficultyLevel": 5,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "error_analysis",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "errorCount": 6,
+        "timeLimit": 300
+      },
+      "difficultyLevel": 5
+    }
+  },
+  {
+    "id": "e10c3526-7c29-5b5d-aa93-e0ccb24959fd",
+    "type": "ExamSimulation",
+    "title": "Süreli Metin ve Sorular",
+    "description": "17–21 yaş grubunda seviyeye uygun çalışma.",
+    "difficultyLevel": 5,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "exam_simulation",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "readingPurpose": "evaluation",
+        "timing": {
+          "questionTimeSeconds": 60
+        }
+      },
+      "difficultyLevel": 5
+    }
+  },
+  {
+    "id": "f7309daa-6a6f-53d6-b5a8-a55ab2699cdc",
+    "type": "EyeTracking",
+    "title": "Hareketi Takip Et",
+    "description": "Dikkat oyunu. 17–21 yaş grubunda seviyeye uygun çalışma.",
+    "difficultyLevel": 5,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "motion_path",
+      "engineConfig": {
+        "mode": "tracking",
+        "path": {
+          "type": "infinity8"
+        },
+        "timing": {
+          "durationSeconds": 60,
+          "speedMs": 2300
+        },
+        "content": {
+          "type": "dot",
+          "pointSize": 36
+        }
+      },
+      "difficultyLevel": 5
+    }
+  },
+  {
+    "id": "52388c32-c1ec-58e4-9e87-ecb3c663a699",
+    "type": "Fixation",
+    "title": "Noktaya Odaklan",
+    "description": "Dikkat oyunu. 17–21 yaş grubunda seviyeye uygun çalışma.",
+    "difficultyLevel": 5,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "motion_path",
+      "engineConfig": {
+        "mode": "fixation",
+        "timing": {
+          "holdMs": 700,
+          "durationSeconds": 45
+        },
+        "content": {
+          "type": "letter",
+          "points": 5,
+          "peripheralCount": 1,
+          "pointSize": 44
+        }
+      },
+      "difficultyLevel": 5
+    }
+  },
+  {
+    "id": "be744984-094c-5d13-ace5-c6f9810bf66e",
+    "type": "Focus",
+    "title": "Konum Belleği",
+    "description": "Dikkat oyunu. 17–21 yaş grubunda seviyeye uygun çalışma.",
+    "difficultyLevel": 5,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "focus",
+      "engineConfig": {
+        "mode": "position",
+        "nLevel": 1,
+        "totalSteps": 30,
+        "speedMs": 1600,
+        "gridSize": 3
+      },
+      "difficultyLevel": 5
+    }
+  },
+  {
+    "id": "e81d9a82-16a1-5931-acc5-0aeec77724bb",
+    "type": "RSVP",
+    "title": "Sıralı Kelime Gösterimi",
+    "description": "17–21 yaş grubunda seviyeye uygun dikkat ve okuma çalışması.",
+    "difficultyLevel": 5,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "text_stream",
+      "engineConfig": {
+        "mode": "rsvp",
+        "content": {
+          "source": "reading_text"
+        },
+        "timing": {
+          "durationMs": 200,
+          "intervalMs": 0
+        },
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 5
+    }
+  },
+  {
+    "id": "c54dce4f-1880-58e5-ad56-9e915bf5506f",
+    "type": "RegressionReduction",
+    "title": "Okuma Takibi ve Geri Dönüş Farkındalığı",
+    "description": "17–21 yaş grubunda seviyeye uygun çalışma. Geri dönüş veya iç sesi tamamen yok etmek başarı şartı değildir.",
+    "difficultyLevel": 5,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "regression_reduction",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "targetWpm": 300,
+        "wordDelayMs": 200,
+        "maskingType": "none",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 5
+    }
+  },
+  {
+    "id": "822040a0-3ad3-59ae-a17c-650280175640",
+    "type": "Saccade",
+    "title": "Hedefler Arası Geçiş",
+    "description": "Dikkat oyunu. 17–21 yaş grubunda seviyeye uygun çalışma.",
+    "difficultyLevel": 5,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "motion_path",
+      "engineConfig": {
+        "mode": "saccade",
+        "timing": {
+          "holdMs": 600,
+          "durationSeconds": 45
+        },
+        "content": {
+          "type": "number",
+          "pattern": "random",
+          "pointSize": 44
+        }
+      },
+      "difficultyLevel": 5
+    }
+  },
+  {
+    "id": "ae975bce-9cb9-5025-849a-28852768281c",
+    "type": "Scanning",
+    "title": "Metinde Hedefi Bul",
+    "description": "17–21 yaş grubunda seviyeye uygun çalışma.",
+    "difficultyLevel": 5,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "scanning",
+      "engineConfig": {
+        "content": {
+          "source": "random_text"
+        },
+        "targetCount": 6,
+        "timeLimit": 180,
+        "targets": {
+          "mode": "find_all",
+          "caseSensitive": false
+        }
+      },
+      "difficultyLevel": 5
+    }
+  },
+  {
+    "id": "34d9e9dc-4515-56c2-b348-16c79d7a7445",
+    "type": "SchulteTable",
+    "title": "Sayı Avcısı",
+    "description": "Dikkat oyunu. 17–21 yaş grubunda seviyeye uygun çalışma.",
+    "difficultyLevel": 5,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "grid_interaction",
+      "engineConfig": {
+        "gridSize": 5,
+        "sequenceType": "numeric",
+        "rules": {
+          "timeLimit": 100
+        }
+      },
+      "difficultyLevel": 5
+    }
+  },
+  {
+    "id": "a1dc447b-f5ce-557c-bd63-852040fb5ca6",
+    "type": "Skimming",
+    "title": "Metne Genel Bakış",
+    "description": "17–21 yaş grubunda seviyeye uygun çalışma.",
+    "difficultyLevel": 5,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "skimming",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "skimming",
+        "rules": {
+          "timeLimit": 150
+        },
+        "timing": {
+          "minReadingTimeMs": 3000
+        },
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 5
+    }
+  },
+  {
+    "id": "a3533513-6a35-5037-ad55-ae51942c437f",
+    "type": "SpeedReading",
+    "title": "Dengeli Tempoda Okuma",
+    "description": "17–21 yaş grubunda seviyeye uygun çalışma.",
+    "difficultyLevel": 5,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "word_highlight",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "guided",
+        "pacer": {
+          "speedWpm": 300,
+          "chunkSize": 1
+        },
+        "readingPurpose": "practice"
+      },
+      "difficultyLevel": 5
+    }
+  },
+  {
+    "id": "0df931f7-e94f-5674-9624-367f02071e9f",
+    "type": "SubvocalizationReduction",
+    "title": "İç Ses ve Okuma Ritmi",
+    "description": "17–21 yaş grubunda seviyeye uygun çalışma. Geri dönüş veya iç sesi tamamen yok etmek başarı şartı değildir.",
+    "difficultyLevel": 5,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "subvocalization_reduction",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "targetWpm": 300,
+        "msPerWord": 200,
+        "chunkSize": 1,
+        "displayMode": "highlight",
+        "metronomeEnabled": false,
+        "visualMetronome": false,
+        "metronomeBpm": 60,
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 5
+    }
+  },
+  {
+    "id": "068c9059-7c45-558b-ab34-1ecd876b599f",
+    "type": "Tachistoscope",
+    "title": "Kısa Gösterimde Tanıma",
+    "description": "17–21 yaş grubunda seviyeye uygun dikkat ve okuma çalışması.",
+    "difficultyLevel": 5,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "text_stream",
+      "engineConfig": {
+        "mode": "tachistoscope",
+        "content": {
+          "type": "number",
+          "count": 20
+        },
+        "timing": {
+          "durationMs": 500,
+          "intervalMs": 500
+        },
+        "adaptive": {
+          "enabled": false,
+          "minDurationMs": 200,
+          "maxDurationMs": 1500
+        }
+      },
+      "difficultyLevel": 5
+    }
+  },
+  {
+    "id": "79fd25f6-1b75-5400-b233-6fe8fde4c578",
+    "type": "TextFading",
+    "title": "Kaybolan Metinle Okuma",
+    "description": "17–21 yaş grubunda seviyeye uygun dikkat ve okuma çalışması.",
+    "difficultyLevel": 5,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "text_fade",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "fading": {
+          "speedWpm": 300,
+          "lagMs": 2000
+        },
+        "timing": {
+          "timeLimitSec": 0
+        },
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 5
+    }
+  },
+  {
+    "id": "53d8fbf9-dbf7-50ba-8226-90fd9937b6ca",
+    "type": "VisualExpansion",
+    "title": "Çevredeki Harfler",
+    "description": "Dikkat oyunu. 17–21 yaş grubunda seviyeye uygun çalışma.",
+    "difficultyLevel": 5,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "visual_expansion",
+      "engineConfig": {
+        "mode": "horizontal",
+        "rounds": 20,
+        "displayDurationMs": 850,
+        "startDegrees": 8,
+        "targetDegrees": 26,
+        "content": {
+          "stimulusType": "letter"
+        }
+      },
+      "difficultyLevel": 5
+    }
+  },
+  {
+    "id": "9d722c1a-d4c9-5f5b-a2ad-7f0aa9b7b5c0",
+    "type": "Visualization",
+    "title": "Sahneyi Zihninde Canlandır",
+    "description": "17–21 yaş grubunda seviyeye uygun dikkat ve okuma çalışması.",
+    "difficultyLevel": 5,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "visualization",
+      "engineConfig": {
+        "mode": "static"
+      },
+      "difficultyLevel": 5
+    }
+  },
+  {
+    "id": "4c518573-ab4c-506c-a016-1982c9ca4481",
+    "type": "Vocabulary",
+    "title": "Kelime Bilgisi Testi",
+    "description": "17–21 yaş grubunda seviyeye uygun çalışma.",
+    "difficultyLevel": 5,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "vocabulary_builder",
+      "engineConfig": {
+        "mode": "quiz",
+        "quizType": "mixed",
+        "timeLimitPerWord": 0,
+        "vocabulary": {
+          "count": 12,
+          "difficultyLevel": 5
+        }
+      },
+      "difficultyLevel": 5
+    }
+  }
+]

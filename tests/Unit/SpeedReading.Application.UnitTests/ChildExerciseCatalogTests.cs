@@ -8,10 +8,11 @@ namespace SpeedReading.Application.UnitTests;
 public sealed class ChildExerciseCatalogTests
 {
     [Theory]
-    [InlineData("child-exercises", "10000000-0000-0000-0000-000000000001", 14)]
-    [InlineData("teen-exercises", "10000000-0000-0000-0000-000000000002", 15)]
-    [InlineData("adult-exercises", "10000000-0000-0000-0000-000000000003", 15)]
-    public void All_seventy_catalog_entries_have_valid_unpinned_configurations(string pack, string ageGroupId, int typeCount)
+    [InlineData("child-exercises", "10000000-0000-0000-0000-000000000001", 14, 70)]
+    [InlineData("teen-exercises", "10000000-0000-0000-0000-000000000002", 15, 70)]
+    [InlineData("adult-exercises", "10000000-0000-0000-0000-000000000003", 15, 70)]
+    [InlineData("young-adult-exercises", "10000000-0000-0000-0000-000000000004", 21, 90)]
+    public void Catalog_entries_have_valid_unpinned_configurations(string pack, string ageGroupId, int typeCount, int count)
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);
         while (directory is not null && !Directory.Exists(Path.Combine(directory.FullName, "content-packs")))
@@ -20,11 +21,12 @@ public sealed class ChildExerciseCatalogTests
         using var document = JsonDocument.Parse(File.ReadAllText(Path.Combine(directory!.FullName,
             "content-packs", pack, "v1", "catalog.json")));
         var entries = document.RootElement.EnumerateArray().ToArray();
-        Assert.Equal(70, entries.Length);
-        Assert.Equal(70, entries.Select(entry => entry.GetProperty("id").GetGuid()).Distinct().Count());
+        Assert.Equal(count, entries.Length);
+        Assert.Equal(count, entries.Select(entry => entry.GetProperty("id").GetGuid()).Distinct().Count());
         Assert.Equal(typeCount, entries.Select(entry => entry.GetProperty("type").GetString()).Distinct().Count());
         foreach (var level in Enumerable.Range(1, 5))
-            Assert.Equal(14, entries.Count(entry => entry.GetProperty("difficultyLevel").GetInt32() == level));
+            Assert.Equal(count == 90 ? new[] { 16, 16, 18, 20, 20 }[level - 1] : 14,
+                entries.Count(entry => entry.GetProperty("difficultyLevel").GetInt32() == level));
         foreach (var entry in entries)
         {
             var config = entry.GetProperty("configuration");
