@@ -10,7 +10,8 @@ for sample in $(seq 1 30); do
   printf '%s|%s|Healthy|restart=%s\n' "$(date --iso-8601=seconds)" "$sample" "$initial_restarts"
   sleep 30
 done
-if docker logs --since "$monitor_start" "$api" 2>&1 | grep -Eqi '(^|[[:space:]])(fail|crit|fatal):|Unhandled exception'; then
+monitor_logs="$(docker logs --since "$monitor_start" "$api" 2>&1)"
+if printf '%s\n' "$monitor_logs" | grep -Eqi '(^|[[:space:]])(fail|crit|fatal):|Unhandled exception'; then
   echo 'Severe log marker detected; inspect securely before closing release' >&2
   exit 1
 fi

@@ -32,7 +32,7 @@ false`);
 
 test('stop and apply intent are recorded before invoking external commands', () => {
   const source = readFileSync(new URL('deploy.sh', root), 'utf8');
-  assert.ok(source.indexOf('stopped=1') < source.indexOf('docker stop --time 30 "$api" >/dev/null\nstopped=1') || !source.includes('docker stop --time 30 "$api" >/dev/null\nstopped=1'));
+  assert.ok(source.indexOf('flock -n 9') < source.indexOf('trap on_exit EXIT'));
   const apply = source.indexOf('psql_run -v plan_json=');
   assert.ok(source.lastIndexOf('apply_started=1', apply) > source.indexOf('psql_run()'));
   const stop = source.indexOf('docker stop --time 30 "$api" >/dev/null', source.indexOf('curl --fail'));

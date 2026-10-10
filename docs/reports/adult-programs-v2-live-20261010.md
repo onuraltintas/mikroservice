@@ -39,7 +39,7 @@ atomik SQL geçişi → son kontrol ve özet eşitliği → readiness/HTTP/oturu
 Diğer servisler/veritabanları, frontend veya migration değişmez; staging oluşturulmaz.
 Eski beş program ancak yeni beş program doğrulandıktan sonra fiziksel silinir.
 İlerleme veya tekrar geçmişi varsa işlem durur; hiçbir kullanıcı/oturum/sonuç silinmez.
-SQL hatasında transaction geri alınır. Commit sonrası doğrulama hatasında API kapalı kalır;
+SQL hatasında transaction geri alınır. Uygulama/commit yanıtı belirsizse veya sonraki doğrulama hatalıysa API kapalı kalır;
 yedek ile kapsamlı inceleme yapılır, yeni kullanıcı verisi üzerine otomatik tam restore yapılmaz.
 Tam restore tatbikatı canlıda yapılmaz. Günlük süre ve eğitim etkililiği garanti edilmez.
 
