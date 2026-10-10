@@ -320,6 +320,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     targetTime: number;
     questionText?: string;
     correctAnswer?: string;
+    explanation?: string;
   }[] = [];
   private adaptiveQuestionHistory: any[] = [];
   readingWpm = 0;
@@ -327,6 +328,17 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   exercisePhase: 'reading' | 'questions' | 'completed' = 'reading';
   selectedAnswer: string | null = null;
   questionFeedback: { isCorrect: boolean | null; correctAnswer?: string; explanation?: string; question?: any } | null = null;
+  comprehensionTextVisible = false;
+
+  isComprehensionLearning(): boolean {
+    return !this.isAssessmentMode && this.engine?.engineType === 'reading_comprehension'
+      && (this.backendSessionConfig?.comprehensionMode ?? this.parsedConfig?.['engineConfig']?.['comprehensionMode']
+        ?? this.parsedConfig?.['comprehensionMode']) === 'learning';
+  }
+
+  private defersComprehensionFeedback(): boolean {
+    return this.isAssessmentMode || (this.engine?.engineType === 'reading_comprehension' && !this.isComprehensionLearning());
+  }
 
   // Question Timer (for Exam Simulation)
   questionTimeRemaining = 0;
@@ -769,6 +781,14 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
           }
           this.backendSessionConfig = this.createPreviewReadingConfig(readingText);
           this.comprehensionQuestions = this.backendSessionConfig['questions'] as any[];
+          const requiredQuestions = this.parsedConfig?.['engineType'] === 'reading_comprehension'
+            ? this.parsedConfig?.['engineConfig']?.['content']?.questionCount ?? this.parsedConfig?.['content']?.questionCount : undefined;
+          if (requiredQuestions && this.comprehensionQuestions.length < requiredQuestions) { retry(); return; }
+          if (requiredQuestions) {
+            this.comprehensionQuestions = this.comprehensionQuestions.slice(0, requiredQuestions);
+            this.backendSessionConfig['questions'] = this.comprehensionQuestions;
+            this.backendSessionConfig['Questions'] = this.comprehensionQuestions;
+          }
           if (this.previewRequiresQuestions() && !this.comprehensionQuestions.length) {
             retry();
             return;
@@ -842,7 +862,8 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   }
 
   private previewTextMatchesLength(wordCount: number): boolean {
-    if (this.exercise?.exerciseTypeName?.toLowerCase() !== 'speedreading') return true;
+    if (this.exercise?.exerciseTypeName?.toLowerCase() !== 'speedreading'
+      && this.parsedConfig?.['engineType'] !== 'reading_comprehension') return true;
     const content = this.parsedConfig?.['engineConfig']?.['content'] || this.parsedConfig?.['content'] || {};
     const minimum = Number(content.minWordCount) || 0;
     const maximum = Number(content.maxWordCount) || 0;
@@ -905,6 +926,12 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     const availableQuestions = Array.isArray(readingText?.questions) ? readingText.questions : [];
     const questions = this.parsedConfig?.['engineType'] === 'skimming'
       ? availableQuestions.filter((question: any) => Number(question.type ?? question.questionType ?? question.QuestionType) === 1)
+      : this.parsedConfig?.['engineType'] === 'reading_comprehension'
+          && (this.parsedConfig?.['engineConfig']?.['content']?.questionCount ?? this.parsedConfig?.['content']?.questionCount)
+      ? availableQuestions.filter((question: any) => Number(question.type ?? question.questionType ?? question.QuestionType) === 1
+        && Number(question.bloomLevel ?? question.BloomLevel) >= 1 && Number(question.bloomLevel ?? question.BloomLevel) <= 6
+        && ['A', 'B', 'C', 'D'].includes(String(question.correctAnswer ?? question.CorrectAnswer ?? '').trim().toUpperCase())
+        && ['A', 'B', 'C', 'D'].every(option => String(question[`option${option}`] ?? question[`Option${option}`] ?? '').trim()))
       : availableQuestions;
     const existingContent = this.parsedConfig?.['content'];
     const contentConfig = existingContent && typeof existingContent === 'object'
@@ -2118,7 +2145,8 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     const targetTime = this.getQuestionTimeLimit(question);
     const timeSpent = isTimeout
       ? targetTime
-      : Math.max(0, targetTime - this.questionTimeRemaining);
+      : targetTime === 0 ? Math.max(0, (Date.now() - this.questionStartTime) / 1000)
+        : Math.max(0, targetTime - this.questionTimeRemaining);
     this.questionSubmissionPending = true;
 
     const action: ActionData = {
@@ -2140,9 +2168,9 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       const answerTimedOut = isTimeout || serverExamFeedback?.timedOut === true;
       const answerTimeSpent = typeof serverExamFeedback?.responseTimeSeconds === 'number' ? serverExamFeedback.responseTimeSeconds : timeSpent;
       this.questionFeedback = {
-        isCorrect: this.isAssessmentMode ? null : response.isCorrect ?? false,
-        correctAnswer: this.isAssessmentMode ? undefined : response.correctAnswer,
-        explanation: this.isAssessmentMode
+        isCorrect: this.defersComprehensionFeedback() ? null : response.isCorrect ?? false,
+        correctAnswer: this.defersComprehensionFeedback() ? undefined : response.correctAnswer,
+        explanation: this.defersComprehensionFeedback()
           ? (isTimeout ? 'Süre doldu; cevap kaydedildi.' : 'Cevabınız kaydedildi.')
           : (response.explanation || response.message)
       };
@@ -2154,7 +2182,8 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
           timeSpent: answerTimeSpent,
           targetTime,
           questionText: question.QuestionText || question.questionText || question.Text || question.text,
-          correctAnswer: this.isAssessmentMode ? undefined : response.correctAnswer
+          correctAnswer: this.defersComprehensionFeedback() ? undefined : response.correctAnswer,
+          explanation: this.defersComprehensionFeedback() ? undefined : response.explanation
         });
       }
       this.questionSubmissionPending = false;
@@ -2214,6 +2243,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       this.currentQuestionIndex++;
       this.selectedAnswer = null;
       this.questionFeedback = null;
+      this.comprehensionTextVisible = false;
       this.startQuestionTimer();
       this.cdr.detectChanges();
     }
@@ -2221,6 +2251,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
 
   // Question Timer Methods
   private getQuestionTimeLimit(question: any): number {
+    if (this.engine?.engineType === 'reading_comprehension' && !this.isAssessmentMode) return 0;
     if (this.engine?.engineType === 'exam_simulation') {
       const seconds = this.backendSessionConfig?.examQuestionTimeSeconds
         ?? this.parsedConfig?.['engineConfig']?.['timing']?.questionTimeSeconds
@@ -2259,6 +2290,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       ? Math.max(0, Math.min(targetTime, question.examRemainingSeconds)) : targetTime;
     this.questionTimeRemaining = remaining;
     this.questionStartTime = Date.now() - (targetTime - remaining) * 1000;
+    if (targetTime === 0) return;
 
     this.questionTimerInterval = setInterval(() => {
       if (this.questionFeedback) {
@@ -2365,6 +2397,8 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   }
 
   private getPerformanceLevel(wpm: number, comprehension: number): string {
+    if (this.engine?.engineType === 'reading_comprehension')
+      return this.isComprehensionLearning() ? 'Anlama çalışması' : 'Anlama değerlendirmesi';
     if (comprehension >= 80 && wpm >= 300) return 'Mükemmel!';
     if (comprehension >= 70 && wpm >= 250) return 'Çok İyi!';
     if (comprehension >= 60 && wpm >= 200) return 'İyi!';
@@ -3490,6 +3524,16 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
           accuracy: sessionResult.accuracy ?? 0,
           details: {
             ...((this.result || result).details || {}),
+            ...(this.engine?.engineType === 'reading_comprehension' ? {
+              correctAnswers: sessionResult.correctCount,
+              comprehensionMode: sessionResult.detailedResults?.comprehensionMode,
+              answers: (sessionResult.detailedResults?.answers || []).map((answer: any) => {
+                const question = sessionResult.detailedResults?.questions?.find((item: any) => item.questionId === answer.questionId);
+                return { questionId: answer.questionId, selectedAnswer: answer.answer, isCorrect: answer.isCorrect,
+                  timeSpent: answer.timeSpentSeconds, questionText: question?.questionText,
+                  correctAnswer: question?.correctAnswer, explanation: question?.explanation };
+              })
+            } : {}),
             ...(this.engine?.engineType === 'error_analysis' && sessionResult.detailedResults?.errorAnalysisFound ? {
               totalErrors: sessionResult.detailedResults.totalSteps,
               foundErrors: sessionResult.detailedResults.errorAnalysisFound.length,

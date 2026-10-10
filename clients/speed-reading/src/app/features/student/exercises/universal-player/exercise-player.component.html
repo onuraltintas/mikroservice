@@ -919,6 +919,13 @@
         </div>
 
         <div class="question-area">
+            <div *ngIf="isComprehensionLearning()" class="exam-paragraph-content">
+                <button class="ep-btn ep-btn--secondary" type="button" [attr.aria-expanded]="comprehensionTextVisible"
+                    aria-controls="comprehension-review-text" (click)="comprehensionTextVisible = !comprehensionTextVisible">
+                    {{ comprehensionTextVisible ? 'Metni gizle' : 'Metne tekrar bak' }}
+                </button>
+                <p id="comprehension-review-text" class="paragraph-text" *ngIf="comprehensionTextVisible">{{ getComprehensionText() }}</p>
+            </div>
             <div class="question-card" [class.exam-simulation-card]="engine?.engineType === 'exam_simulation'">
                 <div class="question-number">Soru {{ currentQuestionIndex + 1 }}</div>
 
@@ -946,8 +953,10 @@
                         <span class="option-text">{{ getOptionText(option) }}</span>
                     </button>
                 </div>
-
-
+                <div *ngIf="isComprehensionLearning() && questionFeedback" role="status">
+                    <strong>{{ questionFeedback.isCorrect ? 'Doğru.' : 'Yanlış. Doğru seçenek: ' + questionFeedback.correctAnswer }}</strong>
+                    <p>{{ questionFeedback.explanation }}</p>
+                </div>
             </div>
         </div>
 
@@ -1959,6 +1968,7 @@
                                     Doğru: {{ answer.correctAnswer }}
                                 </span>
                             </div>
+                            <p *ngIf="engine?.engineType === 'reading_comprehension' && answer.explanation">{{ answer.explanation }}</p>
                         </div>
                     </div>
                 </div>

@@ -1,6 +1,27 @@
 import { ExercisePlayerComponent } from './exercise-player.component';
 
 describe('comprehension presentation', () => {
+  it('permits text review only in learning, never in assessment', () => {
+    const player = Object.create(ExercisePlayerComponent.prototype) as any;
+    player.engine = { engineType: 'reading_comprehension' };
+    player.parsedConfig = { engineConfig: { comprehensionMode: 'learning' } };
+    expect(player.isComprehensionLearning()).toBeTrue();
+    player.isAssessmentMode = true;
+    expect(player.isComprehensionLearning()).toBeFalse();
+    player.isAssessmentMode = false;
+    player.parsedConfig.engineConfig.comprehensionMode = 'evaluation';
+    expect(player.isComprehensionLearning()).toBeFalse();
+  });
+
+  it('defers correctness in evaluation and keeps immediate feedback in learning', () => {
+    const player = Object.create(ExercisePlayerComponent.prototype) as any;
+    player.engine = { engineType: 'reading_comprehension' };
+    player.parsedConfig = { engineConfig: { comprehensionMode: 'evaluation' } };
+    expect(player.defersComprehensionFeedback()).toBeTrue();
+    player.parsedConfig.engineConfig.comprehensionMode = 'learning';
+    expect(player.defersComprehensionFeedback()).toBeFalse();
+  });
+
   it('does not install a default question deadline for comprehension', async () => {
     const player = Object.create(ExercisePlayerComponent.prototype) as any;
     player.engine = { engineType: 'reading_comprehension' };

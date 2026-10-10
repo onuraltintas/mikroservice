@@ -162,15 +162,19 @@ describe('ReadingComprehensionEngine', () => {
     engine.destroy();
   }));
 
-  it('normalizes malformed text and word count without throwing', () => {
+  it('rejects malformed comprehension text instead of using a demonstration passage', () => {
     const engine = new ReadingComprehensionEngine();
 
     expect(() => engine.initialize({
       readingTextContent: {} as any,
       content: { text: {} as any },
       wordCount: Number.MAX_SAFE_INTEGER
-    }, callbacks(() => undefined))).not.toThrow();
-    expect(engine.state.totalSteps).toBeLessThanOrEqual(100000);
+    }, callbacks(() => undefined))).toThrowError(/gerçek metin gerekli/);
+  });
+
+  it('rejects empty comprehension content even in a local preview', () => {
+    const engine = new ReadingComprehensionEngine();
+    expect(() => engine.initialize({}, callbacks(() => undefined))).toThrowError(/gerçek metin gerekli/);
   });
 
   it('keeps the free reading runtime identity', () => {

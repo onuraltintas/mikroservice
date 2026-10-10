@@ -165,7 +165,9 @@ export class ReadingComprehensionEngine implements BaseEngine {
         if ((!resolvedText || invalidAssessmentText) && assessmentMode && cfg.serverAuthoritative !== true) {
             throw new Error('Assessment reading text was not provided by the server.');
         }
-        this.text = resolveReadingText(cfg, resolvedText || this.getRandomText());
+        this.text = resolveReadingText(cfg, resolvedText || (this.engineType === 'free_reading' ? this.getRandomText() : ''));
+        if (this.engineType === 'reading_comprehension' && !this.text.trim())
+            throw new Error('Anlama egzersizi için yayımlanmış gerçek metin gerekli.');
 
         this.title = cfg.ReadingTextTitle ||   // PascalCase from C#
             config.readingTextTitle ||
