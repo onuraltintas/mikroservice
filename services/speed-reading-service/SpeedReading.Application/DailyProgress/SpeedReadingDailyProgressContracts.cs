@@ -27,6 +27,9 @@ public sealed class CompleteDailyExerciseRequest
     // during the migration so old clients do not silently lose completions.
     public Guid? ExerciseId { get; init; }
     public Guid? SessionId { get; init; }
+    public int? SlotOrder { get; init; }
+    public Guid? ProgramProgressId { get; init; }
+    public int? ProgramDay { get; init; }
     public decimal? SuccessRate { get; init; }
     public int? TimeSpentSeconds { get; init; }
     public string? MeasurementStatus { get; init; }

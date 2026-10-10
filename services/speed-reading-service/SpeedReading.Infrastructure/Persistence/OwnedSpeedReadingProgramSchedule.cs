@@ -55,6 +55,10 @@ internal static class OwnedSpeedReadingProgramSchedule
                 throw new BusinessRuleException(
                     "Program.DayEmpty",
                     $"'{template.Name}' programının {week}. hafta {day}. günü için egzersiz tanımlanmamış.");
+            var daySlotCount = patterns.Where(pattern => pattern.Count > 0).Sum(pattern => (long)pattern.Count);
+            if (daySlotCount > 100 || schedule.Count + daySlotCount > 20000)
+                throw new BusinessRuleException("Program.ScheduleTooLarge",
+                    "Bir gün en fazla 100, bir program en fazla 20.000 görev içerebilir.");
             var order = 1;
             var usedExerciseIds = new HashSet<Guid>();
             foreach (var pattern in patterns)
@@ -88,13 +92,23 @@ internal static class OwnedSpeedReadingProgramSchedule
                     .Distinct()
                     .Take(pattern.Count)
                     .ToList();
-                if (selected.Count != pattern.Count)
+                var reusable = exercises
+                    .Where(item => item.IsActive && item.ExerciseTypeId == exerciseType.Id
+                        && item.DifficultyLevel <= difficulty)
+                    .OrderByDescending(item => item.DifficultyLevel)
+                    .ThenBy(item => item.Id)
+                    .Select(item => item.Id)
+                    .ToList();
+                if (selected.Count < pattern.Count && reusable.Count == 0)
                 {
                     throw new BusinessRuleException(
                         "Program.ContentMissing",
                         $"'{template.Name}' programının {week}. hafta {day}. gününde "
-                        + $"'{pattern.Type}' için {pattern.Count} farklı egzersiz gerekli; {selected.Count} bulundu.");
+                        + $"'{pattern.Type}' için uygun etkin egzersiz bulunamadı.");
                 }
+
+                while (selected.Count < pattern.Count)
+                    selected.Add(reusable[(selected.Count) % reusable.Count]);
 
                 foreach (var exerciseId in selected)
                 {

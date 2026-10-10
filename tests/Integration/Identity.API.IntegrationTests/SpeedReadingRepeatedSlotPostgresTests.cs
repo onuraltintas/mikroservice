@@ -1,5 +1,10 @@
 using System.Text.Json;
+using EduPlatform.Shared.Kernel.Exceptions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
+using SpeedReading.Infrastructure.Persistence.Migrations;
+using Npgsql;
 using Shared.IntegrationTests.Fixtures;
 using SpeedReading.Application.DailyProgress;
 using SpeedReading.Domain.Catalog;
@@ -24,6 +29,12 @@ public sealed class SpeedReadingRepeatedSlotPostgresTests(PostgresFixture postgr
         try
         {
             await setup.Database.EnsureCreatedAsync();
+            var migration = new AddDailyTaskSlotOrder();
+            var generator = setup.GetService<IMigrationsSqlGenerator>();
+            foreach (var command in generator.Generate(migration.DownOperations, setup.Model))
+                await setup.Database.ExecuteSqlRawAsync(command.CommandText);
+            foreach (var command in generator.Generate(migration.UpOperations, setup.Model))
+                await setup.Database.ExecuteSqlRawAsync(command.CommandText);
             var user = Guid.NewGuid();
             var now = DateTime.UtcNow;
             var type = ExerciseType.Create(Guid.NewGuid(), "Fixation", "Fixation", "focus");
@@ -70,6 +81,28 @@ public sealed class SpeedReadingRepeatedSlotPostgresTests(PostgresFixture postgr
                 var today = await Service(setup).GetTodayExercisesAsync(user);
                 Assert.True(today.Single(item => item.Order == 1).IsCompleted);
                 Assert.False(today.Single(item => item.Order == 2).IsCompleted);
+                // Simulate an existing pre-migration log; it completes only the first occurrence.
+                await setup.Database.ExecuteSqlRawAsync("UPDATE speed_reading.daily_exercise_logs SET slot_order=NULL");
+                today = await Service(setup).GetTodayExercisesAsync(user);
+                Assert.True(today.Single(item => item.Order == 1).IsCompleted);
+                Assert.False(today.Single(item => item.Order == 2).IsCompleted);
+                var reusedSession = new CompleteDailyExerciseRequest
+                {
+                    ExerciseId = exercise.Id, SessionId = sessions[0].Id, SlotOrder = 2,
+                    ProgramProgressId = progress.Id, ProgramDay = 1
+                };
+                var reused = await Assert.ThrowsAsync<BusinessRuleException>(() => Service(setup).CompleteExerciseAsync(
+                    user, reusedSession, Guid.NewGuid().ToString(), CancellationToken.None));
+                Assert.Equal("DailyProgress.SessionMismatch", reused.Code);
+                var ambiguous = await Assert.ThrowsAsync<BusinessRuleException>(() => Service(setup).CompleteExerciseAsync(
+                    user, new CompleteDailyExerciseRequest { ExerciseId = exercise.Id, SessionId = sessions[1].Id },
+                    Guid.NewGuid().ToString(), CancellationToken.None));
+                Assert.Equal("DailyProgress.SlotMismatch", ambiguous.Code);
+                var stale = await Assert.ThrowsAsync<BusinessRuleException>(() => Service(setup).CompleteExerciseAsync(
+                    user, new CompleteDailyExerciseRequest { ExerciseId = exercise.Id, SessionId = sessions[1].Id,
+                        SlotOrder = 2, ProgramProgressId = progress.Id, ProgramDay = 2 },
+                    Guid.NewGuid().ToString(), CancellationToken.None));
+                Assert.Equal("DailyProgress.SlotMismatch", stale.Code);
                 await Complete(0);
                 Assert.Equal(1, await setup.DailyExerciseLogs.CountAsync());
                 await Complete(1);
@@ -84,6 +117,9 @@ public sealed class SpeedReadingRepeatedSlotPostgresTests(PostgresFixture postgr
             Assert.Equal(2, await setup.DailyExerciseLogs.CountAsync());
             var stats = await Service(setup).GetWeeklyStatsAsync(user);
             Assert.Equal(2, stats.TotalExercises);
+            var rollbackGuard = generator.Generate(migration.DownOperations, setup.Model)[0].CommandText;
+            await Assert.ThrowsAsync<PostgresException>(() => setup.Database.ExecuteSqlRawAsync(rollbackGuard));
+            Assert.Equal(2, await setup.DailyExerciseLogs.CountAsync());
         }
         finally { await setup.Database.EnsureDeletedAsync(); }
     }

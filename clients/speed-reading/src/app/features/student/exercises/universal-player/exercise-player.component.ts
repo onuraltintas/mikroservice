@@ -390,6 +390,9 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   assignmentId: string | null = null;
   pathItemId: string | null = null;
   customPreviewActive = false;
+  dailySlotOrder?: number;
+  dailyProgramDay?: number;
+  dailyProgramProgressId?: string;
 
   ngOnInit(): void {
     // Scroll to top immediately and after a short delay to ensure it works
@@ -402,6 +405,11 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
 
     // Check assignment and assessment context from query params so the flow survives refreshes.
     this.route.queryParams.subscribe(params => {
+      const slotOrder = Number(params['slotOrder']);
+      const programDay = Number(params['programDay']);
+      this.dailySlotOrder = Number.isInteger(slotOrder) && slotOrder > 0 ? slotOrder : undefined;
+      this.dailyProgramDay = Number.isInteger(programDay) && programDay > 0 ? programDay : undefined;
+      this.dailyProgramProgressId = params['programProgressId'] || undefined;
       this.staffTrainingMode = params['mode'] === 'staff-training' && canUseStaffTraining(this.authService);
       this.assignmentId = params['assignmentId'];
       this.reviewItemId = params['mode'] === 'review' ? params['reviewItemId'] || null : null;
@@ -1944,7 +1952,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     }
 
     // 2. Daily Exercises
-    if (state?.fromDailyExercises) {
+    if (state?.fromDailyExercises || this.dailySlotOrder) {
       this.router.navigate(['/student/daily-exercises']);
       return;
     }
@@ -3390,7 +3398,8 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
 
     // 2. Günlük egzersiz ilerlemesini kaydet (pratik modu değilse)
     const state = history.state;
-    const isPracticeMode = state?.practiceMode === true;
+    const isPracticeMode = state?.practiceMode === true
+      || this.route.snapshot.queryParamMap.get('practiceMode') === 'true';
     const isAssessmentMode = this.isAssessmentMode;
     const completionQuestionAnswers = this.engine?.engineType === 'visualization'
       ? undefined
@@ -3555,6 +3564,9 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     const completeRequest: CompleteExerciseRequest = {
       exerciseId: this.exercise.id,
       sessionId: this.sessionId,
+      slotOrder: this.dailySlotOrder,
+      programDay: this.dailyProgramDay,
+      programProgressId: this.dailyProgramProgressId,
       successRate: isMeasured ? result.accuracy ?? undefined : undefined,
       timeSpentSeconds: Math.max(1, Math.round(result.totalTime / 1000)),
       measurementStatus: isMeasured ? 'Measured' : 'NotMeasured',

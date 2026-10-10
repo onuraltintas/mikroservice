@@ -158,11 +158,18 @@ export class DailyExercisesComponent extends BaseComponent implements OnInit {
    * Egzersizi başlat - Universal Player'a yönlendirir
    */
   startExercise(exercise: DailyExercise): void {
+    const progress = this.progress();
     // Tüm egzersizler artık universal-player üzerinden çalışıyor
     this.router.navigate(
       ['/student/exercises/universal-player', exercise.exerciseId],
       {
-        queryParams: this.staffTraining ? { mode: 'staff-training' } : {},
+        queryParams: {
+          ...(this.staffTraining ? { mode: 'staff-training' } : {}),
+          slotOrder: exercise.order,
+          programDay: progress ? ((progress.currentWeek - 1) * 7) + progress.currentDay : undefined,
+          programProgressId: progress?.programProgressId,
+          practiceMode: exercise.isCompleted ? 'true' : undefined
+        },
         state: {
           fromDailyExercises: true,
           practiceMode: exercise.isCompleted,
@@ -365,7 +372,7 @@ export class DailyExercisesComponent extends BaseComponent implements OnInit {
     this.router.navigate(
       ['/student/exercises/universal-player', exercise.exerciseId],
       {
-        queryParams: this.staffTraining ? { mode: 'staff-training' } : {},
+        queryParams: { ...(this.staffTraining ? { mode: 'staff-training' } : {}), practiceMode: 'true' },
         state: {
           fromDailyExercises: true,
           fromHistoricalDay: true,

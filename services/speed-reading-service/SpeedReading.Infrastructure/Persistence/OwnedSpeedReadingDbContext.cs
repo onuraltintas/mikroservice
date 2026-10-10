@@ -1489,6 +1489,7 @@ public sealed class OwnedSpeedReadingDbContext(
         modelBuilder.Entity<DailyExerciseLog>(entity =>
         {
             entity.ToTable("daily_exercise_logs");
+            entity.Property(item => item.SlotOrder).HasColumnName("slot_order");
             entity.Property(item => item.ResultDataJson).HasColumnType("jsonb").IsRequired();
             entity.Property(item => item.SuccessRate).HasPrecision(5, 2);
             entity.Property(item => item.IsMeasured).HasColumnName("is_measured");
@@ -1517,11 +1518,15 @@ public sealed class OwnedSpeedReadingDbContext(
                     item.StudentProgramProgressId,
                     item.WeekNumber,
                     item.DayNumber,
-                    item.ExerciseId
+                    item.SlotOrder
                 })
                 .HasDatabaseName("ux_daily_exercise_logs_progress_slot")
                 .IsUnique()
-                .HasFilter("session_id IS NOT NULL");
+                .HasFilter("slot_order IS NOT NULL");
+            entity.HasIndex(item => new { item.StudentProgramProgressId, item.WeekNumber, item.DayNumber, item.ExerciseId })
+                .HasDatabaseName("ux_daily_exercise_logs_legacy_slot")
+                .IsUnique()
+                .HasFilter("session_id IS NOT NULL AND slot_order IS NULL");
             entity.HasOne<StudentProgramProgress>()
                 .WithMany()
                 .HasForeignKey(item => item.StudentProgramProgressId)

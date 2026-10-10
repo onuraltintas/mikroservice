@@ -109,7 +109,7 @@
         <!-- Exercise cards grid -->
         @if (exercises().length > 0) {
           <div class="de-grid">
-            @for (exercise of exercises(); track exercise.exerciseId; let i = $index) {
+            @for (exercise of exercises(); track exercise.order; let i = $index) {
               <div class="de-card"
                 [class.de-card--done]="exercise.isCompleted"
                 [class.de-card--locked]="isExerciseDisabled(i)">
@@ -226,7 +226,7 @@
 
       } @else if (historicalExercises().length > 0) {
         <div class="de-grid">
-          @for (exercise of historicalExercises(); track exercise.exerciseId; let i = $index) {
+          @for (exercise of historicalExercises(); track exercise.order; let i = $index) {
             <div class="de-card de-card--done">
               <div class="de-card__header" [style.background]="getExerciseColor(exercise.exerciseTypeName)">
                 <div class="de-card__icon-wrap">

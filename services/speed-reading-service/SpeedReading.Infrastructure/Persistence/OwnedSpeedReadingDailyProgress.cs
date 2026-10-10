@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using EduPlatform.Shared.Kernel.Exceptions;
@@ -121,6 +122,8 @@ internal sealed class OwnedSpeedReadingDailyProgress(
 
         var progress = program.Progress;
         var template = program.Template;
+        if (request.SlotOrder.HasValue && (!request.ProgramProgressId.HasValue || !request.ProgramDay.HasValue))
+            throw new BusinessRuleException("DailyProgress.SlotMismatch", "Görevin program ve gün bilgisi gerekli. Günlük listeyi yenileyin.");
         db.StudentProgramProgresses.Attach(progress);
         var now = DateTime.UtcNow;
         if (((progress.CurrentWeek - 1) * 7) + progress.CurrentDay
@@ -128,6 +131,9 @@ internal sealed class OwnedSpeedReadingDailyProgress(
             throw new BusinessRuleException("DailyProgress.DayLocked", "Sonraki program günü yarın açılacak.");
         var (week, day) = SpeedReadingDailyProgressRules.GetWeekAndDay(
             ((progress.CurrentWeek - 1) * 7) + progress.CurrentDay);
+        if ((request.ProgramProgressId.HasValue && request.ProgramProgressId != progress.Id)
+            || (request.ProgramDay.HasValue && request.ProgramDay != ((week - 1) * 7) + day))
+            throw new BusinessRuleException("DailyProgress.SlotMismatch", "Görev artık mevcut program gününe ait değil. Günlük listeyi yenileyin.");
 
         DailyExerciseLog? log = null;
         if (request.ExerciseLogId.HasValue)
@@ -153,12 +159,18 @@ internal sealed class OwnedSpeedReadingDailyProgress(
             week,
             day,
             cancellationToken);
-        if (!scheduledExercises.Any(item => item.ExerciseId == exerciseId))
+        var matchingSlots = scheduledExercises.Where(item => item.ExerciseId == exerciseId).ToList();
+        var slotOrder = request.SlotOrder ?? log?.SlotOrder
+            ?? (matchingSlots.Count == 1 ? matchingSlots[0].Order : (int?)null);
+        if (!slotOrder.HasValue || !matchingSlots.Any(item => item.Order == slotOrder))
         {
             throw new BusinessRuleException(
                 "DailyProgress.SlotMismatch",
-                "The exercise is not part of the current scheduled day.");
+                "Günlük görev belirlenemedi. Günlük egzersiz listesinden tekrar başlatın.");
         }
+        var firstExerciseOrder = matchingSlots.Min(item => item.Order);
+        if (log is not null && (log.SlotOrder ?? firstExerciseOrder) != slotOrder)
+            throw new BusinessRuleException("DailyProgress.SlotMismatch", "Sonuç kaydı bu göreve ait değil.");
         var exercise = await db.Exercises
             .AsNoTracking()
             .SingleOrDefaultAsync(item => item.Id == exerciseId
@@ -205,17 +217,24 @@ internal sealed class OwnedSpeedReadingDailyProgress(
                 && item.SessionId == sessionId,
             cancellationToken);
         if (existingSessionLog is not null)
+        {
+            if (existingSessionLog.StudentProgramProgressId != progress.Id
+                || existingSessionLog.WeekNumber != week || existingSessionLog.DayNumber != day
+                || (existingSessionLog.SlotOrder ?? firstExerciseOrder) != slotOrder)
+                throw new BusinessRuleException("DailyProgress.SessionMismatch", "Bu oturum başka bir günlük görev için zaten kaydedilmiş.");
             return await ReplayCompletedSessionAsync(existingSessionLog, userId, cancellationToken);
+        }
 
-        // A scheduled exercise is a single slot. A different session must not
-        // create a second log for the same progress/week/day/exercise tuple.
-        // The unique index below closes the concurrent-request race.
+        // The daily order identifies a task, even when its exercise is repeated.
+        // Legacy logs without an order belong only to the first occurrence.
         var existingSlotLog = await db.DailyExerciseLogs
             .AsNoTracking()
             .Where(item => item.StudentProgramProgressId == progress.Id
                 && item.ExerciseId == exerciseId
                 && item.WeekNumber == week
-                && item.DayNumber == day)
+                && item.DayNumber == day
+                && (item.SlotOrder == slotOrder
+                    || (item.SlotOrder == null && slotOrder == firstExerciseOrder)))
             .OrderBy(item => item.CompletedDate)
             .ThenBy(item => item.Id)
             .FirstOrDefaultAsync(cancellationToken);
@@ -237,7 +256,8 @@ internal sealed class OwnedSpeedReadingDailyProgress(
                     && item.StudentProgramProgressId == progress.Id
                     && item.ExerciseId == exerciseId
                     && item.WeekNumber == week
-                    && item.DayNumber == day, cancellationToken) + 1;
+                    && item.DayNumber == day
+                    && item.SlotOrder == slotOrder, cancellationToken) + 1;
 
             log = DailyExerciseLog.Import(
                 Guid.NewGuid(),
@@ -281,7 +301,8 @@ internal sealed class OwnedSpeedReadingDailyProgress(
                 now,
                 userId.ToString(),
                 isMeasured,
-                sessionId);
+                sessionId,
+                slotOrder);
             db.DailyExerciseLogs.Add(log);
         }
 
@@ -317,18 +338,11 @@ internal sealed class OwnedSpeedReadingDailyProgress(
         var averageSuccessRate = measuredScores.Count > 0
             ? measuredScores.Average()
             : progress.AverageSuccessRate;
-        var scheduledIds = OwnedSpeedReadingProgramSchedule.Parse(progress.ScheduleJson)
+        var scheduledSlots = OwnedSpeedReadingProgramSchedule.Parse(progress.ScheduleJson)
             .Where(item => item.WeekNumber == week && item.DayNumber == day)
-            .Select(item => item.ExerciseId)
-            .ToHashSet();
-        var expectedCount = scheduledIds.Count;
-        var completedCount = allLogs
-            .Where(item => item.WeekNumber == week
-                && item.DayNumber == day
-                && scheduledIds.Contains(item.ExerciseId))
-            .Select(item => item.ExerciseId)
-            .Distinct()
-            .Count();
+            .ToList();
+        var expectedCount = scheduledSlots.Count;
+        var completedCount = scheduledSlots.Count(slot => FindCompletedSlot(slot, scheduledSlots, allLogs) is not null);
         var completion = progress.ApplyExerciseCompletion(
             averageSuccessRate,
             wasPreviouslyPassed,
@@ -388,7 +402,9 @@ internal sealed class OwnedSpeedReadingDailyProgress(
                 .Where(item => item.StudentProgramProgressId == progress.Id
                     && item.ExerciseId == exerciseId
                     && item.WeekNumber == week
-                    && item.DayNumber == day)
+                    && item.DayNumber == day
+                    && (item.SlotOrder == slotOrder
+                        || (item.SlotOrder == null && slotOrder == firstExerciseOrder)))
                 .OrderBy(item => item.CompletedDate)
                 .ThenBy(item => item.Id)
                 .FirstOrDefaultAsync(cancellationToken);
@@ -515,11 +531,18 @@ internal sealed class OwnedSpeedReadingDailyProgress(
             null);
     }
 
-    private static string CreateCompletionHash(Guid userId, CompleteDailyExerciseRequest request) =>
-        SpeedReadingRequestHasher.Create(
+    private static string CreateCompletionHash(Guid userId, CompleteDailyExerciseRequest request)
+    {
+        var payload = JsonNode.Parse(JsonSerializer.Serialize(request, JsonOptions))!.AsObject();
+        // Keep hashes of pre-slot requests stable across a rolling upgrade.
+        if (request.SlotOrder is null) payload.Remove(nameof(request.SlotOrder));
+        if (request.ProgramProgressId is null) payload.Remove(nameof(request.ProgramProgressId));
+        if (request.ProgramDay is null) payload.Remove(nameof(request.ProgramDay));
+        return SpeedReadingRequestHasher.Create(
             userId.ToString("D"),
             IdempotencyScope,
-            JsonSerializer.Serialize(request, JsonOptions));
+            payload.ToJsonString(JsonOptions));
+    }
 
     private static string CreateAuthoritativeResultData(
         OwnedSessionResult result,
@@ -738,9 +761,6 @@ internal sealed class OwnedSpeedReadingDailyProgress(
                 && item.WeekNumber == week
                 && item.DayNumber == day)
             .ToListAsync(cancellationToken);
-        var completedByExercise = completedLogs
-            .GroupBy(item => item.ExerciseId)
-            .ToDictionary(group => group.Key, group => group.OrderBy(item => item.CompletedDate).First());
 
         var result = new List<DailyExerciseSummary>();
         foreach (var slot in slots)
@@ -749,7 +769,7 @@ internal sealed class OwnedSpeedReadingDailyProgress(
                 || !types.TryGetValue(exercise.ExerciseTypeId, out var exerciseType))
                 throw new BusinessRuleException("Program.ContentMissing", "Atanmış program içeriği bulunamadı.");
 
-            completedByExercise.TryGetValue(exercise.Id, out var completed);
+            var completed = FindCompletedSlot(slot, slots, completedLogs);
             result.Add(new DailyExerciseSummary(
                 exercise.Id,
                 exerciseType.Id,
@@ -766,4 +786,16 @@ internal sealed class OwnedSpeedReadingDailyProgress(
 
         return result;
     }
+
+    private static DailyExerciseLog? FindCompletedSlot(
+        ScheduledProgramExercise slot,
+        IReadOnlyList<ScheduledProgramExercise> slots,
+        IReadOnlyList<DailyExerciseLog> logs) => logs
+        .Where(log => log.WeekNumber == slot.WeekNumber && log.DayNumber == slot.DayNumber
+            && log.ExerciseId == slot.ExerciseId
+            && (log.SlotOrder == slot.Order || (log.SlotOrder == null
+                && slot.Order == slots.Where(item => item.ExerciseId == slot.ExerciseId).Min(item => item.Order))))
+        .OrderBy(log => log.CompletedDate)
+        .ThenBy(log => log.Id)
+        .FirstOrDefault();
 }

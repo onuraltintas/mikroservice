@@ -27,6 +27,9 @@ export interface DailyExercise {
 export interface CompleteExerciseRequest {
   exerciseId: string;
   sessionId: string;
+  slotOrder?: number;
+  programDay?: number;
+  programProgressId?: string;
   successRate?: number;
   timeSpentSeconds: number;
   measurementStatus?: 'Measured' | 'NotMeasured';
@@ -88,6 +91,7 @@ export interface ProgramCompletionStats {
  * Student Progress Summary
  */
 export interface StudentProgressSummary {
+  programProgressId?: string;
   currentWeek: number;
   currentDay: number;
   currentDifficultyLevel: number;
@@ -163,6 +167,7 @@ export class ExerciseProgramService {
         }
 
         return {
+          programProgressId: program.id,
           currentWeek: program?.currentWeek ?? 0,
           currentDay: program?.currentDay ?? 0,
           currentDifficultyLevel: program?.currentDifficultyLevel ?? 0,
@@ -204,6 +209,7 @@ export class ExerciseProgramService {
 }
 
 interface LegacyProgramProgress {
+  id?: string;
   completedDate?: string | null;
   templateName: string;
   totalWeeks: number;

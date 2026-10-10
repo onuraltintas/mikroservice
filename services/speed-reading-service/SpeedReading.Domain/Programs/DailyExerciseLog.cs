@@ -12,6 +12,7 @@ public sealed class DailyExerciseLog : Entity
     public Guid StudentProgramProgressId { get; private set; }
     public Guid ExerciseId { get; private set; }
     public Guid? SessionId { get; private set; }
+    public int? SlotOrder { get; private set; }
     public Guid ExerciseTypeId { get; private set; }
     public int DayNumber { get; private set; }
     public int WeekNumber { get; private set; }
@@ -88,13 +89,17 @@ public sealed class DailyExerciseLog : Entity
         DateTime? updatedAt,
         string? updatedBy,
         bool isMeasured = true,
-        Guid? sessionId = null)
+        Guid? sessionId = null,
+        int? slotOrder = null)
     {
         if (id == Guid.Empty || userId == Guid.Empty || studentProgramProgressId == Guid.Empty
             || exerciseId == Guid.Empty || exerciseTypeId == Guid.Empty)
         {
             throw new ArgumentException("Daily exercise identifiers are required.");
         }
+
+        if (slotOrder is <= 0)
+            throw new ArgumentOutOfRangeException(nameof(slotOrder));
 
         return new DailyExerciseLog
         {
@@ -103,6 +108,7 @@ public sealed class DailyExerciseLog : Entity
             StudentProgramProgressId = studentProgramProgressId,
             ExerciseId = exerciseId,
             SessionId = sessionId,
+            SlotOrder = slotOrder,
             ExerciseTypeId = exerciseTypeId,
             DayNumber = dayNumber,
             WeekNumber = weekNumber,
