@@ -42,6 +42,7 @@ test('stop and apply intent are recorded before invoking external commands', () 
 for (const [name, mock, success] of [
   ['log-read failure must fail monitoring', 'return 1', false],
   ['severe log marker must fail monitoring', "printf 'fail: simulated failure\\n'", false],
+  ['severe marker in a large log must fail monitoring', "printf 'fail: simulated failure\\n'; printf 'info: simulated log\\n%.0s' {1..20000}", false],
   ['successfully read clean logs pass monitoring', "printf 'info: simulated healthy log\\n'", true],
 ]) {
   test(name, () => {
