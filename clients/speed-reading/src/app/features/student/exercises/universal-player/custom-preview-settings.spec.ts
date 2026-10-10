@@ -9,6 +9,22 @@ import { TestBed } from '@angular/core/testing';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 
 describe('Custom preview settings safety', () => {
+  it('keeps adaptive tachistoscope custom settings within the catalogue age limits', () => {
+    const config = { engineType: 'text_stream', difficultyLevel: 5, engineConfig: { mode: 'tachistoscope',
+      content: { type: 'number', length: 5, count: 40 }, timing: { durationMs: 1100 },
+      adaptive: { enabled: true, minLength: 3, maxLength: 5, minDurationMs: 400, maxDurationMs: 2000 } } };
+    const controls = getCustomPreviewControls(config);
+    expect(controls.find(item => item.key === 'stimulusLength')).toEqual(jasmine.objectContaining({ min: 3, max: 5, value: 5 }));
+    expect(controls.find(item => item.key === 'displayDurationMs')).toEqual(jasmine.objectContaining({ min: 400, max: 2000 }));
+    const changed = applyCustomPreviewSettings(config, { stimulusLength: 4, displayDurationMs: 800, stimulusCount: 30 }, { roles: ['Admin'], preview: true });
+    expect(changed.engineConfig.content.length).toBe(4);
+    expect(changed.engineConfig.content.count).toBe(30);
+    expect(changed.engineConfig.adaptive.enabled).toBeTrue();
+    expect(changed.engineConfig.timing.durationMs).toBe(800);
+    expect(config.engineConfig.content.length).toBe(5);
+    expect(() => applyCustomPreviewSettings(config, { stimulusLength: 6 }, { roles: ['Admin'], preview: true })).toThrow();
+    expect(() => applyCustomPreviewSettings(config, { displayDurationMs: 200 }, { roles: ['Admin'], preview: true })).toThrow();
+  });
   it('offers inspection time rather than word-search targets for skimming', () => {
     const config = { engineType: 'skimming', engineConfig: { timing: { minReadingTimeMs: 3000, maxReadingTimeMs: 45000 }, targets: { words: ['eski'] } } };
     const controls = getCustomPreviewControls(config);
