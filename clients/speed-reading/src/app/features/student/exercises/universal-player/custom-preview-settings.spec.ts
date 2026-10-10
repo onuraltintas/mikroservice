@@ -9,6 +9,17 @@ import { TestBed } from '@angular/core/testing';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 
 describe('Custom preview settings safety', () => {
+  it('uses the selected duration even when legacy casing aliases exist', () => {
+    const config = { engineType: 'text_stream', engineConfig: {
+      displayDurationMs: 1100, DisplayDurationMs: 1100, timing: { durationMs: 1100 },
+      content: { type: 'number', count: 20 }, adaptive: { enabled: true } } };
+    const changed = applyCustomPreviewSettings(config, { displayDurationMs: 800 }, { roles: ['Admin'], preview: true });
+    const engine = new TextStreamEngine();
+    engine.initialize(changed as any, { onStateChange: () => undefined } as any);
+    expect(engine.getCurrentDuration()).toBe(800);
+    expect(config.engineConfig.DisplayDurationMs).toBe(1100);
+    engine.destroy();
+  });
   it('keeps adaptive tachistoscope custom settings within the catalogue age limits', () => {
     const config = { engineType: 'text_stream', difficultyLevel: 5, engineConfig: { mode: 'tachistoscope',
       content: { type: 'number', length: 5, count: 40 }, timing: { durationMs: 1100 },
