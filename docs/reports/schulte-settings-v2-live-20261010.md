@@ -28,6 +28,20 @@ eski sonuç/oturumlar, seviye tespit ve diğer egzersizler değişmez.
 
 ## Yayın
 
-Yayın henüz yapılmadı. Aynı Speed Reading API konteynırı yedekli veri geçişinde
-kısa süre durdurulacak; diğer servis/veritabanları ve tüm imajlar korunacak.
-Sonuç ve 15 dakikalık izleme kanıtı yayın sonrası buraya eklenecek.
+- Yayın: 10 Ekim 2026, 21:50:10 Türkiye saati; veri paketi commit'i `de956856`.
+- GitHub dalı: `codex/platform-hardening`; paket yayın öncesi gönderildi.
+- Paket SHA256: `3ec43887969f43ee92086b38af69c911bb3b5d88e4a4ed18c930145236f22cd6`.
+- VPS sürüm klasörü: `/var/lib/eduivme/releases/schulte-settings-v2-20261010-de956856`.
+- Yedek: `speedreading-before.dump`, 1.576.110 bayt, izin 600; `pg_restore --list` doğrulandı.
+  SHA256: `48996f876ecc5ea3dd957172dc362485eb64b58fcd0493eaad78e3528a6f797f`.
+  Tam restore tatbikatı yapılmadı.
+- Atomik SQL geçişi 20 satırı güncelledi; 85 kalıcı tablo kapsam dışı kayıt özetleri birebir aynı.
+- Aynı Speed Reading API konteynırı/imajı yeniden başlatıldı. Diğer servis ve tüm imajlar aynı kaldı.
+- Readiness Healthy, ana sayfa HTTP 200, oturumsuz korumalı program API'si HTTP 401.
+- Canlıda 20 ayarın yeni değerleri salt okunur sorguyla doğrulandı.
+- 15 dakikalık yayın sonrası izleme tamamlandı: 30/30 Healthy, yeniden başlatma sayısı 0
+  ve değişmedi; bu aralıkta ciddi log işareti yok. `MONITOR_OK`.
+  İzleme kaydı VPS sürüm klasöründeki `monitor.txt` dosyasında.
+- Kullanıcı testi için sayfa yenilenip yeni oturum açılmalı. Açık oturumlar eski ayarlarını korur;
+  özel önizleme boyut seçimi kayıtlı boyutu geçersiz kılabilir. Eski ve yeni farklı boyutların
+  ham tamamlanma süreleri doğrudan karşılaştırılmamalıdır.
