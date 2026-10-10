@@ -1,0 +1,1722 @@
+[
+  {
+    "age": "child",
+    "id": "256c80c2-ae0d-53a8-a7ee-0ad265b08996",
+    "title": "Sözcüğü Bul",
+    "level": 1,
+    "ageGroupId": "10000000-0000-0000-0000-000000000001",
+    "previousConfiguration": {
+      "engineType": "scanning",
+      "engineConfig": {
+        "content": {
+          "source": "random_text"
+        },
+        "targetCount": 2,
+        "timeLimit": 90,
+        "targets": {
+          "mode": "find_all",
+          "caseSensitive": false
+        }
+      },
+      "difficultyLevel": 1
+    },
+    "configuration": {
+      "engineType": "scanning",
+      "difficultyLevel": 1,
+      "engineConfig": {
+        "content": {
+          "source": "random_text",
+          "minWordCount": 100,
+          "maxWordCount": 150
+        },
+        "targetCount": 2,
+        "timeLimit": 60,
+        "targets": {
+          "mode": "find_all",
+          "caseSensitive": false,
+          "minLength": 3,
+          "maxLength": 12
+        },
+        "visuals": {
+          "fontSize": "24px"
+        }
+      }
+    }
+  },
+  {
+    "age": "child",
+    "id": "23423d96-7976-5ece-9084-5b189d859cfd",
+    "title": "Metindeki İpuçları",
+    "level": 2,
+    "ageGroupId": "10000000-0000-0000-0000-000000000001",
+    "previousConfiguration": {
+      "engineType": "scanning",
+      "engineConfig": {
+        "content": {
+          "source": "random_text"
+        },
+        "targetCount": 3,
+        "timeLimit": 90,
+        "targets": {
+          "mode": "find_all",
+          "caseSensitive": false
+        }
+      },
+      "difficultyLevel": 2
+    },
+    "configuration": {
+      "engineType": "scanning",
+      "difficultyLevel": 2,
+      "engineConfig": {
+        "content": {
+          "source": "random_text",
+          "minWordCount": 130,
+          "maxWordCount": 180
+        },
+        "targetCount": 3,
+        "timeLimit": 75,
+        "targets": {
+          "mode": "find_all",
+          "caseSensitive": false,
+          "minLength": 3,
+          "maxLength": 12
+        },
+        "visuals": {
+          "fontSize": "24px"
+        }
+      }
+    }
+  },
+  {
+    "age": "child",
+    "id": "de6d36a9-a659-5554-9650-0212cff53ee2",
+    "title": "Ana Bilgiyi Bul",
+    "level": 3,
+    "ageGroupId": "10000000-0000-0000-0000-000000000001",
+    "previousConfiguration": {
+      "engineType": "scanning",
+      "engineConfig": {
+        "content": {
+          "source": "random_text"
+        },
+        "targetCount": 3,
+        "timeLimit": 120,
+        "targets": {
+          "mode": "find_all",
+          "caseSensitive": false
+        }
+      },
+      "difficultyLevel": 3
+    },
+    "configuration": {
+      "engineType": "scanning",
+      "difficultyLevel": 3,
+      "engineConfig": {
+        "content": {
+          "source": "random_text",
+          "minWordCount": 160,
+          "maxWordCount": 220
+        },
+        "targetCount": 4,
+        "timeLimit": 90,
+        "targets": {
+          "mode": "find_all",
+          "caseSensitive": false,
+          "minLength": 3,
+          "maxLength": 12,
+          "tasksByTextId": {
+            "d7a10000-0000-5000-8000-000000000007": [
+              {
+                "answer": "Kerem",
+                "prompt": "Hazırlık sorumlusu kim?"
+              },
+              {
+                "answer": "08.03.2027",
+                "prompt": "Buluşmanın tarihi nedir?"
+              },
+              {
+                "answer": "25",
+                "prompt": "Katılım kontenjanı kaç kişi?"
+              },
+              {
+                "answer": "Çınar",
+                "prompt": "Buluşma hangi salonda yapılacak?"
+              }
+            ],
+            "d7a10000-0000-5000-8000-000000000008": [
+              {
+                "answer": "Eren",
+                "prompt": "Hazırlık sorumlusu kim?"
+              },
+              {
+                "answer": "09.03.2027",
+                "prompt": "Buluşmanın tarihi nedir?"
+              },
+              {
+                "answer": "26",
+                "prompt": "Katılım kontenjanı kaç kişi?"
+              },
+              {
+                "answer": "Liman",
+                "prompt": "Buluşma hangi salonda yapılacak?"
+              }
+            ],
+            "d7a10000-0000-5000-8000-000000000009": [
+              {
+                "answer": "Aylin",
+                "prompt": "Hazırlık sorumlusu kim?"
+              },
+              {
+                "answer": "10.03.2027",
+                "prompt": "Buluşmanın tarihi nedir?"
+              },
+              {
+                "answer": "27",
+                "prompt": "Katılım kontenjanı kaç kişi?"
+              },
+              {
+                "answer": "Ufuk",
+                "prompt": "Buluşma hangi salonda yapılacak?"
+              }
+            ]
+          }
+        },
+        "visuals": {
+          "fontSize": "24px"
+        }
+      }
+    }
+  },
+  {
+    "age": "child",
+    "id": "bb016af4-2510-5bc0-8262-82a916e2a9ef",
+    "title": "Bilgi Dedektifi",
+    "level": 4,
+    "ageGroupId": "10000000-0000-0000-0000-000000000001",
+    "previousConfiguration": {
+      "engineType": "scanning",
+      "engineConfig": {
+        "content": {
+          "source": "random_text"
+        },
+        "targetCount": 4,
+        "timeLimit": 150,
+        "targets": {
+          "mode": "find_all",
+          "caseSensitive": false
+        }
+      },
+      "difficultyLevel": 4
+    },
+    "configuration": {
+      "engineType": "scanning",
+      "difficultyLevel": 4,
+      "engineConfig": {
+        "content": {
+          "source": "random_text",
+          "minWordCount": 200,
+          "maxWordCount": 260
+        },
+        "targetCount": 4,
+        "timeLimit": 105,
+        "targets": {
+          "mode": "find_all",
+          "caseSensitive": false,
+          "minLength": 3,
+          "maxLength": 12,
+          "tasksByTextId": {
+            "d7a10000-0000-5000-8000-000000000010": [
+              {
+                "answer": "Ece",
+                "prompt": "Hazırlık sorumlusu kim?"
+              },
+              {
+                "answer": "09.03.2027",
+                "prompt": "Buluşmanın tarihi nedir?"
+              },
+              {
+                "answer": "27",
+                "prompt": "Katılım kontenjanı kaç kişi?"
+              },
+              {
+                "answer": "Çınar",
+                "prompt": "Buluşma hangi salonda yapılacak?"
+              }
+            ],
+            "d7a10000-0000-5000-8000-000000000011": [
+              {
+                "answer": "Seda",
+                "prompt": "Hazırlık sorumlusu kim?"
+              },
+              {
+                "answer": "10.03.2027",
+                "prompt": "Buluşmanın tarihi nedir?"
+              },
+              {
+                "answer": "28",
+                "prompt": "Katılım kontenjanı kaç kişi?"
+              },
+              {
+                "answer": "Liman",
+                "prompt": "Buluşma hangi salonda yapılacak?"
+              }
+            ],
+            "d7a10000-0000-5000-8000-000000000012": [
+              {
+                "answer": "Can",
+                "prompt": "Hazırlık sorumlusu kim?"
+              },
+              {
+                "answer": "11.03.2027",
+                "prompt": "Buluşmanın tarihi nedir?"
+              },
+              {
+                "answer": "29",
+                "prompt": "Katılım kontenjanı kaç kişi?"
+              },
+              {
+                "answer": "Ufuk",
+                "prompt": "Buluşma hangi salonda yapılacak?"
+              }
+            ]
+          }
+        },
+        "visuals": {
+          "fontSize": "24px"
+        }
+      }
+    }
+  },
+  {
+    "age": "child",
+    "id": "e2ac97a6-6fe5-5dcf-9de2-d8361817407c",
+    "title": "Seçici Bilgi Arama",
+    "level": 5,
+    "ageGroupId": "10000000-0000-0000-0000-000000000001",
+    "previousConfiguration": {
+      "engineType": "scanning",
+      "engineConfig": {
+        "content": {
+          "source": "random_text"
+        },
+        "targetCount": 5,
+        "timeLimit": 180,
+        "targets": {
+          "mode": "find_all",
+          "caseSensitive": false
+        }
+      },
+      "difficultyLevel": 5
+    },
+    "configuration": {
+      "engineType": "scanning",
+      "difficultyLevel": 5,
+      "engineConfig": {
+        "content": {
+          "source": "random_text",
+          "minWordCount": 240,
+          "maxWordCount": 300
+        },
+        "targetCount": 5,
+        "timeLimit": 120,
+        "targets": {
+          "mode": "find_all",
+          "caseSensitive": false,
+          "minLength": 3,
+          "maxLength": 12,
+          "tasksByTextId": {
+            "d7a10000-0000-5000-8000-000000000013": [
+              {
+                "answer": "Mert",
+                "prompt": "Hazırlık sorumlusu kim?"
+              },
+              {
+                "answer": "10.03.2027",
+                "prompt": "Buluşmanın tarihi nedir?"
+              },
+              {
+                "answer": "29",
+                "prompt": "Katılım kontenjanı kaç kişi?"
+              },
+              {
+                "answer": "Çınar",
+                "prompt": "Buluşma hangi salonda yapılacak?"
+              },
+              {
+                "answer": "89",
+                "prompt": "Ortak çalışma kaç dakika sürecek?"
+              }
+            ],
+            "d7a10000-0000-5000-8000-000000000014": [
+              {
+                "answer": "Arda",
+                "prompt": "Hazırlık sorumlusu kim?"
+              },
+              {
+                "answer": "11.03.2027",
+                "prompt": "Buluşmanın tarihi nedir?"
+              },
+              {
+                "answer": "30",
+                "prompt": "Katılım kontenjanı kaç kişi?"
+              },
+              {
+                "answer": "Liman",
+                "prompt": "Buluşma hangi salonda yapılacak?"
+              },
+              {
+                "answer": "90",
+                "prompt": "Ortak çalışma kaç dakika sürecek?"
+              }
+            ],
+            "d7a10000-0000-5000-8000-000000000015": [
+              {
+                "answer": "Pelin",
+                "prompt": "Hazırlık sorumlusu kim?"
+              },
+              {
+                "answer": "12.03.2027",
+                "prompt": "Buluşmanın tarihi nedir?"
+              },
+              {
+                "answer": "31",
+                "prompt": "Katılım kontenjanı kaç kişi?"
+              },
+              {
+                "answer": "Ufuk",
+                "prompt": "Buluşma hangi salonda yapılacak?"
+              },
+              {
+                "answer": "91",
+                "prompt": "Ortak çalışma kaç dakika sürecek?"
+              }
+            ]
+          }
+        },
+        "visuals": {
+          "fontSize": "24px"
+        }
+      }
+    }
+  },
+  {
+    "age": "teen",
+    "id": "d22b9488-d2e9-560f-ab05-a51fc4f3a630",
+    "title": "Metinde Hedefi Bul",
+    "level": 1,
+    "ageGroupId": "10000000-0000-0000-0000-000000000002",
+    "previousConfiguration": {
+      "engineType": "scanning",
+      "engineConfig": {
+        "content": {
+          "source": "random_text"
+        },
+        "targetCount": 3,
+        "timeLimit": 120,
+        "targets": {
+          "mode": "find_all",
+          "caseSensitive": false
+        }
+      },
+      "difficultyLevel": 1
+    },
+    "configuration": {
+      "engineType": "scanning",
+      "difficultyLevel": 1,
+      "engineConfig": {
+        "content": {
+          "source": "random_text",
+          "minWordCount": 150,
+          "maxWordCount": 210
+        },
+        "targetCount": 3,
+        "timeLimit": 60,
+        "targets": {
+          "mode": "find_all",
+          "caseSensitive": false,
+          "minLength": 3,
+          "maxLength": 15
+        },
+        "visuals": {
+          "fontSize": "22px"
+        }
+      }
+    }
+  },
+  {
+    "age": "teen",
+    "id": "fcb7c231-94c4-5f21-8b44-416f1a68c965",
+    "title": "Metinde Hedefi Bul",
+    "level": 2,
+    "ageGroupId": "10000000-0000-0000-0000-000000000002",
+    "previousConfiguration": {
+      "engineType": "scanning",
+      "engineConfig": {
+        "content": {
+          "source": "random_text"
+        },
+        "targetCount": 4,
+        "timeLimit": 120,
+        "targets": {
+          "mode": "find_all",
+          "caseSensitive": false
+        }
+      },
+      "difficultyLevel": 2
+    },
+    "configuration": {
+      "engineType": "scanning",
+      "difficultyLevel": 2,
+      "engineConfig": {
+        "content": {
+          "source": "random_text",
+          "minWordCount": 190,
+          "maxWordCount": 260
+        },
+        "targetCount": 4,
+        "timeLimit": 75,
+        "targets": {
+          "mode": "find_all",
+          "caseSensitive": false,
+          "minLength": 3,
+          "maxLength": 15
+        },
+        "visuals": {
+          "fontSize": "22px"
+        }
+      }
+    }
+  },
+  {
+    "age": "teen",
+    "id": "84b21e5f-e015-547b-948d-ae410738a779",
+    "title": "Metinde Hedefi Bul",
+    "level": 3,
+    "ageGroupId": "10000000-0000-0000-0000-000000000002",
+    "previousConfiguration": {
+      "engineType": "scanning",
+      "engineConfig": {
+        "content": {
+          "source": "random_text"
+        },
+        "targetCount": 5,
+        "timeLimit": 150,
+        "targets": {
+          "mode": "find_all",
+          "caseSensitive": false
+        }
+      },
+      "difficultyLevel": 3
+    },
+    "configuration": {
+      "engineType": "scanning",
+      "difficultyLevel": 3,
+      "engineConfig": {
+        "content": {
+          "source": "random_text",
+          "minWordCount": 230,
+          "maxWordCount": 310
+        },
+        "targetCount": 4,
+        "timeLimit": 90,
+        "targets": {
+          "mode": "find_all",
+          "caseSensitive": false,
+          "minLength": 3,
+          "maxLength": 15,
+          "tasksByTextId": {
+            "d7a10000-0000-5000-8000-000000000022": [
+              {
+                "answer": "Deniz",
+                "prompt": "Hazırlık sorumlusu kim?"
+              },
+              {
+                "answer": "08.04.2027",
+                "prompt": "Buluşmanın tarihi nedir?"
+              },
+              {
+                "answer": "35",
+                "prompt": "Katılım kontenjanı kaç kişi?"
+              },
+              {
+                "answer": "Çınar",
+                "prompt": "Buluşma hangi salonda yapılacak?"
+              }
+            ],
+            "d7a10000-0000-5000-8000-000000000023": [
+              {
+                "answer": "Sibel",
+                "prompt": "Hazırlık sorumlusu kim?"
+              },
+              {
+                "answer": "09.04.2027",
+                "prompt": "Buluşmanın tarihi nedir?"
+              },
+              {
+                "answer": "36",
+                "prompt": "Katılım kontenjanı kaç kişi?"
+              },
+              {
+                "answer": "Liman",
+                "prompt": "Buluşma hangi salonda yapılacak?"
+              }
+            ],
+            "d7a10000-0000-5000-8000-000000000024": [
+              {
+                "answer": "Selin",
+                "prompt": "Hazırlık sorumlusu kim?"
+              },
+              {
+                "answer": "10.04.2027",
+                "prompt": "Buluşmanın tarihi nedir?"
+              },
+              {
+                "answer": "37",
+                "prompt": "Katılım kontenjanı kaç kişi?"
+              },
+              {
+                "answer": "Ufuk",
+                "prompt": "Buluşma hangi salonda yapılacak?"
+              }
+            ]
+          }
+        },
+        "visuals": {
+          "fontSize": "22px"
+        }
+      }
+    }
+  },
+  {
+    "age": "teen",
+    "id": "68d16564-4b4a-581c-83ce-afd5a5f621ea",
+    "title": "Metinde Hedefi Bul",
+    "level": 4,
+    "ageGroupId": "10000000-0000-0000-0000-000000000002",
+    "previousConfiguration": {
+      "engineType": "scanning",
+      "engineConfig": {
+        "content": {
+          "source": "random_text"
+        },
+        "targetCount": 6,
+        "timeLimit": 180,
+        "targets": {
+          "mode": "find_all",
+          "caseSensitive": false
+        }
+      },
+      "difficultyLevel": 4
+    },
+    "configuration": {
+      "engineType": "scanning",
+      "difficultyLevel": 4,
+      "engineConfig": {
+        "content": {
+          "source": "random_text",
+          "minWordCount": 270,
+          "maxWordCount": 360
+        },
+        "targetCount": 5,
+        "timeLimit": 105,
+        "targets": {
+          "mode": "find_all",
+          "caseSensitive": false,
+          "minLength": 3,
+          "maxLength": 15,
+          "tasksByTextId": {
+            "d7a10000-0000-5000-8000-000000000025": [
+              {
+                "answer": "Bora",
+                "prompt": "Hazırlık sorumlusu kim?"
+              },
+              {
+                "answer": "09.04.2027",
+                "prompt": "Buluşmanın tarihi nedir?"
+              },
+              {
+                "answer": "37",
+                "prompt": "Katılım kontenjanı kaç kişi?"
+              },
+              {
+                "answer": "Çınar",
+                "prompt": "Buluşma hangi salonda yapılacak?"
+              },
+              {
+                "answer": "97",
+                "prompt": "Ortak çalışma kaç dakika sürecek?"
+              }
+            ],
+            "d7a10000-0000-5000-8000-000000000026": [
+              {
+                "answer": "Oya",
+                "prompt": "Hazırlık sorumlusu kim?"
+              },
+              {
+                "answer": "10.04.2027",
+                "prompt": "Buluşmanın tarihi nedir?"
+              },
+              {
+                "answer": "38",
+                "prompt": "Katılım kontenjanı kaç kişi?"
+              },
+              {
+                "answer": "Liman",
+                "prompt": "Buluşma hangi salonda yapılacak?"
+              },
+              {
+                "answer": "98",
+                "prompt": "Ortak çalışma kaç dakika sürecek?"
+              }
+            ],
+            "d7a10000-0000-5000-8000-000000000027": [
+              {
+                "answer": "Kerem",
+                "prompt": "Hazırlık sorumlusu kim?"
+              },
+              {
+                "answer": "11.04.2027",
+                "prompt": "Buluşmanın tarihi nedir?"
+              },
+              {
+                "answer": "39",
+                "prompt": "Katılım kontenjanı kaç kişi?"
+              },
+              {
+                "answer": "Ufuk",
+                "prompt": "Buluşma hangi salonda yapılacak?"
+              },
+              {
+                "answer": "99",
+                "prompt": "Ortak çalışma kaç dakika sürecek?"
+              }
+            ]
+          }
+        },
+        "visuals": {
+          "fontSize": "22px"
+        }
+      }
+    }
+  },
+  {
+    "age": "teen",
+    "id": "42387b35-9dcf-591a-83e9-850b2925a62b",
+    "title": "Metinde Hedefi Bul",
+    "level": 5,
+    "ageGroupId": "10000000-0000-0000-0000-000000000002",
+    "previousConfiguration": {
+      "engineType": "scanning",
+      "engineConfig": {
+        "content": {
+          "source": "random_text"
+        },
+        "targetCount": 6,
+        "timeLimit": 210,
+        "targets": {
+          "mode": "find_all",
+          "caseSensitive": false
+        }
+      },
+      "difficultyLevel": 5
+    },
+    "configuration": {
+      "engineType": "scanning",
+      "difficultyLevel": 5,
+      "engineConfig": {
+        "content": {
+          "source": "random_text",
+          "minWordCount": 320,
+          "maxWordCount": 420
+        },
+        "targetCount": 6,
+        "timeLimit": 120,
+        "targets": {
+          "mode": "find_all",
+          "caseSensitive": false,
+          "minLength": 3,
+          "maxLength": 15,
+          "tasksByTextId": {
+            "d7a10000-0000-5000-8000-000000000028": [
+              {
+                "answer": "Eren",
+                "prompt": "Hazırlık sorumlusu kim?"
+              },
+              {
+                "answer": "10.04.2027",
+                "prompt": "Buluşmanın tarihi nedir?"
+              },
+              {
+                "answer": "39",
+                "prompt": "Katılım kontenjanı kaç kişi?"
+              },
+              {
+                "answer": "Çınar",
+                "prompt": "Buluşma hangi salonda yapılacak?"
+              },
+              {
+                "answer": "99",
+                "prompt": "Ortak çalışma kaç dakika sürecek?"
+              },
+              {
+                "answer": "169",
+                "prompt": "Hazırlanan malzeme sayısı kaç?"
+              }
+            ],
+            "d7a10000-0000-5000-8000-000000000029": [
+              {
+                "answer": "Aylin",
+                "prompt": "Hazırlık sorumlusu kim?"
+              },
+              {
+                "answer": "11.04.2027",
+                "prompt": "Buluşmanın tarihi nedir?"
+              },
+              {
+                "answer": "40",
+                "prompt": "Katılım kontenjanı kaç kişi?"
+              },
+              {
+                "answer": "Liman",
+                "prompt": "Buluşma hangi salonda yapılacak?"
+              },
+              {
+                "answer": "100",
+                "prompt": "Ortak çalışma kaç dakika sürecek?"
+              },
+              {
+                "answer": "170",
+                "prompt": "Hazırlanan malzeme sayısı kaç?"
+              }
+            ],
+            "d7a10000-0000-5000-8000-000000000030": [
+              {
+                "answer": "Ece",
+                "prompt": "Hazırlık sorumlusu kim?"
+              },
+              {
+                "answer": "12.04.2027",
+                "prompt": "Buluşmanın tarihi nedir?"
+              },
+              {
+                "answer": "41",
+                "prompt": "Katılım kontenjanı kaç kişi?"
+              },
+              {
+                "answer": "Ufuk",
+                "prompt": "Buluşma hangi salonda yapılacak?"
+              },
+              {
+                "answer": "101",
+                "prompt": "Ortak çalışma kaç dakika sürecek?"
+              },
+              {
+                "answer": "171",
+                "prompt": "Hazırlanan malzeme sayısı kaç?"
+              }
+            ]
+          }
+        },
+        "visuals": {
+          "fontSize": "22px"
+        }
+      }
+    }
+  },
+  {
+    "age": "young-adult",
+    "id": "2c38b331-499a-5ac9-aae3-aa124acac58a",
+    "title": "Metinde Hedefi Bul",
+    "level": 1,
+    "ageGroupId": "10000000-0000-0000-0000-000000000004",
+    "previousConfiguration": {
+      "engineType": "scanning",
+      "engineConfig": {
+        "content": {
+          "source": "random_text"
+        },
+        "targetCount": 3,
+        "timeLimit": 180,
+        "targets": {
+          "mode": "find_all",
+          "caseSensitive": false
+        }
+      },
+      "difficultyLevel": 1
+    },
+    "configuration": {
+      "engineType": "scanning",
+      "difficultyLevel": 1,
+      "engineConfig": {
+        "content": {
+          "source": "random_text",
+          "minWordCount": 180,
+          "maxWordCount": 250
+        },
+        "targetCount": 3,
+        "timeLimit": 60,
+        "targets": {
+          "mode": "find_all",
+          "caseSensitive": false,
+          "minLength": 3,
+          "maxLength": 18
+        },
+        "visuals": {
+          "fontSize": "20px"
+        }
+      }
+    }
+  },
+  {
+    "age": "young-adult",
+    "id": "b58da4f3-056f-5c1b-ad2c-42f947a30adf",
+    "title": "Metinde Hedefi Bul",
+    "level": 2,
+    "ageGroupId": "10000000-0000-0000-0000-000000000004",
+    "previousConfiguration": {
+      "engineType": "scanning",
+      "engineConfig": {
+        "content": {
+          "source": "random_text"
+        },
+        "targetCount": 4,
+        "timeLimit": 180,
+        "targets": {
+          "mode": "find_all",
+          "caseSensitive": false
+        }
+      },
+      "difficultyLevel": 2
+    },
+    "configuration": {
+      "engineType": "scanning",
+      "difficultyLevel": 2,
+      "engineConfig": {
+        "content": {
+          "source": "random_text",
+          "minWordCount": 230,
+          "maxWordCount": 310
+        },
+        "targetCount": 4,
+        "timeLimit": 75,
+        "targets": {
+          "mode": "find_all",
+          "caseSensitive": false,
+          "minLength": 3,
+          "maxLength": 18
+        },
+        "visuals": {
+          "fontSize": "20px"
+        }
+      }
+    }
+  },
+  {
+    "age": "young-adult",
+    "id": "82619e69-6a22-503f-b271-e41b09202121",
+    "title": "Metinde Hedefi Bul",
+    "level": 3,
+    "ageGroupId": "10000000-0000-0000-0000-000000000004",
+    "previousConfiguration": {
+      "engineType": "scanning",
+      "engineConfig": {
+        "content": {
+          "source": "random_text"
+        },
+        "targetCount": 5,
+        "timeLimit": 180,
+        "targets": {
+          "mode": "find_all",
+          "caseSensitive": false
+        }
+      },
+      "difficultyLevel": 3
+    },
+    "configuration": {
+      "engineType": "scanning",
+      "difficultyLevel": 3,
+      "engineConfig": {
+        "content": {
+          "source": "random_text",
+          "minWordCount": 280,
+          "maxWordCount": 380
+        },
+        "targetCount": 5,
+        "timeLimit": 90,
+        "targets": {
+          "mode": "find_all",
+          "caseSensitive": false,
+          "minLength": 3,
+          "maxLength": 18,
+          "tasksByTextId": {
+            "d7a10000-0000-5000-8000-000000000037": [
+              {
+                "answer": "Nil",
+                "prompt": "Hazırlık sorumlusu kim?"
+              },
+              {
+                "answer": "08.05.2027",
+                "prompt": "Buluşmanın tarihi nedir?"
+              },
+              {
+                "answer": "45",
+                "prompt": "Katılım kontenjanı kaç kişi?"
+              },
+              {
+                "answer": "Çınar",
+                "prompt": "Buluşma hangi salonda yapılacak?"
+              },
+              {
+                "answer": "105",
+                "prompt": "Ortak çalışma kaç dakika sürecek?"
+              }
+            ],
+            "d7a10000-0000-5000-8000-000000000038": [
+              {
+                "answer": "Emre",
+                "prompt": "Hazırlık sorumlusu kim?"
+              },
+              {
+                "answer": "09.05.2027",
+                "prompt": "Buluşmanın tarihi nedir?"
+              },
+              {
+                "answer": "46",
+                "prompt": "Katılım kontenjanı kaç kişi?"
+              },
+              {
+                "answer": "Liman",
+                "prompt": "Buluşma hangi salonda yapılacak?"
+              },
+              {
+                "answer": "106",
+                "prompt": "Ortak çalışma kaç dakika sürecek?"
+              }
+            ],
+            "d7a10000-0000-5000-8000-000000000039": [
+              {
+                "answer": "Aslı",
+                "prompt": "Hazırlık sorumlusu kim?"
+              },
+              {
+                "answer": "10.05.2027",
+                "prompt": "Buluşmanın tarihi nedir?"
+              },
+              {
+                "answer": "47",
+                "prompt": "Katılım kontenjanı kaç kişi?"
+              },
+              {
+                "answer": "Ufuk",
+                "prompt": "Buluşma hangi salonda yapılacak?"
+              },
+              {
+                "answer": "107",
+                "prompt": "Ortak çalışma kaç dakika sürecek?"
+              }
+            ]
+          }
+        },
+        "visuals": {
+          "fontSize": "20px"
+        }
+      }
+    }
+  },
+  {
+    "age": "young-adult",
+    "id": "5169df96-15b0-58f0-a4a8-aeacf867f444",
+    "title": "Metinde Hedefi Bul",
+    "level": 4,
+    "ageGroupId": "10000000-0000-0000-0000-000000000004",
+    "previousConfiguration": {
+      "engineType": "scanning",
+      "engineConfig": {
+        "content": {
+          "source": "random_text"
+        },
+        "targetCount": 6,
+        "timeLimit": 180,
+        "targets": {
+          "mode": "find_all",
+          "caseSensitive": false
+        }
+      },
+      "difficultyLevel": 4
+    },
+    "configuration": {
+      "engineType": "scanning",
+      "difficultyLevel": 4,
+      "engineConfig": {
+        "content": {
+          "source": "random_text",
+          "minWordCount": 340,
+          "maxWordCount": 450
+        },
+        "targetCount": 6,
+        "timeLimit": 105,
+        "targets": {
+          "mode": "find_all",
+          "caseSensitive": false,
+          "minLength": 3,
+          "maxLength": 18,
+          "tasksByTextId": {
+            "d7a10000-0000-5000-8000-000000000040": [
+              {
+                "answer": "Cem",
+                "prompt": "Hazırlık sorumlusu kim?"
+              },
+              {
+                "answer": "09.05.2027",
+                "prompt": "Buluşmanın tarihi nedir?"
+              },
+              {
+                "answer": "47",
+                "prompt": "Katılım kontenjanı kaç kişi?"
+              },
+              {
+                "answer": "Çınar",
+                "prompt": "Buluşma hangi salonda yapılacak?"
+              },
+              {
+                "answer": "107",
+                "prompt": "Ortak çalışma kaç dakika sürecek?"
+              },
+              {
+                "answer": "177",
+                "prompt": "Hazırlanan malzeme sayısı kaç?"
+              }
+            ],
+            "d7a10000-0000-5000-8000-000000000041": [
+              {
+                "answer": "Derya",
+                "prompt": "Hazırlık sorumlusu kim?"
+              },
+              {
+                "answer": "10.05.2027",
+                "prompt": "Buluşmanın tarihi nedir?"
+              },
+              {
+                "answer": "48",
+                "prompt": "Katılım kontenjanı kaç kişi?"
+              },
+              {
+                "answer": "Liman",
+                "prompt": "Buluşma hangi salonda yapılacak?"
+              },
+              {
+                "answer": "108",
+                "prompt": "Ortak çalışma kaç dakika sürecek?"
+              },
+              {
+                "answer": "178",
+                "prompt": "Hazırlanan malzeme sayısı kaç?"
+              }
+            ],
+            "d7a10000-0000-5000-8000-000000000042": [
+              {
+                "answer": "Deniz",
+                "prompt": "Hazırlık sorumlusu kim?"
+              },
+              {
+                "answer": "11.05.2027",
+                "prompt": "Buluşmanın tarihi nedir?"
+              },
+              {
+                "answer": "49",
+                "prompt": "Katılım kontenjanı kaç kişi?"
+              },
+              {
+                "answer": "Ufuk",
+                "prompt": "Buluşma hangi salonda yapılacak?"
+              },
+              {
+                "answer": "109",
+                "prompt": "Ortak çalışma kaç dakika sürecek?"
+              },
+              {
+                "answer": "179",
+                "prompt": "Hazırlanan malzeme sayısı kaç?"
+              }
+            ]
+          }
+        },
+        "visuals": {
+          "fontSize": "20px"
+        }
+      }
+    }
+  },
+  {
+    "age": "young-adult",
+    "id": "ae975bce-9cb9-5025-849a-28852768281c",
+    "title": "Metinde Hedefi Bul",
+    "level": 5,
+    "ageGroupId": "10000000-0000-0000-0000-000000000004",
+    "previousConfiguration": {
+      "engineType": "scanning",
+      "engineConfig": {
+        "content": {
+          "source": "random_text"
+        },
+        "targetCount": 6,
+        "timeLimit": 180,
+        "targets": {
+          "mode": "find_all",
+          "caseSensitive": false
+        }
+      },
+      "difficultyLevel": 5
+    },
+    "configuration": {
+      "engineType": "scanning",
+      "difficultyLevel": 5,
+      "engineConfig": {
+        "content": {
+          "source": "random_text",
+          "minWordCount": 400,
+          "maxWordCount": 520
+        },
+        "targetCount": 6,
+        "timeLimit": 120,
+        "targets": {
+          "mode": "find_all",
+          "caseSensitive": false,
+          "minLength": 3,
+          "maxLength": 18,
+          "tasksByTextId": {
+            "d7a10000-0000-5000-8000-000000000043": [
+              {
+                "answer": "Sibel",
+                "prompt": "Hazırlık sorumlusu kim?"
+              },
+              {
+                "answer": "10.05.2027",
+                "prompt": "Buluşmanın tarihi nedir?"
+              },
+              {
+                "answer": "49",
+                "prompt": "Katılım kontenjanı kaç kişi?"
+              },
+              {
+                "answer": "Çınar",
+                "prompt": "Buluşma hangi salonda yapılacak?"
+              },
+              {
+                "answer": "109",
+                "prompt": "Ortak çalışma kaç dakika sürecek?"
+              },
+              {
+                "answer": "179",
+                "prompt": "Hazırlanan malzeme sayısı kaç?"
+              }
+            ],
+            "d7a10000-0000-5000-8000-000000000044": [
+              {
+                "answer": "Selin",
+                "prompt": "Hazırlık sorumlusu kim?"
+              },
+              {
+                "answer": "11.05.2027",
+                "prompt": "Buluşmanın tarihi nedir?"
+              },
+              {
+                "answer": "50",
+                "prompt": "Katılım kontenjanı kaç kişi?"
+              },
+              {
+                "answer": "Liman",
+                "prompt": "Buluşma hangi salonda yapılacak?"
+              },
+              {
+                "answer": "110",
+                "prompt": "Ortak çalışma kaç dakika sürecek?"
+              },
+              {
+                "answer": "180",
+                "prompt": "Hazırlanan malzeme sayısı kaç?"
+              }
+            ],
+            "d7a10000-0000-5000-8000-000000000045": [
+              {
+                "answer": "Bora",
+                "prompt": "Hazırlık sorumlusu kim?"
+              },
+              {
+                "answer": "12.05.2027",
+                "prompt": "Buluşmanın tarihi nedir?"
+              },
+              {
+                "answer": "51",
+                "prompt": "Katılım kontenjanı kaç kişi?"
+              },
+              {
+                "answer": "Ufuk",
+                "prompt": "Buluşma hangi salonda yapılacak?"
+              },
+              {
+                "answer": "111",
+                "prompt": "Ortak çalışma kaç dakika sürecek?"
+              },
+              {
+                "answer": "181",
+                "prompt": "Hazırlanan malzeme sayısı kaç?"
+              }
+            ]
+          }
+        },
+        "visuals": {
+          "fontSize": "20px"
+        }
+      }
+    }
+  },
+  {
+    "age": "adult",
+    "id": "fb0b577e-7de1-53f6-83b1-62754d6f3653",
+    "title": "Metinde Hedefi Bul",
+    "level": 1,
+    "ageGroupId": "10000000-0000-0000-0000-000000000003",
+    "previousConfiguration": {
+      "engineType": "scanning",
+      "engineConfig": {
+        "content": {
+          "source": "random_text"
+        },
+        "targetCount": 3,
+        "timeLimit": 150,
+        "targets": {
+          "mode": "find_all",
+          "caseSensitive": false
+        }
+      },
+      "difficultyLevel": 1
+    },
+    "configuration": {
+      "engineType": "scanning",
+      "difficultyLevel": 1,
+      "engineConfig": {
+        "content": {
+          "source": "random_text",
+          "minWordCount": 200,
+          "maxWordCount": 280
+        },
+        "targetCount": 3,
+        "timeLimit": 75,
+        "targets": {
+          "mode": "find_all",
+          "caseSensitive": false,
+          "minLength": 3,
+          "maxLength": 18
+        },
+        "visuals": {
+          "fontSize": "20px"
+        }
+      }
+    }
+  },
+  {
+    "age": "adult",
+    "id": "62749a6e-77f4-5d70-adf1-35713083debb",
+    "title": "Metinde Hedefi Bul",
+    "level": 2,
+    "ageGroupId": "10000000-0000-0000-0000-000000000003",
+    "previousConfiguration": {
+      "engineType": "scanning",
+      "engineConfig": {
+        "content": {
+          "source": "random_text"
+        },
+        "targetCount": 4,
+        "timeLimit": 150,
+        "targets": {
+          "mode": "find_all",
+          "caseSensitive": false
+        }
+      },
+      "difficultyLevel": 2
+    },
+    "configuration": {
+      "engineType": "scanning",
+      "difficultyLevel": 2,
+      "engineConfig": {
+        "content": {
+          "source": "random_text",
+          "minWordCount": 260,
+          "maxWordCount": 350
+        },
+        "targetCount": 4,
+        "timeLimit": 90,
+        "targets": {
+          "mode": "find_all",
+          "caseSensitive": false,
+          "minLength": 3,
+          "maxLength": 18
+        },
+        "visuals": {
+          "fontSize": "20px"
+        }
+      }
+    }
+  },
+  {
+    "age": "adult",
+    "id": "0649c32f-9419-59da-847e-54dbd6d25aa1",
+    "title": "Metinde Hedefi Bul",
+    "level": 3,
+    "ageGroupId": "10000000-0000-0000-0000-000000000003",
+    "previousConfiguration": {
+      "engineType": "scanning",
+      "engineConfig": {
+        "content": {
+          "source": "random_text"
+        },
+        "targetCount": 5,
+        "timeLimit": 180,
+        "targets": {
+          "mode": "find_all",
+          "caseSensitive": false
+        }
+      },
+      "difficultyLevel": 3
+    },
+    "configuration": {
+      "engineType": "scanning",
+      "difficultyLevel": 3,
+      "engineConfig": {
+        "content": {
+          "source": "random_text",
+          "minWordCount": 320,
+          "maxWordCount": 420
+        },
+        "targetCount": 5,
+        "timeLimit": 105,
+        "targets": {
+          "mode": "find_all",
+          "caseSensitive": false,
+          "minLength": 3,
+          "maxLength": 18,
+          "tasksByTextId": {
+            "d7a10000-0000-5000-8000-000000000052": [
+              {
+                "answer": "Can",
+                "prompt": "Hazırlık sorumlusu kim?"
+              },
+              {
+                "answer": "08.06.2027",
+                "prompt": "Buluşmanın tarihi nedir?"
+              },
+              {
+                "answer": "55",
+                "prompt": "Katılım kontenjanı kaç kişi?"
+              },
+              {
+                "answer": "Çınar",
+                "prompt": "Buluşma hangi salonda yapılacak?"
+              },
+              {
+                "answer": "115",
+                "prompt": "Ortak çalışma kaç dakika sürecek?"
+              }
+            ],
+            "d7a10000-0000-5000-8000-000000000053": [
+              {
+                "answer": "Mert",
+                "prompt": "Hazırlık sorumlusu kim?"
+              },
+              {
+                "answer": "09.06.2027",
+                "prompt": "Buluşmanın tarihi nedir?"
+              },
+              {
+                "answer": "56",
+                "prompt": "Katılım kontenjanı kaç kişi?"
+              },
+              {
+                "answer": "Liman",
+                "prompt": "Buluşma hangi salonda yapılacak?"
+              },
+              {
+                "answer": "116",
+                "prompt": "Ortak çalışma kaç dakika sürecek?"
+              }
+            ],
+            "d7a10000-0000-5000-8000-000000000054": [
+              {
+                "answer": "Arda",
+                "prompt": "Hazırlık sorumlusu kim?"
+              },
+              {
+                "answer": "10.06.2027",
+                "prompt": "Buluşmanın tarihi nedir?"
+              },
+              {
+                "answer": "57",
+                "prompt": "Katılım kontenjanı kaç kişi?"
+              },
+              {
+                "answer": "Ufuk",
+                "prompt": "Buluşma hangi salonda yapılacak?"
+              },
+              {
+                "answer": "117",
+                "prompt": "Ortak çalışma kaç dakika sürecek?"
+              }
+            ]
+          }
+        },
+        "visuals": {
+          "fontSize": "20px"
+        }
+      }
+    }
+  },
+  {
+    "age": "adult",
+    "id": "4c0a4926-292e-5e71-a238-25deeec54b12",
+    "title": "Metinde Hedefi Bul",
+    "level": 4,
+    "ageGroupId": "10000000-0000-0000-0000-000000000003",
+    "previousConfiguration": {
+      "engineType": "scanning",
+      "engineConfig": {
+        "content": {
+          "source": "random_text"
+        },
+        "targetCount": 6,
+        "timeLimit": 240,
+        "targets": {
+          "mode": "find_all",
+          "caseSensitive": false
+        }
+      },
+      "difficultyLevel": 4
+    },
+    "configuration": {
+      "engineType": "scanning",
+      "difficultyLevel": 4,
+      "engineConfig": {
+        "content": {
+          "source": "random_text",
+          "minWordCount": 380,
+          "maxWordCount": 500
+        },
+        "targetCount": 6,
+        "timeLimit": 120,
+        "targets": {
+          "mode": "find_all",
+          "caseSensitive": false,
+          "minLength": 3,
+          "maxLength": 18,
+          "tasksByTextId": {
+            "d7a10000-0000-5000-8000-000000000055": [
+              {
+                "answer": "Pelin",
+                "prompt": "Hazırlık sorumlusu kim?"
+              },
+              {
+                "answer": "09.06.2027",
+                "prompt": "Buluşmanın tarihi nedir?"
+              },
+              {
+                "answer": "57",
+                "prompt": "Katılım kontenjanı kaç kişi?"
+              },
+              {
+                "answer": "Çınar",
+                "prompt": "Buluşma hangi salonda yapılacak?"
+              },
+              {
+                "answer": "117",
+                "prompt": "Ortak çalışma kaç dakika sürecek?"
+              },
+              {
+                "answer": "187",
+                "prompt": "Hazırlanan malzeme sayısı kaç?"
+              }
+            ],
+            "d7a10000-0000-5000-8000-000000000056": [
+              {
+                "answer": "İpek",
+                "prompt": "Hazırlık sorumlusu kim?"
+              },
+              {
+                "answer": "10.06.2027",
+                "prompt": "Buluşmanın tarihi nedir?"
+              },
+              {
+                "answer": "58",
+                "prompt": "Katılım kontenjanı kaç kişi?"
+              },
+              {
+                "answer": "Liman",
+                "prompt": "Buluşma hangi salonda yapılacak?"
+              },
+              {
+                "answer": "118",
+                "prompt": "Ortak çalışma kaç dakika sürecek?"
+              },
+              {
+                "answer": "188",
+                "prompt": "Hazırlanan malzeme sayısı kaç?"
+              }
+            ],
+            "d7a10000-0000-5000-8000-000000000057": [
+              {
+                "answer": "Nil",
+                "prompt": "Hazırlık sorumlusu kim?"
+              },
+              {
+                "answer": "11.06.2027",
+                "prompt": "Buluşmanın tarihi nedir?"
+              },
+              {
+                "answer": "59",
+                "prompt": "Katılım kontenjanı kaç kişi?"
+              },
+              {
+                "answer": "Ufuk",
+                "prompt": "Buluşma hangi salonda yapılacak?"
+              },
+              {
+                "answer": "119",
+                "prompt": "Ortak çalışma kaç dakika sürecek?"
+              },
+              {
+                "answer": "189",
+                "prompt": "Hazırlanan malzeme sayısı kaç?"
+              }
+            ]
+          }
+        },
+        "visuals": {
+          "fontSize": "20px"
+        }
+      }
+    }
+  },
+  {
+    "age": "adult",
+    "id": "83b59c21-1125-5ba9-ba18-f6d02a22d722",
+    "title": "Metinde Hedefi Bul",
+    "level": 5,
+    "ageGroupId": "10000000-0000-0000-0000-000000000003",
+    "previousConfiguration": {
+      "engineType": "scanning",
+      "engineConfig": {
+        "content": {
+          "source": "random_text"
+        },
+        "targetCount": 6,
+        "timeLimit": 270,
+        "targets": {
+          "mode": "find_all",
+          "caseSensitive": false
+        }
+      },
+      "difficultyLevel": 5
+    },
+    "configuration": {
+      "engineType": "scanning",
+      "difficultyLevel": 5,
+      "engineConfig": {
+        "content": {
+          "source": "random_text",
+          "minWordCount": 450,
+          "maxWordCount": 580
+        },
+        "targetCount": 6,
+        "timeLimit": 135,
+        "targets": {
+          "mode": "find_all",
+          "caseSensitive": false,
+          "minLength": 3,
+          "maxLength": 18,
+          "tasksByTextId": {
+            "d7a10000-0000-5000-8000-000000000058": [
+              {
+                "answer": "Emre",
+                "prompt": "Hazırlık sorumlusu kim?"
+              },
+              {
+                "answer": "10.06.2027",
+                "prompt": "Buluşmanın tarihi nedir?"
+              },
+              {
+                "answer": "59",
+                "prompt": "Katılım kontenjanı kaç kişi?"
+              },
+              {
+                "answer": "Çınar",
+                "prompt": "Buluşma hangi salonda yapılacak?"
+              },
+              {
+                "answer": "119",
+                "prompt": "Ortak çalışma kaç dakika sürecek?"
+              },
+              {
+                "answer": "189",
+                "prompt": "Hazırlanan malzeme sayısı kaç?"
+              }
+            ],
+            "d7a10000-0000-5000-8000-000000000059": [
+              {
+                "answer": "Aslı",
+                "prompt": "Hazırlık sorumlusu kim?"
+              },
+              {
+                "answer": "11.06.2027",
+                "prompt": "Buluşmanın tarihi nedir?"
+              },
+              {
+                "answer": "60",
+                "prompt": "Katılım kontenjanı kaç kişi?"
+              },
+              {
+                "answer": "Liman",
+                "prompt": "Buluşma hangi salonda yapılacak?"
+              },
+              {
+                "answer": "120",
+                "prompt": "Ortak çalışma kaç dakika sürecek?"
+              },
+              {
+                "answer": "190",
+                "prompt": "Hazırlanan malzeme sayısı kaç?"
+              }
+            ],
+            "d7a10000-0000-5000-8000-000000000060": [
+              {
+                "answer": "Cem",
+                "prompt": "Hazırlık sorumlusu kim?"
+              },
+              {
+                "answer": "12.06.2027",
+                "prompt": "Buluşmanın tarihi nedir?"
+              },
+              {
+                "answer": "61",
+                "prompt": "Katılım kontenjanı kaç kişi?"
+              },
+              {
+                "answer": "Ufuk",
+                "prompt": "Buluşma hangi salonda yapılacak?"
+              },
+              {
+                "answer": "121",
+                "prompt": "Ortak çalışma kaç dakika sürecek?"
+              },
+              {
+                "answer": "191",
+                "prompt": "Hazırlanan malzeme sayısı kaç?"
+              }
+            ]
+          }
+        },
+        "visuals": {
+          "fontSize": "20px"
+        }
+      }
+    }
+  }
+]

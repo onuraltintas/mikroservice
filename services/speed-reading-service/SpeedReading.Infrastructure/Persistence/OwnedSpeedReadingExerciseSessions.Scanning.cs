@@ -81,7 +81,10 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions
         var requiredCount = Math.Clamp(ReadPositiveInt(config, "targetCount") ?? 3, 1, 100);
         if (targets.Length == 0 && labels.Count == 0)
         {
-            var candidates = words.Where(word => word.Length >= 2 && word.Any(char.IsLetter)).ToArray();
+            var targetConfig = ReadObject(config, "targets");
+            var minimumLength = ReadPositiveInt(targetConfig, "minLength") ?? 2;
+            var maximumLength = ReadPositiveInt(targetConfig, "maxLength") ?? 100;
+            var candidates = words.Where(word => word.Length >= minimumLength && word.Length <= maximumLength && word.Any(char.IsLetter)).ToArray();
             Random.Shared.Shuffle(candidates);
             requested = candidates.Take(requiredCount).ToArray();
             if (requested.Length < requiredCount)

@@ -33,6 +33,8 @@ export interface ScanFindConfig extends EngineConfig {
         caseSensitive?: boolean;
         mode?: 'find_all' | 'find_any'; // Her hedefi bir kez veya hedeflerden herhangi birini bul.
         tasksByTextId?: Record<string, Array<{ answer: string; prompt: string }>>;
+        minLength?: number;
+        maxLength?: number;
     };
     timing?: {
         timeLimitSec?: number;
@@ -125,6 +127,8 @@ export class ScanFindEngine implements BaseEngine {
             words: [...new Set(boundedStringArray(targets['words'], 100, 100).map(normalizeTarget).filter(Boolean))],
             caseSensitive,
             mode: targets['mode'] === 'find_any' ? 'find_any' : 'find_all',
+            minLength: boundedInteger(targets['minLength'], 2, 2, 100),
+            maxLength: boundedInteger(targets['maxLength'], 100, 2, 100),
             tasksByTextId: targets['tasksByTextId'] as NonNullable<ScanFindConfig['targets']>['tasksByTextId']
         };
         this.config.timing = { timeLimitSec: boundedInteger(timing['timeLimitSec'], 3600, 1, 3600) };
@@ -162,7 +166,7 @@ export class ScanFindEngine implements BaseEngine {
         if (taskMap) {
             const tasks = taskMap[String(this.config['readingTextId'])];
             const count = boundedInteger(this.config['targetCount'], 3, 1, 100);
-            if (!Array.isArray(tasks) || tasks.length !== count) throw new Error('Seçilen metnin bilgi bulma hedefleri hazırlanmamış.');
+            if (!Array.isArray(tasks) || tasks.length === 0) throw new Error('Seçilen metnin bilgi bulma hedefleri hazırlanmamış.');
             const labels: Record<string, string> = {};
             for (const task of tasks) {
                 const answer = this.normalizeWord(String(task.answer || ''), this.config.targets?.caseSensitive === true);
@@ -171,16 +175,26 @@ export class ScanFindEngine implements BaseEngine {
                 labels[answer] = task.prompt;
             }
             this.targetLabels = labels;
-            return tasks.map(task => this.normalizeWord(task.answer, this.config.targets?.caseSensitive === true));
+            const answers = tasks.map(task => this.normalizeWord(task.answer, this.config.targets?.caseSensitive === true));
+            const extra = this.shuffleCandidates(words.filter(word => !answers.includes(word)
+                && word.length >= (this.config.targets?.minLength ?? 2)
+                && word.length <= (this.config.targets?.maxLength ?? 100) && /\p{L}/u.test(word)));
+            if (answers.length + extra.length < count) throw new Error('Metinde istenen sayıda farklı tarama hedefi bulunamadı.');
+            return [...answers, ...extra].slice(0, count);
         }
-        const candidates = words.filter(word => Array.from(word).length >= 2 && /\p{L}/u.test(word));
+        const candidates = this.shuffleCandidates(words.filter(word => word.length >= (this.config.targets?.minLength ?? 2)
+            && word.length <= (this.config.targets?.maxLength ?? 100) && /\p{L}/u.test(word)));
+        const count = boundedInteger(this.config['targetCount'], 3, 1, 100);
+        if (candidates.length < count) throw new Error('Metinde istenen sayıda farklı tarama hedefi bulunamadı.');
+        return candidates.slice(0, count);
+    }
+
+    private shuffleCandidates(candidates: string[]): string[] {
         for (let i = candidates.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
         }
-        const count = boundedInteger(this.config['targetCount'], 3, 1, 100);
-        if (candidates.length < count) throw new Error('Metinde istenen sayıda farklı tarama hedefi bulunamadı.');
-        return candidates.slice(0, count);
+        return candidates;
     }
 
     private generateContent(): void {

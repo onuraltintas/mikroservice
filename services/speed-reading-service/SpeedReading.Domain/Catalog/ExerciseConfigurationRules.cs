@@ -662,6 +662,10 @@ public static class ExerciseConfigurationRules
         if (TryGetObject(config, "targets") is { } targets)
         {
             ValidateOptionalStringArray(targets, "words", 100, 100, "Tarama hedefleri");
+            ValidateOptionalIntRange(targets, "minLength", 2, 100, "Minimum hedef uzunluğu");
+            ValidateOptionalIntRange(targets, "maxLength", 2, 100, "Maksimum hedef uzunluğu");
+            if (ReadOptionalInt(targets, "minLength") is { } min && ReadOptionalInt(targets, "maxLength") is { } max && min > max)
+                throw new ArgumentException("Minimum hedef uzunluğu maksimumdan büyük olamaz.");
             if (TryGetProperty(targets, "tasksByTextId") is { } taskMap)
             {
                 if (taskMap.ValueKind != JsonValueKind.Object || !taskMap.EnumerateObject().Any()
