@@ -48,6 +48,7 @@ describe('visual expansion answer UI', () => {
   it('uses verified server round summaries instead of local preview estimates', () => {
     const value = player(['A','B']);
     value.sessionId = 'session'; value.exercise = { id: 'exercise' };
+    value.route = { snapshot: { queryParamMap: { get: () => null } } };
     value.engineState = { totalSteps: 2 }; value.questionAnswers = []; value.parsedConfig = {};
     value.isPreviewSession = () => false; value.isTachistoscopeMode = () => false;
     value.showToast = () => undefined; value.completeDailyProgress = () => undefined;

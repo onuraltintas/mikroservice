@@ -32,6 +32,7 @@ describe('reading result semantics', () => {
     player.parsedConfig = {};
     player.questionAnswers = [];
     player.sessionId = 'session';
+    player.route = { snapshot: { queryParamMap: { get: () => null } } };
     player.exercise = { id: 'exercise', exerciseTypeName: 'RSVP' };
     player.isPreviewSession = () => false;
     player.showToast = () => undefined;
@@ -55,6 +56,7 @@ describe('reading result semantics', () => {
     player.parsedConfig = {};
     player.questionAnswers = [];
     player.sessionId = 'session';
+    player.route = { snapshot: { queryParamMap: { get: () => null } } };
     player.exercise = { id: 'exercise' };
     player.isPreviewSession = () => false;
     player.isTachistoscopeMode = () => false;
@@ -81,6 +83,30 @@ describe('reading result semantics', () => {
     expect(result.details.incomplete).toBeTrue();
     expect(result.accuracy).toBe(0);
     expect(result.details.comprehensionScore).toBeNull();
+  });
+  it('shows the server-owned word count and tempo for saved Speed Reading practice', () => {
+    const player = Object.create(ExercisePlayerComponent.prototype) as any;
+    player.engine = { engineType: 'word_highlight', getWpm: () => 200 };
+    player.engineState = { totalSteps: 4 }; player.parsedConfig = {}; player.questionAnswers = [];
+    player.sessionId = 'session'; player.exercise = { id: 'exercise', exerciseTypeName: 'SpeedReading' };
+    player.route = { snapshot: { queryParamMap: { get: () => null } } };
+    player.isPreviewSession = () => false; player.isTachistoscopeMode = () => false;
+    player.showToast = () => undefined; player.cdr = { detectChanges: () => undefined };
+    player.completeDailyProgress = () => undefined;
+    player.sessionService = { completeSession: () => of({ score: null, accuracy: null, rawWPM: null,
+      detailedResults: { wordCount: 4, groupingDisplayPaceWpm: 200, groupingCompletionPercent: 100, readingIncomplete: false } }) };
+    player.result = { score: 100, accuracy: 0, errors: 0, totalSteps: 4, completedSteps: 4,
+      details: { wordCount: 999, displayPaceWpm: 999 } };
+    player.saveResult(player.result);
+    expect(player.result.details.wordCount).toBe(4);
+    expect(player.result.details.displayPaceWpm).toBe(200);
+  });
+  it('does not show a legacy hard cutoff for Speed Reading practice', () => {
+    const player = Object.create(ExercisePlayerComponent.prototype) as any;
+    player.exercise = { exerciseTypeName: 'SpeedReading' };
+    player.engine = { engineType: 'word_highlight' }; player.engineState = {};
+    player.parsedConfig = { engineConfig: { mode: 'guided', timing: { timeLimitSec: 60 } } };
+    expect(player.hasTimeLimit()).toBeFalse();
   });
   it('retains incomplete reading after questions without fabricating speed', () => {
     const player = Object.create(ExercisePlayerComponent.prototype) as any;

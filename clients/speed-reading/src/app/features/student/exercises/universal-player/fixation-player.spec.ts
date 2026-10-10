@@ -6,6 +6,7 @@ describe('fixation owned session pause', () => {
     const value = Object.create(ExercisePlayerComponent.prototype) as any;
     value.engine = { engineType: 'motion_path', getMode: () => 'fixation' };
     value.sessionId = 'session'; value.exercise = { id: 'exercise' };
+    value.route = { snapshot: { queryParamMap: { get: () => null } } };
     value.engineState = { totalSteps: 1 }; value.questionAnswers = []; value.parsedConfig = {};
     value.isPreviewSession = () => false; value.isTachistoscopeMode = () => false;
     value.showToast = () => undefined; value.completeDailyProgress = () => undefined;
