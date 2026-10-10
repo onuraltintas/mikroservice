@@ -207,6 +207,27 @@ public static class ExerciseConfigurationRules
                     ValidateReadingConfiguration(nested.Value);
                 ValidateEffectiveReadingConfiguration(root, nested);
             }
+            if (configured == "reading_comprehension")
+            {
+                foreach (var scope in nested.HasValue ? new[] { root, nested.Value } : new[] { root })
+                {
+                    ValidateOptionalEnum(scope, "comprehensionMode", ["learning", "evaluation"], "Anlama modu");
+                    if (TryGetObject(scope, "content") is { } content)
+                    {
+                        ValidateOptionalIntRange(content, "minWordCount", 1, 100_000, "Minimum kelime sayısı");
+                        ValidateOptionalIntRange(content, "maxWordCount", 1, 100_000, "Maksimum kelime sayısı");
+                        ValidateOptionalIntRange(content, "questionCount", 1, 50, "Anlama soru sayısı");
+                    }
+                }
+                var scopes = nested.HasValue ? new[] { root, nested.Value } : new[] { root };
+                ValidateConsistentStrings(scopes.SelectMany(scope => ReadStrings(scope, "comprehensionMode")), "Anlama modu");
+                foreach (var key in new[] { "minWordCount", "maxWordCount", "questionCount" })
+                    ValidateConsistentValues(scopes.SelectMany(scope => ReadNestedInts(scope, "content", key)), key);
+                var effectiveContent = TryGetObject(nested ?? root, "content") ?? TryGetObject(root, "content");
+                if (effectiveContent.HasValue && ReadOptionalInt(effectiveContent.Value, "minWordCount") is { } minimum
+                    && ReadOptionalInt(effectiveContent.Value, "maxWordCount") is { } maximum && minimum > maximum)
+                    throw new ArgumentException("Minimum kelime sayısı maksimumdan büyük olamaz.");
+            }
             if (configured is "regression_reduction" or "subvocalization_reduction")
             {
                 ValidateReadingBehaviorConfiguration(root, configured);

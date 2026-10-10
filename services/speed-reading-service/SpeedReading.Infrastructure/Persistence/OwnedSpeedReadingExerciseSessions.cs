@@ -140,12 +140,12 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             var explicitConfig = ParseJsonOrEmpty(configurationJson);
             var explicitContent = ReadObject(ReadObject(explicitConfig, "engineConfig"), "content");
             var isFreeText = ExerciseConfigurationRules.NormalizeEngineType(exerciseEngineType) == "free_reading";
-            var usesTextBand = isFreeText || exerciseTypeName.Equals("SpeedReading", StringComparison.OrdinalIgnoreCase);
+            var usesTextBand = isFreeText || IsEngineType(exerciseEngineType, "reading_comprehension") || exerciseTypeName.Equals("SpeedReading", StringComparison.OrdinalIgnoreCase);
             var minimumWords = usesTextBand ? ReadPositiveInt(explicitContent, "minWordCount") ?? ReadPositiveInt(ReadObject(explicitConfig, "content"), "minWordCount") ?? 0 : 0;
             var maximumWords = usesTextBand ? ReadPositiveInt(explicitContent, "maxWordCount") ?? ReadPositiveInt(ReadObject(explicitConfig, "content"), "maxWordCount") ?? 0 : 0;
             var strictTextLevel = IsEngineType(exerciseEngineType, "word_highlight") || IsPacedHighlight(new SessionState { EngineType = exerciseEngineType, ExerciseTypeName = exerciseTypeName })
                 || IsRsvp(exerciseTypeName, exerciseEngineType, explicitConfig)
-                || ExerciseConfigurationRules.NormalizeEngineType(exerciseEngineType) is "free_reading" or "text_fade" or "regression_reduction" or "subvocalization_reduction" or "skimming";
+                || ExerciseConfigurationRules.NormalizeEngineType(exerciseEngineType) is "reading_comprehension" or "free_reading" or "text_fade" or "regression_reduction" or "subvocalization_reduction" or "skimming";
             var readingTextMatches = await db.ReadingTexts
                 .AsNoTracking()
                 .AnyAsync(item => item.Id == request.ReadingTextId.Value
@@ -324,7 +324,9 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                 var isExam = normalizedEngineType == "exam_simulation";
                 var isFreeReading = normalizedEngineType == "free_reading";
                 var freeContent = ReadObject(ReadObject(parsedConfiguration, "engineConfig"), "content");
-                var usesTextBand = isFreeReading || exerciseTypeName.Equals("SpeedReading", StringComparison.OrdinalIgnoreCase);
+                var usesTextBand = isFreeReading || isComprehension || exerciseTypeName.Equals("SpeedReading", StringComparison.OrdinalIgnoreCase);
+                var comprehensionQuestionCount = isComprehension
+                    ? ReadPositiveInt(freeContent, "questionCount") ?? ReadPositiveInt(ReadObject(parsedConfiguration, "content"), "questionCount") ?? 0 : 0;
                 var freeMinimumWords = usesTextBand ? ReadPositiveInt(freeContent, "minWordCount") ?? ReadPositiveInt(ReadObject(parsedConfiguration, "content"), "minWordCount") ?? 0 : 0;
                 var freeMaximumWords = usesTextBand ? ReadPositiveInt(freeContent, "maxWordCount") ?? ReadPositiveInt(ReadObject(parsedConfiguration, "content"), "maxWordCount") ?? 0 : 0;
                 var isScanning = normalizedEngineType is "scan_find" or "scanning" or "skimming";
@@ -351,6 +353,13 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                             || item.TargetAgeGroupId == null
                             || item.TargetAgeGroupId == profileAgeGroupId.Value)
                         && (item.ExerciseId == null || item.ExerciseId == request.ExerciseId)
+                        && (comprehensionQuestionCount == 0 || db.ReadingQuestions.Count(question =>
+                            question.ReadingTextId == item.Id && !question.IsDeleted && question.Type == 1
+                            && question.BloomLevel >= 1 && question.BloomLevel <= 6
+                            && (question.CorrectAnswer.Trim().ToUpper() == "A" || question.CorrectAnswer.Trim().ToUpper() == "B"
+                                || question.CorrectAnswer.Trim().ToUpper() == "C" || question.CorrectAnswer.Trim().ToUpper() == "D")
+                            && question.OptionA.Trim() != "" && question.OptionB.Trim() != ""
+                            && question.OptionC.Trim() != "" && question.OptionD.Trim() != "") >= comprehensionQuestionCount)
                         && (!isSkimming || db.ReadingQuestions.Any(question => question.ReadingTextId == item.Id
                             && !question.IsDeleted && question.Type == 1 && question.BloomLevel >= 1 && question.BloomLevel <= 6
                             && (question.CorrectAnswer.Trim().ToUpper() == "A" || question.CorrectAnswer.Trim().ToUpper() == "B"
@@ -720,7 +729,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         var adaptiveTransferResult = IsAdaptiveFluency(state)
             ? state.AdaptiveStageResults.SingleOrDefault(item => item.Stage == 3)
             : null;
-        var rawWpmCandidate = IsErrorAnalysis(state) ? null : adaptiveTransferResult?.Wpm
+        var rawWpmCandidate = IsErrorAnalysis(state) || state.ComprehensionMode == "learning" ? null : adaptiveTransferResult?.Wpm
             ?? CalculateReadingWpm(state, timeSpent);
         var measurementStatus = SpeedReadingExerciseSessionRules.ResolveMeasurementStatus(
             state.Questions.Count,
@@ -743,7 +752,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         var score = measurementStatus == SpeedReadingMeasurementStatus.NotMeasured
             ? (decimal?)null
             : state.Questions.Count > 0
-            ? SpeedReadingExerciseSessionRules.CalculateCompositeScore(comprehension, rawWpm)
+            ? IsEngineType(state.EngineType, "reading_comprehension") ? comprehension
+                : SpeedReadingExerciseSessionRules.CalculateCompositeScore(comprehension, rawWpm)
             : IsErrorAnalysis(state) ? ErrorAnalysisScore(state)
             : IsScanning(state) ? Math.Max(0, accuracy - session.IncorrectCount * 10m) : accuracy;
         var weightedKdp = rawWpm.HasValue ? Math.Round(rawWpm.Value * comprehension / 100, 2) : (decimal?)null;
@@ -777,6 +787,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         db.ExerciseSessionResults.Add(result);
         if (!isAssessmentSession
             && session.ReadingTextId is not null
+            && state.ComprehensionMode != "learning"
             && !IsScanning(state)
             && IsReadingExerciseFlow(state))
         {
@@ -1304,6 +1315,9 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             state.ReadingMaximumMs = ReadPositiveInt(timing, "maxReadingTimeMs")
                 ?? ReadPositiveInt(rootTiming, "maxReadingTimeMs") ?? 0;
         }
+        if (IsEngineType(exerciseEngineType, "reading_comprehension"))
+            state.ComprehensionMode = isAssessmentMode ? "evaluation"
+                : (ReadString(effectiveConfig, "comprehensionMode") ?? ReadString(config, "comprehensionMode") ?? "evaluation").Trim().ToLowerInvariant();
         if (IsReadingExerciseFlow(state) && state.EngineType is not ("scan_find" or "scanning"))
             state.ReadingPurpose = ExerciseConfigurationRules.ResolveReadingPurpose(
                 exerciseEngineType,
@@ -1519,6 +1533,22 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                 exerciseTypeName, exerciseEngineType,
                 ReadString(effectiveConfig, "mode") ?? ReadString(config, "mode")))
             state.Questions.Clear();
+
+        if (IsEngineType(exerciseEngineType, "reading_comprehension"))
+        {
+            var count = ReadPositiveInt(ReadObject(effectiveConfig, "content"), "questionCount")
+                ?? ReadPositiveInt(ReadObject(config, "content"), "questionCount");
+            if (count.HasValue)
+            {
+                state.Questions = state.Questions.Where(question => question.QuestionType == 1
+                    && question.BloomLevel is >= 1 and <= 6
+                    && !string.IsNullOrWhiteSpace(question.OptionA) && !string.IsNullOrWhiteSpace(question.OptionB)
+                    && !string.IsNullOrWhiteSpace(question.OptionC) && !string.IsNullOrWhiteSpace(question.OptionD)).ToList();
+                if (state.Questions.Count < count.Value)
+                    throw new BusinessRuleException("ExerciseSession.ReadingQuestionsUnavailable", "Bu metinde gerekli sayıda geçerli anlama sorusu bulunmuyor.");
+                state.Questions = state.Questions.Take(count.Value).ToList();
+            }
+        }
 
         if (state.ReadingPurpose is not null && string.IsNullOrWhiteSpace(state.Content))
             throw new BusinessRuleException("ExerciseSession.ReadingContentUnavailable",
@@ -2220,6 +2250,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         ExerciseActionRequest request,
         DateTime now)
     {
+        if (IsEngineType(state.EngineType, "reading_comprehension") && !state.ReadingEndTime.HasValue)
+            return Invalid("Önce okumayı tamamlayın.");
         if (IsSkimming(state) && (state.SkimmingProtocolVersion != 1 || !state.ReadingEndTime.HasValue))
             return Invalid("Önce metin incelemesini tamamlayın.");
         if (!request.QuestionId.HasValue
@@ -2234,7 +2266,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             // A refresh, timeout race, or retry can repeat the same question
             // action after the answer has already been persisted. Treat that
             // request as idempotent so the student can continue the session.
-            var assessmentSession = session.AssessmentAttemptId.HasValue;
+            var assessmentSession = session.AssessmentAttemptId.HasValue
+                || IsEngineType(state.EngineType, "reading_comprehension") && state.ComprehensionMode != "learning";
             return new ExerciseActionValidationResponse(
                 true,
                 "Bu soru daha önce yanıtlandı; kayıt mevcut.",
@@ -2288,7 +2321,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             OrderIndex = question.OrderIndex,
             QuestionType = question.QuestionType
         });
-        var isAssessment = session.AssessmentAttemptId.HasValue;
+        var isAssessment = session.AssessmentAttemptId.HasValue
+            || IsEngineType(state.EngineType, "reading_comprehension") && state.ComprehensionMode != "learning";
         return new ExerciseActionValidationResponse(
             true,
             timedOut
@@ -3405,7 +3439,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             [],
             false,
             null,
-            ToPublicJson(state),
+            ToPublicJson(state, completedResult: true),
             feedback ?? (score.HasValue ? "Egzersiz tamamlandı." : "Bu oturum daha önce tamamlandı."),
             null,
             result.IsMeasured ? nameof(SpeedReadingMeasurementStatus.Measured) : nameof(SpeedReadingMeasurementStatus.NotMeasured));
@@ -3487,7 +3521,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         }
     }
 
-    private static JsonElement ToPublicJson(SessionState state)
+    private static JsonElement ToPublicJson(SessionState state, bool completedResult = false)
     {
         var json = JsonSerializer.SerializeToNode(state, JsonOptions)!.AsObject();
         if (state.Tachistoscope is { } tachistoscope)
@@ -3506,6 +3540,11 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         var sanitized = JsonSerializer.SerializeToNode(state.IsAssessmentMode
             ? SpeedReadingContentSecurity.SanitizeFocusAssessmentJson(result)
             : RemoveAssessmentKeys(result), JsonOptions)!.AsObject();
+        if (completedResult && !state.IsAssessmentMode && IsEngineType(state.EngineType, "reading_comprehension"))
+        {
+            sanitized["questions"] = JsonSerializer.SerializeToNode(state.Questions, JsonOptions);
+            sanitized["answers"] = JsonSerializer.SerializeToNode(state.Answers, JsonOptions);
+        }
         if (IsVisualExpansionExercise(state) && state.VisualExpansionProtocolVersion != 1)
         {
             sanitized.Remove("visualExpansionRoundResults");
@@ -3755,6 +3794,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         public decimal GroupingDisplayPaceWpm { get; set; }
         public decimal GroupingCompletionPercent { get; set; }
         public string? ReadingPurpose { get; set; }
+        public string? ComprehensionMode { get; set; }
         public DateTime? ReadingPausedAt { get; set; }
         public int ReadingPausedSeconds { get; set; }
         public long? ReadingPausedMilliseconds { get; set; }
