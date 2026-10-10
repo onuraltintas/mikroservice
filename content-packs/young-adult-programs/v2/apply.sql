@@ -24,13 +24,13 @@ DO $$ BEGIN
     AND table_name='daily_exercise_logs' AND column_name='slot_order') THEN
     RAISE EXCEPTION 'Task-slot schema is required';
   END IF;
-  IF EXISTS (SELECT id FROM young_adult_approved_progress GROUP BY id HAVING count(*)>1)
+  IF (SELECT count(*) FROM young_adult_approved_progress)<>1
     OR EXISTS (SELECT 1 FROM speed_reading.student_program_progress p
       JOIN young_adult_program_v2_ids m ON p."ProgramTemplateId"=m.old_id
       WHERE NOT EXISTS(SELECT 1 FROM young_adult_approved_progress a WHERE a.id=p.id))
     OR EXISTS (SELECT 1 FROM speed_reading.student_program_progress p
       JOIN young_adult_approved_progress a ON a.id=p.id
-      WHERE NOT EXISTS(SELECT 1 FROM young_adult_program_v2_ids m WHERE m.old_id=p."ProgramTemplateId")) THEN
+      WHERE NOT EXISTS(SELECT 1 FROM young_adult_program_v2_ids m WHERE m.old_id=p."ProgramTemplateId" AND m.level=1)) THEN
     RAISE EXCEPTION 'Progress deletion scope does not match explicit approval';
   END IF;
   IF EXISTS (SELECT 1 FROM speed_reading.review_items r
@@ -68,7 +68,7 @@ DO $$ BEGIN
       OR (SELECT count(*) FROM jsonb_array_elements_text(d.tasks) t(name)
         WHERE t.name IN('Focus','SchulteTable','EyeTracking','Saccade','Fixation','Tachistoscope','VisualExpansion'))
         <>CASE WHEN d.position<=14 THEN 4 WHEN d.position<=21 THEN 3 ELSE 2 END) THEN
-    RAISE EXCEPTION 'Teen plan must match the approved daily and weekly balance';
+    RAISE EXCEPTION 'Young adult plan must match the approved daily and weekly balance';
   END IF;
 END $$;
 
@@ -158,7 +158,7 @@ DO $$ BEGIN
       AND p."Name"='Genç Yetişkin — Seviye '||d.level||' — Dengeli 4 Haftalık Program'
       AND p."Description"='17–21 yaş. 28 gün, 182 görev. İlk 14 gün 6, son 14 gün 7 görev. Başlangıçta dikkat ve görsel algı ağırlığı; sonraki haftalarda artan okuma ve anlama çalışmaları.'
       AND p.created_by='system:young-adult-programs-v2')<>5 THEN
-    RAISE EXCEPTION 'Teen replacement verification failed; transaction rolled back';
+    RAISE EXCEPTION 'Young adult replacement verification failed; transaction rolled back';
   END IF;
 END $$;
 DELETE FROM speed_reading.daily_exercise_logs WHERE id IN(SELECT id FROM young_adult_target_logs);
