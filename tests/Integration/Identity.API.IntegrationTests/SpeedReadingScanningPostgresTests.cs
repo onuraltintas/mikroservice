@@ -22,7 +22,7 @@ public sealed class SpeedReadingScanningPostgresTests(PostgresFixture postgres)
         while (directory is not null && !Directory.Exists(Path.Combine(directory.FullName, "content-packs"))) directory = directory.Parent;
         Assert.NotNull(directory);
         var pack = Path.Combine(directory!.FullName, "content-packs", "scanning", "v1");
-        var settings = JsonDocument.Parse(await File.ReadAllTextAsync(Path.Combine(pack, "settings.json")));
+        using var settings = JsonDocument.Parse(await File.ReadAllTextAsync(Path.Combine(pack, "settings.json")));
         var sql = await File.ReadAllTextAsync(Path.Combine(pack, "apply.sql"));
         await using var db = new OwnedSpeedReadingDbContext(new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>()
             .UseNpgsql(postgres.ConnectionString).Options);
@@ -40,13 +40,12 @@ public sealed class SpeedReadingScanningPostgresTests(PostgresFixture postgres)
             await db.SaveChangesAsync();
             if (changedSource)
             {
-                await Assert.ThrowsAsync<Npgsql.PostgresException>(() => db.Database.ExecuteSqlRawAsync(sql));
-                await db.Database.CloseConnectionAsync();
+                await Assert.ThrowsAsync<Npgsql.PostgresException>(() => ExecutePackAsync(sql));
                 Assert.Equal(0, await db.ReadingTexts.CountAsync());
                 return;
             }
-            await db.Database.ExecuteSqlRawAsync(sql);
-            await db.Database.ExecuteSqlRawAsync(sql);
+            await ExecutePackAsync(sql);
+            await ExecutePackAsync(sql);
             db.ChangeTracker.Clear();
             Assert.Equal(60, await db.ReadingTexts.CountAsync());
             var serviceType = typeof(OwnedSpeedReadingDbContext).Assembly.GetType("SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingExerciseSessions")!;
@@ -61,6 +60,14 @@ public sealed class SpeedReadingScanningPostgresTests(PostgresFixture postgres)
             }
         }
         finally { await db.Database.EnsureDeletedAsync(); }
+    }
+
+    private async Task ExecutePackAsync(string sql)
+    {
+        await using var connection = new Npgsql.NpgsqlConnection(postgres.ConnectionString);
+        await connection.OpenAsync();
+        await using var command = new Npgsql.NpgsqlCommand(sql, connection);
+        await command.ExecuteNonQueryAsync();
     }
 
     [Theory]
