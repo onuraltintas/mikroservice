@@ -1,0 +1,1642 @@
+[
+  {
+    "age": "child",
+    "id": "ae5aeab6-7483-5069-b61b-3be64238d016",
+    "title": "Küçük Hikâyeyi Anla — Anlama çalışması",
+    "level": 1,
+    "ageGroupId": "10000000-0000-0000-0000-000000000001",
+    "previousConfiguration": {
+      "engineType": "reading_comprehension",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "comprehension",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 1
+    },
+    "configuration": {
+      "engineType": "reading_comprehension",
+      "difficultyLevel": 1,
+      "engineConfig": {
+        "mode": "comprehension",
+        "comprehensionMode": "learning",
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 180,
+          "maxWordCount": 250,
+          "questionCount": 5
+        },
+        "timing": {
+          "minReadingTimeMs": 0,
+          "maxReadingTimeMs": 0
+        },
+        "display": {
+          "fontSize": "large",
+          "lineHeight": 1.8
+        }
+      }
+    }
+  },
+  {
+    "age": "child",
+    "id": "7bc87945-79fa-5b6a-9556-85d6064dffbd",
+    "title": "Bilgiyi Keşfet — Anlama değerlendirmesi",
+    "level": 1,
+    "ageGroupId": "10000000-0000-0000-0000-000000000001",
+    "previousConfiguration": {
+      "engineType": "reading_comprehension",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "comprehension",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 1
+    },
+    "configuration": {
+      "engineType": "reading_comprehension",
+      "difficultyLevel": 1,
+      "engineConfig": {
+        "mode": "comprehension",
+        "comprehensionMode": "evaluation",
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 180,
+          "maxWordCount": 250,
+          "questionCount": 5
+        },
+        "timing": {
+          "minReadingTimeMs": 0,
+          "maxReadingTimeMs": 0
+        },
+        "display": {
+          "fontSize": "large",
+          "lineHeight": 1.8
+        }
+      }
+    }
+  },
+  {
+    "age": "child",
+    "id": "78ffc512-359c-518f-96eb-33bb5d007ec2",
+    "title": "Olayları Anla — Anlama çalışması",
+    "level": 2,
+    "ageGroupId": "10000000-0000-0000-0000-000000000001",
+    "previousConfiguration": {
+      "engineType": "reading_comprehension",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "comprehension",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 2
+    },
+    "configuration": {
+      "engineType": "reading_comprehension",
+      "difficultyLevel": 2,
+      "engineConfig": {
+        "mode": "comprehension",
+        "comprehensionMode": "learning",
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 220,
+          "maxWordCount": 300,
+          "questionCount": 6
+        },
+        "timing": {
+          "minReadingTimeMs": 0,
+          "maxReadingTimeMs": 0
+        },
+        "display": {
+          "fontSize": "large",
+          "lineHeight": 1.8
+        }
+      }
+    }
+  },
+  {
+    "age": "child",
+    "id": "06d125ec-3361-51a1-b2f7-f9709611473e",
+    "title": "Neden Böyle Oldu? — Anlama değerlendirmesi",
+    "level": 2,
+    "ageGroupId": "10000000-0000-0000-0000-000000000001",
+    "previousConfiguration": {
+      "engineType": "reading_comprehension",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "comprehension",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 2
+    },
+    "configuration": {
+      "engineType": "reading_comprehension",
+      "difficultyLevel": 2,
+      "engineConfig": {
+        "mode": "comprehension",
+        "comprehensionMode": "evaluation",
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 220,
+          "maxWordCount": 300,
+          "questionCount": 6
+        },
+        "timing": {
+          "minReadingTimeMs": 0,
+          "maxReadingTimeMs": 0
+        },
+        "display": {
+          "fontSize": "large",
+          "lineHeight": 1.8
+        }
+      }
+    }
+  },
+  {
+    "age": "child",
+    "id": "d8bbdfdc-21ad-5872-a81b-9cf4c25c5d17",
+    "title": "Paragrafı Anla — Anlama çalışması",
+    "level": 3,
+    "ageGroupId": "10000000-0000-0000-0000-000000000001",
+    "previousConfiguration": {
+      "engineType": "reading_comprehension",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "comprehension",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 3
+    },
+    "configuration": {
+      "engineType": "reading_comprehension",
+      "difficultyLevel": 3,
+      "engineConfig": {
+        "mode": "comprehension",
+        "comprehensionMode": "learning",
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 280,
+          "maxWordCount": 360,
+          "questionCount": 6
+        },
+        "timing": {
+          "minReadingTimeMs": 0,
+          "maxReadingTimeMs": 0
+        },
+        "display": {
+          "fontSize": "large",
+          "lineHeight": 1.8
+        }
+      }
+    }
+  },
+  {
+    "age": "child",
+    "id": "f97886fc-96f9-5c76-a677-dd21e342ba4b",
+    "title": "İpuçlarından Sonuca — Anlama değerlendirmesi",
+    "level": 3,
+    "ageGroupId": "10000000-0000-0000-0000-000000000001",
+    "previousConfiguration": {
+      "engineType": "reading_comprehension",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "comprehension",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 3
+    },
+    "configuration": {
+      "engineType": "reading_comprehension",
+      "difficultyLevel": 3,
+      "engineConfig": {
+        "mode": "comprehension",
+        "comprehensionMode": "evaluation",
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 280,
+          "maxWordCount": 360,
+          "questionCount": 6
+        },
+        "timing": {
+          "minReadingTimeMs": 0,
+          "maxReadingTimeMs": 0
+        },
+        "display": {
+          "fontSize": "large",
+          "lineHeight": 1.8
+        }
+      }
+    }
+  },
+  {
+    "age": "child",
+    "id": "35ce8279-5f62-59f3-be9a-caee7504db2e",
+    "title": "Cevabın Kanıtı — Anlama çalışması",
+    "level": 4,
+    "ageGroupId": "10000000-0000-0000-0000-000000000001",
+    "previousConfiguration": {
+      "engineType": "reading_comprehension",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "comprehension",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 4
+    },
+    "configuration": {
+      "engineType": "reading_comprehension",
+      "difficultyLevel": 4,
+      "engineConfig": {
+        "mode": "comprehension",
+        "comprehensionMode": "learning",
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 340,
+          "maxWordCount": 430,
+          "questionCount": 7
+        },
+        "timing": {
+          "minReadingTimeMs": 0,
+          "maxReadingTimeMs": 0
+        },
+        "display": {
+          "fontSize": "large",
+          "lineHeight": 1.8
+        }
+      }
+    }
+  },
+  {
+    "age": "child",
+    "id": "1f1fb3f7-7f8c-5f7a-aead-f0d0949302e6",
+    "title": "Ana Fikir ve Ayrıntı — Anlama değerlendirmesi",
+    "level": 4,
+    "ageGroupId": "10000000-0000-0000-0000-000000000001",
+    "previousConfiguration": {
+      "engineType": "reading_comprehension",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "comprehension",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 4
+    },
+    "configuration": {
+      "engineType": "reading_comprehension",
+      "difficultyLevel": 4,
+      "engineConfig": {
+        "mode": "comprehension",
+        "comprehensionMode": "evaluation",
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 340,
+          "maxWordCount": 430,
+          "questionCount": 7
+        },
+        "timing": {
+          "minReadingTimeMs": 0,
+          "maxReadingTimeMs": 0
+        },
+        "display": {
+          "fontSize": "large",
+          "lineHeight": 1.8
+        }
+      }
+    }
+  },
+  {
+    "age": "child",
+    "id": "82dda6fd-00b0-555d-a689-29221f386915",
+    "title": "Metnin Derin Anlamı — Anlama çalışması",
+    "level": 5,
+    "ageGroupId": "10000000-0000-0000-0000-000000000001",
+    "previousConfiguration": {
+      "engineType": "reading_comprehension",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "comprehension",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 5
+    },
+    "configuration": {
+      "engineType": "reading_comprehension",
+      "difficultyLevel": 5,
+      "engineConfig": {
+        "mode": "comprehension",
+        "comprehensionMode": "learning",
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 400,
+          "maxWordCount": 500,
+          "questionCount": 8
+        },
+        "timing": {
+          "minReadingTimeMs": 0,
+          "maxReadingTimeMs": 0
+        },
+        "display": {
+          "fontSize": "large",
+          "lineHeight": 1.8
+        }
+      }
+    }
+  },
+  {
+    "age": "child",
+    "id": "f55aa9d9-7034-577e-a93b-ab42f2aa2381",
+    "title": "Bilgileri Birleştir — Anlama değerlendirmesi",
+    "level": 5,
+    "ageGroupId": "10000000-0000-0000-0000-000000000001",
+    "previousConfiguration": {
+      "engineType": "reading_comprehension",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "comprehension",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 5
+    },
+    "configuration": {
+      "engineType": "reading_comprehension",
+      "difficultyLevel": 5,
+      "engineConfig": {
+        "mode": "comprehension",
+        "comprehensionMode": "evaluation",
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 400,
+          "maxWordCount": 500,
+          "questionCount": 8
+        },
+        "timing": {
+          "minReadingTimeMs": 0,
+          "maxReadingTimeMs": 0
+        },
+        "display": {
+          "fontSize": "large",
+          "lineHeight": 1.8
+        }
+      }
+    }
+  },
+  {
+    "age": "teen",
+    "id": "04aae210-e225-5c1c-ae92-0d9a91bd927f",
+    "title": "Metin Üzerinde Düşün — Anlama çalışması",
+    "level": 1,
+    "ageGroupId": "10000000-0000-0000-0000-000000000002",
+    "previousConfiguration": {
+      "engineType": "reading_comprehension",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "comprehension",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 1
+    },
+    "configuration": {
+      "engineType": "reading_comprehension",
+      "difficultyLevel": 1,
+      "engineConfig": {
+        "mode": "comprehension",
+        "comprehensionMode": "learning",
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 300,
+          "maxWordCount": 400,
+          "questionCount": 6
+        },
+        "timing": {
+          "minReadingTimeMs": 0,
+          "maxReadingTimeMs": 0
+        },
+        "display": {
+          "fontSize": "medium",
+          "lineHeight": 1.8
+        }
+      }
+    }
+  },
+  {
+    "age": "teen",
+    "id": "d14ee4bf-2317-5bef-9b24-40aa15dc3373",
+    "title": "Metni Anla — Anlama değerlendirmesi",
+    "level": 1,
+    "ageGroupId": "10000000-0000-0000-0000-000000000002",
+    "previousConfiguration": {
+      "engineType": "reading_comprehension",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "comprehension",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 1
+    },
+    "configuration": {
+      "engineType": "reading_comprehension",
+      "difficultyLevel": 1,
+      "engineConfig": {
+        "mode": "comprehension",
+        "comprehensionMode": "evaluation",
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 300,
+          "maxWordCount": 400,
+          "questionCount": 6
+        },
+        "timing": {
+          "minReadingTimeMs": 0,
+          "maxReadingTimeMs": 0
+        },
+        "display": {
+          "fontSize": "medium",
+          "lineHeight": 1.8
+        }
+      }
+    }
+  },
+  {
+    "age": "teen",
+    "id": "1c7c5041-ad21-58de-916b-4c6cf4ef8c7a",
+    "title": "Metin Üzerinde Düşün — Anlama çalışması",
+    "level": 2,
+    "ageGroupId": "10000000-0000-0000-0000-000000000002",
+    "previousConfiguration": {
+      "engineType": "reading_comprehension",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "comprehension",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 2
+    },
+    "configuration": {
+      "engineType": "reading_comprehension",
+      "difficultyLevel": 2,
+      "engineConfig": {
+        "mode": "comprehension",
+        "comprehensionMode": "learning",
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 350,
+          "maxWordCount": 450,
+          "questionCount": 6
+        },
+        "timing": {
+          "minReadingTimeMs": 0,
+          "maxReadingTimeMs": 0
+        },
+        "display": {
+          "fontSize": "medium",
+          "lineHeight": 1.8
+        }
+      }
+    }
+  },
+  {
+    "age": "teen",
+    "id": "b583ccc6-6df1-5c21-a1e2-166b4a1a2186",
+    "title": "Metni Anla — Anlama değerlendirmesi",
+    "level": 2,
+    "ageGroupId": "10000000-0000-0000-0000-000000000002",
+    "previousConfiguration": {
+      "engineType": "reading_comprehension",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "comprehension",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 2
+    },
+    "configuration": {
+      "engineType": "reading_comprehension",
+      "difficultyLevel": 2,
+      "engineConfig": {
+        "mode": "comprehension",
+        "comprehensionMode": "evaluation",
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 350,
+          "maxWordCount": 450,
+          "questionCount": 6
+        },
+        "timing": {
+          "minReadingTimeMs": 0,
+          "maxReadingTimeMs": 0
+        },
+        "display": {
+          "fontSize": "medium",
+          "lineHeight": 1.8
+        }
+      }
+    }
+  },
+  {
+    "age": "teen",
+    "id": "f83107f7-0d4d-5b62-9493-75897980b84d",
+    "title": "Metin Üzerinde Düşün — Anlama çalışması",
+    "level": 3,
+    "ageGroupId": "10000000-0000-0000-0000-000000000002",
+    "previousConfiguration": {
+      "engineType": "reading_comprehension",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "comprehension",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 3
+    },
+    "configuration": {
+      "engineType": "reading_comprehension",
+      "difficultyLevel": 3,
+      "engineConfig": {
+        "mode": "comprehension",
+        "comprehensionMode": "learning",
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 400,
+          "maxWordCount": 550,
+          "questionCount": 7
+        },
+        "timing": {
+          "minReadingTimeMs": 0,
+          "maxReadingTimeMs": 0
+        },
+        "display": {
+          "fontSize": "medium",
+          "lineHeight": 1.8
+        }
+      }
+    }
+  },
+  {
+    "age": "teen",
+    "id": "80f3ff18-30cc-51d7-8394-f3b810405928",
+    "title": "Metni Anla — Anlama değerlendirmesi",
+    "level": 3,
+    "ageGroupId": "10000000-0000-0000-0000-000000000002",
+    "previousConfiguration": {
+      "engineType": "reading_comprehension",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "comprehension",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 3
+    },
+    "configuration": {
+      "engineType": "reading_comprehension",
+      "difficultyLevel": 3,
+      "engineConfig": {
+        "mode": "comprehension",
+        "comprehensionMode": "evaluation",
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 400,
+          "maxWordCount": 550,
+          "questionCount": 7
+        },
+        "timing": {
+          "minReadingTimeMs": 0,
+          "maxReadingTimeMs": 0
+        },
+        "display": {
+          "fontSize": "medium",
+          "lineHeight": 1.8
+        }
+      }
+    }
+  },
+  {
+    "age": "teen",
+    "id": "8b111f6a-cba0-51b9-9613-ccae861a9296",
+    "title": "Metin Üzerinde Düşün — Anlama çalışması",
+    "level": 4,
+    "ageGroupId": "10000000-0000-0000-0000-000000000002",
+    "previousConfiguration": {
+      "engineType": "reading_comprehension",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "comprehension",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 4
+    },
+    "configuration": {
+      "engineType": "reading_comprehension",
+      "difficultyLevel": 4,
+      "engineConfig": {
+        "mode": "comprehension",
+        "comprehensionMode": "learning",
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 500,
+          "maxWordCount": 650,
+          "questionCount": 8
+        },
+        "timing": {
+          "minReadingTimeMs": 0,
+          "maxReadingTimeMs": 0
+        },
+        "display": {
+          "fontSize": "medium",
+          "lineHeight": 1.8
+        }
+      }
+    }
+  },
+  {
+    "age": "teen",
+    "id": "1adfb8f3-c66d-5bde-bff7-7ee965ed8f11",
+    "title": "Metni Anla — Anlama değerlendirmesi",
+    "level": 4,
+    "ageGroupId": "10000000-0000-0000-0000-000000000002",
+    "previousConfiguration": {
+      "engineType": "reading_comprehension",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "comprehension",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 4
+    },
+    "configuration": {
+      "engineType": "reading_comprehension",
+      "difficultyLevel": 4,
+      "engineConfig": {
+        "mode": "comprehension",
+        "comprehensionMode": "evaluation",
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 500,
+          "maxWordCount": 650,
+          "questionCount": 8
+        },
+        "timing": {
+          "minReadingTimeMs": 0,
+          "maxReadingTimeMs": 0
+        },
+        "display": {
+          "fontSize": "medium",
+          "lineHeight": 1.8
+        }
+      }
+    }
+  },
+  {
+    "age": "teen",
+    "id": "f450dc08-7aef-5aff-b42b-6ef66aefa794",
+    "title": "Metin Üzerinde Düşün — Anlama çalışması",
+    "level": 5,
+    "ageGroupId": "10000000-0000-0000-0000-000000000002",
+    "previousConfiguration": {
+      "engineType": "reading_comprehension",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "comprehension",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 5
+    },
+    "configuration": {
+      "engineType": "reading_comprehension",
+      "difficultyLevel": 5,
+      "engineConfig": {
+        "mode": "comprehension",
+        "comprehensionMode": "learning",
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 600,
+          "maxWordCount": 750,
+          "questionCount": 8
+        },
+        "timing": {
+          "minReadingTimeMs": 0,
+          "maxReadingTimeMs": 0
+        },
+        "display": {
+          "fontSize": "medium",
+          "lineHeight": 1.8
+        }
+      }
+    }
+  },
+  {
+    "age": "teen",
+    "id": "22002732-5910-5a5a-a219-a5a61e8b9fe6",
+    "title": "Metni Anla — Anlama değerlendirmesi",
+    "level": 5,
+    "ageGroupId": "10000000-0000-0000-0000-000000000002",
+    "previousConfiguration": {
+      "engineType": "reading_comprehension",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "comprehension",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 5
+    },
+    "configuration": {
+      "engineType": "reading_comprehension",
+      "difficultyLevel": 5,
+      "engineConfig": {
+        "mode": "comprehension",
+        "comprehensionMode": "evaluation",
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 600,
+          "maxWordCount": 750,
+          "questionCount": 8
+        },
+        "timing": {
+          "minReadingTimeMs": 0,
+          "maxReadingTimeMs": 0
+        },
+        "display": {
+          "fontSize": "medium",
+          "lineHeight": 1.8
+        }
+      }
+    }
+  },
+  {
+    "age": "young-adult",
+    "id": "02b7c970-24ac-5509-be55-6eaa84668631",
+    "title": "Metin Üzerinde Düşün — Anlama çalışması",
+    "level": 1,
+    "ageGroupId": "10000000-0000-0000-0000-000000000004",
+    "previousConfiguration": {
+      "engineType": "reading_comprehension",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "comprehension",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 1
+    },
+    "configuration": {
+      "engineType": "reading_comprehension",
+      "difficultyLevel": 1,
+      "engineConfig": {
+        "mode": "comprehension",
+        "comprehensionMode": "learning",
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 400,
+          "maxWordCount": 550,
+          "questionCount": 6
+        },
+        "timing": {
+          "minReadingTimeMs": 0,
+          "maxReadingTimeMs": 0
+        },
+        "display": {
+          "fontSize": "medium",
+          "lineHeight": 1.8
+        }
+      }
+    }
+  },
+  {
+    "age": "young-adult",
+    "id": "8d5a3baa-e30f-546f-9205-1d1ffce5b8a6",
+    "title": "Metni Anla — Anlama değerlendirmesi",
+    "level": 1,
+    "ageGroupId": "10000000-0000-0000-0000-000000000004",
+    "previousConfiguration": {
+      "engineType": "reading_comprehension",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "comprehension",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 1
+    },
+    "configuration": {
+      "engineType": "reading_comprehension",
+      "difficultyLevel": 1,
+      "engineConfig": {
+        "mode": "comprehension",
+        "comprehensionMode": "evaluation",
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 400,
+          "maxWordCount": 550,
+          "questionCount": 6
+        },
+        "timing": {
+          "minReadingTimeMs": 0,
+          "maxReadingTimeMs": 0
+        },
+        "display": {
+          "fontSize": "medium",
+          "lineHeight": 1.8
+        }
+      }
+    }
+  },
+  {
+    "age": "young-adult",
+    "id": "96b11146-d60f-5f1c-ba8f-276505b5de1b",
+    "title": "Metin Üzerinde Düşün — Anlama çalışması",
+    "level": 2,
+    "ageGroupId": "10000000-0000-0000-0000-000000000004",
+    "previousConfiguration": {
+      "engineType": "reading_comprehension",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "comprehension",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 2
+    },
+    "configuration": {
+      "engineType": "reading_comprehension",
+      "difficultyLevel": 2,
+      "engineConfig": {
+        "mode": "comprehension",
+        "comprehensionMode": "learning",
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 500,
+          "maxWordCount": 650,
+          "questionCount": 7
+        },
+        "timing": {
+          "minReadingTimeMs": 0,
+          "maxReadingTimeMs": 0
+        },
+        "display": {
+          "fontSize": "medium",
+          "lineHeight": 1.8
+        }
+      }
+    }
+  },
+  {
+    "age": "young-adult",
+    "id": "7f959ef9-d35d-5537-9dec-74ce0f3c88fa",
+    "title": "Metni Anla — Anlama değerlendirmesi",
+    "level": 2,
+    "ageGroupId": "10000000-0000-0000-0000-000000000004",
+    "previousConfiguration": {
+      "engineType": "reading_comprehension",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "comprehension",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 2
+    },
+    "configuration": {
+      "engineType": "reading_comprehension",
+      "difficultyLevel": 2,
+      "engineConfig": {
+        "mode": "comprehension",
+        "comprehensionMode": "evaluation",
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 500,
+          "maxWordCount": 650,
+          "questionCount": 7
+        },
+        "timing": {
+          "minReadingTimeMs": 0,
+          "maxReadingTimeMs": 0
+        },
+        "display": {
+          "fontSize": "medium",
+          "lineHeight": 1.8
+        }
+      }
+    }
+  },
+  {
+    "age": "young-adult",
+    "id": "dc7cea81-de71-52cf-9bc8-4184c2d11477",
+    "title": "Metin Üzerinde Düşün — Anlama çalışması",
+    "level": 3,
+    "ageGroupId": "10000000-0000-0000-0000-000000000004",
+    "previousConfiguration": {
+      "engineType": "reading_comprehension",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "comprehension",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 3
+    },
+    "configuration": {
+      "engineType": "reading_comprehension",
+      "difficultyLevel": 3,
+      "engineConfig": {
+        "mode": "comprehension",
+        "comprehensionMode": "learning",
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 600,
+          "maxWordCount": 750,
+          "questionCount": 8
+        },
+        "timing": {
+          "minReadingTimeMs": 0,
+          "maxReadingTimeMs": 0
+        },
+        "display": {
+          "fontSize": "medium",
+          "lineHeight": 1.8
+        }
+      }
+    }
+  },
+  {
+    "age": "young-adult",
+    "id": "ee2cab8c-31a1-5ebe-9b53-dc95045d49de",
+    "title": "Metni Anla — Anlama değerlendirmesi",
+    "level": 3,
+    "ageGroupId": "10000000-0000-0000-0000-000000000004",
+    "previousConfiguration": {
+      "engineType": "reading_comprehension",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "comprehension",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 3
+    },
+    "configuration": {
+      "engineType": "reading_comprehension",
+      "difficultyLevel": 3,
+      "engineConfig": {
+        "mode": "comprehension",
+        "comprehensionMode": "evaluation",
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 600,
+          "maxWordCount": 750,
+          "questionCount": 8
+        },
+        "timing": {
+          "minReadingTimeMs": 0,
+          "maxReadingTimeMs": 0
+        },
+        "display": {
+          "fontSize": "medium",
+          "lineHeight": 1.8
+        }
+      }
+    }
+  },
+  {
+    "age": "young-adult",
+    "id": "a339489a-5cdd-5e00-8b6a-f8e4114897fb",
+    "title": "Metin Üzerinde Düşün — Anlama çalışması",
+    "level": 4,
+    "ageGroupId": "10000000-0000-0000-0000-000000000004",
+    "previousConfiguration": {
+      "engineType": "reading_comprehension",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "comprehension",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 4
+    },
+    "configuration": {
+      "engineType": "reading_comprehension",
+      "difficultyLevel": 4,
+      "engineConfig": {
+        "mode": "comprehension",
+        "comprehensionMode": "learning",
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 700,
+          "maxWordCount": 900,
+          "questionCount": 8
+        },
+        "timing": {
+          "minReadingTimeMs": 0,
+          "maxReadingTimeMs": 0
+        },
+        "display": {
+          "fontSize": "medium",
+          "lineHeight": 1.8
+        }
+      }
+    }
+  },
+  {
+    "age": "young-adult",
+    "id": "d47007eb-d1af-5a1c-82a9-e35db8770770",
+    "title": "Metni Anla — Anlama değerlendirmesi",
+    "level": 4,
+    "ageGroupId": "10000000-0000-0000-0000-000000000004",
+    "previousConfiguration": {
+      "engineType": "reading_comprehension",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "comprehension",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 4
+    },
+    "configuration": {
+      "engineType": "reading_comprehension",
+      "difficultyLevel": 4,
+      "engineConfig": {
+        "mode": "comprehension",
+        "comprehensionMode": "evaluation",
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 700,
+          "maxWordCount": 900,
+          "questionCount": 8
+        },
+        "timing": {
+          "minReadingTimeMs": 0,
+          "maxReadingTimeMs": 0
+        },
+        "display": {
+          "fontSize": "medium",
+          "lineHeight": 1.8
+        }
+      }
+    }
+  },
+  {
+    "age": "young-adult",
+    "id": "3fad2018-c1e6-54e0-8e86-79dedadeb1ea",
+    "title": "Metin Üzerinde Düşün — Anlama çalışması",
+    "level": 5,
+    "ageGroupId": "10000000-0000-0000-0000-000000000004",
+    "previousConfiguration": {
+      "engineType": "reading_comprehension",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "comprehension",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 5
+    },
+    "configuration": {
+      "engineType": "reading_comprehension",
+      "difficultyLevel": 5,
+      "engineConfig": {
+        "mode": "comprehension",
+        "comprehensionMode": "learning",
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 850,
+          "maxWordCount": 1050,
+          "questionCount": 10
+        },
+        "timing": {
+          "minReadingTimeMs": 0,
+          "maxReadingTimeMs": 0
+        },
+        "display": {
+          "fontSize": "medium",
+          "lineHeight": 1.8
+        }
+      }
+    }
+  },
+  {
+    "age": "young-adult",
+    "id": "de8896ef-0e11-538b-9f9c-579b61ebf267",
+    "title": "Metni Anla — Anlama değerlendirmesi",
+    "level": 5,
+    "ageGroupId": "10000000-0000-0000-0000-000000000004",
+    "previousConfiguration": {
+      "engineType": "reading_comprehension",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "comprehension",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 5
+    },
+    "configuration": {
+      "engineType": "reading_comprehension",
+      "difficultyLevel": 5,
+      "engineConfig": {
+        "mode": "comprehension",
+        "comprehensionMode": "evaluation",
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 850,
+          "maxWordCount": 1050,
+          "questionCount": 10
+        },
+        "timing": {
+          "minReadingTimeMs": 0,
+          "maxReadingTimeMs": 0
+        },
+        "display": {
+          "fontSize": "medium",
+          "lineHeight": 1.8
+        }
+      }
+    }
+  },
+  {
+    "age": "adult",
+    "id": "0cd5938f-f2c1-52b5-afa0-e9a5241ab779",
+    "title": "Metin Üzerinde Düşün — Anlama çalışması",
+    "level": 1,
+    "ageGroupId": "10000000-0000-0000-0000-000000000003",
+    "previousConfiguration": {
+      "engineType": "reading_comprehension",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "comprehension",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 1
+    },
+    "configuration": {
+      "engineType": "reading_comprehension",
+      "difficultyLevel": 1,
+      "engineConfig": {
+        "mode": "comprehension",
+        "comprehensionMode": "learning",
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 450,
+          "maxWordCount": 600,
+          "questionCount": 6
+        },
+        "timing": {
+          "minReadingTimeMs": 0,
+          "maxReadingTimeMs": 0
+        },
+        "display": {
+          "fontSize": "medium",
+          "lineHeight": 1.8
+        }
+      }
+    }
+  },
+  {
+    "age": "adult",
+    "id": "02c2ad5d-5b89-5e64-b781-26a8b8faf8f2",
+    "title": "Metni Anla — Anlama değerlendirmesi",
+    "level": 1,
+    "ageGroupId": "10000000-0000-0000-0000-000000000003",
+    "previousConfiguration": {
+      "engineType": "reading_comprehension",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "comprehension",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 1
+    },
+    "configuration": {
+      "engineType": "reading_comprehension",
+      "difficultyLevel": 1,
+      "engineConfig": {
+        "mode": "comprehension",
+        "comprehensionMode": "evaluation",
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 450,
+          "maxWordCount": 600,
+          "questionCount": 6
+        },
+        "timing": {
+          "minReadingTimeMs": 0,
+          "maxReadingTimeMs": 0
+        },
+        "display": {
+          "fontSize": "medium",
+          "lineHeight": 1.8
+        }
+      }
+    }
+  },
+  {
+    "age": "adult",
+    "id": "10e5497c-e4ea-584d-a3da-eb73ce98840a",
+    "title": "Metin Üzerinde Düşün — Anlama çalışması",
+    "level": 2,
+    "ageGroupId": "10000000-0000-0000-0000-000000000003",
+    "previousConfiguration": {
+      "engineType": "reading_comprehension",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "comprehension",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 2
+    },
+    "configuration": {
+      "engineType": "reading_comprehension",
+      "difficultyLevel": 2,
+      "engineConfig": {
+        "mode": "comprehension",
+        "comprehensionMode": "learning",
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 550,
+          "maxWordCount": 700,
+          "questionCount": 7
+        },
+        "timing": {
+          "minReadingTimeMs": 0,
+          "maxReadingTimeMs": 0
+        },
+        "display": {
+          "fontSize": "medium",
+          "lineHeight": 1.8
+        }
+      }
+    }
+  },
+  {
+    "age": "adult",
+    "id": "57765ece-7301-5bda-aabb-4b3174184272",
+    "title": "Metni Anla — Anlama değerlendirmesi",
+    "level": 2,
+    "ageGroupId": "10000000-0000-0000-0000-000000000003",
+    "previousConfiguration": {
+      "engineType": "reading_comprehension",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "comprehension",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 2
+    },
+    "configuration": {
+      "engineType": "reading_comprehension",
+      "difficultyLevel": 2,
+      "engineConfig": {
+        "mode": "comprehension",
+        "comprehensionMode": "evaluation",
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 550,
+          "maxWordCount": 700,
+          "questionCount": 7
+        },
+        "timing": {
+          "minReadingTimeMs": 0,
+          "maxReadingTimeMs": 0
+        },
+        "display": {
+          "fontSize": "medium",
+          "lineHeight": 1.8
+        }
+      }
+    }
+  },
+  {
+    "age": "adult",
+    "id": "80d652d9-4cc7-5363-94a2-f21479eb8614",
+    "title": "Metin Üzerinde Düşün — Anlama çalışması",
+    "level": 3,
+    "ageGroupId": "10000000-0000-0000-0000-000000000003",
+    "previousConfiguration": {
+      "engineType": "reading_comprehension",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "comprehension",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 3
+    },
+    "configuration": {
+      "engineType": "reading_comprehension",
+      "difficultyLevel": 3,
+      "engineConfig": {
+        "mode": "comprehension",
+        "comprehensionMode": "learning",
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 650,
+          "maxWordCount": 850,
+          "questionCount": 8
+        },
+        "timing": {
+          "minReadingTimeMs": 0,
+          "maxReadingTimeMs": 0
+        },
+        "display": {
+          "fontSize": "medium",
+          "lineHeight": 1.8
+        }
+      }
+    }
+  },
+  {
+    "age": "adult",
+    "id": "ba183ab1-1064-5a05-9d0f-2f48caca8b5e",
+    "title": "Metni Anla — Anlama değerlendirmesi",
+    "level": 3,
+    "ageGroupId": "10000000-0000-0000-0000-000000000003",
+    "previousConfiguration": {
+      "engineType": "reading_comprehension",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "comprehension",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 3
+    },
+    "configuration": {
+      "engineType": "reading_comprehension",
+      "difficultyLevel": 3,
+      "engineConfig": {
+        "mode": "comprehension",
+        "comprehensionMode": "evaluation",
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 650,
+          "maxWordCount": 850,
+          "questionCount": 8
+        },
+        "timing": {
+          "minReadingTimeMs": 0,
+          "maxReadingTimeMs": 0
+        },
+        "display": {
+          "fontSize": "medium",
+          "lineHeight": 1.8
+        }
+      }
+    }
+  },
+  {
+    "age": "adult",
+    "id": "8afb9fa4-3e7f-5476-93a1-c19e870f8c64",
+    "title": "Metin Üzerinde Düşün — Anlama çalışması",
+    "level": 4,
+    "ageGroupId": "10000000-0000-0000-0000-000000000003",
+    "previousConfiguration": {
+      "engineType": "reading_comprehension",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "comprehension",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 4
+    },
+    "configuration": {
+      "engineType": "reading_comprehension",
+      "difficultyLevel": 4,
+      "engineConfig": {
+        "mode": "comprehension",
+        "comprehensionMode": "learning",
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 800,
+          "maxWordCount": 1000,
+          "questionCount": 10
+        },
+        "timing": {
+          "minReadingTimeMs": 0,
+          "maxReadingTimeMs": 0
+        },
+        "display": {
+          "fontSize": "medium",
+          "lineHeight": 1.8
+        }
+      }
+    }
+  },
+  {
+    "age": "adult",
+    "id": "82dacded-c3a8-5bc7-9c4a-47a0f3baea68",
+    "title": "Metni Anla — Anlama değerlendirmesi",
+    "level": 4,
+    "ageGroupId": "10000000-0000-0000-0000-000000000003",
+    "previousConfiguration": {
+      "engineType": "reading_comprehension",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "comprehension",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 4
+    },
+    "configuration": {
+      "engineType": "reading_comprehension",
+      "difficultyLevel": 4,
+      "engineConfig": {
+        "mode": "comprehension",
+        "comprehensionMode": "evaluation",
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 800,
+          "maxWordCount": 1000,
+          "questionCount": 10
+        },
+        "timing": {
+          "minReadingTimeMs": 0,
+          "maxReadingTimeMs": 0
+        },
+        "display": {
+          "fontSize": "medium",
+          "lineHeight": 1.8
+        }
+      }
+    }
+  },
+  {
+    "age": "adult",
+    "id": "30b894a2-0ca5-5fec-8e74-a3635d417f81",
+    "title": "Metin Üzerinde Düşün — Anlama çalışması",
+    "level": 5,
+    "ageGroupId": "10000000-0000-0000-0000-000000000003",
+    "previousConfiguration": {
+      "engineType": "reading_comprehension",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "comprehension",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 5
+    },
+    "configuration": {
+      "engineType": "reading_comprehension",
+      "difficultyLevel": 5,
+      "engineConfig": {
+        "mode": "comprehension",
+        "comprehensionMode": "learning",
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 950,
+          "maxWordCount": 1200,
+          "questionCount": 10
+        },
+        "timing": {
+          "minReadingTimeMs": 0,
+          "maxReadingTimeMs": 0
+        },
+        "display": {
+          "fontSize": "medium",
+          "lineHeight": 1.8
+        }
+      }
+    }
+  },
+  {
+    "age": "adult",
+    "id": "4d0ea863-0b60-5f35-8c22-f60f856b1414",
+    "title": "Metni Anla — Anlama değerlendirmesi",
+    "level": 5,
+    "ageGroupId": "10000000-0000-0000-0000-000000000003",
+    "previousConfiguration": {
+      "engineType": "reading_comprehension",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "comprehension",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 5
+    },
+    "configuration": {
+      "engineType": "reading_comprehension",
+      "difficultyLevel": 5,
+      "engineConfig": {
+        "mode": "comprehension",
+        "comprehensionMode": "evaluation",
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 950,
+          "maxWordCount": 1200,
+          "questionCount": 10
+        },
+        "timing": {
+          "minReadingTimeMs": 0,
+          "maxReadingTimeMs": 0
+        },
+        "display": {
+          "fontSize": "medium",
+          "lineHeight": 1.8
+        }
+      }
+    }
+  }
+]
