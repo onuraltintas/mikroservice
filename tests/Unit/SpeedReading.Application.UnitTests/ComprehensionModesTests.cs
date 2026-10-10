@@ -78,6 +78,22 @@ public sealed class ComprehensionModesTests
             """{"engineType":"reading_comprehension","engineConfig":{"comprehensionMode":"shortcut"}}""", "reading_comprehension"));
     }
 
+    [Fact]
+    public async Task Learning_does_not_raise_the_independent_adaptive_comprehension_profile()
+    {
+        await using var db = Context();
+        var (service, user, exercise) = await Seed(db, "learning");
+        var started = await service.StartAsync(user, new() { ExerciseId = exercise });
+        await FinishReading(db, service, user, started.SessionId);
+        await service.ValidateActionAsync(user, started.SessionId, new() { Action = "answer_question",
+            QuestionId = started.InitialData.GetProperty("questions")[0].GetProperty("questionId").GetGuid(), Answer = "A" });
+        await service.CompleteAsync(user, started.SessionId, new());
+        var implementation = typeof(OwnedSpeedReadingDbContext).Assembly.GetType("SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingAdaptiveLearning")!;
+        var adaptive = (SpeedReading.Application.AdaptiveLearning.ISpeedReadingAdaptiveLearning)Activator.CreateInstance(implementation,
+            BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, [db], null)!;
+        Assert.Equal(0m, (await adaptive.GetProfileAsync(user)).AverageComprehension);
+    }
+
     private static OwnedSpeedReadingDbContext Context() => new(new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>()
         .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
 
