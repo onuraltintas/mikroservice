@@ -37,6 +37,8 @@ public sealed class YoungAdultProgramReplacementPostgresTests(PostgresFixture po
     [InlineData("invalid-type")]
     [InlineData("wrong-source-age")]
     [InlineData("wrong-approval")]
+    [InlineData("wrong-old-level")]
+    [InlineData("multiple-approvals")]
     [InlineData("review")]
     [InlineData("assessment")]
     [InlineData("shared-session")]
@@ -74,7 +76,8 @@ public sealed class YoungAdultProgramReplacementPostgresTests(PostgresFixture po
             var unrelatedProgress = StudentProgramProgress.Start(Guid.NewGuid(), actor, child, 40, 2, actor, DateTime.UtcNow);
             db.StudentProgramProgresses.Add(unrelatedProgress);
             var testUser = Guid.NewGuid();
-            var testProgress = StudentProgramProgress.Start(Guid.NewGuid(), testUser, oldTemplates[0], 0, 0, actor, DateTime.UtcNow);
+            var testProgress = StudentProgramProgress.Start(Guid.NewGuid(), testUser,
+                mode == "wrong-old-level" ? oldTemplates[1] : oldTemplates[0], 0, 0, actor, DateTime.UtcNow);
             db.StudentProgramProgresses.Add(testProgress);
             var exercise = db.Exercises.Local.First();
             var preservedSession = ExerciseSession.Start(testUser, exercise.Id, null, 1, DateTime.UtcNow, null);
@@ -129,7 +132,13 @@ public sealed class YoungAdultProgramReplacementPostgresTests(PostgresFixture po
                 await using var command = new NpgsqlCommand(script, connection);
                 command.Parameters.Add(new NpgsqlParameter("plan_json", NpgsqlDbType.Jsonb) { Value = planJson });
                 command.Parameters.Add(new NpgsqlParameter("approved_progress_json", NpgsqlDbType.Jsonb)
-                { Value = JsonSerializer.Serialize(mode == "history" ? Array.Empty<Guid>() : new[] { mode == "wrong-approval" ? unrelatedProgress.Id : testProgress.Id }) });
+                { Value = JsonSerializer.Serialize(mode switch
+                  {
+                      "history" => Array.Empty<Guid>(),
+                      "multiple-approvals" => new[] { testProgress.Id, Guid.NewGuid() },
+                      "wrong-approval" => new[] { unrelatedProgress.Id },
+                      _ => new[] { testProgress.Id }
+                  }) });
                 await command.ExecuteNonQueryAsync();
             }
             if (mode != "normal")
