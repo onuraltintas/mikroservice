@@ -5,6 +5,16 @@ namespace SpeedReading.Application.UnitTests;
 
 public sealed class GuidedReadingPackTests
 {
+    [Theory]
+    [InlineData("\"engineConfig\":{\"content\":{\"minWordCount\":-1}}")]
+    [InlineData("\"engineConfig\":{\"content\":{\"minWordCount\":\"200\"}}")]
+    [InlineData("\"engineConfig\":{\"content\":{\"minWordCount\":400,\"maxWordCount\":300}}")]
+    [InlineData("\"content\":{\"minWordCount\":100},\"engineConfig\":{\"content\":{\"minWordCount\":200}}")]
+    public void Invalid_or_conflicting_text_bands_cannot_be_published(string fields)
+    {
+        Assert.Throws<ArgumentException>(() => ExerciseConfigurationRules.ValidateActiveConfiguration(
+            "{\"engineType\":\"word_highlight\"," + fields + "}", "word_highlight"));
+    }
     [Fact]
     public void Pack_preserves_twenty_speeds_and_declares_valid_duration_and_text_bands()
     {
