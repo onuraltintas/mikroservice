@@ -354,7 +354,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                             || item.TargetAgeGroupId == profileAgeGroupId.Value)
                         && (item.ExerciseId == null || item.ExerciseId == request.ExerciseId)
                         && (comprehensionQuestionCount == 0 || db.ReadingQuestions.Count(question =>
-                            question.ReadingTextId == item.Id && !question.IsDeleted && question.Type == 1
+                            question.ReadingTextId == item.Id && !question.IsDeleted && question.Type >= 1 && question.Type <= 3
                             && question.BloomLevel >= 1 && question.BloomLevel <= 6
                             && (question.CorrectAnswer.Trim().ToUpper() == "A" || question.CorrectAnswer.Trim().ToUpper() == "B"
                                 || question.CorrectAnswer.Trim().ToUpper() == "C" || question.CorrectAnswer.Trim().ToUpper() == "D")
@@ -1544,7 +1544,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                 ?? ReadPositiveInt(ReadObject(config, "content"), "questionCount");
             if (count.HasValue)
             {
-                state.Questions = state.Questions.Where(question => question.QuestionType == 1
+                state.Questions = state.Questions.Where(question => question.QuestionType is >= 1 and <= 3
                     && question.BloomLevel is >= 1 and <= 6
                     && !string.IsNullOrWhiteSpace(question.OptionA) && !string.IsNullOrWhiteSpace(question.OptionB)
                     && !string.IsNullOrWhiteSpace(question.OptionC) && !string.IsNullOrWhiteSpace(question.OptionD)).ToList();
