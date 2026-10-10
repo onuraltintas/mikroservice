@@ -4,6 +4,7 @@ using SpeedReading.Domain.Catalog;
 using SpeedReading.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using System.Reflection;
+using System.Text.Json;
 
 namespace SpeedReading.Application.UnitTests;
 
@@ -51,6 +52,32 @@ public sealed class AssignedProgramScheduleTests
             [db, template, null, CancellationToken.None])!;
 
         await action.Should().ThrowAsync<EduPlatform.Shared.Kernel.Exceptions.BusinessRuleException>();
+    }
+
+    [Fact]
+    public async Task Repeated_exercise_has_two_independent_orders_in_the_assigned_day()
+    {
+        await using var db = new OwnedSpeedReadingDbContext(
+            new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>()
+                .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
+        var typeId = Guid.NewGuid();
+        var exerciseId = Guid.NewGuid();
+        db.ExerciseTypes.Add(ExerciseType.Create(typeId, "Fixation", "Fixation", "focus"));
+        db.Exercises.Add(Exercise.Create("Exercise", "Fixation", "{}", 1, exerciseId, typeId));
+        await db.SaveChangesAsync();
+        var template = ProgramTemplate.Import(Guid.NewGuid(), "Repeated program", "", Guid.NewGuid(), 0, 100,
+            "{\"week1\":{\"day1\":[{\"Type\":\"Fixation\",\"Count\":2,\"Difficulty\":1}]}}",
+            1, 1, 2, 1, 1, true, 1, 0, null, false, DateTime.UtcNow, null, null, null);
+        var type = typeof(OwnedSpeedReadingDbContext).Assembly.GetType(
+            "SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingProgramSchedule")!;
+        var method = type.GetMethod("BuildAsync", BindingFlags.Static | BindingFlags.Public)!;
+        var json = await (Task<string>)method.Invoke(null, [db, template, null, CancellationToken.None])!;
+        using var schedule = JsonDocument.Parse(json);
+        var slots = schedule.RootElement.EnumerateArray().ToList();
+
+        slots.Should().HaveCount(2);
+        slots.Select(slot => slot.GetProperty("Order").GetInt32()).Should().Equal(1, 2);
+        slots.Select(slot => slot.GetProperty("ExerciseId").GetGuid()).Should().OnlyContain(id => id == exerciseId);
     }
 
     [Fact]
