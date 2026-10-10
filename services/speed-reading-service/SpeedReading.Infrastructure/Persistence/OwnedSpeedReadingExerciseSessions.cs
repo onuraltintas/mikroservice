@@ -2901,7 +2901,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
 
     private static decimal? CalculateReadingWpm(SessionState state, int fallbackSeconds)
     {
-        if (!SupportsServerReadingMeasurement(state)) return null;
+        if (state.ComprehensionMode == "learning" || !SupportsServerReadingMeasurement(state)) return null;
         var seconds = state.ReadingPausedMilliseconds.HasValue
             ? (decimal)Math.Max(0, (state.ReadingEndTime!.Value - state.ReadingStartTime!.Value).TotalMilliseconds
                 - state.ReadingPausedMilliseconds.Value) / 1000m
