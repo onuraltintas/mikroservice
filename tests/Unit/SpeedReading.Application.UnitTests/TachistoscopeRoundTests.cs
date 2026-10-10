@@ -41,7 +41,7 @@ public sealed class TachistoscopeRoundTests
     }
 
     [Fact]
-    public void Two_consecutive_correct_answers_increase_length_and_shorten_display()
+    public void Adaptation_waits_for_a_complete_five_trial_block_and_changes_only_duration()
     {
         var state = new TachistoscopeState { DisplayDurationMs = 500, TargetLength = 3, Pool = ["bir", "masa", "kalem"] };
         state.Record("bir", "bir", 100);
@@ -49,8 +49,34 @@ public sealed class TachistoscopeRoundTests
         state.Record("bir", "bir", 100);
         state.TargetLength.Should().Be(3);
         state.Record("bir", "bir", 100);
-        state.TargetLength.Should().Be(4);
+        state.TargetLength.Should().Be(3);
+        state.DisplayDurationMs.Should().Be(500);
+        state.Record("bir", "bir", 100);
+        state.TargetLength.Should().Be(3);
         state.DisplayDurationMs.Should().Be(450);
+    }
+
+    [Theory]
+    [InlineData(0, 550)]
+    [InlineData(2, 550)]
+    [InlineData(3, 500)]
+    [InlineData(4, 450)]
+    [InlineData(5, 450)]
+    public void Completed_blocks_adjust_duration_from_accuracy(int correctCount, int expectedDuration)
+    {
+        var state = new TachistoscopeState { DisplayDurationMs = 500, InitialDurationMs = 500, TargetLength = 3 };
+        for (var i = 0; i < 5; i++) state.Record("123", i < correctCount ? "123" : "wrong", 100);
+        state.DisplayDurationMs.Should().Be(expectedDuration);
+        state.TargetLength.Should().Be(3);
+    }
+
+    [Fact]
+    public void Final_partial_block_does_not_change_settings()
+    {
+        var state = new TachistoscopeState { DisplayDurationMs = 500, TargetLength = 3 };
+        for (var i = 0; i < 4; i++) state.Record("123", "123", 100);
+        state.DisplayDurationMs.Should().Be(500);
+        state.TargetLength.Should().Be(3);
     }
 
     [Fact]

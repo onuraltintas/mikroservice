@@ -68,17 +68,45 @@ describe('Tachistoscope runtime', () => {
     engine.destroy();
   });
 
-  it('increases target word length after consecutive preview successes', fakeAsync(() => {
+  it('waits for five answers and adjusts duration without also increasing length', fakeAsync(() => {
     const { engine } = create({ Words: ['bir', 'iki', 'masa', 'kapı', 'kalem'],
-      DisplayDurationMs: 500, content: { count: 3 }, adaptive: { enabled: true } });
+      DisplayDurationMs: 500, content: { count: 6 }, adaptive: { enabled: true } });
     engine.start();
     for (let round = 0; round < 2; round++) {
       tick(engine.getCurrentDuration());
       engine.handleInput({ answer: engine.getCurrentStimulus() });
       tick(600);
     }
+    expect(engine.getCurrentDuration()).toBe(500);
+    expect(engine.getCurrentStimulus().length).toBe(3);
+    for (let round = 2; round < 5; round++) {
+      tick(engine.getCurrentDuration());
+      engine.handleInput({ answer: engine.getCurrentStimulus() });
+      tick(600);
+    }
     expect(engine.getCurrentDuration()).toBe(450);
-    expect(engine.getCurrentStimulus().length).toBe(4);
+    expect(engine.getCurrentStimulus().length).toBe(3);
+    engine.destroy();
+  }));
+
+  it('uses the same legacy number length as the server, not two-times-level', () => {
+    const { engine } = create({ content: { type: 'number', count: 2 }, difficultyLevel: 5 });
+    engine.start();
+    expect(engine.getCurrentStimulus().length).toBe(7);
+    engine.destroy();
+  });
+
+  it('uses the explicit starting length and keeps assessment adaptation disabled', fakeAsync(() => {
+    const { engine } = create({ difficultyLevel: 5, isAssessmentMode: true,
+      timing: { durationMs: 500 }, content: { type: 'number', length: 4, count: 6 },
+      adaptive: { enabled: true, minLength: 3, maxLength: 5 } });
+    engine.start();
+    for (let round = 0; round < 5; round++) {
+      expect(engine.getCurrentStimulus().length).toBe(4);
+      tick(engine.getCurrentDuration());
+      engine.handleInput({ answer: engine.getCurrentStimulus() }); tick(600);
+    }
+    expect(engine.getCurrentDuration()).toBe(500);
     engine.destroy();
   }));
 
