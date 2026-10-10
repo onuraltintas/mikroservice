@@ -16,6 +16,23 @@ function callbacks(onComplete: (result: EngineResult) => void): EngineCallbacks 
 }
 
 describe('ScanFindEngine', () => {
+  it('honors age-appropriate target length bounds', () => {
+    const engine = new ScanFindEngine();
+    engine.initialize({ content: { text: 'ev okul kitap kütüphanemizde' }, targetCount: 2,
+      targets: { minLength: 3, maxLength: 5 } }, callbacks(() => undefined));
+    expect(engine.getTargetWords().sort()).toEqual(['kitap', 'okul']);
+    engine.destroy();
+  });
+
+  it('keeps information tasks usable when custom preview changes target count', () => {
+    const engine = new ScanFindEngine();
+    engine.initialize({ readingTextId: 'id', content: { text: 'Derya 24 okul kitap' }, targetCount: 3,
+      targets: { tasksByTextId: { id: [{ answer: 'Derya', prompt: 'Kim?' }, { answer: '24', prompt: 'Kaç kişi?' }] } }
+    }, callbacks(() => undefined));
+    expect(engine.getTargetWords().length).toBe(3);
+    expect(engine.getTargetLabel('derya')).toBe('Kim?');
+    engine.destroy();
+  });
   it('fails instead of inventing a fallback passage', () => {
     const engine = new ScanFindEngine();
     expect(() => engine.initialize({ targetCount: 3 }, callbacks(() => undefined))).toThrowError(/metin/i);

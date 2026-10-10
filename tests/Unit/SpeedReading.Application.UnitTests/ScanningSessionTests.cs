@@ -216,6 +216,26 @@ public sealed class ScanningSessionTests
     }
 
     [Fact]
+    public async Task Target_length_bounds_are_enforced_without_longest_word_bias()
+    {
+        await using var db = Context();
+        var (_, _, started) = await Start(db, """{"engineConfig":{"targetCount":2,"targets":{"minLength":4,"maxLength":4}}}""");
+        started.InitialData.GetProperty("scanningRounds")[0].GetProperty("targets").EnumerateArray()
+            .Select(value => value.GetString()).Should().BeEquivalentTo("ışık", "inci");
+    }
+
+    [Theory]
+    [InlineData("{\"minLength\":0}")]
+    [InlineData("{\"minLength\":5,\"maxLength\":3}")]
+    [InlineData("{\"tasksByTextId\":{\"not-an-id\":[]}}")]
+    public void Invalid_target_policies_are_rejected(string targets)
+    {
+        var validate = () => ExerciseConfigurationRules.ValidateActiveConfiguration(
+            "{\"engineType\":\"scanning\",\"engineConfig\":{\"targets\":" + targets + "}}", "scanning");
+        validate.Should().Throw<ArgumentException>();
+    }
+
+    [Fact]
     public async Task Curated_information_tasks_are_selected_from_the_matching_real_text()
     {
         await using var db = Context();
