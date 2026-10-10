@@ -7,7 +7,8 @@ SET LOCAL statement_timeout = '120s';
 LOCK TABLE speed_reading.program_templates, speed_reading.student_program_progress IN SHARE ROW EXCLUSIVE MODE;
 LOCK TABLE speed_reading.daily_exercise_logs, speed_reading.exercise_sessions,
   speed_reading.exercise_session_results, speed_reading.exercise_session_answers,
-  speed_reading.assessment_attempts, speed_reading.review_items IN SHARE ROW EXCLUSIVE MODE;
+  speed_reading.assessment_attempts, speed_reading.review_items,
+  speed_reading.review_completions IN SHARE ROW EXCLUSIVE MODE;
 LOCK TABLE speed_reading.exercises, speed_reading.exercise_types IN SHARE MODE;
 CREATE TEMP TABLE young_adult_plan_v2_input ON COMMIT DROP AS SELECT :'plan_json'::jsonb AS plan;
 CREATE TEMP TABLE young_adult_approved_progress ON COMMIT DROP AS
@@ -78,6 +79,19 @@ CREATE TEMP TABLE young_adult_target_logs ON COMMIT DROP AS
   JOIN young_adult_program_v2_ids m ON m.old_id=p."ProgramTemplateId"
   JOIN young_adult_approved_progress a ON a.id=p.id;
 DO $$ BEGIN
+  -- An absent approved progress is allowed only for a verified idempotent rerun.
+  IF EXISTS (SELECT 1 FROM speed_reading.student_program_progress p
+      JOIN young_adult_approved_progress a ON a.id=p.id)
+    AND ((SELECT count(*) FROM young_adult_target_logs)<>3
+      OR (SELECT count(DISTINCT session_id) FROM young_adult_target_logs)<>3
+      OR (SELECT count(*) FROM speed_reading.exercise_session_results
+        WHERE session_id IN(SELECT session_id FROM young_adult_target_logs))<>3) THEN
+    RAISE EXCEPTION 'Expected exactly three approved logged sessions and results';
+  END IF;
+  IF EXISTS (SELECT 1 FROM speed_reading.review_completions
+    WHERE session_id IN(SELECT session_id FROM young_adult_target_logs)) THEN
+    RAISE EXCEPTION 'Approved sessions are referenced by review history';
+  END IF;
   IF EXISTS (SELECT 1 FROM young_adult_target_logs l
       JOIN speed_reading.student_program_progress p ON p.id=l."StudentProgramProgressId"
       LEFT JOIN speed_reading.exercise_sessions s ON s.id=l.session_id
