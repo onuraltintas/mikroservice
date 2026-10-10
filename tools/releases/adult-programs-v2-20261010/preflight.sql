@@ -1,5 +1,10 @@
 BEGIN READ ONLY;
 DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM speed_reading.age_group_configurations
+    WHERE id='10000000-0000-0000-0000-000000000003' AND "Name"='Adult'
+      AND "MinAge"=22 AND "MaxAge" IS NULL AND "IsActive" AND NOT "IsDeleted") THEN
+    RAISE EXCEPTION 'Adult age range changed; review before publication';
+  END IF;
   IF NOT EXISTS (SELECT 1 FROM speed_reading.program_templates WHERE id='55ac59f6-e75b-42ee-822a-ed4acd9cdddb'
     AND "IsAssessment" AND "IsActive" AND NOT "IsDeleted"
     AND "TargetAgeGroupConfigurationId"='10000000-0000-0000-0000-000000000003') THEN

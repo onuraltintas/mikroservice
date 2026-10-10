@@ -123,6 +123,12 @@ public sealed class AdultProgramReplacementPostgresTests(PostgresFixture postgre
                 var typeNames = await db.ExerciseTypes.ToDictionaryAsync(item => item.Id, item => item.Name);
                 foreach (var template in templates)
                 {
+                    var source = oldTemplates.Single(item => item.InitialDifficultyLevel == template.InitialDifficultyLevel);
+                    Assert.Equal(source.MinAssessmentScore, template.MinAssessmentScore);
+                    Assert.Equal(source.MaxAssessmentScore, template.MaxAssessmentScore);
+                    Assert.Equal(source.MaxDifficultyLevel, template.MaxDifficultyLevel);
+                    Assert.Equal(source.ProgramType, template.ProgramType);
+                    Assert.Equal(source.ExamType, template.ExamType);
                     Assert.Equal(0, template.WeeksPerDifficultyIncrease);
                     Assert.Equal(28, template.TotalDays);
                     Assert.Equal(Math.Min(template.InitialDifficultyLevel + 1, 5), template.MaxDifficultyLevel);
