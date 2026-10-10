@@ -168,7 +168,8 @@ export function getCustomPreviewControls(configuration: Record<string, unknown>)
         : read('targetWpm') ?? read('wpm') ?? pacer['speedwpm'] ?? fading['speedwpm'] ?? legacyTempo;
       const controls = [control('speedWpm', grouping || configuration['engineType'] === 'subvocalization_reduction'
         ? 'Gösterim temposu (kelime/dakika)' : 'Okuma hızı (kelime/dakika)', 20, 1500, pace)];
-      if (configuration['engineType'] !== 'text_fade') controls.push(control('chunkSize', 'Kelime grubu', 1, 10, groupSize));
+      const speedReading = grouping && ['guided', 'speed_reading'].includes(String(read('mode')));
+      if (configuration['engineType'] !== 'text_fade' && !speedReading) controls.push(control('chunkSize', 'Kelime grubu', 1, 10, groupSize));
       return controls;
     }
   }
