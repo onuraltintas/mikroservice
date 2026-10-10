@@ -223,9 +223,9 @@ public static class ExerciseConfigurationRules
                 ValidateConsistentStrings(scopes.SelectMany(scope => ReadStrings(scope, "comprehensionMode")), "Anlama modu");
                 foreach (var key in new[] { "minWordCount", "maxWordCount", "questionCount" })
                     ValidateConsistentValues(scopes.SelectMany(scope => ReadNestedInts(scope, "content", key)), key);
-                var effectiveContent = TryGetObject(nested ?? root, "content") ?? TryGetObject(root, "content");
-                if (effectiveContent.HasValue && ReadOptionalInt(effectiveContent.Value, "minWordCount") is { } minimum
-                    && ReadOptionalInt(effectiveContent.Value, "maxWordCount") is { } maximum && minimum > maximum)
+                var minimum = scopes.SelectMany(scope => ReadNestedInts(scope, "content", "minWordCount")).FirstOrDefault();
+                var maximum = scopes.SelectMany(scope => ReadNestedInts(scope, "content", "maxWordCount")).FirstOrDefault();
+                if (minimum > 0 && maximum > 0 && minimum > maximum)
                     throw new ArgumentException("Minimum kelime sayısı maksimumdan büyük olamaz.");
             }
             if (configured is "regression_reduction" or "subvocalization_reduction")
