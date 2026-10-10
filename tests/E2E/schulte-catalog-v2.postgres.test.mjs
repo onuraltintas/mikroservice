@@ -35,7 +35,7 @@ before(async () => {
 });
 after(() => {
   if (container) {
-    const result = docker(['rm', '-f', container]);
+    const result = docker(['rm', '-fv', container]);
     assert.equal(result.status, 0, result.stderr);
   }
 });
@@ -56,7 +56,9 @@ const rows = () => JSON.parse(sql("SELECT jsonb_agg(to_jsonb(e) ORDER BY id) FRO
 function rejected(mutation) {
   seed(); sql(mutation);
   const before = rows();
-  assert.notEqual(sql(apply, false).status, 0);
+  const result = sql(apply, false);
+  assert.equal(result.status, 3, result.stderr || result.error?.message);
+  assert.match(result.stderr, /ERROR:.*(Schulte|Unexpected duplicate)/);
   assert.deepEqual(rows(), before, 'Failed patch must roll back every row');
 }
 
@@ -90,3 +92,7 @@ test('wrong age association aborts', () => rejected(`UPDATE speed_reading.exerci
 test('conflicting timing alias aborts', () => rejected(`UPDATE speed_reading.exercises SET configuration_json=configuration_json||'{"timeLimitSeconds":10}'::jsonb WHERE id='${patches[0].id}';`));
 test('duplicate active age/level exercise aborts', () => rejected(`UPDATE speed_reading.exercises SET type_code='SchulteTable' WHERE id='99999999-0000-0000-0000-000000000001';`));
 test('missing nested grid configuration aborts atomically', () => rejected(`UPDATE speed_reading.exercises SET configuration_json=configuration_json#-'{engineConfig,gridSize}' WHERE id='${patches[0].id}';`));
+test('differently cased nested timing alias aborts', () => rejected(`UPDATE speed_reading.exercises SET configuration_json=jsonb_set(configuration_json,'{engineConfig,TimeLimitSeconds}','10') WHERE id='${patches[0].id}';`));
+test('differently cased root timing alias aborts', () => rejected(`UPDATE speed_reading.exercises SET configuration_json=configuration_json||'{"TimeLimitSeconds":10}'::jsonb WHERE id='${patches[0].id}';`));
+test('duplicate casing of the grid parameter aborts', () => rejected(`UPDATE speed_reading.exercises SET configuration_json=jsonb_set(configuration_json,'{engineConfig,GridSize}','7') WHERE id='${patches[0].id}';`));
+test('duplicate casing of the nested rule aborts', () => rejected(`UPDATE speed_reading.exercises SET configuration_json=jsonb_set(configuration_json,'{engineConfig,rules,TimeLimit}','10') WHERE id='${patches[0].id}';`));
