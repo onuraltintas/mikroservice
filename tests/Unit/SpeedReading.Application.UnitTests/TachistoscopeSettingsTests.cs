@@ -6,13 +6,15 @@ namespace SpeedReading.Application.UnitTests;
 public sealed class TachistoscopeSettingsTests
 {
     [Theory]
-    [InlineData("number", 3, 12)]
-    [InlineData("word", 4, 6)]
-    public void Resuming_legacy_state_preserves_its_original_length_bounds(string contentType, int initialLength, int expectedMaximum)
+    [InlineData("number", 3, 12, "default_pool")]
+    [InlineData("word", 4, 6, "default_pool")]
+    [InlineData("number", 13, 14, "custom")]
+    [InlineData("letter", 13, 14, "custom")]
+    public void Resuming_legacy_state_preserves_its_original_length_bounds(string contentType, int initialLength, int expectedMaximum, string source)
     {
         var json = System.Text.Json.JsonSerializer.Serialize(new { tachistoscope = new {
-            contentType, initialTargetLength = initialLength, targetLength = initialLength,
-            pool = new[] { "masa", "kitap", "kelime" } } });
+            contentType, source, initialTargetLength = initialLength, targetLength = initialLength,
+            pool = source == "custom" ? new[] { "1234567890123", "12345678901234" } : new[] { "masa", "kitap", "kelime" } } });
         var service = typeof(SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingDbContext).Assembly
             .GetType("SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingExerciseSessions")!;
         var restored = service.GetMethod("DeserializeState", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!
