@@ -17,6 +17,8 @@ public sealed class TachistoscopeState
     public bool AdaptiveEnabled { get; set; } = true;
     public int TargetLength { get; set; } = 3;
     public int InitialTargetLength { get; set; } = 3;
+    public int MinTargetLength { get; set; } = 1;
+    public int MaxTargetLength { get; set; } = 12;
     public int ConsecutiveCorrect { get; set; }
     public string LastStimulus { get; set; } = string.Empty;
     public string ExpectedStimulus { get; set; } = string.Empty;
@@ -49,19 +51,26 @@ public sealed class TachistoscopeState
         Round++;
         LastStimulus = stimulus;
         ConsecutiveCorrect = correct ? ConsecutiveCorrect + 1 : 0;
-        if (AdaptiveEnabled)
+        if (AdaptiveEnabled && Trials.Count % 5 == 0)
         {
-            if (ConsecutiveCorrect >= 2)
+            var correctCount = Trials.TakeLast(5).Count(trial => trial.IsCorrect);
+            if (correctCount >= 4)
             {
-                DisplayDurationMs = Math.Max(MinDurationMs, (int)Math.Round(DisplayDurationMs * .9));
-                var maxLength = ContentType is "number" or "letter" ? 12 : Pool.Select(word => word.Length).DefaultIfEmpty(TargetLength).Max();
-                TargetLength = Math.Min(maxLength, TargetLength + 1);
-                ConsecutiveCorrect = 0;
+                if (DisplayDurationMs <= MinDurationMs && TargetLength < MaxTargetLength)
+                {
+                    TargetLength++;
+                    DisplayDurationMs = Math.Clamp(InitialDurationMs, MinDurationMs, MaxDurationMs);
+                }
+                else DisplayDurationMs = Math.Max(MinDurationMs, (int)Math.Round(DisplayDurationMs * .9, MidpointRounding.AwayFromZero));
             }
-            if (Trials.Count % 5 == 0 && Trials.TakeLast(5).Count(trial => trial.IsCorrect) < 3)
+            else if (correctCount <= 2)
             {
-                DisplayDurationMs = Math.Min(MaxDurationMs, (int)Math.Round(DisplayDurationMs * 1.1));
-                TargetLength = Math.Max(InitialTargetLength, TargetLength - 1);
+                if (DisplayDurationMs >= MaxDurationMs && TargetLength > MinTargetLength)
+                {
+                    TargetLength--;
+                    DisplayDurationMs = Math.Clamp(InitialDurationMs, MinDurationMs, MaxDurationMs);
+                }
+                else DisplayDurationMs = Math.Min(MaxDurationMs, (int)Math.Round(DisplayDurationMs * 1.1, MidpointRounding.AwayFromZero));
             }
         }
         return correct;

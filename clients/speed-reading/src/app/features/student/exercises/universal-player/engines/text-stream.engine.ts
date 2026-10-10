@@ -23,6 +23,7 @@ export interface TextStreamConfig extends EngineConfig {
         type: string;         // 'word', 'phrase', 'number', 'letter'
         count: number;        // Toplam stimulus sayısı
         source: string;       // 'random_pool', 'custom', 'backend'
+        length?: number;
         items?: string[];     // Özel içerik listesi
     };
     visuals: {
@@ -33,6 +34,8 @@ export interface TextStreamConfig extends EngineConfig {
         enabled: boolean;
         minDurationMs: number;
         maxDurationMs: number;
+        minLength?: number;
+        maxLength?: number;
     };
     // Backend'den gelen TachistoscopeSessionData
     Stimuli?: Array<{ Text: string; Type: string; DifficultyLevel: number }>;
@@ -105,7 +108,8 @@ export class TextStreamEngine implements BaseEngine {
     private contentPool: string[] = [];
     private targetLength = 3;
     private initialTargetLength = 3;
-    private consecutiveCorrect = 0;
+    private minTargetLength = 1;
+    private maxTargetLength = 12;
 
     // Fallback word pools (used only if no backend data)
     private static readonly WORD_POOL = [
@@ -146,7 +150,7 @@ export class TextStreamEngine implements BaseEngine {
             }
         } as TextStreamConfig;
         this.config.adaptive = {
-            enabled: adaptive['enabled'] !== false,
+            enabled: adaptive['enabled'] !== false && root.isAssessmentMode !== true,
             minDurationMs: boundedInteger(adaptive['mindurationms'], 50, 50, 5000),
             maxDurationMs: boundedInteger(adaptive['maxdurationms'], 1000, 50, 5000)
         };
@@ -199,10 +203,19 @@ export class TextStreamEngine implements BaseEngine {
 
         this.serverAuthoritative = root.serverAuthoritative === true && !this.isRsvpMode();
         const serverState = recordOrEmpty(root.tachistoscope);
-        this.targetLength = boundedInteger(root.difficultyLevel, 1, 1, 5) * 2 + 1;
-        if (this.config.content?.type === 'letter') this.targetLength = boundedInteger(root.difficultyLevel, 1, 1, 5);
-        this.initialTargetLength = this.targetLength;
+        const level = boundedInteger(root.difficultyLevel, 1, 1, 5);
+        const initialLength = this.config.content.type === 'letter' ? level
+            : this.config.content.type === 'number' ? level + 2 : level * 2 + 1;
+        this.targetLength = boundedInteger(content['length'], initialLength, 1, 100);
         this.generateStimuli();
+        const hasPool = this.contentPool.length > 0
+            && (this.config.content.source === 'custom' || !['number', 'letter'].includes(this.config.content.type));
+        const maximumLength = hasPool ? Math.max(...this.contentPool.map(item => item.length)) : 12;
+        if (hasPool) this.targetLength = Math.max(Math.min(...this.contentPool.map(item => item.length)), Math.min(maximumLength, this.targetLength));
+        this.minTargetLength = boundedInteger(adaptive['minlength'], this.targetLength, 1, maximumLength);
+        this.maxTargetLength = boundedInteger(adaptive['maxlength'], maximumLength, this.minTargetLength, maximumLength);
+        this.targetLength = Math.max(this.minTargetLength, Math.min(this.maxTargetLength, this.targetLength));
+        this.initialTargetLength = this.targetLength;
         if (this.serverAuthoritative) {
             this.stimuli = new Array(boundedInteger(serverState['count'], totalStimuli, 1, 500)).fill('');
             this.currentStimulusIndex = boundedInteger(serverState['round'], 0, 0, this.stimuli.length);
@@ -375,7 +388,6 @@ export class TextStreamEngine implements BaseEngine {
         this.state.currentStep = this.currentStimulusIndex;
         this.state.accuracy = this.isRsvpMode() ? 100 : this.correctCount + this.state.errors
             ? Math.round(this.correctCount / (this.correctCount + this.state.errors) * 100) : 0;
-        this.consecutiveCorrect = 0;
 
         // Timer
         this.timerInterval = setInterval(() => {
@@ -606,7 +618,6 @@ export class TextStreamEngine implements BaseEngine {
         this.isWaitingForAnswer = false;
         this.trials = [];
         this.correctCount = 0;
-        this.consecutiveCorrect = 0;
         this.targetLength = this.initialTargetLength;
         this.currentDurationMs = this.initialDurationMs;
         this.generateStimuli(); // Regenerate for variety
@@ -666,15 +677,7 @@ export class TextStreamEngine implements BaseEngine {
         this.state.score = this.state.accuracy;
 
         // Adaptive speed adjustment
-        if (this.config.adaptive?.enabled !== false) {
-            // Increase difficulty after two consecutive correct answers.
-            this.checkFastAdaptation(isCorrect);
-
-            // Deceleration logic: Every 5 trials (periodic)
-            if (this.trials.length % 5 === 0) {
-                this.adjustSpeed();
-            }
-        }
+        if (this.config.adaptive?.enabled && this.trials.length % 5 === 0) this.adjustSpeed();
 
         this.isWaitingForAnswer = false;
 
@@ -697,32 +700,18 @@ export class TextStreamEngine implements BaseEngine {
     private adjustSpeed(): void {
         const recentTrials = this.trials.slice(-5);
         const recentCorrect = recentTrials.filter(t => t.isCorrect).length;
-        const recentAccuracy = (recentCorrect / 5) * 100;
-
         const minDuration = this.config.adaptive?.minDurationMs || 50;
         const maxDuration = this.config.adaptive?.maxDurationMs || 1000;
-
-        // Deceleration logic (Zorlanma Durumu)
-        if (recentAccuracy < 60) {
-            // Low accuracy → slow down (increase duration by 10% as requested)
-            const newDuration = Math.min(maxDuration, Math.round(this.currentDurationMs * 1.1));
-            this.currentDurationMs = newDuration;
-            this.targetLength = Math.max(this.initialTargetLength, this.targetLength - 1);
-        }
-    }
-
-    private checkFastAdaptation(isCorrect: boolean): void {
-        this.consecutiveCorrect = isCorrect ? this.consecutiveCorrect + 1 : 0;
-
-        // Every 2 correct answers, speed up (Başarı Durumu)
-        if (this.consecutiveCorrect >= 2) {
-            const minDuration = this.config.adaptive?.minDurationMs || 50;
-            const newDuration = Math.max(minDuration, Math.round(this.currentDurationMs * 0.9));
-            this.currentDurationMs = newDuration;
-            const maxLength = this.config.content?.type === 'number' || this.config.content?.type === 'letter'
-                ? 12 : Math.max(this.targetLength, ...this.contentPool.map(word => word.length));
-            this.targetLength = Math.min(maxLength, this.targetLength + 1);
-            this.consecutiveCorrect = 0;
+        if (recentCorrect >= 4) {
+            if (this.currentDurationMs <= minDuration && this.targetLength < this.maxTargetLength) {
+                this.targetLength++;
+                this.currentDurationMs = Math.max(minDuration, Math.min(maxDuration, this.initialDurationMs));
+            } else this.currentDurationMs = Math.max(minDuration, Math.round(this.currentDurationMs * .9));
+        } else if (recentCorrect <= 2) {
+            if (this.currentDurationMs >= maxDuration && this.targetLength > this.minTargetLength) {
+                this.targetLength--;
+                this.currentDurationMs = Math.max(minDuration, Math.min(maxDuration, this.initialDurationMs));
+            } else this.currentDurationMs = Math.min(maxDuration, Math.round(this.currentDurationMs * 1.1));
         }
     }
 

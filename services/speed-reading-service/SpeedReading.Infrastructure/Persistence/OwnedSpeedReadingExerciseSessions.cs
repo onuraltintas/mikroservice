@@ -2731,7 +2731,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             InitialDurationMs = Math.Clamp(duration, min, max),
             MinDurationMs = min, MaxDurationMs = max,
             AdaptiveEnabled = ReadProperty(adaptive, "enabled").ValueKind != JsonValueKind.False,
-            TargetLength = type == "letter" ? level : type == "number" ? level + 2 : level * 2 + 1
+            TargetLength = ReadPositiveInt(content, "length")
+                ?? (type == "letter" ? level : type == "number" ? level + 2 : level * 2 + 1)
         };
         if (type is not ("word" or "phrase" or "number" or "letter"))
             throw new ArgumentException("Takistoskop içerik türü word, phrase, number veya letter olmalıdır.");
@@ -2763,6 +2764,10 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         }
         if (state.Pool.Length > 0)
             state.TargetLength = Math.Clamp(state.TargetLength, state.Pool.Min(word => word.Length), state.Pool.Max(word => word.Length));
+        var maximumLength = state.Pool.Length > 0 ? state.Pool.Max(word => word.Length) : 12;
+        state.MinTargetLength = Math.Clamp(ReadPositiveInt(adaptive, "minLength") ?? state.TargetLength, 1, maximumLength);
+        state.MaxTargetLength = Math.Clamp(ReadPositiveInt(adaptive, "maxLength") ?? maximumLength, state.MinTargetLength, maximumLength);
+        state.TargetLength = Math.Clamp(state.TargetLength, state.MinTargetLength, state.MaxTargetLength);
         state.InitialTargetLength = state.TargetLength;
         return state;
     }
