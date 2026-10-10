@@ -22,6 +22,7 @@
 - İnceleme sonrası iki geniş kapsam senaryosu RED (`c9cb62c0`), düzeltme GREEN (`d3e2cadc`).
 - Ek sonuç ve dolaylı tekrar geçmişi senaryoları RED (`a091da33`); düzeltme ile 36 ilgili PG testi GREEN.
 - 988 Hızlı Okuma birim testi, 7 Node kontrolü, 12 ChromeHeadless bileşen testi geçti.
+- Yayın sonrasında Çocuk/Genç/Genç Yetişkin planları birlikte tekrar kontrol edildi: 15 Node testi geçti.
 - PostgreSQL grubu: 18 genç yetişkin geçiş, 10 genç geçiş, 6 çocuk geçiş, 2 eşzamanlı tamamlanma.
   Ayrıca 2 tekrarlı görev PostgreSQL testi geçti; toplam 38 ilgili PG senaryosu başarılı.
 - JS/katalog incelemesi engelleyici bulgu yok. SQL incelemesinin kapsam ve tekrar geçmişi bulguları
@@ -72,4 +73,9 @@ Tam geri yükleme canlıda denenmez. Kimlik/Koçluk/Notification veritabanların
 - Ekran kanıtı: `artifacts/young-adult-programs-v2-tests/live-young-adult-programs.png` (yerel).
 - Canlı içerik kontrolü: her seviyede soruları olan 15 aktif genç yetişkin metni;
   genç yetişkin/ortak kelime havuzunda seviyelere göre 299 / 488 / 323 / 271 / 105 kayıt.
-- 15 dakikalık yayın sonrası sağlık takibi sürüyor; sonucu ayrıca eklenecek.
+- Aktif Eğitimim sayfası temizlenen hesapla hata vermeden boş duruma geldi. Yeni kayıt veya egzersiz
+  oturumu oluşturulmadı. Boş ekrandaki seviye değerlendirmesi açıklaması öğrenciye yönelik mevcut
+  metindir; admin/öğretmen yeni programa Eğitim Programları kataloğundan kaydolur. Bu yayın frontend'i değiştirmedi.
+- Yayın sonrası 15 dakikalık sağlık takibi tamamlandı: 30/30 ölçüm `Healthy`, yeniden başlama 0.
+  `fail` / `crit` / `fatal` seviyeleri veya `Unhandled exception` bulunmadı. Bu, bütün öğrencilerin
+  gerçek kullanımda tüm egzersizleri tamamladığı anlamına gelmez.
