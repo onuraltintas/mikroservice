@@ -34,8 +34,14 @@ DO $$ BEGIN
     AND e.configuration_json#>'{engineConfig,rules,timeLimit}' IS NOT DISTINCT FROM to_jsonb(p.new_time)))
    OR jsonb_typeof(e.configuration_json->'engineConfig') IS DISTINCT FROM 'object'
    OR jsonb_typeof(e.configuration_json#>'{engineConfig,rules}') IS DISTINCT FROM 'object'
-   OR e.configuration_json ?| ARRAY['gridSize','timeLimit','timeLimitSeconds','timing','rules','grid']
-   OR (e.configuration_json->'engineConfig') ?| ARRAY['timeLimit','timeLimitSeconds','timing','grid']) THEN
+   OR EXISTS(SELECT 1 FROM jsonb_object_keys(e.configuration_json) k(key)
+    WHERE lower(key) IN('gridsize','timelimit','timelimitseconds','timing','rules','grid')
+     OR (lower(key) IN('engineconfig','enginetype','difficultylevel') AND key NOT IN('engineConfig','engineType','difficultyLevel')))
+   OR EXISTS(SELECT 1 FROM jsonb_object_keys(e.configuration_json->'engineConfig') k(key)
+    WHERE lower(key) IN('timelimit','timelimitseconds','timing','grid')
+     OR (lower(key) IN('gridsize','rules','sequencetype') AND key NOT IN('gridSize','rules','sequenceType')))
+   OR EXISTS(SELECT 1 FROM jsonb_object_keys(e.configuration_json#>'{engineConfig,rules}') k(key)
+    WHERE lower(key)='timelimit' AND key<>'timeLimit')) THEN
   RAISE EXCEPTION 'Schulte settings differ from the reviewed source or have conflicting aliases';
  END IF;
 END $$;
