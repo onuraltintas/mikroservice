@@ -49,7 +49,8 @@ public sealed class GuidedReadingPackTests
                 var content = File.ReadAllText(Path.Combine(root, "content-packs/guided-reading/v1/texts", entry["file"]!.GetValue<string>())).Trim();
                 Assert.True(originals.Add(content));
                 Assert.InRange(ReadingText.CalculateWordCount(content), bounds["minWordCount"]!.GetValue<int>(), bounds["maxWordCount"]!.GetValue<int>());
-                Assert.Contains(JsonValue.Create(content)!.ToJsonString(), sql);
+                Assert.Contains(JsonValue.Create(content)!.ToJsonString(new System.Text.Json.JsonSerializerOptions {
+                    Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping }), sql);
             }
             else Assert.Equal(2, entry["sources"]!.AsArray().Count);
         }

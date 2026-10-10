@@ -1,0 +1,902 @@
+[
+  {
+    "id": "aff1baaa-fc6b-5870-aaea-0013fb287d0d",
+    "age": "Child",
+    "ageGroupId": "10000000-0000-0000-0000-000000000001",
+    "level": 1,
+    "title": "Tanıdık Kelimelerle Okuma",
+    "minMinutes": 2,
+    "maxMinutes": 3,
+    "previousConfiguration": {
+      "engineType": "word_highlight",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "guided",
+        "pacer": {
+          "speedWpm": 100,
+          "chunkSize": 1
+        },
+        "readingPurpose": "practice"
+      },
+      "difficultyLevel": 1
+    },
+    "configuration": {
+      "engineType": "word_highlight",
+      "difficultyLevel": 1,
+      "engineConfig": {
+        "mode": "speed_reading",
+        "readingPurpose": "practice",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 200,
+          "maxWordCount": 300
+        },
+        "pacer": {
+          "speedWpm": 100,
+          "chunkSize": 1,
+          "autoScroll": true
+        },
+        "adaptive": {
+          "enabled": false
+        }
+      }
+    }
+  },
+  {
+    "id": "1c058d30-e5b1-5a67-85a8-a518b067a746",
+    "age": "Child",
+    "ageGroupId": "10000000-0000-0000-0000-000000000001",
+    "level": 2,
+    "title": "Akıcı Cümleler",
+    "minMinutes": 2,
+    "maxMinutes": 3,
+    "previousConfiguration": {
+      "engineType": "word_highlight",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "guided",
+        "pacer": {
+          "speedWpm": 130,
+          "chunkSize": 1
+        },
+        "readingPurpose": "practice"
+      },
+      "difficultyLevel": 2
+    },
+    "configuration": {
+      "engineType": "word_highlight",
+      "difficultyLevel": 2,
+      "engineConfig": {
+        "mode": "speed_reading",
+        "readingPurpose": "practice",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 260,
+          "maxWordCount": 390
+        },
+        "pacer": {
+          "speedWpm": 130,
+          "chunkSize": 1,
+          "autoScroll": true
+        },
+        "adaptive": {
+          "enabled": false
+        }
+      }
+    }
+  },
+  {
+    "id": "9bc800bb-a551-5ead-9fa3-7c406c33fffc",
+    "age": "Child",
+    "ageGroupId": "10000000-0000-0000-0000-000000000001",
+    "level": 3,
+    "title": "Akıcı Paragraflar",
+    "minMinutes": 2,
+    "maxMinutes": 3,
+    "previousConfiguration": {
+      "engineType": "word_highlight",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "guided",
+        "pacer": {
+          "speedWpm": 160,
+          "chunkSize": 1
+        },
+        "readingPurpose": "practice"
+      },
+      "difficultyLevel": 3
+    },
+    "configuration": {
+      "engineType": "word_highlight",
+      "difficultyLevel": 3,
+      "engineConfig": {
+        "mode": "speed_reading",
+        "readingPurpose": "practice",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 320,
+          "maxWordCount": 480
+        },
+        "pacer": {
+          "speedWpm": 160,
+          "chunkSize": 1,
+          "autoScroll": true
+        },
+        "adaptive": {
+          "enabled": false
+        }
+      }
+    }
+  },
+  {
+    "id": "030538ee-839b-56c6-a3a2-2d9a78ead0d7",
+    "age": "Child",
+    "ageGroupId": "10000000-0000-0000-0000-000000000001",
+    "level": 4,
+    "title": "Dengeli Okuma",
+    "minMinutes": 2,
+    "maxMinutes": 3,
+    "previousConfiguration": {
+      "engineType": "word_highlight",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "guided",
+        "pacer": {
+          "speedWpm": 200,
+          "chunkSize": 1
+        },
+        "readingPurpose": "practice"
+      },
+      "difficultyLevel": 4
+    },
+    "configuration": {
+      "engineType": "word_highlight",
+      "difficultyLevel": 4,
+      "engineConfig": {
+        "mode": "speed_reading",
+        "readingPurpose": "practice",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 400,
+          "maxWordCount": 600
+        },
+        "pacer": {
+          "speedWpm": 200,
+          "chunkSize": 1,
+          "autoScroll": true
+        },
+        "adaptive": {
+          "enabled": false
+        }
+      }
+    }
+  },
+  {
+    "id": "4230beb8-f60f-5c08-a757-acf22d0fa332",
+    "age": "Child",
+    "ageGroupId": "10000000-0000-0000-0000-000000000001",
+    "level": 5,
+    "title": "Akıcılığı Koru",
+    "minMinutes": 2,
+    "maxMinutes": 3,
+    "previousConfiguration": {
+      "engineType": "word_highlight",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "guided",
+        "pacer": {
+          "speedWpm": 230,
+          "chunkSize": 1
+        },
+        "readingPurpose": "practice"
+      },
+      "difficultyLevel": 5
+    },
+    "configuration": {
+      "engineType": "word_highlight",
+      "difficultyLevel": 5,
+      "engineConfig": {
+        "mode": "speed_reading",
+        "readingPurpose": "practice",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 460,
+          "maxWordCount": 690
+        },
+        "pacer": {
+          "speedWpm": 230,
+          "chunkSize": 1,
+          "autoScroll": true
+        },
+        "adaptive": {
+          "enabled": false
+        }
+      }
+    }
+  },
+  {
+    "id": "5856a4db-8bd7-5737-80fe-8731c6ff56b7",
+    "age": "Teen",
+    "ageGroupId": "10000000-0000-0000-0000-000000000002",
+    "level": 1,
+    "title": "Dengeli Tempoda Okuma",
+    "minMinutes": 2.5,
+    "maxMinutes": 3.5,
+    "previousConfiguration": {
+      "engineType": "word_highlight",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "guided",
+        "pacer": {
+          "speedWpm": 150,
+          "chunkSize": 1
+        },
+        "readingPurpose": "practice"
+      },
+      "difficultyLevel": 1
+    },
+    "configuration": {
+      "engineType": "word_highlight",
+      "difficultyLevel": 1,
+      "engineConfig": {
+        "mode": "speed_reading",
+        "readingPurpose": "practice",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 375,
+          "maxWordCount": 525
+        },
+        "pacer": {
+          "speedWpm": 150,
+          "chunkSize": 1,
+          "autoScroll": true
+        },
+        "adaptive": {
+          "enabled": false
+        }
+      }
+    }
+  },
+  {
+    "id": "551b174b-71b2-5b0d-aa99-4b04c1a16829",
+    "age": "Teen",
+    "ageGroupId": "10000000-0000-0000-0000-000000000002",
+    "level": 2,
+    "title": "Dengeli Tempoda Okuma",
+    "minMinutes": 2.5,
+    "maxMinutes": 3.5,
+    "previousConfiguration": {
+      "engineType": "word_highlight",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "guided",
+        "pacer": {
+          "speedWpm": 180,
+          "chunkSize": 1
+        },
+        "readingPurpose": "practice"
+      },
+      "difficultyLevel": 2
+    },
+    "configuration": {
+      "engineType": "word_highlight",
+      "difficultyLevel": 2,
+      "engineConfig": {
+        "mode": "speed_reading",
+        "readingPurpose": "practice",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 450,
+          "maxWordCount": 630
+        },
+        "pacer": {
+          "speedWpm": 180,
+          "chunkSize": 1,
+          "autoScroll": true
+        },
+        "adaptive": {
+          "enabled": false
+        }
+      }
+    }
+  },
+  {
+    "id": "62b339c7-cf1c-5ece-819f-3c24e00e93a7",
+    "age": "Teen",
+    "ageGroupId": "10000000-0000-0000-0000-000000000002",
+    "level": 3,
+    "title": "Dengeli Tempoda Okuma",
+    "minMinutes": 2.5,
+    "maxMinutes": 3.5,
+    "previousConfiguration": {
+      "engineType": "word_highlight",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "guided",
+        "pacer": {
+          "speedWpm": 210,
+          "chunkSize": 1
+        },
+        "readingPurpose": "practice"
+      },
+      "difficultyLevel": 3
+    },
+    "configuration": {
+      "engineType": "word_highlight",
+      "difficultyLevel": 3,
+      "engineConfig": {
+        "mode": "speed_reading",
+        "readingPurpose": "practice",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 525,
+          "maxWordCount": 735
+        },
+        "pacer": {
+          "speedWpm": 210,
+          "chunkSize": 1,
+          "autoScroll": true
+        },
+        "adaptive": {
+          "enabled": false
+        }
+      }
+    }
+  },
+  {
+    "id": "70708463-e9b2-5926-b07b-c7bef1feffac",
+    "age": "Teen",
+    "ageGroupId": "10000000-0000-0000-0000-000000000002",
+    "level": 4,
+    "title": "Dengeli Tempoda Okuma",
+    "minMinutes": 2.5,
+    "maxMinutes": 3.5,
+    "previousConfiguration": {
+      "engineType": "word_highlight",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "guided",
+        "pacer": {
+          "speedWpm": 240,
+          "chunkSize": 1
+        },
+        "readingPurpose": "practice"
+      },
+      "difficultyLevel": 4
+    },
+    "configuration": {
+      "engineType": "word_highlight",
+      "difficultyLevel": 4,
+      "engineConfig": {
+        "mode": "speed_reading",
+        "readingPurpose": "practice",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 600,
+          "maxWordCount": 840
+        },
+        "pacer": {
+          "speedWpm": 240,
+          "chunkSize": 1,
+          "autoScroll": true
+        },
+        "adaptive": {
+          "enabled": false
+        }
+      }
+    }
+  },
+  {
+    "id": "ef36a01a-8e60-563f-a8e8-6e58aa8a82d6",
+    "age": "Teen",
+    "ageGroupId": "10000000-0000-0000-0000-000000000002",
+    "level": 5,
+    "title": "Dengeli Tempoda Okuma",
+    "minMinutes": 2.5,
+    "maxMinutes": 3.5,
+    "previousConfiguration": {
+      "engineType": "word_highlight",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "guided",
+        "pacer": {
+          "speedWpm": 270,
+          "chunkSize": 1
+        },
+        "readingPurpose": "practice"
+      },
+      "difficultyLevel": 5
+    },
+    "configuration": {
+      "engineType": "word_highlight",
+      "difficultyLevel": 5,
+      "engineConfig": {
+        "mode": "speed_reading",
+        "readingPurpose": "practice",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 675,
+          "maxWordCount": 945
+        },
+        "pacer": {
+          "speedWpm": 270,
+          "chunkSize": 1,
+          "autoScroll": true
+        },
+        "adaptive": {
+          "enabled": false
+        }
+      }
+    }
+  },
+  {
+    "id": "d7ebaa38-4780-5651-b09a-37082d9e23ab",
+    "age": "YoungAdult",
+    "ageGroupId": "10000000-0000-0000-0000-000000000004",
+    "level": 1,
+    "title": "Dengeli Tempoda Okuma",
+    "minMinutes": 3,
+    "maxMinutes": 4,
+    "previousConfiguration": {
+      "engineType": "word_highlight",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "guided",
+        "pacer": {
+          "speedWpm": 180,
+          "chunkSize": 1
+        },
+        "readingPurpose": "practice"
+      },
+      "difficultyLevel": 1
+    },
+    "configuration": {
+      "engineType": "word_highlight",
+      "difficultyLevel": 1,
+      "engineConfig": {
+        "mode": "speed_reading",
+        "readingPurpose": "practice",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 540,
+          "maxWordCount": 720
+        },
+        "pacer": {
+          "speedWpm": 180,
+          "chunkSize": 1,
+          "autoScroll": true
+        },
+        "adaptive": {
+          "enabled": false
+        }
+      }
+    }
+  },
+  {
+    "id": "a27a5200-46f9-5850-9d03-1869f0dd2779",
+    "age": "YoungAdult",
+    "ageGroupId": "10000000-0000-0000-0000-000000000004",
+    "level": 2,
+    "title": "Dengeli Tempoda Okuma",
+    "minMinutes": 3,
+    "maxMinutes": 4,
+    "previousConfiguration": {
+      "engineType": "word_highlight",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "guided",
+        "pacer": {
+          "speedWpm": 210,
+          "chunkSize": 1
+        },
+        "readingPurpose": "practice"
+      },
+      "difficultyLevel": 2
+    },
+    "configuration": {
+      "engineType": "word_highlight",
+      "difficultyLevel": 2,
+      "engineConfig": {
+        "mode": "speed_reading",
+        "readingPurpose": "practice",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 630,
+          "maxWordCount": 840
+        },
+        "pacer": {
+          "speedWpm": 210,
+          "chunkSize": 1,
+          "autoScroll": true
+        },
+        "adaptive": {
+          "enabled": false
+        }
+      }
+    }
+  },
+  {
+    "id": "6e16adcb-1adf-5c16-be43-537131e9b10b",
+    "age": "YoungAdult",
+    "ageGroupId": "10000000-0000-0000-0000-000000000004",
+    "level": 3,
+    "title": "Dengeli Tempoda Okuma",
+    "minMinutes": 3,
+    "maxMinutes": 4,
+    "previousConfiguration": {
+      "engineType": "word_highlight",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "guided",
+        "pacer": {
+          "speedWpm": 240,
+          "chunkSize": 1
+        },
+        "readingPurpose": "practice"
+      },
+      "difficultyLevel": 3
+    },
+    "configuration": {
+      "engineType": "word_highlight",
+      "difficultyLevel": 3,
+      "engineConfig": {
+        "mode": "speed_reading",
+        "readingPurpose": "practice",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 720,
+          "maxWordCount": 960
+        },
+        "pacer": {
+          "speedWpm": 240,
+          "chunkSize": 1,
+          "autoScroll": true
+        },
+        "adaptive": {
+          "enabled": false
+        }
+      }
+    }
+  },
+  {
+    "id": "79e32c19-71ce-5f68-802e-588d3d3b7182",
+    "age": "YoungAdult",
+    "ageGroupId": "10000000-0000-0000-0000-000000000004",
+    "level": 4,
+    "title": "Dengeli Tempoda Okuma",
+    "minMinutes": 3,
+    "maxMinutes": 4,
+    "previousConfiguration": {
+      "engineType": "word_highlight",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "guided",
+        "pacer": {
+          "speedWpm": 270,
+          "chunkSize": 1
+        },
+        "readingPurpose": "practice"
+      },
+      "difficultyLevel": 4
+    },
+    "configuration": {
+      "engineType": "word_highlight",
+      "difficultyLevel": 4,
+      "engineConfig": {
+        "mode": "speed_reading",
+        "readingPurpose": "practice",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 810,
+          "maxWordCount": 1080
+        },
+        "pacer": {
+          "speedWpm": 270,
+          "chunkSize": 1,
+          "autoScroll": true
+        },
+        "adaptive": {
+          "enabled": false
+        }
+      }
+    }
+  },
+  {
+    "id": "a3533513-6a35-5037-ad55-ae51942c437f",
+    "age": "YoungAdult",
+    "ageGroupId": "10000000-0000-0000-0000-000000000004",
+    "level": 5,
+    "title": "Dengeli Tempoda Okuma",
+    "minMinutes": 3,
+    "maxMinutes": 4,
+    "previousConfiguration": {
+      "engineType": "word_highlight",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "guided",
+        "pacer": {
+          "speedWpm": 300,
+          "chunkSize": 1
+        },
+        "readingPurpose": "practice"
+      },
+      "difficultyLevel": 5
+    },
+    "configuration": {
+      "engineType": "word_highlight",
+      "difficultyLevel": 5,
+      "engineConfig": {
+        "mode": "speed_reading",
+        "readingPurpose": "practice",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 900,
+          "maxWordCount": 1200
+        },
+        "pacer": {
+          "speedWpm": 300,
+          "chunkSize": 1,
+          "autoScroll": true
+        },
+        "adaptive": {
+          "enabled": false
+        }
+      }
+    }
+  },
+  {
+    "id": "a744fd23-45f3-51cf-ac18-85f81d094937",
+    "age": "Adult",
+    "ageGroupId": "10000000-0000-0000-0000-000000000003",
+    "level": 1,
+    "title": "Dengeli Tempoda Okuma",
+    "minMinutes": 3,
+    "maxMinutes": 4,
+    "previousConfiguration": {
+      "engineType": "word_highlight",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "guided",
+        "pacer": {
+          "speedWpm": 200,
+          "chunkSize": 1
+        },
+        "readingPurpose": "practice"
+      },
+      "difficultyLevel": 1
+    },
+    "configuration": {
+      "engineType": "word_highlight",
+      "difficultyLevel": 1,
+      "engineConfig": {
+        "mode": "speed_reading",
+        "readingPurpose": "practice",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 600,
+          "maxWordCount": 800
+        },
+        "pacer": {
+          "speedWpm": 200,
+          "chunkSize": 1,
+          "autoScroll": true
+        },
+        "adaptive": {
+          "enabled": false
+        }
+      }
+    }
+  },
+  {
+    "id": "9546695f-5d8b-5857-8e8d-b431e37224e5",
+    "age": "Adult",
+    "ageGroupId": "10000000-0000-0000-0000-000000000003",
+    "level": 2,
+    "title": "Dengeli Tempoda Okuma",
+    "minMinutes": 3,
+    "maxMinutes": 4,
+    "previousConfiguration": {
+      "engineType": "word_highlight",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "guided",
+        "pacer": {
+          "speedWpm": 230,
+          "chunkSize": 1
+        },
+        "readingPurpose": "practice"
+      },
+      "difficultyLevel": 2
+    },
+    "configuration": {
+      "engineType": "word_highlight",
+      "difficultyLevel": 2,
+      "engineConfig": {
+        "mode": "speed_reading",
+        "readingPurpose": "practice",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 690,
+          "maxWordCount": 920
+        },
+        "pacer": {
+          "speedWpm": 230,
+          "chunkSize": 1,
+          "autoScroll": true
+        },
+        "adaptive": {
+          "enabled": false
+        }
+      }
+    }
+  },
+  {
+    "id": "ab46da2f-c349-5a15-a0d6-c7e54f2ddb34",
+    "age": "Adult",
+    "ageGroupId": "10000000-0000-0000-0000-000000000003",
+    "level": 3,
+    "title": "Dengeli Tempoda Okuma",
+    "minMinutes": 3,
+    "maxMinutes": 4,
+    "previousConfiguration": {
+      "engineType": "word_highlight",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "guided",
+        "pacer": {
+          "speedWpm": 260,
+          "chunkSize": 1
+        },
+        "readingPurpose": "practice"
+      },
+      "difficultyLevel": 3
+    },
+    "configuration": {
+      "engineType": "word_highlight",
+      "difficultyLevel": 3,
+      "engineConfig": {
+        "mode": "speed_reading",
+        "readingPurpose": "practice",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 780,
+          "maxWordCount": 1040
+        },
+        "pacer": {
+          "speedWpm": 260,
+          "chunkSize": 1,
+          "autoScroll": true
+        },
+        "adaptive": {
+          "enabled": false
+        }
+      }
+    }
+  },
+  {
+    "id": "84f9f28f-5823-5057-ae6a-600c7669d75c",
+    "age": "Adult",
+    "ageGroupId": "10000000-0000-0000-0000-000000000003",
+    "level": 4,
+    "title": "Dengeli Tempoda Okuma",
+    "minMinutes": 3,
+    "maxMinutes": 4,
+    "previousConfiguration": {
+      "engineType": "word_highlight",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "guided",
+        "pacer": {
+          "speedWpm": 290,
+          "chunkSize": 1
+        },
+        "readingPurpose": "practice"
+      },
+      "difficultyLevel": 4
+    },
+    "configuration": {
+      "engineType": "word_highlight",
+      "difficultyLevel": 4,
+      "engineConfig": {
+        "mode": "speed_reading",
+        "readingPurpose": "practice",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 870,
+          "maxWordCount": 1160
+        },
+        "pacer": {
+          "speedWpm": 290,
+          "chunkSize": 1,
+          "autoScroll": true
+        },
+        "adaptive": {
+          "enabled": false
+        }
+      }
+    }
+  },
+  {
+    "id": "c8b1179f-f752-54bb-a888-1c91793f8bdd",
+    "age": "Adult",
+    "ageGroupId": "10000000-0000-0000-0000-000000000003",
+    "level": 5,
+    "title": "Dengeli Tempoda Okuma",
+    "minMinutes": 3,
+    "maxMinutes": 4,
+    "previousConfiguration": {
+      "engineType": "word_highlight",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "guided",
+        "pacer": {
+          "speedWpm": 320,
+          "chunkSize": 1
+        },
+        "readingPurpose": "practice"
+      },
+      "difficultyLevel": 5
+    },
+    "configuration": {
+      "engineType": "word_highlight",
+      "difficultyLevel": 5,
+      "engineConfig": {
+        "mode": "speed_reading",
+        "readingPurpose": "practice",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 960,
+          "maxWordCount": 1280
+        },
+        "pacer": {
+          "speedWpm": 320,
+          "chunkSize": 1,
+          "autoScroll": true
+        },
+        "adaptive": {
+          "enabled": false
+        }
+      }
+    }
+  }
+]

@@ -1,0 +1,360 @@
+[
+  {
+    "id": "61000000-0000-4000-8000-000000000001",
+    "exerciseId": "aff1baaa-fc6b-5870-aaea-0013fb287d0d",
+    "age": "Child",
+    "level": 1,
+    "title": "Parktaki Harita",
+    "file": "child-1-map.txt"
+  },
+  {
+    "id": "61000000-0000-4000-8000-000000000002",
+    "exerciseId": "aff1baaa-fc6b-5870-aaea-0013fb287d0d",
+    "age": "Child",
+    "level": 1,
+    "title": "Tohum Defteri",
+    "file": "child-1-seed.txt"
+  },
+  {
+    "id": "61000000-0000-4000-8000-000000000003",
+    "exerciseId": "030538ee-839b-56c6-a3a2-2d9a78ead0d7",
+    "age": "Child",
+    "level": 4,
+    "title": "Kütüphanenin Onarım Masası",
+    "file": "child-4-library.txt"
+  },
+  {
+    "id": "61000000-0000-4000-8000-000000000004",
+    "exerciseId": "030538ee-839b-56c6-a3a2-2d9a78ead0d7",
+    "age": "Child",
+    "level": 4,
+    "title": "Yağmurun İzleri",
+    "file": "child-4-rain.txt"
+  },
+  {
+    "id": "61000000-0000-4000-8000-000000000005",
+    "exerciseId": "4230beb8-f60f-5c08-a757-acf22d0fa332",
+    "age": "Child",
+    "level": 5,
+    "title": "Köprü Maketinin Soruları",
+    "file": "child-5-bridge.txt"
+  },
+  {
+    "id": "61000000-0000-4000-8000-000000000006",
+    "exerciseId": "4230beb8-f60f-5c08-a757-acf22d0fa332",
+    "age": "Child",
+    "level": 5,
+    "title": "Mahallenin Hafızası",
+    "file": "child-5-memory.txt"
+  },
+  {
+    "id": "61000000-0000-4000-8000-000000000007",
+    "exerciseId": "ef36a01a-8e60-563f-a8e8-6e58aa8a82d6",
+    "age": "Teen",
+    "level": 5,
+    "title": "Okul Rotası: Veriden Karara",
+    "file": "teen-5-route.txt"
+  },
+  {
+    "id": "61000000-0000-4000-8000-000000000008",
+    "exerciseId": "ef36a01a-8e60-563f-a8e8-6e58aa8a82d6",
+    "age": "Teen",
+    "level": 5,
+    "title": "Serginin Arkasındaki Seçimler",
+    "file": "teen-5-exhibition.txt"
+  },
+  {
+    "id": "61000000-0000-4000-8000-000000000009",
+    "exerciseId": "551b174b-71b2-5b0d-aa99-4b04c1a16829",
+    "age": "Teen",
+    "level": 2,
+    "title": "Sınırsız Dünya / Kendin Ol",
+    "sources": [
+      {
+        "id": "698b13f9-aa55-4c9f-b8d3-dbee20565293",
+        "title": "Sınırsız Dünya",
+        "wordCount": 288,
+        "contentHash": "3a9f931dd04017798ad29803d34979a7"
+      },
+      {
+        "id": "c43eea6c-f5b9-4055-8727-0765c2e8d79a",
+        "title": "Kendin Ol",
+        "wordCount": 288,
+        "contentHash": "899c81f18316b73914d1b4dcf967926b"
+      }
+    ]
+  },
+  {
+    "id": "61000000-0000-4000-8000-000000000010",
+    "exerciseId": "551b174b-71b2-5b0d-aa99-4b04c1a16829",
+    "age": "Teen",
+    "level": 2,
+    "title": "Sessiz Kahraman / İkinci Şans",
+    "sources": [
+      {
+        "id": "4dd0a78f-2741-4779-bfa1-3df7929e606e",
+        "title": "Sessiz Kahraman",
+        "wordCount": 296,
+        "contentHash": "41d964cd756d51c7a759444912da3695"
+      },
+      {
+        "id": "f1a5f5b1-52ad-4939-96ac-62f08ca09372",
+        "title": "İkinci Şans",
+        "wordCount": 297,
+        "contentHash": "5f36bca3d767415b572887ce4dc119bf"
+      }
+    ]
+  },
+  {
+    "id": "61000000-0000-4000-8000-000000000011",
+    "exerciseId": "62b339c7-cf1c-5ece-819f-3c24e00e93a7",
+    "age": "Teen",
+    "level": 3,
+    "title": "Biyomimetik: Doğadan İlham / Karbon Ayak İzi: Bir Molekülün Günlüğü",
+    "sources": [
+      {
+        "id": "0b323669-e098-4447-bae4-1ed7f3eb4641",
+        "title": "Biyomimetik: Doğadan İlham",
+        "wordCount": 306,
+        "contentHash": "ad6d8444168911899c0ed09c2050b523"
+      },
+      {
+        "id": "39d3ba1c-091c-42ea-97b6-e9c53dca05b3",
+        "title": "Karbon Ayak İzi: Bir Molekülün Günlüğü",
+        "wordCount": 401,
+        "contentHash": "d642e7c103ed42eca28c786246e4f3a9"
+      }
+    ]
+  },
+  {
+    "id": "61000000-0000-4000-8000-000000000012",
+    "exerciseId": "62b339c7-cf1c-5ece-819f-3c24e00e93a7",
+    "age": "Teen",
+    "level": 3,
+    "title": "Biyomimetik: Doğadan İlham / Sosyal Medya Algoritmaları: Görünmez El",
+    "sources": [
+      {
+        "id": "0b323669-e098-4447-bae4-1ed7f3eb4641",
+        "title": "Biyomimetik: Doğadan İlham",
+        "wordCount": 306,
+        "contentHash": "ad6d8444168911899c0ed09c2050b523"
+      },
+      {
+        "id": "82845f65-d42e-4ee0-86cd-20fd31c2a424",
+        "title": "Sosyal Medya Algoritmaları: Görünmez El",
+        "wordCount": 420,
+        "contentHash": "0931e6cb0999903d0e105ebee7f98a96"
+      }
+    ]
+  },
+  {
+    "id": "61000000-0000-4000-8000-000000000013",
+    "exerciseId": "70708463-e9b2-5926-b07b-c7bef1feffac",
+    "age": "Teen",
+    "level": 4,
+    "title": "Podcast ve Ses İçeriği Üretimi / Fotoğrafçılık: Işık ve Kompozisyon",
+    "sources": [
+      {
+        "id": "c293de94-7e02-479a-8377-2a4848261e9e",
+        "title": "Podcast ve Ses İçeriği Üretimi",
+        "wordCount": 411,
+        "contentHash": "33b533c7c3fc1f94ed6fda17cfe4d30c"
+      },
+      {
+        "id": "f51080a8-ef9c-46b2-91e0-f6d10d73ec4d",
+        "title": "Fotoğrafçılık: Işık ve Kompozisyon",
+        "wordCount": 425,
+        "contentHash": "33c7df985b033e97850ec7eafbd1bf4a"
+      }
+    ]
+  },
+  {
+    "id": "61000000-0000-4000-8000-000000000014",
+    "exerciseId": "70708463-e9b2-5926-b07b-c7bef1feffac",
+    "age": "Teen",
+    "level": 4,
+    "title": "Podcast ve Ses İçeriği Üretimi / 3D Yazıcılar: Dijital Üretim Devrimi",
+    "sources": [
+      {
+        "id": "c293de94-7e02-479a-8377-2a4848261e9e",
+        "title": "Podcast ve Ses İçeriği Üretimi",
+        "wordCount": 411,
+        "contentHash": "33b533c7c3fc1f94ed6fda17cfe4d30c"
+      },
+      {
+        "id": "2d28081a-eae4-4366-aea3-a708b0c48cb6",
+        "title": "3D Yazıcılar: Dijital Üretim Devrimi",
+        "wordCount": 427,
+        "contentHash": "303db7c525b4e77069cb7191901711aa"
+      }
+    ]
+  },
+  {
+    "id": "61000000-0000-4000-8000-000000000015",
+    "exerciseId": "79e32c19-71ce-5f68-802e-588d3d3b7182",
+    "age": "YoungAdult",
+    "level": 4,
+    "title": "Epigenetik: Genler Kaderimiz Değildir / Start-up Kültürü: Garajdan Milyar Dolara",
+    "sources": [
+      {
+        "id": "4a1b2c3d-8e9f-4444-bbbb-123456789012",
+        "title": "Epigenetik: Genler Kaderimiz Değildir",
+        "wordCount": 425,
+        "contentHash": "1789314d4505da73ca88013f0ed900a5"
+      },
+      {
+        "id": "11223344-5566-7788-9900-aabbccddeeff",
+        "title": "Start-up Kültürü: Garajdan Milyar Dolara",
+        "wordCount": 518,
+        "contentHash": "9103fd592890d377f418b554417d2e48"
+      }
+    ]
+  },
+  {
+    "id": "61000000-0000-4000-8000-000000000016",
+    "exerciseId": "79e32c19-71ce-5f68-802e-588d3d3b7182",
+    "age": "YoungAdult",
+    "level": 4,
+    "title": "Dijital Minimalizm: Gürültülü Dünyada Odaklanma / Uzaktan Çalışma ve Dijital Göçebelik: Ofissiz Hayat",
+    "sources": [
+      {
+        "id": "abcdef01-2345-6789-aaaa-bbbbccccdddd",
+        "title": "Dijital Minimalizm: Gürültülü Dünyada Odaklanma",
+        "wordCount": 439,
+        "contentHash": "8c71ac7dd1b2024b0671220a6411718b"
+      },
+      {
+        "id": "77889900-1122-3344-5566-778899001122",
+        "title": "Uzaktan Çalışma ve Dijital Göçebelik: Ofissiz Hayat",
+        "wordCount": 510,
+        "contentHash": "bad7c30090d393656b7f09210bc77674"
+      }
+    ]
+  },
+  {
+    "id": "61000000-0000-4000-8000-000000000017",
+    "exerciseId": "a3533513-6a35-5037-ad55-ae51942c437f",
+    "age": "YoungAdult",
+    "level": 5,
+    "title": "Kuantum Dolanıklık: \"Ürkütücü\" Bir Mesafe / Entropi ve Zamanın Oku: Kaosun Yasası",
+    "sources": [
+      {
+        "id": "44556677-8899-0011-2233-445566778899",
+        "title": "Kuantum Dolanıklık: \"Ürkütücü\" Bir Mesafe",
+        "wordCount": 491,
+        "contentHash": "7bbf1dd517227d6aad9f2b5a5c78dbfd"
+      },
+      {
+        "id": "1c2d3e4f-5a6b-7777-8888-666677778888",
+        "title": "Entropi ve Zamanın Oku: Kaosun Yasası",
+        "wordCount": 559,
+        "contentHash": "902e574beaa3876462f98e161b91c4ef"
+      }
+    ]
+  },
+  {
+    "id": "61000000-0000-4000-8000-000000000018",
+    "exerciseId": "a3533513-6a35-5037-ad55-ae51942c437f",
+    "age": "YoungAdult",
+    "level": 5,
+    "title": "Simbiyoz ve İşbirliği: Doğanın Gizli Kanunu / Sicim Teorisi: Evrenin En Küçük Melodisi",
+    "sources": [
+      {
+        "id": "88990011-2233-4455-6677-889900112233",
+        "title": "Simbiyoz ve İşbirliği: Doğanın Gizli Kanunu",
+        "wordCount": 502,
+        "contentHash": "c99db3304fea8382fac04341577388f4"
+      },
+      {
+        "id": "3c4d5e6f-7a8b-9999-0000-bbbbccccdddd",
+        "title": "Sicim Teorisi: Evrenin En Küçük Melodisi",
+        "wordCount": 549,
+        "contentHash": "f7fd45eb9dc496231c623af53ecee648"
+      }
+    ]
+  },
+  {
+    "id": "61000000-0000-4000-8000-000000000019",
+    "exerciseId": "a744fd23-45f3-51cf-ac18-85f81d094937",
+    "age": "Adult",
+    "level": 1,
+    "title": "Patron mu, Lider mi? Modern Liderlik Anlayışı / Sürdürülebilirlik ve Sıfır Atık: Gezegen İçin Bir Yaşam Tarzı",
+    "sources": [
+      {
+        "id": "e952de08-a9c2-456d-b911-83d422b2625b",
+        "title": "Patron mu, Lider mi? Modern Liderlik Anlayışı",
+        "wordCount": 365,
+        "contentHash": "92e370020d1637a3ad93b39548bcde80"
+      },
+      {
+        "id": "813ec134-d8e3-4a2c-b65a-62ef4372dec8",
+        "title": "Sürdürülebilirlik ve Sıfır Atık: Gezegen İçin Bir Yaşam Tarzı",
+        "wordCount": 374,
+        "contentHash": "3f0ace7bf4f778333a38d265bd8b00f6"
+      }
+    ]
+  },
+  {
+    "id": "61000000-0000-4000-8000-000000000020",
+    "exerciseId": "a744fd23-45f3-51cf-ac18-85f81d094937",
+    "age": "Adult",
+    "level": 1,
+    "title": "Patron mu, Lider mi? Modern Liderlik Anlayışı / Yalnız Seyahat Sanatı: Kendini Yolda Bulmak",
+    "sources": [
+      {
+        "id": "e952de08-a9c2-456d-b911-83d422b2625b",
+        "title": "Patron mu, Lider mi? Modern Liderlik Anlayışı",
+        "wordCount": 365,
+        "contentHash": "92e370020d1637a3ad93b39548bcde80"
+      },
+      {
+        "id": "da3a87e9-30ce-43ce-80ca-e42850cade83",
+        "title": "Yalnız Seyahat Sanatı: Kendini Yolda Bulmak",
+        "wordCount": 380,
+        "contentHash": "5b6e3f9eeaeb07dd5f2acc675889b8ed"
+      }
+    ]
+  },
+  {
+    "id": "61000000-0000-4000-8000-000000000021",
+    "exerciseId": "9546695f-5d8b-5857-8e8d-b431e37224e5",
+    "age": "Adult",
+    "level": 2,
+    "title": "Enflasyon Canavarı ve Faiz Silahı: Makroekonomi 101 / Geleceğin Parası mı, Dijital Lale Çılgınlığı mı: Kripto Paralar ve Blockchain",
+    "sources": [
+      {
+        "id": "370b80a5-12c9-4f29-a568-e7762af601f2",
+        "title": "Enflasyon Canavarı ve Faiz Silahı: Makroekonomi 101",
+        "wordCount": 363,
+        "contentHash": "273332bd0229d265d511502daeec12ab"
+      },
+      {
+        "id": "1d0be83a-59a5-4026-b3e7-f331c8818c44",
+        "title": "Geleceğin Parası mı, Dijital Lale Çılgınlığı mı: Kripto Paralar ve Blockchain",
+        "wordCount": 443,
+        "contentHash": "e71dcc2262e0af3a2b29f13e4d7d1468"
+      }
+    ]
+  },
+  {
+    "id": "61000000-0000-4000-8000-000000000022",
+    "exerciseId": "9546695f-5d8b-5857-8e8d-b431e37224e5",
+    "age": "Adult",
+    "level": 2,
+    "title": "Sanayi Devriminin Dördüncü Dalgası: Endüstri 4.0 ve İşin Geleceği / Homo Economicus Efsanesi: Davranışsal İktisat ve İrrasyonelliğimiz",
+    "sources": [
+      {
+        "id": "aecc0af5-30d1-4e06-85e3-026a8281a5ad",
+        "title": "Sanayi Devriminin Dördüncü Dalgası: Endüstri 4.0 ve İşin Geleceği",
+        "wordCount": 376,
+        "contentHash": "48f0be90012bf2a7e44493a89554910b"
+      },
+      {
+        "id": "e1b39f90-37b3-4c06-84c7-54b048496528",
+        "title": "Homo Economicus Efsanesi: Davranışsal İktisat ve İrrasyonelliğimiz",
+        "wordCount": 422,
+        "contentHash": "34cbd585ccb0f8ca3a4a6e72dca32002"
+      }
+    ]
+  }
+]
