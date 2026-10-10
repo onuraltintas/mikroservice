@@ -47,4 +47,29 @@ Tam geri yükleme canlıda denenmez. Kimlik/Koçluk/Notification veritabanların
 
 ## Yayın sonucu
 
-Henüz yayımlanmadı; kontrollü geçiş kanıtları buraya eklenecek.
+- Yayın zamanı: 10 Ekim 2026, 20:13:32 Türkiye saati.
+- GitHub `codex/platform-hardening` dalına `0e88dde3` gönderildi; remote HEAD eşleşti.
+  Bu dal için GitHub Actions çalışması listelenmedi; test kanıtları yerel çalıştırmalardır.
+- Yalnız veri paketi uygulandı; API imajı `eduivme/speed-reading-service:teen-programs-v2-534c187a`
+  ve frontend aynı kaldı. Tüm konteynır kimliği/imajları önce/sonra birebir aynı.
+- Paket SHA256: `c5df98f9967318b64efcde0d2846f59f1144d71dfd19dcb247e09804ed48085b`.
+- VPS yedeği: `/var/lib/eduivme/releases/young-adult-programs-v2-20261010-0e88dde3/speedreading-before.dump`.
+  1.585.769 bayt, izin 600; `pg_restore --list` başarılı. Tam geri yükleme tatbikatı yapılmadı.
+  Yedek SHA256: `b916143ae66d2f9c77bb60bf6ea8cd198d9780721c8348c8e1aa4f7879657cf7`.
+- Beş eski şablon, bir onaylı Seviye 1 ilerleme kaydı, üç günlük görev logu ve bunların üç oturumu
+  fiziksel olarak silindi; FK cascade ile üç sonuç ve 16 cevap kaldırıldı. Yedekten kurtarılabilir.
+  Hesap silinmedi; bu, bütün kullanıcı geçmişini veya gamification toplamlarını sıfırlama değildir.
+- Beş yeni programın her birinde 28 gün / 182 görev doğrulandı. Seviye tespit şablonu korundu.
+- Kapsam dışındaki kayıtlar için 85 kalıcı tablonun sayım/özetleri birebir aynı.
+  Diğer yaş programları, egzersiz kataloğu, metinler/sorular, profil/abonelik/ödeme verileri ve
+  78 migration kaydı korundu. Identity/Koçluk/Notification veritabanları değiştirilmedi.
+- Readiness `Healthy`, ana sayfa HTTP 200, oturumsuz korumalı program API'si HTTP 401.
+- Gerçek admin oturumunda Genç Yetişkin filtresi beş yeni programı gösterdi. Ayrıntıda
+  28 gün / 182 görev / ilk 14 gün 6, son 14 gün 7 görev görüldü; eski aktif eğitim ve geçmiş
+  kalktı, yeni kayıt butonları etkin. Hiçbir programa yeni canlı kayıt oluşturulmadı.
+- Yayın sonrasına ait konsol hata/uyarı kaydı yok. Daha önceki tarayıcı eklentisi mesajları
+  yayın öncesine aittir, API hatası olarak değerlendirilmedi.
+- Ekran kanıtı: `artifacts/young-adult-programs-v2-tests/live-young-adult-programs.png` (yerel).
+- Canlı içerik kontrolü: her seviyede soruları olan 15 aktif genç yetişkin metni;
+  genç yetişkin/ortak kelime havuzunda seviyelere göre 299 / 488 / 323 / 271 / 105 kayıt.
+- 15 dakikalık yayın sonrası sağlık takibi sürüyor; sonucu ayrıca eklenecek.
