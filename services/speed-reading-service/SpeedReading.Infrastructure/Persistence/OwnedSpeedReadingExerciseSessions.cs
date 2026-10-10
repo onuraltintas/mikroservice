@@ -1316,8 +1316,12 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                 ?? ReadPositiveInt(rootTiming, "maxReadingTimeMs") ?? 0;
         }
         if (IsEngineType(exerciseEngineType, "reading_comprehension"))
+        {
             state.ComprehensionMode = isAssessmentMode ? "evaluation"
                 : (ReadString(effectiveConfig, "comprehensionMode") ?? ReadString(config, "comprehensionMode") ?? "evaluation").Trim().ToLowerInvariant();
+            state.ComprehensionProtocolVersion = !isAssessmentMode
+                && (ReadString(effectiveConfig, "comprehensionMode") ?? ReadString(config, "comprehensionMode")) is not null ? 1 : 0;
+        }
         if (IsReadingExerciseFlow(state) && state.EngineType is not ("scan_find" or "scanning"))
             state.ReadingPurpose = ExerciseConfigurationRules.ResolveReadingPurpose(
                 exerciseEngineType,
@@ -2250,7 +2254,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         ExerciseActionRequest request,
         DateTime now)
     {
-        if (IsEngineType(state.EngineType, "reading_comprehension") && !state.ReadingEndTime.HasValue)
+        if (state.ComprehensionProtocolVersion == 1 && !state.ReadingEndTime.HasValue)
             return Invalid("Önce okumayı tamamlayın.");
         if (IsSkimming(state) && (state.SkimmingProtocolVersion != 1 || !state.ReadingEndTime.HasValue))
             return Invalid("Önce metin incelemesini tamamlayın.");
@@ -3439,7 +3443,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             [],
             false,
             null,
-            ToPublicJson(state, completedResult: true),
+            SerializePublicState(state, completedResult: !session.AssessmentAttemptId.HasValue),
             feedback ?? (score.HasValue ? "Egzersiz tamamlandı." : "Bu oturum daha önce tamamlandı."),
             null,
             result.IsMeasured ? nameof(SpeedReadingMeasurementStatus.Measured) : nameof(SpeedReadingMeasurementStatus.NotMeasured));
@@ -3521,7 +3525,9 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         }
     }
 
-    private static JsonElement ToPublicJson(SessionState state, bool completedResult = false)
+    private static JsonElement ToPublicJson(SessionState state) => SerializePublicState(state, completedResult: false);
+
+    private static JsonElement SerializePublicState(SessionState state, bool completedResult)
     {
         var json = JsonSerializer.SerializeToNode(state, JsonOptions)!.AsObject();
         if (state.Tachistoscope is { } tachistoscope)
@@ -3795,6 +3801,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         public decimal GroupingCompletionPercent { get; set; }
         public string? ReadingPurpose { get; set; }
         public string? ComprehensionMode { get; set; }
+        public int ComprehensionProtocolVersion { get; set; }
         public DateTime? ReadingPausedAt { get; set; }
         public int ReadingPausedSeconds { get; set; }
         public long? ReadingPausedMilliseconds { get; set; }

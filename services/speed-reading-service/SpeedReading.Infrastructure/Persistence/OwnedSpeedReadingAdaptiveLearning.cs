@@ -253,6 +253,17 @@ internal sealed class OwnedSpeedReadingAdaptiveLearning(OwnedSpeedReadingDbConte
             .Where(item => item.StudentId == userId && item.IsMeasured)
             .OrderByDescending(item => item.CompletedAt)
             .ToListAsync(cancellationToken);
+        var resultSessionIds = exerciseResults.Where(item => item.SessionId.HasValue)
+            .Select(item => item.SessionId!.Value).ToList();
+        if (resultSessionIds.Count > 0)
+        {
+            var sessionStates = await db.ExerciseSessions.AsNoTracking()
+                .Where(item => item.StudentId == userId && resultSessionIds.Contains(item.Id))
+                .Select(item => new { item.Id, item.SessionDataJson }).ToListAsync(cancellationToken);
+            var learningIds = sessionStates.Where(item => IsComprehensionLearning(item.SessionDataJson))
+                .Select(item => item.Id).ToHashSet();
+            exerciseResults.RemoveAll(item => item.SessionId.HasValue && learningIds.Contains(item.SessionId.Value));
+        }
         var readingSessions = await db.ReadingSessions
             .AsNoTracking()
             .Where(item => item.UserId == userId
@@ -311,6 +322,18 @@ internal sealed class OwnedSpeedReadingAdaptiveLearning(OwnedSpeedReadingDbConte
             .ToList();
 
         return new AdaptiveSnapshot(profile, userProfile, canonicalExerciseResults, readingSessions, readingSessionAnswers, activities);
+    }
+
+    private static bool IsComprehensionLearning(string stateJson)
+    {
+        try
+        {
+            using var document = JsonDocument.Parse(stateJson);
+            return document.RootElement.ValueKind == JsonValueKind.Object
+                && document.RootElement.TryGetProperty("comprehensionMode", out var mode)
+                && mode.ValueKind == JsonValueKind.String && mode.GetString() == "learning";
+        }
+        catch (JsonException) { return false; } // Historical non-JSON states have no learning mode.
     }
 
     private async Task<LegacyDailyGoal> GetOrCreateDailyGoalAsync(
