@@ -11,9 +11,24 @@ namespace SpeedReading.Infrastructure.Persistence;
 
 internal sealed partial class OwnedSpeedReadingExerciseSessions
 {
-    private static Guid[] ScanningTaskTextIds(JsonElement config) =>
-        ReadObject(ReadObject(config, "targets"), "tasksByTextId") is { ValueKind: JsonValueKind.Object } tasks
-            ? tasks.EnumerateObject().Select(item => Guid.Parse(item.Name)).ToArray() : [];
+    private static Guid[] ScanningTaskTextIds(JsonElement config)
+    {
+        var tasks = ReadProperty(ReadObject(config, "targets"), "tasksByTextId");
+        if (tasks.ValueKind == JsonValueKind.Undefined) return [];
+        if (tasks.ValueKind != JsonValueKind.Object)
+            throw new BusinessRuleException("ExerciseSession.ScanningTasksUnavailable", "Bilgi bulma görevlerinin metin bağlantıları geçersiz.");
+        var ids = new List<Guid>();
+        foreach (var task in tasks.EnumerateObject())
+        {
+            if (!Guid.TryParseExact(task.Name, "D", out var id) || id == Guid.Empty || task.Name != id.ToString()
+                || ids.Count >= 100 || ids.Contains(id))
+                throw new BusinessRuleException("ExerciseSession.ScanningTasksUnavailable", "Bilgi bulma görevlerinin metin bağlantıları geçersiz.");
+            ids.Add(id);
+        }
+        if (ids.Count == 0)
+            throw new BusinessRuleException("ExerciseSession.ScanningTasksUnavailable", "Bilgi bulma görevleri henüz hazırlanmamış.");
+        return ids.ToArray();
+    }
 
     private static bool IsScanning(SessionState state) =>
         ExerciseConfigurationRules.NormalizeEngineType(state.EngineType) is "scan_find" or "scanning";
@@ -39,8 +54,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions
         else
         {
             var content = ReadString(ReadObject(config, "content"), "text") ?? state.Content;
-            var round = CreateScanningRound(content, ReadStringArray(targetsConfig, "words"), state, config);
-            state.ScanningRounds.Add(round);
+            state.ScanningRounds.Add(CreateScanningRound(content, ReadStringArray(targetsConfig, "words"), state, config));
         }
         if (state.ScanningRounds.Count == 0)
             throw new BusinessRuleException("ExerciseSession.ScanningContentUnavailable", "Tarama metni ve hedefleri henüz hazırlanmadı.");

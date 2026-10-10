@@ -255,7 +255,8 @@ export class ScanFindEngine implements BaseEngine {
     }
 
     getTargetLabel(target: string): string {
-        return this.targetLabels[target] || target;
+        return Object.hasOwn(this.targetLabels, target) && typeof this.targetLabels[target] === 'string'
+            ? this.targetLabels[target] : target;
     }
 
     getFontSizePx(): number {
