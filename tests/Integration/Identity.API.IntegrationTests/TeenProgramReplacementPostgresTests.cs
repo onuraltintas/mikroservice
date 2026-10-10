@@ -67,7 +67,7 @@ public sealed class TeenProgramReplacementPostgresTests(PostgresFixture postgres
             var unrelatedProgress = StudentProgramProgress.Start(Guid.NewGuid(), actor, child, 40, 2, actor, DateTime.UtcNow);
             db.StudentProgramProgresses.Add(unrelatedProgress);
             if (mode == "history")
-                db.StudentProgramProgresses.Add(StudentProgramProgress.Start(Guid.NewGuid(), actor, oldTemplates[0], 0, 0, actor, DateTime.UtcNow));
+                db.StudentProgramProgresses.Add(StudentProgramProgress.Start(Guid.NewGuid(), Guid.NewGuid(), oldTemplates[0], 0, 0, actor, DateTime.UtcNow));
             if (mode == "collision")
                 db.ProgramTemplates.Add(Import(Guid.Parse("e2c01002-8d9a-4e6c-a428-000000000001"), "Reserved id collision", Age, 1));
             var invalid = JsonNode.Parse(planJson)!.AsObject();
@@ -120,7 +120,7 @@ public sealed class TeenProgramReplacementPostgresTests(PostgresFixture postgres
                 {
                     Assert.Equal(0, template.WeeksPerDifficultyIncrease);
                     Assert.Equal(28, template.TotalDays);
-                    Assert.Equal(template.InitialDifficultyLevel, template.MaxDifficultyLevel);
+                    Assert.Equal(Math.Min(template.InitialDifficultyLevel + 1, 5), template.MaxDifficultyLevel);
                     ProgramWeeklyPatternRules.Validate(template.WeeklyPatternJson, false, true);
                     var json = await (Task<string>)builder.Invoke(null, [db, template, null, CancellationToken.None])!;
                     using var schedule = JsonDocument.Parse(json);
