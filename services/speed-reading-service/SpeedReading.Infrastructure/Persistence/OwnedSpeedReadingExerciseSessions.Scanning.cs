@@ -11,6 +11,10 @@ namespace SpeedReading.Infrastructure.Persistence;
 
 internal sealed partial class OwnedSpeedReadingExerciseSessions
 {
+    private static Guid[] ScanningTaskTextIds(JsonElement config) =>
+        ReadObject(ReadObject(config, "targets"), "tasksByTextId") is { ValueKind: JsonValueKind.Object } tasks
+            ? tasks.EnumerateObject().Select(item => Guid.Parse(item.Name)).ToArray() : [];
+
     private static bool IsScanning(SessionState state) =>
         ExerciseConfigurationRules.NormalizeEngineType(state.EngineType) is "scan_find" or "scanning";
 
@@ -35,7 +39,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions
         else
         {
             var content = ReadString(ReadObject(config, "content"), "text") ?? state.Content;
-            state.ScanningRounds.Add(CreateScanningRound(content, ReadStringArray(targetsConfig, "words"), state, config));
+            var round = CreateScanningRound(content, ReadStringArray(targetsConfig, "words"), state, config);
+            state.ScanningRounds.Add(round);
         }
         if (state.ScanningRounds.Count == 0)
             throw new BusinessRuleException("ExerciseSession.ScanningContentUnavailable", "Tarama metni ve hedefleri henüz hazırlanmadı.");
@@ -54,14 +59,44 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions
             .Where(word => word.Length > 0).Distinct(StringComparer.Ordinal).ToArray();
         var requested = targets.Take(100).Select(word => NormalizeScanningWord(word, state.ScanningCaseSensitive))
             .Where(word => word.Length > 0).Distinct(StringComparer.Ordinal).ToArray();
+        var labels = new Dictionary<string, string>(StringComparer.Ordinal);
+        var taskMap = ReadObject(ReadObject(config, "targets"), "tasksByTextId");
+        if (taskMap.ValueKind == JsonValueKind.Object)
+        {
+            var tasks = ReadProperty(taskMap, state.ReadingTextId?.ToString() ?? "");
+            if (tasks.ValueKind != JsonValueKind.Array || tasks.GetArrayLength() == 0)
+                throw new BusinessRuleException("ExerciseSession.ScanningTasksUnavailable", "Seçilen metnin bilgi bulma görevleri hazırlanmamış.");
+            foreach (var task in tasks.EnumerateArray())
+            {
+                var answer = NormalizeScanningWord(ReadString(task, "answer") ?? "", state.ScanningCaseSensitive);
+                var prompt = ReadString(task, "prompt") ?? "";
+                if (answer.Length == 0 || string.IsNullOrWhiteSpace(prompt) || !words.Contains(answer, StringComparer.Ordinal)
+                    || !labels.TryAdd(answer, prompt))
+                    throw new BusinessRuleException("ExerciseSession.ScanningTargetsUnavailable", "Bilgi bulma görevi metindeki tek bir sözcükle eşleşmelidir.");
+            }
+            requested = labels.Keys.ToArray();
+        }
         if (targets.Length > 0 && (requested.Length == 0 || requested.Any(word => !words.Contains(word, StringComparer.Ordinal))))
             throw new BusinessRuleException("ExerciseSession.ScanningTargetsUnavailable", "Tarama hedefleri metindeki sözcüklerle eşleşmiyor.");
-        if (targets.Length == 0)
-            requested = words.Where(word => word.Any(char.IsLetter)).OrderByDescending(word => word.Length)
-                .ThenBy(word => word, StringComparer.Ordinal).Take(Math.Clamp(ReadPositiveInt(config, "targetCount") ?? 3, 1, 100)).ToArray();
+        var requiredCount = Math.Clamp(ReadPositiveInt(config, "targetCount") ?? 3, 1, 100);
+        if (targets.Length == 0 && labels.Count == 0)
+        {
+            var candidates = words.Where(word => word.Length >= 2 && word.Any(char.IsLetter)).ToArray();
+            Random.Shared.Shuffle(candidates);
+            requested = candidates.Take(requiredCount).ToArray();
+            if (requested.Length < requiredCount)
+                throw new BusinessRuleException("ExerciseSession.ScanningTargetsUnavailable", "Metinde istenen sayıda farklı tarama hedefi bulunamadı.");
+        }
+        else if (labels.Count > 0 && requested.Length != requiredCount)
+            throw new BusinessRuleException("ExerciseSession.ScanningTargetsUnavailable", "Bilgi bulma görev sayısı hedef sayısıyla eşleşmiyor.");
         if (requested.Length == 0)
             throw new BusinessRuleException("ExerciseSession.ScanningTargetsUnavailable", "Metinde taranabilecek hedef sözcük bulunamadı.");
-        return new ScanningRound { TextContent = content, Targets = requested };
+        var contentConfig = ReadObject(config, "content");
+        var count = SplitWords(content).Length;
+        if (count < (ReadPositiveInt(contentConfig, "minWordCount") ?? 0)
+            || count > (ReadPositiveInt(contentConfig, "maxWordCount") ?? 100_000))
+            throw new BusinessRuleException("ExerciseSession.ScanningContentUnavailable", "Tarama metni yapılandırılan uzunluk sınırlarıyla eşleşmiyor.");
+        return new ScanningRound { TextContent = content, Targets = requested, TargetLabels = labels };
     }
 
     private static bool ScanningComplete(SessionState state) =>
@@ -142,6 +177,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions
 
     private sealed class ScanningRound
     {
+        public Dictionary<string, string> TargetLabels { get; set; } = [];
         public string TextContent { get; set; } = "";
         public string[] Targets { get; set; } = [];
         public List<string> FoundTargets { get; set; } = [];

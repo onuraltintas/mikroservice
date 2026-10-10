@@ -140,17 +140,21 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             var explicitConfig = ParseJsonOrEmpty(configurationJson);
             var explicitContent = ReadObject(ReadObject(explicitConfig, "engineConfig"), "content");
             var isFreeText = ExerciseConfigurationRules.NormalizeEngineType(exerciseEngineType) == "free_reading";
-            var usesTextBand = isFreeText || IsEngineType(exerciseEngineType, "reading_comprehension") || exerciseTypeName.Equals("SpeedReading", StringComparison.OrdinalIgnoreCase);
+            var isScanText = ExerciseConfigurationRules.NormalizeEngineType(exerciseEngineType) is "scan_find" or "scanning";
+            var scanTaskIds = isScanText ? ScanningTaskTextIds(ReadObject(explicitConfig, "engineConfig").ValueKind == JsonValueKind.Object
+                ? ReadObject(explicitConfig, "engineConfig") : explicitConfig) : [];
+            var usesTextBand = isFreeText || isScanText || IsEngineType(exerciseEngineType, "reading_comprehension") || exerciseTypeName.Equals("SpeedReading", StringComparison.OrdinalIgnoreCase);
             var minimumWords = usesTextBand ? ReadPositiveInt(explicitContent, "minWordCount") ?? ReadPositiveInt(ReadObject(explicitConfig, "content"), "minWordCount") ?? 0 : 0;
             var maximumWords = usesTextBand ? ReadPositiveInt(explicitContent, "maxWordCount") ?? ReadPositiveInt(ReadObject(explicitConfig, "content"), "maxWordCount") ?? 0 : 0;
             var strictTextLevel = IsEngineType(exerciseEngineType, "word_highlight") || IsPacedHighlight(new SessionState { EngineType = exerciseEngineType, ExerciseTypeName = exerciseTypeName })
                 || IsRsvp(exerciseTypeName, exerciseEngineType, explicitConfig)
-                || ExerciseConfigurationRules.NormalizeEngineType(exerciseEngineType) is "reading_comprehension" or "free_reading" or "text_fade" or "regression_reduction" or "subvocalization_reduction" or "skimming";
+                || ExerciseConfigurationRules.NormalizeEngineType(exerciseEngineType) is "reading_comprehension" or "free_reading" or "text_fade" or "regression_reduction" or "subvocalization_reduction" or "skimming" or "scan_find" or "scanning";
             var readingTextMatches = await db.ReadingTexts
                 .AsNoTracking()
                 .AnyAsync(item => item.Id == request.ReadingTextId.Value
                     && item.IsActive
                     && !item.IsDeleted
+                    && (scanTaskIds.Length == 0 || Enumerable.Contains(scanTaskIds, item.Id))
                     && (!strictTextLevel || item.DifficultyLevel == difficultyLevel)
                     && (!usesTextBand || (item.WordCount >= minimumWords && (maximumWords == 0 || item.WordCount <= maximumWords)))
                     && (!profileAgeGroupId.HasValue
@@ -324,7 +328,10 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                 var isExam = normalizedEngineType == "exam_simulation";
                 var isFreeReading = normalizedEngineType == "free_reading";
                 var freeContent = ReadObject(ReadObject(parsedConfiguration, "engineConfig"), "content");
-                var usesTextBand = isFreeReading || isComprehension || exerciseTypeName.Equals("SpeedReading", StringComparison.OrdinalIgnoreCase);
+                var isScanText = normalizedEngineType is "scan_find" or "scanning";
+                var scanTaskIds = isScanText ? ScanningTaskTextIds(ReadObject(parsedConfiguration, "engineConfig").ValueKind == JsonValueKind.Object
+                    ? ReadObject(parsedConfiguration, "engineConfig") : parsedConfiguration) : [];
+                var usesTextBand = isFreeReading || isComprehension || isScanText || exerciseTypeName.Equals("SpeedReading", StringComparison.OrdinalIgnoreCase);
                 var comprehensionQuestionCount = isComprehension
                     ? ReadPositiveInt(freeContent, "questionCount") ?? ReadPositiveInt(ReadObject(parsedConfiguration, "content"), "questionCount") ?? 0 : 0;
                 var freeMinimumWords = usesTextBand ? ReadPositiveInt(freeContent, "minWordCount") ?? ReadPositiveInt(ReadObject(parsedConfiguration, "content"), "minWordCount") ?? 0 : 0;
@@ -347,6 +354,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                     .Where(item => item.IsActive
                         && !item.IsDeleted
                         && item.Content != string.Empty
+                        && (scanTaskIds.Length == 0 || Enumerable.Contains(scanTaskIds, item.Id))
                         && (!(isExam || isFreeReading || isComprehension || isSkimming || isScanning || isGrouping || isTextFade || isRegression || isSubvocalization || isRsvp || isErrorAnalysis) || item.DifficultyLevel == difficultyLevel)
                         && (!usesTextBand || (item.WordCount >= freeMinimumWords && (freeMaximumWords == 0 || item.WordCount <= freeMaximumWords)))
                         && (!profileAgeGroupId.HasValue

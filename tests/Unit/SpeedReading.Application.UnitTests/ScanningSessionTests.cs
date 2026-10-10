@@ -211,7 +211,7 @@ public sealed class ScanningSessionTests
     public void Scanning_catalog_rejects_inverted_word_bands()
     {
         var validate = () => ExerciseConfigurationRules.ValidateActiveConfiguration(
-            """{"engineConfig":{"content":{"minWordCount":100,"maxWordCount":50}}}""", "scanning");
+            """{"engineType":"scanning","engineConfig":{"content":{"minWordCount":100,"maxWordCount":50}}}""", "scanning");
         validate.Should().Throw<ArgumentException>();
     }
 

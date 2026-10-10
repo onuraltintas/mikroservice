@@ -642,12 +642,15 @@ public static class ExerciseConfigurationRules
             ValidateOptionalObject(config, name, "Tarama egzersizi");
         ValidateOptionalIntRange(config, "timeLimitSeconds", 1, 3_600, "Tarama süre sınırı");
         ValidateOptionalIntRange(config, "timeLimit", 1, 3_600, "Tarama süre sınırı");
+        ValidateOptionalIntRange(config, "targetCount", 1, 100, "Tarama hedef sayısı");
 
         if (TryGetObject(config, "timing") is { } timing)
             ValidateOptionalIntRange(timing, "timeLimitSec", 1, 3_600, "Tarama süre sınırı");
         if (TryGetObject(config, "content") is { } content)
         {
             ValidateOptionalIntRange(content, "wordCount", 1, 10_000, "Tarama metni kelime sayısı");
+            ValidateOptionalIntRange(content, "minWordCount", 1, 100_000, "Minimum tarama metni uzunluğu");
+            ValidateOptionalIntRange(content, "maxWordCount", 1, 100_000, "Maksimum tarama metni uzunluğu");
             ValidateOptionalBoundedString(content, "text", 100_000, "Tarama metni");
             if (TryGetProperty(content, "source") is { } source
                 && (source.ValueKind != JsonValueKind.String
@@ -659,6 +662,30 @@ public static class ExerciseConfigurationRules
         if (TryGetObject(config, "targets") is { } targets)
         {
             ValidateOptionalStringArray(targets, "words", 100, 100, "Tarama hedefleri");
+            if (TryGetProperty(targets, "tasksByTextId") is { } taskMap)
+            {
+                if (taskMap.ValueKind != JsonValueKind.Object || !taskMap.EnumerateObject().Any()
+                    || taskMap.EnumerateObject().Count() > 100)
+                    throw new ArgumentException("Bilgi bulma görevleri 1–100 metne bağlı olmalıdır.");
+                foreach (var text in taskMap.EnumerateObject())
+                {
+                    if (!Guid.TryParseExact(text.Name, "D", out var id) || id == Guid.Empty || text.Name != id.ToString()
+                        || text.Value.ValueKind != JsonValueKind.Array || text.Value.GetArrayLength() is < 1 or > 100)
+                        throw new ArgumentException("Bilgi bulma görevleri geçerli metin kimliği ve 1–100 görev içermelidir.");
+                    foreach (var task in text.Value.EnumerateArray())
+                    {
+                        if (task.ValueKind != JsonValueKind.Object
+                            || TryGetProperty(task, "answer") is not { ValueKind: JsonValueKind.String } answer
+                            || string.IsNullOrWhiteSpace(answer.GetString()) || answer.GetString()!.Length > 100
+                            || answer.GetString()!.Any(char.IsWhiteSpace)
+                            || TryGetProperty(task, "prompt") is not { ValueKind: JsonValueKind.String } prompt
+                            || string.IsNullOrWhiteSpace(prompt.GetString()) || prompt.GetString()!.Length > 300)
+                            throw new ArgumentException("Bilgi bulma görevi kısa bir yönerge ve tek sözcüklü cevap içermelidir.");
+                    }
+                }
+                if (TryGetProperty(targets, "words") is not null || TryGetProperty(config, "scanningRounds") is not null)
+                    throw new ArgumentException("Metne bağlı görevler diğer tarama hedef kaynaklarıyla karıştırılamaz.");
+            }
             if (TryGetProperty(targets, "caseSensitive") is { ValueKind: not JsonValueKind.True and not JsonValueKind.False })
                 throw new ArgumentException("Tarama caseSensitive alanı boolean olmalıdır.");
             if (TryGetProperty(targets, "mode") is { } mode
@@ -860,6 +887,13 @@ public static class ExerciseConfigurationRules
             limits.AddRange(ReadNestedInts(nested.Value, "timing", "timeLimitSec"));
         }
         ValidateConsistentValues(limits, "Tarama süre sınırı");
+        var scopes = nested.HasValue ? new[] { root, nested.Value } : new[] { root };
+        var minimums = scopes.SelectMany(scope => ReadNestedInts(scope, "content", "minWordCount")).ToList();
+        var maximums = scopes.SelectMany(scope => ReadNestedInts(scope, "content", "maxWordCount")).ToList();
+        ValidateConsistentValues(minimums, "Minimum tarama metni uzunluğu");
+        ValidateConsistentValues(maximums, "Maksimum tarama metni uzunluğu");
+        if (minimums.FirstOrDefault() > 0 && maximums.FirstOrDefault() > 0 && minimums[0] > maximums[0])
+            throw new ArgumentException("Minimum tarama metni uzunluğu maksimumdan büyük olamaz.");
     }
 
     private static void ValidateEffectiveTextStreamConfiguration(JsonElement root, JsonElement? nested)

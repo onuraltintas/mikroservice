@@ -677,12 +677,12 @@
         <div class="scan-targets-panel">
             <div class="targets-header">
                 <span class="material-icons">search</span>
-                <span>Bu kelimeleri bul:</span>
+                <span>Metinde bu hedefleri bul:</span>
             </div>
             <div class="targets-list">
                 <span *ngFor="let target of getScanTargets()" class="target-word"
                     [class.found]="isScanTargetFound(target)">
-                    <span class="target-label">{{ target }}</span>
+                    <span class="target-label">{{ getScanTargetLabel(target) }}</span>
                     <svg *ngIf="isScanTargetFound(target)" class="found-icon" viewBox="0 0 24 24"
                         role="img" aria-label="Bulundu" focusable="false">
                         <path d="M5 12l4 4L19 6" fill="none" stroke="currentColor" stroke-width="3"
@@ -697,7 +697,7 @@
                 role="button" [tabindex]="engineState.isPaused || word.found ? -1 : 0"
                 (keydown.enter)="onScanWordClick(i)" (keydown.space)="$event.preventDefault(); onScanWordClick(i)"
                 [attr.aria-pressed]="word.found" [attr.aria-disabled]="engineState.isPaused"
-                class="scan-word" [class.found]="word.found" [class.target]="word.isTarget"
+                class="scan-word" [class.found]="word.found"
                 [class.missed]="word.isTarget && !word.found && engineState.isCompleted">
                 {{ word.text }}
             </span>

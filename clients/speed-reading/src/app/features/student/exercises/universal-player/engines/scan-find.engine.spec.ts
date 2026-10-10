@@ -156,7 +156,7 @@ describe('ScanFindEngine', () => {
     }));
   }));
 
-  it('normalizes malformed legacy containers and bounds generated content', () => {
+  it('rejects malformed legacy containers without generating invented content', () => {
     const engine = new ScanFindEngine();
 
     expect(() => engine.initialize({
@@ -165,10 +165,7 @@ describe('ScanFindEngine', () => {
       timing: 'invalid',
       scanningRounds: 'invalid',
       timeLimitSeconds: Number.MAX_VALUE
-    } as any, callbacks(() => undefined))).not.toThrow();
-
-    expect(engine.getWords().length).toBeLessThanOrEqual(10000);
-    expect(engine.getTargetWords()).toEqual([]);
+    } as any, callbacks(() => undefined))).toThrowError(/metin/i);
   });
 
   it('counts mixed-case duplicate targets once in case-insensitive mode', () => {

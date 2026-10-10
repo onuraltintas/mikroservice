@@ -752,6 +752,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
             const candidates = texts.filter((text: any) => text.isActive !== false
               && Number(text.difficultyLevel) === level
               && this.previewTextMatchesAge(text)
+              && this.previewTextMatchesScanningTasks(text)
               && this.previewTextMatchesLength(text.wordCount)
               && (!text.exerciseId || text.exerciseId === this.exercise?.id));
             const uses = this.getPreviewTextUses();
@@ -780,6 +781,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
             || !this.previewTextMatchesLength((readingText.content || '').trim().split(/\s+/).length)
             || Number(readingText.difficultyLevel) !== (Number(this.exercise?.difficultyLevel) || 1)
             || !this.previewTextMatchesAge(readingText)
+            || !this.previewTextMatchesScanningTasks(readingText)
             || ((readingText as any).exerciseId && (readingText as any).exerciseId !== this.exercise?.id)) {
             retry();
             return;
@@ -868,11 +870,18 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
 
   private previewTextMatchesLength(wordCount: number): boolean {
     if (this.exercise?.exerciseTypeName?.toLowerCase() !== 'speedreading'
-      && this.parsedConfig?.['engineType'] !== 'reading_comprehension') return true;
+      && !['reading_comprehension', 'scanning', 'scan_find'].includes(this.parsedConfig?.['engineType'] || '')) return true;
     const content = this.parsedConfig?.['engineConfig']?.['content'] || this.parsedConfig?.['content'] || {};
     const minimum = Number(content.minWordCount) || 0;
     const maximum = Number(content.maxWordCount) || 0;
     return wordCount >= minimum && (!maximum || wordCount <= maximum);
+  }
+
+  private previewTextMatchesScanningTasks(text: any): boolean {
+    if (!['scanning', 'scan_find'].includes(this.parsedConfig?.['engineType'] || '')) return true;
+    const tasks = this.parsedConfig?.['engineConfig']?.['targets']?.tasksByTextId
+      ?? this.parsedConfig?.['targets']?.tasksByTextId;
+    return !tasks || Object.hasOwn(tasks, text.id);
   }
 
   private previewRequiresReadingText(): boolean {
@@ -947,6 +956,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
 
     return {
       readingTextContent: content,
+      readingTextId: readingText.id,
       readingTextTitle: title,
       wordCount,
       ReadingTextContent: content,
@@ -3990,6 +4000,10 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       return Array.from(targets);
     }
     return [];
+  }
+
+  getScanTargetLabel(target: string): string {
+    return this.engine?.engineType === 'scan_find' ? (this.engine as ScanFindEngine).getTargetLabel(target) : target;
   }
 
   isScanTargetFound(target: string): boolean {

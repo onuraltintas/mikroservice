@@ -15,6 +15,7 @@ export interface ScanFindConfig extends EngineConfig {
         textTitle: string;
         wordCount: number;
         targets: string[];
+        targetLabels?: Record<string, string>;
         foundTargets: string[];
         searchTimeMs: number;
         isCompleted: boolean;
@@ -31,6 +32,7 @@ export interface ScanFindConfig extends EngineConfig {
         words: string[];      // Aranacak kelimeler
         caseSensitive?: boolean;
         mode?: 'find_all' | 'find_any'; // Her hedefi bir kez veya hedeflerden herhangi birini bul.
+        tasksByTextId?: Record<string, Array<{ answer: string; prompt: string }>>;
     };
     timing?: {
         timeLimitSec?: number;
@@ -69,6 +71,7 @@ export class ScanFindEngine implements BaseEngine {
     private foundCount = 0;
     private targetCount = 0;
     private targetWords: string[] = [];
+    private targetLabels: Record<string, string> = {};
     private currentRoundIndex = 0;
     private totalFoundUniqueAcrossRounds = 0;
     private totalTargetCountAcrossRounds = 0;
@@ -76,20 +79,6 @@ export class ScanFindEngine implements BaseEngine {
     private awaitingServer = false;
     private serverStarted = false;
     private timedOut = false;
-
-    // Dummy text generator
-    private static readonly TEXT_POOL = [
-        "Hızlı okuma becerisi, bilgi çağında hayati bir yetenektir.",
-        "Göz kaslarını geliştirmek için düzenli egzersiz yapmak gerekir.",
-        "Periferik görüş alanını genişleterek daha fazla kelime görebilirsiniz.",
-        "Odaklanma süresini artırmak, okuma verimliliğini doğrudan etkiler.",
-        "Beyin, görsel bilgiyi işleme konusunda olağanüstü bir kapasiteye sahiptir.",
-        "Tekrar okuma alışkanlığı, okuma hızını düşüren en büyük faktördür.",
-        "İç seslendirmeyi azaltmak, daha hızlı okumanın anahtarıdır.",
-        "Okuma sırasında aktif olmak, metni daha iyi anlamayı sağlar.",
-        "Gözler metin üzerinde kayarken, beyin anlamı oluşturur.",
-        "Egzersizler zorluk seviyesine göre kademeli olarak artırılmalıdır."
-    ];
 
     initialize(config: EngineConfig, callbacks: EngineCallbacks): void {
         this.config = { ...config } as ScanFindConfig;
@@ -135,7 +124,8 @@ export class ScanFindEngine implements BaseEngine {
         this.config.targets = {
             words: [...new Set(boundedStringArray(targets['words'], 100, 100).map(normalizeTarget).filter(Boolean))],
             caseSensitive,
-            mode: targets['mode'] === 'find_any' ? 'find_any' : 'find_all'
+            mode: targets['mode'] === 'find_any' ? 'find_any' : 'find_all',
+            tasksByTextId: targets['tasksByTextId'] as NonNullable<ScanFindConfig['targets']>['tasksByTextId']
         };
         this.config.timing = { timeLimitSec: boundedInteger(timing['timeLimitSec'], 3600, 1, 3600) };
         this.config.timeLimitSeconds = boundedInteger(
@@ -167,9 +157,30 @@ export class ScanFindEngine implements BaseEngine {
     }
 
     private generateTargets(text: string): string[] {
-        return [...new Set(text.split(/\s+/).map(word => this.normalizeWord(word, this.config.targets?.caseSensitive === true)))]
-            .filter(word => /\p{L}/u.test(word)).sort((a, b) => b.length - a.length || a.localeCompare(b, 'tr-TR'))
-            .slice(0, boundedInteger(this.config['targetCount'], 3, 1, 100));
+        const words = [...new Set(text.split(/\s+/).map(word => this.normalizeWord(word, this.config.targets?.caseSensitive === true)))];
+        const taskMap = this.config.targets?.tasksByTextId;
+        if (taskMap) {
+            const tasks = taskMap[String(this.config['readingTextId'])];
+            const count = boundedInteger(this.config['targetCount'], 3, 1, 100);
+            if (!Array.isArray(tasks) || tasks.length !== count) throw new Error('Seçilen metnin bilgi bulma hedefleri hazırlanmamış.');
+            const labels: Record<string, string> = {};
+            for (const task of tasks) {
+                const answer = this.normalizeWord(String(task.answer || ''), this.config.targets?.caseSensitive === true);
+                if (!answer || !task.prompt?.trim() || !words.includes(answer) || Object.hasOwn(labels, answer))
+                    throw new Error('Bilgi bulma hedefi metindeki sözcüklerle eşleşmiyor.');
+                labels[answer] = task.prompt;
+            }
+            this.targetLabels = labels;
+            return tasks.map(task => this.normalizeWord(task.answer, this.config.targets?.caseSensitive === true));
+        }
+        const candidates = words.filter(word => Array.from(word).length >= 2 && /\p{L}/u.test(word));
+        for (let i = candidates.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
+        }
+        const count = boundedInteger(this.config['targetCount'], 3, 1, 100);
+        if (candidates.length < count) throw new Error('Metinde istenen sayıda farklı tarama hedefi bulunamadı.');
+        return candidates.slice(0, count);
     }
 
     private generateContent(): void {
@@ -178,6 +189,7 @@ export class ScanFindEngine implements BaseEngine {
 
         // Use the internal state tracker for rounds
         const currentRound = this.config.scanningRounds?.[this.currentRoundIndex];
+        this.targetLabels = currentRound?.targetLabels || {};
 
         if (currentRound) {
             // Backend format
@@ -188,12 +200,7 @@ export class ScanFindEngine implements BaseEngine {
             rawText = this.config.content.text;
             targetWordsList = this.config.targets?.words || [];
         } else {
-            // Fallback to dummy text
-            const count = this.config.content?.wordCount || 100;
-            const sentenceCount = Math.ceil(count / 10);
-            for (let i = 0; i < sentenceCount; i++) {
-                rawText += ScanFindEngine.TEXT_POOL[Math.floor(Math.random() * ScanFindEngine.TEXT_POOL.length)] + " ";
-            }
+            throw new Error('Tarama için uygun bir metin bulunamadı.');
         }
 
         const caseSensitive = this.config.targets?.caseSensitive || false;
@@ -201,6 +208,8 @@ export class ScanFindEngine implements BaseEngine {
             targetWordsList = this.generateTargets(rawText);
         }
         this.targetWords = [...new Set(targetWordsList.map(w => this.normalizeWord(w, caseSensitive)))];
+        const available = rawText.split(/\s+/).map(word => this.normalizeWord(word, caseSensitive));
+        if (this.targetWords.some(word => !available.includes(word))) throw new Error('Tarama hedefleri metindeki sözcüklerle eşleşmiyor.');
         const restoredTargets = (currentRound?.foundTargets || [])
             .filter(word => this.targetWords.includes(word));
         this.foundUniqueWordsInRound = new Set(
@@ -229,6 +238,10 @@ export class ScanFindEngine implements BaseEngine {
 
     getTargetWords(): string[] {
         return this.targetWords;
+    }
+
+    getTargetLabel(target: string): string {
+        return this.targetLabels[target] || target;
     }
 
     getFontSizePx(): number {
