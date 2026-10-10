@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
 const load = () => JSON.parse(readFileSync(new URL('../../infrastructure/data/teen-program-plan-v2.json', import.meta.url), 'utf8'));
+const catalogue = JSON.parse(readFileSync(new URL('../../content-packs/teen-exercises/v1/catalog.json', import.meta.url), 'utf8'));
 const visual = new Set(['Focus', 'SchulteTable', 'EyeTracking', 'Saccade', 'Fixation', 'Tachistoscope', 'VisualExpansion']);
 const available = {
   Chunking: [1, 2, 3, 4], Comprehension: [1, 2, 3, 4, 5],
@@ -33,6 +34,8 @@ for (let level = 1; level <= 5; level++) {
       for (const type of day) {
         const difficulty = type === 'Chunking' ? Math.min(level, 4) : level;
         assert.ok(available[type]?.includes(difficulty), `Missing ${type} at level ${difficulty}`);
+        assert.ok(catalogue.some(exercise => exercise.type === type && exercise.difficultyLevel === difficulty
+          && exercise.targetAgeGroupId === load().ageGroupId), `Missing actual catalogue entry ${type}/${difficulty}`);
       }
     });
     assert.ok(program.days.some(day => new Set(day).size < day.length));
@@ -53,6 +56,7 @@ test('advanced types replace reading tasks only in the final fortnight at suppor
     if (program.level >= 4) {
       assert.ok(program.days.every(day => !day.includes('FreeReading')));
       assert.equal(program.days[20][5], 'ErrorAnalysis');
+      assert.equal(program.days[26][6], 'ErrorAnalysis');
     }
     if (program.level === 5) assert.equal(program.days[27][5], 'ExamSimulation');
     else assert.ok(program.days.every(day => !day.includes('ExamSimulation')));
