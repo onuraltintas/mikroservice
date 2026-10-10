@@ -74,6 +74,16 @@ internal static class OwnedSpeedReadingProgramSchedule
                     template.InitialDifficultyLevel,
                     template.InitialDifficultyLevel,
                     template.MaxDifficultyLevel);
+                var available = exercises
+                    .Where(item => item.IsActive && item.ExerciseTypeId == exerciseType.Id
+                        && item.DifficultyLevel <= difficulty)
+                    .ToList();
+                var bestDifficulty = available.Count == 0 ? 0 : available.Max(item => item.DifficultyLevel);
+                var reusable = available
+                    .Where(item => item.DifficultyLevel == bestDifficulty)
+                    .OrderBy(item => item.Id)
+                    .Select(item => item.Id)
+                    .ToList();
                 var completedIds = completedLogs
                     .Where(item => item.WeekNumber == week
                         && item.DayNumber == day
@@ -81,23 +91,9 @@ internal static class OwnedSpeedReadingProgramSchedule
                         && !usedExerciseIds.Contains(item.ExerciseId))
                     .Select(item => item.ExerciseId);
                 var selected = completedIds
-                    .Concat(exercises
-                        .Where(item => item.IsActive
-                            && item.ExerciseTypeId == exerciseType.Id
-                            && !usedExerciseIds.Contains(item.Id)
-                            && item.DifficultyLevel <= difficulty)
-                        .OrderByDescending(item => item.DifficultyLevel)
-                        .ThenBy(item => item.Id)
-                        .Select(item => item.Id))
+                    .Concat(reusable.Where(id => !usedExerciseIds.Contains(id)))
                     .Distinct()
                     .Take(pattern.Count)
-                    .ToList();
-                var reusable = exercises
-                    .Where(item => item.IsActive && item.ExerciseTypeId == exerciseType.Id
-                        && item.DifficultyLevel <= difficulty)
-                    .OrderByDescending(item => item.DifficultyLevel)
-                    .ThenBy(item => item.Id)
-                    .Select(item => item.Id)
                     .ToList();
                 if (selected.Count < pattern.Count && reusable.Count == 0)
                 {
