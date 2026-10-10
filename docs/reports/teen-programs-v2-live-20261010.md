@@ -28,6 +28,8 @@
   Hata senaryolarındaki beklenen `offline` logları test hatası değildir.
 - Hızlı Okuma API Release publish başarılı.
 - Bunlar tüm ürünün uçtan uca test edildiği veya yüzde 100 kod kapsaması anlamına gelmez.
+- Son inceleme sonrası Node kontrolleri gerçek Genç egzersiz kataloğuyla da eşleştirildi;
+  27. gün Hata Analizi konumu ayrıca doğrulandı. Aynı 7 kontrol geçti.
 
 ## Canlı hazırlığı ve geri dönüş
 
@@ -42,4 +44,30 @@
 
 ## Yayın sonucu
 
-Henüz yayımlanmadı; kod inceleme ve kontrollü yayın doğrulaması bekleniyor.
+- Yayın: 10 Ekim 2026, 19:04:49 Türkiye saati.
+- GitHub `codex/platform-hardening` dalına geliştirme ve yayın hazırlığı gönderildi (`068725b9`).
+  Remote HEAD eşleşmesi doğrulandı. Bu dal için GitHub Actions çalışması listelenmedi;
+  burada belirtilen test kanıtları yerel çalıştırmalardır, CI başarı iddiası değildir.
+- Çalışan API imajı: `eduivme/speed-reading-service:teen-programs-v2-534c187a`.
+- Paket SHA256: `288fe3adbf2b8bbe71dd7cce0f9009206d65667df8c2af5596d726ec7a7bfe0d`.
+- VPS yedeği: `/var/lib/eduivme/releases/teen-programs-v2-20261010-534c187a/speedreading-before.dump`.
+  1.584.590 bayt, izin 600; `pg_restore --list` başarılı.
+  SHA256: `057b027ea2a88fdab441b804cf4ca048c498fbbf2cbf1b60146420cb8a3efc3a`.
+- Eski beş şablon fiziksel olarak silindi; yedekten kurtarılabilir. Beş yeni şablonda ayrı ayrı
+  28 gün / 182 görev ve günlük en az 6, en fazla 7 görev doğrulandı.
+- Eski şablonlara bağlı ilerleme ve `review_items` kayıtları yoktu. Kullanıcı geçmişi silinmedi.
+  Tekrar kaydı kontrolü yayın ön kontrolüne eklendi; eşzamanlı yeni ilişki oluşursa FK silmeyi
+  engeller ve içerik transaction'ı bütünüyle geri alınır.
+- Katalog, egzersiz türleri, korunan programlar ve 78 migration kaydının önce/sonra özetleri birebir aynı.
+  Konteynır karşılaştırmasında yalnız Hızlı Okuma API konteynırı değişti; frontend değişmedi.
+- API readiness `Healthy`, ana sayfa HTTP 200, oturumsuz korumalı program API'si HTTP 401.
+- Gerçek admin oturumunda Eğitim Programları → Genç filtresi tam beş yeni başlığı gösterdi.
+  Program ayrıntısı 28 gün / 182 görev / ilk 14 gün 6, son 14 gün 7 görev bilgisini gösterdi.
+  Mevcut Genç Yetişkin aktif programı ve ilerlemesi korunuyordu; yeni kayıt oluşturulmadı.
+  Bu sayfadaki hata/uyarı konsol kontrolü boş döndü.
+- Canlı içerik kontrolü: Genç seviyelerinin her birinde soruları olan 15 aktif okuma metni var.
+  Kelime motoru Genç ve ortak (`target_age_group_id IS NULL`) havuzu birlikte kullanır;
+  seviyelere göre uygun kelime sayıları 299 / 488 / 323 / 271 / 105.
+- Yayın sonrası 15 dakikalık sağlık takibi tamamlandı: 30/30 ölçüm `Healthy`, yeniden başlama 0.
+  Log taramasında `fail`, `crit`, `fatal` seviyeleri veya `Unhandled exception` bulunmadı.
+  Bu kontrol tüm öğrencilerin gerçek kullanımda bütün egzersizleri tamamladığı anlamına gelmez.
