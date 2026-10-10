@@ -1,6 +1,7 @@
 import { fakeAsync, tick } from '@angular/core/testing';
 import { WordHighlightEngine } from './word-highlight.engine';
 import { EngineCallbacks } from './base-engine.interface';
+import { getCustomPreviewControls } from '../custom-preview-settings';
 
 describe('Fixed-pace Speed Reading practice', () => {
   const callbacks: EngineCallbacks = {
@@ -11,6 +12,11 @@ describe('Fixed-pace Speed Reading practice', () => {
   it('requires real content rather than a static fallback', () => {
     expect(() => new WordHighlightEngine().initialize({ engineConfig: { mode: 'speed_reading' } } as any, callbacks))
       .toThrowError(/reading text/i);
+  });
+  it('offers pace but not group size for Speed Reading', () => {
+    const controls = getCustomPreviewControls({ engineType: 'word_highlight', engineConfig: { mode: 'speed_reading',
+      pacer: { speedWpm: 130, chunkSize: 1 } } });
+    expect(controls.map(control => control.key)).toEqual(['speedWpm']);
   });
   it('highlights one word at fixed pace until the text ends, excluding pauses', fakeAsync(() => {
     let result: any;
