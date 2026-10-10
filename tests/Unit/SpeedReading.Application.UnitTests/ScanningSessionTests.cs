@@ -225,6 +225,17 @@ public sealed class ScanningSessionTests
     }
 
     [Theory]
+    [InlineData("{\"not-an-id\":[]}")]
+    [InlineData("{}")]
+    [InlineData("[]")]
+    public async Task Invalid_legacy_task_maps_return_a_business_error_instead_of_a_server_error(string map)
+    {
+        await using var db = Context();
+        var start = () => Start(db, "{\"engineConfig\":{\"targetCount\":2,\"targets\":{\"tasksByTextId\":" + map + "}}}");
+        await start.Should().ThrowAsync<BusinessRuleException>();
+    }
+
+    [Theory]
     [InlineData("{\"minLength\":0}")]
     [InlineData("{\"minLength\":5,\"maxLength\":3}")]
     [InlineData("{\"tasksByTextId\":{\"not-an-id\":[]}}")]

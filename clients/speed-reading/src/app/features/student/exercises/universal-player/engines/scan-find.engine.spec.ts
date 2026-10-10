@@ -16,6 +16,12 @@ function callbacks(onComplete: (result: EngineResult) => void): EngineCallbacks 
 }
 
 describe('ScanFindEngine', () => {
+  it('renders ordinary targets without inherited object-property labels', () => {
+    const engine = new ScanFindEngine();
+    engine.initialize({ content: { text: 'constructor' }, targets: { words: ['constructor'] } }, callbacks(() => undefined));
+    expect(engine.getTargetLabel('constructor')).toBe('constructor');
+    engine.destroy();
+  });
   it('honors age-appropriate target length bounds', () => {
     const engine = new ScanFindEngine();
     engine.initialize({ content: { text: 'ev okul kitap kütüphanemizde' }, targetCount: 2,
