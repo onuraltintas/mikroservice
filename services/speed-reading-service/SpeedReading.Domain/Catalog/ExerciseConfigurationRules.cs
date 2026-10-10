@@ -603,7 +603,14 @@ public static class ExerciseConfigurationRules
             ValidateOptionalIntRange(timing.Value, "delayMs", 0, 10_000, "Kelime vurgulama bekleme süresi");
         }
         if (TryGetObject(config, "content") is { } content)
+        {
             ValidateOptionalIntRange(content, "chunkSize", 1, 10, "Kelime vurgulama öbek boyutu");
+            foreach (var name in new[] { "minWordCount", "maxWordCount" })
+                if (TryGetProperty(content, name) is { } value && value.ValueKind != JsonValueKind.Number)
+                    throw new ArgumentException("Metin uzunluğu sayısal bir tam sayı olmalıdır.");
+            ValidateOptionalIntRange(content, "minWordCount", 1, 100_000, "Minimum metin uzunluğu");
+            ValidateOptionalIntRange(content, "maxWordCount", 1, 100_000, "Maksimum metin uzunluğu");
+        }
         ValidateOptionalStringArray(config, "chunks", 500, 1_000, "Kelime vurgulama öbekleri");
         ValidateOptionalInlineText(config);
     }
@@ -916,6 +923,13 @@ public static class ExerciseConfigurationRules
         }
         ValidateConsistentValues(speeds, "Kelime vurgulama hedef WPM");
         ValidateConsistentValues(chunks, "Kelime vurgulama öbek boyutu");
+        var scopes = nested.HasValue ? new[] { root, nested.Value } : new[] { root };
+        var minimums = scopes.SelectMany(scope => ReadNestedInts(scope, "content", "minWordCount")).ToList();
+        var maximums = scopes.SelectMany(scope => ReadNestedInts(scope, "content", "maxWordCount")).ToList();
+        ValidateConsistentValues(minimums, "Minimum metin uzunluğu");
+        ValidateConsistentValues(maximums, "Maksimum metin uzunluğu");
+        if (minimums.FirstOrDefault() > 0 && maximums.FirstOrDefault() > 0 && minimums[0] > maximums[0])
+            throw new ArgumentException("Minimum metin uzunluğu maksimum uzunluktan büyük olamaz.");
     }
 
     private static List<int> ReadInts(JsonElement config, params string[] names) =>
