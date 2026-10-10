@@ -6,6 +6,22 @@ namespace SpeedReading.Application.UnitTests;
 public sealed class TachistoscopeSettingsTests
 {
     [Theory]
+    [InlineData("number", 3, 12)]
+    [InlineData("word", 4, 6)]
+    public void Resuming_legacy_state_preserves_its_original_length_bounds(string contentType, int initialLength, int expectedMaximum)
+    {
+        var json = System.Text.Json.JsonSerializer.Serialize(new { tachistoscope = new {
+            contentType, initialTargetLength = initialLength, targetLength = initialLength,
+            pool = new[] { "masa", "kitap", "kelime" } } });
+        var service = typeof(SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingDbContext).Assembly
+            .GetType("SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingExerciseSessions")!;
+        var restored = service.GetMethod("DeserializeState", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!
+            .Invoke(null, [json])!;
+        var state = (TachistoscopeState)restored.GetType().GetProperty("Tachistoscope")!.GetValue(restored)!;
+        Assert.Equal(initialLength, state.MinTargetLength);
+        Assert.Equal(expectedMaximum, state.MaxTargetLength);
+    }
+    [Theory]
     [InlineData("{\"content\":{\"length\":0}}")]
     [InlineData("{\"content\":{\"length\":13}}")]
     [InlineData("{\"adaptive\":{\"minLength\":0}}")]
