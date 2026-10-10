@@ -12,6 +12,7 @@ Program çizelgeleri content-packs/adult-programs/v2/programs.md dosyasındadır
 
 - TDD: 7 plan kontrolü RED, yeni çizelge ile GREEN. Kimlik tekilliği kontrolü ayrıca RED→GREEN.
 - 8 yetişkin plan kontrolü; dört yaş grubunun toplam 23 Node kontrolü geçti.
+  Operasyon güvenliği kontrolleriyle birlikte son birleşik Node koşusu: 31/31 başarılı.
 - 11 yetişkin PostgreSQL senaryosu: normal/tekrar çalıştırma, ilerleme, tekrar geçmişi,
   kimlik çakışması, eksik egzersiz, sürüm/yaş/yapı/tür hataları, mükerrer seviye ve yanlış kaynak yaş.
 - Dört yaş grubu geçiş grubu: 45 PG testi; tekrarlı görev ve eşzamanlı bitirme: 4 PG testi geçti.
@@ -61,4 +62,13 @@ Tam restore tatbikatı canlıda yapılmaz. Günlük süre ve eğitim etkililiği
 - İlk paket Bash kontrolünde Windows satır sonu nedeniyle servise/veritabanına dokunmadan durdu.
   Açılan paket içindeki iki .sh dosyası LF'ye normalize edilip bash -n doğrulandı; sonra geçiş başarılı oldu.
   Sonraki paketler için yalnız bu sürüm klasörüne scoped `.gitattributes` ile LF kuralı eklendi.
-- Gerçek admin tarayıcı doğrulaması ve 15 dakikalık izleme sürüyor; kapanış sonuçları eklenecek.
+- Gerçek admin oturumunda Yetişkin filtresi beş yeni adı gösterdi; Seviye 1 ayrıntısında 28 gün,
+  182 görev ve ilk 14 gün 6 / son 14 gün 7 açıklaması doğrulandı. Aktif genç programı ve geçmişi duruyor.
+  Aktif program nedeniyle yeni kayıt düğmeleri beklenen şekilde devre dışı; kayıt oluşturulmadı.
+- Ekran kanıtı: `artifacts/adult-programs-v2-tests/live-adult-programs.jpg` (yerel).
+- Konsol kaydında yayın sonrasına ait hata yok. Yayın öncesi 17:43 UTC tarihli bir HTTP/session
+  completion hata kaydı ve eklenti listener mesajları var; bu veri yayınının sonucu olarak değerlendirilmedi.
+  Canlı egzersiz tamamlama için yeni kayıt/sonuç oluşturulmadığından bu akışın tam E2E geçtiği iddia edilmez.
+- Yayın sonrası 15 dakikalık izleme tamamlandı: 30/30 readiness ölçümü Healthy,
+  yeniden başlatma sayısı 0 ve değişmedi; izleme aralığındaki loglarda ciddi hata işareti bulunmadı.
+  Sonuç: `MONITOR_OK`. İzleme kaydı VPS sürüm klasöründeki `monitor.txt` dosyasında.
