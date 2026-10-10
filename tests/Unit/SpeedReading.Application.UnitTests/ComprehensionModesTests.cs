@@ -71,6 +71,21 @@ public sealed class ComprehensionModesTests
         Assert.Empty(db.ExerciseSessions);
     }
 
+    [Theory]
+    [InlineData(2)]
+    [InlineData(3)]
+    public async Task Includes_inference_and_evaluation_questions_not_just_literal_questions(int questionType)
+    {
+        await using var db = Context();
+        var (service, user, exercise) = await Seed(db, "evaluation", questionCount: 2);
+        db.ReadingQuestions.Add(ReadingQuestion.Create(Guid.NewGuid(), db.ReadingTexts.Single().Id, "Metinden hangi sonuç çıkar?",
+            "B", 1, questionType, 3, 2, "Metnin açıklamasına göre B.", "A", "B", "C", "D"));
+        await db.SaveChangesAsync();
+        var started = await service.StartAsync(user, new() { ExerciseId = exercise });
+        Assert.Equal(2, started.InitialData.GetProperty("questions").GetArrayLength());
+        Assert.Equal(questionType, started.InitialData.GetProperty("questions")[1].GetProperty("questionType").GetInt32());
+    }
+
     [Fact]
     public void Rejects_unknown_comprehension_mode()
     {
