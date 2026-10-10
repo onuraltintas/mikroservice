@@ -37,6 +37,18 @@ describe('Catalogue reading previews', () => {
     expect(player.initializePreviewEngine).not.toHaveBeenCalled();
     expect(player.error).toContain('metin');
   });
+  it('filters Speed Reading by configured length and checks actual words in pinned content', () => {
+    const player = create();
+    player.parsedConfig = { engineType: 'word_highlight', engineConfig: { mode: 'speed_reading',
+      content: { minWordCount: 10, maxWordCount: 20 } } };
+    player.startPreviewSession();
+    expect(player.initializePreviewEngine).not.toHaveBeenCalled();
+    player.parsedConfig.readingTextId = 'actual';
+    player.exerciseService.getReadingText.and.returnValue(of({ id: 'actual', content: 'Çok kısa metin.',
+      wordCount: 15, difficultyLevel: 3, isActive: true }));
+    player.startPreviewSession();
+    expect(player.initializePreviewEngine).not.toHaveBeenCalled();
+  });
   it('requires real text for the word-group alias and uppercase RSVP mode', () => {
     const player = create();
     player.parsedConfig = { engineType: 'word_group' };
