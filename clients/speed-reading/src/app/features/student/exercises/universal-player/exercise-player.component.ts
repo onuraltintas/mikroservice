@@ -340,6 +340,11 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     return this.isAssessmentMode || (this.engine?.engineType === 'reading_comprehension' && !this.isComprehensionLearning());
   }
 
+  comprehensionResultPending(): boolean {
+    return this.engine?.engineType === 'reading_comprehension'
+      && !['saved', 'preview'].includes(this.resultSaveStatus);
+  }
+
   // Question Timer (for Exam Simulation)
   questionTimeRemaining = 0;
   questionTimerInterval: any = null;
@@ -928,7 +933,8 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       ? availableQuestions.filter((question: any) => Number(question.type ?? question.questionType ?? question.QuestionType) === 1)
       : this.parsedConfig?.['engineType'] === 'reading_comprehension'
           && (this.parsedConfig?.['engineConfig']?.['content']?.questionCount ?? this.parsedConfig?.['content']?.questionCount)
-      ? availableQuestions.filter((question: any) => Number(question.type ?? question.questionType ?? question.QuestionType) === 1
+      ? availableQuestions.filter((question: any) => Number(question.type ?? question.questionType ?? question.QuestionType) >= 1
+        && Number(question.type ?? question.questionType ?? question.QuestionType) <= 3
         && Number(question.bloomLevel ?? question.BloomLevel) >= 1 && Number(question.bloomLevel ?? question.BloomLevel) <= 6
         && ['A', 'B', 'C', 'D'].includes(String(question.correctAnswer ?? question.CorrectAnswer ?? '').trim().toUpperCase())
         && ['A', 'B', 'C', 'D'].every(option => String(question[`option${option}`] ?? question[`Option${option}`] ?? '').trim()))
@@ -1291,8 +1297,10 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
 
             const readingTimeMinutes = (result.totalTime / 1000) / 60;
             // If engine calculated WPM (like RSVP), use it, otherwise calc
-            this.readingWpm = this.readingIncomplete || this.engine?.engineType === 'skimming' ? 0 : (this.engine as any).getCurrentWPM?.() ||
-              (readingTimeMinutes > 0 ? Math.round(wordCount / readingTimeMinutes) : 0);
+            this.readingWpm = this.engine?.engineType === 'reading_comprehension'
+              ? (this.isComprehensionLearning() ? 0 : Number(result.details?.wpm ?? 0))
+              : this.readingIncomplete || this.engine?.engineType === 'skimming' ? 0 : (this.engine as any).getCurrentWPM?.() ||
+                (readingTimeMinutes > 0 ? Math.round(wordCount / readingTimeMinutes) : 0);
 
             this.exercisePhase = 'questions';
             this.currentQuestionIndex = 0;
@@ -2368,7 +2376,10 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       completedSteps: totalQuestions,
       errors: totalQuestions - correctCount,
       details: {
-        wpm: this.readingIncomplete || ['skimming', 'exam_simulation'].includes(this.engine?.engineType || '') ? null : this.readingWpm,
+        wpm: this.readingIncomplete || this.isComprehensionLearning()
+          || ['skimming', 'exam_simulation'].includes(this.engine?.engineType || '')
+          || (this.engine?.engineType === 'reading_comprehension' && this.readingWpm <= 0) ? null : this.readingWpm,
+        ...(this.engine?.engineType === 'reading_comprehension' ? { readingTimeMs: this.engineState.timeElapsed } : {}),
         ...(this.engine?.engineType === 'skimming' ? { inspectionTimeMs: this.engineState.timeElapsed } : {}),
         timedOut: this.readingIncomplete,
         targetWpm: this.getTargetWpm(),
@@ -2384,7 +2395,12 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
         totalTargetTime,
         timeoutCount,
         // Detailed answers with timing
-        answers: this.questionAnswers
+        answers: this.sessionId === 'preview-mode' && this.engine?.engineType === 'reading_comprehension'
+          ? this.questionAnswers.map(answer => {
+            const question = this.comprehensionQuestions.find(item => (item.questionId || item.QuestionId || item.id || item.Id) === answer.questionId);
+            return { ...answer, correctAnswer: this.getQuestionCorrectAnswer(question || {}),
+              explanation: question?.explanation || question?.Explanation };
+          }) : this.questionAnswers
       }
     };
 

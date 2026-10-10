@@ -895,7 +895,7 @@
         <div class="game-header">
             <div class="timer">
                 <span class="material-icons">psychology</span>
-                Anlama Kontrolü
+                {{ isComprehensionLearning() ? 'Anlama çalışması' : 'Anlama Kontrolü' }}
             </div>
             <div class="progress-info">
                 <span>Soru {{ currentQuestionIndex + 1 }} / {{ comprehensionQuestions.length }}</span>
@@ -957,6 +957,9 @@
                     <strong>{{ questionFeedback.isCorrect ? 'Doğru.' : 'Yanlış. Doğru seçenek: ' + questionFeedback.correctAnswer }}</strong>
                     <p>{{ questionFeedback.explanation }}</p>
                 </div>
+                <p *ngIf="engine?.engineType === 'reading_comprehension' && !isComprehensionLearning() && questionFeedback" role="status">
+                    Cevabınız kaydedildi. Doğru cevaplar değerlendirme sonunda gösterilecek.
+                </p>
             </div>
         </div>
 
@@ -1543,7 +1546,11 @@
             <span>Sonuç kaydedildi ancak günlük ilerleme güncellenemedi.</span>
             <button type="button" class="ep-btn ep-btn--primary" (click)="retryDailyProgress()">İlerlemeyi tekrar kaydet</button>
         </div>
-        <div class="result-card-new" [class.result-card-new--schulte]="engine?.engineType === 'grid_interaction'">
+        <div *ngIf="comprehensionResultPending()" role="status" class="grid-save-status">
+            {{ resultSaveStatus === 'failed' ? 'Sonuçlar alınamadı. Lütfen yeniden deneyin.' : 'Sunucudan doğrulanmış sonuçlar alınıyor…' }}
+            <button *ngIf="resultSaveStatus === 'failed'" type="button" class="ep-btn ep-btn--primary" (click)="retrySaveResult()">Tekrar dene</button>
+        </div>
+        <div *ngIf="!comprehensionResultPending()" class="result-card-new" [class.result-card-new--schulte]="engine?.engineType === 'grid_interaction'">
             <section class="schulte-summary" *ngIf="engine?.engineType === 'grid_interaction'">
                 <div class="schulte-summary__heading">
                     <div>
@@ -1637,7 +1644,7 @@
 
 
             <!-- Main Stats Row - Hide for exam_simulation and reading exercises -->
-            <div class="stats-row" *ngIf="!result?.details?.wpm && result?.details?.measurementStatus !== 'NotMeasured' && engine?.engineType !== 'exam_simulation' && engine?.engineType !== 'grid_interaction'">
+            <div class="stats-row" *ngIf="!result?.details?.wpm && result?.details?.measurementStatus !== 'NotMeasured' && engine?.engineType !== 'exam_simulation' && engine?.engineType !== 'grid_interaction' && engine?.engineType !== 'reading_comprehension'">
                 <div class="stat-card primary">
                     <div class="stat-value">{{ result?.score }}</div>
                     <div class="stat-label">Skor</div>
@@ -1836,9 +1843,9 @@
                     <div class="result-label">Anlam korunarak kazanım</div>
                 </div>
             </div>
-            <div class="speed-reading-results" *ngIf="result?.details?.wpm && result?.details?.measurementStatus !== 'NotMeasured' && engine?.engineType !== 'free_reading' && engine?.engineType !== 'exam_simulation' && engine?.engineType !== 'adaptive_fluency'">
+            <div class="speed-reading-results" *ngIf="(result?.details?.wpm || engine?.engineType === 'reading_comprehension') && result?.details?.measurementStatus !== 'NotMeasured' && engine?.engineType !== 'free_reading' && engine?.engineType !== 'exam_simulation' && engine?.engineType !== 'adaptive_fluency'">
                 <!-- WPM Box -->
-                <div class="result-box wpm-box">
+                <div class="result-box wpm-box" *ngIf="result?.details?.wpm">
                     <span class="material-icons">speed</span>
                     <div class="result-value">{{ result?.details?.wpm }}</div>
                     <div class="result-label">Okuma Hızı (WPM)</div>
@@ -1871,8 +1878,14 @@
                 <!-- Total Time (Exam Simulation) -->
                 <div class="result-box time-box" *ngIf="result?.details?.totalTimeSpent !== undefined">
                     <span class="material-icons">schedule</span>
-                    <div class="result-value">{{ result?.details?.totalTimeSpent }}sn</div>
-                    <div class="result-label">Toplam Süre</div>
+                    <div class="result-value">{{ result?.details?.totalTimeSpent | number:'1.0-1' }} sn</div>
+                    <div class="result-label">{{ engine?.engineType === 'reading_comprehension' ? 'Soruları yanıtlama süresi' : 'Toplam Süre' }}</div>
+                </div>
+
+                <div class="result-box time-box" *ngIf="engine?.engineType === 'reading_comprehension'">
+                    <span class="material-icons">schedule</span>
+                    <div class="result-value">{{ (result?.details?.readingTimeMs || 0) / 1000 | number:'1.0-1' }} sn</div>
+                    <div class="result-label">İlk okuma süresi</div>
                 </div>
 
 
@@ -1884,6 +1897,10 @@
                     <div class="result-label">Süre Dolan</div>
                 </div>
             </div>
+
+            <p *ngIf="engine?.engineType === 'reading_comprehension' && !result?.details?.wpm">
+                {{ isComprehensionLearning() ? 'Metne tekrar bakılabildiği için bu çalışmada bağımsız okuma hızı verilmez.' : 'Okuma hızı ölçülemedi. Çok kısa veya geçerli ölçüm aralığı dışındaki okumalar hız olarak raporlanmaz.' }}
+            </p>
 
             <!-- Question Answers Detail (Exam Simulation) -->
             <div class="question-answers-detail"

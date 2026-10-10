@@ -348,7 +348,10 @@ export class ReadingComprehensionEngine implements BaseEngine {
 
         // Calculate WPM
         const readingTimeMinutes = this.state.timeElapsed / 1000 / 60;
-        const wpm = readingTimeMinutes > 0 ? Math.round(this.words.length / readingTimeMinutes) : 0;
+        const rawWpm = readingTimeMinutes > 0 ? this.words.length / readingTimeMinutes : 0;
+        const validSpeed = this.engineType !== 'reading_comprehension'
+            || (this.state.timeElapsed >= 3000 && rawWpm >= 20 && rawWpm <= 1500);
+        const wpm = validSpeed ? Math.round(rawWpm) : null;
 
         const result: EngineResult = {
             score: 0,

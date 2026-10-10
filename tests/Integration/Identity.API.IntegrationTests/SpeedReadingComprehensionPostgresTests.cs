@@ -15,6 +15,74 @@ namespace Identity.API.IntegrationTests;
 [Collection("Database")]
 public sealed class SpeedReadingComprehensionPostgresTests(PostgresFixture postgres)
 {
+    [Theory]
+    [InlineData("learning")]
+    [InlineData("evaluation")]
+    public async Task Configured_mode_selects_sufficient_questions_and_keeps_learning_out_of_reading_measurements(string mode)
+    {
+        await using var db = new OwnedSpeedReadingDbContext(
+            new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>().UseNpgsql(postgres.ConnectionString).Options);
+        await db.Database.EnsureDeletedAsync();
+        try
+        {
+            await db.Database.EnsureCreatedAsync();
+            var user = Guid.NewGuid();
+            var type = ExerciseType.Create(Guid.NewGuid(), "Comprehension", "Anlama", "reading_comprehension");
+            var exercise = Exercise.Create("Anlama", "reading",
+                JsonSerializer.Serialize(new { engineType = "reading_comprehension", engineConfig = new {
+                    comprehensionMode = mode, content = new { minWordCount = 80, maxWordCount = 120, questionCount = 2 } } }),
+                2, user, type.Id);
+            db.ExerciseTypes.Add(type);
+            db.Exercises.Add(exercise);
+            var candidates = new[] {
+                ReadingText.Create(Guid.NewGuid(), "Kısa", "bir iki", difficultyLevel: 2),
+                ReadingText.Create(Guid.NewGuid(), "Az soru", string.Join(" ", Enumerable.Repeat("bahçe", 100)), difficultyLevel: 2),
+                ReadingText.Create(Guid.NewGuid(), "Uygun", string.Join(" ", Enumerable.Repeat("bahçe", 100)), difficultyLevel: 2),
+                ReadingText.Create(Guid.NewGuid(), "Yanlış seviye", string.Join(" ", Enumerable.Repeat("bahçe", 100)), difficultyLevel: 1) };
+            db.ReadingTexts.AddRange(candidates);
+            for (var index = 0; index < candidates.Length; index++)
+                for (var order = 0; order < (index == 1 ? 1 : 3); order++)
+                    db.ReadingQuestions.Add(ReadingQuestion.Create(Guid.NewGuid(), candidates[index].Id, $"Soru {order}", "A", order,
+                        1, 1, 2, "Metnin konusu bahçedir.", "Bahçe", "Deniz", "Dağ", "Köprü"));
+            await db.SaveChangesAsync();
+            var implementation = typeof(OwnedSpeedReadingDbContext).Assembly.GetType("SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingExerciseSessions")!;
+            var service = (ISpeedReadingExerciseSessions)Activator.CreateInstance(implementation,
+                BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, [db], null)!;
+            var started = await service.StartAsync(user, new() { ExerciseId = exercise.Id });
+            Assert.Equal(2, started.InitialData.GetProperty("questions").GetArrayLength());
+            var session = await db.ExerciseSessions.SingleAsync();
+            Assert.Equal(candidates[2].Id, session.ReadingTextId);
+            var first = started.InitialData.GetProperty("questions")[0].GetProperty("questionId").GetGuid();
+            Assert.False((await service.ValidateActionAsync(user, session.Id, new() { Action = "answer_question", QuestionId = first, Answer = "A" })).IsValid);
+            await service.ValidateActionAsync(user, session.Id, new() { Action = "start_reading" });
+            var state = System.Text.Json.Nodes.JsonNode.Parse(session.SessionDataJson)!;
+            state["readingStartTime"] = DateTime.UtcNow.AddSeconds(-30);
+            session.SetState(state.ToJsonString());
+            await db.SaveChangesAsync();
+            await service.ValidateActionAsync(user, session.Id, new() { Action = "finish_reading" });
+            foreach (var question in started.InitialData.GetProperty("questions").EnumerateArray())
+            {
+                var answer = await service.ValidateActionAsync(user, session.Id,
+                    new() { Action = "answer_question", QuestionId = question.GetProperty("questionId").GetGuid(), Answer = "A" });
+                Assert.Equal(mode == "learning" ? true : null, answer.IsCorrect);
+            }
+            await Assert.ThrowsAsync<KeyNotFoundException>(() => service.CompleteAsync(Guid.NewGuid(), session.Id, new()));
+            var result = await service.CompleteAsync(user, session.Id, new());
+            Assert.Equal(100m, result.Score);
+            Assert.Equal(mode, result.DetailedResults.GetProperty("comprehensionMode").GetString());
+            Assert.Equal(2, result.DetailedResults.GetProperty("answers").GetArrayLength());
+            Assert.Equal(mode == "learning" ? 0 : 1, await db.ReadingSessions.CountAsync());
+            Assert.Equal(mode == "learning", result.RawWPM is null);
+            var adaptiveType = typeof(OwnedSpeedReadingDbContext).Assembly.GetType("SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingAdaptiveLearning")!;
+            var adaptive = (SpeedReading.Application.AdaptiveLearning.ISpeedReadingAdaptiveLearning)Activator.CreateInstance(adaptiveType,
+                BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, [db], null)!;
+            Assert.Equal(mode == "learning" ? 0m : 100m, (await adaptive.GetProfileAsync(user)).AverageComprehension);
+            await service.CompleteAsync(user, session.Id, new());
+            Assert.Equal(1, await db.ExerciseSessionResults.CountAsync());
+        }
+        finally { await db.Database.EnsureDeletedAsync(); }
+    }
+
     [Fact]
     public async Task Incomplete_reading_is_preserved_but_cannot_advance_daily_program()
     {

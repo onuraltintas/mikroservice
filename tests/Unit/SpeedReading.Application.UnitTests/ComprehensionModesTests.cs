@@ -49,6 +49,20 @@ public sealed class ComprehensionModesTests
         Assert.Equal(100m, (await service.CompleteAsync(user, started.SessionId, new())).Score);
     }
 
+    [Fact]
+    public async Task Fast_reading_cannot_raise_the_score_of_wrong_answers()
+    {
+        await using var db = Context();
+        var (service, user, exercise) = await Seed(db, "evaluation");
+        var started = await service.StartAsync(user, new() { ExerciseId = exercise });
+        await FinishReading(db, service, user, started.SessionId, seconds: 10);
+        await service.ValidateActionAsync(user, started.SessionId, new() { Action = "answer_question",
+            QuestionId = started.InitialData.GetProperty("questions")[0].GetProperty("questionId").GetGuid(), Answer = "B" });
+        var result = await service.CompleteAsync(user, started.SessionId, new());
+        Assert.True(result.RawWPM > 0);
+        Assert.Equal(0m, result.Score);
+    }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]

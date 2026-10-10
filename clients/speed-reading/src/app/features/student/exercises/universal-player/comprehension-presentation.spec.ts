@@ -1,6 +1,15 @@
 import { ExercisePlayerComponent } from './exercise-player.component';
 
 describe('comprehension presentation', () => {
+  it('keeps all three valid question categories in configured comprehension previews', () => {
+    const player = Object.create(ExercisePlayerComponent.prototype) as any;
+    player.parsedConfig = { engineType: 'reading_comprehension', engineConfig: { content: { questionCount: 2 } } };
+    const questions = [1, 2, 3, 4].map(type => ({ type, bloomLevel: 3, correctAnswer: 'A',
+      optionA: 'A', optionB: 'B', optionC: 'C', optionD: 'D' }));
+    const config = player.createPreviewReadingConfig({ content: 'Gerçek okuma metni.', questions });
+    expect(config.questions.map((question: any) => question.type)).toEqual([1, 2, 3]);
+  });
+
   it('permits text review only in learning, never in assessment', () => {
     const player = Object.create(ExercisePlayerComponent.prototype) as any;
     player.engine = { engineType: 'reading_comprehension' };
