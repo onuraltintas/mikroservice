@@ -1,0 +1,7 @@
+services:
+  speed-reading-service:
+    image: eduivme/speed-reading-service:child-programs-v2-77618cb9
+  speed-reading-migrations:
+    image: eduivme/speed-reading-service:child-programs-v2-77618cb9
+  speed-reading-frontend:
+    image: eduivme/speed-reading-frontend:child-programs-v2-77618cb9
