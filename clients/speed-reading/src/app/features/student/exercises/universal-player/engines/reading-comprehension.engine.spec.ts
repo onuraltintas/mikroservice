@@ -17,6 +17,25 @@ function callbacks(onComplete: (result: EngineResult) => void): EngineCallbacks 
 }
 
 describe('ReadingComprehensionEngine', () => {
+  [2000, 5000, 600_000].forEach(durationMs => {
+    it(`does not report comprehension speed outside measurement bounds (${durationMs}ms)`, fakeAsync(() => {
+      let result: EngineResult | undefined;
+      const engine = new ReadingComprehensionEngine();
+      engine.initialize({ content: Array(150).fill('kelime').join(' ') }, callbacks(value => result = value));
+      engine.start(); tick(durationMs); engine.completeReading();
+      expect(result?.details?.wpm).toBeNull();
+    }));
+  });
+
+  it('retains a valid first-reading speed separately from comprehension score', fakeAsync(() => {
+    let result: EngineResult | undefined;
+    const engine = new ReadingComprehensionEngine();
+    engine.initialize({ content: Array(150).fill('kelime').join(' ') }, callbacks(value => result = value));
+    engine.start(); tick(30_000); engine.completeReading();
+    expect(result?.details?.wpm).toBe(300);
+    expect(result?.score).toBe(0);
+  }));
+
   it('cleans the previous free reading timer when reinitialized', fakeAsync(() => {
     const engine = new ReadingComprehensionEngine('free_reading');
     engine.initialize({ content: 'Bir iki.' }, callbacks(() => undefined)); engine.start(); tick(500);

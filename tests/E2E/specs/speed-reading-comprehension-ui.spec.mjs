@@ -12,7 +12,10 @@ const exercise = {
     engineConfig: { timing: { minReadingTimeMs: 1000, maxReadingTimeMs: 0 }, display: { lineHeight: 1.8 } } })
 };
 
-async function prepare(page, role = 'Admin') {
+async function prepare(page, role = 'Admin', mode = 'evaluation') {
+  const config = JSON.parse(exercise.configurationJson);
+  config.engineConfig.comprehensionMode = mode;
+  const withMode = { ...exercise, configurationJson: JSON.stringify(config) };
   const writes = [];
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));
@@ -29,11 +32,11 @@ async function prepare(page, role = 'Admin') {
       return route.fulfill({ status: 500, json: { message: 'Unexpected preview write' } });
     } else if (path.endsWith('/exercise-types')) {
       response = { items: [{ id: typeId, name: 'Comprehension', displayName: 'Anlama', engineType: 'reading_comprehension', isActive: true }], totalCount: 1 };
-    } else if (path.endsWith(`/exercises/${exerciseId}`)) response = exercise;
-    else if (path.endsWith('/exercises')) response = { items: [exercise], totalCount: 1, pageNumber: 1, pageSize: 100 };
+    } else if (path.endsWith(`/exercises/${exerciseId}`)) response = withMode;
+    else if (path.endsWith('/exercises')) response = { items: [withMode], totalCount: 1, pageNumber: 1, pageSize: 100 };
     else if (path.endsWith(`/reading-texts/${textId}`)) response = {
-      id: textId, title: 'Okuma metni', content: Array(50).fill('Okuma dikkati geliştirir.').join(' '), wordCount: 150,
-      questions: [{ id: questionId, questionText: 'Metinde ne anlatılıyor?', correctAnswer: 'A', optionA: 'Okuma', optionB: 'Spor', optionC: 'Müzik', optionD: 'Uyku' }]
+      id: textId, difficultyLevel: 1, title: 'Okuma metni', content: Array(50).fill('Okuma dikkati geliştirir.').join(' '), wordCount: 150,
+      questions: [{ id: questionId, questionText: 'Metinde ne anlatılıyor?', correctAnswer: 'A', explanation: 'Metnin konusu okumadır.', optionA: 'Okuma', optionB: 'Spor', optionC: 'Müzik', optionD: 'Uyku' }]
     };
     else if (path.includes('/profile/status')) response = { hasAgeGroupConfiguration: true };
     else if (path.endsWith('/my-modules')) response = { hasSpeedReading: true };
@@ -129,4 +132,48 @@ test('teacher can preview and paused time does not unlock completion', async ({ 
 test('student does not see staff custom-preview actions', async ({ page }) => {
   await prepare(page, 'Student');
   await expect(page.getByRole('button', { name: 'Özel ayarlarla dene' })).toHaveCount(0);
+});
+
+test('learning allows text review and immediate explanations without a question deadline', async ({ page }) => {
+  const { writes, errors } = await prepare(page, 'Teacher', 'learning');
+  await page.clock.install();
+  await openCustom(page);
+  await page.clock.runFor(2100);
+  await page.locator('.complete-reading-btn').click();
+  await expect(page.locator('.countdown-timer')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Metne tekrar bak' }).click();
+  await expect(page.locator('#comprehension-review-text')).toContainText('Okuma dikkati');
+  await page.clock.runFor(70_000);
+  await expect(page.locator('.answer-option').first()).toBeEnabled();
+  await page.locator('.answer-option').first().click();
+  await expect(page.locator('.question-card [role="status"]')).toContainText('Metnin konusu okumadır.');
+  await page.getByRole('button', { name: 'Sonuçları Gör' }).click();
+  await expect(page.locator('.completed-state')).toContainText('Anlama çalışması');
+  expect(writes).toEqual([]);
+  expect(errors).toEqual([]);
+});
+
+test('evaluation keeps the text and correctness hidden until final results', async ({ page }) => {
+  const { writes, errors } = await prepare(page);
+  await page.clock.install();
+  await openCustom(page);
+  await page.clock.runFor(2100);
+  await page.locator('.complete-reading-btn').click();
+  await expect(page.getByRole('button', { name: 'Metne tekrar bak' })).toHaveCount(0);
+  await expect(page.locator('.countdown-timer')).toHaveCount(0);
+  await page.locator('.answer-option').nth(1).click();
+  await expect(page.locator('.answer-option.correct, .answer-option.wrong')).toHaveCount(0);
+  await expect(page.getByText('Metnin konusu okumadır.', { exact: true })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Sonuçları Gör' }).click();
+  await expect(page.locator('.completed-state')).toContainText('Anlama değerlendirmesi');
+  await expect(page.locator('.answers-summary')).toContainText('Doğru: A');
+  await expect(page.locator('.answers-summary')).toContainText('Metnin konusu okumadır.');
+  await expect(page.locator('.completed-state')).toContainText('Okuma hızı ölçülemedi');
+  await expect(page.locator('.completed-state')).toContainText('İlk okuma süresi');
+  await expect(page.locator('.completed-state')).toContainText('Soruları yanıtlama süresi');
+  await expect(page.locator('.speed-reading-results .result-label').filter({ hasText: 'Toplam Süre' })).toHaveCount(0);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.screenshot({ path: test.info().outputPath('evaluation-result.png'), fullPage: true });
+  expect(writes).toEqual([]);
+  expect(errors).toEqual([]);
 });
