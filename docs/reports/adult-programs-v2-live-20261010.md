@@ -47,4 +47,18 @@ Tam restore tatbikatı canlıda yapılmaz. Günlük süre ve eğitim etkililiği
 
 ## Yayın sonucu
 
-Henüz yayımlanmadı; kontrollü geçişin ardından kanıtları eklenecek.
+- Yayın: 10 Ekim 2026, 20:51:48 Türkiye saati. Veri paketi commit'i `4619ccca`, GitHub dalıyla eşleşti.
+- Paket SHA256: `ec42daaaaea6a04c13258116a381e1a351d51e325c988c4f4be6851b762ae0a1`.
+- VPS yedeği: `/var/lib/eduivme/releases/adult-programs-v2-20261010-4619ccca/speedreading-before.dump`.
+  1.575.732 bayt, izin 600; pg_restore --list doğrulandı. Tam geri yükleme tatbikatı yapılmadı.
+  SHA256: `d984a44fe61c168ab53b6176614cb0e5c571cbf17bdbf131094f2b5f535809a2`.
+- Eski beş yetişkin şablonu fiziksel olarak silindi; yeni beş şablonun her biri 28 gün / 182 görev.
+  Silinen şablonlar yedekten kurtarılabilir. Kullanıcı, ilerleme, sonuç veya oturum silinmedi.
+- 85 kalıcı tablonun kapsam dışı kayıt sayıları ve özetleri önce/sonra birebir aynı.
+  Seviye tespit, diğer yaşlar, katalog, içerik, abonelik/ödeme ve mevcut genç program kaydı korundu.
+- API ve diğer konteynırların kimlik/imajları aynı kaldı. Yeni migration veya frontend yayını yok.
+- Readiness Healthy, ana sayfa HTTP 200, oturumsuz korumalı program API'si HTTP 401.
+- İlk paket Bash kontrolünde Windows satır sonu nedeniyle servise/veritabanına dokunmadan durdu.
+  Açılan paket içindeki iki .sh dosyası LF'ye normalize edilip bash -n doğrulandı; sonra geçiş başarılı oldu.
+  Sonraki paketler için yalnız bu sürüm klasörüne scoped `.gitattributes` ile LF kuralı eklendi.
+- Gerçek admin tarayıcı doğrulaması ve 15 dakikalık izleme sürüyor; kapanış sonuçları eklenecek.
