@@ -2796,6 +2796,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   }
 
   hasTimeLimit(): boolean {
+    if (this.engine?.engineType === 'word_highlight' && this.exercise?.exerciseTypeName?.toLowerCase() === 'speedreading') return false;
     if (this.engine?.engineType === 'skimming') return true;
     if (this.engine?.engineType === 'grid_interaction') return this.schulteSettings.timeLimit !== undefined;
     if (this.engineState.remainingSeconds !== undefined) {
@@ -3515,6 +3516,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
               timedOut: sessionResult.detailedResults?.readingIncomplete === true
             } : {}),
             ...(sessionResult.detailedResults?.groupingDisplayPaceWpm > 0 ? {
+              wordCount: sessionResult.detailedResults.wordCount,
               displayPaceWpm: sessionResult.detailedResults.groupingDisplayPaceWpm,
               completionPercent: sessionResult.detailedResults.groupingCompletionPercent,
               incomplete: sessionResult.detailedResults.readingIncomplete === true

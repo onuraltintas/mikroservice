@@ -143,7 +143,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             var usesTextBand = isFreeText || exerciseTypeName.Equals("SpeedReading", StringComparison.OrdinalIgnoreCase);
             var minimumWords = usesTextBand ? ReadPositiveInt(explicitContent, "minWordCount") ?? ReadPositiveInt(ReadObject(explicitConfig, "content"), "minWordCount") ?? 0 : 0;
             var maximumWords = usesTextBand ? ReadPositiveInt(explicitContent, "maxWordCount") ?? ReadPositiveInt(ReadObject(explicitConfig, "content"), "maxWordCount") ?? 0 : 0;
-            var strictTextLevel = IsEngineType(exerciseEngineType, "word_highlight") || IsGrouping(new SessionState { EngineType = exerciseEngineType, ExerciseTypeName = exerciseTypeName })
+            var strictTextLevel = IsEngineType(exerciseEngineType, "word_highlight") || IsPacedHighlight(new SessionState { EngineType = exerciseEngineType, ExerciseTypeName = exerciseTypeName })
                 || IsRsvp(exerciseTypeName, exerciseEngineType, explicitConfig)
                 || ExerciseConfigurationRules.NormalizeEngineType(exerciseEngineType) is "free_reading" or "text_fade" or "regression_reduction" or "subvocalization_reduction" or "skimming";
             var readingTextMatches = await db.ReadingTexts
@@ -240,7 +240,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                         && DeserializeState(matchingSession.SessionDataJson).Tachistoscope is null)
                     || (IsScanning(new SessionState { EngineType = exerciseEngineType })
                         && DeserializeState(matchingSession.SessionDataJson).ScanningRounds.Count == 0)
-                    || (IsGrouping(DeserializeState(matchingSession.SessionDataJson))
+                    || (IsPacedHighlight(DeserializeState(matchingSession.SessionDataJson))
                         && DeserializeState(matchingSession.SessionDataJson).GroupingDisplayPaceWpm <= 0)
                     || (IsTextFade(DeserializeState(matchingSession.SessionDataJson))
                         && DeserializeState(matchingSession.SessionDataJson).FadeDisplayPaceWpm <= 0)
@@ -585,7 +585,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                 throw IncompleteSession("Hata analizi doğrulanmış seçim/bitirme akışıyla tamamlanmalıdır.");
             state.Questions.Clear();
         }
-        if ((IsGrouping(state) || IsTextFade(state)) && (DisplayPace(state) <= 0 || state.ReadingMinimumMs <= 0
+        if ((IsPacedHighlight(state) || IsTextFade(state)) && (DisplayPace(state) <= 0 || state.ReadingMinimumMs <= 0
             || !state.ReadingStartTime.HasValue || !state.ReadingEndTime.HasValue))
             throw IncompleteSession("Doğrulanmış gösterim tamamlanmadan oturum kaydedilemez. Egzersizi yeniden başlatın.");
         if (IsRsvp(state) && (state.RsvpProtocolVersion != 1 || !state.ReadingStartTime.HasValue
@@ -1704,7 +1704,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         if (IsScanning(state)) InitializeScanning(state, effectiveConfig);
         if (IsSkimming(state)) InitializeSkimming(state, effectiveConfig, config);
         if (IsErrorAnalysis(state)) InitializeErrorAnalysis(state, effectiveConfig);
-        if (IsGrouping(state))
+        if (IsPacedHighlight(state))
         {
             var pacer = ReadObject(effectiveConfig, "pacer");
             var content = ReadObject(effectiveConfig, "content");
@@ -1789,11 +1789,11 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
     {
         if (IsAdaptiveFluency(state))
             return FinishAdaptiveStage(session, state, now);
-        if (ExerciseConfigurationRules.NormalizeEngineType(state.EngineType) is "reading_comprehension" or "free_reading" || IsGrouping(state) || IsTextFade(state) || IsRsvp(state) || IsSkimming(state))
+        if (ExerciseConfigurationRules.NormalizeEngineType(state.EngineType) is "reading_comprehension" or "free_reading" || IsPacedHighlight(state) || IsTextFade(state) || IsRsvp(state) || IsSkimming(state))
         {
             if (IsRsvp(state) && state.RsvpProtocolVersion != 1)
                 return Invalid("Bu eski RSVP oturumu doğrulanamıyor. Egzersizi yeniden başlatın.");
-            if ((IsGrouping(state) || IsTextFade(state)) && (DisplayPace(state) <= 0 || state.ReadingMinimumMs <= 0))
+            if ((IsPacedHighlight(state) || IsTextFade(state)) && (DisplayPace(state) <= 0 || state.ReadingMinimumMs <= 0))
                 return Invalid("Bu eski egzersiz oturumu doğrulanamıyor. Egzersizi yeniden başlatın.");
             if (!state.ReadingStartTime.HasValue)
                 return Invalid("Önce okumayı başlatın.");
@@ -1805,7 +1805,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                     - (state.ReadingPausedMilliseconds ?? state.ReadingPausedSeconds * 1000L));
                 if (IsSkimming(state) && incomplete && elapsedMs < state.ReadingMaximumMs)
                     return Invalid("İnceleme süresi henüz dolmadı.");
-                if (IsGrouping(state) || IsTextFade(state))
+                if (IsPacedHighlight(state) || IsTextFade(state))
                     incomplete |= state.ReadingMaximumMs > 0 && elapsedMs >= state.ReadingMaximumMs;
                 if (!incomplete && elapsedMs < state.ReadingMinimumMs)
                     return Invalid("Minimum okuma süresi henüz dolmadı.");
@@ -1830,7 +1830,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                     : state.WordCount;
                 state.RsvpCompletionPercent = Math.Round(100m * state.RsvpPresentedWords / state.WordCount, 2);
             }
-            if (IsGrouping(state))
+            if (IsPacedHighlight(state))
             {
                 var elapsedMs = Math.Max(0, (now - state.ReadingStartTime.Value).TotalMilliseconds
                     - (state.ReadingPausedMilliseconds ?? state.ReadingPausedSeconds * 1000L));
@@ -2883,7 +2883,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         && state.ReadingStartTime.HasValue
         && state.ReadingEndTime.HasValue;
 
-    private static bool IsGrouping(SessionState state) =>
+    private static bool IsPacedHighlight(SessionState state) =>
         ExerciseConfigurationRules.NormalizeEngineType(state.EngineType) == "word_highlight"
         && (state.ExerciseTypeName.Equals("Chunking", StringComparison.OrdinalIgnoreCase)
             || state.ExerciseTypeName.Equals("SpeedReading", StringComparison.OrdinalIgnoreCase));
