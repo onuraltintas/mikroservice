@@ -16,6 +16,38 @@ function callbacks(onComplete: (result: EngineResult) => void): EngineCallbacks 
 }
 
 describe('ScanFindEngine', () => {
+  it('fails instead of inventing a fallback passage', () => {
+    const engine = new ScanFindEngine();
+    expect(() => engine.initialize({ targetCount: 3 }, callbacks(() => undefined))).toThrowError(/metin/i);
+  });
+
+  it('rejects an unattainable target count', () => {
+    const engine = new ScanFindEngine();
+    expect(() => engine.initialize({ content: { text: 'ışık inci' }, targetCount: 3 },
+      callbacks(() => undefined))).toThrowError(/hedef/i);
+  });
+
+  it('does not rank targets by longest word', () => {
+    spyOn(Math, 'random').and.returnValue(0.999);
+    const engine = new ScanFindEngine();
+    engine.initialize({ content: { text: 'ev okul kütüphanemizde' }, targetCount: 2 }, callbacks(() => undefined));
+    expect(engine.getTargetWords()).toEqual(['ev', 'okul']);
+    engine.destroy();
+  });
+
+  it('uses verified name, date and number tasks from the selected text', () => {
+    const engine: any = new ScanFindEngine();
+    engine.initialize({ readingTextId: 'text-id', content: { text: 'Derya 12.04.2026 24' }, targetCount: 3,
+      targets: { tasksByTextId: { 'text-id': [
+        { answer: 'Derya', prompt: 'Kim düzenledi?' },
+        { answer: '12.04.2026', prompt: 'Hangi tarihte?' },
+        { answer: '24', prompt: 'Kaç kişi?' }
+      ] } }
+    }, callbacks(() => undefined));
+    expect(engine.getTargetWords()).toEqual(['derya', '12.04.2026', '24']);
+    expect(engine.getTargetLabel('derya')).toBe('Kim düzenledi?');
+    engine.destroy();
+  });
   it('uses target count with actual preview text and never starts an empty task', () => {
     const engine = new ScanFindEngine();
     engine.initialize({ content: { text: 'IŞIK İNCİ kelime' }, targetCount: 2 }, callbacks(() => undefined));

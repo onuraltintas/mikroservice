@@ -176,6 +176,67 @@ public sealed class ScanningSessionTests
     private static OwnedSpeedReadingDbContext Context() => new(new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>()
         .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
 
+    [Theory]
+    [InlineData(4, 10)]
+    [InlineData(1, 2)]
+    public async Task Does_not_select_text_outside_the_configured_word_band(int minimum, int maximum)
+    {
+        await using var db = Context();
+        var config = JsonSerializer.Serialize(new { engineConfig = new { content = new { minWordCount = minimum, maxWordCount = maximum }, targetCount = 2 } });
+        var start = () => Start(db, config);
+        await start.Should().ThrowAsync<BusinessRuleException>();
+    }
+
+    [Fact]
+    public async Task Explicit_text_cannot_bypass_the_scanning_level()
+    {
+        await using var db = Context();
+        var (service, student, started) = await Start(db);
+        var text = ReadingText.Create(Guid.NewGuid(), "Wrong level", "ışık inci kelime", difficultyLevel: 1);
+        db.ReadingTexts.Add(text);
+        await db.SaveChangesAsync();
+        var start = () => service.StartAsync(student, new() { ExerciseId = started.ExerciseId, ReadingTextId = text.Id });
+        await start.Should().ThrowAsync<KeyNotFoundException>();
+    }
+
+    [Fact]
+    public async Task Does_not_silently_reduce_the_number_of_targets()
+    {
+        await using var db = Context();
+        var start = () => Start(db, """{"engineConfig":{"targetCount":4}}""");
+        await start.Should().ThrowAsync<BusinessRuleException>();
+    }
+
+    [Fact]
+    public void Scanning_catalog_rejects_inverted_word_bands()
+    {
+        var validate = () => ExerciseConfigurationRules.ValidateActiveConfiguration(
+            """{"engineConfig":{"content":{"minWordCount":100,"maxWordCount":50}}}""", "scanning");
+        validate.Should().Throw<ArgumentException>();
+    }
+
+    [Fact]
+    public async Task Curated_information_tasks_are_selected_from_the_matching_real_text()
+    {
+        await using var db = Context();
+        var student = Guid.NewGuid();
+        var type = ExerciseType.Create(Guid.NewGuid(), "Scanning", "Tarama", "scanning");
+        var text = ReadingText.Create(Guid.NewGuid(), "Duyuru", "Etkinliği Derya hazırladı. Tarihi 12.04.2026, kontenjanı 24 kişidir.", difficultyLevel: 3);
+        var config = """{"engineConfig":{"targetCount":3,"targets":{"tasksByTextId":{"TEXT_ID":[{"answer":"Derya","prompt":"Etkinliği kim hazırladı?"},{"answer":"12.04.2026","prompt":"Etkinliğin tarihi nedir?"},{"answer":"24","prompt":"Kontenjan kaç kişidir?"}]}}}}""".Replace("TEXT_ID", text.Id.ToString());
+        var exercise = Exercise.Create("Bilgiyi bul", "Scanning", config, 3, student, type.Id);
+        db.ExerciseTypes.Add(type);
+        db.Exercises.Add(exercise);
+        db.ReadingTexts.Add(text);
+        db.ReadingTexts.Add(ReadingText.Create(Guid.NewGuid(), "Other", "başka içerik kelime", difficultyLevel: 3));
+        await db.SaveChangesAsync();
+        var serviceType = typeof(OwnedSpeedReadingDbContext).Assembly.GetType("SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingExerciseSessions")!;
+        var service = (ISpeedReadingExerciseSessions)Activator.CreateInstance(serviceType, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, [db], null)!;
+        var started = await service.StartAsync(student, new() { ExerciseId = exercise.Id });
+        var round = started.InitialData.GetProperty("scanningRounds")[0];
+        round.GetProperty("targets").EnumerateArray().Select(value => value.GetString()).Should().BeEquivalentTo("derya", "12.04.2026", "24");
+        round.GetProperty("targetLabels").GetProperty("derya").GetString().Should().Be("Etkinliği kim hazırladı?");
+    }
+
     private static async Task<(ISpeedReadingExerciseSessions Service, Guid Student, StartExerciseSessionResponse Started)> Start(
         OwnedSpeedReadingDbContext db, string? config = null, int textLevel = 3, string engine = "scanning")
     {

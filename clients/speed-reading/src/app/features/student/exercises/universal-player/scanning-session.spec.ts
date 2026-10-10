@@ -2,6 +2,14 @@ import { of } from 'rxjs';
 import { ExercisePlayerComponent } from './exercise-player.component';
 
 describe('Scanning server pause synchronization', () => {
+  it('filters preview passages by the scanning word band', () => {
+    const player: any = Object.create(ExercisePlayerComponent.prototype);
+    player.exercise = { exerciseTypeName: 'Scanning' };
+    player.parsedConfig = { engineType: 'scanning', engineConfig: { content: { minWordCount: 100, maxWordCount: 200 } } };
+    expect(player.previewTextMatchesLength(99)).toBeFalse();
+    expect(player.previewTextMatchesLength(201)).toBeFalse();
+    expect(player.previewTextMatchesLength(150)).toBeTrue();
+  });
   it('synchronizes pause and resume with the session service', async () => {
     const player: any = Object.create(ExercisePlayerComponent.prototype);
     player.engineState = { isPaused: false };
