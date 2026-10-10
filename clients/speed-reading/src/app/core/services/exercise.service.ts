@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { EMPTY, Observable } from 'rxjs';
+import { EMPTY, Observable, forkJoin, of } from 'rxjs';
 import { expand, map, reduce, switchMap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { Exercise, ReadingText, ExerciseResult } from '../models/exercise.model';
@@ -26,6 +26,23 @@ export class ExerciseService {
    * Backend returns: ApiResponse<PagedResult<Exercise>>
    * Service receives: PagedResult<Exercise> (auto-unwrapped)
    */
+  getPreviewVisualizationScenes(exerciseId: string): Observable<PreviewVisualizationScene[]> {
+    return this.http.get<PreviewVisualizationScene[]>(`${this.API_URL}/visualization/exercises/${exerciseId}/scenes`).pipe(
+      switchMap(scenes => scenes.length ? forkJoin(scenes.map(scene =>
+        this.http.get<PreviewVisualizationScene>(`${this.API_URL}/admin/visualization-scenes/${scene.id}`))) : of([]))
+    );
+  }
+
+  getPreviewVocabulary(difficultyLevel: number, category?: string): Observable<PreviewVocabularyWord[]> {
+    const fetch = (pageNumber: number) => this.http.get<PagedResult<PreviewVocabularyWord>>(`${this.API_URL}/vocabulary`, {
+      params: { difficultyLevel, pageNumber, pageSize: 100, ...(category ? { category } : {}) }
+    });
+    return fetch(1).pipe(
+      expand(page => page.pageNumber < page.totalPages ? fetch(page.pageNumber + 1) : EMPTY),
+      reduce((all, page) => all.concat(page.items), [] as PreviewVocabularyWord[])
+    );
+  }
+
   getExerciseTypes(): Observable<PagedResult<any>> {
     // Note: This endpoint returns all exercise types, we ask for a large page size
     return this.http.get<PagedResult<any>>(`${this.API_URL}/exercise-types`, {
@@ -331,4 +348,20 @@ interface CentralReadingTextDetails {
   questions: unknown[];
   createdAt: string;
   updatedAt: string | null;
+}
+
+export interface PreviewVocabularyWord {
+  id: string;
+  word: string;
+  definition: string;
+  targetAgeGroupId?: string | null;
+}
+
+export interface PreviewVisualizationScene {
+  id: string;
+  description: string;
+  imageUrl?: string;
+  duration: number;
+  displayOrder: number;
+  questions: { id: string; questionText: string; options: string[]; correctAnswer: string; questionType: string; displayOrder: number }[];
 }

@@ -952,7 +952,8 @@
         </div>
 
         <div class="question-actions">
-            <button class="btn-primary" *ngIf="questionFeedback" (click)="nextQuestion()">
+            <button class="btn-primary" [class.question-action-pending]="!questionFeedback"
+                [disabled]="!questionFeedback" (click)="nextQuestion()">
                 <span class="material-icons">{{ isLastQuestion() ? 'done_all' : 'arrow_forward' }}</span>
                 {{ isLastQuestion() ? 'Sonuçları Gör' : 'Sonraki Soru' }}
             </button>

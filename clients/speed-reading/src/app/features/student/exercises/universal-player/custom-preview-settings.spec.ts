@@ -19,6 +19,20 @@ describe('Custom preview settings safety', () => {
     expect(result.engineConfig['targets']).toEqual(config.engineConfig.targets);
     expect(() => applyCustomPreviewSettings(config, { timeLimitSec: 2 }, { roles: ['Teacher'], preview: true })).toThrow();
   });
+  it('generates valid stimuli for a catalogue focus preview without a stored sequence', () => {
+    const config = { engineType: 'focus', engineConfig: { mode: 'position', nLevel: 1, totalSteps: 16, speedMs: 2300, gridSize: 3 } };
+    const values = Object.fromEntries(getCustomPreviewControls(config).map(control => [control.key, control.value]));
+    const changed = applyCustomPreviewSettings(config, values, { roles: ['Admin'], preview: true });
+    const errors: string[] = [];
+    const engine = new FocusEngine();
+    engine.initialize({ ...changed, ...changed.engineConfig, previewOnly: true } as any,
+      { onStateChange: () => undefined, onStart: () => undefined, onAction: () => undefined, onError: (message: string) => errors.push(message) } as any);
+    engine.start();
+    expect(errors).toEqual([]);
+    expect(engine.config.PositionSequence?.length).toBe(16);
+    expect(engine.config.SpeedMs).toBe(2300);
+    engine.destroy();
+  });
   it('rejects inherited unsafe focus bounds before generating mode-only previews', () => {
     for (const overrides of [{ totalSteps: 501 }, { nLevel: 6 }, { gridSize: 8 }]) {
       expect(() => applyCustomPreviewSettings({ engineType: 'focus', engineConfig: { ...overrides } }, { mode: 'dual' }, { roles: ['Teacher'], preview: true })).toThrow();

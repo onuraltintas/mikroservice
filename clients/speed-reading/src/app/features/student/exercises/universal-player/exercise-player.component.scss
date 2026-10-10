@@ -2035,6 +2035,11 @@
     display: flex;
     justify-content: center;
     padding-top: 16px;
+
+    .question-action-pending {
+        visibility: hidden;
+        pointer-events: none;
+    }
 }
 
 /* Speed Reading Results */

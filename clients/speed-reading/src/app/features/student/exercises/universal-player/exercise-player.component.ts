@@ -12,7 +12,7 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { firstValueFrom, Subject, takeUntil } from 'rxjs';
 import { AuthService } from '../../../../core/services/auth.service';
 import { canUseStaffTraining } from '../../../../core/guards/staff-training.guard';
-import { applyCustomPreviewSettings } from './custom-preview-settings';
+import { applyCustomPreviewSettings, getCustomPreviewControls } from './custom-preview-settings';
 import { resolveSchulteSettings } from './schulte-settings';
 
 import { EngineFactory, EngineType } from './engines/engine-factory';
@@ -65,6 +65,7 @@ interface ExerciseData {
   configurationJson: string;
   exerciseTypeName?: string;
   targetAgeGroupId?: string;
+  targetAgeGroupConfigurationId?: string;
 }
 
 interface ParsedConfig {
@@ -676,6 +677,50 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     this.sessionId = 'preview-mode';
     this.backendSessionConfig = {};
 
+    if (this.parsedConfig?.engineType === 'visualization' && this.exercise) {
+      this.exerciseService.getPreviewVisualizationScenes(this.exercise.id)
+        .pipe(takeUntil(this.destroy$)).subscribe({
+          next: scenes => {
+            this.backendSessionConfig = { visualizationScenes: scenes.map(scene => ({
+              ...scene, sceneId: scene.id,
+              questions: scene.questions.map(question => ({ ...question, questionId: question.id }))
+            })) };
+            this.initializePreviewEngine();
+          },
+          error: error => this.handleInitializationError(error)
+        });
+      return;
+    }
+
+    if (this.parsedConfig?.engineType === 'vocabulary_builder') {
+      const settings = this.parsedConfig.engineConfig || {};
+      const vocabulary = settings['vocabulary'] || {};
+      const difficulty = Number(vocabulary.difficultyLevel || this.exercise?.difficultyLevel || 1);
+      const count = Math.max(1, Math.min(50, Number(vocabulary.count) || 10));
+      const age = this.exercise?.targetAgeGroupConfigurationId || this.exercise?.targetAgeGroupId;
+      const configuredIds = settings['vocabularyItemIds'] || vocabulary.itemIds;
+      this.exerciseService.getPreviewVocabulary(difficulty, vocabulary.category)
+        .pipe(takeUntil(this.destroy$)).subscribe({
+          next: words => {
+            const seenWords = new Set<string>();
+            const seenDefinitions = new Set<string>();
+            const candidates = words.filter(word => (!word.targetAgeGroupId || word.targetAgeGroupId === age)
+              && (!Array.isArray(configuredIds) || !configuredIds.length || configuredIds.includes(word.id)))
+              .map(word => ({ word, random: Math.random() })).sort((a, b) => a.random - b.random)
+              .map(item => item.word).filter(word => {
+                const text = word.word?.trim().toLocaleLowerCase('tr');
+                const definition = word.definition?.trim().toLocaleLowerCase('tr');
+                if (!word.id || !text || !definition || seenWords.has(text) || seenDefinitions.has(definition)) return false;
+                seenWords.add(text); seenDefinitions.add(definition); return true;
+              });
+            this.backendSessionConfig = { vocabularyWords: candidates.slice(0, count) };
+            this.initializePreviewEngine();
+          },
+          error: error => this.handleInitializationError(error)
+        });
+      return;
+    }
+
     const readingTextId = this.getConfiguredReadingTextId();
     if (!readingTextId) {
       if (!this.previewRequiresReadingText()) {
@@ -815,6 +860,17 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
 
   private initializePreviewEngine(): void {
     try {
+      if (this.parsedConfig?.engineType === 'focus') {
+        const settings = this.parsedConfig.engineConfig || {};
+        const hasSequence = ['PositionSequence', 'positionSequence', 'WordSequence', 'wordSequence']
+          .some(key => Array.isArray(settings[key]) && settings[key].length > 0);
+        if (!hasSequence) {
+          const values = Object.fromEntries(getCustomPreviewControls(this.parsedConfig)
+            .map(control => [control.key, control.value]));
+          this.parsedConfig = applyCustomPreviewSettings(this.parsedConfig, values,
+            { roles: this.authService.currentUserValue?.roles ?? [], preview: true });
+        }
+      }
       this.initializeEngine();
     } catch (error) {
       this.handleInitializationError(error);
@@ -1304,7 +1360,8 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
           if (engineType === 'vocabulary_builder') {
             const vocabularyItemId = (action as any).wordId;
             if (typeof vocabularyItemId === 'string'
-              && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(vocabularyItemId)) {
+              && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(vocabularyItemId)
+              && vocabularyItemId !== '00000000-0000-0000-0000-000000000000') {
               const reviewKind = action.action === 'mark_known'
                 ? 'known'
                 : action.action === 'mark_unknown'
@@ -1451,9 +1508,9 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
           || this.backendSessionConfig?.visualizationScenes
           || this.parsedConfig?.['scenes']
           || this.parsedConfig?.['Scenes'],
-        words: this.backendSessionConfig?.errorAnalysisWords
-          || this.backendSessionConfig?.vocabularyWords
-          || this.backendSessionConfig?.VocabularyWords
+        words: (engineType === 'vocabulary_builder'
+          ? this.backendSessionConfig?.vocabularyWords || this.backendSessionConfig?.VocabularyWords
+          : this.backendSessionConfig?.errorAnalysisWords)
           || this.backendSessionConfig?.words
           || this.backendSessionConfig?.Words
           || ((!this.sessionId || this.sessionId === 'preview-mode' || this.isPreviewSession())

@@ -5,6 +5,29 @@ import { Router, provideRouter } from '@angular/router';
 import { TrainingProgramsComponent } from './training-programs.component';
 
 describe('Staff training programs', () => {
+  it('sorts by age and level and filters without mixing young adults with adults', () => {
+    TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])] });
+    const fixture = TestBed.createComponent(TrainingProgramsComponent);
+    fixture.detectChanges();
+    const http = TestBed.inject(HttpTestingController);
+    http.expectOne(request => request.url.endsWith('/staff-training/programs')).flush([
+      { id: 'adult', name: 'Yetişkin — Seviye 1', initialDifficultyLevel: 1, totalDays: 28 },
+      { id: 'teen2', name: 'Genç — Seviye 2', initialDifficultyLevel: 2, totalDays: 28 },
+      { id: 'young', name: 'Genç Yetişkin — Seviye 1', initialDifficultyLevel: 1, totalDays: 28 },
+      { id: 'child', name: 'Çocuk — Seviye 1', initialDifficultyLevel: 1, totalDays: 28 },
+      { id: 'teen1', name: 'Genç — Seviye 1', initialDifficultyLevel: 1, totalDays: 28 }]);
+    http.expectOne(request => request.url.endsWith('/student-program/my-programs')).flush([]);
+    fixture.detectChanges();
+    expect(fixture.componentInstance.filteredTemplates().map(p => p.id)).toEqual(['child', 'teen1', 'teen2', 'young', 'adult']);
+    const select = fixture.nativeElement.querySelector('select') as HTMLSelectElement;
+    select.value = 'Genç'; select.dispatchEvent(new Event('change')); fixture.detectChanges();
+    expect(fixture.nativeElement.querySelectorAll('.program-card').length).toBe(2);
+    expect(fixture.componentInstance.filteredTemplates().map(p => p.id)).toEqual(['teen1', 'teen2']);
+    select.value = 'Yetişkin'; select.dispatchEvent(new Event('change')); fixture.detectChanges();
+    expect(fixture.nativeElement.querySelectorAll('.program-card').length).toBe(1);
+    expect(fixture.nativeElement.querySelector('.age-badge').textContent).toBe('Yetişkin');
+    http.verify();
+  });
   it('stacks the title and description despite shared header flex styles', () => {
     TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])] });
     const fixture = TestBed.createComponent(TrainingProgramsComponent);
