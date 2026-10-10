@@ -7,6 +7,7 @@ using NpgsqlTypes;
 using Shared.IntegrationTests.Fixtures;
 using SpeedReading.Domain.Catalog;
 using SpeedReading.Domain.Programs;
+using SpeedReading.Domain.Review;
 using SpeedReading.Infrastructure.Persistence;
 
 namespace Identity.API.IntegrationTests;
@@ -25,6 +26,7 @@ public sealed class AdultProgramReplacementPostgresTests(PostgresFixture postgre
     [Theory]
     [InlineData("normal")]
     [InlineData("history")]
+    [InlineData("review")]
     [InlineData("collision")]
     [InlineData("missing-exercise")]
     [InlineData("invalid-version")]
@@ -68,6 +70,9 @@ public sealed class AdultProgramReplacementPostgresTests(PostgresFixture postgre
             db.StudentProgramProgresses.Add(unrelatedProgress);
             if (mode == "history")
                 db.StudentProgramProgresses.Add(StudentProgramProgress.Start(Guid.NewGuid(), Guid.NewGuid(), oldTemplates[0], 0, 0, actor, DateTime.UtcNow));
+            if (mode == "review")
+                db.ReviewItems.Add(ReviewItem.Start(Guid.NewGuid(), actor, db.Exercises.Local.First().Id,
+                    oldTemplates[0].Id, DateTime.UtcNow, actor));
             if (mode == "collision")
                 db.ProgramTemplates.Add(Import(Guid.Parse("e2c01003-8d9a-4e6c-a428-000000000001"), "Reserved id collision", Age, 1));
             var invalid = JsonNode.Parse(planJson)!.AsObject();

@@ -62,3 +62,12 @@ test('advanced types replace reading tasks only in the final fortnight at suppor
     else assert.ok(program.days.every(day => !day.includes('ExamSimulation')));
   }
 });
+
+test('SQL reserves five distinct adult replacement IDs, one per ordered level', () => {
+  const sql = readFileSync(new URL('../../content-packs/adult-programs/v2/apply.sql', import.meta.url), 'utf8');
+  const mappings = [...sql.matchAll(/\('([0-9a-f-]+)','(e2c01003-[0-9a-f-]+)',([1-5])\)/g)];
+  assert.equal(mappings.length, 5);
+  assert.equal(new Set(mappings.map(match => match[1])).size, 5);
+  assert.equal(new Set(mappings.map(match => match[2])).size, 5);
+  for (const match of mappings) assert.equal(match[2], `e2c01003-8d9a-4e6c-a428-${match[3].padStart(12, '0')}`);
+});
