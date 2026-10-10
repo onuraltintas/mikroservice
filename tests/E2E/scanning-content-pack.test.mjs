@@ -6,6 +6,9 @@ const root = new URL('../../content-packs/scanning/v1/', import.meta.url);
 test('scanning pack provides all age/level settings and three real passages per exercise', () => {
   const settings = JSON.parse(readFileSync(new URL('settings.json', root), 'utf8'));
   const texts = JSON.parse(readFileSync(new URL('content.json', root), 'utf8'));
+  const sql = readFileSync(new URL('apply.sql', root), 'utf8');
+  assert.deepEqual(JSON.parse(sql.split('$settings$')[1]), settings);
+  assert.deepEqual(JSON.parse(sql.split('$content$')[1]), texts);
   assert.equal(settings.length, 20);
   assert.equal(texts.length, 60);
   assert.equal(new Set(texts.map(text => text.id)).size, 60);

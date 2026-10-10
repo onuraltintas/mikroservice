@@ -16,6 +16,87 @@ function callbacks(onComplete: (result: EngineResult) => void): EngineCallbacks 
 }
 
 describe('ScanFindEngine', () => {
+  it('rejects missing, duplicate and mismatched information answers in preview', () => {
+    for (const tasks of [
+      [], [{ answer: 'olmayan', prompt: 'Kim?' }], [{ answer: 'Derya', prompt: '' }],
+      [{ answer: 'Derya', prompt: 'Kim?' }, { answer: 'derya', prompt: 'Kim?' }]
+    ]) {
+      const engine = new ScanFindEngine();
+      expect(() => engine.initialize({ readingTextId: 'id', content: { text: 'Derya 24 okul' }, targetCount: 2,
+        targets: { tasksByTextId: { id: tasks } } }, callbacks(() => undefined))).toThrowError(/hedef/i);
+    }
+  });
+
+  it('rejects explicit words absent from the passage', () => {
+    const engine = new ScanFindEngine();
+    expect(() => engine.initialize({ content: { text: 'okul' }, targets: { words: ['olmayan'] } },
+      callbacks(() => undefined))).toThrowError(/hedef/i);
+  });
+
+  it('stops and reports rejected server validation without counting a result', () => {
+    const engine = new ScanFindEngine();
+    const onError = jasmine.createSpy();
+    const onComplete = jasmine.createSpy();
+    engine.initialize({ serverAuthoritative: true, scanningRounds: [{ textContent: 'okul', targets: ['okul'] }] },
+      { ...callbacks(onComplete), onError });
+    engine.start();
+    engine.reconcileServerResponse({ action: 'scan_start' }, { isValid: false });
+    expect(onError).toHaveBeenCalled();
+    expect(onComplete).not.toHaveBeenCalled();
+    expect(engine.state.isRunning).toBeFalse();
+    engine.destroy();
+  });
+
+  it('excludes pause time and ignores clicks while paused', fakeAsync(() => {
+    const engine = new ScanFindEngine();
+    engine.initialize({ content: { text: 'okul kitap' }, targets: { words: ['okul', 'kitap'] }, timeLimit: 3 }, callbacks(() => undefined));
+    engine.start();
+    tick(1000);
+    engine.pause();
+    engine.handleInput({ type: 'click_word', wordIndex: 0 });
+    tick(5000);
+    expect(engine.state.currentStep).toBe(0);
+    expect(engine.state.timeElapsed).toBe(1000);
+    engine.resume();
+    tick(500);
+    expect(engine.state.timeElapsed).toBe(1500);
+    engine.handleInput({ type: 'click_word', wordIndex: 0 });
+    engine.handleInput({ type: 'click_word', wordIndex: 1 });
+    expect(engine.state.isCompleted).toBeTrue();
+    engine.destroy();
+  }));
+
+  it('does not count repeated target occurrences twice', () => {
+    const engine = new ScanFindEngine();
+    engine.initialize({ content: { text: 'okul okul kitap' }, targets: { words: ['okul', 'kitap'] } }, callbacks(() => undefined));
+    engine.start();
+    engine.handleWordClick(0);
+    engine.handleWordClick(1);
+    expect(engine.state.currentStep).toBe(1);
+    expect(engine.state.errors).toBe(0);
+    engine.handleWordClick(99);
+    engine.handleWordClick(2);
+    engine.destroy();
+  });
+
+  it('reports an unavailable task rather than completing empty rounds', () => {
+    const engine = new ScanFindEngine();
+    const onError = jasmine.createSpy();
+    engine.initialize({ scanningRounds: [{ textContent: '', targets: [] }] }, { ...callbacks(() => undefined), onError });
+    engine.start();
+    expect(onError).toHaveBeenCalled();
+    expect(engine.state.isCompleted).toBeFalse();
+    engine.destroy();
+  });
+
+  it('uses configured numeric font size and finds any target in a server snapshot', () => {
+    const engine = new ScanFindEngine();
+    engine.initialize({ serverAuthoritative: true, scanningFindAny: true, scanningCaseSensitive: true,
+      visuals: { fontSize: '28px' }, scanningRounds: [{ textContent: 'Okul Kitap', targets: ['Okul', 'Kitap'] }] }, callbacks(() => undefined));
+    expect(engine.getFontSizePx()).toBe(28);
+    expect(engine.state.totalSteps).toBe(1);
+    engine.destroy();
+  });
   it('renders ordinary targets without inherited object-property labels', () => {
     const engine = new ScanFindEngine();
     engine.initialize({ content: { text: 'constructor' }, targets: { words: ['constructor'] } }, callbacks(() => undefined));

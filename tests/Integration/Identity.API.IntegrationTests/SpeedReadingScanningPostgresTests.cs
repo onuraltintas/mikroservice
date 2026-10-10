@@ -34,9 +34,12 @@ public sealed class SpeedReadingScanningPostgresTests(PostgresFixture postgres)
             var type = ExerciseType.Create(Guid.NewGuid(), "Scanning", "Tarama", "scanning");
             db.ExerciseTypes.Add(type);
             foreach (var row in settings.RootElement.EnumerateArray())
+            {
+                ExerciseConfigurationRules.ValidateActiveConfiguration(row.GetProperty("configuration").GetRawText(), "scanning");
                 db.Exercises.Add(Exercise.Create(row.GetProperty("title").GetString()!, "Scanning",
                     changedSource ? "{}" : row.GetProperty("previousConfiguration").GetRawText(), row.GetProperty("level").GetInt32(),
                     student, type.Id, row.GetProperty("id").GetGuid(), targetAgeGroupId: row.GetProperty("ageGroupId").GetGuid()));
+            }
             await db.SaveChangesAsync();
             if (changedSource)
             {

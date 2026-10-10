@@ -10,7 +10,7 @@ const exercise = {
     engineConfig: { targetCount: 2, timeLimit: 90 } })
 };
 
-async function prepare(page, role = 'Admin') {
+async function prepare(page, role = 'Admin', information = false) {
   const writes = [], errors = [];
   page.on('pageerror', error => errors.push(error.message));
   await page.addInitScript(() => localStorage.setItem('currentUser', JSON.stringify({ id: 'test-user' })));
@@ -24,9 +24,17 @@ async function prepare(page, role = 'Admin') {
       writes.push(path);
       return route.fulfill({ status: 500, json: { message: 'Unexpected preview write' } });
     } else if (path.endsWith('/exercise-types')) response = { items: [{ id: typeId, name: 'Scanning', displayName: 'Tarama', engineType: 'scanning', isActive: true }], totalCount: 1 };
-    else if (path.endsWith(`/exercises/${exerciseId}`)) response = exercise;
+    else if (path.endsWith(`/exercises/${exerciseId}`)) response = information ? {
+      ...exercise, configurationJson: JSON.stringify({ engineType: 'scanning', readingTextId: textId,
+        engineConfig: { targetCount: 3, timeLimit: 90, targets: { tasksByTextId: { [textId]: [
+          { answer: 'Derya', prompt: 'Hazırlık sorumlusu kim?' },
+          { answer: '12.04.2026', prompt: 'Buluşmanın tarihi nedir?' },
+          { answer: '24', prompt: 'Kontenjan kaç kişi?' }
+        ] } } } })
+    } : exercise;
     else if (path.endsWith('/exercises')) response = { items: [exercise], totalCount: 1, pageNumber: 1, pageSize: 100 };
-    else if (path.endsWith(`/reading-texts/${textId}`)) response = { id: textId, title: 'Metin', content: '“IŞIK” [İNCİ] başka', difficultyLevel: 1, isActive: true, wordCount: 3, questions: [] };
+    else if (path.endsWith(`/reading-texts/${textId}`)) response = { id: textId, title: 'Metin',
+      content: information ? 'Derya 12.04.2026 24' : '“IŞIK” [İNCİ] başka', difficultyLevel: 1, isActive: true, wordCount: 3, questions: [] };
     else if (path.includes('/profile/status')) response = { hasAgeGroupConfiguration: true };
     else if (path.endsWith('/my-modules')) response = { hasSpeedReading: true };
     await route.fulfill({ json: response });
@@ -51,6 +59,7 @@ test('custom targets, Turkish words and keyboard completion without preview writ
   const { writes, errors } = await prepare(page);
   await launch(page);
   await expect(page.locator('.targets-list .target-word')).toHaveCount(3);
+  await expect(page.locator('.scan-word.target')).toHaveCount(0);
   await page.locator('.scan-word').first().focus();
   await page.keyboard.press('Enter');
   await expect(page.locator('.scan-word').first()).toHaveAttribute('aria-pressed', 'true');
@@ -64,6 +73,22 @@ test('custom targets, Turkish words and keyboard completion without preview writ
     return icon.right <= chip.right && icon.left >= chip.left;
   });
   expect(fits).toBe(true);
+  await page.locator('.scan-word').nth(1).click();
+  await page.locator('.scan-word').nth(2).click();
+  await expect(page.getByText('Önizleme sonucu — kaydedilmedi.', { exact: true })).toBeVisible();
+  expect(writes).toEqual([]);
+  expect(errors).toEqual([]);
+});
+
+test('information preview displays questions and accepts matching name, date and number', async ({ page }) => {
+  const { writes, errors } = await prepare(page, 'Admin', true);
+  await launch(page);
+  await expect(page.locator('.targets-list')).toContainText('Hazırlık sorumlusu kim?');
+  await expect(page.locator('.targets-list')).toContainText('Buluşmanın tarihi nedir?');
+  expect(await page.locator('.targets-list').evaluate(element => element.scrollWidth <= element.clientWidth + 1)).toBe(true);
+  await expect(page.locator('.scan-word.target')).toHaveCount(0);
+  await page.locator('.scan-word').nth(0).click();
+  await expect(page.locator('.target-word.found')).toHaveCount(1);
   await page.locator('.scan-word').nth(1).click();
   await page.locator('.scan-word').nth(2).click();
   await expect(page.getByText('Önizleme sonucu — kaydedilmedi.', { exact: true })).toBeVisible();
