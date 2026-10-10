@@ -42,6 +42,8 @@ public sealed class YoungAdultProgramReplacementPostgresTests(PostgresFixture po
     [InlineData("review")]
     [InlineData("assessment")]
     [InlineData("shared-session")]
+    [InlineData("extra-log")]
+    [InlineData("review-completion")]
     public async Task Replacement_is_atomic_preserves_unrelated_data_and_resolves_all_five_schedules(string mode)
     {
         await using var db = new OwnedSpeedReadingDbContext(new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>()
@@ -82,7 +84,8 @@ public sealed class YoungAdultProgramReplacementPostgresTests(PostgresFixture po
             var exercise = db.Exercises.Local.First();
             var preservedSession = ExerciseSession.Start(testUser, exercise.Id, null, 1, DateTime.UtcNow, null);
             db.ExerciseSessions.Add(preservedSession);
-            var targetSessions = Enumerable.Range(1, 3).Select(_ => ExerciseSession.Start(testUser, exercise.Id, null, 1, DateTime.UtcNow, null)).ToArray();
+            var targetCount = mode == "extra-log" ? 4 : 3;
+            var targetSessions = Enumerable.Range(1, targetCount).Select(_ => ExerciseSession.Start(testUser, exercise.Id, null, 1, DateTime.UtcNow, null)).ToArray();
             foreach (var session in targetSessions)
             {
                 session.Complete(DateTime.UtcNow.AddSeconds(1));
@@ -96,6 +99,13 @@ public sealed class YoungAdultProgramReplacementPostgresTests(PostgresFixture po
                 db.DailyExerciseLogs.Add(Log(actor, unrelatedProgress.Id, exercise, targetSessions[0].Id, 1));
             if (mode == "review")
                 db.ReviewItems.Add(ReviewItem.Start(Guid.NewGuid(), testUser, exercise.Id, oldTemplates[0].Id, DateTime.UtcNow, actor));
+            if (mode == "review-completion")
+            {
+                var review = ReviewItem.Start(Guid.NewGuid(), testUser, exercise.Id, null, DateTime.UtcNow, actor);
+                db.ReviewItems.Add(review);
+                db.ReviewCompletions.Add(ReviewCompletion.Record(targetSessions[0].Id, review.Id, testUser,
+                    exercise.Id, DateTime.UtcNow, 100, 1, 1));
+            }
             if (mode == "assessment")
             {
                 var attempt = AssessmentAttempt.Start(Guid.NewGuid(), testUser, AssessmentAttemptPhase.PostTraining,
@@ -148,10 +158,11 @@ public sealed class YoungAdultProgramReplacementPostgresTests(PostgresFixture po
                 Assert.Equal(mode == "collision" ? 8 : 7, await db.ProgramTemplates.CountAsync());
                 Assert.Equal(2, await db.StudentProgramProgresses.CountAsync());
                 Assert.Equal(5, await db.ProgramTemplates.CountAsync(item => OldIds.Select(Guid.Parse).Contains(item.Id)));
-                Assert.Equal(4, await db.ExerciseSessions.CountAsync());
-                Assert.Equal(3, await db.ExerciseSessionResults.CountAsync());
-                Assert.Equal(3, await db.ExerciseSessionAnswers.CountAsync());
-                Assert.Equal(mode == "shared-session" ? 4 : 3, await db.DailyExerciseLogs.CountAsync());
+                Assert.Equal(targetCount + 1, await db.ExerciseSessions.CountAsync());
+                Assert.Equal(targetCount, await db.ExerciseSessionResults.CountAsync());
+                Assert.Equal(targetCount, await db.ExerciseSessionAnswers.CountAsync());
+                Assert.Equal(mode == "shared-session" ? 4 : targetCount, await db.DailyExerciseLogs.CountAsync());
+                Assert.Equal(mode == "review-completion" ? 1 : 0, await db.ReviewCompletions.CountAsync());
             }
             else
             {
