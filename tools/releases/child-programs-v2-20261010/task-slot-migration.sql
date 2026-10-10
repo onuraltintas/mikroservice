@@ -11,4 +11,3 @@ INSERT INTO speed_reading.__ef_migrations_history ("MigrationId", "ProductVersio
 VALUES ('20261010064029_AddDailyTaskSlotOrder', '9.0.2');
 
 COMMIT;
-

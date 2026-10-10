@@ -23,7 +23,7 @@
   `pg_restore --list` ve SHA-256 doğrulaması geçti. Tam geri yükleme tatbikatı bu canlı yayında yapılmadı.
 - Başlangıç migration geçmişi: 77 kayıt, özet `4d0e4003168d775e55105cd3771bba94`.
   Sadece `20261010064029_AddDailyTaskSlotOrder` SQL'i uygulanır.
-- Kesinti/kurtarma fonksiyonu 9 hata/sinyal senaryosunda mock servis çağrılarıyla doğrulanır.
+- Kesinti/kurtarma fonksiyonu 9 hata/sinyal senaryosunda mock servis çağrılarıyla geçti.
 - Korunacak katalog: 366 egzersiz, 21 egzersiz türü, 19 kapsam dışı/seviye tespit programı.
 
 ## Güvenli geri dönüş
@@ -47,4 +47,26 @@ Bu yayında genel içerik yönetim yetkileri genişletilmez.
 
 ## Yayın sonucu
 
-Geçiş henüz çalıştırılmadı; sonuç ve yayın sonrası kontroller tamamlandıktan sonra bu bölüm güncellenecek.
+2026-10-10 07:19 UTC (10:19 Türkiye) kontrollü geçiş tamamlandı:
+
+- Görev sırası migration'ı commit edildi; toplam migration sayısı 78.
+- Yeni beş şablon eklendi, yalnız eski beş çocuk eğitim şablonu fiziksel silindi.
+- Yeni beş şablonun her biri: 28 gün, 182 görev, günlük en az 6/en çok 7.
+- Egzersiz kataloğu, türler ve korunacak 19 programın önce/sonra içerik özetleri birebir eşleşti.
+- Yalnız Hızlı Okuma backend/frontend container kimlikleri değişti; diğer servisler değişmedi.
+- Backend readiness `Healthy`, ana sayfa 200; anonim program/günlük API erişimi 401.
+- Frontend service worker yeni `child-programs-v2-77618cb9` release işaretini sunuyor;
+  `ngsw.json` önbelleğe alınmaması gereken başlıkları sunuyor.
+- Gerçek tarayıcıdaki ana paket `main-7U4USG4K.js`; üretim derlemesindeki paket ile eşleşiyor.
+- Yedek izinleri root-only: dosya 600, yayın klasörü 700.
+- Gerçek admin oturumuyla Çocuk filtresinde beş yeni program, 28 gün/182 görev açıklaması
+  ve mevcut aktif program/günlük liste açılışı doğrulandı; yeni tarayıcı uygulama hatası yok.
+  Programa kayıt, egzersiz başlatma veya sonuç yazma işlemi yapılmadı.
+- Üretimde yeni çocuk programı kayıt/tamamlama testi canlı kullanıcı verisiyle yapılmadı;
+  tekrarlı görev tamamlaması gerçek geçici PostgreSQL entegrasyon testlerinde doğrulandı.
+
+Yayın sonrası 07:20:30–07:35:10 UTC arasında yaklaşık 15 dakikalık izleme tamamlandı.
+30 kontrolün tamamında readiness `Healthy`, ana sayfa 200, korumalı API anonim erişimi
+401 döndü. İzleme boyunca kontrol edilen backend hata kayıtları ve container yeniden
+başlatma sayısı sıfırdı. Bu kontroller tüm olası kullanıcı akışlarının test edildiği
+veya yüzde 100 kod kapsaması sağlandığı anlamına gelmez.
