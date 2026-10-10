@@ -1648,6 +1648,10 @@
             </div>
 
             <div class="stats-row" *ngIf="result?.details?.displayPaceWpm">
+                <div class="stat-card" *ngIf="result?.details?.wordCount != null">
+                    <div class="stat-value">{{ result?.details?.wordCount | number:'1.0-0' }}</div>
+                    <div class="stat-label">Metindeki kelime sayısı</div>
+                </div>
                 <div class="stat-card" *ngIf="result?.details?.completionPercent != null">
                     <div class="stat-value">{{ result?.details?.completionPercent | number:'1.0-0' }}%</div>
                     <div class="stat-label">Tamamlanan gösterim</div>

@@ -83,26 +83,30 @@ export class WordHighlightEngine implements BaseEngine {
         const visuals = mergeCaseInsensitiveRecords(root, nested, 'visuals');
         const timing = mergeCaseInsensitiveRecords(root, nested, 'timing');
         const pacer = mergeCaseInsensitiveRecords(root, nested, 'pacer');
+        const mode = caseInsensitiveField(nested, 'mode') ?? caseInsensitiveField(root, 'mode');
+        const speedReading = mode === 'speed_reading' || mode === 'guided';
         this.config = {
             ...root,
             ...nested,
+            mode,
             content,
             visuals: {
                 ...visuals,
                 fontSize: typeof visuals['fontsize'] === 'string' ? visuals['fontsize'] : 'medium'
             },
             timing: {
-                timeLimitSec: boundedInteger(timing['timelimitsec'], 0, 0, 3_600)
+                timeLimitSec: speedReading ? 0 : boundedInteger(timing['timelimitsec'], 0, 0, 3_600)
             }
         } as WordHighlightConfig;
         this.chunks = [];
         this.allWords = [];
 
         // Populate chunks from backend primary source
-        const text = resolveReadingText(root, WordHighlightEngine.TEXT_POOL.join(' '));
+        const text = resolveReadingText(root, speedReading ? '' : WordHighlightEngine.TEXT_POOL.join(' '));
+        if (speedReading && !text.trim()) throw new Error('Reading text is missing or invalid.');
         const backendChunks = root.serverAuthoritative === true ? []
             : boundedStringArray(caseInsensitiveField(nested, 'chunks') ?? caseInsensitiveField(root, 'chunks'));
-        const chunkSize = boundedInteger(caseInsensitiveField(nested, 'chunkSize')
+        const chunkSize = speedReading ? 1 : boundedInteger(caseInsensitiveField(nested, 'chunkSize')
             ?? caseInsensitiveField(root, 'chunkSize') ?? pacer['chunksize'] ?? content['chunksize'], 1, 1, 10);
         const explicitWpm = caseInsensitiveField(nested, 'targetWpm')
             ?? caseInsensitiveField(root, 'targetWpm') ?? pacer['speedwpm'];
@@ -283,6 +287,7 @@ export class WordHighlightEngine implements BaseEngine {
                 displayPaceWpm: this.config.pacer?.speedWpm,
                 completionPercent: completionScore,
                 chunkCount: this.totalChunks,
+                wordCount: this.allWords.length,
                 mode: this.config.mode || 'chunking',
                 timedOut: !completedNaturally
             }

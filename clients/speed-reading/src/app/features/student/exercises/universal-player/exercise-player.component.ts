@@ -735,6 +735,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
             const candidates = texts.filter((text: any) => text.isActive !== false
               && Number(text.difficultyLevel) === level
               && this.previewTextMatchesAge(text)
+              && this.previewTextMatchesLength(text.wordCount)
               && (!text.exerciseId || text.exerciseId === this.exercise?.id));
             const uses = this.getPreviewTextUses();
             const ordered = candidates.map(text => ({ text, tie: Math.random() }))
@@ -759,6 +760,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       .subscribe({
         next: readingText => {
           if (!(readingText.content || '').trim() || (readingText as any).isActive === false
+            || !this.previewTextMatchesLength((readingText.content || '').trim().split(/\s+/).length)
             || Number(readingText.difficultyLevel) !== (Number(this.exercise?.difficultyLevel) || 1)
             || !this.previewTextMatchesAge(readingText)
             || ((readingText as any).exerciseId && (readingText as any).exerciseId !== this.exercise?.id)) {
@@ -837,6 +839,14 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   private previewTextMatchesAge(text: any): boolean {
     const ageGroup = this.exercise?.targetAgeGroupId;
     return !ageGroup || !text.targetAgeGroupConfigurationId || text.targetAgeGroupConfigurationId === ageGroup;
+  }
+
+  private previewTextMatchesLength(wordCount: number): boolean {
+    if (this.exercise?.exerciseTypeName?.toLowerCase() !== 'speedreading') return true;
+    const content = this.parsedConfig?.['engineConfig']?.['content'] || this.parsedConfig?.['content'] || {};
+    const minimum = Number(content.minWordCount) || 0;
+    const maximum = Number(content.maxWordCount) || 0;
+    return wordCount >= minimum && (!maximum || wordCount <= maximum);
   }
 
   private previewRequiresReadingText(): boolean {
