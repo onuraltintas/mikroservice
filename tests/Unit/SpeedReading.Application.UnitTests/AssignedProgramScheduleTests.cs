@@ -31,7 +31,8 @@ public sealed class AssignedProgramScheduleTests
 
     [Theory]
     [InlineData("{}", 0)]
-    [InlineData("{\"week1\":{\"day1\":[{\"Type\":\"Fixation\",\"Count\":2,\"Difficulty\":1}]}}", 1)]
+    [InlineData("{\"week1\":{\"day1\":[{\"Type\":\"Fixation\",\"Count\":2,\"Difficulty\":1}]}}", 0)]
+    [InlineData("{\"week1\":{\"day1\":[{\"Type\":\"Fixation\",\"Count\":101,\"Difficulty\":1}]}}", 1)]
     public async Task Incomplete_catalog_cannot_create_an_assigned_schedule(string pattern, int available)
     {
         await using var db = new OwnedSpeedReadingDbContext(
@@ -61,9 +62,10 @@ public sealed class AssignedProgramScheduleTests
             new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>()
                 .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
         var typeId = Guid.NewGuid();
-        var exerciseId = Guid.NewGuid();
         db.ExerciseTypes.Add(ExerciseType.Create(typeId, "Fixation", "Fixation", "focus"));
-        db.Exercises.Add(Exercise.Create("Exercise", "Fixation", "{}", 1, exerciseId, typeId));
+        var exercise = Exercise.Create("Exercise", "Fixation", "{}", 1, Guid.NewGuid(), typeId);
+        var exerciseId = exercise.Id;
+        db.Exercises.Add(exercise);
         await db.SaveChangesAsync();
         var template = ProgramTemplate.Import(Guid.NewGuid(), "Repeated program", "", Guid.NewGuid(), 0, 100,
             "{\"week1\":{\"day1\":[{\"Type\":\"Fixation\",\"Count\":2,\"Difficulty\":1}]}}",
