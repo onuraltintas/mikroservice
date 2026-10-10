@@ -1,6 +1,34 @@
 import { ExercisePlayerComponent } from './exercise-player.component';
 
 describe('comprehension presentation', () => {
+  it('does not install a default question deadline for comprehension', async () => {
+    const player = Object.create(ExercisePlayerComponent.prototype) as any;
+    player.engine = { engineType: 'reading_comprehension' };
+    player.comprehensionQuestions = [{ questionId: 'q', targetTimeSeconds: 60 }];
+    player.currentQuestionIndex = 0;
+    player.cdr = { detectChanges: () => {} };
+    await player.startQuestionTimer();
+    const timer = player.questionTimerInterval;
+    player.stopQuestionTimer();
+    expect(timer).toBeFalsy();
+    expect(player.questionTimeRemaining).toBe(0);
+  });
+
+  it('applies the comprehension word band to previews', () => {
+    const player = Object.create(ExercisePlayerComponent.prototype) as any;
+    player.exercise = { exerciseTypeName: 'Comprehension' };
+    player.parsedConfig = { engineType: 'reading_comprehension', engineConfig: { content: { minWordCount: 180, maxWordCount: 250 } } };
+    expect(player.previewTextMatchesLength(179)).toBeFalse();
+    expect(player.previewTextMatchesLength(251)).toBeFalse();
+    expect(player.previewTextMatchesLength(200)).toBeTrue();
+  });
+
+  it('does not reward speed in comprehension performance labels', () => {
+    const player = Object.create(ExercisePlayerComponent.prototype) as any;
+    player.engine = { engineType: 'reading_comprehension' };
+    expect(player.getPerformanceLevel(150, 80)).toEqual(player.getPerformanceLevel(500, 80));
+  });
+
   it('does not display whole-text speed before reading is finished', () => {
     const player = Object.create(ExercisePlayerComponent.prototype) as any;
     player.engine = { engineType: 'reading_comprehension', getWordCount: () => 100 };
