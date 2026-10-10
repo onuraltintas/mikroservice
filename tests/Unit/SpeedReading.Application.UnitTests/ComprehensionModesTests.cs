@@ -94,6 +94,13 @@ public sealed class ComprehensionModesTests
     }
 
     [Fact]
+    public void Rejects_inverted_word_band_even_when_the_bounds_are_in_different_scopes()
+    {
+        Assert.Throws<ArgumentException>(() => ExerciseConfigurationRules.ValidateActiveConfiguration(
+            """{"engineType":"reading_comprehension","content":{"minWordCount":300},"engineConfig":{"content":{"maxWordCount":200}}}""", "reading_comprehension"));
+    }
+
+    [Fact]
     public async Task Learning_does_not_raise_the_independent_adaptive_comprehension_profile()
     {
         await using var db = Context();
