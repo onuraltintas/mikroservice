@@ -18,7 +18,9 @@ public sealed class ChildProgramReplacementPostgresTests(PostgresFixture postgre
     [InlineData("normal")]
     [InlineData("history")]
     [InlineData("collision")]
+    [InlineData("collision-description")]
     [InlineData("invalid-plan")]
+    [InlineData("invalid-shape")]
     public async Task Replacement_preserves_catalog_assessment_and_history_and_builds_all_five_schedules(string mode)
     {
         await using var db = new OwnedSpeedReadingDbContext(new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>()
@@ -57,7 +59,7 @@ public sealed class ChildProgramReplacementPostgresTests(PostgresFixture postgre
             if (mode == "history")
                 db.StudentProgramProgresses.Add(StudentProgramProgress.Start(Guid.NewGuid(), user,
                     oldTemplates[0], 0, 0, user, DateTime.UtcNow));
-            if (mode == "collision")
+            if (mode.StartsWith("collision", StringComparison.Ordinal))
             {
                 var pattern = new Dictionary<string, object> { ["placementLevel"] = 1 };
                 var days = plan.RootElement.GetProperty("days").EnumerateArray().ToList();
@@ -66,13 +68,21 @@ public sealed class ChildProgramReplacementPostgresTests(PostgresFixture postgre
                         day => days[(week - 1) * 7 + day - 1].EnumerateArray()
                             .Select(task => new { type = task.GetString(), count = 1, difficulty = 1 }).ToArray());
                 db.ProgramTemplates.Add(ProgramTemplate.Import(Guid.Parse("e2c01001-8d9a-4e6c-a428-000000000001"),
-                    "Reserved id collision", "", age, 0, 100, JsonSerializer.Serialize(pattern),
-                    1, 0, 2, 4, 28, true, 1, 0, null, true, DateTime.UtcNow, null, null, null));
+                    mode == "collision-description" ? "Çocuk — Seviye 1 — Dengeli 4 Haftalık Program" : "Reserved id collision",
+                    "Unrelated description", age, 0, 100, JsonSerializer.Serialize(pattern),
+                    1, 0, 2, 4, 28, true, 1, 0, null, mode == "collision", DateTime.UtcNow,
+                    "system:child-programs-v2", null, null));
             }
             if (mode == "invalid-plan")
             {
                 var invalid = JsonNode.Parse(planJson)!.AsObject();
                 invalid["version"] = 3;
+                planJson = invalid.ToJsonString();
+            }
+            if (mode == "invalid-shape")
+            {
+                var invalid = JsonNode.Parse(planJson)!.AsObject();
+                invalid["days"]![0]!.AsArray().RemoveAt(0);
                 planJson = invalid.ToJsonString();
             }
             await db.SaveChangesAsync();
@@ -90,7 +100,7 @@ public sealed class ChildProgramReplacementPostgresTests(PostgresFixture postgre
             if (mode != "normal")
             {
                 await Assert.ThrowsAsync<PostgresException>(Apply);
-                Assert.Equal(mode == "collision" ? 7 : 6, await db.ProgramTemplates.CountAsync());
+                Assert.Equal(mode.StartsWith("collision", StringComparison.Ordinal) ? 7 : 6, await db.ProgramTemplates.CountAsync());
                 Assert.Equal(mode == "history" ? 1 : 0, await db.StudentProgramProgresses.CountAsync());
                 return;
             }
