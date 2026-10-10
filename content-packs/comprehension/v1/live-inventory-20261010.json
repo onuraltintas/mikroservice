@@ -1,0 +1,402 @@
+[
+  {
+    "id": "02c2ad5d-5b89-5e64-b781-26a8b8faf8f2",
+    "age": "adult",
+    "level": 1,
+    "mode": "evaluation",
+    "min_words": 450,
+    "max_words": 600,
+    "questions": 6,
+    "eligible_texts": 5
+  },
+  {
+    "id": "0cd5938f-f2c1-52b5-afa0-e9a5241ab779",
+    "age": "adult",
+    "level": 1,
+    "mode": "learning",
+    "min_words": 450,
+    "max_words": 600,
+    "questions": 6,
+    "eligible_texts": 5
+  },
+  {
+    "id": "57765ece-7301-5bda-aabb-4b3174184272",
+    "age": "adult",
+    "level": 2,
+    "mode": "evaluation",
+    "min_words": 550,
+    "max_words": 700,
+    "questions": 7,
+    "eligible_texts": 3
+  },
+  {
+    "id": "10e5497c-e4ea-584d-a3da-eb73ce98840a",
+    "age": "adult",
+    "level": 2,
+    "mode": "learning",
+    "min_words": 550,
+    "max_words": 700,
+    "questions": 7,
+    "eligible_texts": 3
+  },
+  {
+    "id": "ba183ab1-1064-5a05-9d0f-2f48caca8b5e",
+    "age": "adult",
+    "level": 3,
+    "mode": "evaluation",
+    "min_words": 650,
+    "max_words": 850,
+    "questions": 8,
+    "eligible_texts": 2
+  },
+  {
+    "id": "80d652d9-4cc7-5363-94a2-f21479eb8614",
+    "age": "adult",
+    "level": 3,
+    "mode": "learning",
+    "min_words": 650,
+    "max_words": 850,
+    "questions": 8,
+    "eligible_texts": 2
+  },
+  {
+    "id": "82dacded-c3a8-5bc7-9c4a-47a0f3baea68",
+    "age": "adult",
+    "level": 4,
+    "mode": "evaluation",
+    "min_words": 800,
+    "max_words": 1000,
+    "questions": 10,
+    "eligible_texts": 0
+  },
+  {
+    "id": "8afb9fa4-3e7f-5476-93a1-c19e870f8c64",
+    "age": "adult",
+    "level": 4,
+    "mode": "learning",
+    "min_words": 800,
+    "max_words": 1000,
+    "questions": 10,
+    "eligible_texts": 0
+  },
+  {
+    "id": "4d0ea863-0b60-5f35-8c22-f60f856b1414",
+    "age": "adult",
+    "level": 5,
+    "mode": "evaluation",
+    "min_words": 950,
+    "max_words": 1200,
+    "questions": 10,
+    "eligible_texts": 0
+  },
+  {
+    "id": "30b894a2-0ca5-5fec-8e74-a3635d417f81",
+    "age": "adult",
+    "level": 5,
+    "mode": "learning",
+    "min_words": 950,
+    "max_words": 1200,
+    "questions": 10,
+    "eligible_texts": 0
+  },
+  {
+    "id": "7bc87945-79fa-5b6a-9556-85d6064dffbd",
+    "age": "child",
+    "level": 1,
+    "mode": "evaluation",
+    "min_words": 180,
+    "max_words": 250,
+    "questions": 5,
+    "eligible_texts": 0
+  },
+  {
+    "id": "ae5aeab6-7483-5069-b61b-3be64238d016",
+    "age": "child",
+    "level": 1,
+    "mode": "learning",
+    "min_words": 180,
+    "max_words": 250,
+    "questions": 5,
+    "eligible_texts": 0
+  },
+  {
+    "id": "06d125ec-3361-51a1-b2f7-f9709611473e",
+    "age": "child",
+    "level": 2,
+    "mode": "evaluation",
+    "min_words": 220,
+    "max_words": 300,
+    "questions": 6,
+    "eligible_texts": 0
+  },
+  {
+    "id": "78ffc512-359c-518f-96eb-33bb5d007ec2",
+    "age": "child",
+    "level": 2,
+    "mode": "learning",
+    "min_words": 220,
+    "max_words": 300,
+    "questions": 6,
+    "eligible_texts": 0
+  },
+  {
+    "id": "f97886fc-96f9-5c76-a677-dd21e342ba4b",
+    "age": "child",
+    "level": 3,
+    "mode": "evaluation",
+    "min_words": 280,
+    "max_words": 360,
+    "questions": 6,
+    "eligible_texts": 3
+  },
+  {
+    "id": "d8bbdfdc-21ad-5872-a81b-9cf4c25c5d17",
+    "age": "child",
+    "level": 3,
+    "mode": "learning",
+    "min_words": 280,
+    "max_words": 360,
+    "questions": 6,
+    "eligible_texts": 3
+  },
+  {
+    "id": "1f1fb3f7-7f8c-5f7a-aead-f0d0949302e6",
+    "age": "child",
+    "level": 4,
+    "mode": "evaluation",
+    "min_words": 340,
+    "max_words": 430,
+    "questions": 7,
+    "eligible_texts": 9
+  },
+  {
+    "id": "35ce8279-5f62-59f3-be9a-caee7504db2e",
+    "age": "child",
+    "level": 4,
+    "mode": "learning",
+    "min_words": 340,
+    "max_words": 430,
+    "questions": 7,
+    "eligible_texts": 9
+  },
+  {
+    "id": "f55aa9d9-7034-577e-a93b-ab42f2aa2381",
+    "age": "child",
+    "level": 5,
+    "mode": "evaluation",
+    "min_words": 400,
+    "max_words": 500,
+    "questions": 8,
+    "eligible_texts": 0
+  },
+  {
+    "id": "82dda6fd-00b0-555d-a689-29221f386915",
+    "age": "child",
+    "level": 5,
+    "mode": "learning",
+    "min_words": 400,
+    "max_words": 500,
+    "questions": 8,
+    "eligible_texts": 0
+  },
+  {
+    "id": "d14ee4bf-2317-5bef-9b24-40aa15dc3373",
+    "age": "teen",
+    "level": 1,
+    "mode": "evaluation",
+    "min_words": 300,
+    "max_words": 400,
+    "questions": 6,
+    "eligible_texts": 7
+  },
+  {
+    "id": "04aae210-e225-5c1c-ae92-0d9a91bd927f",
+    "age": "teen",
+    "level": 1,
+    "mode": "learning",
+    "min_words": 300,
+    "max_words": 400,
+    "questions": 6,
+    "eligible_texts": 7
+  },
+  {
+    "id": "b583ccc6-6df1-5c21-a1e2-166b4a1a2186",
+    "age": "teen",
+    "level": 2,
+    "mode": "evaluation",
+    "min_words": 350,
+    "max_words": 450,
+    "questions": 6,
+    "eligible_texts": 0
+  },
+  {
+    "id": "1c7c5041-ad21-58de-916b-4c6cf4ef8c7a",
+    "age": "teen",
+    "level": 2,
+    "mode": "learning",
+    "min_words": 350,
+    "max_words": 450,
+    "questions": 6,
+    "eligible_texts": 0
+  },
+  {
+    "id": "80f3ff18-30cc-51d7-8394-f3b810405928",
+    "age": "teen",
+    "level": 3,
+    "mode": "evaluation",
+    "min_words": 400,
+    "max_words": 550,
+    "questions": 7,
+    "eligible_texts": 14
+  },
+  {
+    "id": "f83107f7-0d4d-5b62-9493-75897980b84d",
+    "age": "teen",
+    "level": 3,
+    "mode": "learning",
+    "min_words": 400,
+    "max_words": 550,
+    "questions": 7,
+    "eligible_texts": 14
+  },
+  {
+    "id": "1adfb8f3-c66d-5bde-bff7-7ee965ed8f11",
+    "age": "teen",
+    "level": 4,
+    "mode": "evaluation",
+    "min_words": 500,
+    "max_words": 650,
+    "questions": 8,
+    "eligible_texts": 0
+  },
+  {
+    "id": "8b111f6a-cba0-51b9-9613-ccae861a9296",
+    "age": "teen",
+    "level": 4,
+    "mode": "learning",
+    "min_words": 500,
+    "max_words": 650,
+    "questions": 8,
+    "eligible_texts": 0
+  },
+  {
+    "id": "22002732-5910-5a5a-a219-a5a61e8b9fe6",
+    "age": "teen",
+    "level": 5,
+    "mode": "evaluation",
+    "min_words": 600,
+    "max_words": 750,
+    "questions": 8,
+    "eligible_texts": 4
+  },
+  {
+    "id": "f450dc08-7aef-5aff-b42b-6ef66aefa794",
+    "age": "teen",
+    "level": 5,
+    "mode": "learning",
+    "min_words": 600,
+    "max_words": 750,
+    "questions": 8,
+    "eligible_texts": 4
+  },
+  {
+    "id": "8d5a3baa-e30f-546f-9205-1d1ffce5b8a6",
+    "age": "young-adult",
+    "level": 1,
+    "mode": "evaluation",
+    "min_words": 400,
+    "max_words": 550,
+    "questions": 6,
+    "eligible_texts": 0
+  },
+  {
+    "id": "02b7c970-24ac-5509-be55-6eaa84668631",
+    "age": "young-adult",
+    "level": 1,
+    "mode": "learning",
+    "min_words": 400,
+    "max_words": 550,
+    "questions": 6,
+    "eligible_texts": 0
+  },
+  {
+    "id": "7f959ef9-d35d-5537-9dec-74ce0f3c88fa",
+    "age": "young-adult",
+    "level": 2,
+    "mode": "evaluation",
+    "min_words": 500,
+    "max_words": 650,
+    "questions": 7,
+    "eligible_texts": 3
+  },
+  {
+    "id": "96b11146-d60f-5f1c-ba8f-276505b5de1b",
+    "age": "young-adult",
+    "level": 2,
+    "mode": "learning",
+    "min_words": 500,
+    "max_words": 650,
+    "questions": 7,
+    "eligible_texts": 3
+  },
+  {
+    "id": "ee2cab8c-31a1-5ebe-9b53-dc95045d49de",
+    "age": "young-adult",
+    "level": 3,
+    "mode": "evaluation",
+    "min_words": 600,
+    "max_words": 750,
+    "questions": 8,
+    "eligible_texts": 13
+  },
+  {
+    "id": "dc7cea81-de71-52cf-9bc8-4184c2d11477",
+    "age": "young-adult",
+    "level": 3,
+    "mode": "learning",
+    "min_words": 600,
+    "max_words": 750,
+    "questions": 8,
+    "eligible_texts": 13
+  },
+  {
+    "id": "d47007eb-d1af-5a1c-82a9-e35db8770770",
+    "age": "young-adult",
+    "level": 4,
+    "mode": "evaluation",
+    "min_words": 700,
+    "max_words": 900,
+    "questions": 8,
+    "eligible_texts": 0
+  },
+  {
+    "id": "a339489a-5cdd-5e00-8b6a-f8e4114897fb",
+    "age": "young-adult",
+    "level": 4,
+    "mode": "learning",
+    "min_words": 700,
+    "max_words": 900,
+    "questions": 8,
+    "eligible_texts": 0
+  },
+  {
+    "id": "de8896ef-0e11-538b-9f9c-579b61ebf267",
+    "age": "young-adult",
+    "level": 5,
+    "mode": "evaluation",
+    "min_words": 850,
+    "max_words": 1050,
+    "questions": 10,
+    "eligible_texts": 0
+  },
+  {
+    "id": "3fad2018-c1e6-54e0-8e86-79dedadeb1ea",
+    "age": "young-adult",
+    "level": 5,
+    "mode": "learning",
+    "min_words": 850,
+    "max_words": 1050,
+    "questions": 10,
+    "eligible_texts": 0
+  }
+]
