@@ -89,7 +89,7 @@ public sealed class SpeedReadingGuidedPracticePostgresTests(PostgresFixture post
             var (_, sql, _) = await Seed(db);
             var textCount = await db.ReadingTexts.CountAsync();
             if (changed == "source")
-                sql = sql.Replace("OR md5(t.content)<>s->>'contentHash'", "OR true");
+                await db.Database.ExecuteSqlRawAsync("UPDATE speed_reading.reading_texts SET content=regexp_replace(content, 'kaynak', 'farklı') WHERE title<>'Existing fixture';");
             else
                 await ExecutePack(db, "UPDATE speed_reading.exercises SET configuration_json='{}'::jsonb;");
             await Assert.ThrowsAsync<Npgsql.PostgresException>(() => ExecutePack(db, sql));
