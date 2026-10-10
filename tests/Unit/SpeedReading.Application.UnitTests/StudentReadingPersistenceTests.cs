@@ -22,6 +22,53 @@ namespace SpeedReading.Application.UnitTests;
 public sealed class StudentReadingPersistenceTests
 {
     [Fact]
+    public async Task Adaptive_tachistoscope_resumes_block_history_and_saves_the_actual_trial_durations()
+    {
+        await using var context = CreateContext();
+        var student = Guid.NewGuid(); var type = Guid.NewGuid(); var exercise = Guid.NewGuid();
+        context.ExerciseTypes.Add(ExerciseType.Create(type, "Tachistoscope", "Flash", "text_stream"));
+        context.Exercises.Add(Exercise.Create("Takistoskop", "text_stream",
+            """{"engineType":"text_stream","engineConfig":{"mode":"tachistoscope","content":{"type":"number","count":10,"length":3},"timing":{"durationMs":500},"adaptive":{"enabled":true,"minLength":3,"maxLength":5,"minDurationMs":400,"maxDurationMs":2000}}}""",
+            5, student, type, id: exercise));
+        await context.SaveChangesAsync();
+        var service = CreateExerciseSessionService(context);
+        var started = await service.StartAsync(student, new StartExerciseSessionRequest { ExerciseId = exercise });
+        Assert.Equal(10, started.TotalSteps);
+        for (var round = 0; round < 10; round++)
+        {
+            if (round == 4)
+            {
+                var resumed = await service.StartAsync(student, new StartExerciseSessionRequest { ExerciseId = exercise });
+                Assert.Equal(started.SessionId, resumed.SessionId);
+                Assert.Equal(4, resumed.InitialData.GetProperty("tachistoscope").GetProperty("round").GetInt32());
+            }
+            var presentation = await service.ValidateActionAsync(student, started.SessionId,
+                new ExerciseActionRequest { Action = "tachistoscope_present", Index = round });
+            var data = presentation.FeedbackData!.Value;
+            Assert.True(presentation.IsValid);
+            Assert.Equal(round < 5 ? 500 : 450, data.GetProperty("displayDurationMs").GetInt32());
+            var stimulus = data.GetProperty("stimulus").GetString()!;
+            Assert.Equal(3, stimulus.Length);
+            var session = await context.ExerciseSessions.SingleAsync();
+            var state = System.Text.Json.Nodes.JsonNode.Parse(session.SessionDataJson)!;
+            state["tachistoscope"]!["presentedAt"] = DateTime.UtcNow.AddSeconds(-3);
+            session.SetState(state.ToJsonString()); await context.SaveChangesAsync();
+            var answer = await service.ValidateActionAsync(student, started.SessionId,
+                new ExerciseActionRequest { Action = "tachistoscope_answer", Index = round, Answer = round < 5 ? stimulus : "wrong" });
+            Assert.True(answer.IsValid);
+            Assert.Equal(round < 5, answer.IsCorrect);
+        }
+        var result = await service.CompleteAsync(student, started.SessionId, new CompleteExerciseSessionRequest());
+        Assert.Equal(50, result.Accuracy);
+        Assert.Equal(5, result.CorrectCount); Assert.Equal(5, result.IncorrectCount);
+        Assert.Null(result.RawWPM);
+        var trials = result.DetailedResults.GetProperty("tachistoscope").GetProperty("trials");
+        Assert.Equal(10, trials.GetArrayLength());
+        Assert.Equal(500, trials[4].GetProperty("displayDurationMs").GetInt32());
+        Assert.Equal(450, trials[5].GetProperty("displayDurationMs").GetInt32());
+        Assert.Equal(1, await context.ExerciseSessionResults.CountAsync());
+    }
+    [Fact]
     public async Task Speed_reading_requires_matching_level_instead_of_falling_back_to_another_level()
     {
         await using var context = CreateContext();

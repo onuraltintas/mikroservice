@@ -3444,10 +3444,22 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         return JsonSerializer.Serialize(actions, JsonOptions);
     }
 
-    private static SessionState DeserializeState(string json) =>
-        string.IsNullOrWhiteSpace(json)
-            ? new SessionState()
-            : JsonSerializer.Deserialize<SessionState>(json, JsonOptions) ?? new SessionState();
+    private static SessionState DeserializeState(string json)
+    {
+        if (string.IsNullOrWhiteSpace(json)) return new SessionState();
+        var state = JsonSerializer.Deserialize<SessionState>(json, JsonOptions) ?? new SessionState();
+        if (state.Tachistoscope is { } tachistoscope)
+        {
+            using var document = JsonDocument.Parse(json);
+            var saved = ReadObject(document.RootElement, "tachistoscope");
+            if (ReadProperty(saved, "minTargetLength").ValueKind == JsonValueKind.Undefined)
+                tachistoscope.MinTargetLength = tachistoscope.InitialTargetLength;
+            if (ReadProperty(saved, "maxTargetLength").ValueKind == JsonValueKind.Undefined)
+                tachistoscope.MaxTargetLength = tachistoscope.ContentType is "number" or "letter"
+                    ? 12 : tachistoscope.Pool.Select(item => item.Length).DefaultIfEmpty(tachistoscope.TargetLength).Max();
+        }
+        return state;
+    }
 
     private static AssessmentContentSnapshot DeserializeAssessmentSnapshot(string? json)
         => AssessmentContentSnapshotRules.DeserializeRequired(json);

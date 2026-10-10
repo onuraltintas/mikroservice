@@ -3,6 +3,53 @@ import { EngineCallbacks, EngineResult } from './base-engine.interface';
 import { TextStreamEngine } from './text-stream.engine';
 
 describe('Tachistoscope runtime', () => {
+  for (const [correctCount, duration] of [[0, 550], [2, 550], [3, 500], [4, 450], [5, 450]]) {
+    it(`adapts a preview block with ${correctCount} correct answers to ${duration} ms`, fakeAsync(() => {
+      const { engine } = create({ content: { type: 'number', length: 3, count: 6 },
+        timing: { durationMs: 500 }, adaptive: { enabled: true, minLength: 3, maxLength: 5 } });
+      engine.start();
+      for (let i = 0; i < 5; i++) {
+        tick(engine.getCurrentDuration());
+        engine.handleInput({ answer: i < correctCount ? engine.getCurrentStimulus() : 'wrong' }); tick(600);
+      }
+      expect(engine.getCurrentDuration()).toBe(duration);
+      expect(engine.getCurrentStimulus().length).toBe(3);
+      engine.destroy();
+    }));
+  }
+
+  for (const [minimum, maximum] of [[3, 5], [3, 6], [4, 6], [4, 7]]) {
+    it(`changes preview length only at duration bounds and stays within ${minimum}-${maximum}`, fakeAsync(() => {
+      const { engine } = create({ content: { type: 'number', length: maximum - 1, count: 100 },
+        timing: { durationMs: 500 }, adaptive: { enabled: true, minLength: minimum, maxLength: maximum, minDurationMs: 400, maxDurationMs: 600 } });
+      engine.start();
+      const answerBlock = (correct: boolean) => {
+        for (let i = 0; i < 5; i++) {
+          tick(engine.getCurrentDuration());
+          engine.handleInput({ answer: correct ? engine.getCurrentStimulus() : 'wrong' }); tick(600);
+        }
+      };
+      for (let block = 0; block < 3; block++) answerBlock(true);
+      expect(engine.getCurrentDuration()).toBe(400);
+      answerBlock(true);
+      expect(engine.getCurrentStimulus().length).toBe(maximum);
+      expect(engine.getCurrentDuration()).toBe(500);
+      for (let block = 0; block < 3; block++) answerBlock(true);
+      expect(engine.getCurrentDuration()).toBe(400);
+      answerBlock(true);
+      expect(engine.getCurrentStimulus().length).toBe(maximum);
+      expect(engine.getCurrentDuration()).toBe(400);
+      for (let block = 0; block < 5; block++) answerBlock(false);
+      expect(engine.getCurrentDuration()).toBe(600);
+      answerBlock(false);
+      expect(engine.getCurrentStimulus().length).toBe(maximum - 1);
+      expect(engine.getCurrentDuration()).toBe(500);
+      engine.reset(); engine.start();
+      expect(engine.getCurrentStimulus().length).toBe(maximum - 1);
+      expect(engine.getCurrentDuration()).toBe(500);
+      engine.destroy();
+    }));
+  }
   it('prefers unused equally sized preview words', () => {
     const { engine } = create({ Words: ['bir', 'iki', 'ses'], adaptive: { enabled: false } });
     const runtime = engine as any;

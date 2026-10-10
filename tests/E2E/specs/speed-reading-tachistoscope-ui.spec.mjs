@@ -1,4 +1,56 @@
 import { test, expect } from '@playwright/test';
+import { readFileSync } from 'node:fs';
+
+test('adaptive child custom preview respects age bounds and completes without saving', async ({ page }) => {
+  const patch = JSON.parse(readFileSync(new URL('../../../content-packs/tachistoscope-settings/v2/settings.json', import.meta.url), 'utf8'))
+    .find(item => item.age === 'Child' && item.level === 5);
+  const id = patch.id; const typeId = '40000000-0000-0000-0000-000000000002';
+  const errors = []; const writes = [];
+  page.on('pageerror', error => errors.push(error.message));
+  await page.addInitScript(() => localStorage.setItem('currentUser', JSON.stringify({ id: 'test-user' })));
+  const exercise = { id, exerciseTypeId: typeId, title: 'Takistoskop', difficultyLevel: 5,
+    exerciseTypeName: 'Tachistoscope', configurationJson: JSON.stringify(patch.configuration) };
+  await page.route('**/api/**', async route => {
+    const path = new URL(route.request().url()).pathname;
+    if (route.request().method() !== 'GET' && /session|result|progress/.test(path)) writes.push(path);
+    let response = { items: [], totalCount: 0 };
+    if (path.endsWith('/auth/refresh-token')) {
+      const claims = { sub: 'test-user', exp: Math.floor(Date.now() / 1000) + 3600, role: 'Admin' };
+      response = { id: 'test-user', roles: ['Admin'], token: `e30.${Buffer.from(JSON.stringify(claims)).toString('base64url')}.fixture` };
+    } else if (path.endsWith('/exercise-types')) response = { items: [{ id: typeId, name: 'Tachistoscope', displayName: 'Takistoskop', engineType: 'text_stream', isActive: true }], totalCount: 1 };
+    else if (path.endsWith(`/exercises/${id}`)) response = exercise;
+    else if (path.endsWith('/exercises')) response = { items: [exercise], totalCount: 1 };
+    else if (path.includes('/profile/status')) response = { hasAgeGroupConfiguration: true };
+    else if (path.endsWith('/my-modules')) response = { hasSpeedReading: true };
+    await route.fulfill({ json: response });
+  });
+  await page.goto('/student/exercises', { waitUntil: 'domcontentloaded' });
+  await page.getByRole('button', { name: 'Özel ayarlarla dene' }).click();
+  const dialog = page.getByRole('dialog');
+  const length = dialog.getByLabel('Başlangıç basamak sayısı');
+  await expect(length).toHaveValue('5');
+  await expect(length).toHaveAttribute('min', '3'); await expect(length).toHaveAttribute('max', '5');
+  await length.fill('6'); await dialog.getByRole('button', { name: 'Denemeyi başlat' }).click();
+  await expect(dialog.getByRole('alert')).toContainText('geçerli bir değer');
+  await length.fill('4');
+  await dialog.getByLabel('Başlangıç gösterim süresi (ms)').fill('500');
+  await dialog.getByLabel('Uyaran sayısı').fill('25');
+  await dialog.getByRole('button', { name: 'Denemeyi başlat' }).click();
+  await expect(page.locator('.start-button-large')).toBeVisible();
+  await page.clock.install(); await page.clock.pauseAt(new Date());
+  await page.locator('.start-button-large').click(); await page.clock.runFor(300);
+  for (let round = 0; round < 25; round++) {
+    const stimulus = await page.locator('.stimulus-display').innerText();
+    expect(stimulus).toMatch(round < 20 ? /^\d{4}$/ : /^\d{5}$/);
+    const duration = [500, 450, 405, 400, 500][Math.floor(round / 5)];
+    await page.clock.runFor(duration);
+    await page.locator('.answer-input').fill(stimulus); await page.locator('.submit-btn').click();
+    if (round < 24) await page.clock.runFor(1050); // 750ms feedback + 300ms fixation.
+  }
+  await page.clock.runFor(600);
+  await expect(page.getByText('Önizleme sonucu — kaydedilmedi.', { exact: false })).toBeVisible();
+  expect(writes).toEqual([]); expect(errors).toEqual([]);
+});
 
 test('feedback never displaces fixation or stimulus and counters update', async ({ page }) => {
   const id = '40000000-0000-0000-0000-000000000001';

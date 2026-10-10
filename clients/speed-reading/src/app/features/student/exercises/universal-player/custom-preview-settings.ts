@@ -106,12 +106,24 @@ export function getCustomPreviewControls(configuration: Record<string, unknown>)
       control('displayDurationMs', 'Gösterim süresi (ms)', 100, 5000, read('displayDurationMs') || timing['durationms'] || read('VisualExpansionDisplayDurationMs') || 250),
       control('intervalMs', 'Gösterimler arası bekleme (ms)', 50, 10000, timing['intervalms'] || 1500)
     ];
-    case 'text_stream': return [
-      control('displayDurationMs', 'Gösterim süresi (ms)', 50, 5000, read('displayDurationMs') ?? read('intervalMs') ?? timing['durationms'] ?? 500),
+    case 'text_stream': {
+      const isRsvp = String(read('mode')).toLowerCase() === 'rsvp';
+      const content = mergeCaseInsensitiveRecords(configuration, settings, 'content');
+      const adaptive = mergeCaseInsensitiveRecords(configuration, settings, 'adaptive');
+      const adapts = !isRsvp && adaptive['enabled'] !== false;
+      return [
+      control('displayDurationMs', 'Başlangıç gösterim süresi (ms)',
+        adapts ? Number(adaptive['mindurationms'] ?? 50) : 50,
+        adapts ? Number(adaptive['maxdurationms'] ?? 5000) : 5000,
+        read('displayDurationMs') ?? read('intervalMs') ?? timing['durationms'] ?? 500),
       control('intervalMs', 'Gösterimler arası bekleme (ms)', 0, 10000, timing['intervalms'] ?? 0),
-      ...(read('mode') === 'rsvp' ? [] : [control('stimulusCount', 'Uyaran sayısı', 1, 500,
-        read('totalStimuli') ?? caseInsensitiveField(recordOrEmpty(read('content')), 'count') ?? 20)])
+      ...(isRsvp ? [] : [control('stimulusCount', 'Uyaran sayısı', 1, 500,
+        read('totalStimuli') ?? caseInsensitiveField(recordOrEmpty(read('content')), 'count') ?? 20)]),
+      ...(!isRsvp && content['type'] === 'number' && content['source'] !== 'custom'
+        ? [control('stimulusLength', 'Başlangıç basamak sayısı', Number(adaptive['minlength'] ?? 1),
+          Number(adaptive['maxlength'] ?? 12), content['length'] ?? boundedInteger(configuration['difficultyLevel'], 1, 1, 5) + 2)] : [])
     ];
+    }
     case 'motion_path': {
       const mode = String(read('mode') ?? 'fixation').toLowerCase();
       if (mode === 'tracking') {
@@ -348,7 +360,14 @@ export function applyCustomPreviewSettings<T extends Record<string, unknown>>(
     return result;
   }
   if (engine === 'text_stream') {
-    if (validated['displayDurationMs'] !== undefined) settings['displayDurationMs'] = validated['displayDurationMs'];
+    if (validated['displayDurationMs'] !== undefined) {
+      for (const key of Object.keys(settings))
+        if (key.toLowerCase() === 'displaydurationms') delete settings[key];
+      settings['displayDurationMs'] = validated['displayDurationMs'];
+      if (mergeCaseInsensitiveRecords(configuration, settings, 'timing')['durationms'] !== undefined)
+        merge('timing', { durationMs: validated['displayDurationMs'] });
+    }
+    if (validated['stimulusLength'] !== undefined) merge('content', { length: validated['stimulusLength'] });
     if (validated['intervalMs'] !== undefined) merge('timing', { intervalMs: validated['intervalMs'] });
     if (validated['stimulusCount'] !== undefined) {
       settings['totalStimuli'] = validated['stimulusCount'];

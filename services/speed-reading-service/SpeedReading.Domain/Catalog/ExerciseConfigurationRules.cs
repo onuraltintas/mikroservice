@@ -450,12 +450,15 @@ public static class ExerciseConfigurationRules
         if (content.HasValue)
         {
             ValidateOptionalIntRange(content.Value, "count", 1, 500, "Metin akışı uyaran sayısı");
+            ValidateOptionalIntRange(content.Value, "length", 1, 12, "Takistoskop başlangıç uzunluğu");
             ValidateOptionalStringArray(content.Value, "items", 500, 1_000, "Metin akışı özel içeriği");
         }
 
         var adaptive = TryGetObject(config, "adaptive");
         if (adaptive.HasValue)
         {
+            ValidateOptionalIntRange(adaptive.Value, "minLength", 1, 12, "Takistoskop minimum uzunluğu");
+            ValidateOptionalIntRange(adaptive.Value, "maxLength", 1, 12, "Takistoskop maksimum uzunluğu");
             ValidateOptionalIntRange(adaptive.Value, "minDurationMs", 50, 5_000, "Adaptif minimum gösterim süresi");
             ValidateOptionalIntRange(adaptive.Value, "maxDurationMs", 50, 5_000, "Adaptif maksimum gösterim süresi");
             var minimum = ReadOptionalInt(adaptive.Value, "minDurationMs");
@@ -855,6 +858,22 @@ public static class ExerciseConfigurationRules
             counts.AddRange(ReadNestedInts(nested.Value, "content", "count"));
         }
         ValidateConsistentValues(counts, "Metin akışı uyaran sayısı");
+        var lengths = ReadNestedInts(root, "content", "length");
+        var minimumLengths = ReadNestedInts(root, "adaptive", "minLength");
+        var maximumLengths = ReadNestedInts(root, "adaptive", "maxLength");
+        if (nested.HasValue)
+        {
+            lengths.AddRange(ReadNestedInts(nested.Value, "content", "length"));
+            minimumLengths.AddRange(ReadNestedInts(nested.Value, "adaptive", "minLength"));
+            maximumLengths.AddRange(ReadNestedInts(nested.Value, "adaptive", "maxLength"));
+        }
+        ValidateConsistentValues(lengths, "Takistoskop başlangıç uzunluğu");
+        ValidateConsistentValues(minimumLengths, "Takistoskop minimum uzunluğu");
+        ValidateConsistentValues(maximumLengths, "Takistoskop maksimum uzunluğu");
+        var minLength = minimumLengths.Count > 0 ? minimumLengths[0] : 1;
+        var maxLength = maximumLengths.Count > 0 ? maximumLengths[0] : 12;
+        if (minLength > maxLength || lengths.Any(length => length < minLength || length > maxLength))
+            throw new ArgumentException("Takistoskop uzunlukları minimum/maksimum sınırlarına uygun olmalıdır.");
     }
 
     private static int CountTextStreamContentSources(JsonElement config)
