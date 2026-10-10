@@ -28,10 +28,12 @@ DO $$ BEGIN
  END IF;
  IF EXISTS(SELECT 1 FROM speed_reading.exercises e JOIN schulte_patch p ON e.id=p.id
   WHERE NOT(
-   (e.configuration_json#>'{engineConfig,gridSize}'=to_jsonb(p.old_grid)
-    AND e.configuration_json#>'{engineConfig,rules,timeLimit}'=to_jsonb(p.old_time))
-   OR (e.configuration_json#>'{engineConfig,gridSize}'=to_jsonb(p.new_grid)
-    AND e.configuration_json#>'{engineConfig,rules,timeLimit}'=to_jsonb(p.new_time)))
+   (e.configuration_json#>'{engineConfig,gridSize}' IS NOT DISTINCT FROM to_jsonb(p.old_grid)
+    AND e.configuration_json#>'{engineConfig,rules,timeLimit}' IS NOT DISTINCT FROM to_jsonb(p.old_time))
+   OR (e.configuration_json#>'{engineConfig,gridSize}' IS NOT DISTINCT FROM to_jsonb(p.new_grid)
+    AND e.configuration_json#>'{engineConfig,rules,timeLimit}' IS NOT DISTINCT FROM to_jsonb(p.new_time)))
+   OR jsonb_typeof(e.configuration_json->'engineConfig') IS DISTINCT FROM 'object'
+   OR jsonb_typeof(e.configuration_json#>'{engineConfig,rules}') IS DISTINCT FROM 'object'
    OR e.configuration_json ?| ARRAY['gridSize','timeLimit','timeLimitSeconds','timing','rules','grid']
    OR (e.configuration_json->'engineConfig') ?| ARRAY['timeLimit','timeLimitSeconds','timing','grid']) THEN
   RAISE EXCEPTION 'Schulte settings differ from the reviewed source or have conflicting aliases';
