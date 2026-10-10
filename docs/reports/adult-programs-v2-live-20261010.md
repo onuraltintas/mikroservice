@@ -19,6 +19,8 @@ Program çizelgeleri content-packs/adult-programs/v2/programs.md dosyasındadır
 - C#/SQL incelemesinde yeni kimlik çakışması giderildi ve yeniden üretici test eklendi.
   Yaş aralığı/aktiflik yayın ön koşuluna eklendi; tüm psql çağrılarında ON_ERROR_STOP=1 zorunlu.
 - Kaynak score/ceiling/program türü/sınav türü korunumu PG testinde ayrıca doğrulandı.
+- 8 sahte Bash operasyon testi: belirsiz stop/commit yanıtı, yeniden başlatma sonrası hata,
+  işlem niyeti ve yayın kilidi, log okuma hatası, küçük/büyük ciddi log ve temiz log kontrolü geçti.
 - Test çıktıları artifacts/adult-programs-v2-tests altında. Tam ürün E2E veya %100 kod kapsaması değildir.
   Yalnız veri paketi değiştiği için .NET coverage yüzdesi SQL kapsamını ölçmez.
 

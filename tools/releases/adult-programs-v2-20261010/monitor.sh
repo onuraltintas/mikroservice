@@ -11,7 +11,7 @@ for sample in $(seq 1 30); do
   sleep 30
 done
 monitor_logs="$(docker logs --since "$monitor_start" "$api" 2>&1)"
-if printf '%s\n' "$monitor_logs" | grep -Eqi '(^|[[:space:]])(fail|crit|fatal):|Unhandled exception'; then
+if printf '%s\n' "$monitor_logs" | grep -Ei '(^|[[:space:]])(fail|crit|fatal):|Unhandled exception' >/dev/null; then
   echo 'Severe log marker detected; inspect securely before closing release' >&2
   exit 1
 fi
