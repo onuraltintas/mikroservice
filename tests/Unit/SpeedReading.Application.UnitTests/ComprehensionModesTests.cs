@@ -9,6 +9,18 @@ namespace SpeedReading.Application.UnitTests;
 
 public sealed class ComprehensionModesTests
 {
+    [Fact]
+    public async Task Learning_reading_feedback_does_not_publish_an_independent_speed()
+    {
+        await using var db = Context();
+        var (service, user, exercise) = await Seed(db, "learning");
+        var started = await service.StartAsync(user, new() { ExerciseId = exercise });
+        await FinishReading(db, service, user, started.SessionId);
+        var reading = await service.ValidateActionAsync(user, started.SessionId, new() { Action = "finish_reading" });
+        Assert.True(reading.IsValid);
+        Assert.Null(reading.CurrentWPM);
+    }
+
     [Theory]
     [InlineData("evaluation", false)]
     [InlineData("learning", true)]
