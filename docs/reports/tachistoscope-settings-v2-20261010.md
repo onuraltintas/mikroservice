@@ -21,7 +21,8 @@ Onaylanan 20 kombinasyon ve uygulama sırası:
 - Seviye tespitinin uyarlaması kapalı tutuldu. Dört değerlendirme kataloğu değiştirilmez.
 - Devam edilen oturumun blok geçmişi korunur; sonuçta her turun uygulanan süresi
   ve doğru/yanlış sayıları saklanır. Takistoskop sonucu okuma hızı olarak sunulmaz.
-- Yeni sınır alanları bulunmayan eski oturumlar uyumlu şekilde okunur.
+- Yeni sınır alanları bulunmayan eski oturumlar uyumlu şekilde okunur; uzun özel
+  sayı/harf havuzlarında minimumun maksimumu aşması da giderildi.
 - SQL yalnız 20 eğitim yapılandırmasını değiştirir. Eksik/farklı kaynak, çift kayıt,
   yaş/seviye uyuşmazlığı, yönetici değişikliği veya fazladan alias durumunda tüm işlem durur.
 
@@ -29,7 +30,7 @@ Onaylanan 20 kombinasyon ve uygulama sırası:
 
 | Kontrol | Sonuç |
 |---|---|
-| .NET: Takistoskop ve owned-domain regresyonları | 236 geçti |
+| .NET: Takistoskop ve owned-domain regresyonları | 238 geçti |
 | ChromeHeadless: Takistoskop, özel ayarlar ve RSVP | 73 geçti |
 | Node: 20 kombinasyonun onaylanan matrise uygunluğu | 1 geçti |
 | Geçici gerçek PostgreSQL: atomiklik, tekrar çalıştırma, kapsam ve hata durumları | 10 geçti |
@@ -53,11 +54,11 @@ Derlemede mevcut `exercise-player.component.scss` boyutu için uyarı var:
 
 ## Kapsam dışı teknik not
 
-İncelemede, açık maksimum uzunluk tanımlanmayan eski özel sayı/harf havuzlarında
-havuz öğesinin uzunluğunun 12'yi aşabilmesi not edildi. Bu paketin tüm kayıtları
-rastgele sayı üretir ve açık maksimumları en fazla 7'dir; söz konusu özel havuz
-durumu bu değişiklik tarafından kullanılmaz. Özel içerik yönetimi genişletilirse
-bu eski havuz sözleşmesi ayrıca netleştirilmelidir.
+Eski özel sayı/harf havuzları 12 karakterden uzun öğe kabul edebilir. Bu eski
+içerik sözleşmesi korunur; eski oturum normalizasyonu havuzun gerçek uzunluğunu
+kullanır. Bu paketin tüm kayıtları rastgele sayı üretir ve açık maksimumları en
+fazla 7'dir. İleride özel içerik yönetimi genişletilirse havuz uzunluğu sözleşmesi
+yaş matrisiyle birlikte ayrıca netleştirilmelidir.
 
 ## Yayın öncesi
 

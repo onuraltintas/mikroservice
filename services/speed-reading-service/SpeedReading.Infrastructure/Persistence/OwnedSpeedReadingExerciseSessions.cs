@@ -3455,7 +3455,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             if (ReadProperty(saved, "minTargetLength").ValueKind == JsonValueKind.Undefined)
                 tachistoscope.MinTargetLength = tachistoscope.InitialTargetLength;
             if (ReadProperty(saved, "maxTargetLength").ValueKind == JsonValueKind.Undefined)
-                tachistoscope.MaxTargetLength = tachistoscope.ContentType is "number" or "letter"
+                tachistoscope.MaxTargetLength = tachistoscope.ContentType is "number" or "letter" && tachistoscope.Source != "custom"
                     ? 12 : tachistoscope.Pool.Select(item => item.Length).DefaultIfEmpty(tachistoscope.TargetLength).Max();
         }
         return state;
