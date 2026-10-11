@@ -48,4 +48,23 @@ describe('Attention prototype UI', () => {
     c.togglePause(); expect(c.game.status).toBe('paused');
     fixture.destroy();
   }));
+
+  it('keeps keyboard focus on the board between tutorial rounds', fakeAsync(() => {
+    spyOn(performance, 'now').and.callFake(() => Date.now());
+    const fixture = TestBed.createComponent(AttentionPreviewComponent); fixture.detectChanges();
+    const c = fixture.componentInstance; c.startTutorial(); fixture.detectChanges();
+    const index = c.game.shapes.indexOf('star');
+    const button = fixture.nativeElement.querySelectorAll('.shape-button')[index] as HTMLButtonElement;
+    button.focus(); button.click(); fixture.detectChanges(); tick(800); fixture.detectChanges();
+    expect(document.activeElement).toBe(fixture.nativeElement.querySelectorAll('.shape-button')[index]);
+    fixture.destroy();
+  }));
+
+  it('moves focus from the removed start control to the first shape', () => {
+    const fixture = TestBed.createComponent(AttentionPreviewComponent); fixture.detectChanges();
+    const start = fixture.nativeElement.querySelector('.primary') as HTMLButtonElement;
+    start.focus(); start.click(); fixture.detectChanges();
+    expect(document.activeElement).toBe(fixture.nativeElement.querySelector('.shape-button'));
+    fixture.destroy();
+  });
 });
