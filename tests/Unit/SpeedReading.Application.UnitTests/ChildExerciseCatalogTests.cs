@@ -41,7 +41,7 @@ public sealed class ChildExerciseCatalogTests
             var content = config.GetProperty("engineConfig");
             if (content.TryGetProperty("content", out var source))
             {
-                if (entry.GetProperty("type").GetString() is "RegressionReduction" or "SubvocalizationReduction")
+                if (entry.GetProperty("type").GetString() is "RegressionReduction" or "SubvocalizationReduction" or "RSVP")
                 {
                     Assert.True(source.GetProperty("minWordCount").GetInt32() > 0);
                     Assert.True(source.GetProperty("maxWordCount").GetInt32() >= source.GetProperty("minWordCount").GetInt32());

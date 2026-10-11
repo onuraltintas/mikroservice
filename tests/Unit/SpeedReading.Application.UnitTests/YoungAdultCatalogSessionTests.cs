@@ -46,7 +46,7 @@ public sealed class YoungAdultCatalogSessionTests
                 db.ReadingQuestions.Add(ReadingQuestion.Create(Guid.NewGuid(), text.Id, $"Araştırma test sorusu {index + 1}", "A", index, 1, 1,
                     optionA: "Kanıtları değerlendirmek", optionB: "Uyumak", optionC: "Koşmak", optionD: "Yüzmek"));
         }
-        foreach (var contentPack in new[] { "regression", "subvocalization" })
+        foreach (var contentPack in new[] { "regression", "subvocalization", "rsvp" })
         {
             using var readingContent = JsonDocument.Parse(File.ReadAllText(Path.Combine(directory.FullName, "content-packs", contentPack, "v2", "content.json")));
             foreach (var row in readingContent.RootElement.EnumerateArray().Where(row => row.GetProperty("ageGroupId").GetGuid() == age))

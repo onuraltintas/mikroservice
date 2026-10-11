@@ -179,7 +179,9 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             }
         }
 
-        if (!IsEngineType(exerciseEngineType, "text_fade"))
+        var deferExplicitTextValidation = IsEngineType(exerciseEngineType, "text_fade")
+            || IsRsvp(exerciseTypeName, exerciseEngineType, ParseJsonOrEmpty(configurationJson));
+        if (!deferExplicitTextValidation)
             await ValidateExplicitReadingTextAsync(cancellationToken);
 
         // Starting a session is retried when a player is refreshed or the
@@ -324,7 +326,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             }
             if (activeSession is not null)
                 throw new InvalidOperationException("An active session already exists for this exercise.");
-            if (IsEngineType(exerciseEngineType, "text_fade"))
+            if (deferExplicitTextValidation)
                 await ValidateExplicitReadingTextAsync(token);
 
             var readingTextId = assessmentSnapshot is not null
