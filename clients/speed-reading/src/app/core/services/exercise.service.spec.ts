@@ -17,6 +17,16 @@ describe('ExerciseService', () => {
 
   afterEach(() => http.verify());
 
+  it('requests three randomized visualization scenes before loading preview answer keys', () => {
+    let result: any[] = [];
+    service.getPreviewVisualizationScenes('exercise-1').subscribe(scenes => result = scenes);
+    const request = http.expectOne('/api/speed-reading/visualization/exercises/exercise-1/scenes?limit=3');
+    request.flush([{ id: 'scene-1' }, { id: 'scene-2' }, { id: 'scene-3' }]);
+    for (let index = 1; index <= 3; index++)
+      http.expectOne(`/api/speed-reading/admin/visualization-scenes/scene-${index}`).flush({ id: `scene-${index}`, displayOrder: 99 });
+    expect(result.map(scene => scene.displayOrder)).toEqual([0, 1, 2]);
+  });
+
   it('writes an exercise result through the dedicated service with idempotency', () => {
     service.submitExerciseResult({
       sessionId: 'session-1',

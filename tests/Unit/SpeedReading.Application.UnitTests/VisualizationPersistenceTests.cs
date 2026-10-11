@@ -64,12 +64,25 @@ public sealed class VisualizationPersistenceTests
         Assert.Equal(id, await admin.CreateSceneAsync(request, actor, "create-visualization-scene", CancellationToken.None));
         var stored = (await admin.GetSceneAsync(id, CancellationToken.None))!;
         Assert.Equal("Mavi", stored.Questions[0].CorrectAnswer);
-        Assert.True(await admin.UpdateSceneAsync(id, request, actor, "edit-visualization-scene", CancellationToken.None));
+        var edit = request with { Questions = stored.Questions.Select(q => new VisualizationQuestionRequest(
+            q.QuestionText, q.Options, q.CorrectAnswer, q.QuestionType, q.DisplayOrder, q.HintText, q.Id)).ToArray() };
+        Assert.True(await admin.UpdateSceneAsync(id, edit, actor, "edit-visualization-scene", CancellationToken.None));
+        Assert.True(await admin.UpdateSceneAsync(id, edit, actor, "edit-visualization-scene", CancellationToken.None));
         var started = await Service(db).StartAsync(actor, new() { ExerciseId = exercise.Id });
         var question = (await admin.GetSceneAsync(id, CancellationToken.None))!.Questions[0];
         Assert.True((await Service(db).ValidateActionAsync(actor, started.SessionId,
             new() { Action = "answer_question", QuestionId = question.Id, Answer = "B" })).IsCorrect);
     }
+
+    [Theory]
+    [InlineData("A", "A")]
+    [InlineData("b", "B")]
+    [InlineData(" Mavi ", "B")]
+    [InlineData("C", null)]
+    [InlineData("Bilinmeyen", null)]
+    [InlineData("", null)]
+    public void Answer_key_supports_only_existing_options(string answer, string? expected) =>
+        Assert.Equal(expected, VisualizationQuestion.ResolveAnswerKey(["Kırmızı", "Mavi"], answer));
 
     [Fact]
     public async Task Admin_scene_listing_survives_malformed_question_options()
