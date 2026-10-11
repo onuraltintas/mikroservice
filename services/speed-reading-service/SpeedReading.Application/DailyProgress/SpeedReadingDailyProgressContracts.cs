@@ -227,6 +227,21 @@ public static class SpeedReadingDailyProgressRules
         return duration;
     }
 
+    // Normal Focus catalogue duration, excluding optional unscored practice.
+    // Other exercise estimates retain their existing value.
+    public static int EstimateFocusDurationMinutes(string configurationJson)
+    {
+        using var document = JsonDocument.Parse(configurationJson);
+        var root = document.RootElement;
+        if (!root.TryGetProperty("engineType", out var engine) || engine.GetString() != "focus"
+            || !root.TryGetProperty("engineConfig", out var settings)
+            || !settings.TryGetProperty("speedMs", out var speed) || !speed.TryGetInt32(out var speedMs)
+            || !settings.TryGetProperty("totalSteps", out var count) || !count.TryGetInt32(out var steps)
+            || speedMs is < 100 or > 10000 || steps is < 2 or > 500)
+            return 5;
+        return (int)Math.Ceiling(speedMs * (double)steps / 60000);
+    }
+
     public static int CalculateNextStreak(
         DateTime? lastCompletionDate,
         DateTime completionDate,

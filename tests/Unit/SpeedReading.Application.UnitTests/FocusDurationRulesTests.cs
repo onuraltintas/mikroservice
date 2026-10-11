@@ -12,7 +12,9 @@ public sealed class FocusDurationRulesTests
     [InlineData(2700,56,3)] [InlineData(3100,56,3)] [InlineData(2800,64,3)]
     public void Focus_duration_uses_trial_count_and_cadence_rounded_up(int speedMs, int steps, int minutes)
     {
-        var config = $$$"""{"engineType":"focus","engineConfig":{"speedMs":{{{speedMs}}},"totalSteps":{{{steps}}}}""";
+        var config = System.Text.Json.JsonSerializer.Serialize(new {
+            engineType = "focus", engineConfig = new { speedMs, totalSteps = steps }
+        });
         Assert.Equal(minutes, SpeedReadingDailyProgressRules.EstimateFocusDurationMinutes(config));
     }
 

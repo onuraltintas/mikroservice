@@ -270,6 +270,49 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   exercise: ExerciseData | null = null;
   parsedConfig: ParsedConfig | null = null;
   engine: BaseEngine | null = null;
+  focusPracticeActive = false;
+  focusPracticeCompleted = false;
+  private scoredFocusEngine: FocusEngine | null = null;
+
+  get canPracticeFocus(): boolean {
+    return this.engine instanceof FocusEngine && !this.isAssessmentMode
+      && !this.focusPracticeActive && !this.engineState.isRunning && !this.engineState.isCompleted;
+  }
+
+  startFocusPractice(previousLoad = false): void {
+    if (!this.canPracticeFocus || !(this.engine instanceof FocusEngine)) return;
+    const original = this.engine;
+    const nLevel = previousLoad ? Math.max(1, original.nLevel - 1) : original.nLevel;
+    const positions = nLevel === 1 ? [1,1,2,3,3,4,5,5]
+      : Array.from({ length: 8 }, (_, index) => index % nLevel + 1);
+    const words = positions.map(position => ['kitap','kalem','masa','bulut','deniz'][position - 1]);
+    const practice = new FocusEngine();
+    this.scoredFocusEngine = original;
+    this.focusPracticeActive = true;
+    this.engine = practice;
+    practice.initialize({ previewOnly: true, Mode: original.mode, NLevel: nLevel,
+      SpeedMs: original.config.SpeedMs, GridSize: original.gridSize,
+      TotalSteps: 8, PositionSequence: positions, WordSequence: words }, {
+      onStart: () => {}, onPause: () => {}, onResume: () => {},
+      onAction: () => {}, onStepComplete: () => {},
+      onStateChange: state => { this.engineState = state; this.cdr.detectChanges(); },
+      onError: message => { this.error = message; this.finishFocusPractice(); },
+      onComplete: () => {
+        this.focusPracticeCompleted = !previousLoad || this.focusPracticeCompleted;
+        this.finishFocusPractice();
+      }
+    });
+    practice.start();
+  }
+
+  private finishFocusPractice(): void {
+    this.engine?.destroy();
+    this.engine = this.scoredFocusEngine;
+    this.scoredFocusEngine = null;
+    this.focusPracticeActive = false;
+    if (this.engine) this.engineState = { ...this.engine.state };
+    this.cdr.detectChanges();
+  }
 
   isLoading = true;
   error: string | null = null;
@@ -593,6 +636,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     this.destroy$.next();
     this.destroy$.complete();
     this.engine?.destroy();
+    this.scoredFocusEngine?.destroy();
   }
 
   private loadExercise(id: string): void {
@@ -1817,6 +1861,13 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
 
   async startExercise(): Promise<void> {
     if (this.isPauseTransitionPending) return;
+    // A new higher load first gets a short local demonstration. The server's
+    // focus_start clock begins only when the actual exercise is started.
+    if (this.canPracticeFocus && this.engine instanceof FocusEngine && this.engine.nLevel > 1
+        && !this.focusPracticeCompleted && !this.isPreviewSession()) {
+      this.startFocusPractice();
+      return;
+    }
     if (this.restoredTachistoscopePaused && this.sessionId) {
       this.isPauseTransitionPending = true;
       try {

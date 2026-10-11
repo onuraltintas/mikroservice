@@ -1,4 +1,5 @@
 <div class="player-container">
+    <p *ngIf="focusPracticeActive" role="status">Puanlanmayan alıştırma — 8 uyaran. Sonuç ve program ilerlemesi kaydedilmez.</p>
     <p *ngIf="customPreviewActive" role="status">Özel ayarlı önizleme — sonuç ve ilerleme kaydedilmez.</p>
     <!-- Loading State -->
     <div *ngIf="isLoading" class="loading-state">
@@ -43,6 +44,11 @@
 
             <div class="card-body-content">
                 <p class="description">{{ exercise?.description }}</p>
+                <p class="description" *ngIf="canPracticeFocus">
+                    {{ asFocusEngine?.nLevel }} adım önceki konum aynıysa eşleşme düğmesine basın;
+                    farklıysa bekleyin. N düzeyi çalışma boyunca değişmez.
+                    <span *ngIf="focusPracticeCompleted">Alıştırma tamamlandı. Hazırsanız asıl egzersize başlayın.</span>
+                </p>
                 <p class="description" *ngIf="engine.engineType === 'subvocalization_reduction' && isSubvocMetronomeEnabled()">
                     Metni okurken hafif sesle bir–iki–üç–dört sayın; her ritim işaretinde bir sayı söyleyin.
                     Sayma ritmi okuma temposundan bağımsızdır. Anlama sorularına geçince saymayı bırakın.
@@ -121,6 +127,9 @@
             </div>
 
             <div class="card-action-area">
+                <button *ngIf="canPracticeFocus" class="ep-btn ep-btn--secondary" (click)="startFocusPractice()">Kısa alıştırma yap</button>
+                <button *ngIf="canPracticeFocus && (asFocusEngine?.nLevel || 1) > 1" class="ep-btn ep-btn--secondary"
+                    (click)="startFocusPractice(true)">Önceki N ile alıştırma</button>
                 <button class="ep-btn ep-btn--primary" class="start-button-large" (click)="startExercise()">
                     <span class="material-icons">play_circle_filled</span>
                     EGZERSİZE BAŞLA
