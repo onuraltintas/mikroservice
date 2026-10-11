@@ -1,6 +1,6 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { BaseComponent } from '../../../core/components/base.component';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { ExerciseService } from '../../../core/services/exercise.service';
@@ -32,6 +32,7 @@ interface ExerciseCard {
   standalone: true,
   imports: [
     CommonModule,
+    RouterLink,
     MatDialogModule
   ],
   templateUrl: './exercises-list.component.html',
@@ -171,6 +172,10 @@ export class ExercisesListComponent extends BaseComponent implements OnInit {
   get canCustomizePreview(): boolean {
     const roles = this.authService.currentUserValue?.roles ?? [];
     return !roles.includes('Student') && roles.some(role => ['Admin', 'SystemAdmin', 'Teacher'].includes(role));
+  }
+
+  get canTryAttentionPrototype(): boolean {
+    return (this.authService.currentUserValue?.roles ?? []).some(role => ['Admin', 'SystemAdmin', 'Teacher'].includes(role));
   }
 
   openCustomPreview(exercise: Exercise): void {

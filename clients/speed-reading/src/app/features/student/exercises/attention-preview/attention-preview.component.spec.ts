@@ -16,6 +16,7 @@ describe('Attention prototype UI', () => {
   });
 
   it('runs three untimed practice rounds before the scored trial', fakeAsync(() => {
+    spyOn(performance, 'now').and.callFake(() => Date.now());
     const fixture = TestBed.createComponent(AttentionPreviewComponent); fixture.detectChanges();
     const c = fixture.componentInstance;
     c.selectPreset(1); c.startTutorial(); tick(10000);

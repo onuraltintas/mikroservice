@@ -1,0 +1,97 @@
+<main class="attention-page">
+  <a class="back-link" routerLink="/student/exercises">← Egzersiz kataloğuna dön</a>
+  <header>
+    <span class="eyebrow">SEÇİCİ DİKKAT · PROTOTİP</span>
+    <h1>Hedefi Yakala<span>.</span></h1>
+    <p>Bir hedef, tek kural: diğer şekillerin arasındaki <strong>yıldızı bul ve tıkla.</strong></p>
+  </header>
+  <p class="notice">Sonuçlar kaydedilmez. Bu prototip mevcut eğitim programlarını değiştirmez.</p>
+
+  @if (game.status === 'intro') {
+    <section class="intro-panel" aria-labelledby="intro-title">
+      <div class="rule-illustration" aria-hidden="true">★</div>
+      <div class="intro-content">
+        <h2 id="intro-title">Her turda yıldızı yakala</h2>
+        <p>Hedef hep aynı. Yerini değiştirir; siz süre dolmadan bir kez tıklarsınız. Önce üç süre sınırı olmayan alıştırma yapacağız.</p>
+        <fieldset>
+          <legend>Deneme temposu</legend>
+          <div class="preset-options">
+            @for (preset of presets; track preset.label; let i = $index) {
+              <button type="button" class="preset" [class.selected]="selectedPresetIndex === i"
+                [attr.aria-pressed]="selectedPresetIndex === i" (click)="selectPreset(i)">
+                <strong>{{ preset.label }}</strong>
+                <span>{{ preset.shapeCount }} şekil · {{ preset.rounds }} tur</span>
+                <span>Tur başına {{ preset.responseMs / 1000 }} saniye</span>
+              </button>
+            }
+          </div>
+        </fieldset>
+        <p class="muted">Bunlar deneme ayarlarıdır; yaş normu veya bilimsel değerlendirme eşiği değildir.</p>
+        <button type="button" class="primary" (click)="startTutorial()">Alıştırmayı başlat →</button>
+      </div>
+    </section>
+  } @else if (game.status === 'ready') {
+    <section class="summary-panel">
+      <span class="eyebrow">ALIŞTIRMA TAMAMLANDI</span>
+      <h2>Hazırsınız!</h2>
+      <p>Üç alıştırma skora dahil edilmedi. Şimdi {{ game.preset.label | lowercase }} tempoda {{ game.preset.rounds }} tur deneyin.</p>
+      <p>Doğru tıklama, yanlış şekil ve süre dolması ayrı sayılır. Bir turda yalnız bir yanıt alınır.</p>
+      <button type="button" class="primary" (click)="startSession()">Denemeyi başlat →</button>
+    </section>
+  } @else if (game.status === 'complete') {
+    <section class="summary-panel">
+      <span class="eyebrow">DENEME TAMAMLANDI · KAYDEDİLMEDİ</span>
+      <h2>Hedeflerin {{ game.hits }} tanesini yakaladınız.</h2>
+      <dl class="results">
+        <div><dt>Doğru</dt><dd>{{ game.hits }}</dd></div>
+        <div><dt>Yanlış</dt><dd>{{ game.wrong }}</dd></div>
+        <div><dt>Kaçırılan</dt><dd>{{ game.missed }}</dd></div>
+        <div><dt>Başarı oranı</dt><dd>%{{ game.accuracy }}</dd></div>
+        <div><dt>Doğru yanıtların ortalama süresi</dt><dd>{{ game.meanResponseMs === null ? '—' : ((game.meanResponseMs! / 1000) | number:'1.1-2') + ' sn' }}</dd></div>
+      </dl>
+      <p class="muted">Yanıt süresi görsel arama ve tıklamayı birlikte kapsar. Bu bir klinik dikkat testi veya okuma hızı ölçümü değildir.</p>
+      <button type="button" class="primary" (click)="reset()">Yeniden dene</button>
+    </section>
+  } @else {
+    <section class="play-panel" aria-label="Hedefi Yakala oyun alanı">
+      <div class="play-header">
+        <div><span class="eyebrow">{{ game.tutorial ? 'ALIŞTIRMA · SKORA DAHİL DEĞİL' : game.preset.label.toUpperCase() + ' TEMPO' }}</span>
+          <h2>Tur {{ game.round }} <span>/ {{ game.totalRounds }}</span></h2></div>
+        <div class="time">{{ game.tutorial ? 'Süre sınırı yok' : ((game.remainingMs(now) / 1000) | number:'1.1-1') + ' sn' }}</div>
+        <button type="button" class="secondary" (click)="togglePause()">{{ game.status === 'paused' ? 'Devam et' : 'Duraklat' }}</button>
+      </div>
+      <dl class="counters" aria-label="Deneme sayaçları">
+        <div><dt>Doğru</dt><dd>{{ game.hits }}</dd></div>
+        <div><dt>Yanlış</dt><dd>{{ game.wrong }}</dd></div>
+        <div><dt>Kaçırılan</dt><dd>{{ game.missed }}</dd></div>
+      </dl>
+      <div class="board-wrap">
+        <div class="shape-board" [class.large-board]="game.shapes.length > 12" [class.medium-board]="game.shapes.length > 6 && game.shapes.length <= 12"
+          [class.paused]="game.status === 'paused'">
+          @for (shape of game.shapes; track $index) {
+            <button type="button" class="shape-button" [class.reveal]="game.status === 'feedback' && shape === 'star'"
+              [disabled]="game.status !== 'playing'" [attr.aria-label]="shapeNames[shape] + ', konum ' + ($index + 1)" (click)="choose($index)">
+              <svg viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+                @switch (shape) {
+                  @case ('star') { <polygon points="50,5 61,36 95,36 68,57 78,91 50,71 22,91 32,57 5,36 39,36"/> }
+                  @case ('circle') { <circle cx="50" cy="50" r="32"/> }
+                  @case ('triangle') { <polygon points="50,13 88,82 12,82"/> }
+                  @case ('square') { <rect x="19" y="19" width="62" height="62" rx="4"/> }
+                  @case ('diamond') { <polygon points="50,7 93,50 50,93 7,50"/> }
+                  @case ('cross') { <path d="M38 12 H62 V38 H88 V62 H62 V88 H38 V62 H12 V38 H38 Z"/> }
+                }
+              </svg>
+            </button>
+          }
+        </div>
+        @if (game.status === 'paused') {
+          <div class="pause-overlay"><strong>Duraklatıldı</strong><p>Hazır olduğunuzda “Devam et”e basın.</p></div>
+        }
+      </div>
+      <p class="feedback" role="status" aria-live="polite" [class.correct]="game.outcome === 'correct'" [class.incorrect]="game.outcome === 'wrong' || game.outcome === 'missed'">
+        {{ game.status === 'paused' ? 'Süre ve hedefler durduruldu.' : game.message }}
+      </p>
+      <p class="target-reminder"><span aria-hidden="true">★</span> Hedefiniz her turda yıldız.</p>
+    </section>
+  }
+</main>
