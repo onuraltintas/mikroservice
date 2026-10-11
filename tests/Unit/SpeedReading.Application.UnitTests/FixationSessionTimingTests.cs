@@ -3,12 +3,66 @@ using System.Text.Json.Nodes;
 using Microsoft.EntityFrameworkCore;
 using SpeedReading.Application.ExerciseSessions;
 using SpeedReading.Domain.Catalog;
+using SpeedReading.Domain.Assessment;
 using SpeedReading.Infrastructure.Persistence;
 
 namespace SpeedReading.Application.UnitTests;
 
 public sealed class FixationSessionTimingTests
 {
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Legacy_and_pinned_assessment_sessions_resume_with_their_original_protocol(bool assessment)
+    {
+        await using var db = CreateDb();
+        var student = Guid.NewGuid();
+        var type = ExerciseType.Create(Guid.NewGuid(), "Fixation", "Sabitleme", "motion_path");
+        const string configuration = """{"engineType":"motion_path","engineConfig":{"mode":"fixation","content":{"points":2,"peripheralCount":2},"timing":{"holdMs":100}}}""";
+        var exercise = Exercise.Create("Sabitleme", "attention", configuration, 1, student, type.Id);
+        db.ExerciseTypes.Add(type); db.Exercises.Add(exercise);
+        var request = new StartExerciseSessionRequest { ExerciseId = exercise.Id };
+        if (assessment) {
+            var attemptId = Guid.NewGuid();
+            request = new() { ExerciseId = exercise.Id, AssessmentAttemptId = attemptId };
+            db.AssessmentAttempts.Add(AssessmentAttempt.Start(attemptId, student,
+                AssessmentAttemptPhase.Baseline, "baseline-v1", "tr", null, 1, DateTime.UtcNow, student.ToString()));
+            var snapshot = System.Text.Json.JsonSerializer.Serialize(new {
+                version = 1, exercise = new { id = exercise.Id, title = exercise.Title, description = "attention",
+                    typeName = "Fixation", difficultyLevel = 1, engineType = "motion_path", configurationJson = configuration },
+                questions = Array.Empty<object>()
+            });
+            db.AssessmentAttemptExercises.Add(AssessmentAttemptExercise.Pin(Guid.NewGuid(), attemptId,
+                exercise.Id, null, "attention", 1, snapshot, DateTime.UtcNow, student.ToString()));
+        }
+        await db.SaveChangesAsync();
+        var owned = typeof(OwnedSpeedReadingDbContext).Assembly.GetType("SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingExerciseSessions")!;
+        var service = (ISpeedReadingExerciseSessions)Activator.CreateInstance(owned,
+            BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, [db], null)!;
+        var started = await service.StartAsync(student, request);
+        Assert.Equal(assessment ? 1 : 2, started.InitialData.GetProperty("fixationProtocolVersion").GetInt32());
+        var session = await db.ExerciseSessions.SingleAsync();
+        if (!assessment) {
+            var legacy = JsonNode.Parse(session.SessionDataJson)!; legacy["fixationProtocolVersion"] = 1;
+            session.SetState(legacy.ToJsonString()); await db.SaveChangesAsync();
+        }
+        var presented = await service.ValidateActionAsync(student, started.SessionId, new() { Action = "fixation_present" });
+        var state = JsonNode.Parse(session.SessionDataJson)!;
+        state["fixationPresentedAt"] = DateTime.UtcNow.AddSeconds(-1);
+        session.SetState(state.ToJsonString()); await db.SaveChangesAsync();
+        var answer = await service.ValidateActionAsync(student, started.SessionId, new() { Action = "fixation_answer", Answers = Stimuli(presented) });
+        Assert.True(answer.IsValid);
+        if (assessment) Assert.Null(answer.IsCorrect); else Assert.True(answer.IsCorrect);
+        Assert.True(JsonNode.Parse(session.SessionDataJson)!["fixationRoundResults"]![0]!["isCorrect"]!.GetValue<bool>());
+        await service.PauseAsync(student, started.SessionId); db.ChangeTracker.Clear();
+        await service.ResumeAsync(student, started.SessionId);
+        var resumed = await service.StartAsync(student, request);
+        Assert.Equal(started.SessionId, resumed.SessionId);
+        Assert.Equal(1, resumed.InitialData.GetProperty("fixationProtocolVersion").GetInt32());
+        Assert.Equal(1, resumed.InitialData.GetProperty("fixationRound").GetInt32());
+        Assert.Equal(2, resumed.TotalSteps);
+    }
+
     [Fact]
     public async Task New_fixation_protocol_preserves_the_previous_stimuli_across_pause_without_exposing_them()
     {
