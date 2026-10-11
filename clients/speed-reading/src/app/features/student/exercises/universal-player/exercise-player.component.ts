@@ -3416,6 +3416,9 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       return result.details?.measurementStatus === 'Measured' && result.details?.comprehensionScore != null;
     if (this.engine?.engineType === 'motion_path' && result.details?.serverValidatedFixation)
       return true;
+    if (this.isFixationMode() && this.isPreviewSession()
+      && result.details?.fixationResults?.some((round: { correctChars?: string }) => !!round.correctChars))
+      return true;
     if (this.questionAnswers.length > 0
       || result.details?.totalQuestions > 0
       || result.details?.totalAnswers > 0
