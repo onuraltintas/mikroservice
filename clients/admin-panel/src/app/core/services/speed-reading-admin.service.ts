@@ -650,6 +650,7 @@ export interface SpeedReadingVisualizationQuestionRequest {
   displayOrder: number;
   hintText?: string | null;
   id?: string | null;
+  answerFormat?: 'text' | 'key' | 'auto';
 }
 
 export interface SpeedReadingVisualizationSceneRequest {

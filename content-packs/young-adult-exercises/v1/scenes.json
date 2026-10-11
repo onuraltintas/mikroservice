@@ -1,8 +1,9 @@
 [
   {
-    "id": "ddb6b8cf-06d1-595d-95a3-69de7ce972ea",
+    "id": "daf10000-0000-5000-8000-000000004010",
     "exerciseId": "10fd88c2-b691-5252-be76-889197ac21af",
-    "description": "Deniz, üniversite kütüphanesi içinde bir masanın önünde duruyor. Masanın üzerinde mavi bir defter var. Bu nesnenin sağında bir sarı kalem, solunda ise küçük bir masa lambası bulunuyor. Pencere masanın arkasında, kapı odanın sol duvarında. Deniz önce lambayı açıyor, sonra defter nesnesini eline alıyor ve en son pencereye doğru dönüyor.",
+    "theme": "deney",
+    "description": "Deniz, üniversitenin araştırma laboratuvarında deney düzeneğini kontrol ediyor. “mavi kap” için üç pil ayrılmış. “mavi kap” ortada. Solunda sarı cetvel, sağında kırmızı kutu bulunuyor. Soldaki nesnenin önünde yeşil kart var. Görevli önce kabı açıyor, ardından cetveli alıyor, en son kutuyu kapatıyor. Yerleşimi ve işlem sırasını zihninizde birlikte canlandırın.",
     "duration": 25,
     "displayOrder": 0,
     "difficultyLevel": 1,
@@ -10,50 +11,57 @@
     "mode": "assessment",
     "questions": [
       {
-        "id": "bff5c731-e6fe-5086-8e35-b6a6d56e7b07",
-        "questionText": "Masadaki defter hangi renkteydi?",
+        "questionText": "“mavi kap” için ne ayrılmıştı?",
         "options": [
-          "mavi",
-          "yeşil",
-          "turuncu",
-          "mor"
+          "dört pil",
+          "üç pil",
+          "bir pil",
+          "iki pil"
         ],
-        "correctAnswer": "A",
+        "evidence": "“mavi kap” için üç pil ayrılmış.",
         "questionType": "detail",
+        "id": "daf20000-0000-5000-8000-000000040100",
+        "correctAnswer": "B",
+        "demandLevel": 1,
         "displayOrder": 0
       },
       {
-        "id": "4c66d9a9-25e5-55b7-b5a3-bef9f3903c5b",
-        "questionText": "Defter nesnesinin solunda ne vardı?",
+        "questionText": "Ortadaki nesnenin solunda ne vardı?",
         "options": [
-          "Pencere",
-          "Masa lambası",
-          "Sarı kalem",
-          "Kapı"
+          "kırmızı kutu",
+          "yeşil kart",
+          "sarı cetvel",
+          "mavi kap"
         ],
-        "correctAnswer": "B",
+        "evidence": "“mavi kap” ortada. Solunda sarı cetvel, sağında kırmızı kutu bulunuyor. Soldaki nesnenin önünde yeşil kart var.",
         "questionType": "spatial",
+        "id": "daf20000-0000-5000-8000-000000040101",
+        "correctAnswer": "C",
+        "demandLevel": 1,
         "displayOrder": 1
       },
       {
-        "id": "43ecd0ba-dc06-588a-b520-fe7b4d3aac2d",
-        "questionText": "Deniz lambayı açtıktan hemen sonra ne yaptı?",
+        "questionText": "Görevli ilk işlemden hemen sonra ne yaptı?",
         "options": [
-          "Kapıyı açtı",
-          "Sandalyeye oturdu",
-          "Defter nesnesini eline aldı",
-          "Pencereye doğru döndü"
+          "kabı açıyor",
+          "kutuyu kapatıyor",
+          "hiçbir işlem yapmadı",
+          "cetveli alıyor"
         ],
-        "correctAnswer": "C",
+        "evidence": "Görevli önce kabı açıyor, ardından cetveli alıyor, en son kutuyu kapatıyor.",
         "questionType": "sequence",
+        "id": "daf20000-0000-5000-8000-000000040102",
+        "correctAnswer": "D",
+        "demandLevel": 1,
         "displayOrder": 2
       }
     ]
   },
   {
-    "id": "8f9290f8-d3e1-5802-a239-3638ef333760",
+    "id": "daf10000-0000-5000-8000-000000004011",
     "exerciseId": "10fd88c2-b691-5252-be76-889197ac21af",
-    "description": "Ece, üniversite kütüphanesi içinde bir masanın önünde duruyor. Masanın üzerinde yeşil bir dosya var. Bu nesnenin sağında bir beyaz kart, solunda ise küçük bir masa lambası bulunuyor. Pencere masanın arkasında, kapı odanın sol duvarında. Ece önce lambayı açıyor, sonra dosya nesnesini eline alıyor ve en son pencereye doğru dönüyor.",
+    "theme": "park",
+    "description": "Ece, kampüsün ekoloji sahasında örnekleme noktalarını hazırlıyor. “taş işaret” için iki ağaç ayrılmış. “taş işaret” ortada. Solunda çiçek saksısı, sağında kuş yuvası bulunuyor. Soldaki nesnenin önünde su kabı var. Görevli önce levhayı okuyor, ardından suyu dolduruyor, en son yuvayı gözlüyor. Yerleşimi ve işlem sırasını zihninizde birlikte canlandırın.",
     "duration": 25,
     "displayOrder": 1,
     "difficultyLevel": 1,
@@ -61,50 +69,57 @@
     "mode": "assessment",
     "questions": [
       {
-        "id": "5af79884-14a3-5d88-861e-efa042e9dae9",
-        "questionText": "Masadaki dosya hangi renkteydi?",
+        "questionText": "“taş işaret” için ne ayrılmıştı?",
         "options": [
-          "kırmızı",
-          "yeşil",
-          "turuncu",
-          "mor"
+          "üç ağaç",
+          "dört ağaç",
+          "iki ağaç",
+          "bir ağaç"
         ],
-        "correctAnswer": "B",
+        "evidence": "“taş işaret” için iki ağaç ayrılmış.",
         "questionType": "detail",
+        "id": "daf20000-0000-5000-8000-000000040110",
+        "correctAnswer": "C",
+        "demandLevel": 1,
         "displayOrder": 0
       },
       {
-        "id": "5079cc1c-461a-555b-8dac-b9685727f80b",
-        "questionText": "Dosya nesnesinin solunda ne vardı?",
+        "questionText": "Ortadaki nesnenin solunda ne vardı?",
         "options": [
-          "Kapı",
-          "Pencere",
-          "Masa lambası",
-          "Beyaz kart"
+          "taş işaret",
+          "kuş yuvası",
+          "su kabı",
+          "çiçek saksısı"
         ],
-        "correctAnswer": "C",
+        "evidence": "“taş işaret” ortada. Solunda çiçek saksısı, sağında kuş yuvası bulunuyor. Soldaki nesnenin önünde su kabı var.",
         "questionType": "spatial",
+        "id": "daf20000-0000-5000-8000-000000040111",
+        "correctAnswer": "D",
+        "demandLevel": 1,
         "displayOrder": 1
       },
       {
-        "id": "38725476-3c47-5fbd-9020-84239b51b762",
-        "questionText": "Ece lambayı açtıktan hemen sonra ne yaptı?",
+        "questionText": "Görevli ilk işlemden hemen sonra ne yaptı?",
         "options": [
-          "Pencereye doğru döndü",
-          "Kapıyı açtı",
-          "Sandalyeye oturdu",
-          "Dosya nesnesini eline aldı"
+          "suyu dolduruyor",
+          "levhayı okuyor",
+          "yuvayı gözlüyor",
+          "hiçbir işlem yapmadı"
         ],
-        "correctAnswer": "D",
+        "evidence": "Görevli önce levhayı okuyor, ardından suyu dolduruyor, en son yuvayı gözlüyor.",
         "questionType": "sequence",
+        "id": "daf20000-0000-5000-8000-000000040112",
+        "correctAnswer": "A",
+        "demandLevel": 1,
         "displayOrder": 2
       }
     ]
   },
   {
-    "id": "19f39012-adc6-5154-808c-ab8555d2d814",
+    "id": "daf10000-0000-5000-8000-000000004012",
     "exerciseId": "10fd88c2-b691-5252-be76-889197ac21af",
-    "description": "Mert, üniversite kütüphanesi içinde bir masanın önünde duruyor. Masanın üzerinde turuncu bir çanta var. Bu nesnenin sağında bir gri kutu, solunda ise küçük bir masa lambası bulunuyor. Pencere masanın arkasında, kapı odanın sol duvarında. Mert önce lambayı açıyor, sonra çanta nesnesini eline alıyor ve en son pencereye doğru dönüyor.",
+    "theme": "mutfak",
+    "description": "Mert, beslenme atölyesinde uygulama malzemelerini düzenliyor. “beyaz tabak” için üç elma ayrılmış. “beyaz tabak” ortada. Solunda mavi bardak, sağında yeşil kase bulunuyor. Soldaki nesnenin önünde kırmızı peçete var. Görevli önce elmayı yıkıyor, ardından kaseye koyuyor, en son bardağı dolduruyor. Yerleşimi ve işlem sırasını zihninizde birlikte canlandırın.",
     "duration": 25,
     "displayOrder": 2,
     "difficultyLevel": 1,
@@ -112,50 +127,231 @@
     "mode": "assessment",
     "questions": [
       {
-        "id": "444e9215-3ba9-5e0e-b3ec-14051a6014d8",
-        "questionText": "Masadaki çanta hangi renkteydi?",
+        "questionText": "“beyaz tabak” için ne ayrılmıştı?",
         "options": [
-          "kırmızı",
-          "mavi",
-          "turuncu",
-          "mor"
+          "bir elma",
+          "iki elma",
+          "dört elma",
+          "üç elma"
         ],
-        "correctAnswer": "C",
+        "evidence": "“beyaz tabak” için üç elma ayrılmış.",
         "questionType": "detail",
+        "id": "daf20000-0000-5000-8000-000000040120",
+        "correctAnswer": "D",
+        "demandLevel": 1,
         "displayOrder": 0
       },
       {
-        "id": "ea4abda8-2f4e-57c1-b218-737821f07aae",
-        "questionText": "Çanta nesnesinin solunda ne vardı?",
+        "questionText": "Ortadaki nesnenin solunda ne vardı?",
         "options": [
-          "Gri kutu",
-          "Kapı",
-          "Pencere",
-          "Masa lambası"
+          "mavi bardak",
+          "beyaz tabak",
+          "yeşil kase",
+          "kırmızı peçete"
         ],
-        "correctAnswer": "D",
+        "evidence": "“beyaz tabak” ortada. Solunda mavi bardak, sağında yeşil kase bulunuyor. Soldaki nesnenin önünde kırmızı peçete var.",
         "questionType": "spatial",
+        "id": "daf20000-0000-5000-8000-000000040121",
+        "correctAnswer": "A",
+        "demandLevel": 1,
         "displayOrder": 1
       },
       {
-        "id": "08ad9673-6e9f-5f9d-a25c-982ea23f590b",
-        "questionText": "Mert lambayı açtıktan hemen sonra ne yaptı?",
+        "questionText": "Görevli ilk işlemden hemen sonra ne yaptı?",
         "options": [
-          "Çanta nesnesini eline aldı",
-          "Pencereye doğru döndü",
-          "Kapıyı açtı",
-          "Sandalyeye oturdu"
+          "hiçbir işlem yapmadı",
+          "kaseye koyuyor",
+          "elmayı yıkıyor",
+          "bardağı dolduruyor"
         ],
-        "correctAnswer": "A",
+        "evidence": "Görevli önce elmayı yıkıyor, ardından kaseye koyuyor, en son bardağı dolduruyor.",
         "questionType": "sequence",
+        "id": "daf20000-0000-5000-8000-000000040122",
+        "correctAnswer": "B",
+        "demandLevel": 1,
         "displayOrder": 2
       }
     ]
   },
   {
-    "id": "25049772-8961-5ef2-9c17-5fc4f57a64e0",
+    "id": "daf10000-0000-5000-8000-000000004013",
+    "exerciseId": "10fd88c2-b691-5252-be76-889197ac21af",
+    "theme": "muze",
+    "description": "Ada, müze stajında geçici serginin yerleşimini inceliyor. “sergi vitrini” için iki kukla ayrılmış. “sergi vitrini” ortada. Solunda oyuncak tren, sağında tahta gemi bulunuyor. Soldaki nesnenin önünde kırmızı bilet var. Görevli önce bileti gösteriyor, ardından treni inceliyor, en son broşürü açıyor. Yerleşimi ve işlem sırasını zihninizde birlikte canlandırın.",
+    "duration": 25,
+    "displayOrder": 3,
+    "difficultyLevel": 1,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "mode": "assessment",
+    "questions": [
+      {
+        "questionText": "“sergi vitrini” için ne ayrılmıştı?",
+        "options": [
+          "iki kukla",
+          "bir kukla",
+          "üç kukla",
+          "dört kukla"
+        ],
+        "evidence": "“sergi vitrini” için iki kukla ayrılmış.",
+        "questionType": "detail",
+        "id": "daf20000-0000-5000-8000-000000040130",
+        "correctAnswer": "A",
+        "demandLevel": 1,
+        "displayOrder": 0
+      },
+      {
+        "questionText": "Ortadaki nesnenin solunda ne vardı?",
+        "options": [
+          "kırmızı bilet",
+          "oyuncak tren",
+          "sergi vitrini",
+          "tahta gemi"
+        ],
+        "evidence": "“sergi vitrini” ortada. Solunda oyuncak tren, sağında tahta gemi bulunuyor. Soldaki nesnenin önünde kırmızı bilet var.",
+        "questionType": "spatial",
+        "id": "daf20000-0000-5000-8000-000000040131",
+        "correctAnswer": "B",
+        "demandLevel": 1,
+        "displayOrder": 1
+      },
+      {
+        "questionText": "Görevli ilk işlemden hemen sonra ne yaptı?",
+        "options": [
+          "broşürü açıyor",
+          "hiçbir işlem yapmadı",
+          "treni inceliyor",
+          "bileti gösteriyor"
+        ],
+        "evidence": "Görevli önce bileti gösteriyor, ardından treni inceliyor, en son broşürü açıyor.",
+        "questionType": "sequence",
+        "id": "daf20000-0000-5000-8000-000000040132",
+        "correctAnswer": "C",
+        "demandLevel": 1,
+        "displayOrder": 2
+      }
+    ]
+  },
+  {
+    "id": "daf10000-0000-5000-8000-000000004014",
+    "exerciseId": "10fd88c2-b691-5252-be76-889197ac21af",
+    "theme": "istasyon",
+    "description": "Can, öğrenci topluluğuyla tren istasyonunda saha gezisini organize ediyor. “bilet gişesi” için üç vagon ayrılmış. “bilet gişesi” ortada. Solunda kırmızı bavul, sağında mavi bank bulunuyor. Soldaki nesnenin önünde sarı çanta var. Görevli önce bileti alıyor, ardından bavulu kaldırıyor, en son bankta bekliyor. Yerleşimi ve işlem sırasını zihninizde birlikte canlandırın.",
+    "duration": 25,
+    "displayOrder": 4,
+    "difficultyLevel": 1,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "mode": "assessment",
+    "questions": [
+      {
+        "questionText": "“bilet gişesi” için ne ayrılmıştı?",
+        "options": [
+          "dört vagon",
+          "üç vagon",
+          "bir vagon",
+          "iki vagon"
+        ],
+        "evidence": "“bilet gişesi” için üç vagon ayrılmış.",
+        "questionType": "detail",
+        "id": "daf20000-0000-5000-8000-000000040140",
+        "correctAnswer": "B",
+        "demandLevel": 1,
+        "displayOrder": 0
+      },
+      {
+        "questionText": "Ortadaki nesnenin solunda ne vardı?",
+        "options": [
+          "mavi bank",
+          "sarı çanta",
+          "kırmızı bavul",
+          "bilet gişesi"
+        ],
+        "evidence": "“bilet gişesi” ortada. Solunda kırmızı bavul, sağında mavi bank bulunuyor. Soldaki nesnenin önünde sarı çanta var.",
+        "questionType": "spatial",
+        "id": "daf20000-0000-5000-8000-000000040141",
+        "correctAnswer": "C",
+        "demandLevel": 1,
+        "displayOrder": 1
+      },
+      {
+        "questionText": "Görevli ilk işlemden hemen sonra ne yaptı?",
+        "options": [
+          "bileti alıyor",
+          "bankta bekliyor",
+          "hiçbir işlem yapmadı",
+          "bavulu kaldırıyor"
+        ],
+        "evidence": "Görevli önce bileti alıyor, ardından bavulu kaldırıyor, en son bankta bekliyor.",
+        "questionType": "sequence",
+        "id": "daf20000-0000-5000-8000-000000040142",
+        "correctAnswer": "D",
+        "demandLevel": 1,
+        "displayOrder": 2
+      }
+    ]
+  },
+  {
+    "id": "daf10000-0000-5000-8000-000000004015",
+    "exerciseId": "10fd88c2-b691-5252-be76-889197ac21af",
+    "theme": "tasarim",
+    "description": "Elif, kampüsün tasarım stüdyosunda proje sunumunu hazırlıyor. “resim sehpası” için iki çizgi ayrılmış. “resim sehpası” ortada. Solunda mavi boya, sağında sarı fırça bulunuyor. Soldaki nesnenin önünde beyaz kağıt var. Görevli önce boyayı açıyor, ardından fırçayı alıyor, en son kağıda çiziyor. Yerleşimi ve işlem sırasını zihninizde birlikte canlandırın.",
+    "duration": 25,
+    "displayOrder": 5,
+    "difficultyLevel": 1,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "mode": "assessment",
+    "questions": [
+      {
+        "questionText": "“resim sehpası” için ne ayrılmıştı?",
+        "options": [
+          "üç çizgi",
+          "dört çizgi",
+          "iki çizgi",
+          "bir çizgi"
+        ],
+        "evidence": "“resim sehpası” için iki çizgi ayrılmış.",
+        "questionType": "detail",
+        "id": "daf20000-0000-5000-8000-000000040150",
+        "correctAnswer": "C",
+        "demandLevel": 1,
+        "displayOrder": 0
+      },
+      {
+        "questionText": "Ortadaki nesnenin solunda ne vardı?",
+        "options": [
+          "resim sehpası",
+          "sarı fırça",
+          "beyaz kağıt",
+          "mavi boya"
+        ],
+        "evidence": "“resim sehpası” ortada. Solunda mavi boya, sağında sarı fırça bulunuyor. Soldaki nesnenin önünde beyaz kağıt var.",
+        "questionType": "spatial",
+        "id": "daf20000-0000-5000-8000-000000040151",
+        "correctAnswer": "D",
+        "demandLevel": 1,
+        "displayOrder": 1
+      },
+      {
+        "questionText": "Görevli ilk işlemden hemen sonra ne yaptı?",
+        "options": [
+          "fırçayı alıyor",
+          "boyayı açıyor",
+          "kağıda çiziyor",
+          "hiçbir işlem yapmadı"
+        ],
+        "evidence": "Görevli önce boyayı açıyor, ardından fırçayı alıyor, en son kağıda çiziyor.",
+        "questionType": "sequence",
+        "id": "daf20000-0000-5000-8000-000000040152",
+        "correctAnswer": "A",
+        "demandLevel": 1,
+        "displayOrder": 2
+      }
+    ]
+  },
+  {
+    "id": "daf10000-0000-5000-8000-000000004020",
     "exerciseId": "bf3e2cba-0c6b-5d9a-a07a-ce625c6f353f",
-    "description": "Deniz, araştırma atölyesi içinde bir masanın önünde duruyor. Masanın üzerinde yeşil bir defter var. Bu nesnenin sağında bir sarı kalem, solunda ise küçük bir masa lambası bulunuyor. Pencere masanın arkasında, kapı odanın sol duvarında. Deniz önce lambayı açıyor, sonra defter nesnesini eline alıyor ve en son pencereye doğru dönüyor. Kapının yanında iki sandalye var; pencereye yakın olanın üzerinde bir mont duruyor.",
+    "theme": "deney",
+    "description": "Deniz, üniversitenin araştırma laboratuvarında deney düzeneğini kontrol ediyor. “mavi kap” için üç pil ayrılmış. “cam tüp” için iki sensör ayrılmış. “cam tüp” ortada. Solunda mor işaret, sağında metal halka bulunuyor. Soldaki nesnenin önünde pembe kart var. Görevli önce tüpü yerleştiriyor, ardından halkayı ölçüyor, en son kartı çeviriyor. Yerleşimi ve işlem sırasını zihninizde birlikte canlandırın.",
     "duration": 30,
     "displayOrder": 0,
     "difficultyLevel": 2,
@@ -163,50 +359,57 @@
     "mode": "assessment",
     "questions": [
       {
-        "id": "f2571234-6560-5dc2-b717-7211faa891d1",
-        "questionText": "Masadaki defter hangi renkteydi?",
+        "questionText": "“cam tüp” için ne ayrılmıştı?",
         "options": [
-          "turuncu",
-          "mor",
-          "kırmızı",
-          "yeşil"
+          "üç sensör",
+          "dört sensör",
+          "iki sensör",
+          "bir sensör"
         ],
-        "correctAnswer": "D",
+        "evidence": "“cam tüp” için iki sensör ayrılmış.",
         "questionType": "detail",
+        "id": "daf20000-0000-5000-8000-000000040200",
+        "correctAnswer": "C",
+        "demandLevel": 2,
         "displayOrder": 0
       },
       {
-        "id": "0f2d4ff2-bab6-5342-9b0a-9f71b9718fa2",
-        "questionText": "Defter nesnesinin solunda ne vardı?",
+        "questionText": "Ortadaki nesnenin solundaki nesnenin önünde ne vardı?",
         "options": [
-          "Masa lambası",
-          "Sarı kalem",
-          "Kapı",
-          "Pencere"
+          "cam tüp",
+          "metal halka",
+          "mor işaret",
+          "pembe kart"
         ],
-        "correctAnswer": "A",
+        "evidence": "“cam tüp” ortada. Solunda mor işaret, sağında metal halka bulunuyor. Soldaki nesnenin önünde pembe kart var.",
         "questionType": "spatial",
+        "id": "daf20000-0000-5000-8000-000000040201",
+        "correctAnswer": "D",
+        "demandLevel": 2,
         "displayOrder": 1
       },
       {
-        "id": "accdd3ed-0560-5631-b222-06a7a52f2593",
-        "questionText": "Deniz lambayı açtıktan hemen sonra ne yaptı?",
+        "questionText": "Görevlinin son işlemi hangisiydi?",
         "options": [
-          "Sandalyeye oturdu",
-          "Defter nesnesini eline aldı",
-          "Pencereye doğru döndü",
-          "Kapıyı açtı"
+          "kartı çeviriyor",
+          "halkayı ölçüyor",
+          "tüpü yerleştiriyor",
+          "hiçbir işlem yapmadı"
         ],
-        "correctAnswer": "B",
+        "evidence": "Görevli önce tüpü yerleştiriyor, ardından halkayı ölçüyor, en son kartı çeviriyor.",
         "questionType": "sequence",
+        "id": "daf20000-0000-5000-8000-000000040202",
+        "correctAnswer": "A",
+        "demandLevel": 2,
         "displayOrder": 2
       }
     ]
   },
   {
-    "id": "a219a1f5-4b63-55ea-a42a-68c1c11914a6",
+    "id": "daf10000-0000-5000-8000-000000004021",
     "exerciseId": "bf3e2cba-0c6b-5d9a-a07a-ce625c6f353f",
-    "description": "Ece, araştırma atölyesi içinde bir masanın önünde duruyor. Masanın üzerinde turuncu bir dosya var. Bu nesnenin sağında bir beyaz kart, solunda ise küçük bir masa lambası bulunuyor. Pencere masanın arkasında, kapı odanın sol duvarında. Ece önce lambayı açıyor, sonra dosya nesnesini eline alıyor ve en son pencereye doğru dönüyor. Kapının yanında iki sandalye var; pencereye yakın olanın üzerinde bir mont duruyor.",
+    "theme": "park",
+    "description": "Ece, kampüsün ekoloji sahasında örnekleme noktalarını hazırlıyor. “taş işaret” için iki ağaç ayrılmış. “gözlem noktası” için üç fide ayrılmış. “gözlem noktası” ortada. Solunda kırmızı çalı, sağında yeşil bank bulunuyor. Soldaki nesnenin önünde küçük fener var. Görevli önce fideyi ekiyor, ardından bankı siliyor, en son feneri kaldırıyor. Yerleşimi ve işlem sırasını zihninizde birlikte canlandırın.",
     "duration": 30,
     "displayOrder": 1,
     "difficultyLevel": 2,
@@ -214,50 +417,57 @@
     "mode": "assessment",
     "questions": [
       {
-        "id": "1eb775fc-7ea6-5bae-96c9-d93f45798961",
-        "questionText": "Masadaki dosya hangi renkteydi?",
+        "questionText": "“gözlem noktası” için ne ayrılmıştı?",
         "options": [
-          "turuncu",
-          "mor",
-          "kırmızı",
-          "mavi"
+          "bir fide",
+          "iki fide",
+          "dört fide",
+          "üç fide"
         ],
-        "correctAnswer": "A",
+        "evidence": "“gözlem noktası” için üç fide ayrılmış.",
         "questionType": "detail",
+        "id": "daf20000-0000-5000-8000-000000040210",
+        "correctAnswer": "D",
+        "demandLevel": 2,
         "displayOrder": 0
       },
       {
-        "id": "a284c75b-3be7-547c-8a0b-9f860fad996f",
-        "questionText": "Dosya nesnesinin solunda ne vardı?",
+        "questionText": "Ortadaki nesnenin solundaki nesnenin önünde ne vardı?",
         "options": [
-          "Pencere",
-          "Masa lambası",
-          "Beyaz kart",
-          "Kapı"
+          "küçük fener",
+          "gözlem noktası",
+          "yeşil bank",
+          "kırmızı çalı"
         ],
-        "correctAnswer": "B",
+        "evidence": "“gözlem noktası” ortada. Solunda kırmızı çalı, sağında yeşil bank bulunuyor. Soldaki nesnenin önünde küçük fener var.",
         "questionType": "spatial",
+        "id": "daf20000-0000-5000-8000-000000040211",
+        "correctAnswer": "A",
+        "demandLevel": 2,
         "displayOrder": 1
       },
       {
-        "id": "147e8dc7-a019-5ebd-be79-b8ced71cc39a",
-        "questionText": "Ece lambayı açtıktan hemen sonra ne yaptı?",
+        "questionText": "Görevlinin son işlemi hangisiydi?",
         "options": [
-          "Kapıyı açtı",
-          "Sandalyeye oturdu",
-          "Dosya nesnesini eline aldı",
-          "Pencereye doğru döndü"
+          "hiçbir işlem yapmadı",
+          "feneri kaldırıyor",
+          "bankı siliyor",
+          "fideyi ekiyor"
         ],
-        "correctAnswer": "C",
+        "evidence": "Görevli önce fideyi ekiyor, ardından bankı siliyor, en son feneri kaldırıyor.",
         "questionType": "sequence",
+        "id": "daf20000-0000-5000-8000-000000040212",
+        "correctAnswer": "B",
+        "demandLevel": 2,
         "displayOrder": 2
       }
     ]
   },
   {
-    "id": "f4aa02c3-3527-5815-a06f-a5e6872202a5",
+    "id": "daf10000-0000-5000-8000-000000004022",
     "exerciseId": "bf3e2cba-0c6b-5d9a-a07a-ce625c6f353f",
-    "description": "Mert, araştırma atölyesi içinde bir masanın önünde duruyor. Masanın üzerinde mor bir çanta var. Bu nesnenin sağında bir gri kutu, solunda ise küçük bir masa lambası bulunuyor. Pencere masanın arkasında, kapı odanın sol duvarında. Mert önce lambayı açıyor, sonra çanta nesnesini eline alıyor ve en son pencereye doğru dönüyor. Kapının yanında iki sandalye var; pencereye yakın olanın üzerinde bir mont duruyor.",
+    "theme": "mutfak",
+    "description": "Mert, beslenme atölyesinde uygulama malzemelerini düzenliyor. “beyaz tabak” için üç elma ayrılmış. “kesme tahtası” için iki armut ayrılmış. “kesme tahtası” ortada. Solunda cam kavanoz, sağında metal süzgeç bulunuyor. Soldaki nesnenin önünde pembe bez var. Görevli önce kavanozu açıyor, ardından armudu dilimliyor, en son süzgeci kaldırıyor. Yerleşimi ve işlem sırasını zihninizde birlikte canlandırın.",
     "duration": 30,
     "displayOrder": 2,
     "difficultyLevel": 2,
@@ -265,50 +475,231 @@
     "mode": "assessment",
     "questions": [
       {
-        "id": "3406acb6-3272-55c5-a544-dc30ef452317",
-        "questionText": "Masadaki çanta hangi renkteydi?",
+        "questionText": "“kesme tahtası” için ne ayrılmıştı?",
         "options": [
-          "yeşil",
-          "mor",
-          "kırmızı",
-          "mavi"
+          "iki armut",
+          "bir armut",
+          "üç armut",
+          "dört armut"
         ],
-        "correctAnswer": "B",
+        "evidence": "“kesme tahtası” için iki armut ayrılmış.",
         "questionType": "detail",
+        "id": "daf20000-0000-5000-8000-000000040220",
+        "correctAnswer": "A",
+        "demandLevel": 2,
         "displayOrder": 0
       },
       {
-        "id": "bdeb42dc-317c-521d-b380-1bad7900ecf4",
-        "questionText": "Çanta nesnesinin solunda ne vardı?",
+        "questionText": "Ortadaki nesnenin solundaki nesnenin önünde ne vardı?",
         "options": [
-          "Kapı",
-          "Pencere",
-          "Masa lambası",
-          "Gri kutu"
+          "cam kavanoz",
+          "pembe bez",
+          "kesme tahtası",
+          "metal süzgeç"
         ],
-        "correctAnswer": "C",
+        "evidence": "“kesme tahtası” ortada. Solunda cam kavanoz, sağında metal süzgeç bulunuyor. Soldaki nesnenin önünde pembe bez var.",
         "questionType": "spatial",
+        "id": "daf20000-0000-5000-8000-000000040221",
+        "correctAnswer": "B",
+        "demandLevel": 2,
         "displayOrder": 1
       },
       {
-        "id": "ce025fa6-b5c7-5978-8962-ee42e71fb3b7",
-        "questionText": "Mert lambayı açtıktan hemen sonra ne yaptı?",
+        "questionText": "Görevlinin son işlemi hangisiydi?",
         "options": [
-          "Pencereye doğru döndü",
-          "Kapıyı açtı",
-          "Sandalyeye oturdu",
-          "Çanta nesnesini eline aldı"
+          "kavanozu açıyor",
+          "hiçbir işlem yapmadı",
+          "süzgeci kaldırıyor",
+          "armudu dilimliyor"
         ],
-        "correctAnswer": "D",
+        "evidence": "Görevli önce kavanozu açıyor, ardından armudu dilimliyor, en son süzgeci kaldırıyor.",
         "questionType": "sequence",
+        "id": "daf20000-0000-5000-8000-000000040222",
+        "correctAnswer": "C",
+        "demandLevel": 2,
         "displayOrder": 2
       }
     ]
   },
   {
-    "id": "e38366af-b4a6-590d-93d7-36922a3532e6",
+    "id": "daf10000-0000-5000-8000-000000004023",
+    "exerciseId": "bf3e2cba-0c6b-5d9a-a07a-ce625c6f353f",
+    "theme": "muze",
+    "description": "Ada, müze stajında geçici serginin yerleşimini inceliyor. “sergi vitrini” için iki kukla ayrılmış. “bilgi panosu” için üç fotoğraf ayrılmış. “bilgi panosu” ortada. Solunda sarı afiş, sağında eski saat bulunuyor. Soldaki nesnenin önünde beyaz kart var. Görevli önce afişi okuyor, ardından saati inceliyor, en son kartı alıyor. Yerleşimi ve işlem sırasını zihninizde birlikte canlandırın.",
+    "duration": 30,
+    "displayOrder": 3,
+    "difficultyLevel": 2,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "mode": "assessment",
+    "questions": [
+      {
+        "questionText": "“bilgi panosu” için ne ayrılmıştı?",
+        "options": [
+          "dört fotoğraf",
+          "üç fotoğraf",
+          "bir fotoğraf",
+          "iki fotoğraf"
+        ],
+        "evidence": "“bilgi panosu” için üç fotoğraf ayrılmış.",
+        "questionType": "detail",
+        "id": "daf20000-0000-5000-8000-000000040230",
+        "correctAnswer": "B",
+        "demandLevel": 2,
+        "displayOrder": 0
+      },
+      {
+        "questionText": "Ortadaki nesnenin solundaki nesnenin önünde ne vardı?",
+        "options": [
+          "eski saat",
+          "sarı afiş",
+          "beyaz kart",
+          "bilgi panosu"
+        ],
+        "evidence": "“bilgi panosu” ortada. Solunda sarı afiş, sağında eski saat bulunuyor. Soldaki nesnenin önünde beyaz kart var.",
+        "questionType": "spatial",
+        "id": "daf20000-0000-5000-8000-000000040231",
+        "correctAnswer": "C",
+        "demandLevel": 2,
+        "displayOrder": 1
+      },
+      {
+        "questionText": "Görevlinin son işlemi hangisiydi?",
+        "options": [
+          "saati inceliyor",
+          "afişi okuyor",
+          "hiçbir işlem yapmadı",
+          "kartı alıyor"
+        ],
+        "evidence": "Görevli önce afişi okuyor, ardından saati inceliyor, en son kartı alıyor.",
+        "questionType": "sequence",
+        "id": "daf20000-0000-5000-8000-000000040232",
+        "correctAnswer": "D",
+        "demandLevel": 2,
+        "displayOrder": 2
+      }
+    ]
+  },
+  {
+    "id": "daf10000-0000-5000-8000-000000004024",
+    "exerciseId": "bf3e2cba-0c6b-5d9a-a07a-ce625c6f353f",
+    "theme": "istasyon",
+    "description": "Can, öğrenci topluluğuyla tren istasyonunda saha gezisini organize ediyor. “bilet gişesi” için üç vagon ayrılmış. “yolcu panosu” için iki hat ayrılmış. “yolcu panosu” ortada. Solunda yeşil saat, sağında siyah dolap bulunuyor. Soldaki nesnenin önünde mor kart var. Görevli önce saati kontrol ediyor, ardından kartı çıkarıyor, en son sepete uzanıyor. Yerleşimi ve işlem sırasını zihninizde birlikte canlandırın.",
+    "duration": 30,
+    "displayOrder": 4,
+    "difficultyLevel": 2,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "mode": "assessment",
+    "questions": [
+      {
+        "questionText": "“yolcu panosu” için ne ayrılmıştı?",
+        "options": [
+          "üç hat",
+          "dört hat",
+          "iki hat",
+          "bir hat"
+        ],
+        "evidence": "“yolcu panosu” için iki hat ayrılmış.",
+        "questionType": "detail",
+        "id": "daf20000-0000-5000-8000-000000040240",
+        "correctAnswer": "C",
+        "demandLevel": 2,
+        "displayOrder": 0
+      },
+      {
+        "questionText": "Ortadaki nesnenin solundaki nesnenin önünde ne vardı?",
+        "options": [
+          "yolcu panosu",
+          "siyah dolap",
+          "yeşil saat",
+          "mor kart"
+        ],
+        "evidence": "“yolcu panosu” ortada. Solunda yeşil saat, sağında siyah dolap bulunuyor. Soldaki nesnenin önünde mor kart var.",
+        "questionType": "spatial",
+        "id": "daf20000-0000-5000-8000-000000040241",
+        "correctAnswer": "D",
+        "demandLevel": 2,
+        "displayOrder": 1
+      },
+      {
+        "questionText": "Görevlinin son işlemi hangisiydi?",
+        "options": [
+          "sepete uzanıyor",
+          "kartı çıkarıyor",
+          "saati kontrol ediyor",
+          "hiçbir işlem yapmadı"
+        ],
+        "evidence": "Görevli önce saati kontrol ediyor, ardından kartı çıkarıyor, en son sepete uzanıyor.",
+        "questionType": "sequence",
+        "id": "daf20000-0000-5000-8000-000000040242",
+        "correctAnswer": "A",
+        "demandLevel": 2,
+        "displayOrder": 2
+      }
+    ]
+  },
+  {
+    "id": "daf10000-0000-5000-8000-000000004025",
+    "exerciseId": "bf3e2cba-0c6b-5d9a-a07a-ce625c6f353f",
+    "theme": "tasarim",
+    "description": "Elif, kampüsün tasarım stüdyosunda proje sunumunu hazırlıyor. “resim sehpası” için iki çizgi ayrılmış. “çalışma panosu” için üç şekil ayrılmış. “çalışma panosu” ortada. Solunda yeşil karton, sağında mor kalem bulunuyor. Soldaki nesnenin önünde siyah bant var. Görevli önce kartonu kesiyor, ardından şekli çiziyor, en son bandı yapıştırıyor. Yerleşimi ve işlem sırasını zihninizde birlikte canlandırın.",
+    "duration": 30,
+    "displayOrder": 5,
+    "difficultyLevel": 2,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "mode": "assessment",
+    "questions": [
+      {
+        "questionText": "“çalışma panosu” için ne ayrılmıştı?",
+        "options": [
+          "bir şekil",
+          "iki şekil",
+          "dört şekil",
+          "üç şekil"
+        ],
+        "evidence": "“çalışma panosu” için üç şekil ayrılmış.",
+        "questionType": "detail",
+        "id": "daf20000-0000-5000-8000-000000040250",
+        "correctAnswer": "D",
+        "demandLevel": 2,
+        "displayOrder": 0
+      },
+      {
+        "questionText": "Ortadaki nesnenin solundaki nesnenin önünde ne vardı?",
+        "options": [
+          "siyah bant",
+          "çalışma panosu",
+          "mor kalem",
+          "yeşil karton"
+        ],
+        "evidence": "“çalışma panosu” ortada. Solunda yeşil karton, sağında mor kalem bulunuyor. Soldaki nesnenin önünde siyah bant var.",
+        "questionType": "spatial",
+        "id": "daf20000-0000-5000-8000-000000040251",
+        "correctAnswer": "A",
+        "demandLevel": 2,
+        "displayOrder": 1
+      },
+      {
+        "questionText": "Görevlinin son işlemi hangisiydi?",
+        "options": [
+          "hiçbir işlem yapmadı",
+          "bandı yapıştırıyor",
+          "şekli çiziyor",
+          "kartonu kesiyor"
+        ],
+        "evidence": "Görevli önce kartonu kesiyor, ardından şekli çiziyor, en son bandı yapıştırıyor.",
+        "questionType": "sequence",
+        "id": "daf20000-0000-5000-8000-000000040252",
+        "correctAnswer": "B",
+        "demandLevel": 2,
+        "displayOrder": 2
+      }
+    ]
+  },
+  {
+    "id": "daf10000-0000-5000-8000-000000004030",
     "exerciseId": "4a9620bf-06db-5c9f-9e8a-9052e481ebe8",
-    "description": "Deniz, öğrenci kulübü odası içinde bir masanın önünde duruyor. Masanın üzerinde turuncu bir defter var. Bu nesnenin sağında bir sarı kalem, solunda ise küçük bir masa lambası bulunuyor. Pencere masanın arkasında, kapı odanın sol duvarında. Deniz önce lambayı açıyor, sonra defter nesnesini eline alıyor ve en son pencereye doğru dönüyor. Kapının yanında üç sandalye ve üzerinde bir saat bulunan raf var. Saati gösteren raf pencerenin karşısındaki duvarda.",
+    "theme": "deney",
+    "description": "Deniz, üniversitenin araştırma laboratuvarında deney düzeneğini kontrol ediyor. “mavi kap” için üç pil ayrılmış. “cam tüp” için iki sensör ayrılmış. “ölçüm kabı” için dört bağlantı ayrılmış. “ölçüm kabı” ortada. Solunda şeffaf şişe, sağında koyu şerit bulunuyor. Soldaki nesnenin önünde gri tepsi var. Görevli önce şişeyi dolduruyor, ardından kabı tartıyor, en son şeridi bağlıyor. Yerleşimi ve işlem sırasını zihninizde birlikte canlandırın.",
     "duration": 35,
     "displayOrder": 0,
     "difficultyLevel": 3,
@@ -316,50 +707,57 @@
     "mode": "assessment",
     "questions": [
       {
-        "id": "2ff4b6a2-a6f6-5ad0-958f-f8cce4041e3f",
-        "questionText": "Masadaki defter hangi renkteydi?",
+        "questionText": "Diğer nesneler için ayrılanlardan farklı olarak “ölçüm kabı” için ne ayrılmıştı?",
         "options": [
-          "kırmızı",
-          "mavi",
-          "turuncu",
-          "mor"
+          "iki bağlantı",
+          "üç bağlantı",
+          "beş bağlantı",
+          "dört bağlantı"
         ],
-        "correctAnswer": "C",
+        "evidence": "“ölçüm kabı” için dört bağlantı ayrılmış.",
         "questionType": "detail",
+        "id": "daf20000-0000-5000-8000-000000040300",
+        "correctAnswer": "D",
+        "demandLevel": 3,
         "displayOrder": 0
       },
       {
-        "id": "b4b86a7c-68f8-5b36-963a-fd584f7a5463",
-        "questionText": "Defter nesnesinin solunda ne vardı?",
+        "questionText": "Ortadaki nesnenin solundaki nesnenin önünde ne vardı?",
         "options": [
-          "Sarı kalem",
-          "Kapı",
-          "Pencere",
-          "Masa lambası"
+          "gri tepsi",
+          "ölçüm kabı",
+          "koyu şerit",
+          "şeffaf şişe"
         ],
-        "correctAnswer": "D",
+        "evidence": "“ölçüm kabı” ortada. Solunda şeffaf şişe, sağında koyu şerit bulunuyor. Soldaki nesnenin önünde gri tepsi var.",
         "questionType": "spatial",
+        "id": "daf20000-0000-5000-8000-000000040301",
+        "correctAnswer": "A",
+        "demandLevel": 3,
         "displayOrder": 1
       },
       {
-        "id": "c549d330-062a-5efa-a313-17cae1967592",
-        "questionText": "Deniz lambayı açtıktan hemen sonra ne yaptı?",
+        "questionText": "Görevli son işlemden hemen önce ne yaptı?",
         "options": [
-          "Defter nesnesini eline aldı",
-          "Pencereye doğru döndü",
-          "Kapıyı açtı",
-          "Sandalyeye oturdu"
+          "hiçbir işlem yapmadı",
+          "kabı tartıyor",
+          "şişeyi dolduruyor",
+          "şeridi bağlıyor"
         ],
-        "correctAnswer": "A",
+        "evidence": "Görevli önce şişeyi dolduruyor, ardından kabı tartıyor, en son şeridi bağlıyor.",
         "questionType": "sequence",
+        "id": "daf20000-0000-5000-8000-000000040302",
+        "correctAnswer": "B",
+        "demandLevel": 3,
         "displayOrder": 2
       }
     ]
   },
   {
-    "id": "5afb07cd-3d25-54b3-ad66-ae5bb62f5d98",
+    "id": "daf10000-0000-5000-8000-000000004031",
     "exerciseId": "4a9620bf-06db-5c9f-9e8a-9052e481ebe8",
-    "description": "Ece, öğrenci kulübü odası içinde bir masanın önünde duruyor. Masanın üzerinde mor bir dosya var. Bu nesnenin sağında bir beyaz kart, solunda ise küçük bir masa lambası bulunuyor. Pencere masanın arkasında, kapı odanın sol duvarında. Ece önce lambayı açıyor, sonra dosya nesnesini eline alıyor ve en son pencereye doğru dönüyor. Kapının yanında üç sandalye ve üzerinde bir saat bulunan raf var. Saati gösteren raf pencerenin karşısındaki duvarda.",
+    "theme": "park",
+    "description": "Ece, kampüsün ekoloji sahasında örnekleme noktalarını hazırlıyor. “taş işaret” için iki ağaç ayrılmış. “gözlem noktası” için üç fide ayrılmış. “yol ayrımı” için dört yaprak ayrılmış. “yol ayrımı” ortada. Solunda meşe ağacı, sağında ahşap köprü bulunuyor. Soldaki nesnenin önünde mavi tabela var. Görevli önce tabelayı inceliyor, ardından köprüye ilerliyor, en son taşı işaretliyor. Yerleşimi ve işlem sırasını zihninizde birlikte canlandırın.",
     "duration": 35,
     "displayOrder": 1,
     "difficultyLevel": 3,
@@ -367,50 +765,57 @@
     "mode": "assessment",
     "questions": [
       {
-        "id": "d45de8c6-1069-56e3-96cb-dc8c58adac46",
-        "questionText": "Masadaki dosya hangi renkteydi?",
+        "questionText": "Diğer nesneler için ayrılanlardan farklı olarak “yol ayrımı” için ne ayrılmıştı?",
         "options": [
-          "kırmızı",
-          "mavi",
-          "yeşil",
-          "mor"
+          "dört yaprak",
+          "iki yaprak",
+          "üç yaprak",
+          "beş yaprak"
         ],
-        "correctAnswer": "D",
+        "evidence": "“yol ayrımı” için dört yaprak ayrılmış.",
         "questionType": "detail",
+        "id": "daf20000-0000-5000-8000-000000040310",
+        "correctAnswer": "A",
+        "demandLevel": 3,
         "displayOrder": 0
       },
       {
-        "id": "d71c2eff-9dd2-5680-a029-54ea401a2434",
-        "questionText": "Dosya nesnesinin solunda ne vardı?",
+        "questionText": "Ortadaki nesnenin solundaki nesnenin önünde ne vardı?",
         "options": [
-          "Masa lambası",
-          "Beyaz kart",
-          "Kapı",
-          "Pencere"
+          "meşe ağacı",
+          "mavi tabela",
+          "yol ayrımı",
+          "ahşap köprü"
         ],
-        "correctAnswer": "A",
+        "evidence": "“yol ayrımı” ortada. Solunda meşe ağacı, sağında ahşap köprü bulunuyor. Soldaki nesnenin önünde mavi tabela var.",
         "questionType": "spatial",
+        "id": "daf20000-0000-5000-8000-000000040311",
+        "correctAnswer": "B",
+        "demandLevel": 3,
         "displayOrder": 1
       },
       {
-        "id": "cb5d668a-c60e-5793-9bc8-6dbd6dab051a",
-        "questionText": "Ece lambayı açtıktan hemen sonra ne yaptı?",
+        "questionText": "Görevli son işlemden hemen önce ne yaptı?",
         "options": [
-          "Sandalyeye oturdu",
-          "Dosya nesnesini eline aldı",
-          "Pencereye doğru döndü",
-          "Kapıyı açtı"
+          "taşı işaretliyor",
+          "hiçbir işlem yapmadı",
+          "köprüye ilerliyor",
+          "tabelayı inceliyor"
         ],
-        "correctAnswer": "B",
+        "evidence": "Görevli önce tabelayı inceliyor, ardından köprüye ilerliyor, en son taşı işaretliyor.",
         "questionType": "sequence",
+        "id": "daf20000-0000-5000-8000-000000040312",
+        "correctAnswer": "C",
+        "demandLevel": 3,
         "displayOrder": 2
       }
     ]
   },
   {
-    "id": "e077b9db-b2df-5e6b-a5b2-860b874722ee",
+    "id": "daf10000-0000-5000-8000-000000004032",
     "exerciseId": "4a9620bf-06db-5c9f-9e8a-9052e481ebe8",
-    "description": "Mert, öğrenci kulübü odası içinde bir masanın önünde duruyor. Masanın üzerinde kırmızı bir çanta var. Bu nesnenin sağında bir gri kutu, solunda ise küçük bir masa lambası bulunuyor. Pencere masanın arkasında, kapı odanın sol duvarında. Mert önce lambayı açıyor, sonra çanta nesnesini eline alıyor ve en son pencereye doğru dönüyor. Kapının yanında üç sandalye ve üzerinde bir saat bulunan raf var. Saati gösteren raf pencerenin karşısındaki duvarda.",
+    "theme": "mutfak",
+    "description": "Mert, beslenme atölyesinde uygulama malzemelerini düzenliyor. “beyaz tabak” için üç elma ayrılmış. “kesme tahtası” için iki armut ayrılmış. “servis tepsisi” için dört dilim ayrılmış. “servis tepsisi” ortada. Solunda siyah kepçe, sağında beyaz sürahi bulunuyor. Soldaki nesnenin önünde mor örtü var. Görevli önce örtüyü seriyor, ardından sürahiyi dolduruyor, en son tepsiyi taşıyor. Yerleşimi ve işlem sırasını zihninizde birlikte canlandırın.",
     "duration": 35,
     "displayOrder": 2,
     "difficultyLevel": 3,
@@ -418,50 +823,231 @@
     "mode": "assessment",
     "questions": [
       {
-        "id": "6eda5ac2-7301-59b2-97a4-290fb9d96e30",
-        "questionText": "Masadaki çanta hangi renkteydi?",
+        "questionText": "Diğer nesneler için ayrılanlardan farklı olarak “servis tepsisi” için ne ayrılmıştı?",
         "options": [
-          "kırmızı",
-          "mavi",
-          "yeşil",
-          "turuncu"
+          "beş dilim",
+          "dört dilim",
+          "iki dilim",
+          "üç dilim"
         ],
-        "correctAnswer": "A",
+        "evidence": "“servis tepsisi” için dört dilim ayrılmış.",
         "questionType": "detail",
+        "id": "daf20000-0000-5000-8000-000000040320",
+        "correctAnswer": "B",
+        "demandLevel": 3,
         "displayOrder": 0
       },
       {
-        "id": "73e250d4-b2b6-5e93-bde4-8af028aa0e1b",
-        "questionText": "Çanta nesnesinin solunda ne vardı?",
+        "questionText": "Ortadaki nesnenin solundaki nesnenin önünde ne vardı?",
         "options": [
-          "Pencere",
-          "Masa lambası",
-          "Gri kutu",
-          "Kapı"
+          "beyaz sürahi",
+          "siyah kepçe",
+          "mor örtü",
+          "servis tepsisi"
         ],
-        "correctAnswer": "B",
+        "evidence": "“servis tepsisi” ortada. Solunda siyah kepçe, sağında beyaz sürahi bulunuyor. Soldaki nesnenin önünde mor örtü var.",
         "questionType": "spatial",
+        "id": "daf20000-0000-5000-8000-000000040321",
+        "correctAnswer": "C",
+        "demandLevel": 3,
         "displayOrder": 1
       },
       {
-        "id": "3e35535c-0482-5bd2-ba04-f144c6e01dbe",
-        "questionText": "Mert lambayı açtıktan hemen sonra ne yaptı?",
+        "questionText": "Görevli son işlemden hemen önce ne yaptı?",
         "options": [
-          "Kapıyı açtı",
-          "Sandalyeye oturdu",
-          "Çanta nesnesini eline aldı",
-          "Pencereye doğru döndü"
+          "örtüyü seriyor",
+          "tepsiyi taşıyor",
+          "hiçbir işlem yapmadı",
+          "sürahiyi dolduruyor"
         ],
-        "correctAnswer": "C",
+        "evidence": "Görevli önce örtüyü seriyor, ardından sürahiyi dolduruyor, en son tepsiyi taşıyor.",
         "questionType": "sequence",
+        "id": "daf20000-0000-5000-8000-000000040322",
+        "correctAnswer": "D",
+        "demandLevel": 3,
         "displayOrder": 2
       }
     ]
   },
   {
-    "id": "a95c63fe-4ecc-5f11-9a58-3057adce3120",
+    "id": "daf10000-0000-5000-8000-000000004033",
+    "exerciseId": "4a9620bf-06db-5c9f-9e8a-9052e481ebe8",
+    "theme": "muze",
+    "description": "Ada, müze stajında geçici serginin yerleşimini inceliyor. “sergi vitrini” için iki kukla ayrılmış. “bilgi panosu” için üç fotoğraf ayrılmış. “eser kaidesi” için dört çizim ayrılmış. “eser kaidesi” ortada. Solunda bronz heykel, sağında cam kase bulunuyor. Soldaki nesnenin önünde mor katalog var. Görevli önce kataloğu açıyor, ardından heykeli gözlüyor, en son levhayı okuyor. Yerleşimi ve işlem sırasını zihninizde birlikte canlandırın.",
+    "duration": 35,
+    "displayOrder": 3,
+    "difficultyLevel": 3,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "mode": "assessment",
+    "questions": [
+      {
+        "questionText": "Diğer nesneler için ayrılanlardan farklı olarak “eser kaidesi” için ne ayrılmıştı?",
+        "options": [
+          "üç çizim",
+          "beş çizim",
+          "dört çizim",
+          "iki çizim"
+        ],
+        "evidence": "“eser kaidesi” için dört çizim ayrılmış.",
+        "questionType": "detail",
+        "id": "daf20000-0000-5000-8000-000000040330",
+        "correctAnswer": "C",
+        "demandLevel": 3,
+        "displayOrder": 0
+      },
+      {
+        "questionText": "Ortadaki nesnenin solundaki nesnenin önünde ne vardı?",
+        "options": [
+          "eser kaidesi",
+          "cam kase",
+          "bronz heykel",
+          "mor katalog"
+        ],
+        "evidence": "“eser kaidesi” ortada. Solunda bronz heykel, sağında cam kase bulunuyor. Soldaki nesnenin önünde mor katalog var.",
+        "questionType": "spatial",
+        "id": "daf20000-0000-5000-8000-000000040331",
+        "correctAnswer": "D",
+        "demandLevel": 3,
+        "displayOrder": 1
+      },
+      {
+        "questionText": "Görevli son işlemden hemen önce ne yaptı?",
+        "options": [
+          "heykeli gözlüyor",
+          "kataloğu açıyor",
+          "levhayı okuyor",
+          "hiçbir işlem yapmadı"
+        ],
+        "evidence": "Görevli önce kataloğu açıyor, ardından heykeli gözlüyor, en son levhayı okuyor.",
+        "questionType": "sequence",
+        "id": "daf20000-0000-5000-8000-000000040332",
+        "correctAnswer": "A",
+        "demandLevel": 3,
+        "displayOrder": 2
+      }
+    ]
+  },
+  {
+    "id": "daf10000-0000-5000-8000-000000004034",
+    "exerciseId": "4a9620bf-06db-5c9f-9e8a-9052e481ebe8",
+    "theme": "istasyon",
+    "description": "Can, öğrenci topluluğuyla tren istasyonunda saha gezisini organize ediyor. “bilet gişesi” için üç vagon ayrılmış. “yolcu panosu” için iki hat ayrılmış. “peron işareti” için dört sıra ayrılmış. “peron işareti” ortada. Solunda turuncu bariyer, sağında beyaz levha bulunuyor. Soldaki nesnenin önünde mavi valiz var. Görevli önce levhayı okuyor, ardından valizi taşıyor, en son bariyerde duruyor. Yerleşimi ve işlem sırasını zihninizde birlikte canlandırın.",
+    "duration": 35,
+    "displayOrder": 4,
+    "difficultyLevel": 3,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "mode": "assessment",
+    "questions": [
+      {
+        "questionText": "Diğer nesneler için ayrılanlardan farklı olarak “peron işareti” için ne ayrılmıştı?",
+        "options": [
+          "iki sıra",
+          "üç sıra",
+          "beş sıra",
+          "dört sıra"
+        ],
+        "evidence": "“peron işareti” için dört sıra ayrılmış.",
+        "questionType": "detail",
+        "id": "daf20000-0000-5000-8000-000000040340",
+        "correctAnswer": "D",
+        "demandLevel": 3,
+        "displayOrder": 0
+      },
+      {
+        "questionText": "Ortadaki nesnenin solundaki nesnenin önünde ne vardı?",
+        "options": [
+          "mavi valiz",
+          "peron işareti",
+          "beyaz levha",
+          "turuncu bariyer"
+        ],
+        "evidence": "“peron işareti” ortada. Solunda turuncu bariyer, sağında beyaz levha bulunuyor. Soldaki nesnenin önünde mavi valiz var.",
+        "questionType": "spatial",
+        "id": "daf20000-0000-5000-8000-000000040341",
+        "correctAnswer": "A",
+        "demandLevel": 3,
+        "displayOrder": 1
+      },
+      {
+        "questionText": "Görevli son işlemden hemen önce ne yaptı?",
+        "options": [
+          "hiçbir işlem yapmadı",
+          "valizi taşıyor",
+          "levhayı okuyor",
+          "bariyerde duruyor"
+        ],
+        "evidence": "Görevli önce levhayı okuyor, ardından valizi taşıyor, en son bariyerde duruyor.",
+        "questionType": "sequence",
+        "id": "daf20000-0000-5000-8000-000000040342",
+        "correctAnswer": "B",
+        "demandLevel": 3,
+        "displayOrder": 2
+      }
+    ]
+  },
+  {
+    "id": "daf10000-0000-5000-8000-000000004035",
+    "exerciseId": "4a9620bf-06db-5c9f-9e8a-9052e481ebe8",
+    "theme": "tasarim",
+    "description": "Elif, kampüsün tasarım stüdyosunda proje sunumunu hazırlıyor. “resim sehpası” için iki çizgi ayrılmış. “çalışma panosu” için üç şekil ayrılmış. “sunum maketi” için dört parça ayrılmış. “sunum maketi” ortada. Solunda gri blok, sağında şeffaf panel bulunuyor. Soldaki nesnenin önünde turuncu not var. Görevli önce bloğu yerleştiriyor, ardından paneli ekliyor, en son notu yazıyor. Yerleşimi ve işlem sırasını zihninizde birlikte canlandırın.",
+    "duration": 35,
+    "displayOrder": 5,
+    "difficultyLevel": 3,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "mode": "assessment",
+    "questions": [
+      {
+        "questionText": "Diğer nesneler için ayrılanlardan farklı olarak “sunum maketi” için ne ayrılmıştı?",
+        "options": [
+          "dört parça",
+          "iki parça",
+          "üç parça",
+          "beş parça"
+        ],
+        "evidence": "“sunum maketi” için dört parça ayrılmış.",
+        "questionType": "detail",
+        "id": "daf20000-0000-5000-8000-000000040350",
+        "correctAnswer": "A",
+        "demandLevel": 3,
+        "displayOrder": 0
+      },
+      {
+        "questionText": "Ortadaki nesnenin solundaki nesnenin önünde ne vardı?",
+        "options": [
+          "gri blok",
+          "turuncu not",
+          "sunum maketi",
+          "şeffaf panel"
+        ],
+        "evidence": "“sunum maketi” ortada. Solunda gri blok, sağında şeffaf panel bulunuyor. Soldaki nesnenin önünde turuncu not var.",
+        "questionType": "spatial",
+        "id": "daf20000-0000-5000-8000-000000040351",
+        "correctAnswer": "B",
+        "demandLevel": 3,
+        "displayOrder": 1
+      },
+      {
+        "questionText": "Görevli son işlemden hemen önce ne yaptı?",
+        "options": [
+          "notu yazıyor",
+          "hiçbir işlem yapmadı",
+          "paneli ekliyor",
+          "bloğu yerleştiriyor"
+        ],
+        "evidence": "Görevli önce bloğu yerleştiriyor, ardından paneli ekliyor, en son notu yazıyor.",
+        "questionType": "sequence",
+        "id": "daf20000-0000-5000-8000-000000040352",
+        "correctAnswer": "C",
+        "demandLevel": 3,
+        "displayOrder": 2
+      }
+    ]
+  },
+  {
+    "id": "daf10000-0000-5000-8000-000000004040",
     "exerciseId": "a7afcefc-8e1a-543e-bdcd-b3f9e14e2692",
-    "description": "Deniz, bilim merkezi içinde bir masanın önünde duruyor. Masanın üzerinde mor bir defter var. Bu nesnenin sağında bir sarı kalem, solunda ise küçük bir masa lambası bulunuyor. Pencere masanın arkasında, kapı odanın sol duvarında. Deniz önce lambayı açıyor, sonra defter nesnesini eline alıyor ve en son pencereye doğru dönüyor. Kapının yanındaki üç sandalyeden ortadakinin üzerinde bir mont bulunuyor. Raftaki kitapların arasında açık renkli bir kutu var; bu kutu masadaki nesnelerden farklı.",
+    "theme": "deney",
+    "description": "Deniz, üniversitenin araştırma laboratuvarında deney düzeneğini kontrol ediyor. “mavi kap” için üç pil ayrılmış. “cam tüp” için iki sensör ayrılmış. “ölçüm kabı” için dört bağlantı ayrılmış. “deney panosu” için beş etiket ayrılmış. “deney panosu” ortada. Solunda turuncu kablo, sağında beyaz sayaç bulunuyor. Soldaki nesnenin önünde yeşil anahtar var. Öndeki nesnenin yanında kırmızı mandal duruyor. Görevli önce kabloyu bağlıyor, ardından sayacı okuyor, en son anahtarı çeviriyor. Yerleşimi ve işlem sırasını zihninizde birlikte canlandırın.",
     "duration": 40,
     "displayOrder": 0,
     "difficultyLevel": 4,
@@ -469,50 +1055,57 @@
     "mode": "assessment",
     "questions": [
       {
-        "id": "d7c526e8-3a06-54e9-a91c-a0519ccff8fa",
-        "questionText": "Masadaki defter hangi renkteydi?",
+        "questionText": "Diğer nesneler için ayrılanlardan farklı olarak “deney panosu” için ne ayrılmıştı?",
         "options": [
-          "yeşil",
-          "mor",
-          "kırmızı",
-          "mavi"
+          "beş etiket",
+          "üç etiket",
+          "dört etiket",
+          "altı etiket"
         ],
-        "correctAnswer": "B",
+        "evidence": "“deney panosu” için beş etiket ayrılmış.",
         "questionType": "detail",
+        "id": "daf20000-0000-5000-8000-000000040400",
+        "correctAnswer": "A",
+        "demandLevel": 4,
         "displayOrder": 0
       },
       {
-        "id": "43fc9503-22d6-58d9-b9db-adb9dc4de22d",
-        "questionText": "Defter nesnesinin solunda ne vardı?",
+        "questionText": "Ortadaki nesnenin solundaki nesnenin önünde duran nesnenin yanında ne vardı?",
         "options": [
-          "Kapı",
-          "Pencere",
-          "Masa lambası",
-          "Sarı kalem"
+          "turuncu kablo",
+          "kırmızı mandal",
+          "deney panosu",
+          "beyaz sayaç"
         ],
-        "correctAnswer": "C",
+        "evidence": "“deney panosu” ortada. Solunda turuncu kablo, sağında beyaz sayaç bulunuyor. Soldaki nesnenin önünde yeşil anahtar var. Öndeki nesnenin yanında kırmızı mandal duruyor.",
         "questionType": "spatial",
+        "id": "daf20000-0000-5000-8000-000000040401",
+        "correctAnswer": "B",
+        "demandLevel": 4,
         "displayOrder": 1
       },
       {
-        "id": "777a19bb-2d42-5668-8d56-982ca9e5751f",
-        "questionText": "Deniz lambayı açtıktan hemen sonra ne yaptı?",
+        "questionText": "İlk ve son işlem arasında yapılan işlem hangisiydi?",
         "options": [
-          "Pencereye doğru döndü",
-          "Kapıyı açtı",
-          "Sandalyeye oturdu",
-          "Defter nesnesini eline aldı"
+          "anahtarı çeviriyor",
+          "hiçbir işlem yapmadı",
+          "sayacı okuyor",
+          "kabloyu bağlıyor"
         ],
-        "correctAnswer": "D",
+        "evidence": "Görevli önce kabloyu bağlıyor, ardından sayacı okuyor, en son anahtarı çeviriyor.",
         "questionType": "sequence",
+        "id": "daf20000-0000-5000-8000-000000040402",
+        "correctAnswer": "C",
+        "demandLevel": 4,
         "displayOrder": 2
       }
     ]
   },
   {
-    "id": "ab8a8537-2a65-5f87-a693-ab8695d9f120",
+    "id": "daf10000-0000-5000-8000-000000004041",
     "exerciseId": "a7afcefc-8e1a-543e-bdcd-b3f9e14e2692",
-    "description": "Ece, bilim merkezi içinde bir masanın önünde duruyor. Masanın üzerinde kırmızı bir dosya var. Bu nesnenin sağında bir beyaz kart, solunda ise küçük bir masa lambası bulunuyor. Pencere masanın arkasında, kapı odanın sol duvarında. Ece önce lambayı açıyor, sonra dosya nesnesini eline alıyor ve en son pencereye doğru dönüyor. Kapının yanındaki üç sandalyeden ortadakinin üzerinde bir mont bulunuyor. Raftaki kitapların arasında açık renkli bir kutu var; bu kutu masadaki nesnelerden farklı.",
+    "theme": "park",
+    "description": "Ece, kampüsün ekoloji sahasında örnekleme noktalarını hazırlıyor. “taş işaret” için iki ağaç ayrılmış. “gözlem noktası” için üç fide ayrılmış. “yol ayrımı” için dört yaprak ayrılmış. “örnekleme alanı” için beş örnek ayrılmış. “örnekleme alanı” ortada. Solunda toprak kutusu, sağında ölçüm çubuğu bulunuyor. Soldaki nesnenin önünde siyah kap var. Öndeki nesnenin yanında turuncu bayrak duruyor. Görevli önce çubuğu yerleştiriyor, ardından örneği topluyor, en son bayrağı dikiyor. Yerleşimi ve işlem sırasını zihninizde birlikte canlandırın.",
     "duration": 40,
     "displayOrder": 1,
     "difficultyLevel": 4,
@@ -520,50 +1113,57 @@
     "mode": "assessment",
     "questions": [
       {
-        "id": "3119e41b-57fc-50ee-9313-3227ca462794",
-        "questionText": "Masadaki dosya hangi renkteydi?",
+        "questionText": "Diğer nesneler için ayrılanlardan farklı olarak “örnekleme alanı” için ne ayrılmıştı?",
         "options": [
-          "yeşil",
-          "turuncu",
-          "kırmızı",
-          "mavi"
+          "altı örnek",
+          "beş örnek",
+          "üç örnek",
+          "dört örnek"
         ],
-        "correctAnswer": "C",
+        "evidence": "“örnekleme alanı” için beş örnek ayrılmış.",
         "questionType": "detail",
+        "id": "daf20000-0000-5000-8000-000000040410",
+        "correctAnswer": "B",
+        "demandLevel": 4,
         "displayOrder": 0
       },
       {
-        "id": "c0e5c561-e1e6-5d4a-b75e-dc0bfd4fe470",
-        "questionText": "Dosya nesnesinin solunda ne vardı?",
+        "questionText": "Ortadaki nesnenin solundaki nesnenin önünde duran nesnenin yanında ne vardı?",
         "options": [
-          "Beyaz kart",
-          "Kapı",
-          "Pencere",
-          "Masa lambası"
+          "ölçüm çubuğu",
+          "toprak kutusu",
+          "turuncu bayrak",
+          "örnekleme alanı"
         ],
-        "correctAnswer": "D",
+        "evidence": "“örnekleme alanı” ortada. Solunda toprak kutusu, sağında ölçüm çubuğu bulunuyor. Soldaki nesnenin önünde siyah kap var. Öndeki nesnenin yanında turuncu bayrak duruyor.",
         "questionType": "spatial",
+        "id": "daf20000-0000-5000-8000-000000040411",
+        "correctAnswer": "C",
+        "demandLevel": 4,
         "displayOrder": 1
       },
       {
-        "id": "8eefa7b6-8290-55a9-8582-27b411606307",
-        "questionText": "Ece lambayı açtıktan hemen sonra ne yaptı?",
+        "questionText": "İlk ve son işlem arasında yapılan işlem hangisiydi?",
         "options": [
-          "Dosya nesnesini eline aldı",
-          "Pencereye doğru döndü",
-          "Kapıyı açtı",
-          "Sandalyeye oturdu"
+          "çubuğu yerleştiriyor",
+          "bayrağı dikiyor",
+          "hiçbir işlem yapmadı",
+          "örneği topluyor"
         ],
-        "correctAnswer": "A",
+        "evidence": "Görevli önce çubuğu yerleştiriyor, ardından örneği topluyor, en son bayrağı dikiyor.",
         "questionType": "sequence",
+        "id": "daf20000-0000-5000-8000-000000040412",
+        "correctAnswer": "D",
+        "demandLevel": 4,
         "displayOrder": 2
       }
     ]
   },
   {
-    "id": "a63cfe78-d721-5f95-a3fd-ba4f485ae994",
+    "id": "daf10000-0000-5000-8000-000000004042",
     "exerciseId": "a7afcefc-8e1a-543e-bdcd-b3f9e14e2692",
-    "description": "Mert, bilim merkezi içinde bir masanın önünde duruyor. Masanın üzerinde mavi bir çanta var. Bu nesnenin sağında bir gri kutu, solunda ise küçük bir masa lambası bulunuyor. Pencere masanın arkasında, kapı odanın sol duvarında. Mert önce lambayı açıyor, sonra çanta nesnesini eline alıyor ve en son pencereye doğru dönüyor. Kapının yanındaki üç sandalyeden ortadakinin üzerinde bir mont bulunuyor. Raftaki kitapların arasında açık renkli bir kutu var; bu kutu masadaki nesnelerden farklı.",
+    "theme": "mutfak",
+    "description": "Mert, beslenme atölyesinde uygulama malzemelerini düzenliyor. “beyaz tabak” için üç elma ayrılmış. “kesme tahtası” için iki armut ayrılmış. “servis tepsisi” için dört dilim ayrılmış. “hazırlık listesi” için beş paket ayrılmış. “hazırlık listesi” ortada. Solunda sarı tartı, sağında mavi zamanlayıcı bulunuyor. Soldaki nesnenin önünde yeşil kutu var. Öndeki nesnenin yanında turuncu not duruyor. Görevli önce paketi tartıyor, ardından süreyi ayarlıyor, en son notu ekliyor. Yerleşimi ve işlem sırasını zihninizde birlikte canlandırın.",
     "duration": 40,
     "displayOrder": 2,
     "difficultyLevel": 4,
@@ -571,50 +1171,231 @@
     "mode": "assessment",
     "questions": [
       {
-        "id": "aaaf325c-af77-5316-837b-1f3c8fade227",
-        "questionText": "Masadaki çanta hangi renkteydi?",
+        "questionText": "Diğer nesneler için ayrılanlardan farklı olarak “hazırlık listesi” için ne ayrılmıştı?",
         "options": [
-          "yeşil",
-          "turuncu",
-          "mor",
-          "mavi"
+          "dört paket",
+          "altı paket",
+          "beş paket",
+          "üç paket"
         ],
-        "correctAnswer": "D",
+        "evidence": "“hazırlık listesi” için beş paket ayrılmış.",
         "questionType": "detail",
+        "id": "daf20000-0000-5000-8000-000000040420",
+        "correctAnswer": "C",
+        "demandLevel": 4,
         "displayOrder": 0
       },
       {
-        "id": "f5c98536-ceed-5c38-b743-bb063868f0b5",
-        "questionText": "Çanta nesnesinin solunda ne vardı?",
+        "questionText": "Ortadaki nesnenin solundaki nesnenin önünde duran nesnenin yanında ne vardı?",
         "options": [
-          "Masa lambası",
-          "Gri kutu",
-          "Kapı",
-          "Pencere"
+          "hazırlık listesi",
+          "mavi zamanlayıcı",
+          "sarı tartı",
+          "turuncu not"
         ],
-        "correctAnswer": "A",
+        "evidence": "“hazırlık listesi” ortada. Solunda sarı tartı, sağında mavi zamanlayıcı bulunuyor. Soldaki nesnenin önünde yeşil kutu var. Öndeki nesnenin yanında turuncu not duruyor.",
         "questionType": "spatial",
+        "id": "daf20000-0000-5000-8000-000000040421",
+        "correctAnswer": "D",
+        "demandLevel": 4,
         "displayOrder": 1
       },
       {
-        "id": "ea97a671-61c1-58aa-9b7a-731c4dabfff5",
-        "questionText": "Mert lambayı açtıktan hemen sonra ne yaptı?",
+        "questionText": "İlk ve son işlem arasında yapılan işlem hangisiydi?",
         "options": [
-          "Sandalyeye oturdu",
-          "Çanta nesnesini eline aldı",
-          "Pencereye doğru döndü",
-          "Kapıyı açtı"
+          "süreyi ayarlıyor",
+          "paketi tartıyor",
+          "notu ekliyor",
+          "hiçbir işlem yapmadı"
         ],
-        "correctAnswer": "B",
+        "evidence": "Görevli önce paketi tartıyor, ardından süreyi ayarlıyor, en son notu ekliyor.",
         "questionType": "sequence",
+        "id": "daf20000-0000-5000-8000-000000040422",
+        "correctAnswer": "A",
+        "demandLevel": 4,
         "displayOrder": 2
       }
     ]
   },
   {
-    "id": "ee37e5da-a0e7-54cd-8ed6-47684c01b22c",
+    "id": "daf10000-0000-5000-8000-000000004043",
+    "exerciseId": "a7afcefc-8e1a-543e-bdcd-b3f9e14e2692",
+    "theme": "muze",
+    "description": "Ada, müze stajında geçici serginin yerleşimini inceliyor. “sergi vitrini” için iki kukla ayrılmış. “bilgi panosu” için üç fotoğraf ayrılmış. “eser kaidesi” için dört çizim ayrılmış. “sergi krokisi” için beş numara ayrılmış. “sergi krokisi” ortada. Solunda mavi ok, sağında kırmızı etiket bulunuyor. Soldaki nesnenin önünde sarı klasör var. Öndeki nesnenin yanında beyaz maket duruyor. Görevli önce krokiyi inceliyor, ardından etiketi takıyor, en son maketi düzeltiyor. Yerleşimi ve işlem sırasını zihninizde birlikte canlandırın.",
+    "duration": 40,
+    "displayOrder": 3,
+    "difficultyLevel": 4,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "mode": "assessment",
+    "questions": [
+      {
+        "questionText": "Diğer nesneler için ayrılanlardan farklı olarak “sergi krokisi” için ne ayrılmıştı?",
+        "options": [
+          "üç numara",
+          "dört numara",
+          "altı numara",
+          "beş numara"
+        ],
+        "evidence": "“sergi krokisi” için beş numara ayrılmış.",
+        "questionType": "detail",
+        "id": "daf20000-0000-5000-8000-000000040430",
+        "correctAnswer": "D",
+        "demandLevel": 4,
+        "displayOrder": 0
+      },
+      {
+        "questionText": "Ortadaki nesnenin solundaki nesnenin önünde duran nesnenin yanında ne vardı?",
+        "options": [
+          "beyaz maket",
+          "sergi krokisi",
+          "kırmızı etiket",
+          "mavi ok"
+        ],
+        "evidence": "“sergi krokisi” ortada. Solunda mavi ok, sağında kırmızı etiket bulunuyor. Soldaki nesnenin önünde sarı klasör var. Öndeki nesnenin yanında beyaz maket duruyor.",
+        "questionType": "spatial",
+        "id": "daf20000-0000-5000-8000-000000040431",
+        "correctAnswer": "A",
+        "demandLevel": 4,
+        "displayOrder": 1
+      },
+      {
+        "questionText": "İlk ve son işlem arasında yapılan işlem hangisiydi?",
+        "options": [
+          "hiçbir işlem yapmadı",
+          "etiketi takıyor",
+          "krokiyi inceliyor",
+          "maketi düzeltiyor"
+        ],
+        "evidence": "Görevli önce krokiyi inceliyor, ardından etiketi takıyor, en son maketi düzeltiyor.",
+        "questionType": "sequence",
+        "id": "daf20000-0000-5000-8000-000000040432",
+        "correctAnswer": "B",
+        "demandLevel": 4,
+        "displayOrder": 2
+      }
+    ]
+  },
+  {
+    "id": "daf10000-0000-5000-8000-000000004044",
+    "exerciseId": "a7afcefc-8e1a-543e-bdcd-b3f9e14e2692",
+    "theme": "istasyon",
+    "description": "Can, öğrenci topluluğuyla tren istasyonunda saha gezisini organize ediyor. “bilet gişesi” için üç vagon ayrılmış. “yolcu panosu” için iki hat ayrılmış. “peron işareti” için dört sıra ayrılmış. “aktarma krokisi” için beş durak ayrılmış. “aktarma krokisi” ortada. Solunda sarı ok, sağında gri kapı bulunuyor. Soldaki nesnenin önünde yeşil dosya var. Öndeki nesnenin yanında beyaz not duruyor. Görevli önce rotayı inceliyor, ardından kapıya ilerliyor, en son notu güncelliyor. Yerleşimi ve işlem sırasını zihninizde birlikte canlandırın.",
+    "duration": 40,
+    "displayOrder": 4,
+    "difficultyLevel": 4,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "mode": "assessment",
+    "questions": [
+      {
+        "questionText": "Diğer nesneler için ayrılanlardan farklı olarak “aktarma krokisi” için ne ayrılmıştı?",
+        "options": [
+          "beş durak",
+          "üç durak",
+          "dört durak",
+          "altı durak"
+        ],
+        "evidence": "“aktarma krokisi” için beş durak ayrılmış.",
+        "questionType": "detail",
+        "id": "daf20000-0000-5000-8000-000000040440",
+        "correctAnswer": "A",
+        "demandLevel": 4,
+        "displayOrder": 0
+      },
+      {
+        "questionText": "Ortadaki nesnenin solundaki nesnenin önünde duran nesnenin yanında ne vardı?",
+        "options": [
+          "sarı ok",
+          "beyaz not",
+          "aktarma krokisi",
+          "gri kapı"
+        ],
+        "evidence": "“aktarma krokisi” ortada. Solunda sarı ok, sağında gri kapı bulunuyor. Soldaki nesnenin önünde yeşil dosya var. Öndeki nesnenin yanında beyaz not duruyor.",
+        "questionType": "spatial",
+        "id": "daf20000-0000-5000-8000-000000040441",
+        "correctAnswer": "B",
+        "demandLevel": 4,
+        "displayOrder": 1
+      },
+      {
+        "questionText": "İlk ve son işlem arasında yapılan işlem hangisiydi?",
+        "options": [
+          "notu güncelliyor",
+          "hiçbir işlem yapmadı",
+          "kapıya ilerliyor",
+          "rotayı inceliyor"
+        ],
+        "evidence": "Görevli önce rotayı inceliyor, ardından kapıya ilerliyor, en son notu güncelliyor.",
+        "questionType": "sequence",
+        "id": "daf20000-0000-5000-8000-000000040442",
+        "correctAnswer": "C",
+        "demandLevel": 4,
+        "displayOrder": 2
+      }
+    ]
+  },
+  {
+    "id": "daf10000-0000-5000-8000-000000004045",
+    "exerciseId": "a7afcefc-8e1a-543e-bdcd-b3f9e14e2692",
+    "theme": "tasarim",
+    "description": "Elif, kampüsün tasarım stüdyosunda proje sunumunu hazırlıyor. “resim sehpası” için iki çizgi ayrılmış. “çalışma panosu” için üç şekil ayrılmış. “sunum maketi” için dört parça ayrılmış. “renk çizelgesi” için beş ton ayrılmış. “renk çizelgesi” ortada. Solunda kırmızı numune, sağında mavi ölçer bulunuyor. Soldaki nesnenin önünde sarı kart var. Öndeki nesnenin yanında yeşil kutu duruyor. Görevli önce numuneyi seçiyor, ardından ölçümü alıyor, en son kartı ekliyor. Yerleşimi ve işlem sırasını zihninizde birlikte canlandırın.",
+    "duration": 40,
+    "displayOrder": 5,
+    "difficultyLevel": 4,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "mode": "assessment",
+    "questions": [
+      {
+        "questionText": "Diğer nesneler için ayrılanlardan farklı olarak “renk çizelgesi” için ne ayrılmıştı?",
+        "options": [
+          "altı ton",
+          "beş ton",
+          "üç ton",
+          "dört ton"
+        ],
+        "evidence": "“renk çizelgesi” için beş ton ayrılmış.",
+        "questionType": "detail",
+        "id": "daf20000-0000-5000-8000-000000040450",
+        "correctAnswer": "B",
+        "demandLevel": 4,
+        "displayOrder": 0
+      },
+      {
+        "questionText": "Ortadaki nesnenin solundaki nesnenin önünde duran nesnenin yanında ne vardı?",
+        "options": [
+          "mavi ölçer",
+          "kırmızı numune",
+          "yeşil kutu",
+          "renk çizelgesi"
+        ],
+        "evidence": "“renk çizelgesi” ortada. Solunda kırmızı numune, sağında mavi ölçer bulunuyor. Soldaki nesnenin önünde sarı kart var. Öndeki nesnenin yanında yeşil kutu duruyor.",
+        "questionType": "spatial",
+        "id": "daf20000-0000-5000-8000-000000040451",
+        "correctAnswer": "C",
+        "demandLevel": 4,
+        "displayOrder": 1
+      },
+      {
+        "questionText": "İlk ve son işlem arasında yapılan işlem hangisiydi?",
+        "options": [
+          "numuneyi seçiyor",
+          "kartı ekliyor",
+          "hiçbir işlem yapmadı",
+          "ölçümü alıyor"
+        ],
+        "evidence": "Görevli önce numuneyi seçiyor, ardından ölçümü alıyor, en son kartı ekliyor.",
+        "questionType": "sequence",
+        "id": "daf20000-0000-5000-8000-000000040452",
+        "correctAnswer": "D",
+        "demandLevel": 4,
+        "displayOrder": 2
+      }
+    ]
+  },
+  {
+    "id": "daf10000-0000-5000-8000-000000004050",
     "exerciseId": "9d722c1a-d4c9-5f5b-a2ad-7f0aa9b7b5c0",
-    "description": "Deniz, proje çalışma alanı içinde bir masanın önünde duruyor. Masanın üzerinde kırmızı bir defter var. Bu nesnenin sağında bir sarı kalem, solunda ise küçük bir masa lambası bulunuyor. Pencere masanın arkasında, kapı odanın sol duvarında. Deniz önce lambayı açıyor, sonra defter nesnesini eline alıyor ve en son pencereye doğru dönüyor. Kapının yanındaki üç sandalyeden ortadakinin üzerinde bir mont var. Pencerenin karşısındaki rafta dört kitap ve bir kutu bulunuyor. Masanın altındaki sepet boş, duvardaki saatin altındaki pano ise iki afiş taşıyor.",
+    "theme": "deney",
+    "description": "Deniz, üniversitenin araştırma laboratuvarında deney düzeneğini kontrol ediyor. “mavi kap” için üç pil ayrılmış. “cam tüp” için iki sensör ayrılmış. “ölçüm kabı” için dört bağlantı ayrılmış. “deney panosu” için beş etiket ayrılmış. “kontrol ekranı” için altı ölçüm ayrılmış. “kontrol ekranı” ortada. Solunda mavi sensör, sağında sarı düğme bulunuyor. Soldaki nesnenin önünde mor dosya var. Öndeki nesnenin yanında beyaz not duruyor. Görevli önce sensörü kontrol ediyor, ardından notu yazıyor, en son ekranı kapatıyor. Yerleşimi ve işlem sırasını zihninizde birlikte canlandırın.",
     "duration": 45,
     "displayOrder": 0,
     "difficultyLevel": 5,
@@ -622,50 +1403,57 @@
     "mode": "assessment",
     "questions": [
       {
-        "id": "51c592c5-69dd-5b69-8133-df4e0177cfb9",
-        "questionText": "Masadaki defter hangi renkteydi?",
+        "questionText": "Diğer nesneler için ayrılanlardan farklı olarak “kontrol ekranı” için ne ayrılmıştı?",
         "options": [
-          "kırmızı",
-          "mavi",
-          "yeşil",
-          "turuncu"
+          "yedi ölçüm",
+          "altı ölçüm",
+          "dört ölçüm",
+          "beş ölçüm"
         ],
-        "correctAnswer": "A",
+        "evidence": "“kontrol ekranı” için altı ölçüm ayrılmış.",
         "questionType": "detail",
+        "id": "daf20000-0000-5000-8000-000000040500",
+        "correctAnswer": "B",
+        "demandLevel": 5,
         "displayOrder": 0
       },
       {
-        "id": "d6b83382-ab52-5448-88b9-1c08d11fc755",
-        "questionText": "Defter nesnesinin solunda ne vardı?",
+        "questionText": "Ortadaki nesnenin solundaki nesnenin önünde duran nesnenin yanında ne vardı?",
         "options": [
-          "Pencere",
-          "Masa lambası",
-          "Sarı kalem",
-          "Kapı"
+          "sarı düğme",
+          "mavi sensör",
+          "beyaz not",
+          "kontrol ekranı"
         ],
-        "correctAnswer": "B",
+        "evidence": "“kontrol ekranı” ortada. Solunda mavi sensör, sağında sarı düğme bulunuyor. Soldaki nesnenin önünde mor dosya var. Öndeki nesnenin yanında beyaz not duruyor.",
         "questionType": "spatial",
+        "id": "daf20000-0000-5000-8000-000000040501",
+        "correctAnswer": "C",
+        "demandLevel": 5,
         "displayOrder": 1
       },
       {
-        "id": "c7231559-0f7f-5d4d-8636-421f16a41a09",
-        "questionText": "Deniz lambayı açtıktan hemen sonra ne yaptı?",
+        "questionText": "Görevlinin işlemlerini doğru sırayla veren seçenek hangisi?",
         "options": [
-          "Kapıyı açtı",
-          "Sandalyeye oturdu",
-          "Defter nesnesini eline aldı",
-          "Pencereye doğru döndü"
+          "ekranı kapatıyor → notu yazıyor → sensörü kontrol ediyor",
+          "notu yazıyor → sensörü kontrol ediyor → ekranı kapatıyor",
+          "sensörü kontrol ediyor → ekranı kapatıyor → notu yazıyor",
+          "sensörü kontrol ediyor → notu yazıyor → ekranı kapatıyor"
         ],
-        "correctAnswer": "C",
+        "evidence": "Görevli önce sensörü kontrol ediyor, ardından notu yazıyor, en son ekranı kapatıyor.",
         "questionType": "sequence",
+        "id": "daf20000-0000-5000-8000-000000040502",
+        "correctAnswer": "D",
+        "demandLevel": 5,
         "displayOrder": 2
       }
     ]
   },
   {
-    "id": "537c1e60-bc35-58db-9bf3-31deaf2675b3",
+    "id": "daf10000-0000-5000-8000-000000004051",
     "exerciseId": "9d722c1a-d4c9-5f5b-a2ad-7f0aa9b7b5c0",
-    "description": "Ece, proje çalışma alanı içinde bir masanın önünde duruyor. Masanın üzerinde mavi bir dosya var. Bu nesnenin sağında bir beyaz kart, solunda ise küçük bir masa lambası bulunuyor. Pencere masanın arkasında, kapı odanın sol duvarında. Ece önce lambayı açıyor, sonra dosya nesnesini eline alıyor ve en son pencereye doğru dönüyor. Kapının yanındaki üç sandalyeden ortadakinin üzerinde bir mont var. Pencerenin karşısındaki rafta dört kitap ve bir kutu bulunuyor. Masanın altındaki sepet boş, duvardaki saatin altındaki pano ise iki afiş taşıyor.",
+    "theme": "park",
+    "description": "Ece, kampüsün ekoloji sahasında örnekleme noktalarını hazırlıyor. “taş işaret” için iki ağaç ayrılmış. “gözlem noktası” için üç fide ayrılmış. “yol ayrımı” için dört yaprak ayrılmış. “örnekleme alanı” için beş örnek ayrılmış. “harita panosu” için altı durak ayrılmış. “harita panosu” ortada. Solunda kırmızı rota, sağında sarı ölçer bulunuyor. Soldaki nesnenin önünde yeşil klasör var. Öndeki nesnenin yanında mavi kalem duruyor. Görevli önce rotayı işaretliyor, ardından ölçümü yazıyor, en son klasörü kapatıyor. Yerleşimi ve işlem sırasını zihninizde birlikte canlandırın.",
     "duration": 45,
     "displayOrder": 1,
     "difficultyLevel": 5,
@@ -673,50 +1461,57 @@
     "mode": "assessment",
     "questions": [
       {
-        "id": "b1fcac0c-891c-5094-b8c4-fdf56592b3e8",
-        "questionText": "Masadaki dosya hangi renkteydi?",
+        "questionText": "Diğer nesneler için ayrılanlardan farklı olarak “harita panosu” için ne ayrılmıştı?",
         "options": [
-          "mor",
-          "mavi",
-          "yeşil",
-          "turuncu"
+          "beş durak",
+          "yedi durak",
+          "altı durak",
+          "dört durak"
         ],
-        "correctAnswer": "B",
+        "evidence": "“harita panosu” için altı durak ayrılmış.",
         "questionType": "detail",
+        "id": "daf20000-0000-5000-8000-000000040510",
+        "correctAnswer": "C",
+        "demandLevel": 5,
         "displayOrder": 0
       },
       {
-        "id": "6899d18e-b53b-5b7c-a2de-d57efb2a7c50",
-        "questionText": "Dosya nesnesinin solunda ne vardı?",
+        "questionText": "Ortadaki nesnenin solundaki nesnenin önünde duran nesnenin yanında ne vardı?",
         "options": [
-          "Kapı",
-          "Pencere",
-          "Masa lambası",
-          "Beyaz kart"
+          "harita panosu",
+          "sarı ölçer",
+          "kırmızı rota",
+          "mavi kalem"
         ],
-        "correctAnswer": "C",
+        "evidence": "“harita panosu” ortada. Solunda kırmızı rota, sağında sarı ölçer bulunuyor. Soldaki nesnenin önünde yeşil klasör var. Öndeki nesnenin yanında mavi kalem duruyor.",
         "questionType": "spatial",
+        "id": "daf20000-0000-5000-8000-000000040511",
+        "correctAnswer": "D",
+        "demandLevel": 5,
         "displayOrder": 1
       },
       {
-        "id": "c35cbc57-10be-55c9-b9c1-ed3768f69d43",
-        "questionText": "Ece lambayı açtıktan hemen sonra ne yaptı?",
+        "questionText": "Görevlinin işlemlerini doğru sırayla veren seçenek hangisi?",
         "options": [
-          "Pencereye doğru döndü",
-          "Kapıyı açtı",
-          "Sandalyeye oturdu",
-          "Dosya nesnesini eline aldı"
+          "rotayı işaretliyor → ölçümü yazıyor → klasörü kapatıyor",
+          "klasörü kapatıyor → ölçümü yazıyor → rotayı işaretliyor",
+          "ölçümü yazıyor → rotayı işaretliyor → klasörü kapatıyor",
+          "rotayı işaretliyor → klasörü kapatıyor → ölçümü yazıyor"
         ],
-        "correctAnswer": "D",
+        "evidence": "Görevli önce rotayı işaretliyor, ardından ölçümü yazıyor, en son klasörü kapatıyor.",
         "questionType": "sequence",
+        "id": "daf20000-0000-5000-8000-000000040512",
+        "correctAnswer": "A",
+        "demandLevel": 5,
         "displayOrder": 2
       }
     ]
   },
   {
-    "id": "57556109-c418-5efb-93fe-9ca6f0c5790f",
+    "id": "daf10000-0000-5000-8000-000000004052",
     "exerciseId": "9d722c1a-d4c9-5f5b-a2ad-7f0aa9b7b5c0",
-    "description": "Mert, proje çalışma alanı içinde bir masanın önünde duruyor. Masanın üzerinde yeşil bir çanta var. Bu nesnenin sağında bir gri kutu, solunda ise küçük bir masa lambası bulunuyor. Pencere masanın arkasında, kapı odanın sol duvarında. Mert önce lambayı açıyor, sonra çanta nesnesini eline alıyor ve en son pencereye doğru dönüyor. Kapının yanındaki üç sandalyeden ortadakinin üzerinde bir mont var. Pencerenin karşısındaki rafta dört kitap ve bir kutu bulunuyor. Masanın altındaki sepet boş, duvardaki saatin altındaki pano ise iki afiş taşıyor.",
+    "theme": "mutfak",
+    "description": "Mert, beslenme atölyesinde uygulama malzemelerini düzenliyor. “beyaz tabak” için üç elma ayrılmış. “kesme tahtası” için iki armut ayrılmış. “servis tepsisi” için dört dilim ayrılmış. “hazırlık listesi” için beş paket ayrılmış. “servis çizelgesi” için altı porsiyon ayrılmış. “servis çizelgesi” ortada. Solunda beyaz etiket, sağında kırmızı kapak bulunuyor. Soldaki nesnenin önünde gri sepet var. Öndeki nesnenin yanında mavi dosya duruyor. Görevli önce etiketi yazıyor, ardından kapağı kapatıyor, en son sepeti kaldırıyor. Yerleşimi ve işlem sırasını zihninizde birlikte canlandırın.",
     "duration": 45,
     "displayOrder": 2,
     "difficultyLevel": 5,
@@ -724,42 +1519,222 @@
     "mode": "assessment",
     "questions": [
       {
-        "id": "3fb9f770-6710-5fb7-a005-6755410ea5fc",
-        "questionText": "Masadaki çanta hangi renkteydi?",
+        "questionText": "Diğer nesneler için ayrılanlardan farklı olarak “servis çizelgesi” için ne ayrılmıştı?",
         "options": [
-          "mor",
-          "kırmızı",
-          "yeşil",
-          "turuncu"
+          "dört porsiyon",
+          "beş porsiyon",
+          "yedi porsiyon",
+          "altı porsiyon"
         ],
-        "correctAnswer": "C",
+        "evidence": "“servis çizelgesi” için altı porsiyon ayrılmış.",
         "questionType": "detail",
+        "id": "daf20000-0000-5000-8000-000000040520",
+        "correctAnswer": "D",
+        "demandLevel": 5,
         "displayOrder": 0
       },
       {
-        "id": "f45ad366-2293-50ea-a2c8-2961e4f4afae",
-        "questionText": "Çanta nesnesinin solunda ne vardı?",
+        "questionText": "Ortadaki nesnenin solundaki nesnenin önünde duran nesnenin yanında ne vardı?",
         "options": [
-          "Gri kutu",
-          "Kapı",
-          "Pencere",
-          "Masa lambası"
+          "mavi dosya",
+          "servis çizelgesi",
+          "kırmızı kapak",
+          "beyaz etiket"
         ],
-        "correctAnswer": "D",
+        "evidence": "“servis çizelgesi” ortada. Solunda beyaz etiket, sağında kırmızı kapak bulunuyor. Soldaki nesnenin önünde gri sepet var. Öndeki nesnenin yanında mavi dosya duruyor.",
         "questionType": "spatial",
+        "id": "daf20000-0000-5000-8000-000000040521",
+        "correctAnswer": "A",
+        "demandLevel": 5,
         "displayOrder": 1
       },
       {
-        "id": "d1cf11e3-e1b2-5b5c-a944-1645a81c9a16",
-        "questionText": "Mert lambayı açtıktan hemen sonra ne yaptı?",
+        "questionText": "Görevlinin işlemlerini doğru sırayla veren seçenek hangisi?",
         "options": [
-          "Çanta nesnesini eline aldı",
-          "Pencereye doğru döndü",
-          "Kapıyı açtı",
-          "Sandalyeye oturdu"
+          "etiketi yazıyor → sepeti kaldırıyor → kapağı kapatıyor",
+          "etiketi yazıyor → kapağı kapatıyor → sepeti kaldırıyor",
+          "sepeti kaldırıyor → kapağı kapatıyor → etiketi yazıyor",
+          "kapağı kapatıyor → etiketi yazıyor → sepeti kaldırıyor"
         ],
-        "correctAnswer": "A",
+        "evidence": "Görevli önce etiketi yazıyor, ardından kapağı kapatıyor, en son sepeti kaldırıyor.",
         "questionType": "sequence",
+        "id": "daf20000-0000-5000-8000-000000040522",
+        "correctAnswer": "B",
+        "demandLevel": 5,
+        "displayOrder": 2
+      }
+    ]
+  },
+  {
+    "id": "daf10000-0000-5000-8000-000000004053",
+    "exerciseId": "9d722c1a-d4c9-5f5b-a2ad-7f0aa9b7b5c0",
+    "theme": "muze",
+    "description": "Ada, müze stajında geçici serginin yerleşimini inceliyor. “sergi vitrini” için iki kukla ayrılmış. “bilgi panosu” için üç fotoğraf ayrılmış. “eser kaidesi” için dört çizim ayrılmış. “sergi krokisi” için beş numara ayrılmış. “koruma planı” için altı kayıt ayrılmış. “koruma planı” ortada. Solunda yeşil sensör, sağında gri perde bulunuyor. Soldaki nesnenin önünde turuncu liste var. Öndeki nesnenin yanında mavi kutu duruyor. Görevli önce sensörü okuyor, ardından perdeyi ayarlıyor, en son listeyi tamamlıyor. Yerleşimi ve işlem sırasını zihninizde birlikte canlandırın.",
+    "duration": 45,
+    "displayOrder": 3,
+    "difficultyLevel": 5,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "mode": "assessment",
+    "questions": [
+      {
+        "questionText": "Diğer nesneler için ayrılanlardan farklı olarak “koruma planı” için ne ayrılmıştı?",
+        "options": [
+          "altı kayıt",
+          "dört kayıt",
+          "beş kayıt",
+          "yedi kayıt"
+        ],
+        "evidence": "“koruma planı” için altı kayıt ayrılmış.",
+        "questionType": "detail",
+        "id": "daf20000-0000-5000-8000-000000040530",
+        "correctAnswer": "A",
+        "demandLevel": 5,
+        "displayOrder": 0
+      },
+      {
+        "questionText": "Ortadaki nesnenin solundaki nesnenin önünde duran nesnenin yanında ne vardı?",
+        "options": [
+          "yeşil sensör",
+          "mavi kutu",
+          "koruma planı",
+          "gri perde"
+        ],
+        "evidence": "“koruma planı” ortada. Solunda yeşil sensör, sağında gri perde bulunuyor. Soldaki nesnenin önünde turuncu liste var. Öndeki nesnenin yanında mavi kutu duruyor.",
+        "questionType": "spatial",
+        "id": "daf20000-0000-5000-8000-000000040531",
+        "correctAnswer": "B",
+        "demandLevel": 5,
+        "displayOrder": 1
+      },
+      {
+        "questionText": "Görevlinin işlemlerini doğru sırayla veren seçenek hangisi?",
+        "options": [
+          "perdeyi ayarlıyor → sensörü okuyor → listeyi tamamlıyor",
+          "sensörü okuyor → listeyi tamamlıyor → perdeyi ayarlıyor",
+          "sensörü okuyor → perdeyi ayarlıyor → listeyi tamamlıyor",
+          "listeyi tamamlıyor → perdeyi ayarlıyor → sensörü okuyor"
+        ],
+        "evidence": "Görevli önce sensörü okuyor, ardından perdeyi ayarlıyor, en son listeyi tamamlıyor.",
+        "questionType": "sequence",
+        "id": "daf20000-0000-5000-8000-000000040532",
+        "correctAnswer": "C",
+        "demandLevel": 5,
+        "displayOrder": 2
+      }
+    ]
+  },
+  {
+    "id": "daf10000-0000-5000-8000-000000004054",
+    "exerciseId": "9d722c1a-d4c9-5f5b-a2ad-7f0aa9b7b5c0",
+    "theme": "istasyon",
+    "description": "Can, öğrenci topluluğuyla tren istasyonunda saha gezisini organize ediyor. “bilet gişesi” için üç vagon ayrılmış. “yolcu panosu” için iki hat ayrılmış. “peron işareti” için dört sıra ayrılmış. “aktarma krokisi” için beş durak ayrılmış. “yolculuk çizelgesi” için altı bilet ayrılmış. “yolculuk çizelgesi” ortada. Solunda mavi etiket, sağında kırmızı sayaç bulunuyor. Soldaki nesnenin önünde mor çanta var. Öndeki nesnenin yanında gri klasör duruyor. Görevli önce biletleri sayıyor, ardından etiketi takıyor, en son klasörü kapatıyor. Yerleşimi ve işlem sırasını zihninizde birlikte canlandırın.",
+    "duration": 45,
+    "displayOrder": 4,
+    "difficultyLevel": 5,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "mode": "assessment",
+    "questions": [
+      {
+        "questionText": "Diğer nesneler için ayrılanlardan farklı olarak “yolculuk çizelgesi” için ne ayrılmıştı?",
+        "options": [
+          "yedi bilet",
+          "altı bilet",
+          "dört bilet",
+          "beş bilet"
+        ],
+        "evidence": "“yolculuk çizelgesi” için altı bilet ayrılmış.",
+        "questionType": "detail",
+        "id": "daf20000-0000-5000-8000-000000040540",
+        "correctAnswer": "B",
+        "demandLevel": 5,
+        "displayOrder": 0
+      },
+      {
+        "questionText": "Ortadaki nesnenin solundaki nesnenin önünde duran nesnenin yanında ne vardı?",
+        "options": [
+          "kırmızı sayaç",
+          "mavi etiket",
+          "gri klasör",
+          "yolculuk çizelgesi"
+        ],
+        "evidence": "“yolculuk çizelgesi” ortada. Solunda mavi etiket, sağında kırmızı sayaç bulunuyor. Soldaki nesnenin önünde mor çanta var. Öndeki nesnenin yanında gri klasör duruyor.",
+        "questionType": "spatial",
+        "id": "daf20000-0000-5000-8000-000000040541",
+        "correctAnswer": "C",
+        "demandLevel": 5,
+        "displayOrder": 1
+      },
+      {
+        "questionText": "Görevlinin işlemlerini doğru sırayla veren seçenek hangisi?",
+        "options": [
+          "klasörü kapatıyor → etiketi takıyor → biletleri sayıyor",
+          "etiketi takıyor → biletleri sayıyor → klasörü kapatıyor",
+          "biletleri sayıyor → klasörü kapatıyor → etiketi takıyor",
+          "biletleri sayıyor → etiketi takıyor → klasörü kapatıyor"
+        ],
+        "evidence": "Görevli önce biletleri sayıyor, ardından etiketi takıyor, en son klasörü kapatıyor.",
+        "questionType": "sequence",
+        "id": "daf20000-0000-5000-8000-000000040542",
+        "correctAnswer": "D",
+        "demandLevel": 5,
+        "displayOrder": 2
+      }
+    ]
+  },
+  {
+    "id": "daf10000-0000-5000-8000-000000004055",
+    "exerciseId": "9d722c1a-d4c9-5f5b-a2ad-7f0aa9b7b5c0",
+    "theme": "tasarim",
+    "description": "Elif, kampüsün tasarım stüdyosunda proje sunumunu hazırlıyor. “resim sehpası” için iki çizgi ayrılmış. “çalışma panosu” için üç şekil ayrılmış. “sunum maketi” için dört parça ayrılmış. “renk çizelgesi” için beş ton ayrılmış. “proje şeması” için altı bölüm ayrılmış. “proje şeması” ortada. Solunda mor bağlantı, sağında siyah işaret bulunuyor. Soldaki nesnenin önünde gri klasör var. Öndeki nesnenin yanında beyaz etiket duruyor. Görevli önce bağlantıyı çiziyor, ardından etiketi yazıyor, en son şemayı tamamlıyor. Yerleşimi ve işlem sırasını zihninizde birlikte canlandırın.",
+    "duration": 45,
+    "displayOrder": 5,
+    "difficultyLevel": 5,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "mode": "assessment",
+    "questions": [
+      {
+        "questionText": "Diğer nesneler için ayrılanlardan farklı olarak “proje şeması” için ne ayrılmıştı?",
+        "options": [
+          "beş bölüm",
+          "yedi bölüm",
+          "altı bölüm",
+          "dört bölüm"
+        ],
+        "evidence": "“proje şeması” için altı bölüm ayrılmış.",
+        "questionType": "detail",
+        "id": "daf20000-0000-5000-8000-000000040550",
+        "correctAnswer": "C",
+        "demandLevel": 5,
+        "displayOrder": 0
+      },
+      {
+        "questionText": "Ortadaki nesnenin solundaki nesnenin önünde duran nesnenin yanında ne vardı?",
+        "options": [
+          "proje şeması",
+          "siyah işaret",
+          "mor bağlantı",
+          "beyaz etiket"
+        ],
+        "evidence": "“proje şeması” ortada. Solunda mor bağlantı, sağında siyah işaret bulunuyor. Soldaki nesnenin önünde gri klasör var. Öndeki nesnenin yanında beyaz etiket duruyor.",
+        "questionType": "spatial",
+        "id": "daf20000-0000-5000-8000-000000040551",
+        "correctAnswer": "D",
+        "demandLevel": 5,
+        "displayOrder": 1
+      },
+      {
+        "questionText": "Görevlinin işlemlerini doğru sırayla veren seçenek hangisi?",
+        "options": [
+          "bağlantıyı çiziyor → etiketi yazıyor → şemayı tamamlıyor",
+          "şemayı tamamlıyor → etiketi yazıyor → bağlantıyı çiziyor",
+          "etiketi yazıyor → bağlantıyı çiziyor → şemayı tamamlıyor",
+          "bağlantıyı çiziyor → şemayı tamamlıyor → etiketi yazıyor"
+        ],
+        "evidence": "Görevli önce bağlantıyı çiziyor, ardından etiketi yazıyor, en son şemayı tamamlıyor.",
+        "questionType": "sequence",
+        "id": "daf20000-0000-5000-8000-000000040552",
+        "correctAnswer": "A",
+        "demandLevel": 5,
         "displayOrder": 2
       }
     ]

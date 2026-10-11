@@ -90,7 +90,8 @@ public sealed record VisualizationQuestionRequest(
     string QuestionType,
     int DisplayOrder,
     string? HintText = null,
-    Guid? Id = null);
+    Guid? Id = null,
+    string AnswerFormat = "auto");
 
 public sealed record VisualizationSceneRequest(
     Guid ExerciseId,

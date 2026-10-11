@@ -214,7 +214,7 @@ export class SpeedReadingVisualizationScenesComponent implements OnInit {
   }
 
   private emptyQuestion(displayOrder: number): SpeedReadingVisualizationQuestionRequest {
-    return { questionText: '', options: ['', '', '', ''], correctAnswer: '', questionType: 'detail', displayOrder, hintText: '' };
+    return { questionText: '', options: ['', '', '', ''], correctAnswer: '', answerFormat: 'text', questionType: 'detail', displayOrder, hintText: '' };
   }
 
   private toRequest(scene: SpeedReadingVisualizationScene): SpeedReadingVisualizationSceneRequest {
@@ -225,7 +225,7 @@ export class SpeedReadingVisualizationScenesComponent implements OnInit {
       duration: scene.duration,
       displayOrder: scene.displayOrder,
       difficultyLevel: scene.difficultyLevel,
-      questions: scene.questions.map(question => ({ ...question })),
+      questions: scene.questions.map(question => ({ ...question, answerFormat: 'text' })),
       targetAgeGroupConfigurationId: scene.targetAgeGroupConfigurationId,
       mode: scene.mode ?? 'assessment'
     };

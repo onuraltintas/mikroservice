@@ -95,7 +95,7 @@ internal sealed class OwnedSpeedReadingVisualization(OwnedSpeedReadingDbContext 
         return scene.Id;
     }
 
-    public async Task<bool> UpdateSceneAsync(
+    public Task<bool> UpdateSceneAsync(
         Guid sceneId,
         VisualizationSceneRequest request,
         Guid actorId,
@@ -103,6 +103,13 @@ internal sealed class OwnedSpeedReadingVisualization(OwnedSpeedReadingDbContext 
         CancellationToken cancellationToken)
     {
         OwnedContentMutationIdempotency.Validate(actorId, idempotencyKey);
+        return ExecuteSceneMutationAsync(() => UpdateSceneCoreAsync(sceneId, request, actorId, idempotencyKey, cancellationToken));
+    }
+
+    private async Task<bool> UpdateSceneCoreAsync(Guid sceneId, VisualizationSceneRequest request,
+        Guid actorId, string idempotencyKey, CancellationToken cancellationToken)
+    {
+        await using var transaction = await LockSceneAsync(sceneId, cancellationToken);
         var key = idempotencyKey.Trim();
         var requestHash = OwnedContentMutationIdempotency.CreateRequestHash(actorId, UpdateScope, sceneId, request);
         var existing = await OwnedContentMutationIdempotency.GetAsync(db, UpdateScope, key, cancellationToken);
@@ -128,16 +135,23 @@ internal sealed class OwnedSpeedReadingVisualization(OwnedSpeedReadingDbContext 
         var concurrent = await OwnedContentMutationIdempotency.SaveAsync(db, UpdateScope, key, cancellationToken);
         if (concurrent is not null)
             OwnedContentMutationIdempotency.EnsureReplayMatches(concurrent, requestHash);
+        if (transaction is not null) await transaction.CommitAsync(cancellationToken);
         return true;
     }
 
-    public async Task<bool> DeleteSceneAsync(
+    public Task<bool> DeleteSceneAsync(
         Guid sceneId,
         Guid actorId,
         string idempotencyKey,
         CancellationToken cancellationToken)
     {
         OwnedContentMutationIdempotency.Validate(actorId, idempotencyKey);
+        return ExecuteSceneMutationAsync(() => DeleteSceneCoreAsync(sceneId, actorId, idempotencyKey, cancellationToken));
+    }
+
+    private async Task<bool> DeleteSceneCoreAsync(Guid sceneId, Guid actorId, string idempotencyKey, CancellationToken cancellationToken)
+    {
+        await using var transaction = await LockSceneAsync(sceneId, cancellationToken);
         var key = idempotencyKey.Trim();
         var requestHash = OwnedContentMutationIdempotency.CreateRequestHash(actorId, DeleteScope, sceneId);
         var existing = await OwnedContentMutationIdempotency.GetAsync(db, DeleteScope, key, cancellationToken);
@@ -156,7 +170,37 @@ internal sealed class OwnedSpeedReadingVisualization(OwnedSpeedReadingDbContext 
         var concurrent = await OwnedContentMutationIdempotency.SaveAsync(db, DeleteScope, key, cancellationToken);
         if (concurrent is not null)
             OwnedContentMutationIdempotency.EnsureReplayMatches(concurrent, requestHash);
+        if (transaction is not null) await transaction.CommitAsync(cancellationToken);
         return true;
+    }
+
+    private Task<bool> ExecuteSceneMutationAsync(Func<Task<bool>> mutation)
+    {
+        var retry = false;
+        return db.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
+        {
+            // A rolled-back attempt may leave tracked entities marked as saved; reload them on retry.
+            if (retry) db.ChangeTracker.Clear();
+            retry = true;
+            return await mutation();
+        });
+    }
+
+    private async Task<Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction?> LockSceneAsync(Guid sceneId, CancellationToken cancellationToken)
+    {
+        if (!db.Database.IsRelational()) return null;
+        var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+        try
+        {
+            await db.Database.ExecuteSqlInterpolatedAsync(
+                $"SELECT id FROM speed_reading.visualization_scenes WHERE id = {sceneId} FOR UPDATE", cancellationToken);
+            return transaction;
+        }
+        catch
+        {
+            await transaction.DisposeAsync();
+            throw;
+        }
     }
 
     public async Task<VisualizationImportResult> ImportCsvAsync(Stream csv, Guid actorId, CancellationToken cancellationToken)
@@ -207,7 +251,7 @@ internal sealed class OwnedSpeedReadingVisualization(OwnedSpeedReadingDbContext 
         foreach (var request in questions)
             db.VisualizationQuestions.Add(VisualizationQuestion.Create(request.Id.GetValueOrDefault(Guid.NewGuid()), sceneId,
                 request.QuestionText, JsonSerializer.Serialize(request.Options.Select(option => option.Trim()), JsonOptions),
-                VisualizationQuestion.ResolveAnswerKey(request.Options, request.CorrectAnswer)!,
+                VisualizationQuestion.ResolveAnswerKey(request.Options, request.CorrectAnswer, request.AnswerFormat)!,
                 request.QuestionType, request.DisplayOrder, request.HintText, actorId, now));
     }
 
@@ -235,7 +279,7 @@ internal sealed class OwnedSpeedReadingVisualization(OwnedSpeedReadingDbContext 
             var options = question.Options.Where(value => !string.IsNullOrWhiteSpace(value)).Select(value => value.Trim()).Distinct(StringComparer.Ordinal).ToArray();
             if (string.IsNullOrWhiteSpace(question.QuestionText) || options.Length is < 2 or > 4
                 || options.Length != question.Options.Count || string.IsNullOrWhiteSpace(question.CorrectAnswer)
-                || VisualizationQuestion.ResolveAnswerKey(question.Options, question.CorrectAnswer) is null)
+                || VisualizationQuestion.ResolveAnswerKey(question.Options, question.CorrectAnswer, question.AnswerFormat) is null)
                 throw new ArgumentException("Each question needs two to four distinct, nonblank options and a matching correct answer.");
             if (!SupportedQuestionTypes.Contains(question.QuestionType.Trim().ToLowerInvariant(), StringComparer.Ordinal)) throw new ArgumentException("QuestionType is invalid.");
             if (question.DisplayOrder < 0) throw new ArgumentException("Question DisplayOrder cannot be negative.");
