@@ -198,8 +198,8 @@
       "engineConfig": {
         "mode": "position",
         "nLevel": 1,
-        "totalSteps": 12,
-        "speedMs": 2500,
+        "totalSteps": 32,
+        "speedMs": 3000,
         "gridSize": 3
       },
       "difficultyLevel": 1
@@ -501,8 +501,8 @@
       "engineConfig": {
         "mode": "position",
         "nLevel": 1,
-        "totalSteps": 16,
-        "speedMs": 2300,
+        "totalSteps": 40,
+        "speedMs": 2800,
         "gridSize": 3
       },
       "difficultyLevel": 2
@@ -808,8 +808,8 @@
       "engineConfig": {
         "mode": "position",
         "nLevel": 1,
-        "totalSteps": 20,
-        "speedMs": 2100,
+        "totalSteps": 48,
+        "speedMs": 2600,
         "gridSize": 3
       },
       "difficultyLevel": 3
@@ -1114,9 +1114,9 @@
       "engineType": "focus",
       "engineConfig": {
         "mode": "position",
-        "nLevel": 1,
-        "totalSteps": 24,
-        "speedMs": 2000,
+        "nLevel": 2,
+        "totalSteps": 48,
+        "speedMs": 3000,
         "gridSize": 3
       },
       "difficultyLevel": 4
@@ -1417,9 +1417,9 @@
       "engineType": "focus",
       "engineConfig": {
         "mode": "position",
-        "nLevel": 1,
-        "totalSteps": 24,
-        "speedMs": 1800,
+        "nLevel": 2,
+        "totalSteps": 56,
+        "speedMs": 2800,
         "gridSize": 3
       },
       "difficultyLevel": 5

@@ -19,7 +19,7 @@ Mevcut metin uzunlukları ve soruları korunur. Anlama ve değerlendirmeli serbe
 | Hikâyemi Seçiyorum | FreeReading | `{"content":{"source":"reading_text"},"mode":"free","readingPurpose":"evaluation"}` |
 | Sözcüğü Bul | Scanning | `{"content":{"source":"random_text"},"targetCount":2,"timeLimit":90,"targets":{"mode":"find_all","caseSensitive":false}}` |
 | Sayı Avcısı | SchulteTable | `{"gridSize":3,"sequenceType":"numeric","rules":{"timeLimit":90}}` |
-| Konum Belleği | Focus | `{"mode":"position","nLevel":1,"totalSteps":12,"speedMs":2500,"gridSize":3}` |
+| Konum Belleği | Focus | `{"mode":"position","nLevel":1,"totalSteps":32,"speedMs":3000,"gridSize":3}` |
 | Hareketi Takip Et | EyeTracking | `{"mode":"tracking","path":{"type":"circle"},"timing":{"durationSeconds":30,"speedMs":3000},"content":{"type":"dot","pointSize":36}}` |
 | Noktaya Odaklan | Fixation | `{"mode":"fixation","timing":{"holdMs":1000,"durationSeconds":30},"content":{"type":"letter","points":3,"peripheralCount":1,"pointSize":44}}` |
 | Hedefler Arası Geçiş | Saccade | `{"mode":"saccade","timing":{"holdMs":900,"durationSeconds":40},"content":{"type":"number","pattern":"horizontal","pointSize":44}}` |
@@ -38,7 +38,7 @@ Mevcut metin uzunlukları ve soruları korunur. Anlama ve değerlendirmeli serbe
 | Metindeki İpuçları | Scanning | `{"content":{"source":"random_text"},"targetCount":3,"timeLimit":90,"targets":{"mode":"find_all","caseSensitive":false}}` |
 | Yeni Bir Hikâye | FreeReading | `{"content":{"source":"reading_text"},"mode":"free","readingPurpose":"evaluation"}` |
 | Sayı Avcısı | SchulteTable | `{"gridSize":3,"sequenceType":"numeric","rules":{"timeLimit":75}}` |
-| Konum Belleği | Focus | `{"mode":"position","nLevel":1,"totalSteps":16,"speedMs":2300,"gridSize":3}` |
+| Konum Belleği | Focus | `{"mode":"position","nLevel":1,"totalSteps":40,"speedMs":2800,"gridSize":3}` |
 | Hareketi Takip Et | EyeTracking | `{"mode":"tracking","path":{"type":"horizontal"},"timing":{"durationSeconds":40,"speedMs":2800},"content":{"type":"dot","pointSize":36}}` |
 | Noktaya Odaklan | Fixation | `{"mode":"fixation","timing":{"holdMs":900,"durationSeconds":35},"content":{"type":"letter","points":3,"peripheralCount":1,"pointSize":44}}` |
 | Hedefler Arası Geçiş | Saccade | `{"mode":"saccade","timing":{"holdMs":850,"durationSeconds":45},"content":{"type":"number","pattern":"horizontal","pointSize":44}}` |
@@ -57,7 +57,7 @@ Mevcut metin uzunlukları ve soruları korunur. Anlama ve değerlendirmeli serbe
 | Metne İlk Bakış | Skimming | `{"content":{"source":"reading_text"},"mode":"skimming","rules":{"timeLimit":120},"timing":{"minReadingTimeMs":3000},"readingPurpose":"evaluation"}` |
 | Kendi Hızımda Okuyorum | FreeReading | `{"content":{"source":"reading_text"},"mode":"free","readingPurpose":"evaluation"}` |
 | Sayı Avcısı | SchulteTable | `{"gridSize":4,"sequenceType":"numeric","rules":{"timeLimit":120}}` |
-| Konum Belleği | Focus | `{"mode":"position","nLevel":1,"totalSteps":20,"speedMs":2100,"gridSize":3}` |
+| Konum Belleği | Focus | `{"mode":"position","nLevel":1,"totalSteps":48,"speedMs":2600,"gridSize":3}` |
 | Hareketi Takip Et | EyeTracking | `{"mode":"tracking","path":{"type":"circle"},"timing":{"durationSeconds":45,"speedMs":2500},"content":{"type":"dot","pointSize":36}}` |
 | Noktaya Odaklan | Fixation | `{"mode":"fixation","timing":{"holdMs":850,"durationSeconds":40},"content":{"type":"letter","points":4,"peripheralCount":1,"pointSize":44}}` |
 | Hedefler Arası Geçiş | Saccade | `{"mode":"saccade","timing":{"holdMs":800,"durationSeconds":50},"content":{"type":"number","pattern":"vertical","pointSize":44}}` |
@@ -76,7 +76,7 @@ Mevcut metin uzunlukları ve soruları korunur. Anlama ve değerlendirmeli serbe
 | Başlık ve Özet | Skimming | `{"content":{"source":"reading_text"},"mode":"skimming","rules":{"timeLimit":150},"timing":{"minReadingTimeMs":3000},"readingPurpose":"evaluation"}` |
 | Metni Kontrol Et | ErrorAnalysis | `{"content":{"source":"reading_text"},"errorCount":4,"timeLimit":240}` |
 | Sayı Avcısı | SchulteTable | `{"gridSize":4,"sequenceType":"numeric","rules":{"timeLimit":100}}` |
-| Konum Belleği | Focus | `{"mode":"position","nLevel":1,"totalSteps":24,"speedMs":2000,"gridSize":3}` |
+| Konum Belleği | Focus | `{"mode":"position","nLevel":2,"totalSteps":48,"speedMs":3000,"gridSize":3}` |
 | Hareketi Takip Et | EyeTracking | `{"mode":"tracking","path":{"type":"infinity8"},"timing":{"durationSeconds":45,"speedMs":3000},"content":{"type":"dot","pointSize":36}}` |
 | Noktaya Odaklan | Fixation | `{"mode":"fixation","timing":{"holdMs":800,"durationSeconds":45},"content":{"type":"letter","points":4,"peripheralCount":1,"pointSize":44}}` |
 | Hedefler Arası Geçiş | Saccade | `{"mode":"saccade","timing":{"holdMs":750,"durationSeconds":55},"content":{"type":"number","pattern":"horizontal","pointSize":44}}` |
@@ -95,7 +95,7 @@ Mevcut metin uzunlukları ve soruları korunur. Anlama ve değerlendirmeli serbe
 | Dikkatli Editör | ErrorAnalysis | `{"content":{"source":"reading_text"},"errorCount":5,"timeLimit":240}` |
 | Bağımsız Okuyucu | FreeReading | `{"content":{"source":"reading_text"},"mode":"free","readingPurpose":"evaluation"}` |
 | Sayı Avcısı | SchulteTable | `{"gridSize":5,"sequenceType":"numeric","rules":{"timeLimit":150}}` |
-| Konum Belleği | Focus | `{"mode":"position","nLevel":1,"totalSteps":24,"speedMs":1800,"gridSize":3}` |
+| Konum Belleği | Focus | `{"mode":"position","nLevel":2,"totalSteps":56,"speedMs":2800,"gridSize":3}` |
 | Hareketi Takip Et | EyeTracking | `{"mode":"tracking","path":{"type":"infinity8"},"timing":{"durationSeconds":60,"speedMs":2800},"content":{"type":"dot","pointSize":36}}` |
 | Noktaya Odaklan | Fixation | `{"mode":"fixation","timing":{"holdMs":750,"durationSeconds":45},"content":{"type":"letter","points":5,"peripheralCount":1,"pointSize":44}}` |
 | Hedefler Arası Geçiş | Saccade | `{"mode":"saccade","timing":{"holdMs":700,"durationSeconds":60},"content":{"type":"number","pattern":"random","pointSize":44}}` |

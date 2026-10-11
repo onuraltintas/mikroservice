@@ -1,0 +1,542 @@
+[
+  {
+    "id": "1f9bcc44-6bf6-588e-a6c9-87fbcc57f5e6",
+    "ageGroupId": "10000000-0000-0000-0000-000000000001",
+    "level": 1,
+    "previousConfiguration": {
+      "engineType": "focus",
+      "engineConfig": {
+        "mode": "position",
+        "nLevel": 1,
+        "totalSteps": 12,
+        "speedMs": 2500,
+        "gridSize": 3
+      },
+      "difficultyLevel": 1
+    },
+    "configuration": {
+      "engineType": "focus",
+      "engineConfig": {
+        "mode": "position",
+        "nLevel": 1,
+        "totalSteps": 32,
+        "speedMs": 3000,
+        "gridSize": 3
+      },
+      "difficultyLevel": 1
+    }
+  },
+  {
+    "id": "eb968e3b-1d20-551c-bf84-0ce50acd7510",
+    "ageGroupId": "10000000-0000-0000-0000-000000000001",
+    "level": 2,
+    "previousConfiguration": {
+      "engineType": "focus",
+      "engineConfig": {
+        "mode": "position",
+        "nLevel": 1,
+        "totalSteps": 16,
+        "speedMs": 2300,
+        "gridSize": 3
+      },
+      "difficultyLevel": 2
+    },
+    "configuration": {
+      "engineType": "focus",
+      "engineConfig": {
+        "mode": "position",
+        "nLevel": 1,
+        "totalSteps": 40,
+        "speedMs": 2800,
+        "gridSize": 3
+      },
+      "difficultyLevel": 2
+    }
+  },
+  {
+    "id": "cb0b533d-84bd-5d78-a06c-199b968f0bd8",
+    "ageGroupId": "10000000-0000-0000-0000-000000000001",
+    "level": 3,
+    "previousConfiguration": {
+      "engineType": "focus",
+      "engineConfig": {
+        "mode": "position",
+        "nLevel": 1,
+        "totalSteps": 20,
+        "speedMs": 2100,
+        "gridSize": 3
+      },
+      "difficultyLevel": 3
+    },
+    "configuration": {
+      "engineType": "focus",
+      "engineConfig": {
+        "mode": "position",
+        "nLevel": 1,
+        "totalSteps": 48,
+        "speedMs": 2600,
+        "gridSize": 3
+      },
+      "difficultyLevel": 3
+    }
+  },
+  {
+    "id": "f05d5094-094d-5739-8a06-5d58cf39bb53",
+    "ageGroupId": "10000000-0000-0000-0000-000000000001",
+    "level": 4,
+    "previousConfiguration": {
+      "engineType": "focus",
+      "engineConfig": {
+        "mode": "position",
+        "nLevel": 1,
+        "totalSteps": 24,
+        "speedMs": 2000,
+        "gridSize": 3
+      },
+      "difficultyLevel": 4
+    },
+    "configuration": {
+      "engineType": "focus",
+      "engineConfig": {
+        "mode": "position",
+        "nLevel": 2,
+        "totalSteps": 48,
+        "speedMs": 3000,
+        "gridSize": 3
+      },
+      "difficultyLevel": 4
+    }
+  },
+  {
+    "id": "730afda5-23eb-5323-b237-77b527c8a27c",
+    "ageGroupId": "10000000-0000-0000-0000-000000000001",
+    "level": 5,
+    "previousConfiguration": {
+      "engineType": "focus",
+      "engineConfig": {
+        "mode": "position",
+        "nLevel": 1,
+        "totalSteps": 24,
+        "speedMs": 1800,
+        "gridSize": 3
+      },
+      "difficultyLevel": 5
+    },
+    "configuration": {
+      "engineType": "focus",
+      "engineConfig": {
+        "mode": "position",
+        "nLevel": 2,
+        "totalSteps": 56,
+        "speedMs": 2800,
+        "gridSize": 3
+      },
+      "difficultyLevel": 5
+    }
+  },
+  {
+    "id": "4cd282b6-9a2b-5c52-bd1a-2213f08a98d2",
+    "ageGroupId": "10000000-0000-0000-0000-000000000002",
+    "level": 1,
+    "previousConfiguration": {
+      "engineType": "focus",
+      "engineConfig": {
+        "mode": "position",
+        "nLevel": 1,
+        "totalSteps": 16,
+        "speedMs": 2300,
+        "gridSize": 3
+      },
+      "difficultyLevel": 1
+    },
+    "configuration": {
+      "engineType": "focus",
+      "engineConfig": {
+        "mode": "position",
+        "nLevel": 1,
+        "totalSteps": 40,
+        "speedMs": 2800,
+        "gridSize": 3
+      },
+      "difficultyLevel": 1
+    }
+  },
+  {
+    "id": "ffe98e72-6131-5a84-b5fb-d723fc319637",
+    "ageGroupId": "10000000-0000-0000-0000-000000000002",
+    "level": 2,
+    "previousConfiguration": {
+      "engineType": "focus",
+      "engineConfig": {
+        "mode": "position",
+        "nLevel": 1,
+        "totalSteps": 20,
+        "speedMs": 2100,
+        "gridSize": 3
+      },
+      "difficultyLevel": 2
+    },
+    "configuration": {
+      "engineType": "focus",
+      "engineConfig": {
+        "mode": "position",
+        "nLevel": 1,
+        "totalSteps": 48,
+        "speedMs": 2500,
+        "gridSize": 3
+      },
+      "difficultyLevel": 2
+    }
+  },
+  {
+    "id": "0a7f05d8-f836-5a29-8d55-927150eedad8",
+    "ageGroupId": "10000000-0000-0000-0000-000000000002",
+    "level": 3,
+    "previousConfiguration": {
+      "engineType": "focus",
+      "engineConfig": {
+        "mode": "position",
+        "nLevel": 1,
+        "totalSteps": 24,
+        "speedMs": 2000,
+        "gridSize": 3
+      },
+      "difficultyLevel": 3
+    },
+    "configuration": {
+      "engineType": "focus",
+      "engineConfig": {
+        "mode": "position",
+        "nLevel": 2,
+        "totalSteps": 48,
+        "speedMs": 2800,
+        "gridSize": 3
+      },
+      "difficultyLevel": 3
+    }
+  },
+  {
+    "id": "f63b5845-7541-5828-9973-8610e198110f",
+    "ageGroupId": "10000000-0000-0000-0000-000000000002",
+    "level": 4,
+    "previousConfiguration": {
+      "engineType": "focus",
+      "engineConfig": {
+        "mode": "position",
+        "nLevel": 1,
+        "totalSteps": 28,
+        "speedMs": 1800,
+        "gridSize": 3
+      },
+      "difficultyLevel": 4
+    },
+    "configuration": {
+      "engineType": "focus",
+      "engineConfig": {
+        "mode": "position",
+        "nLevel": 2,
+        "totalSteps": 56,
+        "speedMs": 2500,
+        "gridSize": 3
+      },
+      "difficultyLevel": 4
+    }
+  },
+  {
+    "id": "0f487932-7f27-513a-a0e5-0bf9404b8c8b",
+    "ageGroupId": "10000000-0000-0000-0000-000000000002",
+    "level": 5,
+    "previousConfiguration": {
+      "engineType": "focus",
+      "engineConfig": {
+        "mode": "position",
+        "nLevel": 1,
+        "totalSteps": 30,
+        "speedMs": 1600,
+        "gridSize": 3
+      },
+      "difficultyLevel": 5
+    },
+    "configuration": {
+      "engineType": "focus",
+      "engineConfig": {
+        "mode": "position",
+        "nLevel": 3,
+        "totalSteps": 56,
+        "speedMs": 3000,
+        "gridSize": 3
+      },
+      "difficultyLevel": 5
+    }
+  },
+  {
+    "id": "fa53b143-e64f-5bcf-8986-ea5394047453",
+    "ageGroupId": "10000000-0000-0000-0000-000000000004",
+    "level": 1,
+    "previousConfiguration": {
+      "engineType": "focus",
+      "engineConfig": {
+        "mode": "position",
+        "nLevel": 1,
+        "totalSteps": 16,
+        "speedMs": 2300,
+        "gridSize": 3
+      },
+      "difficultyLevel": 1
+    },
+    "configuration": {
+      "engineType": "focus",
+      "engineConfig": {
+        "mode": "position",
+        "nLevel": 1,
+        "totalSteps": 48,
+        "speedMs": 2600,
+        "gridSize": 3
+      },
+      "difficultyLevel": 1
+    }
+  },
+  {
+    "id": "64a9789a-f515-58b9-b606-59f9a3ca68b3",
+    "ageGroupId": "10000000-0000-0000-0000-000000000004",
+    "level": 2,
+    "previousConfiguration": {
+      "engineType": "focus",
+      "engineConfig": {
+        "mode": "position",
+        "nLevel": 1,
+        "totalSteps": 20,
+        "speedMs": 2100,
+        "gridSize": 3
+      },
+      "difficultyLevel": 2
+    },
+    "configuration": {
+      "engineType": "focus",
+      "engineConfig": {
+        "mode": "position",
+        "nLevel": 2,
+        "totalSteps": 48,
+        "speedMs": 2900,
+        "gridSize": 3
+      },
+      "difficultyLevel": 2
+    }
+  },
+  {
+    "id": "69261140-377b-55d4-aba0-6e108980fd00",
+    "ageGroupId": "10000000-0000-0000-0000-000000000004",
+    "level": 3,
+    "previousConfiguration": {
+      "engineType": "focus",
+      "engineConfig": {
+        "mode": "position",
+        "nLevel": 1,
+        "totalSteps": 24,
+        "speedMs": 2000,
+        "gridSize": 3
+      },
+      "difficultyLevel": 3
+    },
+    "configuration": {
+      "engineType": "focus",
+      "engineConfig": {
+        "mode": "position",
+        "nLevel": 2,
+        "totalSteps": 56,
+        "speedMs": 2600,
+        "gridSize": 3
+      },
+      "difficultyLevel": 3
+    }
+  },
+  {
+    "id": "5f1dc195-0be9-5b0e-b3e1-8ca60a1bdfc6",
+    "ageGroupId": "10000000-0000-0000-0000-000000000004",
+    "level": 4,
+    "previousConfiguration": {
+      "engineType": "focus",
+      "engineConfig": {
+        "mode": "position",
+        "nLevel": 1,
+        "totalSteps": 28,
+        "speedMs": 1800,
+        "gridSize": 3
+      },
+      "difficultyLevel": 4
+    },
+    "configuration": {
+      "engineType": "focus",
+      "engineConfig": {
+        "mode": "position",
+        "nLevel": 3,
+        "totalSteps": 56,
+        "speedMs": 3000,
+        "gridSize": 3
+      },
+      "difficultyLevel": 4
+    }
+  },
+  {
+    "id": "be744984-094c-5d13-ace5-c6f9810bf66e",
+    "ageGroupId": "10000000-0000-0000-0000-000000000004",
+    "level": 5,
+    "previousConfiguration": {
+      "engineType": "focus",
+      "engineConfig": {
+        "mode": "position",
+        "nLevel": 1,
+        "totalSteps": 30,
+        "speedMs": 1600,
+        "gridSize": 3
+      },
+      "difficultyLevel": 5
+    },
+    "configuration": {
+      "engineType": "focus",
+      "engineConfig": {
+        "mode": "position",
+        "nLevel": 3,
+        "totalSteps": 64,
+        "speedMs": 2700,
+        "gridSize": 3
+      },
+      "difficultyLevel": 5
+    }
+  },
+  {
+    "id": "71abefe8-6122-55b9-8ebe-ae4d8d27123d",
+    "ageGroupId": "10000000-0000-0000-0000-000000000003",
+    "level": 1,
+    "previousConfiguration": {
+      "engineType": "focus",
+      "engineConfig": {
+        "mode": "position",
+        "nLevel": 1,
+        "totalSteps": 16,
+        "speedMs": 2300,
+        "gridSize": 3
+      },
+      "difficultyLevel": 1
+    },
+    "configuration": {
+      "engineType": "focus",
+      "engineConfig": {
+        "mode": "position",
+        "nLevel": 1,
+        "totalSteps": 48,
+        "speedMs": 2700,
+        "gridSize": 3
+      },
+      "difficultyLevel": 1
+    }
+  },
+  {
+    "id": "ba1bcf8c-6884-532a-a59f-1a7cfc74cd9c",
+    "ageGroupId": "10000000-0000-0000-0000-000000000003",
+    "level": 2,
+    "previousConfiguration": {
+      "engineType": "focus",
+      "engineConfig": {
+        "mode": "position",
+        "nLevel": 1,
+        "totalSteps": 20,
+        "speedMs": 2100,
+        "gridSize": 3
+      },
+      "difficultyLevel": 2
+    },
+    "configuration": {
+      "engineType": "focus",
+      "engineConfig": {
+        "mode": "position",
+        "nLevel": 2,
+        "totalSteps": 48,
+        "speedMs": 3000,
+        "gridSize": 3
+      },
+      "difficultyLevel": 2
+    }
+  },
+  {
+    "id": "4f987dc5-213e-5b89-a933-52b3aa552433",
+    "ageGroupId": "10000000-0000-0000-0000-000000000003",
+    "level": 3,
+    "previousConfiguration": {
+      "engineType": "focus",
+      "engineConfig": {
+        "mode": "position",
+        "nLevel": 1,
+        "totalSteps": 24,
+        "speedMs": 2000,
+        "gridSize": 3
+      },
+      "difficultyLevel": 3
+    },
+    "configuration": {
+      "engineType": "focus",
+      "engineConfig": {
+        "mode": "position",
+        "nLevel": 2,
+        "totalSteps": 56,
+        "speedMs": 2700,
+        "gridSize": 3
+      },
+      "difficultyLevel": 3
+    }
+  },
+  {
+    "id": "1c66c565-e9ed-5ed0-8eb4-94dd40fcb64b",
+    "ageGroupId": "10000000-0000-0000-0000-000000000003",
+    "level": 4,
+    "previousConfiguration": {
+      "engineType": "focus",
+      "engineConfig": {
+        "mode": "position",
+        "nLevel": 1,
+        "totalSteps": 28,
+        "speedMs": 1800,
+        "gridSize": 3
+      },
+      "difficultyLevel": 4
+    },
+    "configuration": {
+      "engineType": "focus",
+      "engineConfig": {
+        "mode": "position",
+        "nLevel": 3,
+        "totalSteps": 56,
+        "speedMs": 3100,
+        "gridSize": 3
+      },
+      "difficultyLevel": 4
+    }
+  },
+  {
+    "id": "f37af5c9-d3c5-58bc-9a2f-8123961bb77f",
+    "ageGroupId": "10000000-0000-0000-0000-000000000003",
+    "level": 5,
+    "previousConfiguration": {
+      "engineType": "focus",
+      "engineConfig": {
+        "mode": "position",
+        "nLevel": 1,
+        "totalSteps": 30,
+        "speedMs": 1600,
+        "gridSize": 3
+      },
+      "difficultyLevel": 5
+    },
+    "configuration": {
+      "engineType": "focus",
+      "engineConfig": {
+        "mode": "position",
+        "nLevel": 3,
+        "totalSteps": 64,
+        "speedMs": 2800,
+        "gridSize": 3
+      },
+      "difficultyLevel": 5
+    }
+  }
+]
