@@ -66,7 +66,9 @@ public sealed class SpeedReadingRegressionCatalogPostgresTests(PostgresFixture p
             }
             if (changedSource == "question")
             {
-                var text = content.RootElement[0]; var question = text.GetProperty("questions")[0];
+                var existingId = settings.RootElement.EnumerateArray().First(row => row.GetProperty("previousConfiguration").ValueKind != JsonValueKind.Null).GetProperty("id").GetGuid();
+                var text = content.RootElement.EnumerateArray().First(row => row.GetProperty("exerciseId").GetGuid() == existingId);
+                var question = text.GetProperty("questions")[0];
                 db.ReadingTexts.Add(ReadingText.Create(text.GetProperty("id").GetGuid(), text.GetProperty("title").GetString()!,
                     text.GetProperty("content").GetString()!, difficultyLevel: text.GetProperty("level").GetInt32(),
                     targetAgeGroupId: text.GetProperty("ageGroupId").GetGuid(), exerciseId: text.GetProperty("exerciseId").GetGuid()));
@@ -77,7 +79,12 @@ public sealed class SpeedReadingRegressionCatalogPostgresTests(PostgresFixture p
             var schedules = await db.StudentProgramProgresses.AsNoTracking().ToDictionaryAsync(item => item.Id, item => item.ScheduleJson);
             if (changedSource != "none")
             {
-                await Assert.ThrowsAsync<PostgresException>(() => ExecutePack(sql));
+                var error = await Assert.ThrowsAsync<PostgresException>(() => ExecutePack(sql));
+                Assert.Equal(changedSource switch {
+                    "catalog" => "Regression catalog baseline changed",
+                    "program" => "Regression program baseline changed",
+                    _ => "Regression question collision or later edit"
+                }, error.MessageText);
                 Assert.Equal(6, await db.Exercises.CountAsync(item => item.ExerciseTypeId == type.Id));
                 Assert.Equal(changedSource == "question" ? 1 : 0, await db.ReadingQuestions.CountAsync());
                 return;

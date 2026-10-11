@@ -1,6 +1,6 @@
 # Çocuk egzersiz kataloğu v1
 
-5 seviye, 18 tür ve toplam 88 kayıt. Seviye dağılımı: 16 / 16 / 16 / 18 / 18. Temel 70 kayda dört türden 14 yeni egzersiz eklenmiştir.
+5 seviye, 19 tür ve toplam 88 kayıt. Seviye dağılımı: 16 / 17 / 17 / 19 / 19.
 
 Metin kimliği sabitlenmez. Yaş ve seviyeye uygun havuzdan iki okuma geçmişinde de kullanılmamış metin rastgele seçilir. Havuz tükenince en az kullanılan metinler arasından seçim yapılır. Başlatılıp bırakılan oturum da kullanım sayılır. Kelime etkinlikleri mevcut yaş/seviye kelime havuzunu kullanır.
 

@@ -1,0 +1,206 @@
+[
+  {
+    "age": "adult",
+    "level": 1,
+    "titles": [],
+    "maximum": 198,
+    "minimum": 162,
+    "eligible": 0
+  },
+  {
+    "age": "adult",
+    "level": 2,
+    "titles": [],
+    "maximum": 303,
+    "minimum": 247,
+    "eligible": 0
+  },
+  {
+    "age": "adult",
+    "level": 3,
+    "titles": [
+      "Kara Kutu: Algoritmik Önyargı ve Yapay Zeka Etiği",
+      "Kazan-Kazan mı, Sıfır Toplam mı? Uluslararası İlişkilerde Oyun Teorisi",
+      "Yenilmez Zihin: Modern Dünyada Stoacılık",
+      "Para Basmak Çözüm mü? Modern Para Teorisi (MMT) vs. Avusturya Ekolü",
+      "Antroposen Çağı: İnsanlığın Jeolojik İmzası"
+    ],
+    "maximum": 446,
+    "minimum": 364,
+    "eligible": 5
+  },
+  {
+    "age": "adult",
+    "level": 4,
+    "titles": [],
+    "maximum": 597,
+    "minimum": 488,
+    "eligible": 0
+  },
+  {
+    "age": "adult",
+    "level": 5,
+    "titles": [
+      "Mikrobiyom: İnsan Sağlığı ve Mikroorganizmalar",
+      "Yenilenebilir Enerji Sistemleri: Teknik Analiz"
+    ],
+    "maximum": 748,
+    "minimum": 612,
+    "eligible": 2
+  },
+  {
+    "age": "child",
+    "level": 2,
+    "titles": [],
+    "maximum": 154,
+    "minimum": 126,
+    "eligible": 0
+  },
+  {
+    "age": "child",
+    "level": 3,
+    "titles": [],
+    "maximum": 206,
+    "minimum": 168,
+    "eligible": 0
+  },
+  {
+    "age": "child",
+    "level": 4,
+    "titles": [],
+    "maximum": 264,
+    "minimum": 216,
+    "eligible": 0
+  },
+  {
+    "age": "child",
+    "level": 5,
+    "titles": [
+      "Elektroliz ve Elektrokimya"
+    ],
+    "maximum": 330,
+    "minimum": 270,
+    "eligible": 1
+  },
+  {
+    "age": "teen",
+    "level": 1,
+    "titles": [],
+    "maximum": 176,
+    "minimum": 144,
+    "eligible": 0
+  },
+  {
+    "age": "teen",
+    "level": 2,
+    "titles": [],
+    "maximum": 262,
+    "minimum": 213,
+    "eligible": 0
+  },
+  {
+    "age": "teen",
+    "level": 3,
+    "titles": [
+      "Biyomimetik: Doğadan İlham"
+    ],
+    "maximum": 363,
+    "minimum": 297,
+    "eligible": 1
+  },
+  {
+    "age": "teen",
+    "level": 4,
+    "titles": [
+      "Uzay Turizmi: Yeni Sınır",
+      "Atletik Performans: Sporcuların Bilimi",
+      "Podcast ve Ses İçeriği Üretimi",
+      "Uyku Bilimi: Neden Uyuruz?",
+      "Fotoğrafçılık: Işık ve Kompozisyon",
+      "Sismoloji: Depremleri Anlamak",
+      "Yapay Zeka ve Makine Öğrenmesi",
+      "Biyonik Teknoloji: İnsan ve Makine Birleşimi",
+      "Yenilenebilir Enerji: Güneş ve Rüzgar",
+      "Besin Bilimi: Makro ve Mikro Besinler",
+      "Kriptografi: Dijital Güvenliğin Temelleri",
+      "Elektrikli Araçlar: Geleceğin Ulaşımı",
+      "Okyanus Araştırmaları: Derin Denizin Sırları",
+      "E-Spor: Dijital Rekabet Çağı",
+      "3D Yazıcılar: Dijital Üretim Devrimi"
+    ],
+    "maximum": 501,
+    "minimum": 409,
+    "eligible": 15
+  },
+  {
+    "age": "teen",
+    "level": 5,
+    "titles": [
+      "Kök Hücre Biyolojisi: Rejeneratif Tıbbın Temeli",
+      "Akustik Mühendisliği: Ses Dalgaları ve Mekan Tasarımı",
+      "Oseanografi: Okyanus Akıntıları ve İklim Etkileşimi",
+      "CRISPR-Cas9: Genetik Düzenlemenin Mekanizması",
+      "Meteoroloji: Sayısal Hava Tahmini Modelleri",
+      "Süperiletkenlik: Sıfır Dirençli İletkenlik",
+      "Lazer Fiziği: Uyarılmış Emisyon ve Uygulamaları",
+      "Malzeme Bilimi: Kompozit Yapılar ve Uygulamaları",
+      "Astronomi: Karadelik Fiziği ve Gözlemsel Kanıtlar",
+      "Blokzincir Teknolojisi: Dağıtık Uzlaşı Sistemleri",
+      "Kuantum Hesaplama: Klasik Bilgisayarların Ötesinde",
+      "Robotik Sistemler: Hareket Planlaması ve Kontrol",
+      "Biyoinformatik: Genomik Veri Analizi",
+      "Nanoteknoloji: Atom Ölçeğinde Mühendislik"
+    ],
+    "maximum": 638,
+    "minimum": 522,
+    "eligible": 14
+  },
+  {
+    "age": "young-adult",
+    "level": 1,
+    "titles": [],
+    "maximum": 198,
+    "minimum": 162,
+    "eligible": 0
+  },
+  {
+    "age": "young-adult",
+    "level": 2,
+    "titles": [],
+    "maximum": 289,
+    "minimum": 236,
+    "eligible": 0
+  },
+  {
+    "age": "young-adult",
+    "level": 3,
+    "titles": [],
+    "maximum": 413,
+    "minimum": 337,
+    "eligible": 0
+  },
+  {
+    "age": "young-adult",
+    "level": 4,
+    "titles": [
+      "Start-up Kültürü: Garajdan Milyar Dolara",
+      "Nöroplastisite: Beynin Kendini Yeniden İnşa Etme Gücü",
+      "Biyomimikri: Doğanın Tasarımını Taklit Etmek",
+      "Sosyal Etki ve Gönüllülük: Ben Değil, Biz",
+      "Uzaktan Çalışma ve Dijital Göçebelik: Ofissiz Hayat"
+    ],
+    "maximum": 559,
+    "minimum": 456,
+    "eligible": 5
+  },
+  {
+    "age": "young-adult",
+    "level": 5,
+    "titles": [
+      "Fermi Paradoksu: Herkes Nerede?"
+    ],
+    "maximum": 704,
+    "minimum": 576,
+    "eligible": 1
+  }
+]

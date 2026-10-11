@@ -9,12 +9,15 @@ const question = { questionId, questionText: 'Metindeki ilk kelime hangisi?', op
 const configuration = { engineType: 'regression_reduction', readingTextId: textId,
   engineConfig: { wpm: 600, chunkSize: 2, maskingType: 'trailing' } };
 
-async function prepare(page, role = 'Admin', withQuestions = false, unpinned = false) {
+async function prepare(page, role = 'Admin', withQuestions = false, unpinned = false, versionTwo = false) {
   const errors = [], writes = [];
   page.on('pageerror', error => errors.push(error.message));
   await page.addInitScript(() => localStorage.setItem('currentUser', JSON.stringify({ id: 'test-user' })));
   const exercise = { id: exerciseId, exerciseTypeId: typeId, title: 'Regresyon testi', difficultyLevel: 3,
-    exerciseTypeName: 'RegressionReduction', configurationJson: JSON.stringify(withQuestions
+    exerciseTypeName: 'RegressionReduction', configurationJson: JSON.stringify(versionTwo
+      ? { ...configuration, readingTextId: undefined, engineConfig: { targetWpm: 300, chunkSize: 1, maskingType: 'trailing',
+        visibleHistoryWords: 1, readingPurpose: 'evaluation', content: { minWordCount: 5, maxWordCount: 10, questionCount: 5 } } }
+      : withQuestions
       ? { ...configuration, engineConfig: { ...configuration.engineConfig, readingPurpose: 'evaluation' } }
       : unpinned ? { ...configuration, readingTextId: undefined } : configuration) };
   await page.route('**/api/**', async route => {
@@ -29,8 +32,10 @@ async function prepare(page, role = 'Admin', withQuestions = false, unpinned = f
     } else if (path.endsWith('/exercise-types')) response = { items: [{ id: typeId, name: 'RegressionReduction', displayName: 'Regresyon Azaltma', engineType: 'regression_reduction', isActive: true }], totalCount: 1 };
     else if (path.endsWith(`/exercises/${exerciseId}`)) response = exercise;
     else if (path.endsWith('/exercises')) response = { items: [exercise], totalCount: 1 };
-    else if (path.endsWith('/reading-texts')) response = [{ id: textId, difficultyLevel: 3, isActive: true }];
-    else if (path.endsWith(`/reading-texts/${textId}`)) response = { id: textId, content: 'bir iki üç dört beş', difficultyLevel: 3, isActive: true, wordCount: 5, questions: withQuestions ? [question] : [] };
+    else if (path.endsWith('/reading-texts')) response = [{ id: textId, difficultyLevel: 3, isActive: true, wordCount: 5 }];
+    else if (path.endsWith(`/reading-texts/${textId}`)) response = { id: textId, content: 'bir iki üç dört beş', difficultyLevel: 3, isActive: true, wordCount: 5,
+      questions: versionTwo ? Array.from({length:7},(_,index) => ({...question,questionId: `${questionId}-${index}`,
+        correctAnswer: 'A', type: 1, bloomLevel: 1 })) : withQuestions ? [question] : [] };
     else if (path.includes('/profile/status')) response = { hasAgeGroupConfiguration: true };
     else if (path.endsWith('/my-modules')) response = { hasSpeedReading: true };
     await route.fulfill({ json: response });
@@ -39,6 +44,34 @@ async function prepare(page, role = 'Admin', withQuestions = false, unpinned = f
   await expect(page.getByRole('heading', { name: 'Regresyon Azaltma', exact: true })).toBeVisible();
   return { errors, writes };
 }
+
+test('custom history window keeps the active and next words visible then asks exactly five questions', async ({ page }) => {
+  const { errors, writes } = await prepare(page, 'Admin', true, true, true);
+  await page.getByRole('button', { name: 'Özel ayarlarla dene' }).click();
+  await page.getByLabel('Okunabilir geçmiş kelime sayısı').fill('2');
+  await page.getByLabel('Gösterim temposu (kelime/dakika)', { exact: true }).fill('300');
+  await page.getByRole('dialog').getByRole('button', { name: 'Denemeyi başlat' }).click();
+  await expect(page.locator('.start-button-large')).toBeVisible();
+  await page.clock.install(); await page.clock.pauseAt(new Date());
+  await page.locator('.start-button-large').click();
+  await page.clock.runFor(601);
+  await expect(page.locator('.regression-word.trailing-faded')).toHaveText(['bir']);
+  await expect(page.locator('.regression-word.active')).toHaveText(['dört']);
+  await expect(page.locator('.regression-word').last()).toHaveText('beş');
+  await expect(page.locator('.regression-word').last()).not.toHaveClass(/trailing-faded/);
+  await page.clock.runFor(401);
+  await page.clock.resume();
+  for (let index = 0; index < 5; index++) {
+    await expect(page.locator('.regression-question-container')).toBeVisible();
+    await page.locator('.regression-question-container .option-button').first().click();
+    await page.locator('.regression-question-container .submit-answer-btn').click();
+    if (index < 4) await page.locator('.regression-question-container .next-question-btn').click();
+  }
+  await expect(page.getByRole('status').filter({ hasText: /Önizleme sonucu.*kaydedilmedi/ })).toBeVisible();
+  await expect(page.getByText('Anlama ölçülmedi.', { exact: false })).toBeVisible();
+  expect(writes).toEqual([]); expect(errors).toEqual([]);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+});
 
 test('admin preview loads catalogue text when exercise has no pinned text', async ({ page }) => {
   await prepare(page, 'Admin', false, true);
