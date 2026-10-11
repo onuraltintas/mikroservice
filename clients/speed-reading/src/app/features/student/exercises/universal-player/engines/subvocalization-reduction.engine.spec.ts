@@ -114,6 +114,33 @@ describe('subvocalization measurement', () => {
     engine.destroy();
   }));
 
+  it('keeps the one-second counting beat independent of groups and restarts it after pause', fakeAsync(() => {
+    const engine = new SubvocalizationReductionEngine();
+    engine.initialize({ readingTextContent: Array(30).fill('kelime').join(' '), targetWpm: 240,
+      chunkSize: 2, metronomeEnabled: true, visualMetronome: true, metronomeBpm: 60 } as any, {
+      onStart: noOp, onPause: noOp, onResume: noOp, onComplete: noOp, onError: noOp,
+      onStateChange: noOp, onStepComplete: noOp, onAction: noOp
+    });
+    engine.start(); tick(500);
+    expect(engine.getCurrentWordIndex()).toBe(3);
+    expect((engine.state as any).metronomeStep).toBe(1);
+    tick(200); engine.pause(); tick(100); engine.resume();
+    tick(999);
+    expect((engine.state as any).metronomeStep).toBe(1);
+    tick(1);
+    expect((engine.state as any).metronomeStep).toBe(2);
+    engine.destroy();
+  }));
+
+  it('does not cross sentence boundaries when grouping words', fakeAsync(() => {
+    const engine = createEngine('Bir. İki üç dört', 3);
+    engine.start();
+    expect(engine.getCurrentChunk()).toBe('Bir.');
+    tick(100);
+    expect(engine.getCurrentChunk()).toBe('İki üç dört');
+    engine.destroy();
+  }));
+
   function createEngine(text: string, chunkSize = 1): SubvocalizationReductionEngine {
     const engine = new SubvocalizationReductionEngine();
     engine.initialize({ readingTextContent: text, wpm: 600, chunkSize } as any, {

@@ -2,6 +2,26 @@ import { ExercisePlayerComponent } from './exercise-player.component';
 import { createActionFailureState } from './exercise-action-queue';
 
 describe('subvocalization answer validation', () => {
+  it('filters preview texts by the configured word band', () => {
+    const value: any = Object.create(ExercisePlayerComponent.prototype);
+    value.exercise = { exerciseTypeName: 'SubvocalizationReduction' };
+    value.parsedConfig = { engineType: 'subvocalization_reduction', engineConfig: {
+      readingPurpose: 'evaluation', content: { minWordCount: 5, maxWordCount: 10, questionCount: 5 } } };
+    expect(value.previewTextMatchesLength(4)).toBeFalse();
+    expect(value.previewTextMatchesLength(11)).toBeFalse();
+    expect(value.previewTextMatchesLength(6)).toBeTrue();
+  });
+
+  it('excludes malformed questions from preview selection', () => {
+    const value: any = Object.create(ExercisePlayerComponent.prototype);
+    value.exercise = { exerciseTypeName: 'SubvocalizationReduction' };
+    value.parsedConfig = { engineType: 'subvocalization_reduction', engineConfig: {
+      readingPurpose: 'evaluation', content: { questionCount: 5 } } };
+    const questions = [{ id: 'bad', correctAnswer: 'A', type: 1, bloomLevel: 1, optionA: 'A' },
+      { id: 'ok', correctAnswer: 'A', type: 1, bloomLevel: 1, optionA: 'A', optionB: 'B', optionC: 'C', optionD: 'D' }];
+    expect(value.createPreviewReadingConfig({ id: 'text', content: 'bir iki', questions }).questions.map((q: any) => q.id)).toEqual(['ok']);
+  });
+
   function player(): any {
     const value = Object.create(ExercisePlayerComponent.prototype);
     value.engineState = { isRunning: true, isPaused: false };
