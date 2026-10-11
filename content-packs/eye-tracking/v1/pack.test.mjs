@@ -22,9 +22,9 @@ test('all twenty age/level cells use the approved pilot duration and cycle', () 
     for (const row of cells) {
       const old = structuredClone(row.previousConfiguration), next = structuredClone(row.configuration);
       for (const config of [old, next]) {
-        delete config.engineConfig.timing;
+        delete config.engineConfig.timing.durationSeconds;
+        delete config.engineConfig.timing.speedMs;
         delete config.engineConfig.path.type;
-        delete config.engineConfig.content.pointSize;
       }
       assert.deepEqual(next, old);
       assert.equal(row.configuration.engineConfig.content.type, 'dot');
@@ -34,7 +34,7 @@ test('all twenty age/level cells use the approved pilot duration and cycle', () 
 
 test('checked-in JSON and SQL match the generator and do not delete any history', () => {
   const settings = JSON.stringify(buildTrackingPack(), null, 2);
-  const file = name => readFileSync(new URL(name, import.meta.url), 'utf8');
+  const file = name => readFileSync(new URL(name, import.meta.url), 'utf8').replace(/\r\n/g, '\n');
   assert.equal(file('settings.json'), settings + '\n');
   for (const name of ['apply','rollback']) {
     const sql = file(`${name}.sql`);

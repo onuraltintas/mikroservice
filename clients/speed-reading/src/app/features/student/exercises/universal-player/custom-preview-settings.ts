@@ -1,5 +1,6 @@
 import { boundedInteger, caseInsensitiveField, mergeCaseInsensitiveRecords, recordOrEmpty } from './engines/reading-pacer-safety';
 import { resolveSkimmingTiming } from './engines/skimming.engine';
+import { resolveTrackingCycleMs } from './engines/motion-path.engine';
 
 export interface CustomPreviewContext {
   roles: readonly string[];
@@ -141,17 +142,18 @@ export function getCustomPreviewControls(configuration: Record<string, unknown>)
     ];
     }
     case 'motion_path': {
-      const mode = String(read('mode') ?? 'fixation').toLowerCase();
+      const mode = String(read('mode') ?? (String(read('exerciseTypeName')).toLowerCase() === 'eyetracking' ? 'tracking' : 'fixation')).toLowerCase();
       if (mode === 'tracking') {
         const path = mergeCaseInsensitiveRecords(configuration, settings, 'path');
         const content = mergeCaseInsensitiveRecords(configuration, settings, 'content');
-        return [control('speedLevel', 'Hareket hızı seviyesi', 1, 5, movement['speedlevel'] ?? 1),
-          control('durationSeconds', 'Takip süresi (saniye)', 5, 3600, timing['durationms'] !== undefined
-            ? Number(timing['durationms']) / 1000 : timing['totaldurationseconds'] ?? timing['durationseconds'] ?? 60),
-          { key: 'pathType', label: 'Hareket yolu', min: 0, max: 0, value: String(path['type'] ?? 'horizontal'),
+        const durationMs = boundedInteger(timing['durationms'], 0, 0, 3600000);
+        return [control('cycleDurationMs', 'Hareket döngüsü / geçiş aralığı (ms)', 50, 60000, resolveTrackingCycleMs(configuration)),
+          control('durationSeconds', 'Takip süresi (saniye)', 5, 3600, durationMs > 0
+            ? Math.ceil(Math.max(5000, durationMs) / 1000) : boundedInteger(timing['totaldurationseconds'] ?? timing['durationseconds'], 60, 5, 3600)),
+          { key: 'pathType', label: 'Hareket yolu', min: 0, max: 0, value: String(path['type'] ?? 'horizontal').toLowerCase(),
             options: [{ value: 'horizontal', label: 'Yatay' }, { value: 'vertical', label: 'Dikey' },
               { value: 'circle', label: 'Daire' }, { value: 'infinity8', label: 'Sekiz' },
-              { value: 'random_point', label: 'Rastgele noktalar' }, { value: 'two_point_jump', label: 'İki nokta' }] },
+              { value: 'random_point', label: 'Rastgele noktalar (sıçramalı)' }, { value: 'two_point_jump', label: 'İki nokta (sıçramalı)' }] },
           control('pointSize', 'Nokta boyutu (px)', 8, 200, content['pointsize'] ?? 36)];
       }
       if (mode === 'saccade') return [control('jumpIntervalMs', 'Hedef geçiş aralığı (ms)', 50, 10000,
@@ -463,14 +465,7 @@ export function applyCustomPreviewSettings<T extends Record<string, unknown>>(
     if (validated['holdMs'] !== undefined) merge('timing', { holdMs: validated['holdMs'] });
     if (validated['points'] !== undefined) merge('content', { points: validated['points'] });
     if (validated['peripheralCount'] !== undefined) merge('content', { peripheralCount: validated['peripheralCount'] });
-    if (validated['speedLevel'] !== undefined) {
-      merge('movement', { speedLevel: validated['speedLevel'] });
-      if (caseInsensitiveField(mergeCaseInsensitiveRecords(configuration, settings, 'timing'), 'speedMs') !== undefined) {
-        merge('timing', {});
-        for (const key of Object.keys(recordOrEmpty(settings['timing']))) if (key.toLowerCase() === 'speedms') delete (settings['timing'] as any)[key];
-        (settings['timing'] as Record<string, unknown>)['speedMs'] = 0;
-      }
-    }
+    if (validated['cycleDurationMs'] !== undefined) merge('timing', { speedMs: validated['cycleDurationMs'] });
     if (validated['jumpIntervalMs'] !== undefined) merge('movement', { jumpIntervalMs: validated['jumpIntervalMs'] });
     return result;
   }

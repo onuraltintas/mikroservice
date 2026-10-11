@@ -77,7 +77,7 @@ for (const variant of ['recorded', 'custom', 'jump']) {
       await dialog.getByRole('button', { name: 'Denemeyi başlat' }).click();
     }
     await expect(page.getByText('Göz hareketleri veya okuma hızı ölçülmez.', { exact: false })).toBeVisible();
-    const fixed = new Date('2026-10-12T09:00:00Z');
+    const fixed = new Date();
     await page.clock.install({ time: fixed }); await page.clock.pauseAt(fixed);
     await page.locator('.start-button-large').click();
     const target = page.locator('.target-container');

@@ -4,7 +4,28 @@
  */
 
 import { BaseEngine, EngineConfig, EngineState, EngineResult, EngineCallbacks } from './base-engine.interface';
-import { boundedInteger, boundedText, recordOrEmpty } from './reading-pacer-safety';
+import { boundedInteger, boundedText, caseInsensitiveField, mergeCaseInsensitiveRecords, recordOrEmpty } from './reading-pacer-safety';
+
+/** Full cycle on continuous paths; one placement interval on jump paths. Lower is faster. */
+export function resolveTrackingCycleMs(configuration: Record<string, unknown>): number {
+    const nested = recordOrEmpty(caseInsensitiveField(configuration, 'engineConfig'));
+    const timing = mergeCaseInsensitiveRecords(configuration, nested, 'timing');
+    const movement = mergeCaseInsensitiveRecords(configuration, nested, 'movement');
+    const path = mergeCaseInsensitiveRecords(configuration, nested, 'path');
+    if (typeof timing['speedms'] === 'number' && timing['speedms'] > 0)
+        return boundedInteger(timing['speedms'], 3000, 50, 60000);
+    const level = boundedInteger(movement['speedlevel'], 1, 1, 5);
+    let cycle: number;
+    switch (String(path['type'] ?? 'horizontal').toLowerCase()) {
+        case 'random_point':
+        case 'two_point_jump': return boundedInteger(movement['jumpintervalms'], 1000, 50, 10000);
+        case 'circle': cycle = 2 * Math.PI * 1000 / (60 * (0.02 + 0.01 * level)); break;
+        case 'infinity8': cycle = 2 * Math.PI * 1000 / (60 * (0.03 + 0.01 * level)); break;
+        case 'vertical': cycle = 160 * 1000 / (60 * (0.5 + 0.3 * level)); break;
+        default: cycle = 180 * 1000 / (60 * (0.5 + 0.3 * level));
+    }
+    return Math.round(cycle);
+}
 
 function field(record: Record<string, any>, name: string): any {
     const key = Object.keys(record).reverse().find(candidate => candidate.toLowerCase() === name.toLowerCase());
@@ -178,7 +199,8 @@ export class MotionPathEngine implements BaseEngine {
         this.currentMode = mode;
         this.modernFixation = backendConfig.isAssessmentMode !== true
             && Number(field(backendConfig, 'fixationProtocolVersion') ?? 2) >= 2;
-        this.trackingCycleMs = typeof field(timing, 'speedMs') === 'number' && field(timing, 'speedMs') > 0
+        this.trackingCycleMs = mode === 'tracking' ? resolveTrackingCycleMs(backendConfig)
+            : typeof field(timing, 'speedMs') === 'number' && field(timing, 'speedMs') > 0
             ? boundedInteger(field(timing, 'speedMs'), 3000, 50, 60000) : 0;
         this.isTimeBased = durationSeconds > 0;
         this.durationSeconds = durationSeconds;
@@ -704,7 +726,7 @@ export class MotionPathEngine implements BaseEngine {
 
     // --- JUMPING ---
     private startJumping(jumpImmediately = true): void {
-        const interval = this.config.movement?.jumpIntervalMs || 1000;
+        const interval = this.currentMode === 'tracking' ? this.trackingCycleMs : this.config.movement?.jumpIntervalMs || 1000;
         if (jumpImmediately) this.jump();
         if (!this.state.isRunning) return;
         const delay = jumpImmediately ? interval : this.jumpRemainingMs;

@@ -44,6 +44,11 @@
 
             <div class="card-body-content">
                 <p class="description">{{ exercise?.description }}</p>
+                <p class="description" *ngIf="getTrackingTarget()">
+                    Noktayı gözlerinizle takip edin; tıklamanız veya cevap yazmanız gerekmez.
+                    Süre tamamlandığında çalışma biter; duraklatılan süre sayılmaz.
+                    Göz hareketleri veya okuma hızı ölçülmez. Rahatsızlık hissederseniz durdurun.
+                </p>
                 <p class="description" *ngIf="engine.engineType === 'skimming'">
                     Başlık, giriş ve sonuç cümlelerinden metnin ana fikrini belirleyin; her kelimeyi okumak zorunda değilsiniz.
                     İnceleme sınırı {{ $any(engine).getMaximumMs() / 1000 }} saniyedir.

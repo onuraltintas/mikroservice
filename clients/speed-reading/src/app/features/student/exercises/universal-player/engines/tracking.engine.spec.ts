@@ -1,5 +1,5 @@
 import { fakeAsync, tick } from '@angular/core/testing';
-import { MotionPathEngine } from './motion-path.engine';
+import { MotionPathEngine, resolveTrackingCycleMs } from './motion-path.engine';
 import { EngineCallbacks, EngineResult } from './base-engine.interface';
 import { applyCustomPreviewSettings } from '../custom-preview-settings';
 
@@ -9,6 +9,15 @@ describe('Tracking motion timing', () => {
     onResume: () => undefined, onStateChange: () => undefined, onStepComplete: () => undefined,
     onAction: () => undefined, onError: () => undefined, onComplete: value => result = value };
   beforeEach(() => result = undefined);
+
+  it('resolves nested aliases and legacy tempos on all supported paths', () => {
+    expect(resolveTrackingCycleMs({ timing: { SpeedMs: 1000 }, engineConfig: { timing: { SPEEDMS: 2800 } } })).toBe(2800);
+    for (const [path, cycle] of Object.entries({ horizontal: 3750, vertical: 3333, circle: 3491, infinity8: 2618,
+      random_point: 1000, two_point_jump: 1000 })) {
+      expect(resolveTrackingCycleMs({ path: { type: path }, movement: { speedLevel: 1 } })).toBe(cycle);
+    }
+    expect(resolveTrackingCycleMs({ timing: { speedMs: -1 }, movement: { speedLevel: 1 } })).toBe(3750);
+  });
 
   it('uses tracking for legacy EyeTracking configuration and cycle timing on horizontal paths', () => {
     spyOn(window, 'requestAnimationFrame').and.returnValue(1);
