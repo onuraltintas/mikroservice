@@ -1,0 +1,10 @@
+services:
+  speed-reading-service:
+    image: eduivme/speed-reading-service:exercises-20261011-6f315ff3
+    pull_policy: never
+  speed-reading-frontend:
+    image: eduivme/speed-reading-frontend:exercises-20261011-6f315ff3
+    pull_policy: never
+  admin-panel:
+    image: eduivme/admin-panel:exercises-20261011-6f315ff3
+    pull_policy: never
