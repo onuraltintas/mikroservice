@@ -3621,6 +3621,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
             ...(this.engine?.engineType === 'visual_expansion' && sessionResult.detailedResults?.visualExpansionRoundResults ? {
               maxDegreesReached: sessionResult.detailedResults.visualExpansionMaxPresentedDistance,
               averageResponseTimeMs: sessionResult.detailedResults.visualExpansionAverageResponseTimeMs,
+              targetSummary: sessionResult.detailedResults.visualExpansionTargetSummary,
               roundResults: sessionResult.detailedResults.visualExpansionRoundResults
             } : {})
           }

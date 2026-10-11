@@ -633,8 +633,8 @@ export class VisualExpansionEngine implements BaseEngine {
                 correctAnswers: this.correctAnswers,
                 totalAnswers: this.totalAnswers,
                 averageResponseTimeMs: avgResponseTime,
-                roundResults: this.roundResults
-                ,targetSummary: {
+                roundResults: this.roundResults,
+                targetSummary: {
                     targetDistance: this.targetDegrees,
                     targetReached: targetRounds.length > 0,
                     targetRounds: targetRounds.length,

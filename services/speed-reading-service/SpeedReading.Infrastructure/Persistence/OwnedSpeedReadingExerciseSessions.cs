@@ -2147,7 +2147,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         state.VisualExpansionCurrentDegrees = nextDifficulty.Degrees;
         state.VisualExpansionDisplayDurationMs = nextDifficulty.DisplayDurationMs;
         state.VisualExpansionConsecutiveCorrect = nextDifficulty.ConsecutiveCorrect;
-        state.VisualExpansionPreviousStimuli = state.VisualExpansionExpectedStimuli;
+        state.VisualExpansionPreviousStimuli = state.VisualExpansionProtocolVersion == 2 ? state.VisualExpansionExpectedStimuli : [];
         state.VisualExpansionExpectedStimuli = [];
         state.VisualExpansionPresentedAt = null;
         return Valid(
@@ -3616,6 +3616,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                 shortestCorrectDisplayDurationMs = correctRounds.Length == 0 ? (int?)null : correctRounds.Min(round => round.DisplayDurationMs)
             }, JsonOptions);
         }
+        sanitized.Remove("visualExpansionPreviousStimuli");
         if (IsValidatedFixation(state) && state.FixationProtocolVersion != 1)
             sanitized.Remove("fixationRoundResults");
         if (!state.IsAssessmentMode && state.Tachistoscope is { } completed && completed.Round == completed.Count)

@@ -328,8 +328,8 @@ describe('Custom preview settings safety', () => {
   it('uses the motion engine mode source and visual expansion effective zero defaults', () => {
     expect(getCustomPreviewControls({ engineType: 'motion_path', engineConfig: { mode: 'fixation' }, sessionData: { mode: 'tracking' } })[0].key).toBe('holdMs');
     const controls = getCustomPreviewControls({ engineType: 'visual_expansion', engineConfig: { timing: { durationMs: 0, intervalMs: 0 } } });
-    expect(controls[0].value).toBe(250);
-    expect(controls[1].value).toBe(1500);
+    expect(controls.find(control => control.key === 'displayDurationMs')!.value).toBe(250);
+    expect(controls.find(control => control.key === 'intervalMs')!.value).toBe(1500);
   });
   it('does not wait for server authority in vocabulary preview even with stale session flags', () => {
     spyOn(localStorage, 'getItem').and.returnValue(null);
