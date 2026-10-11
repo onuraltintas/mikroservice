@@ -15,6 +15,30 @@ describe('RSVP presentation', () => {
   beforeEach(() => { result = undefined; errors = []; engine = new TextStreamEngine(); });
   afterEach(() => engine.destroy());
 
+  it('shows the fixation only before the first word and reports the whole presentation duration', fakeAsync(() => {
+    engine.initialize({ mode:'rsvp',words:['bir','iki'],timing:{durationMs:200} } as any,callbacks);
+    expect(engine.getPresentationDurationMs()).toBe(700);
+    engine.start(); expect(engine.isShowingFixationPoint()).toBeTrue(); tick(500);
+    expect(engine.getCurrentStimulus()).toBe('iki'); expect(engine.isShowingFixationPoint()).toBeFalse();
+    tick(200); expect(result.totalTime).toBe(700); expect(result.details.displayPaceWpm).toBe(171);
+  }));
+
+  it('uses the version two server snapshot without letting the catalogue change it', fakeAsync(() => {
+    engine.initialize({ serverAuthoritative:true,exerciseTypeName:'RSVP',words:['bir','iki'],
+      rsvpProtocolVersion:2,rsvpDisplayDurationMs:200,rsvpGapMs:100,rsvpFixationMs:300,
+      engineConfig:{mode:'rsvp',displayDurationMs:50,visuals:{showFixation:false}} } as any,callbacks);
+    engine.start(); tick(799); expect(result).toBeUndefined(); tick(1);
+    expect(result.totalTime).toBe(800);
+  }));
+
+  it('preserves the initial fixation and gap across pauses and restores it on a fresh reset', fakeAsync(() => {
+    engine.initialize({mode:'rsvp',words:['bir','iki'],timing:{durationMs:200,intervalMs:100}} as any,callbacks);
+    engine.start(); tick(100); engine.pause(); tick(1000); engine.resume(); tick(450);
+    engine.pause(); tick(2000); engine.resume(); tick(249); expect(result).toBeUndefined(); tick(1);
+    expect(result.totalTime).toBe(800);
+    engine.reset(); engine.start(); expect(engine.isShowingFixationPoint()).toBeTrue(); tick(800);
+  }));
+
   it('preserves the remaining word exposure across pause', fakeAsync(() => {
     engine.initialize({ mode: 'rsvp', words: ['bir', 'iki'], timing: { durationMs: 200 }, visuals: { showFixation: false } } as any, callbacks);
     engine.start(); tick(150); engine.pause(); tick(5000); engine.resume(); tick(50);
