@@ -12,6 +12,32 @@ namespace SpeedReading.Application.UnitTests;
 
 public sealed class VisualizationPersistenceTests
 {
+    [Theory]
+    [InlineData("spatial", "B")]
+    [InlineData("sequence", "Mavi")]
+    [InlineData("detail", "b")]
+    public async Task Admin_can_edit_catalog_question_types_and_grade_letter_or_text_answers(string questionType, string answer)
+    {
+        await using var db = Context(); var actor = Guid.NewGuid();
+        var type = ExerciseType.Create(Guid.NewGuid(), "Visualization", "Görselleştirme", "visualization");
+        var exercise = Exercise.Create("Görselleştirme", "strategy", "{}", 3, actor, type.Id);
+        db.ExerciseTypes.Add(type); db.Exercises.Add(exercise); await db.SaveChangesAsync();
+        var admin = (ISpeedReadingVisualization)Activator.CreateInstance(typeof(OwnedSpeedReadingDbContext).Assembly
+            .GetType("SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingVisualization")!,
+            BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, [db], null)!;
+        var request = new VisualizationSceneRequest(exercise.Id, "Mavi ev", null, 5, 0, 3,
+            [new("Ev ne renk?", ["Kırmızı", "Mavi"], answer, questionType, 0, null)], Mode: "assessment");
+        var id = await admin.CreateSceneAsync(request, actor, "create-scene", CancellationToken.None);
+        Assert.Equal(id, await admin.CreateSceneAsync(request, actor, "create-scene", CancellationToken.None));
+        var stored = (await admin.GetSceneAsync(id, CancellationToken.None))!;
+        Assert.Equal("Mavi", stored.Questions[0].CorrectAnswer);
+        Assert.True(await admin.UpdateSceneAsync(id, request, actor, "edit-scene", CancellationToken.None));
+        var started = await Service(db).StartAsync(actor, new() { ExerciseId = exercise.Id });
+        var question = (await admin.GetSceneAsync(id, CancellationToken.None))!.Questions[0];
+        Assert.True((await Service(db).ValidateActionAsync(actor, started.SessionId,
+            new() { Action = "answer_question", QuestionId = question.Id, Answer = "B" })).IsCorrect);
+    }
+
     [Fact]
     public async Task Admin_scene_listing_survives_malformed_question_options()
     {
