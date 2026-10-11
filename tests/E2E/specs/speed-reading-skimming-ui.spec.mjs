@@ -33,6 +33,7 @@ for (const timedOut of [false, true]) {
       await route.fulfill({ json: response });
     });
     await page.goto(`/student/exercises/universal-player/${exerciseId}`);
+    await expect(page.getByText(/Süre dolarsa sorulara geçilir; çalışma eksik sayılır/)).toBeVisible();
     await page.locator('.start-button-large').click();
     await expect(page.locator('.reading-text-content')).toContainText('Kitaplar öğrenmeyi destekler.');
     await expect(page.locator('.reading-instruction')).toContainText('ana fikrini belirleyin');
