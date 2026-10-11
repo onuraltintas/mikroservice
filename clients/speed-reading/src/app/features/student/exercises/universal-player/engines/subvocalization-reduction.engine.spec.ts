@@ -132,6 +132,21 @@ describe('subvocalization measurement', () => {
     engine.destroy();
   }));
 
+  it('cannot resume counting after a paused session is stopped', fakeAsync(() => {
+    const engine = new SubvocalizationReductionEngine();
+    const onResume = jasmine.createSpy('onResume');
+    engine.initialize({ readingTextContent: Array(30).fill('kelime').join(' '), targetWpm: 240,
+      metronomeEnabled: true, visualMetronome: true, metronomeBpm: 60 } as any, {
+      onStart: noOp, onPause: noOp, onResume, onComplete: noOp, onError: noOp,
+      onStateChange: noOp, onStepComplete: noOp, onAction: noOp
+    });
+    engine.start(); engine.pause(); engine.stop(); engine.resume(); tick(1000);
+    expect(onResume).not.toHaveBeenCalled();
+    expect((engine.state as any).metronomeStep).toBe(1);
+    expect(engine.state.isRunning).toBeFalse();
+    engine.destroy();
+  }));
+
   it('does not cross sentence boundaries when grouping words', fakeAsync(() => {
     const engine = createEngine('Bir. İki üç dört', 3);
     engine.start();

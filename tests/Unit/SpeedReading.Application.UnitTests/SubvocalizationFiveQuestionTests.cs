@@ -27,6 +27,18 @@ public sealed class SubvocalizationFiveQuestionTests
     }
 
     [Fact]
+    public async Task Rejects_text_when_stored_word_count_hides_out_of_band_content()
+    {
+        await using var db = Context();
+        var (service, student, exercise, text) = await Seed(db, 5, 11);
+        db.Entry(await db.ReadingTexts.SingleAsync()).Property(item => item.WordCount).CurrentValue = 6;
+        await db.SaveChangesAsync();
+        await Assert.ThrowsAnyAsync<Exception>(() => service.StartAsync(student, new() {
+            ExerciseId = exercise, ReadingTextId = text }));
+        Assert.Empty(db.ExerciseSessions);
+    }
+
+    [Fact]
     public async Task Snapshots_five_valid_questions_and_keeps_existing_session()
     {
         await using var db = Context();
