@@ -34,11 +34,16 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions
             fixation = ReadProperty(ReadObject(root, "visuals"), "showFixation");
         state.RsvpFixationMs = fixation.ValueKind == JsonValueKind.False ? 0 : 300;
         state.WordCount = state.Words.Length;
+        var content = ReadObject(nested, "content");
+        var minimum = ReadPositiveInt(content, "minWordCount") ?? ReadPositiveInt(ReadObject(root, "content"), "minWordCount") ?? 0;
+        var maximum = ReadPositiveInt(content, "maxWordCount") ?? ReadPositiveInt(ReadObject(root, "content"), "maxWordCount") ?? 0;
+        if (state.WordCount < minimum || maximum > 0 && state.WordCount > maximum)
+            throw new InvalidOperationException("RSVP metni yapılandırılmış kelime aralığında değil.");
         state.TotalSteps = state.WordCount;
-        state.ReadingMinimumMs = checked(state.WordCount * (state.RsvpDisplayDurationMs + state.RsvpFixationMs)
+        state.ReadingMinimumMs = checked(state.RsvpFixationMs + state.WordCount * state.RsvpDisplayDurationMs
             + (state.WordCount - 1) * state.RsvpGapMs);
         state.RsvpDisplayPaceWpm = Math.Round(state.WordCount * 60000m / state.ReadingMinimumMs, 2);
         state.ReadingPausedMilliseconds = 0;
-        state.RsvpProtocolVersion = 1;
+        state.RsvpProtocolVersion = 2;
     }
 }

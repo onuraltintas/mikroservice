@@ -151,6 +151,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             var usesTextBand = isErrorText || isFreeText || isScanText || IsEngineType(exerciseEngineType, "reading_comprehension")
                 || IsEngineType(exerciseEngineType, "regression_reduction")
                 || IsEngineType(exerciseEngineType, "subvocalization_reduction")
+                || IsRsvp(exerciseTypeName, exerciseEngineType, explicitConfig)
                 || exerciseTypeName.Equals("SpeedReading", StringComparison.OrdinalIgnoreCase)
                 || exerciseTypeName.Equals("Chunking", StringComparison.OrdinalIgnoreCase);
             var minimumWords = usesTextBand ? ReadPositiveInt(explicitContent, "minWordCount") ?? ReadPositiveInt(ReadObject(explicitConfig, "content"), "minWordCount") ?? 0 : 0;
@@ -263,7 +264,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                     || (IsTextFade(DeserializeState(matchingSession.SessionDataJson))
                         && DeserializeState(matchingSession.SessionDataJson).FadeDisplayPaceWpm <= 0)
                     || (IsRsvp(exerciseTypeName, exerciseEngineType, ParseJsonOrEmpty(configurationJson))
-                        && DeserializeState(matchingSession.SessionDataJson).RsvpProtocolVersion != 1)
+                        && DeserializeState(matchingSession.SessionDataJson).RsvpProtocolVersion is not (1 or 2))
                     || (IsSkimming(new SessionState { EngineType = exerciseEngineType })
                         && DeserializeState(matchingSession.SessionDataJson).SkimmingProtocolVersion != 1)
                     || (IsVisualExpansionExercise(DeserializeState(matchingSession.SessionDataJson))
@@ -350,6 +351,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                 var usesTextBand = normalizedEngineType == "error_analysis" || isFreeReading || isComprehension || isScanText || normalizedEngineType == "text_fade"
                     || normalizedEngineType == "regression_reduction"
                     || normalizedEngineType == "subvocalization_reduction"
+                    || IsRsvp(exerciseTypeName, exerciseEngineType, parsedConfiguration)
                     || exerciseTypeName.Equals("SpeedReading", StringComparison.OrdinalIgnoreCase)
                     || exerciseTypeName.Equals("Chunking", StringComparison.OrdinalIgnoreCase);
                 var comprehensionQuestionCount = normalizedEngineType == "text_fade"
@@ -357,7 +359,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                         ReadString(ReadObject(parsedConfiguration, "engineConfig"), "readingPurpose")
                             ?? ReadString(parsedConfiguration, "readingPurpose"), request.AssessmentAttemptId.HasValue) == "evaluation" ? 4 : isComprehension
                     ? ReadPositiveInt(freeContent, "questionCount") ?? ReadPositiveInt(ReadObject(parsedConfiguration, "content"), "questionCount") ?? 0
-                    : normalizedEngineType is "regression_reduction" or "subvocalization_reduction"
+                    : (normalizedEngineType is "regression_reduction" or "subvocalization_reduction"
+                        || IsRsvp(exerciseTypeName, exerciseEngineType, parsedConfiguration))
                         && ExerciseConfigurationRules.ResolveReadingPurpose(normalizedEngineType,
                             ReadString(ReadObject(parsedConfiguration, "engineConfig"), "readingPurpose")
                                 ?? ReadString(parsedConfiguration, "readingPurpose"), request.AssessmentAttemptId.HasValue) == "evaluation"
@@ -639,7 +642,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         if ((IsPacedHighlight(state) || IsTextFade(state)) && (DisplayPace(state) <= 0 || state.ReadingMinimumMs <= 0
             || !state.ReadingStartTime.HasValue || !state.ReadingEndTime.HasValue))
             throw IncompleteSession("Doğrulanmış gösterim tamamlanmadan oturum kaydedilemez. Egzersizi yeniden başlatın.");
-        if (IsRsvp(state) && (state.RsvpProtocolVersion != 1 || !state.ReadingStartTime.HasValue
+        if (IsRsvp(state) && (state.RsvpProtocolVersion is not (1 or 2) || !state.ReadingStartTime.HasValue
             || !state.ReadingEndTime.HasValue || state.ReadingMinimumMs <= 0))
             throw IncompleteSession("RSVP gösterimi doğrulanmadan oturum kaydedilemez. Egzersizi yeniden başlatın.");
 
@@ -1599,7 +1602,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         if (IsEngineType(exerciseEngineType, "reading_comprehension")
             || (IsEngineType(exerciseEngineType, "regression_reduction") && state.ReadingPurpose == "evaluation")
             || (IsEngineType(exerciseEngineType, "subvocalization_reduction") && state.ReadingPurpose == "evaluation")
-            || (IsTextFade(state) && state.ReadingPurpose == "evaluation"))
+            || (IsTextFade(state) && state.ReadingPurpose == "evaluation")
+            || (IsRsvp(state) && state.ReadingPurpose == "evaluation"))
         {
             var count = IsTextFade(state) ? 4 : ReadPositiveInt(ReadObject(effectiveConfig, "content"), "questionCount")
                 ?? ReadPositiveInt(ReadObject(config, "content"), "questionCount");
@@ -1914,7 +1918,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             return FinishAdaptiveStage(session, state, now);
         if (ExerciseConfigurationRules.NormalizeEngineType(state.EngineType) is "reading_comprehension" or "free_reading" || IsPacedHighlight(state) || IsTextFade(state) || IsRsvp(state) || IsSkimming(state))
         {
-            if (IsRsvp(state) && state.RsvpProtocolVersion != 1)
+            if (IsRsvp(state) && state.RsvpProtocolVersion is not (1 or 2))
                 return Invalid("Bu eski RSVP oturumu doğrulanamıyor. Egzersizi yeniden başlatın.");
             if ((IsPacedHighlight(state) || IsTextFade(state)) && (DisplayPace(state) <= 0 || state.ReadingMinimumMs <= 0))
                 return Invalid("Bu eski egzersiz oturumu doğrulanamıyor. Egzersizi yeniden başlatın.");
@@ -1947,9 +1951,11 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             if (IsRsvp(state)) {
                 var elapsedMs = Math.Max(0, (now - state.ReadingStartTime.Value).TotalMilliseconds
                     - (state.ReadingPausedMilliseconds ?? 0));
-                var cycleMs = state.RsvpDisplayDurationMs + state.RsvpFixationMs + state.RsvpGapMs;
+                var cycleMs = state.RsvpDisplayDurationMs + state.RsvpGapMs
+                    + (state.RsvpProtocolVersion == 1 ? state.RsvpFixationMs : 0);
+                var presentationMs = state.RsvpProtocolVersion == 2 ? Math.Max(0, elapsedMs - state.RsvpFixationMs) : elapsedMs;
                 state.RsvpPresentedWords = incomplete
-                    ? Math.Min(state.WordCount, (int)Math.Floor((elapsedMs + state.RsvpGapMs) / cycleMs))
+                    ? Math.Min(state.WordCount, (int)Math.Floor((presentationMs + state.RsvpGapMs) / cycleMs))
                     : state.WordCount;
                 state.RsvpCompletionPercent = Math.Round(100m * state.RsvpPresentedWords / state.WordCount, 2);
             }
