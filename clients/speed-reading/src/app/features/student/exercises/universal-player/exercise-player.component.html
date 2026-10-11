@@ -57,8 +57,8 @@
                 <!-- Word Highlight Details (Speed Reading/Chunking) -->
                 <div *ngIf="parsedConfig?.engineType === 'word_highlight'" class="exercise-details">
                     <div class="detail-item" *ngIf="parsedConfig?.engineConfig?.['pacer']?.['speedWpm']">
-                        <span class="label">Hedef Hız:</span>
-                        <span class="value">{{ parsedConfig?.engineConfig?.['pacer']?.['speedWpm'] }} WPM</span>
+                        <span class="label">{{ parsedConfig?.engineConfig?.['mode'] === 'chunking' ? 'Gösterim temposu:' : 'Hedef Hız:' }}</span>
+                        <span class="value">{{ parsedConfig?.engineConfig?.['pacer']?.['speedWpm'] }} {{ parsedConfig?.engineConfig?.['mode'] === 'chunking' ? 'kelime/dk' : 'WPM' }}</span>
                     </div>
                     <div class="detail-item"
                         *ngIf="parsedConfig?.engineConfig?.['pacer']?.['chunkSize'] || parsedConfig?.engineConfig?.['content']?.['chunkSize']">
@@ -68,7 +68,7 @@
                     </div>
                     <div class="detail-item">
                         <span class="label">Egzersiz Tipi:</span>
-                        <span class="value">{{ parsedConfig?.engineConfig?.['mode'] === 'chunking' ? 'Gruplama' : 'Hız
+                        <span class="value">{{ parsedConfig?.engineConfig?.['mode'] === 'chunking' ? 'Kelime grupları' : 'Hız
                             Okuma' }}</span>
                     </div>
                 </div>

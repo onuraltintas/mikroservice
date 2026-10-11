@@ -83,7 +83,7 @@ test('large custom groups wrap on mobile without horizontally clipping real word
   const display = page.locator('.highlight-display-area');
   const dimensions = await display.evaluate(element => ({ width: element.clientWidth, scrollWidth: element.scrollWidth }));
   expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.width + 1);
-  await page.screenshot({ path: testInfo.outputPath('bounded-groups.png'), fullPage: true });
+  await page.screenshot({ path: testInfo.outputPath('bounded-groups.png'), fullPage: true, animations: 'disabled' });
 });
 
 test('teacher timeout reports incomplete demonstration without preview persistence', async ({ page }) => {
