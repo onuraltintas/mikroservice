@@ -11,6 +11,56 @@ namespace SpeedReading.Application.UnitTests;
 public sealed class VocabularyPersistenceTests
 {
     [Fact]
+    public async Task Learn_then_quiz_uses_same_words_without_scoring_self_reports()
+    {
+        await using var db = Context(); var student = Guid.NewGuid();
+        var exerciseId = await Seed(db, student, "learning");
+        var exercise = await db.Exercises.SingleAsync();
+        exercise.Update(exercise.Title, exercise.Description, exercise.TypeCode, JsonSerializer.Serialize(new {
+            engineType = "vocabulary_builder", engineConfig = new { mode = "learning", learnThenQuiz = true, quizType = "mixed", vocabulary = new { count = 4, difficultyLevel = 2, requireFullPool = true } }
+        }), exercise.DifficultyLevel, exercise.ExerciseTypeId, exercise.TargetAgeGroupId, student, DateTime.UtcNow);
+        await db.SaveChangesAsync();
+        var service = Service(db); var started = await service.StartAsync(student, new() { ExerciseId = exerciseId });
+        var words = started.InitialData.GetProperty("vocabularyWords").EnumerateArray().Select(word => word.Clone()).ToArray();
+        ExerciseActionRequest Action(JsonElement word, string kind) => new() { ActionId = Guid.NewGuid(), Action = "vocabulary_review", CustomData = new() {
+            ["vocabularyItemId"] = word.GetProperty("id"), ["reviewKind"] = JsonSerializer.SerializeToElement(kind),
+            ["questionType"] = word.GetProperty("questionType"),
+            ["selectedAnswer"] = word.GetProperty(word.GetProperty("questionType").GetString() == "word" ? "definition" : "word")
+        } };
+        Assert.False((await service.ValidateActionAsync(student, started.SessionId, Action(words[0], "quiz"))).IsValid);
+        foreach (var word in words) {
+            var action = Action(word, "known");
+            Assert.True((await service.ValidateActionAsync(student, started.SessionId, action)).IsValid);
+            Assert.True((await service.ValidateActionAsync(student, started.SessionId, action)).IsValid);
+            Assert.False((await service.ValidateActionAsync(student, started.SessionId, Action(word, "known"))).IsValid);
+        }
+        Assert.Empty(db.UserVocabularyProgresses);
+        Assert.Empty(db.ExerciseSessionResults);
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.CompleteAsync(student, started.SessionId, new()));
+        var resumed = await service.StartAsync(student, new() { ExerciseId = exerciseId });
+        Assert.Equal("quiz", resumed.InitialData.GetProperty("vocabularyMode").GetString());
+        Assert.Equal(words.Select(w => w.GetProperty("id").GetGuid()), resumed.InitialData.GetProperty("vocabularyWords").EnumerateArray().Select(w => w.GetProperty("id").GetGuid()));
+        foreach (var word in words) Assert.True((await service.ValidateActionAsync(student, started.SessionId, Action(word, "quiz"))).IsValid);
+        var result = await service.CompleteAsync(student, started.SessionId, new());
+        Assert.Equal(100m, result.Accuracy); Assert.Equal(4, result.CorrectCount);
+        Assert.All(await db.UserVocabularyProgresses.ToListAsync(), p => Assert.Equal(2, p.Box));
+        Assert.Single(db.ExerciseSessionResults); Assert.Null(result.RawWPM);
+    }
+
+    [Fact]
+    public async Task Full_pool_setting_rejects_a_short_catalog_before_creating_session()
+    {
+        await using var db = Context(); var student = Guid.NewGuid();
+        var id = await Seed(db, student, "quiz"); var exercise = await db.Exercises.SingleAsync();
+        exercise.Update(exercise.Title, exercise.Description, exercise.TypeCode, JsonSerializer.Serialize(new {
+            engineType = "vocabulary_builder", engineConfig = new { mode = "quiz", vocabulary = new { count = 8, difficultyLevel = 2, requireFullPool = true } }
+        }), exercise.DifficultyLevel, exercise.ExerciseTypeId, exercise.TargetAgeGroupId, student, DateTime.UtcNow);
+        await db.SaveChangesAsync();
+        await Assert.ThrowsAsync<InvalidOperationException>(() => Service(db).StartAsync(student, new() { ExerciseId = id }));
+        Assert.Empty(db.ExerciseSessions);
+    }
+
+    [Fact]
     public async Task Default_configuration_uses_central_words_and_rejects_empty_catalog()
     {
         await using var db = Context(); var student = Guid.NewGuid();

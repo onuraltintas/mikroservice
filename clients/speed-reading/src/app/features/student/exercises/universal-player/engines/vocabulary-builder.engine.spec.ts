@@ -2,6 +2,32 @@ import { fakeAsync, tick } from '@angular/core/testing';
 import { VocabularyBuilderEngine } from './vocabulary-builder.engine';
 
 describe('VocabularyBuilderEngine server validation contract', () => {
+  it('learns then tests exactly the same words without scoring learning or completing early', () => {
+    const actions: any[] = []; let completed = 0;
+    const engine = createQuizEngine(actions, []);
+    const words = (engine as any).words;
+    engine.initialize({ previewOnly: true, mode: 'learning', learnThenQuiz: true, quizType: 'word_to_definition', words } as any,
+      { ...createCallbacks(actions, []), onComplete: () => completed++ });
+    engine.start();
+    for (const word of words) {
+      expect(engine.getCurrentWord()?.id).toBe(word.id);
+      engine.markAsKnown();
+      expect(engine.getCorrectCount()).toBe(0);
+    }
+    expect(completed).toBe(0); expect(engine.getMode()).toBe('quiz');
+    expect(engine.getProgress()).toEqual({ current: 1, total: 4 });
+    for (const word of words) {
+      expect(engine.getCurrentWord()?.id).toBe(word.id);
+      engine.submitQuizAnswer(engine.getCorrectAnswer()); engine.nextQuizQuestion();
+    }
+    expect(completed).toBe(1);
+    expect(engine.getResult().details.correctCount).toBe(4); engine.destroy();
+  });
+  it('restores the server-owned vocabulary phase and current word on reload', () => {
+    const engine = createQuizEngine([], []); const words = (engine as any).words;
+    engine.initialize({ serverAuthoritative: true, mode: 'learning', learnThenQuiz: true, vocabularyMode: 'quiz', vocabularyCurrentWordIndex: 2, words } as any, createCallbacks([], []));
+    expect(engine.getMode()).toBe('quiz'); expect(engine.getCurrentWord()?.id).toBe(words[2].id); engine.destroy();
+  });
   it('ignores delayed acknowledgements after destroy and cannot resume a stopped timer', fakeAsync(() => {
     const engine = createQuizEngine([], []); (engine as any).serverAuthoritative = true; engine.timeLimitPerWord = 2;
     engine.start(); engine.submitQuizAnswer(engine.getQuizOptions()[0].letter); engine.destroy();
