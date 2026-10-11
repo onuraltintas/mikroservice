@@ -697,6 +697,12 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     this.backendSessionConfig = {};
 
     if (this.parsedConfig?.engineType === 'visualization' && this.exercise) {
+      const inlineScenes = this.parsedConfig.engineConfig?.['scenes'] ?? this.parsedConfig.engineConfig?.['Scenes']
+        ?? this.parsedConfig['scenes'] ?? this.parsedConfig['Scenes'];
+      if (Array.isArray(inlineScenes) && inlineScenes.length) {
+        this.initializePreviewEngine();
+        return;
+      }
       this.exerciseService.getPreviewVisualizationScenes(this.exercise.id)
         .pipe(takeUntil(this.destroy$)).subscribe({
           next: scenes => {
@@ -704,6 +710,12 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
               ...scene, sceneId: scene.id,
               questions: scene.questions.map(question => ({ ...question, questionId: question.id }))
             })) };
+            // The engine prioritizes nested configuration; populate it before applying local preview overrides.
+            this.parsedConfig = { ...this.parsedConfig, engineConfig: {
+              ...this.parsedConfig?.engineConfig, scenes: this.backendSessionConfig.visualizationScenes
+            } };
+            this.applyCustomPreview(history.state);
+            if (this.error) { this.finishLoading(); return; }
             this.initializePreviewEngine();
           },
           error: error => this.handleInitializationError(error)

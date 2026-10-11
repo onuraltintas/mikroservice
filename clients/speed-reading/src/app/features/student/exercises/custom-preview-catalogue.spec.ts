@@ -1,8 +1,30 @@
-import { of } from 'rxjs';
+import { of, Subject, throwError } from 'rxjs';
 import { ExercisesListComponent } from './exercises-list.component';
 import { CustomPreviewDialogComponent } from './universal-player/custom-preview-dialog.component';
 
 describe('Custom preview catalogue navigation', () => {
+  it('loads visualization scenes for their actual duration before opening custom settings', () => {
+    const open = jasmine.createSpy('open').and.returnValue({ afterClosed: () => of(undefined) });
+    const scenes = [{ id: 'scene', duration: 45, questions: [] }];
+    const load = jasmine.createSpy('load').and.returnValue(of(scenes));
+    const context: any = { dialog: { open }, exerciseService: { getPreviewVisualizationScenes: load },
+      destroy$: new Subject<void>(), authService: { currentUserValue: { roles: ['Teacher'] } },
+      toaster: { error: jasmine.createSpy('error') } };
+    const config = { engineType: 'visualization', engineConfig: { mode: 'static' } };
+    ExercisesListComponent.prototype.openCustomPreview.call(context, { id: 'exercise', configurationJson: JSON.stringify(config) } as any);
+    expect(load).toHaveBeenCalledWith('exercise');
+    expect(open.calls.mostRecent().args[1].data.engineConfig.scenes[0].duration).toBe(45);
+    expect((config.engineConfig as any).scenes).toBeUndefined();
+  });
+  it('explains failed visualization scene loading without opening an empty dialog', () => {
+    const open = jasmine.createSpy('open'); const error = jasmine.createSpy('error');
+    const context: any = { dialog: { open }, exerciseService: { getPreviewVisualizationScenes: () => throwError(() => new Error('Offline')) },
+      destroy$: new Subject<void>(), authService: { currentUserValue: { roles: ['Admin'] } }, toaster: { error } };
+    ExercisesListComponent.prototype.openCustomPreview.call(context, { id: 'exercise',
+      configurationJson: JSON.stringify({ engineType: 'visualization' }) } as any);
+    expect(open).not.toHaveBeenCalled();
+    expect(error).toHaveBeenCalledWith('Görselleştirme sahneleri yüklenemedi. Lütfen yeniden deneyin.');
+  });
   it('does not open an empty form for an unsupported default exercise', () => {
     const open = jasmine.createSpy('open').and.returnValue({ afterClosed: () => of(undefined) });
     const context: any = { dialog: { open }, authService: { currentUserValue: { roles: ['Teacher'] } }, toaster: { error: jasmine.createSpy('error') } };

@@ -43,8 +43,9 @@ async function prepare(page, role, mode, databaseScenes) {
 test('admin previews three real authored scenes and nine questions without saving', async ({ page }) => {
   const pack = JSON.parse(readFileSync(new URL('../../../content-packs/visualization/v2/scenes.json', import.meta.url), 'utf8'));
   const scenes = pack.slice(0, 3);
-  const { errors, writes } = await prepare(page, 'Admin', 'assessment', scenes);
+  const { errors, writes } = await prepare(page, 'Admin', 'static', scenes);
   await page.getByRole('button', { name: 'Özel ayarlarla dene' }).click();
+  await page.getByRole('dialog').locator('input[type=number]').first().fill('17');
   await page.getByRole('dialog').getByRole('button', { name: 'Denemeyi başlat' }).click();
   await page.locator('.start-button-large').click();
   for (const scene of scenes) {
@@ -54,7 +55,7 @@ test('admin previews three real authored scenes and nine questions without savin
       await expect(page.locator('.visualization-question-container .question-text')).toHaveText(question.questionText);
       await page.locator('.modern-options .modern-option-btn').first().click();
       await expect(page.getByText('Önizleme: cevap değerlendirilmedi.', { exact: true })).toBeVisible();
-      await page.getByRole('button', { name: index === 2 ? 'Sonraki Sahne' : 'Sonraki Soru', exact: true }).click();
+      await page.getByRole('button', { name: index === 2 ? 'Sonraki Sahne' : 'Sonraki Soru' }).click();
     }
   }
   await expect(page.getByRole('status').filter({ hasText: /Önizleme sonucu.*kaydedilmedi/ })).toBeVisible();

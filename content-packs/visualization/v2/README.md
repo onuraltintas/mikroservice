@@ -10,8 +10,8 @@ Bu paket yalnız Hızlı Okuma'nın Görselleştirme egzersizini değiştirir. E
 - Seviye yükseldikçe ek ayrıntılar, ilişkili konumlar ve sıralama talepleri artar. Bu dağılım pedagojik bir başlangıç ayarıdır; bilimsel olarak doğrulanmış yaş/seviye normu veya klinik ölçüm değildir.
 - Sahne içeriği metinseldir; fotoğraf veya yapay zekâ görseli eklenmez. Egzersiz zihinde canlandırma ve soruları yanıtlama üzerine kuruludur.
 - Kayıtlı çalışmada mevcut öğrenci ve egzersize ait son 200 oturumdan sahne kullanım sıklığı ve son kullanımı dikkate alınır. Daha az kullanılan/uzun süredir kullanılmayan üç sahne seçilir; eşitlikler ve sunum sırası rastgele belirlenir. Bu, sınırsız tekrar engeli değildir.
-- Önizleme API'sinden rastgele üç sahne alınır; kullanıcı geçmişi veya sonuç kaydı oluşturulmaz. Dokuz cevap önizlemede puanlanmaz.
-- Kayıtlı sonuçta dokuz cevap sunucuda doğrulanır. Bu egzersiz okuma hızı (WPM) ölçmez.
+- Merkezi sahneli önizleme API'sinden rastgele üç sahne alınır; kullanıcı geçmişi veya sonuç kaydı oluşturulmaz. Dokuz cevap önizlemede puanlanmaz. Elle yapılandırılmış inline sahnelerin önizlemesi kendi içeriğini korur.
+- Yeni paketle kayıtlı sonuçta dokuz cevap sunucuda doğrulanır. Bu egzersiz okuma hızı (WPM) ölçmez.
 
 ### Korunan sahne süreleri (saniye)
 

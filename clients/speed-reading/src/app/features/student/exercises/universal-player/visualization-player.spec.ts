@@ -3,6 +3,18 @@ import { createActionFailureState } from './exercise-action-queue';
 import { of, Subject } from 'rxjs';
 
 describe('visualization result normalization', () => {
+  it('preserves configured inline scenes rather than replacing them with an empty database response', () => {
+    const player = Object.create(ExercisePlayerComponent.prototype) as any;
+    player.exercise = { id: 'exercise' };
+    const scene = { sceneId: 'inline', description: 'Elle hazırlanan sahne', duration: 17, questions: [] };
+    player.parsedConfig = { engineType: 'visualization', engineConfig: { mode: 'static', scenes: [scene] } };
+    player.exerciseService = { getPreviewVisualizationScenes: jasmine.createSpy('getPreviewVisualizationScenes') };
+    player.initializePreviewEngine = jasmine.createSpy('initializePreviewEngine');
+    player.startPreviewSession();
+    expect(player.parsedConfig.engineConfig.scenes).toEqual([scene]);
+    expect(player.exerciseService.getPreviewVisualizationScenes).not.toHaveBeenCalled();
+    expect(player.initializePreviewEngine).toHaveBeenCalled();
+  });
   for (const scenes of [undefined, []]) {
     it(`applies custom duration after loading database scenes (inline: ${JSON.stringify(scenes)})`, () => {
       const player = Object.create(ExercisePlayerComponent.prototype) as any;

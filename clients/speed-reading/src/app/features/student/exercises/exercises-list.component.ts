@@ -7,7 +7,7 @@ import { ExerciseService } from '../../../core/services/exercise.service';
 import { ExerciseTypeService } from '../../../core/services/exercise-type.service';
 import { Exercise } from '../../../core/models/exercise.model';
 import { ExerciseLevelDialogComponent } from './exercise-level-dialog/exercise-level-dialog.component';
-import { forkJoin } from 'rxjs';
+import { forkJoin, takeUntil } from 'rxjs';
 import { AuthService } from '../../../core/services/auth.service';
 import { CustomPreviewDialogComponent } from './universal-player/custom-preview-dialog.component';
 import { getCustomPreviewControls } from './universal-player/custom-preview-settings';
@@ -183,18 +183,30 @@ export class ExercisesListComponent extends BaseComponent implements OnInit {
       configuration = parsed as Record<string, unknown>;
     }
     catch { this.toaster.error('Bu egzersizin ayarları okunamadı.'); return; }
-    if (!getCustomPreviewControls(configuration).length) {
-      this.toaster.error('Bu egzersiz türü için özel ayarlar henüz desteklenmiyor. Kayıtlı ayarlarla başlatabilirsiniz.');
+    const openDialog = (settings: Record<string, unknown>) => {
+      if (!getCustomPreviewControls(settings).length) {
+        this.toaster.error('Bu egzersiz türü için özel ayarlar henüz desteklenmiyor. Kayıtlı ayarlarla başlatabilirsiniz.');
+        return;
+      }
+      this.dialog.open(CustomPreviewDialogComponent, { width: '480px', maxWidth: '95vw', data: settings })
+        .afterClosed().subscribe(values => {
+          if (!values) return;
+          const exerciseId = exercise.id;
+          this.router.navigate(['/student/exercises/universal-player', exerciseId], {
+            state: { customPreview: { exerciseId, values } }
+          });
+        });
+    };
+    const engineConfig = configuration['engineConfig'] as Record<string, unknown> | undefined;
+    if (configuration['engineType'] === 'visualization'
+      && (!Array.isArray(engineConfig?.['scenes']) || !engineConfig['scenes'].length)) {
+      this.exerciseService.getPreviewVisualizationScenes(exercise.id).pipe(takeUntil(this.destroy$)).subscribe({
+        next: scenes => openDialog({ ...configuration, engineConfig: { ...engineConfig, scenes } }),
+        error: () => this.toaster.error('Görselleştirme sahneleri yüklenemedi. Lütfen yeniden deneyin.')
+      });
       return;
     }
-    this.dialog.open(CustomPreviewDialogComponent, { width: '480px', maxWidth: '95vw', data: configuration })
-      .afterClosed().subscribe(values => {
-        if (!values) return;
-        const exerciseId = exercise.id;
-        this.router.navigate(['/student/exercises/universal-player', exerciseId], {
-          state: { customPreview: { exerciseId, values } }
-        });
-      });
+    openDialog(configuration);
   }
 
   startExercise(exerciseCard: ExerciseCard, custom = false): void {
