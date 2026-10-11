@@ -2395,6 +2395,16 @@ DO $$ BEGIN
       OR s.config->'engineConfig'->>'readingPurpose' IS DISTINCT FROM 'evaluation'
       OR s.config->'engineConfig'->'content'->>'source' IS DISTINCT FROM 'reading_text'
       OR (s.config->>'difficultyLevel')::int IS DISTINCT FROM s.level
+      OR (s.config->'engineConfig'->'timing'->>'durationMs')::int IS NULL
+      OR (s.config->'engineConfig'->'timing'->>'durationMs')::int NOT BETWEEN 50 AND 5000
+      OR s.config->'engineConfig'->'timing'->'durationMs' IS DISTINCT FROM s.old_config->'engineConfig'->'timing'->'durationMs'
+      OR (s.config->'engineConfig'->'timing'->>'intervalMs')::int IS DISTINCT FROM 0
+      OR s.config->'engineConfig'->'visuals'->>'showFixation' IS DISTINCT FROM 'true'
+      OR s.config->'engineConfig'->'adaptive'->>'enabled' IS DISTINCT FROM 'false'
+      OR (s.config->'engineConfig'->'content'->>'minWordCount')::int IS NULL
+      OR (s.config->'engineConfig'->'content'->>'maxWordCount')::int IS NULL
+      OR (s.config->'engineConfig'->'content'->>'minWordCount')::int < 1
+      OR (s.config->'engineConfig'->'content'->>'maxWordCount')::int < (s.config->'engineConfig'->'content'->>'minWordCount')::int
       OR (s.config->'engineConfig'->'content'->>'questionCount')::int IS DISTINCT FROM 5)
     THEN RAISE EXCEPTION 'RSVP settings invalid'; END IF;
   IF EXISTS(SELECT 1 FROM rsvp_settings GROUP BY age_id,level
@@ -2440,7 +2450,7 @@ DO $$ BEGIN
     THEN RAISE EXCEPTION 'RSVP question collision or later edit'; END IF;
 END $$;
 INSERT INTO speed_reading.reading_texts(id,title,content,word_count,category,difficulty_level,target_age_group_id,
-  language,is_active,tags,recommended_min_level,recommended_max_level,average_rsvp_score,times_read,
+  language,is_active,tags,recommended_min_level,recommended_max_level,average_comprehension_score,times_read,
   average_reading_time_seconds,exercise_id,created_at,created_by,version,is_deleted)
 SELECT id,title,content,word_count,'rsvp',level,age_id,'tr',true,'rsvp-v2;original-selection',level,level,
   0,0,0,exercise_id,now(),'rsvp-v2',1,false FROM rsvp_content ON CONFLICT(id) DO NOTHING;
