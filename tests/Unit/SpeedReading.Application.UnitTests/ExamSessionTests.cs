@@ -91,9 +91,15 @@ public sealed class ExamSessionTests
         Assert.Null(answer.IsCorrect); Assert.Null(answer.CorrectAnswer); Assert.Null(answer.Explanation);
         var retry = await service.ValidateActionAsync(student, start.SessionId, new() { Action = "answer_question", QuestionId = question, Answer = "B" });
         Assert.Null(retry.IsCorrect); Assert.Null(retry.CorrectAnswer);
+        var progress = await service.GetProgressAsync(student, start.SessionId);
+        Assert.Equal(0, progress.CorrectCount); Assert.Equal(0, progress.IncorrectCount);
+        var details = await service.GetDetailsAsync(student, start.SessionId);
+        Assert.Equal(0, details.CorrectCount); Assert.Equal(0, details.Accuracy);
         var result = await service.CompleteAsync(student, start.SessionId, new());
         Assert.Equal("A", result.DetailedResults.GetProperty("questions")[0].GetProperty("correctAnswer").GetString());
         Assert.Equal(100, result.Score); Assert.Null(result.RawWPM);
+        Assert.Equal(1, (await service.GetProgressAsync(student, start.SessionId)).CorrectCount);
+        Assert.Equal(100, (await service.GetDetailsAsync(student, start.SessionId)).Accuracy);
     }
 
     [Fact]
