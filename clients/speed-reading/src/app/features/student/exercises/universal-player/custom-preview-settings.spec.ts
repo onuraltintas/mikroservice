@@ -340,10 +340,22 @@ describe('Custom preview settings safety', () => {
     expect(result.engineConfig.PositionSequence).toEqual([1, 2, 1]);
     expect(() => applyCustomPreviewSettings(config, { speedMs: 0 }, context)).toThrow();
   });
-  it('adjusts vocabulary quiz duration only in quiz mode', () => {
+  it('adjusts vocabulary preview mode, count and quiz direction without mutating the catalogue', () => {
+    const config = { engineType: 'vocabulary_builder', engineConfig: { mode: 'learning', learnThenQuiz: true, vocabulary: { count: 8, difficultyLevel: 2 } } };
+    const result = applyCustomPreviewSettings(config, { mode: 'quiz', wordCount: 18, quizType: 'definition_to_word', timeLimitPerWord: 20 }, context);
+    expect(result.engineConfig.mode).toBe('quiz');
+    expect(result.engineConfig.learnThenQuiz).toBeFalse();
+    expect(result.engineConfig.vocabulary.count).toBe(18);
+    expect((result.engineConfig as any).quizType).toBe('definition_to_word');
+    expect(config.engineConfig.vocabulary.count).toBe(8);
+    expect(() => applyCustomPreviewSettings(config, { wordCount: 51 }, context)).toThrow();
+    expect(() => applyCustomPreviewSettings(config, { mode: 'review' }, context)).toThrow();
+    expect(() => applyCustomPreviewSettings(config, { quizType: 'invalid' }, context)).toThrow();
+  });
+  it('adjusts vocabulary quiz duration in preview', () => {
     const config = { engineType: 'vocabulary_builder', engineConfig: { mode: 'quiz', timeLimitPerWord: 0 } };
     expect(applyCustomPreviewSettings(config, { timeLimitPerWord: 20 }, context).engineConfig.timeLimitPerWord).toBe(20);
-    expect(getCustomPreviewControls({ engineType: 'vocabulary_builder', engineConfig: { mode: 'learn' } })).toEqual([]);
+    expect(getCustomPreviewControls(config).map(control => control.key)).toContain('wordCount');
   });
   it('adjusts visual expansion display duration without replacing stimuli', () => {
     const config = { engineType: 'visual_expansion', engineConfig: { timing: { durationMs: 250, intervalMs: 1500 }, content: { stimulusType: 'letter' } } };

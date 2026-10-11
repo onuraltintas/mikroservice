@@ -2,6 +2,25 @@ import { fakeAsync, tick } from '@angular/core/testing';
 import { VocabularyBuilderEngine } from './vocabulary-builder.engine';
 
 describe('VocabularyBuilderEngine server validation contract', () => {
+  it('restarts the learning phase when a combined preview is reset', () => {
+    const engine = createQuizEngine([], []); const words = (engine as any).words;
+    engine.initialize({ previewOnly: true, mode: 'learning', learnThenQuiz: true, words } as any, createCallbacks([], []));
+    engine.start(); for (const word of words) engine.markAsKnown();
+    expect(engine.getMode()).toBe('quiz'); engine.reset();
+    expect(engine.getMode()).toBe('learning'); engine.destroy();
+  });
+  it('waits for acknowledgements before switching a combined session to quiz and never awards self-report progress', () => {
+    const actions: any[] = []; const engine = createQuizEngine([], []); const words = (engine as any).words;
+    engine.initialize({ serverAuthoritative: true, mode: 'learning', learnThenQuiz: true, words } as any, createCallbacks(actions, []));
+    engine.start(); engine.markAsKnown(); engine.applyServerResponse({ isValid: false });
+    expect(engine.getProgress().current).toBe(1);
+    for (const word of words) {
+      engine.markAsUnknown(); expect(engine.getCurrentWord()?.id).toBe(word.id);
+      engine.applyServerResponse({ isValid: true, isCorrect: false });
+      expect(engine.getIncorrectCount()).toBe(0);
+    }
+    expect(engine.getMode()).toBe('quiz'); expect(engine.getCorrectCount()).toBe(0); engine.destroy();
+  });
   it('learns then tests exactly the same words without scoring learning or completing early', () => {
     const actions: any[] = []; let completed = 0;
     const engine = createQuizEngine(actions, []);
