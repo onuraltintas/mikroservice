@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SpeedReading.API.Controllers;
 using SpeedReading.Application.Content;
+using SpeedReading.Application.StudentReading;
 using SpeedReading.Domain.Catalog;
 using SpeedReading.Domain.Profiles;
 using SpeedReading.Infrastructure.Persistence;
@@ -23,6 +24,10 @@ public sealed class ErrorAnalysisCatalogVisibilityTests
         Assert.DoesNotContain("proofreading-fixture", await catalog.GetReadingTextCategoriesAsync(user));
         Assert.DoesNotContain(4, await catalog.GetReadingTextDifficultyLevelsAsync(user));
         Assert.NotNull(await catalog.GetReadingTextAsync(text.Id, true, false, true, null));
+        var reading = (ISpeedReadingStudentReading)Activator.CreateInstance(typeof(OwnedSpeedReadingDbContext).Assembly.GetType(
+            "SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingStudentReading")!, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, [db], null)!;
+        Assert.Null(await reading.StartAsync(user, text.Id, CancellationToken.None));
+        Assert.DoesNotContain(await reading.GetAvailableTextsAsync(user, null, null, null, null, CancellationToken.None), item => item.Id == text.Id);
         var ordinary = ReadingText.Create(Guid.NewGuid(), "Normal metin", "Okuma metni.", difficultyLevel: 2);
         db.ReadingTexts.Add(ordinary); await db.SaveChangesAsync();
         Assert.NotNull(await catalog.GetReadingTextAsync(ordinary.Id, false, false, false, user));
