@@ -6,6 +6,8 @@ test('covers existing 3–5 levels with increasing text demand and four evidence
   const { settings, content } = buildSkimmingPack();
   assert.equal(settings.length, 12);
   assert.equal(content.length, 36);
+  assert(new Set(content.map(text => text.questions.map(question => question.correctAnswer).join(''))).size > 1,
+    'Answer positions must not repeat the same pattern for every text');
   assert.equal(new Set([...settings, ...content, ...content.flatMap(text => text.questions)].map(row => row.id)).size, 192);
   for (const age of ['child', 'teen', 'young-adult', 'adult']) {
     const rows = settings.filter(row => row.age === age);
@@ -29,7 +31,7 @@ test('covers existing 3–5 levels with increasing text demand and four evidence
         assert(text.wordCount >= band.minWordCount && text.wordCount <= band.maxWordCount);
         assert.equal(text.questions.length, 4);
         assert.equal(new Set(text.questions.map(question => question.questionText)).size, 4);
-        assert.deepEqual(text.questions.map(question => question.correctAnswer), ['A', 'B', 'C', 'D']);
+        assert.deepEqual(text.questions.map(question => question.correctAnswer).sort(), ['A', 'B', 'C', 'D']);
         for (const question of text.questions) {
           assert.equal(question.type, 1);
           assert(text.content.includes(question.evidence));
