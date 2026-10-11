@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using SpeedReading.Application.Content;
+using SpeedReading.Domain.Catalog;
 
 namespace SpeedReading.Infrastructure.Persistence;
 
@@ -9,6 +10,9 @@ namespace SpeedReading.Infrastructure.Persistence;
 internal sealed class OwnedSpeedReadingCatalog(OwnedSpeedReadingDbContext db)
     : ILegacySpeedReadingCatalog
 {
+    private IQueryable<ReadingText> ReadingTextsForViewer(Guid? viewerUserId) => viewerUserId.HasValue
+        ? ReadingTextVisibility.IndependentReading(db) : db.ReadingTexts.AsNoTracking();
+
     public async Task<IReadOnlyList<ExerciseTypeCategorySummary>> GetExerciseTypeCategoriesAsync(
         CancellationToken cancellationToken = default) =>
         await db.ExerciseTypeCategories
@@ -196,7 +200,7 @@ internal sealed class OwnedSpeedReadingCatalog(OwnedSpeedReadingDbContext db)
         CancellationToken cancellationToken = default)
     {
         var viewerAgeGroupId = await GetViewerAgeGroupIdAsync(viewerUserId, cancellationToken);
-        var query = db.ReadingTexts.AsNoTracking().Where(item => !item.IsDeleted);
+        var query = ReadingTextsForViewer(viewerUserId).Where(item => !item.IsDeleted);
         if (viewerUserId.HasValue)
             query = query.Where(item => item.TargetAgeGroupId == null
                 || (viewerAgeGroupId.HasValue && item.TargetAgeGroupId == viewerAgeGroupId.Value));
@@ -249,8 +253,7 @@ internal sealed class OwnedSpeedReadingCatalog(OwnedSpeedReadingDbContext db)
         CancellationToken cancellationToken = default)
     {
         var viewerAgeGroupId = await GetViewerAgeGroupIdAsync(viewerUserId, cancellationToken);
-        return await db.ReadingTexts
-            .AsNoTracking()
+        return await ReadingTextsForViewer(viewerUserId)
             .Where(item => item.IsActive && !item.IsDeleted && item.Category != string.Empty
                 && (!viewerUserId.HasValue
                     || item.TargetAgeGroupId == null
@@ -266,8 +269,7 @@ internal sealed class OwnedSpeedReadingCatalog(OwnedSpeedReadingDbContext db)
         CancellationToken cancellationToken = default)
     {
         var viewerAgeGroupId = await GetViewerAgeGroupIdAsync(viewerUserId, cancellationToken);
-        return await db.ReadingTexts
-            .AsNoTracking()
+        return await ReadingTextsForViewer(viewerUserId)
             .Where(item => item.IsActive && !item.IsDeleted
                 && (!viewerUserId.HasValue
                     || item.TargetAgeGroupId == null
@@ -285,8 +287,7 @@ internal sealed class OwnedSpeedReadingCatalog(OwnedSpeedReadingDbContext db)
     {
         var boundedLimit = Math.Clamp(limit, 1, 50);
         var viewerAgeGroupId = await GetViewerAgeGroupIdAsync(viewerUserId, cancellationToken);
-        return await db.ReadingTexts
-            .AsNoTracking()
+        return await ReadingTextsForViewer(viewerUserId)
             .Where(item => item.IsActive && !item.IsDeleted && item.WordCount > 0 && item.WordCount <= 200
                 && (!viewerUserId.HasValue
                     || item.TargetAgeGroupId == null
@@ -311,8 +312,7 @@ internal sealed class OwnedSpeedReadingCatalog(OwnedSpeedReadingDbContext db)
         CancellationToken cancellationToken = default)
     {
         var viewerAgeGroupId = await GetViewerAgeGroupIdAsync(viewerUserId, cancellationToken);
-        var text = await db.ReadingTexts
-            .AsNoTracking()
+        var text = await ReadingTextsForViewer(viewerUserId)
             .Where(item => item.Id == id
                 && !item.IsDeleted
                 && (includeInactive || item.IsActive)

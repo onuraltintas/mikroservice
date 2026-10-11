@@ -4,6 +4,7 @@ using EduPlatform.Shared.Security.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SpeedReading.Application.Content;
+using SpeedReading.API.Security;
 using System.IO.Compression;
 using System.Security.Claims;
 using System.Security.Cryptography;
@@ -853,7 +854,7 @@ public sealed class ReadingTextsController(
     private bool TryGetViewerUserId(bool canManageContent, out Guid? viewerUserId)
     {
         viewerUserId = null;
-        if (canManageContent)
+        if (canManageContent || StaffTrainingAccess.IsAllowed(User))
             return true;
         if (!TryGetCurrentUserId(out var userId))
             return false;

@@ -22,8 +22,7 @@ internal sealed class OwnedSpeedReadingStudentReading(OwnedSpeedReadingDbContext
         var minLevel = Math.Max(1, currentLevel - 2);
         var maxLevel = Math.Min(10, currentLevel + 2);
 
-        return await db.ReadingTexts
-            .AsNoTracking()
+        return await ReadingTextVisibility.IndependentReading(db)
             .Where(item => !item.IsDeleted
                 && item.IsActive
                 && item.DifficultyLevel >= minLevel
@@ -51,8 +50,7 @@ internal sealed class OwnedSpeedReadingStudentReading(OwnedSpeedReadingDbContext
         var lowerLevel = Math.Clamp(minLevel ?? currentLevel - 2, 1, 10);
         var upperLevel = Math.Clamp(maxLevel ?? currentLevel + 2, lowerLevel, 10);
 
-        var query = db.ReadingTexts
-            .AsNoTracking()
+        var query = ReadingTextVisibility.IndependentReading(db)
             .Where(item => !item.IsDeleted
                 && item.IsActive
                 && item.DifficultyLevel >= lowerLevel
@@ -85,8 +83,7 @@ internal sealed class OwnedSpeedReadingStudentReading(OwnedSpeedReadingDbContext
         CancellationToken cancellationToken)
     {
         var ageGroupId = await GetAgeGroupIdAsync(userId, cancellationToken);
-        var text = await db.ReadingTexts
-            .AsNoTracking()
+        var text = await ReadingTextVisibility.IndependentReading(db)
             .SingleOrDefaultAsync(item => item.Id == textId
                 && item.IsActive
                 && !item.IsDeleted

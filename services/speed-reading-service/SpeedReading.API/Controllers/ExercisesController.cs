@@ -4,6 +4,7 @@ using EduPlatform.Shared.Security.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SpeedReading.Application.Content;
+using SpeedReading.API.Security;
 
 namespace SpeedReading.API.Controllers;
 
@@ -47,7 +48,7 @@ public sealed class ExercisesController(
         var result = await catalog.GetExerciseAsync(
             id,
             includeInactive: canManageContent,
-            includeConfiguration: canManageContent,
+            includeConfiguration: canManageContent || StaffTrainingAccess.IsAllowed(User),
             cancellationToken: cancellationToken);
         return result is null ? NotFound() : Ok(result);
     }

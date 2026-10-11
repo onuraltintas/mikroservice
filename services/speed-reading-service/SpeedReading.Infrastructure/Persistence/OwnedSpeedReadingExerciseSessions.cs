@@ -143,7 +143,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             var explicitContent = ReadObject(ReadObject(explicitConfig, "engineConfig"), "content");
             var isFreeText = ExerciseConfigurationRules.NormalizeEngineType(exerciseEngineType) == "free_reading";
             var isErrorText = IsEngineType(exerciseEngineType, "error_analysis");
-            var errorTextIds = isErrorText ? ErrorAnalysisTextIds(ReadObject(explicitConfig, "engineConfig")) : [];
+            var errorTextIds = isErrorText ? ErrorAnalysisTextIds(ReadObject(explicitConfig, "engineConfig").ValueKind == JsonValueKind.Object
+                ? ReadObject(explicitConfig, "engineConfig") : explicitConfig) : [];
             var isScanText = ExerciseConfigurationRules.NormalizeEngineType(exerciseEngineType) is "scan_find" or "scanning";
             var scanTaskIds = isScanText ? ScanningTaskTextIds(ReadObject(explicitConfig, "engineConfig").ValueKind == JsonValueKind.Object
                 ? ReadObject(explicitConfig, "engineConfig") : explicitConfig) : [];
@@ -370,7 +371,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                 var isRegression = normalizedEngineType == "regression_reduction";
                 var isSubvocalization = normalizedEngineType == "subvocalization_reduction";
                 var isErrorAnalysis = normalizedEngineType == "error_analysis";
-                var errorTextIds = isErrorAnalysis ? ErrorAnalysisTextIds(ReadObject(parsedConfiguration, "engineConfig")) : [];
+                var errorTextIds = isErrorAnalysis ? ErrorAnalysisTextIds(ReadObject(parsedConfiguration, "engineConfig").ValueKind == JsonValueKind.Object
+                    ? ReadObject(parsedConfiguration, "engineConfig") : parsedConfiguration) : [];
                 var requiresScorableQuestions = !isErrorAnalysis && ExerciseConfigurationRules.ResolveReadingPurpose(
                     normalizedEngineType,
                     ReadString(ReadObject(parsedConfiguration, "engineConfig"), "readingPurpose")
@@ -1062,7 +1064,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
     {
         if (IsTachistoscope(exerciseTypeName, exerciseEngineType, configuration)) return false;
         if (exerciseEngineType == "error_analysis"
-            && ReadString(ReadObject(ReadObject(configuration, "engineConfig"), "content"), "source") == "reading_text")
+            && (ReadString(ReadObject(ReadObject(configuration, "engineConfig"), "content"), "source")
+                ?? ReadString(ReadObject(configuration, "content"), "source")) == "reading_text")
             return true;
         if (ReadingExerciseTypes.Contains(exerciseTypeName)
             || ReadingExerciseTypes.Contains(exerciseEngineType))

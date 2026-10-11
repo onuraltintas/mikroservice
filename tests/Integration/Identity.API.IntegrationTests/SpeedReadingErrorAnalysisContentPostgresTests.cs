@@ -4,7 +4,11 @@ using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using Shared.IntegrationTests.Fixtures;
 using SpeedReading.Application.ExerciseSessions;
+using SpeedReading.Application.Content;
+using SpeedReading.Application.StudentReading;
 using SpeedReading.Domain.Catalog;
+using SpeedReading.Domain.AgeGroups;
+using SpeedReading.Domain.Profiles;
 using SpeedReading.Infrastructure.Persistence;
 
 namespace Identity.API.IntegrationTests;
@@ -28,6 +32,14 @@ public sealed class SpeedReadingErrorAnalysisContentPostgresTests(PostgresFixtur
             await db.Database.EnsureCreatedAsync(); var creator = Guid.NewGuid();
             var type = ExerciseType.Create(Guid.NewGuid(), "ErrorAnalysis", "Hata Analizi", "error_analysis");
             db.ExerciseTypes.Add(type);
+            foreach (var row in settings.RootElement.EnumerateArray().DistinctBy(row => row.GetProperty("ageGroupId").GetGuid()))
+            {
+                var age = row.GetProperty("age").GetString()!;
+                var minimum = age switch { "child" => 9, "teen" => 13, "young-adult" => 17, _ => 22 };
+                db.AgeGroupConfigurations.Add(AgeGroupConfiguration.Create(row.GetProperty("ageGroupId").GetGuid(), age, age,
+                    minimum, age == "adult" ? null : minimum + (age == "child" || age == "teen" ? 3 : 4),
+                    50, 150, 1000, 70, 15, 1, minimum, true, null, creator, DateTime.UtcNow));
+            }
             foreach (var row in settings.RootElement.EnumerateArray())
                 db.Exercises.Add(Exercise.Create(row.GetProperty("title").GetString()!, "ErrorAnalysis",
                     row.GetProperty("previousConfiguration").GetRawText(), row.GetProperty("level").GetInt32(), creator, type.Id,
@@ -52,9 +64,16 @@ public sealed class SpeedReadingErrorAnalysisContentPostgresTests(PostgresFixtur
             Assert.Empty(await db.ReadingQuestions.ToListAsync());
             Assert.True(JsonElement.DeepEquals(JsonSerializer.Deserialize<JsonElement>(snapshot),
                 JsonSerializer.Deserialize<JsonElement>((await db.ExerciseSessions.SingleAsync(s => s.Id == old.SessionId)).SessionDataJson)));
+            var catalog = (ILegacySpeedReadingCatalog)Activator.CreateInstance(typeof(OwnedSpeedReadingDbContext).Assembly.GetType(
+                "SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingCatalog")!, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, [db], null)!;
+            var reading = (ISpeedReadingStudentReading)Activator.CreateInstance(typeof(OwnedSpeedReadingDbContext).Assembly.GetType(
+                "SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingStudentReading")!, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, [db], null)!;
             foreach (var row in settings.RootElement.EnumerateArray())
             {
                 var user = Guid.NewGuid(); var exerciseId = row.GetProperty("id").GetGuid();
+                db.UserProfiles.Add(SpeedReadingUserProfile.Import(Guid.NewGuid(), user, row.GetProperty("level").GetInt32(),
+                    200, 70, 15, row.GetProperty("ageGroupId").GetGuid(), null, true, DateTime.UtcNow, null, null, null));
+                await db.SaveChangesAsync();
                 var started = await service.StartAsync(user, new() { ExerciseId = exerciseId });
                 Assert.DoesNotContain("originalWord", started.InitialData.GetRawText());
                 Assert.DoesNotContain("errorsByTextId", started.Configuration.GetRawText());
@@ -62,6 +81,12 @@ public sealed class SpeedReadingErrorAnalysisContentPostgresTests(PostgresFixtur
                 var text = await db.ReadingTexts.SingleAsync(t => t.Id == session.ReadingTextId);
                 Assert.Equal(row.GetProperty("ageGroupId").GetGuid(), text.TargetAgeGroupId);
                 Assert.Equal(row.GetProperty("level").GetInt32(), text.DifficultyLevel);
+                Assert.Null(await catalog.GetReadingTextAsync(text.Id, true, false, false, user));
+                Assert.Empty(await catalog.GetReadingTextsAsync(exerciseId, null, null, null, false, null, true, user));
+                Assert.DoesNotContain(await catalog.GetShortReadingTextsAsync(50, user), item => item.Id == text.Id);
+                Assert.NotNull(await catalog.GetReadingTextAsync(text.Id, false, false, false, null));
+                Assert.Null(await reading.StartAsync(user, text.Id, CancellationToken.None));
+                Assert.Empty(await reading.GetAvailableTextsAsync(user, null, null, null, null, CancellationToken.None));
                 var config = row.GetProperty("configuration").GetProperty("engineConfig");
                 var band = config.GetProperty("content");
                 Assert.InRange(text.WordCount, band.GetProperty("minWordCount").GetInt32(), band.GetProperty("maxWordCount").GetInt32());
