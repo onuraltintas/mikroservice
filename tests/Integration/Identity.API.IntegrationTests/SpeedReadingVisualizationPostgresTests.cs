@@ -87,6 +87,7 @@ public sealed class SpeedReadingVisualizationPostgresTests(PostgresFixture postg
     [InlineData("description")]
     [InlineData("hint")]
     [InlineData("extra-question")]
+    [InlineData("duplicate-baseline")]
     [InlineData("duplicate-question")]
     [InlineData("null-options")]
     public async Task V2_pack_preserves_old_sessions_rotates_new_scenes_and_rejects_edited_baseline(string change)
@@ -153,6 +154,12 @@ public sealed class SpeedReadingVisualizationPostgresTests(PostgresFixture postg
                 {
                     var payload = JsonNode.Parse(ReadPack("scenes.json"))!;
                     if (change == "duplicate-question") payload[1]!["questions"]![0]!["id"] = payload[0]!["questions"]![0]!["id"]!.GetValue<string>();
+                    else if (change == "duplicate-baseline")
+                    {
+                        var duplicatedBaseline = JsonNode.Parse(baseline)!;
+                        duplicatedBaseline[1] = duplicatedBaseline[0]!.DeepClone();
+                        baseline = duplicatedBaseline.ToJsonString();
+                    }
                     else payload[0]!["questions"]![0]!["options"] = null;
                     sql = ReadPack("apply.template.sql").Replace("{{SCENES}}", payload.ToJsonString()).Replace("{{BASELINE}}", baseline);
                 }
