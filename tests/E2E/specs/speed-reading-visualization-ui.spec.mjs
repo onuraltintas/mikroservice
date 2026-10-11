@@ -1,16 +1,17 @@
 import { test, expect } from '@playwright/test';
+import { readFileSync } from 'node:fs';
 
 // Real UI and engine; API fixtures. PostgreSQL persistence has separate tests.
 const exerciseId = '60000000-0000-0000-0000-000000000001';
 const typeId = '60000000-0000-0000-0000-000000000002';
 const sceneId = '60000000-0000-0000-0000-000000000003';
 const questionId = '60000000-0000-0000-0000-000000000004';
-async function prepare(page, role, mode) {
+async function prepare(page, role, mode, databaseScenes) {
   const errors = [], writes = [];
   const scene = { sceneId, description: 'Kırmızı evin yanında mavi bir bisiklet var.', duration: 5, displayOrder: 0,
     ...(mode === 'guided' ? { steps: ['Kırmızı bir ev düşünün.', 'Yanında mavi bir bisiklet düşünün.'], stepDurationMs: 3000 } : {}),
     questions: [{ questionId, questionText: 'Ev ne renk?', options: ['Kırmızı', 'Mavi'], questionType: 'color' }] };
-  const configuration = { engineType: 'visualization', engineConfig: { mode, scenes: [scene] } };
+  const configuration = { engineType: 'visualization', engineConfig: { mode, scenes: databaseScenes ? [] : [scene] } };
   const exercise = { id: exerciseId, exerciseTypeId: typeId, title: 'Görselleştirme testi', difficultyLevel: 3,
     exerciseTypeName: 'Visualization', configurationJson: JSON.stringify(configuration) };
   page.on('pageerror', error => errors.push(error.message));
@@ -22,6 +23,11 @@ async function prepare(page, role, mode) {
       response = { id: 'test-user', token: `e30.${Buffer.from(JSON.stringify(claims)).toString('base64url')}.fixture`, roles: [role] };
     } else if (request.method() !== 'GET') {
       writes.push(path); return route.fulfill({ status: 500, json: { message: 'Unexpected write' } });
+    } else if (databaseScenes && path.endsWith(`/visualization/exercises/${exerciseId}/scenes`)) {
+      expect(new URL(request.url()).searchParams.get('limit')).toBe('3');
+      response = databaseScenes;
+    } else if (databaseScenes && path.includes('/admin/visualization-scenes/')) {
+      response = databaseScenes.find(item => path.endsWith(`/${item.id}`));
     } else if (path.endsWith('/exercise-types')) response = { items: [{ id: typeId, name: 'Visualization', displayName: 'Görselleştirme', engineType: 'visualization', isActive: true }], totalCount: 1 };
     else if (path.endsWith(`/exercises/${exerciseId}`)) response = exercise;
     else if (path.endsWith('/exercises')) response = { items: [exercise], totalCount: 1 };
@@ -33,6 +39,27 @@ async function prepare(page, role, mode) {
   await expect(page.getByRole('heading', { name: 'Görselleştirme', exact: true })).toBeVisible();
   return { errors, writes, configuration, scene };
 }
+
+test('admin previews three real authored scenes and nine questions without saving', async ({ page }) => {
+  const pack = JSON.parse(readFileSync(new URL('../../../content-packs/visualization/v2/scenes.json', import.meta.url), 'utf8'));
+  const scenes = pack.slice(0, 3);
+  const { errors, writes } = await prepare(page, 'Admin', 'assessment', scenes);
+  await page.getByRole('button', { name: 'Özel ayarlarla dene' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Denemeyi başlat' }).click();
+  await page.locator('.start-button-large').click();
+  for (const scene of scenes) {
+    await expect(page.locator('.visualization-container')).toContainText(scene.description);
+    await page.getByRole('button', { name: 'Hazırım, Sorulara Geç' }).click();
+    for (const [index, question] of scene.questions.entries()) {
+      await expect(page.locator('.visualization-question-container .question-text')).toHaveText(question.questionText);
+      await page.locator('.modern-options .modern-option-btn').first().click();
+      await expect(page.getByText('Önizleme: cevap değerlendirilmedi.', { exact: true })).toBeVisible();
+      await page.getByRole('button', { name: index === 2 ? 'Sonraki Sahne' : 'Sonraki Soru', exact: true }).click();
+    }
+  }
+  await expect(page.getByRole('status').filter({ hasText: /Önizleme sonucu.*kaydedilmedi/ })).toBeVisible();
+  expect(writes).toEqual([]); expect(errors).toEqual([]);
+});
 
 for (const mode of ['static', 'guided', 'flash']) {
   test(`teacher ${mode} custom preview preserves timing and never records scores`, async ({ page }) => {
