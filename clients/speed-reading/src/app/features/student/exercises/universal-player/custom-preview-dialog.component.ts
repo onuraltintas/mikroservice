@@ -2,7 +2,7 @@ import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { applyCustomPreviewSettings, getCustomPreviewControls, PreviewControl } from './custom-preview-settings';
-import { caseInsensitiveField, recordOrEmpty } from './engines/reading-pacer-safety';
+import { caseInsensitiveField, mergeCaseInsensitiveRecords, recordOrEmpty } from './engines/reading-pacer-safety';
 
 @Component({
   standalone: true,
@@ -11,7 +11,8 @@ import { caseInsensitiveField, recordOrEmpty } from './engines/reading-pacer-saf
     <h2 mat-dialog-title>Özel ayarlarla dene</h2>
     <mat-dialog-content>
       @if (isRsvp) {
-        <p>Gösterim süresi, kelimeler arası bekleme ve varsa 300 ms sabitleme süresi birlikte gösterim temposunu belirler. Gösterim temposu gerçek okuma hızı ölçümü değildir.</p>
+        <p>300 ms sabitleme işareti yalnız başlangıçta gösterilir. Gösterim temposu gerçek okuma hızı ölçümü değildir.</p>
+        <p aria-live="polite">{{ rsvpSummary }}</p>
       }
       <p>Bu ayarlar yalnız bu önizlemeye uygulanır. Kayıtlı egzersiz ve ilerlemeniz değişmez.</p>
       @for (control of controls; track control.key) {
@@ -51,6 +52,22 @@ export class CustomPreviewDialogComponent {
   get chunkSize(): number { return this.values['chunkSize'] as number; }
   set chunkSize(value: number) { this.values['chunkSize'] = value; }
   error = '';
+  get rsvpSummary(): string {
+    const duration = Number(this.values['displayDurationMs']);
+    const gap = Number(this.values['intervalMs']);
+    if (!Number.isFinite(duration) || !Number.isFinite(gap) || duration < 50 || duration > 5000 || gap < 0 || gap > 10000)
+      return 'Süre ayarlarını kontrol edin.';
+    const settings = recordOrEmpty(caseInsensitiveField(this.configuration, 'engineConfig'));
+    const content = mergeCaseInsensitiveRecords(this.configuration, settings, 'content');
+    const visuals = mergeCaseInsensitiveRecords(this.configuration, settings, 'visuals');
+    const fixation = visuals['showfixation'] === false ? 0 : 300;
+    const tempo = Math.round(60000 / (duration + gap));
+    const minimum = Number(content['minwordcount']), maximum = Number(content['maxwordcount']);
+    if (!(minimum > 0 && maximum >= minimum)) return `Akış temposu: ${tempo} kelime/dk. Toplam süre seçilen metnin uzunluğuna bağlıdır.`;
+    const seconds = (count: number) => ((fixation + count * duration + (count - 1) * gap) / 1000)
+      .toLocaleString('tr-TR', { maximumFractionDigits: 1 });
+    return `Akış temposu: ${tempo} kelime/dk. Tahmini gösterim süresi: ${seconds(minimum)}–${seconds(maximum)} saniye (${minimum}–${maximum} kelime). Soru çözme süresi dahil değildir.`;
+  }
   constructor() { this.reset(); }
   reset(): void {
     this.controls = getCustomPreviewControls(this.configuration);

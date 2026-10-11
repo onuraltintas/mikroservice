@@ -100,6 +100,7 @@ export class TextStreamEngine implements BaseEngine {
     private initialDurationMs = 500;
     private serverAuthoritative = false;
     private ownedRsvp = false;
+    private rsvpRepeatsFixation = false;
     private awaitingServer = false;
     private pendingAnswer = '';
     private pendingStimulus = '';
@@ -159,7 +160,8 @@ export class TextStreamEngine implements BaseEngine {
             this.config.adaptive.maxDurationMs);
         this.config.timing.intervalMs = boundedInteger(timing['intervalms'], 0, 0, 10000);
         this.ownedRsvp = root.serverAuthoritative === true && this.isRsvpMode();
-        if (this.ownedRsvp && root.rsvpProtocolVersion === 1) {
+        this.rsvpRepeatsFixation = this.ownedRsvp && root.rsvpProtocolVersion === 1;
+        if (this.ownedRsvp && [1, 2].includes(root.rsvpProtocolVersion)) {
             this.config.timing.intervalMs = boundedInteger(root.rsvpGapMs, 0, 0, 10000);
             this.config.visuals.showFixation = root.rsvpFixationMs === 300;
         }
@@ -179,7 +181,7 @@ export class TextStreamEngine implements BaseEngine {
             ? rawStimuli.filter(item => typeof item === 'string' || (item && typeof item === 'object')).slice(0, this.isRsvpMode() ? 100_000 : 500)
             : undefined;
         const displayDuration = boundedInteger(
-            (this.ownedRsvp && root.rsvpProtocolVersion === 1 ? root.rsvpDisplayDurationMs : undefined)
+            (this.ownedRsvp && [1, 2].includes(root.rsvpProtocolVersion) ? root.rsvpDisplayDurationMs : undefined)
             ?? caseInsensitiveField(nested, 'displayDurationMs')
             ?? caseInsensitiveField(nested, 'intervalMs')
             ?? caseInsensitiveField(root, 'displayDurationMs')
@@ -420,7 +422,8 @@ export class TextStreamEngine implements BaseEngine {
         const showFixation = this.config.visuals?.showFixation !== false;
 
         // Show fixation point first (if enabled)
-        if (showFixation && !this.isShowingFixation) {
+        if (showFixation && !this.isShowingFixation
+            && (!this.isRsvpMode() || this.rsvpRepeatsFixation || this.currentStimulusIndex === 0)) {
             this.isShowingFixation = true;
             this.isShowingStimulus = false;
             this.isWaitingForAnswer = false;
@@ -820,7 +823,8 @@ export class TextStreamEngine implements BaseEngine {
 
     getPresentationDurationMs(): number {
         const count = this.stimuli.length;
-        return count * (this.currentDurationMs + (this.config.visuals?.showFixation !== false ? 300 : 0))
+        const fixationCount = this.isRsvpMode() && !this.rsvpRepeatsFixation ? Math.min(1, count) : count;
+        return count * this.currentDurationMs + fixationCount * (this.config.visuals?.showFixation !== false ? 300 : 0)
             + Math.max(0, count - 1) * (this.config.timing?.intervalMs || 0);
     }
 
