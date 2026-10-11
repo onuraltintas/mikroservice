@@ -177,7 +177,7 @@ test('keyboard-only practice keeps focus through all three rounds and the start 
   expect(writes).toEqual([]); expect(errors).toEqual([]);
 });
 
-test('catalogue link opens the prototype without replacing the Focus catalogue', async ({ page }) => {
+test('catalogue card opens the prototype without replacing the Focus catalogue', async ({ page }) => {
   const { writes, errors } = await prepare(page);
   const typeId = '70000000-0000-0000-0000-000000000002';
   await page.route('**/api/**/exercise-types?*', route => route.fulfill({ json: {
@@ -190,7 +190,12 @@ test('catalogue link opens the prototype without replacing the Focus catalogue',
   } }));
   await page.goto('/student/exercises');
   await expect(page.getByRole('heading', { name: 'Odaklanma', exact: true })).toBeVisible();
-  await page.getByRole('link', { name: 'Yeni dikkat prototipini dene' }).click();
+  const card = page.locator('.exercise-card').filter({ has: page.getByRole('heading', { name: 'Hedefi Yakala', exact: true }) });
+  await expect(card).toContainText('Sonuçlar kaydedilmez');
+  await page.getByRole('button', { name: 'Odaklanma', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Odaklanma', exact: true })).toBeVisible();
+  await expect(card).toBeVisible();
+  await card.getByRole('button', { name: 'Önizlemeyi başlat' }).click();
   await expect(page.getByRole('heading', { name: 'Hedefi Yakala.' })).toBeVisible();
   expect(writes).toEqual([]); expect(errors).toEqual([]);
 });
