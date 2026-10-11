@@ -1190,14 +1190,203 @@
     "targetAgeGroupId": "10000000-0000-0000-0000-000000000003",
     "configuration": {
       "engineType": "error_analysis",
+      "difficultyLevel": 4,
       "engineConfig": {
         "content": {
-          "source": "reading_text"
+          "source": "reading_text",
+          "minWordCount": 340,
+          "maxWordCount": 420
         },
         "errorCount": 5,
-        "timeLimit": 360
-      },
-      "difficultyLevel": 4
+        "timeLimit": 360,
+        "errorsByTextId": {
+          "493ad1ec-dff6-59d6-8b43-e8b761f0172e": [
+            {
+              "wordIndex": 10,
+              "originalWord": "arkadaşlarıyla",
+              "errorWord": "arkadşlarıyla",
+              "errorType": "missing_letter",
+              "explanation": "Eksik harf düzeltilmeli. Doğru yazım: arkadaşlarıyla"
+            },
+            {
+              "wordIndex": 43,
+              "originalWord": "söyledi.",
+              "errorWord": "söyeldi.",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: söyledi."
+            },
+            {
+              "wordIndex": 73,
+              "originalWord": "birkaç",
+              "errorWord": "birkaaç",
+              "errorType": "extra_letter",
+              "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: birkaç"
+            },
+            {
+              "wordIndex": 177,
+              "originalWord": "bütün",
+              "errorWord": "bütüün",
+              "errorType": "extra_letter",
+              "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: bütün"
+            },
+            {
+              "wordIndex": 313,
+              "originalWord": "yeniden",
+              "errorWord": "yendien",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: yeniden"
+            }
+          ],
+          "5b233b33-7bdc-561c-8830-6ee9b972794b": [
+            {
+              "wordIndex": 1,
+              "originalWord": "küçük",
+              "errorWord": "küçkü",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: küçük"
+            },
+            {
+              "wordIndex": 51,
+              "originalWord": "defter",
+              "errorWord": "dfeter",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: defter"
+            },
+            {
+              "wordIndex": 83,
+              "originalWord": "kitaplarda",
+              "errorWord": "kitaplrda",
+              "errorType": "missing_letter",
+              "explanation": "Eksik harf düzeltilmeli. Doğru yazım: kitaplarda"
+            },
+            {
+              "wordIndex": 155,
+              "originalWord": "Yeni",
+              "errorWord": "Ynei",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: Yeni"
+            },
+            {
+              "wordIndex": 366,
+              "originalWord": "defterde",
+              "errorWord": "dfeterde",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: defterde"
+            }
+          ],
+          "462cc6c6-b7de-5bac-8734-3897f43154e8": [
+            {
+              "wordIndex": 5,
+              "originalWord": "zaman",
+              "errorWord": "zmaan",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: zaman"
+            },
+            {
+              "wordIndex": 44,
+              "originalWord": "kısa",
+              "errorWord": "kıssa",
+              "errorType": "extra_letter",
+              "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: kısa"
+            },
+            {
+              "wordIndex": 112,
+              "originalWord": "arkadaşlarıyla",
+              "errorWord": "arkadşlarıyla",
+              "errorType": "missing_letter",
+              "explanation": "Eksik harf düzeltilmeli. Doğru yazım: arkadaşlarıyla"
+            },
+            {
+              "wordIndex": 217,
+              "originalWord": "yeniden",
+              "errorWord": "yendien",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: yeniden"
+            },
+            {
+              "wordIndex": 308,
+              "originalWord": "Yeni",
+              "errorWord": "Ynei",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: Yeni"
+            }
+          ],
+          "9bebea1d-e78f-503f-883b-db12eeb56907": [
+            {
+              "wordIndex": 7,
+              "originalWord": "küçük",
+              "errorWord": "küçkü",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: küçük"
+            },
+            {
+              "wordIndex": 40,
+              "originalWord": "olarak",
+              "errorWord": "olraak",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: olarak"
+            },
+            {
+              "wordIndex": 138,
+              "originalWord": "ancak",
+              "errorWord": "anack",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: ancak"
+            },
+            {
+              "wordIndex": 179,
+              "originalWord": "yeni",
+              "errorWord": "ynei",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: yeni"
+            },
+            {
+              "wordIndex": 376,
+              "originalWord": "yeniden",
+              "errorWord": "yendien",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: yeniden"
+            }
+          ],
+          "ac749670-fcc4-557f-8294-54a602485619": [
+            {
+              "wordIndex": 12,
+              "originalWord": "önce",
+              "errorWord": "öcne",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: önce"
+            },
+            {
+              "wordIndex": 75,
+              "originalWord": "malzeme",
+              "errorWord": "malzmee",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: malzeme"
+            },
+            {
+              "wordIndex": 212,
+              "originalWord": "aynı",
+              "errorWord": "ayynı",
+              "errorType": "extra_letter",
+              "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: aynı"
+            },
+            {
+              "wordIndex": 244,
+              "originalWord": "herkes",
+              "errorWord": "herkse",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: herkes"
+            },
+            {
+              "wordIndex": 352,
+              "originalWord": "küçük",
+              "errorWord": "küçkü",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: küçük"
+            }
+          ]
+        }
+      }
     }
   },
   {
@@ -1619,14 +1808,238 @@
     "targetAgeGroupId": "10000000-0000-0000-0000-000000000003",
     "configuration": {
       "engineType": "error_analysis",
+      "difficultyLevel": 5,
       "engineConfig": {
         "content": {
-          "source": "reading_text"
+          "source": "reading_text",
+          "minWordCount": 420,
+          "maxWordCount": 500
         },
         "errorCount": 6,
-        "timeLimit": 420
-      },
-      "difficultyLevel": 5
+        "timeLimit": 420,
+        "errorsByTextId": {
+          "9a4ae25c-08ad-50d5-8d85-9b3e19194949": [
+            {
+              "wordIndex": 10,
+              "originalWord": "arkadaşlarıyla",
+              "errorWord": "arkadşlarıyla",
+              "errorType": "missing_letter",
+              "explanation": "Eksik harf düzeltilmeli. Doğru yazım: arkadaşlarıyla"
+            },
+            {
+              "wordIndex": 48,
+              "originalWord": "sonra",
+              "errorWord": "sorna",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: sonra"
+            },
+            {
+              "wordIndex": 112,
+              "originalWord": "gördüler.",
+              "errorWord": "gödrüler.",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: gördüler."
+            },
+            {
+              "wordIndex": 277,
+              "originalWord": "uzun",
+              "errorWord": "uuzun",
+              "errorType": "extra_letter",
+              "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: uzun"
+            },
+            {
+              "wordIndex": 291,
+              "originalWord": "kesin",
+              "errorWord": "keisn",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: kesin"
+            },
+            {
+              "wordIndex": 313,
+              "originalWord": "yeniden",
+              "errorWord": "yendien",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: yeniden"
+            }
+          ],
+          "15eeb96e-bdd5-5179-85ed-6a9c1b93a931": [
+            {
+              "wordIndex": 1,
+              "originalWord": "küçük",
+              "errorWord": "küçkü",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: küçük"
+            },
+            {
+              "wordIndex": 61,
+              "originalWord": "bütün",
+              "errorWord": "bütüün",
+              "errorType": "extra_letter",
+              "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: bütün"
+            },
+            {
+              "wordIndex": 97,
+              "originalWord": "kitap",
+              "errorWord": "ktiap",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: kitap"
+            },
+            {
+              "wordIndex": 328,
+              "originalWord": "deneme,",
+              "errorWord": "dneeme,",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: deneme,"
+            },
+            {
+              "wordIndex": 334,
+              "originalWord": "zaman",
+              "errorWord": "zmaan",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: zaman"
+            },
+            {
+              "wordIndex": 366,
+              "originalWord": "defterde",
+              "errorWord": "dfeterde",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: defterde"
+            }
+          ],
+          "20802779-865c-52f4-81d2-5ab3cd072e3f": [
+            {
+              "wordIndex": 5,
+              "originalWord": "zaman",
+              "errorWord": "zmaan",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: zaman"
+            },
+            {
+              "wordIndex": 74,
+              "originalWord": "Ancak",
+              "errorWord": "Anack",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: Ancak"
+            },
+            {
+              "wordIndex": 217,
+              "originalWord": "yeniden",
+              "errorWord": "yendien",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: yeniden"
+            },
+            {
+              "wordIndex": 398,
+              "originalWord": "karar",
+              "errorWord": "kraar",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: karar"
+            },
+            {
+              "wordIndex": 404,
+              "originalWord": "önemli",
+              "errorWord": "önmeli",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: önemli"
+            },
+            {
+              "wordIndex": 423,
+              "originalWord": "birkaç",
+              "errorWord": "birkaaç",
+              "errorType": "extra_letter",
+              "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: birkaç"
+            }
+          ],
+          "b6788e34-973a-56e4-85fe-155621811707": [
+            {
+              "wordIndex": 7,
+              "originalWord": "küçük",
+              "errorWord": "küçkü",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: küçük"
+            },
+            {
+              "wordIndex": 46,
+              "originalWord": "toplantıda",
+              "errorWord": "toplantdıa",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: toplantıda"
+            },
+            {
+              "wordIndex": 162,
+              "originalWord": "aynı",
+              "errorWord": "ayynı",
+              "errorType": "extra_letter",
+              "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: aynı"
+            },
+            {
+              "wordIndex": 363,
+              "originalWord": "Önce",
+              "errorWord": "Öcne",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: Önce"
+            },
+            {
+              "wordIndex": 376,
+              "originalWord": "yeniden",
+              "errorWord": "yendien",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: yeniden"
+            },
+            {
+              "wordIndex": 382,
+              "originalWord": "kendi",
+              "errorWord": "kendii",
+              "errorType": "extra_letter",
+              "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: kendi"
+            }
+          ],
+          "37279fff-9963-5c10-86db-2e3862a9155d": [
+            {
+              "wordIndex": 12,
+              "originalWord": "önce",
+              "errorWord": "öcne",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: önce"
+            },
+            {
+              "wordIndex": 139,
+              "originalWord": "olarak",
+              "errorWord": "olraak",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: olarak"
+            },
+            {
+              "wordIndex": 243,
+              "originalWord": "Sonra",
+              "errorWord": "Sorna",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: Sonra"
+            },
+            {
+              "wordIndex": 352,
+              "originalWord": "küçük",
+              "errorWord": "küçkü",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: küçük"
+            },
+            {
+              "wordIndex": 409,
+              "originalWord": "yeniden",
+              "errorWord": "yendien",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: yeniden"
+            },
+            {
+              "wordIndex": 450,
+              "originalWord": "deneme",
+              "errorWord": "dneeme",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: deneme"
+            }
+          ]
+        }
+      }
     }
   },
   {

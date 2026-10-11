@@ -75,7 +75,7 @@ Mevcut metin uzunlukları ve soruları korunur. Serbest Okuma sorusuz bağımsı
 | Kelime Anlamlarını Ayır | Vocabulary | `{"mode":"quiz","quizType":"mixed","timeLimitPerWord":0,"vocabulary":{"count":14,"difficultyLevel":4,"requireFullPool":true}}` |
 | Bilgi Dedektifi | Scanning | `{"content":{"source":"random_text"},"targetCount":4,"timeLimit":150,"targets":{"mode":"find_all","caseSensitive":false}}` |
 | Başlık ve Özet | Skimming | `{"content":{"source":"reading_text"},"mode":"skimming","rules":{"timeLimit":150},"timing":{"minReadingTimeMs":3000},"readingPurpose":"evaluation"}` |
-| Metni Kontrol Et | ErrorAnalysis | `{"content":{"source":"reading_text"},"errorCount":4,"timeLimit":240}` |
+| Metni Kontrol Et | ErrorAnalysis | 180–240 kelime; 4 hazırlanmış hata; 240 sn; 5 metin |
 | Sayı Avcısı | SchulteTable | `{"gridSize":4,"sequenceType":"numeric","rules":{"timeLimit":100}}` |
 | Konum Belleği | Focus | `{"mode":"position","nLevel":2,"totalSteps":48,"speedMs":3000,"gridSize":3}` |
 | Hareketi Takip Et | EyeTracking | `{"mode":"tracking","path":{"type":"infinity8"},"timing":{"durationSeconds":45,"speedMs":3000},"content":{"type":"dot","pointSize":36}}` |
@@ -94,7 +94,7 @@ Mevcut metin uzunlukları ve soruları korunur. Serbest Okuma sorusuz bağımsı
 | Kelime Ustası | Vocabulary | `{"mode":"quiz","quizType":"mixed","timeLimitPerWord":0,"vocabulary":{"count":16,"difficultyLevel":5,"requireFullPool":true}}` |
 | Seçici Bilgi Arama | Scanning | `{"content":{"source":"random_text"},"targetCount":5,"timeLimit":180,"targets":{"mode":"find_all","caseSensitive":false}}` |
 | Metnin Haritası | Skimming | `{"content":{"source":"reading_text"},"mode":"skimming","rules":{"timeLimit":180},"timing":{"minReadingTimeMs":3000},"readingPurpose":"evaluation"}` |
-| Dikkatli Editör | ErrorAnalysis | `{"content":{"source":"reading_text"},"errorCount":5,"timeLimit":240}` |
+| Dikkatli Editör | ErrorAnalysis | 240–300 kelime; 5 hazırlanmış hata; 240 sn; 5 metin |
 | Bağımsız Okuyucu | FreeReading | `{"content":{"source":"reading_text","minWordCount":450,"maxWordCount":550},"mode":"free","readingPurpose":"practice","timing":{"minReadingTimeMs":10000,"maxReadingTimeMs":0,"suggestedMinReadingTimeMs":300000,"suggestedMaxReadingTimeMs":360000}}` |
 | Sayı Avcısı | SchulteTable | `{"gridSize":5,"sequenceType":"numeric","rules":{"timeLimit":150}}` |
 | Konum Belleği | Focus | `{"mode":"position","nLevel":2,"totalSteps":56,"speedMs":2800,"gridSize":3}` |

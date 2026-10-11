@@ -1,0 +1,3919 @@
+-- Speed Reading DB only. Verified backup and quiesced API required before production use.
+BEGIN;
+SET LOCAL lock_timeout='5s';
+SET LOCAL statement_timeout='120s';
+SELECT pg_advisory_xact_lock(hashtext('error-analysis-v1'));
+LOCK TABLE speed_reading.exercises, speed_reading.exercise_types, speed_reading.reading_texts,
+  speed_reading.reading_questions IN SHARE ROW EXCLUSIVE MODE;
+CREATE TEMP TABLE proofreading_settings ON COMMIT DROP AS
+SELECT (s->>'id')::uuid id,(s->>'ageGroupId')::uuid age_id,(s->>'level')::int level,
+  s->'previousConfiguration' old_config,s->'configuration' config
+FROM jsonb_array_elements($settings$[
+  {
+    "id": "ec753237-5029-5c23-a225-2be60945fd1e",
+    "ageGroupId": "10000000-0000-0000-0000-000000000001",
+    "age": "child",
+    "level": 4,
+    "title": "Metni Kontrol Et",
+    "previousConfiguration": {
+      "engineType": "error_analysis",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "errorCount": 4,
+        "timeLimit": 240
+      },
+      "difficultyLevel": 4
+    },
+    "configuration": {
+      "engineType": "error_analysis",
+      "difficultyLevel": 4,
+      "engineConfig": {
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 180,
+          "maxWordCount": 240
+        },
+        "errorCount": 4,
+        "timeLimit": 240,
+        "errorsByTextId": {
+          "3e7c2691-616c-5641-8743-b51f7f19d78d": [
+            {
+              "wordIndex": 10,
+              "originalWord": "arkadaşlarıyla",
+              "errorWord": "arkadşlarıyla",
+              "errorType": "missing_letter",
+              "explanation": "Eksik harf düzeltilmeli. Doğru yazım: arkadaşlarıyla"
+            },
+            {
+              "wordIndex": 44,
+              "originalWord": "Çocuklar",
+              "errorWord": "Çocuklr",
+              "errorType": "missing_letter",
+              "explanation": "Eksik harf düzeltilmeli. Doğru yazım: Çocuklar"
+            },
+            {
+              "wordIndex": 110,
+              "originalWord": "zaman",
+              "errorWord": "zmaan",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: zaman"
+            },
+            {
+              "wordIndex": 196,
+              "originalWord": "Gözlem",
+              "errorWord": "Gözlme",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: Gözlem"
+            }
+          ],
+          "0aa1a3d0-7e12-56a0-8dac-7ef5109d4048": [
+            {
+              "wordIndex": 1,
+              "originalWord": "küçük",
+              "errorWord": "küçkü",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: küçük"
+            },
+            {
+              "wordIndex": 55,
+              "originalWord": "başlığı",
+              "errorWord": "başılğı",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: başlığı"
+            },
+            {
+              "wordIndex": 86,
+              "originalWord": "uzun",
+              "errorWord": "uuzun",
+              "errorType": "extra_letter",
+              "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: uzun"
+            },
+            {
+              "wordIndex": 212,
+              "originalWord": "harita",
+              "errorWord": "hriata",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: harita"
+            }
+          ],
+          "73f05135-f30e-5fa2-8f23-8c2dc6a31594": [
+            {
+              "wordIndex": 5,
+              "originalWord": "zaman",
+              "errorWord": "zmaan",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: zaman"
+            },
+            {
+              "wordIndex": 44,
+              "originalWord": "kısa",
+              "errorWord": "kıssa",
+              "errorType": "extra_letter",
+              "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: kısa"
+            },
+            {
+              "wordIndex": 88,
+              "originalWord": "İşaretlerin",
+              "errorWord": "İşartelerin",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: İşaretlerin"
+            },
+            {
+              "wordIndex": 196,
+              "originalWord": "önce",
+              "errorWord": "öcne",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: önce"
+            }
+          ],
+          "92257f2e-5c2d-59ea-8ee4-65f698d9ff3d": [
+            {
+              "wordIndex": 5,
+              "originalWord": "öğrenciler",
+              "errorWord": "öğenciler",
+              "errorType": "missing_letter",
+              "explanation": "Eksik harf düzeltilmeli. Doğru yazım: öğrenciler"
+            },
+            {
+              "wordIndex": 35,
+              "originalWord": "kesin",
+              "errorWord": "keisn",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: kesin"
+            },
+            {
+              "wordIndex": 96,
+              "originalWord": "kendi",
+              "errorWord": "kendii",
+              "errorType": "extra_letter",
+              "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: kendi"
+            },
+            {
+              "wordIndex": 200,
+              "originalWord": "Çocuklar",
+              "errorWord": "Çocuklr",
+              "errorType": "missing_letter",
+              "explanation": "Eksik harf düzeltilmeli. Doğru yazım: Çocuklar"
+            }
+          ],
+          "90bf46b1-c681-5954-8469-835ad2d89cd4": [
+            {
+              "wordIndex": 2,
+              "originalWord": "öğrenciler,",
+              "errorWord": "öğenciler,",
+              "errorType": "missing_letter",
+              "explanation": "Eksik harf düzeltilmeli. Doğru yazım: öğrenciler,"
+            },
+            {
+              "wordIndex": 49,
+              "originalWord": "sonuçları",
+              "errorWord": "sonçuları",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: sonuçları"
+            },
+            {
+              "wordIndex": 98,
+              "originalWord": "Defterde",
+              "errorWord": "Dfeterde",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: Defterde"
+            },
+            {
+              "wordIndex": 189,
+              "originalWord": "söyledi.",
+              "errorWord": "söyeldi.",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: söyledi."
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "f3fe7294-505f-599a-97ee-50bc9f00bbf4",
+    "ageGroupId": "10000000-0000-0000-0000-000000000001",
+    "age": "child",
+    "level": 5,
+    "title": "Dikkatli Editör",
+    "previousConfiguration": {
+      "engineType": "error_analysis",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "errorCount": 5,
+        "timeLimit": 240
+      },
+      "difficultyLevel": 5
+    },
+    "configuration": {
+      "engineType": "error_analysis",
+      "difficultyLevel": 5,
+      "engineConfig": {
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 240,
+          "maxWordCount": 300
+        },
+        "errorCount": 5,
+        "timeLimit": 240,
+        "errorsByTextId": {
+          "3bba9756-6e19-5c62-8b70-c3df2c390c6e": [
+            {
+              "wordIndex": 10,
+              "originalWord": "arkadaşlarıyla",
+              "errorWord": "arkadşlarıyla",
+              "errorType": "missing_letter",
+              "explanation": "Eksik harf düzeltilmeli. Doğru yazım: arkadaşlarıyla"
+            },
+            {
+              "wordIndex": 60,
+              "originalWord": "tarih",
+              "errorWord": "tarhi",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: tarih"
+            },
+            {
+              "wordIndex": 192,
+              "originalWord": "bilgilerle",
+              "errorWord": "bligilerle",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: bilgilerle"
+            },
+            {
+              "wordIndex": 196,
+              "originalWord": "Gözlem",
+              "errorWord": "Gözlme",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: Gözlem"
+            },
+            {
+              "wordIndex": 224,
+              "originalWord": "farklı",
+              "errorWord": "farkıl",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: farklı"
+            }
+          ],
+          "fa4827fe-8a78-5cf9-8b78-36b5394e2f81": [
+            {
+              "wordIndex": 1,
+              "originalWord": "küçük",
+              "errorWord": "küçkü",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: küçük"
+            },
+            {
+              "wordIndex": 75,
+              "originalWord": "kısa",
+              "errorWord": "kıssa",
+              "errorType": "extra_letter",
+              "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: kısa"
+            },
+            {
+              "wordIndex": 155,
+              "originalWord": "Yeni",
+              "errorWord": "Ynei",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: Yeni"
+            },
+            {
+              "wordIndex": 183,
+              "originalWord": "kendi",
+              "errorWord": "kendii",
+              "errorType": "extra_letter",
+              "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: kendi"
+            },
+            {
+              "wordIndex": 212,
+              "originalWord": "harita",
+              "errorWord": "hriata",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: harita"
+            }
+          ],
+          "c19eaa91-9abf-5030-8111-f42cc64d89d0": [
+            {
+              "wordIndex": 5,
+              "originalWord": "zaman",
+              "errorWord": "zmaan",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: zaman"
+            },
+            {
+              "wordIndex": 78,
+              "originalWord": "birbirine",
+              "errorWord": "birbiirne",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: birbirine"
+            },
+            {
+              "wordIndex": 234,
+              "originalWord": "herkes",
+              "errorWord": "herkse",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: herkes"
+            },
+            {
+              "wordIndex": 261,
+              "originalWord": "gördüler.",
+              "errorWord": "gödrüler.",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: gördüler."
+            },
+            {
+              "wordIndex": 263,
+              "originalWord": "sonra",
+              "errorWord": "sorna",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: sonra"
+            }
+          ],
+          "866f2034-9fc9-5bd6-81aa-f8f2800f1781": [
+            {
+              "wordIndex": 5,
+              "originalWord": "öğrenciler",
+              "errorWord": "öğenciler",
+              "errorType": "missing_letter",
+              "explanation": "Eksik harf düzeltilmeli. Doğru yazım: öğrenciler"
+            },
+            {
+              "wordIndex": 43,
+              "originalWord": "Çalışmanın",
+              "errorWord": "Çlışmanın",
+              "errorType": "missing_letter",
+              "explanation": "Eksik harf düzeltilmeli. Doğru yazım: Çalışmanın"
+            },
+            {
+              "wordIndex": 166,
+              "originalWord": "sonra",
+              "errorWord": "sorna",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: sonra"
+            },
+            {
+              "wordIndex": 246,
+              "originalWord": "bilgileri",
+              "errorWord": "bligileri",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: bilgileri"
+            },
+            {
+              "wordIndex": 263,
+              "originalWord": "kısa",
+              "errorWord": "kıssa",
+              "errorType": "extra_letter",
+              "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: kısa"
+            }
+          ],
+          "1c03fb04-a08b-50aa-8dd1-1d51cd949f4c": [
+            {
+              "wordIndex": 2,
+              "originalWord": "öğrenciler,",
+              "errorWord": "öğenciler,",
+              "errorType": "missing_letter",
+              "explanation": "Eksik harf düzeltilmeli. Doğru yazım: öğrenciler,"
+            },
+            {
+              "wordIndex": 85,
+              "originalWord": "sonucunu",
+              "errorWord": "sonucnuu",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: sonucunu"
+            },
+            {
+              "wordIndex": 175,
+              "originalWord": "kendi",
+              "errorWord": "kendii",
+              "errorType": "extra_letter",
+              "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: kendi"
+            },
+            {
+              "wordIndex": 189,
+              "originalWord": "söyledi.",
+              "errorWord": "söyeldi.",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: söyledi."
+            },
+            {
+              "wordIndex": 220,
+              "originalWord": "tasarım",
+              "errorWord": "tasraım",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: tasarım"
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "372e5d3e-ad89-52aa-a147-5cf52aabc188",
+    "ageGroupId": "10000000-0000-0000-0000-000000000002",
+    "age": "teen",
+    "level": 4,
+    "title": "Eksik Harfi Bul",
+    "previousConfiguration": {
+      "engineType": "error_analysis",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "errorCount": 5,
+        "timeLimit": 300
+      },
+      "difficultyLevel": 4
+    },
+    "configuration": {
+      "engineType": "error_analysis",
+      "difficultyLevel": 4,
+      "engineConfig": {
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 240,
+          "maxWordCount": 320
+        },
+        "errorCount": 5,
+        "timeLimit": 300,
+        "errorsByTextId": {
+          "687f5839-9047-5036-84bc-2785d3ec4f5e": [
+            {
+              "wordIndex": 10,
+              "originalWord": "arkadaşlarıyla",
+              "errorWord": "arkadşlarıyla",
+              "errorType": "missing_letter",
+              "explanation": "Eksik harf düzeltilmeli. Doğru yazım: arkadaşlarıyla"
+            },
+            {
+              "wordIndex": 43,
+              "originalWord": "söyledi.",
+              "errorWord": "söyeldi.",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: söyledi."
+            },
+            {
+              "wordIndex": 68,
+              "originalWord": "Bahçenin",
+              "errorWord": "Bahçeinn",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: Bahçenin"
+            },
+            {
+              "wordIndex": 136,
+              "originalWord": "herkes",
+              "errorWord": "herkse",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: herkes"
+            },
+            {
+              "wordIndex": 277,
+              "originalWord": "uzun",
+              "errorWord": "uuzun",
+              "errorType": "extra_letter",
+              "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: uzun"
+            }
+          ],
+          "eaf9e99d-98af-512d-8d36-88c85e347f92": [
+            {
+              "wordIndex": 1,
+              "originalWord": "küçük",
+              "errorWord": "küçkü",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: küçük"
+            },
+            {
+              "wordIndex": 51,
+              "originalWord": "defter",
+              "errorWord": "dfeter",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: defter"
+            },
+            {
+              "wordIndex": 78,
+              "originalWord": "sonra",
+              "errorWord": "sorna",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: sonra"
+            },
+            {
+              "wordIndex": 141,
+              "originalWord": "birlikte",
+              "errorWord": "birliket",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: birlikte"
+            },
+            {
+              "wordIndex": 212,
+              "originalWord": "harita",
+              "errorWord": "hriata",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: harita"
+            }
+          ],
+          "748bbacd-152f-5ade-8530-5e9a79d61e7d": [
+            {
+              "wordIndex": 5,
+              "originalWord": "zaman",
+              "errorWord": "zmaan",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: zaman"
+            },
+            {
+              "wordIndex": 44,
+              "originalWord": "kısa",
+              "errorWord": "kıssa",
+              "errorType": "extra_letter",
+              "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: kısa"
+            },
+            {
+              "wordIndex": 88,
+              "originalWord": "İşaretlerin",
+              "errorWord": "İşartelerin",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: İşaretlerin"
+            },
+            {
+              "wordIndex": 217,
+              "originalWord": "yeniden",
+              "errorWord": "yendien",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: yeniden"
+            },
+            {
+              "wordIndex": 282,
+              "originalWord": "söyledi.",
+              "errorWord": "söyeldi.",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: söyledi."
+            }
+          ],
+          "90fb091a-9ee1-5fb7-866a-0a10396812d6": [
+            {
+              "wordIndex": 5,
+              "originalWord": "öğrenciler",
+              "errorWord": "öğenciler",
+              "errorType": "missing_letter",
+              "explanation": "Eksik harf düzeltilmeli. Doğru yazım: öğrenciler"
+            },
+            {
+              "wordIndex": 29,
+              "originalWord": "söyledi.",
+              "errorWord": "söyeldi.",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: söyledi."
+            },
+            {
+              "wordIndex": 77,
+              "originalWord": "anlattı.",
+              "errorWord": "anllattı.",
+              "errorType": "extra_letter",
+              "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: anlattı."
+            },
+            {
+              "wordIndex": 157,
+              "originalWord": "Yeni",
+              "errorWord": "Ynei",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: Yeni"
+            },
+            {
+              "wordIndex": 263,
+              "originalWord": "kısa",
+              "errorWord": "kıssa",
+              "errorType": "extra_letter",
+              "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: kısa"
+            }
+          ],
+          "78979a4f-7087-5456-8801-a44b64cc547d": [
+            {
+              "wordIndex": 2,
+              "originalWord": "öğrenciler,",
+              "errorWord": "öğenciler,",
+              "errorType": "missing_letter",
+              "explanation": "Eksik harf düzeltilmeli. Doğru yazım: öğrenciler,"
+            },
+            {
+              "wordIndex": 38,
+              "originalWord": "Gruplar,",
+              "errorWord": "Gruplra,",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: Gruplar,"
+            },
+            {
+              "wordIndex": 88,
+              "originalWord": "Yeni",
+              "errorWord": "Ynei",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: Yeni"
+            },
+            {
+              "wordIndex": 145,
+              "originalWord": "Öğretmenleri,",
+              "errorWord": "Öretmenleri,",
+              "errorType": "missing_letter",
+              "explanation": "Eksik harf düzeltilmeli. Doğru yazım: Öğretmenleri,"
+            },
+            {
+              "wordIndex": 220,
+              "originalWord": "tasarım",
+              "errorWord": "tasraım",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: tasarım"
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "68243d64-9505-5c7e-8f67-6e6bd873dbbe",
+    "ageGroupId": "10000000-0000-0000-0000-000000000002",
+    "age": "teen",
+    "level": 5,
+    "title": "Eksik Harfi Bul",
+    "previousConfiguration": {
+      "engineType": "error_analysis",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "errorCount": 6,
+        "timeLimit": 360
+      },
+      "difficultyLevel": 5
+    },
+    "configuration": {
+      "engineType": "error_analysis",
+      "difficultyLevel": 5,
+      "engineConfig": {
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 320,
+          "maxWordCount": 400
+        },
+        "errorCount": 6,
+        "timeLimit": 360,
+        "errorsByTextId": {
+          "8560d83e-2759-5579-8211-b22bd34b5cb6": [
+            {
+              "wordIndex": 10,
+              "originalWord": "arkadaşlarıyla",
+              "errorWord": "arkadşlarıyla",
+              "errorType": "missing_letter",
+              "explanation": "Eksik harf düzeltilmeli. Doğru yazım: arkadaşlarıyla"
+            },
+            {
+              "wordIndex": 48,
+              "originalWord": "sonra",
+              "errorWord": "sorna",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: sonra"
+            },
+            {
+              "wordIndex": 112,
+              "originalWord": "gördüler.",
+              "errorWord": "gödrüler.",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: gördüler."
+            },
+            {
+              "wordIndex": 277,
+              "originalWord": "uzun",
+              "errorWord": "uuzun",
+              "errorType": "extra_letter",
+              "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: uzun"
+            },
+            {
+              "wordIndex": 291,
+              "originalWord": "kesin",
+              "errorWord": "keisn",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: kesin"
+            },
+            {
+              "wordIndex": 313,
+              "originalWord": "yeniden",
+              "errorWord": "yendien",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: yeniden"
+            }
+          ],
+          "9a64a1ba-d630-5bcc-8010-26b83652a5b1": [
+            {
+              "wordIndex": 1,
+              "originalWord": "küçük",
+              "errorWord": "küçkü",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: küçük"
+            },
+            {
+              "wordIndex": 55,
+              "originalWord": "başlığı",
+              "errorWord": "başılğı",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: başlığı"
+            },
+            {
+              "wordIndex": 86,
+              "originalWord": "uzun",
+              "errorWord": "uuzun",
+              "errorType": "extra_letter",
+              "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: uzun"
+            },
+            {
+              "wordIndex": 212,
+              "originalWord": "harita",
+              "errorWord": "hriata",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: harita"
+            },
+            {
+              "wordIndex": 328,
+              "originalWord": "deneme,",
+              "errorWord": "dneeme,",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: deneme,"
+            },
+            {
+              "wordIndex": 334,
+              "originalWord": "zaman",
+              "errorWord": "zmaan",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: zaman"
+            }
+          ],
+          "f8470805-9fac-5c75-82de-b20bf30f8a04": [
+            {
+              "wordIndex": 5,
+              "originalWord": "zaman",
+              "errorWord": "zmaan",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: zaman"
+            },
+            {
+              "wordIndex": 66,
+              "originalWord": "gördü.",
+              "errorWord": "gödrü.",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: gördü."
+            },
+            {
+              "wordIndex": 157,
+              "originalWord": "Kendi",
+              "errorWord": "Kendii",
+              "errorType": "extra_letter",
+              "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: Kendi"
+            },
+            {
+              "wordIndex": 263,
+              "originalWord": "sonra",
+              "errorWord": "sorna",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: sonra"
+            },
+            {
+              "wordIndex": 282,
+              "originalWord": "söyledi.",
+              "errorWord": "söyeldi.",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: söyledi."
+            },
+            {
+              "wordIndex": 308,
+              "originalWord": "Yeni",
+              "errorWord": "Ynei",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: Yeni"
+            }
+          ],
+          "54ce329d-1e87-57f8-8b12-2c59c1fb60ee": [
+            {
+              "wordIndex": 5,
+              "originalWord": "öğrenciler",
+              "errorWord": "öğenciler",
+              "errorType": "missing_letter",
+              "explanation": "Eksik harf düzeltilmeli. Doğru yazım: öğrenciler"
+            },
+            {
+              "wordIndex": 36,
+              "originalWord": "bilgi",
+              "errorWord": "bligi",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: bilgi"
+            },
+            {
+              "wordIndex": 100,
+              "originalWord": "birbirine",
+              "errorWord": "birbiirne",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: birbirine"
+            },
+            {
+              "wordIndex": 166,
+              "originalWord": "sonra",
+              "errorWord": "sorna",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: sonra"
+            },
+            {
+              "wordIndex": 246,
+              "originalWord": "bilgileri",
+              "errorWord": "bligileri",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: bilgileri"
+            },
+            {
+              "wordIndex": 338,
+              "originalWord": "bütün",
+              "errorWord": "bütüün",
+              "errorType": "extra_letter",
+              "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: bütün"
+            }
+          ],
+          "658ab077-5841-540e-8c10-e2e9450e5028": [
+            {
+              "wordIndex": 2,
+              "originalWord": "öğrenciler,",
+              "errorWord": "öğenciler,",
+              "errorType": "missing_letter",
+              "explanation": "Eksik harf düzeltilmeli. Doğru yazım: öğrenciler,"
+            },
+            {
+              "wordIndex": 53,
+              "originalWord": "çalışma",
+              "errorWord": "çlışma",
+              "errorType": "missing_letter",
+              "explanation": "Eksik harf düzeltilmeli. Doğru yazım: çalışma"
+            },
+            {
+              "wordIndex": 145,
+              "originalWord": "Öğretmenleri,",
+              "errorWord": "Öretmenleri,",
+              "errorType": "missing_letter",
+              "explanation": "Eksik harf düzeltilmeli. Doğru yazım: Öğretmenleri,"
+            },
+            {
+              "wordIndex": 304,
+              "originalWord": "zaman",
+              "errorWord": "zmaan",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: zaman"
+            },
+            {
+              "wordIndex": 307,
+              "originalWord": "gördüler.",
+              "errorWord": "gödrüler.",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: gördüler."
+            },
+            {
+              "wordIndex": 360,
+              "originalWord": "anlattı.",
+              "errorWord": "anllattı.",
+              "errorType": "extra_letter",
+              "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: anlattı."
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "ffc886e8-ccd3-5664-82bf-b51ec2e4702c",
+    "ageGroupId": "10000000-0000-0000-0000-000000000004",
+    "age": "young-adult",
+    "level": 4,
+    "title": "Eksik Harfi Bul",
+    "previousConfiguration": {
+      "engineType": "error_analysis",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "errorCount": 5,
+        "timeLimit": 300
+      },
+      "difficultyLevel": 4
+    },
+    "configuration": {
+      "engineType": "error_analysis",
+      "difficultyLevel": 4,
+      "engineConfig": {
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 300,
+          "maxWordCount": 380
+        },
+        "errorCount": 5,
+        "timeLimit": 300,
+        "errorsByTextId": {
+          "cabc4af6-57ea-5f44-8c7a-534524e7fc2b": [
+            {
+              "wordIndex": 10,
+              "originalWord": "arkadaşlarıyla",
+              "errorWord": "arkadşlarıyla",
+              "errorType": "missing_letter",
+              "explanation": "Eksik harf düzeltilmeli. Doğru yazım: arkadaşlarıyla"
+            },
+            {
+              "wordIndex": 43,
+              "originalWord": "söyledi.",
+              "errorWord": "söyeldi.",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: söyledi."
+            },
+            {
+              "wordIndex": 73,
+              "originalWord": "birkaç",
+              "errorWord": "birkaaç",
+              "errorType": "extra_letter",
+              "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: birkaç"
+            },
+            {
+              "wordIndex": 177,
+              "originalWord": "bütün",
+              "errorWord": "bütüün",
+              "errorType": "extra_letter",
+              "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: bütün"
+            },
+            {
+              "wordIndex": 313,
+              "originalWord": "yeniden",
+              "errorWord": "yendien",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: yeniden"
+            }
+          ],
+          "ed00bc29-70d2-5f4f-82f9-0d46ef528935": [
+            {
+              "wordIndex": 1,
+              "originalWord": "küçük",
+              "errorWord": "küçkü",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: küçük"
+            },
+            {
+              "wordIndex": 51,
+              "originalWord": "defter",
+              "errorWord": "dfeter",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: defter"
+            },
+            {
+              "wordIndex": 79,
+              "originalWord": "birkaç",
+              "errorWord": "birkaaç",
+              "errorType": "extra_letter",
+              "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: birkaç"
+            },
+            {
+              "wordIndex": 155,
+              "originalWord": "Yeni",
+              "errorWord": "Ynei",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: Yeni"
+            },
+            {
+              "wordIndex": 334,
+              "originalWord": "zaman",
+              "errorWord": "zmaan",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: zaman"
+            }
+          ],
+          "9e77a7e7-eedf-5669-8b6b-de3b86c53816": [
+            {
+              "wordIndex": 5,
+              "originalWord": "zaman",
+              "errorWord": "zmaan",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: zaman"
+            },
+            {
+              "wordIndex": 44,
+              "originalWord": "kısa",
+              "errorWord": "kıssa",
+              "errorType": "extra_letter",
+              "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: kısa"
+            },
+            {
+              "wordIndex": 112,
+              "originalWord": "arkadaşlarıyla",
+              "errorWord": "arkadşlarıyla",
+              "errorType": "missing_letter",
+              "explanation": "Eksik harf düzeltilmeli. Doğru yazım: arkadaşlarıyla"
+            },
+            {
+              "wordIndex": 217,
+              "originalWord": "yeniden",
+              "errorWord": "yendien",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: yeniden"
+            },
+            {
+              "wordIndex": 308,
+              "originalWord": "Yeni",
+              "errorWord": "Ynei",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: Yeni"
+            }
+          ],
+          "841fabcf-d748-52b3-84ef-bcf486a00fee": [
+            {
+              "wordIndex": 7,
+              "originalWord": "küçük",
+              "errorWord": "küçkü",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: küçük"
+            },
+            {
+              "wordIndex": 35,
+              "originalWord": "birkaç",
+              "errorWord": "birkaaç",
+              "errorType": "extra_letter",
+              "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: birkaç"
+            },
+            {
+              "wordIndex": 128,
+              "originalWord": "tarih",
+              "errorWord": "tarhi",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: tarih"
+            },
+            {
+              "wordIndex": 178,
+              "originalWord": "sonra",
+              "errorWord": "sorna",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: sonra"
+            },
+            {
+              "wordIndex": 253,
+              "originalWord": "çalışma",
+              "errorWord": "çlışma",
+              "errorType": "missing_letter",
+              "explanation": "Eksik harf düzeltilmeli. Doğru yazım: çalışma"
+            }
+          ],
+          "2e2c5c5d-625c-554d-89ca-4bf915c6e74a": [
+            {
+              "wordIndex": 12,
+              "originalWord": "önce",
+              "errorWord": "öcne",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: önce"
+            },
+            {
+              "wordIndex": 75,
+              "originalWord": "malzeme",
+              "errorWord": "malzmee",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: malzeme"
+            },
+            {
+              "wordIndex": 168,
+              "originalWord": "bütün",
+              "errorWord": "bütüün",
+              "errorType": "extra_letter",
+              "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: bütün"
+            },
+            {
+              "wordIndex": 243,
+              "originalWord": "Sonra",
+              "errorWord": "Sorna",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: Sonra"
+            },
+            {
+              "wordIndex": 290,
+              "originalWord": "yeni",
+              "errorWord": "ynei",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: yeni"
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "88d37e8c-a1a9-558f-bb9e-d50513dda573",
+    "ageGroupId": "10000000-0000-0000-0000-000000000004",
+    "age": "young-adult",
+    "level": 5,
+    "title": "Eksik Harfi Bul",
+    "previousConfiguration": {
+      "engineType": "error_analysis",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "errorCount": 6,
+        "timeLimit": 300
+      },
+      "difficultyLevel": 5
+    },
+    "configuration": {
+      "engineType": "error_analysis",
+      "difficultyLevel": 5,
+      "engineConfig": {
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 380,
+          "maxWordCount": 460
+        },
+        "errorCount": 6,
+        "timeLimit": 300,
+        "errorsByTextId": {
+          "c92e0e82-0556-591f-8db8-072bb945bf33": [
+            {
+              "wordIndex": 10,
+              "originalWord": "arkadaşlarıyla",
+              "errorWord": "arkadşlarıyla",
+              "errorType": "missing_letter",
+              "explanation": "Eksik harf düzeltilmeli. Doğru yazım: arkadaşlarıyla"
+            },
+            {
+              "wordIndex": 48,
+              "originalWord": "sonra",
+              "errorWord": "sorna",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: sonra"
+            },
+            {
+              "wordIndex": 112,
+              "originalWord": "gördüler.",
+              "errorWord": "gödrüler.",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: gördüler."
+            },
+            {
+              "wordIndex": 277,
+              "originalWord": "uzun",
+              "errorWord": "uuzun",
+              "errorType": "extra_letter",
+              "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: uzun"
+            },
+            {
+              "wordIndex": 291,
+              "originalWord": "kesin",
+              "errorWord": "keisn",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: kesin"
+            },
+            {
+              "wordIndex": 313,
+              "originalWord": "yeniden",
+              "errorWord": "yendien",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: yeniden"
+            }
+          ],
+          "1cf7587d-915e-5db8-831f-a0efee2155bf": [
+            {
+              "wordIndex": 1,
+              "originalWord": "küçük",
+              "errorWord": "küçkü",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: küçük"
+            },
+            {
+              "wordIndex": 61,
+              "originalWord": "bütün",
+              "errorWord": "bütüün",
+              "errorType": "extra_letter",
+              "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: bütün"
+            },
+            {
+              "wordIndex": 97,
+              "originalWord": "kitap",
+              "errorWord": "ktiap",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: kitap"
+            },
+            {
+              "wordIndex": 328,
+              "originalWord": "deneme,",
+              "errorWord": "dneeme,",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: deneme,"
+            },
+            {
+              "wordIndex": 334,
+              "originalWord": "zaman",
+              "errorWord": "zmaan",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: zaman"
+            },
+            {
+              "wordIndex": 366,
+              "originalWord": "defterde",
+              "errorWord": "dfeterde",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: defterde"
+            }
+          ],
+          "fbff8b0e-051d-5283-8c7a-9590d7476396": [
+            {
+              "wordIndex": 5,
+              "originalWord": "zaman",
+              "errorWord": "zmaan",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: zaman"
+            },
+            {
+              "wordIndex": 74,
+              "originalWord": "Ancak",
+              "errorWord": "Anack",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: Ancak"
+            },
+            {
+              "wordIndex": 196,
+              "originalWord": "önce",
+              "errorWord": "öcne",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: önce"
+            },
+            {
+              "wordIndex": 394,
+              "originalWord": "bilgileri",
+              "errorWord": "bligileri",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: bilgileri"
+            },
+            {
+              "wordIndex": 398,
+              "originalWord": "karar",
+              "errorWord": "kraar",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: karar"
+            },
+            {
+              "wordIndex": 404,
+              "originalWord": "önemli",
+              "errorWord": "önmeli",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: önemli"
+            }
+          ],
+          "82d22abc-5e9b-5af5-839d-57e5353413cb": [
+            {
+              "wordIndex": 7,
+              "originalWord": "küçük",
+              "errorWord": "küçkü",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: küçük"
+            },
+            {
+              "wordIndex": 46,
+              "originalWord": "toplantıda",
+              "errorWord": "toplantdıa",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: toplantıda"
+            },
+            {
+              "wordIndex": 162,
+              "originalWord": "aynı",
+              "errorWord": "ayynı",
+              "errorType": "extra_letter",
+              "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: aynı"
+            },
+            {
+              "wordIndex": 363,
+              "originalWord": "Önce",
+              "errorWord": "Öcne",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: Önce"
+            },
+            {
+              "wordIndex": 376,
+              "originalWord": "yeniden",
+              "errorWord": "yendien",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: yeniden"
+            },
+            {
+              "wordIndex": 382,
+              "originalWord": "kendi",
+              "errorWord": "kendii",
+              "errorType": "extra_letter",
+              "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: kendi"
+            }
+          ],
+          "e3e9d6b9-8498-5632-8766-aa26e68f5765": [
+            {
+              "wordIndex": 12,
+              "originalWord": "önce",
+              "errorWord": "öcne",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: önce"
+            },
+            {
+              "wordIndex": 133,
+              "originalWord": "söyledi.",
+              "errorWord": "söyeldi.",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: söyledi."
+            },
+            {
+              "wordIndex": 222,
+              "originalWord": "farklı",
+              "errorWord": "farkıl",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: farklı"
+            },
+            {
+              "wordIndex": 341,
+              "originalWord": "uzun",
+              "errorWord": "uuzun",
+              "errorType": "extra_letter",
+              "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: uzun"
+            },
+            {
+              "wordIndex": 352,
+              "originalWord": "küçük",
+              "errorWord": "küçkü",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: küçük"
+            },
+            {
+              "wordIndex": 409,
+              "originalWord": "yeniden",
+              "errorWord": "yendien",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: yeniden"
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "e5d1dcbd-a8f1-5f39-8e15-29169297c17b",
+    "ageGroupId": "10000000-0000-0000-0000-000000000003",
+    "age": "adult",
+    "level": 4,
+    "title": "Eksik Harfi Bul",
+    "previousConfiguration": {
+      "engineType": "error_analysis",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "errorCount": 5,
+        "timeLimit": 360
+      },
+      "difficultyLevel": 4
+    },
+    "configuration": {
+      "engineType": "error_analysis",
+      "difficultyLevel": 4,
+      "engineConfig": {
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 340,
+          "maxWordCount": 420
+        },
+        "errorCount": 5,
+        "timeLimit": 360,
+        "errorsByTextId": {
+          "493ad1ec-dff6-59d6-8b43-e8b761f0172e": [
+            {
+              "wordIndex": 10,
+              "originalWord": "arkadaşlarıyla",
+              "errorWord": "arkadşlarıyla",
+              "errorType": "missing_letter",
+              "explanation": "Eksik harf düzeltilmeli. Doğru yazım: arkadaşlarıyla"
+            },
+            {
+              "wordIndex": 43,
+              "originalWord": "söyledi.",
+              "errorWord": "söyeldi.",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: söyledi."
+            },
+            {
+              "wordIndex": 73,
+              "originalWord": "birkaç",
+              "errorWord": "birkaaç",
+              "errorType": "extra_letter",
+              "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: birkaç"
+            },
+            {
+              "wordIndex": 177,
+              "originalWord": "bütün",
+              "errorWord": "bütüün",
+              "errorType": "extra_letter",
+              "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: bütün"
+            },
+            {
+              "wordIndex": 313,
+              "originalWord": "yeniden",
+              "errorWord": "yendien",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: yeniden"
+            }
+          ],
+          "5b233b33-7bdc-561c-8830-6ee9b972794b": [
+            {
+              "wordIndex": 1,
+              "originalWord": "küçük",
+              "errorWord": "küçkü",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: küçük"
+            },
+            {
+              "wordIndex": 51,
+              "originalWord": "defter",
+              "errorWord": "dfeter",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: defter"
+            },
+            {
+              "wordIndex": 83,
+              "originalWord": "kitaplarda",
+              "errorWord": "kitaplrda",
+              "errorType": "missing_letter",
+              "explanation": "Eksik harf düzeltilmeli. Doğru yazım: kitaplarda"
+            },
+            {
+              "wordIndex": 155,
+              "originalWord": "Yeni",
+              "errorWord": "Ynei",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: Yeni"
+            },
+            {
+              "wordIndex": 366,
+              "originalWord": "defterde",
+              "errorWord": "dfeterde",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: defterde"
+            }
+          ],
+          "462cc6c6-b7de-5bac-8734-3897f43154e8": [
+            {
+              "wordIndex": 5,
+              "originalWord": "zaman",
+              "errorWord": "zmaan",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: zaman"
+            },
+            {
+              "wordIndex": 44,
+              "originalWord": "kısa",
+              "errorWord": "kıssa",
+              "errorType": "extra_letter",
+              "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: kısa"
+            },
+            {
+              "wordIndex": 112,
+              "originalWord": "arkadaşlarıyla",
+              "errorWord": "arkadşlarıyla",
+              "errorType": "missing_letter",
+              "explanation": "Eksik harf düzeltilmeli. Doğru yazım: arkadaşlarıyla"
+            },
+            {
+              "wordIndex": 217,
+              "originalWord": "yeniden",
+              "errorWord": "yendien",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: yeniden"
+            },
+            {
+              "wordIndex": 308,
+              "originalWord": "Yeni",
+              "errorWord": "Ynei",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: Yeni"
+            }
+          ],
+          "9bebea1d-e78f-503f-883b-db12eeb56907": [
+            {
+              "wordIndex": 7,
+              "originalWord": "küçük",
+              "errorWord": "küçkü",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: küçük"
+            },
+            {
+              "wordIndex": 40,
+              "originalWord": "olarak",
+              "errorWord": "olraak",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: olarak"
+            },
+            {
+              "wordIndex": 138,
+              "originalWord": "ancak",
+              "errorWord": "anack",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: ancak"
+            },
+            {
+              "wordIndex": 179,
+              "originalWord": "yeni",
+              "errorWord": "ynei",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: yeni"
+            },
+            {
+              "wordIndex": 376,
+              "originalWord": "yeniden",
+              "errorWord": "yendien",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: yeniden"
+            }
+          ],
+          "ac749670-fcc4-557f-8294-54a602485619": [
+            {
+              "wordIndex": 12,
+              "originalWord": "önce",
+              "errorWord": "öcne",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: önce"
+            },
+            {
+              "wordIndex": 75,
+              "originalWord": "malzeme",
+              "errorWord": "malzmee",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: malzeme"
+            },
+            {
+              "wordIndex": 212,
+              "originalWord": "aynı",
+              "errorWord": "ayynı",
+              "errorType": "extra_letter",
+              "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: aynı"
+            },
+            {
+              "wordIndex": 244,
+              "originalWord": "herkes",
+              "errorWord": "herkse",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: herkes"
+            },
+            {
+              "wordIndex": 352,
+              "originalWord": "küçük",
+              "errorWord": "küçkü",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: küçük"
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "913cc8e9-0e66-561d-80ff-f6039de11fbf",
+    "ageGroupId": "10000000-0000-0000-0000-000000000003",
+    "age": "adult",
+    "level": 5,
+    "title": "Eksik Harfi Bul",
+    "previousConfiguration": {
+      "engineType": "error_analysis",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "errorCount": 6,
+        "timeLimit": 420
+      },
+      "difficultyLevel": 5
+    },
+    "configuration": {
+      "engineType": "error_analysis",
+      "difficultyLevel": 5,
+      "engineConfig": {
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 420,
+          "maxWordCount": 500
+        },
+        "errorCount": 6,
+        "timeLimit": 420,
+        "errorsByTextId": {
+          "9a4ae25c-08ad-50d5-8d85-9b3e19194949": [
+            {
+              "wordIndex": 10,
+              "originalWord": "arkadaşlarıyla",
+              "errorWord": "arkadşlarıyla",
+              "errorType": "missing_letter",
+              "explanation": "Eksik harf düzeltilmeli. Doğru yazım: arkadaşlarıyla"
+            },
+            {
+              "wordIndex": 48,
+              "originalWord": "sonra",
+              "errorWord": "sorna",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: sonra"
+            },
+            {
+              "wordIndex": 112,
+              "originalWord": "gördüler.",
+              "errorWord": "gödrüler.",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: gördüler."
+            },
+            {
+              "wordIndex": 277,
+              "originalWord": "uzun",
+              "errorWord": "uuzun",
+              "errorType": "extra_letter",
+              "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: uzun"
+            },
+            {
+              "wordIndex": 291,
+              "originalWord": "kesin",
+              "errorWord": "keisn",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: kesin"
+            },
+            {
+              "wordIndex": 313,
+              "originalWord": "yeniden",
+              "errorWord": "yendien",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: yeniden"
+            }
+          ],
+          "15eeb96e-bdd5-5179-85ed-6a9c1b93a931": [
+            {
+              "wordIndex": 1,
+              "originalWord": "küçük",
+              "errorWord": "küçkü",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: küçük"
+            },
+            {
+              "wordIndex": 61,
+              "originalWord": "bütün",
+              "errorWord": "bütüün",
+              "errorType": "extra_letter",
+              "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: bütün"
+            },
+            {
+              "wordIndex": 97,
+              "originalWord": "kitap",
+              "errorWord": "ktiap",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: kitap"
+            },
+            {
+              "wordIndex": 328,
+              "originalWord": "deneme,",
+              "errorWord": "dneeme,",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: deneme,"
+            },
+            {
+              "wordIndex": 334,
+              "originalWord": "zaman",
+              "errorWord": "zmaan",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: zaman"
+            },
+            {
+              "wordIndex": 366,
+              "originalWord": "defterde",
+              "errorWord": "dfeterde",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: defterde"
+            }
+          ],
+          "20802779-865c-52f4-81d2-5ab3cd072e3f": [
+            {
+              "wordIndex": 5,
+              "originalWord": "zaman",
+              "errorWord": "zmaan",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: zaman"
+            },
+            {
+              "wordIndex": 74,
+              "originalWord": "Ancak",
+              "errorWord": "Anack",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: Ancak"
+            },
+            {
+              "wordIndex": 217,
+              "originalWord": "yeniden",
+              "errorWord": "yendien",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: yeniden"
+            },
+            {
+              "wordIndex": 398,
+              "originalWord": "karar",
+              "errorWord": "kraar",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: karar"
+            },
+            {
+              "wordIndex": 404,
+              "originalWord": "önemli",
+              "errorWord": "önmeli",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: önemli"
+            },
+            {
+              "wordIndex": 423,
+              "originalWord": "birkaç",
+              "errorWord": "birkaaç",
+              "errorType": "extra_letter",
+              "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: birkaç"
+            }
+          ],
+          "b6788e34-973a-56e4-85fe-155621811707": [
+            {
+              "wordIndex": 7,
+              "originalWord": "küçük",
+              "errorWord": "küçkü",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: küçük"
+            },
+            {
+              "wordIndex": 46,
+              "originalWord": "toplantıda",
+              "errorWord": "toplantdıa",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: toplantıda"
+            },
+            {
+              "wordIndex": 162,
+              "originalWord": "aynı",
+              "errorWord": "ayynı",
+              "errorType": "extra_letter",
+              "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: aynı"
+            },
+            {
+              "wordIndex": 363,
+              "originalWord": "Önce",
+              "errorWord": "Öcne",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: Önce"
+            },
+            {
+              "wordIndex": 376,
+              "originalWord": "yeniden",
+              "errorWord": "yendien",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: yeniden"
+            },
+            {
+              "wordIndex": 382,
+              "originalWord": "kendi",
+              "errorWord": "kendii",
+              "errorType": "extra_letter",
+              "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: kendi"
+            }
+          ],
+          "37279fff-9963-5c10-86db-2e3862a9155d": [
+            {
+              "wordIndex": 12,
+              "originalWord": "önce",
+              "errorWord": "öcne",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: önce"
+            },
+            {
+              "wordIndex": 139,
+              "originalWord": "olarak",
+              "errorWord": "olraak",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: olarak"
+            },
+            {
+              "wordIndex": 243,
+              "originalWord": "Sonra",
+              "errorWord": "Sorna",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: Sonra"
+            },
+            {
+              "wordIndex": 352,
+              "originalWord": "küçük",
+              "errorWord": "küçkü",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: küçük"
+            },
+            {
+              "wordIndex": 409,
+              "originalWord": "yeniden",
+              "errorWord": "yendien",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: yeniden"
+            },
+            {
+              "wordIndex": 450,
+              "originalWord": "deneme",
+              "errorWord": "dneeme",
+              "errorType": "transposition",
+              "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: deneme"
+            }
+          ]
+        }
+      }
+    }
+  }
+]$settings$::jsonb) s;
+CREATE TEMP TABLE proofreading_content ON COMMIT DROP AS
+SELECT (s->>'id')::uuid id,(s->>'exerciseId')::uuid exercise_id,(s->>'ageGroupId')::uuid age_id,
+  (s->>'level')::int level,s->>'title' title,s->>'content' content,(s->>'wordCount')::int word_count,s->'errors' errors
+FROM jsonb_array_elements($content$[
+  {
+    "id": "3e7c2691-616c-5641-8743-b51f7f19d78d",
+    "exerciseId": "ec753237-5029-5c23-a225-2be60945fd1e",
+    "ageGroupId": "10000000-0000-0000-0000-000000000001",
+    "age": "child",
+    "level": 4,
+    "title": "Dikkatli editör — garden — child S4",
+    "content": "Okul bahçesinin bir köşesinde boş bir toprak alan vardı. Eren, arkadaşlarıyla birlikte burada küçük bir bitki köşesi kurmayı düşündü. İlk işleri tohum almak olmadı. Önce alanı gezdiler, güneşin nereden geldiğini ve suyun nerede biriktiğini gözlemlediler.\n\nÖğretmenleri, her bitkinin aynı yerde aynı biçimde büyümeyeceğini söyledi. Çocuklar sabah ve öğleden sonra bahçeye baktı. Gölgenin gün içinde yer değiştirdiğini fark ettiler. Bir deftere tarih ve saat yazarak gördüklerini kısa cümlelerle kaydettiler.\n\nBahçenin kenarında kuru yapraklar ve birkaç taş bulunuyordu. Çocuklar toprağı temizlerken küçük canlıları rahatsız etmemeye çalıştı. Buldukları her şeyi çöp saymadılar. Bazı yaprakların ve dalların toprağın üzerinde doğal olarak bulunabileceğini öğretmenlerine sordular.\n\nTohumları seçerken yetişme sürelerini de okudular. Bazı bitkilerin daha çok zaman istediğini gördüler. Küçük alan için birkaç türle başlamaya karar verdiler. Her sıranın başına bir işaret koydular. İşaretlerde bitkinin adı ve ekildiği gün yazıyordu.\n\nİlk sulamada herkes su vermek istedi. Ancak her çocuğun ayrı ayrı sulaması toprağı fazla ıslattı. Ertesi gün görevleri paylaşmaya karar verdiler. Bir kişi suluyor, bir kişi toprağın durumunu gözlüyor, bir kişi de deftere not alıyordu.\n\nBir hafta sonra ilk küçük yapraklar göründü. Eren, bütün tohumların aynı gün filizlenmediğini fark etti. Henüz görünmeyen tohumları hemen başarısız saymadı. Paket üzerindeki bilgilerle defterdeki tarihleri karşılaştırdı. Gözlem yapmanın bazen sabır gerektirdiğini anladı.\n\nÇocuklar ölçüm için basit bir cetvel kullandı.",
+    "wordCount": 209,
+    "errors": [
+      {
+        "wordIndex": 10,
+        "originalWord": "arkadaşlarıyla",
+        "errorWord": "arkadşlarıyla",
+        "errorType": "missing_letter",
+        "explanation": "Eksik harf düzeltilmeli. Doğru yazım: arkadaşlarıyla"
+      },
+      {
+        "wordIndex": 44,
+        "originalWord": "Çocuklar",
+        "errorWord": "Çocuklr",
+        "errorType": "missing_letter",
+        "explanation": "Eksik harf düzeltilmeli. Doğru yazım: Çocuklar"
+      },
+      {
+        "wordIndex": 110,
+        "originalWord": "zaman",
+        "errorWord": "zmaan",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: zaman"
+      },
+      {
+        "wordIndex": 196,
+        "originalWord": "Gözlem",
+        "errorWord": "Gözlme",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: Gözlem"
+      }
+    ],
+    "source": "../../grouping/v1/texts/garden.txt",
+    "sourceSha256": "0d7ce30627e06b33e7c9ff46cf4804e53fdf3cab138d39819f02146874592a02"
+  },
+  {
+    "id": "0aa1a3d0-7e12-56a0-8dac-7ef5109d4048",
+    "exerciseId": "ec753237-5029-5c23-a225-2be60945fd1e",
+    "ageGroupId": "10000000-0000-0000-0000-000000000001",
+    "age": "child",
+    "level": 4,
+    "title": "Dikkatli editör — library — child S4",
+    "content": "Mahallenin küçük kütüphanesi, eski bir okul binasının girişindeydi. Pencereler bahçeye bakıyor, rafların arasında geniş bir geçit uzanıyordu. Duru, ilk ziyaretinde kitaplardan önce kapının yanındaki çizimi fark etti. Çizimde her raf farklı bir renkle gösterilmişti.\n\nGörevli, renklerin kitapların yerini bulmayı kolaylaştırdığını anlattı. Mavi raflarda öyküler, yeşil raflarda doğa kitapları vardı. Duru bir defter çıkardı ve aradığı başlığı yazdı. Başlığı unuttuğunda defterine bakmak, bütün rafları yeniden dolaşmaktan daha kolaydı.\n\nBir kitabı seçerken yalnız kapağa bakmadı. Arka kapaktaki kısa tanıtımı okudu, sonra birkaç sayfayı çevirdi. Bazı kitaplarda çizimler, bazılarında uzun bölümler vardı. Duru o gün, merak ettiği kuşları anlatan bir kitap aldı.\n\nKitabın ilk bölümünde parkta gördüğü serçeler anlatılıyordu. Duru, tanıdığı bir ayrıntıya rastlayınca okumayı sürdürdü. Bilmediği bir sözcüğü defterine yazdı. Eve dönerken parkta kısa bir süre durdu ve kitaptaki kuşla gerçek kuşu karşılaştırdı.\n\nErtesi gün defterini kütüphaneye getirdi. Görevliye sorusunu gösterdi ve yanıtı birlikte başka bir kitapta aradılar. Duru, bir sorunun farklı kaynaklarda farklı ayrıntılarla açıklanabileceğini gördü. Yeni bulduğu açıklamayı önceki notunun yanına ekledi.\n\nHafta sonunda bir arkadaşını da davet etti. Arkadaşı öykü okumayı seviyordu. Aynı rafta aynı kitabı seçmek zorunda olmadıklarını konuştular. Her biri kendi kitabından ilginç bir bölümü anlattı. Böylece tek ziyaret, iki ayrı keşfe dönüştü.\n\nKütüphane, ziyaretçilerin önerilerini küçük kartlarda topluyordu. Duru kartına, kitapların hangi rafta bulunduğunu gösteren daha büyük bir harita çizilmesini önerdi.",
+    "wordCount": 215,
+    "errors": [
+      {
+        "wordIndex": 1,
+        "originalWord": "küçük",
+        "errorWord": "küçkü",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: küçük"
+      },
+      {
+        "wordIndex": 55,
+        "originalWord": "başlığı",
+        "errorWord": "başılğı",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: başlığı"
+      },
+      {
+        "wordIndex": 86,
+        "originalWord": "uzun",
+        "errorWord": "uuzun",
+        "errorType": "extra_letter",
+        "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: uzun"
+      },
+      {
+        "wordIndex": 212,
+        "originalWord": "harita",
+        "errorWord": "hriata",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: harita"
+      }
+    ],
+    "source": "../../grouping/v1/texts/library.txt",
+    "sourceSha256": "1f8f8ea6c8de855bd7e6d3e9b82f11f3b8d02668bddc39dbfde9b6503b94abea"
+  },
+  {
+    "id": "73f05135-f30e-5fa2-8f23-8c2dc6a31594",
+    "exerciseId": "ec753237-5029-5c23-a225-2be60945fd1e",
+    "ageGroupId": "10000000-0000-0000-0000-000000000001",
+    "age": "child",
+    "level": 4,
+    "title": "Dikkatli editör — map — child S4",
+    "content": "Deniz, evinden parka giderken her zaman aynı yolu kullanıyordu. Bir gün yolun bir bölümü kapandı. Başka bir sokaktan yürümek zorunda kaldı. Dönüşte basit bir harita çizdi. Haritada bildiği yerleri, köşeleri ve geçtiği sokakları işaretledi.\n\nHaritası gerçek sokakların tam ölçüsünü göstermiyordu. Bazı yolları uzun, bazılarını kısa çizmişti. Yine de nerede döneceğini hatırlamasına yardım ediyordu. Deniz, bir çizimin bütün ayrıntıları göstermeden de belirli bir iş için yararlı olabileceğini gördü.\n\nArkadaşı haritaya baktığında fırının işaretini hemen tanıdı. Ancak iki oyun alanını birbirine karıştırdı. Deniz, aynı şekli iki farklı yer için kullanmıştı. İşaretlerin yanına kısa adlar ekledi. Böylece çizim, yalnız kendisinin anlayacağı bir not olmaktan çıktı.\n\nBir sonraki yürüyüşte yolun süresini de tuttu. Hızlı yürüdüğü günle arkadaşlarıyla konuşarak yürüdüğü gün aynı sonucu vermedi. Tek bir süreyi kesin bir ölçü saymadı. Haritanın yanına, sürenin yürüyüş biçimine göre değişebileceğini yazdı.\n\nParkın kapısında başka bir harita vardı. Bu harita yürüyüş yollarını, çeşmeleri ve oturma alanlarını gösteriyordu. Deniz iki haritanın aynı şey olmadığını fark etti. Kendi haritası parka ulaşmaya, kapıdaki harita ise parkın içinde dolaşmaya yardım ediyordu.\n\nParkta küçük bir keşif oyunu hazırladılar. Arkadaşları üç yeri bulacak ve oralardaki işaretleri not edecekti. Oyunda koşmak zorunlu değildi. Deniz, yolların açık olduğundan emin olmak için oyunu önce bir arkadaşıyla yavaşça denedi.\n\nDenemede bir okun yanlış yere baktığı görüldü.",
+    "wordCount": 208,
+    "errors": [
+      {
+        "wordIndex": 5,
+        "originalWord": "zaman",
+        "errorWord": "zmaan",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: zaman"
+      },
+      {
+        "wordIndex": 44,
+        "originalWord": "kısa",
+        "errorWord": "kıssa",
+        "errorType": "extra_letter",
+        "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: kısa"
+      },
+      {
+        "wordIndex": 88,
+        "originalWord": "İşaretlerin",
+        "errorWord": "İşartelerin",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: İşaretlerin"
+      },
+      {
+        "wordIndex": 196,
+        "originalWord": "önce",
+        "errorWord": "öcne",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: önce"
+      }
+    ],
+    "source": "../../grouping/v1/texts/map.txt",
+    "sourceSha256": "0ab7639c5911d2578e4403703ce59e9c4fb107f2fe964e2feee6c817da006345"
+  },
+  {
+    "id": "92257f2e-5c2d-59ea-8ee4-65f698d9ff3d",
+    "exerciseId": "ec753237-5029-5c23-a225-2be60945fd1e",
+    "ageGroupId": "10000000-0000-0000-0000-000000000001",
+    "age": "child",
+    "level": 4,
+    "title": "Dikkatli editör — memory — child S4",
+    "content": "Okulun yakınındaki eski çeşme yenilenirken öğrenciler mahallede küçük bir tarih çalışması yapmaya karar verdi. Çeşmenin ne zaman yapıldığını ve eskiden nasıl kullanıldığını öğrenmek istiyorlardı. Öğretmenleri, herkesin hatırasının aynı olmayabileceğini söyledi. Bir kişinin anlattığı olayı hemen kesin bilgi olarak yazmak yerine farklı kaynakları karşılaştıracaklardı. Çalışmanın amacı, mahalleyi tanımak kadar bilgi toplarken dikkatli davranmayı da öğrenmekti.\n\nİlk görüşme bakkalın sahibi Nihat Bey ile yapıldı. Nihat Bey, çocukken çeşmenin yanında bekleyen insanları hatırlıyordu. O yıllarda çevredeki bazı evlere su taşındığını anlattı. Ancak hangi yıldan söz ettiğini kesin olarak söyleyemedi. Öğrenciler notlarına yaklaşık bir tarih aralığı yazdı. Anlatılan olayla anlatıcının kendi tahmini aynı cümlede birbirine karışmasın diye defterde farklı işaretler kullandılar.\n\nİkinci görüşmede mahallede uzun süredir yaşayan Ayşe Hanım farklı bir ayrıntı paylaştı. Ona göre çeşmenin çevresinde küçük bir pazar kuruluyordu. Öğrenciler iki anlatının birbirini dışladığını düşündü. Öğretmenleri ise aynı yerin farklı zamanlarda farklı amaçlarla kullanılabileceğini hatırlattı. Çeşme, bir dönemde su taşınan bir nokta, başka bir dönemde buluşma yeri olmuş olabilirdi. Yeni sorularını zaman ve kullanım biçimi üzerine kurdular.\n\nDaha sonra okul arşivinde birkaç eski fotoğraf bulundu. Fotoğraflardan birinde çeşmenin arkasındaki dükkân görünüyordu ama çekim tarihi yazmıyordu. Başka bir fotoğrafın arkasında bir yıl vardı. Bu iki görüntüyü doğrudan aynı döneme ait saymak doğru olmazdı. Çocuklar dükkânın tabelasını, yolun biçimini ve çevredeki binaları karşılaştırdı.",
+    "wordCount": 209,
+    "errors": [
+      {
+        "wordIndex": 5,
+        "originalWord": "öğrenciler",
+        "errorWord": "öğenciler",
+        "errorType": "missing_letter",
+        "explanation": "Eksik harf düzeltilmeli. Doğru yazım: öğrenciler"
+      },
+      {
+        "wordIndex": 35,
+        "originalWord": "kesin",
+        "errorWord": "keisn",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: kesin"
+      },
+      {
+        "wordIndex": 96,
+        "originalWord": "kendi",
+        "errorWord": "kendii",
+        "errorType": "extra_letter",
+        "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: kendi"
+      },
+      {
+        "wordIndex": 200,
+        "originalWord": "Çocuklar",
+        "errorWord": "Çocuklr",
+        "errorType": "missing_letter",
+        "explanation": "Eksik harf düzeltilmeli. Doğru yazım: Çocuklar"
+      }
+    ],
+    "source": "../../guided-reading/v1/texts/child-5-memory.txt",
+    "sourceSha256": "5a7c2401d57f1b9092d98e4d4062b4ecca6484cdf020dab66ce44fd36c94bdd2"
+  },
+  {
+    "id": "90bf46b1-c681-5954-8469-835ad2d89cd4",
+    "exerciseId": "ec753237-5029-5c23-a225-2be60945fd1e",
+    "ageGroupId": "10000000-0000-0000-0000-000000000001",
+    "age": "child",
+    "level": 4,
+    "title": "Dikkatli editör — bridge — child S4",
+    "content": "Bilim kulübündeki öğrenciler, küçük bir köprü maketi tasarlamak için iki gruba ayrıldı. Masanın iki ucuna yerleştirilen desteklerin arasındaki boşluk herkes için aynıydı. Kullanılabilecek karton miktarı da sınırlıydı. Öğretmen, yarışmanın yalnız en çok ağırlığı taşıyan köprüyü bulmak olmadığını açıkladı. Gruplar, hangi değişikliğin neyi etkilediğini de anlatmalıydı. Bu nedenle çizimler, deneme sonuçları ve başarısız tasarımlar çalışma boyunca saklanacaktı.\n\nDuru'nun grubu önce düz bir karton parçasını desteklerin üzerine koydu. İlk küçük yükte karton aşağı doğru eğildi. Kerem hemen ikinci bir karton eklemek istedi. Duru ise önce ilk denemenin sonucunu kaydetmelerini önerdi. Yeni malzeme eklediklerinde ne kadar fark oluştuğunu ancak böyle anlayabilirlerdi. Defterde kullanılan karton miktarı, destekler arasındaki uzaklık ve yükün konduğu yer için ayrı satırlar açtılar.\n\nSonraki denemede aynı miktarda kartonu katlayarak kullandılar. Katların biçimi değişince köprünün görünümü de değişti. Ancak yükün yerini önceki denemeden farklı seçmişlerdi. Sonuç daha iyi görünse de bunun yalnız katlama biçiminden kaynaklandığını söyleyemediler. Öğretmenleri, bir karşılaştırmada koşulları mümkün olduğunca aynı tutmanın neden önemli olduğunu sordu. Öğrenciler ikinci tasarımı aynı noktadan yükleyerek yeniden denedi.\n\nDiğer grup kartondan üçgen destekler hazırlıyordu. Kerem onların tasarımına bakınca kendi köprülerinin yanlış olduğunu düşündü. Duru, farklı bir tasarımın görülmesinin ilk çalışmayı değersiz yapmadığını söyledi. İki grup farklı yöntemlerle aynı soruna yaklaşıyordu. Sonuçları karşılaştırmak için malzeme miktarının ve deneme düzeninin açık olması gerekiyordu.",
+    "wordCount": 208,
+    "errors": [
+      {
+        "wordIndex": 2,
+        "originalWord": "öğrenciler,",
+        "errorWord": "öğenciler,",
+        "errorType": "missing_letter",
+        "explanation": "Eksik harf düzeltilmeli. Doğru yazım: öğrenciler,"
+      },
+      {
+        "wordIndex": 49,
+        "originalWord": "sonuçları",
+        "errorWord": "sonçuları",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: sonuçları"
+      },
+      {
+        "wordIndex": 98,
+        "originalWord": "Defterde",
+        "errorWord": "Dfeterde",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: Defterde"
+      },
+      {
+        "wordIndex": 189,
+        "originalWord": "söyledi.",
+        "errorWord": "söyeldi.",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: söyledi."
+      }
+    ],
+    "source": "../../guided-reading/v1/texts/child-5-bridge.txt",
+    "sourceSha256": "23eab41f3b9508c43da5368b86518b863d07de672d84f74164cce2d24a7a21aa"
+  },
+  {
+    "id": "3bba9756-6e19-5c62-8b70-c3df2c390c6e",
+    "exerciseId": "f3fe7294-505f-599a-97ee-50bc9f00bbf4",
+    "ageGroupId": "10000000-0000-0000-0000-000000000001",
+    "age": "child",
+    "level": 5,
+    "title": "Dikkatli editör — garden — child S5",
+    "content": "Okul bahçesinin bir köşesinde boş bir toprak alan vardı. Eren, arkadaşlarıyla birlikte burada küçük bir bitki köşesi kurmayı düşündü. İlk işleri tohum almak olmadı. Önce alanı gezdiler, güneşin nereden geldiğini ve suyun nerede biriktiğini gözlemlediler.\n\nÖğretmenleri, her bitkinin aynı yerde aynı biçimde büyümeyeceğini söyledi. Çocuklar sabah ve öğleden sonra bahçeye baktı. Gölgenin gün içinde yer değiştirdiğini fark ettiler. Bir deftere tarih ve saat yazarak gördüklerini kısa cümlelerle kaydettiler.\n\nBahçenin kenarında kuru yapraklar ve birkaç taş bulunuyordu. Çocuklar toprağı temizlerken küçük canlıları rahatsız etmemeye çalıştı. Buldukları her şeyi çöp saymadılar. Bazı yaprakların ve dalların toprağın üzerinde doğal olarak bulunabileceğini öğretmenlerine sordular.\n\nTohumları seçerken yetişme sürelerini de okudular. Bazı bitkilerin daha çok zaman istediğini gördüler. Küçük alan için birkaç türle başlamaya karar verdiler. Her sıranın başına bir işaret koydular. İşaretlerde bitkinin adı ve ekildiği gün yazıyordu.\n\nİlk sulamada herkes su vermek istedi. Ancak her çocuğun ayrı ayrı sulaması toprağı fazla ıslattı. Ertesi gün görevleri paylaşmaya karar verdiler. Bir kişi suluyor, bir kişi toprağın durumunu gözlüyor, bir kişi de deftere not alıyordu.\n\nBir hafta sonra ilk küçük yapraklar göründü. Eren, bütün tohumların aynı gün filizlenmediğini fark etti. Henüz görünmeyen tohumları hemen başarısız saymadı. Paket üzerindeki bilgilerle defterdeki tarihleri karşılaştırdı. Gözlem yapmanın bazen sabır gerektirdiğini anladı.\n\nÇocuklar ölçüm için basit bir cetvel kullandı. Her bitkinin aynı noktasından ölçmeye çalıştılar. Bir arkadaşları yaprağın ucunu, diğeri gövdenin tepesini ölçünce sonuçlar farklı çıktı. Sonraki ölçümlerde hangi noktaya bakacaklarını birlikte belirlediler.\n\nDefterdeki sayılar tek başına bahçede olanları anlatmıyordu. Yağmur yağdığı günleri ve yaprakların rengini de kaydettiler. Böylece bir değişiklik gördüklerinde önceki günlerin koşullarına bakabiliyorlardı. Notlar, hatırlanan bilgiyi daha düzenli bir gözleme dönüştürüyordu.\n\nBahçeye gelen bir ziyaretçi, hangi sıranın daha hızlı büyüdüğünü sordu.",
+    "wordCount": 274,
+    "errors": [
+      {
+        "wordIndex": 10,
+        "originalWord": "arkadaşlarıyla",
+        "errorWord": "arkadşlarıyla",
+        "errorType": "missing_letter",
+        "explanation": "Eksik harf düzeltilmeli. Doğru yazım: arkadaşlarıyla"
+      },
+      {
+        "wordIndex": 60,
+        "originalWord": "tarih",
+        "errorWord": "tarhi",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: tarih"
+      },
+      {
+        "wordIndex": 192,
+        "originalWord": "bilgilerle",
+        "errorWord": "bligilerle",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: bilgilerle"
+      },
+      {
+        "wordIndex": 196,
+        "originalWord": "Gözlem",
+        "errorWord": "Gözlme",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: Gözlem"
+      },
+      {
+        "wordIndex": 224,
+        "originalWord": "farklı",
+        "errorWord": "farkıl",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: farklı"
+      }
+    ],
+    "source": "../../grouping/v1/texts/garden.txt",
+    "sourceSha256": "0d7ce30627e06b33e7c9ff46cf4804e53fdf3cab138d39819f02146874592a02"
+  },
+  {
+    "id": "fa4827fe-8a78-5cf9-8b78-36b5394e2f81",
+    "exerciseId": "f3fe7294-505f-599a-97ee-50bc9f00bbf4",
+    "ageGroupId": "10000000-0000-0000-0000-000000000001",
+    "age": "child",
+    "level": 5,
+    "title": "Dikkatli editör — library — child S5",
+    "content": "Mahallenin küçük kütüphanesi, eski bir okul binasının girişindeydi. Pencereler bahçeye bakıyor, rafların arasında geniş bir geçit uzanıyordu. Duru, ilk ziyaretinde kitaplardan önce kapının yanındaki çizimi fark etti. Çizimde her raf farklı bir renkle gösterilmişti.\n\nGörevli, renklerin kitapların yerini bulmayı kolaylaştırdığını anlattı. Mavi raflarda öyküler, yeşil raflarda doğa kitapları vardı. Duru bir defter çıkardı ve aradığı başlığı yazdı. Başlığı unuttuğunda defterine bakmak, bütün rafları yeniden dolaşmaktan daha kolaydı.\n\nBir kitabı seçerken yalnız kapağa bakmadı. Arka kapaktaki kısa tanıtımı okudu, sonra birkaç sayfayı çevirdi. Bazı kitaplarda çizimler, bazılarında uzun bölümler vardı. Duru o gün, merak ettiği kuşları anlatan bir kitap aldı.\n\nKitabın ilk bölümünde parkta gördüğü serçeler anlatılıyordu. Duru, tanıdığı bir ayrıntıya rastlayınca okumayı sürdürdü. Bilmediği bir sözcüğü defterine yazdı. Eve dönerken parkta kısa bir süre durdu ve kitaptaki kuşla gerçek kuşu karşılaştırdı.\n\nErtesi gün defterini kütüphaneye getirdi. Görevliye sorusunu gösterdi ve yanıtı birlikte başka bir kitapta aradılar. Duru, bir sorunun farklı kaynaklarda farklı ayrıntılarla açıklanabileceğini gördü. Yeni bulduğu açıklamayı önceki notunun yanına ekledi.\n\nHafta sonunda bir arkadaşını da davet etti. Arkadaşı öykü okumayı seviyordu. Aynı rafta aynı kitabı seçmek zorunda olmadıklarını konuştular. Her biri kendi kitabından ilginç bir bölümü anlattı. Böylece tek ziyaret, iki ayrı keşfe dönüştü.\n\nKütüphane, ziyaretçilerin önerilerini küçük kartlarda topluyordu. Duru kartına, kitapların hangi rafta bulunduğunu gösteren daha büyük bir harita çizilmesini önerdi. Önerisini verirken nedenini de yazdı: İlk kez gelen biri renklerin anlamını hemen anlayamayabilirdi.\n\nGörevli, öneriyi diğer kartlarla birlikte panoya astı. Bir başka ziyaretçi büyük yazılı yön işaretleri istedi. Yaşlı bir okuyucu oturma yerlerinin ışığa yakın olmasını önerdi. Kartların hepsi aynı konuyu anlatmıyor, farklı ihtiyaçları görünür kılıyordu.\n\nBir sonraki buluşmada gönüllüler haritayı yeniledi.",
+    "wordCount": 267,
+    "errors": [
+      {
+        "wordIndex": 1,
+        "originalWord": "küçük",
+        "errorWord": "küçkü",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: küçük"
+      },
+      {
+        "wordIndex": 75,
+        "originalWord": "kısa",
+        "errorWord": "kıssa",
+        "errorType": "extra_letter",
+        "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: kısa"
+      },
+      {
+        "wordIndex": 155,
+        "originalWord": "Yeni",
+        "errorWord": "Ynei",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: Yeni"
+      },
+      {
+        "wordIndex": 183,
+        "originalWord": "kendi",
+        "errorWord": "kendii",
+        "errorType": "extra_letter",
+        "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: kendi"
+      },
+      {
+        "wordIndex": 212,
+        "originalWord": "harita",
+        "errorWord": "hriata",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: harita"
+      }
+    ],
+    "source": "../../grouping/v1/texts/library.txt",
+    "sourceSha256": "1f8f8ea6c8de855bd7e6d3e9b82f11f3b8d02668bddc39dbfde9b6503b94abea"
+  },
+  {
+    "id": "c19eaa91-9abf-5030-8111-f42cc64d89d0",
+    "exerciseId": "f3fe7294-505f-599a-97ee-50bc9f00bbf4",
+    "ageGroupId": "10000000-0000-0000-0000-000000000001",
+    "age": "child",
+    "level": 5,
+    "title": "Dikkatli editör — map — child S5",
+    "content": "Deniz, evinden parka giderken her zaman aynı yolu kullanıyordu. Bir gün yolun bir bölümü kapandı. Başka bir sokaktan yürümek zorunda kaldı. Dönüşte basit bir harita çizdi. Haritada bildiği yerleri, köşeleri ve geçtiği sokakları işaretledi.\n\nHaritası gerçek sokakların tam ölçüsünü göstermiyordu. Bazı yolları uzun, bazılarını kısa çizmişti. Yine de nerede döneceğini hatırlamasına yardım ediyordu. Deniz, bir çizimin bütün ayrıntıları göstermeden de belirli bir iş için yararlı olabileceğini gördü.\n\nArkadaşı haritaya baktığında fırının işaretini hemen tanıdı. Ancak iki oyun alanını birbirine karıştırdı. Deniz, aynı şekli iki farklı yer için kullanmıştı. İşaretlerin yanına kısa adlar ekledi. Böylece çizim, yalnız kendisinin anlayacağı bir not olmaktan çıktı.\n\nBir sonraki yürüyüşte yolun süresini de tuttu. Hızlı yürüdüğü günle arkadaşlarıyla konuşarak yürüdüğü gün aynı sonucu vermedi. Tek bir süreyi kesin bir ölçü saymadı. Haritanın yanına, sürenin yürüyüş biçimine göre değişebileceğini yazdı.\n\nParkın kapısında başka bir harita vardı. Bu harita yürüyüş yollarını, çeşmeleri ve oturma alanlarını gösteriyordu. Deniz iki haritanın aynı şey olmadığını fark etti. Kendi haritası parka ulaşmaya, kapıdaki harita ise parkın içinde dolaşmaya yardım ediyordu.\n\nParkta küçük bir keşif oyunu hazırladılar. Arkadaşları üç yeri bulacak ve oralardaki işaretleri not edecekti. Oyunda koşmak zorunlu değildi. Deniz, yolların açık olduğundan emin olmak için oyunu önce bir arkadaşıyla yavaşça denedi.\n\nDenemede bir okun yanlış yere baktığı görüldü. Deniz oku düzeltti ama bununla yetinmedi. Yanındaki açıklamayı da yeniden okudu. Bir sorunun yalnız işaretten değil, işaretle yazının birlikte kullanılmasından doğabileceğini fark etti.\n\nKeşif oyunu başladığında herkes aynı yolu seçmedi. Bazıları önce yakındaki yeri, bazıları daha uzak noktayı buldu. Deniz farklı yolları haritaya çizdi. Aynı sonuca ulaşmak için birden fazla uygun yol bulunabileceğini gördüler.\n\nOyundan sonra en hızlı bitireni ilan etmek yerine hangi işaretlerin kolay anlaşıldığını konuştular.",
+    "wordCount": 275,
+    "errors": [
+      {
+        "wordIndex": 5,
+        "originalWord": "zaman",
+        "errorWord": "zmaan",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: zaman"
+      },
+      {
+        "wordIndex": 78,
+        "originalWord": "birbirine",
+        "errorWord": "birbiirne",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: birbirine"
+      },
+      {
+        "wordIndex": 234,
+        "originalWord": "herkes",
+        "errorWord": "herkse",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: herkes"
+      },
+      {
+        "wordIndex": 261,
+        "originalWord": "gördüler.",
+        "errorWord": "gödrüler.",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: gördüler."
+      },
+      {
+        "wordIndex": 263,
+        "originalWord": "sonra",
+        "errorWord": "sorna",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: sonra"
+      }
+    ],
+    "source": "../../grouping/v1/texts/map.txt",
+    "sourceSha256": "0ab7639c5911d2578e4403703ce59e9c4fb107f2fe964e2feee6c817da006345"
+  },
+  {
+    "id": "866f2034-9fc9-5bd6-81aa-f8f2800f1781",
+    "exerciseId": "f3fe7294-505f-599a-97ee-50bc9f00bbf4",
+    "ageGroupId": "10000000-0000-0000-0000-000000000001",
+    "age": "child",
+    "level": 5,
+    "title": "Dikkatli editör — memory — child S5",
+    "content": "Okulun yakınındaki eski çeşme yenilenirken öğrenciler mahallede küçük bir tarih çalışması yapmaya karar verdi. Çeşmenin ne zaman yapıldığını ve eskiden nasıl kullanıldığını öğrenmek istiyorlardı. Öğretmenleri, herkesin hatırasının aynı olmayabileceğini söyledi. Bir kişinin anlattığı olayı hemen kesin bilgi olarak yazmak yerine farklı kaynakları karşılaştıracaklardı. Çalışmanın amacı, mahalleyi tanımak kadar bilgi toplarken dikkatli davranmayı da öğrenmekti.\n\nİlk görüşme bakkalın sahibi Nihat Bey ile yapıldı. Nihat Bey, çocukken çeşmenin yanında bekleyen insanları hatırlıyordu. O yıllarda çevredeki bazı evlere su taşındığını anlattı. Ancak hangi yıldan söz ettiğini kesin olarak söyleyemedi. Öğrenciler notlarına yaklaşık bir tarih aralığı yazdı. Anlatılan olayla anlatıcının kendi tahmini aynı cümlede birbirine karışmasın diye defterde farklı işaretler kullandılar.\n\nİkinci görüşmede mahallede uzun süredir yaşayan Ayşe Hanım farklı bir ayrıntı paylaştı. Ona göre çeşmenin çevresinde küçük bir pazar kuruluyordu. Öğrenciler iki anlatının birbirini dışladığını düşündü. Öğretmenleri ise aynı yerin farklı zamanlarda farklı amaçlarla kullanılabileceğini hatırlattı. Çeşme, bir dönemde su taşınan bir nokta, başka bir dönemde buluşma yeri olmuş olabilirdi. Yeni sorularını zaman ve kullanım biçimi üzerine kurdular.\n\nDaha sonra okul arşivinde birkaç eski fotoğraf bulundu. Fotoğraflardan birinde çeşmenin arkasındaki dükkân görünüyordu ama çekim tarihi yazmıyordu. Başka bir fotoğrafın arkasında bir yıl vardı. Bu iki görüntüyü doğrudan aynı döneme ait saymak doğru olmazdı. Çocuklar dükkânın tabelasını, yolun biçimini ve çevredeki binaları karşılaştırdı. Bunlar tarih için ipucu olabilirdi; yine de tek başlarına kesin kanıt sayılmıyorlardı.\n\nGörüşmeler ilerledikçe çalışma defteri kalabalıklaştı. Öğrenciler anlatılan her ayrıntıyı sergiye koymak istedi. Fakat bazı sözler yalnız bir kişinin özel hayatıyla ilgiliydi. Öğretmenleri, insanların paylaşılmasını istemediği bilgileri sergilememeleri gerektiğini açıkladı. Bir anıyı dinlemek, onu her yerde yayımlama izni almak anlamına gelmiyordu. Çocuklar kullanılacak kısa alıntılar ve fotoğraflar için ayrıca izin istedi.",
+    "wordCount": 271,
+    "errors": [
+      {
+        "wordIndex": 5,
+        "originalWord": "öğrenciler",
+        "errorWord": "öğenciler",
+        "errorType": "missing_letter",
+        "explanation": "Eksik harf düzeltilmeli. Doğru yazım: öğrenciler"
+      },
+      {
+        "wordIndex": 43,
+        "originalWord": "Çalışmanın",
+        "errorWord": "Çlışmanın",
+        "errorType": "missing_letter",
+        "explanation": "Eksik harf düzeltilmeli. Doğru yazım: Çalışmanın"
+      },
+      {
+        "wordIndex": 166,
+        "originalWord": "sonra",
+        "errorWord": "sorna",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: sonra"
+      },
+      {
+        "wordIndex": 246,
+        "originalWord": "bilgileri",
+        "errorWord": "bligileri",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: bilgileri"
+      },
+      {
+        "wordIndex": 263,
+        "originalWord": "kısa",
+        "errorWord": "kıssa",
+        "errorType": "extra_letter",
+        "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: kısa"
+      }
+    ],
+    "source": "../../guided-reading/v1/texts/child-5-memory.txt",
+    "sourceSha256": "5a7c2401d57f1b9092d98e4d4062b4ecca6484cdf020dab66ce44fd36c94bdd2"
+  },
+  {
+    "id": "1c03fb04-a08b-50aa-8dd1-1d51cd949f4c",
+    "exerciseId": "f3fe7294-505f-599a-97ee-50bc9f00bbf4",
+    "ageGroupId": "10000000-0000-0000-0000-000000000001",
+    "age": "child",
+    "level": 5,
+    "title": "Dikkatli editör — bridge — child S5",
+    "content": "Bilim kulübündeki öğrenciler, küçük bir köprü maketi tasarlamak için iki gruba ayrıldı. Masanın iki ucuna yerleştirilen desteklerin arasındaki boşluk herkes için aynıydı. Kullanılabilecek karton miktarı da sınırlıydı. Öğretmen, yarışmanın yalnız en çok ağırlığı taşıyan köprüyü bulmak olmadığını açıkladı. Gruplar, hangi değişikliğin neyi etkilediğini de anlatmalıydı. Bu nedenle çizimler, deneme sonuçları ve başarısız tasarımlar çalışma boyunca saklanacaktı.\n\nDuru'nun grubu önce düz bir karton parçasını desteklerin üzerine koydu. İlk küçük yükte karton aşağı doğru eğildi. Kerem hemen ikinci bir karton eklemek istedi. Duru ise önce ilk denemenin sonucunu kaydetmelerini önerdi. Yeni malzeme eklediklerinde ne kadar fark oluştuğunu ancak böyle anlayabilirlerdi. Defterde kullanılan karton miktarı, destekler arasındaki uzaklık ve yükün konduğu yer için ayrı satırlar açtılar.\n\nSonraki denemede aynı miktarda kartonu katlayarak kullandılar. Katların biçimi değişince köprünün görünümü de değişti. Ancak yükün yerini önceki denemeden farklı seçmişlerdi. Sonuç daha iyi görünse de bunun yalnız katlama biçiminden kaynaklandığını söyleyemediler. Öğretmenleri, bir karşılaştırmada koşulları mümkün olduğunca aynı tutmanın neden önemli olduğunu sordu. Öğrenciler ikinci tasarımı aynı noktadan yükleyerek yeniden denedi.\n\nDiğer grup kartondan üçgen destekler hazırlıyordu. Kerem onların tasarımına bakınca kendi köprülerinin yanlış olduğunu düşündü. Duru, farklı bir tasarımın görülmesinin ilk çalışmayı değersiz yapmadığını söyledi. İki grup farklı yöntemlerle aynı soruna yaklaşıyordu. Sonuçları karşılaştırmak için malzeme miktarının ve deneme düzeninin açık olması gerekiyordu. Yalnız köprülerin fotoğraflarına bakarak hangisinin daha başarılı olduğunu anlamak mümkün değildi.\n\nÜçüncü tasarım hazırlanırken grubun içinde bir anlaşmazlık çıktı. Kerem, çok sayıda ince katın daha iyi olacağını savunuyordu. Duru ise az sayıda geniş katı denemek istiyordu. Tartışmayı tahminlerle sürdürmek yerine iki küçük örnek hazırladılar. Her örnek için aynı tür karton kullandılar ve yükü aynı noktaya koydular. Sonuçlardan biri beklentilerine uymadı.",
+    "wordCount": 268,
+    "errors": [
+      {
+        "wordIndex": 2,
+        "originalWord": "öğrenciler,",
+        "errorWord": "öğenciler,",
+        "errorType": "missing_letter",
+        "explanation": "Eksik harf düzeltilmeli. Doğru yazım: öğrenciler,"
+      },
+      {
+        "wordIndex": 85,
+        "originalWord": "sonucunu",
+        "errorWord": "sonucnuu",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: sonucunu"
+      },
+      {
+        "wordIndex": 175,
+        "originalWord": "kendi",
+        "errorWord": "kendii",
+        "errorType": "extra_letter",
+        "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: kendi"
+      },
+      {
+        "wordIndex": 189,
+        "originalWord": "söyledi.",
+        "errorWord": "söyeldi.",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: söyledi."
+      },
+      {
+        "wordIndex": 220,
+        "originalWord": "tasarım",
+        "errorWord": "tasraım",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: tasarım"
+      }
+    ],
+    "source": "../../guided-reading/v1/texts/child-5-bridge.txt",
+    "sourceSha256": "23eab41f3b9508c43da5368b86518b863d07de672d84f74164cce2d24a7a21aa"
+  },
+  {
+    "id": "687f5839-9047-5036-84bc-2785d3ec4f5e",
+    "exerciseId": "372e5d3e-ad89-52aa-a147-5cf52aabc188",
+    "ageGroupId": "10000000-0000-0000-0000-000000000002",
+    "age": "teen",
+    "level": 4,
+    "title": "Dikkatli editör — garden — teen S4",
+    "content": "Okul bahçesinin bir köşesinde boş bir toprak alan vardı. Eren, arkadaşlarıyla birlikte burada küçük bir bitki köşesi kurmayı düşündü. İlk işleri tohum almak olmadı. Önce alanı gezdiler, güneşin nereden geldiğini ve suyun nerede biriktiğini gözlemlediler.\n\nÖğretmenleri, her bitkinin aynı yerde aynı biçimde büyümeyeceğini söyledi. Çocuklar sabah ve öğleden sonra bahçeye baktı. Gölgenin gün içinde yer değiştirdiğini fark ettiler. Bir deftere tarih ve saat yazarak gördüklerini kısa cümlelerle kaydettiler.\n\nBahçenin kenarında kuru yapraklar ve birkaç taş bulunuyordu. Çocuklar toprağı temizlerken küçük canlıları rahatsız etmemeye çalıştı. Buldukları her şeyi çöp saymadılar. Bazı yaprakların ve dalların toprağın üzerinde doğal olarak bulunabileceğini öğretmenlerine sordular.\n\nTohumları seçerken yetişme sürelerini de okudular. Bazı bitkilerin daha çok zaman istediğini gördüler. Küçük alan için birkaç türle başlamaya karar verdiler. Her sıranın başına bir işaret koydular. İşaretlerde bitkinin adı ve ekildiği gün yazıyordu.\n\nİlk sulamada herkes su vermek istedi. Ancak her çocuğun ayrı ayrı sulaması toprağı fazla ıslattı. Ertesi gün görevleri paylaşmaya karar verdiler. Bir kişi suluyor, bir kişi toprağın durumunu gözlüyor, bir kişi de deftere not alıyordu.\n\nBir hafta sonra ilk küçük yapraklar göründü. Eren, bütün tohumların aynı gün filizlenmediğini fark etti. Henüz görünmeyen tohumları hemen başarısız saymadı. Paket üzerindeki bilgilerle defterdeki tarihleri karşılaştırdı. Gözlem yapmanın bazen sabır gerektirdiğini anladı.\n\nÇocuklar ölçüm için basit bir cetvel kullandı. Her bitkinin aynı noktasından ölçmeye çalıştılar. Bir arkadaşları yaprağın ucunu, diğeri gövdenin tepesini ölçünce sonuçlar farklı çıktı. Sonraki ölçümlerde hangi noktaya bakacaklarını birlikte belirlediler.\n\nDefterdeki sayılar tek başına bahçede olanları anlatmıyordu. Yağmur yağdığı günleri ve yaprakların rengini de kaydettiler. Böylece bir değişiklik gördüklerinde önceki günlerin koşullarına bakabiliyorlardı. Notlar, hatırlanan bilgiyi daha düzenli bir gözleme dönüştürüyordu.\n\nBahçeye gelen bir ziyaretçi, hangi sıranın daha hızlı büyüdüğünü sordu. Çocuklar yalnız en uzun bitkiyi göstermedi.",
+    "wordCount": 280,
+    "errors": [
+      {
+        "wordIndex": 10,
+        "originalWord": "arkadaşlarıyla",
+        "errorWord": "arkadşlarıyla",
+        "errorType": "missing_letter",
+        "explanation": "Eksik harf düzeltilmeli. Doğru yazım: arkadaşlarıyla"
+      },
+      {
+        "wordIndex": 43,
+        "originalWord": "söyledi.",
+        "errorWord": "söyeldi.",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: söyledi."
+      },
+      {
+        "wordIndex": 68,
+        "originalWord": "Bahçenin",
+        "errorWord": "Bahçeinn",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: Bahçenin"
+      },
+      {
+        "wordIndex": 136,
+        "originalWord": "herkes",
+        "errorWord": "herkse",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: herkes"
+      },
+      {
+        "wordIndex": 277,
+        "originalWord": "uzun",
+        "errorWord": "uuzun",
+        "errorType": "extra_letter",
+        "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: uzun"
+      }
+    ],
+    "source": "../../grouping/v1/texts/garden.txt",
+    "sourceSha256": "0d7ce30627e06b33e7c9ff46cf4804e53fdf3cab138d39819f02146874592a02"
+  },
+  {
+    "id": "eaf9e99d-98af-512d-8d36-88c85e347f92",
+    "exerciseId": "372e5d3e-ad89-52aa-a147-5cf52aabc188",
+    "ageGroupId": "10000000-0000-0000-0000-000000000002",
+    "age": "teen",
+    "level": 4,
+    "title": "Dikkatli editör — library — teen S4",
+    "content": "Mahallenin küçük kütüphanesi, eski bir okul binasının girişindeydi. Pencereler bahçeye bakıyor, rafların arasında geniş bir geçit uzanıyordu. Duru, ilk ziyaretinde kitaplardan önce kapının yanındaki çizimi fark etti. Çizimde her raf farklı bir renkle gösterilmişti.\n\nGörevli, renklerin kitapların yerini bulmayı kolaylaştırdığını anlattı. Mavi raflarda öyküler, yeşil raflarda doğa kitapları vardı. Duru bir defter çıkardı ve aradığı başlığı yazdı. Başlığı unuttuğunda defterine bakmak, bütün rafları yeniden dolaşmaktan daha kolaydı.\n\nBir kitabı seçerken yalnız kapağa bakmadı. Arka kapaktaki kısa tanıtımı okudu, sonra birkaç sayfayı çevirdi. Bazı kitaplarda çizimler, bazılarında uzun bölümler vardı. Duru o gün, merak ettiği kuşları anlatan bir kitap aldı.\n\nKitabın ilk bölümünde parkta gördüğü serçeler anlatılıyordu. Duru, tanıdığı bir ayrıntıya rastlayınca okumayı sürdürdü. Bilmediği bir sözcüğü defterine yazdı. Eve dönerken parkta kısa bir süre durdu ve kitaptaki kuşla gerçek kuşu karşılaştırdı.\n\nErtesi gün defterini kütüphaneye getirdi. Görevliye sorusunu gösterdi ve yanıtı birlikte başka bir kitapta aradılar. Duru, bir sorunun farklı kaynaklarda farklı ayrıntılarla açıklanabileceğini gördü. Yeni bulduğu açıklamayı önceki notunun yanına ekledi.\n\nHafta sonunda bir arkadaşını da davet etti. Arkadaşı öykü okumayı seviyordu. Aynı rafta aynı kitabı seçmek zorunda olmadıklarını konuştular. Her biri kendi kitabından ilginç bir bölümü anlattı. Böylece tek ziyaret, iki ayrı keşfe dönüştü.\n\nKütüphane, ziyaretçilerin önerilerini küçük kartlarda topluyordu. Duru kartına, kitapların hangi rafta bulunduğunu gösteren daha büyük bir harita çizilmesini önerdi. Önerisini verirken nedenini de yazdı: İlk kez gelen biri renklerin anlamını hemen anlayamayabilirdi.\n\nGörevli, öneriyi diğer kartlarla birlikte panoya astı. Bir başka ziyaretçi büyük yazılı yön işaretleri istedi. Yaşlı bir okuyucu oturma yerlerinin ışığa yakın olmasını önerdi. Kartların hepsi aynı konuyu anlatmıyor, farklı ihtiyaçları görünür kılıyordu.\n\nBir sonraki buluşmada gönüllüler haritayı yeniledi. Renkleri korudular ama her renge bir sözcük ve basit bir şekil eklediler.",
+    "wordCount": 279,
+    "errors": [
+      {
+        "wordIndex": 1,
+        "originalWord": "küçük",
+        "errorWord": "küçkü",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: küçük"
+      },
+      {
+        "wordIndex": 51,
+        "originalWord": "defter",
+        "errorWord": "dfeter",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: defter"
+      },
+      {
+        "wordIndex": 78,
+        "originalWord": "sonra",
+        "errorWord": "sorna",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: sonra"
+      },
+      {
+        "wordIndex": 141,
+        "originalWord": "birlikte",
+        "errorWord": "birliket",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: birlikte"
+      },
+      {
+        "wordIndex": 212,
+        "originalWord": "harita",
+        "errorWord": "hriata",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: harita"
+      }
+    ],
+    "source": "../../grouping/v1/texts/library.txt",
+    "sourceSha256": "1f8f8ea6c8de855bd7e6d3e9b82f11f3b8d02668bddc39dbfde9b6503b94abea"
+  },
+  {
+    "id": "748bbacd-152f-5ade-8530-5e9a79d61e7d",
+    "exerciseId": "372e5d3e-ad89-52aa-a147-5cf52aabc188",
+    "ageGroupId": "10000000-0000-0000-0000-000000000002",
+    "age": "teen",
+    "level": 4,
+    "title": "Dikkatli editör — map — teen S4",
+    "content": "Deniz, evinden parka giderken her zaman aynı yolu kullanıyordu. Bir gün yolun bir bölümü kapandı. Başka bir sokaktan yürümek zorunda kaldı. Dönüşte basit bir harita çizdi. Haritada bildiği yerleri, köşeleri ve geçtiği sokakları işaretledi.\n\nHaritası gerçek sokakların tam ölçüsünü göstermiyordu. Bazı yolları uzun, bazılarını kısa çizmişti. Yine de nerede döneceğini hatırlamasına yardım ediyordu. Deniz, bir çizimin bütün ayrıntıları göstermeden de belirli bir iş için yararlı olabileceğini gördü.\n\nArkadaşı haritaya baktığında fırının işaretini hemen tanıdı. Ancak iki oyun alanını birbirine karıştırdı. Deniz, aynı şekli iki farklı yer için kullanmıştı. İşaretlerin yanına kısa adlar ekledi. Böylece çizim, yalnız kendisinin anlayacağı bir not olmaktan çıktı.\n\nBir sonraki yürüyüşte yolun süresini de tuttu. Hızlı yürüdüğü günle arkadaşlarıyla konuşarak yürüdüğü gün aynı sonucu vermedi. Tek bir süreyi kesin bir ölçü saymadı. Haritanın yanına, sürenin yürüyüş biçimine göre değişebileceğini yazdı.\n\nParkın kapısında başka bir harita vardı. Bu harita yürüyüş yollarını, çeşmeleri ve oturma alanlarını gösteriyordu. Deniz iki haritanın aynı şey olmadığını fark etti. Kendi haritası parka ulaşmaya, kapıdaki harita ise parkın içinde dolaşmaya yardım ediyordu.\n\nParkta küçük bir keşif oyunu hazırladılar. Arkadaşları üç yeri bulacak ve oralardaki işaretleri not edecekti. Oyunda koşmak zorunlu değildi. Deniz, yolların açık olduğundan emin olmak için oyunu önce bir arkadaşıyla yavaşça denedi.\n\nDenemede bir okun yanlış yere baktığı görüldü. Deniz oku düzeltti ama bununla yetinmedi. Yanındaki açıklamayı da yeniden okudu. Bir sorunun yalnız işaretten değil, işaretle yazının birlikte kullanılmasından doğabileceğini fark etti.\n\nKeşif oyunu başladığında herkes aynı yolu seçmedi. Bazıları önce yakındaki yeri, bazıları daha uzak noktayı buldu. Deniz farklı yolları haritaya çizdi. Aynı sonuca ulaşmak için birden fazla uygun yol bulunabileceğini gördüler.\n\nOyundan sonra en hızlı bitireni ilan etmek yerine hangi işaretlerin kolay anlaşıldığını konuştular. Bir arkadaşları büyük ağaç çiziminin işe yaradığını söyledi.",
+    "wordCount": 283,
+    "errors": [
+      {
+        "wordIndex": 5,
+        "originalWord": "zaman",
+        "errorWord": "zmaan",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: zaman"
+      },
+      {
+        "wordIndex": 44,
+        "originalWord": "kısa",
+        "errorWord": "kıssa",
+        "errorType": "extra_letter",
+        "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: kısa"
+      },
+      {
+        "wordIndex": 88,
+        "originalWord": "İşaretlerin",
+        "errorWord": "İşartelerin",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: İşaretlerin"
+      },
+      {
+        "wordIndex": 217,
+        "originalWord": "yeniden",
+        "errorWord": "yendien",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: yeniden"
+      },
+      {
+        "wordIndex": 282,
+        "originalWord": "söyledi.",
+        "errorWord": "söyeldi.",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: söyledi."
+      }
+    ],
+    "source": "../../grouping/v1/texts/map.txt",
+    "sourceSha256": "0ab7639c5911d2578e4403703ce59e9c4fb107f2fe964e2feee6c817da006345"
+  },
+  {
+    "id": "90fb091a-9ee1-5fb7-866a-0a10396812d6",
+    "exerciseId": "372e5d3e-ad89-52aa-a147-5cf52aabc188",
+    "ageGroupId": "10000000-0000-0000-0000-000000000002",
+    "age": "teen",
+    "level": 4,
+    "title": "Dikkatli editör — memory — teen S4",
+    "content": "Okulun yakınındaki eski çeşme yenilenirken öğrenciler mahallede küçük bir tarih çalışması yapmaya karar verdi. Çeşmenin ne zaman yapıldığını ve eskiden nasıl kullanıldığını öğrenmek istiyorlardı. Öğretmenleri, herkesin hatırasının aynı olmayabileceğini söyledi. Bir kişinin anlattığı olayı hemen kesin bilgi olarak yazmak yerine farklı kaynakları karşılaştıracaklardı. Çalışmanın amacı, mahalleyi tanımak kadar bilgi toplarken dikkatli davranmayı da öğrenmekti.\n\nİlk görüşme bakkalın sahibi Nihat Bey ile yapıldı. Nihat Bey, çocukken çeşmenin yanında bekleyen insanları hatırlıyordu. O yıllarda çevredeki bazı evlere su taşındığını anlattı. Ancak hangi yıldan söz ettiğini kesin olarak söyleyemedi. Öğrenciler notlarına yaklaşık bir tarih aralığı yazdı. Anlatılan olayla anlatıcının kendi tahmini aynı cümlede birbirine karışmasın diye defterde farklı işaretler kullandılar.\n\nİkinci görüşmede mahallede uzun süredir yaşayan Ayşe Hanım farklı bir ayrıntı paylaştı. Ona göre çeşmenin çevresinde küçük bir pazar kuruluyordu. Öğrenciler iki anlatının birbirini dışladığını düşündü. Öğretmenleri ise aynı yerin farklı zamanlarda farklı amaçlarla kullanılabileceğini hatırlattı. Çeşme, bir dönemde su taşınan bir nokta, başka bir dönemde buluşma yeri olmuş olabilirdi. Yeni sorularını zaman ve kullanım biçimi üzerine kurdular.\n\nDaha sonra okul arşivinde birkaç eski fotoğraf bulundu. Fotoğraflardan birinde çeşmenin arkasındaki dükkân görünüyordu ama çekim tarihi yazmıyordu. Başka bir fotoğrafın arkasında bir yıl vardı. Bu iki görüntüyü doğrudan aynı döneme ait saymak doğru olmazdı. Çocuklar dükkânın tabelasını, yolun biçimini ve çevredeki binaları karşılaştırdı. Bunlar tarih için ipucu olabilirdi; yine de tek başlarına kesin kanıt sayılmıyorlardı.\n\nGörüşmeler ilerledikçe çalışma defteri kalabalıklaştı. Öğrenciler anlatılan her ayrıntıyı sergiye koymak istedi. Fakat bazı sözler yalnız bir kişinin özel hayatıyla ilgiliydi. Öğretmenleri, insanların paylaşılmasını istemediği bilgileri sergilememeleri gerektiğini açıkladı. Bir anıyı dinlemek, onu her yerde yayımlama izni almak anlamına gelmiyordu. Çocuklar kullanılacak kısa alıntılar ve fotoğraflar için ayrıca izin istedi.\n\nSergi panosunu hazırlarken bilgileri üç bölüme ayırdılar.",
+    "wordCount": 278,
+    "errors": [
+      {
+        "wordIndex": 5,
+        "originalWord": "öğrenciler",
+        "errorWord": "öğenciler",
+        "errorType": "missing_letter",
+        "explanation": "Eksik harf düzeltilmeli. Doğru yazım: öğrenciler"
+      },
+      {
+        "wordIndex": 29,
+        "originalWord": "söyledi.",
+        "errorWord": "söyeldi.",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: söyledi."
+      },
+      {
+        "wordIndex": 77,
+        "originalWord": "anlattı.",
+        "errorWord": "anllattı.",
+        "errorType": "extra_letter",
+        "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: anlattı."
+      },
+      {
+        "wordIndex": 157,
+        "originalWord": "Yeni",
+        "errorWord": "Ynei",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: Yeni"
+      },
+      {
+        "wordIndex": 263,
+        "originalWord": "kısa",
+        "errorWord": "kıssa",
+        "errorType": "extra_letter",
+        "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: kısa"
+      }
+    ],
+    "source": "../../guided-reading/v1/texts/child-5-memory.txt",
+    "sourceSha256": "5a7c2401d57f1b9092d98e4d4062b4ecca6484cdf020dab66ce44fd36c94bdd2"
+  },
+  {
+    "id": "78979a4f-7087-5456-8801-a44b64cc547d",
+    "exerciseId": "372e5d3e-ad89-52aa-a147-5cf52aabc188",
+    "ageGroupId": "10000000-0000-0000-0000-000000000002",
+    "age": "teen",
+    "level": 4,
+    "title": "Dikkatli editör — bridge — teen S4",
+    "content": "Bilim kulübündeki öğrenciler, küçük bir köprü maketi tasarlamak için iki gruba ayrıldı. Masanın iki ucuna yerleştirilen desteklerin arasındaki boşluk herkes için aynıydı. Kullanılabilecek karton miktarı da sınırlıydı. Öğretmen, yarışmanın yalnız en çok ağırlığı taşıyan köprüyü bulmak olmadığını açıkladı. Gruplar, hangi değişikliğin neyi etkilediğini de anlatmalıydı. Bu nedenle çizimler, deneme sonuçları ve başarısız tasarımlar çalışma boyunca saklanacaktı.\n\nDuru'nun grubu önce düz bir karton parçasını desteklerin üzerine koydu. İlk küçük yükte karton aşağı doğru eğildi. Kerem hemen ikinci bir karton eklemek istedi. Duru ise önce ilk denemenin sonucunu kaydetmelerini önerdi. Yeni malzeme eklediklerinde ne kadar fark oluştuğunu ancak böyle anlayabilirlerdi. Defterde kullanılan karton miktarı, destekler arasındaki uzaklık ve yükün konduğu yer için ayrı satırlar açtılar.\n\nSonraki denemede aynı miktarda kartonu katlayarak kullandılar. Katların biçimi değişince köprünün görünümü de değişti. Ancak yükün yerini önceki denemeden farklı seçmişlerdi. Sonuç daha iyi görünse de bunun yalnız katlama biçiminden kaynaklandığını söyleyemediler. Öğretmenleri, bir karşılaştırmada koşulları mümkün olduğunca aynı tutmanın neden önemli olduğunu sordu. Öğrenciler ikinci tasarımı aynı noktadan yükleyerek yeniden denedi.\n\nDiğer grup kartondan üçgen destekler hazırlıyordu. Kerem onların tasarımına bakınca kendi köprülerinin yanlış olduğunu düşündü. Duru, farklı bir tasarımın görülmesinin ilk çalışmayı değersiz yapmadığını söyledi. İki grup farklı yöntemlerle aynı soruna yaklaşıyordu. Sonuçları karşılaştırmak için malzeme miktarının ve deneme düzeninin açık olması gerekiyordu. Yalnız köprülerin fotoğraflarına bakarak hangisinin daha başarılı olduğunu anlamak mümkün değildi.\n\nÜçüncü tasarım hazırlanırken grubun içinde bir anlaşmazlık çıktı. Kerem, çok sayıda ince katın daha iyi olacağını savunuyordu. Duru ise az sayıda geniş katı denemek istiyordu. Tartışmayı tahminlerle sürdürmek yerine iki küçük örnek hazırladılar. Her örnek için aynı tür karton kullandılar ve yükü aynı noktaya koydular. Sonuçlardan biri beklentilerine uymadı. Bu şaşırtıcı farkı gizlemek yerine nedenini incelemek için işaretlediler.\n\nÖrneklerden birinin kenarı önceden yıpranmıştı.",
+    "wordCount": 282,
+    "errors": [
+      {
+        "wordIndex": 2,
+        "originalWord": "öğrenciler,",
+        "errorWord": "öğenciler,",
+        "errorType": "missing_letter",
+        "explanation": "Eksik harf düzeltilmeli. Doğru yazım: öğrenciler,"
+      },
+      {
+        "wordIndex": 38,
+        "originalWord": "Gruplar,",
+        "errorWord": "Gruplra,",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: Gruplar,"
+      },
+      {
+        "wordIndex": 88,
+        "originalWord": "Yeni",
+        "errorWord": "Ynei",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: Yeni"
+      },
+      {
+        "wordIndex": 145,
+        "originalWord": "Öğretmenleri,",
+        "errorWord": "Öretmenleri,",
+        "errorType": "missing_letter",
+        "explanation": "Eksik harf düzeltilmeli. Doğru yazım: Öğretmenleri,"
+      },
+      {
+        "wordIndex": 220,
+        "originalWord": "tasarım",
+        "errorWord": "tasraım",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: tasarım"
+      }
+    ],
+    "source": "../../guided-reading/v1/texts/child-5-bridge.txt",
+    "sourceSha256": "23eab41f3b9508c43da5368b86518b863d07de672d84f74164cce2d24a7a21aa"
+  },
+  {
+    "id": "8560d83e-2759-5579-8211-b22bd34b5cb6",
+    "exerciseId": "68243d64-9505-5c7e-8f67-6e6bd873dbbe",
+    "ageGroupId": "10000000-0000-0000-0000-000000000002",
+    "age": "teen",
+    "level": 5,
+    "title": "Dikkatli editör — garden — teen S5",
+    "content": "Okul bahçesinin bir köşesinde boş bir toprak alan vardı. Eren, arkadaşlarıyla birlikte burada küçük bir bitki köşesi kurmayı düşündü. İlk işleri tohum almak olmadı. Önce alanı gezdiler, güneşin nereden geldiğini ve suyun nerede biriktiğini gözlemlediler.\n\nÖğretmenleri, her bitkinin aynı yerde aynı biçimde büyümeyeceğini söyledi. Çocuklar sabah ve öğleden sonra bahçeye baktı. Gölgenin gün içinde yer değiştirdiğini fark ettiler. Bir deftere tarih ve saat yazarak gördüklerini kısa cümlelerle kaydettiler.\n\nBahçenin kenarında kuru yapraklar ve birkaç taş bulunuyordu. Çocuklar toprağı temizlerken küçük canlıları rahatsız etmemeye çalıştı. Buldukları her şeyi çöp saymadılar. Bazı yaprakların ve dalların toprağın üzerinde doğal olarak bulunabileceğini öğretmenlerine sordular.\n\nTohumları seçerken yetişme sürelerini de okudular. Bazı bitkilerin daha çok zaman istediğini gördüler. Küçük alan için birkaç türle başlamaya karar verdiler. Her sıranın başına bir işaret koydular. İşaretlerde bitkinin adı ve ekildiği gün yazıyordu.\n\nİlk sulamada herkes su vermek istedi. Ancak her çocuğun ayrı ayrı sulaması toprağı fazla ıslattı. Ertesi gün görevleri paylaşmaya karar verdiler. Bir kişi suluyor, bir kişi toprağın durumunu gözlüyor, bir kişi de deftere not alıyordu.\n\nBir hafta sonra ilk küçük yapraklar göründü. Eren, bütün tohumların aynı gün filizlenmediğini fark etti. Henüz görünmeyen tohumları hemen başarısız saymadı. Paket üzerindeki bilgilerle defterdeki tarihleri karşılaştırdı. Gözlem yapmanın bazen sabır gerektirdiğini anladı.\n\nÇocuklar ölçüm için basit bir cetvel kullandı. Her bitkinin aynı noktasından ölçmeye çalıştılar. Bir arkadaşları yaprağın ucunu, diğeri gövdenin tepesini ölçünce sonuçlar farklı çıktı. Sonraki ölçümlerde hangi noktaya bakacaklarını birlikte belirlediler.\n\nDefterdeki sayılar tek başına bahçede olanları anlatmıyordu. Yağmur yağdığı günleri ve yaprakların rengini de kaydettiler. Böylece bir değişiklik gördüklerinde önceki günlerin koşullarına bakabiliyorlardı. Notlar, hatırlanan bilgiyi daha düzenli bir gözleme dönüştürüyordu.\n\nBahçeye gelen bir ziyaretçi, hangi sıranın daha hızlı büyüdüğünü sordu. Çocuklar yalnız en uzun bitkiyi göstermedi. Aynı türdeki birkaç bitkiyi karşılaştırdılar. Bir örneğe bakarak bütün sıra hakkında kesin karar vermenin yanıltıcı olabileceğini düşündüler.\n\nBir gün işaretlerden biri kayboldu. O sıradaki bitkilerin adını herkes farklı hatırlıyordu. Defterdeki çizime bakarak sırayı yeniden buldular. Bilginin yalnız bir kişinin belleğinde durmaması, küçük bir karışıklığın daha kolay çözülmesini sağladı.\n\nSulama görevleri haftalık bir çizelgeye yazıldı. Çizelgede yalnız isimler değil, yapılacak işin kısa açıklaması da vardı. Bir kişi gelemediğinde başka biri görevi devralabiliyordu. Görevin nasıl yapılacağını bilmek, görevlinin adını bilmek kadar önemliydi.",
+    "wordCount": 360,
+    "errors": [
+      {
+        "wordIndex": 10,
+        "originalWord": "arkadaşlarıyla",
+        "errorWord": "arkadşlarıyla",
+        "errorType": "missing_letter",
+        "explanation": "Eksik harf düzeltilmeli. Doğru yazım: arkadaşlarıyla"
+      },
+      {
+        "wordIndex": 48,
+        "originalWord": "sonra",
+        "errorWord": "sorna",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: sonra"
+      },
+      {
+        "wordIndex": 112,
+        "originalWord": "gördüler.",
+        "errorWord": "gödrüler.",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: gördüler."
+      },
+      {
+        "wordIndex": 277,
+        "originalWord": "uzun",
+        "errorWord": "uuzun",
+        "errorType": "extra_letter",
+        "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: uzun"
+      },
+      {
+        "wordIndex": 291,
+        "originalWord": "kesin",
+        "errorWord": "keisn",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: kesin"
+      },
+      {
+        "wordIndex": 313,
+        "originalWord": "yeniden",
+        "errorWord": "yendien",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: yeniden"
+      }
+    ],
+    "source": "../../grouping/v1/texts/garden.txt",
+    "sourceSha256": "0d7ce30627e06b33e7c9ff46cf4804e53fdf3cab138d39819f02146874592a02"
+  },
+  {
+    "id": "9a64a1ba-d630-5bcc-8010-26b83652a5b1",
+    "exerciseId": "68243d64-9505-5c7e-8f67-6e6bd873dbbe",
+    "ageGroupId": "10000000-0000-0000-0000-000000000002",
+    "age": "teen",
+    "level": 5,
+    "title": "Dikkatli editör — library — teen S5",
+    "content": "Mahallenin küçük kütüphanesi, eski bir okul binasının girişindeydi. Pencereler bahçeye bakıyor, rafların arasında geniş bir geçit uzanıyordu. Duru, ilk ziyaretinde kitaplardan önce kapının yanındaki çizimi fark etti. Çizimde her raf farklı bir renkle gösterilmişti.\n\nGörevli, renklerin kitapların yerini bulmayı kolaylaştırdığını anlattı. Mavi raflarda öyküler, yeşil raflarda doğa kitapları vardı. Duru bir defter çıkardı ve aradığı başlığı yazdı. Başlığı unuttuğunda defterine bakmak, bütün rafları yeniden dolaşmaktan daha kolaydı.\n\nBir kitabı seçerken yalnız kapağa bakmadı. Arka kapaktaki kısa tanıtımı okudu, sonra birkaç sayfayı çevirdi. Bazı kitaplarda çizimler, bazılarında uzun bölümler vardı. Duru o gün, merak ettiği kuşları anlatan bir kitap aldı.\n\nKitabın ilk bölümünde parkta gördüğü serçeler anlatılıyordu. Duru, tanıdığı bir ayrıntıya rastlayınca okumayı sürdürdü. Bilmediği bir sözcüğü defterine yazdı. Eve dönerken parkta kısa bir süre durdu ve kitaptaki kuşla gerçek kuşu karşılaştırdı.\n\nErtesi gün defterini kütüphaneye getirdi. Görevliye sorusunu gösterdi ve yanıtı birlikte başka bir kitapta aradılar. Duru, bir sorunun farklı kaynaklarda farklı ayrıntılarla açıklanabileceğini gördü. Yeni bulduğu açıklamayı önceki notunun yanına ekledi.\n\nHafta sonunda bir arkadaşını da davet etti. Arkadaşı öykü okumayı seviyordu. Aynı rafta aynı kitabı seçmek zorunda olmadıklarını konuştular. Her biri kendi kitabından ilginç bir bölümü anlattı. Böylece tek ziyaret, iki ayrı keşfe dönüştü.\n\nKütüphane, ziyaretçilerin önerilerini küçük kartlarda topluyordu. Duru kartına, kitapların hangi rafta bulunduğunu gösteren daha büyük bir harita çizilmesini önerdi. Önerisini verirken nedenini de yazdı: İlk kez gelen biri renklerin anlamını hemen anlayamayabilirdi.\n\nGörevli, öneriyi diğer kartlarla birlikte panoya astı. Bir başka ziyaretçi büyük yazılı yön işaretleri istedi. Yaşlı bir okuyucu oturma yerlerinin ışığa yakın olmasını önerdi. Kartların hepsi aynı konuyu anlatmıyor, farklı ihtiyaçları görünür kılıyordu.\n\nBir sonraki buluşmada gönüllüler haritayı yeniledi. Renkleri korudular ama her renge bir sözcük ve basit bir şekil eklediler. Böylece yalnız renge bakarak ayırt edemeyen ziyaretçiler de rafları bulabildi. Duru, çiziminin başkalarının fikriyle geliştiğini gördü.\n\nHarita tamamlanınca hemen duvara asılmadı. Gönüllüler önce birkaç kişiden bir kitabın yerini bulmasını istedi. Yolunu şaşıran ziyaretçilere hangi işaretin karışık geldiğini sordular. Yanıtları dinledikten sonra okların yerini ve yazıların büyüklüğünü değiştirdiler.\n\nBu küçük deneme, güzel görünen bir çizimin her zaman kolay kullanılmadığını gösterdi. Haritanın amacı duvarı süslemek değil, ziyaretçinin aradığı yere ulaşmasını sağlamaktı. Gönüllüler bu yüzden kendi beğenilerinden çok, denemede karşılaşılan güçlükleri dikkate aldı.",
+    "wordCount": 359,
+    "errors": [
+      {
+        "wordIndex": 1,
+        "originalWord": "küçük",
+        "errorWord": "küçkü",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: küçük"
+      },
+      {
+        "wordIndex": 55,
+        "originalWord": "başlığı",
+        "errorWord": "başılğı",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: başlığı"
+      },
+      {
+        "wordIndex": 86,
+        "originalWord": "uzun",
+        "errorWord": "uuzun",
+        "errorType": "extra_letter",
+        "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: uzun"
+      },
+      {
+        "wordIndex": 212,
+        "originalWord": "harita",
+        "errorWord": "hriata",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: harita"
+      },
+      {
+        "wordIndex": 328,
+        "originalWord": "deneme,",
+        "errorWord": "dneeme,",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: deneme,"
+      },
+      {
+        "wordIndex": 334,
+        "originalWord": "zaman",
+        "errorWord": "zmaan",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: zaman"
+      }
+    ],
+    "source": "../../grouping/v1/texts/library.txt",
+    "sourceSha256": "1f8f8ea6c8de855bd7e6d3e9b82f11f3b8d02668bddc39dbfde9b6503b94abea"
+  },
+  {
+    "id": "f8470805-9fac-5c75-82de-b20bf30f8a04",
+    "exerciseId": "68243d64-9505-5c7e-8f67-6e6bd873dbbe",
+    "ageGroupId": "10000000-0000-0000-0000-000000000002",
+    "age": "teen",
+    "level": 5,
+    "title": "Dikkatli editör — map — teen S5",
+    "content": "Deniz, evinden parka giderken her zaman aynı yolu kullanıyordu. Bir gün yolun bir bölümü kapandı. Başka bir sokaktan yürümek zorunda kaldı. Dönüşte basit bir harita çizdi. Haritada bildiği yerleri, köşeleri ve geçtiği sokakları işaretledi.\n\nHaritası gerçek sokakların tam ölçüsünü göstermiyordu. Bazı yolları uzun, bazılarını kısa çizmişti. Yine de nerede döneceğini hatırlamasına yardım ediyordu. Deniz, bir çizimin bütün ayrıntıları göstermeden de belirli bir iş için yararlı olabileceğini gördü.\n\nArkadaşı haritaya baktığında fırının işaretini hemen tanıdı. Ancak iki oyun alanını birbirine karıştırdı. Deniz, aynı şekli iki farklı yer için kullanmıştı. İşaretlerin yanına kısa adlar ekledi. Böylece çizim, yalnız kendisinin anlayacağı bir not olmaktan çıktı.\n\nBir sonraki yürüyüşte yolun süresini de tuttu. Hızlı yürüdüğü günle arkadaşlarıyla konuşarak yürüdüğü gün aynı sonucu vermedi. Tek bir süreyi kesin bir ölçü saymadı. Haritanın yanına, sürenin yürüyüş biçimine göre değişebileceğini yazdı.\n\nParkın kapısında başka bir harita vardı. Bu harita yürüyüş yollarını, çeşmeleri ve oturma alanlarını gösteriyordu. Deniz iki haritanın aynı şey olmadığını fark etti. Kendi haritası parka ulaşmaya, kapıdaki harita ise parkın içinde dolaşmaya yardım ediyordu.\n\nParkta küçük bir keşif oyunu hazırladılar. Arkadaşları üç yeri bulacak ve oralardaki işaretleri not edecekti. Oyunda koşmak zorunlu değildi. Deniz, yolların açık olduğundan emin olmak için oyunu önce bir arkadaşıyla yavaşça denedi.\n\nDenemede bir okun yanlış yere baktığı görüldü. Deniz oku düzeltti ama bununla yetinmedi. Yanındaki açıklamayı da yeniden okudu. Bir sorunun yalnız işaretten değil, işaretle yazının birlikte kullanılmasından doğabileceğini fark etti.\n\nKeşif oyunu başladığında herkes aynı yolu seçmedi. Bazıları önce yakındaki yeri, bazıları daha uzak noktayı buldu. Deniz farklı yolları haritaya çizdi. Aynı sonuca ulaşmak için birden fazla uygun yol bulunabileceğini gördüler.\n\nOyundan sonra en hızlı bitireni ilan etmek yerine hangi işaretlerin kolay anlaşıldığını konuştular. Bir arkadaşları büyük ağaç çiziminin işe yaradığını söyledi. Başka biri çeşmenin yerini yazıdan bulmuştu. Harita farklı kişilere farklı ipuçları sunuyordu.\n\nBir ziyaretçi merdiven kullanmadan ilerleyebileceği yolu sordu. Deniz haritasında basamakları göstermediğini fark etti. Yeni çizime merdiven ve eğimli yol işaretleri ekledi. Herkes için aynı yolun uygun olmadığını bilmek, haritayı daha yararlı hâle getirdi.\n\nYol çalışması bitince eski sokak yeniden açıldı. Deniz yeni haritasını hemen atmadı. Farklı yolların başka günlerde de işe yarayabileceğini düşündü. Ancak kapalı sokak işaretini kaldırdı ve haritanın hangi tarihte güncellendiğini yazdı.",
+    "wordCount": 359,
+    "errors": [
+      {
+        "wordIndex": 5,
+        "originalWord": "zaman",
+        "errorWord": "zmaan",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: zaman"
+      },
+      {
+        "wordIndex": 66,
+        "originalWord": "gördü.",
+        "errorWord": "gödrü.",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: gördü."
+      },
+      {
+        "wordIndex": 157,
+        "originalWord": "Kendi",
+        "errorWord": "Kendii",
+        "errorType": "extra_letter",
+        "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: Kendi"
+      },
+      {
+        "wordIndex": 263,
+        "originalWord": "sonra",
+        "errorWord": "sorna",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: sonra"
+      },
+      {
+        "wordIndex": 282,
+        "originalWord": "söyledi.",
+        "errorWord": "söyeldi.",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: söyledi."
+      },
+      {
+        "wordIndex": 308,
+        "originalWord": "Yeni",
+        "errorWord": "Ynei",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: Yeni"
+      }
+    ],
+    "source": "../../grouping/v1/texts/map.txt",
+    "sourceSha256": "0ab7639c5911d2578e4403703ce59e9c4fb107f2fe964e2feee6c817da006345"
+  },
+  {
+    "id": "54ce329d-1e87-57f8-8b12-2c59c1fb60ee",
+    "exerciseId": "68243d64-9505-5c7e-8f67-6e6bd873dbbe",
+    "ageGroupId": "10000000-0000-0000-0000-000000000002",
+    "age": "teen",
+    "level": 5,
+    "title": "Dikkatli editör — memory — teen S5",
+    "content": "Okulun yakınındaki eski çeşme yenilenirken öğrenciler mahallede küçük bir tarih çalışması yapmaya karar verdi. Çeşmenin ne zaman yapıldığını ve eskiden nasıl kullanıldığını öğrenmek istiyorlardı. Öğretmenleri, herkesin hatırasının aynı olmayabileceğini söyledi. Bir kişinin anlattığı olayı hemen kesin bilgi olarak yazmak yerine farklı kaynakları karşılaştıracaklardı. Çalışmanın amacı, mahalleyi tanımak kadar bilgi toplarken dikkatli davranmayı da öğrenmekti.\n\nİlk görüşme bakkalın sahibi Nihat Bey ile yapıldı. Nihat Bey, çocukken çeşmenin yanında bekleyen insanları hatırlıyordu. O yıllarda çevredeki bazı evlere su taşındığını anlattı. Ancak hangi yıldan söz ettiğini kesin olarak söyleyemedi. Öğrenciler notlarına yaklaşık bir tarih aralığı yazdı. Anlatılan olayla anlatıcının kendi tahmini aynı cümlede birbirine karışmasın diye defterde farklı işaretler kullandılar.\n\nİkinci görüşmede mahallede uzun süredir yaşayan Ayşe Hanım farklı bir ayrıntı paylaştı. Ona göre çeşmenin çevresinde küçük bir pazar kuruluyordu. Öğrenciler iki anlatının birbirini dışladığını düşündü. Öğretmenleri ise aynı yerin farklı zamanlarda farklı amaçlarla kullanılabileceğini hatırlattı. Çeşme, bir dönemde su taşınan bir nokta, başka bir dönemde buluşma yeri olmuş olabilirdi. Yeni sorularını zaman ve kullanım biçimi üzerine kurdular.\n\nDaha sonra okul arşivinde birkaç eski fotoğraf bulundu. Fotoğraflardan birinde çeşmenin arkasındaki dükkân görünüyordu ama çekim tarihi yazmıyordu. Başka bir fotoğrafın arkasında bir yıl vardı. Bu iki görüntüyü doğrudan aynı döneme ait saymak doğru olmazdı. Çocuklar dükkânın tabelasını, yolun biçimini ve çevredeki binaları karşılaştırdı. Bunlar tarih için ipucu olabilirdi; yine de tek başlarına kesin kanıt sayılmıyorlardı.\n\nGörüşmeler ilerledikçe çalışma defteri kalabalıklaştı. Öğrenciler anlatılan her ayrıntıyı sergiye koymak istedi. Fakat bazı sözler yalnız bir kişinin özel hayatıyla ilgiliydi. Öğretmenleri, insanların paylaşılmasını istemediği bilgileri sergilememeleri gerektiğini açıkladı. Bir anıyı dinlemek, onu her yerde yayımlama izni almak anlamına gelmiyordu. Çocuklar kullanılacak kısa alıntılar ve fotoğraflar için ayrıca izin istedi.\n\nSergi panosunu hazırlarken bilgileri üç bölüme ayırdılar. İlk bölümde tarihi bilinen fotoğraflar yer aldı. İkinci bölümde görüşmelerden izin alınmış hatıralar vardı. Son bölüm ise henüz cevabı bulunamayan sorulara ayrıldı. Birbiriyle uyuşmayan iki tarih silinmedi. Panoda bu tarihler hakkında farklı anlatılar bulunduğu açıkça yazıldı. Böylece sergiyi gezen kişiler de bilginin nasıl toplandığını görebilecekti.\n\nAçılış günü yeni bir ziyaretçi, evinde çeşmenin daha eski bir fotoğrafının bulunduğunu söyledi. Öğrenciler hemen bütün panoyu değiştirmek yerine fotoğrafı incelemek için yeni bir görüşme planladı. Çalışmaları tek bir günde tamamlanmış, değişmez bir hikâye değildi.",
+    "wordCount": 358,
+    "errors": [
+      {
+        "wordIndex": 5,
+        "originalWord": "öğrenciler",
+        "errorWord": "öğenciler",
+        "errorType": "missing_letter",
+        "explanation": "Eksik harf düzeltilmeli. Doğru yazım: öğrenciler"
+      },
+      {
+        "wordIndex": 36,
+        "originalWord": "bilgi",
+        "errorWord": "bligi",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: bilgi"
+      },
+      {
+        "wordIndex": 100,
+        "originalWord": "birbirine",
+        "errorWord": "birbiirne",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: birbirine"
+      },
+      {
+        "wordIndex": 166,
+        "originalWord": "sonra",
+        "errorWord": "sorna",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: sonra"
+      },
+      {
+        "wordIndex": 246,
+        "originalWord": "bilgileri",
+        "errorWord": "bligileri",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: bilgileri"
+      },
+      {
+        "wordIndex": 338,
+        "originalWord": "bütün",
+        "errorWord": "bütüün",
+        "errorType": "extra_letter",
+        "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: bütün"
+      }
+    ],
+    "source": "../../guided-reading/v1/texts/child-5-memory.txt",
+    "sourceSha256": "5a7c2401d57f1b9092d98e4d4062b4ecca6484cdf020dab66ce44fd36c94bdd2"
+  },
+  {
+    "id": "658ab077-5841-540e-8c10-e2e9450e5028",
+    "exerciseId": "68243d64-9505-5c7e-8f67-6e6bd873dbbe",
+    "ageGroupId": "10000000-0000-0000-0000-000000000002",
+    "age": "teen",
+    "level": 5,
+    "title": "Dikkatli editör — bridge — teen S5",
+    "content": "Bilim kulübündeki öğrenciler, küçük bir köprü maketi tasarlamak için iki gruba ayrıldı. Masanın iki ucuna yerleştirilen desteklerin arasındaki boşluk herkes için aynıydı. Kullanılabilecek karton miktarı da sınırlıydı. Öğretmen, yarışmanın yalnız en çok ağırlığı taşıyan köprüyü bulmak olmadığını açıkladı. Gruplar, hangi değişikliğin neyi etkilediğini de anlatmalıydı. Bu nedenle çizimler, deneme sonuçları ve başarısız tasarımlar çalışma boyunca saklanacaktı.\n\nDuru'nun grubu önce düz bir karton parçasını desteklerin üzerine koydu. İlk küçük yükte karton aşağı doğru eğildi. Kerem hemen ikinci bir karton eklemek istedi. Duru ise önce ilk denemenin sonucunu kaydetmelerini önerdi. Yeni malzeme eklediklerinde ne kadar fark oluştuğunu ancak böyle anlayabilirlerdi. Defterde kullanılan karton miktarı, destekler arasındaki uzaklık ve yükün konduğu yer için ayrı satırlar açtılar.\n\nSonraki denemede aynı miktarda kartonu katlayarak kullandılar. Katların biçimi değişince köprünün görünümü de değişti. Ancak yükün yerini önceki denemeden farklı seçmişlerdi. Sonuç daha iyi görünse de bunun yalnız katlama biçiminden kaynaklandığını söyleyemediler. Öğretmenleri, bir karşılaştırmada koşulları mümkün olduğunca aynı tutmanın neden önemli olduğunu sordu. Öğrenciler ikinci tasarımı aynı noktadan yükleyerek yeniden denedi.\n\nDiğer grup kartondan üçgen destekler hazırlıyordu. Kerem onların tasarımına bakınca kendi köprülerinin yanlış olduğunu düşündü. Duru, farklı bir tasarımın görülmesinin ilk çalışmayı değersiz yapmadığını söyledi. İki grup farklı yöntemlerle aynı soruna yaklaşıyordu. Sonuçları karşılaştırmak için malzeme miktarının ve deneme düzeninin açık olması gerekiyordu. Yalnız köprülerin fotoğraflarına bakarak hangisinin daha başarılı olduğunu anlamak mümkün değildi.\n\nÜçüncü tasarım hazırlanırken grubun içinde bir anlaşmazlık çıktı. Kerem, çok sayıda ince katın daha iyi olacağını savunuyordu. Duru ise az sayıda geniş katı denemek istiyordu. Tartışmayı tahminlerle sürdürmek yerine iki küçük örnek hazırladılar. Her örnek için aynı tür karton kullandılar ve yükü aynı noktaya koydular. Sonuçlardan biri beklentilerine uymadı. Bu şaşırtıcı farkı gizlemek yerine nedenini incelemek için işaretlediler.\n\nÖrneklerden birinin kenarı önceden yıpranmıştı. Ayrıca katlardan biri diğerlerine göre daha gevşekti. Çocuklar bu ayrıntıların sonucu etkileyebileceğini düşündü. Denemeyi yenilediklerinde fark azaldı. Böylece tek bir ölçümün her zaman yeterli olmadığını gördüler. Yine de sınıftaki küçük deneyden bütün köprüler için geçerli bir kural çıkaramazlardı. Kullandıkları malzeme, boyut ve yükler gerçek köprülerden çok farklıydı.\n\nSunum günü her grup yalnız son maketini değil, çalışma defterini de getirdi. Duru, ilk başarısız köprünün fotoğrafını özellikle gösterdi. Bu deneme, sonraki soruların oluşmasını sağlamıştı. Kerem ise karşılaştırma sırasında değiştirdikleri koşulları anlattı.",
+    "wordCount": 361,
+    "errors": [
+      {
+        "wordIndex": 2,
+        "originalWord": "öğrenciler,",
+        "errorWord": "öğenciler,",
+        "errorType": "missing_letter",
+        "explanation": "Eksik harf düzeltilmeli. Doğru yazım: öğrenciler,"
+      },
+      {
+        "wordIndex": 53,
+        "originalWord": "çalışma",
+        "errorWord": "çlışma",
+        "errorType": "missing_letter",
+        "explanation": "Eksik harf düzeltilmeli. Doğru yazım: çalışma"
+      },
+      {
+        "wordIndex": 145,
+        "originalWord": "Öğretmenleri,",
+        "errorWord": "Öretmenleri,",
+        "errorType": "missing_letter",
+        "explanation": "Eksik harf düzeltilmeli. Doğru yazım: Öğretmenleri,"
+      },
+      {
+        "wordIndex": 304,
+        "originalWord": "zaman",
+        "errorWord": "zmaan",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: zaman"
+      },
+      {
+        "wordIndex": 307,
+        "originalWord": "gördüler.",
+        "errorWord": "gödrüler.",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: gördüler."
+      },
+      {
+        "wordIndex": 360,
+        "originalWord": "anlattı.",
+        "errorWord": "anllattı.",
+        "errorType": "extra_letter",
+        "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: anlattı."
+      }
+    ],
+    "source": "../../guided-reading/v1/texts/child-5-bridge.txt",
+    "sourceSha256": "23eab41f3b9508c43da5368b86518b863d07de672d84f74164cce2d24a7a21aa"
+  },
+  {
+    "id": "cabc4af6-57ea-5f44-8c7a-534524e7fc2b",
+    "exerciseId": "ffc886e8-ccd3-5664-82bf-b51ec2e4702c",
+    "ageGroupId": "10000000-0000-0000-0000-000000000004",
+    "age": "young-adult",
+    "level": 4,
+    "title": "Dikkatli editör — garden — young-adult S4",
+    "content": "Okul bahçesinin bir köşesinde boş bir toprak alan vardı. Eren, arkadaşlarıyla birlikte burada küçük bir bitki köşesi kurmayı düşündü. İlk işleri tohum almak olmadı. Önce alanı gezdiler, güneşin nereden geldiğini ve suyun nerede biriktiğini gözlemlediler.\n\nÖğretmenleri, her bitkinin aynı yerde aynı biçimde büyümeyeceğini söyledi. Çocuklar sabah ve öğleden sonra bahçeye baktı. Gölgenin gün içinde yer değiştirdiğini fark ettiler. Bir deftere tarih ve saat yazarak gördüklerini kısa cümlelerle kaydettiler.\n\nBahçenin kenarında kuru yapraklar ve birkaç taş bulunuyordu. Çocuklar toprağı temizlerken küçük canlıları rahatsız etmemeye çalıştı. Buldukları her şeyi çöp saymadılar. Bazı yaprakların ve dalların toprağın üzerinde doğal olarak bulunabileceğini öğretmenlerine sordular.\n\nTohumları seçerken yetişme sürelerini de okudular. Bazı bitkilerin daha çok zaman istediğini gördüler. Küçük alan için birkaç türle başlamaya karar verdiler. Her sıranın başına bir işaret koydular. İşaretlerde bitkinin adı ve ekildiği gün yazıyordu.\n\nİlk sulamada herkes su vermek istedi. Ancak her çocuğun ayrı ayrı sulaması toprağı fazla ıslattı. Ertesi gün görevleri paylaşmaya karar verdiler. Bir kişi suluyor, bir kişi toprağın durumunu gözlüyor, bir kişi de deftere not alıyordu.\n\nBir hafta sonra ilk küçük yapraklar göründü. Eren, bütün tohumların aynı gün filizlenmediğini fark etti. Henüz görünmeyen tohumları hemen başarısız saymadı. Paket üzerindeki bilgilerle defterdeki tarihleri karşılaştırdı. Gözlem yapmanın bazen sabır gerektirdiğini anladı.\n\nÇocuklar ölçüm için basit bir cetvel kullandı. Her bitkinin aynı noktasından ölçmeye çalıştılar. Bir arkadaşları yaprağın ucunu, diğeri gövdenin tepesini ölçünce sonuçlar farklı çıktı. Sonraki ölçümlerde hangi noktaya bakacaklarını birlikte belirlediler.\n\nDefterdeki sayılar tek başına bahçede olanları anlatmıyordu. Yağmur yağdığı günleri ve yaprakların rengini de kaydettiler. Böylece bir değişiklik gördüklerinde önceki günlerin koşullarına bakabiliyorlardı. Notlar, hatırlanan bilgiyi daha düzenli bir gözleme dönüştürüyordu.\n\nBahçeye gelen bir ziyaretçi, hangi sıranın daha hızlı büyüdüğünü sordu. Çocuklar yalnız en uzun bitkiyi göstermedi. Aynı türdeki birkaç bitkiyi karşılaştırdılar. Bir örneğe bakarak bütün sıra hakkında kesin karar vermenin yanıltıcı olabileceğini düşündüler.\n\nBir gün işaretlerden biri kayboldu. O sıradaki bitkilerin adını herkes farklı hatırlıyordu. Defterdeki çizime bakarak sırayı yeniden buldular. Bilginin yalnız bir kişinin belleğinde durmaması, küçük bir karışıklığın daha kolay çözülmesini sağladı.\n\nSulama görevleri haftalık bir çizelgeye yazıldı. Çizelgede yalnız isimler değil, yapılacak işin kısa açıklaması da vardı.",
+    "wordCount": 344,
+    "errors": [
+      {
+        "wordIndex": 10,
+        "originalWord": "arkadaşlarıyla",
+        "errorWord": "arkadşlarıyla",
+        "errorType": "missing_letter",
+        "explanation": "Eksik harf düzeltilmeli. Doğru yazım: arkadaşlarıyla"
+      },
+      {
+        "wordIndex": 43,
+        "originalWord": "söyledi.",
+        "errorWord": "söyeldi.",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: söyledi."
+      },
+      {
+        "wordIndex": 73,
+        "originalWord": "birkaç",
+        "errorWord": "birkaaç",
+        "errorType": "extra_letter",
+        "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: birkaç"
+      },
+      {
+        "wordIndex": 177,
+        "originalWord": "bütün",
+        "errorWord": "bütüün",
+        "errorType": "extra_letter",
+        "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: bütün"
+      },
+      {
+        "wordIndex": 313,
+        "originalWord": "yeniden",
+        "errorWord": "yendien",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: yeniden"
+      }
+    ],
+    "source": "../../grouping/v1/texts/garden.txt",
+    "sourceSha256": "0d7ce30627e06b33e7c9ff46cf4804e53fdf3cab138d39819f02146874592a02"
+  },
+  {
+    "id": "ed00bc29-70d2-5f4f-82f9-0d46ef528935",
+    "exerciseId": "ffc886e8-ccd3-5664-82bf-b51ec2e4702c",
+    "ageGroupId": "10000000-0000-0000-0000-000000000004",
+    "age": "young-adult",
+    "level": 4,
+    "title": "Dikkatli editör — library — young-adult S4",
+    "content": "Mahallenin küçük kütüphanesi, eski bir okul binasının girişindeydi. Pencereler bahçeye bakıyor, rafların arasında geniş bir geçit uzanıyordu. Duru, ilk ziyaretinde kitaplardan önce kapının yanındaki çizimi fark etti. Çizimde her raf farklı bir renkle gösterilmişti.\n\nGörevli, renklerin kitapların yerini bulmayı kolaylaştırdığını anlattı. Mavi raflarda öyküler, yeşil raflarda doğa kitapları vardı. Duru bir defter çıkardı ve aradığı başlığı yazdı. Başlığı unuttuğunda defterine bakmak, bütün rafları yeniden dolaşmaktan daha kolaydı.\n\nBir kitabı seçerken yalnız kapağa bakmadı. Arka kapaktaki kısa tanıtımı okudu, sonra birkaç sayfayı çevirdi. Bazı kitaplarda çizimler, bazılarında uzun bölümler vardı. Duru o gün, merak ettiği kuşları anlatan bir kitap aldı.\n\nKitabın ilk bölümünde parkta gördüğü serçeler anlatılıyordu. Duru, tanıdığı bir ayrıntıya rastlayınca okumayı sürdürdü. Bilmediği bir sözcüğü defterine yazdı. Eve dönerken parkta kısa bir süre durdu ve kitaptaki kuşla gerçek kuşu karşılaştırdı.\n\nErtesi gün defterini kütüphaneye getirdi. Görevliye sorusunu gösterdi ve yanıtı birlikte başka bir kitapta aradılar. Duru, bir sorunun farklı kaynaklarda farklı ayrıntılarla açıklanabileceğini gördü. Yeni bulduğu açıklamayı önceki notunun yanına ekledi.\n\nHafta sonunda bir arkadaşını da davet etti. Arkadaşı öykü okumayı seviyordu. Aynı rafta aynı kitabı seçmek zorunda olmadıklarını konuştular. Her biri kendi kitabından ilginç bir bölümü anlattı. Böylece tek ziyaret, iki ayrı keşfe dönüştü.\n\nKütüphane, ziyaretçilerin önerilerini küçük kartlarda topluyordu. Duru kartına, kitapların hangi rafta bulunduğunu gösteren daha büyük bir harita çizilmesini önerdi. Önerisini verirken nedenini de yazdı: İlk kez gelen biri renklerin anlamını hemen anlayamayabilirdi.\n\nGörevli, öneriyi diğer kartlarla birlikte panoya astı. Bir başka ziyaretçi büyük yazılı yön işaretleri istedi. Yaşlı bir okuyucu oturma yerlerinin ışığa yakın olmasını önerdi. Kartların hepsi aynı konuyu anlatmıyor, farklı ihtiyaçları görünür kılıyordu.\n\nBir sonraki buluşmada gönüllüler haritayı yeniledi. Renkleri korudular ama her renge bir sözcük ve basit bir şekil eklediler. Böylece yalnız renge bakarak ayırt edemeyen ziyaretçiler de rafları bulabildi. Duru, çiziminin başkalarının fikriyle geliştiğini gördü.\n\nHarita tamamlanınca hemen duvara asılmadı. Gönüllüler önce birkaç kişiden bir kitabın yerini bulmasını istedi. Yolunu şaşıran ziyaretçilere hangi işaretin karışık geldiğini sordular. Yanıtları dinledikten sonra okların yerini ve yazıların büyüklüğünü değiştirdiler.\n\nBu küçük deneme, güzel görünen bir çizimin her zaman kolay kullanılmadığını gösterdi.",
+    "wordCount": 338,
+    "errors": [
+      {
+        "wordIndex": 1,
+        "originalWord": "küçük",
+        "errorWord": "küçkü",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: küçük"
+      },
+      {
+        "wordIndex": 51,
+        "originalWord": "defter",
+        "errorWord": "dfeter",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: defter"
+      },
+      {
+        "wordIndex": 79,
+        "originalWord": "birkaç",
+        "errorWord": "birkaaç",
+        "errorType": "extra_letter",
+        "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: birkaç"
+      },
+      {
+        "wordIndex": 155,
+        "originalWord": "Yeni",
+        "errorWord": "Ynei",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: Yeni"
+      },
+      {
+        "wordIndex": 334,
+        "originalWord": "zaman",
+        "errorWord": "zmaan",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: zaman"
+      }
+    ],
+    "source": "../../grouping/v1/texts/library.txt",
+    "sourceSha256": "1f8f8ea6c8de855bd7e6d3e9b82f11f3b8d02668bddc39dbfde9b6503b94abea"
+  },
+  {
+    "id": "9e77a7e7-eedf-5669-8b6b-de3b86c53816",
+    "exerciseId": "ffc886e8-ccd3-5664-82bf-b51ec2e4702c",
+    "ageGroupId": "10000000-0000-0000-0000-000000000004",
+    "age": "young-adult",
+    "level": 4,
+    "title": "Dikkatli editör — map — young-adult S4",
+    "content": "Deniz, evinden parka giderken her zaman aynı yolu kullanıyordu. Bir gün yolun bir bölümü kapandı. Başka bir sokaktan yürümek zorunda kaldı. Dönüşte basit bir harita çizdi. Haritada bildiği yerleri, köşeleri ve geçtiği sokakları işaretledi.\n\nHaritası gerçek sokakların tam ölçüsünü göstermiyordu. Bazı yolları uzun, bazılarını kısa çizmişti. Yine de nerede döneceğini hatırlamasına yardım ediyordu. Deniz, bir çizimin bütün ayrıntıları göstermeden de belirli bir iş için yararlı olabileceğini gördü.\n\nArkadaşı haritaya baktığında fırının işaretini hemen tanıdı. Ancak iki oyun alanını birbirine karıştırdı. Deniz, aynı şekli iki farklı yer için kullanmıştı. İşaretlerin yanına kısa adlar ekledi. Böylece çizim, yalnız kendisinin anlayacağı bir not olmaktan çıktı.\n\nBir sonraki yürüyüşte yolun süresini de tuttu. Hızlı yürüdüğü günle arkadaşlarıyla konuşarak yürüdüğü gün aynı sonucu vermedi. Tek bir süreyi kesin bir ölçü saymadı. Haritanın yanına, sürenin yürüyüş biçimine göre değişebileceğini yazdı.\n\nParkın kapısında başka bir harita vardı. Bu harita yürüyüş yollarını, çeşmeleri ve oturma alanlarını gösteriyordu. Deniz iki haritanın aynı şey olmadığını fark etti. Kendi haritası parka ulaşmaya, kapıdaki harita ise parkın içinde dolaşmaya yardım ediyordu.\n\nParkta küçük bir keşif oyunu hazırladılar. Arkadaşları üç yeri bulacak ve oralardaki işaretleri not edecekti. Oyunda koşmak zorunlu değildi. Deniz, yolların açık olduğundan emin olmak için oyunu önce bir arkadaşıyla yavaşça denedi.\n\nDenemede bir okun yanlış yere baktığı görüldü. Deniz oku düzeltti ama bununla yetinmedi. Yanındaki açıklamayı da yeniden okudu. Bir sorunun yalnız işaretten değil, işaretle yazının birlikte kullanılmasından doğabileceğini fark etti.\n\nKeşif oyunu başladığında herkes aynı yolu seçmedi. Bazıları önce yakındaki yeri, bazıları daha uzak noktayı buldu. Deniz farklı yolları haritaya çizdi. Aynı sonuca ulaşmak için birden fazla uygun yol bulunabileceğini gördüler.\n\nOyundan sonra en hızlı bitireni ilan etmek yerine hangi işaretlerin kolay anlaşıldığını konuştular. Bir arkadaşları büyük ağaç çiziminin işe yaradığını söyledi. Başka biri çeşmenin yerini yazıdan bulmuştu. Harita farklı kişilere farklı ipuçları sunuyordu.\n\nBir ziyaretçi merdiven kullanmadan ilerleyebileceği yolu sordu. Deniz haritasında basamakları göstermediğini fark etti. Yeni çizime merdiven ve eğimli yol işaretleri ekledi. Herkes için aynı yolun uygun olmadığını bilmek, haritayı daha yararlı hâle getirdi.\n\nYol çalışması bitince eski sokak yeniden açıldı. Deniz yeni haritasını hemen atmadı.",
+    "wordCount": 340,
+    "errors": [
+      {
+        "wordIndex": 5,
+        "originalWord": "zaman",
+        "errorWord": "zmaan",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: zaman"
+      },
+      {
+        "wordIndex": 44,
+        "originalWord": "kısa",
+        "errorWord": "kıssa",
+        "errorType": "extra_letter",
+        "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: kısa"
+      },
+      {
+        "wordIndex": 112,
+        "originalWord": "arkadaşlarıyla",
+        "errorWord": "arkadşlarıyla",
+        "errorType": "missing_letter",
+        "explanation": "Eksik harf düzeltilmeli. Doğru yazım: arkadaşlarıyla"
+      },
+      {
+        "wordIndex": 217,
+        "originalWord": "yeniden",
+        "errorWord": "yendien",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: yeniden"
+      },
+      {
+        "wordIndex": 308,
+        "originalWord": "Yeni",
+        "errorWord": "Ynei",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: Yeni"
+      }
+    ],
+    "source": "../../grouping/v1/texts/map.txt",
+    "sourceSha256": "0ab7639c5911d2578e4403703ce59e9c4fb107f2fe964e2feee6c817da006345"
+  },
+  {
+    "id": "841fabcf-d748-52b3-84ef-bcf486a00fee",
+    "exerciseId": "ffc886e8-ccd3-5664-82bf-b51ec2e4702c",
+    "ageGroupId": "10000000-0000-0000-0000-000000000004",
+    "age": "young-adult",
+    "level": 4,
+    "title": "Dikkatli editör — archive — young-adult S4",
+    "content": "Kentteki bir kültür derneği, mahallenin geçmişini anlatan küçük bir dijital arşiv hazırlamak istedi. Amaç bütün kentin tarihini eksiksiz yazmak değil, gönüllülerin paylaşmak istediği sınırlı sayıdaki belgeyi açıklamalarıyla birlikte düzenlemekti. Eski dükkân fotoğrafları, etkinlik afişleri ve birkaç kişisel anlatı başlangıç malzemesi olarak seçildi. Projeyi yürüten Elif, ilk toplantıda arşivin neyi kapsamadığını da konuşmayı önerdi. Ellerindeki belgeler her dönemi ve her topluluğu eşit biçimde temsil etmiyordu. Bu durum sonradan küçük bir dipnotla geçiştirilmeyecekti. Arşivin giriş sayfasında kapsam açıkça belirtilecekti. Katılımcılar bir dosyanın ellerinde bulunmasını, onu herkesle paylaşma yetkisine sahip oldukları anlamında kabul etmedi. Kayıt ile yayın için ayrı kararlar verilmesi gerektiğini kararlaştırdılar.\n\nİlk getirilen fotoğraf eski bir fırının önünü gösteriyordu. Fotoğrafı getiren kişi görüntünün çocukluğunda çekildiğini hatırlıyor, fakat kesin bir yıl söyleyemiyordu. Elif dosyanın adına tahmini bir yıl yazmak yerine tarih bilinmiyor notunu ekledi. Fotoğraftaki tabelanın biçimi başka belgelerle karşılaştırılabilirdi, ancak bu henüz yapılmış bir doğrulama değildi. Kayıtta belgenin sahibi tarafından söylenenler ile ekip tarafından kontrol edilenler ayrı alanlara yazıldı. Böylece bir ziyaretçi bilgilerin aynı kesinlik düzeyinde olmadığını anlayabilecekti. Fotoğrafın güzel görünmesi, tarihi hakkında kesin bir cümle kurulmasını gerektirmiyordu. Daha sonra yeni bir belge bulunursa kayıt güncellenebilecek, değişikliğin dayanağı da açıklanacaktı. Belirsizliği korumak dosyayı kullanılamaz yapmadı; hangi sorunun henüz cevaplanmadığını görünür kıldı.\n\nBelgelerin taranması sırasında ekip aynı görüntünün farklı kopyalarını buldu. Bunlardan biri kenarları kesilmiş, diğeri daha düşük çözünürlüklüydü. İki dosyanın aynı fotoğraf olması, her bakımdan eşdeğer oldukları anlamına gelmiyordu. Kenardaki bir yazı kopyaların yalnız birinde okunabiliyordu. Ekip en ayrıntılı kopyayı sakladı, diğerinin nereden geldiğini de kayıtla ilişkilendirdi. Dosyalar gelişigüzel silinmedi. Ziyaretçiye gösterilecek görüntü ile çalışma için korunan asıl kopya ayrı tutuldu. Parlaklık ayarı yapılan bir görüntüye düzenleme notu eklendi. Görüntünün eksik kısmını hayal ederek tamamlamak veya görünmeyen bir sözcüğü kesinmiş gibi yazmak uygun bulunmadı. Amaç daha çekici bir sahne üretmek değil, elde bulunan belgenin anlaşılmasını sağlamaktı.\n\nArşivde arama yapılabilmesi için konu etiketleri hazırlandı. Bir afiş hem spor etkinliği hem mahalle buluşması başlığıyla ilgiliydi. İlk taslakta yalnız bir konu seçilmesi isteniyordu. Gönüllüler bunun bazı belgeleri dar bir başlık içinde saklayabileceğini fark etti.",
+    "wordCount": 330,
+    "errors": [
+      {
+        "wordIndex": 7,
+        "originalWord": "küçük",
+        "errorWord": "küçkü",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: küçük"
+      },
+      {
+        "wordIndex": 35,
+        "originalWord": "birkaç",
+        "errorWord": "birkaaç",
+        "errorType": "extra_letter",
+        "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: birkaç"
+      },
+      {
+        "wordIndex": 128,
+        "originalWord": "tarih",
+        "errorWord": "tarhi",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: tarih"
+      },
+      {
+        "wordIndex": 178,
+        "originalWord": "sonra",
+        "errorWord": "sorna",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: sonra"
+      },
+      {
+        "wordIndex": 253,
+        "originalWord": "çalışma",
+        "errorWord": "çlışma",
+        "errorType": "missing_letter",
+        "explanation": "Eksik harf düzeltilmeli. Doğru yazım: çalışma"
+      }
+    ],
+    "source": "../../comprehension/v1/texts/community-archive.txt",
+    "sourceSha256": "5e8947a4afc100c16cbee52de105ab360490c728c36747b9748bfbec9f92ebda"
+  },
+  {
+    "id": "2e2c5c5d-625c-554d-89ca-4bf915c6e74a",
+    "exerciseId": "ffc886e8-ccd3-5664-82bf-b51ec2e4702c",
+    "ageGroupId": "10000000-0000-0000-0000-000000000004",
+    "age": "young-adult",
+    "level": 4,
+    "title": "Dikkatli editör — repair — young-adult S4",
+    "content": "Mahalle kültür merkezinde açılan tamir atölyesi, kullanılmayan eşyaları hemen yenileriyle değiştirmek yerine önce sorunlarını anlamak için kurulmuştu. Gönüllüler ilk toplantıda kırık masa lambaları, fermuarı açılan çantalar ve gevşeyen sandalye ayakları hakkında konuştu. Ancak her eşyanın atölyede güvenle onarılabileceğini varsaymadılar. Elektrik bağlantısı bulunan cihazları yalnız yetkin bir uzmanın incelemesi, diğer katılımcıların ise gözlem ve kayıt işleriyle başlaması kararlaştırıldı. Atölyenin amacı herkesi bir günde usta yapmak değil, bakım kararlarının nasıl verildiğini görünür kılmaktı. Selin kayıt masasını, Bora malzeme dolabını düzenlemeyi üstlendi. İlk buluşmada hiçbir elektrikli cihaz çalıştırılmadı. Katılımcılara, bir sorunu tanımak ile onu onarmaya yetkili olmak arasındaki fark açıklandı. Bu ayrım hazırlık listesinin ilk satırına yazıldı.\n\nSelin her eşya için bir kabul kartı hazırladı. Kartta eşyanın türü, sahibinin anlattığı sorun ve inceleme sonucu için ayrı alanlar vardı. Bir çantanın sahibi, fermuarın geçen haftadan beri takıldığını söyledi. Selin bunu doğrudan arızanın nedeni olarak kaydetmedi; sahibinin gözlemi olarak yazdı. İnceleme sırasında kumaşın fermuara sıkıştığı görüldü. Kartın ikinci alanına bu bulgu eklendi. Böylece anlatılan belirti ile kontrol edilerek bulunan neden birbirine karışmadı. Sahiplerin bütün geçmişini veya ev adresini kaydetmek gerekmiyordu. Geri dönüş için istenen iletişim bilgisi ayrı tutuldu ve yalnız görevlilerin erişimine bırakıldı. Katılımcılar hangi bilginin neden toplandığını okuyabiliyordu. Bir eşyanın fotoğrafı çekilecekse bunun için ayrıca izin soruluyordu.\n\nMalzeme dolabı hazırlanırken Bora bütün parçaları dış görünüşlerine göre aynı kutuya koymak istedi. Deneyimli bir gönüllü, birbirine benzeyen vidaların farklı ölçülerde olabileceğini gösterdi. Kutular ölçü ve kullanım bilgisiyle etiketlendi. Etiketi okunmayan bir parçaya tahminle ad verilmedi; kontrol bekleyen bölüme kondu. Sonra herkes dolaptan örnek bir parça bulmayı denedi. Bazı etiketler doğru olsa da rafın arkasında kaldığı için görülmüyordu. Yerleri değiştirildi ve yazılar büyütüldü. Düzenin başarısı yalnız kutuların düzgün görünmesiyle değil, aranan parçanın doğru bulunmasıyla değerlendirildi. İlk düzenleme fotoğrafı saklandı; sonraki değişikliğin nedeni kısa bir notla açıklandı. Böylece yeni gelen bir gönüllü de etiketlerin hangi ihtiyaçtan doğduğunu anlayabilecekti.\n\nİlk üç buluşmanın sonunda ekip onarılan eşya sayısını karşılaştırdı. Birinci buluşmada on, ikinci buluşmada yedi, üçüncüde on iki eşya tamamlanmıştı. Bora üçüncü buluşmanın kesinlikle en verimli gün olduğunu söyledi. Selin kabul kartlarına bakmayı önerdi.",
+    "wordCount": 334,
+    "errors": [
+      {
+        "wordIndex": 12,
+        "originalWord": "önce",
+        "errorWord": "öcne",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: önce"
+      },
+      {
+        "wordIndex": 75,
+        "originalWord": "malzeme",
+        "errorWord": "malzmee",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: malzeme"
+      },
+      {
+        "wordIndex": 168,
+        "originalWord": "bütün",
+        "errorWord": "bütüün",
+        "errorType": "extra_letter",
+        "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: bütün"
+      },
+      {
+        "wordIndex": 243,
+        "originalWord": "Sonra",
+        "errorWord": "Sorna",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: Sonra"
+      },
+      {
+        "wordIndex": 290,
+        "originalWord": "yeni",
+        "errorWord": "ynei",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: yeni"
+      }
+    ],
+    "source": "../../comprehension/v1/texts/repair-workshop.txt",
+    "sourceSha256": "4f11e94e54fd624803f7d4759adf273eaef86a8fa04028446fa2339a4d27e479"
+  },
+  {
+    "id": "c92e0e82-0556-591f-8db8-072bb945bf33",
+    "exerciseId": "88d37e8c-a1a9-558f-bb9e-d50513dda573",
+    "ageGroupId": "10000000-0000-0000-0000-000000000004",
+    "age": "young-adult",
+    "level": 5,
+    "title": "Dikkatli editör — garden — young-adult S5",
+    "content": "Okul bahçesinin bir köşesinde boş bir toprak alan vardı. Eren, arkadaşlarıyla birlikte burada küçük bir bitki köşesi kurmayı düşündü. İlk işleri tohum almak olmadı. Önce alanı gezdiler, güneşin nereden geldiğini ve suyun nerede biriktiğini gözlemlediler.\n\nÖğretmenleri, her bitkinin aynı yerde aynı biçimde büyümeyeceğini söyledi. Çocuklar sabah ve öğleden sonra bahçeye baktı. Gölgenin gün içinde yer değiştirdiğini fark ettiler. Bir deftere tarih ve saat yazarak gördüklerini kısa cümlelerle kaydettiler.\n\nBahçenin kenarında kuru yapraklar ve birkaç taş bulunuyordu. Çocuklar toprağı temizlerken küçük canlıları rahatsız etmemeye çalıştı. Buldukları her şeyi çöp saymadılar. Bazı yaprakların ve dalların toprağın üzerinde doğal olarak bulunabileceğini öğretmenlerine sordular.\n\nTohumları seçerken yetişme sürelerini de okudular. Bazı bitkilerin daha çok zaman istediğini gördüler. Küçük alan için birkaç türle başlamaya karar verdiler. Her sıranın başına bir işaret koydular. İşaretlerde bitkinin adı ve ekildiği gün yazıyordu.\n\nİlk sulamada herkes su vermek istedi. Ancak her çocuğun ayrı ayrı sulaması toprağı fazla ıslattı. Ertesi gün görevleri paylaşmaya karar verdiler. Bir kişi suluyor, bir kişi toprağın durumunu gözlüyor, bir kişi de deftere not alıyordu.\n\nBir hafta sonra ilk küçük yapraklar göründü. Eren, bütün tohumların aynı gün filizlenmediğini fark etti. Henüz görünmeyen tohumları hemen başarısız saymadı. Paket üzerindeki bilgilerle defterdeki tarihleri karşılaştırdı. Gözlem yapmanın bazen sabır gerektirdiğini anladı.\n\nÇocuklar ölçüm için basit bir cetvel kullandı. Her bitkinin aynı noktasından ölçmeye çalıştılar. Bir arkadaşları yaprağın ucunu, diğeri gövdenin tepesini ölçünce sonuçlar farklı çıktı. Sonraki ölçümlerde hangi noktaya bakacaklarını birlikte belirlediler.\n\nDefterdeki sayılar tek başına bahçede olanları anlatmıyordu. Yağmur yağdığı günleri ve yaprakların rengini de kaydettiler. Böylece bir değişiklik gördüklerinde önceki günlerin koşullarına bakabiliyorlardı. Notlar, hatırlanan bilgiyi daha düzenli bir gözleme dönüştürüyordu.\n\nBahçeye gelen bir ziyaretçi, hangi sıranın daha hızlı büyüdüğünü sordu. Çocuklar yalnız en uzun bitkiyi göstermedi. Aynı türdeki birkaç bitkiyi karşılaştırdılar. Bir örneğe bakarak bütün sıra hakkında kesin karar vermenin yanıltıcı olabileceğini düşündüler.\n\nBir gün işaretlerden biri kayboldu. O sıradaki bitkilerin adını herkes farklı hatırlıyordu. Defterdeki çizime bakarak sırayı yeniden buldular. Bilginin yalnız bir kişinin belleğinde durmaması, küçük bir karışıklığın daha kolay çözülmesini sağladı.\n\nSulama görevleri haftalık bir çizelgeye yazıldı. Çizelgede yalnız isimler değil, yapılacak işin kısa açıklaması da vardı. Bir kişi gelemediğinde başka biri görevi devralabiliyordu. Görevin nasıl yapılacağını bilmek, görevlinin adını bilmek kadar önemliydi.\n\nÇocuklar farklı sulama miktarlarını denemek istediğinde öğretmenleri önce küçük bir alan seçmelerini önerdi. Bütün bahçeyi aynı anda değiştirmek yerine, karşılaştırabilecekleri birkaç bitki ayırdılar. Ne değiştirdiklerini açıkça yazdılar ve diğer koşulları benzer tutmaya çalıştılar.\n\nDenemenin sonunda bazı bitkiler daha canlı görünüyordu. Ancak çocuklar bunun yalnız sulamadan kaynaklandığını hemen söylemedi. Toprağın ve güneşin de etkili olabileceğini konuştular.",
+    "wordCount": 415,
+    "errors": [
+      {
+        "wordIndex": 10,
+        "originalWord": "arkadaşlarıyla",
+        "errorWord": "arkadşlarıyla",
+        "errorType": "missing_letter",
+        "explanation": "Eksik harf düzeltilmeli. Doğru yazım: arkadaşlarıyla"
+      },
+      {
+        "wordIndex": 48,
+        "originalWord": "sonra",
+        "errorWord": "sorna",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: sonra"
+      },
+      {
+        "wordIndex": 112,
+        "originalWord": "gördüler.",
+        "errorWord": "gödrüler.",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: gördüler."
+      },
+      {
+        "wordIndex": 277,
+        "originalWord": "uzun",
+        "errorWord": "uuzun",
+        "errorType": "extra_letter",
+        "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: uzun"
+      },
+      {
+        "wordIndex": 291,
+        "originalWord": "kesin",
+        "errorWord": "keisn",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: kesin"
+      },
+      {
+        "wordIndex": 313,
+        "originalWord": "yeniden",
+        "errorWord": "yendien",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: yeniden"
+      }
+    ],
+    "source": "../../grouping/v1/texts/garden.txt",
+    "sourceSha256": "0d7ce30627e06b33e7c9ff46cf4804e53fdf3cab138d39819f02146874592a02"
+  },
+  {
+    "id": "1cf7587d-915e-5db8-831f-a0efee2155bf",
+    "exerciseId": "88d37e8c-a1a9-558f-bb9e-d50513dda573",
+    "ageGroupId": "10000000-0000-0000-0000-000000000004",
+    "age": "young-adult",
+    "level": 5,
+    "title": "Dikkatli editör — library — young-adult S5",
+    "content": "Mahallenin küçük kütüphanesi, eski bir okul binasının girişindeydi. Pencereler bahçeye bakıyor, rafların arasında geniş bir geçit uzanıyordu. Duru, ilk ziyaretinde kitaplardan önce kapının yanındaki çizimi fark etti. Çizimde her raf farklı bir renkle gösterilmişti.\n\nGörevli, renklerin kitapların yerini bulmayı kolaylaştırdığını anlattı. Mavi raflarda öyküler, yeşil raflarda doğa kitapları vardı. Duru bir defter çıkardı ve aradığı başlığı yazdı. Başlığı unuttuğunda defterine bakmak, bütün rafları yeniden dolaşmaktan daha kolaydı.\n\nBir kitabı seçerken yalnız kapağa bakmadı. Arka kapaktaki kısa tanıtımı okudu, sonra birkaç sayfayı çevirdi. Bazı kitaplarda çizimler, bazılarında uzun bölümler vardı. Duru o gün, merak ettiği kuşları anlatan bir kitap aldı.\n\nKitabın ilk bölümünde parkta gördüğü serçeler anlatılıyordu. Duru, tanıdığı bir ayrıntıya rastlayınca okumayı sürdürdü. Bilmediği bir sözcüğü defterine yazdı. Eve dönerken parkta kısa bir süre durdu ve kitaptaki kuşla gerçek kuşu karşılaştırdı.\n\nErtesi gün defterini kütüphaneye getirdi. Görevliye sorusunu gösterdi ve yanıtı birlikte başka bir kitapta aradılar. Duru, bir sorunun farklı kaynaklarda farklı ayrıntılarla açıklanabileceğini gördü. Yeni bulduğu açıklamayı önceki notunun yanına ekledi.\n\nHafta sonunda bir arkadaşını da davet etti. Arkadaşı öykü okumayı seviyordu. Aynı rafta aynı kitabı seçmek zorunda olmadıklarını konuştular. Her biri kendi kitabından ilginç bir bölümü anlattı. Böylece tek ziyaret, iki ayrı keşfe dönüştü.\n\nKütüphane, ziyaretçilerin önerilerini küçük kartlarda topluyordu. Duru kartına, kitapların hangi rafta bulunduğunu gösteren daha büyük bir harita çizilmesini önerdi. Önerisini verirken nedenini de yazdı: İlk kez gelen biri renklerin anlamını hemen anlayamayabilirdi.\n\nGörevli, öneriyi diğer kartlarla birlikte panoya astı. Bir başka ziyaretçi büyük yazılı yön işaretleri istedi. Yaşlı bir okuyucu oturma yerlerinin ışığa yakın olmasını önerdi. Kartların hepsi aynı konuyu anlatmıyor, farklı ihtiyaçları görünür kılıyordu.\n\nBir sonraki buluşmada gönüllüler haritayı yeniledi. Renkleri korudular ama her renge bir sözcük ve basit bir şekil eklediler. Böylece yalnız renge bakarak ayırt edemeyen ziyaretçiler de rafları bulabildi. Duru, çiziminin başkalarının fikriyle geliştiğini gördü.\n\nHarita tamamlanınca hemen duvara asılmadı. Gönüllüler önce birkaç kişiden bir kitabın yerini bulmasını istedi. Yolunu şaşıran ziyaretçilere hangi işaretin karışık geldiğini sordular. Yanıtları dinledikten sonra okların yerini ve yazıların büyüklüğünü değiştirdiler.\n\nBu küçük deneme, güzel görünen bir çizimin her zaman kolay kullanılmadığını gösterdi. Haritanın amacı duvarı süslemek değil, ziyaretçinin aradığı yere ulaşmasını sağlamaktı. Gönüllüler bu yüzden kendi beğenilerinden çok, denemede karşılaşılan güçlükleri dikkate aldı.\n\nKütüphanenin kitap kayıtları da yenileniyordu. Bazı başlıklar defterde iki kez yazılmış, bazı kitapların yerleri değişmişti. Görevli, yanlış kayıtları sessizce silmek yerine önce raftaki kitaplarla karşılaştırdı. Bir kaydın başka baskıya ait olabileceğini de kontrol etti.\n\nGönüllüler işleri küçük parçalara böldü. Biri başlıkları okuyor, diğeri raf yerlerini yazıyordu. Her bölüm tamamlandığında kısa bir kontrol yapılıyordu. Bütün rafları tek seferde saymaya çalışmak yerine, yapılan işi açıkça işaretlemek karışıklığı azalttı.",
+    "wordCount": 425,
+    "errors": [
+      {
+        "wordIndex": 1,
+        "originalWord": "küçük",
+        "errorWord": "küçkü",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: küçük"
+      },
+      {
+        "wordIndex": 61,
+        "originalWord": "bütün",
+        "errorWord": "bütüün",
+        "errorType": "extra_letter",
+        "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: bütün"
+      },
+      {
+        "wordIndex": 97,
+        "originalWord": "kitap",
+        "errorWord": "ktiap",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: kitap"
+      },
+      {
+        "wordIndex": 328,
+        "originalWord": "deneme,",
+        "errorWord": "dneeme,",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: deneme,"
+      },
+      {
+        "wordIndex": 334,
+        "originalWord": "zaman",
+        "errorWord": "zmaan",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: zaman"
+      },
+      {
+        "wordIndex": 366,
+        "originalWord": "defterde",
+        "errorWord": "dfeterde",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: defterde"
+      }
+    ],
+    "source": "../../grouping/v1/texts/library.txt",
+    "sourceSha256": "1f8f8ea6c8de855bd7e6d3e9b82f11f3b8d02668bddc39dbfde9b6503b94abea"
+  },
+  {
+    "id": "fbff8b0e-051d-5283-8c7a-9590d7476396",
+    "exerciseId": "88d37e8c-a1a9-558f-bb9e-d50513dda573",
+    "ageGroupId": "10000000-0000-0000-0000-000000000004",
+    "age": "young-adult",
+    "level": 5,
+    "title": "Dikkatli editör — map — young-adult S5",
+    "content": "Deniz, evinden parka giderken her zaman aynı yolu kullanıyordu. Bir gün yolun bir bölümü kapandı. Başka bir sokaktan yürümek zorunda kaldı. Dönüşte basit bir harita çizdi. Haritada bildiği yerleri, köşeleri ve geçtiği sokakları işaretledi.\n\nHaritası gerçek sokakların tam ölçüsünü göstermiyordu. Bazı yolları uzun, bazılarını kısa çizmişti. Yine de nerede döneceğini hatırlamasına yardım ediyordu. Deniz, bir çizimin bütün ayrıntıları göstermeden de belirli bir iş için yararlı olabileceğini gördü.\n\nArkadaşı haritaya baktığında fırının işaretini hemen tanıdı. Ancak iki oyun alanını birbirine karıştırdı. Deniz, aynı şekli iki farklı yer için kullanmıştı. İşaretlerin yanına kısa adlar ekledi. Böylece çizim, yalnız kendisinin anlayacağı bir not olmaktan çıktı.\n\nBir sonraki yürüyüşte yolun süresini de tuttu. Hızlı yürüdüğü günle arkadaşlarıyla konuşarak yürüdüğü gün aynı sonucu vermedi. Tek bir süreyi kesin bir ölçü saymadı. Haritanın yanına, sürenin yürüyüş biçimine göre değişebileceğini yazdı.\n\nParkın kapısında başka bir harita vardı. Bu harita yürüyüş yollarını, çeşmeleri ve oturma alanlarını gösteriyordu. Deniz iki haritanın aynı şey olmadığını fark etti. Kendi haritası parka ulaşmaya, kapıdaki harita ise parkın içinde dolaşmaya yardım ediyordu.\n\nParkta küçük bir keşif oyunu hazırladılar. Arkadaşları üç yeri bulacak ve oralardaki işaretleri not edecekti. Oyunda koşmak zorunlu değildi. Deniz, yolların açık olduğundan emin olmak için oyunu önce bir arkadaşıyla yavaşça denedi.\n\nDenemede bir okun yanlış yere baktığı görüldü. Deniz oku düzeltti ama bununla yetinmedi. Yanındaki açıklamayı da yeniden okudu. Bir sorunun yalnız işaretten değil, işaretle yazının birlikte kullanılmasından doğabileceğini fark etti.\n\nKeşif oyunu başladığında herkes aynı yolu seçmedi. Bazıları önce yakındaki yeri, bazıları daha uzak noktayı buldu. Deniz farklı yolları haritaya çizdi. Aynı sonuca ulaşmak için birden fazla uygun yol bulunabileceğini gördüler.\n\nOyundan sonra en hızlı bitireni ilan etmek yerine hangi işaretlerin kolay anlaşıldığını konuştular. Bir arkadaşları büyük ağaç çiziminin işe yaradığını söyledi. Başka biri çeşmenin yerini yazıdan bulmuştu. Harita farklı kişilere farklı ipuçları sunuyordu.\n\nBir ziyaretçi merdiven kullanmadan ilerleyebileceği yolu sordu. Deniz haritasında basamakları göstermediğini fark etti. Yeni çizime merdiven ve eğimli yol işaretleri ekledi. Herkes için aynı yolun uygun olmadığını bilmek, haritayı daha yararlı hâle getirdi.\n\nYol çalışması bitince eski sokak yeniden açıldı. Deniz yeni haritasını hemen atmadı. Farklı yolların başka günlerde de işe yarayabileceğini düşündü. Ancak kapalı sokak işaretini kaldırdı ve haritanın hangi tarihte güncellendiğini yazdı.\n\nMahalledeki gençler, yürüyüş yollarını birlikte kaydetmek istedi. Herkes kendi bildiği köşeleri çizdi. Çizimler birleştirildiğinde bazı adların farklı yazıldığı görüldü. Aynı yerden söz edip etmediklerini birlikte kontrol ederek ortak bir ad listesi hazırladılar.\n\nGrup, haritaya bütün bilgileri aynı anda koymamaya karar verdi. Ana çizimde yönler ve önemli noktalar bulunacaktı. Ayrıntılar ayrı notlarda gösterilecekti. Çok fazla işaretin, aranan bilgiyi bulmayı zorlaştırabileceğini denemelerde görmüşlerdi.",
+    "wordCount": 420,
+    "errors": [
+      {
+        "wordIndex": 5,
+        "originalWord": "zaman",
+        "errorWord": "zmaan",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: zaman"
+      },
+      {
+        "wordIndex": 74,
+        "originalWord": "Ancak",
+        "errorWord": "Anack",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: Ancak"
+      },
+      {
+        "wordIndex": 196,
+        "originalWord": "önce",
+        "errorWord": "öcne",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: önce"
+      },
+      {
+        "wordIndex": 394,
+        "originalWord": "bilgileri",
+        "errorWord": "bligileri",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: bilgileri"
+      },
+      {
+        "wordIndex": 398,
+        "originalWord": "karar",
+        "errorWord": "kraar",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: karar"
+      },
+      {
+        "wordIndex": 404,
+        "originalWord": "önemli",
+        "errorWord": "önmeli",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: önemli"
+      }
+    ],
+    "source": "../../grouping/v1/texts/map.txt",
+    "sourceSha256": "0ab7639c5911d2578e4403703ce59e9c4fb107f2fe964e2feee6c817da006345"
+  },
+  {
+    "id": "82d22abc-5e9b-5af5-839d-57e5353413cb",
+    "exerciseId": "88d37e8c-a1a9-558f-bb9e-d50513dda573",
+    "ageGroupId": "10000000-0000-0000-0000-000000000004",
+    "age": "young-adult",
+    "level": 5,
+    "title": "Dikkatli editör — archive — young-adult S5",
+    "content": "Kentteki bir kültür derneği, mahallenin geçmişini anlatan küçük bir dijital arşiv hazırlamak istedi. Amaç bütün kentin tarihini eksiksiz yazmak değil, gönüllülerin paylaşmak istediği sınırlı sayıdaki belgeyi açıklamalarıyla birlikte düzenlemekti. Eski dükkân fotoğrafları, etkinlik afişleri ve birkaç kişisel anlatı başlangıç malzemesi olarak seçildi. Projeyi yürüten Elif, ilk toplantıda arşivin neyi kapsamadığını da konuşmayı önerdi. Ellerindeki belgeler her dönemi ve her topluluğu eşit biçimde temsil etmiyordu. Bu durum sonradan küçük bir dipnotla geçiştirilmeyecekti. Arşivin giriş sayfasında kapsam açıkça belirtilecekti. Katılımcılar bir dosyanın ellerinde bulunmasını, onu herkesle paylaşma yetkisine sahip oldukları anlamında kabul etmedi. Kayıt ile yayın için ayrı kararlar verilmesi gerektiğini kararlaştırdılar.\n\nİlk getirilen fotoğraf eski bir fırının önünü gösteriyordu. Fotoğrafı getiren kişi görüntünün çocukluğunda çekildiğini hatırlıyor, fakat kesin bir yıl söyleyemiyordu. Elif dosyanın adına tahmini bir yıl yazmak yerine tarih bilinmiyor notunu ekledi. Fotoğraftaki tabelanın biçimi başka belgelerle karşılaştırılabilirdi, ancak bu henüz yapılmış bir doğrulama değildi. Kayıtta belgenin sahibi tarafından söylenenler ile ekip tarafından kontrol edilenler ayrı alanlara yazıldı. Böylece bir ziyaretçi bilgilerin aynı kesinlik düzeyinde olmadığını anlayabilecekti. Fotoğrafın güzel görünmesi, tarihi hakkında kesin bir cümle kurulmasını gerektirmiyordu. Daha sonra yeni bir belge bulunursa kayıt güncellenebilecek, değişikliğin dayanağı da açıklanacaktı. Belirsizliği korumak dosyayı kullanılamaz yapmadı; hangi sorunun henüz cevaplanmadığını görünür kıldı.\n\nBelgelerin taranması sırasında ekip aynı görüntünün farklı kopyalarını buldu. Bunlardan biri kenarları kesilmiş, diğeri daha düşük çözünürlüklüydü. İki dosyanın aynı fotoğraf olması, her bakımdan eşdeğer oldukları anlamına gelmiyordu. Kenardaki bir yazı kopyaların yalnız birinde okunabiliyordu. Ekip en ayrıntılı kopyayı sakladı, diğerinin nereden geldiğini de kayıtla ilişkilendirdi. Dosyalar gelişigüzel silinmedi. Ziyaretçiye gösterilecek görüntü ile çalışma için korunan asıl kopya ayrı tutuldu. Parlaklık ayarı yapılan bir görüntüye düzenleme notu eklendi. Görüntünün eksik kısmını hayal ederek tamamlamak veya görünmeyen bir sözcüğü kesinmiş gibi yazmak uygun bulunmadı. Amaç daha çekici bir sahne üretmek değil, elde bulunan belgenin anlaşılmasını sağlamaktı.\n\nArşivde arama yapılabilmesi için konu etiketleri hazırlandı. Bir afiş hem spor etkinliği hem mahalle buluşması başlığıyla ilgiliydi. İlk taslakta yalnız bir konu seçilmesi isteniyordu. Gönüllüler bunun bazı belgeleri dar bir başlık içinde saklayabileceğini fark etti. Birden fazla anlamlı etiket kullanılmasına izin verildi, fakat aynı şey için çok sayıda farklı ad üretmemek amacıyla ortak bir liste tutuldu. Listenin kapalı ve değişmez olması gerekmiyordu. Yeni bir ihtiyaç çıktığında ekleme önerilebilirdi. Önce birkaç kişi aradıkları belgeyi etiketlerle bulmayı denedi. Kullanılmayan veya karışıklık yaratan terimler yeniden gözden geçirildi. Etiket sayısının artması kendi başına başarı değildi; aranan belgenin doğru bağlamla bulunmasına yardımcı olması önemliydi.\n\nKişisel anlatıların eklenmesi proje için yeni sorular doğurdu. Aynı meydandaki bir etkinliği iki kişi farklı biçimde hatırlıyordu. Ekip hangisinin daha canlı anlattığına bakarak birini doğru ilan etmedi.",
+    "wordCount": 421,
+    "errors": [
+      {
+        "wordIndex": 7,
+        "originalWord": "küçük",
+        "errorWord": "küçkü",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: küçük"
+      },
+      {
+        "wordIndex": 46,
+        "originalWord": "toplantıda",
+        "errorWord": "toplantdıa",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: toplantıda"
+      },
+      {
+        "wordIndex": 162,
+        "originalWord": "aynı",
+        "errorWord": "ayynı",
+        "errorType": "extra_letter",
+        "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: aynı"
+      },
+      {
+        "wordIndex": 363,
+        "originalWord": "Önce",
+        "errorWord": "Öcne",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: Önce"
+      },
+      {
+        "wordIndex": 376,
+        "originalWord": "yeniden",
+        "errorWord": "yendien",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: yeniden"
+      },
+      {
+        "wordIndex": 382,
+        "originalWord": "kendi",
+        "errorWord": "kendii",
+        "errorType": "extra_letter",
+        "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: kendi"
+      }
+    ],
+    "source": "../../comprehension/v1/texts/community-archive.txt",
+    "sourceSha256": "5e8947a4afc100c16cbee52de105ab360490c728c36747b9748bfbec9f92ebda"
+  },
+  {
+    "id": "e3e9d6b9-8498-5632-8766-aa26e68f5765",
+    "exerciseId": "88d37e8c-a1a9-558f-bb9e-d50513dda573",
+    "ageGroupId": "10000000-0000-0000-0000-000000000004",
+    "age": "young-adult",
+    "level": 5,
+    "title": "Dikkatli editör — repair — young-adult S5",
+    "content": "Mahalle kültür merkezinde açılan tamir atölyesi, kullanılmayan eşyaları hemen yenileriyle değiştirmek yerine önce sorunlarını anlamak için kurulmuştu. Gönüllüler ilk toplantıda kırık masa lambaları, fermuarı açılan çantalar ve gevşeyen sandalye ayakları hakkında konuştu. Ancak her eşyanın atölyede güvenle onarılabileceğini varsaymadılar. Elektrik bağlantısı bulunan cihazları yalnız yetkin bir uzmanın incelemesi, diğer katılımcıların ise gözlem ve kayıt işleriyle başlaması kararlaştırıldı. Atölyenin amacı herkesi bir günde usta yapmak değil, bakım kararlarının nasıl verildiğini görünür kılmaktı. Selin kayıt masasını, Bora malzeme dolabını düzenlemeyi üstlendi. İlk buluşmada hiçbir elektrikli cihaz çalıştırılmadı. Katılımcılara, bir sorunu tanımak ile onu onarmaya yetkili olmak arasındaki fark açıklandı. Bu ayrım hazırlık listesinin ilk satırına yazıldı.\n\nSelin her eşya için bir kabul kartı hazırladı. Kartta eşyanın türü, sahibinin anlattığı sorun ve inceleme sonucu için ayrı alanlar vardı. Bir çantanın sahibi, fermuarın geçen haftadan beri takıldığını söyledi. Selin bunu doğrudan arızanın nedeni olarak kaydetmedi; sahibinin gözlemi olarak yazdı. İnceleme sırasında kumaşın fermuara sıkıştığı görüldü. Kartın ikinci alanına bu bulgu eklendi. Böylece anlatılan belirti ile kontrol edilerek bulunan neden birbirine karışmadı. Sahiplerin bütün geçmişini veya ev adresini kaydetmek gerekmiyordu. Geri dönüş için istenen iletişim bilgisi ayrı tutuldu ve yalnız görevlilerin erişimine bırakıldı. Katılımcılar hangi bilginin neden toplandığını okuyabiliyordu. Bir eşyanın fotoğrafı çekilecekse bunun için ayrıca izin soruluyordu.\n\nMalzeme dolabı hazırlanırken Bora bütün parçaları dış görünüşlerine göre aynı kutuya koymak istedi. Deneyimli bir gönüllü, birbirine benzeyen vidaların farklı ölçülerde olabileceğini gösterdi. Kutular ölçü ve kullanım bilgisiyle etiketlendi. Etiketi okunmayan bir parçaya tahminle ad verilmedi; kontrol bekleyen bölüme kondu. Sonra herkes dolaptan örnek bir parça bulmayı denedi. Bazı etiketler doğru olsa da rafın arkasında kaldığı için görülmüyordu. Yerleri değiştirildi ve yazılar büyütüldü. Düzenin başarısı yalnız kutuların düzgün görünmesiyle değil, aranan parçanın doğru bulunmasıyla değerlendirildi. İlk düzenleme fotoğrafı saklandı; sonraki değişikliğin nedeni kısa bir notla açıklandı. Böylece yeni gelen bir gönüllü de etiketlerin hangi ihtiyaçtan doğduğunu anlayabilecekti.\n\nİlk üç buluşmanın sonunda ekip onarılan eşya sayısını karşılaştırdı. Birinci buluşmada on, ikinci buluşmada yedi, üçüncüde on iki eşya tamamlanmıştı. Bora üçüncü buluşmanın kesinlikle en verimli gün olduğunu söyledi. Selin kabul kartlarına bakmayı önerdi. İkinci gün gelen eşyalardan birkaçının incelemesi daha uzun sürmüş, bazıları için parça beklenmişti. Üçüncü gün ise çok sayıda küçük kumaş onarımı yapılmıştı. Sayılar gerçekti, fakat işlerin güçlüğünü tek başına göstermiyordu. Ekip toplam sayının yanına işlem türlerini ve bekleyen işleri de ekledi. Karşılaştırmayı kaldırmadılar; hangi soruya cevap verdiğini daralttılar. Artık tablo, gönüllülerin becerisini sıralayan bir puan değil, farklı günlerde hangi işlerin yapıldığını anlatan bir kayıt olarak kullanılıyordu.\n\nBir katılımcı eski bir lambasının onarılmasını istediğinde güvenlik sınırı yeniden gündeme geldi. Uzman o gün atölyede değildi.",
+    "wordCount": 417,
+    "errors": [
+      {
+        "wordIndex": 12,
+        "originalWord": "önce",
+        "errorWord": "öcne",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: önce"
+      },
+      {
+        "wordIndex": 133,
+        "originalWord": "söyledi.",
+        "errorWord": "söyeldi.",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: söyledi."
+      },
+      {
+        "wordIndex": 222,
+        "originalWord": "farklı",
+        "errorWord": "farkıl",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: farklı"
+      },
+      {
+        "wordIndex": 341,
+        "originalWord": "uzun",
+        "errorWord": "uuzun",
+        "errorType": "extra_letter",
+        "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: uzun"
+      },
+      {
+        "wordIndex": 352,
+        "originalWord": "küçük",
+        "errorWord": "küçkü",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: küçük"
+      },
+      {
+        "wordIndex": 409,
+        "originalWord": "yeniden",
+        "errorWord": "yendien",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: yeniden"
+      }
+    ],
+    "source": "../../comprehension/v1/texts/repair-workshop.txt",
+    "sourceSha256": "4f11e94e54fd624803f7d4759adf273eaef86a8fa04028446fa2339a4d27e479"
+  },
+  {
+    "id": "493ad1ec-dff6-59d6-8b43-e8b761f0172e",
+    "exerciseId": "e5d1dcbd-a8f1-5f39-8e15-29169297c17b",
+    "ageGroupId": "10000000-0000-0000-0000-000000000003",
+    "age": "adult",
+    "level": 4,
+    "title": "Dikkatli editör — garden — adult S4",
+    "content": "Okul bahçesinin bir köşesinde boş bir toprak alan vardı. Eren, arkadaşlarıyla birlikte burada küçük bir bitki köşesi kurmayı düşündü. İlk işleri tohum almak olmadı. Önce alanı gezdiler, güneşin nereden geldiğini ve suyun nerede biriktiğini gözlemlediler.\n\nÖğretmenleri, her bitkinin aynı yerde aynı biçimde büyümeyeceğini söyledi. Çocuklar sabah ve öğleden sonra bahçeye baktı. Gölgenin gün içinde yer değiştirdiğini fark ettiler. Bir deftere tarih ve saat yazarak gördüklerini kısa cümlelerle kaydettiler.\n\nBahçenin kenarında kuru yapraklar ve birkaç taş bulunuyordu. Çocuklar toprağı temizlerken küçük canlıları rahatsız etmemeye çalıştı. Buldukları her şeyi çöp saymadılar. Bazı yaprakların ve dalların toprağın üzerinde doğal olarak bulunabileceğini öğretmenlerine sordular.\n\nTohumları seçerken yetişme sürelerini de okudular. Bazı bitkilerin daha çok zaman istediğini gördüler. Küçük alan için birkaç türle başlamaya karar verdiler. Her sıranın başına bir işaret koydular. İşaretlerde bitkinin adı ve ekildiği gün yazıyordu.\n\nİlk sulamada herkes su vermek istedi. Ancak her çocuğun ayrı ayrı sulaması toprağı fazla ıslattı. Ertesi gün görevleri paylaşmaya karar verdiler. Bir kişi suluyor, bir kişi toprağın durumunu gözlüyor, bir kişi de deftere not alıyordu.\n\nBir hafta sonra ilk küçük yapraklar göründü. Eren, bütün tohumların aynı gün filizlenmediğini fark etti. Henüz görünmeyen tohumları hemen başarısız saymadı. Paket üzerindeki bilgilerle defterdeki tarihleri karşılaştırdı. Gözlem yapmanın bazen sabır gerektirdiğini anladı.\n\nÇocuklar ölçüm için basit bir cetvel kullandı. Her bitkinin aynı noktasından ölçmeye çalıştılar. Bir arkadaşları yaprağın ucunu, diğeri gövdenin tepesini ölçünce sonuçlar farklı çıktı. Sonraki ölçümlerde hangi noktaya bakacaklarını birlikte belirlediler.\n\nDefterdeki sayılar tek başına bahçede olanları anlatmıyordu. Yağmur yağdığı günleri ve yaprakların rengini de kaydettiler. Böylece bir değişiklik gördüklerinde önceki günlerin koşullarına bakabiliyorlardı. Notlar, hatırlanan bilgiyi daha düzenli bir gözleme dönüştürüyordu.\n\nBahçeye gelen bir ziyaretçi, hangi sıranın daha hızlı büyüdüğünü sordu. Çocuklar yalnız en uzun bitkiyi göstermedi. Aynı türdeki birkaç bitkiyi karşılaştırdılar. Bir örneğe bakarak bütün sıra hakkında kesin karar vermenin yanıltıcı olabileceğini düşündüler.\n\nBir gün işaretlerden biri kayboldu. O sıradaki bitkilerin adını herkes farklı hatırlıyordu. Defterdeki çizime bakarak sırayı yeniden buldular. Bilginin yalnız bir kişinin belleğinde durmaması, küçük bir karışıklığın daha kolay çözülmesini sağladı.\n\nSulama görevleri haftalık bir çizelgeye yazıldı. Çizelgede yalnız isimler değil, yapılacak işin kısa açıklaması da vardı. Bir kişi gelemediğinde başka biri görevi devralabiliyordu. Görevin nasıl yapılacağını bilmek, görevlinin adını bilmek kadar önemliydi.\n\nÇocuklar farklı sulama miktarlarını denemek istediğinde öğretmenleri önce küçük bir alan seçmelerini önerdi. Bütün bahçeyi aynı anda değiştirmek yerine, karşılaştırabilecekleri birkaç bitki ayırdılar.",
+    "wordCount": 383,
+    "errors": [
+      {
+        "wordIndex": 10,
+        "originalWord": "arkadaşlarıyla",
+        "errorWord": "arkadşlarıyla",
+        "errorType": "missing_letter",
+        "explanation": "Eksik harf düzeltilmeli. Doğru yazım: arkadaşlarıyla"
+      },
+      {
+        "wordIndex": 43,
+        "originalWord": "söyledi.",
+        "errorWord": "söyeldi.",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: söyledi."
+      },
+      {
+        "wordIndex": 73,
+        "originalWord": "birkaç",
+        "errorWord": "birkaaç",
+        "errorType": "extra_letter",
+        "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: birkaç"
+      },
+      {
+        "wordIndex": 177,
+        "originalWord": "bütün",
+        "errorWord": "bütüün",
+        "errorType": "extra_letter",
+        "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: bütün"
+      },
+      {
+        "wordIndex": 313,
+        "originalWord": "yeniden",
+        "errorWord": "yendien",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: yeniden"
+      }
+    ],
+    "source": "../../grouping/v1/texts/garden.txt",
+    "sourceSha256": "0d7ce30627e06b33e7c9ff46cf4804e53fdf3cab138d39819f02146874592a02"
+  },
+  {
+    "id": "5b233b33-7bdc-561c-8830-6ee9b972794b",
+    "exerciseId": "e5d1dcbd-a8f1-5f39-8e15-29169297c17b",
+    "ageGroupId": "10000000-0000-0000-0000-000000000003",
+    "age": "adult",
+    "level": 4,
+    "title": "Dikkatli editör — library — adult S4",
+    "content": "Mahallenin küçük kütüphanesi, eski bir okul binasının girişindeydi. Pencereler bahçeye bakıyor, rafların arasında geniş bir geçit uzanıyordu. Duru, ilk ziyaretinde kitaplardan önce kapının yanındaki çizimi fark etti. Çizimde her raf farklı bir renkle gösterilmişti.\n\nGörevli, renklerin kitapların yerini bulmayı kolaylaştırdığını anlattı. Mavi raflarda öyküler, yeşil raflarda doğa kitapları vardı. Duru bir defter çıkardı ve aradığı başlığı yazdı. Başlığı unuttuğunda defterine bakmak, bütün rafları yeniden dolaşmaktan daha kolaydı.\n\nBir kitabı seçerken yalnız kapağa bakmadı. Arka kapaktaki kısa tanıtımı okudu, sonra birkaç sayfayı çevirdi. Bazı kitaplarda çizimler, bazılarında uzun bölümler vardı. Duru o gün, merak ettiği kuşları anlatan bir kitap aldı.\n\nKitabın ilk bölümünde parkta gördüğü serçeler anlatılıyordu. Duru, tanıdığı bir ayrıntıya rastlayınca okumayı sürdürdü. Bilmediği bir sözcüğü defterine yazdı. Eve dönerken parkta kısa bir süre durdu ve kitaptaki kuşla gerçek kuşu karşılaştırdı.\n\nErtesi gün defterini kütüphaneye getirdi. Görevliye sorusunu gösterdi ve yanıtı birlikte başka bir kitapta aradılar. Duru, bir sorunun farklı kaynaklarda farklı ayrıntılarla açıklanabileceğini gördü. Yeni bulduğu açıklamayı önceki notunun yanına ekledi.\n\nHafta sonunda bir arkadaşını da davet etti. Arkadaşı öykü okumayı seviyordu. Aynı rafta aynı kitabı seçmek zorunda olmadıklarını konuştular. Her biri kendi kitabından ilginç bir bölümü anlattı. Böylece tek ziyaret, iki ayrı keşfe dönüştü.\n\nKütüphane, ziyaretçilerin önerilerini küçük kartlarda topluyordu. Duru kartına, kitapların hangi rafta bulunduğunu gösteren daha büyük bir harita çizilmesini önerdi. Önerisini verirken nedenini de yazdı: İlk kez gelen biri renklerin anlamını hemen anlayamayabilirdi.\n\nGörevli, öneriyi diğer kartlarla birlikte panoya astı. Bir başka ziyaretçi büyük yazılı yön işaretleri istedi. Yaşlı bir okuyucu oturma yerlerinin ışığa yakın olmasını önerdi. Kartların hepsi aynı konuyu anlatmıyor, farklı ihtiyaçları görünür kılıyordu.\n\nBir sonraki buluşmada gönüllüler haritayı yeniledi. Renkleri korudular ama her renge bir sözcük ve basit bir şekil eklediler. Böylece yalnız renge bakarak ayırt edemeyen ziyaretçiler de rafları bulabildi. Duru, çiziminin başkalarının fikriyle geliştiğini gördü.\n\nHarita tamamlanınca hemen duvara asılmadı. Gönüllüler önce birkaç kişiden bir kitabın yerini bulmasını istedi. Yolunu şaşıran ziyaretçilere hangi işaretin karışık geldiğini sordular. Yanıtları dinledikten sonra okların yerini ve yazıların büyüklüğünü değiştirdiler.\n\nBu küçük deneme, güzel görünen bir çizimin her zaman kolay kullanılmadığını gösterdi. Haritanın amacı duvarı süslemek değil, ziyaretçinin aradığı yere ulaşmasını sağlamaktı. Gönüllüler bu yüzden kendi beğenilerinden çok, denemede karşılaşılan güçlükleri dikkate aldı.\n\nKütüphanenin kitap kayıtları da yenileniyordu. Bazı başlıklar defterde iki kez yazılmış, bazı kitapların yerleri değişmişti. Görevli, yanlış kayıtları sessizce silmek yerine önce raftaki kitaplarla karşılaştırdı.",
+    "wordCount": 384,
+    "errors": [
+      {
+        "wordIndex": 1,
+        "originalWord": "küçük",
+        "errorWord": "küçkü",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: küçük"
+      },
+      {
+        "wordIndex": 51,
+        "originalWord": "defter",
+        "errorWord": "dfeter",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: defter"
+      },
+      {
+        "wordIndex": 83,
+        "originalWord": "kitaplarda",
+        "errorWord": "kitaplrda",
+        "errorType": "missing_letter",
+        "explanation": "Eksik harf düzeltilmeli. Doğru yazım: kitaplarda"
+      },
+      {
+        "wordIndex": 155,
+        "originalWord": "Yeni",
+        "errorWord": "Ynei",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: Yeni"
+      },
+      {
+        "wordIndex": 366,
+        "originalWord": "defterde",
+        "errorWord": "dfeterde",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: defterde"
+      }
+    ],
+    "source": "../../grouping/v1/texts/library.txt",
+    "sourceSha256": "1f8f8ea6c8de855bd7e6d3e9b82f11f3b8d02668bddc39dbfde9b6503b94abea"
+  },
+  {
+    "id": "462cc6c6-b7de-5bac-8734-3897f43154e8",
+    "exerciseId": "e5d1dcbd-a8f1-5f39-8e15-29169297c17b",
+    "ageGroupId": "10000000-0000-0000-0000-000000000003",
+    "age": "adult",
+    "level": 4,
+    "title": "Dikkatli editör — map — adult S4",
+    "content": "Deniz, evinden parka giderken her zaman aynı yolu kullanıyordu. Bir gün yolun bir bölümü kapandı. Başka bir sokaktan yürümek zorunda kaldı. Dönüşte basit bir harita çizdi. Haritada bildiği yerleri, köşeleri ve geçtiği sokakları işaretledi.\n\nHaritası gerçek sokakların tam ölçüsünü göstermiyordu. Bazı yolları uzun, bazılarını kısa çizmişti. Yine de nerede döneceğini hatırlamasına yardım ediyordu. Deniz, bir çizimin bütün ayrıntıları göstermeden de belirli bir iş için yararlı olabileceğini gördü.\n\nArkadaşı haritaya baktığında fırının işaretini hemen tanıdı. Ancak iki oyun alanını birbirine karıştırdı. Deniz, aynı şekli iki farklı yer için kullanmıştı. İşaretlerin yanına kısa adlar ekledi. Böylece çizim, yalnız kendisinin anlayacağı bir not olmaktan çıktı.\n\nBir sonraki yürüyüşte yolun süresini de tuttu. Hızlı yürüdüğü günle arkadaşlarıyla konuşarak yürüdüğü gün aynı sonucu vermedi. Tek bir süreyi kesin bir ölçü saymadı. Haritanın yanına, sürenin yürüyüş biçimine göre değişebileceğini yazdı.\n\nParkın kapısında başka bir harita vardı. Bu harita yürüyüş yollarını, çeşmeleri ve oturma alanlarını gösteriyordu. Deniz iki haritanın aynı şey olmadığını fark etti. Kendi haritası parka ulaşmaya, kapıdaki harita ise parkın içinde dolaşmaya yardım ediyordu.\n\nParkta küçük bir keşif oyunu hazırladılar. Arkadaşları üç yeri bulacak ve oralardaki işaretleri not edecekti. Oyunda koşmak zorunlu değildi. Deniz, yolların açık olduğundan emin olmak için oyunu önce bir arkadaşıyla yavaşça denedi.\n\nDenemede bir okun yanlış yere baktığı görüldü. Deniz oku düzeltti ama bununla yetinmedi. Yanındaki açıklamayı da yeniden okudu. Bir sorunun yalnız işaretten değil, işaretle yazının birlikte kullanılmasından doğabileceğini fark etti.\n\nKeşif oyunu başladığında herkes aynı yolu seçmedi. Bazıları önce yakındaki yeri, bazıları daha uzak noktayı buldu. Deniz farklı yolları haritaya çizdi. Aynı sonuca ulaşmak için birden fazla uygun yol bulunabileceğini gördüler.\n\nOyundan sonra en hızlı bitireni ilan etmek yerine hangi işaretlerin kolay anlaşıldığını konuştular. Bir arkadaşları büyük ağaç çiziminin işe yaradığını söyledi. Başka biri çeşmenin yerini yazıdan bulmuştu. Harita farklı kişilere farklı ipuçları sunuyordu.\n\nBir ziyaretçi merdiven kullanmadan ilerleyebileceği yolu sordu. Deniz haritasında basamakları göstermediğini fark etti. Yeni çizime merdiven ve eğimli yol işaretleri ekledi. Herkes için aynı yolun uygun olmadığını bilmek, haritayı daha yararlı hâle getirdi.\n\nYol çalışması bitince eski sokak yeniden açıldı. Deniz yeni haritasını hemen atmadı. Farklı yolların başka günlerde de işe yarayabileceğini düşündü. Ancak kapalı sokak işaretini kaldırdı ve haritanın hangi tarihte güncellendiğini yazdı.\n\nMahalledeki gençler, yürüyüş yollarını birlikte kaydetmek istedi. Herkes kendi bildiği köşeleri çizdi. Çizimler birleştirildiğinde bazı adların farklı yazıldığı görüldü.",
+    "wordCount": 378,
+    "errors": [
+      {
+        "wordIndex": 5,
+        "originalWord": "zaman",
+        "errorWord": "zmaan",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: zaman"
+      },
+      {
+        "wordIndex": 44,
+        "originalWord": "kısa",
+        "errorWord": "kıssa",
+        "errorType": "extra_letter",
+        "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: kısa"
+      },
+      {
+        "wordIndex": 112,
+        "originalWord": "arkadaşlarıyla",
+        "errorWord": "arkadşlarıyla",
+        "errorType": "missing_letter",
+        "explanation": "Eksik harf düzeltilmeli. Doğru yazım: arkadaşlarıyla"
+      },
+      {
+        "wordIndex": 217,
+        "originalWord": "yeniden",
+        "errorWord": "yendien",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: yeniden"
+      },
+      {
+        "wordIndex": 308,
+        "originalWord": "Yeni",
+        "errorWord": "Ynei",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: Yeni"
+      }
+    ],
+    "source": "../../grouping/v1/texts/map.txt",
+    "sourceSha256": "0ab7639c5911d2578e4403703ce59e9c4fb107f2fe964e2feee6c817da006345"
+  },
+  {
+    "id": "9bebea1d-e78f-503f-883b-db12eeb56907",
+    "exerciseId": "e5d1dcbd-a8f1-5f39-8e15-29169297c17b",
+    "ageGroupId": "10000000-0000-0000-0000-000000000003",
+    "age": "adult",
+    "level": 4,
+    "title": "Dikkatli editör — archive — adult S4",
+    "content": "Kentteki bir kültür derneği, mahallenin geçmişini anlatan küçük bir dijital arşiv hazırlamak istedi. Amaç bütün kentin tarihini eksiksiz yazmak değil, gönüllülerin paylaşmak istediği sınırlı sayıdaki belgeyi açıklamalarıyla birlikte düzenlemekti. Eski dükkân fotoğrafları, etkinlik afişleri ve birkaç kişisel anlatı başlangıç malzemesi olarak seçildi. Projeyi yürüten Elif, ilk toplantıda arşivin neyi kapsamadığını da konuşmayı önerdi. Ellerindeki belgeler her dönemi ve her topluluğu eşit biçimde temsil etmiyordu. Bu durum sonradan küçük bir dipnotla geçiştirilmeyecekti. Arşivin giriş sayfasında kapsam açıkça belirtilecekti. Katılımcılar bir dosyanın ellerinde bulunmasını, onu herkesle paylaşma yetkisine sahip oldukları anlamında kabul etmedi. Kayıt ile yayın için ayrı kararlar verilmesi gerektiğini kararlaştırdılar.\n\nİlk getirilen fotoğraf eski bir fırının önünü gösteriyordu. Fotoğrafı getiren kişi görüntünün çocukluğunda çekildiğini hatırlıyor, fakat kesin bir yıl söyleyemiyordu. Elif dosyanın adına tahmini bir yıl yazmak yerine tarih bilinmiyor notunu ekledi. Fotoğraftaki tabelanın biçimi başka belgelerle karşılaştırılabilirdi, ancak bu henüz yapılmış bir doğrulama değildi. Kayıtta belgenin sahibi tarafından söylenenler ile ekip tarafından kontrol edilenler ayrı alanlara yazıldı. Böylece bir ziyaretçi bilgilerin aynı kesinlik düzeyinde olmadığını anlayabilecekti. Fotoğrafın güzel görünmesi, tarihi hakkında kesin bir cümle kurulmasını gerektirmiyordu. Daha sonra yeni bir belge bulunursa kayıt güncellenebilecek, değişikliğin dayanağı da açıklanacaktı. Belirsizliği korumak dosyayı kullanılamaz yapmadı; hangi sorunun henüz cevaplanmadığını görünür kıldı.\n\nBelgelerin taranması sırasında ekip aynı görüntünün farklı kopyalarını buldu. Bunlardan biri kenarları kesilmiş, diğeri daha düşük çözünürlüklüydü. İki dosyanın aynı fotoğraf olması, her bakımdan eşdeğer oldukları anlamına gelmiyordu. Kenardaki bir yazı kopyaların yalnız birinde okunabiliyordu. Ekip en ayrıntılı kopyayı sakladı, diğerinin nereden geldiğini de kayıtla ilişkilendirdi. Dosyalar gelişigüzel silinmedi. Ziyaretçiye gösterilecek görüntü ile çalışma için korunan asıl kopya ayrı tutuldu. Parlaklık ayarı yapılan bir görüntüye düzenleme notu eklendi. Görüntünün eksik kısmını hayal ederek tamamlamak veya görünmeyen bir sözcüğü kesinmiş gibi yazmak uygun bulunmadı. Amaç daha çekici bir sahne üretmek değil, elde bulunan belgenin anlaşılmasını sağlamaktı.\n\nArşivde arama yapılabilmesi için konu etiketleri hazırlandı. Bir afiş hem spor etkinliği hem mahalle buluşması başlığıyla ilgiliydi. İlk taslakta yalnız bir konu seçilmesi isteniyordu. Gönüllüler bunun bazı belgeleri dar bir başlık içinde saklayabileceğini fark etti. Birden fazla anlamlı etiket kullanılmasına izin verildi, fakat aynı şey için çok sayıda farklı ad üretmemek amacıyla ortak bir liste tutuldu. Listenin kapalı ve değişmez olması gerekmiyordu. Yeni bir ihtiyaç çıktığında ekleme önerilebilirdi. Önce birkaç kişi aradıkları belgeyi etiketlerle bulmayı denedi. Kullanılmayan veya karışıklık yaratan terimler yeniden gözden geçirildi.",
+    "wordCount": 379,
+    "errors": [
+      {
+        "wordIndex": 7,
+        "originalWord": "küçük",
+        "errorWord": "küçkü",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: küçük"
+      },
+      {
+        "wordIndex": 40,
+        "originalWord": "olarak",
+        "errorWord": "olraak",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: olarak"
+      },
+      {
+        "wordIndex": 138,
+        "originalWord": "ancak",
+        "errorWord": "anack",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: ancak"
+      },
+      {
+        "wordIndex": 179,
+        "originalWord": "yeni",
+        "errorWord": "ynei",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: yeni"
+      },
+      {
+        "wordIndex": 376,
+        "originalWord": "yeniden",
+        "errorWord": "yendien",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: yeniden"
+      }
+    ],
+    "source": "../../comprehension/v1/texts/community-archive.txt",
+    "sourceSha256": "5e8947a4afc100c16cbee52de105ab360490c728c36747b9748bfbec9f92ebda"
+  },
+  {
+    "id": "ac749670-fcc4-557f-8294-54a602485619",
+    "exerciseId": "e5d1dcbd-a8f1-5f39-8e15-29169297c17b",
+    "ageGroupId": "10000000-0000-0000-0000-000000000003",
+    "age": "adult",
+    "level": 4,
+    "title": "Dikkatli editör — repair — adult S4",
+    "content": "Mahalle kültür merkezinde açılan tamir atölyesi, kullanılmayan eşyaları hemen yenileriyle değiştirmek yerine önce sorunlarını anlamak için kurulmuştu. Gönüllüler ilk toplantıda kırık masa lambaları, fermuarı açılan çantalar ve gevşeyen sandalye ayakları hakkında konuştu. Ancak her eşyanın atölyede güvenle onarılabileceğini varsaymadılar. Elektrik bağlantısı bulunan cihazları yalnız yetkin bir uzmanın incelemesi, diğer katılımcıların ise gözlem ve kayıt işleriyle başlaması kararlaştırıldı. Atölyenin amacı herkesi bir günde usta yapmak değil, bakım kararlarının nasıl verildiğini görünür kılmaktı. Selin kayıt masasını, Bora malzeme dolabını düzenlemeyi üstlendi. İlk buluşmada hiçbir elektrikli cihaz çalıştırılmadı. Katılımcılara, bir sorunu tanımak ile onu onarmaya yetkili olmak arasındaki fark açıklandı. Bu ayrım hazırlık listesinin ilk satırına yazıldı.\n\nSelin her eşya için bir kabul kartı hazırladı. Kartta eşyanın türü, sahibinin anlattığı sorun ve inceleme sonucu için ayrı alanlar vardı. Bir çantanın sahibi, fermuarın geçen haftadan beri takıldığını söyledi. Selin bunu doğrudan arızanın nedeni olarak kaydetmedi; sahibinin gözlemi olarak yazdı. İnceleme sırasında kumaşın fermuara sıkıştığı görüldü. Kartın ikinci alanına bu bulgu eklendi. Böylece anlatılan belirti ile kontrol edilerek bulunan neden birbirine karışmadı. Sahiplerin bütün geçmişini veya ev adresini kaydetmek gerekmiyordu. Geri dönüş için istenen iletişim bilgisi ayrı tutuldu ve yalnız görevlilerin erişimine bırakıldı. Katılımcılar hangi bilginin neden toplandığını okuyabiliyordu. Bir eşyanın fotoğrafı çekilecekse bunun için ayrıca izin soruluyordu.\n\nMalzeme dolabı hazırlanırken Bora bütün parçaları dış görünüşlerine göre aynı kutuya koymak istedi. Deneyimli bir gönüllü, birbirine benzeyen vidaların farklı ölçülerde olabileceğini gösterdi. Kutular ölçü ve kullanım bilgisiyle etiketlendi. Etiketi okunmayan bir parçaya tahminle ad verilmedi; kontrol bekleyen bölüme kondu. Sonra herkes dolaptan örnek bir parça bulmayı denedi. Bazı etiketler doğru olsa da rafın arkasında kaldığı için görülmüyordu. Yerleri değiştirildi ve yazılar büyütüldü. Düzenin başarısı yalnız kutuların düzgün görünmesiyle değil, aranan parçanın doğru bulunmasıyla değerlendirildi. İlk düzenleme fotoğrafı saklandı; sonraki değişikliğin nedeni kısa bir notla açıklandı. Böylece yeni gelen bir gönüllü de etiketlerin hangi ihtiyaçtan doğduğunu anlayabilecekti.\n\nİlk üç buluşmanın sonunda ekip onarılan eşya sayısını karşılaştırdı. Birinci buluşmada on, ikinci buluşmada yedi, üçüncüde on iki eşya tamamlanmıştı. Bora üçüncü buluşmanın kesinlikle en verimli gün olduğunu söyledi. Selin kabul kartlarına bakmayı önerdi. İkinci gün gelen eşyalardan birkaçının incelemesi daha uzun sürmüş, bazıları için parça beklenmişti. Üçüncü gün ise çok sayıda küçük kumaş onarımı yapılmıştı. Sayılar gerçekti, fakat işlerin güçlüğünü tek başına göstermiyordu. Ekip toplam sayının yanına işlem türlerini ve bekleyen işleri de ekledi. Karşılaştırmayı kaldırmadılar; hangi soruya cevap verdiğini daralttılar.",
+    "wordCount": 382,
+    "errors": [
+      {
+        "wordIndex": 12,
+        "originalWord": "önce",
+        "errorWord": "öcne",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: önce"
+      },
+      {
+        "wordIndex": 75,
+        "originalWord": "malzeme",
+        "errorWord": "malzmee",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: malzeme"
+      },
+      {
+        "wordIndex": 212,
+        "originalWord": "aynı",
+        "errorWord": "ayynı",
+        "errorType": "extra_letter",
+        "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: aynı"
+      },
+      {
+        "wordIndex": 244,
+        "originalWord": "herkes",
+        "errorWord": "herkse",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: herkes"
+      },
+      {
+        "wordIndex": 352,
+        "originalWord": "küçük",
+        "errorWord": "küçkü",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: küçük"
+      }
+    ],
+    "source": "../../comprehension/v1/texts/repair-workshop.txt",
+    "sourceSha256": "4f11e94e54fd624803f7d4759adf273eaef86a8fa04028446fa2339a4d27e479"
+  },
+  {
+    "id": "9a4ae25c-08ad-50d5-8d85-9b3e19194949",
+    "exerciseId": "913cc8e9-0e66-561d-80ff-f6039de11fbf",
+    "ageGroupId": "10000000-0000-0000-0000-000000000003",
+    "age": "adult",
+    "level": 5,
+    "title": "Dikkatli editör — garden — adult S5",
+    "content": "Okul bahçesinin bir köşesinde boş bir toprak alan vardı. Eren, arkadaşlarıyla birlikte burada küçük bir bitki köşesi kurmayı düşündü. İlk işleri tohum almak olmadı. Önce alanı gezdiler, güneşin nereden geldiğini ve suyun nerede biriktiğini gözlemlediler.\n\nÖğretmenleri, her bitkinin aynı yerde aynı biçimde büyümeyeceğini söyledi. Çocuklar sabah ve öğleden sonra bahçeye baktı. Gölgenin gün içinde yer değiştirdiğini fark ettiler. Bir deftere tarih ve saat yazarak gördüklerini kısa cümlelerle kaydettiler.\n\nBahçenin kenarında kuru yapraklar ve birkaç taş bulunuyordu. Çocuklar toprağı temizlerken küçük canlıları rahatsız etmemeye çalıştı. Buldukları her şeyi çöp saymadılar. Bazı yaprakların ve dalların toprağın üzerinde doğal olarak bulunabileceğini öğretmenlerine sordular.\n\nTohumları seçerken yetişme sürelerini de okudular. Bazı bitkilerin daha çok zaman istediğini gördüler. Küçük alan için birkaç türle başlamaya karar verdiler. Her sıranın başına bir işaret koydular. İşaretlerde bitkinin adı ve ekildiği gün yazıyordu.\n\nİlk sulamada herkes su vermek istedi. Ancak her çocuğun ayrı ayrı sulaması toprağı fazla ıslattı. Ertesi gün görevleri paylaşmaya karar verdiler. Bir kişi suluyor, bir kişi toprağın durumunu gözlüyor, bir kişi de deftere not alıyordu.\n\nBir hafta sonra ilk küçük yapraklar göründü. Eren, bütün tohumların aynı gün filizlenmediğini fark etti. Henüz görünmeyen tohumları hemen başarısız saymadı. Paket üzerindeki bilgilerle defterdeki tarihleri karşılaştırdı. Gözlem yapmanın bazen sabır gerektirdiğini anladı.\n\nÇocuklar ölçüm için basit bir cetvel kullandı. Her bitkinin aynı noktasından ölçmeye çalıştılar. Bir arkadaşları yaprağın ucunu, diğeri gövdenin tepesini ölçünce sonuçlar farklı çıktı. Sonraki ölçümlerde hangi noktaya bakacaklarını birlikte belirlediler.\n\nDefterdeki sayılar tek başına bahçede olanları anlatmıyordu. Yağmur yağdığı günleri ve yaprakların rengini de kaydettiler. Böylece bir değişiklik gördüklerinde önceki günlerin koşullarına bakabiliyorlardı. Notlar, hatırlanan bilgiyi daha düzenli bir gözleme dönüştürüyordu.\n\nBahçeye gelen bir ziyaretçi, hangi sıranın daha hızlı büyüdüğünü sordu. Çocuklar yalnız en uzun bitkiyi göstermedi. Aynı türdeki birkaç bitkiyi karşılaştırdılar. Bir örneğe bakarak bütün sıra hakkında kesin karar vermenin yanıltıcı olabileceğini düşündüler.\n\nBir gün işaretlerden biri kayboldu. O sıradaki bitkilerin adını herkes farklı hatırlıyordu. Defterdeki çizime bakarak sırayı yeniden buldular. Bilginin yalnız bir kişinin belleğinde durmaması, küçük bir karışıklığın daha kolay çözülmesini sağladı.\n\nSulama görevleri haftalık bir çizelgeye yazıldı. Çizelgede yalnız isimler değil, yapılacak işin kısa açıklaması da vardı. Bir kişi gelemediğinde başka biri görevi devralabiliyordu. Görevin nasıl yapılacağını bilmek, görevlinin adını bilmek kadar önemliydi.\n\nÇocuklar farklı sulama miktarlarını denemek istediğinde öğretmenleri önce küçük bir alan seçmelerini önerdi. Bütün bahçeyi aynı anda değiştirmek yerine, karşılaştırabilecekleri birkaç bitki ayırdılar. Ne değiştirdiklerini açıkça yazdılar ve diğer koşulları benzer tutmaya çalıştılar.\n\nDenemenin sonunda bazı bitkiler daha canlı görünüyordu. Ancak çocuklar bunun yalnız sulamadan kaynaklandığını hemen söylemedi. Toprağın ve güneşin de etkili olabileceğini konuştular. Sonucu bir gözlem olarak yazdılar; kesin bir kural gibi sunmadılar.\n\nBahçenin çevresine küçük bir yol yapıldı. Yol, bitkilere basmadan yaklaşmayı kolaylaştırıyordu. Önce çok dar çizilen geçit, sulama kabı taşıyanlara yetmedi. Çocuklar yürüyerek denedi ve yolu biraz genişletti. Çizim, kullanıldığında karşılaşılan duruma göre değişti.",
+    "wordCount": 458,
+    "errors": [
+      {
+        "wordIndex": 10,
+        "originalWord": "arkadaşlarıyla",
+        "errorWord": "arkadşlarıyla",
+        "errorType": "missing_letter",
+        "explanation": "Eksik harf düzeltilmeli. Doğru yazım: arkadaşlarıyla"
+      },
+      {
+        "wordIndex": 48,
+        "originalWord": "sonra",
+        "errorWord": "sorna",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: sonra"
+      },
+      {
+        "wordIndex": 112,
+        "originalWord": "gördüler.",
+        "errorWord": "gödrüler.",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: gördüler."
+      },
+      {
+        "wordIndex": 277,
+        "originalWord": "uzun",
+        "errorWord": "uuzun",
+        "errorType": "extra_letter",
+        "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: uzun"
+      },
+      {
+        "wordIndex": 291,
+        "originalWord": "kesin",
+        "errorWord": "keisn",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: kesin"
+      },
+      {
+        "wordIndex": 313,
+        "originalWord": "yeniden",
+        "errorWord": "yendien",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: yeniden"
+      }
+    ],
+    "source": "../../grouping/v1/texts/garden.txt",
+    "sourceSha256": "0d7ce30627e06b33e7c9ff46cf4804e53fdf3cab138d39819f02146874592a02"
+  },
+  {
+    "id": "15eeb96e-bdd5-5179-85ed-6a9c1b93a931",
+    "exerciseId": "913cc8e9-0e66-561d-80ff-f6039de11fbf",
+    "ageGroupId": "10000000-0000-0000-0000-000000000003",
+    "age": "adult",
+    "level": 5,
+    "title": "Dikkatli editör — library — adult S5",
+    "content": "Mahallenin küçük kütüphanesi, eski bir okul binasının girişindeydi. Pencereler bahçeye bakıyor, rafların arasında geniş bir geçit uzanıyordu. Duru, ilk ziyaretinde kitaplardan önce kapının yanındaki çizimi fark etti. Çizimde her raf farklı bir renkle gösterilmişti.\n\nGörevli, renklerin kitapların yerini bulmayı kolaylaştırdığını anlattı. Mavi raflarda öyküler, yeşil raflarda doğa kitapları vardı. Duru bir defter çıkardı ve aradığı başlığı yazdı. Başlığı unuttuğunda defterine bakmak, bütün rafları yeniden dolaşmaktan daha kolaydı.\n\nBir kitabı seçerken yalnız kapağa bakmadı. Arka kapaktaki kısa tanıtımı okudu, sonra birkaç sayfayı çevirdi. Bazı kitaplarda çizimler, bazılarında uzun bölümler vardı. Duru o gün, merak ettiği kuşları anlatan bir kitap aldı.\n\nKitabın ilk bölümünde parkta gördüğü serçeler anlatılıyordu. Duru, tanıdığı bir ayrıntıya rastlayınca okumayı sürdürdü. Bilmediği bir sözcüğü defterine yazdı. Eve dönerken parkta kısa bir süre durdu ve kitaptaki kuşla gerçek kuşu karşılaştırdı.\n\nErtesi gün defterini kütüphaneye getirdi. Görevliye sorusunu gösterdi ve yanıtı birlikte başka bir kitapta aradılar. Duru, bir sorunun farklı kaynaklarda farklı ayrıntılarla açıklanabileceğini gördü. Yeni bulduğu açıklamayı önceki notunun yanına ekledi.\n\nHafta sonunda bir arkadaşını da davet etti. Arkadaşı öykü okumayı seviyordu. Aynı rafta aynı kitabı seçmek zorunda olmadıklarını konuştular. Her biri kendi kitabından ilginç bir bölümü anlattı. Böylece tek ziyaret, iki ayrı keşfe dönüştü.\n\nKütüphane, ziyaretçilerin önerilerini küçük kartlarda topluyordu. Duru kartına, kitapların hangi rafta bulunduğunu gösteren daha büyük bir harita çizilmesini önerdi. Önerisini verirken nedenini de yazdı: İlk kez gelen biri renklerin anlamını hemen anlayamayabilirdi.\n\nGörevli, öneriyi diğer kartlarla birlikte panoya astı. Bir başka ziyaretçi büyük yazılı yön işaretleri istedi. Yaşlı bir okuyucu oturma yerlerinin ışığa yakın olmasını önerdi. Kartların hepsi aynı konuyu anlatmıyor, farklı ihtiyaçları görünür kılıyordu.\n\nBir sonraki buluşmada gönüllüler haritayı yeniledi. Renkleri korudular ama her renge bir sözcük ve basit bir şekil eklediler. Böylece yalnız renge bakarak ayırt edemeyen ziyaretçiler de rafları bulabildi. Duru, çiziminin başkalarının fikriyle geliştiğini gördü.\n\nHarita tamamlanınca hemen duvara asılmadı. Gönüllüler önce birkaç kişiden bir kitabın yerini bulmasını istedi. Yolunu şaşıran ziyaretçilere hangi işaretin karışık geldiğini sordular. Yanıtları dinledikten sonra okların yerini ve yazıların büyüklüğünü değiştirdiler.\n\nBu küçük deneme, güzel görünen bir çizimin her zaman kolay kullanılmadığını gösterdi. Haritanın amacı duvarı süslemek değil, ziyaretçinin aradığı yere ulaşmasını sağlamaktı. Gönüllüler bu yüzden kendi beğenilerinden çok, denemede karşılaşılan güçlükleri dikkate aldı.\n\nKütüphanenin kitap kayıtları da yenileniyordu. Bazı başlıklar defterde iki kez yazılmış, bazı kitapların yerleri değişmişti. Görevli, yanlış kayıtları sessizce silmek yerine önce raftaki kitaplarla karşılaştırdı. Bir kaydın başka baskıya ait olabileceğini de kontrol etti.\n\nGönüllüler işleri küçük parçalara böldü. Biri başlıkları okuyor, diğeri raf yerlerini yazıyordu. Her bölüm tamamlandığında kısa bir kontrol yapılıyordu. Bütün rafları tek seferde saymaya çalışmak yerine, yapılan işi açıkça işaretlemek karışıklığı azalttı.\n\nDuru, defterindeki notların da benzer biçimde düzenlenebileceğini düşündü. Sorularını ayrı bir sayfada, öğrendiği açıklamaları başka bir sayfada tuttu. Bir açıklamanın yanına hangi kitaptan geldiğini yazdı. Sonradan aynı konuyu ararken kaynağa daha kolay dönebiliyordu.",
+    "wordCount": 458,
+    "errors": [
+      {
+        "wordIndex": 1,
+        "originalWord": "küçük",
+        "errorWord": "küçkü",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: küçük"
+      },
+      {
+        "wordIndex": 61,
+        "originalWord": "bütün",
+        "errorWord": "bütüün",
+        "errorType": "extra_letter",
+        "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: bütün"
+      },
+      {
+        "wordIndex": 97,
+        "originalWord": "kitap",
+        "errorWord": "ktiap",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: kitap"
+      },
+      {
+        "wordIndex": 328,
+        "originalWord": "deneme,",
+        "errorWord": "dneeme,",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: deneme,"
+      },
+      {
+        "wordIndex": 334,
+        "originalWord": "zaman",
+        "errorWord": "zmaan",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: zaman"
+      },
+      {
+        "wordIndex": 366,
+        "originalWord": "defterde",
+        "errorWord": "dfeterde",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: defterde"
+      }
+    ],
+    "source": "../../grouping/v1/texts/library.txt",
+    "sourceSha256": "1f8f8ea6c8de855bd7e6d3e9b82f11f3b8d02668bddc39dbfde9b6503b94abea"
+  },
+  {
+    "id": "20802779-865c-52f4-81d2-5ab3cd072e3f",
+    "exerciseId": "913cc8e9-0e66-561d-80ff-f6039de11fbf",
+    "ageGroupId": "10000000-0000-0000-0000-000000000003",
+    "age": "adult",
+    "level": 5,
+    "title": "Dikkatli editör — map — adult S5",
+    "content": "Deniz, evinden parka giderken her zaman aynı yolu kullanıyordu. Bir gün yolun bir bölümü kapandı. Başka bir sokaktan yürümek zorunda kaldı. Dönüşte basit bir harita çizdi. Haritada bildiği yerleri, köşeleri ve geçtiği sokakları işaretledi.\n\nHaritası gerçek sokakların tam ölçüsünü göstermiyordu. Bazı yolları uzun, bazılarını kısa çizmişti. Yine de nerede döneceğini hatırlamasına yardım ediyordu. Deniz, bir çizimin bütün ayrıntıları göstermeden de belirli bir iş için yararlı olabileceğini gördü.\n\nArkadaşı haritaya baktığında fırının işaretini hemen tanıdı. Ancak iki oyun alanını birbirine karıştırdı. Deniz, aynı şekli iki farklı yer için kullanmıştı. İşaretlerin yanına kısa adlar ekledi. Böylece çizim, yalnız kendisinin anlayacağı bir not olmaktan çıktı.\n\nBir sonraki yürüyüşte yolun süresini de tuttu. Hızlı yürüdüğü günle arkadaşlarıyla konuşarak yürüdüğü gün aynı sonucu vermedi. Tek bir süreyi kesin bir ölçü saymadı. Haritanın yanına, sürenin yürüyüş biçimine göre değişebileceğini yazdı.\n\nParkın kapısında başka bir harita vardı. Bu harita yürüyüş yollarını, çeşmeleri ve oturma alanlarını gösteriyordu. Deniz iki haritanın aynı şey olmadığını fark etti. Kendi haritası parka ulaşmaya, kapıdaki harita ise parkın içinde dolaşmaya yardım ediyordu.\n\nParkta küçük bir keşif oyunu hazırladılar. Arkadaşları üç yeri bulacak ve oralardaki işaretleri not edecekti. Oyunda koşmak zorunlu değildi. Deniz, yolların açık olduğundan emin olmak için oyunu önce bir arkadaşıyla yavaşça denedi.\n\nDenemede bir okun yanlış yere baktığı görüldü. Deniz oku düzeltti ama bununla yetinmedi. Yanındaki açıklamayı da yeniden okudu. Bir sorunun yalnız işaretten değil, işaretle yazının birlikte kullanılmasından doğabileceğini fark etti.\n\nKeşif oyunu başladığında herkes aynı yolu seçmedi. Bazıları önce yakındaki yeri, bazıları daha uzak noktayı buldu. Deniz farklı yolları haritaya çizdi. Aynı sonuca ulaşmak için birden fazla uygun yol bulunabileceğini gördüler.\n\nOyundan sonra en hızlı bitireni ilan etmek yerine hangi işaretlerin kolay anlaşıldığını konuştular. Bir arkadaşları büyük ağaç çiziminin işe yaradığını söyledi. Başka biri çeşmenin yerini yazıdan bulmuştu. Harita farklı kişilere farklı ipuçları sunuyordu.\n\nBir ziyaretçi merdiven kullanmadan ilerleyebileceği yolu sordu. Deniz haritasında basamakları göstermediğini fark etti. Yeni çizime merdiven ve eğimli yol işaretleri ekledi. Herkes için aynı yolun uygun olmadığını bilmek, haritayı daha yararlı hâle getirdi.\n\nYol çalışması bitince eski sokak yeniden açıldı. Deniz yeni haritasını hemen atmadı. Farklı yolların başka günlerde de işe yarayabileceğini düşündü. Ancak kapalı sokak işaretini kaldırdı ve haritanın hangi tarihte güncellendiğini yazdı.\n\nMahalledeki gençler, yürüyüş yollarını birlikte kaydetmek istedi. Herkes kendi bildiği köşeleri çizdi. Çizimler birleştirildiğinde bazı adların farklı yazıldığı görüldü. Aynı yerden söz edip etmediklerini birlikte kontrol ederek ortak bir ad listesi hazırladılar.\n\nGrup, haritaya bütün bilgileri aynı anda koymamaya karar verdi. Ana çizimde yönler ve önemli noktalar bulunacaktı. Ayrıntılar ayrı notlarda gösterilecekti. Çok fazla işaretin, aranan bilgiyi bulmayı zorlaştırabileceğini denemelerde görmüşlerdi.\n\nYürüyüş süresi için birkaç farklı günde kayıt tutuldu. Yağmurlu günlerin, kalabalık saatlerin ve yol çalışmalarının süreyi değiştirdiği görüldü. Sonuçlar tek bir sayı yerine küçük bir aralıkla anlatıldı. Bu aralık, beklenebilecek değişkenliği daha açık gösteriyordu.\n\nBazı sokaklar kısa görünse de yürümek için uygun değildi.",
+    "wordCount": 463,
+    "errors": [
+      {
+        "wordIndex": 5,
+        "originalWord": "zaman",
+        "errorWord": "zmaan",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: zaman"
+      },
+      {
+        "wordIndex": 74,
+        "originalWord": "Ancak",
+        "errorWord": "Anack",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: Ancak"
+      },
+      {
+        "wordIndex": 217,
+        "originalWord": "yeniden",
+        "errorWord": "yendien",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: yeniden"
+      },
+      {
+        "wordIndex": 398,
+        "originalWord": "karar",
+        "errorWord": "kraar",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: karar"
+      },
+      {
+        "wordIndex": 404,
+        "originalWord": "önemli",
+        "errorWord": "önmeli",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: önemli"
+      },
+      {
+        "wordIndex": 423,
+        "originalWord": "birkaç",
+        "errorWord": "birkaaç",
+        "errorType": "extra_letter",
+        "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: birkaç"
+      }
+    ],
+    "source": "../../grouping/v1/texts/map.txt",
+    "sourceSha256": "0ab7639c5911d2578e4403703ce59e9c4fb107f2fe964e2feee6c817da006345"
+  },
+  {
+    "id": "b6788e34-973a-56e4-85fe-155621811707",
+    "exerciseId": "913cc8e9-0e66-561d-80ff-f6039de11fbf",
+    "ageGroupId": "10000000-0000-0000-0000-000000000003",
+    "age": "adult",
+    "level": 5,
+    "title": "Dikkatli editör — archive — adult S5",
+    "content": "Kentteki bir kültür derneği, mahallenin geçmişini anlatan küçük bir dijital arşiv hazırlamak istedi. Amaç bütün kentin tarihini eksiksiz yazmak değil, gönüllülerin paylaşmak istediği sınırlı sayıdaki belgeyi açıklamalarıyla birlikte düzenlemekti. Eski dükkân fotoğrafları, etkinlik afişleri ve birkaç kişisel anlatı başlangıç malzemesi olarak seçildi. Projeyi yürüten Elif, ilk toplantıda arşivin neyi kapsamadığını da konuşmayı önerdi. Ellerindeki belgeler her dönemi ve her topluluğu eşit biçimde temsil etmiyordu. Bu durum sonradan küçük bir dipnotla geçiştirilmeyecekti. Arşivin giriş sayfasında kapsam açıkça belirtilecekti. Katılımcılar bir dosyanın ellerinde bulunmasını, onu herkesle paylaşma yetkisine sahip oldukları anlamında kabul etmedi. Kayıt ile yayın için ayrı kararlar verilmesi gerektiğini kararlaştırdılar.\n\nİlk getirilen fotoğraf eski bir fırının önünü gösteriyordu. Fotoğrafı getiren kişi görüntünün çocukluğunda çekildiğini hatırlıyor, fakat kesin bir yıl söyleyemiyordu. Elif dosyanın adına tahmini bir yıl yazmak yerine tarih bilinmiyor notunu ekledi. Fotoğraftaki tabelanın biçimi başka belgelerle karşılaştırılabilirdi, ancak bu henüz yapılmış bir doğrulama değildi. Kayıtta belgenin sahibi tarafından söylenenler ile ekip tarafından kontrol edilenler ayrı alanlara yazıldı. Böylece bir ziyaretçi bilgilerin aynı kesinlik düzeyinde olmadığını anlayabilecekti. Fotoğrafın güzel görünmesi, tarihi hakkında kesin bir cümle kurulmasını gerektirmiyordu. Daha sonra yeni bir belge bulunursa kayıt güncellenebilecek, değişikliğin dayanağı da açıklanacaktı. Belirsizliği korumak dosyayı kullanılamaz yapmadı; hangi sorunun henüz cevaplanmadığını görünür kıldı.\n\nBelgelerin taranması sırasında ekip aynı görüntünün farklı kopyalarını buldu. Bunlardan biri kenarları kesilmiş, diğeri daha düşük çözünürlüklüydü. İki dosyanın aynı fotoğraf olması, her bakımdan eşdeğer oldukları anlamına gelmiyordu. Kenardaki bir yazı kopyaların yalnız birinde okunabiliyordu. Ekip en ayrıntılı kopyayı sakladı, diğerinin nereden geldiğini de kayıtla ilişkilendirdi. Dosyalar gelişigüzel silinmedi. Ziyaretçiye gösterilecek görüntü ile çalışma için korunan asıl kopya ayrı tutuldu. Parlaklık ayarı yapılan bir görüntüye düzenleme notu eklendi. Görüntünün eksik kısmını hayal ederek tamamlamak veya görünmeyen bir sözcüğü kesinmiş gibi yazmak uygun bulunmadı. Amaç daha çekici bir sahne üretmek değil, elde bulunan belgenin anlaşılmasını sağlamaktı.\n\nArşivde arama yapılabilmesi için konu etiketleri hazırlandı. Bir afiş hem spor etkinliği hem mahalle buluşması başlığıyla ilgiliydi. İlk taslakta yalnız bir konu seçilmesi isteniyordu. Gönüllüler bunun bazı belgeleri dar bir başlık içinde saklayabileceğini fark etti. Birden fazla anlamlı etiket kullanılmasına izin verildi, fakat aynı şey için çok sayıda farklı ad üretmemek amacıyla ortak bir liste tutuldu. Listenin kapalı ve değişmez olması gerekmiyordu. Yeni bir ihtiyaç çıktığında ekleme önerilebilirdi. Önce birkaç kişi aradıkları belgeyi etiketlerle bulmayı denedi. Kullanılmayan veya karışıklık yaratan terimler yeniden gözden geçirildi. Etiket sayısının artması kendi başına başarı değildi; aranan belgenin doğru bağlamla bulunmasına yardımcı olması önemliydi.\n\nKişisel anlatıların eklenmesi proje için yeni sorular doğurdu. Aynı meydandaki bir etkinliği iki kişi farklı biçimde hatırlıyordu. Ekip hangisinin daha canlı anlattığına bakarak birini doğru ilan etmedi. Her anlatı, anlatanın hatırası olarak ve paylaşım izni kapsamında kaydedildi. Ayrıntılar doğrulanmadığında böyle olduğu belirtildi. Bir anlatının başka bir kişiden söz etmesi de otomatik yayın izni sayılmadı. Gerekli izin bulunmayan bölümler kamuya açık metne alınmadı.",
+    "wordCount": 456,
+    "errors": [
+      {
+        "wordIndex": 7,
+        "originalWord": "küçük",
+        "errorWord": "küçkü",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: küçük"
+      },
+      {
+        "wordIndex": 46,
+        "originalWord": "toplantıda",
+        "errorWord": "toplantdıa",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: toplantıda"
+      },
+      {
+        "wordIndex": 162,
+        "originalWord": "aynı",
+        "errorWord": "ayynı",
+        "errorType": "extra_letter",
+        "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: aynı"
+      },
+      {
+        "wordIndex": 363,
+        "originalWord": "Önce",
+        "errorWord": "Öcne",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: Önce"
+      },
+      {
+        "wordIndex": 376,
+        "originalWord": "yeniden",
+        "errorWord": "yendien",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: yeniden"
+      },
+      {
+        "wordIndex": 382,
+        "originalWord": "kendi",
+        "errorWord": "kendii",
+        "errorType": "extra_letter",
+        "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: kendi"
+      }
+    ],
+    "source": "../../comprehension/v1/texts/community-archive.txt",
+    "sourceSha256": "5e8947a4afc100c16cbee52de105ab360490c728c36747b9748bfbec9f92ebda"
+  },
+  {
+    "id": "37279fff-9963-5c10-86db-2e3862a9155d",
+    "exerciseId": "913cc8e9-0e66-561d-80ff-f6039de11fbf",
+    "ageGroupId": "10000000-0000-0000-0000-000000000003",
+    "age": "adult",
+    "level": 5,
+    "title": "Dikkatli editör — repair — adult S5",
+    "content": "Mahalle kültür merkezinde açılan tamir atölyesi, kullanılmayan eşyaları hemen yenileriyle değiştirmek yerine önce sorunlarını anlamak için kurulmuştu. Gönüllüler ilk toplantıda kırık masa lambaları, fermuarı açılan çantalar ve gevşeyen sandalye ayakları hakkında konuştu. Ancak her eşyanın atölyede güvenle onarılabileceğini varsaymadılar. Elektrik bağlantısı bulunan cihazları yalnız yetkin bir uzmanın incelemesi, diğer katılımcıların ise gözlem ve kayıt işleriyle başlaması kararlaştırıldı. Atölyenin amacı herkesi bir günde usta yapmak değil, bakım kararlarının nasıl verildiğini görünür kılmaktı. Selin kayıt masasını, Bora malzeme dolabını düzenlemeyi üstlendi. İlk buluşmada hiçbir elektrikli cihaz çalıştırılmadı. Katılımcılara, bir sorunu tanımak ile onu onarmaya yetkili olmak arasındaki fark açıklandı. Bu ayrım hazırlık listesinin ilk satırına yazıldı.\n\nSelin her eşya için bir kabul kartı hazırladı. Kartta eşyanın türü, sahibinin anlattığı sorun ve inceleme sonucu için ayrı alanlar vardı. Bir çantanın sahibi, fermuarın geçen haftadan beri takıldığını söyledi. Selin bunu doğrudan arızanın nedeni olarak kaydetmedi; sahibinin gözlemi olarak yazdı. İnceleme sırasında kumaşın fermuara sıkıştığı görüldü. Kartın ikinci alanına bu bulgu eklendi. Böylece anlatılan belirti ile kontrol edilerek bulunan neden birbirine karışmadı. Sahiplerin bütün geçmişini veya ev adresini kaydetmek gerekmiyordu. Geri dönüş için istenen iletişim bilgisi ayrı tutuldu ve yalnız görevlilerin erişimine bırakıldı. Katılımcılar hangi bilginin neden toplandığını okuyabiliyordu. Bir eşyanın fotoğrafı çekilecekse bunun için ayrıca izin soruluyordu.\n\nMalzeme dolabı hazırlanırken Bora bütün parçaları dış görünüşlerine göre aynı kutuya koymak istedi. Deneyimli bir gönüllü, birbirine benzeyen vidaların farklı ölçülerde olabileceğini gösterdi. Kutular ölçü ve kullanım bilgisiyle etiketlendi. Etiketi okunmayan bir parçaya tahminle ad verilmedi; kontrol bekleyen bölüme kondu. Sonra herkes dolaptan örnek bir parça bulmayı denedi. Bazı etiketler doğru olsa da rafın arkasında kaldığı için görülmüyordu. Yerleri değiştirildi ve yazılar büyütüldü. Düzenin başarısı yalnız kutuların düzgün görünmesiyle değil, aranan parçanın doğru bulunmasıyla değerlendirildi. İlk düzenleme fotoğrafı saklandı; sonraki değişikliğin nedeni kısa bir notla açıklandı. Böylece yeni gelen bir gönüllü de etiketlerin hangi ihtiyaçtan doğduğunu anlayabilecekti.\n\nİlk üç buluşmanın sonunda ekip onarılan eşya sayısını karşılaştırdı. Birinci buluşmada on, ikinci buluşmada yedi, üçüncüde on iki eşya tamamlanmıştı. Bora üçüncü buluşmanın kesinlikle en verimli gün olduğunu söyledi. Selin kabul kartlarına bakmayı önerdi. İkinci gün gelen eşyalardan birkaçının incelemesi daha uzun sürmüş, bazıları için parça beklenmişti. Üçüncü gün ise çok sayıda küçük kumaş onarımı yapılmıştı. Sayılar gerçekti, fakat işlerin güçlüğünü tek başına göstermiyordu. Ekip toplam sayının yanına işlem türlerini ve bekleyen işleri de ekledi. Karşılaştırmayı kaldırmadılar; hangi soruya cevap verdiğini daralttılar. Artık tablo, gönüllülerin becerisini sıralayan bir puan değil, farklı günlerde hangi işlerin yapıldığını anlatan bir kayıt olarak kullanılıyordu.\n\nBir katılımcı eski bir lambasının onarılmasını istediğinde güvenlik sınırı yeniden gündeme geldi. Uzman o gün atölyede değildi. Gönüllüler lambayı denemek yerine kabul kartını doldurup inceleme bekleyen bölüme kaldırdı. Lambanın o gün geri verilmemesi katılımcıyı üzdü, fakat neden açıkça anlatıldı. Beklemek, eşyanın önemsiz görüldüğü anlamına gelmiyordu. Uzman değerlendirmesi olmadan yapılan bir deneme başka riskler doğurabilirdi.",
+    "wordCount": 454,
+    "errors": [
+      {
+        "wordIndex": 12,
+        "originalWord": "önce",
+        "errorWord": "öcne",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: önce"
+      },
+      {
+        "wordIndex": 139,
+        "originalWord": "olarak",
+        "errorWord": "olraak",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: olarak"
+      },
+      {
+        "wordIndex": 243,
+        "originalWord": "Sonra",
+        "errorWord": "Sorna",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: Sonra"
+      },
+      {
+        "wordIndex": 352,
+        "originalWord": "küçük",
+        "errorWord": "küçkü",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: küçük"
+      },
+      {
+        "wordIndex": 409,
+        "originalWord": "yeniden",
+        "errorWord": "yendien",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: yeniden"
+      },
+      {
+        "wordIndex": 450,
+        "originalWord": "deneme",
+        "errorWord": "dneeme",
+        "errorType": "transposition",
+        "explanation": "Harflerin sırası düzeltilmeli. Doğru yazım: deneme"
+      }
+    ],
+    "source": "../../comprehension/v1/texts/repair-workshop.txt",
+    "sourceSha256": "4f11e94e54fd624803f7d4759adf273eaef86a8fa04028446fa2339a4d27e479"
+  }
+]$content$::jsonb) s;
+DO $$ BEGIN
+  IF (SELECT count(*) FROM proofreading_settings)<>8 OR (SELECT count(DISTINCT id) FROM proofreading_settings)<>8
+    OR (SELECT count(*) FROM proofreading_content)<>40 OR (SELECT count(DISTINCT id) FROM proofreading_content)<>40
+    THEN RAISE EXCEPTION 'Proofreading payload incomplete'; END IF;
+  IF (SELECT count(*) FROM speed_reading.exercise_types WHERE name='ErrorAnalysis' AND engine_type='error_analysis'
+    AND is_active AND NOT is_deleted)<>1 THEN RAISE EXCEPTION 'Proofreading type missing or ambiguous'; END IF;
+  IF EXISTS(SELECT 1 FROM proofreading_settings s LEFT JOIN speed_reading.exercises e ON e.id=s.id
+    LEFT JOIN speed_reading.exercise_types t ON t.id=e.exercise_type_id
+    WHERE e.id IS NULL OR t.name IS DISTINCT FROM 'ErrorAnalysis' OR t.engine_type IS DISTINCT FROM 'error_analysis'
+      OR NOT e.is_active OR e.is_deleted OR e.target_age_group_id IS DISTINCT FROM s.age_id
+      OR e.difficulty_level IS DISTINCT FROM s.level
+      OR (e.configuration_json IS DISTINCT FROM s.old_config AND e.configuration_json IS DISTINCT FROM s.config))
+    THEN RAISE EXCEPTION 'Proofreading baseline changed'; END IF;
+  IF EXISTS(SELECT 1 FROM proofreading_settings GROUP BY age_id HAVING count(*)<>2 OR min(level)<>4 OR max(level)<>5)
+    OR (SELECT count(DISTINCT age_id) FROM proofreading_settings)<>4
+    OR EXISTS(SELECT 1 FROM proofreading_settings WHERE config->>'engineType' IS DISTINCT FROM 'error_analysis'
+      OR config#>>'{engineConfig,content,source}' IS DISTINCT FROM 'reading_text'
+      OR config#>'{engineConfig,errorCount}' IS DISTINCT FROM old_config#>'{engineConfig,errorCount}'
+      OR config#>'{engineConfig,timeLimit}' IS DISTINCT FROM old_config#>'{engineConfig,timeLimit}')
+    THEN RAISE EXCEPTION 'Proofreading cells or preserved limits invalid'; END IF;
+  IF EXISTS(SELECT 1 FROM proofreading_content c LEFT JOIN proofreading_settings s ON s.id=c.exercise_id
+    WHERE s.id IS NULL OR c.age_id IS DISTINCT FROM s.age_id OR c.level IS DISTINCT FROM s.level
+      OR c.content IS NULL OR btrim(c.content)='' OR c.title IS NULL OR btrim(c.title)=''
+      OR cardinality(regexp_split_to_array(btrim(c.content), E'\\s+')) IS DISTINCT FROM c.word_count
+      OR c.word_count NOT BETWEEN (s.config#>>'{engineConfig,content,minWordCount}')::int
+        AND (s.config#>>'{engineConfig,content,maxWordCount}')::int
+      OR c.errors IS DISTINCT FROM s.config->'engineConfig'->'errorsByTextId'->c.id::text
+      OR jsonb_array_length(c.errors)<>(s.config#>>'{engineConfig,errorCount}')::int)
+    THEN RAISE EXCEPTION 'Proofreading content or target count mismatch'; END IF;
+  IF EXISTS(SELECT 1 FROM proofreading_settings s LEFT JOIN proofreading_content c ON c.exercise_id=s.id
+    GROUP BY s.id,s.config HAVING count(c.id)<>5 OR count(DISTINCT c.content)<>5
+      OR (SELECT count(*) FROM jsonb_object_keys(s.config#>'{engineConfig,errorsByTextId}'))<>5)
+    THEN RAISE EXCEPTION 'Proofreading needs five distinct texts per exercise'; END IF;
+  IF EXISTS(SELECT 1 FROM proofreading_content c CROSS JOIN LATERAL jsonb_array_elements(c.errors) error
+    WHERE (error->>'wordIndex')::int NOT BETWEEN 0 AND c.word_count-1
+      OR (regexp_split_to_array(btrim(c.content), E'\\s+'))[(error->>'wordIndex')::int+1] IS DISTINCT FROM error->>'originalWord'
+      OR btrim(coalesce(error->>'explanation',''))='' OR btrim(coalesce(error->>'errorWord',''))=''
+      OR error->>'errorWord'=error->>'originalWord' OR error->>'errorWord' ~ '\s'
+      OR error->>'errorType' NOT IN ('transposition','missing_letter','extra_letter'))
+    OR EXISTS(SELECT 1 FROM proofreading_content c CROSS JOIN LATERAL jsonb_array_elements(c.errors) error
+      GROUP BY c.id HAVING count(DISTINCT error->>'wordIndex')<>count(*))
+    THEN RAISE EXCEPTION 'Proofreading annotations invalid'; END IF;
+  IF EXISTS(SELECT 1 FROM proofreading_content c JOIN speed_reading.reading_texts t ON t.id=c.id
+    WHERE t.content IS DISTINCT FROM c.content OR t.title IS DISTINCT FROM c.title OR t.word_count IS DISTINCT FROM c.word_count
+      OR t.exercise_id IS DISTINCT FROM c.exercise_id OR t.target_age_group_id IS DISTINCT FROM c.age_id
+      OR t.difficulty_level IS DISTINCT FROM c.level OR t.category IS DISTINCT FROM 'error-analysis'
+      OR t.language IS DISTINCT FROM 'tr' OR NOT t.is_active OR t.is_deleted)
+    OR EXISTS(SELECT 1 FROM proofreading_content c JOIN speed_reading.reading_questions q ON q.reading_text_id=c.id WHERE NOT q.is_deleted)
+    THEN RAISE EXCEPTION 'Proofreading text collision or later edit'; END IF;
+END $$;
+UPDATE speed_reading.exercises e SET configuration_json=s.config,updated_at=now(),updated_by='error-analysis-v1',version=e.version+1
+FROM proofreading_settings s WHERE e.id=s.id AND e.configuration_json IS DISTINCT FROM s.config;
+INSERT INTO speed_reading.reading_texts(id,title,content,word_count,category,difficulty_level,target_age_group_id,
+  language,is_active,tags,recommended_min_level,recommended_max_level,average_comprehension_score,times_read,
+  average_reading_time_seconds,exercise_id,created_at,created_by,version,is_deleted)
+SELECT id,title,content,word_count,'error-analysis',level,age_id,'tr',true,'error-analysis-v1;prepared-targets',level,level,
+  0,0,0,exercise_id,now(),'error-analysis-v1',1,false FROM proofreading_content ON CONFLICT(id) DO NOTHING;
+COMMIT;

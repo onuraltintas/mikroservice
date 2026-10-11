@@ -78,7 +78,7 @@ Başlangıç temposu 180, 210, 240, 270, 300 kelime/dk. İlk 7 çalışma günü
 | Anlam Gruplarıyla Okuma | Chunking | `{"content":{"source":"reading_text"},"mode":"chunking","pacer":{"speedWpm":270,"chunkSize":4},"readingPurpose":"practice"}` |
 | Metin Üzerinde Düşün | Comprehension | `{"content":{"source":"reading_text"},"mode":"comprehension","readingPurpose":"evaluation"}` |
 | Metni Anla | Comprehension | `{"content":{"source":"reading_text"},"mode":"comprehension","readingPurpose":"evaluation"}` |
-| Eksik Harfi Bul | ErrorAnalysis | `{"content":{"source":"reading_text"},"errorCount":5,"timeLimit":300}` |
+| Eksik Harfi Bul | ErrorAnalysis | 300–380 kelime; 5 hazırlanmış hata; 300 sn; 5 metin |
 | Hareketi Takip Et | EyeTracking | `{"mode":"tracking","path":{"type":"infinity8"},"timing":{"durationSeconds":60,"speedMs":2500},"content":{"type":"dot","pointSize":36}}` |
 | Noktaya Odaklan | Fixation | `{"mode":"fixation","timing":{"holdMs":750,"durationSeconds":45},"content":{"type":"letter","points":5,"peripheralCount":1,"pointSize":44}}` |
 | Konum Belleği | Focus | `{"mode":"position","nLevel":3,"totalSteps":56,"speedMs":3000,"gridSize":3}` |
@@ -101,7 +101,7 @@ Başlangıç temposu 180, 210, 240, 270, 300 kelime/dk. İlk 7 çalışma günü
 |---|---|---|
 | Metin Üzerinde Düşün | Comprehension | `{"content":{"source":"reading_text"},"mode":"comprehension","readingPurpose":"evaluation"}` |
 | Metni Anla | Comprehension | `{"content":{"source":"reading_text"},"mode":"comprehension","readingPurpose":"evaluation"}` |
-| Eksik Harfi Bul | ErrorAnalysis | `{"content":{"source":"reading_text"},"errorCount":6,"timeLimit":300}` |
+| Eksik Harfi Bul | ErrorAnalysis | 380–460 kelime; 6 hazırlanmış hata; 300 sn; 5 metin |
 | Süreli Metin ve Sorular | ExamSimulation | `{"content":{"source":"reading_text"},"readingPurpose":"evaluation","timing":{"questionTimeSeconds":60}}` |
 | Hareketi Takip Et | EyeTracking | `{"mode":"tracking","path":{"type":"infinity8"},"timing":{"durationSeconds":60,"speedMs":2300},"content":{"type":"dot","pointSize":36}}` |
 | Noktaya Odaklan | Fixation | `{"mode":"fixation","timing":{"holdMs":700,"durationSeconds":45},"content":{"type":"letter","points":5,"peripheralCount":1,"pointSize":44}}` |
