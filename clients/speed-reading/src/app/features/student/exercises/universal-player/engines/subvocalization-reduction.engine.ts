@@ -158,7 +158,7 @@ export class SubvocalizationReductionEngine implements BaseEngine {
         }
         let size = Math.min(this.config.chunkSize, this.words.length - start);
         for (let i = 1; i < size; i++) {
-            if (this.lineBreakIndices.has(start + i)) { size = i; break; }
+            if (this.lineBreakIndices.has(start + i) || /[.!?…]["'”’»)]*$/u.test(this.words[start + i - 1])) { size = i; break; }
         }
         this.actualChunkSize = size;
         this.currentWordIndex = start + size - 1;
@@ -174,6 +174,7 @@ export class SubvocalizationReductionEngine implements BaseEngine {
     }
 
     private startMetronome(): void {
+        if (this.metronomeInterval) clearInterval(this.metronomeInterval);
         const msPerBeat = Math.round(60000 / this.config.metronomeBpm);
 
         // Start at 1
@@ -235,6 +236,8 @@ export class SubvocalizationReductionEngine implements BaseEngine {
         if (this.phase === 'reading') {
             this.remainingChunkMs = Math.max(0, this.chunkDeadline - Date.now());
             clearTimeout(this.wordTimeout);
+            if (this.metronomeInterval) clearInterval(this.metronomeInterval);
+            this.metronomeInterval = null;
         }
         this.callbacks.onPause();
         this.callbacks.onStateChange({ ...this.state });
@@ -249,7 +252,10 @@ export class SubvocalizationReductionEngine implements BaseEngine {
         if (this.phase === 'reading') this.readingStartTime += pauseDuration;
 
         this.state.isPaused = false;
-        if (this.phase === 'reading') this.scheduleChunk(this.remainingChunkMs);
+        if (this.phase === 'reading') {
+            this.scheduleChunk(this.remainingChunkMs);
+            if (this.config.metronomeEnabled) this.startMetronome();
+        }
         this.callbacks.onResume();
         this.callbacks.onStateChange({ ...this.state });
     }

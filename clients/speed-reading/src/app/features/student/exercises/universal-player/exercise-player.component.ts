@@ -791,7 +791,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
           this.backendSessionConfig = this.createPreviewReadingConfig(readingText);
           this.comprehensionQuestions = this.backendSessionConfig['questions'] as any[];
           const requiredQuestions = this.parsedConfig?.['engineType'] === 'text_fade' && this.previewRequiresQuestions() ? 4
-            : ['reading_comprehension', 'regression_reduction'].includes(this.parsedConfig?.['engineType'] || '') && this.previewRequiresQuestions()
+            : ['reading_comprehension', 'regression_reduction', 'subvocalization_reduction'].includes(this.parsedConfig?.['engineType'] || '') && this.previewRequiresQuestions()
             ? this.parsedConfig?.['engineConfig']?.['content']?.questionCount ?? this.parsedConfig?.['content']?.questionCount : undefined;
           if (requiredQuestions && this.comprehensionQuestions.length < requiredQuestions) { retry(); return; }
           if (requiredQuestions) {
@@ -874,7 +874,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   private previewTextMatchesLength(wordCount: number): boolean {
     if (this.exercise?.exerciseTypeName?.toLowerCase() !== 'speedreading'
       && this.exercise?.exerciseTypeName?.toLowerCase() !== 'chunking'
-      && !['reading_comprehension', 'text_fade', 'scanning', 'scan_find', 'regression_reduction'].includes(this.parsedConfig?.['engineType'] || '')) return true;
+      && !['reading_comprehension', 'text_fade', 'scanning', 'scan_find', 'regression_reduction', 'subvocalization_reduction'].includes(this.parsedConfig?.['engineType'] || '')) return true;
     const content = this.parsedConfig?.['engineConfig']?.['content'] || this.parsedConfig?.['content'] || {};
     const minimum = Number(content.minWordCount) || 0;
     const maximum = Number(content.maxWordCount) || 0;
@@ -945,7 +945,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       : Array.isArray(readingText?.questions) ? readingText.questions : [];
     const questions = this.parsedConfig?.['engineType'] === 'skimming'
       ? availableQuestions.filter((question: any) => Number(question.type ?? question.questionType ?? question.QuestionType) === 1)
-      : ['reading_comprehension', 'text_fade', 'regression_reduction'].includes(this.parsedConfig?.['engineType'] || '')
+      : ['reading_comprehension', 'text_fade', 'regression_reduction', 'subvocalization_reduction'].includes(this.parsedConfig?.['engineType'] || '')
           && this.previewRequiresQuestions()
           && (this.parsedConfig?.['engineType'] === 'text_fade'
             || (this.parsedConfig?.['engineConfig']?.['content']?.questionCount ?? this.parsedConfig?.['content']?.questionCount))

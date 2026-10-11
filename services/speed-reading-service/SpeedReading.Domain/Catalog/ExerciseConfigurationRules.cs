@@ -504,6 +504,21 @@ public static class ExerciseConfigurationRules
         ValidateOptionalIntRange(config, "targetWpm", 20, 1_500, "Hedef WPM");
         ValidateOptionalIntRange(config, "chunkSize", 1, 10, "Okuma öbek boyutu");
 
+        if (engineType == "subvocalization_reduction")
+        {
+            ValidateOptionalObject(config, "content", "İç Ses Azaltma metni");
+            if (TryGetObject(config, "content") is { } content)
+            {
+                ValidateOptionalIntRange(content, "questionCount", 5, 5, "İç Ses Azaltma soru sayısı");
+                ValidateOptionalIntRange(content, "minWordCount", 1, 100_000, "Minimum kelime sayısı");
+                ValidateOptionalIntRange(content, "maxWordCount", 1, 100_000, "Maksimum kelime sayısı");
+                var minimum = ReadInts(content, "minWordCount").FirstOrDefault();
+                var maximum = ReadInts(content, "maxWordCount").FirstOrDefault();
+                if (minimum > 0 && maximum > 0 && minimum > maximum)
+                    throw new ArgumentException("Minimum kelime sayısı maksimumdan büyük olamaz.");
+            }
+        }
+
         if (engineType == "regression_reduction")
         {
             ValidateOptionalIntRange(config, "visibleHistoryWords", 0, 2, "Görünür geçmiş kelime sayısı");

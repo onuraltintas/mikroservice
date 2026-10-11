@@ -147,6 +147,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                 ? ReadObject(explicitConfig, "engineConfig") : explicitConfig) : [];
             var usesTextBand = isFreeText || isScanText || IsEngineType(exerciseEngineType, "reading_comprehension")
                 || IsEngineType(exerciseEngineType, "regression_reduction")
+                || IsEngineType(exerciseEngineType, "subvocalization_reduction")
                 || exerciseTypeName.Equals("SpeedReading", StringComparison.OrdinalIgnoreCase)
                 || exerciseTypeName.Equals("Chunking", StringComparison.OrdinalIgnoreCase);
             var minimumWords = usesTextBand ? ReadPositiveInt(explicitContent, "minWordCount") ?? ReadPositiveInt(ReadObject(explicitConfig, "content"), "minWordCount") ?? 0 : 0;
@@ -343,6 +344,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                     ? ReadObject(parsedConfiguration, "engineConfig") : parsedConfiguration) : [];
                 var usesTextBand = isFreeReading || isComprehension || isScanText || normalizedEngineType == "text_fade"
                     || normalizedEngineType == "regression_reduction"
+                    || normalizedEngineType == "subvocalization_reduction"
                     || exerciseTypeName.Equals("SpeedReading", StringComparison.OrdinalIgnoreCase)
                     || exerciseTypeName.Equals("Chunking", StringComparison.OrdinalIgnoreCase);
                 var comprehensionQuestionCount = normalizedEngineType == "text_fade"
@@ -350,7 +352,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                         ReadString(ReadObject(parsedConfiguration, "engineConfig"), "readingPurpose")
                             ?? ReadString(parsedConfiguration, "readingPurpose"), request.AssessmentAttemptId.HasValue) == "evaluation" ? 4 : isComprehension
                     ? ReadPositiveInt(freeContent, "questionCount") ?? ReadPositiveInt(ReadObject(parsedConfiguration, "content"), "questionCount") ?? 0
-                    : normalizedEngineType == "regression_reduction"
+                    : normalizedEngineType is "regression_reduction" or "subvocalization_reduction"
                         && ExerciseConfigurationRules.ResolveReadingPurpose(normalizedEngineType,
                             ReadString(ReadObject(parsedConfiguration, "engineConfig"), "readingPurpose")
                                 ?? ReadString(parsedConfiguration, "readingPurpose"), request.AssessmentAttemptId.HasValue) == "evaluation"
@@ -1573,6 +1575,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
 
         if (IsEngineType(exerciseEngineType, "reading_comprehension")
             || (IsEngineType(exerciseEngineType, "regression_reduction") && state.ReadingPurpose == "evaluation")
+            || (IsEngineType(exerciseEngineType, "subvocalization_reduction") && state.ReadingPurpose == "evaluation")
             || (IsTextFade(state) && state.ReadingPurpose == "evaluation"))
         {
             var count = IsTextFade(state) ? 4 : ReadPositiveInt(ReadObject(effectiveConfig, "content"), "questionCount")
