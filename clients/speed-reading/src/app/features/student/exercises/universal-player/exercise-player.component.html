@@ -45,8 +45,11 @@
             <div class="card-body-content">
                 <p class="description">{{ exercise?.description }}</p>
                 <p class="description" *ngIf="canPracticeFocus">
-                    {{ asFocusEngine?.nLevel }} adım önceki konum aynıysa eşleşme düğmesine basın;
-                    farklıysa bekleyin. N düzeyi çalışma boyunca değişmez.
+                    <span *ngIf="!asFocusEngine?.isDualMode">{{ asFocusEngine?.nLevel }} adım önceki
+                        {{ asFocusEngine?.isWordMode ? 'kelime' : 'konum' }} aynıysa eşleşme düğmesine basın; farklıysa bekleyin.</span>
+                    <span *ngIf="asFocusEngine?.isDualMode">{{ asFocusEngine?.nLevel }} adım önceki konum ve kelimeyi
+                        ayrı ayrı karşılaştırın; eşleşen kanalın düğmesine basın.</span>
+                    N düzeyi çalışma boyunca değişmez.
                     <span *ngIf="focusPracticeCompleted">Alıştırma tamamlandı. Hazırsanız asıl egzersize başlayın.</span>
                 </p>
                 <p class="description" *ngIf="engine.engineType === 'subvocalization_reduction' && isSubvocMetronomeEnabled()">

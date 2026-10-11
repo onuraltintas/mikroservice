@@ -5,15 +5,27 @@ namespace SpeedReading.Application.UnitTests;
 public sealed class FocusDurationRulesTests
 {
     [Theory]
-    [InlineData(3000,32,2)] [InlineData(2800,40,2)] [InlineData(2600,48,3)]
-    [InlineData(3000,48,3)] [InlineData(2800,56,3)] [InlineData(2500,48,2)]
-    [InlineData(2500,56,3)] [InlineData(3000,56,3)] [InlineData(2900,48,3)]
-    [InlineData(2600,56,3)] [InlineData(2700,64,3)] [InlineData(2700,48,3)]
-    [InlineData(2700,56,3)] [InlineData(3100,56,3)] [InlineData(2800,64,3)]
+    [InlineData(3000, 32, 2)]
+    [InlineData(2800, 40, 2)]
+    [InlineData(2600, 48, 3)]
+    [InlineData(3000, 48, 3)]
+    [InlineData(2800, 56, 3)]
+    [InlineData(2500, 48, 2)]
+    [InlineData(2500, 56, 3)]
+    [InlineData(3000, 56, 3)]
+    [InlineData(2900, 48, 3)]
+    [InlineData(2600, 56, 3)]
+    [InlineData(2700, 64, 3)]
+    [InlineData(2700, 48, 3)]
+    [InlineData(2700, 56, 3)]
+    [InlineData(3100, 56, 3)]
+    [InlineData(2800, 64, 3)]
     public void Focus_duration_uses_trial_count_and_cadence_rounded_up(int speedMs, int steps, int minutes)
     {
-        var config = System.Text.Json.JsonSerializer.Serialize(new {
-            engineType = "focus", engineConfig = new { speedMs, totalSteps = steps }
+        var config = System.Text.Json.JsonSerializer.Serialize(new
+        {
+            engineType = "focus",
+            engineConfig = new { speedMs, totalSteps = steps }
         });
         Assert.Equal(minutes, SpeedReadingDailyProgressRules.EstimateFocusDurationMinutes(config));
     }
