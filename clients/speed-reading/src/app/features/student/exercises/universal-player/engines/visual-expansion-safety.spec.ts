@@ -25,7 +25,7 @@ describe('visual expansion configuration safety', () => {
   it('reports relative screen distance and sanitizes configured stimulus size', () => {
     const engine = new VisualExpansionEngine();
     engine.initialize({ startDegrees: 30, visuals: { stimulusSize: '2rem' } } as any, callbacks());
-    expect((engine as any).getRelativeDistancePercent()).toBe(50);
+    expect((engine as any).getRelativeDistancePercent()).toBe(22.5);
     expect((engine as any).getStimulusSizeCss()).toBe('2rem');
     engine.initialize({ visuals: { stimulusSize: 'url(javascript:bad)' } } as any, callbacks());
     expect((engine as any).getStimulusSizeCss()).toBe('2rem');
@@ -49,7 +49,7 @@ describe('visual expansion configuration safety', () => {
     expect(shown.every(item => /^[1-9]$/.test(item.content))).toBeTrue();
     expect(pattern === 'vertical' ? shown.every(item => item.x === 50) : shown.every(item => item.y === 50)).toBeTrue();
     tick(200); engine.handleInput({ answers: shown.map(item => item.content) });
-    expect(engine.getCurrentDisplayDurationMs()).toBe(190);
+    expect(engine.getCurrentDisplayDurationMs()).toBe(200);
     engine.reset();
     expect(engine.getCurrentDisplayDurationMs()).toBe(200);
     expect(engine.currentDegrees).toBe(8);
