@@ -9,6 +9,14 @@ import { TestBed } from '@angular/core/testing';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 
 describe('Custom preview settings safety', () => {
+  it('supports the regression masking history window without changing the catalog', () => {
+    const config = { engineType: 'regression_reduction', engineConfig: {
+      targetWpm: 220, maskingType: 'trailing', visibleHistoryWords: 1 } };
+    expect(getCustomPreviewControls(config).find(control => control.key === 'visibleHistoryWords')?.value).toBe(1);
+    const changed = applyCustomPreviewSettings(config, { visibleHistoryWords: 2 }, { roles: ['Teacher'], preview: true });
+    expect(changed.engineConfig.visibleHistoryWords).toBe(2);
+    expect(config.engineConfig.visibleHistoryWords).toBe(1);
+  });
   it('uses the effective saccade timing in custom preview including nested legacy aliases', () => {
     const config = { engineType: 'motion_path', engineConfig: { mode: 'saccade',
       timing: { holdMs: 700, durationSeconds: 60 } } };
