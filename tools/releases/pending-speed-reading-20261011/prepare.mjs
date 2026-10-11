@@ -1,4 +1,6 @@
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, readdirSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { execFileSync } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { resolve } from 'node:path';
 
@@ -68,5 +70,21 @@ if (process.argv[1] && pathToFileURL(resolve(process.argv[1])).href === import.m
   writeFileSync(resolve(output, 'inventory.sql'), buildInventorySql());
   writeFileSync(resolve(output, 'inventory-all.sql'), buildInventorySql(true));
   writeFileSync(resolve(output, 'verify-targets.sql'), buildVerificationSql());
+  if (process.argv.includes('--seal')) {
+    for (const file of ['deploy.sh', 'monitor.sh', 'api.Dockerfile', 'web.Dockerfile', 'production.override.yml', 'README.md']) {
+      writeFileSync(resolve(output, file), readFileSync(new URL(file, import.meta.url), 'utf8').replaceAll('\r\n', '\n'));
+    }
+    writeFileSync(resolve(output, 'nginx.conf'), readFileSync(resolve(root, 'clients/speed-reading/nginx.conf'), 'utf8').replaceAll('\r\n', '\n'));
+    writeFileSync(resolve(output, 'source-revision.txt'), execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim() + '\n');
+    const walk = directory => readdirSync(directory, { withFileTypes: true }).flatMap(entry => {
+      if (entry.isSymbolicLink()) throw new Error('Payload must not contain symlinks');
+      const path = resolve(directory, entry.name);
+      return entry.isDirectory() ? walk(path) : [path];
+    });
+    const lines = walk(output).filter(file => file !== resolve(output, 'payload.sha256')).sort().map(file =>
+      `${createHash('sha256').update(readFileSync(file)).digest('hex')}  ${file.slice(output.length + 1).replaceAll('\\', '/')}`);
+    writeFileSync(resolve(output, 'payload.sha256'), lines.join('\n') + '\n');
+    console.log(`Sealed ${lines.length} generated/published payload files; no production environment file included.`);
+  }
   console.log('Prepared five atomic packages: 88 catalog entries, 162 texts, 110 questions.');
 }
