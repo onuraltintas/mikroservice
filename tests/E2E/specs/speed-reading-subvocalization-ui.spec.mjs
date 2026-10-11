@@ -7,10 +7,11 @@ const textId = '50000000-0000-0000-0000-000000000003';
 const questionId = '50000000-0000-0000-0000-000000000004';
 const question = { questionId, questionText: 'İlk kelime hangisi?', optionA: 'bir', optionB: 'iki', optionC: 'uc', optionD: 'dort' };
 
-async function prepare(page, role, mode = 'highlight', questions = false) {
+async function prepare(page, role, mode = 'highlight', questions = false, counting = false) {
   const errors = [], writes = [];
   const configuration = { engineType: 'subvocalization_reduction', readingTextId: textId,
-    engineConfig: { targetWpm: 600, chunkSize: 2, displayMode: mode, readingPurpose: questions ? 'evaluation' : 'practice' } };
+    engineConfig: { targetWpm: 600, chunkSize: 2, displayMode: mode, readingPurpose: questions ? 'evaluation' : 'practice',
+      ...(counting ? { metronomeEnabled: true, visualMetronome: true, metronomeBpm: 60, content: { questionCount: 5 } } : {}) } };
   page.on('pageerror', error => errors.push(error.message));
   await page.addInitScript(() => localStorage.setItem('currentUser', JSON.stringify({ id: 'test-user' })));
   const exercise = { id: exerciseId, exerciseTypeId: typeId, title: 'İç Ses testi', difficultyLevel: 3,
@@ -26,7 +27,10 @@ async function prepare(page, role, mode = 'highlight', questions = false) {
     } else if (path.endsWith('/exercise-types')) response = { items: [{ id: typeId, name: 'SubvocalizationReduction', displayName: 'İç Ses Azaltma', engineType: 'subvocalization_reduction', isActive: true }], totalCount: 1 };
     else if (path.endsWith(`/exercises/${exerciseId}`)) response = exercise;
     else if (path.endsWith('/exercises')) response = { items: [exercise], totalCount: 1 };
-    else if (path.endsWith(`/reading-texts/${textId}`)) response = { id: textId, content: 'bir iki uc dort bes', wordCount: 5, questions: questions ? [question] : [] };
+    else if (path.endsWith(`/reading-texts/${textId}`)) response = { id: textId, difficultyLevel: 3,
+      content: counting ? Array(30).fill('kelime').join(' ') : 'bir iki uc dort bes', wordCount: counting ? 30 : 5,
+      questions: questions ? counting ? Array.from({ length: 5 }, (_,i) => ({ ...question, questionId: `q${i}`,
+        type: 1, bloomLevel: 1, correctAnswer: 'A' })) : [question] : [] };
     else if (path.includes('/profile/status')) response = { hasAgeGroupConfiguration: true };
     else if (path.endsWith('/my-modules')) response = { hasSpeedReading: true };
     await route.fulfill({ json: response });
@@ -35,6 +39,32 @@ async function prepare(page, role, mode = 'highlight', questions = false) {
   await expect(page.getByRole('heading', { name: 'İç Ses Azaltma', exact: true })).toBeVisible();
   return { errors, writes, configuration };
 }
+
+test('counting instructions, independent rhythm and five preview questions', async ({ page }) => {
+  const { errors, writes } = await prepare(page, 'Teacher', 'highlight', true, true);
+  await page.getByRole('button', { name: 'Özel ayarlarla dene' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Denemeyi başlat' }).click();
+  await expect(page.locator('.ready-state')).toContainText('hafif sesle');
+  await page.clock.install(); await page.clock.pauseAt(new Date());
+  await page.locator('.start-button-large').click();
+  await expect(page.locator('.subvoc-footer')).toContainText('bir–iki–üç–dört');
+  const rhythm = page.locator('.rhythm-dot.active');
+  await expect(rhythm).toHaveText('1'); await page.clock.runFor(1000);
+  await expect(rhythm).toHaveText('2');
+  const pause = page.locator('.subvoc-reduction-container .game-header button').first();
+  await pause.click(); await page.clock.runFor(1000); await expect(rhythm).toHaveText('2');
+  await pause.click(); await expect(rhythm).toHaveText('1');
+  await page.clock.runFor(3000);
+  await expect(page.locator('.subvoc-pulse-rhythm')).toHaveCount(0);
+  for (let i = 0; i < 5; i++) {
+    await expect(page.locator('.question-progress-bar')).toContainText(`Soru ${i+1} / 5`);
+    await page.locator('.modern-options .modern-option-btn').first().click();
+    await page.getByRole('button', { name: i === 4 ? 'Tamamla' : 'Sonraki Soru', exact: false }).click();
+  }
+  await expect(page.getByText('Sayı sayma doğrulanmadı.', { exact: false })).toBeVisible();
+  await expect(page.getByText('Anlama ölçülmedi.', { exact: false })).toBeVisible();
+  expect(writes).toEqual([]); expect(errors).toEqual([]);
+});
 
 for (const [role, mode] of [['Admin', 'highlight'], ['Teacher', 'rsvp'], ['Teacher', 'chunk']]) {
   test(`${role} ${mode} custom preview applies mode and pace without saving`, async ({ page }) => {
