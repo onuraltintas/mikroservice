@@ -19,7 +19,7 @@ describe('Hedefi Yakala prototype', () => {
     expect(g.status).toBe('playing');
     g.choose(g.shapes.indexOf('circle'), 100001);
     expect(g.status).toBe('playing');
-    expect(g.message).toContain('Yıldızı');
+    expect(g.message).toContain('Üstteki sembolü');
     for (let index = 0; index < 3; index++) {
       g.choose(g.shapes.indexOf('star'), 101000 + index * 1000);
       g.tick(101700 + index * 1000);

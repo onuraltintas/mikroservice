@@ -1,7 +1,7 @@
 import { ChangeDetectorRef, Component, ElementRef, HostListener, inject, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { AttentionGame, ATTENTION_PRESETS, AttentionShape } from './attention-game';
+import { AttentionGame, ATTENTION_AGE_GROUPS, ATTENTION_PRESETS, AttentionShape } from './attention-game';
 
 @Component({
   selector: 'app-attention-preview',
@@ -12,6 +12,8 @@ import { AttentionGame, ATTENTION_PRESETS, AttentionShape } from './attention-ga
 })
 export class AttentionPreviewComponent implements OnInit, OnDestroy {
   readonly presets = ATTENTION_PRESETS;
+  readonly ageGroups = ATTENTION_AGE_GROUPS;
+  readonly levels = [1, 2, 3, 4, 5];
   readonly shapeNames: Record<AttentionShape, string> = {
     star: 'Yıldız', circle: 'Daire', triangle: 'Üçgen', square: 'Kare', diamond: 'Baklava', cross: 'Artı'
   };
@@ -22,6 +24,9 @@ export class AttentionPreviewComponent implements OnInit, OnDestroy {
   private readonly changeDetector = inject(ChangeDetectorRef);
   private focusPosition = 0;
   private timer?: ReturnType<typeof setInterval>;
+
+  get selectedAgeGroupIndex(): number { return Math.floor(this.selectedPresetIndex / 5); }
+  get selectedLevel(): number { return this.selectedPresetIndex % 5 + 1; }
 
   ngOnInit(): void {
     this.timer = setInterval(() => {
@@ -41,6 +46,14 @@ export class AttentionPreviewComponent implements OnInit, OnDestroy {
     if (this.game.status !== 'intro' || !Number.isInteger(index) || !this.presets[index]) return;
     this.selectedPresetIndex = index;
     this.game = new AttentionGame(this.presets[index]);
+  }
+  selectAgeGroup(index: number): void {
+    if (!Number.isInteger(index) || !this.ageGroups[index]) return;
+    this.selectPreset(index * 5 + this.selectedLevel - 1);
+  }
+  selectLevel(level: number): void {
+    if (!Number.isInteger(level) || !this.levels.includes(level)) return;
+    this.selectPreset(this.selectedAgeGroupIndex * 5 + level - 1);
   }
   startTutorial(): void {
     this.now = performance.now(); this.game.startTutorial(this.now);

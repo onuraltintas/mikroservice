@@ -4,7 +4,7 @@
   <header>
     <span class="eyebrow">SEÇİCİ DİKKAT · PROTOTİP</span>
     <h1>Hedefi Yakala<span>.</span></h1>
-    <p>Bir hedef, tek kural: diğer şekillerin arasındaki <strong>yıldızı bul ve tıkla.</strong></p>
+    <p>Bir hedef, tek kural: üstte gösterilen sembolü diğer şekillerin arasında <strong>bul ve tıkla.</strong></p>
   </header>
   <p class="notice">Sonuçlar kaydedilmez. Bu prototip mevcut eğitim programlarını değiştirmez.</p>
 
@@ -12,21 +12,31 @@
     <section class="intro-panel" aria-labelledby="intro-title">
       <div class="rule-illustration" aria-hidden="true">★</div>
       <div class="intro-content">
-        <h2 id="intro-title">Her turda yıldızı yakala</h2>
+        <h2 id="intro-title">Her turda gösterilen sembolü yakala</h2>
         <p>Hedef hep aynı. Yerini değiştirir; siz süre dolmadan bir kez tıklarsınız. Önce üç süre sınırı olmayan alıştırma yapacağız.</p>
         <fieldset>
-          <legend>Deneme temposu</legend>
-          <div class="preset-options">
-            @for (preset of presets; track preset.label; let i = $index) {
-              <button type="button" class="preset" [class.selected]="selectedPresetIndex === i"
-                [attr.aria-pressed]="selectedPresetIndex === i" (click)="selectPreset(i)">
-                <strong>{{ preset.label }}</strong>
-                <span>{{ preset.shapeCount }} şekil · {{ preset.rounds }} tur</span>
-                <span>Tur başına {{ preset.responseMs / 1000 }} saniye</span>
+          <legend>Yaş grubu</legend>
+          <div class="preset-options age-options">
+            @for (group of ageGroups; track group.label; let i = $index) {
+              <button type="button" class="preset age-option" [class.selected]="selectedAgeGroupIndex === i"
+                [attr.aria-pressed]="selectedAgeGroupIndex === i" (click)="selectAgeGroup(i)">
+                {{ group.label }}
               </button>
             }
           </div>
         </fieldset>
+        <fieldset>
+          <legend>Seviye</legend>
+          <div class="preset-options level-options">
+            @for (level of levels; track level) {
+              <button type="button" class="preset level-option" [class.selected]="selectedLevel === level"
+                [attr.aria-pressed]="selectedLevel === level" (click)="selectLevel(level)">Seviye {{ level }}</button>
+            }
+          </div>
+        </fieldset>
+        <p class="settings-summary"><strong>{{ game.preset.label }}</strong><br>
+          {{ game.preset.shapeCount }} şekil · {{ game.preset.rounds }} tur · Tur başına {{ game.preset.responseMs / 1000 | number:'1.0-1' }} saniye</p>
+        <p class="muted">Erken yanıtlayınca sonraki tura geçilir; toplam süre sabit değildir. Her turdan sonra 0,7 saniye dönüt verilir. Duraklamalar ve alıştırmalar süreye dahil değildir.</p>
         <p class="muted">Bunlar deneme ayarlarıdır; yaş normu veya bilimsel değerlendirme eşiği değildir.</p>
         <button type="button" class="primary" (click)="startTutorial()">Alıştırmayı başlat →</button>
       </div>
@@ -35,7 +45,7 @@
     <section class="summary-panel">
       <span class="eyebrow">ALIŞTIRMA TAMAMLANDI</span>
       <h2>Hazırsınız!</h2>
-      <p>Üç alıştırma skora dahil edilmedi. Şimdi {{ game.preset.label | lowercase }} tempoda {{ game.preset.rounds }} tur deneyin.</p>
+      <p>Üç alıştırma skora dahil edilmedi. Şimdi {{ game.preset.label }} ayarlarıyla {{ game.preset.rounds }} tur deneyin.</p>
       <p>Doğru tıklama, yanlış şekil ve süre dolması ayrı sayılır. Bir turda yalnız bir yanıt alınır.</p>
       <button type="button" class="primary" (click)="startSession()">Denemeyi başlat →</button>
     </section>
@@ -66,6 +76,12 @@
         <div><dt>Yanlış</dt><dd>{{ game.wrong }}</dd></div>
         <div><dt>Kaçırılan</dt><dd>{{ game.missed }}</dd></div>
       </dl>
+      <div class="target-cue">
+        <span class="eyebrow">HEDEF</span>
+        <svg viewBox="0 0 100 100" role="img" aria-label="Aranacak sembol: yıldız" focusable="false">
+          <polygon points="50,5 61,36 95,36 68,57 78,91 50,71 22,91 32,57 5,36 39,36"/>
+        </svg>
+      </div>
       <div class="board-wrap">
         <div class="shape-board" [class.large-board]="game.shapes.length > 12" [class.medium-board]="game.shapes.length > 6 && game.shapes.length <= 12"
           [class.paused]="game.status === 'paused'">
@@ -92,7 +108,6 @@
       <p class="feedback" role="status" aria-live="polite" [class.correct]="game.outcome === 'correct'" [class.incorrect]="game.outcome === 'wrong' || game.outcome === 'missed'">
         {{ game.status === 'paused' ? 'Süre ve hedefler durduruldu.' : game.message }}
       </p>
-      <p class="target-reminder"><span aria-hidden="true">★</span> Hedefiniz her turda yıldız.</p>
     </section>
   }
 </section>

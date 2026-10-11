@@ -2,12 +2,20 @@ export type AttentionShape = 'star' | 'circle' | 'triangle' | 'square' | 'diamon
 export interface AttentionPreset { label: string; shapeCount: number; rounds: number; responseMs: number; }
 type Status = 'intro' | 'ready' | 'playing' | 'feedback' | 'paused' | 'complete';
 
-// Pilot choices for usability testing, not age norms or a validated assessment.
-export const ATTENTION_PRESETS: readonly AttentionPreset[] = [
-  { label: 'Sakin', shapeCount: 6, rounds: 12, responseMs: 5000 },
-  { label: 'Dengeli', shapeCount: 12, rounds: 20, responseMs: 4000 },
-  { label: 'Yoğun', shapeCount: 20, rounds: 24, responseMs: 3000 }
-];
+// Approved pilot settings, not age norms or a validated assessment.
+// Each level specifies [shape count, response limit in milliseconds, rounds].
+export const ATTENTION_AGE_GROUPS = [
+  { label: 'Çocuk', levels: [[6, 6000, 24], [8, 5500, 28], [10, 5000, 32], [12, 4500, 36], [16, 4000, 40]] },
+  { label: 'Genç', levels: [[8, 5500, 28], [10, 5000, 32], [12, 4500, 36], [16, 4000, 40], [20, 3500, 44]] },
+  { label: 'Genç yetişkin', levels: [[10, 5000, 32], [12, 4500, 36], [16, 4000, 40], [20, 3500, 44], [20, 3000, 48]] },
+  { label: 'Yetişkin', levels: [[10, 5000, 32], [12, 4500, 36], [16, 4000, 40], [20, 3500, 44], [20, 3000, 48]] }
+] as const;
+
+export const ATTENTION_PRESETS: readonly AttentionPreset[] = ATTENTION_AGE_GROUPS.flatMap(group =>
+  group.levels.map(([shapeCount, responseMs, rounds], index) => ({
+    label: `${group.label} · Seviye ${index + 1}`, shapeCount, responseMs, rounds
+  }))
+);
 
 const DISTRACTORS: readonly AttentionShape[] = ['circle', 'triangle', 'square', 'diamond', 'cross'];
 const FEEDBACK_MS = 700;
@@ -69,7 +77,7 @@ export class AttentionGame {
     this.previousTarget = target;
     this.startedAt = now;
     this.deadline = now + this.preset.responseMs;
-    this.message = this.tutorial ? 'Yıldızı bulup tıklayın. Bu denemede süre sınırı yok.' : 'Yıldızı bul ve tıkla.';
+    this.message = this.tutorial ? 'Üstteki sembolü bulup tıklayın. Bu alıştırmada süre sınırı yok.' : 'Üstteki sembolü bul ve tıkla.';
     this.outcome = null;
     this.status = 'playing';
   }
@@ -78,7 +86,7 @@ export class AttentionGame {
     if (this.status !== 'playing' || !Number.isInteger(index) || index < 0 || index >= this.shapes.length) return;
     if (!this.tutorial && now >= this.deadline) { this.finishRound('missed', now); return; }
     if (this.shapes[index] !== 'star' && this.tutorial) {
-      this.message = 'Bu başka bir şekil. Yıldızı bulup tekrar deneyin.';
+      this.message = 'Bu başka bir şekil. Üstteki sembolü bulup tekrar deneyin.';
       return;
     }
     const correct = this.shapes[index] === 'star';
@@ -94,7 +102,7 @@ export class AttentionGame {
       else this.missed++;
     }
     this.message = outcome === 'correct' ? 'Doğru, hedefi yakaladınız!'
-      : outcome === 'wrong' ? 'Bu hedef değildi. Yıldızı arayın.' : 'Süre doldu. Sonraki turda tekrar deneyin.';
+      : outcome === 'wrong' ? 'Bu hedef değildi. Üstteki sembolü arayın.' : 'Süre doldu. Sonraki turda tekrar deneyin.';
     this.status = 'feedback';
     this.feedbackUntil = now + FEEDBACK_MS;
   }
