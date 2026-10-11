@@ -71,6 +71,7 @@ public sealed class TextFadeSessionTests
 
     [Theory]
     [InlineData("""{"engineType":"text_fade","content":{"questionCount":0}}""")]
+    [InlineData("""{"engineType":"text_fade","content":{"questionCount":3}}""")]
     [InlineData("""{"engineType":"text_fade","engineConfig":{"content":{"minWordCount":8,"maxWordCount":5}}}""")]
     [InlineData("""{"engineType":"text_fade","content":{"questionCount":4},"engineConfig":{"content":{"questionCount":5}}}""")]
     public void Rejects_invalid_content_configuration(string config)
@@ -83,8 +84,10 @@ public sealed class TextFadeSessionTests
         Guid.NewGuid(), text, $"Soru {index}", "A", index, type: 1, bloomLevel: 1,
         optionA: "Doğru", optionB: "B", optionC: "C", optionD: "D");
 
-    [Fact]
-    public async Task Resumes_explicit_text_snapshot_after_catalog_band_changes()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Resumes_explicit_text_snapshot_after_catalog_band_changes(bool changedTextMetadata)
     {
         await using var db = Context();
         var (service, student, exercise) = await Seed(db,
@@ -96,8 +99,22 @@ public sealed class TextFadeSessionTests
         var started = await service.StartAsync(student, request);
         db.Entry(await db.Exercises.SingleAsync()).Property(item => item.ConfigurationJson).CurrentValue =
             """{"engineType":"text_fade","engineConfig":{"content":{"minWordCount":5,"maxWordCount":8}}}""";
+        if (changedTextMetadata) db.Entry(text).Property(item => item.DifficultyLevel).CurrentValue = 4;
         await db.SaveChangesAsync();
         (await service.StartAsync(student, request)).SessionId.Should().Be(started.SessionId);
+    }
+
+    [Fact]
+    public async Task Evaluation_defaults_to_four_questions_when_catalog_count_is_missing()
+    {
+        await using var db = Context();
+        var (service, student, exercise) = await Seed(db,
+            """{"engineType":"text_fade","engineConfig":{"readingPurpose":"evaluation"}}""");
+        var text = ReadingText.Create(Guid.NewGuid(), "A", "bir iki üç dört", difficultyLevel: 3);
+        db.ReadingTexts.Add(text);
+        for (var index = 0; index < 5; index++) db.ReadingQuestions.Add(Question(text.Id, index));
+        await db.SaveChangesAsync();
+        (await service.StartAsync(student, new() { ExerciseId = exercise })).InitialData.GetProperty("questions").GetArrayLength().Should().Be(4);
     }
 
     [Fact]
