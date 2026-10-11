@@ -20,6 +20,13 @@ public sealed class FocusDurationRulesTests
 
     [Theory]
     [InlineData("{}")]
+    [InlineData("invalid JSON")]
+    [InlineData("null")]
+    [InlineData("[]")]
+    [InlineData("{\"engineType\":42}")]
+    [InlineData("{\"engineType\":\"focus\",\"engineConfig\":null}")]
+    [InlineData("{\"engineType\":\"focus\",\"engineConfig\":[]}")]
+    [InlineData("{\"engineType\":\"focus\",\"engineConfig\":{\"speedMs\":\"3000\",\"totalSteps\":32}}")]
     [InlineData("{\"engineType\":\"text_stream\",\"engineConfig\":{\"speedMs\":3000,\"totalSteps\":32}}")]
     [InlineData("{\"engineType\":\"focus\",\"engineConfig\":{\"speedMs\":0,\"totalSteps\":32}}")]
     public void Other_or_incomplete_configuration_keeps_existing_estimate(string configuration)
