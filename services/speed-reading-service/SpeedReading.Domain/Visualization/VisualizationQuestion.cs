@@ -4,6 +4,16 @@ namespace SpeedReading.Domain.Visualization;
 
 public sealed class VisualizationQuestion : AggregateRoot
 {
+    public static string? ResolveAnswerKey(IReadOnlyList<string> options, string answer)
+    {
+        var value = answer.Trim();
+        for (var index = 0; index < Math.Min(options.Count, 4); index++)
+            if (string.Equals(options[index].Trim(), value, StringComparison.Ordinal))
+                return ((char)('A' + index)).ToString();
+        var key = value.ToUpperInvariant();
+        return key.Length == 1 && key[0] >= 'A' && key[0] < 'A' + Math.Min(options.Count, 4) ? key : null;
+    }
+
     private VisualizationQuestion()
     {
     }

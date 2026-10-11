@@ -10,7 +10,7 @@ namespace SpeedReading.Infrastructure.Persistence;
 internal sealed class OwnedSpeedReadingVisualization(OwnedSpeedReadingDbContext db) : ISpeedReadingVisualization
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
-    private static readonly string[] SupportedQuestionTypes = ["detail", "color", "position", "count"];
+    private static readonly string[] SupportedQuestionTypes = ["detail", "color", "position", "count", "spatial", "sequence"];
     private const string CreateScope = "speed-reading.visualization-scenes.create";
     private const string UpdateScope = "speed-reading.visualization-scenes.update";
     private const string DeleteScope = "speed-reading.visualization-scenes.delete";
@@ -205,13 +205,19 @@ internal sealed class OwnedSpeedReadingVisualization(OwnedSpeedReadingDbContext 
     {
         foreach (var request in questions)
             db.VisualizationQuestions.Add(VisualizationQuestion.Create(request.Id.GetValueOrDefault(Guid.NewGuid()), sceneId,
-                request.QuestionText, JsonSerializer.Serialize(request.Options, JsonOptions), request.CorrectAnswer,
+                request.QuestionText, JsonSerializer.Serialize(request.Options.Select(option => option.Trim()), JsonOptions),
+                VisualizationQuestion.ResolveAnswerKey(request.Options, request.CorrectAnswer)!,
                 request.QuestionType, request.DisplayOrder, request.HintText, actorId, now));
     }
 
-    private static VisualizationQuestionSummary ToQuestionSummary(VisualizationQuestion question) => new(
-        question.Id, question.QuestionText, ParseOptions(question.OptionsJson), question.CorrectAnswer, question.QuestionType,
-        question.DisplayOrder, question.HintText);
+    private static VisualizationQuestionSummary ToQuestionSummary(VisualizationQuestion question)
+    {
+        var options = ParseOptions(question.OptionsJson);
+        var key = VisualizationQuestion.ResolveAnswerKey(options, question.CorrectAnswer);
+        return new(question.Id, question.QuestionText, options,
+            key is null ? question.CorrectAnswer : options[key[0] - 'A'], question.QuestionType,
+            question.DisplayOrder, question.HintText);
+    }
 
     private static void ValidateSceneRequest(VisualizationSceneRequest request)
     {
@@ -226,8 +232,10 @@ internal sealed class OwnedSpeedReadingVisualization(OwnedSpeedReadingDbContext 
         foreach (var question in request.Questions)
         {
             var options = question.Options.Where(value => !string.IsNullOrWhiteSpace(value)).Select(value => value.Trim()).Distinct(StringComparer.Ordinal).ToArray();
-            if (string.IsNullOrWhiteSpace(question.QuestionText) || options.Length < 2 || string.IsNullOrWhiteSpace(question.CorrectAnswer) ||
-                !options.Contains(question.CorrectAnswer.Trim(), StringComparer.Ordinal)) throw new ArgumentException("Each question needs at least two options and a matching correct answer.");
+            if (string.IsNullOrWhiteSpace(question.QuestionText) || options.Length is < 2 or > 4
+                || options.Length != question.Options.Count || string.IsNullOrWhiteSpace(question.CorrectAnswer)
+                || VisualizationQuestion.ResolveAnswerKey(question.Options, question.CorrectAnswer) is null)
+                throw new ArgumentException("Each question needs two to four distinct, nonblank options and a matching correct answer.");
             if (!SupportedQuestionTypes.Contains(question.QuestionType.Trim().ToLowerInvariant(), StringComparer.Ordinal)) throw new ArgumentException("QuestionType is invalid.");
             if (question.DisplayOrder < 0) throw new ArgumentException("Question DisplayOrder cannot be negative.");
         }

@@ -3340,7 +3340,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         OptionB = question.Options.ElementAtOrDefault(1) ?? string.Empty,
         OptionC = question.Options.ElementAtOrDefault(2) ?? string.Empty,
         OptionD = question.Options.ElementAtOrDefault(3) ?? string.Empty,
-        CorrectAnswer = question.CorrectAnswer,
+        CorrectAnswer = SpeedReading.Domain.Visualization.VisualizationQuestion.ResolveAnswerKey(question.Options, question.CorrectAnswer) ?? string.Empty,
         BloomLevel = 1,
         DifficultyLevel = 1,
         OrderIndex = question.DisplayOrder
