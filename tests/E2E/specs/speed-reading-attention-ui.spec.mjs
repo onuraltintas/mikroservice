@@ -36,12 +36,17 @@ async function noOverflow(page) {
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 }
 
+async function pauseClock(page) {
+  // Base the pause on the browser clock, not a potentially skewed host clock.
+  await page.clock.pauseAt(new Date(await page.evaluate(() => Date.now() + 10000)));
+}
+
 test('simple practice, correct wrong missed and completion without writes', async ({ page }, testInfo) => {
   const { errors, writes } = await prepare(page, ['Admin']);
   await expect(page.getByRole('heading', { name: 'Hedefi Yakala.' })).toBeVisible();
   await noOverflow(page);
   await page.screenshot({ path: `../../artifacts/attention-ui/${testInfo.project.name}-intro.png`, fullPage: true });
-  await page.clock.pauseAt(new Date());
+  await pauseClock(page);
   await page.getByRole('button', { name: 'Alıştırmayı başlat' }).click();
   await page.clock.runFor(20000);
   await expect(page.getByRole('heading', { name: 'Tur 1 / 3' })).toBeVisible();
@@ -55,7 +60,9 @@ test('simple practice, correct wrong missed and completion without writes', asyn
   await page.getByRole('button', { name: 'Denemeyi başlat' }).click();
   await page.clock.runFor(100);
   await expect(page.locator('.shape-button')).toHaveCount(6);
+  const initialTime = await page.locator('.time').innerText();
   await page.clock.runFor(500);
+  expect(await page.locator('.time').innerText()).not.toBe(initialTime);
   await page.getByRole('button', { name: /^Yıldız, konum/ }).click();
   await page.clock.runFor(100);
   await expect(page.locator('.counters')).toContainText('Doğru1');
@@ -96,19 +103,21 @@ for (const [label, count] of [['Dengeli', 12], ['Yoğun', 20]]) {
   test(`${label} preset applies board and single target with no layout overflow`, async ({ page }) => {
     const { errors, writes } = await prepare(page);
     await page.getByRole('button', { name: new RegExp(`^${label}`) }).click();
-    await page.clock.pauseAt(new Date());
+    await pauseClock(page);
     await practice(page); await page.getByRole('button', { name: 'Denemeyi başlat' }).click();
     await page.clock.runFor(100);
     await expect(page.locator('.shape-button')).toHaveCount(count);
     await expect(page.getByRole('button', { name: /^Yıldız, konum/ })).toHaveCount(1);
     const bounds = await page.locator('.shape-button').first().boundingBox();
     expect(bounds.width).toBeGreaterThanOrEqual(44); expect(bounds.height).toBeGreaterThanOrEqual(44);
+    const last = await page.locator('.shape-button').last().boundingBox();
+    expect(last.y + last.height).toBeLessThanOrEqual(page.viewportSize().height);
     await noOverflow(page); expect(writes).toEqual([]); expect(errors).toEqual([]);
   });
 }
 
 test('hidden page pauses the trial and requires explicit resume', async ({ page }) => {
-  const { errors, writes } = await prepare(page); await page.clock.pauseAt(new Date());
+  const { errors, writes } = await prepare(page); await pauseClock(page);
   await practice(page); await page.getByRole('button', { name: 'Denemeyi başlat' }).click();
   await page.clock.runFor(100);
   await page.clock.runFor(500);
@@ -141,6 +150,30 @@ for (const role of ['Student', 'Editor', 'InstitutionAdmin']) {
 test('mixed Teacher Student roles can access the preview without changing enrolment', async ({ page }) => {
   const { writes, errors } = await prepare(page, ['Teacher', 'Student']);
   await expect(page.getByRole('heading', { name: 'Hedefi Yakala.' })).toBeVisible();
+  expect(writes).toEqual([]); expect(errors).toEqual([]);
+});
+
+test('keyboard-only practice keeps focus through all three rounds and the start transition', async ({ page }) => {
+  const { writes, errors } = await prepare(page); await pauseClock(page);
+  const start = page.getByRole('button', { name: 'Alıştırmayı başlat' });
+  for (let step = 0; step < 30 && !await start.evaluate(el => el === document.activeElement); step++) {
+    await page.keyboard.press('Tab');
+  }
+  await expect(start).toBeFocused(); await page.keyboard.press('Enter'); await page.clock.runFor(100);
+  for (let round = 0; round < 3; round++) {
+    await expect(page.locator('.shape-board .shape-button:focus')).toHaveCount(1);
+    const star = page.getByRole('button', { name: /^Yıldız, konum/ });
+    const targetPosition = Number((await star.getAttribute('aria-label')).match(/\d+/)[0]);
+    const focusedPosition = await page.locator('.shape-button:focus').getAttribute('aria-label');
+    const direction = Number(focusedPosition.match(/\d+/)[0]) > targetPosition ? 'Shift+Tab' : 'Tab';
+    for (let step = 0; step < 6 && !await star.evaluate(el => el === document.activeElement); step++) {
+      await page.keyboard.press(direction);
+    }
+    await expect(star).toBeFocused(); await page.keyboard.press('Enter'); await page.clock.runFor(800);
+  }
+  await expect(page.getByRole('button', { name: 'Denemeyi başlat' })).toBeFocused();
+  await page.keyboard.press('Enter'); await page.clock.runFor(100);
+  await expect(page.locator('.shape-button').first()).toBeFocused();
   expect(writes).toEqual([]); expect(errors).toEqual([]);
 });
 
