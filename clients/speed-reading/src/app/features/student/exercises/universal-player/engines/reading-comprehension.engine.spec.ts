@@ -17,6 +17,10 @@ function callbacks(onComplete: (result: EngineResult) => void): EngineCallbacks 
 }
 
 describe('ReadingComprehensionEngine', () => {
+  it('requires real free reading content rather than a demo fallback', () => {
+    const engine = new ReadingComprehensionEngine('free_reading');
+    expect(() => engine.initialize({}, callbacks(() => undefined))).toThrowError(/metin/i);
+  });
   [2000, 5000, 600_000].forEach(durationMs => {
     it(`does not report comprehension speed outside measurement bounds (${durationMs}ms)`, fakeAsync(() => {
       let result: EngineResult | undefined;

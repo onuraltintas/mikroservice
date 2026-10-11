@@ -9,6 +9,23 @@ namespace SpeedReading.Application.UnitTests;
 
 public sealed class FreeReadingPersistenceTests
 {
+    [Fact]
+    public async Task Practice_tempo_does_not_award_verified_score_xp_or_reading_achievement()
+    {
+        await using var db = Context(); var user = Guid.NewGuid(); var exercise = await Seed(db, user);
+        db.ReadingTexts.Add(Text(Guid.NewGuid(), exercise, 2, 100)); await db.SaveChangesAsync();
+        var service = Service(db); var started = await service.StartAsync(user, new() { ExerciseId = exercise });
+        Assert.Equal(0, started.InitialData.GetProperty("questions").GetArrayLength());
+        var session = await db.ExerciseSessions.SingleAsync(); var state = JsonNode.Parse(session.SessionDataJson)!;
+        var end = DateTime.UtcNow.AddSeconds(-2);
+        state["readingStartTime"] = end.AddSeconds(-30); state["readingEndTime"] = end;
+        session.SetState(state.ToJsonString()); await db.SaveChangesAsync();
+        var result = await service.CompleteAsync(user, started.SessionId, new());
+        Assert.Equal(200m, result.RawWPM);
+        Assert.Null(result.Score); Assert.Null(result.ComprehensionScore); Assert.Null(result.WeightedKDP);
+        Assert.Equal(0, result.XpGained);
+        Assert.Empty(db.UserGamifications);
+    }
     [Theory]
     [InlineData(2)]
     [InlineData(201)]
