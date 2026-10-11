@@ -1,6 +1,5 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
 import { buildBatch, buildInventorySql, packs } from '../../tools/releases/pending-speed-reading-20261011/prepare.mjs';
 
 test('the approved five packages share exactly one atomic transaction', () => {

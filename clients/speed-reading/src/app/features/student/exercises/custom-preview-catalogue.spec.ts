@@ -29,8 +29,7 @@ describe('Custom preview catalogue navigation', () => {
     const open = jasmine.createSpy('open').and.returnValue({ afterClosed: () => of(undefined) });
     const context: any = { dialog: { open }, authService: { currentUserValue: { roles: ['Teacher'] } }, toaster: { error: jasmine.createSpy('error') } };
     const levels: any[] = [
-      { id: 'learn', configurationJson: JSON.stringify({ engineType: 'vocabulary_builder', engineConfig: { mode: 'learn' } }) },
-      { id: 'quiz', configurationJson: JSON.stringify({ engineType: 'vocabulary_builder', engineConfig: { mode: 'quiz' } }) }
+      { id: 'unsupported', configurationJson: JSON.stringify({ engineType: 'unsupported_engine' }) }
     ];
     ExercisesListComponent.prototype.openCustomPreview.call(context, levels[0]);
     expect(open).not.toHaveBeenCalled();
@@ -94,7 +93,7 @@ describe('Custom preview catalogue navigation', () => {
     const error = jasmine.createSpy('error');
     const context: any = { dialog: { open }, authService: { currentUserValue: { roles: ['Teacher'] } }, toaster: { error } };
     (ExercisesListComponent.prototype as any).openCustomPreview.call(context,
-      { id: 'exercise', configurationJson: JSON.stringify({ engineType: 'vocabulary_builder', engineConfig: { mode: 'learn' } }) });
+      { id: 'exercise', configurationJson: JSON.stringify({ engineType: 'unsupported_engine' }) });
     expect(open).not.toHaveBeenCalled();
     expect(error).toHaveBeenCalled();
   });
