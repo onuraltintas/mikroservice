@@ -7,6 +7,16 @@ const scss = readFileSync(new URL('../src/app/features/student/exercises/univers
 const motionPath = html.split('<!-- Exercise Running - Motion Path (Eye Tracking / Fixation) -->')[1]
   ?.split('<!-- Exercise Running - Text Stream')[0] ?? '';
 
+test('saccade describes observation and reports seconds and transitions without letter or accuracy claims', () => {
+  assert.doesNotMatch(motionPath, /Gerektiğinde tıklayın/);
+  assert.match(motionPath, /geçiş/);
+  const results = html.split('class="saccade-results"')[1]?.split('measurement-not-available')[0] ?? '';
+  assert.match(results, /Aktif çalışma süresi/);
+  assert.match(results, /Tamamlanan hedef geçişi/);
+  assert.match(results, /Hedef geçiş aralığı/);
+  assert.match(html, /Göz hareketleri ölçülmedi/);
+});
+
 test('eye tracking and fixation share one compact information strip', () => {
   assert.match(motionPath, /class="game-header motion-path-header"/);
   assert.match(motionPath, /class="game-stats motion-path-stats"[^>]*\*ngIf="!isSaccadeMode\(\)"/);

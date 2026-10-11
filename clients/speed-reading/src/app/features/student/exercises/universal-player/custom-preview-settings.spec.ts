@@ -9,6 +9,22 @@ import { TestBed } from '@angular/core/testing';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 
 describe('Custom preview settings safety', () => {
+  it('uses the effective saccade timing in custom preview including nested legacy aliases', () => {
+    const config = { engineType: 'motion_path', engineConfig: { mode: 'saccade',
+      timing: { holdMs: 700, durationSeconds: 60 } } };
+    expect(getCustomPreviewControls(config)[0].value).toBe(700);
+    const changed = applyCustomPreviewSettings(config, { jumpIntervalMs: 950 }, { roles: ['Teacher'], preview: true });
+    const engine = new MotionPathEngine();
+    engine.initialize(changed as any, { onStateChange: () => undefined } as any);
+    expect(engine.getFixationDuration()).toBe(950);
+    expect(config.engineConfig.timing.holdMs).toBe(700);
+    engine.destroy();
+    expect(getCustomPreviewControls({ engineType: 'motion_path', engineConfig: { mode: 'saccade',
+      MOVEMENT: { FIXATIONTIMEMS: 650 } } })[0].value).toBe(650);
+    expect(getCustomPreviewControls({ engineType: 'motion_path', engineConfig: { mode: 'saccade',
+      timing: { holdMs: 700 }, movement: { jumpIntervalMs: 850 } } })[0].value).toBe(850);
+  });
+
   it('offers fixation rounds and letter count within the catalogue age limit', () => {
     const config = { engineType: 'motion_path', engineConfig: { mode: 'fixation',
       timing: { holdMs: 1000 }, content: { points: 20, peripheralCount: 1, maxPeripheralCount: 2 } } };

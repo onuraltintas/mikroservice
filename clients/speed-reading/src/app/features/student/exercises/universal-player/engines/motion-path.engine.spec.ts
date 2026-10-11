@@ -16,6 +16,69 @@ function callbacks(onComplete: (result: EngineResult) => void): EngineCallbacks 
 }
 
 describe('MotionPathEngine', () => {
+  it('keeps a resumed timed saccade automatic and excludes paused time', fakeAsync(() => {
+    const actions: any[] = [];
+    let result: EngineResult | undefined;
+    const engine = new MotionPathEngine();
+    engine.initialize({ mode: 'saccade', timing: { durationSeconds: 5, holdMs: 800 } },
+      { ...callbacks(value => result = value), onAction: action => actions.push(action) });
+    engine.start(); tick(300); engine.pause(); tick(5000); engine.resume(); tick(499);
+    expect(actions.length).toBe(0);
+    tick(1);
+    expect(actions[0].action).toBe('target_advanced');
+    expect(actions[0].responseTime).toBeUndefined();
+    tick(4250);
+    expect(result?.totalTime).toBeLessThan(5050);
+    expect(result?.details?.measurementStatus).toBe('NotMeasured');
+    engine.destroy();
+  }));
+
+  it('does not let clicks accelerate a timed observation-only saccade', fakeAsync(() => {
+    const engine = new MotionPathEngine();
+    engine.initialize({ mode: 'saccade', timing: { durationSeconds: 5, holdMs: 800 } }, callbacks(() => undefined));
+    engine.start(); engine.handleInput({ type: 'click' });
+    expect(engine.state.currentStep).toBe(0);
+    tick(800); expect(engine.state.currentStep).toBe(1);
+    engine.destroy();
+  }));
+
+  it('generates fresh timed batches and avoids immediate numeric repeats across their boundary', fakeAsync(() => {
+    let randomCalls = 0;
+    spyOn(Math, 'random').and.callFake(() => { randomCalls++; return 0.1; });
+    const engine = new MotionPathEngine();
+    engine.initialize({ mode: 'saccade', content: { type: 'number', points: 3, pattern: 'horizontal' },
+      timing: { durationSeconds: 5, holdMs: 100 } }, callbacks(() => undefined));
+    engine.start();
+    const callsBeforeNextBatch = randomCalls;
+    let previous = engine.state.currentValue;
+    for (let index = 0; index < 8; index++) {
+      tick(100);
+      expect(engine.state.currentValue).not.toBe(previous);
+      const position = engine.getTargetPosition();
+      expect(position.x).toBe(index % 2 === 0 ? 90 : 10);
+      previous = engine.state.currentValue;
+    }
+    expect(randomCalls).toBeGreaterThan(callsBeforeNextBatch);
+    expect(engine.state.isCompleted).toBeFalse();
+    engine.destroy();
+  }));
+
+  it('keeps generated random targets apart even with a constant random source', fakeAsync(() => {
+    spyOn(Math, 'random').and.returnValue(0.5);
+    const engine = new MotionPathEngine();
+    engine.initialize({ mode: 'saccade', content: { type: 'number', points: 2, pattern: 'random' },
+      timing: { durationSeconds: 5, holdMs: 100 } }, callbacks(() => undefined));
+    engine.start(); let previous = engine.getTargetPosition();
+    for (let index = 0; index < 8; index++) {
+      tick(100); const current = engine.getTargetPosition();
+      expect(Math.hypot(current.x - previous.x, current.y - previous.y)).toBeGreaterThanOrEqual(30);
+      expect(current.x).toBeGreaterThanOrEqual(10); expect(current.x).toBeLessThanOrEqual(90);
+      expect(current.y).toBeGreaterThanOrEqual(10); expect(current.y).toBeLessThanOrEqual(90);
+      previous = current;
+    }
+    engine.destroy();
+  }));
+
   it('starts fixation response timing at actual hiding even when the exposure timer is delayed', fakeAsync(() => {
     let result: EngineResult | undefined;
     const engine = new MotionPathEngine();
