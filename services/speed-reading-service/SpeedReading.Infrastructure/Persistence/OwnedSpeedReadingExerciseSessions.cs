@@ -2759,7 +2759,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         IReadOnlyCollection<int> configuredTargetIndices)
     {
         var targetIndices = configuredTargetIndices.ToHashSet();
-        var hasConfiguredTargets = targetIndices.Count > 0;
+        if (targetIndices.Count > 0)
+            return CreateConfiguredFocusPositions(totalSteps, nLevel, gridSize, targetIndices);
         var sequence = new int[totalSteps];
         var positionCount = gridSize * gridSize;
 
@@ -2769,15 +2770,9 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                 || position != sequence[index - 1]
                 || (nLevel == 1 && (index < 2 || sequence[index - 1] != sequence[index - 2]));
             var isTarget = index >= nLevel
-                && (hasConfiguredTargets
-                    ? targetIndices.Contains(index)
-                    : index == nLevel || Random.Shared.Next(4) == 0);
+                && (index == nLevel || Random.Shared.Next(4) == 0);
             if (isTarget && !AllowsPosition(sequence[index - nLevel]))
-            {
-                if (hasConfiguredTargets)
-                    throw new InvalidOperationException("N-back konum hedefleri ardışık tekrar sınırıyla çelişiyor.");
                 isTarget = false;
-            }
             if (isTarget)
             {
                 sequence[index] = sequence[index - nLevel];
@@ -2793,6 +2788,45 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             sequence[index] = candidates[Random.Shared.Next(candidates.Length)];
         }
 
+        return sequence;
+    }
+
+    private static int[] CreateConfiguredFocusPositions(int totalSteps, int nLevel, int gridSize, HashSet<int> targets)
+    {
+        if (targets.Any(index => index < nLevel || index >= totalSteps))
+            throw new InvalidOperationException("N-back konum hedefleri uyaran dizisinin dışında.");
+
+        // Target-linked positions share a root. Reserve different values for all
+        // neighbouring roots before choosing random positions, including future targets.
+        var roots = new int[totalSteps];
+        var neighbours = Enumerable.Range(0, totalSteps).Select(_ => new HashSet<int>()).ToArray();
+        for (var index = 0; index < totalSteps; index++)
+            roots[index] = targets.Contains(index) ? roots[index - nLevel] : index;
+
+        void RequireDifferent(int first, int second)
+        {
+            first = roots[first]; second = roots[second];
+            if (first == second)
+                throw new InvalidOperationException("N-back konum hedefleri ardışık tekrar sınırıyla çelişiyor.");
+            neighbours[first].Add(second); neighbours[second].Add(first);
+        }
+        for (var index = 1; index < totalSteps; index++)
+        {
+            if (nLevel > 1 || (index > 1 && targets.Contains(index - 1)))
+                RequireDifferent(index, index - 1);
+            if (index >= nLevel && !targets.Contains(index))
+                RequireDifferent(index, index - nLevel);
+        }
+
+        var sequence = new int[totalSteps];
+        for (var index = 0; index < totalSteps; index++)
+        {
+            if (roots[index] != index) { sequence[index] = sequence[roots[index]]; continue; }
+            var excluded = neighbours[index].Where(root => root < index).Select(root => sequence[root]).ToHashSet();
+            var candidates = Enumerable.Range(1, gridSize * gridSize).Where(position => !excluded.Contains(position)).ToArray();
+            // At most N earlier roots are still reachable; a 3x3 grid has spare positions for N <= 5.
+            sequence[index] = candidates[Random.Shared.Next(candidates.Length)];
+        }
         return sequence;
     }
 
