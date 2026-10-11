@@ -1,9 +1,36 @@
 import { fakeAsync, tick } from '@angular/core/testing';
 import { ExercisePlayerComponent } from './exercise-player.component';
 import { RegressionReductionEngine } from './engines/regression-reduction.engine';
-import { Subject } from 'rxjs';
+import { of, Subject } from 'rxjs';
 
 describe('regression player configuration', () => {
+  it('rejects preview text outside the configured word band', () => {
+    const player = Object.create(ExercisePlayerComponent.prototype) as any;
+    player.exercise = { exerciseTypeName: 'RegressionReduction' };
+    player.parsedConfig = { engineType: 'regression_reduction', engineConfig: { content: { minWordCount: 5, maxWordCount: 10 } } };
+    expect(player.previewTextMatchesLength(4)).toBeFalse();
+    expect(player.previewTextMatchesLength(5)).toBeTrue();
+    expect(player.previewTextMatchesLength(11)).toBeFalse();
+  });
+  for (const count of [4, 7]) it(`requires and snapshots five valid preview questions from ${count} available`, () => {
+    const player = Object.create(ExercisePlayerComponent.prototype) as any;
+    player.exercise = { id: 'e', difficultyLevel: 2, exerciseTypeName: 'RegressionReduction' };
+    player.parsedConfig = { engineType: 'regression_reduction', engineConfig: { readingPurpose: 'evaluation', content: { questionCount: 5 } } };
+    player.destroy$ = new Subject<void>();
+    player.exerciseService = { getReadingText: () => of({ id: 't', content: 'bir iki üç dört beş', difficultyLevel: 2,
+      questions: Array.from({ length: count }, (_, index) => ({ id: String(index), type: 1, bloomLevel: 1,
+        correctAnswer: 'A', optionA: 'A', optionB: 'B', optionC: 'C', optionD: 'D' })) }) };
+    player.failPreviewReadingText = jasmine.createSpy('fail');
+    player.initializePreviewEngine = jasmine.createSpy('initialize');
+    player.loadPreviewReadingText('t');
+    if (count < 5) {
+      expect(player.failPreviewReadingText).toHaveBeenCalled();
+      expect(player.initializePreviewEngine).not.toHaveBeenCalled();
+    } else {
+      expect(player.comprehensionQuestions.length).toBe(5);
+      expect(player.initializePreviewEngine).toHaveBeenCalled();
+    }
+  });
   for (const [level, visibleHistoryWords] of [[1, 2], [2, 1], [3, 1], [4, 0], [5, 0]]) {
     it(`keeps exactly ${visibleHistoryWords} previous words readable at level ${level}`, fakeAsync(() => {
       const engine = new RegressionReductionEngine();
