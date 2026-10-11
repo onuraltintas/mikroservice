@@ -1,5 +1,7 @@
 # Hedefi Yakala — yerel prototip
 
+Bu rapor ilk yerel doğrulamanın kaydıdır. Daha sonra yapılan katalog eklemesi ve canlı yayın için [yayın raporuna](attention-release-20261011.md) bakın.
+
 Tarih: 11 Ekim 2026. Kapsam: kullanımı zor bulunan Odaklanma/N-back egzersizine alternatifin ilk denemesi. **Canlıya alınmadı; GitHub'a gönderilmedi.** Yerel geliştirme ve test aşamaları commitlendi.
 
 ## Kullanım
