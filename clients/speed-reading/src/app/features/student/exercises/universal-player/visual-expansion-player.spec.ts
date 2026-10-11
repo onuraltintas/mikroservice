@@ -54,6 +54,8 @@ describe('visual expansion answer UI', () => {
     value.showToast = () => undefined; value.completeDailyProgress = () => undefined;
     value.sessionService = { completeSession: () => of({ accuracy: 50, score: 50, rawWPM: null,
       detailedResults: { visualExpansionMaxPresentedDistance: 12, visualExpansionAverageResponseTimeMs: 500,
+        visualExpansionTargetSummary: { targetDistance: 16, targetReached: false, targetRounds: 0,
+          targetCorrectRounds: 0, targetAccuracy: null, shortestCorrectDisplayDurationMs: null },
         visualExpansionRoundResults: [{ round: 1, distance: 10, responseTimeMs: 400 }, { round: 2, distance: 12, responseTimeMs: 600 }] } }) };
     value.result = { score: 100, accuracy: 100, totalTime: 1000, totalSteps: 2, completedSteps: 2, errors: 0,
       details: { maxDegreesReached: 999, averageResponseTimeMs: 999, roundResults: [] } };
@@ -61,5 +63,7 @@ describe('visual expansion answer UI', () => {
     expect(value.result.details.maxDegreesReached).toBe(12);
     expect(value.result.details.averageResponseTimeMs).toBe(500);
     expect(value.result.details.roundResults.length).toBe(2);
+    expect(value.result.details.targetSummary.targetReached).toBeFalse();
+    expect(value.result.details.targetSummary.targetAccuracy).toBeNull();
   });
 });

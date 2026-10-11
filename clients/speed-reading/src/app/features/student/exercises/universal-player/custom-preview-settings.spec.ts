@@ -9,6 +9,16 @@ import { TestBed } from '@angular/core/testing';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 
 describe('Custom preview settings safety', () => {
+  it('allows visual expansion rounds while preserving the catalog and enforcing 1–100 bounds', () => {
+    const config = { engineType: 'visual_expansion', engineConfig: { rounds: 30, startDegrees: 8,
+      targetDegrees: 16, displayDurationMs: 1200 } };
+    expect(getCustomPreviewControls(config).find(control => control.key === 'rounds')?.value).toBe(30);
+    const changed = applyCustomPreviewSettings(config, { rounds: 45 }, { roles: ['Teacher'], preview: true }) as any;
+    expect(changed.engineConfig.rounds).toBe(45);
+    expect(config.engineConfig.rounds).toBe(30);
+    for (const rounds of [0, 101, 1.5])
+      expect(() => applyCustomPreviewSettings(config, { rounds }, { roles: ['Admin'], preview: true })).toThrow();
+  });
   it('uses the selected duration even when legacy casing aliases exist', () => {
     const config = { engineType: 'text_stream', engineConfig: {
       displayDurationMs: 1100, DisplayDurationMs: 1100, timing: { durationMs: 1100 },
