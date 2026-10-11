@@ -6,6 +6,7 @@
 
 import { BaseEngine, EngineConfig, EngineState, EngineResult, EngineCallbacks } from './base-engine.interface';
 import { boundedInteger, boundedStringArray, caseInsensitiveField, mergeCaseInsensitiveRecords, recordOrEmpty, resolveReadingText } from './reading-pacer-safety';
+import { buildGroupingBoundaries, GroupingBoundary } from './grouping-text';
 
 export interface WordHighlightConfig extends EngineConfig {
     content: {
@@ -85,6 +86,7 @@ export class WordHighlightEngine implements BaseEngine {
         const pacer = mergeCaseInsensitiveRecords(root, nested, 'pacer');
         const mode = caseInsensitiveField(nested, 'mode') ?? caseInsensitiveField(root, 'mode');
         const speedReading = mode === 'speed_reading' || mode === 'guided';
+        const grouping = mode === 'chunking' || caseInsensitiveField(root, 'exerciseTypeName') === 'Chunking';
         this.config = {
             ...root,
             ...nested,
@@ -102,13 +104,13 @@ export class WordHighlightEngine implements BaseEngine {
         this.allWords = [];
 
         // Populate chunks from backend primary source
-        const text = resolveReadingText(root, speedReading ? '' : WordHighlightEngine.TEXT_POOL.join(' '));
-        if (speedReading && !text.trim()) throw new Error('Reading text is missing or invalid.');
+        const text = resolveReadingText(root, speedReading || grouping ? '' : WordHighlightEngine.TEXT_POOL.join(' '));
+        if ((speedReading || grouping) && !text.trim()) throw new Error('Reading text is missing or invalid.');
         const backendChunks = root.serverAuthoritative === true ? []
             : boundedStringArray(caseInsensitiveField(nested, 'chunks') ?? caseInsensitiveField(root, 'chunks'));
-        const chunkSize = speedReading ? 1 : boundedInteger(caseInsensitiveField(nested, 'chunkSize')
+        const chunkSize = speedReading ? 1 : boundedInteger((root.serverAuthoritative === true ? root.groupingChunkSize : undefined) ?? caseInsensitiveField(nested, 'chunkSize')
             ?? caseInsensitiveField(root, 'chunkSize') ?? pacer['chunksize'] ?? content['chunksize'], 1, 1, 10);
-        const explicitWpm = caseInsensitiveField(nested, 'targetWpm')
+        const explicitWpm = (root.serverAuthoritative === true ? root.groupingDisplayPaceWpm : undefined) ?? caseInsensitiveField(nested, 'targetWpm')
             ?? caseInsensitiveField(root, 'targetWpm') ?? pacer['speedwpm'];
         const legacyDuration = boundedInteger(timing['durationms'], 0, 0, 10000);
         const legacyDelay = boundedInteger(timing['delayms'], 0, 0, 10000);
@@ -119,15 +121,34 @@ export class WordHighlightEngine implements BaseEngine {
         {
             const rawWords = (backendChunks.length ? backendChunks.join(' ') : text).split(/\s+/).filter(w => w.length > 0);
             const cs = chunkSize;
-
-            for (let i = 0; i < rawWords.length; i += cs) {
-                const words = rawWords.slice(i, i + cs);
+            let boundaries: GroupingBoundary[];
+            if (grouping && root.serverAuthoritative !== true) {
+                boundaries = buildGroupingBoundaries(text, cs);
+            } else if (grouping && root.groupingVersion === 1) {
+                boundaries = root.groupingChunks;
+                let previous = 0;
+                if (!Array.isArray(boundaries) || !boundaries.length || boundaries.some(boundary => {
+                    const valid = boundary && Number.isInteger(boundary.endIndex) && boundary.endIndex > previous
+                        && boundary.endIndex - previous <= cs && boundary.endIndex <= rawWords.length
+                        && typeof boundary.hasNewline === 'boolean';
+                    previous = boundary?.endIndex;
+                    return !valid;
+                }) || previous !== rawWords.length) throw new Error('Invalid grouping session snapshot.');
+            } else {
+                // Existing server sessions retain their saved legacy fixed-size grouping.
+                boundaries = rawWords.flatMap((_, i) => i % cs === 0
+                    ? [{ endIndex: Math.min(i + cs, rawWords.length), hasNewline: false }] : []);
+            }
+            let startIndex = 0;
+            for (const boundary of boundaries) {
+                const words = rawWords.slice(startIndex, boundary.endIndex);
                 this.chunks.push({
                     words: words,
-                    hasNewline: false,
-                    startIndex: i
+                    hasNewline: boundary.hasNewline,
+                    startIndex
                 });
                 this.allWords.push(...words);
+                startIndex = boundary.endIndex;
             }
         }
 

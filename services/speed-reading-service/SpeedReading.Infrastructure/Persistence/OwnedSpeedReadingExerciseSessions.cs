@@ -1775,6 +1775,12 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             state.WordCount = state.Words.Length;
             state.ReadingPausedMilliseconds = 0;
             state.TotalSteps = (int)Math.Ceiling((decimal)state.Words.Length / state.GroupingChunkSize);
+            if (state.ExerciseTypeName.Equals("Chunking", StringComparison.OrdinalIgnoreCase))
+            {
+                state.GroupingVersion = 1;
+                state.GroupingChunks = GroupingTextRules.Build(state.Content, state.GroupingChunkSize);
+                state.TotalSteps = state.GroupingChunks.Count;
+            }
         }
         state.CustomData = customData;
         if (IsTextFade(state))
@@ -3802,6 +3808,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         public int RsvpPresentedWords { get; set; }
         public decimal RsvpCompletionPercent { get; set; }
         public int GroupingChunkSize { get; set; }
+        public int GroupingVersion { get; set; }
+        public List<GroupingBoundary> GroupingChunks { get; set; } = [];
         public decimal FadeDisplayPaceWpm { get; set; }
         public int FadeLagMs { get; set; }
         public decimal FadeCompletionPercent { get; set; }
