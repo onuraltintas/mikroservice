@@ -103,7 +103,7 @@
       {
         "wordIndex": 44,
         "originalWord": "kısa",
-        "errorWord": "kıssa",
+        "errorWord": "kısssa",
         "errorType": "extra_letter",
         "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: kısa"
       },
@@ -278,7 +278,7 @@
       {
         "wordIndex": 75,
         "originalWord": "kısa",
-        "errorWord": "kıssa",
+        "errorWord": "kısssa",
         "errorType": "extra_letter",
         "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: kısa"
       },
@@ -397,7 +397,7 @@
       {
         "wordIndex": 263,
         "originalWord": "kısa",
-        "errorWord": "kıssa",
+        "errorWord": "kısssa",
         "errorType": "extra_letter",
         "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: kısa"
       }
@@ -572,7 +572,7 @@
       {
         "wordIndex": 44,
         "originalWord": "kısa",
-        "errorWord": "kıssa",
+        "errorWord": "kısssa",
         "errorType": "extra_letter",
         "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: kısa"
       },
@@ -642,7 +642,7 @@
       {
         "wordIndex": 263,
         "originalWord": "kısa",
-        "errorWord": "kıssa",
+        "errorWord": "kısssa",
         "errorType": "extra_letter",
         "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: kısa"
       }
@@ -1097,7 +1097,7 @@
       {
         "wordIndex": 44,
         "originalWord": "kısa",
-        "errorWord": "kıssa",
+        "errorWord": "kısssa",
         "errorType": "extra_letter",
         "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: kısa"
       },
@@ -1622,7 +1622,7 @@
       {
         "wordIndex": 44,
         "originalWord": "kısa",
-        "errorWord": "kıssa",
+        "errorWord": "kısssa",
         "errorType": "extra_letter",
         "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: kısa"
       },

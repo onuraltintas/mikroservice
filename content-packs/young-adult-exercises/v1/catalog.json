@@ -1285,7 +1285,7 @@
             {
               "wordIndex": 44,
               "originalWord": "kısa",
-              "errorWord": "kıssa",
+              "errorWord": "kısssa",
               "errorType": "extra_letter",
               "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: kısa"
             },

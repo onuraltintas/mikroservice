@@ -109,7 +109,7 @@ FROM jsonb_array_elements($settings$[
             {
               "wordIndex": 44,
               "originalWord": "kısa",
-              "errorWord": "kıssa",
+              "errorWord": "kısssa",
               "errorType": "extra_letter",
               "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: kısa"
             },
@@ -269,7 +269,7 @@ FROM jsonb_array_elements($settings$[
             {
               "wordIndex": 75,
               "originalWord": "kısa",
-              "errorWord": "kıssa",
+              "errorWord": "kısssa",
               "errorType": "extra_letter",
               "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: kısa"
             },
@@ -364,7 +364,7 @@ FROM jsonb_array_elements($settings$[
             {
               "wordIndex": 263,
               "originalWord": "kısa",
-              "errorWord": "kıssa",
+              "errorWord": "kısssa",
               "errorType": "extra_letter",
               "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: kısa"
             }
@@ -524,7 +524,7 @@ FROM jsonb_array_elements($settings$[
             {
               "wordIndex": 44,
               "originalWord": "kısa",
-              "errorWord": "kıssa",
+              "errorWord": "kısssa",
               "errorType": "extra_letter",
               "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: kısa"
             },
@@ -582,7 +582,7 @@ FROM jsonb_array_elements($settings$[
             {
               "wordIndex": 263,
               "originalWord": "kısa",
-              "errorWord": "kıssa",
+              "errorWord": "kısssa",
               "errorType": "extra_letter",
               "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: kısa"
             }
@@ -995,7 +995,7 @@ FROM jsonb_array_elements($settings$[
             {
               "wordIndex": 44,
               "originalWord": "kısa",
-              "errorWord": "kıssa",
+              "errorWord": "kısssa",
               "errorType": "extra_letter",
               "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: kısa"
             },
@@ -1466,7 +1466,7 @@ FROM jsonb_array_elements($settings$[
             {
               "wordIndex": 44,
               "originalWord": "kısa",
-              "errorWord": "kıssa",
+              "errorWord": "kısssa",
               "errorType": "extra_letter",
               "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: kısa"
             },
@@ -1932,7 +1932,7 @@ FROM jsonb_array_elements($content$[
       {
         "wordIndex": 44,
         "originalWord": "kısa",
-        "errorWord": "kıssa",
+        "errorWord": "kısssa",
         "errorType": "extra_letter",
         "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: kısa"
       },
@@ -2107,7 +2107,7 @@ FROM jsonb_array_elements($content$[
       {
         "wordIndex": 75,
         "originalWord": "kısa",
-        "errorWord": "kıssa",
+        "errorWord": "kısssa",
         "errorType": "extra_letter",
         "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: kısa"
       },
@@ -2226,7 +2226,7 @@ FROM jsonb_array_elements($content$[
       {
         "wordIndex": 263,
         "originalWord": "kısa",
-        "errorWord": "kıssa",
+        "errorWord": "kısssa",
         "errorType": "extra_letter",
         "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: kısa"
       }
@@ -2401,7 +2401,7 @@ FROM jsonb_array_elements($content$[
       {
         "wordIndex": 44,
         "originalWord": "kısa",
-        "errorWord": "kıssa",
+        "errorWord": "kısssa",
         "errorType": "extra_letter",
         "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: kısa"
       },
@@ -2471,7 +2471,7 @@ FROM jsonb_array_elements($content$[
       {
         "wordIndex": 263,
         "originalWord": "kısa",
-        "errorWord": "kıssa",
+        "errorWord": "kısssa",
         "errorType": "extra_letter",
         "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: kısa"
       }
@@ -2926,7 +2926,7 @@ FROM jsonb_array_elements($content$[
       {
         "wordIndex": 44,
         "originalWord": "kısa",
-        "errorWord": "kıssa",
+        "errorWord": "kısssa",
         "errorType": "extra_letter",
         "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: kısa"
       },
@@ -3451,7 +3451,7 @@ FROM jsonb_array_elements($content$[
       {
         "wordIndex": 44,
         "originalWord": "kısa",
-        "errorWord": "kıssa",
+        "errorWord": "kısssa",
         "errorType": "extra_letter",
         "explanation": "Fazladan harf düzeltilmeli. Doğru yazım: kısa"
       },
