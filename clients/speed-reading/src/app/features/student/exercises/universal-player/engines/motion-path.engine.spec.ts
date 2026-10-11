@@ -16,6 +16,44 @@ function callbacks(onComplete: (result: EngineResult) => void): EngineCallbacks 
 }
 
 describe('MotionPathEngine', () => {
+  it('cycles single-letter fixation through all four directions without immediate repeats', fakeAsync(() => {
+    const engine = new MotionPathEngine();
+    engine.initialize({ mode: 'fixation', content: { points: 4, peripheralCount: 1 },
+      timing: { holdMs: 100 } }, callbacks(() => undefined));
+    engine.start();
+    const positions: string[] = [], letters: string[] = [];
+    for (let round = 0; round < 4; round++) {
+      tick(350);
+      const stimulus = engine.getPeripheralChars()[0];
+      positions.push(stimulus.position); letters.push(stimulus.char);
+      tick(100);
+      engine.handleInput({ type: 'keypress', key: stimulus.char });
+      engine.handleInput({ type: 'enter', key: 'Enter' });
+      tick(1200);
+    }
+    expect(new Set(positions).size).toBe(4);
+    for (let round = 1; round < letters.length; round++) expect(letters[round]).not.toBe(letters[round - 1]);
+    expect(engine.state.isCompleted).toBeTrue();
+    engine.destroy();
+  }));
+
+  it('uses complete-round accuracy in new fixation previews just like the owned server', fakeAsync(() => {
+    let result: EngineResult | undefined;
+    const engine = new MotionPathEngine();
+    engine.initialize({ mode: 'fixation', content: { points: 1, peripheralCount: 2 }, timing: { holdMs: 100 } },
+      callbacks(value => result = value));
+    engine.start(); tick(350);
+    const first = engine.getPeripheralChars()[0].char;
+    tick(100);
+    engine.handleInput({ type: 'keypress', key: first });
+    engine.handleInput({ type: 'keypress', key: first });
+    engine.handleInput({ type: 'enter', key: 'Enter' });
+    tick(1200);
+    expect(result?.accuracy).toBe(0);
+    expect(result?.errors).toBe(1);
+    engine.destroy();
+  }));
+
   it('uses the configured saccade interval and generated target count', fakeAsync(() => {
     const engine = new MotionPathEngine();
     engine.initialize({ mode: 'saccade', content: { points: 3 }, movement: { jumpIntervalMs: 200 } } as any,

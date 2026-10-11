@@ -10,6 +10,47 @@ namespace SpeedReading.Application.UnitTests;
 public sealed class FixationSessionTimingTests
 {
     [Fact]
+    public async Task New_fixation_protocol_preserves_the_previous_stimuli_across_pause_without_exposing_them()
+    {
+        await using var db = CreateDb();
+        var student = Guid.NewGuid();
+        var type = ExerciseType.Create(Guid.NewGuid(), "Fixation", "Sabitleme", "motion_path");
+        var exercise = Exercise.Create("Sabitleme", "attention",
+            """{"engineType":"motion_path","engineConfig":{"mode":"fixation","content":{"points":6,"peripheralCount":4,"maxPeripheralCount":4},"timing":{"holdMs":100}}}""",
+            5, student, type.Id);
+        db.ExerciseTypes.Add(type); db.Exercises.Add(exercise); await db.SaveChangesAsync();
+        var owned = typeof(OwnedSpeedReadingDbContext).Assembly.GetType("SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingExerciseSessions")!;
+        var service = (ISpeedReadingExerciseSessions)Activator.CreateInstance(owned,
+            BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, [db], null)!;
+        var started = await service.StartAsync(student, new() { ExerciseId = exercise.Id });
+        Assert.Equal(2, started.InitialData.GetProperty("fixationProtocolVersion").GetInt32());
+        List<string>? previous = null;
+        for (var round = 0; round < 6; round++)
+        {
+            if (round == 2) {
+                await service.PauseAsync(student, started.SessionId);
+                db.ChangeTracker.Clear(); await service.ResumeAsync(student, started.SessionId);
+            }
+            var presentation = await service.ValidateActionAsync(student, started.SessionId, new() { Action = "fixation_present" });
+            var stimuli = Stimuli(presentation);
+            Assert.Equal(4, stimuli.Count);
+            Assert.Equal(4, stimuli.Distinct().Count());
+            if (previous is not null) Assert.Empty(stimuli.Intersect(previous));
+            previous = stimuli;
+            var session = await db.ExerciseSessions.SingleAsync();
+            var state = JsonNode.Parse(session.SessionDataJson)!;
+            state["fixationPresentedAt"] = DateTime.UtcNow.AddSeconds(-1);
+            session.SetState(state.ToJsonString()); await db.SaveChangesAsync();
+            Assert.True((await service.ValidateActionAsync(student, started.SessionId,
+                new() { Action = "fixation_answer", Answers = stimuli.AsEnumerable().Reverse().ToList() })).IsCorrect);
+        }
+        var result = await service.CompleteAsync(student, started.SessionId, new());
+        Assert.Equal(100, result.Accuracy);
+        Assert.Equal(6, result.DetailedResults.GetProperty("fixationRoundResults").GetArrayLength());
+        Assert.False(result.DetailedResults.TryGetProperty("fixationPreviousStimuli", out _));
+    }
+
+    [Fact]
     public async Task Restarts_legacy_fixation_without_mixing_old_round_history()
     {
         await using var db = CreateDb();

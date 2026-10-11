@@ -9,6 +9,23 @@ import { TestBed } from '@angular/core/testing';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 
 describe('Custom preview settings safety', () => {
+  it('offers fixation rounds and letter count within the catalogue age limit', () => {
+    const config = { engineType: 'motion_path', engineConfig: { mode: 'fixation',
+      timing: { holdMs: 1000 }, content: { points: 20, peripheralCount: 1, maxPeripheralCount: 2 } } };
+    const controls = getCustomPreviewControls(config);
+    expect(controls.find(control => control.key === 'points')?.value).toBe(20);
+    expect(controls.find(control => control.key === 'peripheralCount')).toEqual(
+      jasmine.objectContaining({ value: 1, min: 1, max: 2 }));
+    const changed = applyCustomPreviewSettings(config, { points: 25, peripheralCount: 2, holdMs: 900 },
+      { roles: ['Teacher'], preview: true });
+    expect(changed.engineConfig.content.points).toBe(25);
+    expect(changed.engineConfig.content.peripheralCount).toBe(2);
+    expect(changed.engineConfig.timing.holdMs).toBe(900);
+    expect(config.engineConfig.content.points).toBe(20);
+    for (const overrides of [{ points: 0 }, { points: 101 }, { peripheralCount: 3 }, { peripheralCount: 1.5 }])
+      expect(() => applyCustomPreviewSettings(config, overrides, { roles: ['Admin'], preview: true })).toThrow();
+  });
+
   it('allows visual expansion rounds while preserving the catalog and enforcing 1–100 bounds', () => {
     const config = { engineType: 'visual_expansion', engineConfig: { rounds: 30, startDegrees: 8,
       targetDegrees: 16, displayDurationMs: 1200 } };
