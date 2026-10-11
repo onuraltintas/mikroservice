@@ -9,6 +9,24 @@ namespace SpeedReading.Application.UnitTests;
 
 public sealed class GroupingSessionTests
 {
+    [Fact]
+    public async Task New_sessions_snapshot_sentence_boundaries_and_preserve_them_on_resume()
+    {
+        await using var db = Context();
+        var (service, student, exercise) = await Seed(db);
+        db.ReadingTexts.Add(ReadingText.Create(Guid.NewGuid(), "Metin", "Bir. İki üç dört. Beş altı.", difficultyLevel: 3));
+        await db.SaveChangesAsync();
+        var started = await service.StartAsync(student, new() { ExerciseId = exercise });
+        started.InitialData.GetProperty("groupingVersion").GetInt32().Should().Be(1);
+        started.InitialData.GetProperty("totalSteps").GetInt32().Should().Be(4);
+        started.InitialData.GetProperty("groupingChunks").EnumerateArray()
+            .Select(group => group.GetProperty("endIndex").GetInt32()).Should().Equal(1, 3, 4, 6);
+        started.InitialData.GetProperty("readingMinimumMs").GetInt32().Should().Be(1800);
+        var snapshot = (await db.ExerciseSessions.SingleAsync()).SessionDataJson;
+        (await service.StartAsync(student, new() { ExerciseId = exercise })).SessionId.Should().Be(started.SessionId);
+        (await db.ExerciseSessions.SingleAsync()).SessionDataJson.Should().Be(snapshot);
+    }
+
     [Theory]
     [InlineData("""{"engineType":"word_highlight","engineConfig":{"content":{"chunkSize":0}}}""")]
     [InlineData("""{"engineType":"word_highlight","engineConfig":{"timing":{"durationMs":0}}}""")]
