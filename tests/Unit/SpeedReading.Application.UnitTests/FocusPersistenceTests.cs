@@ -50,6 +50,8 @@ public sealed class FocusPersistenceTests
     }
 
     [Theory]
+    [InlineData(1)]
+    [InlineData(2)]
     [InlineData(3)]
     [InlineData(4)]
     [InlineData(5)]
@@ -58,13 +60,16 @@ public sealed class FocusPersistenceTests
         var generate = typeof(OwnedSpeedReadingDbContext).Assembly
             .GetType("SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingExerciseSessions")!
             .GetMethod("CreateFocusPositionSequence", BindingFlags.NonPublic | BindingFlags.Static)!;
-        var targets = Enumerable.Range(nLevel + 1, 100 - nLevel - 1).Where(index => index % nLevel == 1).ToArray();
+        var targets = Enumerable.Range(nLevel + 1, 100 - nLevel - 1)
+            .Where(index => nLevel == 1 ? index % 3 == 1 : index % nLevel == 1).ToArray();
         for (var attempt = 0; attempt < 100; attempt++)
         {
             var positions = (int[])generate.Invoke(null, [100, nLevel, 3, targets])!;
             for (var index = 1; index < positions.Length; index++)
             {
-                Assert.NotEqual(positions[index - 1], positions[index]);
+                if (nLevel > 1) Assert.NotEqual(positions[index - 1], positions[index]);
+                else if (index > 1)
+                    Assert.False(positions[index] == positions[index - 1] && positions[index] == positions[index - 2]);
                 if (index >= nLevel)
                     Assert.Equal(targets.Contains(index), positions[index] == positions[index - nLevel]);
             }

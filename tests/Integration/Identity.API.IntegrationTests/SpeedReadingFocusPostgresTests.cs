@@ -13,6 +13,47 @@ namespace Identity.API.IntegrationTests;
 public sealed class SpeedReadingFocusPostgresTests(PostgresFixture postgres)
 {
     [Theory]
+    [InlineData(1)]
+    [InlineData(2)]
+    [InlineData(3)]
+    [InlineData(4)]
+    [InlineData(5)]
+    public async Task Generated_position_sequences_persist_repeat_limits_and_valid_targets(int nLevel)
+    {
+        await using var db = new OwnedSpeedReadingDbContext(new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>()
+            .UseNpgsql(postgres.ConnectionString).Options);
+        // This fixture owns an isolated disposable database, never a live database.
+        await db.Database.EnsureDeletedAsync();
+        try
+        {
+            await db.Database.EnsureCreatedAsync();
+            var student = Guid.NewGuid();
+            var type = ExerciseType.Create(Guid.NewGuid(), "Focus", "Konum Belleği", "focus");
+            var exercise = Exercise.Create("Konum Belleği", "focus",
+                $$$"""{"engineType":"focus","engineConfig":{"mode":"position","nLevel":{{{nLevel}}},"speedMs":1000,"gridSize":3,"totalSteps":500}}""",
+                3, student, type.Id);
+            db.ExerciseTypes.Add(type); db.Exercises.Add(exercise); await db.SaveChangesAsync();
+            var service = (ISpeedReadingExerciseSessions)Activator.CreateInstance(typeof(OwnedSpeedReadingDbContext).Assembly
+                .GetType("SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingExerciseSessions")!,
+                BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, [db], null)!;
+            await service.StartAsync(student, new() { ExerciseId = exercise.Id });
+            db.ChangeTracker.Clear();
+            var state = JsonNode.Parse((await db.ExerciseSessions.SingleAsync()).SessionDataJson)!;
+            var positions = state["positionSequence"]!.AsArray().Select(item => item!.GetValue<int>()).ToArray();
+            Assert.Equal(500, positions.Length);
+            Assert.Equal(positions[0], positions[nLevel]);
+            Assert.All(positions, position => Assert.InRange(position, 1, 9));
+            for (var index = nLevel == 1 ? 2 : 1; index < positions.Length; index++)
+            {
+                if (nLevel == 1)
+                    Assert.False(positions[index] == positions[index - 1] && positions[index] == positions[index - 2]);
+                else Assert.NotEqual(positions[index - 1], positions[index]);
+            }
+        }
+        finally { await db.Database.EnsureDeletedAsync(); }
+    }
+
+    [Theory]
     [InlineData("position")]
     [InlineData("word")]
     [InlineData("dual")]

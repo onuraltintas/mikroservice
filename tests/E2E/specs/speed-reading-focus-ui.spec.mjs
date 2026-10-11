@@ -54,6 +54,51 @@ for (const mode of ['position', 'word', 'dual']) {
   });
 }
 
+for (const nLevel of [1, 2, 3, 4, 5]) {
+  test(`${nLevel}-back preview preserves targets and limits repeated visible positions`, async ({ page }) => {
+    const { errors, writes } = await prepare(page, 'Teacher', 'position');
+    await page.getByRole('button', { name: 'Özel ayarlarla dene' }).click();
+    const dialog = page.getByRole('dialog');
+    const inputs = dialog.locator('input[type=number]');
+    await inputs.nth(0).fill('1000'); await inputs.nth(1).fill(String(nLevel));
+    await inputs.nth(2).fill('3'); await inputs.nth(3).fill('12');
+    // Exercise the densest target stream deterministically, not by waiting for chance.
+    await page.evaluate(() => { Math.random = () => 0; });
+    await dialog.getByRole('button', { name: 'Denemeyi başlat' }).click();
+    await expect(page.locator('.start-button-large')).toBeVisible();
+    await page.clock.install(); await page.clock.pauseAt(new Date());
+    await page.locator('.start-button-large').click();
+    const active = page.locator('.focus-grid .grid-cell.active');
+    const position = () => active.evaluate(cell => [...cell.parentElement.children].indexOf(cell) + 1);
+    const positions = [await position()];
+    for (let index = 1; index < 12; index++) {
+      await page.clock.runFor(1000);
+      if (nLevel === 1 && index % 2 === 1) {
+        await expect(active).toHaveCount(0);
+        await page.getByRole('button', { name: /KONUM EŞLEŞME \(Space\)/ }).click();
+        await expect(page.locator('.stat-pill.correct')).toContainText('0');
+        await page.clock.runFor(150);
+        positions.push(await position());
+        expect(positions[index]).toBe(positions[index - 1]);
+        // Preserve the original fixed per-stimulus cadence after the separator.
+        await page.clock.runFor(850);
+        if (index < 11) {
+          positions.push(await position());
+          index++;
+        }
+      } else positions.push(await position());
+    }
+    expect(positions[nLevel]).toBe(positions[0]);
+    for (let index = nLevel === 1 ? 2 : 1; index < positions.length; index++) {
+      if (nLevel === 1) expect(positions[index] === positions[index - 1] && positions[index] === positions[index - 2]).toBe(false);
+      else expect(positions[index]).not.toBe(positions[index - 1]);
+    }
+    await page.clock.runFor(1500);
+    await expect(page.getByRole('status').filter({ hasText: /Önizleme sonucu.*kaydedilmedi/ })).toBeVisible();
+    expect(writes).toEqual([]); expect(errors).toEqual([]);
+  });
+}
+
 test('student unanswered session uses server completion without WPM', async ({ page }) => {
   const { errors, configuration } = await prepare(page, 'Student', 'position');
   let completed = 0; const actions = [];
