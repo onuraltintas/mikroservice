@@ -1657,6 +1657,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                 config,
                 difficultyLevel,
                 profileAgeGroupId,
+                studentId,
                 cancellationToken);
             if (state.VisualizationScenes.Count == 0)
                 throw new InvalidOperationException("Görselleştirme için seviyenize uygun sahne bulunamadı.");
@@ -3214,13 +3215,14 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         JsonElement config,
         int difficultyLevel,
         Guid? profileAgeGroupId,
+        Guid studentId,
         CancellationToken cancellationToken)
     {
         var nested = ReadObject(config, "engineConfig");
         var sceneConfig = ReadProperty(nested, "scenes").ValueKind == JsonValueKind.Array ? nested : config;
         var configuredScenes = ReadVisualizationScenes(sceneConfig, difficultyLevel, profileAgeGroupId);
         if (configuredScenes.Count > 0)
-            return configuredScenes;
+            return await SelectVisualizationScenesAsync(configuredScenes, studentId, exerciseId, cancellationToken);
 
         var scenes = await db.VisualizationScenes.AsNoTracking()
             .Where(item => item.ExerciseId == exerciseId
@@ -3243,7 +3245,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             .GroupBy(item => item.SceneId)
             .ToDictionary(group => group.Key, group => group.ToList());
 
-        return scenes.Select(scene => new VisualizationSceneState
+        var available = scenes.Select(scene => new VisualizationSceneState
         {
             SceneId = scene.Id.ToString("D"),
             Description = scene.Description,
@@ -3263,6 +3265,36 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                 })
                 .ToList()
         }).ToList();
+        return await SelectVisualizationScenesAsync(available, studentId, exerciseId, cancellationToken);
+    }
+
+    private async Task<List<VisualizationSceneState>> SelectVisualizationScenesAsync(
+        List<VisualizationSceneState> scenes, Guid studentId, Guid exerciseId, CancellationToken cancellationToken)
+    {
+        if (scenes.Count <= 3) return scenes;
+        // A bounded, owner/exercise-scoped history prevents loading a student's entire training history.
+        var snapshots = await db.ExerciseSessions.AsNoTracking()
+            .Where(session => session.StudentId == studentId && session.ExerciseId == exerciseId)
+            .OrderByDescending(session => session.StartTime).ThenByDescending(session => session.Id)
+            .Take(200).Select(session => session.SessionDataJson).ToListAsync(cancellationToken);
+        var usage = new Dictionary<string, (int Count, int Recency)>(StringComparer.Ordinal);
+        for (var index = 0; index < snapshots.Count; index++)
+        {
+            var previous = ReadProperty(ParseJsonOrEmpty(snapshots[index]), "visualizationScenes");
+            if (previous.ValueKind != JsonValueKind.Array) continue;
+            foreach (var id in previous.EnumerateArray().Select(scene => ReadString(scene, "sceneId"))
+                .Where(id => id is not null).Distinct())
+            {
+                var seen = usage.GetValueOrDefault(id!, (Count: 0, Recency: int.MaxValue));
+                usage[id!] = (seen.Count + 1, Math.Min(seen.Recency, index));
+            }
+        }
+        var selected = scenes.DistinctBy(scene => scene.SceneId)
+            .OrderBy(scene => usage.GetValueOrDefault(scene.SceneId).Count)
+            .ThenByDescending(scene => usage.GetValueOrDefault(scene.SceneId, (Count: 0, Recency: int.MaxValue)).Recency)
+            .ThenBy(_ => Random.Shared.Next()).Take(3).OrderBy(_ => Random.Shared.Next()).ToList();
+        for (var index = 0; index < selected.Count; index++) selected[index].DisplayOrder = index;
+        return selected;
     }
 
     private static List<VisualizationSceneState> ReadVisualizationScenes(JsonElement config, int difficultyLevel, Guid? profileAgeGroupId)
