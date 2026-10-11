@@ -42,6 +42,8 @@ async function launch(page) {
   await page.getByRole('button', { name: 'Özel ayarlarla dene' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Denemeyi başlat' }).click();
   await expect(page.locator('.start-button-large')).toBeVisible();
+  await expect(page.getByText('Gösterim temposu:', { exact: true })).toBeVisible();
+  await expect(page.getByText('200 kelime/dk', { exact: true })).toBeVisible();
   await page.clock.install();
   await page.clock.pauseAt(new Date());
   await page.locator('.start-button-large').click();
@@ -69,7 +71,7 @@ test('group colors, display pace and completion remain distinct from measured re
   expect(writes).toEqual([]);
 });
 
-test('large custom groups wrap on mobile without horizontally clipping real words', async ({ page }) => {
+test('large custom groups wrap on mobile without horizontally clipping real words', async ({ page }, testInfo) => {
   await prepare(page, 'Admin', false, 'Kütüphanedekilerin gözlemlerinden yararlanılabileceğini düşündüğümüzde karşılaştırmalarımızı değerlendiriyoruz.');
   await page.getByRole('button', { name: 'Özel ayarlarla dene' }).click();
   await page.getByRole('dialog').getByLabel('Kelime grubu', { exact: true }).fill('10');
@@ -81,6 +83,7 @@ test('large custom groups wrap on mobile without horizontally clipping real word
   const display = page.locator('.highlight-display-area');
   const dimensions = await display.evaluate(element => ({ width: element.clientWidth, scrollWidth: element.scrollWidth }));
   expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.width + 1);
+  await page.screenshot({ path: testInfo.outputPath('bounded-groups.png'), fullPage: true });
 });
 
 test('teacher timeout reports incomplete demonstration without preview persistence', async ({ page }) => {
