@@ -117,7 +117,8 @@ export class WordHighlightEngine implements BaseEngine {
         // Legacy duration/delay together represent one group display cycle.
         const targetWpm = explicitWpm == null && legacyDuration > 0
             ? Math.max(20, Math.min(1500, 60000 * chunkSize / (legacyDuration + legacyDelay)))
-            : boundedInteger(explicitWpm, 200, 20, 1500);
+            : typeof explicitWpm === 'number' && Number.isFinite(explicitWpm)
+                ? Math.max(20, Math.min(1500, explicitWpm)) : 200;
         {
             const rawWords = (backendChunks.length ? backendChunks.join(' ') : text).split(/\s+/).filter(w => w.length > 0);
             const cs = chunkSize;

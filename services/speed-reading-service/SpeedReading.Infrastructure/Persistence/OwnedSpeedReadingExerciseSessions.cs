@@ -1781,6 +1781,12 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             state.TotalSteps = (int)Math.Ceiling((decimal)state.Words.Length / state.GroupingChunkSize);
             if (state.ExerciseTypeName.Equals("Chunking", StringComparison.OrdinalIgnoreCase))
             {
+                var minimumWords = ReadPositiveInt(content, "minWordCount")
+                    ?? ReadPositiveInt(ReadObject(config, "content"), "minWordCount") ?? 0;
+                var maximumWords = ReadPositiveInt(content, "maxWordCount")
+                    ?? ReadPositiveInt(ReadObject(config, "content"), "maxWordCount") ?? 0;
+                if (state.WordCount < minimumWords || maximumWords > 0 && state.WordCount > maximumWords)
+                    throw new InvalidOperationException("Gruplama metninin gerçek uzunluğu seçilen aralığa uygun değil.");
                 state.GroupingVersion = 1;
                 state.GroupingChunks = GroupingTextRules.Build(state.Content, state.GroupingChunkSize);
                 state.TotalSteps = state.GroupingChunks.Count;
