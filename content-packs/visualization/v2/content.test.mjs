@@ -21,6 +21,9 @@ for (const age of ages) {
           assert.ok(scene.description.includes(q.evidence));
           assert.ok(q.options.every(value => value.trim()));
           assert.equal(q.demandLevel, level);
+          if (q.questionType === 'detail')
+            assert.equal(new Set(q.options.map(option => option.split(' ').slice(1).join(' '))).size, 1,
+              'Count distractors must describe the same object, not unrelated items');
         }
       }
       if (level > 1) {
