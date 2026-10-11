@@ -16,6 +16,21 @@ function callbacks(onComplete: (result: EngineResult) => void): EngineCallbacks 
 }
 
 describe('MotionPathEngine', () => {
+  it('reports fixation response time after hiding the letters and excludes a pause', fakeAsync(() => {
+    let result: EngineResult | undefined;
+    const engine = new MotionPathEngine();
+    engine.initialize({ mode: 'fixation', content: { points: 1, peripheralCount: 1 }, timing: { holdMs: 100 } },
+      callbacks(value => result = value));
+    engine.start(); tick(350);
+    const letter = engine.getPeripheralChars()[0].char;
+    tick(100); tick(200);
+    engine.pause(); tick(5000); engine.resume(); tick(300);
+    engine.handleInput({ type: 'keypress', key: letter });
+    engine.handleInput({ type: 'enter', key: 'Enter' }); tick(1200);
+    expect(result?.details?.averageResponseTimeMs).toBe(500);
+    expect(result?.details?.fixationResults[0].responseTimeMs).toBe(500);
+    engine.destroy();
+  }));
   it('cycles single-letter fixation through all four directions without immediate repeats', fakeAsync(() => {
     const engine = new MotionPathEngine();
     engine.initialize({ mode: 'fixation', content: { points: 4, peripheralCount: 1 },
