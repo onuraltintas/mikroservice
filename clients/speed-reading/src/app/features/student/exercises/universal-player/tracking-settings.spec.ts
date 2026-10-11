@@ -32,4 +32,11 @@ describe('Tracking custom settings', () => {
     const config = { engineType: 'motion_path', mode: 'tracking' };
     for (const value of [49, 60001, NaN, 1.5]) expect(() => applyCustomPreviewSettings(config, { cycleDurationMs: value }, { roles: ['Admin'], preview: true })).toThrow();
   });
+  it('normalizes legacy millisecond durations and path names just like the player', () => {
+    const controls = getCustomPreviewControls({ engineType: 'motion_path', engineConfig: {
+      mode: 'tracking', timing: { durationMs: 5100 }, path: { type: 'Circle' }
+    } });
+    expect(controls.find(item => item.key === 'durationSeconds')?.value).toBe(6);
+    expect(controls.find(item => item.key === 'pathType')?.value).toBe('circle');
+  });
 });
