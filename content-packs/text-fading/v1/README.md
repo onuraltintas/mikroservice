@@ -25,3 +25,12 @@ Metinler kısaltılmaz, yeni soru üretilmez. Aktif, aynı seviyede, uygun yaşt
 6. Geri dönüşte yalnız bu paketin hedef satırlarını doğrulanmış önceki değerlerine getir. Yeni dokuz kayda bağlı oturum oluşmuşsa silme; pasife al ve geçmişi koru. API/frontend'i uyumlu sürüme döndür.
 
 Seviye tespit, günlük program görev sırası, öğrenci schedule'ları, açık oturum snapshot'ları, sonuçlar, metinler ve sorular değiştirilmez. Alt seviyelere açılması katalog erişimini genişletir; günlük programa otomatik yeni görev eklemez. Gerçek canlı Identity oturumuyla kabul testi yayın sonrasında ayrıca yapılmalıdır.
+
+## Yerel doğrulama — 11 Ekim 2026
+
+- 1.077 Speed Reading C# birim testi, 770 frontend testi, 10 gerçek PostgreSQL testi (6 Metin Solma + 4 Anlama regresyonu), 14 masaüstü/mobil tarayıcı testi ve ayar matrisi testi geçti.
+- PostgreSQL: 20 yeni oturumda dört soru, değişmiş kaynak/eksik soruda atomik ret, tekrar uygulamada sabit version, eski açık snapshot'ın korunması ve dört sorudan üç doğrunun %75 anlama puanı olarak tek kez saklanması doğrulandı. Ölçülmüş WPM üretilmiyor.
+- Tarayıcı: gerçek Angular oynatıcı, kontrollü Identity/API yanıtları. Bu testler canlı kimlik oturumunun kabul testi değildir.
+- TypeScript ve üretim frontend derlemesi geçti. Mevcut oynatıcı SCSS bütçe uyarısı (128,99 kB / 120 kB) sürüyor.
+- Metin Solma motoru satır kapsamı %98,5, dal kapsamı %82,97; uygulama genelinde satır kapsamı %62,72. Genel %80/%100 kapsam iddiası yok.
+- GitHub'a gönderim veya canlı veritabanı değişikliği yapılmadı. Canlı envanter yalnız salt okunur incelendi.

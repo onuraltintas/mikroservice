@@ -94,6 +94,57 @@ public sealed class SpeedReadingTextFadePostgresTests(PostgresFixture postgres)
         await command.ExecuteNonQueryAsync();
     }
 
+    [Fact]
+    public async Task Persists_four_question_evaluation_without_measured_reading_speed()
+    {
+        await using var db = new OwnedSpeedReadingDbContext(new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>()
+            .UseNpgsql(postgres.ConnectionString).Options);
+        await db.Database.EnsureDeletedAsync();
+        try
+        {
+            await db.Database.EnsureCreatedAsync();
+            var student = Guid.NewGuid();
+            var type = ExerciseType.Create(Guid.NewGuid(), "TextFading", "Metin Solma", "text_fade");
+            var exercise = Exercise.Create("Metin Solma", "reading",
+                """{"engineType":"text_fade","engineConfig":{"readingPurpose":"evaluation","fading":{"speedWpm":200,"lagMs":0}}}""",
+                3, student, type.Id);
+            db.ExerciseTypes.Add(type);
+            db.Exercises.Add(exercise);
+            var text = ReadingText.Create(Guid.NewGuid(), "Metin", "bir iki üç dört", difficultyLevel: 3);
+            db.ReadingTexts.Add(text);
+            for (var index = 0; index < 5; index++)
+                db.ReadingQuestions.Add(ReadingQuestion.Create(Guid.NewGuid(), text.Id, $"Soru {index}", "A", index,
+                    type: 1, bloomLevel: 1, optionA: "A", optionB: "B", optionC: "C", optionD: "D"));
+            await db.SaveChangesAsync();
+            var serviceType = typeof(OwnedSpeedReadingDbContext).Assembly.GetType("SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingExerciseSessions")!;
+            var service = (ISpeedReadingExerciseSessions)Activator.CreateInstance(serviceType,
+                BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, [db], null)!;
+            var started = await service.StartAsync(student, new() { ExerciseId = exercise.Id });
+            Assert.Equal(4, started.InitialData.GetProperty("questions").GetArrayLength());
+            Assert.True((await service.ValidateActionAsync(student, started.SessionId, new() { Action = "start_reading" })).IsValid);
+            var session = await db.ExerciseSessions.SingleAsync();
+            var state = JsonNode.Parse(session.SessionDataJson)!;
+            state["readingStartTime"] = DateTime.UtcNow.AddMilliseconds(-1300);
+            session.SetState(state.ToJsonString());
+            await db.SaveChangesAsync();
+            Assert.True((await service.ValidateActionAsync(student, started.SessionId, new() { Action = "finish_reading" })).IsValid);
+            await Assert.ThrowsAsync<EduPlatform.Shared.Kernel.Exceptions.BusinessRuleException>(() => service.CompleteAsync(student, started.SessionId, new()));
+            var questions = started.InitialData.GetProperty("questions").EnumerateArray().ToArray();
+            for (var index = 0; index < questions.Length; index++)
+                Assert.True((await service.ValidateActionAsync(student, started.SessionId, new() {
+                    Action = "answer_question", QuestionId = questions[index].GetProperty("questionId").GetGuid(),
+                    Answer = index == 3 ? "B" : "A", ResponseTime = 1000 })).IsValid);
+            var result = await service.CompleteAsync(student, started.SessionId, new());
+            Assert.Equal(75, result.ComprehensionScore);
+            Assert.Null(result.RawWPM);
+            Assert.Equal(200, result.DetailedResults.GetProperty("fadeDisplayPaceWpm").GetDecimal());
+            db.ChangeTracker.Clear();
+            Assert.Equal(75, (await service.CompleteAsync(student, started.SessionId, new())).ComprehensionScore);
+            Assert.Equal(1, await db.ExerciseSessionResults.CountAsync());
+        }
+        finally { await db.Database.EnsureDeletedAsync(); }
+    }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
