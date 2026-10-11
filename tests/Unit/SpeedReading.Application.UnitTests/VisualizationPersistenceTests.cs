@@ -13,6 +13,39 @@ namespace SpeedReading.Application.UnitTests;
 public sealed class VisualizationPersistenceTests
 {
     [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Three_scene_sessions_rotate_unused_content_and_keep_resumed_snapshot(bool configured)
+    {
+        await using var db = Context(); var student = Guid.NewGuid();
+        var type = ExerciseType.Create(Guid.NewGuid(), "Visualization", "Görselleştirme", "visualization");
+        var ids = Enumerable.Range(0, 6).Select(_ => Guid.NewGuid()).ToArray();
+        var config = configured ? System.Text.Json.JsonSerializer.Serialize(new { scenes = ids.Select((id, i) =>
+            new { sceneId = id, description = $"Sahne {i}", difficultyLevel = 3, displayOrder = i }) }) : "{}";
+        var exercise = Exercise.Create("Görselleştirme", "strategy", config, 3, student, type.Id);
+        db.ExerciseTypes.Add(type); db.Exercises.Add(exercise);
+        if (!configured) db.VisualizationScenes.AddRange(ids.Select((id, i) =>
+            VisualizationScene.Create(id, exercise.Id, $"Sahne {i}", null, 30, i, 3, null, student, DateTime.UtcNow)));
+        await db.SaveChangesAsync(); var service = Service(db);
+        var first = await service.StartAsync(student, new() { ExerciseId = exercise.Id });
+        var firstIds = SceneIds(first);
+        Assert.Equal(3, firstIds.Length);
+        var resumed = await service.StartAsync(student, new() { ExerciseId = exercise.Id });
+        Assert.Equal(first.SessionId, resumed.SessionId); Assert.Equal(firstIds, SceneIds(resumed));
+        await service.CompleteAsync(student, first.SessionId, new());
+        var second = await service.StartAsync(student, new() { ExerciseId = exercise.Id });
+        Assert.Equal(3, SceneIds(second).Length);
+        Assert.Empty(firstIds.Intersect(SceneIds(second)));
+        await service.CompleteAsync(student, second.SessionId, new());
+        var third = await service.StartAsync(student, new() { ExerciseId = exercise.Id });
+        Assert.Equal(3, SceneIds(third).Distinct().Count());
+        Assert.All(SceneIds(third), id => Assert.Contains(id, ids.Select(value => value.ToString("D"))));
+    }
+
+    private static string[] SceneIds(StartExerciseSessionResponse response) => response.InitialData
+        .GetProperty("visualizationScenes").EnumerateArray().Select(scene => scene.GetProperty("sceneId").GetString()!).ToArray();
+
+    [Theory]
     [InlineData("spatial", "B")]
     [InlineData("sequence", "Mavi")]
     [InlineData("detail", "b")]
