@@ -779,15 +779,31 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
           next: words => {
             const seenWords = new Set<string>();
             const seenDefinitions = new Set<string>();
-            const candidates = words.filter(word => (!word.targetAgeGroupId || word.targetAgeGroupId === age)
-              && (!Array.isArray(configuredIds) || !configuredIds.length || configuredIds.includes(word.id)))
+            const eligible = words.filter(word => (!word.targetAgeGroupId || word.targetAgeGroupId === age)
+              && (!Array.isArray(configuredIds) || !configuredIds.length || configuredIds.includes(word.id)));
+            const wordCounts = new Map<string, number>();
+            const definitionCounts = new Map<string, number>();
+            for (const word of eligible) {
+              const text = word.word?.trim().toLowerCase() || '';
+              const definition = word.definition?.trim().toLowerCase() || '';
+              wordCounts.set(text, (wordCounts.get(text) || 0) + 1);
+              definitionCounts.set(definition, (definitionCounts.get(definition) || 0) + 1);
+            }
+            const candidates = eligible.filter(word => !vocabulary.requireFullPool
+              || (wordCounts.get(word.word?.trim().toLowerCase()) === 1 && definitionCounts.get(word.definition?.trim().toLowerCase()) === 1))
               .map(word => ({ word, random: Math.random() })).sort((a, b) => a.random - b.random)
               .map(item => item.word).filter(word => {
-                const text = word.word?.trim().toLocaleLowerCase('tr');
-                const definition = word.definition?.trim().toLocaleLowerCase('tr');
+                const text = word.word?.trim().toLowerCase();
+                const definition = word.definition?.trim().toLowerCase();
                 if (!word.id || !text || !definition || seenWords.has(text) || seenDefinitions.has(definition)) return false;
                 seenWords.add(text); seenDefinitions.add(definition); return true;
               });
+            if (vocabulary.requireFullPool && candidates.length < count) {
+              this.engine = null;
+              this.error = `Seçilen yaş ve seviyede ${count} benzersiz kelime bulunamadı. Kelime sayısını azaltın veya kataloğu tamamlayın.`;
+              this.finishLoading();
+              return;
+            }
             this.backendSessionConfig = { vocabularyWords: candidates.slice(0, count) };
             this.initializePreviewEngine();
           },
@@ -4165,6 +4181,10 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       return (this.engine as any).getMode();
     }
     return 'learning';
+  }
+  isVocabLearnThenQuiz(): boolean {
+    return this.engine?.engineType === 'vocabulary_builder'
+      && (this.engine as VocabularyBuilderEngine).isLearnThenQuiz();
   }
   isVocabAwaitingPersistence(): boolean {
     return this.engine?.engineType === 'vocabulary_builder'

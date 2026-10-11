@@ -1081,10 +1081,20 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
 
     private void PersistSessionAnswers(ExerciseSession session)
     {
-        foreach (var answer in session.Answers)
+        // Register new answer IDs before relationship discovery can classify them as updates.
+        var autoDetectChanges = db.ChangeTracker.AutoDetectChangesEnabled;
+        db.ChangeTracker.AutoDetectChangesEnabled = false;
+        try
         {
-            if (db.Entry(answer).State == EntityState.Detached)
-                db.ExerciseSessionAnswers.Add(answer);
+            foreach (var answer in session.Answers)
+            {
+                if (db.Entry(answer).State == EntityState.Detached)
+                    db.ExerciseSessionAnswers.Add(answer);
+            }
+        }
+        finally
+        {
+            db.ChangeTracker.AutoDetectChangesEnabled = autoDetectChanges;
         }
     }
 
@@ -1374,6 +1384,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         if (IsVocabularyExercise(exerciseTypeName, effectiveConfig))
         {
             state.VocabularyMode = (ReadString(effectiveConfig, "mode") ?? "learning").Trim().ToLowerInvariant();
+            state.VocabularyLearnThenQuiz = state.VocabularyMode == "learning" && ReadBoolean(effectiveConfig, "learnThenQuiz") == true;
             state.VocabularyQuizType = (ReadString(effectiveConfig, "quizType") ?? "mixed")
                 .Trim()
                 .ToLowerInvariant() switch
@@ -1392,7 +1403,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             if (state.VocabularyWords.Count == 0)
                 throw new InvalidOperationException(state.VocabularyMode == "review"
                     ? "Şu anda tekrar zamanı gelen kelimeniz yok." : "Seçilen ayarlara uygun kelime bulunamadı.");
-            if (state.VocabularyMode == "quiz" && state.VocabularyWords.Count > 0
+            if ((state.VocabularyMode == "quiz" || state.VocabularyLearnThenQuiz) && state.VocabularyWords.Count > 0
                 && (state.VocabularyWords.Count < 2
                     || state.VocabularyWords.Select(w => w.Word).Distinct(StringComparer.OrdinalIgnoreCase).Count() != state.VocabularyWords.Count
                     || state.VocabularyWords.Select(w => w.Definition).Distinct(StringComparer.OrdinalIgnoreCase).Count() != state.VocabularyWords.Count))
@@ -2503,6 +2514,21 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             return Invalid("Kelime yanıtı bu oturumdaki merkezi kelime havuzuyla eşleşmiyor.");
         }
 
+        if (state.VocabularyLearnThenQuiz && state.VocabularyMode == "learning")
+        {
+            if (reviewKind is not ("known" or "unknown")
+                || state.VocabularyLearnedIds.Contains(itemId)
+                || state.VocabularyWords[state.VocabularyLearnedIds.Count].Id != itemId)
+                return Invalid("Önce kelime kartlarını sırayla tamamlayın.");
+            state.VocabularyLearnedIds.Add(itemId);
+            if (state.VocabularyLearnedIds.Count == state.VocabularyWords.Count) state.VocabularyMode = "quiz";
+            // Self-report is a learning acknowledgement, not a verified answer or SRS promotion.
+            return Valid("Kelime kartı incelendi.", session.CurrentStep, isCorrect: reviewKind == "known");
+        }
+
+        if (state.VocabularyLearnThenQuiz && reviewKind is not ("quiz" or "timeout"))
+            return Invalid("Öğrenmeden sonra test sorularını yanıtlayın.");
+
         bool isCorrect;
         if (state.VocabularyMode == "quiz" && reviewKind == "quiz")
         {
@@ -2533,6 +2559,9 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
 
         if (state.Answers.Any(item => item.QuestionId == itemId))
             return Invalid("Bu kelime yanıtı daha önce kaydedildi.");
+        if (state.VocabularyMode == "quiz" && (state.Answers.Count >= state.VocabularyWords.Count
+            || state.VocabularyWords[state.Answers.Count].Id != itemId))
+            return Invalid("Test kelimelerini oturumdaki sırayla yanıtlayın.");
 
         var review = await OwnedVocabularyProgressRecorder.RecordAsync(
             db,
@@ -3210,6 +3239,9 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                 .Where(byId.ContainsKey)
                 .Select(id => ToVocabularyWordState(byId[id]))
                 .ToList();
+            if (mode != "review" && ReadBoolean(vocabulary, "requireFullPool") == true
+                && selected.Count != Math.Clamp(ReadPositiveInt(vocabulary, "count") ?? 10, 1, 50))
+                throw new InvalidOperationException("Seçilen kelime listesi çalışma için gereken kelime sayısını karşılamıyor.");
             await ApplyVocabularyBoxesAsync(selected, studentId, cancellationToken);
             return selected;
         }
@@ -3222,9 +3254,19 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         if (difficulty is >= 1 and <= 5)
             query = query.Where(item => item.DifficultyLevel == difficulty);
 
-        // Bound transferred candidates; database random ordering rotates the pool between sessions.
-        var candidates = await query.OrderBy(_ => EF.Functions.Random()).Take(500).ToListAsync(cancellationToken);
-        if (mode == "quiz") {
+        if (mode != "review" && ReadBoolean(vocabulary, "requireFullPool") == true)
+        {
+            // Exclude ambiguous pairs before random selection so pool sufficiency cannot depend on shuffle order.
+            var eligible = query;
+            query = query.Where(item => eligible.Count(other => other.Word.Trim().ToLower() == item.Word.Trim().ToLower()) == 1
+                && eligible.Count(other => other.Definition.Trim().ToLower() == item.Definition.Trim().ToLower()) == 1);
+        }
+
+        // Prefer less-used words for this student; randomize ties without transferring the entire pool.
+        var candidates = await query.OrderBy(item => db.ExerciseSessionAnswers.Count(answer => answer.QuestionId == item.Id
+                && db.ExerciseSessions.Any(session => session.Id == answer.SessionId && session.StudentId == studentId)))
+            .ThenBy(_ => EF.Functions.Random()).Take(500).ToListAsync(cancellationToken);
+        if (mode == "quiz" || ReadBoolean(config, "learnThenQuiz") == true) {
             var seenWords = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             var seenDefinitions = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             candidates = candidates.Where(item => !seenWords.Contains(item.Word) && !seenDefinitions.Contains(item.Definition)
@@ -3233,6 +3275,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         var selectedWords = candidates.Take(count)
             .Select(ToVocabularyWordState)
             .ToList();
+        if (mode != "review" && ReadBoolean(vocabulary, "requireFullPool") == true && selectedWords.Count < count)
+            throw new InvalidOperationException($"Bu çalışma için {count} benzersiz kelime gerekiyor; uygun kelime havuzu yetersiz.");
         await ApplyVocabularyBoxesAsync(selectedWords, studentId, cancellationToken);
         return selectedWords;
     }
@@ -3680,6 +3724,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
     private static JsonElement SerializePublicState(SessionState state, bool completedResult)
     {
         var json = JsonSerializer.SerializeToNode(state, JsonOptions)!.AsObject();
+        if (IsVocabularyState(state)) json["vocabularyCurrentWordIndex"] = state.VocabularyMode == "learning" && state.VocabularyLearnThenQuiz
+            ? state.VocabularyLearnedIds.Count : state.Answers.Count;
         if (state.Tachistoscope is { } tachistoscope)
         {
             json["tachistoscope"] = JsonSerializer.SerializeToNode(new
@@ -3756,6 +3802,16 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             if (property.Name.Equals(propertyName, StringComparison.OrdinalIgnoreCase)
                 && property.Value.TryGetInt32(out var value) && value >= 0)
                 return value;
+        return null;
+    }
+
+    private static bool? ReadBoolean(JsonElement element, string propertyName)
+    {
+        if (element.ValueKind != JsonValueKind.Object) return null;
+        foreach (var property in element.EnumerateObject())
+            if (property.Name.Equals(propertyName, StringComparison.OrdinalIgnoreCase)
+                && property.Value.ValueKind is JsonValueKind.True or JsonValueKind.False)
+                return property.Value.GetBoolean();
         return null;
     }
 
@@ -4064,6 +4120,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         public long? ScanningElapsedMs { get; set; }
         public List<VisualizationSceneState> VisualizationScenes { get; set; } = [];
         public string VocabularyMode { get; set; } = "learning";
+        public bool VocabularyLearnThenQuiz { get; set; }
+        public List<Guid> VocabularyLearnedIds { get; set; } = [];
         public string VocabularyQuizType { get; set; } = "mixed";
         public List<VocabularyWordState> VocabularyWords { get; set; } = [];
         public Dictionary<string, JsonElement>? CustomData { get; set; }

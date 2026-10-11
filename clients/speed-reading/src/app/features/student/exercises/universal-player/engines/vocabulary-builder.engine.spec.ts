@@ -2,6 +2,12 @@ import { fakeAsync, tick } from '@angular/core/testing';
 import { VocabularyBuilderEngine } from './vocabulary-builder.engine';
 
 describe('VocabularyBuilderEngine server validation contract', () => {
+  it('finishes a restored fully answered session without submitting the last word again', () => {
+    const engine = createQuizEngine([], []); const words = (engine as any).words; let completed = 0;
+    engine.initialize({ serverAuthoritative: true, mode: 'quiz', vocabularyCurrentWordIndex: words.length, words } as any,
+      { ...createCallbacks([], []), onComplete: () => completed++ });
+    engine.start(); expect(completed).toBe(1); expect(engine.getCurrentWord()).toBeNull(); engine.destroy();
+  });
   it('restarts the learning phase when a combined preview is reset', () => {
     const engine = createQuizEngine([], []); const words = (engine as any).words;
     engine.initialize({ previewOnly: true, mode: 'learning', learnThenQuiz: true, words } as any, createCallbacks([], []));
@@ -27,6 +33,7 @@ describe('VocabularyBuilderEngine server validation contract', () => {
     const words = (engine as any).words;
     engine.initialize({ previewOnly: true, mode: 'learning', learnThenQuiz: true, quizType: 'word_to_definition', words } as any,
       { ...createCallbacks(actions, []), onComplete: () => completed++ });
+    expect(engine.isLearnThenQuiz()).toBeTrue();
     engine.start();
     for (const word of words) {
       expect(engine.getCurrentWord()?.id).toBe(word.id);

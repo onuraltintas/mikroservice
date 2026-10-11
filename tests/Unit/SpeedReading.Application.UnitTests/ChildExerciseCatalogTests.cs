@@ -8,7 +8,7 @@ namespace SpeedReading.Application.UnitTests;
 public sealed class ChildExerciseCatalogTests
 {
     [Theory]
-    [InlineData("child-exercises", "10000000-0000-0000-0000-000000000001", 20, 90)]
+    [InlineData("child-exercises", "10000000-0000-0000-0000-000000000001", 20, 91)]
     [InlineData("teen-exercises", "10000000-0000-0000-0000-000000000002", 21, 94)]
     [InlineData("adult-exercises", "10000000-0000-0000-0000-000000000003", 21, 95)]
     [InlineData("young-adult-exercises", "10000000-0000-0000-0000-000000000004", 21, 95)]
@@ -25,7 +25,7 @@ public sealed class ChildExerciseCatalogTests
         Assert.Equal(count, entries.Select(entry => entry.GetProperty("id").GetGuid()).Distinct().Count());
         Assert.Equal(typeCount, entries.Select(entry => entry.GetProperty("type").GetString()).Distinct().Count());
         var distribution = pack switch {
-            "child-exercises" => new[] { 16, 17, 17, 20, 20 },
+            "child-exercises" => new[] { 16, 17, 18, 20, 20 },
             "teen-exercises" => new[] { 17, 17, 20, 20, 20 },
             _ => new[] { 17, 18, 20, 20, 20 }
         };

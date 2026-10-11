@@ -631,6 +631,9 @@ public sealed class StudentReadingPersistenceTests
         started.TotalSteps.Should().Be(2);
         started.InitialData.GetProperty("vocabularyQuizType").GetString()
             .Should().Be("word_to_definition");
+        // The server randomizes the pool; follow its order while testing forged correctness and direction.
+        vocabularyItemId = started.InitialData.GetProperty("vocabularyWords")[0].GetProperty("id").GetGuid();
+        secondVocabularyItemId = started.InitialData.GetProperty("vocabularyWords")[1].GetProperty("id").GetGuid();
         var response = await service.ValidateActionAsync(
             studentId,
             started.SessionId,

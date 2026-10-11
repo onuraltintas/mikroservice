@@ -1,6 +1,6 @@
 # Çocuk egzersiz kataloğu v1
 
-9–12 yaş; 20 tür; toplam 90 egzersiz. Seviye dağılımı: 16 / 17 / 17 / 20 / 20.
+9–12 yaş; 20 tür; toplam 91 egzersiz. Seviye dağılımı: 16 / 17 / 18 / 20 / 20.
 
 Metin kimliği sabitlenmez. Yaş ve seviyeye uygun havuzdan iki okuma geçmişinde de kullanılmamış metin rastgele seçilir. Havuz tükenince en az kullanılan metinler arasından seçim yapılır. Başlatılıp bırakılan oturum da kullanım sayılır. Kelime etkinlikleri mevcut yaş/seviye kelime havuzunu kullanır.
 
@@ -14,8 +14,8 @@ Mevcut metin uzunlukları ve soruları korunur. Anlama ve değerlendirmeli serbe
 | Bilgiyi Keşfet | Comprehension | `{"content":{"source":"reading_text"},"mode":"comprehension","readingPurpose":"evaluation"}` |
 | Tanıdık Kelimelerle Okuma | SpeedReading | `{"content":{"source":"reading_text"},"mode":"guided","pacer":{"speedWpm":100,"chunkSize":1},"readingPurpose":"practice"}` |
 | İkili Anlam Grupları | Chunking | `{"content":{"source":"reading_text"},"mode":"chunking","pacer":{"speedWpm":100,"chunkSize":2},"readingPurpose":"practice"}` |
-| Kelime Bahçesi | Vocabulary | `{"mode":"learning","quizType":"word_to_definition","timeLimitPerWord":0,"vocabulary":{"count":5,"difficultyLevel":1}}` |
-| Kelimemi Seçiyorum | Vocabulary | `{"mode":"quiz","quizType":"word_to_definition","timeLimitPerWord":0,"vocabulary":{"count":5,"difficultyLevel":1}}` |
+| Kelime Bahçesi | Vocabulary | `{"mode":"learning","quizType":"word_to_definition","timeLimitPerWord":0,"vocabulary":{"count":8,"difficultyLevel":1,"requireFullPool":true},"learnThenQuiz":true}` |
+| Kelimemi Seçiyorum | Vocabulary | `{"mode":"quiz","quizType":"word_to_definition","timeLimitPerWord":0,"vocabulary":{"count":8,"difficultyLevel":1,"requireFullPool":true}}` |
 | Hikâyemi Seçiyorum | FreeReading | `{"content":{"source":"reading_text"},"mode":"free","readingPurpose":"evaluation"}` |
 | Sözcüğü Bul | Scanning | `{"content":{"source":"random_text"},"targetCount":2,"timeLimit":90,"targets":{"mode":"find_all","caseSensitive":false}}` |
 | Sayı Avcısı | SchulteTable | `{"gridSize":3,"sequenceType":"numeric","rules":{"timeLimit":90}}` |
@@ -33,8 +33,8 @@ Mevcut metin uzunlukları ve soruları korunur. Anlama ve değerlendirmeli serbe
 | Neden Böyle Oldu? | Comprehension | `{"content":{"source":"reading_text"},"mode":"comprehension","readingPurpose":"evaluation"}` |
 | Akıcı Cümleler | SpeedReading | `{"content":{"source":"reading_text"},"mode":"guided","pacer":{"speedWpm":130,"chunkSize":1},"readingPurpose":"practice"}` |
 | Üçlü Kelime Grupları | Chunking | `{"content":{"source":"reading_text"},"mode":"chunking","pacer":{"speedWpm":130,"chunkSize":3},"readingPurpose":"practice"}` |
-| Bağlamdan Kelime | Vocabulary | `{"mode":"learning","quizType":"mixed","timeLimitPerWord":0,"vocabulary":{"count":6,"difficultyLevel":2}}` |
-| Kelimeyi Hatırla | Vocabulary | `{"mode":"quiz","quizType":"mixed","timeLimitPerWord":0,"vocabulary":{"count":6,"difficultyLevel":2}}` |
+| Bağlamdan Kelime | Vocabulary | `{"mode":"learning","quizType":"mixed","timeLimitPerWord":0,"vocabulary":{"count":10,"difficultyLevel":2,"requireFullPool":true},"learnThenQuiz":true}` |
+| Kelimeyi Hatırla | Vocabulary | `{"mode":"quiz","quizType":"mixed","timeLimitPerWord":0,"vocabulary":{"count":10,"difficultyLevel":2,"requireFullPool":true}}` |
 | Metindeki İpuçları | Scanning | `{"content":{"source":"random_text"},"targetCount":3,"timeLimit":90,"targets":{"mode":"find_all","caseSensitive":false}}` |
 | Yeni Bir Hikâye | FreeReading | `{"content":{"source":"reading_text"},"mode":"free","readingPurpose":"evaluation"}` |
 | Sayı Avcısı | SchulteTable | `{"gridSize":3,"sequenceType":"numeric","rules":{"timeLimit":75}}` |
@@ -52,7 +52,8 @@ Mevcut metin uzunlukları ve soruları korunur. Anlama ve değerlendirmeli serbe
 | İpuçlarından Sonuca | Comprehension | `{"content":{"source":"reading_text"},"mode":"comprehension","readingPurpose":"evaluation"}` |
 | Akıcı Paragraflar | SpeedReading | `{"content":{"source":"reading_text"},"mode":"guided","pacer":{"speedWpm":160,"chunkSize":1},"readingPurpose":"practice"}` |
 | Dörtlü Kelime Grupları | Chunking | `{"content":{"source":"reading_text"},"mode":"chunking","pacer":{"speedWpm":160,"chunkSize":4},"readingPurpose":"practice"}` |
-| Kelime Bağlantıları | Vocabulary | `{"mode":"learning","quizType":"mixed","timeLimitPerWord":0,"vocabulary":{"count":8,"difficultyLevel":3}}` |
+| Kelime Bağlantıları | Vocabulary | `{"mode":"learning","quizType":"mixed","timeLimitPerWord":0,"vocabulary":{"count":12,"difficultyLevel":3,"requireFullPool":true},"learnThenQuiz":true}` |
+| Kelime Bağlantılarını Sına | Vocabulary | `{"mode":"quiz","quizType":"mixed","timeLimitPerWord":0,"vocabulary":{"count":12,"difficultyLevel":3,"requireFullPool":true}}` |
 | Ana Bilgiyi Bul | Scanning | `{"content":{"source":"random_text"},"targetCount":3,"timeLimit":120,"targets":{"mode":"find_all","caseSensitive":false}}` |
 | Metne İlk Bakış | Skimming | `{"content":{"source":"reading_text"},"mode":"skimming","rules":{"timeLimit":120},"timing":{"minReadingTimeMs":3000},"readingPurpose":"evaluation"}` |
 | Kendi Hızımda Okuyorum | FreeReading | `{"content":{"source":"reading_text"},"mode":"free","readingPurpose":"evaluation"}` |
@@ -71,7 +72,7 @@ Mevcut metin uzunlukları ve soruları korunur. Anlama ve değerlendirmeli serbe
 | Ana Fikir ve Ayrıntı | Comprehension | `{"content":{"source":"reading_text"},"mode":"comprehension","readingPurpose":"evaluation"}` |
 | Dengeli Okuma | SpeedReading | `{"content":{"source":"reading_text"},"mode":"guided","pacer":{"speedWpm":200,"chunkSize":1},"readingPurpose":"practice"}` |
 | Geniş Kelime Grupları | Chunking | `{"content":{"source":"reading_text"},"mode":"chunking","pacer":{"speedWpm":200,"chunkSize":4},"readingPurpose":"practice"}` |
-| Kelime Anlamlarını Ayır | Vocabulary | `{"mode":"quiz","quizType":"mixed","timeLimitPerWord":0,"vocabulary":{"count":8,"difficultyLevel":4}}` |
+| Kelime Anlamlarını Ayır | Vocabulary | `{"mode":"quiz","quizType":"mixed","timeLimitPerWord":0,"vocabulary":{"count":14,"difficultyLevel":4,"requireFullPool":true}}` |
 | Bilgi Dedektifi | Scanning | `{"content":{"source":"random_text"},"targetCount":4,"timeLimit":150,"targets":{"mode":"find_all","caseSensitive":false}}` |
 | Başlık ve Özet | Skimming | `{"content":{"source":"reading_text"},"mode":"skimming","rules":{"timeLimit":150},"timing":{"minReadingTimeMs":3000},"readingPurpose":"evaluation"}` |
 | Metni Kontrol Et | ErrorAnalysis | `{"content":{"source":"reading_text"},"errorCount":4,"timeLimit":240}` |
@@ -89,7 +90,7 @@ Mevcut metin uzunlukları ve soruları korunur. Anlama ve değerlendirmeli serbe
 | Metnin Derin Anlamı | Comprehension | `{"content":{"source":"reading_text"},"mode":"comprehension","readingPurpose":"evaluation"}` |
 | Bilgileri Birleştir | Comprehension | `{"content":{"source":"reading_text"},"mode":"comprehension","readingPurpose":"evaluation"}` |
 | Akıcılığı Koru | SpeedReading | `{"content":{"source":"reading_text"},"mode":"guided","pacer":{"speedWpm":230,"chunkSize":1},"readingPurpose":"practice"}` |
-| Kelime Ustası | Vocabulary | `{"mode":"quiz","quizType":"mixed","timeLimitPerWord":0,"vocabulary":{"count":10,"difficultyLevel":5}}` |
+| Kelime Ustası | Vocabulary | `{"mode":"quiz","quizType":"mixed","timeLimitPerWord":0,"vocabulary":{"count":16,"difficultyLevel":5,"requireFullPool":true}}` |
 | Seçici Bilgi Arama | Scanning | `{"content":{"source":"random_text"},"targetCount":5,"timeLimit":180,"targets":{"mode":"find_all","caseSensitive":false}}` |
 | Metnin Haritası | Skimming | `{"content":{"source":"reading_text"},"mode":"skimming","rules":{"timeLimit":180},"timing":{"minReadingTimeMs":3000},"readingPurpose":"evaluation"}` |
 | Dikkatli Editör | ErrorAnalysis | `{"content":{"source":"reading_text"},"errorCount":5,"timeLimit":240}` |

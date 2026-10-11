@@ -317,8 +317,9 @@
         "quizType": "word_to_definition",
         "timeLimitPerWord": 0,
         "vocabulary": {
-          "count": 8,
-          "difficultyLevel": 1
+          "count": 12,
+          "difficultyLevel": 1,
+          "requireFullPool": true
         }
       },
       "difficultyLevel": 1
@@ -338,9 +339,11 @@
         "quizType": "word_to_definition",
         "timeLimitPerWord": 0,
         "vocabulary": {
-          "count": 8,
-          "difficultyLevel": 1
-        }
+          "count": 12,
+          "difficultyLevel": 1,
+          "requireFullPool": true
+        },
+        "learnThenQuiz": true
       },
       "difficultyLevel": 1
     }
@@ -663,8 +666,9 @@
         "quizType": "mixed",
         "timeLimitPerWord": 0,
         "vocabulary": {
-          "count": 10,
-          "difficultyLevel": 2
+          "count": 15,
+          "difficultyLevel": 2,
+          "requireFullPool": true
         }
       },
       "difficultyLevel": 2
@@ -684,9 +688,11 @@
         "quizType": "mixed",
         "timeLimitPerWord": 0,
         "vocabulary": {
-          "count": 10,
-          "difficultyLevel": 2
-        }
+          "count": 15,
+          "difficultyLevel": 2,
+          "requireFullPool": true
+        },
+        "learnThenQuiz": true
       },
       "difficultyLevel": 2
     }
@@ -1082,8 +1088,9 @@
         "quizType": "mixed",
         "timeLimitPerWord": 0,
         "vocabulary": {
-          "count": 10,
-          "difficultyLevel": 3
+          "count": 18,
+          "difficultyLevel": 3,
+          "requireFullPool": true
         }
       },
       "difficultyLevel": 3
@@ -1533,8 +1540,9 @@
         "quizType": "mixed",
         "timeLimitPerWord": 0,
         "vocabulary": {
-          "count": 12,
-          "difficultyLevel": 4
+          "count": 20,
+          "difficultyLevel": 4,
+          "requireFullPool": true
         }
       },
       "difficultyLevel": 4
@@ -1982,8 +1990,9 @@
         "quizType": "mixed",
         "timeLimitPerWord": 0,
         "vocabulary": {
-          "count": 12,
-          "difficultyLevel": 5
+          "count": 24,
+          "difficultyLevel": 5,
+          "requireFullPool": true
         }
       },
       "difficultyLevel": 5

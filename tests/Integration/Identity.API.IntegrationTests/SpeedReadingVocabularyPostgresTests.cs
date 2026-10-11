@@ -13,10 +13,11 @@ namespace Identity.API.IntegrationTests;
 public sealed class SpeedReadingVocabularyPostgresTests(PostgresFixture postgres)
 {
     [Theory]
-    [InlineData("learning")]
-    [InlineData("review")]
-    [InlineData("quiz")]
-    public async Task Vocabulary_records_owned_reviews_and_completes_without_reading_metrics(string mode)
+    [InlineData("learning", false)]
+    [InlineData("review", false)]
+    [InlineData("quiz", false)]
+    [InlineData("learning", true)]
+    public async Task Vocabulary_records_owned_reviews_and_completes_without_reading_metrics(string mode, bool learnThenQuiz)
     {
         await using var db = new OwnedSpeedReadingDbContext(new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>().UseNpgsql(postgres.ConnectionString).Options);
         // Disposable Testcontainers database, never a live connection.
@@ -25,7 +26,7 @@ public sealed class SpeedReadingVocabularyPostgresTests(PostgresFixture postgres
             await db.Database.EnsureCreatedAsync(); var student = Guid.NewGuid();
             var type = ExerciseType.Create(Guid.NewGuid(), "Vocabulary", "Kelime Hazinesi", "vocabulary_builder");
             var exercise = Exercise.Create("Kelime Hazinesi", "vocabulary_builder", JsonSerializer.Serialize(new {
-                engineType = "vocabulary_builder", engineConfig = new { mode, vocabulary = new { count = 4, difficultyLevel = 2 } }
+                engineType = "vocabulary_builder", engineConfig = new { mode, learnThenQuiz, vocabulary = new { count = 4, difficultyLevel = 2, requireFullPool = true } }
             }), 2, student, type.Id);
             db.ExerciseTypes.Add(type); db.Exercises.Add(exercise);
             for (var i = 0; i < 4; i++) {
@@ -38,10 +39,25 @@ public sealed class SpeedReadingVocabularyPostgresTests(PostgresFixture postgres
                 BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, [db], null)!;
             var started = await service.StartAsync(student, new() { ExerciseId = exercise.Id });
             var selected = started.InitialData.GetProperty("vocabularyWords"); Assert.Equal(4, selected.GetArrayLength());
+            if (learnThenQuiz) {
+                foreach (var word in selected.EnumerateArray()) {
+                    var action = new ExerciseActionRequest { ActionId = Guid.NewGuid(), Action = "vocabulary_review", CustomData = new() {
+                        ["vocabularyItemId"] = word.GetProperty("id").Clone(), ["reviewKind"] = JsonSerializer.SerializeToElement("known")
+                    } };
+                    Assert.True((await service.ValidateActionAsync(student, started.SessionId, action)).IsValid);
+                    Assert.True((await service.ValidateActionAsync(student, started.SessionId, action)).IsValid);
+                }
+                Assert.Empty(await db.UserVocabularyProgresses.ToListAsync());
+                db.ChangeTracker.Clear();
+                var resumed = await service.StartAsync(student, new() { ExerciseId = exercise.Id });
+                Assert.Equal(started.SessionId, resumed.SessionId);
+                Assert.Equal("quiz", resumed.InitialData.GetProperty("vocabularyMode").GetString());
+                Assert.Equal(selected.GetRawText(), resumed.InitialData.GetProperty("vocabularyWords").GetRawText());
+            }
             await Assert.ThrowsAsync<KeyNotFoundException>(() => service.CompleteAsync(Guid.NewGuid(), started.SessionId, new()));
             foreach (var word in selected.EnumerateArray()) {
                 var custom = new Dictionary<string, JsonElement> {
-                    ["vocabularyItemId"] = word.GetProperty("id").Clone(), ["reviewKind"] = JsonSerializer.SerializeToElement(mode == "quiz" ? "quiz" : "known"),
+                    ["vocabularyItemId"] = word.GetProperty("id").Clone(), ["reviewKind"] = JsonSerializer.SerializeToElement(mode == "quiz" || learnThenQuiz ? "quiz" : "known"),
                     ["questionType"] = word.GetProperty("questionType").Clone(),
                     ["selectedAnswer"] = word.GetProperty(word.GetProperty("questionType").GetString() == "word" ? "definition" : "word").Clone()
                 };

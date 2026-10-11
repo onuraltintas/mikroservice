@@ -97,9 +97,11 @@
         "quizType": "word_to_definition",
         "timeLimitPerWord": 0,
         "vocabulary": {
-          "count": 5,
-          "difficultyLevel": 1
-        }
+          "count": 8,
+          "difficultyLevel": 1,
+          "requireFullPool": true
+        },
+        "learnThenQuiz": true
       },
       "difficultyLevel": 1
     }
@@ -118,8 +120,9 @@
         "quizType": "word_to_definition",
         "timeLimitPerWord": 0,
         "vocabulary": {
-          "count": 5,
-          "difficultyLevel": 1
+          "count": 8,
+          "difficultyLevel": 1,
+          "requireFullPool": true
         }
       },
       "difficultyLevel": 1
@@ -400,9 +403,11 @@
         "quizType": "mixed",
         "timeLimitPerWord": 0,
         "vocabulary": {
-          "count": 6,
-          "difficultyLevel": 2
-        }
+          "count": 10,
+          "difficultyLevel": 2,
+          "requireFullPool": true
+        },
+        "learnThenQuiz": true
       },
       "difficultyLevel": 2
     }
@@ -421,8 +426,9 @@
         "quizType": "mixed",
         "timeLimitPerWord": 0,
         "vocabulary": {
-          "count": 6,
-          "difficultyLevel": 2
+          "count": 10,
+          "difficultyLevel": 2,
+          "requireFullPool": true
         }
       },
       "difficultyLevel": 2
@@ -703,8 +709,32 @@
         "quizType": "mixed",
         "timeLimitPerWord": 0,
         "vocabulary": {
-          "count": 8,
-          "difficultyLevel": 3
+          "count": 12,
+          "difficultyLevel": 3,
+          "requireFullPool": true
+        },
+        "learnThenQuiz": true
+      },
+      "difficultyLevel": 3
+    }
+  },
+  {
+    "id": "d281c883-b608-57bd-8d31-bfe196936d7c",
+    "type": "Vocabulary",
+    "title": "Kelime Bağlantılarını Sına",
+    "description": "Çocuk yaş grubunda seçilen seviyeye uygun çalışma.",
+    "difficultyLevel": 3,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "vocabulary_builder",
+      "engineConfig": {
+        "mode": "quiz",
+        "quizType": "mixed",
+        "timeLimitPerWord": 0,
+        "vocabulary": {
+          "count": 12,
+          "difficultyLevel": 3,
+          "requireFullPool": true
         }
       },
       "difficultyLevel": 3
@@ -1010,8 +1040,9 @@
         "quizType": "mixed",
         "timeLimitPerWord": 0,
         "vocabulary": {
-          "count": 8,
-          "difficultyLevel": 4
+          "count": 14,
+          "difficultyLevel": 4,
+          "requireFullPool": true
         }
       },
       "difficultyLevel": 4
@@ -1294,8 +1325,9 @@
         "quizType": "mixed",
         "timeLimitPerWord": 0,
         "vocabulary": {
-          "count": 10,
-          "difficultyLevel": 5
+          "count": 16,
+          "difficultyLevel": 5,
+          "requireFullPool": true
         }
       },
       "difficultyLevel": 5

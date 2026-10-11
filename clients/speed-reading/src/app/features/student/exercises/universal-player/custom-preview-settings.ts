@@ -100,8 +100,14 @@ export function getCustomPreviewControls(configuration: Record<string, unknown>)
       { key: 'mode', label: 'Çalışma modu', min: 0, max: 0, value: String(read('Mode') ?? read('FocusMode') ?? 'position'),
         options: [{ value: 'position', label: 'Konum' }, { value: 'word', label: 'Kelime' }, { value: 'dual', label: 'Konum ve kelime' }] }
     ];
-    case 'vocabulary_builder': return read('mode') === 'quiz'
-      ? [control('timeLimitPerWord', 'Kelime başına süre (saniye; 0: sınırsız)', 0, 3600, read('timeLimitPerWord') ?? 0)] : [];
+    case 'vocabulary_builder': return [
+      { key: 'mode', label: 'Çalışma modu', min: 0, max: 0, value: read('mode') === 'quiz' ? 'quiz' : 'learning',
+        options: [{ value: 'learning', label: 'Öğren ve aynı kelimelerle test ol' }, { value: 'quiz', label: 'Doğrudan test' }] },
+      control('wordCount', 'Kelime sayısı', 4, 50, recordOrEmpty(read('vocabulary'))['count'] ?? 10),
+      { key: 'quizType', label: 'Test sorularının yönü', min: 0, max: 0, value: String(read('quizType') ?? 'mixed'),
+        options: [{ value: 'word_to_definition', label: 'Kelime → anlam' }, { value: 'definition_to_word', label: 'Anlam → kelime' }, { value: 'mixed', label: 'Karışık' }] },
+      control('timeLimitPerWord', 'Testte kelime başına süre (saniye; 0: sınırsız)', 0, 3600, read('timeLimitPerWord') ?? 0)
+    ];
     case 'visual_expansion': return [
       control('rounds', 'Tur sayısı', 1, 100, read('rounds') ?? 20),
       control('displayDurationMs', 'Gösterim süresi (ms)', 100, 5000, read('displayDurationMs') || timing['durationms'] || read('VisualExpansionDisplayDurationMs') || 250),
@@ -198,6 +204,33 @@ export function applyCustomPreviewSettings<T extends Record<string, unknown>>(
   if (!CUSTOM_PREVIEW_ENGINES.some(type => type === engine)) return configuration;
   const controls = getCustomPreviewControls(configuration);
   if (!controls.length) return configuration;
+  if (engine === 'vocabulary_builder') {
+    const overrides: Record<string, unknown> = {};
+    for (const control of controls) {
+      const value = values[control.key];
+      if (value === undefined) continue;
+      if (control.options ? !control.options.some(option => option.value === value)
+        : typeof value !== 'number' || !Number.isInteger(value) || value < control.min || value > control.max)
+        throw new Error(`${control.label} için geçerli bir değer seçin.`);
+      overrides[control.key] = value;
+    }
+    if (!Object.keys(overrides).length) return configuration;
+    const result = structuredClone(configuration);
+    const settings = recordOrEmpty(result['engineConfig']);
+    const mode = overrides['mode'] ?? caseInsensitiveField(settings, 'mode') ?? caseInsensitiveField(result, 'mode') ?? 'learning';
+    delete overrides['wordCount'];
+    overrides['mode'] = mode;
+    overrides['learnThenQuiz'] = mode === 'learning';
+    overrides['vocabulary'] = overrideFields(caseInsensitiveField(settings, 'vocabulary') ?? caseInsensitiveField(result, 'vocabulary'),
+      { ...(values['wordCount'] === undefined ? {} : { count: values['wordCount'] }), requireFullPool: true });
+    // Preview uses a freshly fetched pool, not a persisted session snapshot or pinned word list.
+    for (const container of [result as Record<string, unknown>, settings]) {
+      for (const key of Object.keys(container)) if (['sessiondata', 'vocabularyitemids'].includes(key.toLowerCase())) delete container[key];
+    }
+    overrides['vocabulary'] = overrideFields(overrides['vocabulary'], { itemIds: [] });
+    (result as Record<string, unknown>)['engineConfig'] = overrideFields(settings, overrides);
+    return result;
+  }
   const fontControl = controls.find(control => control.key === 'fontSize');
   if (fontControl) {
     const value = values['fontSize'];

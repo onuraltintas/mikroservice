@@ -11,6 +11,31 @@ namespace SpeedReading.Application.UnitTests;
 public sealed class VocabularyPersistenceTests
 {
     [Fact]
+    public async Task New_quiz_prefers_unseen_words_when_an_unused_pool_exists()
+    {
+        await using var db = Context(); var student = Guid.NewGuid();
+        var exerciseId = await Seed(db, student, "quiz");
+        for (var i = 4; i < 12; i++) db.VocabularyItems.Add(VocabularyItem.Create(Guid.NewGuid(), "Kelime" + i, "Anlam" + i, null, null, null, "Genel", 2, null, student, DateTime.UtcNow));
+        await db.SaveChangesAsync(); var service = Service(db);
+        var first = await service.StartAsync(student, new() { ExerciseId = exerciseId });
+        var usedIds = new HashSet<Guid>();
+        foreach (var word in first.InitialData.GetProperty("vocabularyWords").EnumerateArray()) {
+            usedIds.Add(word.GetProperty("id").GetGuid());
+            Assert.True((await service.ValidateActionAsync(student, first.SessionId, new() { ActionId = Guid.NewGuid(), Action = "vocabulary_review", CustomData = new() {
+                ["vocabularyItemId"] = word.GetProperty("id"), ["reviewKind"] = JsonSerializer.SerializeToElement("quiz"),
+                ["questionType"] = word.GetProperty("questionType"),
+                ["selectedAnswer"] = word.GetProperty(word.GetProperty("questionType").GetString() == "word" ? "definition" : "word")
+            } })).IsValid);
+        }
+        await service.CompleteAsync(student, first.SessionId, new());
+        for (var attempt = 0; attempt < 8; attempt++) {
+            var next = await service.StartAsync(student, new() { ExerciseId = exerciseId });
+            Assert.All(next.InitialData.GetProperty("vocabularyWords").EnumerateArray(), word => Assert.DoesNotContain(word.GetProperty("id").GetGuid(), usedIds));
+            (await db.ExerciseSessions.SingleAsync(session => session.Id == next.SessionId)).Abandon(DateTime.UtcNow);
+            await db.SaveChangesAsync();
+        }
+    }
+    [Fact]
     public async Task Learn_then_quiz_uses_same_words_without_scoring_self_reports()
     {
         await using var db = Context(); var student = Guid.NewGuid();
@@ -36,24 +61,62 @@ public sealed class VocabularyPersistenceTests
         }
         Assert.Empty(db.UserVocabularyProgresses);
         Assert.Empty(db.ExerciseSessionResults);
-        await Assert.ThrowsAsync<InvalidOperationException>(() => service.CompleteAsync(student, started.SessionId, new()));
+        await Assert.ThrowsAsync<EduPlatform.Shared.Kernel.Exceptions.BusinessRuleException>(() => service.CompleteAsync(student, started.SessionId, new()));
         var resumed = await service.StartAsync(student, new() { ExerciseId = exerciseId });
+        Assert.Equal(started.SessionId, resumed.SessionId);
         Assert.Equal("quiz", resumed.InitialData.GetProperty("vocabularyMode").GetString());
         Assert.Equal(words.Select(w => w.GetProperty("id").GetGuid()), resumed.InitialData.GetProperty("vocabularyWords").EnumerateArray().Select(w => w.GetProperty("id").GetGuid()));
-        foreach (var word in words) Assert.True((await service.ValidateActionAsync(student, started.SessionId, Action(word, "quiz"))).IsValid);
+        foreach (var word in words) {
+            Assert.True((await service.ValidateActionAsync(student, started.SessionId, Action(word, "quiz"))).IsValid);
+            Assert.All(await db.UserVocabularyProgresses.ToListAsync(), p => Assert.Equal(2, p.Box));
+        }
         var result = await service.CompleteAsync(student, started.SessionId, new());
         Assert.Equal(100m, result.Accuracy); Assert.Equal(4, result.CorrectCount);
         Assert.All(await db.UserVocabularyProgresses.ToListAsync(), p => Assert.Equal(2, p.Box));
         Assert.Single(db.ExerciseSessionResults); Assert.Null(result.RawWPM);
     }
 
-    [Fact]
-    public async Task Full_pool_setting_rejects_a_short_catalog_before_creating_session()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Full_pool_setting_rejects_a_short_catalog_before_creating_session(bool pinned)
     {
         await using var db = Context(); var student = Guid.NewGuid();
         var id = await Seed(db, student, "quiz"); var exercise = await db.Exercises.SingleAsync();
         exercise.Update(exercise.Title, exercise.Description, exercise.TypeCode, JsonSerializer.Serialize(new {
-            engineType = "vocabulary_builder", engineConfig = new { mode = "quiz", vocabulary = new { count = 8, difficultyLevel = 2, requireFullPool = true } }
+            engineType = "vocabulary_builder", engineConfig = new { mode = "quiz", vocabularyItemIds = pinned ? await db.VocabularyItems.Select(word => word.Id).ToArrayAsync() : Array.Empty<Guid>(), vocabulary = new { count = 8, difficultyLevel = 2, requireFullPool = true } }
+        }), exercise.DifficultyLevel, exercise.ExerciseTypeId, exercise.TargetAgeGroupId, student, DateTime.UtcNow);
+        await db.SaveChangesAsync();
+        await Assert.ThrowsAsync<InvalidOperationException>(() => Service(db).StartAsync(student, new() { ExerciseId = id }));
+        Assert.Empty(db.ExerciseSessions);
+    }
+
+    [Fact]
+    public async Task Quiz_rejects_out_of_order_answers_before_updating_progress()
+    {
+        await using var db = Context(); var student = Guid.NewGuid();
+        var exerciseId = await Seed(db, student, "quiz"); var service = Service(db);
+        var started = await service.StartAsync(student, new() { ExerciseId = exerciseId });
+        var word = started.InitialData.GetProperty("vocabularyWords")[2];
+        var response = await service.ValidateActionAsync(student, started.SessionId, new() { ActionId = Guid.NewGuid(), Action = "vocabulary_review", CustomData = new() {
+            ["vocabularyItemId"] = word.GetProperty("id"), ["reviewKind"] = JsonSerializer.SerializeToElement("quiz"),
+            ["questionType"] = word.GetProperty("questionType"),
+            ["selectedAnswer"] = word.GetProperty(word.GetProperty("questionType").GetString() == "word" ? "definition" : "word")
+        } });
+        Assert.False(response.IsValid); Assert.Empty(db.UserVocabularyProgresses);
+    }
+
+    [Fact]
+    public async Task Full_pool_excludes_intersecting_ambiguous_pairs_before_random_selection()
+    {
+        await using var db = Context(); var student = Guid.NewGuid();
+        var id = await Seed(db, student, "quiz");
+        db.VocabularyItems.RemoveRange(db.VocabularyItems);
+        foreach (var (word, definition) in new[] { ("A", "X"), ("A", "Y"), ("B", "X"), ("C", "Z"), ("D", "T") })
+            db.VocabularyItems.Add(VocabularyItem.Create(Guid.NewGuid(), word, definition, null, null, null, "Genel", 2, null, student, DateTime.UtcNow));
+        var exercise = await db.Exercises.SingleAsync();
+        exercise.Update(exercise.Title, exercise.Description, exercise.TypeCode, JsonSerializer.Serialize(new {
+            engineType = "vocabulary_builder", engineConfig = new { mode = "quiz", vocabulary = new { count = 4, difficultyLevel = 2, requireFullPool = true } }
         }), exercise.DifficultyLevel, exercise.ExerciseTypeId, exercise.TargetAgeGroupId, student, DateTime.UtcNow);
         await db.SaveChangesAsync();
         await Assert.ThrowsAsync<InvalidOperationException>(() => Service(db).StartAsync(student, new() { ExerciseId = id }));

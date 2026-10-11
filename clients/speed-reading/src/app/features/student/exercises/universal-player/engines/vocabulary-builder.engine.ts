@@ -34,6 +34,7 @@ interface VocabularyConfig extends EngineConfig {
     currentWordIndex?: number;
     quizType?: 'word_to_definition' | 'definition_to_word' | 'mixed';
     timeLimitPerWord?: number; // Seconds
+    learnThenQuiz?: boolean;
 }
 
 interface WordProgress {
@@ -63,6 +64,7 @@ export class VocabularyBuilderEngine implements BaseEngine {
     private words: VocabularyWord[] = [];
     private currentWordIndex = 0;
     private mode: 'learning' | 'quiz' | 'review' = 'learning';
+    private learnThenQuiz = false;
     private quizType: 'word_to_definition' | 'definition_to_word' | 'mixed' = 'word_to_definition';
     public timeLimitPerWord: number = 0;
     private wordTimer: any;
@@ -127,16 +129,17 @@ export class VocabularyBuilderEngine implements BaseEngine {
             box: w.box || w.Box
         }));
 
-        const mode = read('mode');
+        const mode = this.serverAuthoritative ? read('vocabularyMode') ?? read('mode') : read('mode');
         const quizType = read('quizType');
         this.mode = ['learning', 'quiz', 'review'].includes(mode) ? mode : 'learning';
+        this.learnThenQuiz = read('vocabularyLearnThenQuiz') === true || read('learnThenQuiz') === true;
         this.quizType = ['word_to_definition', 'definition_to_word', 'mixed'].includes(quizType)
             ? quizType : 'mixed';
-        this.currentWordIndex = boundedInteger(read('currentWordIndex'), 0, 0, Math.max(0, this.words.length - 1));
+        this.currentWordIndex = boundedInteger(this.serverAuthoritative ? read('vocabularyCurrentWordIndex') ?? read('currentWordIndex') : read('currentWordIndex'), 0, 0, this.words.length);
         this.timeLimitPerWord = boundedInteger(read('timeLimitPerWord'), 0, 0, 3_600);
         this.configurationError = this.words.length === 0 || this.words.some(word => !word.id || !word.word?.trim() || !word.definition?.trim())
             || new Set(this.words.map(word => word.id)).size !== this.words.length
-            || (this.mode === 'quiz' && (this.words.length < 2
+            || ((this.mode === 'quiz' || this.learnThenQuiz) && (this.words.length < 2
                 || new Set(this.words.map(word => word.word.trim().toLocaleLowerCase('tr'))).size !== this.words.length
                 || new Set(this.words.map(word => word.definition.trim().toLocaleLowerCase('tr'))).size !== this.words.length))
             ? 'Kelime havuzu eksik veya belirsiz. Lütfen farklı bir kelime grubu seçin.' : '';
@@ -183,6 +186,10 @@ export class VocabularyBuilderEngine implements BaseEngine {
         this.prepareCurrentStep();
 
         this.callbacks.onStart();
+        if (this.currentWordIndex >= this.words.length) {
+            this.completeExercise();
+            return;
+        }
         this.callbacks.onStateChange({ ...this.state });
     }
 
@@ -309,6 +316,7 @@ export class VocabularyBuilderEngine implements BaseEngine {
 
     reset(): void {
         this.clearWordTimer();
+        if (this.learnThenQuiz) this.mode = 'learning';
         if (this.timerInterval) clearInterval(this.timerInterval);
         this.currentWordIndex = 0;
         this.responses = [];
@@ -397,14 +405,14 @@ export class VocabularyBuilderEngine implements BaseEngine {
     markAsKnown(): void {
         if (!this.canRespond()) return;
         const word = this.getCurrentWord();
-        if (word && !this.serverAuthoritative) this.updateLeitnerBox(word.id, true);
+        if (word && !this.serverAuthoritative && !this.learnThenQuiz) this.updateLeitnerBox(word.id, true);
         this.recordResponse(true);
     }
 
     markAsUnknown(): void {
         if (!this.canRespond()) return;
         const word = this.getCurrentWord();
-        if (word && !this.serverAuthoritative) this.updateLeitnerBox(word.id, false);
+        if (word && !this.serverAuthoritative && !this.learnThenQuiz) this.updateLeitnerBox(word.id, false);
         this.recordResponse(false);
     }
 
@@ -417,6 +425,12 @@ export class VocabularyBuilderEngine implements BaseEngine {
             this.pendingQuizAnswer = { word, responseTime };
             this.callbacks.onAction({ action: isCorrect ? 'mark_known' : 'mark_unknown', wordId: word.id, responseTime, timestamp: new Date() });
             this.callbacks.onStateChange({ ...this.state });
+            return;
+        }
+
+        if (this.learnThenQuiz && this.mode === 'learning') {
+            this.callbacks.onAction({ action: isCorrect ? 'mark_known' : 'mark_unknown', wordId: word.id, responseTime, timestamp: new Date() });
+            this.nextWord();
             return;
         }
 
@@ -452,7 +466,13 @@ export class VocabularyBuilderEngine implements BaseEngine {
         this.wordStartTime = Date.now();
 
         if (this.currentWordIndex >= this.words.length) {
-            this.completeExercise();
+            if (this.learnThenQuiz && this.mode === 'learning') {
+                this.mode = 'quiz';
+                this.currentWordIndex = 0;
+                this.state.currentStep = 0;
+                this.prepareCurrentStep();
+                this.callbacks.onStateChange({ ...this.state });
+            } else this.completeExercise();
         } else {
             this.prepareCurrentStep();
             this.callbacks.onStateChange({ ...this.state });
@@ -608,6 +628,11 @@ export class VocabularyBuilderEngine implements BaseEngine {
         }
 
         const isCorrect = response?.isCorrect === true;
+        if (this.learnThenQuiz && this.mode === 'learning') {
+            if (this.state.isPaused) this.advanceOnResume = true;
+            else this.nextWord();
+            return;
+        }
         this.userProgress[pending.word.id].box = boundedInteger(response?.feedbackData?.box, this.getWordBox(pending.word.id), 1, 5);
         this.responses.push({
             wordId: pending.word.id,
@@ -702,6 +727,9 @@ export class VocabularyBuilderEngine implements BaseEngine {
 
     getMode(): string {
         return this.mode;
+    }
+    isLearnThenQuiz(): boolean {
+        return this.learnThenQuiz;
     }
     private canRespond(): boolean {
         return this.state.isRunning && !this.state.isPaused && !this.state.isCompleted && !this.pendingQuizAnswer && !this.advanceOnResume;

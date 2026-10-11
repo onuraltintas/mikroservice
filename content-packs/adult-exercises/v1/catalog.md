@@ -26,8 +26,8 @@ Sınav soru başına 60 saniye; metni okuma dahil değildir. Genişlik ayarları
 | Kısa Gösterimde Tanıma | Tachistoscope | `{"mode":"tachistoscope","content":{"type":"number","count":12},"timing":{"durationMs":800,"intervalMs":500},"adaptive":{"enabled":false,"minDurationMs":200,"maxDurationMs":1500}}` |
 | Çevredeki Harfler | VisualExpansion | `{"mode":"horizontal","rounds":12,"displayDurationMs":1100,"startDegrees":8,"targetDegrees":18,"content":{"stimulusType":"letter"}}` |
 | Sahneyi Zihninde Canlandır | Visualization | `{"mode":"static"}` |
-| Kelime Bilgisi Testi | Vocabulary | `{"mode":"quiz","quizType":"word_to_definition","timeLimitPerWord":0,"vocabulary":{"count":8,"difficultyLevel":1}}` |
-| Kelime Öğrenme | Vocabulary | `{"mode":"learning","quizType":"word_to_definition","timeLimitPerWord":0,"vocabulary":{"count":8,"difficultyLevel":1}}` |
+| Kelime Bilgisi Testi | Vocabulary | `{"mode":"quiz","quizType":"mixed","timeLimitPerWord":0,"vocabulary":{"count":24,"difficultyLevel":5,"requireFullPool":true}}` |
+| Kelime Öğrenme | Vocabulary | `{"mode":"learning","quizType":"mixed","timeLimitPerWord":0,"vocabulary":{"count":15,"difficultyLevel":2,"requireFullPool":true},"learnThenQuiz":true}` |
 
 ## Seviye 2
 
@@ -47,8 +47,8 @@ Sınav soru başına 60 saniye; metni okuma dahil değildir. Genişlik ayarları
 | Kısa Gösterimde Tanıma | Tachistoscope | `{"mode":"tachistoscope","content":{"type":"number","count":14},"timing":{"durationMs":700,"intervalMs":500},"adaptive":{"enabled":false,"minDurationMs":200,"maxDurationMs":1500}}` |
 | Çevredeki Harfler | VisualExpansion | `{"mode":"horizontal","rounds":14,"displayDurationMs":1000,"startDegrees":8,"targetDegrees":20,"content":{"stimulusType":"letter"}}` |
 | Sahneyi Zihninde Canlandır | Visualization | `{"mode":"static"}` |
-| Kelime Bilgisi Testi | Vocabulary | `{"mode":"quiz","quizType":"mixed","timeLimitPerWord":0,"vocabulary":{"count":10,"difficultyLevel":2}}` |
-| Kelime Öğrenme | Vocabulary | `{"mode":"learning","quizType":"mixed","timeLimitPerWord":0,"vocabulary":{"count":10,"difficultyLevel":2}}` |
+| Kelime Bilgisi Testi | Vocabulary | `{"mode":"quiz","quizType":"mixed","timeLimitPerWord":0,"vocabulary":{"count":24,"difficultyLevel":5,"requireFullPool":true}}` |
+| Kelime Öğrenme | Vocabulary | `{"mode":"learning","quizType":"mixed","timeLimitPerWord":0,"vocabulary":{"count":15,"difficultyLevel":2,"requireFullPool":true},"learnThenQuiz":true}` |
 
 ## Seviye 3
 
@@ -71,7 +71,7 @@ Sınav soru başına 60 saniye; metni okuma dahil değildir. Genişlik ayarları
 | Kaybolan Metinle Okuma | TextFading | `{"content":{"source":"reading_text"},"fading":{"speedWpm":260,"lagMs":2000},"timing":{"timeLimitSec":0},"readingPurpose":"evaluation"}` |
 | Çevredeki Harfler | VisualExpansion | `{"mode":"horizontal","rounds":16,"displayDurationMs":950,"startDegrees":8,"targetDegrees":22,"content":{"stimulusType":"letter"}}` |
 | Sahneyi Zihninde Canlandır | Visualization | `{"mode":"static"}` |
-| Kelime Bilgisi Testi | Vocabulary | `{"mode":"quiz","quizType":"mixed","timeLimitPerWord":0,"vocabulary":{"count":10,"difficultyLevel":3}}` |
+| Kelime Bilgisi Testi | Vocabulary | `{"mode":"quiz","quizType":"mixed","timeLimitPerWord":0,"vocabulary":{"count":24,"difficultyLevel":5,"requireFullPool":true}}` |
 
 ## Seviye 4
 
@@ -94,7 +94,7 @@ Sınav soru başına 60 saniye; metni okuma dahil değildir. Genişlik ayarları
 | Kaybolan Metinle Okuma | TextFading | `{"content":{"source":"reading_text"},"fading":{"speedWpm":290,"lagMs":2000},"timing":{"timeLimitSec":0},"readingPurpose":"evaluation"}` |
 | Çevredeki Harfler | VisualExpansion | `{"mode":"horizontal","rounds":18,"displayDurationMs":900,"startDegrees":8,"targetDegrees":24,"content":{"stimulusType":"letter"}}` |
 | Sahneyi Zihninde Canlandır | Visualization | `{"mode":"static"}` |
-| Kelime Bilgisi Testi | Vocabulary | `{"mode":"quiz","quizType":"mixed","timeLimitPerWord":0,"vocabulary":{"count":12,"difficultyLevel":4}}` |
+| Kelime Bilgisi Testi | Vocabulary | `{"mode":"quiz","quizType":"mixed","timeLimitPerWord":0,"vocabulary":{"count":24,"difficultyLevel":5,"requireFullPool":true}}` |
 
 ## Seviye 5
 
@@ -117,7 +117,7 @@ Sınav soru başına 60 saniye; metni okuma dahil değildir. Genişlik ayarları
 | Kaybolan Metinle Okuma | TextFading | `{"content":{"source":"reading_text"},"fading":{"speedWpm":320,"lagMs":2000},"timing":{"timeLimitSec":0},"readingPurpose":"evaluation"}` |
 | Çevredeki Harfler | VisualExpansion | `{"mode":"horizontal","rounds":20,"displayDurationMs":850,"startDegrees":8,"targetDegrees":26,"content":{"stimulusType":"letter"}}` |
 | Sahneyi Zihninde Canlandır | Visualization | `{"mode":"static"}` |
-| Kelime Bilgisi Testi | Vocabulary | `{"mode":"quiz","quizType":"mixed","timeLimitPerWord":0,"vocabulary":{"count":12,"difficultyLevel":5}}` |
+| Kelime Bilgisi Testi | Vocabulary | `{"mode":"quiz","quizType":"mixed","timeLimitPerWord":0,"vocabulary":{"count":24,"difficultyLevel":5,"requireFullPool":true}}` |
 
 ## Regresyon v2
 

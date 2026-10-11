@@ -1462,6 +1462,9 @@
             </button>
         </div>
 
+        <p *ngIf="isVocabLearnThenQuiz()" role="status">
+            {{ getVocabMode() === 'learning' ? 'Önce kartları inceleyin; ardından aynı kelimelerin testi açılır. Biliyorum/Bilmiyorum seçimi puan değildir.' : 'Kartlar tamamlandı. Şimdi aynı kelimelerin testini yanıtlayın; puan ve tekrar ilerlemesi bu cevaplardan oluşur.' }}
+        </p>
         <!-- LEARNING MODE UI -->
         <div class="vocabulary-learning-area" [class.blurred]="engineState.isPaused"
             *ngIf="getVocabMode() !== 'quiz' && getVocabCurrentWord()">
