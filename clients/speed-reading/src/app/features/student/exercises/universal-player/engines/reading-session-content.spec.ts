@@ -14,6 +14,9 @@ const callbacks: EngineCallbacks = {
 };
 
 describe('server-owned reading content', () => {
+  it('never substitutes sample content for a missing Text Fade preview text', () => {
+    expect(() => new TextFadeEngine().initialize({ engineType: 'text_fade' } as any, callbacks)).toThrowError(/reading text/i);
+  });
   it('preserves snapshot text through the actual player configuration merge', () => {
     const player = Object.create(ExercisePlayerComponent.prototype) as any;
     player.isAssessmentMode = false;

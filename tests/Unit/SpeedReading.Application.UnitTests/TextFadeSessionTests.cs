@@ -10,6 +10,79 @@ namespace SpeedReading.Application.UnitTests;
 
 public sealed class TextFadeSessionTests
 {
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(true, false)]
+    [InlineData(false, true)]
+    [InlineData(true, true)]
+    public async Task Rejects_out_of_band_text_even_with_stale_word_metadata(bool explicitText, bool staleMetadata)
+    {
+        await using var db = Context();
+        var (service, student, exercise) = await Seed(db,
+            """{"engineType":"text_fade","engineConfig":{"content":{"minWordCount":5,"maxWordCount":8}}}""");
+        var text = ReadingText.Create(Guid.NewGuid(), "Kısa", "bir iki üç dört", difficultyLevel: 3);
+        db.ReadingTexts.Add(text);
+        if (staleMetadata) db.Entry(text).Property(item => item.WordCount).CurrentValue = 6;
+        await db.SaveChangesAsync();
+        var start = () => service.StartAsync(student, new() { ExerciseId = exercise, ReadingTextId = explicitText ? text.Id : null });
+        await start.Should().ThrowAsync<Exception>();
+        db.ExerciseSessions.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task Snapshots_four_valid_questions_and_preserves_them_on_resume()
+    {
+        await using var db = Context();
+        var (service, student, exercise) = await Seed(db,
+            """{"engineType":"text_fade","engineConfig":{"readingPurpose":"evaluation","content":{"questionCount":4}}}""");
+        var text = ReadingText.Create(Guid.NewGuid(), "A", "bir iki üç dört", difficultyLevel: 3);
+        db.ReadingTexts.Add(text);
+        for (var index = 0; index < 5; index++) db.ReadingQuestions.Add(Question(text.Id, index));
+        db.ReadingQuestions.Add(ReadingQuestion.Create(Guid.NewGuid(), text.Id, "Geçersiz", "A", 0));
+        await db.SaveChangesAsync();
+        var started = await service.StartAsync(student, new() { ExerciseId = exercise });
+        started.InitialData.GetProperty("questions").EnumerateArray().Select(q => q.GetProperty("questionText").GetString())
+            .Should().Equal("Soru 0", "Soru 1", "Soru 2", "Soru 3");
+        var session = await db.ExerciseSessions.SingleAsync();
+        var snapshot = session.SessionDataJson;
+        db.Entry(await db.Exercises.SingleAsync()).Property(item => item.ConfigurationJson).CurrentValue =
+            """{"engineType":"text_fade","engineConfig":{"readingPurpose":"evaluation","content":{"questionCount":5}}}""";
+        await db.SaveChangesAsync();
+        (await service.StartAsync(student, new() { ExerciseId = exercise })).SessionId.Should().Be(started.SessionId);
+        session.SessionDataJson.Should().Be(snapshot);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Rejects_evaluation_with_fewer_than_four_valid_questions(bool explicitText)
+    {
+        await using var db = Context();
+        var (service, student, exercise) = await Seed(db,
+            """{"engineType":"text_fade","engineConfig":{"readingPurpose":"evaluation","content":{"questionCount":4}}}""");
+        var text = ReadingText.Create(Guid.NewGuid(), "A", "bir iki üç dört", difficultyLevel: 3);
+        db.ReadingTexts.Add(text);
+        db.ReadingQuestions.Add(Question(text.Id, 0));
+        await db.SaveChangesAsync();
+        var start = () => service.StartAsync(student, new() { ExerciseId = exercise, ReadingTextId = explicitText ? text.Id : null });
+        await start.Should().ThrowAsync<Exception>();
+        db.ExerciseSessions.Should().BeEmpty();
+    }
+
+    [Theory]
+    [InlineData("""{"engineType":"text_fade","content":{"questionCount":0}}""")]
+    [InlineData("""{"engineType":"text_fade","engineConfig":{"content":{"minWordCount":8,"maxWordCount":5}}}""")]
+    [InlineData("""{"engineType":"text_fade","content":{"questionCount":4},"engineConfig":{"content":{"questionCount":5}}}""")]
+    public void Rejects_invalid_content_configuration(string config)
+    {
+        var validate = () => ExerciseConfigurationRules.ValidateActiveConfiguration(config, "text_fade");
+        validate.Should().Throw<ArgumentException>();
+    }
+
+    private static ReadingQuestion Question(Guid text, int index) => ReadingQuestion.Create(
+        Guid.NewGuid(), text, $"Soru {index}", "A", index, type: 1, bloomLevel: 1,
+        optionA: "Doğru", optionB: "B", optionC: "C", optionD: "D");
+
     [Fact]
     public async Task Verifies_pace_and_lag_before_completion_without_fabricated_metrics()
     {

@@ -22,6 +22,26 @@ describe('Catalogue reading previews', () => {
     expect(player.backendSessionConfig.readingTextContent).toBe('Gerçek katalog metni burada.');
     expect(player.initializePreviewEngine).toHaveBeenCalledTimes(1);
   });
+  it('applies Text Fade word bands to automatic and pinned previews', () => {
+    const player = create();
+    player.exercise.exerciseTypeName = 'TextFading';
+    player.parsedConfig = { engineType: 'text_fade', engineConfig: { content: { minWordCount: 5, maxWordCount: 8 } } };
+    player.startPreviewSession();
+    expect(player.initializePreviewEngine).not.toHaveBeenCalled();
+    player.parsedConfig.readingTextId = 'actual';
+    player.startPreviewSession();
+    expect(player.initializePreviewEngine).not.toHaveBeenCalled();
+  });
+  it('rejects Text Fade evaluation with fewer than four valid questions', () => {
+    const player = create();
+    player.exercise.exerciseTypeName = 'TextFading';
+    player.parsedConfig = { engineType: 'text_fade', engineConfig: {
+      readingPurpose: 'evaluation', content: { questionCount: 4 } } };
+    player.exerciseService.getReadingText.and.returnValue(of({ id: 'actual', content: 'Bir iki üç dört.', difficultyLevel: 3,
+      questions: [{ questionText: 'Soru', type: 1, bloomLevel: 1, correctAnswer: 'A', optionA: 'A', optionB: 'B', optionC: 'C', optionD: 'D' }] }));
+    player.startPreviewSession();
+    expect(player.initializePreviewEngine).not.toHaveBeenCalled();
+  });
   it('applies Chunking word bands even with custom speed/group size and drops practice questions', () => {
     const player = create();
     player.exercise.exerciseTypeName = 'Chunking';
