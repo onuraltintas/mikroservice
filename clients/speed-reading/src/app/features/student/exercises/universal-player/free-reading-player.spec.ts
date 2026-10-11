@@ -19,6 +19,16 @@ describe('free reading player', () => {
     expect(result.details.measurementStatus).toBe('NotMeasured');
     expect(result.details.comprehensionScore).toBeNull();
   });
+  it('keeps evaluation snapshot semantics after the catalog changes to practice', () => {
+    const player=Object.create(ExercisePlayerComponent.prototype) as any;
+    player.engine={ engineType:'free_reading' }; player.questionAnswers=[{ answer:'A' }];
+    player.parsedConfig={ engineType:'free_reading',engineConfig:{ readingPurpose:'practice' } };
+    player.backendSessionConfig={ readingPurpose:'evaluation',engineConfig:{ readingPurpose:'practice' } };
+    expect(player.isFreeReadingPractice()).toBeFalse();
+    const result=player.normalizeEngineResultForDisplay({ score:100,accuracy:100,details:{ wpm:200,comprehensionScore:100 } });
+    expect(result.score).toBe(100); expect(result.details.comprehensionScore).toBe(100);
+    expect(result.details.measurementStatus).toBe('Measured');
+  });
   it('routes completion, font size and scrolling to the free reading engine', () => {
     const player = Object.create(ExercisePlayerComponent.prototype) as any;
     player.engine = { engineType: 'free_reading', getFontSize: () => 'large', completeReading: jasmine.createSpy(), handleInput: jasmine.createSpy() };
