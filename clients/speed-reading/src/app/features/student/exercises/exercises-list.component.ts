@@ -1,6 +1,6 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { BaseComponent } from '../../../core/components/base.component';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { ExerciseService } from '../../../core/services/exercise.service';
@@ -32,7 +32,6 @@ interface ExerciseCard {
   standalone: true,
   imports: [
     CommonModule,
-    RouterLink,
     MatDialogModule
   ],
   templateUrl: './exercises-list.component.html',
@@ -153,6 +152,17 @@ export class ExercisesListComponent extends BaseComponent implements OnInit {
       this.exercises.push(card);
     });
 
+    if (this.canTryAttentionPrototype) {
+      this.exercises.push({
+        name: 'Hedefi Yakala', route: '/student/attention-preview',
+        exerciseTypeId: 'attention-prototype', icon: 'stars',
+        color: 'linear-gradient(135deg, #0d766e 0%, #164e63 100%)',
+        description: 'Şekiller arasındaki yıldızı bulun. Önce alıştırma yapın, ardından temponuzu seçerek deneyin. Sonuçlar kaydedilmez.',
+        difficulty: 'Prototip', category: 'Odaklanma', estimatedTime: '1–3 dk',
+        benefits: ['Hedef seçme alıştırması', 'Doğru, yanlış ve kaçırılan hedef dönütü']
+      });
+    }
+
     // Extract unique categories for dynamic filtering
     const uniqueCategories = new Set<string>(this.exercises.map(e => e.category));
     this.categories = ['all', ...Array.from(uniqueCategories).sort()];
@@ -215,6 +225,10 @@ export class ExercisesListComponent extends BaseComponent implements OnInit {
   }
 
   startExercise(exerciseCard: ExerciseCard, custom = false): void {
+    if (exerciseCard.route === '/student/attention-preview') {
+      if (this.canTryAttentionPrototype) this.router.navigate([exerciseCard.route]);
+      return;
+    }
     if (!exerciseCard.exercises || exerciseCard.exercises.length === 0) {
       this.toaster.error('Bu kategoride aktif egzersiz bulunamadı.');
       return;

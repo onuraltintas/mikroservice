@@ -18,9 +18,6 @@
                 Egzersizler
             </h1>
             <p class="subtitle">Hızlı okuma becerilerini geliştirmek için tasarlanmış egzersizler</p>
-            @if (canTryAttentionPrototype) {
-              <a class="sp-btn" routerLink="/student/attention-preview">Yeni dikkat prototipini dene →</a>
-            }
         </div>
     </div>
 
@@ -75,16 +72,18 @@
             <div class="sp-card-actions">
                 <button class="sp-btn start-button" (click)="startExercise(exercise)">
                     <span class="material-icons">play_arrow</span>
-                    Kayıtlı ayarlarla başlat
+                    {{ exercise.route ? 'Önizlemeyi başlat' : 'Kayıtlı ayarlarla başlat' }}
                 </button>
-                @if (canCustomizePreview) {
+                @if (canCustomizePreview && !exercise.route) {
                 <button class="sp-btn" (click)="startExercise(exercise, true)">
                     <span class="material-icons" aria-hidden="true">tune</span> Özel ayarlarla dene
                 </button>
                 }
+                @if (!exercise.route) {
                 <button class="sp-btn" title="Detaylı bilgi" (click)="showInfo(exercise)">
                     <span class="material-icons">info</span>
                 </button>
+                }
             </div>
         </div>
         }
