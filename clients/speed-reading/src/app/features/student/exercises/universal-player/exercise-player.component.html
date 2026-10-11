@@ -569,6 +569,11 @@
     <!-- Exercise Running - Visual Expansion -->
     <div *ngIf="engine && engineState.isRunning && engine.engineType === 'visual_expansion'"
         class="game-container visual-expansion-container">
+        <div class="measurement-not-available" *ngIf="!isAssessmentMode && engineState.currentStep > 0
+            && engineState.currentStep % 15 === 0 && engineState.currentStep < engineState.totalSteps">
+            İsterseniz kısa bir mola verebilirsiniz. İlerlemeniz korunur.
+            <button class="ep-btn" *ngIf="!engineState.isPaused" (click)="togglePause()">Kısa mola ver</button>
+        </div>
         <div class="game-header">
             <div class="timer" [class.countdown]="hasTimeLimit()" [class.urgent]="isTimeUrgent()">
                 <span class="material-icons">{{ hasTimeLimit() ? 'hourglass_empty' : 'timer' }}</span>
@@ -635,7 +640,7 @@
         <div class="game-stats">
             <div class="stat">
                 <span class="label">Göreli uzaklık</span>
-                <span class="value">{{ getExpansionRelativeDistance() | number:'1.0-0' }}%</span>
+                <span class="value">{{ getExpansionRelativeDistance() | number:'1.0-1' }}%</span>
             </div>
             <div class="stat correct-stat">
                 <span class="label">Doğru</span>
@@ -1715,10 +1720,20 @@
                 Kayıtlı cevap süresine ağ gecikmesi etki edebilir; duraklama süresi hariç tutulur.
             </div>
             <div class="stats-row" *ngIf="engine?.engineType === 'visual_expansion'">
-                <div class="stat-card"><div class="stat-value">{{ (result?.details?.maxDegreesReached || 0) / 60 * 100 | number:'1.0-0' }}%</div><div class="stat-label">En büyük göreli uzaklık</div></div>
+                <div class="stat-card"><div class="stat-value">{{ getExpansionDistancePercent(result?.details?.maxDegreesReached) | number:'1.0-1' }}%</div><div class="stat-label">En büyük göreli uzaklık</div></div>
                 <div class="stat-card"><div class="stat-value">{{ (result?.details?.averageResponseTimeMs || 0) / 1000 | number:'1.2-2' }} sn</div><div class="stat-label">Ortalama cevap süresi</div></div>
-                <div class="stat-card"><div class="stat-value">{{ result?.details?.roundResults?.length }}</div><div class="stat-label">Tamamlanan tur</div></div>
+                <div class="stat-card"><div class="stat-value">{{ result?.details?.roundResults?.length }} / {{ result?.totalSteps }}</div><div class="stat-label">Tamamlanan / planlanan tur</div></div>
             </div>
+            <ng-container *ngIf="engine?.engineType === 'visual_expansion' && result?.details?.targetSummary as target">
+                <div class="measurement-not-available">{{ target.targetReached ? 'Hedefe ulaşıldı' : 'Hedefe ulaşılmadı' }}</div>
+                <div class="stats-row">
+                    <div class="stat-card"><div class="stat-value">{{ getExpansionDistancePercent(target.targetDistance) | number:'1.0-1' }}%</div><div class="stat-label">Hedef uzaklık</div></div>
+                    <div class="stat-card"><div class="stat-value">{{ target.targetRounds }}</div><div class="stat-label">Hedefteki tur</div></div>
+                    <div class="stat-card"><div class="stat-value">{{ target.targetCorrectRounds }}</div><div class="stat-label">Hedefteki doğru tur</div></div>
+                    <div class="stat-card"><div class="stat-value">{{ target.targetAccuracy == null ? 'Ölçülmedi' : target.targetAccuracy + '%' }}</div><div class="stat-label">Hedefteki doğruluk</div></div>
+                    <div class="stat-card"><div class="stat-value">{{ target.shortestCorrectDisplayDurationMs == null ? 'Ölçülmedi' : ((target.shortestCorrectDisplayDurationMs / 1000 | number:'1.2-2') + ' sn') }}</div><div class="stat-label">Hedefte doğru yanıtlanan en kısa gösterim</div></div>
+                </div>
+            </ng-container>
             <div class="measurement-not-available" *ngIf="engine?.engineType === 'visual_expansion'">
                 Uzaklık ekrandaki göreli konumdur; fiziksel görüş açısı veya okuma hızı ölçümü değildir.
                 Cevap süresi uyaran gizlendikten sonraki yanıtlama süresidir; kayıtlı oturumlarda ağ gecikmesi de etkileyebilir.

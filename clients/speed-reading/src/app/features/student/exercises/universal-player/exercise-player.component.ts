@@ -36,6 +36,7 @@ import { WordHighlightEngine } from './engines/word-highlight.engine';
 import { ReadingComprehensionEngine } from './engines/reading-comprehension.engine';
 import { VisualExpansionEngine } from './engines/visual-expansion.engine';
 import { resolveVisualExpansionSettings } from './engines/visual-expansion-settings';
+import { visualAngleToOffsetPercent } from './engines/visual-expansion-position';
 import { MotionPathEngine } from './engines/motion-path.engine';
 import { ScanFindEngine } from './engines/scan-find.engine';
 import { ErrorAnalysisEngine } from './engines/error-analysis.engine';
@@ -3332,6 +3333,11 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   getExpansionCorrectCount(): number {
     if (this.engine?.engineType !== 'visual_expansion') return 0;
     return (this.engine as any)?.correctAnswers || 0;
+  }
+
+  getExpansionDistancePercent(distance: unknown): number {
+    const value = Number(distance);
+    return value > 0 ? visualAngleToOffsetPercent(value, 1) : 0;
   }
 
   getExpansionWrongCount(): number {

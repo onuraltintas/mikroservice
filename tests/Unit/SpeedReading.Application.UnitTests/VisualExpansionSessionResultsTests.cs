@@ -2,6 +2,7 @@ using System.Reflection;
 using System.Text.Json.Nodes;
 using Microsoft.EntityFrameworkCore;
 using SpeedReading.Application.ExerciseSessions;
+using SpeedReading.Domain.Assessment;
 using SpeedReading.Domain.Catalog;
 using SpeedReading.Infrastructure.Persistence;
 
@@ -9,6 +10,80 @@ namespace SpeedReading.Application.UnitTests;
 
 public sealed class VisualExpansionSessionResultsTests
 {
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Legacy_and_pinned_assessment_sessions_resume_with_their_original_progression(bool assessment)
+    {
+        await using var db = new OwnedSpeedReadingDbContext(new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
+        var student = Guid.NewGuid();
+        var type = ExerciseType.Create(Guid.NewGuid(), "VisualExpansion", "Görsel Genişleme", "visual_expansion");
+        const string configuration = """{"engineType":"visual_expansion","engineConfig":{"rounds":6,"startDegrees":8,"targetDegrees":20,"displayDurationMs":400}}""";
+        var exercise = Exercise.Create("Görsel Genişleme", "attention", configuration, 1, student, type.Id);
+        db.ExerciseTypes.Add(type); db.Exercises.Add(exercise);
+        var request = new StartExerciseSessionRequest { ExerciseId = exercise.Id };
+        if (assessment)
+        {
+            var attemptId = Guid.NewGuid();
+            request = new() { ExerciseId = exercise.Id, AssessmentAttemptId = attemptId };
+            db.AssessmentAttempts.Add(AssessmentAttempt.Start(attemptId, student,
+                AssessmentAttemptPhase.Baseline, "baseline-v1", "tr", null, 1, DateTime.UtcNow, student.ToString()));
+            var snapshot = System.Text.Json.JsonSerializer.Serialize(new {
+                version = 1,
+                exercise = new { id = exercise.Id, title = exercise.Title, description = "attention",
+                    typeName = "VisualExpansion", difficultyLevel = 1, engineType = "visual_expansion",
+                    configurationJson = configuration },
+                questions = Array.Empty<object>()
+            });
+            db.AssessmentAttemptExercises.Add(AssessmentAttemptExercise.Pin(Guid.NewGuid(), attemptId,
+                exercise.Id, null, "attention", 1, snapshot, DateTime.UtcNow, student.ToString()));
+        }
+        await db.SaveChangesAsync();
+        var owned = typeof(OwnedSpeedReadingDbContext).Assembly.GetType("SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingExerciseSessions")!;
+        var service = (ISpeedReadingExerciseSessions)Activator.CreateInstance(owned,
+            BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, [db], null)!;
+        var started = await service.StartAsync(student, request);
+        Assert.Equal(6, started.TotalSteps);
+        var session = await db.ExerciseSessions.SingleAsync();
+        var state = JsonNode.Parse(session.SessionDataJson)!;
+        Assert.Equal(assessment ? 1 : 2, state["visualExpansionProtocolVersion"]!.GetValue<int>());
+        if (!assessment)
+        {
+            state["visualExpansionProtocolVersion"] = 1;
+            session.SetState(state.ToJsonString()); await db.SaveChangesAsync();
+        }
+        for (var round = 0; round < 2; round++)
+        {
+            var presentation = await service.ValidateActionAsync(student, started.SessionId,
+                new() { Action = "visual_expansion_present" });
+            var data = presentation.FeedbackData!.Value;
+            Assert.Equal(round == 0 ? 8 : 10, data.GetProperty("degrees").GetInt32());
+            Assert.Equal(round == 0 ? 400 : 380, data.GetProperty("displayDurationMs").GetInt32());
+            var answers = data.GetProperty("stimuli").EnumerateArray().Select(item => item.GetString()!).ToList();
+            session = await db.ExerciseSessions.SingleAsync();
+            state = JsonNode.Parse(session.SessionDataJson)!;
+            state["visualExpansionPresentedAt"] = DateTime.UtcNow.AddSeconds(-1);
+            session.SetState(state.ToJsonString()); await db.SaveChangesAsync();
+            var answer = await service.ValidateActionAsync(student, started.SessionId,
+                new() { Action = "visual_expansion_answer", Answers = answers });
+            Assert.True(answer.IsValid);
+            if (assessment) Assert.Null(answer.IsCorrect);
+            else Assert.True(answer.IsCorrect);
+            Assert.True(JsonNode.Parse(session.SessionDataJson)!["visualExpansionRoundResults"]![round]!["isCorrect"]!.GetValue<bool>());
+            if (round == 0)
+            {
+                await service.PauseAsync(student, started.SessionId);
+                db.ChangeTracker.Clear();
+                await service.ResumeAsync(student, started.SessionId);
+                var restarted = await service.StartAsync(student, request);
+                Assert.Equal(started.SessionId, restarted.SessionId);
+                Assert.Equal(6, restarted.TotalSteps);
+                Assert.Equal(1, restarted.InitialData.GetProperty("visualExpansionRound").GetInt32());
+            }
+        }
+    }
+
     [Fact]
     public void Assessment_public_state_does_not_restore_tachistoscope_answer_keys()
     {
