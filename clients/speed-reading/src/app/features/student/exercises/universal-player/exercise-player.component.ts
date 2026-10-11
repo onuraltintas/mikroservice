@@ -2598,7 +2598,8 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     const activeIndex = this.getRegressionActiveIndex();
     if (activeIndex < 0) return false;
     const startChunkIndex = (this.engine as RegressionReductionEngine).getCurrentChunkStart();
-    return wordIndex < startChunkIndex;
+    const visibleHistory = (this.engine as RegressionReductionEngine).getVisibleHistoryWords();
+    return wordIndex < startChunkIndex - visibleHistory;
   }
 
   getRegressionPhase(): string {

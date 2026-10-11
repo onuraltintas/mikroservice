@@ -146,6 +146,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             var scanTaskIds = isScanText ? ScanningTaskTextIds(ReadObject(explicitConfig, "engineConfig").ValueKind == JsonValueKind.Object
                 ? ReadObject(explicitConfig, "engineConfig") : explicitConfig) : [];
             var usesTextBand = isFreeText || isScanText || IsEngineType(exerciseEngineType, "reading_comprehension")
+                || IsEngineType(exerciseEngineType, "regression_reduction")
                 || exerciseTypeName.Equals("SpeedReading", StringComparison.OrdinalIgnoreCase)
                 || exerciseTypeName.Equals("Chunking", StringComparison.OrdinalIgnoreCase);
             var minimumWords = usesTextBand ? ReadPositiveInt(explicitContent, "minWordCount") ?? ReadPositiveInt(ReadObject(explicitConfig, "content"), "minWordCount") ?? 0 : 0;
@@ -341,12 +342,15 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                 var scanTaskIds = isScanText ? ScanningTaskTextIds(ReadObject(parsedConfiguration, "engineConfig").ValueKind == JsonValueKind.Object
                     ? ReadObject(parsedConfiguration, "engineConfig") : parsedConfiguration) : [];
                 var usesTextBand = isFreeReading || isComprehension || isScanText || normalizedEngineType == "text_fade"
+                    || normalizedEngineType == "regression_reduction"
                     || exerciseTypeName.Equals("SpeedReading", StringComparison.OrdinalIgnoreCase)
                     || exerciseTypeName.Equals("Chunking", StringComparison.OrdinalIgnoreCase);
                 var comprehensionQuestionCount = normalizedEngineType == "text_fade"
                     && ExerciseConfigurationRules.ResolveReadingPurpose(normalizedEngineType,
                         ReadString(ReadObject(parsedConfiguration, "engineConfig"), "readingPurpose")
                             ?? ReadString(parsedConfiguration, "readingPurpose"), request.AssessmentAttemptId.HasValue) == "evaluation" ? 4 : isComprehension
+                    ? ReadPositiveInt(freeContent, "questionCount") ?? ReadPositiveInt(ReadObject(parsedConfiguration, "content"), "questionCount") ?? 0
+                    : normalizedEngineType == "regression_reduction"
                     ? ReadPositiveInt(freeContent, "questionCount") ?? ReadPositiveInt(ReadObject(parsedConfiguration, "content"), "questionCount") ?? 0 : 0;
                 var freeMinimumWords = usesTextBand ? ReadPositiveInt(freeContent, "minWordCount") ?? ReadPositiveInt(ReadObject(parsedConfiguration, "content"), "minWordCount") ?? 0 : 0;
                 var freeMaximumWords = usesTextBand ? ReadPositiveInt(freeContent, "maxWordCount") ?? ReadPositiveInt(ReadObject(parsedConfiguration, "content"), "maxWordCount") ?? 0 : 0;
@@ -1565,6 +1569,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             state.Questions.Clear();
 
         if (IsEngineType(exerciseEngineType, "reading_comprehension")
+            || IsEngineType(exerciseEngineType, "regression_reduction")
             || (IsTextFade(state) && state.ReadingPurpose == "evaluation"))
         {
             var count = IsTextFade(state) ? 4 : ReadPositiveInt(ReadObject(effectiveConfig, "content"), "questionCount")
@@ -1810,6 +1815,14 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             }
         }
         state.CustomData = customData;
+        if (IsEngineType(exerciseEngineType, "regression_reduction"))
+        {
+            var content = ReadObject(effectiveConfig, "content");
+            var minimumWords = ReadPositiveInt(content, "minWordCount") ?? ReadPositiveInt(ReadObject(config, "content"), "minWordCount") ?? 0;
+            var maximumWords = ReadPositiveInt(content, "maxWordCount") ?? ReadPositiveInt(ReadObject(config, "content"), "maxWordCount") ?? 0;
+            if (state.Words.Length < minimumWords || maximumWords > 0 && state.Words.Length > maximumWords)
+                throw new BusinessRuleException("ExerciseSession.ReadingContentUnavailable", "Regresyon metni seçilen kelime bandına uygun değil.");
+        }
         if (IsTextFade(state))
         {
             if (state.Words.Length == 0)

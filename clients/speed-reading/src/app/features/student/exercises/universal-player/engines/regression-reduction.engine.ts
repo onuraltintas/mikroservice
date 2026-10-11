@@ -14,6 +14,7 @@ export interface RegressionConfig extends EngineConfig {
     maskingEnabled: boolean;
     wordDelayMs?: number;
     chunkSize?: number; // Kelime grubu boyutu (1, 2, veya 3)
+    visibleHistoryWords?: number;
     ReadingTextContent?: string;
     Questions?: any[];
 }
@@ -66,9 +67,10 @@ export class RegressionReductionEngine implements BaseEngine {
         this.config = {
             ...root,
             ...nested,
-            wpm: boundedInteger(read('wpm') ?? read('targetWpm'), 200, 20, 1500),
-            wordDelayMs: boundedInteger(read('wordDelayMs'), 0, 0, 10000),
+            wpm: boundedInteger(read('targetWpm') ?? read('wpm'), 200, 20, 1500),
+            wordDelayMs: read('targetWpm') != null ? 0 : boundedInteger(read('wordDelayMs'), 0, 0, 10000),
             chunkSize: boundedInteger(read('chunkSize'), 1, 1, 10),
+            visibleHistoryWords: boundedInteger(read('visibleHistoryWords'), 0, 0, 2),
             maskingType: ['none', 'fade', 'trailing'].includes(read('maskingType'))
                 ? read('maskingType') : 'none'
         } as RegressionConfig;
@@ -322,6 +324,7 @@ export class RegressionReductionEngine implements BaseEngine {
     getCurrentWordIndex(): number { return this.currentWordIndex; }
     getCurrentChunkStart(): number { return this.currentChunkStart; }
     getChunkSize(): number { return this.config.chunkSize || 1; }
+    getVisibleHistoryWords(): number { return this.config.visibleHistoryWords ?? 0; }
     getDisplayPaceWpm(): number { return this.config.wordDelayMs ? Math.round(60000 / this.config.wordDelayMs) : this.config.wpm; }
     getBackwardClickCount(): number { return this.backwardClickCount; }
     getPhase(): 'reading' | 'answering' | 'completed' { return this.phase; }
