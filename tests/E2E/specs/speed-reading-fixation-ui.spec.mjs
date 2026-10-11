@@ -72,7 +72,7 @@ test('four-letter custom preview scores complete rounds, pauses safely and shows
   await expect(page.locator('.motion-path-stats')).toContainText('Gösterim');
   await expect(page.locator('.motion-path-stats')).toContainText('Doğru');
   await expect(page.locator('.motion-path-stats')).toContainText('Yanlış');
-  await expect(page.locator('.motion-path-stats')).toContainText('0.10 sn');
+  await expect(page.locator('.motion-path-stats')).toContainText(/0[.,]10 sn/);
   let previous = [];
   for (let round = 0; round < 2; round++) {
     await page.clock.runFor(350);

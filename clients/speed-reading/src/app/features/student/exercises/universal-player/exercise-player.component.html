@@ -235,21 +235,16 @@
                     <div class="ep-progress-bar"><div class="ep-progress-bar__fill" [style.width.%]="getProgressPercent()"></div></div>
                 </ng-template>
             </div>
-            <div class="game-stats motion-path-stats" *ngIf="!isSaccadeMode()" aria-label="Egzersiz istatistikleri">
-                <div class="stat" *ngIf="!isFixationMode()">
-                    <span class="label">Satır</span>
-                    <span class="value">{{ engineState.currentStep }}</span>
+            <div class="game-stats motion-path-stats" *ngIf="isFixationMode()" aria-label="Egzersiz istatistikleri">
+                <div class="stat">
+                    <span class="label">Gösterim</span>
+                    <span class="value">{{ getMotionPathFixationDuration() / 1000 | number:'1.2-2' }} sn</span>
                 </div>
                 <div class="stat">
-                    <span class="label">{{ isFixationMode() ? 'Gösterim' : 'Görünme' }}</span>
-                    <span class="value" *ngIf="isFixationMode(); else motionExposure">{{ getMotionPathFixationDuration() / 1000 | number:'1.2-2' }} sn</span>
-                    <ng-template #motionExposure><span class="value">{{ getMotionPathFixationDuration() }} ms</span></ng-template>
-                </div>
-                <div class="stat" *ngIf="isFixationMode()">
                     <span class="label">Doğru</span>
                     <span class="value correct-count">{{ getCorrectCount() }}</span>
                 </div>
-                <div class="stat" *ngIf="isFixationMode()">
+                <div class="stat">
                     <span class="label">Yanlış</span>
                     <span class="value incorrect-count">{{ getIncorrectCount() }}</span>
                 </div>
