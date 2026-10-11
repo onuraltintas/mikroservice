@@ -10,6 +10,7 @@ public sealed class GroupingTextRulesTests
     [InlineData("Bir iki üç\n\ndört beş altı yedi", 2, "2,3,5,7", "False,True,False,False")]
     [InlineData("Dr. Deniz 12.04.2026 tarihinde 3.5 litre aldı.", 3, "3,6,7", "False,False,False")]
     [InlineData("“Bir iki!” Üç dört.", 3, "2,4", "False,False")]
+    [InlineData("Bir ٣. Üç dört.", 3, "2,4", "False,False")]
     public void Groups_preserve_sentence_and_paragraph_boundaries(string text, int size, string ends, string breaks)
     {
         var groups = GroupingTextRules.Build(text, size);

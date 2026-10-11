@@ -101,6 +101,22 @@ describe('reading result semantics', () => {
     expect(player.result.details.wordCount).toBe(4);
     expect(player.result.details.displayPaceWpm).toBe(200);
   });
+  it('uses server-owned grouping totals instead of preview totals in a registered result', () => {
+    const player = Object.create(ExercisePlayerComponent.prototype) as any;
+    player.engine = { engineType: 'word_highlight', getWpm: () => 200 };
+    player.engineState = { totalSteps: 4 }; player.parsedConfig = {}; player.questionAnswers = [];
+    player.sessionId = 'session'; player.exercise = { id: 'exercise', exerciseTypeName: 'Chunking' };
+    player.route = { snapshot: { queryParamMap: { get: () => null } } };
+    player.isPreviewSession = () => false; player.isTachistoscopeMode = () => false;
+    player.showToast = () => undefined; player.cdr = { detectChanges: () => undefined };
+    player.completeDailyProgress = () => undefined;
+    player.sessionService = { completeSession: () => of({ score: null, accuracy: null, rawWPM: null,
+      detailedResults: { wordCount: 6, totalSteps: 4, groupingDisplayPaceWpm: 200, groupingCompletionPercent: 100, readingIncomplete: false } }) };
+    player.result = { score: 100, accuracy: 0, errors: 0, totalSteps: 4, completedSteps: 4,
+      details: { wordCount: 999, chunkCount: 999 } };
+    player.saveResult(player.result);
+    expect(player.result.details.chunkCount).toBe(4);
+  });
   it('does not show a legacy hard cutoff for Speed Reading practice', () => {
     const player = Object.create(ExercisePlayerComponent.prototype) as any;
     player.exercise = { exerciseTypeName: 'SpeedReading' };

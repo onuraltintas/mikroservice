@@ -5,7 +5,7 @@ const exerciseId = '30000000-0000-0000-0000-000000000001';
 const typeId = '30000000-0000-0000-0000-000000000002';
 const textId = '30000000-0000-0000-0000-000000000003';
 
-async function prepare(page, role = 'Admin', timeout = false) {
+async function prepare(page, role = 'Admin', timeout = false, realText = 'bir. iki üç dört.\n\nbeş altı.') {
   const errors = [], writes = [];
   page.on('pageerror', error => errors.push(error.message));
   await page.addInitScript(() => localStorage.setItem('currentUser', JSON.stringify({ id: 'test-user' })));
@@ -27,7 +27,7 @@ async function prepare(page, role = 'Admin', timeout = false) {
     } else if (path.endsWith('/exercise-types')) response = { items: [{ id: typeId, name: 'Chunking', displayName: 'Gruplama', engineType: 'word_highlight', isActive: true }], totalCount: 1 };
     else if (path.endsWith(`/exercises/${exerciseId}`)) response = exercise;
     else if (path.endsWith('/exercises')) response = { items: [exercise], totalCount: 1 };
-    else if (path.endsWith(`/reading-texts/${textId}`)) response = { id: textId, title: 'Metin', content: 'bir. iki üç dört.\n\nbeş altı.',
+    else if (path.endsWith(`/reading-texts/${textId}`)) response = { id: textId, title: 'Metin', content: realText,
       difficultyLevel: 3, isActive: true, wordCount: 6, questions: [{ type: 1, correctAnswer: 'A', optionA: 'a', optionB: 'b', optionC: 'c', optionD: 'd' }] };
     else if (path.includes('/profile/status')) response = { hasAgeGroupConfiguration: true };
     else if (path.endsWith('/my-modules')) response = { hasSpeedReading: true };
@@ -66,6 +66,20 @@ test('group colors, display pace and completion remain distinct from measured re
   await expect(page.locator('.comprehension-questions-container')).toHaveCount(0);
   expect(errors).toEqual([]);
   expect(writes).toEqual([]);
+});
+
+test('large custom groups wrap on mobile without horizontally clipping real words', async ({ page }) => {
+  await prepare(page, 'Admin', false, 'Kütüphanedekilerin gözlemlerinden yararlanılabileceğini düşündüğümüzde karşılaştırmalarımızı değerlendiriyoruz.');
+  await page.getByRole('button', { name: 'Özel ayarlarla dene' }).click();
+  await page.getByRole('dialog').getByLabel('Kelime grubu', { exact: true }).fill('10');
+  await page.getByRole('dialog').getByRole('button', { name: 'Denemeyi başlat' }).click();
+  await expect(page.locator('.start-button-large')).toBeVisible();
+  await page.clock.install(); await page.clock.pauseAt(new Date());
+  await page.locator('.start-button-large').click();
+  await page.clock.runFor(100);
+  const display = page.locator('.highlight-display-area');
+  const dimensions = await display.evaluate(element => ({ width: element.clientWidth, scrollWidth: element.scrollWidth }));
+  expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.width + 1);
 });
 
 test('teacher timeout reports incomplete demonstration without preview persistence', async ({ page }) => {
