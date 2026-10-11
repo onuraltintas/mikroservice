@@ -84,6 +84,23 @@ public sealed class TextFadeSessionTests
         optionA: "Doğru", optionB: "B", optionC: "C", optionD: "D");
 
     [Fact]
+    public async Task Resumes_explicit_text_snapshot_after_catalog_band_changes()
+    {
+        await using var db = Context();
+        var (service, student, exercise) = await Seed(db,
+            """{"engineType":"text_fade","engineConfig":{"content":{"minWordCount":3,"maxWordCount":8}}}""");
+        var text = ReadingText.Create(Guid.NewGuid(), "A", "bir iki üç dört", difficultyLevel: 3);
+        db.ReadingTexts.Add(text);
+        await db.SaveChangesAsync();
+        var request = new StartExerciseSessionRequest { ExerciseId = exercise, ReadingTextId = text.Id };
+        var started = await service.StartAsync(student, request);
+        db.Entry(await db.Exercises.SingleAsync()).Property(item => item.ConfigurationJson).CurrentValue =
+            """{"engineType":"text_fade","engineConfig":{"content":{"minWordCount":5,"maxWordCount":8}}}""";
+        await db.SaveChangesAsync();
+        (await service.StartAsync(student, request)).SessionId.Should().Be(started.SessionId);
+    }
+
+    [Fact]
     public async Task Verifies_pace_and_lag_before_completion_without_fabricated_metrics()
     {
         await using var db = Context();
