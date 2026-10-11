@@ -32,4 +32,5 @@ test('fixation describes rounds, exposure and response duration without a false 
   assert.match(result, /averageResponseTimeMs \/ 1000 \| number:'1\.2-2'/);
   assert.match(result, /Tamamlanan \/ planlanan tur/);
   assert.doesNotMatch(result, /Doğrulanmış tur/);
+  assert.doesNotMatch(html, /Egzersiz tamamlandı ve kaydedildi\. Bu egzersizdeki harf yanıtları/);
 });

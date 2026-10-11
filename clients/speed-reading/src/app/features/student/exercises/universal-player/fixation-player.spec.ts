@@ -2,6 +2,20 @@ import { ExercisePlayerComponent } from './exercise-player.component';
 import { of } from 'rxjs';
 
 describe('fixation owned session pause', () => {
+  it('preserves local preview letter accuracy without claiming server verification', () => {
+    const value = Object.create(ExercisePlayerComponent.prototype) as any;
+    value.engine = { engineType: 'motion_path', getMode: () => 'fixation' };
+    value.isPreviewSession = () => true; value.questionAnswers = [];
+    const result = value.normalizeEngineResultForDisplay({ score: 50, accuracy: 50,
+      details: { serverValidatedFixation: false, fixationResults: [
+        { correctChars: 'AB', accuracy: 100 }, { correctChars: 'CD', accuracy: 0 }
+      ] } });
+    expect(result.accuracy).toBe(50);
+    expect(result.details.measurementStatus).toBe('Measured');
+    expect(result.details.serverValidatedFixation).toBeFalse();
+    value.isPreviewSession = () => false;
+    expect(value.normalizeEngineResultForDisplay(result).details.measurementStatus).toBe('NotMeasured');
+  });
   it('displays verified round history instead of local estimates', () => {
     const value = Object.create(ExercisePlayerComponent.prototype) as any;
     value.engine = { engineType: 'motion_path', getMode: () => 'fixation' };
