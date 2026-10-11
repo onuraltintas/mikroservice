@@ -1,0 +1,530 @@
+[
+  {
+    "id": "2f5ccf40-b4c8-5f5f-a472-88bd03480aca",
+    "ageGroupId": "10000000-0000-0000-0000-000000000001",
+    "age": "child",
+    "level": 3,
+    "previousConfiguration": {
+      "engineType": "skimming",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "skimming",
+        "rules": {
+          "timeLimit": 120
+        },
+        "timing": {
+          "minReadingTimeMs": 3000
+        },
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 3
+    },
+    "configuration": {
+      "engineType": "skimming",
+      "difficultyLevel": 3,
+      "engineConfig": {
+        "mode": "skimming",
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 200,
+          "maxWordCount": 280,
+          "questionCount": 4
+        },
+        "timing": {
+          "minReadingTimeMs": 10000,
+          "maxReadingTimeMs": 75000
+        },
+        "visuals": {
+          "fontSize": "24px"
+        }
+      }
+    }
+  },
+  {
+    "id": "d1a4fac5-42db-587b-a429-015f922fa8d2",
+    "ageGroupId": "10000000-0000-0000-0000-000000000001",
+    "age": "child",
+    "level": 4,
+    "previousConfiguration": {
+      "engineType": "skimming",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "skimming",
+        "rules": {
+          "timeLimit": 150
+        },
+        "timing": {
+          "minReadingTimeMs": 3000
+        },
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 4
+    },
+    "configuration": {
+      "engineType": "skimming",
+      "difficultyLevel": 4,
+      "engineConfig": {
+        "mode": "skimming",
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 280,
+          "maxWordCount": 360,
+          "questionCount": 4
+        },
+        "timing": {
+          "minReadingTimeMs": 12000,
+          "maxReadingTimeMs": 90000
+        },
+        "visuals": {
+          "fontSize": "24px"
+        }
+      }
+    }
+  },
+  {
+    "id": "00a29320-c7cf-5ac0-99e4-62226e911a2b",
+    "ageGroupId": "10000000-0000-0000-0000-000000000001",
+    "age": "child",
+    "level": 5,
+    "previousConfiguration": {
+      "engineType": "skimming",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "skimming",
+        "rules": {
+          "timeLimit": 180
+        },
+        "timing": {
+          "minReadingTimeMs": 3000
+        },
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 5
+    },
+    "configuration": {
+      "engineType": "skimming",
+      "difficultyLevel": 5,
+      "engineConfig": {
+        "mode": "skimming",
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 360,
+          "maxWordCount": 450,
+          "questionCount": 4
+        },
+        "timing": {
+          "minReadingTimeMs": 15000,
+          "maxReadingTimeMs": 105000
+        },
+        "visuals": {
+          "fontSize": "24px"
+        }
+      }
+    }
+  },
+  {
+    "id": "9242e9ad-d5d5-5b01-8a4c-86a6f68923e8",
+    "ageGroupId": "10000000-0000-0000-0000-000000000002",
+    "age": "teen",
+    "level": 3,
+    "previousConfiguration": {
+      "engineType": "skimming",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "skimming",
+        "rules": {
+          "timeLimit": 150
+        },
+        "timing": {
+          "minReadingTimeMs": 3000
+        },
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 3
+    },
+    "configuration": {
+      "engineType": "skimming",
+      "difficultyLevel": 3,
+      "engineConfig": {
+        "mode": "skimming",
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 300,
+          "maxWordCount": 400,
+          "questionCount": 4
+        },
+        "timing": {
+          "minReadingTimeMs": 12000,
+          "maxReadingTimeMs": 90000
+        },
+        "visuals": {
+          "fontSize": "22px"
+        }
+      }
+    }
+  },
+  {
+    "id": "f72341f8-d778-5065-a7a4-687a1567b547",
+    "ageGroupId": "10000000-0000-0000-0000-000000000002",
+    "age": "teen",
+    "level": 4,
+    "previousConfiguration": {
+      "engineType": "skimming",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "skimming",
+        "rules": {
+          "timeLimit": 180
+        },
+        "timing": {
+          "minReadingTimeMs": 3000
+        },
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 4
+    },
+    "configuration": {
+      "engineType": "skimming",
+      "difficultyLevel": 4,
+      "engineConfig": {
+        "mode": "skimming",
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 400,
+          "maxWordCount": 520,
+          "questionCount": 4
+        },
+        "timing": {
+          "minReadingTimeMs": 15000,
+          "maxReadingTimeMs": 105000
+        },
+        "visuals": {
+          "fontSize": "22px"
+        }
+      }
+    }
+  },
+  {
+    "id": "af019d2e-728c-585a-bb33-85615c0eaccf",
+    "ageGroupId": "10000000-0000-0000-0000-000000000002",
+    "age": "teen",
+    "level": 5,
+    "previousConfiguration": {
+      "engineType": "skimming",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "skimming",
+        "rules": {
+          "timeLimit": 210
+        },
+        "timing": {
+          "minReadingTimeMs": 3000
+        },
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 5
+    },
+    "configuration": {
+      "engineType": "skimming",
+      "difficultyLevel": 5,
+      "engineConfig": {
+        "mode": "skimming",
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 520,
+          "maxWordCount": 650,
+          "questionCount": 4
+        },
+        "timing": {
+          "minReadingTimeMs": 18000,
+          "maxReadingTimeMs": 120000
+        },
+        "visuals": {
+          "fontSize": "22px"
+        }
+      }
+    }
+  },
+  {
+    "id": "5b407543-34d2-55c2-9be3-fb11ca93c2ca",
+    "ageGroupId": "10000000-0000-0000-0000-000000000004",
+    "age": "young-adult",
+    "level": 3,
+    "previousConfiguration": {
+      "engineType": "skimming",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "skimming",
+        "rules": {
+          "timeLimit": 180
+        },
+        "timing": {
+          "minReadingTimeMs": 3000
+        },
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 3
+    },
+    "configuration": {
+      "engineType": "skimming",
+      "difficultyLevel": 3,
+      "engineConfig": {
+        "mode": "skimming",
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 450,
+          "maxWordCount": 600,
+          "questionCount": 4
+        },
+        "timing": {
+          "minReadingTimeMs": 15000,
+          "maxReadingTimeMs": 105000
+        },
+        "visuals": {
+          "fontSize": "20px"
+        }
+      }
+    }
+  },
+  {
+    "id": "4062647b-988d-566f-8f34-8d880bfe14a0",
+    "ageGroupId": "10000000-0000-0000-0000-000000000004",
+    "age": "young-adult",
+    "level": 4,
+    "previousConfiguration": {
+      "engineType": "skimming",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "skimming",
+        "rules": {
+          "timeLimit": 150
+        },
+        "timing": {
+          "minReadingTimeMs": 3000
+        },
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 4
+    },
+    "configuration": {
+      "engineType": "skimming",
+      "difficultyLevel": 4,
+      "engineConfig": {
+        "mode": "skimming",
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 600,
+          "maxWordCount": 750,
+          "questionCount": 4
+        },
+        "timing": {
+          "minReadingTimeMs": 18000,
+          "maxReadingTimeMs": 120000
+        },
+        "visuals": {
+          "fontSize": "20px"
+        }
+      }
+    }
+  },
+  {
+    "id": "a1dc447b-f5ce-557c-bd63-852040fb5ca6",
+    "ageGroupId": "10000000-0000-0000-0000-000000000004",
+    "age": "young-adult",
+    "level": 5,
+    "previousConfiguration": {
+      "engineType": "skimming",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "skimming",
+        "rules": {
+          "timeLimit": 150
+        },
+        "timing": {
+          "minReadingTimeMs": 3000
+        },
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 5
+    },
+    "configuration": {
+      "engineType": "skimming",
+      "difficultyLevel": 5,
+      "engineConfig": {
+        "mode": "skimming",
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 750,
+          "maxWordCount": 900,
+          "questionCount": 4
+        },
+        "timing": {
+          "minReadingTimeMs": 20000,
+          "maxReadingTimeMs": 135000
+        },
+        "visuals": {
+          "fontSize": "20px"
+        }
+      }
+    }
+  },
+  {
+    "id": "b0eef605-99a1-52f6-95af-62d48476c4d6",
+    "ageGroupId": "10000000-0000-0000-0000-000000000003",
+    "age": "adult",
+    "level": 3,
+    "previousConfiguration": {
+      "engineType": "skimming",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "skimming",
+        "rules": {
+          "timeLimit": 180
+        },
+        "timing": {
+          "minReadingTimeMs": 3000
+        },
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 3
+    },
+    "configuration": {
+      "engineType": "skimming",
+      "difficultyLevel": 3,
+      "engineConfig": {
+        "mode": "skimming",
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 500,
+          "maxWordCount": 650,
+          "questionCount": 4
+        },
+        "timing": {
+          "minReadingTimeMs": 15000,
+          "maxReadingTimeMs": 120000
+        },
+        "visuals": {
+          "fontSize": "20px"
+        }
+      }
+    }
+  },
+  {
+    "id": "a4d35a8a-6f3c-57ba-a5a1-d8519105fb70",
+    "ageGroupId": "10000000-0000-0000-0000-000000000003",
+    "age": "adult",
+    "level": 4,
+    "previousConfiguration": {
+      "engineType": "skimming",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "skimming",
+        "rules": {
+          "timeLimit": 240
+        },
+        "timing": {
+          "minReadingTimeMs": 3000
+        },
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 4
+    },
+    "configuration": {
+      "engineType": "skimming",
+      "difficultyLevel": 4,
+      "engineConfig": {
+        "mode": "skimming",
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 650,
+          "maxWordCount": 850,
+          "questionCount": 4
+        },
+        "timing": {
+          "minReadingTimeMs": 20000,
+          "maxReadingTimeMs": 135000
+        },
+        "visuals": {
+          "fontSize": "20px"
+        }
+      }
+    }
+  },
+  {
+    "id": "8f6c9722-b784-54c2-bf22-98c32bb9716f",
+    "ageGroupId": "10000000-0000-0000-0000-000000000003",
+    "age": "adult",
+    "level": 5,
+    "previousConfiguration": {
+      "engineType": "skimming",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "skimming",
+        "rules": {
+          "timeLimit": 270
+        },
+        "timing": {
+          "minReadingTimeMs": 3000
+        },
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 5
+    },
+    "configuration": {
+      "engineType": "skimming",
+      "difficultyLevel": 5,
+      "engineConfig": {
+        "mode": "skimming",
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 850,
+          "maxWordCount": 1050,
+          "questionCount": 4
+        },
+        "timing": {
+          "minReadingTimeMs": 25000,
+          "maxReadingTimeMs": 150000
+        },
+        "visuals": {
+          "fontSize": "20px"
+        }
+      }
+    }
+  }
+]

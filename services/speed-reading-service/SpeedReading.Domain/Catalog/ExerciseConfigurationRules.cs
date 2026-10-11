@@ -171,6 +171,20 @@ public static class ExerciseConfigurationRules
                 if (nested.HasValue)
                     ValidateReadingConfiguration(nested.Value);
                 ValidateEffectiveReadingConfiguration(root, nested);
+                var scopes = nested.HasValue ? new[] { root, nested.Value } : new[] { root };
+                foreach (var scope in scopes)
+                {
+                    if (TryGetObject(scope, "content") is not { } content) continue;
+                    ValidateOptionalIntRange(content, "minWordCount", 1, 100_000, "Göz Gezdirme minimum kelime sayısı");
+                    ValidateOptionalIntRange(content, "maxWordCount", 1, 100_000, "Göz Gezdirme maksimum kelime sayısı");
+                    ValidateOptionalIntRange(content, "questionCount", 1, 50, "Göz Gezdirme soru sayısı");
+                }
+                foreach (var key in new[] { "minWordCount", "maxWordCount", "questionCount" })
+                    ValidateConsistentValues(scopes.SelectMany(scope => ReadNestedInts(scope, "content", key)), key);
+                var minimumWords = scopes.SelectMany(scope => ReadNestedInts(scope, "content", "minWordCount")).FirstOrDefault();
+                var maximumWords = scopes.SelectMany(scope => ReadNestedInts(scope, "content", "maxWordCount")).FirstOrDefault();
+                if (minimumWords > 0 && maximumWords > 0 && minimumWords > maximumWords)
+                    throw new ArgumentException("Göz Gezdirme minimum metin uzunluğu maksimumdan büyük olamaz.");
                 var minimum = nested.HasValue ? ReadOptionalInt(TryGetObject(nested.Value, "timing") ?? nested.Value, "minReadingTimeMs") : null;
                 minimum ??= ReadOptionalInt(TryGetObject(root, "timing") ?? root, "minReadingTimeMs");
                 var maximum = nested.HasValue ? ReadOptionalInt(TryGetObject(nested.Value, "timing") ?? nested.Value, "maxReadingTimeMs") : null;

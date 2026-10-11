@@ -84,7 +84,8 @@ public sealed class SpeedReadingSkimmingContentPostgresTests(PostgresFixture pos
             Assert.Equal(37, await db.ReadingTexts.CountAsync());
             Assert.Equal(144, await db.ReadingQuestions.CountAsync());
             foreach (var item in await db.Exercises.AsNoTracking().ToListAsync()) Assert.Equal(versions[item.Id], (item.Version, item.UpdatedAt));
-            Assert.Equal("{\"oldSnapshot\":true}", (await db.ExerciseSessions.SingleAsync(item => item.Id == oldSession.Id)).SessionDataJson);
+            Assert.True(JsonNode.DeepEquals(JsonNode.Parse("{\"oldSnapshot\":true}"),
+                JsonNode.Parse((await db.ExerciseSessions.SingleAsync(item => item.Id == oldSession.Id)).SessionDataJson)));
             var implementation = typeof(OwnedSpeedReadingDbContext).Assembly.GetType("SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingExerciseSessions")!;
             var service = (ISpeedReadingExerciseSessions)Activator.CreateInstance(implementation,
                 BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, [db], null)!;
@@ -119,6 +120,8 @@ public sealed class SpeedReadingSkimmingContentPostgresTests(PostgresFixture pos
                 Assert.Equal(100m, result.ComprehensionScore); Assert.Null(result.RawWPM); Assert.Null(result.WordsRead); Assert.Null(result.WeightedKDP);
                 await service.CompleteAsync(user, session.Id, new());
                 Assert.Equal(1, await db.ExerciseSessionResults.CountAsync(item => item.SessionId == session.Id));
+                var next = await service.StartAsync(user, new() { ExerciseId = row.GetProperty("id").GetGuid() });
+                Assert.NotEqual(session.ReadingTextId, (await db.ExerciseSessions.SingleAsync(item => item.Id == next.SessionId)).ReadingTextId);
             }
             var rollback = await File.ReadAllTextAsync(Path.Combine(pack, "rollback.sql"));
             await Execute(rollback); db.ChangeTracker.Clear();

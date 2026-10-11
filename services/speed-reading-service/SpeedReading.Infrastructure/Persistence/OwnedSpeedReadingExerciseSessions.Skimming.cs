@@ -17,6 +17,16 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions
         if (!state.ReadingTextId.HasValue || string.IsNullOrWhiteSpace(state.Content) || state.Questions.Count == 0)
             throw new BusinessRuleException("ExerciseSession.SkimmingContentUnavailable",
                 "Bu seviyede ana fikir sorusu hazırlanmış Göz Gezdirme metni bulunamadı.");
+        var content = ReadObject(config, "content");
+        var rootContent = ReadObject(root, "content");
+        var minimumWords = ReadPositiveInt(content, "minWordCount") ?? ReadPositiveInt(rootContent, "minWordCount") ?? 0;
+        var maximumWords = ReadPositiveInt(content, "maxWordCount") ?? ReadPositiveInt(rootContent, "maxWordCount") ?? 0;
+        var count = ReadPositiveInt(content, "questionCount") ?? ReadPositiveInt(rootContent, "questionCount");
+        if (state.WordCount < minimumWords || maximumWords > 0 && state.WordCount > maximumWords
+            || count.HasValue && state.Questions.Count < count.Value)
+            throw new BusinessRuleException("ExerciseSession.SkimmingContentUnavailable",
+                "Bu seviyede gerekli uzunlukta ve yeterli ana fikir sorusu bulunan metin hazırlanmadı.");
+        if (count.HasValue) state.Questions = state.Questions.Take(count.Value).ToList();
         var timing = ReadObject(config, "timing");
         var rootTiming = ReadObject(root, "timing");
         state.ReadingMinimumMs = Math.Clamp(ReadNonNegativeInt(timing, "minReadingTimeMs")

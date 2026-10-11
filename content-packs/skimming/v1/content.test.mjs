@@ -1,5 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { buildSkimmingPack } from './generate.mjs';
 
 test('covers existing 3–5 levels with increasing text demand and four evidence-linked questions', () => {
@@ -40,5 +41,18 @@ test('covers existing 3–5 levels with increasing text demand and four evidence
         }
       }
     }
+  }
+});
+
+test('committed manifests and SQL match the generator and templates', () => {
+  const { settings, content } = buildSkimmingPack();
+  const read = name => readFileSync(new URL(name, import.meta.url), 'utf8');
+  assert.deepEqual(JSON.parse(read('settings.json')), settings);
+  assert.deepEqual(JSON.parse(read('content.json')), content);
+  for (const name of ['apply', 'rollback']) {
+    const expected = read(`${name}.template.sql`)
+      .replace('{{SETTINGS}}', JSON.stringify(settings, null, 2))
+      .replace('{{CONTENT}}', JSON.stringify(content, null, 2));
+    assert.equal(read(`${name}.sql`).replace(/\r\n/g, '\n'), expected.replace(/\r\n/g, '\n'));
   }
 });

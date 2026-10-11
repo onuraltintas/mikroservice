@@ -148,7 +148,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             var isScanText = ExerciseConfigurationRules.NormalizeEngineType(exerciseEngineType) is "scan_find" or "scanning";
             var scanTaskIds = isScanText ? ScanningTaskTextIds(ReadObject(explicitConfig, "engineConfig").ValueKind == JsonValueKind.Object
                 ? ReadObject(explicitConfig, "engineConfig") : explicitConfig) : [];
-            var usesTextBand = isErrorText || isFreeText || isScanText || IsEngineType(exerciseEngineType, "reading_comprehension")
+            var usesTextBand = isErrorText || isFreeText || isScanText || IsEngineType(exerciseEngineType, "skimming") || IsEngineType(exerciseEngineType, "reading_comprehension")
                 || IsEngineType(exerciseEngineType, "regression_reduction")
                 || IsEngineType(exerciseEngineType, "subvocalization_reduction")
                 || IsRsvp(exerciseTypeName, exerciseEngineType, explicitConfig)
@@ -350,7 +350,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                 var isScanText = normalizedEngineType is "scan_find" or "scanning";
                 var scanTaskIds = isScanText ? ScanningTaskTextIds(ReadObject(parsedConfiguration, "engineConfig").ValueKind == JsonValueKind.Object
                     ? ReadObject(parsedConfiguration, "engineConfig") : parsedConfiguration) : [];
-                var usesTextBand = normalizedEngineType == "error_analysis" || isFreeReading || isComprehension || isScanText || normalizedEngineType == "text_fade"
+                var usesTextBand = normalizedEngineType == "error_analysis" || isFreeReading || isComprehension || isScanText || normalizedEngineType is "skimming" or "text_fade"
                     || normalizedEngineType == "regression_reduction"
                     || normalizedEngineType == "subvocalization_reduction"
                     || IsRsvp(exerciseTypeName, exerciseEngineType, parsedConfiguration)
@@ -371,6 +371,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                 var freeMaximumWords = usesTextBand ? ReadPositiveInt(freeContent, "maxWordCount") ?? ReadPositiveInt(ReadObject(parsedConfiguration, "content"), "maxWordCount") ?? 0 : 0;
                 var isScanning = normalizedEngineType is "scan_find" or "scanning" or "skimming";
                 var isSkimming = normalizedEngineType == "skimming";
+                var skimmingQuestionCount = isSkimming ? ReadPositiveInt(freeContent, "questionCount")
+                    ?? ReadPositiveInt(ReadObject(parsedConfiguration, "content"), "questionCount") ?? 1 : 0;
                 var isGrouping = normalizedEngineType == "word_highlight";
                 var isTextFade = normalizedEngineType == "text_fade";
                 var isRsvp = IsRsvp(exerciseTypeName, exerciseEngineType, parsedConfiguration);
@@ -405,11 +407,11 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                                 || question.CorrectAnswer.Trim().ToUpper() == "C" || question.CorrectAnswer.Trim().ToUpper() == "D")
                             && question.OptionA.Trim() != "" && question.OptionB.Trim() != ""
                             && question.OptionC.Trim() != "" && question.OptionD.Trim() != "") >= comprehensionQuestionCount)
-                        && (!isSkimming || db.ReadingQuestions.Any(question => question.ReadingTextId == item.Id
+                        && (!isSkimming || db.ReadingQuestions.Count(question => question.ReadingTextId == item.Id
                             && !question.IsDeleted && question.Type == 1 && question.BloomLevel >= 1 && question.BloomLevel <= 6
                             && (question.CorrectAnswer.Trim().ToUpper() == "A" || question.CorrectAnswer.Trim().ToUpper() == "B"
                                 || question.CorrectAnswer.Trim().ToUpper() == "C" || question.CorrectAnswer.Trim().ToUpper() == "D")
-                            && question.OptionA.Trim() != "" && question.OptionB.Trim() != "" && question.OptionC.Trim() != "" && question.OptionD.Trim() != ""))
+                            && question.OptionA.Trim() != "" && question.OptionB.Trim() != "" && question.OptionC.Trim() != "" && question.OptionD.Trim() != "") >= skimmingQuestionCount)
                         && (!requiresScorableQuestions || db.ReadingQuestions.Any(question =>
                             question.ReadingTextId == item.Id
                             && !question.IsDeleted

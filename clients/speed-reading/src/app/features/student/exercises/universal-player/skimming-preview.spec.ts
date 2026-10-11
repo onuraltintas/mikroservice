@@ -13,7 +13,8 @@ describe('Skimming preview questions', () => {
     const player = Object.create(ExercisePlayerComponent.prototype) as any;
     player.parsedConfig = { engineType: 'skimming' };
     const config = player.createPreviewReadingConfig({ content: 'Metin', questions: [
-      { id: 'main', type: 1 }, { id: 'detail', type: 3 }, { id: 'unknown' }
+      { id: 'main', type: 1, bloomLevel: 2, correctAnswer: 'A', optionA: 'A', optionB: 'B', optionC: 'C', optionD: 'D' },
+      { id: 'detail', type: 3 }, { id: 'unknown' }, { id: 'invalid-main', type: 1 }
     ] });
     expect(config.questions.map((question: any) => question.id)).toEqual(['main']);
   });

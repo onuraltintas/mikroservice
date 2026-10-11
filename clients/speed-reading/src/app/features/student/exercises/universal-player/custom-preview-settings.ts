@@ -1,4 +1,5 @@
 import { boundedInteger, caseInsensitiveField, mergeCaseInsensitiveRecords, recordOrEmpty } from './engines/reading-pacer-safety';
+import { resolveSkimmingTiming } from './engines/skimming.engine';
 
 export interface CustomPreviewContext {
   roles: readonly string[];
@@ -164,9 +165,8 @@ export function getCustomPreviewControls(configuration: Record<string, unknown>)
         control('peripheralCount', 'Her turdaki harf sayısı', 1, maxLetters, content['peripheralcount'] ?? fixation['peripheralcount']), hold];
     }
     case 'skimming': return [
-      control('timeLimitSec', 'İnceleme süresi sınırı (saniye)', 1, 3600,
-        timing['maxreadingtimems'] !== undefined ? Number(timing['maxreadingtimems']) / 1000
-          : read('timeLimitSeconds') ?? read('timeLimit') ?? timing['timelimitsec'] ?? 90),
+      control('timeLimitSec', 'İnceleme süresi sınırı (saniye)', Math.floor(resolveSkimmingTiming(configuration).minimumMs / 1000) + 1, 3600,
+        resolveSkimmingTiming(configuration).maximumMs / 1000),
       control('fontSizePx', 'Metin boyutu (px)', 14, 48, Number.parseInt(String(caseInsensitiveField(recordOrEmpty(read('visuals')), 'fontSize') ?? '20'), 10) || 20)
     ];
     case 'scanning':

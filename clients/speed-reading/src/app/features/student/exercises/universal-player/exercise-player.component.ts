@@ -864,7 +864,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
           catch { retry(); return; }
           this.comprehensionQuestions = this.backendSessionConfig['questions'] as any[];
           const requiredQuestions = this.parsedConfig?.['engineType'] === 'text_fade' && this.previewRequiresQuestions() ? 4
-            : (['reading_comprehension', 'regression_reduction', 'subvocalization_reduction'].includes(this.parsedConfig?.['engineType'] || '')
+            : (['reading_comprehension', 'regression_reduction', 'subvocalization_reduction', 'skimming'].includes(this.parsedConfig?.['engineType'] || '')
                 || this.isRsvpPreview()) && this.previewRequiresQuestions()
             ? this.parsedConfig?.['engineConfig']?.['content']?.questionCount ?? this.parsedConfig?.['content']?.questionCount : undefined;
           if (requiredQuestions && this.comprehensionQuestions.length < requiredQuestions) { retry(); return; }
@@ -950,7 +950,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     if (this.exercise?.exerciseTypeName?.toLowerCase() !== 'speedreading'
       && this.exercise?.exerciseTypeName?.toLowerCase() !== 'chunking'
       && !this.isRsvpPreview()
-      && !['error_analysis', 'free_reading', 'reading_comprehension', 'text_fade', 'scanning', 'scan_find', 'regression_reduction', 'subvocalization_reduction'].includes(this.parsedConfig?.['engineType'] || '')) return true;
+      && !['error_analysis', 'free_reading', 'reading_comprehension', 'text_fade', 'scanning', 'scan_find', 'skimming', 'regression_reduction', 'subvocalization_reduction'].includes(this.parsedConfig?.['engineType'] || '')) return true;
     const content = this.parsedConfig?.['engineConfig']?.['content'] || this.parsedConfig?.['content'] || {};
     const minimum = Number(content.minWordCount) || 0;
     const maximum = Number(content.maxWordCount) || 0;
@@ -1052,7 +1052,10 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       || (this.parsedConfig?.['engineType'] === 'free_reading' && !this.previewRequiresQuestions()) ? []
       : Array.isArray(readingText?.questions) ? readingText.questions : [];
     const questions = this.parsedConfig?.['engineType'] === 'skimming'
-      ? availableQuestions.filter((question: any) => Number(question.type ?? question.questionType ?? question.QuestionType) === 1)
+      ? availableQuestions.filter((question: any) => Number(question.type ?? question.questionType ?? question.QuestionType) === 1
+        && Number(question.bloomLevel ?? question.BloomLevel) >= 1 && Number(question.bloomLevel ?? question.BloomLevel) <= 6
+        && ['A', 'B', 'C', 'D'].includes(String(question.correctAnswer ?? question.CorrectAnswer ?? '').trim().toUpperCase())
+        && ['A', 'B', 'C', 'D'].every(option => String(question[`option${option}`] ?? question[`Option${option}`] ?? '').trim()))
       : (['reading_comprehension', 'text_fade', 'regression_reduction', 'subvocalization_reduction'].includes(this.parsedConfig?.['engineType'] || '')
           || this.isRsvpPreview())
           && this.previewRequiresQuestions()

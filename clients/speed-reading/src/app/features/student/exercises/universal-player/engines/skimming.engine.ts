@@ -1,6 +1,20 @@
 import { BaseEngine, EngineCallbacks, EngineConfig, EngineResult, EngineState } from './base-engine.interface';
 import { boundedInteger, boundedText, caseInsensitiveField, mergeCaseInsensitiveRecords, recordOrEmpty } from './reading-pacer-safety';
 
+export function resolveSkimmingTiming(config: Record<string, unknown>): { minimumMs: number; maximumMs: number } {
+  const nested = recordOrEmpty(caseInsensitiveField(config, 'engineConfig'));
+  const timing = mergeCaseInsensitiveRecords(config, nested, 'timing');
+  const duration = (scope: Record<string, unknown>) => caseInsensitiveField(scope, 'timeLimitSeconds')
+    ?? caseInsensitiveField(scope, 'timeLimit')
+    ?? caseInsensitiveField(recordOrEmpty(caseInsensitiveField(scope, 'rules')), 'timeLimit')
+    ?? caseInsensitiveField(recordOrEmpty(caseInsensitiveField(scope, 'timing')), 'timeLimitSec');
+  return {
+    minimumMs: boundedInteger(timing['minreadingtimems'], 3000, 0, 3_600_000),
+    maximumMs: boundedInteger(timing['maxreadingtimems'],
+      boundedInteger(duration(nested) ?? duration(config), 90, 1, 3600) * 1000, 1000, 3_600_000)
+  };
+}
+
 /** Timed inspection of a text's overall meaning; questions are handled by the player. */
 export class SkimmingEngine implements BaseEngine {
   readonly engineType = 'skimming';
@@ -20,7 +34,7 @@ export class SkimmingEngine implements BaseEngine {
     clearInterval(this.timer);
     this.callbacks = callbacks;
     const nested = recordOrEmpty(caseInsensitiveField(config, 'engineConfig'));
-    const timing = mergeCaseInsensitiveRecords(config, nested, 'timing');
+    const timing = resolveSkimmingTiming(config);
     const visuals = mergeCaseInsensitiveRecords(config, nested, 'visuals');
     const owned = config['serverAuthoritative'] === true;
     const content = caseInsensitiveField(config, 'content');
@@ -30,11 +44,8 @@ export class SkimmingEngine implements BaseEngine {
     this.text = boundedText(owned ? ownedText : ownedText ?? (typeof previewContent === 'string' ? previewContent
       : caseInsensitiveField(recordOrEmpty(previewContent), 'text')), '').trim();
     this.title = boundedText(caseInsensitiveField(config, 'readingTextTitle'), '');
-    this.minimumMs = boundedInteger(owned ? config['readingMinimumMs'] : timing['minreadingtimems'], 3000, 0, 3_600_000);
-    const seconds = caseInsensitiveField(nested, 'timeLimitSeconds') ?? caseInsensitiveField(nested, 'timeLimit')
-      ?? caseInsensitiveField(config, 'timeLimitSeconds') ?? caseInsensitiveField(config, 'timeLimit') ?? timing['timelimitsec'];
-    this.maximumMs = boundedInteger(owned ? config['readingMaximumMs'] : timing['maxreadingtimems'],
-      boundedInteger(seconds, 90, 1, 3600) * 1000, 1000, 3_600_000);
+    this.minimumMs = owned ? boundedInteger(config['readingMinimumMs'], 3000, 0, 3_600_000) : timing.minimumMs;
+    this.maximumMs = owned ? boundedInteger(config['readingMaximumMs'], 90000, 1000, 3_600_000) : timing.maximumMs;
     this.fontSize = boundedInteger(Number.parseInt(String(visuals['fontsize'] ?? '20'), 10), 20, 14, 48);
     this.state = this.initialState();
   }

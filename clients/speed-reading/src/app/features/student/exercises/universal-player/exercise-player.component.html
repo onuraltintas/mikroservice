@@ -44,6 +44,12 @@
 
             <div class="card-body-content">
                 <p class="description">{{ exercise?.description }}</p>
+                <p class="description" *ngIf="engine.engineType === 'skimming'">
+                    Başlık, giriş ve sonuç cümlelerinden metnin ana fikrini belirleyin; her kelimeyi okumak zorunda değilsiniz.
+                    İnceleme sınırı {{ $any(engine).getMaximumMs() / 1000 }} saniyedir.
+                    Süre dolarsa sorulara geçilir; çalışma eksik sayılır ve kayıtlı oturumda program/ödev ilerlemesi verilmez.
+                    Soruları cevaplama süresi inceleme sınırına dahil değildir. Okuma hızı ölçülmez.
+                </p>
                 <p class="description" *ngIf="canPracticeFocus">
                     <span *ngIf="!asFocusEngine?.isDualMode">{{ asFocusEngine?.nLevel }} adım önceki
                         {{ asFocusEngine?.isWordMode ? 'kelime' : 'konum' }} aynıysa eşleşme düğmesine basın; farklıysa bekleyin.</span>
@@ -1808,8 +1814,8 @@
             <!-- XP and Level Row -->
             <div class="measurement-not-available" *ngIf="engine?.engineType === 'skimming'">
                 Ana fikir başarısı sorularla ölçülür; metne göz gezdirme süresi normal okuma hızı (WPM) değildir.
-                <span *ngIf="result?.details?.inspectionTimeMs != null">İnceleme süresi: {{ formatTime(result?.details?.inspectionTimeMs) }}</span>
-                <span *ngIf="result?.details?.comprehensionScore != null">Ana fikir başarısı: {{ result?.details?.comprehensionScore }}%</span>
+                <div *ngIf="result?.details?.inspectionTimeMs != null">İnceleme süresi: {{ formatTime(result?.details?.inspectionTimeMs) }}</div>
+                <div *ngIf="result?.details?.comprehensionScore != null">Ana fikir başarısı: {{ result?.details?.comprehensionScore }}%</div>
             </div>
             <div class="measurement-not-available" *ngIf="result?.details?.timedOut">
                 Okuma süresi doldu. Anlama cevapları kaydedildi; okuma hızı ölçülmedi ve program/ödev ilerlemesi verilmedi.
