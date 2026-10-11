@@ -16,6 +16,21 @@ function callbacks(onComplete: (result: EngineResult) => void): EngineCallbacks 
 }
 
 describe('MotionPathEngine', () => {
+  it('starts fixation response timing at actual hiding even when the exposure timer is delayed', fakeAsync(() => {
+    let result: EngineResult | undefined;
+    const engine = new MotionPathEngine();
+    engine.initialize({ mode: 'fixation', content: { points: 1, peripheralCount: 1 }, timing: { holdMs: 100 } },
+      callbacks(value => result = value));
+    engine.start(); tick(350);
+    const letter = engine.getPeripheralChars()[0].char, presentedAt = Date.now();
+    const clock = spyOn(Date, 'now').and.returnValue(presentedAt + 600);
+    tick(100);
+    clock.and.returnValue(presentedAt + 700);
+    engine.handleInput({ type: 'keypress', key: letter });
+    engine.handleInput({ type: 'enter', key: 'Enter' }); tick(1200);
+    expect(result?.details?.averageResponseTimeMs).toBe(100);
+    engine.destroy();
+  }));
   it('reports fixation response time after hiding the letters and excludes a pause', fakeAsync(() => {
     let result: EngineResult | undefined;
     const engine = new MotionPathEngine();

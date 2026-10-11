@@ -78,13 +78,16 @@ public sealed class SpeedReadingVisualExpansionPostgresTests(PostgresFixture pos
     }
 
     [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public async Task Catalog_update_is_atomic_idempotent_and_preserves_assessments_and_open_snapshots(bool changedBaseline)
+    [InlineData(false, "visual-expansion", "VisualExpansion", "visual_expansion")]
+    [InlineData(true, "visual-expansion", "VisualExpansion", "visual_expansion")]
+    [InlineData(false, "fixation", "Fixation", "motion_path")]
+    [InlineData(true, "fixation", "Fixation", "motion_path")]
+    [InlineData(false, "fixation", "Fixation", "motion_path", true)]
+    public async Task Catalog_update_is_atomic_idempotent_and_preserves_assessments_and_open_snapshots(bool changedBaseline, string packName, string typeName, string engineType, bool changedEngine = false)
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);
         while (directory is not null && !Directory.Exists(Path.Combine(directory.FullName, "content-packs"))) directory = directory.Parent;
-        var pack = Path.Combine(directory!.FullName, "content-packs", "visual-expansion", "v1");
+        var pack = Path.Combine(directory!.FullName, "content-packs", packName, "v1");
         using var settings = System.Text.Json.JsonDocument.Parse(await File.ReadAllTextAsync(Path.Combine(pack, "settings.json")));
         var sql = await File.ReadAllTextAsync(Path.Combine(pack, "apply.sql"));
         await using var db = new OwnedSpeedReadingDbContext(new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>()
@@ -94,22 +97,25 @@ public sealed class SpeedReadingVisualExpansionPostgresTests(PostgresFixture pos
         try {
             await db.Database.EnsureCreatedAsync();
             var student = Guid.NewGuid();
-            var type = ExerciseType.Create(Guid.NewGuid(), "VisualExpansion", "Görsel Genişleme", "visual_expansion");
+            var type = ExerciseType.Create(Guid.NewGuid(), typeName, typeName, engineType);
             db.ExerciseTypes.Add(type);
             var rows = settings.RootElement.EnumerateArray().ToArray();
             foreach (var row in rows)
                 db.Exercises.Add(Exercise.Create("Çevredeki Harfler", "attention",
                     row.GetProperty("previousConfiguration").GetRawText(), row.GetProperty("level").GetInt32(),
                     student, type.Id, row.GetProperty("id").GetGuid(), targetAgeGroupId: row.GetProperty("ageGroupId").GetGuid()));
-            var assessment = Exercise.Create("Seviye Tespit", "attention", """{"engineType":"visual_expansion","rounds":6}""", 1, student, type.Id);
+            var assessment = Exercise.Create("Seviye Tespit", "attention", $$"""{"engineType":"{{engineType}}","rounds":6}""", 1, student, type.Id);
             db.Exercises.Add(assessment); await db.SaveChangesAsync();
             var owned = typeof(OwnedSpeedReadingDbContext).Assembly.GetType("SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingExerciseSessions")!;
             var service = (ISpeedReadingExerciseSessions)Activator.CreateInstance(owned,
                 BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, [db], null)!;
             var started = await service.StartAsync(student, new() { ExerciseId = rows[0].GetProperty("id").GetGuid() });
             var snapshot = (await db.ExerciseSessions.SingleAsync()).SessionDataJson;
-            if (changedBaseline) {
-                await db.Database.ExecuteSqlRawAsync("UPDATE speed_reading.exercises SET configuration_json='{{}}'::jsonb WHERE id={0}", rows[0].GetProperty("id").GetGuid());
+            if (changedBaseline || changedEngine) {
+                if (changedBaseline)
+                    await db.Database.ExecuteSqlRawAsync("UPDATE speed_reading.exercises SET configuration_json='{{}}'::jsonb WHERE id={0}", rows[0].GetProperty("id").GetGuid());
+                else
+                    await db.Database.ExecuteSqlRawAsync("UPDATE speed_reading.exercise_types SET engine_type='text_stream' WHERE id={0}", type.Id);
                 await Assert.ThrowsAsync<Npgsql.PostgresException>(() => ExecuteAsync(sql));
                 db.ChangeTracker.Clear();
                 var untouched = await db.Exercises.SingleAsync(item => item.Id == rows[1].GetProperty("id").GetGuid());
@@ -125,7 +131,14 @@ public sealed class SpeedReadingVisualExpansionPostgresTests(PostgresFixture pos
                 Assert.Equal(versions[exercise.Id], exercise.Version);
                 Assert.True(JsonNode.DeepEquals(JsonNode.Parse(exercise.ConfigurationJson), JsonNode.Parse(row.GetProperty("configuration").GetRawText())));
                 var fresh = await service.StartAsync(Guid.NewGuid(), new() { ExerciseId = exercise.Id });
-                Assert.Equal(row.GetProperty("configuration").GetProperty("engineConfig").GetProperty("rounds").GetInt32(), fresh.TotalSteps);
+                var config = row.GetProperty("configuration").GetProperty("engineConfig");
+                Assert.Equal(typeName == "Fixation" ? config.GetProperty("content").GetProperty("points").GetInt32()
+                    : config.GetProperty("rounds").GetInt32(), fresh.TotalSteps);
+                if (typeName == "Fixation") {
+                    Assert.Equal(2, fresh.InitialData.GetProperty("fixationProtocolVersion").GetInt32());
+                    Assert.Equal(config.GetProperty("content").GetProperty("peripheralCount").GetInt32(),
+                        fresh.InitialData.GetProperty("fixationPeripheralCount").GetInt32());
+                }
             }
             Assert.True(JsonNode.DeepEquals(JsonNode.Parse(assessment.ConfigurationJson),
                 JsonNode.Parse((await db.Exercises.SingleAsync(item => item.Id == assessment.Id)).ConfigurationJson)));
