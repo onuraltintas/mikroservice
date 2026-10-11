@@ -2067,18 +2067,27 @@
     "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
     "configuration": {
       "engineType": "text_stream",
+      "difficultyLevel": 4,
       "engineConfig": {
         "mode": "rsvp",
+        "readingPurpose": "evaluation",
         "content": {
-          "source": "reading_text"
+          "source": "reading_text",
+          "minWordCount": 180,
+          "maxWordCount": 240,
+          "questionCount": 5
         },
         "timing": {
           "durationMs": 500,
           "intervalMs": 0
         },
-        "readingPurpose": "evaluation"
-      },
-      "difficultyLevel": 4
+        "visuals": {
+          "showFixation": true
+        },
+        "adaptive": {
+          "enabled": false
+        }
+      }
     }
   },
   {
@@ -2158,18 +2167,27 @@
     "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
     "configuration": {
       "engineType": "text_stream",
+      "difficultyLevel": 5,
       "engineConfig": {
         "mode": "rsvp",
+        "readingPurpose": "evaluation",
         "content": {
-          "source": "reading_text"
+          "source": "reading_text",
+          "minWordCount": 240,
+          "maxWordCount": 300,
+          "questionCount": 5
         },
         "timing": {
           "durationMs": 429,
           "intervalMs": 0
         },
-        "readingPurpose": "evaluation"
-      },
-      "difficultyLevel": 5
+        "visuals": {
+          "showFixation": true
+        },
+        "adaptive": {
+          "enabled": false
+        }
+      }
     }
   },
   {

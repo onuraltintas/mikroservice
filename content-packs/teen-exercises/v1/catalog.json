@@ -880,18 +880,27 @@
     "targetAgeGroupId": "10000000-0000-0000-0000-000000000002",
     "configuration": {
       "engineType": "text_stream",
+      "difficultyLevel": 3,
       "engineConfig": {
         "mode": "rsvp",
+        "readingPurpose": "evaluation",
         "content": {
-          "source": "reading_text"
+          "source": "reading_text",
+          "minWordCount": 360,
+          "maxWordCount": 440,
+          "questionCount": 5
         },
         "timing": {
           "durationMs": 286,
           "intervalMs": 0
         },
-        "readingPurpose": "evaluation"
-      },
-      "difficultyLevel": 3
+        "visuals": {
+          "showFixation": true
+        },
+        "adaptive": {
+          "enabled": false
+        }
+      }
     }
   },
   {
@@ -1468,18 +1477,27 @@
     "targetAgeGroupId": "10000000-0000-0000-0000-000000000002",
     "configuration": {
       "engineType": "text_stream",
+      "difficultyLevel": 4,
       "engineConfig": {
         "mode": "rsvp",
+        "readingPurpose": "evaluation",
         "content": {
-          "source": "reading_text"
+          "source": "reading_text",
+          "minWordCount": 450,
+          "maxWordCount": 540,
+          "questionCount": 5
         },
         "timing": {
           "durationMs": 250,
           "intervalMs": 0
         },
-        "readingPurpose": "evaluation"
-      },
-      "difficultyLevel": 4
+        "visuals": {
+          "showFixation": true
+        },
+        "adaptive": {
+          "enabled": false
+        }
+      }
     }
   },
   {
@@ -2142,18 +2160,27 @@
     "targetAgeGroupId": "10000000-0000-0000-0000-000000000002",
     "configuration": {
       "engineType": "text_stream",
+      "difficultyLevel": 5,
       "engineConfig": {
         "mode": "rsvp",
+        "readingPurpose": "evaluation",
         "content": {
-          "source": "reading_text"
+          "source": "reading_text",
+          "minWordCount": 560,
+          "maxWordCount": 680,
+          "questionCount": 5
         },
         "timing": {
           "durationMs": 222,
           "intervalMs": 0
         },
-        "readingPurpose": "evaluation"
-      },
-      "difficultyLevel": 5
+        "visuals": {
+          "showFixation": true
+        },
+        "adaptive": {
+          "enabled": false
+        }
+      }
     }
   },
   {

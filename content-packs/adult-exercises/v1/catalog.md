@@ -61,7 +61,7 @@ Sınav soru başına 60 saniye; metni okuma dahil değildir. Genişlik ayarları
 | Noktaya Odaklan | Fixation | `{"mode":"fixation","timing":{"holdMs":800,"durationSeconds":45},"content":{"type":"letter","points":4,"peripheralCount":1,"pointSize":44}}` |
 | Konum Belleği | Focus | `{"mode":"position","nLevel":2,"totalSteps":56,"speedMs":2700,"gridSize":3}` |
 | Bağımsız Metin Okuma | FreeReading | `{"content":{"source":"reading_text","minWordCount":600,"maxWordCount":800},"mode":"free","readingPurpose":"practice","timing":{"minReadingTimeMs":10000,"maxReadingTimeMs":0,"suggestedMinReadingTimeMs":240000,"suggestedMaxReadingTimeMs":300000}}` |
-| Sıralı Kelime Gösterimi | RSVP | `{"mode":"rsvp","content":{"source":"reading_text"},"timing":{"durationMs":231,"intervalMs":0},"readingPurpose":"evaluation"}` |
+| Sıralı Kelime Gösterimi | RSVP | `{"mode":"rsvp","readingPurpose":"evaluation","content":{"source":"reading_text","minWordCount":480,"maxWordCount":540,"questionCount":5},"timing":{"durationMs":231,"intervalMs":0},"visuals":{"showFixation":true},"adaptive":{"enabled":false}}` |
 | Hedefler Arası Geçiş | Saccade | `{"mode":"saccade","timing":{"holdMs":750,"durationSeconds":70},"content":{"type":"number","pattern":"horizontal","pointSize":44}}` |
 | Metinde Hedefi Bul | Scanning | `{"content":{"source":"random_text"},"targetCount":5,"timeLimit":180,"targets":{"mode":"find_all","caseSensitive":false}}` |
 | Sayı Avcısı | SchulteTable | `{"gridSize":5,"sequenceType":"numeric","rules":{"timeLimit":150}}` |
@@ -84,7 +84,7 @@ Sınav soru başına 60 saniye; metni okuma dahil değildir. Genişlik ayarları
 | Hareketi Takip Et | EyeTracking | `{"mode":"tracking","path":{"type":"infinity8"},"timing":{"durationSeconds":60,"speedMs":2500},"content":{"type":"dot","pointSize":36}}` |
 | Noktaya Odaklan | Fixation | `{"mode":"fixation","timing":{"holdMs":750,"durationSeconds":45},"content":{"type":"letter","points":5,"peripheralCount":1,"pointSize":44}}` |
 | Konum Belleği | Focus | `{"mode":"position","nLevel":3,"totalSteps":56,"speedMs":3100,"gridSize":3}` |
-| Sıralı Kelime Gösterimi | RSVP | `{"mode":"rsvp","content":{"source":"reading_text"},"timing":{"durationMs":207,"intervalMs":0},"readingPurpose":"evaluation"}` |
+| Sıralı Kelime Gösterimi | RSVP | `{"mode":"rsvp","readingPurpose":"evaluation","content":{"source":"reading_text","minWordCount":580,"maxWordCount":650,"questionCount":5},"timing":{"durationMs":207,"intervalMs":0},"visuals":{"showFixation":true},"adaptive":{"enabled":false}}` |
 | Hedefler Arası Geçiş | Saccade | `{"mode":"saccade","timing":{"holdMs":700,"durationSeconds":80},"content":{"type":"number","pattern":"vertical","pointSize":44}}` |
 | Metinde Hedefi Bul | Scanning | `{"content":{"source":"random_text"},"targetCount":6,"timeLimit":240,"targets":{"mode":"find_all","caseSensitive":false}}` |
 | Sayı Avcısı | SchulteTable | `{"gridSize":5,"sequenceType":"numeric","rules":{"timeLimit":120}}` |
@@ -108,7 +108,7 @@ Sınav soru başına 60 saniye; metni okuma dahil değildir. Genişlik ayarları
 | Hareketi Takip Et | EyeTracking | `{"mode":"tracking","path":{"type":"infinity8"},"timing":{"durationSeconds":60,"speedMs":2300},"content":{"type":"dot","pointSize":36}}` |
 | Noktaya Odaklan | Fixation | `{"mode":"fixation","timing":{"holdMs":700,"durationSeconds":45},"content":{"type":"letter","points":5,"peripheralCount":1,"pointSize":44}}` |
 | Konum Belleği | Focus | `{"mode":"position","nLevel":3,"totalSteps":64,"speedMs":2800,"gridSize":3}` |
-| Sıralı Kelime Gösterimi | RSVP | `{"mode":"rsvp","content":{"source":"reading_text"},"timing":{"durationMs":188,"intervalMs":0},"readingPurpose":"evaluation"}` |
+| Sıralı Kelime Gösterimi | RSVP | `{"mode":"rsvp","readingPurpose":"evaluation","content":{"source":"reading_text","minWordCount":690,"maxWordCount":800,"questionCount":5},"timing":{"durationMs":188,"intervalMs":0},"visuals":{"showFixation":true},"adaptive":{"enabled":false}}` |
 | Hedefler Arası Geçiş | Saccade | `{"mode":"saccade","timing":{"holdMs":650,"durationSeconds":90},"content":{"type":"number","pattern":"random","pointSize":44}}` |
 | Metinde Hedefi Bul | Scanning | `{"content":{"source":"random_text"},"targetCount":6,"timeLimit":270,"targets":{"mode":"find_all","caseSensitive":false}}` |
 | Sayı Avcısı | SchulteTable | `{"gridSize":5,"sequenceType":"numeric","rules":{"timeLimit":100}}` |

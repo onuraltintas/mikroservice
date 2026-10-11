@@ -116,11 +116,11 @@ Toplam 84 egzersiz, 18 tür. Seviye dağılımı: 16 / 16 / 16 / 18 / 18. Öncek
 | Visualization | 2 | `{"mode": "static"}` |
 | Tachistoscope | 3 | `{"mode": "tachistoscope", "content": {"type": "number", "count": 12}, "timing": {"durationMs": 1300, "intervalMs": 750}, "adaptive": {"enabled": false, "minDurationMs": 200, "maxDurationMs": 2000}}` |
 | Visualization | 3 | `{"mode": "static"}` |
-| RSVP | 4 | `{"mode": "rsvp", "content": {"source": "reading_text"}, "timing": {"durationMs": 500, "intervalMs": 0}, "readingPurpose": "evaluation"}` |
+| RSVP | 4 | `{"mode":"rsvp","readingPurpose":"evaluation","content":{"source":"reading_text","minWordCount":180,"maxWordCount":240,"questionCount":5},"timing":{"durationMs":500,"intervalMs":0},"visuals":{"showFixation":true},"adaptive":{"enabled":false}}` |
 | Tachistoscope | 4 | `{"mode": "tachistoscope", "content": {"type": "number", "count": 14}, "timing": {"durationMs": 1200, "intervalMs": 750}, "adaptive": {"enabled": false, "minDurationMs": 200, "maxDurationMs": 2000}}` |
 | TextFading | 4 | `{"content": {"source": "reading_text"}, "fading": {"speedWpm": 120, "lagMs": 5000}, "timing": {"timeLimitSec": 0}, "readingPurpose": "evaluation"}` |
 | Visualization | 4 | `{"mode": "static"}` |
-| RSVP | 5 | `{"mode": "rsvp", "content": {"source": "reading_text"}, "timing": {"durationMs": 429, "intervalMs": 0}, "readingPurpose": "evaluation"}` |
+| RSVP | 5 | `{"mode":"rsvp","readingPurpose":"evaluation","content":{"source":"reading_text","minWordCount":240,"maxWordCount":300,"questionCount":5},"timing":{"durationMs":429,"intervalMs":0},"visuals":{"showFixation":true},"adaptive":{"enabled":false}}` |
 | Tachistoscope | 5 | `{"mode": "tachistoscope", "content": {"type": "number", "count": 16}, "timing": {"durationMs": 1100, "intervalMs": 750}, "adaptive": {"enabled": false, "minDurationMs": 200, "maxDurationMs": 2000}}` |
 | TextFading | 5 | `{"content": {"source": "reading_text"}, "fading": {"speedWpm": 140, "lagMs": 5000}, "timing": {"timeLimitSec": 0}, "readingPurpose": "evaluation"}` |
 | Visualization | 5 | `{"mode": "static"}` |

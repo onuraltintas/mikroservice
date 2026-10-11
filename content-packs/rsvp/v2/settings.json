@@ -1,0 +1,519 @@
+[
+  {
+    "id": "09061d36-37ce-5719-ab5d-8e8c01c326fa",
+    "ageGroupId": "10000000-0000-0000-0000-000000000001",
+    "age": "child",
+    "level": 4,
+    "title": "Sıralı Kelime Gösterimi",
+    "previousTitle": "Sıralı Kelime Gösterimi",
+    "previousConfiguration": {
+      "engineType": "text_stream",
+      "engineConfig": {
+        "mode": "rsvp",
+        "content": {
+          "source": "reading_text"
+        },
+        "timing": {
+          "durationMs": 500,
+          "intervalMs": 0
+        },
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 4
+    },
+    "configuration": {
+      "engineType": "text_stream",
+      "difficultyLevel": 4,
+      "engineConfig": {
+        "mode": "rsvp",
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 180,
+          "maxWordCount": 240,
+          "questionCount": 5
+        },
+        "timing": {
+          "durationMs": 500,
+          "intervalMs": 0
+        },
+        "visuals": {
+          "showFixation": true
+        },
+        "adaptive": {
+          "enabled": false
+        }
+      }
+    }
+  },
+  {
+    "id": "bad94b71-5134-5273-b692-b2224311fa7b",
+    "ageGroupId": "10000000-0000-0000-0000-000000000001",
+    "age": "child",
+    "level": 5,
+    "title": "Sıralı Kelime Gösterimi",
+    "previousTitle": "Sıralı Kelime Gösterimi",
+    "previousConfiguration": {
+      "engineType": "text_stream",
+      "engineConfig": {
+        "mode": "rsvp",
+        "content": {
+          "source": "reading_text"
+        },
+        "timing": {
+          "durationMs": 429,
+          "intervalMs": 0
+        },
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 5
+    },
+    "configuration": {
+      "engineType": "text_stream",
+      "difficultyLevel": 5,
+      "engineConfig": {
+        "mode": "rsvp",
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 240,
+          "maxWordCount": 300,
+          "questionCount": 5
+        },
+        "timing": {
+          "durationMs": 429,
+          "intervalMs": 0
+        },
+        "visuals": {
+          "showFixation": true
+        },
+        "adaptive": {
+          "enabled": false
+        }
+      }
+    }
+  },
+  {
+    "id": "ed48f982-03cc-5950-85d1-2cf3d74eb614",
+    "ageGroupId": "10000000-0000-0000-0000-000000000002",
+    "age": "teen",
+    "level": 3,
+    "title": "Sıralı Kelime Gösterimi",
+    "previousTitle": "Sıralı Kelime Gösterimi",
+    "previousConfiguration": {
+      "engineType": "text_stream",
+      "engineConfig": {
+        "mode": "rsvp",
+        "content": {
+          "source": "reading_text"
+        },
+        "timing": {
+          "durationMs": 286,
+          "intervalMs": 0
+        },
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 3
+    },
+    "configuration": {
+      "engineType": "text_stream",
+      "difficultyLevel": 3,
+      "engineConfig": {
+        "mode": "rsvp",
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 360,
+          "maxWordCount": 440,
+          "questionCount": 5
+        },
+        "timing": {
+          "durationMs": 286,
+          "intervalMs": 0
+        },
+        "visuals": {
+          "showFixation": true
+        },
+        "adaptive": {
+          "enabled": false
+        }
+      }
+    }
+  },
+  {
+    "id": "5f119bf7-a937-5e4b-b4d6-6c49ec62c164",
+    "ageGroupId": "10000000-0000-0000-0000-000000000002",
+    "age": "teen",
+    "level": 4,
+    "title": "Sıralı Kelime Gösterimi",
+    "previousTitle": "Sıralı Kelime Gösterimi",
+    "previousConfiguration": {
+      "engineType": "text_stream",
+      "engineConfig": {
+        "mode": "rsvp",
+        "content": {
+          "source": "reading_text"
+        },
+        "timing": {
+          "durationMs": 250,
+          "intervalMs": 0
+        },
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 4
+    },
+    "configuration": {
+      "engineType": "text_stream",
+      "difficultyLevel": 4,
+      "engineConfig": {
+        "mode": "rsvp",
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 450,
+          "maxWordCount": 540,
+          "questionCount": 5
+        },
+        "timing": {
+          "durationMs": 250,
+          "intervalMs": 0
+        },
+        "visuals": {
+          "showFixation": true
+        },
+        "adaptive": {
+          "enabled": false
+        }
+      }
+    }
+  },
+  {
+    "id": "8297af0e-6a31-5158-a723-27b4abf53cfc",
+    "ageGroupId": "10000000-0000-0000-0000-000000000002",
+    "age": "teen",
+    "level": 5,
+    "title": "Sıralı Kelime Gösterimi",
+    "previousTitle": "Sıralı Kelime Gösterimi",
+    "previousConfiguration": {
+      "engineType": "text_stream",
+      "engineConfig": {
+        "mode": "rsvp",
+        "content": {
+          "source": "reading_text"
+        },
+        "timing": {
+          "durationMs": 222,
+          "intervalMs": 0
+        },
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 5
+    },
+    "configuration": {
+      "engineType": "text_stream",
+      "difficultyLevel": 5,
+      "engineConfig": {
+        "mode": "rsvp",
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 560,
+          "maxWordCount": 680,
+          "questionCount": 5
+        },
+        "timing": {
+          "durationMs": 222,
+          "intervalMs": 0
+        },
+        "visuals": {
+          "showFixation": true
+        },
+        "adaptive": {
+          "enabled": false
+        }
+      }
+    }
+  },
+  {
+    "id": "edf49e6e-2c3f-5c60-a251-4545d3b574ff",
+    "ageGroupId": "10000000-0000-0000-0000-000000000004",
+    "age": "young-adult",
+    "level": 3,
+    "title": "Sıralı Kelime Gösterimi",
+    "previousTitle": "Sıralı Kelime Gösterimi",
+    "previousConfiguration": {
+      "engineType": "text_stream",
+      "engineConfig": {
+        "mode": "rsvp",
+        "content": {
+          "source": "reading_text"
+        },
+        "timing": {
+          "durationMs": 250,
+          "intervalMs": 0
+        },
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 3
+    },
+    "configuration": {
+      "engineType": "text_stream",
+      "difficultyLevel": 3,
+      "engineConfig": {
+        "mode": "rsvp",
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 580,
+          "maxWordCount": 640,
+          "questionCount": 5
+        },
+        "timing": {
+          "durationMs": 250,
+          "intervalMs": 0
+        },
+        "visuals": {
+          "showFixation": true
+        },
+        "adaptive": {
+          "enabled": false
+        }
+      }
+    }
+  },
+  {
+    "id": "67ea967a-8814-5cde-a143-269691eb6535",
+    "ageGroupId": "10000000-0000-0000-0000-000000000004",
+    "age": "young-adult",
+    "level": 4,
+    "title": "Sıralı Kelime Gösterimi",
+    "previousTitle": "Sıralı Kelime Gösterimi",
+    "previousConfiguration": {
+      "engineType": "text_stream",
+      "engineConfig": {
+        "mode": "rsvp",
+        "content": {
+          "source": "reading_text"
+        },
+        "timing": {
+          "durationMs": 222,
+          "intervalMs": 0
+        },
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 4
+    },
+    "configuration": {
+      "engineType": "text_stream",
+      "difficultyLevel": 4,
+      "engineConfig": {
+        "mode": "rsvp",
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 680,
+          "maxWordCount": 750,
+          "questionCount": 5
+        },
+        "timing": {
+          "durationMs": 222,
+          "intervalMs": 0
+        },
+        "visuals": {
+          "showFixation": true
+        },
+        "adaptive": {
+          "enabled": false
+        }
+      }
+    }
+  },
+  {
+    "id": "e81d9a82-16a1-5931-acc5-0aeec77724bb",
+    "ageGroupId": "10000000-0000-0000-0000-000000000004",
+    "age": "young-adult",
+    "level": 5,
+    "title": "Sıralı Kelime Gösterimi",
+    "previousTitle": "Sıralı Kelime Gösterimi",
+    "previousConfiguration": {
+      "engineType": "text_stream",
+      "engineConfig": {
+        "mode": "rsvp",
+        "content": {
+          "source": "reading_text"
+        },
+        "timing": {
+          "durationMs": 200,
+          "intervalMs": 0
+        },
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 5
+    },
+    "configuration": {
+      "engineType": "text_stream",
+      "difficultyLevel": 5,
+      "engineConfig": {
+        "mode": "rsvp",
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 770,
+          "maxWordCount": 850,
+          "questionCount": 5
+        },
+        "timing": {
+          "durationMs": 200,
+          "intervalMs": 0
+        },
+        "visuals": {
+          "showFixation": true
+        },
+        "adaptive": {
+          "enabled": false
+        }
+      }
+    }
+  },
+  {
+    "id": "8ba66f06-8c31-5d50-84ab-84a16ffd6dec",
+    "ageGroupId": "10000000-0000-0000-0000-000000000003",
+    "age": "adult",
+    "level": 3,
+    "title": "Sıralı Kelime Gösterimi",
+    "previousTitle": "Sıralı Kelime Gösterimi",
+    "previousConfiguration": {
+      "engineType": "text_stream",
+      "engineConfig": {
+        "mode": "rsvp",
+        "content": {
+          "source": "reading_text"
+        },
+        "timing": {
+          "durationMs": 231,
+          "intervalMs": 0
+        },
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 3
+    },
+    "configuration": {
+      "engineType": "text_stream",
+      "difficultyLevel": 3,
+      "engineConfig": {
+        "mode": "rsvp",
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 480,
+          "maxWordCount": 540,
+          "questionCount": 5
+        },
+        "timing": {
+          "durationMs": 231,
+          "intervalMs": 0
+        },
+        "visuals": {
+          "showFixation": true
+        },
+        "adaptive": {
+          "enabled": false
+        }
+      }
+    }
+  },
+  {
+    "id": "4c4c529e-95e2-5f05-b7f2-c2f9befdecc8",
+    "ageGroupId": "10000000-0000-0000-0000-000000000003",
+    "age": "adult",
+    "level": 4,
+    "title": "Sıralı Kelime Gösterimi",
+    "previousTitle": "Sıralı Kelime Gösterimi",
+    "previousConfiguration": {
+      "engineType": "text_stream",
+      "engineConfig": {
+        "mode": "rsvp",
+        "content": {
+          "source": "reading_text"
+        },
+        "timing": {
+          "durationMs": 207,
+          "intervalMs": 0
+        },
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 4
+    },
+    "configuration": {
+      "engineType": "text_stream",
+      "difficultyLevel": 4,
+      "engineConfig": {
+        "mode": "rsvp",
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 580,
+          "maxWordCount": 650,
+          "questionCount": 5
+        },
+        "timing": {
+          "durationMs": 207,
+          "intervalMs": 0
+        },
+        "visuals": {
+          "showFixation": true
+        },
+        "adaptive": {
+          "enabled": false
+        }
+      }
+    }
+  },
+  {
+    "id": "327c6e3a-bb89-5352-b4ad-8e1ee1195564",
+    "ageGroupId": "10000000-0000-0000-0000-000000000003",
+    "age": "adult",
+    "level": 5,
+    "title": "Sıralı Kelime Gösterimi",
+    "previousTitle": "Sıralı Kelime Gösterimi",
+    "previousConfiguration": {
+      "engineType": "text_stream",
+      "engineConfig": {
+        "mode": "rsvp",
+        "content": {
+          "source": "reading_text"
+        },
+        "timing": {
+          "durationMs": 188,
+          "intervalMs": 0
+        },
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 5
+    },
+    "configuration": {
+      "engineType": "text_stream",
+      "difficultyLevel": 5,
+      "engineConfig": {
+        "mode": "rsvp",
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 690,
+          "maxWordCount": 800,
+          "questionCount": 5
+        },
+        "timing": {
+          "durationMs": 188,
+          "intervalMs": 0
+        },
+        "visuals": {
+          "showFixation": true
+        },
+        "adaptive": {
+          "enabled": false
+        }
+      }
+    }
+  }
+]
