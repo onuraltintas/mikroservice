@@ -50,6 +50,17 @@ public sealed class RegressionFiveQuestionTests
             Config.Replace("\"visibleHistoryWords\":1", $"\"visibleHistoryWords\":{visible}"), "regression_reduction"));
     }
 
+    [Fact]
+    public async Task Legacy_practice_clears_questions_without_applying_evaluation_count()
+    {
+        await using var db = Context();
+        var (service, student, exercise, _) = await Seed(db, 0, 6);
+        db.Entry(await db.Exercises.SingleAsync()).Property(e => e.ConfigurationJson).CurrentValue =
+            Config.Replace("\"evaluation\"", "\"practice\"");
+        await db.SaveChangesAsync();
+        Assert.Equal(0, (await service.StartAsync(student, new() { ExerciseId = exercise })).InitialData.GetProperty("questions").GetArrayLength());
+    }
+
     private static OwnedSpeedReadingDbContext Context() => new(new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>()
         .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
 
