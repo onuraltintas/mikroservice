@@ -27,11 +27,11 @@ public sealed class VisualizationPersistenceTests
             BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, [db], null)!;
         var request = new VisualizationSceneRequest(exercise.Id, "Mavi ev", null, 5, 0, 3,
             [new("Ev ne renk?", ["Kırmızı", "Mavi"], answer, questionType, 0, null)], Mode: "assessment");
-        var id = await admin.CreateSceneAsync(request, actor, "create-scene", CancellationToken.None);
-        Assert.Equal(id, await admin.CreateSceneAsync(request, actor, "create-scene", CancellationToken.None));
+        var id = await admin.CreateSceneAsync(request, actor, "create-visualization-scene", CancellationToken.None);
+        Assert.Equal(id, await admin.CreateSceneAsync(request, actor, "create-visualization-scene", CancellationToken.None));
         var stored = (await admin.GetSceneAsync(id, CancellationToken.None))!;
         Assert.Equal("Mavi", stored.Questions[0].CorrectAnswer);
-        Assert.True(await admin.UpdateSceneAsync(id, request, actor, "edit-scene", CancellationToken.None));
+        Assert.True(await admin.UpdateSceneAsync(id, request, actor, "edit-visualization-scene", CancellationToken.None));
         var started = await Service(db).StartAsync(actor, new() { ExerciseId = exercise.Id });
         var question = (await admin.GetSceneAsync(id, CancellationToken.None))!.Questions[0];
         Assert.True((await Service(db).ValidateActionAsync(actor, started.SessionId,
