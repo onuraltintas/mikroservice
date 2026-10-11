@@ -102,6 +102,35 @@ describe('Hedefi Yakala prototype', () => {
       { ...preset, responseMs: 0 }, { ...preset, shapeCount: 6.5 }]) {
       expect(() => new AttentionGame(settings)).toThrowError();
     }
-    expect(ATTENTION_PRESETS.length).toBe(3);
+    expect(ATTENTION_PRESETS.length).toBe(20);
   });
+
+  const approved = [
+    [[6, 6000, 24], [8, 5500, 28], [10, 5000, 32], [12, 4500, 36], [16, 4000, 40]],
+    [[8, 5500, 28], [10, 5000, 32], [12, 4500, 36], [16, 4000, 40], [20, 3500, 44]],
+    [[10, 5000, 32], [12, 4500, 36], [16, 4000, 40], [20, 3500, 44], [20, 3000, 48]],
+    [[10, 5000, 32], [12, 4500, 36], [16, 4000, 40], [20, 3500, 44], [20, 3000, 48]]
+  ];
+  for (const [group, levels] of approved.entries()) {
+    for (const [level, [shapeCount, responseMs, rounds]] of levels.entries()) {
+      it(`applies the approved group ${group + 1} level ${level + 1} through completion`, () => {
+        const settings = ATTENTION_PRESETS[group * 5 + level];
+        expect(settings).toEqual(jasmine.objectContaining({ shapeCount, responseMs, rounds }));
+        if (!settings) return;
+        const g = new AttentionGame(settings, () => 0);
+        g.startSession(0);
+        expect(g.shapes.length).toBe(shapeCount);
+        expect(g.remainingMs(0)).toBe(responseMs);
+        let now = 0;
+        for (let round = 1; round <= rounds; round++) {
+          expect(g.round).toBe(round);
+          expect(g.status).toBe('playing');
+          g.choose(g.shapes.indexOf('star'), now + 100);
+          now += 800; g.tick(now);
+        }
+        expect(g.status).toBe('complete');
+        expect(g.hits).toBe(rounds);
+      });
+    }
+  }
 });

@@ -23,7 +23,7 @@ describe('Attention prototype UI', () => {
     expect(c.game.status).toBe('playing'); expect(c.game.shapes.length).toBe(6);
     for (let i = 0; i < 3; i++) { c.choose(c.game.shapes.indexOf('star')); tick(800); }
     expect(c.game.status).toBe('ready'); expect(c.game.hits).toBe(0);
-    c.startSession(); expect(c.game.shapes.length).toBe(12);
+    c.startSession(); expect(c.game.shapes.length).toBe(8);
     c.choose(c.game.shapes.indexOf('star')); expect(c.game.hits).toBe(1);
     c.reset(); expect(c.game.status).toBe('intro'); expect(c.game.hits).toBe(0);
     fixture.destroy(); tick(10000);
@@ -32,7 +32,7 @@ describe('Attention prototype UI', () => {
   it('does not bypass the practice stage, and ignores invalid preset choices', () => {
     const fixture = TestBed.createComponent(AttentionPreviewComponent); const c = fixture.componentInstance;
     c.startSession(); expect(c.game.status).toBe('intro');
-    for (const index of [-1, 3, 0.5, NaN]) c.selectPreset(index);
+    for (const index of [-1, 20, 0.5, NaN]) c.selectPreset(index);
     expect(c.selectedPresetIndex).toBe(0);
     c.startTutorial(); c.selectPreset(2); expect(c.selectedPresetIndex).toBe(0);
     fixture.destroy();
@@ -67,4 +67,32 @@ describe('Attention prototype UI', () => {
     expect(document.activeElement).toBe(fixture.nativeElement.querySelector('.shape-button'));
     fixture.destroy();
   });
+
+  it('offers four age groups and five levels with the approved defaults', () => {
+    const fixture = TestBed.createComponent(AttentionPreviewComponent); fixture.detectChanges();
+    const root = fixture.nativeElement as HTMLElement;
+    expect(root.querySelectorAll('.age-option').length).toBe(4);
+    expect(root.querySelectorAll('.level-option').length).toBe(5);
+    expect(root.querySelector('.settings-summary')?.textContent).toContain('24 tur');
+    expect(root.querySelector('.settings-summary')?.textContent).toContain('6 saniye');
+    fixture.destroy();
+  });
+
+  it('shows the target as a non-interactive SVG above the board throughout play and pause', fakeAsync(() => {
+    spyOn(performance, 'now').and.callFake(() => Date.now());
+    const fixture = TestBed.createComponent(AttentionPreviewComponent); fixture.detectChanges();
+    const c = fixture.componentInstance; c.startTutorial(); fixture.detectChanges();
+    const root = fixture.nativeElement as HTMLElement;
+    const target = root.querySelector('.target-cue');
+    expect(target?.querySelector('svg[role="img"]')?.getAttribute('aria-label')).toBe('Aranacak sembol: yıldız');
+    expect(target?.querySelector('polygon')?.getAttribute('points')).toBe(root.querySelector('.shape-button[aria-label^="Yıldız"] polygon')?.getAttribute('points'));
+    expect(target?.querySelector('button')).toBeNull();
+    expect(target && target.compareDocumentPosition(root.querySelector('.board-wrap')!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    c.choose(c.game.shapes.indexOf('star')); fixture.detectChanges();
+    expect(root.querySelector('.target-cue svg')).not.toBeNull();
+    c.togglePause(); fixture.detectChanges();
+    expect(root.querySelector('.target-cue svg')).not.toBeNull();
+    expect(root.querySelector('.target-reminder')).toBeNull();
+    fixture.destroy();
+  }));
 });
