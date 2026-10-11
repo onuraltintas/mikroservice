@@ -24,4 +24,6 @@ test('promotion requires checksum, rehearsal, backup and only two scoped restart
     'backup speedreading-before.dump', 'diff -u rehearsal-first.txt rehearsal-second.txt',
     'up -d --no-deps --pull never speed-reading-service speed-reading-frontend']) assert.ok(script.includes(value));
   assert.doesNotMatch(script, /system prune|volume rm/);
+  assert.ok(script.includes('< rollback-all.sql'));
+  assert.ok(script.includes('< verify-rollback.sql'));
 });

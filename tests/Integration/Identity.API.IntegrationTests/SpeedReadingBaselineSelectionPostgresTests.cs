@@ -36,10 +36,10 @@ public sealed class SpeedReadingBaselineSelectionPostgresTests(PostgresFixture p
             var method = type.GetMethod("FindBaselineTemplateAsync", BindingFlags.NonPublic | BindingFlags.Instance)!;
             foreach (var score in new[] { 40m, 40.5m, 70m })
             {
-                var selected = await (Task<ProgramTemplate?>)method.Invoke(service, [age, score, CancellationToken.None])!;
+                var selected = await (Task<ProgramTemplate?>)method.Invoke(service, [age, score, CancellationToken.None, null])!;
                 Assert.Equal("Middle", selected?.Name);
             }
-            var unmatched = await (Task<ProgramTemplate?>)method.Invoke(service, [age, 71m, CancellationToken.None])!;
+            var unmatched = await (Task<ProgramTemplate?>)method.Invoke(service, [age, 71m, CancellationToken.None, null])!;
             Assert.Null(unmatched);
         }
         finally
