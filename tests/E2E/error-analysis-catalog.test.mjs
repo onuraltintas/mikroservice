@@ -30,6 +30,7 @@ test('all eight cells have five real texts with exact, explained and unambiguous
   const pairs=JSON.parse(readFileSync(new URL('../../content-packs/error-analysis/v1/pairs.json',import.meta.url)));
   assert.equal(new Set(texts.map(row=>row.id)).size,40);
   for(const row of texts) {
+    assert.ok(!/garden|library|memory|bridge|archive|repair|child|teen|adult/u.test(row.title),`Internal key in title: ${row.title}`);
     const tokens=row.content.trim().split(/\s+/u),[min,max]=bands[row.age][row.level-4];
     const source=readFileSync(new URL(row.source,new URL('../../content-packs/error-analysis/v1/',import.meta.url)),'utf8').trim().replace(/\r\n/g,'\n');
     assert.equal(createHash('sha256').update(source).digest('hex'),row.sourceSha256);

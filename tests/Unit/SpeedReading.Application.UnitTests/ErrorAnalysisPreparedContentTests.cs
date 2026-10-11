@@ -82,6 +82,18 @@ public sealed class ErrorAnalysisPreparedContentTests
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
+    public async Task Prepared_text_must_belong_to_the_exercise(bool explicitText)
+    {
+        await using var db = Context(); var user = Guid.NewGuid();
+        var (exercise, text) = await Seed(db, user, linked: false);
+        await Assert.ThrowsAnyAsync<Exception>(() => Service(db).StartAsync(user,
+            new() { ExerciseId = exercise.Id, ReadingTextId = explicitText ? text.Id : null }));
+        Assert.Empty(db.ExerciseSessions);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
     public async Task Root_prepared_configuration_supports_automatic_and_explicit_text(bool explicitText)
     {
         await using var db = Context(); var user = Guid.NewGuid();
@@ -112,7 +124,7 @@ public sealed class ErrorAnalysisPreparedContentTests
     private static ISpeedReadingExerciseSessions Service(OwnedSpeedReadingDbContext db) => (ISpeedReadingExerciseSessions)Activator.CreateInstance(
         typeof(OwnedSpeedReadingDbContext).Assembly.GetType("SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingExerciseSessions")!,
         BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, [db], null)!;
-    private static async Task<(Exercise, ReadingText)> Seed(OwnedSpeedReadingDbContext db, Guid user)
+    private static async Task<(Exercise, ReadingText)> Seed(OwnedSpeedReadingDbContext db, Guid user, bool linked = true)
     {
         var age = Guid.NewGuid(); var textId = Guid.NewGuid();
         var type = ExerciseType.Create(Guid.NewGuid(), "ErrorAnalysis", "Hata Analizi", "error_analysis");
@@ -123,7 +135,7 @@ public sealed class ErrorAnalysisPreparedContentTests
             } }
         } });
         var exercise = Exercise.Create("Hata Analizi", "error_analysis", config, 4, user, type.Id, targetAgeGroupId: age);
-        var text = ReadingText.Create(textId, "Metin", "yalnız bugün.", difficultyLevel: 4, exerciseId: exercise.Id, targetAgeGroupId: age);
+        var text = ReadingText.Create(textId, "Metin", "yalnız bugün.", difficultyLevel: 4, exerciseId: linked ? exercise.Id : null, targetAgeGroupId: age);
         db.ExerciseTypes.Add(type); db.Exercises.Add(exercise); db.ReadingTexts.Add(text); await db.SaveChangesAsync();
         return (exercise, text);
     }
