@@ -1,5 +1,7 @@
 # Hata Analizi — hazırlanmış yazım hataları
 
+Yerel test sonuçları ve yayın sınırları: [doğrulama raporu](verification.md).
+
 Bu paket dört yaş grubunda mevcut 4–5. seviyeleri günceller. Yeni seviye veya eğitim programı eklemez. Her hücrede beş, toplam 40 egzersize özel metin seçkisi vardır; 40 bağımsız hikâye değildir. Kaynak metinler ve başka egzersizlerin soruları değiştirilmez.
 
 | Yaş | Seviye 4 | Seviye 5 |
