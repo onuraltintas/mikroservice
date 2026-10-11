@@ -1,0 +1,7 @@
+services:
+  speed-reading-service:
+    image: eduivme/speed-reading-service:pending-20261011
+    pull_policy: never
+  speed-reading-frontend:
+    image: eduivme/speed-reading-frontend:pending-20261011
+    pull_policy: never
