@@ -287,10 +287,10 @@ describe('Custom preview settings safety', () => {
   });
   it('uses only controls relevant to the motion mode', () => {
     const config = { engineType: 'motion_path', engineConfig: { mode: 'tracking', movement: { speedLevel: 1 } } };
-    const result = applyCustomPreviewSettings(config, { speedLevel: 4, holdMs: 700 }, context);
-    expect(result.engineConfig.movement.speedLevel).toBe(4);
-    expect((result.engineConfig as Record<string, unknown>)['timing']).toBeUndefined();
-    expect(() => applyCustomPreviewSettings(config, { speedLevel: 6 }, context)).toThrow();
+    const result = applyCustomPreviewSettings(config, { cycleDurationMs: 2000, holdMs: 700 }, context);
+    expect(result.engineConfig.movement.speedLevel).toBe(1);
+    expect((result.engineConfig as Record<string, unknown>)['timing']).toEqual({ speedMs: 2000 });
+    expect(() => applyCustomPreviewSettings(config, { cycleDurationMs: 60001 }, context)).toThrow();
     const fixation = applyCustomPreviewSettings({ engineType: 'motion_path', engineConfig: { mode: 'fixation' } as Record<string, unknown> }, { holdMs: 700 }, context);
     expect(fixation.engineConfig['timing']).toEqual({ holdMs: 700 });
   });

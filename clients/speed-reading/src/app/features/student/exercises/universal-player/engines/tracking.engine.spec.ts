@@ -20,15 +20,23 @@ describe('Tracking motion timing', () => {
     expect(engine.getTargetPosition().x).toBeCloseTo(50, 5); engine.destroy();
   });
 
-  it('uses the chosen speed level when custom settings disable legacy cycle speed', () => {
+  it('uses the chosen cycle time without falling back to a different speed scale', () => {
     spyOn(window, 'requestAnimationFrame').and.returnValue(1);
     let now = 1000; spyOn(Date, 'now').and.callFake(() => now);
     const config = applyCustomPreviewSettings({ engineType: 'motion_path', mode: 'tracking', path: { type: 'circle' },
-      timing: { speedMs: 1250, durationSeconds: 60 } }, { speedLevel: 4 }, { roles: ['Admin'], preview: true });
+      timing: { speedMs: 1250, durationSeconds: 60 } }, { cycleDurationMs: 2000 }, { roles: ['Admin'], preview: true });
     const engine = new MotionPathEngine(); engine.initialize(config, callbacks); engine.start();
     now += 1000; (engine as any).animate();
-    expect(engine.getTargetPosition().x).toBeCloseTo(50 + 35 * Math.cos(3.6), 5); engine.destroy();
+    expect(engine.getTargetPosition().x).toBeCloseTo(15, 5); engine.destroy();
   });
+
+  it('uses explicit cycle timing for jump paths and preserves it across pause', fakeAsync(() => {
+    const engine = new MotionPathEngine();
+    engine.initialize({ mode: 'tracking', path: { type: 'two_point_jump' }, timing: { speedMs: 2000, durationSeconds: 60 }, movement: { jumpIntervalMs: 1000 } }, callbacks);
+    engine.start(); tick(900); engine.pause(); tick(2000); engine.resume();
+    tick(1099); expect(engine.state.currentStep).toBe(1);
+    tick(1); expect(engine.state.currentStep).toBe(2); engine.destroy();
+  }));
 
   it('uses ceiling consistently for millisecond duration and preserves remaining jump delay', fakeAsync(() => {
     const engine = new MotionPathEngine();
