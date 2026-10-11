@@ -85,4 +85,7 @@ dd { margin: 3px 0 0; font-size: 1.6rem; font-weight: 700; font-variant-numeric:
     .shape-board.large-board .shape-button { min-height: 48px; }
     .feedback { min-height: 52px; margin-top: 12px; font-size: .9rem; }
   }
+  @media (min-width: 375px) {
+    .shape-board.large-board { grid-template-columns: repeat(5, 1fr); }
+  }
 }
