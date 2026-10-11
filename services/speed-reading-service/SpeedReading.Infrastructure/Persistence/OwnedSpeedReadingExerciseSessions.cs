@@ -143,7 +143,9 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             var isScanText = ExerciseConfigurationRules.NormalizeEngineType(exerciseEngineType) is "scan_find" or "scanning";
             var scanTaskIds = isScanText ? ScanningTaskTextIds(ReadObject(explicitConfig, "engineConfig").ValueKind == JsonValueKind.Object
                 ? ReadObject(explicitConfig, "engineConfig") : explicitConfig) : [];
-            var usesTextBand = isFreeText || isScanText || IsEngineType(exerciseEngineType, "reading_comprehension") || exerciseTypeName.Equals("SpeedReading", StringComparison.OrdinalIgnoreCase);
+            var usesTextBand = isFreeText || isScanText || IsEngineType(exerciseEngineType, "reading_comprehension")
+                || exerciseTypeName.Equals("SpeedReading", StringComparison.OrdinalIgnoreCase)
+                || exerciseTypeName.Equals("Chunking", StringComparison.OrdinalIgnoreCase);
             var minimumWords = usesTextBand ? ReadPositiveInt(explicitContent, "minWordCount") ?? ReadPositiveInt(ReadObject(explicitConfig, "content"), "minWordCount") ?? 0 : 0;
             var maximumWords = usesTextBand ? ReadPositiveInt(explicitContent, "maxWordCount") ?? ReadPositiveInt(ReadObject(explicitConfig, "content"), "maxWordCount") ?? 0 : 0;
             var strictTextLevel = IsEngineType(exerciseEngineType, "word_highlight") || IsPacedHighlight(new SessionState { EngineType = exerciseEngineType, ExerciseTypeName = exerciseTypeName })
@@ -331,7 +333,9 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                 var isScanText = normalizedEngineType is "scan_find" or "scanning";
                 var scanTaskIds = isScanText ? ScanningTaskTextIds(ReadObject(parsedConfiguration, "engineConfig").ValueKind == JsonValueKind.Object
                     ? ReadObject(parsedConfiguration, "engineConfig") : parsedConfiguration) : [];
-                var usesTextBand = isFreeReading || isComprehension || isScanText || exerciseTypeName.Equals("SpeedReading", StringComparison.OrdinalIgnoreCase);
+                var usesTextBand = isFreeReading || isComprehension || isScanText
+                    || exerciseTypeName.Equals("SpeedReading", StringComparison.OrdinalIgnoreCase)
+                    || exerciseTypeName.Equals("Chunking", StringComparison.OrdinalIgnoreCase);
                 var comprehensionQuestionCount = isComprehension
                     ? ReadPositiveInt(freeContent, "questionCount") ?? ReadPositiveInt(ReadObject(parsedConfiguration, "content"), "questionCount") ?? 0 : 0;
                 var freeMinimumWords = usesTextBand ? ReadPositiveInt(freeContent, "minWordCount") ?? ReadPositiveInt(ReadObject(parsedConfiguration, "content"), "minWordCount") ?? 0 : 0;

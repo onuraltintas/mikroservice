@@ -870,6 +870,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
 
   private previewTextMatchesLength(wordCount: number): boolean {
     if (this.exercise?.exerciseTypeName?.toLowerCase() !== 'speedreading'
+      && this.exercise?.exerciseTypeName?.toLowerCase() !== 'chunking'
       && !['reading_comprehension', 'scanning', 'scan_find'].includes(this.parsedConfig?.['engineType'] || '')) return true;
     const content = this.parsedConfig?.['engineConfig']?.['content'] || this.parsedConfig?.['content'] || {};
     const minimum = Number(content.minWordCount) || 0;
@@ -937,7 +938,8 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     const content = typeof readingText?.content === 'string' ? readingText.content : '';
     const title = typeof readingText?.title === 'string' ? readingText.title : '';
     const wordCount = Number(readingText?.wordCount) || content.split(/\s+/).filter(Boolean).length;
-    const availableQuestions = Array.isArray(readingText?.questions) ? readingText.questions : [];
+    const availableQuestions = this.exercise?.exerciseTypeName?.toLowerCase() === 'chunking' ? []
+      : Array.isArray(readingText?.questions) ? readingText.questions : [];
     const questions = this.parsedConfig?.['engineType'] === 'skimming'
       ? availableQuestions.filter((question: any) => Number(question.type ?? question.questionType ?? question.QuestionType) === 1)
       : this.parsedConfig?.['engineType'] === 'reading_comprehension'
