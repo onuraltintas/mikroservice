@@ -61,7 +61,7 @@ public sealed class FixationSessionTimingTests
         session.SetState(state.ToJsonString()); await db.SaveChangesAsync();
         var restarted = await service.StartAsync(student, new() { ExerciseId = started.ExerciseId });
         Assert.NotEqual(started.SessionId, restarted.SessionId);
-        Assert.Equal(1, restarted.InitialData.GetProperty("fixationProtocolVersion").GetInt32());
+        Assert.Equal(2, restarted.InitialData.GetProperty("fixationProtocolVersion").GetInt32());
     }
 
     [Theory]

@@ -262,7 +262,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                     || (IsVisualExpansionExercise(DeserializeState(matchingSession.SessionDataJson))
                         && DeserializeState(matchingSession.SessionDataJson).VisualExpansionProtocolVersion is not (1 or 2))
                     || (IsValidatedFixation(DeserializeState(matchingSession.SessionDataJson))
-                        && DeserializeState(matchingSession.SessionDataJson).FixationProtocolVersion != 1)))
+                        && DeserializeState(matchingSession.SessionDataJson).FixationProtocolVersion is not (1 or 2))))
             {
                 // Legacy client-scored attempts cannot be verified by the new round protocol.
                 // Preserve their history, but start a fresh authoritative attempt.
@@ -668,7 +668,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             && (state.VisualExpansionProtocolVersion is not (1 or 2) || state.VisualExpansionRound < state.TotalSteps
                 || state.VisualExpansionRoundResults.Count != state.TotalSteps))
             throw IncompleteSession("All visual expansion rounds must be validated before completion.");
-        if (IsValidatedFixation(state) && (!state.FocusCompleted || state.FixationProtocolVersion != 1
+        if (IsValidatedFixation(state) && (!state.FocusCompleted || state.FixationProtocolVersion is not (1 or 2)
             || state.FixationRoundResults.Count != state.TotalSteps))
             throw IncompleteSession("All fixation rounds must be validated before completion.");
         if (state.VocabularyWords.Count > 0
@@ -1742,10 +1742,12 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             var content = ReadObject(effectiveConfig, "content");
             var fixation = ReadObject(effectiveConfig, "fixation");
             var timing = ReadObject(effectiveConfig, "timing");
+            var maxPeripheralCount = Math.Clamp(ReadPositiveInt(content, "maxPeripheralCount")
+                ?? ReadPositiveInt(fixation, "maxPeripheralCount") ?? 4, 1, 4);
             state.FixationPeripheralCount = Math.Clamp(
                 ReadPositiveInt(content, "peripheralCount")
-                    ?? ReadPositiveInt(fixation, "peripheralCount") ?? 0, 0, 4);
-            state.FixationProtocolVersion = 1;
+                    ?? ReadPositiveInt(fixation, "peripheralCount") ?? 0, 0, maxPeripheralCount);
+            state.FixationProtocolVersion = isAssessmentMode ? 1 : 2;
             state.FixationHoldMs = Math.Clamp(
                 ReadPositiveInt(timing, "holdMs")
                     ?? ReadPositiveInt(ReadObject(effectiveConfig, "movement"), "fixationTimeMs") ?? 2_000,
@@ -2168,7 +2170,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         if (state.FixationExpectedStimuli.Length == 0)
         {
             state.FixationExpectedStimuli = VisualExpansionRoundRules.CreateStimuli(
-                session.Id.GetHashCode(), state.FixationRound, "letter", state.FixationPeripheralCount).ToArray();
+                session.Id.GetHashCode(), state.FixationRound, "letter", state.FixationPeripheralCount,
+                state.FixationProtocolVersion == 2 ? state.FixationPreviousStimuli : null).ToArray();
             state.FixationPresentedAt = now.ToUniversalTime();
             state.FixationPausedMilliseconds = 0;
             state.FixationPausedAt = null;
@@ -2203,6 +2206,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         session.Advance(isCorrect);
         state.FixationRoundResults.Add(new FixationRoundState(state.FixationRound + 1, state.FixationHoldMs, responseTimeMs, isCorrect));
         state.FixationRound++;
+        state.FixationPreviousStimuli = state.FixationProtocolVersion == 2 ? state.FixationExpectedStimuli : [];
         state.FixationExpectedStimuli = [];
         state.FixationPresentedAt = null;
         state.FocusCompleted = state.FixationRound >= state.TotalSteps;
@@ -3617,7 +3621,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             }, JsonOptions);
         }
         sanitized.Remove("visualExpansionPreviousStimuli");
-        if (IsValidatedFixation(state) && state.FixationProtocolVersion != 1)
+        sanitized.Remove("fixationPreviousStimuli");
+        if (IsValidatedFixation(state) && state.FixationProtocolVersion is not (1 or 2))
             sanitized.Remove("fixationRoundResults");
         if (!state.IsAssessmentMode && state.Tachistoscope is { } completed && completed.Round == completed.Count)
             sanitized["tachistoscope"]!["trials"] = JsonSerializer.SerializeToNode(completed.Trials, JsonOptions);
@@ -3948,6 +3953,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         public DateTime? FixationPausedAt { get; set; }
         public long FixationPausedMilliseconds { get; set; }
         public List<FixationRoundState> FixationRoundResults { get; set; } = [];
+        public string[] FixationPreviousStimuli { get; set; } = [];
         public List<SessionQuestion> Questions { get; set; } = [];
         public List<SessionAnswer> Answers { get; set; } = [];
         public List<ScanningRound> ScanningRounds { get; set; } = [];

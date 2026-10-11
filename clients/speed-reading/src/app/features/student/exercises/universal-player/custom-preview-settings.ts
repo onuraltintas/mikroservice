@@ -140,7 +140,13 @@ export function getCustomPreviewControls(configuration: Record<string, unknown>)
           control('pointSize', 'Nokta boyutu (px)', 8, 200, content['pointsize'] ?? 36)];
       }
       if (mode === 'saccade') return [control('jumpIntervalMs', 'Hedef geçiş aralığı (ms)', 50, 10000, movement['jumpintervalms'] ?? 1000)];
-      return [control('holdMs', 'Odaklanma süresi (ms)', 50, 10000, timing['holdms'] ?? movement['fixationtimems'] ?? 2000)];
+      const content = mergeCaseInsensitiveRecords(configuration, settings, 'content');
+      const fixation = mergeCaseInsensitiveRecords(configuration, settings, 'fixation');
+      const hold = control('holdMs', 'Gösterim süresi (ms)', 50, 10000, timing['holdms'] ?? movement['fixationtimems'] ?? 2000);
+      if (Number(content['peripheralcount'] ?? fixation['peripheralcount'] ?? 0) === 0) return [hold];
+      const maxLetters = boundedInteger(content['maxperipheralcount'] ?? fixation['maxperipheralcount'], 4, 1, 4);
+      return [control('points', 'Tur sayısı', 1, 100, content['points'] ?? fixation['points'] ?? 10),
+        control('peripheralCount', 'Her turdaki harf sayısı', 1, maxLetters, content['peripheralcount'] ?? fixation['peripheralcount']), hold];
     }
     case 'skimming': return [
       control('timeLimitSec', 'İnceleme süresi sınırı (saniye)', 1, 3600,
@@ -395,6 +401,8 @@ export function applyCustomPreviewSettings<T extends Record<string, unknown>>(
       { ...recordOrEmpty(caseInsensitiveField(configuration, 'path')), ...recordOrEmpty(caseInsensitiveField(settings, 'path')) }, { type: values['pathType'] });
     if (validated['pointSize'] !== undefined) merge('content', { pointSize: validated['pointSize'] });
     if (validated['holdMs'] !== undefined) merge('timing', { holdMs: validated['holdMs'] });
+    if (validated['points'] !== undefined) merge('content', { points: validated['points'] });
+    if (validated['peripheralCount'] !== undefined) merge('content', { peripheralCount: validated['peripheralCount'] });
     if (validated['speedLevel'] !== undefined) {
       merge('movement', { speedLevel: validated['speedLevel'] });
       if (caseInsensitiveField(mergeCaseInsensitiveRecords(configuration, settings, 'timing'), 'speedMs') !== undefined) {

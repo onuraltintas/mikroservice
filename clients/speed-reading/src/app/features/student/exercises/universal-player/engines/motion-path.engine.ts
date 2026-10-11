@@ -101,6 +101,7 @@ export class MotionPathEngine implements BaseEngine {
     private totalPeripheralTests = 0;
     private correctPeripheralTests = 0;
     private serverAuthoritativeFixation = false;
+    private modernFixation = true;
     private pendingServerAnswer = false;
 
     // Audio/Metronome Support
@@ -172,6 +173,8 @@ export class MotionPathEngine implements BaseEngine {
             mode === 'fixation' ? 2000 : 1000, 50, 10000);
 
         this.currentMode = mode;
+        this.modernFixation = backendConfig.isAssessmentMode !== true
+            && Number(field(backendConfig, 'fixationProtocolVersion') ?? 2) >= 2;
         this.trackingCycleMs = typeof field(timing, 'speedMs') === 'number' && field(timing, 'speedMs') > 0
             ? boundedInteger(field(timing, 'speedMs'), 3000, 50, 60000) : 0;
         this.isTimeBased = durationSeconds > 0;
@@ -213,7 +216,8 @@ export class MotionPathEngine implements BaseEngine {
                 this.generateSaccadeTargets(content);
             this.state.totalSteps = this.isTimeBased ? 0 : this.saccadeTargets.length;
         } else {
-            const peripheralCount = boundedInteger(field(content, 'peripheralCount') ?? field(fixation, 'peripheralCount'), 0, 0, 4);
+            const maxPeripheralCount = boundedInteger(field(content, 'maxPeripheralCount') ?? field(fixation, 'maxPeripheralCount'), 4, 1, 4);
+            const peripheralCount = boundedInteger(field(content, 'peripheralCount') ?? field(fixation, 'peripheralCount'), 0, 0, maxPeripheralCount);
             // Answered fixation rounds finish by verified point count, not by a timer while answering.
             if (mode === 'fixation' && peripheralCount > 0) this.isTimeBased = false;
             const namedSize = targetSize === 'small' ? 24 : targetSize === 'large' ? 48 : 36;
@@ -497,9 +501,10 @@ export class MotionPathEngine implements BaseEngine {
 
         if (count === 0) return;
 
-        const allChars = 'ABCDEFGHKLMNPRSTVYZ';
+        const allChars = this.modernFixation ? 'ABCDEFGHKLMNPRSTUVYZ' : 'ABCDEFGHKLMNPRSTVYZ';
         const positions: Array<'top' | 'bottom' | 'left' | 'right'> = ['top', 'bottom', 'left', 'right'];
-        const usedPositions = positions.slice(0, count);
+        const usedPositions = Array.from({ length: count }, (_, index) =>
+            positions[(index + (this.modernFixation ? this.state.currentStep : 0)) % positions.length]);
 
         // Filter out last used characters to avoid repetition
         let availableChars = allChars.split('').filter(c => !this.lastUsedChars.includes(c));
@@ -902,7 +907,8 @@ export class MotionPathEngine implements BaseEngine {
             }
         }
         const accuracy = serverCorrect == null
-            ? correctChars.length > 0 ? (matchCount / correctChars.length) * 100 : 100
+            ? this.modernFixation ? (matchCount === correctChars.length && userInput.length === correctChars.length ? 100 : 0)
+                : correctChars.length > 0 ? (matchCount / correctChars.length) * 100 : 100
             : serverCorrect ? 100 : 0;
         const isCorrect = accuracy === 100;
 

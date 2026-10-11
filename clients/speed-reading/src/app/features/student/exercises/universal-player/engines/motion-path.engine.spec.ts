@@ -294,11 +294,12 @@ describe('MotionPathEngine', () => {
     expect(engine.state.currentStep).toBe(1);
   });
 
-  it('does not count the same peripheral character twice', fakeAsync(() => {
+  it('preserves partial character scoring for legacy fixation without counting a character twice', fakeAsync(() => {
     let result: EngineResult | undefined;
     const engine = new MotionPathEngine();
     engine.initialize({
       mode: 'fixation',
+      fixationProtocolVersion: 1,
       content: { points: 1, peripheralCount: 2 },
       timing: { holdMs: 50 }
     }, callbacks(value => result = value));
