@@ -22,6 +22,20 @@ describe('Catalogue reading previews', () => {
     expect(player.backendSessionConfig.readingTextContent).toBe('Gerçek katalog metni burada.');
     expect(player.initializePreviewEngine).toHaveBeenCalledTimes(1);
   });
+  it('applies Chunking word bands even with custom speed/group size and drops practice questions', () => {
+    const player = create();
+    player.exercise.exerciseTypeName = 'Chunking';
+    player.parsedConfig = { engineType: 'word_highlight', engineConfig: { mode: 'chunking',
+      readingPurpose: 'practice', content: { minWordCount: 5, maxWordCount: 8 },
+      pacer: { speedWpm: 700, chunkSize: 6 } } };
+    player.startPreviewSession();
+    expect(player.initializePreviewEngine).not.toHaveBeenCalled();
+    const config = player.createPreviewReadingConfig({ id: 'real', content: 'Bir iki üç dört beş altı.',
+      questions: [{ type: 1, correctAnswer: 'A' }] });
+    expect(config.questions).toEqual([]);
+    expect(config.Questions).toEqual([]);
+    expect(player.parsedConfig.engineConfig.content).toEqual({ minWordCount: 5, maxWordCount: 8 });
+  });
   it('does not silently initialize a demo when a pinned text fails', () => {
     const player = create();
     player.parsedConfig.readingTextId = 'missing';

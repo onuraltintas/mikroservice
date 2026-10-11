@@ -9,6 +9,22 @@ namespace SpeedReading.Application.UnitTests;
 
 public sealed class GroupingSessionTests
 {
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Applies_word_band_to_automatic_and_explicit_text_selection(bool explicitText)
+    {
+        await using var db = Context();
+        var (service, student, exercise) = await Seed(db,
+            """{"engineType":"word_highlight","engineConfig":{"mode":"chunking","readingPurpose":"practice","content":{"minWordCount":5,"maxWordCount":8},"pacer":{"chunkSize":2,"speedWpm":200}}}""");
+        var text = ReadingText.Create(Guid.NewGuid(), "Kısa", "bir iki üç dört", difficultyLevel: 3);
+        db.ReadingTexts.Add(text);
+        await db.SaveChangesAsync();
+        var start = () => service.StartAsync(student, new() { ExerciseId = exercise, ReadingTextId = explicitText ? text.Id : null });
+        await start.Should().ThrowAsync<Exception>();
+        db.ExerciseSessions.Should().BeEmpty();
+    }
+
     [Fact]
     public async Task New_sessions_snapshot_sentence_boundaries_and_preserve_them_on_resume()
     {
