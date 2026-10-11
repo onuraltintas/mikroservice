@@ -221,11 +221,12 @@ public static class ExerciseConfigurationRules
                     ValidateReadingConfiguration(nested.Value);
                 ValidateEffectiveReadingConfiguration(root, nested);
             }
-            if (configured == "reading_comprehension")
+            if (configured is "reading_comprehension" or "exam_simulation")
             {
                 foreach (var scope in nested.HasValue ? new[] { root, nested.Value } : new[] { root })
                 {
-                    ValidateOptionalEnum(scope, "comprehensionMode", ["learning", "evaluation"], "Anlama modu");
+                    if (configured == "reading_comprehension")
+                        ValidateOptionalEnum(scope, "comprehensionMode", ["learning", "evaluation"], "Anlama modu");
                     if (TryGetObject(scope, "content") is { } content)
                     {
                         ValidateOptionalIntRange(content, "minWordCount", 1, 100_000, "Minimum kelime sayısı");
@@ -241,6 +242,13 @@ public static class ExerciseConfigurationRules
                 var maximum = scopes.SelectMany(scope => ReadNestedInts(scope, "content", "maxWordCount")).FirstOrDefault();
                 if (minimum > 0 && maximum > 0 && minimum > maximum)
                     throw new ArgumentException("Minimum kelime sayısı maksimumdan büyük olamaz.");
+                if (configured == "exam_simulation")
+                {
+                    var minimumTime = scopes.SelectMany(scope => ReadNestedInts(scope, "timing", "minReadingTimeMs")).FirstOrDefault();
+                    var maximumTime = scopes.SelectMany(scope => ReadNestedInts(scope, "timing", "maxReadingTimeMs")).Cast<int?>().FirstOrDefault() ?? 180_000;
+                    if (maximumTime <= minimumTime)
+                        throw new ArgumentException("Sınav ilk okuma süresi minimumdan büyük olmalıdır.");
+                }
             }
             if (configured is "regression_reduction" or "subvocalization_reduction")
             {

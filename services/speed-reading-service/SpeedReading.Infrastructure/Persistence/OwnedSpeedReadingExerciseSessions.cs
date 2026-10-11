@@ -1211,14 +1211,15 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             await db.SaveChangesAsync(cancellationToken);
         }
 
+        var hideExamFeedback = state.EngineType == "exam_simulation" && session.Status != OwnedExerciseSessionStatus.Completed;
         return new ExerciseSessionProgress(
             session.Id,
             (Application.ExerciseSessions.ExerciseSessionStatus)session.Status,
             session.CurrentStep,
             session.TotalSteps,
             session.TotalSteps == 0 ? 0 : Math.Round((decimal)session.CurrentStep / session.TotalSteps * 100, 2),
-            session.CorrectCount,
-            session.IncorrectCount,
+            hideExamFeedback ? 0 : session.CorrectCount,
+            hideExamFeedback ? 0 : session.IncorrectCount,
             SpeedReadingExerciseSessionRules.CalculateActiveSeconds(
                 GetTimingStartTime(session, state, now),
                 session.EndTime ?? now,
@@ -1244,6 +1245,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             .Select(item => item.DisplayName)
             .SingleOrDefaultAsync(cancellationToken) ?? string.Empty;
         var now = DateTime.UtcNow;
+        var hideExamFeedback = state.EngineType == "exam_simulation" && session.Status != OwnedExerciseSessionStatus.Completed;
         return new ExerciseSessionDetails(
             session.Id,
             session.ExerciseId,
@@ -1254,9 +1256,9 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             session.EndTime,
             session.CurrentStep,
             session.TotalSteps,
-            session.CorrectCount,
-            session.IncorrectCount,
-            SpeedReadingExerciseSessionRules.CalculateAccuracy(session.CorrectCount, session.IncorrectCount),
+            hideExamFeedback ? 0 : session.CorrectCount,
+            hideExamFeedback ? 0 : session.IncorrectCount,
+            hideExamFeedback ? 0 : SpeedReadingExerciseSessionRules.CalculateAccuracy(session.CorrectCount, session.IncorrectCount),
             SpeedReadingExerciseSessionRules.CalculateActiveSeconds(
                 GetTimingStartTime(session, state, now),
                 session.EndTime ?? now,
