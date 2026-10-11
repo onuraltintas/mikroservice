@@ -350,7 +350,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                 var isScanText = normalizedEngineType is "scan_find" or "scanning";
                 var scanTaskIds = isScanText ? ScanningTaskTextIds(ReadObject(parsedConfiguration, "engineConfig").ValueKind == JsonValueKind.Object
                     ? ReadObject(parsedConfiguration, "engineConfig") : parsedConfiguration) : [];
-                var usesTextBand = normalizedEngineType == "error_analysis" || isFreeReading || isComprehension || isScanText || normalizedEngineType is "skimming" or "text_fade"
+                var usesTextBand = isExam || normalizedEngineType == "error_analysis" || isFreeReading || isComprehension || isScanText || normalizedEngineType is "skimming" or "text_fade"
                     || normalizedEngineType == "regression_reduction"
                     || normalizedEngineType == "subvocalization_reduction"
                     || IsRsvp(exerciseTypeName, exerciseEngineType, parsedConfiguration)
@@ -362,7 +362,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                             ?? ReadString(parsedConfiguration, "readingPurpose"), request.AssessmentAttemptId.HasValue) == "evaluation" ? 4 : isComprehension
                     ? ReadPositiveInt(freeContent, "questionCount") ?? ReadPositiveInt(ReadObject(parsedConfiguration, "content"), "questionCount") ?? 0
                     : (normalizedEngineType is "regression_reduction" or "subvocalization_reduction"
-                        || IsRsvp(exerciseTypeName, exerciseEngineType, parsedConfiguration))
+                        || isExam || IsRsvp(exerciseTypeName, exerciseEngineType, parsedConfiguration))
                         && ExerciseConfigurationRules.ResolveReadingPurpose(normalizedEngineType,
                             ReadString(ReadObject(parsedConfiguration, "engineConfig"), "readingPurpose")
                                 ?? ReadString(parsedConfiguration, "readingPurpose"), request.AssessmentAttemptId.HasValue) == "evaluation"
@@ -766,6 +766,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             state.ReadingStartTime,
             state.ReadingEndTime,
             pausedReadingSeconds);
+        if (IsEngineType(state.EngineType, "exam_simulation") && state.ExamProtocolVersion == 1)
+            timeSpent = (int)Math.Round(state.ExamReadingTimeMs / 1000d) + state.Answers.Sum(answer => answer.TimeSpentSeconds);
         var accuracy = IsErrorAnalysis(state) ? ErrorAnalysisAccuracy(state)
             : IsScanning(state) ? ScanningAccuracy(state)
             : SpeedReadingExerciseSessionRules.CalculateAccuracy(session.CorrectCount, session.IncorrectCount);
@@ -1137,6 +1139,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         var session = await GetOwnedSessionAsync(studentId, sessionId, cancellationToken);
         var now = DateTime.UtcNow;
         var state = DeserializeState(session.SessionDataJson);
+        if (IsEngineType(state.EngineType, "exam_simulation"))
+            throw new BusinessRuleException("ExerciseSession.ExamCannotPause", "Süreli paragraf testi duraklatılamaz.");
         session.Pause(now);
         if (IsFocusExercise(state) && state.FocusStartTime.HasValue)
             state.FocusPausedAt = now;
@@ -1604,6 +1608,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             state.Questions.Clear();
 
         if (IsEngineType(exerciseEngineType, "reading_comprehension")
+            || IsEngineType(exerciseEngineType, "exam_simulation")
             || (IsEngineType(exerciseEngineType, "regression_reduction") && state.ReadingPurpose == "evaluation")
             || (IsEngineType(exerciseEngineType, "subvocalization_reduction") && state.ReadingPurpose == "evaluation")
             || (IsTextFade(state) && state.ReadingPurpose == "evaluation")
@@ -1809,6 +1814,25 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         if (state.Tachistoscope is { } tachistoscope) state.TotalSteps = tachistoscope.Count;
         if (IsScanning(state)) InitializeScanning(state, effectiveConfig);
         if (IsSkimming(state)) InitializeSkimming(state, effectiveConfig, config);
+        if (IsEngineType(exerciseEngineType, "exam_simulation"))
+        {
+            var timing = ReadObject(effectiveConfig, "timing");
+            var rootTiming = ReadObject(config, "timing");
+            var content = ReadObject(effectiveConfig, "content");
+            var rootContent = ReadObject(config, "content");
+            var minWords = ReadPositiveInt(content, "minWordCount") ?? ReadPositiveInt(rootContent, "minWordCount") ?? 0;
+            var maxWords = ReadPositiveInt(content, "maxWordCount") ?? ReadPositiveInt(rootContent, "maxWordCount") ?? 0;
+            if (state.WordCount < minWords || maxWords > 0 && state.WordCount > maxWords)
+                throw new BusinessRuleException("ExerciseSession.ExamContentUnavailable", "Bu seviyede gerekli uzunlukta sınav metni bulunamadı.");
+            state.ExamProtocolVersion = 1;
+            state.ReadingMinimumMs = Math.Clamp(ReadNonNegativeInt(timing, "minReadingTimeMs") ?? ReadNonNegativeInt(rootTiming, "minReadingTimeMs") ?? 0, 0, 3_600_000);
+            state.ReadingMaximumMs = Math.Clamp(ReadPositiveInt(timing, "maxReadingTimeMs") ?? ReadPositiveInt(rootTiming, "maxReadingTimeMs") ?? 180000, 1000, 3_600_000);
+            if (state.ReadingMinimumMs >= state.ReadingMaximumMs)
+                throw new BusinessRuleException("ExerciseSession.ExamTimingInvalid", "Minimum okuma süresi, okuma sınırından kısa olmalıdır.");
+            state.ReadingPausedMilliseconds = 0;
+            state.TimeLimitSeconds = null;
+            state.TotalSteps = state.Questions.Count + 1;
+        }
         if (IsErrorAnalysis(state)) InitializeErrorAnalysis(state, effectiveConfig);
         if (IsPacedHighlight(state))
         {
@@ -1920,6 +1944,19 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
     {
         if (IsAdaptiveFluency(state))
             return FinishAdaptiveStage(session, state, now);
+        if (IsEngineType(state.EngineType, "exam_simulation") && state.ExamProtocolVersion == 1)
+        {
+            if (!state.ReadingStartTime.HasValue) return Invalid("Önce okumayı başlatın.");
+            var elapsed = Math.Max(0, (now - state.ReadingStartTime.Value).TotalMilliseconds);
+            if (incomplete && elapsed < state.ReadingMaximumMs || !incomplete && elapsed < state.ReadingMinimumMs)
+                return Invalid("Okuma süresi henüz dolmadı.");
+            if (!state.ReadingEndTime.HasValue)
+            {
+                state.ReadingEndTime = now;
+                state.ExamReadingTimeMs = (int)Math.Min(state.ReadingMaximumMs, elapsed);
+            }
+            return Valid("Okuma aşaması tamamlandı; sorulara geçebilirsiniz.", session.CurrentStep);
+        }
         if (ExerciseConfigurationRules.NormalizeEngineType(state.EngineType) is "reading_comprehension" or "free_reading" || IsPacedHighlight(state) || IsTextFade(state) || IsRsvp(state) || IsSkimming(state))
         {
             if (IsRsvp(state) && state.RsvpProtocolVersion is not (1 or 2))
@@ -2338,6 +2375,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
     {
         if (session.Status != OwnedExerciseSessionStatus.Active)
             return Invalid("Sınav duraklatılmışken soru başlatılamaz.");
+        if (state.ExamProtocolVersion == 1 && !state.ReadingEndTime.HasValue)
+            return Invalid("Önce metin okuma aşamasını tamamlayın.");
         var next = state.Questions.FirstOrDefault(question => state.Answers.All(answer => answer.QuestionId != question.QuestionId));
         if (next is null || request.QuestionId != next.QuestionId)
             return Invalid("Sıradaki sınav sorusunu başlatın.");
@@ -2376,7 +2415,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             // A refresh, timeout race, or retry can repeat the same question
             // action after the answer has already been persisted. Treat that
             // request as idempotent so the student can continue the session.
-            var assessmentSession = session.AssessmentAttemptId.HasValue
+            var assessmentSession = IsEngineType(state.EngineType, "exam_simulation") || session.AssessmentAttemptId.HasValue
                 || IsEngineType(state.EngineType, "reading_comprehension") && state.ComprehensionMode != "learning";
             return new ExerciseActionValidationResponse(
                 true,
@@ -2431,7 +2470,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             OrderIndex = question.OrderIndex,
             QuestionType = question.QuestionType
         });
-        var isAssessment = session.AssessmentAttemptId.HasValue
+        var isAssessment = exam || session.AssessmentAttemptId.HasValue
             || IsEngineType(state.EngineType, "reading_comprehension") && state.ComprehensionMode != "learning";
         return new ExerciseActionValidationResponse(
             true,
@@ -3767,7 +3806,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         var sanitized = JsonSerializer.SerializeToNode(state.IsAssessmentMode
             ? SpeedReadingContentSecurity.SanitizeFocusAssessmentJson(result)
             : RemoveAssessmentKeys(result), JsonOptions)!.AsObject();
-        if (completedResult && !state.IsAssessmentMode && IsEngineType(state.EngineType, "reading_comprehension"))
+        if (completedResult && !state.IsAssessmentMode && (IsEngineType(state.EngineType, "reading_comprehension") || IsEngineType(state.EngineType, "exam_simulation")))
         {
             sanitized["questions"] = JsonSerializer.SerializeToNode(state.Questions, JsonOptions);
             sanitized["answers"] = JsonSerializer.SerializeToNode(state.Answers, JsonOptions);
@@ -4059,6 +4098,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         public DateTime? ExamQuestionStartedAt { get; set; }
         public int ExamPausedSecondsAtStart { get; set; }
         public int ExamQuestionTimeSeconds { get; set; } = 60;
+        public int ExamProtocolVersion { get; set; }
+        public int ExamReadingTimeMs { get; set; }
         public int ReadingMaximumMs { get; set; }
         public decimal? FinalWpm { get; set; }
         public decimal? ComprehensionScore { get; set; }
