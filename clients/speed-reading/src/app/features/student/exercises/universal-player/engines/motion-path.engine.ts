@@ -91,6 +91,7 @@ export class MotionPathEngine implements BaseEngine {
         correctChars: string;
         accuracy: number;
         fixationTimeMs: number;
+        responseTimeMs: number | null;
         timestamp: string;
     }> = [];
 
@@ -959,6 +960,7 @@ export class MotionPathEngine implements BaseEngine {
             correctChars,
             accuracy,
             fixationTimeMs: this.config.movement?.fixationTimeMs || 2000,
+            responseTimeMs: correctChars ? Math.max(0, Date.now() - this.fixationStartTime - (this.config.movement?.fixationTimeMs || 2000)) : null,
             timestamp: new Date().toISOString()
         });
     }
@@ -1045,6 +1047,10 @@ export class MotionPathEngine implements BaseEngine {
                     targetIntervalMs: this.config.movement?.fixationTimeMs
                 } : {}),
                 fixationResults: this.fixationResults,
+                ...(this.currentMode === 'fixation' && this.fixationResults.some(item => item.responseTimeMs !== null) ? {
+                    averageResponseTimeMs: Math.round(this.fixationResults.reduce((sum, item) => sum + (item.responseTimeMs || 0), 0)
+                        / this.fixationResults.filter(item => item.responseTimeMs !== null).length)
+                } : {}),
                 serverValidatedFixation: this.serverAuthoritativeFixation
             }
         };

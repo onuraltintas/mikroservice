@@ -203,7 +203,7 @@
                     </span>
                 </ng-container>
                 <ng-template #normalProgress>
-                    <span>{{ engineState.currentStep }} / {{ engineState.totalSteps }} Nokta</span>
+                    <span>{{ engineState.currentStep }} / {{ engineState.totalSteps }} {{ isFixationMode() ? 'Tur' : 'Nokta' }}</span>
                     <div class="ep-progress-bar"><div class="ep-progress-bar__fill" [style.width.%]="getProgressPercent()"></div></div>
                 </ng-template>
             </div>
@@ -213,8 +213,9 @@
                     <span class="value">{{ engineState.currentStep }}</span>
                 </div>
                 <div class="stat">
-                    <span class="label">Görünme</span>
-                    <span class="value">{{ getMotionPathFixationDuration() }} ms</span>
+                    <span class="label">{{ isFixationMode() ? 'Gösterim' : 'Görünme' }}</span>
+                    <span class="value" *ngIf="isFixationMode(); else motionExposure">{{ getMotionPathFixationDuration() / 1000 | number:'1.2-2' }} sn</span>
+                    <ng-template #motionExposure><span class="value">{{ getMotionPathFixationDuration() }} ms</span></ng-template>
                 </div>
                 <div class="stat" *ngIf="isFixationMode()">
                     <span class="label">Doğru</span>
@@ -239,7 +240,7 @@
             <div class="tracking-instruction">
                 <span class="material-icons">{{ isFixationMode() ? 'center_focus_strong' : (isSaccadeMode() ? 'ads_click' : 'visibility')
                     }}</span>
-                <span>{{ isFixationMode() ? 'Noktaya odaklanın ve bekleyin' : (isSaccadeMode() ? 'Hedefleri takip edin
+                <span>{{ isFixationMode() ? 'Bakışınızı noktada tutun; çevresindeki harfleri fark edin' : (isSaccadeMode() ? 'Hedefleri takip edin
                     (Gerektiğinde tıklayın)' : 'Gözlerinizle noktayı takip edin') }}</span>
             </div>
             <div class="tracking-canvas">
@@ -284,11 +285,11 @@
                             <span>Çevrede ne gördünüz?</span>
                         </div>
                         <div class="input-hint">
-                            Noktanın etrafındaki harfleri yazın
+                            Harfleri gördükten sonra tamamını yazın; sıra önemli değildir.
                         </div>
                         <input #peripheralInput type="text" class="peripheral-input" [(ngModel)]="peripheralInputValue"
                             (input)="onPeripheralInputChange($event)" (keydown.enter)="submitPeripheralInput()"
-                            maxlength="4" autocomplete="off" autocorrect="off" autocapitalize="characters"
+                            aria-label="Gördüğünüz harfler" maxlength="4" autocomplete="off" autocorrect="off" autocapitalize="characters"
                             spellcheck="false" />
                         <button class="ep-btn ep-btn--primary" (click)="submitPeripheralInput()">
                             <span class="material-icons">check</span> Gönder
@@ -1711,8 +1712,8 @@
                 </section>
             </div>
             <div class="stats-row" *ngIf="isFixationMode() && result?.details?.averageResponseTimeMs != null">
-                <div class="stat-card"><div class="stat-value">{{ result?.details?.averageResponseTimeMs }} ms</div><div class="stat-label">Ortalama cevap süresi</div></div>
-                <div class="stat-card"><div class="stat-value">{{ result?.details?.fixationResults?.length }}</div><div class="stat-label">Doğrulanmış tur</div></div>
+                <div class="stat-card"><div class="stat-value">{{ result?.details?.averageResponseTimeMs / 1000 | number:'1.2-2' }} sn</div><div class="stat-label">Ortalama cevap süresi</div></div>
+                <div class="stat-card"><div class="stat-value">{{ result?.details?.fixationResults?.length }} / {{ result?.totalSteps }}</div><div class="stat-label">Tamamlanan / planlanan tur</div></div>
             </div>
             <div class="measurement-not-available" *ngIf="isFixationMode()">
                 Yanıtlı çalışma harf tanıma doğruluğunu ölçer; harfsiz çalışma yalnız izleme alıştırmasıdır.
