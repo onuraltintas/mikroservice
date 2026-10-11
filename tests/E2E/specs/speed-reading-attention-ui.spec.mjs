@@ -242,3 +242,21 @@ test('all four groups and five levels are selectable and stay selected after res
   await expect(page.locator('.settings-summary')).toContainText('Yetişkin · Seviye 5');
   expect(writes).toEqual([]); expect(errors).toEqual([]);
 });
+
+for (const width of [320, 375]) {
+  test(`20-shape board keeps touch targets and no horizontal overflow at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 850 });
+    const { writes, errors } = await prepare(page);
+    await page.getByRole('button', { name: 'Genç yetişkin', exact: true }).click();
+    await page.getByRole('button', { name: 'Seviye 5', exact: true }).click();
+    await noOverflow(page); await pauseClock(page); await practice(page);
+    await page.getByRole('button', { name: 'Denemeyi başlat' }).click(); await page.clock.runFor(100);
+    await expect(page.locator('.shape-button')).toHaveCount(20);
+    const bounds = await page.locator('.shape-button').first().boundingBox();
+    expect(bounds.width).toBeGreaterThanOrEqual(44); expect(bounds.height).toBeGreaterThanOrEqual(44);
+    const columns = await page.locator('.shape-board').evaluate(el => getComputedStyle(el).gridTemplateColumns.split(' ').length);
+    expect(columns).toBe(width < 375 ? 4 : 5);
+    await expect(page.getByRole('img', { name: 'Aranacak sembol: yıldız' })).toBeVisible();
+    await noOverflow(page); expect(writes).toEqual([]); expect(errors).toEqual([]);
+  });
+}
