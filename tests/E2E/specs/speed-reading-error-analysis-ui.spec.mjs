@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { readFileSync } from 'node:fs';
 const exerciseId = '73000000-0000-4000-8000-000000000001';
 const typeId = '73000000-0000-4000-8000-000000000002';
 for (const failure of [false, true]) {
@@ -50,5 +51,52 @@ for (const failure of [false, true]) {
     await expect(page.getByText(/Hata bulma alıştırmasıdır/)).toBeVisible(); expect(errors).toEqual([]);
     expect(actions.filter(action => action.action === 'error_analysis_select').every(action => action.index === 3)).toBe(true);
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1); expect(overflow).toBe(false);
+  });
+}
+
+for (const [role,available] of [['Admin',true],['Teacher',true],['Admin',false]]) {
+  test(`${role} prepared preview ${available ? 'uses custom targets without writes' : 'rejects missing content without a demo'}`,async({page})=>{
+    const settings=JSON.parse(readFileSync(new URL('../../../content-packs/error-analysis/v1/settings.json',import.meta.url)))[0];
+    const row=JSON.parse(readFileSync(new URL('../../../content-packs/error-analysis/v1/content.json',import.meta.url)))
+      .find(row=>row.exerciseId===settings.id);
+    const writes=[],errors=[];
+    page.on('pageerror',error=>errors.push(error.message));
+    await page.addInitScript(({exerciseId})=>{
+      localStorage.setItem('currentUser',JSON.stringify({id:'preview-user'}));
+      history.replaceState({customPreview:{exerciseId,values:{timeLimitSeconds:90,errorCount:2,fontSize:'large'}}},'',location.href);
+    },{exerciseId:settings.id});
+    await page.route('**/api/**',async route=>{
+      const request=route.request(),path=new URL(request.url()).pathname;
+      if(request.method()!=='GET'&&!path.endsWith('/auth/refresh-token')) writes.push(path);
+      let response={items:[],totalCount:0};
+      if(path.endsWith('/auth/refresh-token')) response={id:'preview-user',roles:[role],token:`e30.${Buffer.from(JSON.stringify({sub:'preview-user',exp:Math.floor(Date.now()/1000)+3600,role})).toString('base64url')}.fixture`};
+      else if(path.endsWith(`/exercises/${settings.id}`)) response={id:settings.id,exerciseTypeId:typeId,exerciseTypeName:'ErrorAnalysis',title:'Hata Analizi',difficultyLevel:4,targetAgeGroupId:row.ageGroupId,configurationJson:JSON.stringify(settings.configuration)};
+      else if(path.endsWith('/exercise-types')) response={items:[{id:typeId,name:'ErrorAnalysis',engineType:'error_analysis',isActive:true}]};
+      else if(path.includes('/profile/status')) response={hasAgeGroupConfiguration:true};
+      else if(path.endsWith('/my-modules')) response={hasSpeedReading:true};
+      else if(path.endsWith('/reading-texts')) response=available?[{...row,difficultyLevel:4,isActive:true,targetAgeGroupConfigurationId:row.ageGroupId}]:[];
+      else if(path.endsWith(`/reading-texts/${row.id}`)) response={...row,difficultyLevel:4,targetAgeGroupConfigurationId:row.ageGroupId,questions:[]};
+      await route.fulfill({json:response});
+    });
+    await page.goto(`/student/exercises/universal-player/${settings.id}?mode=preview`);
+    if(available) {
+      await expect(page.getByText('Özel ayarlı önizleme — sonuç ve ilerleme kaydedilmez.')).toBeVisible();
+      await page.locator('.start-button-large').click();
+      await expect(page.locator('.error-instruction')).toContainText('2 hata');
+      await expect(page.locator('.error-text-content')).toHaveClass(/font-large/);
+      const tokens=page.locator('.error-word'); await expect(tokens).toHaveCount(row.wordCount);
+      for(const error of row.errors.slice(0,2)) {
+        await expect(tokens.nth(error.wordIndex)).toHaveText(error.errorWord);
+        await tokens.nth(error.wordIndex).click();
+      }
+      await expect(page.getByText('Önizleme sonucu — kaydedilmedi.')).toBeVisible();
+      await expect(page.getByText('Bulunan hata',{exact:true})).toBeVisible();
+      await page.screenshot({path:`../../artifacts/error-analysis-ui/${role}-${test.info().project.name}.png`,fullPage:true});
+    } else {
+      await expect(page.locator('.error-state')).toContainText('uygun yayımlanmış metin yüklenemedi');
+      await expect(page.locator('.loading-state')).toHaveCount(0);
+    }
+    expect(writes).toEqual([]); expect(errors).toEqual([]);
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1)).toBe(false);
   });
 }

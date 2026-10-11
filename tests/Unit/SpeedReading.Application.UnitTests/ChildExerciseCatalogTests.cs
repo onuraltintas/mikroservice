@@ -47,7 +47,7 @@ public sealed class ChildExerciseCatalogTests
                     Assert.True(source.GetProperty("maxWordCount").GetInt32() >= source.GetProperty("minWordCount").GetInt32());
                     Assert.Equal(5, source.GetProperty("questionCount").GetInt32());
                 }
-                else if (entry.GetProperty("type").GetString() == "FreeReading")
+                else if (entry.GetProperty("type").GetString() is "FreeReading" or "ErrorAnalysis")
                 {
                     Assert.True(source.GetProperty("minWordCount").GetInt32() > 0);
                     Assert.True(source.GetProperty("maxWordCount").GetInt32() >= source.GetProperty("minWordCount").GetInt32());

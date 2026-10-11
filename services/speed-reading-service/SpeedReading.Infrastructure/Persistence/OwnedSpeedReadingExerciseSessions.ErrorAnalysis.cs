@@ -73,7 +73,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions
             var index = ReadNonNegativeInt(error, "wordIndex");
             var original = ReadString(error, "originalWord"); var incorrect = ReadString(error, "errorWord");
             if (!index.HasValue || string.IsNullOrWhiteSpace(original) || string.IsNullOrWhiteSpace(incorrect)
-                || original == incorrect || original.Length > 1000
+                || original == incorrect || original.Length > 1000 || incorrect.Any(char.IsWhiteSpace)
                 || state.ErrorAnalysisWords.SingleOrDefault(word => word.Index == index)?.Text != incorrect
                 || state.ErrorAnalysisErrors.Any(item => item.WordIndex == index)) throw ErrorAnalysisContentError();
             state.ErrorAnalysisErrors.Add(new() { WordIndex = index.Value, OriginalWord = original, ErrorWord = incorrect,

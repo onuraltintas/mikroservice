@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using SpeedReading.Application.ExerciseSessions;
 using SpeedReading.Domain.Catalog;
@@ -50,11 +51,17 @@ public sealed class UnreadTextSelectionTests
             .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
         var student = Guid.NewGuid();
         var type = ExerciseType.Create(Guid.NewGuid(), typeName, typeName, engine);
-        var configuration = engine == "error_analysis"
-            ? """{"engineType":"error_analysis","engineConfig":{"content":{"source":"reading_text"},"errorCount":2}}""" : "{}";
-        var exercise = Exercise.Create("Çocuk", typeName, configuration, 2, student, type.Id);
-        var read = ReadingText.Create(Guid.Parse("10000000-0000-0000-0000-000000000001"), "Okunmuş", "bir iki üç dört", difficultyLevel: 2);
-        var unread = ReadingText.Create(Guid.Parse("10000000-0000-0000-0000-000000000002"), "Yeni", "beş altı yedi sekiz", difficultyLevel: 2);
+        Guid? age = engine == "error_analysis" ? Guid.NewGuid() : null;
+        var read = ReadingText.Create(Guid.Parse("10000000-0000-0000-0000-000000000001"), "Okunmuş", "bir iki üç dört", difficultyLevel: 2, targetAgeGroupId: age);
+        var unread = ReadingText.Create(Guid.Parse("10000000-0000-0000-0000-000000000002"), "Yeni", "beş altı yedi sekiz", difficultyLevel: 2, targetAgeGroupId: age);
+        var configuration = engine == "error_analysis" ? JsonSerializer.Serialize(new {
+            engineType = "error_analysis", engineConfig = new { content = new { source = "reading_text" }, errorCount = 1,
+                errorsByTextId = new Dictionary<string, object> {
+                    [read.Id.ToString()] = new[] { new { wordIndex = 0, originalWord = "bir", errorWord = "bri" } },
+                    [unread.Id.ToString()] = new[] { new { wordIndex = 0, originalWord = "beş", errorWord = "beşş" } }
+                } }
+        }) : "{}";
+        var exercise = Exercise.Create("Çocuk", typeName, configuration, 2, student, type.Id, targetAgeGroupId: age);
         db.ExerciseTypes.Add(type);
         db.Exercises.Add(exercise);
         db.ReadingTexts.AddRange(read, unread);

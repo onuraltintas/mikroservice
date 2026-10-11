@@ -31,6 +31,27 @@ describe('prepared Error Analysis preview', () => {
       expect(()=>p.createPreviewReadingConfig({id:'text',content:'yalnız bugün.'})).toThrow();
     }
   });
+  it('requires the exact age and prepared text ID rather than a shared fallback', () => {
+    const p=player();
+    expect(p.previewTextMatchesAge({targetAgeGroupConfigurationId:'child'})).toBeTrue();
+    expect(p.previewTextMatchesAge({})).toBeFalse();
+    expect(p.previewTextMatchesAge({targetAgeGroupConfigurationId:'adult'})).toBeFalse();
+    expect(p.previewTextMatchesScanningTasks({id:'text'})).toBeTrue();
+    expect(p.previewTextMatchesScanningTasks({id:'unprepared'})).toBeFalse();
+  });
+  it('reduces prepared targets without modifying the original and rejects duplicate/empty targets', () => {
+    const config=configuration();
+    config.engineConfig.errorCount=2;
+    config.engineConfig.errorsByTextId.text.push({wordIndex:1,originalWord:'bugün.',errorWord:'bügun.',errorType:'transposition',explanation:'Doğru: bugün.'});
+    const custom=applyCustomPreviewSettings(config,{errorCount:1},{preview:true,roles:['Admin']});
+    expect(custom.engineConfig.errorsByTextId.text.length).toBe(1);
+    expect(config.engineConfig.errorsByTextId.text.length).toBe(2);
+    for (const errors of [[],[config.engineConfig.errorsByTextId.text[0],config.engineConfig.errorsByTextId.text[0]]]) {
+      const p=player(); p.parsedConfig.engineConfig.errorCount=errors.length;
+      p.parsedConfig.engineConfig.errorsByTextId.text=errors;
+      expect(()=>p.createPreviewReadingConfig({id:'text',content:'yalnız bugün.'})).toThrow();
+    }
+  });
   it('exposes bounded time and target count controls without rewriting the catalogue', () => {
     const config=configuration(); const keys=getCustomPreviewControls(config).map(control=>control.key);
     expect(keys).toContain('timeLimitSeconds'); expect(keys).toContain('errorCount');
