@@ -52,8 +52,9 @@ public sealed class UnreadTextSelectionTests
         var student = Guid.NewGuid();
         var type = ExerciseType.Create(Guid.NewGuid(), typeName, typeName, engine);
         Guid? age = engine == "error_analysis" ? Guid.NewGuid() : null;
-        var read = ReadingText.Create(Guid.Parse("10000000-0000-0000-0000-000000000001"), "Okunmuş", "bir iki üç dört", difficultyLevel: 2, targetAgeGroupId: age);
-        var unread = ReadingText.Create(Guid.Parse("10000000-0000-0000-0000-000000000002"), "Yeni", "beş altı yedi sekiz", difficultyLevel: 2, targetAgeGroupId: age);
+        var exerciseId = Guid.NewGuid(); Guid? sourceExerciseId = engine == "error_analysis" ? exerciseId : null;
+        var read = ReadingText.Create(Guid.Parse("10000000-0000-0000-0000-000000000001"), "Okunmuş", "bir iki üç dört", difficultyLevel: 2, targetAgeGroupId: age, exerciseId: sourceExerciseId);
+        var unread = ReadingText.Create(Guid.Parse("10000000-0000-0000-0000-000000000002"), "Yeni", "beş altı yedi sekiz", difficultyLevel: 2, targetAgeGroupId: age, exerciseId: sourceExerciseId);
         var configuration = engine == "error_analysis" ? JsonSerializer.Serialize(new {
             engineType = "error_analysis", engineConfig = new { content = new { source = "reading_text" }, errorCount = 1,
                 errorsByTextId = new Dictionary<string, object> {
@@ -61,7 +62,7 @@ public sealed class UnreadTextSelectionTests
                     [unread.Id.ToString()] = new[] { new { wordIndex = 0, originalWord = "beş", errorWord = "beşş" } }
                 } }
         }) : "{}";
-        var exercise = Exercise.Create("Çocuk", typeName, configuration, 2, student, type.Id, targetAgeGroupId: age);
+        var exercise = Exercise.Create("Çocuk", typeName, configuration, 2, student, type.Id, id: exerciseId, targetAgeGroupId: age);
         db.ExerciseTypes.Add(type);
         db.Exercises.Add(exercise);
         db.ReadingTexts.AddRange(read, unread);

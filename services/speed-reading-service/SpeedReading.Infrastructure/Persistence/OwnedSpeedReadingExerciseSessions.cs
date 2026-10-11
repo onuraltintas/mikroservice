@@ -164,7 +164,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                     && item.IsActive
                     && !item.IsDeleted
                     && (scanTaskIds.Length == 0 || Enumerable.Contains(scanTaskIds, item.Id))
-                    && (!isErrorText || Enumerable.Contains(errorTextIds, item.Id) && item.TargetAgeGroupId == profileAgeGroupId)
+                    && (!isErrorText || Enumerable.Contains(errorTextIds, item.Id) && item.TargetAgeGroupId == profileAgeGroupId
+                        && item.ExerciseId == request.ExerciseId)
                     && (!strictTextLevel || item.DifficultyLevel == difficultyLevel)
                     && (!usesTextBand || (item.WordCount >= minimumWords && (maximumWords == 0 || item.WordCount <= maximumWords)))
                     && (!profileAgeGroupId.HasValue
@@ -384,7 +385,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                         && !item.IsDeleted
                         && item.Content != string.Empty
                         && (scanTaskIds.Length == 0 || Enumerable.Contains(scanTaskIds, item.Id))
-                        && (!isErrorAnalysis || Enumerable.Contains(errorTextIds, item.Id) && item.TargetAgeGroupId == profileAgeGroupId)
+                        && (!isErrorAnalysis || Enumerable.Contains(errorTextIds, item.Id) && item.TargetAgeGroupId == profileAgeGroupId
+                            && item.ExerciseId == request.ExerciseId)
                         && (!(isExam || isFreeReading || isComprehension || isSkimming || isScanning || isGrouping || isTextFade || isRegression || isSubvocalization || isRsvp || isErrorAnalysis) || item.DifficultyLevel == difficultyLevel)
                         && (!usesTextBand || (item.WordCount >= freeMinimumWords && (freeMaximumWords == 0 || item.WordCount <= freeMaximumWords)))
                         && (!profileAgeGroupId.HasValue

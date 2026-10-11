@@ -9,6 +9,8 @@ const uuid=key=>{
   return `${hash.slice(0,8)}-${hash.slice(8,12)}-5${hash.slice(13,16)}-8${hash.slice(17,20)}-${hash.slice(20,32)}`;
 };
 const bands={child:[[180,240],[240,300]],teen:[[240,320],[320,400]],'young-adult':[[300,380],[380,460]],adult:[[340,420],[420,500]]};
+const ageLabels={child:'Çocuk',teen:'Genç','young-adult':'Genç yetişkin',adult:'Yetişkin'};
+const themes={garden:'Bahçe',library:'Kütüphane',map:'Harita',memory:'Bellek',bridge:'Köprü',archive:'Mahalle arşivi',repair:'Onarım atölyesi'};
 const pairs=read('./pairs.json');
 for(const pair of pairs) if(!pair.original||!pair.wrong||pair.original===pair.wrong||/\s/u.test(pair.wrong)) throw new Error('Invalid curated pair');
 const source=(age,key)=>['garden','library','map'].includes(key)?`../../grouping/v1/texts/${key}.txt`
@@ -51,7 +53,7 @@ for(const [age,lengths] of Object.entries(bands)) {
         .filter(row=>row.errors).sort((a,b)=>Math.abs(count(a.text)-(min+max)/2)-Math.abs(count(b.text)-(min+max)/2));
       if(!selections.length) throw new Error(`No annotated selection ${age}/${level}/${key}`);
       const chosen=selections[0],id=uuid(`${age}:${level}:${key}`); map[id]=chosen.errors;
-      content.push({id,exerciseId:row.id,ageGroupId:row.targetAgeGroupId,age,level,title:`Dikkatli editör — ${key} — ${age} S${level}`,
+      content.push({id,exerciseId:row.id,ageGroupId:row.targetAgeGroupId,age,level,title:`Dikkatli editör — ${themes[key]} — ${ageLabels[age]} Seviye ${level}`,
         content:chosen.text,wordCount:count(chosen.text),errors:chosen.errors,source:path,sourceSha256:createHash('sha256').update(original).digest('hex')});
     }
     row.configuration={engineType:'error_analysis',difficultyLevel:level,engineConfig:{
