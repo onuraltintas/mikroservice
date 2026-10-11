@@ -49,6 +49,28 @@ public sealed class FocusPersistenceTests
         Assert.Empty(db.ExerciseSessions);
     }
 
+    [Theory]
+    [InlineData(3)]
+    [InlineData(4)]
+    [InlineData(5)]
+    public async Task Feasible_later_configured_targets_never_fail_due_to_earlier_random_positions(int nLevel)
+    {
+        var generate = typeof(OwnedSpeedReadingDbContext).Assembly
+            .GetType("SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingExerciseSessions")!
+            .GetMethod("CreateFocusPositionSequence", BindingFlags.NonPublic | BindingFlags.Static)!;
+        var targets = Enumerable.Range(nLevel + 1, 100 - nLevel - 1).Where(index => index % nLevel == 1).ToArray();
+        for (var attempt = 0; attempt < 100; attempt++)
+        {
+            var positions = (int[])generate.Invoke(null, [100, nLevel, 3, targets])!;
+            for (var index = 1; index < positions.Length; index++)
+            {
+                Assert.NotEqual(positions[index - 1], positions[index]);
+                if (index >= nLevel)
+                    Assert.Equal(targets.Contains(index), positions[index] == positions[index - nLevel]);
+            }
+        }
+    }
+
     [Fact]
     public async Task Pause_before_focus_start_does_not_reduce_exercise_active_time()
     {
