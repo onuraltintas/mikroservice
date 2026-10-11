@@ -15,6 +15,11 @@ describe('bounded RSVP preview', () => {
     const p=player();expect(p.previewTextMatchesLength(1)).toBeFalse();expect(p.previewTextMatchesLength(5)).toBeFalse();
     expect(p.previewTextMatchesLength(3)).toBeTrue();
   });
+  it('passes the loaded text words to the RSVP engine instead of only custom content items',()=>{
+    const p=player();const preview=p.createPreviewReadingConfig({id:'text',content:'bir iki üç',wordCount:3,
+      questions:Array.from({length:5},(_,i)=>question(i))});
+    expect(preview.words).toEqual(['bir','iki','üç']);
+  });
   for (const count of [4,5,6]) it(`requires exactly five valid preview questions from a pool of ${count}`,()=>{
     const p=player();p.exerciseService={getReadingText:()=>of({id:'text',content:'bir iki üç',wordCount:3,difficultyLevel:4,
       questions:Array.from({length:count},(_,i)=>question(i))})};
