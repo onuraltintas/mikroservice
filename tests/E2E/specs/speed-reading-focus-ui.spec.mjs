@@ -150,3 +150,49 @@ test('short N-back practice and lower load never write results or advance a prog
   await expect(page.getByRole('status').filter({ hasText: /Önizleme sonucu.*kaydedilmedi/ })).toBeVisible();
   expect(writes).toEqual([]); expect(errors).toEqual([]);
 });
+
+test('student higher load practice never starts the scored clock or writes completion', async ({ page }) => {
+  const { errors, configuration } = await prepare(page, 'Student', 'position');
+  configuration.engineConfig.nLevel = 2;
+  const actions = [], writes = [];
+  let dailyCompletions = 0;
+  await page.route('**/api/**/daily-progress/complete-exercise', route => {
+    dailyCompletions++;
+    return route.fulfill({ json: {} });
+  });
+  await page.route(`**/api/**/exercises/${exerciseId}`, route => route.fulfill({ json: {
+    id: exerciseId, exerciseTypeId: typeId, title: '2-back testi', difficultyLevel: 3,
+    exerciseTypeName: 'Focus', configurationJson: JSON.stringify(configuration)
+  } }));
+  await page.route('**/api/**/exercise-sessions/**', async route => {
+    const path = new URL(route.request().url()).pathname;
+    writes.push(path);
+    let response = {};
+    if (path.endsWith('/start')) response = { sessionId: 'owned-focus', exerciseId, totalSteps: 3, configuration,
+      initialData: { engineType: 'focus', focusMode: 'position', focusNLevel: 2, focusSpeedMs: 1000,
+        gridSize: 3, positionSequence: [1,2,1], totalSteps: 3 } };
+    else if (path.endsWith('/validate')) {
+      const action = route.request().postDataJSON(); actions.push(action.action);
+      response = { isValid: true, isCompleted: action.action === 'complete', feedbackData: { hits: 0, misses: 0, falseAlarms: 0 } };
+    } else if (path.endsWith('/complete')) response = { correctCount: 0, incorrectCount: 0, accuracy: 0, score: 0,
+      rawWPM: null, wordsRead: null, comprehensionScore: null, measurementStatus: 'Measured', detailedResults: {} };
+    await route.fulfill({ json: response });
+  });
+  await page.goto(`/student/exercises/universal-player/${exerciseId}`, { waitUntil: 'domcontentloaded' });
+  await expect(page.locator('.start-button-large')).toBeVisible();
+  expect(writes).toHaveLength(1);
+  await page.clock.install(); await page.clock.pauseAt(new Date());
+  await page.locator('.start-button-large').click();
+  await expect(page.getByRole('status').filter({ hasText: /Puanlanmayan alıştırma/ })).toBeVisible();
+  const pause = page.locator('.mental-registration-container .header-section.right button').first();
+  await page.clock.runFor(1000); await pause.click(); await page.clock.runFor(10000);
+  await expect(page.getByRole('status').filter({ hasText: /Puanlanmayan alıştırma/ })).toBeVisible();
+  expect(actions).toEqual([]); expect(writes).toHaveLength(1); expect(dailyCompletions).toBe(0);
+  await pause.click(); await page.clock.runFor(7500);
+  await expect(page.locator('.start-button-large')).toBeVisible();
+  expect(actions).toEqual([]); expect(writes).toHaveLength(1); expect(dailyCompletions).toBe(0);
+  await page.locator('.start-button-large').click(); await page.clock.runFor(3500);
+  await expect.poll(() => actions).toEqual(['focus_start', 'complete']);
+  await expect(page.getByRole('status').filter({ hasText: /kaydedildi/ })).toBeVisible();
+  expect(errors).toEqual([]);
+});

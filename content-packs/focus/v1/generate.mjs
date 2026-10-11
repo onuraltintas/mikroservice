@@ -9,6 +9,7 @@ const ages = {
 const settingsUrl = new URL('./settings.json', import.meta.url);
 const previous = existsSync(settingsUrl) ? JSON.parse(readFileSync(settingsUrl, 'utf8')) : [];
 const patches = [];
+const durationImpact = [];
 for (const [age, values] of Object.entries(ages)) {
   const url = new URL(`../../${age}-exercises/v1/catalog.json`, import.meta.url);
   const catalog = JSON.parse(readFileSync(url, 'utf8'));
@@ -27,9 +28,24 @@ for (const [age, values] of Object.entries(ages)) {
   let index = 0;
   writeFileSync(markdown, readFileSync(markdown, 'utf8').replace(/^(.*\| Focus \| )`[^`]*`(.*)$/gm,
     (_, prefix, suffix) => `${prefix}\`${JSON.stringify(rows[index++].configuration.engineConfig)}\`${suffix}`));
+  const programs = JSON.parse(readFileSync(new URL(`../../../infrastructure/data/${age}-program-plan-v2.json`, import.meta.url), 'utf8'));
+  const plans = programs.programs ?? values.map((_, index) => ({ level: index + 1, days: programs.days }));
+  for (const program of plans) {
+    const config = rows[program.level - 1].configuration.engineConfig;
+    const seconds = config.speedMs * config.totalSteps / 1000;
+    durationImpact.push({ age, level: program.level, nLevel: config.nLevel, scoredDurationSeconds: seconds,
+      days: program.days.map((tasks, index) => {
+        const focusSlots = tasks.filter(type => type === 'Focus').length;
+        return { day: index + 1, focusSlots, focusDurationSeconds: Math.round(focusSlots * seconds * 10) / 10,
+          // Keep the existing five-minute estimate for other tasks. This is not
+          // a guarantee of actual daily time, especially for response-based tasks.
+          estimatedDailyMinutes: (tasks.length - focusSlots) * 5 + focusSlots * Math.ceil(seconds / 60) };
+      }) });
+  }
 }
 const settings = JSON.stringify(patches, null, 2);
 writeFileSync(settingsUrl, settings + '\n');
 const template = readFileSync(new URL('./apply.template.sql', import.meta.url), 'utf8');
 writeFileSync(new URL('./apply.sql', import.meta.url), template.replace('{{SETTINGS}}', settings));
+writeFileSync(new URL('./duration-impact.json', import.meta.url), JSON.stringify(durationImpact, null, 2) + '\n');
 console.log(`Generated ${patches.length} Focus training updates.`);

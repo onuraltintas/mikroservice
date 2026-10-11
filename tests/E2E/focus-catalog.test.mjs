@@ -23,3 +23,21 @@ for (const [age, expected] of Object.entries(ages)) {
     });
   });
 }
+
+test('daily duration impact counts repeated Focus slots separately for all 560 program days', () => {
+  const impact = JSON.parse(readFileSync(new URL('../../content-packs/focus/v1/duration-impact.json', import.meta.url)));
+  assert.equal(impact.length, 20);
+  for (const entry of impact) {
+    const programs = JSON.parse(readFileSync(new URL(`../../infrastructure/data/${entry.age}-program-plan-v2.json`, import.meta.url)));
+    const program = programs.programs?.find(row => row.level === entry.level) ?? { days: programs.days };
+    const [, speed, trials] = ages[entry.age][entry.level - 1];
+    assert.equal(entry.scoredDurationSeconds, speed * trials / 1000);
+    assert.equal(entry.days.length, 28);
+    entry.days.forEach((day, index) => {
+      const slots = program.days[index].filter(type => type === 'Focus').length;
+      assert.equal(day.focusSlots, slots);
+      assert.equal(day.focusDurationSeconds, Math.round(slots * speed * trials / 100) / 10);
+      assert.equal(day.estimatedDailyMinutes, (program.days[index].length - slots) * 5 + slots * Math.ceil(speed * trials / 60000));
+    });
+  }
+});

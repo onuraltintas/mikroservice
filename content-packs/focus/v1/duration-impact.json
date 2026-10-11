@@ -1,0 +1,3522 @@
+[
+  {
+    "age": "child",
+    "level": 1,
+    "nLevel": 1,
+    "scoredDurationSeconds": 96,
+    "days": [
+      {
+        "day": 1,
+        "focusSlots": 1,
+        "focusDurationSeconds": 96,
+        "estimatedDailyMinutes": 27
+      },
+      {
+        "day": 2,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 3,
+        "focusSlots": 1,
+        "focusDurationSeconds": 96,
+        "estimatedDailyMinutes": 27
+      },
+      {
+        "day": 4,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 5,
+        "focusSlots": 1,
+        "focusDurationSeconds": 96,
+        "estimatedDailyMinutes": 27
+      },
+      {
+        "day": 6,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 7,
+        "focusSlots": 1,
+        "focusDurationSeconds": 96,
+        "estimatedDailyMinutes": 27
+      },
+      {
+        "day": 8,
+        "focusSlots": 1,
+        "focusDurationSeconds": 96,
+        "estimatedDailyMinutes": 27
+      },
+      {
+        "day": 9,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 10,
+        "focusSlots": 2,
+        "focusDurationSeconds": 192,
+        "estimatedDailyMinutes": 24
+      },
+      {
+        "day": 11,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 12,
+        "focusSlots": 1,
+        "focusDurationSeconds": 96,
+        "estimatedDailyMinutes": 27
+      },
+      {
+        "day": 13,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 14,
+        "focusSlots": 1,
+        "focusDurationSeconds": 96,
+        "estimatedDailyMinutes": 27
+      },
+      {
+        "day": 15,
+        "focusSlots": 1,
+        "focusDurationSeconds": 96,
+        "estimatedDailyMinutes": 32
+      },
+      {
+        "day": 16,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 17,
+        "focusSlots": 1,
+        "focusDurationSeconds": 96,
+        "estimatedDailyMinutes": 32
+      },
+      {
+        "day": 18,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 19,
+        "focusSlots": 1,
+        "focusDurationSeconds": 96,
+        "estimatedDailyMinutes": 32
+      },
+      {
+        "day": 20,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 21,
+        "focusSlots": 1,
+        "focusDurationSeconds": 96,
+        "estimatedDailyMinutes": 32
+      },
+      {
+        "day": 22,
+        "focusSlots": 1,
+        "focusDurationSeconds": 96,
+        "estimatedDailyMinutes": 32
+      },
+      {
+        "day": 23,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 24,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 25,
+        "focusSlots": 1,
+        "focusDurationSeconds": 96,
+        "estimatedDailyMinutes": 32
+      },
+      {
+        "day": 26,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 27,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 28,
+        "focusSlots": 1,
+        "focusDurationSeconds": 96,
+        "estimatedDailyMinutes": 32
+      }
+    ]
+  },
+  {
+    "age": "child",
+    "level": 2,
+    "nLevel": 1,
+    "scoredDurationSeconds": 112,
+    "days": [
+      {
+        "day": 1,
+        "focusSlots": 1,
+        "focusDurationSeconds": 112,
+        "estimatedDailyMinutes": 27
+      },
+      {
+        "day": 2,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 3,
+        "focusSlots": 1,
+        "focusDurationSeconds": 112,
+        "estimatedDailyMinutes": 27
+      },
+      {
+        "day": 4,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 5,
+        "focusSlots": 1,
+        "focusDurationSeconds": 112,
+        "estimatedDailyMinutes": 27
+      },
+      {
+        "day": 6,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 7,
+        "focusSlots": 1,
+        "focusDurationSeconds": 112,
+        "estimatedDailyMinutes": 27
+      },
+      {
+        "day": 8,
+        "focusSlots": 1,
+        "focusDurationSeconds": 112,
+        "estimatedDailyMinutes": 27
+      },
+      {
+        "day": 9,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 10,
+        "focusSlots": 2,
+        "focusDurationSeconds": 224,
+        "estimatedDailyMinutes": 24
+      },
+      {
+        "day": 11,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 12,
+        "focusSlots": 1,
+        "focusDurationSeconds": 112,
+        "estimatedDailyMinutes": 27
+      },
+      {
+        "day": 13,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 14,
+        "focusSlots": 1,
+        "focusDurationSeconds": 112,
+        "estimatedDailyMinutes": 27
+      },
+      {
+        "day": 15,
+        "focusSlots": 1,
+        "focusDurationSeconds": 112,
+        "estimatedDailyMinutes": 32
+      },
+      {
+        "day": 16,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 17,
+        "focusSlots": 1,
+        "focusDurationSeconds": 112,
+        "estimatedDailyMinutes": 32
+      },
+      {
+        "day": 18,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 19,
+        "focusSlots": 1,
+        "focusDurationSeconds": 112,
+        "estimatedDailyMinutes": 32
+      },
+      {
+        "day": 20,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 21,
+        "focusSlots": 1,
+        "focusDurationSeconds": 112,
+        "estimatedDailyMinutes": 32
+      },
+      {
+        "day": 22,
+        "focusSlots": 1,
+        "focusDurationSeconds": 112,
+        "estimatedDailyMinutes": 32
+      },
+      {
+        "day": 23,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 24,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 25,
+        "focusSlots": 1,
+        "focusDurationSeconds": 112,
+        "estimatedDailyMinutes": 32
+      },
+      {
+        "day": 26,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 27,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 28,
+        "focusSlots": 1,
+        "focusDurationSeconds": 112,
+        "estimatedDailyMinutes": 32
+      }
+    ]
+  },
+  {
+    "age": "child",
+    "level": 3,
+    "nLevel": 1,
+    "scoredDurationSeconds": 124.8,
+    "days": [
+      {
+        "day": 1,
+        "focusSlots": 1,
+        "focusDurationSeconds": 124.8,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 2,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 3,
+        "focusSlots": 1,
+        "focusDurationSeconds": 124.8,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 4,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 5,
+        "focusSlots": 1,
+        "focusDurationSeconds": 124.8,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 6,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 7,
+        "focusSlots": 1,
+        "focusDurationSeconds": 124.8,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 8,
+        "focusSlots": 1,
+        "focusDurationSeconds": 124.8,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 9,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 10,
+        "focusSlots": 2,
+        "focusDurationSeconds": 249.6,
+        "estimatedDailyMinutes": 26
+      },
+      {
+        "day": 11,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 12,
+        "focusSlots": 1,
+        "focusDurationSeconds": 124.8,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 13,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 14,
+        "focusSlots": 1,
+        "focusDurationSeconds": 124.8,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 15,
+        "focusSlots": 1,
+        "focusDurationSeconds": 124.8,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 16,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 17,
+        "focusSlots": 1,
+        "focusDurationSeconds": 124.8,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 18,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 19,
+        "focusSlots": 1,
+        "focusDurationSeconds": 124.8,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 20,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 21,
+        "focusSlots": 1,
+        "focusDurationSeconds": 124.8,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 22,
+        "focusSlots": 1,
+        "focusDurationSeconds": 124.8,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 23,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 24,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 25,
+        "focusSlots": 1,
+        "focusDurationSeconds": 124.8,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 26,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 27,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 28,
+        "focusSlots": 1,
+        "focusDurationSeconds": 124.8,
+        "estimatedDailyMinutes": 33
+      }
+    ]
+  },
+  {
+    "age": "child",
+    "level": 4,
+    "nLevel": 2,
+    "scoredDurationSeconds": 144,
+    "days": [
+      {
+        "day": 1,
+        "focusSlots": 1,
+        "focusDurationSeconds": 144,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 2,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 3,
+        "focusSlots": 1,
+        "focusDurationSeconds": 144,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 4,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 5,
+        "focusSlots": 1,
+        "focusDurationSeconds": 144,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 6,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 7,
+        "focusSlots": 1,
+        "focusDurationSeconds": 144,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 8,
+        "focusSlots": 1,
+        "focusDurationSeconds": 144,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 9,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 10,
+        "focusSlots": 2,
+        "focusDurationSeconds": 288,
+        "estimatedDailyMinutes": 26
+      },
+      {
+        "day": 11,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 12,
+        "focusSlots": 1,
+        "focusDurationSeconds": 144,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 13,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 14,
+        "focusSlots": 1,
+        "focusDurationSeconds": 144,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 15,
+        "focusSlots": 1,
+        "focusDurationSeconds": 144,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 16,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 17,
+        "focusSlots": 1,
+        "focusDurationSeconds": 144,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 18,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 19,
+        "focusSlots": 1,
+        "focusDurationSeconds": 144,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 20,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 21,
+        "focusSlots": 1,
+        "focusDurationSeconds": 144,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 22,
+        "focusSlots": 1,
+        "focusDurationSeconds": 144,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 23,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 24,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 25,
+        "focusSlots": 1,
+        "focusDurationSeconds": 144,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 26,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 27,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 28,
+        "focusSlots": 1,
+        "focusDurationSeconds": 144,
+        "estimatedDailyMinutes": 33
+      }
+    ]
+  },
+  {
+    "age": "child",
+    "level": 5,
+    "nLevel": 2,
+    "scoredDurationSeconds": 156.8,
+    "days": [
+      {
+        "day": 1,
+        "focusSlots": 1,
+        "focusDurationSeconds": 156.8,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 2,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 3,
+        "focusSlots": 1,
+        "focusDurationSeconds": 156.8,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 4,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 5,
+        "focusSlots": 1,
+        "focusDurationSeconds": 156.8,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 6,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 7,
+        "focusSlots": 1,
+        "focusDurationSeconds": 156.8,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 8,
+        "focusSlots": 1,
+        "focusDurationSeconds": 156.8,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 9,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 10,
+        "focusSlots": 2,
+        "focusDurationSeconds": 313.6,
+        "estimatedDailyMinutes": 26
+      },
+      {
+        "day": 11,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 12,
+        "focusSlots": 1,
+        "focusDurationSeconds": 156.8,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 13,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 14,
+        "focusSlots": 1,
+        "focusDurationSeconds": 156.8,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 15,
+        "focusSlots": 1,
+        "focusDurationSeconds": 156.8,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 16,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 17,
+        "focusSlots": 1,
+        "focusDurationSeconds": 156.8,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 18,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 19,
+        "focusSlots": 1,
+        "focusDurationSeconds": 156.8,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 20,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 21,
+        "focusSlots": 1,
+        "focusDurationSeconds": 156.8,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 22,
+        "focusSlots": 1,
+        "focusDurationSeconds": 156.8,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 23,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 24,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 25,
+        "focusSlots": 1,
+        "focusDurationSeconds": 156.8,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 26,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 27,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 28,
+        "focusSlots": 1,
+        "focusDurationSeconds": 156.8,
+        "estimatedDailyMinutes": 33
+      }
+    ]
+  },
+  {
+    "age": "teen",
+    "level": 1,
+    "nLevel": 1,
+    "scoredDurationSeconds": 112,
+    "days": [
+      {
+        "day": 1,
+        "focusSlots": 1,
+        "focusDurationSeconds": 112,
+        "estimatedDailyMinutes": 27
+      },
+      {
+        "day": 2,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 3,
+        "focusSlots": 1,
+        "focusDurationSeconds": 112,
+        "estimatedDailyMinutes": 27
+      },
+      {
+        "day": 4,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 5,
+        "focusSlots": 1,
+        "focusDurationSeconds": 112,
+        "estimatedDailyMinutes": 27
+      },
+      {
+        "day": 6,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 7,
+        "focusSlots": 1,
+        "focusDurationSeconds": 112,
+        "estimatedDailyMinutes": 27
+      },
+      {
+        "day": 8,
+        "focusSlots": 1,
+        "focusDurationSeconds": 112,
+        "estimatedDailyMinutes": 27
+      },
+      {
+        "day": 9,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 10,
+        "focusSlots": 2,
+        "focusDurationSeconds": 224,
+        "estimatedDailyMinutes": 24
+      },
+      {
+        "day": 11,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 12,
+        "focusSlots": 1,
+        "focusDurationSeconds": 112,
+        "estimatedDailyMinutes": 27
+      },
+      {
+        "day": 13,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 14,
+        "focusSlots": 1,
+        "focusDurationSeconds": 112,
+        "estimatedDailyMinutes": 27
+      },
+      {
+        "day": 15,
+        "focusSlots": 1,
+        "focusDurationSeconds": 112,
+        "estimatedDailyMinutes": 32
+      },
+      {
+        "day": 16,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 17,
+        "focusSlots": 1,
+        "focusDurationSeconds": 112,
+        "estimatedDailyMinutes": 32
+      },
+      {
+        "day": 18,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 19,
+        "focusSlots": 1,
+        "focusDurationSeconds": 112,
+        "estimatedDailyMinutes": 32
+      },
+      {
+        "day": 20,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 21,
+        "focusSlots": 1,
+        "focusDurationSeconds": 112,
+        "estimatedDailyMinutes": 32
+      },
+      {
+        "day": 22,
+        "focusSlots": 1,
+        "focusDurationSeconds": 112,
+        "estimatedDailyMinutes": 32
+      },
+      {
+        "day": 23,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 24,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 25,
+        "focusSlots": 1,
+        "focusDurationSeconds": 112,
+        "estimatedDailyMinutes": 32
+      },
+      {
+        "day": 26,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 27,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 28,
+        "focusSlots": 1,
+        "focusDurationSeconds": 112,
+        "estimatedDailyMinutes": 32
+      }
+    ]
+  },
+  {
+    "age": "teen",
+    "level": 2,
+    "nLevel": 1,
+    "scoredDurationSeconds": 120,
+    "days": [
+      {
+        "day": 1,
+        "focusSlots": 1,
+        "focusDurationSeconds": 120,
+        "estimatedDailyMinutes": 27
+      },
+      {
+        "day": 2,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 3,
+        "focusSlots": 1,
+        "focusDurationSeconds": 120,
+        "estimatedDailyMinutes": 27
+      },
+      {
+        "day": 4,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 5,
+        "focusSlots": 1,
+        "focusDurationSeconds": 120,
+        "estimatedDailyMinutes": 27
+      },
+      {
+        "day": 6,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 7,
+        "focusSlots": 1,
+        "focusDurationSeconds": 120,
+        "estimatedDailyMinutes": 27
+      },
+      {
+        "day": 8,
+        "focusSlots": 1,
+        "focusDurationSeconds": 120,
+        "estimatedDailyMinutes": 27
+      },
+      {
+        "day": 9,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 10,
+        "focusSlots": 2,
+        "focusDurationSeconds": 240,
+        "estimatedDailyMinutes": 24
+      },
+      {
+        "day": 11,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 12,
+        "focusSlots": 1,
+        "focusDurationSeconds": 120,
+        "estimatedDailyMinutes": 27
+      },
+      {
+        "day": 13,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 14,
+        "focusSlots": 1,
+        "focusDurationSeconds": 120,
+        "estimatedDailyMinutes": 27
+      },
+      {
+        "day": 15,
+        "focusSlots": 1,
+        "focusDurationSeconds": 120,
+        "estimatedDailyMinutes": 32
+      },
+      {
+        "day": 16,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 17,
+        "focusSlots": 1,
+        "focusDurationSeconds": 120,
+        "estimatedDailyMinutes": 32
+      },
+      {
+        "day": 18,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 19,
+        "focusSlots": 1,
+        "focusDurationSeconds": 120,
+        "estimatedDailyMinutes": 32
+      },
+      {
+        "day": 20,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 21,
+        "focusSlots": 1,
+        "focusDurationSeconds": 120,
+        "estimatedDailyMinutes": 32
+      },
+      {
+        "day": 22,
+        "focusSlots": 1,
+        "focusDurationSeconds": 120,
+        "estimatedDailyMinutes": 32
+      },
+      {
+        "day": 23,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 24,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 25,
+        "focusSlots": 1,
+        "focusDurationSeconds": 120,
+        "estimatedDailyMinutes": 32
+      },
+      {
+        "day": 26,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 27,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 28,
+        "focusSlots": 1,
+        "focusDurationSeconds": 120,
+        "estimatedDailyMinutes": 32
+      }
+    ]
+  },
+  {
+    "age": "teen",
+    "level": 3,
+    "nLevel": 2,
+    "scoredDurationSeconds": 134.4,
+    "days": [
+      {
+        "day": 1,
+        "focusSlots": 1,
+        "focusDurationSeconds": 134.4,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 2,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 3,
+        "focusSlots": 1,
+        "focusDurationSeconds": 134.4,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 4,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 5,
+        "focusSlots": 1,
+        "focusDurationSeconds": 134.4,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 6,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 7,
+        "focusSlots": 1,
+        "focusDurationSeconds": 134.4,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 8,
+        "focusSlots": 1,
+        "focusDurationSeconds": 134.4,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 9,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 10,
+        "focusSlots": 2,
+        "focusDurationSeconds": 268.8,
+        "estimatedDailyMinutes": 26
+      },
+      {
+        "day": 11,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 12,
+        "focusSlots": 1,
+        "focusDurationSeconds": 134.4,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 13,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 14,
+        "focusSlots": 1,
+        "focusDurationSeconds": 134.4,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 15,
+        "focusSlots": 1,
+        "focusDurationSeconds": 134.4,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 16,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 17,
+        "focusSlots": 1,
+        "focusDurationSeconds": 134.4,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 18,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 19,
+        "focusSlots": 1,
+        "focusDurationSeconds": 134.4,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 20,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 21,
+        "focusSlots": 1,
+        "focusDurationSeconds": 134.4,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 22,
+        "focusSlots": 1,
+        "focusDurationSeconds": 134.4,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 23,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 24,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 25,
+        "focusSlots": 1,
+        "focusDurationSeconds": 134.4,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 26,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 27,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 28,
+        "focusSlots": 1,
+        "focusDurationSeconds": 134.4,
+        "estimatedDailyMinutes": 33
+      }
+    ]
+  },
+  {
+    "age": "teen",
+    "level": 4,
+    "nLevel": 2,
+    "scoredDurationSeconds": 140,
+    "days": [
+      {
+        "day": 1,
+        "focusSlots": 1,
+        "focusDurationSeconds": 140,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 2,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 3,
+        "focusSlots": 1,
+        "focusDurationSeconds": 140,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 4,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 5,
+        "focusSlots": 1,
+        "focusDurationSeconds": 140,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 6,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 7,
+        "focusSlots": 1,
+        "focusDurationSeconds": 140,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 8,
+        "focusSlots": 1,
+        "focusDurationSeconds": 140,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 9,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 10,
+        "focusSlots": 2,
+        "focusDurationSeconds": 280,
+        "estimatedDailyMinutes": 26
+      },
+      {
+        "day": 11,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 12,
+        "focusSlots": 1,
+        "focusDurationSeconds": 140,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 13,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 14,
+        "focusSlots": 1,
+        "focusDurationSeconds": 140,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 15,
+        "focusSlots": 1,
+        "focusDurationSeconds": 140,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 16,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 17,
+        "focusSlots": 1,
+        "focusDurationSeconds": 140,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 18,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 19,
+        "focusSlots": 1,
+        "focusDurationSeconds": 140,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 20,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 21,
+        "focusSlots": 1,
+        "focusDurationSeconds": 140,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 22,
+        "focusSlots": 1,
+        "focusDurationSeconds": 140,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 23,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 24,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 25,
+        "focusSlots": 1,
+        "focusDurationSeconds": 140,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 26,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 27,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 28,
+        "focusSlots": 1,
+        "focusDurationSeconds": 140,
+        "estimatedDailyMinutes": 33
+      }
+    ]
+  },
+  {
+    "age": "teen",
+    "level": 5,
+    "nLevel": 3,
+    "scoredDurationSeconds": 168,
+    "days": [
+      {
+        "day": 1,
+        "focusSlots": 1,
+        "focusDurationSeconds": 168,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 2,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 3,
+        "focusSlots": 1,
+        "focusDurationSeconds": 168,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 4,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 5,
+        "focusSlots": 1,
+        "focusDurationSeconds": 168,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 6,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 7,
+        "focusSlots": 1,
+        "focusDurationSeconds": 168,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 8,
+        "focusSlots": 1,
+        "focusDurationSeconds": 168,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 9,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 10,
+        "focusSlots": 2,
+        "focusDurationSeconds": 336,
+        "estimatedDailyMinutes": 26
+      },
+      {
+        "day": 11,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 12,
+        "focusSlots": 1,
+        "focusDurationSeconds": 168,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 13,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 14,
+        "focusSlots": 1,
+        "focusDurationSeconds": 168,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 15,
+        "focusSlots": 1,
+        "focusDurationSeconds": 168,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 16,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 17,
+        "focusSlots": 1,
+        "focusDurationSeconds": 168,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 18,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 19,
+        "focusSlots": 1,
+        "focusDurationSeconds": 168,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 20,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 21,
+        "focusSlots": 1,
+        "focusDurationSeconds": 168,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 22,
+        "focusSlots": 1,
+        "focusDurationSeconds": 168,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 23,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 24,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 25,
+        "focusSlots": 1,
+        "focusDurationSeconds": 168,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 26,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 27,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 28,
+        "focusSlots": 1,
+        "focusDurationSeconds": 168,
+        "estimatedDailyMinutes": 33
+      }
+    ]
+  },
+  {
+    "age": "young-adult",
+    "level": 1,
+    "nLevel": 1,
+    "scoredDurationSeconds": 124.8,
+    "days": [
+      {
+        "day": 1,
+        "focusSlots": 1,
+        "focusDurationSeconds": 124.8,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 2,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 3,
+        "focusSlots": 1,
+        "focusDurationSeconds": 124.8,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 4,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 5,
+        "focusSlots": 1,
+        "focusDurationSeconds": 124.8,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 6,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 7,
+        "focusSlots": 1,
+        "focusDurationSeconds": 124.8,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 8,
+        "focusSlots": 1,
+        "focusDurationSeconds": 124.8,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 9,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 10,
+        "focusSlots": 2,
+        "focusDurationSeconds": 249.6,
+        "estimatedDailyMinutes": 26
+      },
+      {
+        "day": 11,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 12,
+        "focusSlots": 1,
+        "focusDurationSeconds": 124.8,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 13,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 14,
+        "focusSlots": 1,
+        "focusDurationSeconds": 124.8,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 15,
+        "focusSlots": 1,
+        "focusDurationSeconds": 124.8,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 16,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 17,
+        "focusSlots": 1,
+        "focusDurationSeconds": 124.8,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 18,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 19,
+        "focusSlots": 1,
+        "focusDurationSeconds": 124.8,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 20,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 21,
+        "focusSlots": 1,
+        "focusDurationSeconds": 124.8,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 22,
+        "focusSlots": 1,
+        "focusDurationSeconds": 124.8,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 23,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 24,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 25,
+        "focusSlots": 1,
+        "focusDurationSeconds": 124.8,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 26,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 27,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 28,
+        "focusSlots": 1,
+        "focusDurationSeconds": 124.8,
+        "estimatedDailyMinutes": 33
+      }
+    ]
+  },
+  {
+    "age": "young-adult",
+    "level": 2,
+    "nLevel": 2,
+    "scoredDurationSeconds": 139.2,
+    "days": [
+      {
+        "day": 1,
+        "focusSlots": 1,
+        "focusDurationSeconds": 139.2,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 2,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 3,
+        "focusSlots": 1,
+        "focusDurationSeconds": 139.2,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 4,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 5,
+        "focusSlots": 1,
+        "focusDurationSeconds": 139.2,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 6,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 7,
+        "focusSlots": 1,
+        "focusDurationSeconds": 139.2,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 8,
+        "focusSlots": 1,
+        "focusDurationSeconds": 139.2,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 9,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 10,
+        "focusSlots": 2,
+        "focusDurationSeconds": 278.4,
+        "estimatedDailyMinutes": 26
+      },
+      {
+        "day": 11,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 12,
+        "focusSlots": 1,
+        "focusDurationSeconds": 139.2,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 13,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 14,
+        "focusSlots": 1,
+        "focusDurationSeconds": 139.2,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 15,
+        "focusSlots": 1,
+        "focusDurationSeconds": 139.2,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 16,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 17,
+        "focusSlots": 1,
+        "focusDurationSeconds": 139.2,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 18,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 19,
+        "focusSlots": 1,
+        "focusDurationSeconds": 139.2,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 20,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 21,
+        "focusSlots": 1,
+        "focusDurationSeconds": 139.2,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 22,
+        "focusSlots": 1,
+        "focusDurationSeconds": 139.2,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 23,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 24,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 25,
+        "focusSlots": 1,
+        "focusDurationSeconds": 139.2,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 26,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 27,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 28,
+        "focusSlots": 1,
+        "focusDurationSeconds": 139.2,
+        "estimatedDailyMinutes": 33
+      }
+    ]
+  },
+  {
+    "age": "young-adult",
+    "level": 3,
+    "nLevel": 2,
+    "scoredDurationSeconds": 145.6,
+    "days": [
+      {
+        "day": 1,
+        "focusSlots": 1,
+        "focusDurationSeconds": 145.6,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 2,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 3,
+        "focusSlots": 1,
+        "focusDurationSeconds": 145.6,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 4,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 5,
+        "focusSlots": 1,
+        "focusDurationSeconds": 145.6,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 6,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 7,
+        "focusSlots": 1,
+        "focusDurationSeconds": 145.6,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 8,
+        "focusSlots": 1,
+        "focusDurationSeconds": 145.6,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 9,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 10,
+        "focusSlots": 2,
+        "focusDurationSeconds": 291.2,
+        "estimatedDailyMinutes": 26
+      },
+      {
+        "day": 11,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 12,
+        "focusSlots": 1,
+        "focusDurationSeconds": 145.6,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 13,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 14,
+        "focusSlots": 1,
+        "focusDurationSeconds": 145.6,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 15,
+        "focusSlots": 1,
+        "focusDurationSeconds": 145.6,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 16,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 17,
+        "focusSlots": 1,
+        "focusDurationSeconds": 145.6,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 18,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 19,
+        "focusSlots": 1,
+        "focusDurationSeconds": 145.6,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 20,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 21,
+        "focusSlots": 1,
+        "focusDurationSeconds": 145.6,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 22,
+        "focusSlots": 1,
+        "focusDurationSeconds": 145.6,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 23,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 24,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 25,
+        "focusSlots": 1,
+        "focusDurationSeconds": 145.6,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 26,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 27,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 28,
+        "focusSlots": 1,
+        "focusDurationSeconds": 145.6,
+        "estimatedDailyMinutes": 33
+      }
+    ]
+  },
+  {
+    "age": "young-adult",
+    "level": 4,
+    "nLevel": 3,
+    "scoredDurationSeconds": 168,
+    "days": [
+      {
+        "day": 1,
+        "focusSlots": 1,
+        "focusDurationSeconds": 168,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 2,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 3,
+        "focusSlots": 1,
+        "focusDurationSeconds": 168,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 4,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 5,
+        "focusSlots": 1,
+        "focusDurationSeconds": 168,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 6,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 7,
+        "focusSlots": 1,
+        "focusDurationSeconds": 168,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 8,
+        "focusSlots": 1,
+        "focusDurationSeconds": 168,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 9,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 10,
+        "focusSlots": 2,
+        "focusDurationSeconds": 336,
+        "estimatedDailyMinutes": 26
+      },
+      {
+        "day": 11,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 12,
+        "focusSlots": 1,
+        "focusDurationSeconds": 168,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 13,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 14,
+        "focusSlots": 1,
+        "focusDurationSeconds": 168,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 15,
+        "focusSlots": 1,
+        "focusDurationSeconds": 168,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 16,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 17,
+        "focusSlots": 1,
+        "focusDurationSeconds": 168,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 18,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 19,
+        "focusSlots": 1,
+        "focusDurationSeconds": 168,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 20,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 21,
+        "focusSlots": 1,
+        "focusDurationSeconds": 168,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 22,
+        "focusSlots": 1,
+        "focusDurationSeconds": 168,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 23,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 24,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 25,
+        "focusSlots": 1,
+        "focusDurationSeconds": 168,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 26,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 27,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 28,
+        "focusSlots": 1,
+        "focusDurationSeconds": 168,
+        "estimatedDailyMinutes": 33
+      }
+    ]
+  },
+  {
+    "age": "young-adult",
+    "level": 5,
+    "nLevel": 3,
+    "scoredDurationSeconds": 172.8,
+    "days": [
+      {
+        "day": 1,
+        "focusSlots": 1,
+        "focusDurationSeconds": 172.8,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 2,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 3,
+        "focusSlots": 1,
+        "focusDurationSeconds": 172.8,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 4,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 5,
+        "focusSlots": 1,
+        "focusDurationSeconds": 172.8,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 6,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 7,
+        "focusSlots": 1,
+        "focusDurationSeconds": 172.8,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 8,
+        "focusSlots": 1,
+        "focusDurationSeconds": 172.8,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 9,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 10,
+        "focusSlots": 2,
+        "focusDurationSeconds": 345.6,
+        "estimatedDailyMinutes": 26
+      },
+      {
+        "day": 11,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 12,
+        "focusSlots": 1,
+        "focusDurationSeconds": 172.8,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 13,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 14,
+        "focusSlots": 1,
+        "focusDurationSeconds": 172.8,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 15,
+        "focusSlots": 1,
+        "focusDurationSeconds": 172.8,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 16,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 17,
+        "focusSlots": 1,
+        "focusDurationSeconds": 172.8,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 18,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 19,
+        "focusSlots": 1,
+        "focusDurationSeconds": 172.8,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 20,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 21,
+        "focusSlots": 1,
+        "focusDurationSeconds": 172.8,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 22,
+        "focusSlots": 1,
+        "focusDurationSeconds": 172.8,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 23,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 24,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 25,
+        "focusSlots": 1,
+        "focusDurationSeconds": 172.8,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 26,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 27,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 28,
+        "focusSlots": 1,
+        "focusDurationSeconds": 172.8,
+        "estimatedDailyMinutes": 33
+      }
+    ]
+  },
+  {
+    "age": "adult",
+    "level": 1,
+    "nLevel": 1,
+    "scoredDurationSeconds": 129.6,
+    "days": [
+      {
+        "day": 1,
+        "focusSlots": 1,
+        "focusDurationSeconds": 129.6,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 2,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 3,
+        "focusSlots": 1,
+        "focusDurationSeconds": 129.6,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 4,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 5,
+        "focusSlots": 1,
+        "focusDurationSeconds": 129.6,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 6,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 7,
+        "focusSlots": 1,
+        "focusDurationSeconds": 129.6,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 8,
+        "focusSlots": 1,
+        "focusDurationSeconds": 129.6,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 9,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 10,
+        "focusSlots": 2,
+        "focusDurationSeconds": 259.2,
+        "estimatedDailyMinutes": 26
+      },
+      {
+        "day": 11,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 12,
+        "focusSlots": 1,
+        "focusDurationSeconds": 129.6,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 13,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 14,
+        "focusSlots": 1,
+        "focusDurationSeconds": 129.6,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 15,
+        "focusSlots": 1,
+        "focusDurationSeconds": 129.6,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 16,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 17,
+        "focusSlots": 1,
+        "focusDurationSeconds": 129.6,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 18,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 19,
+        "focusSlots": 1,
+        "focusDurationSeconds": 129.6,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 20,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 21,
+        "focusSlots": 1,
+        "focusDurationSeconds": 129.6,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 22,
+        "focusSlots": 1,
+        "focusDurationSeconds": 129.6,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 23,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 24,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 25,
+        "focusSlots": 1,
+        "focusDurationSeconds": 129.6,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 26,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 27,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 28,
+        "focusSlots": 1,
+        "focusDurationSeconds": 129.6,
+        "estimatedDailyMinutes": 33
+      }
+    ]
+  },
+  {
+    "age": "adult",
+    "level": 2,
+    "nLevel": 2,
+    "scoredDurationSeconds": 144,
+    "days": [
+      {
+        "day": 1,
+        "focusSlots": 1,
+        "focusDurationSeconds": 144,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 2,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 3,
+        "focusSlots": 1,
+        "focusDurationSeconds": 144,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 4,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 5,
+        "focusSlots": 1,
+        "focusDurationSeconds": 144,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 6,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 7,
+        "focusSlots": 1,
+        "focusDurationSeconds": 144,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 8,
+        "focusSlots": 1,
+        "focusDurationSeconds": 144,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 9,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 10,
+        "focusSlots": 2,
+        "focusDurationSeconds": 288,
+        "estimatedDailyMinutes": 26
+      },
+      {
+        "day": 11,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 12,
+        "focusSlots": 1,
+        "focusDurationSeconds": 144,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 13,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 14,
+        "focusSlots": 1,
+        "focusDurationSeconds": 144,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 15,
+        "focusSlots": 1,
+        "focusDurationSeconds": 144,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 16,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 17,
+        "focusSlots": 1,
+        "focusDurationSeconds": 144,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 18,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 19,
+        "focusSlots": 1,
+        "focusDurationSeconds": 144,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 20,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 21,
+        "focusSlots": 1,
+        "focusDurationSeconds": 144,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 22,
+        "focusSlots": 1,
+        "focusDurationSeconds": 144,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 23,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 24,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 25,
+        "focusSlots": 1,
+        "focusDurationSeconds": 144,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 26,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 27,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 28,
+        "focusSlots": 1,
+        "focusDurationSeconds": 144,
+        "estimatedDailyMinutes": 33
+      }
+    ]
+  },
+  {
+    "age": "adult",
+    "level": 3,
+    "nLevel": 2,
+    "scoredDurationSeconds": 151.2,
+    "days": [
+      {
+        "day": 1,
+        "focusSlots": 1,
+        "focusDurationSeconds": 151.2,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 2,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 3,
+        "focusSlots": 1,
+        "focusDurationSeconds": 151.2,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 4,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 5,
+        "focusSlots": 1,
+        "focusDurationSeconds": 151.2,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 6,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 7,
+        "focusSlots": 1,
+        "focusDurationSeconds": 151.2,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 8,
+        "focusSlots": 1,
+        "focusDurationSeconds": 151.2,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 9,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 10,
+        "focusSlots": 2,
+        "focusDurationSeconds": 302.4,
+        "estimatedDailyMinutes": 26
+      },
+      {
+        "day": 11,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 12,
+        "focusSlots": 1,
+        "focusDurationSeconds": 151.2,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 13,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 14,
+        "focusSlots": 1,
+        "focusDurationSeconds": 151.2,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 15,
+        "focusSlots": 1,
+        "focusDurationSeconds": 151.2,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 16,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 17,
+        "focusSlots": 1,
+        "focusDurationSeconds": 151.2,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 18,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 19,
+        "focusSlots": 1,
+        "focusDurationSeconds": 151.2,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 20,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 21,
+        "focusSlots": 1,
+        "focusDurationSeconds": 151.2,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 22,
+        "focusSlots": 1,
+        "focusDurationSeconds": 151.2,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 23,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 24,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 25,
+        "focusSlots": 1,
+        "focusDurationSeconds": 151.2,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 26,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 27,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 28,
+        "focusSlots": 1,
+        "focusDurationSeconds": 151.2,
+        "estimatedDailyMinutes": 33
+      }
+    ]
+  },
+  {
+    "age": "adult",
+    "level": 4,
+    "nLevel": 3,
+    "scoredDurationSeconds": 173.6,
+    "days": [
+      {
+        "day": 1,
+        "focusSlots": 1,
+        "focusDurationSeconds": 173.6,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 2,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 3,
+        "focusSlots": 1,
+        "focusDurationSeconds": 173.6,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 4,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 5,
+        "focusSlots": 1,
+        "focusDurationSeconds": 173.6,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 6,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 7,
+        "focusSlots": 1,
+        "focusDurationSeconds": 173.6,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 8,
+        "focusSlots": 1,
+        "focusDurationSeconds": 173.6,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 9,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 10,
+        "focusSlots": 2,
+        "focusDurationSeconds": 347.2,
+        "estimatedDailyMinutes": 26
+      },
+      {
+        "day": 11,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 12,
+        "focusSlots": 1,
+        "focusDurationSeconds": 173.6,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 13,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 14,
+        "focusSlots": 1,
+        "focusDurationSeconds": 173.6,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 15,
+        "focusSlots": 1,
+        "focusDurationSeconds": 173.6,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 16,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 17,
+        "focusSlots": 1,
+        "focusDurationSeconds": 173.6,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 18,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 19,
+        "focusSlots": 1,
+        "focusDurationSeconds": 173.6,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 20,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 21,
+        "focusSlots": 1,
+        "focusDurationSeconds": 173.6,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 22,
+        "focusSlots": 1,
+        "focusDurationSeconds": 173.6,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 23,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 24,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 25,
+        "focusSlots": 1,
+        "focusDurationSeconds": 173.6,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 26,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 27,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 28,
+        "focusSlots": 1,
+        "focusDurationSeconds": 173.6,
+        "estimatedDailyMinutes": 33
+      }
+    ]
+  },
+  {
+    "age": "adult",
+    "level": 5,
+    "nLevel": 3,
+    "scoredDurationSeconds": 179.2,
+    "days": [
+      {
+        "day": 1,
+        "focusSlots": 1,
+        "focusDurationSeconds": 179.2,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 2,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 3,
+        "focusSlots": 1,
+        "focusDurationSeconds": 179.2,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 4,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 5,
+        "focusSlots": 1,
+        "focusDurationSeconds": 179.2,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 6,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 7,
+        "focusSlots": 1,
+        "focusDurationSeconds": 179.2,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 8,
+        "focusSlots": 1,
+        "focusDurationSeconds": 179.2,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 9,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 10,
+        "focusSlots": 2,
+        "focusDurationSeconds": 358.4,
+        "estimatedDailyMinutes": 26
+      },
+      {
+        "day": 11,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 12,
+        "focusSlots": 1,
+        "focusDurationSeconds": 179.2,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 13,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 30
+      },
+      {
+        "day": 14,
+        "focusSlots": 1,
+        "focusDurationSeconds": 179.2,
+        "estimatedDailyMinutes": 28
+      },
+      {
+        "day": 15,
+        "focusSlots": 1,
+        "focusDurationSeconds": 179.2,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 16,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 17,
+        "focusSlots": 1,
+        "focusDurationSeconds": 179.2,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 18,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 19,
+        "focusSlots": 1,
+        "focusDurationSeconds": 179.2,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 20,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 21,
+        "focusSlots": 1,
+        "focusDurationSeconds": 179.2,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 22,
+        "focusSlots": 1,
+        "focusDurationSeconds": 179.2,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 23,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 24,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 25,
+        "focusSlots": 1,
+        "focusDurationSeconds": 179.2,
+        "estimatedDailyMinutes": 33
+      },
+      {
+        "day": 26,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 27,
+        "focusSlots": 0,
+        "focusDurationSeconds": 0,
+        "estimatedDailyMinutes": 35
+      },
+      {
+        "day": 28,
+        "focusSlots": 1,
+        "focusDurationSeconds": 179.2,
+        "estimatedDailyMinutes": 33
+      }
+    ]
+  }
+]
