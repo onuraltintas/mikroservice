@@ -84,6 +84,14 @@ public sealed class VisualizationPersistenceTests
     public void Answer_key_supports_only_existing_options(string answer, string? expected) =>
         Assert.Equal(expected, VisualizationQuestion.ResolveAnswerKey(["Kırmızı", "Mavi"], answer));
 
+    [Theory]
+    [InlineData("key", "B")]
+    [InlineData("text", "A")]
+    [InlineData("auto", null)]
+    [InlineData("invalid", null)]
+    public void Letter_options_have_explicit_answer_format(string format, string? expected) =>
+        Assert.Equal(expected, VisualizationQuestion.ResolveAnswerKey(["B", "A", "X", "Y"], "B", format));
+
     [Fact]
     public async Task Admin_scene_listing_survives_malformed_question_options()
     {
