@@ -61,4 +61,11 @@ describe('prepared Error Analysis preview', () => {
       expect(()=>applyCustomPreviewSettings(config,values,{preview:true,roles:['Admin']})).toThrow();
     expect(applyCustomPreviewSettings(config,{timeLimitSeconds:90},{preview:false,roles:['Teacher']})).toBe(config);
   });
+  it('uses the requested custom time even when legacy timer aliases exist', () => {
+    const config:any={engineType:'error_analysis',timeLimitSeconds:240,engineConfig:{timing:{timeLimitSec:300},
+      words:[{index:0,text:'yanlız'}],errors:[{wordIndex:0,originalWord:'yalnız',errorWord:'yanlız'}]}};
+    const custom=applyCustomPreviewSettings(config,{timeLimitSeconds:90},{preview:true,roles:['Admin']});
+    const engine=new ErrorAnalysisEngine(); engine.initialize(custom as any,{} as any);
+    expect((engine as any).timeLimitMs).toBe(90000); engine.destroy();
+  });
 });
