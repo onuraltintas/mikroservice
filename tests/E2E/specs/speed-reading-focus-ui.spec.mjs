@@ -125,3 +125,28 @@ test('student unanswered session uses server completion without WPM', async ({ p
   await expect(page.locator('.stat-label').filter({ hasText: /^WPM$|^Okuma hızı$/ })).toHaveCount(0);
   expect(errors).toEqual([]);
 });
+
+test('short N-back practice and lower load never write results or advance a program', async ({ page }) => {
+  const { errors, writes } = await prepare(page, 'Teacher', 'position');
+  await page.getByRole('button', { name: 'Özel ayarlarla dene' }).click();
+  const dialog = page.getByRole('dialog');
+  await dialog.locator('input[type=number]').nth(1).fill('2');
+  await dialog.getByRole('button', { name: 'Denemeyi başlat' }).click();
+  await expect(page.locator('.start-button-large')).toBeVisible();
+  await page.clock.install(); await page.clock.pauseAt(new Date());
+  await page.getByRole('button', { name: 'Kısa alıştırma yap', exact: true }).click();
+  await expect(page.getByRole('status').filter({ hasText: /Puanlanmayan alıştırma/ })).toBeVisible();
+  await expect(page.locator('.level-badge')).toContainText('2-Back');
+  await page.clock.runFor(9000);
+  await expect(page.locator('.start-button-large')).toBeVisible();
+  await expect(page.locator('.focus-results')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Önceki N ile alıştırma', exact: true }).click();
+  await expect(page.locator('.level-badge')).toContainText('1-Back');
+  await page.clock.runFor(9000);
+  await expect(page.locator('.start-button-large')).toBeVisible();
+  await page.locator('.start-button-large').click();
+  await expect(page.locator('.level-badge')).toContainText('2-Back');
+  await page.clock.runFor(3500);
+  await expect(page.getByRole('status').filter({ hasText: /Önizleme sonucu.*kaydedilmedi/ })).toBeVisible();
+  expect(writes).toEqual([]); expect(errors).toEqual([]);
+});
