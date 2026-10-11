@@ -1,0 +1,718 @@
+[
+  {
+    "id": "d8f10000-0000-5000-8000-000000000011",
+    "age": "child",
+    "ageGroupId": "10000000-0000-0000-0000-000000000001",
+    "level": 1,
+    "previousTitle": null,
+    "previousConfiguration": null,
+    "title": "Kaybolan Metinle Okuma — Seviye 1",
+    "configuration": {
+      "engineType": "text_fade",
+      "difficultyLevel": 1,
+      "engineConfig": {
+        "content": {
+          "source": "reading_text",
+          "questionCount": 4
+        },
+        "fading": {
+          "speedWpm": 60,
+          "lagMs": 5000
+        },
+        "timing": {
+          "timeLimitSec": 0
+        },
+        "readingPurpose": "evaluation"
+      }
+    }
+  },
+  {
+    "id": "d8f10000-0000-5000-8000-000000000012",
+    "age": "child",
+    "ageGroupId": "10000000-0000-0000-0000-000000000001",
+    "level": 2,
+    "previousTitle": null,
+    "previousConfiguration": null,
+    "title": "Kaybolan Metinle Okuma — Seviye 2",
+    "configuration": {
+      "engineType": "text_fade",
+      "difficultyLevel": 2,
+      "engineConfig": {
+        "content": {
+          "source": "reading_text",
+          "questionCount": 4
+        },
+        "fading": {
+          "speedWpm": 80,
+          "lagMs": 5000
+        },
+        "timing": {
+          "timeLimitSec": 0
+        },
+        "readingPurpose": "evaluation"
+      }
+    }
+  },
+  {
+    "id": "d8f10000-0000-5000-8000-000000000013",
+    "age": "child",
+    "ageGroupId": "10000000-0000-0000-0000-000000000001",
+    "level": 3,
+    "previousTitle": null,
+    "previousConfiguration": null,
+    "title": "Kaybolan Metinle Okuma — Seviye 3",
+    "configuration": {
+      "engineType": "text_fade",
+      "difficultyLevel": 3,
+      "engineConfig": {
+        "content": {
+          "source": "reading_text",
+          "questionCount": 4
+        },
+        "fading": {
+          "speedWpm": 100,
+          "lagMs": 5000
+        },
+        "timing": {
+          "timeLimitSec": 0
+        },
+        "readingPurpose": "evaluation"
+      }
+    }
+  },
+  {
+    "id": "b59e48d3-da80-5ce2-90fa-f784b78b9d9d",
+    "age": "child",
+    "ageGroupId": "10000000-0000-0000-0000-000000000001",
+    "level": 4,
+    "previousTitle": "Kaybolan Metinle Okuma",
+    "previousConfiguration": {
+      "engineType": "text_fade",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "fading": {
+          "speedWpm": 120,
+          "lagMs": 5000
+        },
+        "timing": {
+          "timeLimitSec": 0
+        },
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 4
+    },
+    "title": "Kaybolan Metinle Okuma — Seviye 4",
+    "configuration": {
+      "engineType": "text_fade",
+      "difficultyLevel": 4,
+      "engineConfig": {
+        "content": {
+          "source": "reading_text",
+          "questionCount": 4
+        },
+        "fading": {
+          "speedWpm": 120,
+          "lagMs": 5000
+        },
+        "timing": {
+          "timeLimitSec": 0
+        },
+        "readingPurpose": "evaluation"
+      }
+    }
+  },
+  {
+    "id": "41bbc0ee-6d42-53dc-bde6-c7f65c615d60",
+    "age": "child",
+    "ageGroupId": "10000000-0000-0000-0000-000000000001",
+    "level": 5,
+    "previousTitle": "Kaybolan Metinle Okuma",
+    "previousConfiguration": {
+      "engineType": "text_fade",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "fading": {
+          "speedWpm": 140,
+          "lagMs": 5000
+        },
+        "timing": {
+          "timeLimitSec": 0
+        },
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 5
+    },
+    "title": "Kaybolan Metinle Okuma — Seviye 5",
+    "configuration": {
+      "engineType": "text_fade",
+      "difficultyLevel": 5,
+      "engineConfig": {
+        "content": {
+          "source": "reading_text",
+          "questionCount": 4
+        },
+        "fading": {
+          "speedWpm": 140,
+          "lagMs": 5000
+        },
+        "timing": {
+          "timeLimitSec": 0
+        },
+        "readingPurpose": "evaluation"
+      }
+    }
+  },
+  {
+    "id": "d8f10000-0000-5000-8000-000000000021",
+    "age": "teen",
+    "ageGroupId": "10000000-0000-0000-0000-000000000002",
+    "level": 1,
+    "previousTitle": null,
+    "previousConfiguration": null,
+    "title": "Kaybolan Metinle Okuma — Seviye 1",
+    "configuration": {
+      "engineType": "text_fade",
+      "difficultyLevel": 1,
+      "engineConfig": {
+        "content": {
+          "source": "reading_text",
+          "questionCount": 4
+        },
+        "fading": {
+          "speedWpm": 150,
+          "lagMs": 2500
+        },
+        "timing": {
+          "timeLimitSec": 0
+        },
+        "readingPurpose": "evaluation"
+      }
+    }
+  },
+  {
+    "id": "d8f10000-0000-5000-8000-000000000022",
+    "age": "teen",
+    "ageGroupId": "10000000-0000-0000-0000-000000000002",
+    "level": 2,
+    "previousTitle": null,
+    "previousConfiguration": null,
+    "title": "Kaybolan Metinle Okuma — Seviye 2",
+    "configuration": {
+      "engineType": "text_fade",
+      "difficultyLevel": 2,
+      "engineConfig": {
+        "content": {
+          "source": "reading_text",
+          "questionCount": 4
+        },
+        "fading": {
+          "speedWpm": 180,
+          "lagMs": 2500
+        },
+        "timing": {
+          "timeLimitSec": 0
+        },
+        "readingPurpose": "evaluation"
+      }
+    }
+  },
+  {
+    "id": "86403101-4144-5d9b-ba6c-cfdb00b5ea36",
+    "age": "teen",
+    "ageGroupId": "10000000-0000-0000-0000-000000000002",
+    "level": 3,
+    "previousTitle": "Kaybolan Metinle Okuma",
+    "previousConfiguration": {
+      "engineType": "text_fade",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "fading": {
+          "speedWpm": 210,
+          "lagMs": 2500
+        },
+        "timing": {
+          "timeLimitSec": 0
+        },
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 3
+    },
+    "title": "Kaybolan Metinle Okuma — Seviye 3",
+    "configuration": {
+      "engineType": "text_fade",
+      "difficultyLevel": 3,
+      "engineConfig": {
+        "content": {
+          "source": "reading_text",
+          "questionCount": 4
+        },
+        "fading": {
+          "speedWpm": 210,
+          "lagMs": 2500
+        },
+        "timing": {
+          "timeLimitSec": 0
+        },
+        "readingPurpose": "evaluation"
+      }
+    }
+  },
+  {
+    "id": "5385ae8f-b6bf-57c0-94f8-36a15f7b8dff",
+    "age": "teen",
+    "ageGroupId": "10000000-0000-0000-0000-000000000002",
+    "level": 4,
+    "previousTitle": "Kaybolan Metinle Okuma",
+    "previousConfiguration": {
+      "engineType": "text_fade",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "fading": {
+          "speedWpm": 240,
+          "lagMs": 2500
+        },
+        "timing": {
+          "timeLimitSec": 0
+        },
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 4
+    },
+    "title": "Kaybolan Metinle Okuma — Seviye 4",
+    "configuration": {
+      "engineType": "text_fade",
+      "difficultyLevel": 4,
+      "engineConfig": {
+        "content": {
+          "source": "reading_text",
+          "questionCount": 4
+        },
+        "fading": {
+          "speedWpm": 240,
+          "lagMs": 2500
+        },
+        "timing": {
+          "timeLimitSec": 0
+        },
+        "readingPurpose": "evaluation"
+      }
+    }
+  },
+  {
+    "id": "44b03518-112b-56b6-ba37-3a4736090cd6",
+    "age": "teen",
+    "ageGroupId": "10000000-0000-0000-0000-000000000002",
+    "level": 5,
+    "previousTitle": "Kaybolan Metinle Okuma",
+    "previousConfiguration": {
+      "engineType": "text_fade",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "fading": {
+          "speedWpm": 270,
+          "lagMs": 2500
+        },
+        "timing": {
+          "timeLimitSec": 0
+        },
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 5
+    },
+    "title": "Kaybolan Metinle Okuma — Seviye 5",
+    "configuration": {
+      "engineType": "text_fade",
+      "difficultyLevel": 5,
+      "engineConfig": {
+        "content": {
+          "source": "reading_text",
+          "questionCount": 4
+        },
+        "fading": {
+          "speedWpm": 270,
+          "lagMs": 2500
+        },
+        "timing": {
+          "timeLimitSec": 0
+        },
+        "readingPurpose": "evaluation"
+      }
+    }
+  },
+  {
+    "id": "d8f10000-0000-5000-8000-000000000041",
+    "age": "young-adult",
+    "ageGroupId": "10000000-0000-0000-0000-000000000004",
+    "level": 1,
+    "previousTitle": null,
+    "previousConfiguration": null,
+    "title": "Kaybolan Metinle Okuma — Seviye 1",
+    "configuration": {
+      "engineType": "text_fade",
+      "difficultyLevel": 1,
+      "engineConfig": {
+        "content": {
+          "source": "reading_text",
+          "questionCount": 4
+        },
+        "fading": {
+          "speedWpm": 180,
+          "lagMs": 2000
+        },
+        "timing": {
+          "timeLimitSec": 0
+        },
+        "readingPurpose": "evaluation"
+      }
+    }
+  },
+  {
+    "id": "d8f10000-0000-5000-8000-000000000042",
+    "age": "young-adult",
+    "ageGroupId": "10000000-0000-0000-0000-000000000004",
+    "level": 2,
+    "previousTitle": null,
+    "previousConfiguration": null,
+    "title": "Kaybolan Metinle Okuma — Seviye 2",
+    "configuration": {
+      "engineType": "text_fade",
+      "difficultyLevel": 2,
+      "engineConfig": {
+        "content": {
+          "source": "reading_text",
+          "questionCount": 4
+        },
+        "fading": {
+          "speedWpm": 210,
+          "lagMs": 2000
+        },
+        "timing": {
+          "timeLimitSec": 0
+        },
+        "readingPurpose": "evaluation"
+      }
+    }
+  },
+  {
+    "id": "b18bdbdf-e093-5bf0-91c1-228ebc0fbfd1",
+    "age": "young-adult",
+    "ageGroupId": "10000000-0000-0000-0000-000000000004",
+    "level": 3,
+    "previousTitle": "Kaybolan Metinle Okuma",
+    "previousConfiguration": {
+      "engineType": "text_fade",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "fading": {
+          "speedWpm": 240,
+          "lagMs": 2000
+        },
+        "timing": {
+          "timeLimitSec": 0
+        },
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 3
+    },
+    "title": "Kaybolan Metinle Okuma — Seviye 3",
+    "configuration": {
+      "engineType": "text_fade",
+      "difficultyLevel": 3,
+      "engineConfig": {
+        "content": {
+          "source": "reading_text",
+          "questionCount": 4
+        },
+        "fading": {
+          "speedWpm": 240,
+          "lagMs": 2000
+        },
+        "timing": {
+          "timeLimitSec": 0
+        },
+        "readingPurpose": "evaluation"
+      }
+    }
+  },
+  {
+    "id": "81a83d67-b712-5211-aaae-b0e4bd622cd2",
+    "age": "young-adult",
+    "ageGroupId": "10000000-0000-0000-0000-000000000004",
+    "level": 4,
+    "previousTitle": "Kaybolan Metinle Okuma",
+    "previousConfiguration": {
+      "engineType": "text_fade",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "fading": {
+          "speedWpm": 270,
+          "lagMs": 2000
+        },
+        "timing": {
+          "timeLimitSec": 0
+        },
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 4
+    },
+    "title": "Kaybolan Metinle Okuma — Seviye 4",
+    "configuration": {
+      "engineType": "text_fade",
+      "difficultyLevel": 4,
+      "engineConfig": {
+        "content": {
+          "source": "reading_text",
+          "questionCount": 4
+        },
+        "fading": {
+          "speedWpm": 270,
+          "lagMs": 2000
+        },
+        "timing": {
+          "timeLimitSec": 0
+        },
+        "readingPurpose": "evaluation"
+      }
+    }
+  },
+  {
+    "id": "79fd25f6-1b75-5400-b233-6fe8fde4c578",
+    "age": "young-adult",
+    "ageGroupId": "10000000-0000-0000-0000-000000000004",
+    "level": 5,
+    "previousTitle": "Kaybolan Metinle Okuma",
+    "previousConfiguration": {
+      "engineType": "text_fade",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "fading": {
+          "speedWpm": 300,
+          "lagMs": 2000
+        },
+        "timing": {
+          "timeLimitSec": 0
+        },
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 5
+    },
+    "title": "Kaybolan Metinle Okuma — Seviye 5",
+    "configuration": {
+      "engineType": "text_fade",
+      "difficultyLevel": 5,
+      "engineConfig": {
+        "content": {
+          "source": "reading_text",
+          "questionCount": 4
+        },
+        "fading": {
+          "speedWpm": 300,
+          "lagMs": 2000
+        },
+        "timing": {
+          "timeLimitSec": 0
+        },
+        "readingPurpose": "evaluation"
+      }
+    }
+  },
+  {
+    "id": "d8f10000-0000-5000-8000-000000000031",
+    "age": "adult",
+    "ageGroupId": "10000000-0000-0000-0000-000000000003",
+    "level": 1,
+    "previousTitle": null,
+    "previousConfiguration": null,
+    "title": "Kaybolan Metinle Okuma — Seviye 1",
+    "configuration": {
+      "engineType": "text_fade",
+      "difficultyLevel": 1,
+      "engineConfig": {
+        "content": {
+          "source": "reading_text",
+          "questionCount": 4
+        },
+        "fading": {
+          "speedWpm": 200,
+          "lagMs": 2000
+        },
+        "timing": {
+          "timeLimitSec": 0
+        },
+        "readingPurpose": "evaluation"
+      }
+    }
+  },
+  {
+    "id": "d8f10000-0000-5000-8000-000000000032",
+    "age": "adult",
+    "ageGroupId": "10000000-0000-0000-0000-000000000003",
+    "level": 2,
+    "previousTitle": null,
+    "previousConfiguration": null,
+    "title": "Kaybolan Metinle Okuma — Seviye 2",
+    "configuration": {
+      "engineType": "text_fade",
+      "difficultyLevel": 2,
+      "engineConfig": {
+        "content": {
+          "source": "reading_text",
+          "questionCount": 4
+        },
+        "fading": {
+          "speedWpm": 230,
+          "lagMs": 2000
+        },
+        "timing": {
+          "timeLimitSec": 0
+        },
+        "readingPurpose": "evaluation"
+      }
+    }
+  },
+  {
+    "id": "2021a2ac-2a22-5f5c-b511-2f0adf7edd76",
+    "age": "adult",
+    "ageGroupId": "10000000-0000-0000-0000-000000000003",
+    "level": 3,
+    "previousTitle": "Kaybolan Metinle Okuma",
+    "previousConfiguration": {
+      "engineType": "text_fade",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "fading": {
+          "speedWpm": 260,
+          "lagMs": 2000
+        },
+        "timing": {
+          "timeLimitSec": 0
+        },
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 3
+    },
+    "title": "Kaybolan Metinle Okuma — Seviye 3",
+    "configuration": {
+      "engineType": "text_fade",
+      "difficultyLevel": 3,
+      "engineConfig": {
+        "content": {
+          "source": "reading_text",
+          "questionCount": 4
+        },
+        "fading": {
+          "speedWpm": 260,
+          "lagMs": 2000
+        },
+        "timing": {
+          "timeLimitSec": 0
+        },
+        "readingPurpose": "evaluation"
+      }
+    }
+  },
+  {
+    "id": "074f3279-0207-54f6-9df8-15083ab8b074",
+    "age": "adult",
+    "ageGroupId": "10000000-0000-0000-0000-000000000003",
+    "level": 4,
+    "previousTitle": "Kaybolan Metinle Okuma",
+    "previousConfiguration": {
+      "engineType": "text_fade",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "fading": {
+          "speedWpm": 290,
+          "lagMs": 2000
+        },
+        "timing": {
+          "timeLimitSec": 0
+        },
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 4
+    },
+    "title": "Kaybolan Metinle Okuma — Seviye 4",
+    "configuration": {
+      "engineType": "text_fade",
+      "difficultyLevel": 4,
+      "engineConfig": {
+        "content": {
+          "source": "reading_text",
+          "questionCount": 4
+        },
+        "fading": {
+          "speedWpm": 290,
+          "lagMs": 2000
+        },
+        "timing": {
+          "timeLimitSec": 0
+        },
+        "readingPurpose": "evaluation"
+      }
+    }
+  },
+  {
+    "id": "7da49430-9d21-5e23-9304-07a4675fe43d",
+    "age": "adult",
+    "ageGroupId": "10000000-0000-0000-0000-000000000003",
+    "level": 5,
+    "previousTitle": "Kaybolan Metinle Okuma",
+    "previousConfiguration": {
+      "engineType": "text_fade",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "fading": {
+          "speedWpm": 320,
+          "lagMs": 2000
+        },
+        "timing": {
+          "timeLimitSec": 0
+        },
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 5
+    },
+    "title": "Kaybolan Metinle Okuma — Seviye 5",
+    "configuration": {
+      "engineType": "text_fade",
+      "difficultyLevel": 5,
+      "engineConfig": {
+        "content": {
+          "source": "reading_text",
+          "questionCount": 4
+        },
+        "fading": {
+          "speedWpm": 320,
+          "lagMs": 2000
+        },
+        "timing": {
+          "timeLimitSec": 0
+        },
+        "readingPurpose": "evaluation"
+      }
+    }
+  }
+]
