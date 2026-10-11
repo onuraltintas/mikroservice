@@ -1,5 +1,5 @@
 import { ExercisePlayerComponent } from './exercise-player.component';
-import { getCustomPreviewControls } from './custom-preview-settings';
+import { applyCustomPreviewSettings, getCustomPreviewControls } from './custom-preview-settings';
 import { ExamSimulationEngine } from './engines/exam-simulation.engine';
 
 describe('exam presentation', () => {
@@ -8,6 +8,10 @@ describe('exam presentation', () => {
     player.engine = { engineType: 'exam_simulation' };
     player.isAssessmentMode = false;
     expect(player.defersComprehensionFeedback()).toBeTrue();
+  });
+  it('rejects a custom reading limit that equals the minimum', () => {
+    const config = { engineType: 'exam_simulation', engineConfig: { timing: { minReadingTimeMs: 10000 } } };
+    expect(() => applyCustomPreviewSettings(config, { maxReadingTimeSec: 10 }, { roles: ['Teacher'], preview: true })).toThrow();
   });
   it('starts reading before questions in the new exam protocol', async () => {
     const player = Object.create(ExercisePlayerComponent.prototype) as any;
