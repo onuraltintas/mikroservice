@@ -277,7 +277,7 @@
       "engineType": "visual_expansion",
       "engineConfig": {
         "mode": "horizontal",
-        "rounds": 12,
+        "rounds": 45,
         "displayDurationMs": 1100,
         "startDegrees": 8,
         "targetDegrees": 18,
@@ -623,7 +623,7 @@
       "engineType": "visual_expansion",
       "engineConfig": {
         "mode": "horizontal",
-        "rounds": 14,
+        "rounds": 50,
         "displayDurationMs": 1000,
         "startDegrees": 8,
         "targetDegrees": 20,
@@ -1042,7 +1042,7 @@
       "engineType": "visual_expansion",
       "engineConfig": {
         "mode": "horizontal",
-        "rounds": 16,
+        "rounds": 55,
         "displayDurationMs": 950,
         "startDegrees": 8,
         "targetDegrees": 22,
@@ -1486,7 +1486,7 @@
       "engineType": "visual_expansion",
       "engineConfig": {
         "mode": "horizontal",
-        "rounds": 18,
+        "rounds": 60,
         "displayDurationMs": 900,
         "startDegrees": 8,
         "targetDegrees": 24,
@@ -1928,7 +1928,7 @@
       "engineType": "visual_expansion",
       "engineConfig": {
         "mode": "horizontal",
-        "rounds": 20,
+        "rounds": 65,
         "displayDurationMs": 850,
         "startDegrees": 8,
         "targetDegrees": 26,

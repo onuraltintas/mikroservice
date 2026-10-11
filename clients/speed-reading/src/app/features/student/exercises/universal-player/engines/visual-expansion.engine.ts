@@ -75,12 +75,15 @@ export class VisualExpansionEngine implements BaseEngine {
         userLeftAnswer: string;
         userRightAnswer: string;
         responseTimeMs: number;
+        displayDurationMs: number;
         timestamp: string;
     }> = [];
     private stimulusShownTime = 0;
     private serverAuthoritative = false;
     private awaitingServer = false;
     private pendingAnswers: string[] = [];
+    private stagedProgression = true;
+    private previousStimuli: string[] = [];
 
     // Stimulus State
     currentStimuli: Array<{ content: string; x: number; y: number }> = [];
@@ -96,6 +99,7 @@ export class VisualExpansionEngine implements BaseEngine {
         // Backend hem PascalCase hem camelCase gönderebilir
         const backendConfig = config as any;
         this.serverAuthoritative = backendConfig.serverAuthoritative === true;
+        this.stagedProgression = backendConfig.isAssessmentMode !== true;
 
         // Catalog configurations exist in both the newer nested shape and
         // the legacy mode/content shape. Normalize them before rendering so
@@ -311,17 +315,23 @@ export class VisualExpansionEngine implements BaseEngine {
             userLeftAnswer: userAnswers[0] || '',
             userRightAnswer: userAnswers[1] || '',
             responseTimeMs,
+            displayDurationMs: this.config.timing.durationMs,
             timestamp: new Date().toISOString()
         });
 
         if (isFullyCorrect) {
             this.correctAnswers++;
-            this.currentDegrees = Math.min(this.targetDegrees, this.currentDegrees + 2);
-            this.config.timing.durationMs = Math.max(
-                100,
-                Math.round(this.config.timing.durationMs * 0.95));
-
             this.successStreak++;
+            if (!this.stagedProgression || this.successStreak >= 3) {
+                if (this.currentDegrees < this.targetDegrees) {
+                    this.currentDegrees = Math.min(this.targetDegrees, this.currentDegrees + 2);
+                } else if (this.stagedProgression) {
+                    this.config.timing.durationMs = Math.max(100, Math.round(this.config.timing.durationMs * 0.95));
+                }
+                if (!this.stagedProgression)
+                    this.config.timing.durationMs = Math.max(100, Math.round(this.config.timing.durationMs * 0.95));
+                this.successStreak = 0;
+            }
             this.failStreak = 0;
         } else {
             // Yanlış cevapta hız/açı düşmez, olduğu yerde kalır
@@ -417,6 +427,7 @@ export class VisualExpansionEngine implements BaseEngine {
                 userLeftAnswer: this.pendingAnswers[0] || '',
                 userRightAnswer: this.pendingAnswers[1] || '',
                 responseTimeMs,
+                displayDurationMs: this.config.timing.durationMs,
                 timestamp: new Date().toISOString()
             });
             this.pendingAnswers = [];
@@ -466,7 +477,8 @@ export class VisualExpansionEngine implements BaseEngine {
             : type === 'word' ? ['EV','SU','GÜN','YOL','KUŞ','AY','EL','DAĞ']
             : [...'ABCDEFGHKLMNPRSTUVYZ'];
         // Match the server pools; each presentation contains distinct stimuli.
-        const available = [...pool];
+        const unused = pool.filter(value => !this.previousStimuli.includes(value));
+        const available = unused.length >= (radial ? 4 : 2) ? unused : [...pool];
         const getUniqueContent = (): string => {
             const index = Math.floor(Math.random() * available.length);
             return available.splice(index, 1)[0];
@@ -502,6 +514,7 @@ export class VisualExpansionEngine implements BaseEngine {
                 { content: getUniqueContent(), x: clamp(50 + diagX), y: clamp(50 + diagY) }
             );
         }
+        this.previousStimuli = this.currentStimuli.map(stimulus => stimulus.content);
     }
 
     private getRenderBounds(): { width: number; height: number } {
@@ -573,6 +586,9 @@ export class VisualExpansionEngine implements BaseEngine {
         this.lastShownStimuli = [];
         this.currentStimuli = [];
         this.pendingAnswers = [];
+        this.previousStimuli = [];
+        this.successStreak = 0;
+        this.failStreak = 0;
         this.awaitingServer = false;
         this.isStimulusVisible = false;
         this.isWaitingForInput = false;
@@ -599,6 +615,8 @@ export class VisualExpansionEngine implements BaseEngine {
         // Başlangıç ve bitiş açıları
         const startDegrees = this.roundResults.length > 0 ? this.roundResults[0].degrees : this.currentDegrees;
         const endDegrees = this.roundResults.length > 0 ? this.roundResults[this.roundResults.length - 1].degrees : this.currentDegrees;
+        const targetRounds = this.roundResults.filter(round => round.degrees >= this.targetDegrees);
+        const targetCorrectRounds = targetRounds.filter(round => round.correct);
 
         const result: EngineResult = {
             score: this.state.accuracy,
@@ -616,6 +634,15 @@ export class VisualExpansionEngine implements BaseEngine {
                 totalAnswers: this.totalAnswers,
                 averageResponseTimeMs: avgResponseTime,
                 roundResults: this.roundResults
+                ,targetSummary: {
+                    targetDistance: this.targetDegrees,
+                    targetReached: targetRounds.length > 0,
+                    targetRounds: targetRounds.length,
+                    targetCorrectRounds: targetCorrectRounds.length,
+                    targetAccuracy: targetRounds.length ? Math.round(targetCorrectRounds.length / targetRounds.length * 100) : null,
+                    shortestCorrectDisplayDurationMs: targetCorrectRounds.length
+                        ? Math.min(...targetCorrectRounds.map(round => round.displayDurationMs)) : null
+                }
             }
         };
 
@@ -644,7 +671,7 @@ export class VisualExpansionEngine implements BaseEngine {
     }
 
     getRelativeDistancePercent(): number {
-        return this.currentDegrees / 60 * 100;
+        return visualAngleToAxisOffsetPercent(this.currentDegrees, 1, false);
     }
 
     getStimulusSizeCss(): string {

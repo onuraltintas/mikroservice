@@ -260,7 +260,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                     || (IsSkimming(new SessionState { EngineType = exerciseEngineType })
                         && DeserializeState(matchingSession.SessionDataJson).SkimmingProtocolVersion != 1)
                     || (IsVisualExpansionExercise(DeserializeState(matchingSession.SessionDataJson))
-                        && DeserializeState(matchingSession.SessionDataJson).VisualExpansionProtocolVersion != 1)
+                        && DeserializeState(matchingSession.SessionDataJson).VisualExpansionProtocolVersion is not (1 or 2))
                     || (IsValidatedFixation(DeserializeState(matchingSession.SessionDataJson))
                         && DeserializeState(matchingSession.SessionDataJson).FixationProtocolVersion != 1)))
             {
@@ -665,7 +665,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             }
         }
         if (IsVisualExpansionExercise(state)
-            && (state.VisualExpansionProtocolVersion != 1 || state.VisualExpansionRound < state.TotalSteps
+            && (state.VisualExpansionProtocolVersion is not (1 or 2) || state.VisualExpansionRound < state.TotalSteps
                 || state.VisualExpansionRoundResults.Count != state.TotalSteps))
             throw IncompleteSession("All visual expansion rounds must be validated before completion.");
         if (IsValidatedFixation(state) && (!state.FocusCompleted || state.FixationProtocolVersion != 1
@@ -1422,7 +1422,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             || IsEngineType(exerciseEngineType, "visual_expansion"))
         {
             var visualConfig = engineConfig.ValueKind == JsonValueKind.Object ? engineConfig : config;
-            state.VisualExpansionProtocolVersion = 1;
+            state.VisualExpansionProtocolVersion = isAssessmentMode ? 1 : 2;
             var expansion = ReadObject(visualConfig, "expansion");
             var content = ReadObject(visualConfig, "content");
             var timing = ReadObject(visualConfig, "timing");
@@ -2082,7 +2082,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             session.Id.GetHashCode(),
             state.VisualExpansionRound,
             state.VisualExpansionStimulusType,
-            state.VisualExpansionPattern.Equals("radial", StringComparison.OrdinalIgnoreCase) ? 4 : 2).ToArray();
+            state.VisualExpansionPattern.Equals("radial", StringComparison.OrdinalIgnoreCase) ? 4 : 2,
+            state.VisualExpansionProtocolVersion == 2 ? state.VisualExpansionPreviousStimuli : null).ToArray();
         state.VisualExpansionPresentedAt = now.ToUniversalTime();
         state.VisualExpansionPausedMilliseconds = 0;
         state.VisualExpansionPausedAt = null;
@@ -2140,9 +2141,13 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             state.VisualExpansionCurrentDegrees,
             state.VisualExpansionTargetDegrees,
             state.VisualExpansionDisplayDurationMs,
-            result.IsCorrect);
+            result.IsCorrect,
+            state.VisualExpansionConsecutiveCorrect,
+            staged: state.VisualExpansionProtocolVersion == 2);
         state.VisualExpansionCurrentDegrees = nextDifficulty.Degrees;
         state.VisualExpansionDisplayDurationMs = nextDifficulty.DisplayDurationMs;
+        state.VisualExpansionConsecutiveCorrect = nextDifficulty.ConsecutiveCorrect;
+        state.VisualExpansionPreviousStimuli = state.VisualExpansionExpectedStimuli;
         state.VisualExpansionExpectedStimuli = [];
         state.VisualExpansionPresentedAt = null;
         return Valid(
@@ -3591,11 +3596,25 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             sanitized["questions"] = JsonSerializer.SerializeToNode(state.Questions, JsonOptions);
             sanitized["answers"] = JsonSerializer.SerializeToNode(state.Answers, JsonOptions);
         }
-        if (IsVisualExpansionExercise(state) && state.VisualExpansionProtocolVersion != 1)
+        if (IsVisualExpansionExercise(state) && state.VisualExpansionProtocolVersion is not (1 or 2))
         {
             sanitized.Remove("visualExpansionRoundResults");
             sanitized.Remove("visualExpansionMaxPresentedDistance");
             sanitized.Remove("visualExpansionAverageResponseTimeMs");
+        }
+        if (completedResult && IsVisualExpansionExercise(state) && state.VisualExpansionProtocolVersion is 1 or 2)
+        {
+            var targetRounds = state.VisualExpansionRoundResults
+                .Where(round => round.Distance >= state.VisualExpansionTargetDegrees).ToArray();
+            var correctRounds = targetRounds.Where(round => round.IsCorrect).ToArray();
+            sanitized["visualExpansionTargetSummary"] = JsonSerializer.SerializeToNode(new {
+                targetDistance = state.VisualExpansionTargetDegrees,
+                targetReached = targetRounds.Length > 0,
+                targetRounds = targetRounds.Length,
+                targetCorrectRounds = correctRounds.Length,
+                targetAccuracy = targetRounds.Length == 0 ? (int?)null : (int)Math.Round(correctRounds.Length * 100d / targetRounds.Length),
+                shortestCorrectDisplayDurationMs = correctRounds.Length == 0 ? (int?)null : correctRounds.Min(round => round.DisplayDurationMs)
+            }, JsonOptions);
         }
         if (IsValidatedFixation(state) && state.FixationProtocolVersion != 1)
             sanitized.Remove("fixationRoundResults");
@@ -3903,6 +3922,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         public bool FocusCompleted { get; set; }
         public string VisualExpansionStimulusType { get; set; } = "letter";
         public int VisualExpansionProtocolVersion { get; set; }
+        public int VisualExpansionConsecutiveCorrect { get; set; }
+        public string[] VisualExpansionPreviousStimuli { get; set; } = [];
         public List<VisualExpansionRoundState> VisualExpansionRoundResults { get; set; } = [];
         public int VisualExpansionMaxPresentedDistance { get; set; }
         public int VisualExpansionAverageResponseTimeMs { get; set; }
