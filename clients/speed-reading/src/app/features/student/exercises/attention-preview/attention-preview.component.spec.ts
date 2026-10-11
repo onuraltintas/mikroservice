@@ -1,0 +1,50 @@
+import { fakeAsync, TestBed, tick } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
+import { AttentionPreviewComponent } from './attention-preview.component';
+
+describe('Attention prototype UI', () => {
+  beforeEach(() => TestBed.configureTestingModule({
+    imports: [AttentionPreviewComponent], providers: [provideRouter([])]
+  }));
+
+  it('shows the simple rule and a non-persistence notice before starting', () => {
+    const fixture = TestBed.createComponent(AttentionPreviewComponent); fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Hedefi Yakala');
+    expect(fixture.nativeElement.textContent).toContain('Sonuçlar kaydedilmez');
+    expect(fixture.nativeElement.querySelectorAll('.shape-button').length).toBe(0);
+    fixture.destroy();
+  });
+
+  it('runs three untimed practice rounds before the scored trial', fakeAsync(() => {
+    const fixture = TestBed.createComponent(AttentionPreviewComponent); fixture.detectChanges();
+    const c = fixture.componentInstance;
+    c.selectPreset(1); c.startTutorial(); tick(10000);
+    expect(c.game.status).toBe('playing'); expect(c.game.shapes.length).toBe(6);
+    for (let i = 0; i < 3; i++) { c.choose(c.game.shapes.indexOf('star')); tick(800); }
+    expect(c.game.status).toBe('ready'); expect(c.game.hits).toBe(0);
+    c.startSession(); expect(c.game.shapes.length).toBe(12);
+    c.choose(c.game.shapes.indexOf('star')); expect(c.game.hits).toBe(1);
+    c.reset(); expect(c.game.status).toBe('intro'); expect(c.game.hits).toBe(0);
+    fixture.destroy(); tick(10000);
+  }));
+
+  it('does not bypass the practice stage, and ignores invalid preset choices', () => {
+    const fixture = TestBed.createComponent(AttentionPreviewComponent); const c = fixture.componentInstance;
+    c.startSession(); expect(c.game.status).toBe('intro');
+    for (const index of [-1, 3, 0.5, NaN]) c.selectPreset(index);
+    expect(c.selectedPresetIndex).toBe(0);
+    c.startTutorial(); c.selectPreset(2); expect(c.selectedPresetIndex).toBe(0);
+    fixture.destroy();
+  });
+
+  it('pauses a hidden page without resuming it automatically', fakeAsync(() => {
+    const fixture = TestBed.createComponent(AttentionPreviewComponent); fixture.detectChanges();
+    const c = fixture.componentInstance; c.startTutorial();
+    spyOnProperty(document, 'hidden', 'get').and.returnValue(true);
+    document.dispatchEvent(new Event('visibilitychange')); tick(20000);
+    expect(c.game.status).toBe('paused');
+    c.togglePause(); expect(c.game.status).toBe('playing');
+    c.togglePause(); expect(c.game.status).toBe('paused');
+    fixture.destroy();
+  }));
+});
