@@ -23,6 +23,10 @@ test('tracking starts after validation and reports no measured gaze or WPM', asy
   await expect(page.getByText('Göz hareketleri veya okuma hızı ölçülmez.', { exact: false })).toBeVisible();
   await page.locator('.start-button-large').click();
   await expect(page.locator('.tracking-instruction')).toContainText('Gözlerinizle noktayı takip edin');
+  await expect(page.locator('.motion-path-stats')).toHaveCount(0, { timeout: 1000 });
+  await expect(page.locator('.motion-path-header .timer')).toBeVisible();
+  await expect(page.locator('.motion-path-header .progress-info')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Duraklat', exact: true })).toBeVisible();
   await expect(page.locator('.target-dot')).toHaveCSS('width', '48px');
   await expect(page.locator('.target-dot')).toHaveCSS('background-color', 'rgb(255, 0, 0)');
   await expect(page.locator('.target-dot')).toContainText('➜');
@@ -80,6 +84,9 @@ for (const variant of ['recorded', 'custom', 'jump']) {
     const fixed = new Date();
     await page.clock.install({ time: fixed }); await page.clock.pauseAt(fixed);
     await page.locator('.start-button-large').click();
+    await expect(page.locator('.motion-path-stats')).toHaveCount(0);
+    await expect(page.locator('.motion-path-header .timer')).toBeVisible();
+    await expect(page.locator('.motion-path-header .progress-info')).toBeVisible();
     const target = page.locator('.target-container');
     const left = () => target.evaluate(element => Number.parseFloat(element.style.left));
     if (variant === 'recorded') {
