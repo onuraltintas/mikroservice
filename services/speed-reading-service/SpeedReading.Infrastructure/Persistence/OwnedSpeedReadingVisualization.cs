@@ -122,7 +122,8 @@ internal sealed class OwnedSpeedReadingVisualization(OwnedSpeedReadingDbContext 
             request.DifficultyLevel, request.TargetAgeGroupConfigurationId, actorId, now, request.Mode);
         var questions = await db.VisualizationQuestions.Where(item => item.SceneId == sceneId && !item.IsDeleted).ToListAsync(cancellationToken);
         foreach (var question in questions) question.Delete(actorId, now);
-        AddQuestions(sceneId, request.Questions, actorId, now);
+        // Updated questions get new IDs; existing session snapshots keep their original IDs/answers.
+        AddQuestions(sceneId, request.Questions.Select(question => question with { Id = null }).ToArray(), actorId, now);
         OwnedContentMutationIdempotency.Add(db, UpdateScope, key, requestHash, scene.Id, now);
         var concurrent = await OwnedContentMutationIdempotency.SaveAsync(db, UpdateScope, key, cancellationToken);
         if (concurrent is not null)

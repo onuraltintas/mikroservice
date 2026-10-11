@@ -27,9 +27,12 @@ export class ExerciseService {
    * Service receives: PagedResult<Exercise> (auto-unwrapped)
    */
   getPreviewVisualizationScenes(exerciseId: string): Observable<PreviewVisualizationScene[]> {
-    return this.http.get<PreviewVisualizationScene[]>(`${this.API_URL}/visualization/exercises/${exerciseId}/scenes`).pipe(
+    return this.http.get<PreviewVisualizationScene[]>(`${this.API_URL}/visualization/exercises/${exerciseId}/scenes`, {
+      params: { limit: 3 }
+    }).pipe(
       switchMap(scenes => scenes.length ? forkJoin(scenes.map(scene =>
-        this.http.get<PreviewVisualizationScene>(`${this.API_URL}/admin/visualization-scenes/${scene.id}`))) : of([]))
+        this.http.get<PreviewVisualizationScene>(`${this.API_URL}/admin/visualization-scenes/${scene.id}`))) : of([])),
+      map(scenes => scenes.map((scene, displayOrder) => ({ ...scene, displayOrder })))
     );
   }
 
