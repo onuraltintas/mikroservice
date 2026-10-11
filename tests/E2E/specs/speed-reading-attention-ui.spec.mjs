@@ -60,17 +60,21 @@ test('simple practice, correct wrong missed and completion without writes', asyn
   await page.getByRole('button', { name: 'Denemeyi başlat' }).click();
   await page.clock.runFor(100);
   await expect(page.locator('.shape-button')).toHaveCount(6);
+  const target = page.getByRole('img', { name: 'Aranacak sembol: yıldız' });
+  await expect(target).toBeVisible();
+  const targetBounds = await target.boundingBox();
   const initialTime = await page.locator('.time').innerText();
   await page.clock.runFor(500);
   expect(await page.locator('.time').innerText()).not.toBe(initialTime);
   await page.getByRole('button', { name: /^Yıldız, konum/ }).click();
   await page.clock.runFor(100);
   await expect(page.locator('.counters')).toContainText('Doğru1');
+  expect(await target.boundingBox()).toEqual(targetBounds);
   await page.clock.runFor(800);
   await page.getByRole('button', { name: /Daire|Üçgen|Kare|Baklava|Artı/ }).first().click();
   await page.clock.runFor(100);
   await expect(page.locator('.counters')).toContainText('Yanlış1');
-  await page.clock.runFor(800); await page.clock.runFor(5000);
+  await page.clock.runFor(800); await page.clock.runFor(6000);
   await expect(page.locator('.counters')).toContainText('Kaçırılan1');
   await page.clock.runFor(800);
   await page.getByRole('button', { name: 'Duraklat' }).click();
@@ -79,17 +83,19 @@ test('simple practice, correct wrong missed and completion without writes', asyn
   await page.screenshot({ path: `../../artifacts/attention-ui/${testInfo.project.name}-paused.png`, fullPage: true });
   await page.clock.runFor(20000);
   await expect(page.locator('.shape-button').first()).toBeDisabled();
+  await expect(target).toBeVisible();
+  expect(await target.boundingBox()).toEqual(targetBounds);
   await page.getByRole('button', { name: 'Devam et', exact: true }).click();
   await page.clock.runFor(100);
   await page.getByRole('button', { name: /^Yıldız, konum/ }).focus();
   await page.keyboard.press('Enter'); await page.clock.runFor(800);
   await noOverflow(page);
   await page.screenshot({ path: `../../artifacts/attention-ui/${testInfo.project.name}-playing.png`, fullPage: true });
-  for (let round = 5; round <= 12; round++) {
+  for (let round = 5; round <= 24; round++) {
     await page.getByRole('button', { name: /^Yıldız, konum/ }).click(); await page.clock.runFor(800);
   }
-  await expect(page.getByRole('heading', { name: 'Hedeflerin 10 tanesini yakaladınız.' })).toBeVisible();
-  await expect(page.locator('.results')).toContainText('%83');
+  await expect(page.getByRole('heading', { name: 'Hedeflerin 22 tanesini yakaladınız.' })).toBeVisible();
+  await expect(page.locator('.results')).toContainText('%92');
   await expect(page.locator('.results')).toContainText('sn');
   await expect(page.locator('.summary-panel')).toContainText('KAYDEDİLMEDİ');
   await page.screenshot({ path: `../../artifacts/attention-ui/${testInfo.project.name}-result.png`, fullPage: true });
@@ -99,18 +105,29 @@ test('simple practice, correct wrong missed and completion without writes', asyn
   expect(writes).toEqual([]); expect(errors).toEqual([]);
 });
 
-for (const [label, count] of [['Dengeli', 12], ['Yoğun', 20]]) {
-  test(`${label} preset applies board and single target with no layout overflow`, async ({ page }) => {
+for (const [group, level, count, rounds, seconds] of [['Çocuk', 4, 12, 36, 4.5], ['Genç yetişkin', 5, 20, 48, 3]]) {
+  test(`${group} level ${level} applies settings and visible target with no layout overflow`, async ({ page }, testInfo) => {
     const { errors, writes } = await prepare(page);
-    await page.getByRole('button', { name: new RegExp(`^${label}`) }).click();
+    await page.getByRole('button', { name: group, exact: true }).click();
+    await page.getByRole('button', { name: `Seviye ${level}`, exact: true }).click();
+    await expect(page.locator('.settings-summary')).toContainText(`${rounds} tur`);
     await pauseClock(page);
     await practice(page); await page.getByRole('button', { name: 'Denemeyi başlat' }).click();
     await page.clock.runFor(100);
     await expect(page.locator('.shape-button')).toHaveCount(count);
+    await expect(page.getByRole('heading', { name: `Tur 1 / ${rounds}` })).toBeVisible();
+    const remaining = Number((await page.locator('.time').innerText()).replace(',', '.').replace(' sn', ''));
+    expect(remaining).toBeLessThanOrEqual(seconds); expect(remaining).toBeGreaterThan(seconds - .5);
+    const target = page.getByRole('img', { name: 'Aranacak sembol: yıldız' });
+    await expect(target).toBeVisible();
+    const cue = await target.boundingBox(), board = await page.locator('.board-wrap').boundingBox();
+    expect(cue.y + cue.height).toBeLessThan(board.y);
+    expect(cue.width).toBeGreaterThanOrEqual(48);
     await expect(page.getByRole('button', { name: /^Yıldız, konum/ })).toHaveCount(1);
     const bounds = await page.locator('.shape-button').first().boundingBox();
     expect(bounds.width).toBeGreaterThanOrEqual(44); expect(bounds.height).toBeGreaterThanOrEqual(44);
     const last = await page.locator('.shape-button').last().boundingBox();
+    await page.screenshot({ path: `../../artifacts/attention-ui/${testInfo.project.name}-level-${level}.png`, fullPage: true });
     expect(last.y + last.height).toBeLessThanOrEqual(page.viewportSize().height);
     await noOverflow(page); expect(writes).toEqual([]); expect(errors).toEqual([]);
   });
@@ -127,7 +144,7 @@ test('hidden page pauses the trial and requires explicit resume', async ({ page 
   });
   await page.clock.runFor(20000);
   await expect(page.getByText('Duraklatıldı', { exact: true })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Tur 1 / 12' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Tur 1 / 24' })).toBeVisible();
   await page.evaluate(() => {
     Object.defineProperty(document, 'hidden', { configurable: true, get: () => false });
     document.dispatchEvent(new Event('visibilitychange'));
@@ -197,5 +214,31 @@ test('catalogue card opens the prototype without replacing the Focus catalogue',
   await expect(card).toBeVisible();
   await card.getByRole('button', { name: 'Önizlemeyi başlat' }).click();
   await expect(page.getByRole('heading', { name: 'Hedefi Yakala.' })).toBeVisible();
+  expect(writes).toEqual([]); expect(errors).toEqual([]);
+});
+
+test('all four groups and five levels are selectable and stay selected after reset', async ({ page }) => {
+  const { writes, errors } = await prepare(page);
+  const groups = ['Çocuk', 'Genç', 'Genç yetişkin', 'Yetişkin'];
+  for (const group of groups) {
+    await page.getByRole('button', { name: group, exact: true }).click();
+    for (let level = 1; level <= 5; level++) {
+      await page.getByRole('button', { name: `Seviye ${level}`, exact: true }).click();
+      await expect(page.locator('.settings-summary')).toContainText(`${group} · Seviye ${level}`);
+      await expect(page.getByRole('button', { name: group, exact: true })).toHaveAttribute('aria-pressed', 'true');
+      await expect(page.getByRole('button', { name: `Seviye ${level}`, exact: true })).toHaveAttribute('aria-pressed', 'true');
+    }
+  }
+  await noOverflow(page); await pauseClock(page); await practice(page);
+  await page.getByRole('button', { name: 'Denemeyi başlat' }).click();
+  await page.clock.runFor(100);
+  await expect(page.locator('.age-option')).toHaveCount(0);
+  await expect(page.locator('.level-option')).toHaveCount(0);
+  for (let round = 0; round < 48; round++) {
+    await page.getByRole('button', { name: /^Yıldız, konum/ }).click(); await page.clock.runFor(800);
+  }
+  await expect(page.getByRole('heading', { name: 'Hedeflerin 48 tanesini yakaladınız.' })).toBeVisible();
+  await page.getByRole('button', { name: 'Yeniden dene' }).click();
+  await expect(page.locator('.settings-summary')).toContainText('Yetişkin · Seviye 5');
   expect(writes).toEqual([]); expect(errors).toEqual([]);
 });

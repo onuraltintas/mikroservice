@@ -78,6 +78,42 @@ describe('Attention prototype UI', () => {
     fixture.destroy();
   });
 
+  it('switches every age and level through the controls and preserves both on reset', () => {
+    const fixture = TestBed.createComponent(AttentionPreviewComponent); fixture.detectChanges();
+    const c = fixture.componentInstance;
+    const root = fixture.nativeElement as HTMLElement;
+    for (let age = 0; age < 4; age++) {
+      root.querySelectorAll<HTMLButtonElement>('.age-option')[age].click(); fixture.detectChanges();
+      for (let level = 1; level <= 5; level++) {
+        root.querySelectorAll<HTMLButtonElement>('.level-option')[level - 1].click(); fixture.detectChanges();
+        expect(c.selectedAgeGroupIndex).toBe(age);
+        expect(c.selectedLevel).toBe(level);
+        expect(c.game.preset).toBe(c.presets[age * 5 + level - 1]);
+        expect(root.querySelectorAll('.age-option[aria-pressed="true"]').length).toBe(1);
+        expect(root.querySelectorAll('.level-option[aria-pressed="true"]').length).toBe(1);
+      }
+    }
+    c.startTutorial(); c.reset(); fixture.detectChanges();
+    expect(c.selectedAgeGroupIndex).toBe(3); expect(c.selectedLevel).toBe(5);
+    expect(c.game.preset.rounds).toBe(48);
+    fixture.destroy();
+  });
+
+  it('rejects invalid age or level values and locks settings after starting', () => {
+    const fixture = TestBed.createComponent(AttentionPreviewComponent); fixture.detectChanges();
+    const c = fixture.componentInstance;
+    for (const age of [-1, 4, .5, NaN]) c.selectAgeGroup(age);
+    for (const level of [-1, 0, 6, .5, NaN]) c.selectLevel(level);
+    expect(c.selectedPresetIndex).toBe(0);
+    c.selectLevel(5); c.selectAgeGroup(2);
+    expect(c.selectedPresetIndex).toBe(14);
+    c.startTutorial(); c.selectAgeGroup(0); c.selectLevel(1);
+    expect(c.selectedPresetIndex).toBe(14);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.age-option')).toBeNull();
+    fixture.destroy();
+  });
+
   it('shows the target as a non-interactive SVG above the board throughout play and pause', fakeAsync(() => {
     spyOn(performance, 'now').and.callFake(() => Date.now());
     const fixture = TestBed.createComponent(AttentionPreviewComponent); fixture.detectChanges();
