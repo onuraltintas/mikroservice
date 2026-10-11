@@ -68,8 +68,31 @@ public sealed class ErrorAnalysisPreparedContentTests
         var text = ReadingText.Create(Guid.NewGuid(), "Başka", string.Join(" ", Enumerable.Repeat("kelime", length)),
             difficultyLevel: level, exerciseId: exercise.Id, targetAgeGroupId: commonAge ? null : exercise.TargetAgeGroupId);
         db.ReadingTexts.Add(text); await db.SaveChangesAsync();
+        var config = JsonNode.Parse(exercise.ConfigurationJson)!;
+        config["engineConfig"]!["errorsByTextId"]![text.Id.ToString()] = JsonSerializer.SerializeToNode(new[] {
+            new { wordIndex = 0, originalWord = "kelime", errorWord = "keliem" }
+        });
+        exercise.Update(exercise.Title, exercise.Description, exercise.TypeCode, config.ToJsonString(), 4,
+            exercise.ExerciseTypeId, exercise.TargetAgeGroupId, user, DateTime.UtcNow);
+        await db.SaveChangesAsync();
         await Assert.ThrowsAnyAsync<Exception>(() => Service(db).StartAsync(user, new() { ExerciseId = exercise.Id, ReadingTextId = text.Id }));
         Assert.Empty(db.ExerciseSessions);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Root_prepared_configuration_supports_automatic_and_explicit_text(bool explicitText)
+    {
+        await using var db = Context(); var user = Guid.NewGuid();
+        var (exercise, text) = await Seed(db, user);
+        var nested = JsonNode.Parse(exercise.ConfigurationJson)!["engineConfig"]!.DeepClone();
+        nested["engineType"] = "error_analysis";
+        exercise.Update(exercise.Title, exercise.Description, exercise.TypeCode, nested.ToJsonString(), 4,
+            exercise.ExerciseTypeId, exercise.TargetAgeGroupId, user, DateTime.UtcNow);
+        await db.SaveChangesAsync();
+        var started = await Service(db).StartAsync(user, new() { ExerciseId = exercise.Id, ReadingTextId = explicitText ? text.Id : null });
+        Assert.Equal("yanlız", started.InitialData.GetProperty("errorAnalysisWords")[0].GetProperty("text").GetString());
     }
 
     [Fact]
