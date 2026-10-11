@@ -788,8 +788,8 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
           }
           this.backendSessionConfig = this.createPreviewReadingConfig(readingText);
           this.comprehensionQuestions = this.backendSessionConfig['questions'] as any[];
-          const requiredQuestions = ['reading_comprehension', 'text_fade'].includes(this.parsedConfig?.['engineType'] || '')
-            && this.previewRequiresQuestions()
+          const requiredQuestions = this.parsedConfig?.['engineType'] === 'text_fade' && this.previewRequiresQuestions() ? 4
+            : this.parsedConfig?.['engineType'] === 'reading_comprehension'
             ? this.parsedConfig?.['engineConfig']?.['content']?.questionCount ?? this.parsedConfig?.['content']?.questionCount : undefined;
           if (requiredQuestions && this.comprehensionQuestions.length < requiredQuestions) { retry(); return; }
           if (requiredQuestions) {
@@ -945,7 +945,8 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       ? availableQuestions.filter((question: any) => Number(question.type ?? question.questionType ?? question.QuestionType) === 1)
       : ['reading_comprehension', 'text_fade'].includes(this.parsedConfig?.['engineType'] || '')
           && this.previewRequiresQuestions()
-          && (this.parsedConfig?.['engineConfig']?.['content']?.questionCount ?? this.parsedConfig?.['content']?.questionCount)
+          && (this.parsedConfig?.['engineType'] === 'text_fade'
+            || (this.parsedConfig?.['engineConfig']?.['content']?.questionCount ?? this.parsedConfig?.['content']?.questionCount))
       ? availableQuestions.filter((question: any) => Number(question.type ?? question.questionType ?? question.QuestionType) >= 1
         && Number(question.type ?? question.questionType ?? question.QuestionType) <= 3
         && Number(question.bloomLevel ?? question.BloomLevel) >= 1 && Number(question.bloomLevel ?? question.BloomLevel) <= 6

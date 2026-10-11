@@ -1,5 +1,6 @@
 using System.Reflection;
 using System.Text.Json.Nodes;
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Shared.IntegrationTests.Fixtures;
 using SpeedReading.Application.ExerciseSessions;
@@ -11,6 +12,88 @@ namespace Identity.API.IntegrationTests;
 [Collection("Database")]
 public sealed class SpeedReadingTextFadePostgresTests(PostgresFixture postgres)
 {
+    [Theory]
+    [InlineData("valid")]
+    [InlineData("changed")]
+    [InlineData("missing-questions")]
+    public async Task Catalog_pack_requires_four_questions_is_atomic_and_idempotent(string scenario)
+    {
+        var directory = new DirectoryInfo(AppContext.BaseDirectory);
+        while (directory is not null && !Directory.Exists(Path.Combine(directory.FullName, "content-packs"))) directory = directory.Parent;
+        var pack = Path.Combine(directory!.FullName, "content-packs", "text-fading", "v1");
+        using var settings = JsonDocument.Parse(await File.ReadAllTextAsync(Path.Combine(pack, "settings.json")));
+        var sql = await File.ReadAllTextAsync(Path.Combine(pack, "apply.sql"));
+        await using var db = new OwnedSpeedReadingDbContext(new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>()
+            .UseNpgsql(postgres.ConnectionString).Options);
+        // Only the disposable Testcontainers database supplied by PostgresFixture.
+        await db.Database.EnsureDeletedAsync();
+        try
+        {
+            await db.Database.EnsureCreatedAsync();
+            var student = Guid.NewGuid();
+            var type = ExerciseType.Create(Guid.NewGuid(), "TextFading", "Metin Solma", "text_fade");
+            db.ExerciseTypes.Add(type);
+            foreach (var row in settings.RootElement.EnumerateArray())
+            {
+                if (row.GetProperty("previousConfiguration").ValueKind != JsonValueKind.Null)
+                    db.Exercises.Add(Exercise.Create(row.GetProperty("previousTitle").GetString()!, "reading",
+                        scenario == "changed" ? "{}" : row.GetProperty("previousConfiguration").GetRawText(),
+                        row.GetProperty("level").GetInt32(), student, type.Id, row.GetProperty("id").GetGuid(),
+                        targetAgeGroupId: row.GetProperty("ageGroupId").GetGuid()));
+                var text = ReadingText.Create(Guid.NewGuid(), "Gerçek test metni", "bir iki üç dört beş altı",
+                    difficultyLevel: row.GetProperty("level").GetInt32(), targetAgeGroupId: row.GetProperty("ageGroupId").GetGuid());
+                db.ReadingTexts.Add(text);
+                for (var index = 0; index < (scenario == "missing-questions" ? 3 : 5); index++)
+                    db.ReadingQuestions.Add(ReadingQuestion.Create(Guid.NewGuid(), text.Id, $"Soru {index}", "A", index,
+                        type: 1, bloomLevel: 1, optionA: "A", optionB: "B", optionC: "C", optionD: "D"));
+            }
+            await db.SaveChangesAsync();
+            var originals = await db.Exercises.AsNoTracking().ToDictionaryAsync(item => item.Id, item => item.ConfigurationJson);
+            if (scenario != "valid")
+            {
+                await Assert.ThrowsAsync<Npgsql.PostgresException>(() => ExecutePackAsync(sql));
+                Assert.Equal(11, await db.Exercises.CountAsync());
+                foreach (var exercise in await db.Exercises.AsNoTracking().ToListAsync()) Assert.Equal(originals[exercise.Id], exercise.ConfigurationJson);
+                return;
+            }
+            // Keep an open old session across the catalog update.
+            var serviceType = typeof(OwnedSpeedReadingDbContext).Assembly.GetType("SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingExerciseSessions")!;
+            var service = (ISpeedReadingExerciseSessions)Activator.CreateInstance(serviceType,
+                BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, [db], null)!;
+            var oldExercise = await db.Exercises.FirstAsync();
+            var oldStart = await service.StartAsync(student, new() { ExerciseId = oldExercise.Id });
+            var oldSnapshot = (await db.ExerciseSessions.SingleAsync()).SessionDataJson;
+            await ExecutePackAsync(sql);
+            db.ChangeTracker.Clear();
+            var versions = await db.Exercises.AsNoTracking().ToDictionaryAsync(item => item.Id, item => item.Version);
+            await ExecutePackAsync(sql);
+            db.ChangeTracker.Clear();
+            Assert.Equal(20, await db.Exercises.CountAsync());
+            foreach (var exercise in await db.Exercises.ToListAsync()) Assert.Equal(versions[exercise.Id], exercise.Version);
+            Assert.Equal(oldStart.SessionId, (await service.StartAsync(student, new() { ExerciseId = oldExercise.Id })).SessionId);
+            Assert.True(JsonNode.DeepEquals(JsonNode.Parse(oldSnapshot), JsonNode.Parse((await db.ExerciseSessions.SingleAsync()).SessionDataJson)));
+            foreach (var row in settings.RootElement.EnumerateArray())
+            {
+                var started = await service.StartAsync(Guid.NewGuid(), new() { ExerciseId = row.GetProperty("id").GetGuid() });
+                Assert.Equal(4, started.InitialData.GetProperty("questions").GetArrayLength());
+                Assert.Equal(row.GetProperty("configuration").GetProperty("engineConfig").GetProperty("fading").GetProperty("speedWpm").GetInt32(),
+                    started.InitialData.GetProperty("fadeDisplayPaceWpm").GetDecimal());
+                Assert.Equal(0, started.InitialData.GetProperty("readingMaximumMs").GetInt32());
+            }
+            Assert.Equal(20, await db.ReadingTexts.CountAsync());
+            Assert.Equal(100, await db.ReadingQuestions.CountAsync());
+        }
+        finally { await db.Database.EnsureDeletedAsync(); }
+    }
+
+    private async Task ExecutePackAsync(string sql)
+    {
+        await using var connection = new Npgsql.NpgsqlConnection(postgres.ConnectionString);
+        await connection.OpenAsync();
+        await using var command = new Npgsql.NpgsqlCommand(sql, connection);
+        await command.ExecuteNonQueryAsync();
+    }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]

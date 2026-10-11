@@ -5,13 +5,14 @@ const exerciseId = '30000000-0000-0000-0000-000000000001';
 const typeId = '30000000-0000-0000-0000-000000000002';
 const textId = '30000000-0000-0000-0000-000000000003';
 
-async function prepare(page, role = 'Admin', timeout = false) {
+async function prepare(page, role = 'Admin', timeout = false, questionCount = 0) {
   const errors = [], writes = [];
   page.on('pageerror', error => errors.push(error.message));
   await page.addInitScript(() => localStorage.setItem('currentUser', JSON.stringify({ id: 'test-user' })));
   const exercise = { id: exerciseId, exerciseTypeId: typeId, title: 'Metin Solma testi', difficultyLevel: 3,
     exerciseTypeName: 'TextFading', configurationJson: JSON.stringify({ engineType: 'text_fade', readingTextId: textId,
       engineConfig: { fading: { speedWpm: 200, lagMs: 0 },
+        ...(questionCount ? { readingPurpose: 'evaluation', content: { questionCount: 4 } } : {}),
         visuals: { highlightColor: 'blue' }, timing: timeout ? { timeLimitSec: 1 } : {} } }) };
   await page.route('**/api/**', async route => {
     const request = route.request(), path = new URL(request.url()).pathname;
@@ -27,7 +28,11 @@ async function prepare(page, role = 'Admin', timeout = false) {
     } else if (path.endsWith('/exercise-types')) response = { items: [{ id: typeId, name: 'TextFading', displayName: 'Metin Solma', engineType: 'text_fade', isActive: true }], totalCount: 1 };
     else if (path.endsWith(`/exercises/${exerciseId}`)) response = exercise;
     else if (path.endsWith('/exercises')) response = { items: [exercise], totalCount: 1 };
-    else if (path.endsWith(`/reading-texts/${textId}`)) response = { id: textId, title: 'Metin', content: 'bir iki üç dört beş altı', wordCount: 6, questions: [] };
+    else if (path.endsWith(`/reading-texts/${textId}`)) response = { id: textId, title: 'Metin', difficultyLevel: 3,
+      content: 'bir iki üç dört beş altı', wordCount: 6,
+      questions: Array.from({ length: questionCount }, (_, index) => ({ id: `question-${index}`,
+        questionText: `Metne bağlı soru ${index+1}`, type: 1, bloomLevel: 1, orderIndex: index,
+        correctAnswer: 'A', optionA: 'Doğru cevap', optionB: 'B', optionC: 'C', optionD: 'D' })) };
     else if (path.includes('/profile/status')) response = { hasAgeGroupConfiguration: true };
     else if (path.endsWith('/my-modules')) response = { hasSpeedReading: true };
     await route.fulfill({ json: response });
@@ -71,6 +76,29 @@ test('teacher timeout reports incomplete demonstration without preview persisten
 test('student cannot use staff-only custom preview controls', async ({ page }) => {
   await prepare(page, 'Student');
   await expect(page.getByRole('button', { name: 'Özel ayarlarla dene' })).toHaveCount(0);
+});
+
+test('evaluation preview asks exactly four questions from the selected text without writes', async ({ page }) => {
+  const { errors, writes } = await prepare(page, 'Admin', false, 5);
+  await launch(page);
+  await page.clock.runFor(2100);
+  for (let index = 0; index < 4; index++) {
+    await expect(page.locator('.question-container .question-text')).toContainText(`Metne bağlı soru ${index+1}`);
+    await page.locator('.question-container .answer-option').first().click();
+    await page.getByRole('button', { name: index === 3 ? 'Sonuçları Gör' : 'Sonraki Soru' }).click();
+  }
+  await expect(page.getByText('Önizleme sonucu — kaydedilmedi.', { exact: true })).toBeVisible();
+  expect(writes).toEqual([]);
+  expect(errors).toEqual([]);
+});
+
+test('evaluation preview refuses a text with only three questions', async ({ page }) => {
+  const { writes } = await prepare(page, 'Teacher', false, 3);
+  await page.getByRole('button', { name: 'Özel ayarlarla dene' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Denemeyi başlat' }).click();
+  await expect(page.getByText('Bu egzersize uygun yayımlanmış metin yüklenemedi.', { exact: false })).toBeVisible();
+  await expect(page.locator('.start-button-large')).toHaveCount(0);
+  expect(writes).toEqual([]);
 });
 
 for (const partial of [false, true]) test(`student honors server ${partial ? 'partial override' : 'full result'} without fabricated WPM`, async ({ page }) => {

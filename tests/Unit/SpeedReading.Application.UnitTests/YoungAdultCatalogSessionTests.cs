@@ -42,8 +42,9 @@ public sealed class YoungAdultCatalogSessionTests
         {
             var text = ReadingText.Create(Guid.NewGuid(), "Üniversitede okuma", "Araştırma yapmak farklı düşünceleri karşılaştırmayı ve kanıtları dikkatle değerlendirmeyi gerektirir.", difficultyLevel: level, targetAgeGroupId: age);
             db.ReadingTexts.Add(text);
-            db.ReadingQuestions.Add(ReadingQuestion.Create(Guid.NewGuid(), text.Id, "Araştırma ne gerektirir?", "A", 0, 1, 1,
-                optionA: "Kanıtları değerlendirmek", optionB: "Uyumak", optionC: "Koşmak", optionD: "Yüzmek"));
+            for (var index = 0; index < 4; index++)
+                db.ReadingQuestions.Add(ReadingQuestion.Create(Guid.NewGuid(), text.Id, $"Araştırma test sorusu {index + 1}", "A", index, 1, 1,
+                    optionA: "Kanıtları değerlendirmek", optionB: "Uyumak", optionC: "Koşmak", optionD: "Yüzmek"));
         }
         foreach (var scene in sceneCatalog.RootElement.EnumerateArray())
         {

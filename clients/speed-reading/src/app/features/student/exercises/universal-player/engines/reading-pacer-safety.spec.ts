@@ -188,7 +188,7 @@ describe('reading pacer runtime safety', () => {
     const highlight = new WordHighlightEngine();
 
     stream.initialize({ engineConfig: { visuals: { fontSize: 'xlarge', showFixation: false } } } as any, callbacks);
-    fade.initialize({ engineConfig: { visuals: { fontSize: 'large' } } } as any, callbacks);
+    fade.initialize({ readingTextContent: 'Gerçek metin.', engineConfig: { visuals: { fontSize: 'large' } } } as any, callbacks);
     highlight.initialize({ engineConfig: { visuals: { fontSize: 'small' } } } as any, callbacks);
 
     expect(stream.getFontSize()).toBe('xlarge');
@@ -313,7 +313,7 @@ describe('reading pacer runtime safety', () => {
   it('clamps text fade WPM even for legacy active configuration', () => {
     const engine = new TextFadeEngine();
 
-    engine.initialize({ TargetWpm: 100_000, LagMs: -1 } as any, callbacks);
+    engine.initialize({ readingTextContent: 'Gerçek metin.', TargetWpm: 100_000, LagMs: -1 } as any, callbacks);
 
     expect(engine.getWpm()).toBe(1500);
   });
@@ -345,14 +345,14 @@ describe('reading pacer runtime safety', () => {
     const highlight = new WordHighlightEngine();
     const stream = new TextStreamEngine();
 
-    expect(() => fade.initialize({ fading: 'invalid' } as any, callbacks)).not.toThrow();
+    expect(() => fade.initialize({ readingTextContent: 'Gerçek metin.', fading: 'invalid' } as any, callbacks)).not.toThrow();
     expect(() => highlight.initialize({ pacer: 'invalid', content: 'invalid' } as any, callbacks)).not.toThrow();
     expect(() => stream.initialize({ timing: 'invalid', content: 'invalid' } as any, callbacks)).not.toThrow();
   });
 
   it('preserves the normalized text fade lag when starting', fakeAsync(() => {
     const engine = new TextFadeEngine();
-    engine.initialize({ TargetWpm: 200, LagMs: 1000 } as any, callbacks);
+    engine.initialize({ readingTextContent: 'Gerçek metin.', TargetWpm: 200, LagMs: 1000 } as any, callbacks);
 
     engine.start();
 

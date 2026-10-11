@@ -135,15 +135,17 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                 ?? exerciseTypeName;
         }
 
-        if (request.ReadingTextId.HasValue && assessmentSnapshot is null)
+        async Task ValidateExplicitReadingTextAsync(CancellationToken token)
         {
+            if (!request.ReadingTextId.HasValue || assessmentSnapshot is not null)
+                return;
             var explicitConfig = ParseJsonOrEmpty(configurationJson);
             var explicitContent = ReadObject(ReadObject(explicitConfig, "engineConfig"), "content");
             var isFreeText = ExerciseConfigurationRules.NormalizeEngineType(exerciseEngineType) == "free_reading";
             var isScanText = ExerciseConfigurationRules.NormalizeEngineType(exerciseEngineType) is "scan_find" or "scanning";
             var scanTaskIds = isScanText ? ScanningTaskTextIds(ReadObject(explicitConfig, "engineConfig").ValueKind == JsonValueKind.Object
                 ? ReadObject(explicitConfig, "engineConfig") : explicitConfig) : [];
-            var usesTextBand = isFreeText || isScanText || IsEngineType(exerciseEngineType, "reading_comprehension") || IsEngineType(exerciseEngineType, "text_fade")
+            var usesTextBand = isFreeText || isScanText || IsEngineType(exerciseEngineType, "reading_comprehension")
                 || exerciseTypeName.Equals("SpeedReading", StringComparison.OrdinalIgnoreCase)
                 || exerciseTypeName.Equals("Chunking", StringComparison.OrdinalIgnoreCase);
             var minimumWords = usesTextBand ? ReadPositiveInt(explicitContent, "minWordCount") ?? ReadPositiveInt(ReadObject(explicitConfig, "content"), "minWordCount") ?? 0 : 0;
@@ -162,12 +164,15 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                     && (!profileAgeGroupId.HasValue
                         || item.TargetAgeGroupId == null
                         || item.TargetAgeGroupId == profileAgeGroupId.Value)
-                    && (item.ExerciseId == null || item.ExerciseId == request.ExerciseId), cancellationToken);
+                    && (item.ExerciseId == null || item.ExerciseId == request.ExerciseId), token);
             if (!readingTextMatches)
             {
                 throw new KeyNotFoundException("Reading text not found or does not belong to the exercise.");
             }
         }
+
+        if (!IsEngineType(exerciseEngineType, "text_fade"))
+            await ValidateExplicitReadingTextAsync(cancellationToken);
 
         // Starting a session is retried when a player is refreshed or the
         // browser restores its previous route. Serialize starts for the same
@@ -311,6 +316,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             }
             if (activeSession is not null)
                 throw new InvalidOperationException("An active session already exists for this exercise.");
+            if (IsEngineType(exerciseEngineType, "text_fade"))
+                await ValidateExplicitReadingTextAsync(token);
 
             var readingTextId = assessmentSnapshot is not null
                 ? assessmentSnapshot.ReadingText?.Id
@@ -336,10 +343,10 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                 var usesTextBand = isFreeReading || isComprehension || isScanText || normalizedEngineType == "text_fade"
                     || exerciseTypeName.Equals("SpeedReading", StringComparison.OrdinalIgnoreCase)
                     || exerciseTypeName.Equals("Chunking", StringComparison.OrdinalIgnoreCase);
-                var comprehensionQuestionCount = isComprehension || (normalizedEngineType == "text_fade"
+                var comprehensionQuestionCount = normalizedEngineType == "text_fade"
                     && ExerciseConfigurationRules.ResolveReadingPurpose(normalizedEngineType,
                         ReadString(ReadObject(parsedConfiguration, "engineConfig"), "readingPurpose")
-                            ?? ReadString(parsedConfiguration, "readingPurpose"), request.AssessmentAttemptId.HasValue) == "evaluation")
+                            ?? ReadString(parsedConfiguration, "readingPurpose"), request.AssessmentAttemptId.HasValue) == "evaluation" ? 4 : isComprehension
                     ? ReadPositiveInt(freeContent, "questionCount") ?? ReadPositiveInt(ReadObject(parsedConfiguration, "content"), "questionCount") ?? 0 : 0;
                 var freeMinimumWords = usesTextBand ? ReadPositiveInt(freeContent, "minWordCount") ?? ReadPositiveInt(ReadObject(parsedConfiguration, "content"), "minWordCount") ?? 0 : 0;
                 var freeMaximumWords = usesTextBand ? ReadPositiveInt(freeContent, "maxWordCount") ?? ReadPositiveInt(ReadObject(parsedConfiguration, "content"), "maxWordCount") ?? 0 : 0;
@@ -1556,7 +1563,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         if (IsEngineType(exerciseEngineType, "reading_comprehension")
             || (IsTextFade(state) && state.ReadingPurpose == "evaluation"))
         {
-            var count = ReadPositiveInt(ReadObject(effectiveConfig, "content"), "questionCount")
+            var count = IsTextFade(state) ? 4 : ReadPositiveInt(ReadObject(effectiveConfig, "content"), "questionCount")
                 ?? ReadPositiveInt(ReadObject(config, "content"), "questionCount");
             if (count.HasValue)
             {

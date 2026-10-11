@@ -600,7 +600,7 @@ public static class ExerciseConfigurationRules
         {
             ValidateOptionalIntRange(content, "minWordCount", 1, 100_000, "Minimum kelime sayısı");
             ValidateOptionalIntRange(content, "maxWordCount", 1, 100_000, "Maksimum kelime sayısı");
-            ValidateOptionalIntRange(content, "questionCount", 1, 50, "Anlama soru sayısı");
+            ValidateOptionalIntRange(content, "questionCount", 4, 4, "Metin Solma anlama soru sayısı");
         }
         var fading = TryGetObject(config, "fading");
         if (!fading.HasValue)
