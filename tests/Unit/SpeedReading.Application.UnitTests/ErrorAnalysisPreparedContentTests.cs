@@ -35,6 +35,7 @@ public sealed class ErrorAnalysisPreparedContentTests
     [InlineData("original")]
     [InlineData("duplicate")]
     [InlineData("index")]
+    [InlineData("whitespace")]
     public async Task Invalid_annotations_cannot_silently_generate_or_reduce_errors(string reason)
     {
         await using var db = Context(); var user = Guid.NewGuid();
@@ -48,6 +49,7 @@ public sealed class ErrorAnalysisPreparedContentTests
         if (reason == "original") errors[0]!["originalWord"] = "başka";
         if (reason == "duplicate") errors.Add(errors[0]!.DeepClone());
         if (reason == "index") errors[0]!["wordIndex"] = 9;
+        if (reason == "whitespace") errors[0]!["errorWord"] = "iki kelime";
         exercise.Update(exercise.Title, exercise.Description, exercise.TypeCode, config.ToJsonString(), 4,
             exercise.ExerciseTypeId, exercise.TargetAgeGroupId, user, DateTime.UtcNow);
         await db.SaveChangesAsync();
