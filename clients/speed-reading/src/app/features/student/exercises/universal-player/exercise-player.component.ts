@@ -35,6 +35,7 @@ import { TextFadeEngine } from './engines/text-fade.engine';
 import { WordHighlightEngine } from './engines/word-highlight.engine';
 import { ReadingComprehensionEngine } from './engines/reading-comprehension.engine';
 import { VisualExpansionEngine } from './engines/visual-expansion.engine';
+import { resolveVisualExpansionSettings } from './engines/visual-expansion-settings';
 import { MotionPathEngine } from './engines/motion-path.engine';
 import { ScanFindEngine } from './engines/scan-find.engine';
 import { ErrorAnalysisEngine } from './engines/error-analysis.engine';
@@ -1563,6 +1564,8 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
           || this.backendSessionConfig?.DisplayDurationMs
           || this.backendSessionConfig?.visualExpansionDisplayDurationMs
           || this.parsedConfig?.['displayDurationMs'],
+        ...(engineType === 'visual_expansion'
+          ? resolveVisualExpansionSettings(this.parsedConfig ?? {}, this.backendSessionConfig ?? {}) : {}),
         isAssessmentMode: this.isAssessmentMode,
         scenes: this.backendSessionConfig?.VisualizationScenes
           || this.backendSessionConfig?.visualizationScenes

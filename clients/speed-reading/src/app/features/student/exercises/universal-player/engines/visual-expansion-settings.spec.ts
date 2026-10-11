@@ -15,7 +15,7 @@ describe('visual expansion catalog settings', () => {
     expect(resolveVisualExpansionSettings({ engineConfig: {
       rounds: 40, displayDurationMs: 1200, timing: { durationMs: 900 },
       expansion: { startDegrees: 10, targetDegrees: 20 }
-    } }, {}).displayDurationMs).toBe(900);
+    } }, {})['displayDurationMs']).toBe(900);
   });
   it('retains legacy root configuration without inventing missing values', () => {
     expect(resolveVisualExpansionSettings({ rounds: 6, startDegrees: 8, targetDegrees: 16, displayDurationMs: 1100 }))

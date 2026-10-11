@@ -7,7 +7,8 @@ public sealed record VisualExpansionRoundResult(
 
 public sealed record VisualExpansionDifficulty(
     int Degrees,
-    int DisplayDurationMs);
+    int DisplayDurationMs,
+    int ConsecutiveCorrect = 0);
 
 public static class VisualExpansionRoundRules
 {
@@ -28,7 +29,8 @@ public static class VisualExpansionRoundRules
         int sessionSeed,
         int roundIndex,
         string stimulusType,
-        int count)
+        int count,
+        IReadOnlyList<string>? previousStimuli = null)
     {
         var pool = stimulusType.Trim().ToLowerInvariant() switch
         {
@@ -41,8 +43,10 @@ public static class VisualExpansionRoundRules
         if (count <= 0 || count > pool.Length)
             throw new ArgumentOutOfRangeException(nameof(count));
 
+        var available = pool.Where(item => previousStimuli?.Contains(item) != true).ToArray();
+        if (available.Length < count) available = pool;
         var random = new Random(unchecked(sessionSeed * 397 ^ roundIndex));
-        return pool.OrderBy(_ => random.Next()).Take(count).ToArray();
+        return available.OrderBy(_ => random.Next()).Take(count).ToArray();
     }
 
     public static VisualExpansionRoundResult Evaluate(
@@ -68,7 +72,9 @@ public static class VisualExpansionRoundRules
         int currentDegrees,
         int targetDegrees,
         int currentDisplayDurationMs,
-        bool isCorrect)
+        bool isCorrect,
+        int consecutiveCorrect = 0,
+        bool staged = true)
     {
         var degrees = Math.Clamp(currentDegrees, 2, 60);
         var target = Math.Clamp(targetDegrees, degrees, 60);
@@ -76,8 +82,15 @@ public static class VisualExpansionRoundRules
         if (!isCorrect)
             return new VisualExpansionDifficulty(degrees, duration);
 
+        var streak = Math.Clamp(consecutiveCorrect, 0, 2) + 1;
+        if (staged && streak < 3)
+            return new VisualExpansionDifficulty(degrees, duration, streak);
+
+        if (staged && degrees < target)
+            return new VisualExpansionDifficulty(Math.Min(target, degrees + AngleIncreaseDegrees), duration);
+
         return new VisualExpansionDifficulty(
-            Math.Min(target, degrees + AngleIncreaseDegrees),
+            staged ? degrees : Math.Min(target, degrees + AngleIncreaseDegrees),
             Math.Max(
                 MinimumDisplayDurationMs,
                 (int)Math.Round(duration * DisplayDurationMultiplier, MidpointRounding.AwayFromZero)));
