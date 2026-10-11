@@ -4,6 +4,33 @@ import { RegressionReductionEngine } from './engines/regression-reduction.engine
 import { Subject } from 'rxjs';
 
 describe('regression player configuration', () => {
+  for (const [level, visibleHistoryWords] of [[1, 2], [2, 1], [3, 1], [4, 0], [5, 0]]) {
+    it(`keeps exactly ${visibleHistoryWords} previous words readable at level ${level}`, fakeAsync(() => {
+      const engine = new RegressionReductionEngine();
+      engine.initialize({ readingTextContent: 'bir iki üç dört beş altı',
+        targetWpm: 600, engineConfig: { maskingType: 'trailing', visibleHistoryWords } } as any, {
+        onStart: () => undefined, onPause: () => undefined, onResume: () => undefined,
+        onComplete: () => undefined, onError: () => undefined, onStateChange: () => undefined,
+        onStepComplete: () => undefined, onAction: () => undefined
+      });
+      const player = Object.create(ExercisePlayerComponent.prototype) as ExercisePlayerComponent;
+      player.engine = engine; engine.start(); tick(400);
+      for (let index = 0; index < 6; index++)
+        expect(player.isWordInTrailingMask(index)).toBe(index < 4 - visibleHistoryWords);
+      engine.destroy();
+    }));
+  }
+  it('uses canonical target tempo instead of a stale word delay', fakeAsync(() => {
+    const engine = new RegressionReductionEngine();
+    engine.initialize({ readingTextContent: 'bir iki üç', targetWpm: 300, wordDelayMs: 60 } as any, {
+      onStart: () => undefined, onPause: () => undefined, onResume: () => undefined,
+      onComplete: () => undefined, onError: () => undefined, onStateChange: () => undefined,
+      onStepComplete: () => undefined, onAction: () => undefined
+    });
+    expect(engine.getDisplayPaceWpm()).toBe(300);
+    engine.start(); tick(199); expect(engine.getCurrentWordIndex()).toBe(0);
+    tick(1); expect(engine.getCurrentWordIndex()).toBe(1); engine.destroy();
+  }));
   it('does not normalize unmeasured preview answers into measured comprehension', () => {
     const player = Object.create(ExercisePlayerComponent.prototype) as any;
     player.engine = { engineType: 'regression_reduction' };
