@@ -69,5 +69,9 @@ for (const [pattern, type] of [['radial','word'], ['vertical','symbol']]) test(`
   await expect(page.getByText('Önizleme sonucu — kaydedilmedi.', { exact: true })).toBeVisible();
   const responseTime = page.locator('.stat-card').filter({ hasText: 'Ortalama cevap süresi' }).locator('.stat-value');
   await expect(responseTime).toHaveText(/\d+[.,]\d{2} sn/);
+  await expect(page.getByText('Hedef uzaklık', { exact: true })).toBeVisible();
+  await expect(page.getByText('Hedefe ulaşıldı', { exact: true })).toHaveCount(0);
+  await expect(page.getByText('Hedefe ulaşılmadı', { exact: true })).toBeVisible();
+  await expect(page.getByText('Hedefteki doğruluk', { exact: true })).toBeVisible();
   expect(errors).toEqual([]); expect(writes).toEqual([]);
 });
