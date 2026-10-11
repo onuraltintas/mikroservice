@@ -81,7 +81,7 @@ export function getCustomPreviewControls(configuration: Record<string, unknown>)
         options: [{ value: 'small', label: 'Küçük' }, { value: 'medium', label: 'Orta' }, { value: 'large', label: 'Büyük' }] }];
       if (configuration['engineType'] === 'error_analysis') {
         controls.push(control('timeLimitSeconds', 'Çalışma süresi (saniye)', 15, 3600,
-          caseInsensitiveField(settings, 'timeLimit') ?? 180));
+          read('timeLimitSeconds') ?? read('timeLimit') ?? timing['timelimitsec'] ?? 180));
         const map = recordOrEmpty(caseInsensitiveField(settings, 'errorsByTextId'));
         const counts = Object.values(map).filter(Array.isArray).map(entries => entries.length);
         if (counts.length) controls.push(control('errorCount', 'Bulunacak hata sayısı', 1, Math.min(...counts),
@@ -257,7 +257,11 @@ export function applyCustomPreviewSettings<T extends Record<string, unknown>>(
     const settings = recordOrEmpty(result['engineConfig']);
     (result as Record<string, unknown>)['engineConfig'] = settings;
     if (engine === 'error_analysis') {
-      if (numeric['timeLimitSeconds'] !== undefined) settings['timeLimit'] = numeric['timeLimitSeconds'];
+      if (numeric['timeLimitSeconds'] !== undefined) {
+        Object.assign(settings, overrideFields(settings, { timeLimit: numeric['timeLimitSeconds'], timeLimitSeconds: numeric['timeLimitSeconds'] }));
+        const session = caseInsensitiveField(result, 'sessionData');
+        if (session && typeof session === 'object') (result as Record<string, unknown>)['sessionData'] = overrideFields(session, { timeLimitSeconds: numeric['timeLimitSeconds'] });
+      }
       if (numeric['errorCount'] !== undefined) {
         settings['errorCount'] = numeric['errorCount'];
         const map = recordOrEmpty(settings['errorsByTextId']);
