@@ -72,7 +72,10 @@ test('duplicate training exercise rolls back', () => rejected(`UPDATE speed_read
 
 for (const [name, mutate] of [
   ['target mode', config => { config.engineConfig.mode = 'tracking'; }],
-  ['unapproved non-timing field', config => { config.engineConfig.content.pointSize = 99; }]
+  ['unapproved non-timing field', config => { config.engineConfig.content.pointSize = 99; }],
+  ['missing duration', config => { delete config.engineConfig.timing.durationSeconds; }],
+  ['null interval', config => { config.engineConfig.timing.holdMs = null; }],
+  ['non-numeric duration', config => { config.engineConfig.timing.durationSeconds = '60'; }]
 ]) {
   test(`rejects payload drift in ${name} without modifying records`, () => {
     seed(); const before = rows(); const changed = structuredClone(settings);
