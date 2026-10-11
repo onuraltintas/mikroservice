@@ -8,6 +8,7 @@ describe('Grouping text boundaries', () => {
     ['Bir iki üç\n\ndört beş altı yedi', 2, [2, 3, 5, 7], [false, true, false, false]],
     ['Dr. Deniz 12.04.2026 tarihinde 3.5 litre aldı.', 3, [3, 6, 7], [false, false, false]],
     ['“Bir iki!” Üç dört.', 3, [2, 4], [false, false]],
+    ['Bir ٣. Üç dört.', 3, [2, 4], [false, false]],
   ] as const) {
     it(`preserves boundaries: ${text}`, () => {
       const boundaries = buildGroupingBoundaries(text, size);
@@ -18,6 +19,14 @@ describe('Grouping text boundaries', () => {
 
   it('rejects missing real text in chunking preview', () => {
     expect(() => new WordHighlightEngine().initialize({ mode: 'chunking' } as any, {} as any)).toThrow();
+  });
+
+  it('uses backend whitespace semantics in canonical grouping snapshots', () => {
+    const engine = new WordHighlightEngine();
+    engine.initialize({ mode: 'chunking', serverAuthoritative: true,
+      content: 'bir\u0085iki\uFEFFüç dört', groupingVersion: 1, groupingChunkSize: 2,
+      groupingChunks: [{ endIndex: 2, hasNewline: false }, { endIndex: 3, hasNewline: false }] } as any, {} as any);
+    expect(engine.getChunks().map(group => group.words)).toEqual([['bir', 'iki\uFEFFüç'], ['dört']]);
   });
 
   it('uses actual group size for timing and excludes pauses', fakeAsync(() => {
