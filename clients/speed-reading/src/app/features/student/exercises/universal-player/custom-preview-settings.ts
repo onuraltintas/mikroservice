@@ -174,10 +174,12 @@ export function getCustomPreviewControls(configuration: Record<string, unknown>)
           ? Math.round(60000 / boundedInteger(read('msPerWord'), 300, 40, 3000)) : 200;
       const pace = grouping ? read('targetWpm') ?? pacer['speedwpm'] ?? legacyTempo
         : read('targetWpm') ?? read('wpm') ?? pacer['speedwpm'] ?? fading['speedwpm'] ?? legacyTempo;
-      const controls = [control('speedWpm', grouping || configuration['engineType'] === 'subvocalization_reduction'
+      const controls = [control('speedWpm', grouping || ['subvocalization_reduction', 'regression_reduction'].includes(String(configuration['engineType']))
         ? 'Gösterim temposu (kelime/dakika)' : 'Okuma hızı (kelime/dakika)', 20, 1500, pace)];
       const speedReading = grouping && ['guided', 'speed_reading'].includes(String(read('mode')));
       if (configuration['engineType'] !== 'text_fade' && !speedReading) controls.push(control('chunkSize', 'Kelime grubu', 1, 10, groupSize));
+      if (configuration['engineType'] === 'regression_reduction') controls.push(
+        control('visibleHistoryWords', 'Okunabilir geçmiş kelime sayısı', 0, 2, read('visibleHistoryWords') ?? 0));
       return controls;
     }
   }
@@ -440,6 +442,8 @@ export function applyCustomPreviewSettings<T extends Record<string, unknown>>(
     return result;
   }
   if (validated['chunkSize'] !== undefined) settings['chunkSize'] = validated['chunkSize'];
+  if (engine === 'regression_reduction' && validated['visibleHistoryWords'] !== undefined)
+    settings['visibleHistoryWords'] = validated['visibleHistoryWords'];
   if (engine === 'word_highlight') {
     const existing = settings['pacer'];
     const pacer = existing && typeof existing === 'object' && !Array.isArray(existing)
@@ -465,6 +469,8 @@ export function applyCustomPreviewSettings<T extends Record<string, unknown>>(
       else overrides['wordDelayMs'] = 0;
     }
     if (validated['chunkSize'] !== undefined) overrides['chunkSize'] = validated['chunkSize'];
+    if (engine === 'regression_reduction' && validated['visibleHistoryWords'] !== undefined)
+      overrides['visibleHistoryWords'] = validated['visibleHistoryWords'];
     if (engine === 'subvocalization_reduction') merge('difficultySettings', overrides);
     updateSessions(overrides);
   }

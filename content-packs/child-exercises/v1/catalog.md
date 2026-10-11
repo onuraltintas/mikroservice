@@ -1,6 +1,6 @@
 # Çocuk egzersiz kataloğu v1
 
-5 seviye, 18 tür ve toplam 84 kayıt. Seviye dağılımı: 16 / 16 / 16 / 18 / 18. Temel 70 kayda dört türden 14 yeni egzersiz eklenmiştir.
+5 seviye, 18 tür ve toplam 88 kayıt. Seviye dağılımı: 16 / 16 / 16 / 18 / 18. Temel 70 kayda dört türden 14 yeni egzersiz eklenmiştir.
 
 Metin kimliği sabitlenmez. Yaş ve seviyeye uygun havuzdan iki okuma geçmişinde de kullanılmamış metin rastgele seçilir. Havuz tükenince en az kullanılan metinler arasından seçim yapılır. Başlatılıp bırakılan oturum da kullanım sayılır. Kelime etkinlikleri mevcut yaş/seviye kelime havuzunu kullanır.
 
@@ -124,3 +124,12 @@ Toplam 84 egzersiz, 18 tür. Seviye dağılımı: 16 / 16 / 16 / 18 / 18. Öncek
 | Visualization | 5 | `{"mode": "static"}` |
 
 Visualization: her seviyede üç metin sahnesi, her sahnede ayrıntı/konum/sıra için üç soru; toplam 15 sahne ve 45 soru. Gösterim süreleri 40/45/50/55/60 saniye. Tachistoscope sayı uzunluğu motor tarafından seviye+2 (3–7 basamak) olarak belirlenir. RSVP ve TextFading yalnızca 4–5. seviyelerde katalogda bulunur; isteğe bağlılık ayrı bir otomatik program filtresi değildir. Mevcut yaş/seviye ve kullanım geçmişi üzerinden metin seçimi kullanılır; kısa metin sınırı tanımlanmamıştır. TextFading duraklatılabilir; kaybolan kelimeleri aynı oturumda geri getiren bir katalog parametresi bulunmaz.
+
+## Regresyon v2
+
+| Egzersiz | Tür | Motor parametreleri |
+|---|---|---|
+| Regresyon Azaltma — Seviye 2 | RegressionReduction | `{"targetWpm":140,"chunkSize":1,"maskingType":"trailing","visibleHistoryWords":1,"readingPurpose":"evaluation","content":{"source":"reading_text","questionCount":5,"minWordCount":126,"maxWordCount":154}}` |
+| Regresyon Azaltma — Seviye 3 | RegressionReduction | `{"targetWpm":160,"chunkSize":1,"maskingType":"trailing","visibleHistoryWords":1,"readingPurpose":"evaluation","content":{"source":"reading_text","questionCount":5,"minWordCount":168,"maxWordCount":206}}` |
+| Regresyon Azaltma — Seviye 4 | RegressionReduction | `{"targetWpm":180,"chunkSize":1,"maskingType":"trailing","visibleHistoryWords":0,"readingPurpose":"evaluation","content":{"source":"reading_text","questionCount":5,"minWordCount":216,"maxWordCount":264}}` |
+| Regresyon Azaltma — Seviye 5 | RegressionReduction | `{"targetWpm":200,"chunkSize":1,"maskingType":"trailing","visibleHistoryWords":0,"readingPurpose":"evaluation","content":{"source":"reading_text","questionCount":5,"minWordCount":270,"maxWordCount":330}}` |

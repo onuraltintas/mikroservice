@@ -85,7 +85,6 @@ Sınav soru başına 48 saniye; 10 soruda en fazla 8 dakika cevaplama, metni oku
 | Noktaya Odaklan | Fixation | `{"mode":"fixation","timing":{"holdMs":750,"durationSeconds":45},"content":{"type":"letter","points":5,"peripheralCount":1,"pointSize":44}}` |
 | Konum Belleği | Focus | `{"mode":"position","nLevel":1,"totalSteps":28,"speedMs":1800,"gridSize":3}` |
 | Sıralı Kelime Gösterimi | RSVP | `{"mode":"rsvp","content":{"source":"reading_text"},"timing":{"durationMs":250,"intervalMs":0},"readingPurpose":"evaluation"}` |
-| Okuma Takibi ve Geri Dönüş Farkındalığı | RegressionReduction | `{"content":{"source":"reading_text"},"targetWpm":240,"wordDelayMs":250,"maskingType":"none","readingPurpose":"evaluation"}` |
 | Hedefler Arası Geçiş | Saccade | `{"mode":"saccade","timing":{"holdMs":700,"durationSeconds":70},"content":{"type":"number","pattern":"vertical","pointSize":44}}` |
 | Metinde Hedefi Bul | Scanning | `{"content":{"source":"random_text"},"targetCount":6,"timeLimit":180,"targets":{"mode":"find_all","caseSensitive":false}}` |
 | Sayı Avcısı | SchulteTable | `{"gridSize":5,"sequenceType":"numeric","rules":{"timeLimit":120}}` |
@@ -110,7 +109,6 @@ Sınav soru başına 48 saniye; 10 soruda en fazla 8 dakika cevaplama, metni oku
 | Noktaya Odaklan | Fixation | `{"mode":"fixation","timing":{"holdMs":700,"durationSeconds":45},"content":{"type":"letter","points":5,"peripheralCount":1,"pointSize":44}}` |
 | Konum Belleği | Focus | `{"mode":"position","nLevel":1,"totalSteps":30,"speedMs":1600,"gridSize":3}` |
 | Sıralı Kelime Gösterimi | RSVP | `{"mode":"rsvp","content":{"source":"reading_text"},"timing":{"durationMs":222,"intervalMs":0},"readingPurpose":"evaluation"}` |
-| Okuma Takibi ve Geri Dönüş Farkındalığı | RegressionReduction | `{"content":{"source":"reading_text"},"targetWpm":270,"wordDelayMs":222,"maskingType":"none","readingPurpose":"evaluation"}` |
 | Hedefler Arası Geçiş | Saccade | `{"mode":"saccade","timing":{"holdMs":650,"durationSeconds":80},"content":{"type":"number","pattern":"random","pointSize":44}}` |
 | Metinde Hedefi Bul | Scanning | `{"content":{"source":"random_text"},"targetCount":6,"timeLimit":210,"targets":{"mode":"find_all","caseSensitive":false}}` |
 | Sayı Avcısı | SchulteTable | `{"gridSize":5,"sequenceType":"numeric","rules":{"timeLimit":100}}` |
@@ -122,3 +120,13 @@ Sınav soru başına 48 saniye; 10 soruda en fazla 8 dakika cevaplama, metni oku
 | Çevredeki Harfler | VisualExpansion | `{"mode":"horizontal","rounds":20,"displayDurationMs":850,"startDegrees":8,"targetDegrees":26,"content":{"stimulusType":"letter"}}` |
 | Sahneyi Zihninde Canlandır | Visualization | `{"mode":"static"}` |
 | Kelime Bilgisi Testi | Vocabulary | `{"mode":"quiz","quizType":"mixed","timeLimitPerWord":0,"vocabulary":{"count":12,"difficultyLevel":5}}` |
+
+## Regresyon v2
+
+| Egzersiz | Tür | Motor parametreleri |
+|---|---|---|
+| Regresyon Azaltma — Seviye 1 | RegressionReduction | `{"targetWpm":160,"chunkSize":1,"maskingType":"trailing","visibleHistoryWords":2,"readingPurpose":"evaluation","content":{"source":"reading_text","questionCount":5,"minWordCount":144,"maxWordCount":176}}` |
+| Regresyon Azaltma — Seviye 2 | RegressionReduction | `{"targetWpm":190,"chunkSize":1,"maskingType":"trailing","visibleHistoryWords":1,"readingPurpose":"evaluation","content":{"source":"reading_text","questionCount":5,"minWordCount":213,"maxWordCount":262}}` |
+| Regresyon Azaltma — Seviye 3 | RegressionReduction | `{"targetWpm":220,"chunkSize":1,"maskingType":"trailing","visibleHistoryWords":1,"readingPurpose":"evaluation","content":{"source":"reading_text","questionCount":5,"minWordCount":297,"maxWordCount":364}}` |
+| Regresyon Azaltma — Seviye 4 | RegressionReduction | `{"targetWpm":260,"chunkSize":1,"maskingType":"trailing","visibleHistoryWords":0,"readingPurpose":"evaluation","content":{"source":"reading_text","questionCount":5,"minWordCount":409,"maxWordCount":501}}` |
+| Regresyon Azaltma — Seviye 5 | RegressionReduction | `{"targetWpm":290,"chunkSize":1,"maskingType":"trailing","visibleHistoryWords":0,"readingPurpose":"evaluation","content":{"source":"reading_text","questionCount":5,"minWordCount":522,"maxWordCount":638}}` |

@@ -83,7 +83,6 @@ Başlangıç temposu 180, 210, 240, 270, 300 kelime/dk. İlk 7 çalışma günü
 | Noktaya Odaklan | Fixation | `{"mode":"fixation","timing":{"holdMs":750,"durationSeconds":45},"content":{"type":"letter","points":5,"peripheralCount":1,"pointSize":44}}` |
 | Konum Belleği | Focus | `{"mode":"position","nLevel":1,"totalSteps":28,"speedMs":1800,"gridSize":3}` |
 | Sıralı Kelime Gösterimi | RSVP | `{"mode":"rsvp","content":{"source":"reading_text"},"timing":{"durationMs":222,"intervalMs":0},"readingPurpose":"evaluation"}` |
-| Okuma Takibi ve Geri Dönüş Farkındalığı | RegressionReduction | `{"content":{"source":"reading_text"},"targetWpm":270,"wordDelayMs":222,"maskingType":"none","readingPurpose":"evaluation"}` |
 | Hedefler Arası Geçiş | Saccade | `{"mode":"saccade","timing":{"holdMs":650,"durationSeconds":80},"content":{"type":"number","pattern":"vertical","pointSize":44}}` |
 | Metinde Hedefi Bul | Scanning | `{"content":{"source":"random_text"},"targetCount":6,"timeLimit":180,"targets":{"mode":"find_all","caseSensitive":false}}` |
 | Sayı Avcısı | SchulteTable | `{"gridSize":5,"sequenceType":"numeric","rules":{"timeLimit":120}}` |
@@ -108,7 +107,6 @@ Başlangıç temposu 180, 210, 240, 270, 300 kelime/dk. İlk 7 çalışma günü
 | Noktaya Odaklan | Fixation | `{"mode":"fixation","timing":{"holdMs":700,"durationSeconds":45},"content":{"type":"letter","points":5,"peripheralCount":1,"pointSize":44}}` |
 | Konum Belleği | Focus | `{"mode":"position","nLevel":1,"totalSteps":30,"speedMs":1600,"gridSize":3}` |
 | Sıralı Kelime Gösterimi | RSVP | `{"mode":"rsvp","content":{"source":"reading_text"},"timing":{"durationMs":200,"intervalMs":0},"readingPurpose":"evaluation"}` |
-| Okuma Takibi ve Geri Dönüş Farkındalığı | RegressionReduction | `{"content":{"source":"reading_text"},"targetWpm":300,"wordDelayMs":200,"maskingType":"none","readingPurpose":"evaluation"}` |
 | Hedefler Arası Geçiş | Saccade | `{"mode":"saccade","timing":{"holdMs":600,"durationSeconds":90},"content":{"type":"number","pattern":"random","pointSize":44}}` |
 | Metinde Hedefi Bul | Scanning | `{"content":{"source":"random_text"},"targetCount":6,"timeLimit":180,"targets":{"mode":"find_all","caseSensitive":false}}` |
 | Sayı Avcısı | SchulteTable | `{"gridSize":5,"sequenceType":"numeric","rules":{"timeLimit":100}}` |
@@ -120,3 +118,13 @@ Başlangıç temposu 180, 210, 240, 270, 300 kelime/dk. İlk 7 çalışma günü
 | Çevredeki Harfler | VisualExpansion | `{"mode":"horizontal","rounds":20,"displayDurationMs":850,"startDegrees":8,"targetDegrees":26,"content":{"stimulusType":"letter"}}` |
 | Sahneyi Zihninde Canlandır | Visualization | `{"mode":"static"}` |
 | Kelime Bilgisi Testi | Vocabulary | `{"mode":"quiz","quizType":"mixed","timeLimitPerWord":0,"vocabulary":{"count":12,"difficultyLevel":5}}` |
+
+## Regresyon v2
+
+| Egzersiz | Tür | Motor parametreleri |
+|---|---|---|
+| Regresyon Azaltma — Seviye 1 | RegressionReduction | `{"targetWpm":180,"chunkSize":1,"maskingType":"trailing","visibleHistoryWords":2,"readingPurpose":"evaluation","content":{"source":"reading_text","questionCount":5,"minWordCount":162,"maxWordCount":199}}` |
+| Regresyon Azaltma — Seviye 2 | RegressionReduction | `{"targetWpm":210,"chunkSize":1,"maskingType":"trailing","visibleHistoryWords":1,"readingPurpose":"evaluation","content":{"source":"reading_text","questionCount":5,"minWordCount":236,"maxWordCount":289}}` |
+| Regresyon Azaltma — Seviye 3 | RegressionReduction | `{"targetWpm":250,"chunkSize":1,"maskingType":"trailing","visibleHistoryWords":1,"readingPurpose":"evaluation","content":{"source":"reading_text","questionCount":5,"minWordCount":337,"maxWordCount":413}}` |
+| Regresyon Azaltma — Seviye 4 | RegressionReduction | `{"targetWpm":290,"chunkSize":1,"maskingType":"trailing","visibleHistoryWords":0,"readingPurpose":"evaluation","content":{"source":"reading_text","questionCount":5,"minWordCount":456,"maxWordCount":559}}` |
+| Regresyon Azaltma — Seviye 5 | RegressionReduction | `{"targetWpm":320,"chunkSize":1,"maskingType":"trailing","visibleHistoryWords":0,"readingPurpose":"evaluation","content":{"source":"reading_text","questionCount":5,"minWordCount":576,"maxWordCount":704}}` |

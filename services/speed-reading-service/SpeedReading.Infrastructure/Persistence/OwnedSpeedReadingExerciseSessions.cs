@@ -351,6 +351,9 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                             ?? ReadString(parsedConfiguration, "readingPurpose"), request.AssessmentAttemptId.HasValue) == "evaluation" ? 4 : isComprehension
                     ? ReadPositiveInt(freeContent, "questionCount") ?? ReadPositiveInt(ReadObject(parsedConfiguration, "content"), "questionCount") ?? 0
                     : normalizedEngineType == "regression_reduction"
+                        && ExerciseConfigurationRules.ResolveReadingPurpose(normalizedEngineType,
+                            ReadString(ReadObject(parsedConfiguration, "engineConfig"), "readingPurpose")
+                                ?? ReadString(parsedConfiguration, "readingPurpose"), request.AssessmentAttemptId.HasValue) == "evaluation"
                     ? ReadPositiveInt(freeContent, "questionCount") ?? ReadPositiveInt(ReadObject(parsedConfiguration, "content"), "questionCount") ?? 0 : 0;
                 var freeMinimumWords = usesTextBand ? ReadPositiveInt(freeContent, "minWordCount") ?? ReadPositiveInt(ReadObject(parsedConfiguration, "content"), "minWordCount") ?? 0 : 0;
                 var freeMaximumWords = usesTextBand ? ReadPositiveInt(freeContent, "maxWordCount") ?? ReadPositiveInt(ReadObject(parsedConfiguration, "content"), "maxWordCount") ?? 0 : 0;
@@ -1569,7 +1572,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             state.Questions.Clear();
 
         if (IsEngineType(exerciseEngineType, "reading_comprehension")
-            || IsEngineType(exerciseEngineType, "regression_reduction")
+            || (IsEngineType(exerciseEngineType, "regression_reduction") && state.ReadingPurpose == "evaluation")
             || (IsTextFade(state) && state.ReadingPurpose == "evaluation"))
         {
             var count = IsTextFade(state) ? 4 : ReadPositiveInt(ReadObject(effectiveConfig, "content"), "questionCount")

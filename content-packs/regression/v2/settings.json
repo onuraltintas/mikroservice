@@ -1,0 +1,587 @@
+[
+  {
+    "id": "d8f20000-0000-5000-8000-000000000012",
+    "age": "child",
+    "ageGroupId": "10000000-0000-0000-0000-000000000001",
+    "level": 2,
+    "seconds": 60,
+    "previousTitle": null,
+    "previousConfiguration": null,
+    "title": "Regresyon Azaltma — Seviye 2",
+    "configuration": {
+      "engineType": "regression_reduction",
+      "difficultyLevel": 2,
+      "engineConfig": {
+        "targetWpm": 140,
+        "chunkSize": 1,
+        "maskingType": "trailing",
+        "visibleHistoryWords": 1,
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "questionCount": 5,
+          "minWordCount": 126,
+          "maxWordCount": 154
+        }
+      }
+    }
+  },
+  {
+    "id": "d8f20000-0000-5000-8000-000000000013",
+    "age": "child",
+    "ageGroupId": "10000000-0000-0000-0000-000000000001",
+    "level": 3,
+    "seconds": 70,
+    "previousTitle": null,
+    "previousConfiguration": null,
+    "title": "Regresyon Azaltma — Seviye 3",
+    "configuration": {
+      "engineType": "regression_reduction",
+      "difficultyLevel": 3,
+      "engineConfig": {
+        "targetWpm": 160,
+        "chunkSize": 1,
+        "maskingType": "trailing",
+        "visibleHistoryWords": 1,
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "questionCount": 5,
+          "minWordCount": 168,
+          "maxWordCount": 206
+        }
+      }
+    }
+  },
+  {
+    "id": "d8f20000-0000-5000-8000-000000000014",
+    "age": "child",
+    "ageGroupId": "10000000-0000-0000-0000-000000000001",
+    "level": 4,
+    "seconds": 80,
+    "previousTitle": null,
+    "previousConfiguration": null,
+    "title": "Regresyon Azaltma — Seviye 4",
+    "configuration": {
+      "engineType": "regression_reduction",
+      "difficultyLevel": 4,
+      "engineConfig": {
+        "targetWpm": 180,
+        "chunkSize": 1,
+        "maskingType": "trailing",
+        "visibleHistoryWords": 0,
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "questionCount": 5,
+          "minWordCount": 216,
+          "maxWordCount": 264
+        }
+      }
+    }
+  },
+  {
+    "id": "d8f20000-0000-5000-8000-000000000015",
+    "age": "child",
+    "ageGroupId": "10000000-0000-0000-0000-000000000001",
+    "level": 5,
+    "seconds": 90,
+    "previousTitle": null,
+    "previousConfiguration": null,
+    "title": "Regresyon Azaltma — Seviye 5",
+    "configuration": {
+      "engineType": "regression_reduction",
+      "difficultyLevel": 5,
+      "engineConfig": {
+        "targetWpm": 200,
+        "chunkSize": 1,
+        "maskingType": "trailing",
+        "visibleHistoryWords": 0,
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "questionCount": 5,
+          "minWordCount": 270,
+          "maxWordCount": 330
+        }
+      }
+    }
+  },
+  {
+    "id": "d8f20000-0000-5000-8000-000000000021",
+    "age": "teen",
+    "ageGroupId": "10000000-0000-0000-0000-000000000002",
+    "level": 1,
+    "seconds": 60,
+    "previousTitle": null,
+    "previousConfiguration": null,
+    "title": "Regresyon Azaltma — Seviye 1",
+    "configuration": {
+      "engineType": "regression_reduction",
+      "difficultyLevel": 1,
+      "engineConfig": {
+        "targetWpm": 160,
+        "chunkSize": 1,
+        "maskingType": "trailing",
+        "visibleHistoryWords": 2,
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "questionCount": 5,
+          "minWordCount": 144,
+          "maxWordCount": 176
+        }
+      }
+    }
+  },
+  {
+    "id": "d8f20000-0000-5000-8000-000000000022",
+    "age": "teen",
+    "ageGroupId": "10000000-0000-0000-0000-000000000002",
+    "level": 2,
+    "seconds": 75,
+    "previousTitle": null,
+    "previousConfiguration": null,
+    "title": "Regresyon Azaltma — Seviye 2",
+    "configuration": {
+      "engineType": "regression_reduction",
+      "difficultyLevel": 2,
+      "engineConfig": {
+        "targetWpm": 190,
+        "chunkSize": 1,
+        "maskingType": "trailing",
+        "visibleHistoryWords": 1,
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "questionCount": 5,
+          "minWordCount": 213,
+          "maxWordCount": 262
+        }
+      }
+    }
+  },
+  {
+    "id": "d8f20000-0000-5000-8000-000000000023",
+    "age": "teen",
+    "ageGroupId": "10000000-0000-0000-0000-000000000002",
+    "level": 3,
+    "seconds": 90,
+    "previousTitle": null,
+    "previousConfiguration": null,
+    "title": "Regresyon Azaltma — Seviye 3",
+    "configuration": {
+      "engineType": "regression_reduction",
+      "difficultyLevel": 3,
+      "engineConfig": {
+        "targetWpm": 220,
+        "chunkSize": 1,
+        "maskingType": "trailing",
+        "visibleHistoryWords": 1,
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "questionCount": 5,
+          "minWordCount": 297,
+          "maxWordCount": 364
+        }
+      }
+    }
+  },
+  {
+    "id": "c56becc0-ba2a-52d4-9823-9288f91b6c5d",
+    "age": "teen",
+    "ageGroupId": "10000000-0000-0000-0000-000000000002",
+    "level": 4,
+    "seconds": 105,
+    "previousTitle": "Okuma Takibi ve Geri Dönüş Farkındalığı",
+    "previousConfiguration": {
+      "engineType": "regression_reduction",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "targetWpm": 240,
+        "wordDelayMs": 250,
+        "maskingType": "none",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 4
+    },
+    "title": "Regresyon Azaltma — Seviye 4",
+    "configuration": {
+      "engineType": "regression_reduction",
+      "difficultyLevel": 4,
+      "engineConfig": {
+        "targetWpm": 260,
+        "chunkSize": 1,
+        "maskingType": "trailing",
+        "visibleHistoryWords": 0,
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "questionCount": 5,
+          "minWordCount": 409,
+          "maxWordCount": 501
+        }
+      }
+    }
+  },
+  {
+    "id": "12882859-f26f-5218-a6b3-82437f8b696a",
+    "age": "teen",
+    "ageGroupId": "10000000-0000-0000-0000-000000000002",
+    "level": 5,
+    "seconds": 120,
+    "previousTitle": "Okuma Takibi ve Geri Dönüş Farkındalığı",
+    "previousConfiguration": {
+      "engineType": "regression_reduction",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "targetWpm": 270,
+        "wordDelayMs": 222,
+        "maskingType": "none",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 5
+    },
+    "title": "Regresyon Azaltma — Seviye 5",
+    "configuration": {
+      "engineType": "regression_reduction",
+      "difficultyLevel": 5,
+      "engineConfig": {
+        "targetWpm": 290,
+        "chunkSize": 1,
+        "maskingType": "trailing",
+        "visibleHistoryWords": 0,
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "questionCount": 5,
+          "minWordCount": 522,
+          "maxWordCount": 638
+        }
+      }
+    }
+  },
+  {
+    "id": "d8f20000-0000-5000-8000-000000000041",
+    "age": "young-adult",
+    "ageGroupId": "10000000-0000-0000-0000-000000000004",
+    "level": 1,
+    "seconds": 60,
+    "previousTitle": null,
+    "previousConfiguration": null,
+    "title": "Regresyon Azaltma — Seviye 1",
+    "configuration": {
+      "engineType": "regression_reduction",
+      "difficultyLevel": 1,
+      "engineConfig": {
+        "targetWpm": 180,
+        "chunkSize": 1,
+        "maskingType": "trailing",
+        "visibleHistoryWords": 2,
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "questionCount": 5,
+          "minWordCount": 162,
+          "maxWordCount": 199
+        }
+      }
+    }
+  },
+  {
+    "id": "d8f20000-0000-5000-8000-000000000042",
+    "age": "young-adult",
+    "ageGroupId": "10000000-0000-0000-0000-000000000004",
+    "level": 2,
+    "seconds": 75,
+    "previousTitle": null,
+    "previousConfiguration": null,
+    "title": "Regresyon Azaltma — Seviye 2",
+    "configuration": {
+      "engineType": "regression_reduction",
+      "difficultyLevel": 2,
+      "engineConfig": {
+        "targetWpm": 210,
+        "chunkSize": 1,
+        "maskingType": "trailing",
+        "visibleHistoryWords": 1,
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "questionCount": 5,
+          "minWordCount": 236,
+          "maxWordCount": 289
+        }
+      }
+    }
+  },
+  {
+    "id": "d8f20000-0000-5000-8000-000000000043",
+    "age": "young-adult",
+    "ageGroupId": "10000000-0000-0000-0000-000000000004",
+    "level": 3,
+    "seconds": 90,
+    "previousTitle": null,
+    "previousConfiguration": null,
+    "title": "Regresyon Azaltma — Seviye 3",
+    "configuration": {
+      "engineType": "regression_reduction",
+      "difficultyLevel": 3,
+      "engineConfig": {
+        "targetWpm": 250,
+        "chunkSize": 1,
+        "maskingType": "trailing",
+        "visibleHistoryWords": 1,
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "questionCount": 5,
+          "minWordCount": 337,
+          "maxWordCount": 413
+        }
+      }
+    }
+  },
+  {
+    "id": "9245fea6-e9b1-5ba0-83e5-903381340702",
+    "age": "young-adult",
+    "ageGroupId": "10000000-0000-0000-0000-000000000004",
+    "level": 4,
+    "seconds": 105,
+    "previousTitle": "Okuma Takibi ve Geri Dönüş Farkındalığı",
+    "previousConfiguration": {
+      "engineType": "regression_reduction",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "targetWpm": 270,
+        "wordDelayMs": 222,
+        "maskingType": "none",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 4
+    },
+    "title": "Regresyon Azaltma — Seviye 4",
+    "configuration": {
+      "engineType": "regression_reduction",
+      "difficultyLevel": 4,
+      "engineConfig": {
+        "targetWpm": 290,
+        "chunkSize": 1,
+        "maskingType": "trailing",
+        "visibleHistoryWords": 0,
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "questionCount": 5,
+          "minWordCount": 456,
+          "maxWordCount": 559
+        }
+      }
+    }
+  },
+  {
+    "id": "c54dce4f-1880-58e5-ad56-9e915bf5506f",
+    "age": "young-adult",
+    "ageGroupId": "10000000-0000-0000-0000-000000000004",
+    "level": 5,
+    "seconds": 120,
+    "previousTitle": "Okuma Takibi ve Geri Dönüş Farkındalığı",
+    "previousConfiguration": {
+      "engineType": "regression_reduction",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "targetWpm": 300,
+        "wordDelayMs": 200,
+        "maskingType": "none",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 5
+    },
+    "title": "Regresyon Azaltma — Seviye 5",
+    "configuration": {
+      "engineType": "regression_reduction",
+      "difficultyLevel": 5,
+      "engineConfig": {
+        "targetWpm": 320,
+        "chunkSize": 1,
+        "maskingType": "trailing",
+        "visibleHistoryWords": 0,
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "questionCount": 5,
+          "minWordCount": 576,
+          "maxWordCount": 704
+        }
+      }
+    }
+  },
+  {
+    "id": "d8f20000-0000-5000-8000-000000000031",
+    "age": "adult",
+    "ageGroupId": "10000000-0000-0000-0000-000000000003",
+    "level": 1,
+    "seconds": 60,
+    "previousTitle": null,
+    "previousConfiguration": null,
+    "title": "Regresyon Azaltma — Seviye 1",
+    "configuration": {
+      "engineType": "regression_reduction",
+      "difficultyLevel": 1,
+      "engineConfig": {
+        "targetWpm": 180,
+        "chunkSize": 1,
+        "maskingType": "trailing",
+        "visibleHistoryWords": 2,
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "questionCount": 5,
+          "minWordCount": 162,
+          "maxWordCount": 199
+        }
+      }
+    }
+  },
+  {
+    "id": "d8f20000-0000-5000-8000-000000000032",
+    "age": "adult",
+    "ageGroupId": "10000000-0000-0000-0000-000000000003",
+    "level": 2,
+    "seconds": 75,
+    "previousTitle": null,
+    "previousConfiguration": null,
+    "title": "Regresyon Azaltma — Seviye 2",
+    "configuration": {
+      "engineType": "regression_reduction",
+      "difficultyLevel": 2,
+      "engineConfig": {
+        "targetWpm": 220,
+        "chunkSize": 1,
+        "maskingType": "trailing",
+        "visibleHistoryWords": 1,
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "questionCount": 5,
+          "minWordCount": 247,
+          "maxWordCount": 303
+        }
+      }
+    }
+  },
+  {
+    "id": "d8f20000-0000-5000-8000-000000000033",
+    "age": "adult",
+    "ageGroupId": "10000000-0000-0000-0000-000000000003",
+    "level": 3,
+    "seconds": 90,
+    "previousTitle": null,
+    "previousConfiguration": null,
+    "title": "Regresyon Azaltma — Seviye 3",
+    "configuration": {
+      "engineType": "regression_reduction",
+      "difficultyLevel": 3,
+      "engineConfig": {
+        "targetWpm": 270,
+        "chunkSize": 1,
+        "maskingType": "trailing",
+        "visibleHistoryWords": 1,
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "questionCount": 5,
+          "minWordCount": 364,
+          "maxWordCount": 446
+        }
+      }
+    }
+  },
+  {
+    "id": "ea073e31-ed94-5450-b192-a8acc1902054",
+    "age": "adult",
+    "ageGroupId": "10000000-0000-0000-0000-000000000003",
+    "level": 4,
+    "seconds": 105,
+    "previousTitle": "Okuma Takibi ve Geri Dönüş Farkındalığı",
+    "previousConfiguration": {
+      "engineType": "regression_reduction",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "targetWpm": 290,
+        "wordDelayMs": 207,
+        "maskingType": "none",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 4
+    },
+    "title": "Regresyon Azaltma — Seviye 4",
+    "configuration": {
+      "engineType": "regression_reduction",
+      "difficultyLevel": 4,
+      "engineConfig": {
+        "targetWpm": 310,
+        "chunkSize": 1,
+        "maskingType": "trailing",
+        "visibleHistoryWords": 0,
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "questionCount": 5,
+          "minWordCount": 488,
+          "maxWordCount": 597
+        }
+      }
+    }
+  },
+  {
+    "id": "8861032e-a5f9-58e0-a3da-7f898f282780",
+    "age": "adult",
+    "ageGroupId": "10000000-0000-0000-0000-000000000003",
+    "level": 5,
+    "seconds": 120,
+    "previousTitle": "Okuma Takibi ve Geri Dönüş Farkındalığı",
+    "previousConfiguration": {
+      "engineType": "regression_reduction",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "targetWpm": 320,
+        "wordDelayMs": 188,
+        "maskingType": "none",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 5
+    },
+    "title": "Regresyon Azaltma — Seviye 5",
+    "configuration": {
+      "engineType": "regression_reduction",
+      "difficultyLevel": 5,
+      "engineConfig": {
+        "targetWpm": 340,
+        "chunkSize": 1,
+        "maskingType": "trailing",
+        "visibleHistoryWords": 0,
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "questionCount": 5,
+          "minWordCount": 612,
+          "maxWordCount": 749
+        }
+      }
+    }
+  }
+]

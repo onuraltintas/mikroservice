@@ -1832,5 +1832,105 @@
       },
       "difficultyLevel": 5
     }
+  },
+  {
+    "id": "d8f20000-0000-5000-8000-000000000012",
+    "type": "RegressionReduction",
+    "title": "Regresyon Azaltma — Seviye 2",
+    "description": "Maskelenen geçmiş kelimelerle sabit tempolu metin takibi; sonunda beş anlama sorusu.",
+    "difficultyLevel": 2,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "regression_reduction",
+      "difficultyLevel": 2,
+      "engineConfig": {
+        "targetWpm": 140,
+        "chunkSize": 1,
+        "maskingType": "trailing",
+        "visibleHistoryWords": 1,
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "questionCount": 5,
+          "minWordCount": 126,
+          "maxWordCount": 154
+        }
+      }
+    }
+  },
+  {
+    "id": "d8f20000-0000-5000-8000-000000000013",
+    "type": "RegressionReduction",
+    "title": "Regresyon Azaltma — Seviye 3",
+    "description": "Maskelenen geçmiş kelimelerle sabit tempolu metin takibi; sonunda beş anlama sorusu.",
+    "difficultyLevel": 3,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "regression_reduction",
+      "difficultyLevel": 3,
+      "engineConfig": {
+        "targetWpm": 160,
+        "chunkSize": 1,
+        "maskingType": "trailing",
+        "visibleHistoryWords": 1,
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "questionCount": 5,
+          "minWordCount": 168,
+          "maxWordCount": 206
+        }
+      }
+    }
+  },
+  {
+    "id": "d8f20000-0000-5000-8000-000000000014",
+    "type": "RegressionReduction",
+    "title": "Regresyon Azaltma — Seviye 4",
+    "description": "Maskelenen geçmiş kelimelerle sabit tempolu metin takibi; sonunda beş anlama sorusu.",
+    "difficultyLevel": 4,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "regression_reduction",
+      "difficultyLevel": 4,
+      "engineConfig": {
+        "targetWpm": 180,
+        "chunkSize": 1,
+        "maskingType": "trailing",
+        "visibleHistoryWords": 0,
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "questionCount": 5,
+          "minWordCount": 216,
+          "maxWordCount": 264
+        }
+      }
+    }
+  },
+  {
+    "id": "d8f20000-0000-5000-8000-000000000015",
+    "type": "RegressionReduction",
+    "title": "Regresyon Azaltma — Seviye 5",
+    "description": "Maskelenen geçmiş kelimelerle sabit tempolu metin takibi; sonunda beş anlama sorusu.",
+    "difficultyLevel": 5,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "regression_reduction",
+      "difficultyLevel": 5,
+      "engineConfig": {
+        "targetWpm": 200,
+        "chunkSize": 1,
+        "maskingType": "trailing",
+        "visibleHistoryWords": 0,
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "questionCount": 5,
+          "minWordCount": 270,
+          "maxWordCount": 330
+        }
+      }
+    }
   }
 ]
