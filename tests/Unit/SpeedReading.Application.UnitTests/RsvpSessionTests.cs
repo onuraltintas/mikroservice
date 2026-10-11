@@ -44,7 +44,7 @@ public sealed class RsvpSessionTests
 
     [Theory]
     [InlineData(false, 1100)]
-    [InlineData(true, 2300)]
+    [InlineData(true, 1400)]
     public async Task Server_duration_includes_exposure_fixation_and_gaps(bool fixation, int expected)
     {
         await using var db = Context();
@@ -140,7 +140,7 @@ public sealed class RsvpSessionTests
         await db.SaveChangesAsync();
         var next = await service.StartAsync(student, new() { ExerciseId = exercise });
         next.SessionId.Should().NotBe(first.SessionId);
-        next.InitialData.GetProperty("rsvpProtocolVersion").GetInt32().Should().Be(1);
+        next.InitialData.GetProperty("rsvpProtocolVersion").GetInt32().Should().Be(2);
         db.ExerciseSessions.Should().HaveCount(2);
     }
 
@@ -180,6 +180,114 @@ public sealed class RsvpSessionTests
         await db.SaveChangesAsync();
         await service.ResumeAsync(student, started.SessionId);
         (await service.ValidateActionAsync(student, started.SessionId, new() { Action = "finish_reading" })).IsValid.Should().BeFalse();
+    }
+
+    [Theory]
+    [InlineData(100, 0)]
+    [InlineData(550, 1)]
+    [InlineData(950, 2)]
+    public async Task Partial_presentation_counts_initial_fixation_only_once(int elapsed, int words)
+    {
+        await using var db = Context();
+        var (service, student, exercise) = await Seed(db, fixation: true);
+        db.ReadingTexts.Add(ReadingText.Create(Guid.NewGuid(), "A", "bir iki üç dört", difficultyLevel: 3));
+        await db.SaveChangesAsync();
+        var started = await service.StartAsync(student, new() { ExerciseId = exercise });
+        await service.ValidateActionAsync(student, started.SessionId, new() { Action = "start_reading" });
+        var session = await db.ExerciseSessions.SingleAsync();
+        var state = JsonNode.Parse(session.SessionDataJson)!;
+        state["readingStartTime"] = DateTime.UtcNow.AddMilliseconds(-elapsed);
+        session.SetState(state.ToJsonString());
+        await db.SaveChangesAsync();
+        (await service.ValidateActionAsync(student, started.SessionId, new() { Action = "finish_reading", IsTimeout = true })).IsValid.Should().BeTrue();
+        var result = await service.CompleteAsync(student, started.SessionId, new());
+        result.DetailedResults.GetProperty("rsvpPresentedWords").GetInt32().Should().Be(words);
+        result.RawWPM.Should().BeNull();
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Configured_band_blocks_outside_text_in_auto_and_explicit_start(bool pinned)
+    {
+        await using var db = Context();
+        var (service, student, exercise) = await Seed(db);
+        await Configure(db, new() { ["source"] = "reading_text", ["minWordCount"] = 5, ["maxWordCount"] = 8 });
+        var text = ReadingText.Create(Guid.NewGuid(), "Too short", "bir iki üç dört", difficultyLevel: 3);
+        db.ReadingTexts.Add(text);
+        await db.SaveChangesAsync();
+        var start = () => service.StartAsync(student, new() { ExerciseId = exercise, ReadingTextId = pinned ? text.Id : null });
+        await start.Should().ThrowAsync<Exception>();
+    }
+
+    [Fact]
+    public async Task Actual_word_count_is_checked_even_if_catalog_metadata_is_stale()
+    {
+        await using var db = Context();
+        var (service, student, exercise) = await Seed(db);
+        await Configure(db, new() { ["source"] = "reading_text", ["minWordCount"] = 5, ["maxWordCount"] = 8 });
+        var text = ReadingText.Create(Guid.NewGuid(), "A", "bir iki üç dört", difficultyLevel: 3);
+        db.ReadingTexts.Add(text);
+        db.Entry(text).Property(item => item.WordCount).CurrentValue = 6;
+        await db.SaveChangesAsync();
+        var start = () => service.StartAsync(student, new() { ExerciseId = exercise });
+        await start.Should().ThrowAsync<Exception>();
+    }
+
+    [Theory]
+    [InlineData(4, false)]
+    [InlineData(5, true)]
+    [InlineData(6, true)]
+    public async Task Evaluation_requires_and_returns_exactly_five_valid_questions(int count, bool accepted)
+    {
+        await using var db = Context();
+        var (service, student, exercise) = await Seed(db, purpose: "evaluation");
+        await Configure(db, new() { ["source"] = "reading_text", ["questionCount"] = 5 });
+        var text = ReadingText.Create(Guid.NewGuid(), "A", "bir iki üç dört", difficultyLevel: 3);
+        db.ReadingTexts.Add(text);
+        for (var i = 0; i < count; i++)
+            db.ReadingQuestions.Add(ReadingQuestion.Create(Guid.NewGuid(), text.Id, $"Soru {i}", "A", i, 1, 1,
+                optionA: "A", optionB: "B", optionC: "C", optionD: "D"));
+        await db.SaveChangesAsync();
+        if (!accepted)
+        {
+            var start = () => service.StartAsync(student, new() { ExerciseId = exercise, ReadingTextId = text.Id });
+            await start.Should().ThrowAsync<Exception>();
+        }
+        else
+        {
+            var start = await service.StartAsync(student, new() { ExerciseId = exercise });
+            start.InitialData.GetProperty("questions").GetArrayLength().Should().Be(5);
+        }
+    }
+
+    [Fact]
+    public async Task Version_one_active_snapshot_is_not_retimed_or_replaced()
+    {
+        await using var db = Context();
+        var (service, student, exercise) = await Seed(db, fixation: true);
+        db.ReadingTexts.Add(ReadingText.Create(Guid.NewGuid(), "A", "bir iki üç dört", difficultyLevel: 3));
+        await db.SaveChangesAsync();
+        var first = await service.StartAsync(student, new() { ExerciseId = exercise });
+        var session = await db.ExerciseSessions.SingleAsync();
+        var old = JsonNode.Parse(session.SessionDataJson)!;
+        old["rsvpProtocolVersion"] = 1;
+        old["readingMinimumMs"] = 2300;
+        session.SetState(old.ToJsonString());
+        await db.SaveChangesAsync();
+        var resumed = await service.StartAsync(student, new() { ExerciseId = exercise });
+        resumed.SessionId.Should().Be(first.SessionId);
+        resumed.InitialData.GetProperty("readingMinimumMs").GetInt32().Should().Be(2300);
+        resumed.InitialData.GetProperty("rsvpProtocolVersion").GetInt32().Should().Be(1);
+    }
+
+    private static async Task Configure(OwnedSpeedReadingDbContext db, JsonObject content)
+    {
+        var exercise = await db.Exercises.SingleAsync();
+        var config = JsonNode.Parse(exercise.ConfigurationJson)!;
+        config["engineConfig"]!["content"] = content;
+        db.Entry(exercise).Property(item => item.ConfigurationJson).CurrentValue = config.ToJsonString();
+        await db.SaveChangesAsync();
     }
 
     private static OwnedSpeedReadingDbContext Context() => new(new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>()
