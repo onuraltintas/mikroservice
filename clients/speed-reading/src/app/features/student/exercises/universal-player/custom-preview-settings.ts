@@ -95,6 +95,7 @@ export function getCustomPreviewControls(configuration: Record<string, unknown>)
         control('lineHeightPercent', 'Satır aralığı (%)', 100, 300, Math.round(Number(display['lineheight'] ?? 1.8) * 100))
       );
       if (configuration['engineType'] === 'exam_simulation') controls.push(
+        control('maxReadingTimeSec', 'İlk okuma süresi sınırı (saniye)', 1, 3600, Number(timing['maxreadingtimems'] ?? 180000) / 1000),
         control('questionTimeSeconds', 'Soru başına süre (saniye)', 1, 3600, timing['questiontimeseconds'] ?? 60),
         control('lineHeightPercent', 'Satır aralığı (%)', 100, 300, Math.round(Number(display['lineheight'] ?? 1.8) * 100))
       );

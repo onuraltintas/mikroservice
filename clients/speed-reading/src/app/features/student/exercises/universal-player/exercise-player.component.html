@@ -550,6 +550,9 @@
         </div>
 
         <!-- Reading Instructions -->
+        <div class="reading-instruction" *ngIf="engine.engineType === 'exam_simulation'">
+            <span>Önce metni okuyun; ardından her sorunun ayrı süresi başlayacak. Cevaplar test sonunda açıklanır. Süre durdurulamaz.</span>
+        </div>
         <div class="reading-instruction" *ngIf="!engineState.isPaused && engine.engineType !== 'adaptive_fluency' && engine.engineType !== 'skimming'">
             <span class="material-icons">menu_book</span>
             <span>Metni kendi hızınızda okuyun. Okuma bitince "{{ isFreeReadingPractice() ? 'Okumayı Bitir' : 'Okudum' }}" butonuna basın.</span>
@@ -975,7 +978,8 @@
                         <span class="material-icons">article</span>
                         <span>Paragraf</span>
                     </div>
-                    <p class="paragraph-text">{{ getQuestionContent() }}</p>
+                    <p class="paragraph-text" [style.font-size.px]="getComprehensionFontSize() === 'small' ? 16 : getComprehensionFontSize() === 'large' ? 24 : 20"
+                        [style.line-height]="getComprehensionLineHeight()" style="white-space: pre-line">{{ getQuestionContent() }}</p>
                 </div>
 
                 <div class="question-text" [class.exam-question]="engine?.engineType === 'exam_simulation'">
@@ -996,7 +1000,7 @@
                     <strong>{{ questionFeedback.isCorrect ? 'Doğru.' : 'Yanlış. Doğru seçenek: ' + questionFeedback.correctAnswer }}</strong>
                     <p>{{ questionFeedback.explanation }}</p>
                 </div>
-                <p *ngIf="engine?.engineType === 'reading_comprehension' && !isComprehensionLearning() && questionFeedback" role="status">
+                <p *ngIf="(engine?.engineType === 'exam_simulation' || engine?.engineType === 'reading_comprehension' && !isComprehensionLearning()) && questionFeedback" role="status">
                     Cevabınız kaydedildi. Doğru cevaplar değerlendirme sonunda gösterilecek.
                 </p>
             </div>

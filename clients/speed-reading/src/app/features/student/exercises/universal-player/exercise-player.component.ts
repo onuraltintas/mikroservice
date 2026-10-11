@@ -19,6 +19,7 @@ import { EngineFactory, EngineType } from './engines/engine-factory';
 import { shouldForwardExerciseAction } from './exercise-action-policy';
 import { shouldShowReadingQuestions } from './reading-question-flow';
 import { SkimmingEngine } from './engines/skimming.engine';
+import { ExamSimulationEngine } from './engines/exam-simulation.engine';
 import {
   createActionFailureState,
   finishAfterPendingActions,
@@ -382,7 +383,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   }
 
   private defersComprehensionFeedback(): boolean {
-    return this.isAssessmentMode || (this.engine?.engineType === 'reading_comprehension' && !this.isComprehensionLearning());
+    return this.isAssessmentMode || this.engine?.engineType === 'exam_simulation' || (this.engine?.engineType === 'reading_comprehension' && !this.isComprehensionLearning());
   }
 
   comprehensionResultPending(): boolean {
@@ -864,7 +865,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
           catch { retry(); return; }
           this.comprehensionQuestions = this.backendSessionConfig['questions'] as any[];
           const requiredQuestions = this.parsedConfig?.['engineType'] === 'text_fade' && this.previewRequiresQuestions() ? 4
-            : (['reading_comprehension', 'regression_reduction', 'subvocalization_reduction', 'skimming'].includes(this.parsedConfig?.['engineType'] || '')
+            : (['exam_simulation', 'reading_comprehension', 'regression_reduction', 'subvocalization_reduction', 'skimming'].includes(this.parsedConfig?.['engineType'] || '')
                 || this.isRsvpPreview()) && this.previewRequiresQuestions()
             ? this.parsedConfig?.['engineConfig']?.['content']?.questionCount ?? this.parsedConfig?.['content']?.questionCount : undefined;
           if (requiredQuestions && this.comprehensionQuestions.length < requiredQuestions) { retry(); return; }
@@ -950,7 +951,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     if (this.exercise?.exerciseTypeName?.toLowerCase() !== 'speedreading'
       && this.exercise?.exerciseTypeName?.toLowerCase() !== 'chunking'
       && !this.isRsvpPreview()
-      && !['error_analysis', 'free_reading', 'reading_comprehension', 'text_fade', 'scanning', 'scan_find', 'skimming', 'regression_reduction', 'subvocalization_reduction'].includes(this.parsedConfig?.['engineType'] || '')) return true;
+      && !['exam_simulation', 'error_analysis', 'free_reading', 'reading_comprehension', 'text_fade', 'scanning', 'scan_find', 'skimming', 'regression_reduction', 'subvocalization_reduction'].includes(this.parsedConfig?.['engineType'] || '')) return true;
     const content = this.parsedConfig?.['engineConfig']?.['content'] || this.parsedConfig?.['content'] || {};
     const minimum = Number(content.minWordCount) || 0;
     const maximum = Number(content.maxWordCount) || 0;
@@ -1056,7 +1057,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
         && Number(question.bloomLevel ?? question.BloomLevel) >= 1 && Number(question.bloomLevel ?? question.BloomLevel) <= 6
         && ['A', 'B', 'C', 'D'].includes(String(question.correctAnswer ?? question.CorrectAnswer ?? '').trim().toUpperCase())
         && ['A', 'B', 'C', 'D'].every(option => String(question[`option${option}`] ?? question[`Option${option}`] ?? '').trim()))
-      : (['reading_comprehension', 'text_fade', 'regression_reduction', 'subvocalization_reduction'].includes(this.parsedConfig?.['engineType'] || '')
+      : (['exam_simulation', 'reading_comprehension', 'text_fade', 'regression_reduction', 'subvocalization_reduction'].includes(this.parsedConfig?.['engineType'] || '')
           || this.isRsvpPreview())
           && this.previewRequiresQuestions()
           && (this.parsedConfig?.['engineType'] === 'text_fade'
@@ -1255,7 +1256,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
 
   /** Resume a reading assessment that had already moved past its text phase. */
   private resumeAssessmentSession(initialData: any): void {
-    if (!this.isAssessmentMode || !this.engine || !this.comprehensionQuestions.length) return;
+    if ((!this.isAssessmentMode && this.engine?.engineType !== 'exam_simulation') || !this.engine || !this.comprehensionQuestions.length) return;
     const state = this.isRecord(initialData) ? initialData : {};
     const answers = state['answers'] ?? state['Answers'];
     const hasFinishedReading = Boolean(
@@ -1429,7 +1430,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
             // If engine calculated WPM (like RSVP), use it, otherwise calc
             this.readingWpm = this.engine?.engineType === 'reading_comprehension'
               ? (this.isComprehensionLearning() ? 0 : Number(result.details?.wpm ?? 0))
-              : this.readingIncomplete || this.engine?.engineType === 'skimming' ? 0 : (this.engine as any).getCurrentWPM?.() ||
+              : this.readingIncomplete || ['skimming', 'exam_simulation'].includes(this.engine?.engineType || '') ? 0 : (this.engine as any).getCurrentWPM?.() ||
                 (readingTimeMinutes > 0 ? Math.round(wordCount / readingTimeMinutes) : 0);
 
             this.exercisePhase = 'questions';
@@ -1732,6 +1733,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       && [
         'word_highlight',
         'reading_comprehension',
+        'exam_simulation',
         'skimming',
         'text_fade',
         'text_stream',
@@ -1943,9 +1945,9 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     this.correctCells.clear();
     this.wrongCells.clear();
 
-    // Exam Simulation: Skip reading phase, go directly to questions phase
-    // Questions include their own paragraph content
-    if (this.engine?.engineType === 'exam_simulation' && this.comprehensionQuestions.length > 0) {
+    // Old snapshots retain their question-only flow; new exams have a reading phase.
+    if (this.engine?.engineType === 'exam_simulation' && this.comprehensionQuestions.length > 0
+      && !this.isPreviewSession() && this.backendSessionConfig?.examProtocolVersion !== 1) {
       this.exercisePhase = 'questions';
       if (!this.questionAnswers.length) this.currentQuestionIndex = 0;
       this.selectedAnswer = null;
@@ -2510,7 +2512,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     this.result = {
       score: comprehensionAccuracy,
       accuracy: comprehensionAccuracy,
-      totalTime: this.engine?.engineType === 'exam_simulation' ? totalTimeSpent * 1000 : this.engineState.timeElapsed,
+      totalTime: this.engine?.engineType === 'exam_simulation' ? totalTimeSpent * 1000 + this.engineState.timeElapsed : this.engineState.timeElapsed,
       totalSteps: totalQuestions,
       completedSteps: totalQuestions,
       errors: totalQuestions - correctCount,
@@ -2529,7 +2531,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
           : this.engine?.engineType === 'skimming' ? 'Ana fikir değerlendirmesi'
           : this.readingIncomplete ? 'Okuma tamamlanmadı' : this.getPerformanceLevel(this.readingWpm, comprehensionAccuracy),
         // Time statistics
-        totalTimeSpent,
+        totalTimeSpent: this.engine?.engineType === 'exam_simulation' ? totalTimeSpent + this.engineState.timeElapsed / 1000 : totalTimeSpent,
         averageTimePerQuestion,
         totalTargetTime,
         timeoutCount,
@@ -2639,6 +2641,8 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   }
 
   getRemainingTimeMs(): number {
+    if (this.engine?.engineType === 'exam_simulation')
+      return Math.max(0, (this.engine as ExamSimulationEngine).getMaximumMs() - this.engineState.timeElapsed);
     if (this.engine?.engineType === 'skimming')
       return Math.max(0, (this.engine as SkimmingEngine).getMaximumMs() - this.engineState.timeElapsed);
     if (this.engine?.engineType === 'grid_interaction') {
@@ -2986,6 +2990,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   }
 
   hasTimeLimit(): boolean {
+    if (this.engine?.engineType === 'exam_simulation') return this.exercisePhase === 'reading';
     if (this.engine?.engineType === 'word_highlight' && this.exercise?.exerciseTypeName?.toLowerCase() === 'speedreading') return false;
     if (this.engine?.engineType === 'skimming') return true;
     if (this.engine?.engineType === 'grid_interaction') return this.schulteSettings.timeLimit !== undefined;
@@ -3718,7 +3723,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
           accuracy: sessionResult.accuracy ?? 0,
           details: {
             ...((this.result || result).details || {}),
-            ...(this.engine?.engineType === 'reading_comprehension' ? {
+            ...(['exam_simulation', 'reading_comprehension'].includes(this.engine?.engineType || '') ? {
               correctAnswers: sessionResult.correctCount,
               comprehensionMode: sessionResult.detailedResults?.comprehensionMode,
               answers: (sessionResult.detailedResults?.answers || []).map((answer: any) => {
@@ -3727,6 +3732,12 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
                   timeSpent: answer.timeSpentSeconds, questionText: question?.questionText,
                   correctAnswer: question?.correctAnswer, explanation: question?.explanation };
               })
+            } : {}),
+            ...(this.engine?.engineType === 'exam_simulation' ? {
+              totalTimeSpent: sessionResult.timeSpentSeconds,
+              averageTimePerQuestion: Math.round((sessionResult.detailedResults?.answers || []).reduce(
+                (sum: number, answer: any) => sum + answer.timeSpentSeconds, 0) / Math.max(1, this.comprehensionQuestions.length)),
+              timeoutCount: (sessionResult.detailedResults?.answers || []).filter((answer: any) => answer.answer === '__timeout__').length
             } : {}),
             ...(this.engine?.engineType === 'error_analysis' && sessionResult.detailedResults?.errorAnalysisFound ? {
               totalErrors: sessionResult.detailedResults.totalSteps,

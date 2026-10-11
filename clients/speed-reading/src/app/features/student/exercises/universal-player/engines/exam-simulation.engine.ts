@@ -54,7 +54,7 @@ interface ReadingState {
 
 export class ExamSimulationEngine implements BaseEngine {
     engineType = 'exam_simulation' as const;
-    displayName = 'Sınav Simülasyonu';
+    displayName = 'Süreli Paragraf Testi';
 
     private config!: ExamSimulationConfig;
     private callbacks!: EngineCallbacks;
@@ -91,7 +91,7 @@ export class ExamSimulationEngine implements BaseEngine {
         const lineHeight = typeof display['lineheight'] === 'number' && Number.isFinite(display['lineheight'])
             ? Math.min(3, Math.max(1, display['lineheight'])) : 1.8;
         const minReadingTimeMs = boundedInteger(timing['minreadingtimems'], 0, 0, 3_600_000);
-        const configuredMaximum = boundedInteger(timing['maxreadingtimems'], 0, 0, 3_600_000);
+        const configuredMaximum = boundedInteger(caseInsensitiveField(cfg, 'readingMaximumMs') ?? timing['maxreadingtimems'], 180000, 1000, 3_600_000);
         const maxReadingTimeMs = configuredMaximum > 0
             ? Math.max(minReadingTimeMs, configuredMaximum) : 0;
         this.config = {
@@ -202,7 +202,8 @@ export class ExamSimulationEngine implements BaseEngine {
         this.state.isCompleted = false;
         this.state.timeElapsed = 0;
         this.readingState.phase = 'reading';
-        this.startTime = Date.now();
+        const restored = Date.parse(String((this.config as any).readingStartTime || ''));
+        this.startTime = Number.isFinite(restored) ? Math.min(Date.now(), restored) : Date.now();
 
         this.timerInterval = setInterval(() => {
             if (!this.state.isPaused) {
@@ -282,6 +283,7 @@ export class ExamSimulationEngine implements BaseEngine {
         if (this.state.isCompleted || !this.state.isRunning) return;
         const minTime = this.config.timing?.minReadingTimeMs || 0;
         if (!force && this.state.timeElapsed < minTime) return;
+        this.state.timeElapsed = Math.min(this.getMaximumMs(), this.state.timeElapsed);
         this.readingState.phase = 'completed';
         this.complete();
     }
@@ -316,5 +318,7 @@ export class ExamSimulationEngine implements BaseEngine {
     getWordCount(): number { return this.words.length; }
     getFontSize(): string { return this.config.display?.fontSize || 'medium'; }
     getLineHeight(): number { return this.config.display?.lineHeight || 1.8; }
+    getMaximumMs(): number { return this.config.timing?.maxReadingTimeMs || 180000; }
+    canComplete(): boolean { return this.state.isRunning && !this.state.isPaused && this.state.timeElapsed >= (this.config.timing?.minReadingTimeMs || 0); }
     getReadingPhase(): string { return this.readingState.phase; }
 }

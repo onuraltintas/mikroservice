@@ -15,6 +15,7 @@ describe('exam presentation', () => {
     player.backendSessionConfig = { examProtocolVersion: 1 };
     player.comprehensionQuestions = [{}]; player.clickedCells = new Set(); player.correctCells = new Set(); player.wrongCells = new Set();
     player.questionAnswers = []; player.engineState = {}; player.cdr = { detectChanges: () => undefined };
+    player.isPreviewSession = () => false;
     player.startQuestionTimer = jasmine.createSpy('question');
     player.startReadingTracking = (callback: () => void) => callback();
     await player.startExercise();
