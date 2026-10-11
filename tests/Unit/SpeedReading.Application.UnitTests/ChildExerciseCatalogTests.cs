@@ -8,10 +8,10 @@ namespace SpeedReading.Application.UnitTests;
 public sealed class ChildExerciseCatalogTests
 {
     [Theory]
-    [InlineData("child-exercises", "10000000-0000-0000-0000-000000000001", 20, 91)]
-    [InlineData("teen-exercises", "10000000-0000-0000-0000-000000000002", 21, 94)]
-    [InlineData("adult-exercises", "10000000-0000-0000-0000-000000000003", 21, 95)]
-    [InlineData("young-adult-exercises", "10000000-0000-0000-0000-000000000004", 21, 95)]
+    [InlineData("child-exercises", "10000000-0000-0000-0000-000000000001", 20, 92)]
+    [InlineData("teen-exercises", "10000000-0000-0000-0000-000000000002", 21, 96)]
+    [InlineData("adult-exercises", "10000000-0000-0000-0000-000000000003", 21, 97)]
+    [InlineData("young-adult-exercises", "10000000-0000-0000-0000-000000000004", 21, 97)]
     public void Catalog_entries_have_valid_unpinned_configurations(string pack, string ageGroupId, int typeCount, int count)
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);
@@ -25,9 +25,9 @@ public sealed class ChildExerciseCatalogTests
         Assert.Equal(count, entries.Select(entry => entry.GetProperty("id").GetGuid()).Distinct().Count());
         Assert.Equal(typeCount, entries.Select(entry => entry.GetProperty("type").GetString()).Distinct().Count());
         var distribution = pack switch {
-            "child-exercises" => new[] { 16, 17, 18, 20, 20 },
-            "teen-exercises" => new[] { 17, 17, 20, 20, 20 },
-            _ => new[] { 17, 18, 20, 20, 20 }
+            "child-exercises" => new[] { 16, 17, 18, 21, 20 },
+            "teen-exercises" => new[] { 17, 17, 20, 21, 21 },
+            _ => new[] { 17, 18, 20, 21, 21 }
         };
         foreach (var level in Enumerable.Range(1, 5))
             Assert.Equal(distribution[level - 1],
@@ -46,6 +46,12 @@ public sealed class ChildExerciseCatalogTests
                     Assert.True(source.GetProperty("minWordCount").GetInt32() > 0);
                     Assert.True(source.GetProperty("maxWordCount").GetInt32() >= source.GetProperty("minWordCount").GetInt32());
                     Assert.Equal(5, source.GetProperty("questionCount").GetInt32());
+                }
+                else if (entry.GetProperty("type").GetString() == "FreeReading")
+                {
+                    Assert.True(source.GetProperty("minWordCount").GetInt32() > 0);
+                    Assert.True(source.GetProperty("maxWordCount").GetInt32() >= source.GetProperty("minWordCount").GetInt32());
+                    Assert.False(source.TryGetProperty("questionCount", out _));
                 }
                 else
                 {

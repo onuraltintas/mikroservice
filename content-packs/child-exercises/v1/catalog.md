@@ -1,10 +1,10 @@
 # Çocuk egzersiz kataloğu v1
 
-9–12 yaş; 20 tür; toplam 91 egzersiz. Seviye dağılımı: 16 / 17 / 18 / 20 / 20.
+9–12 yaş; 20 tür; toplam 92 egzersiz. Seviye dağılımı: 16 / 17 / 18 / 21 / 20.
 
 Metin kimliği sabitlenmez. Yaş ve seviyeye uygun havuzdan iki okuma geçmişinde de kullanılmamış metin rastgele seçilir. Havuz tükenince en az kullanılan metinler arasından seçim yapılır. Başlatılıp bırakılan oturum da kullanım sayılır. Kelime etkinlikleri mevcut yaş/seviye kelime havuzunu kullanır.
 
-Mevcut metin uzunlukları ve soruları korunur. Anlama ve değerlendirmeli serbest okumada mevcut sorular; göz gezdirmede mevcut açık bilgi soruları kullanılır. Hata analizinde oturuma özel eksik harfler oluşturulur; kayıtlı metin değiştirilmez.
+Mevcut metin uzunlukları ve soruları korunur. Serbest Okuma sorusuz bağımsız pratiktir. Anlamada mevcut sorular; göz gezdirmede mevcut açık bilgi soruları kullanılır. Hata analizinde oturuma özel eksik harfler oluşturulur; kayıtlı metin değiştirilmez.
 
 ## Seviye 1
 
@@ -16,7 +16,7 @@ Mevcut metin uzunlukları ve soruları korunur. Anlama ve değerlendirmeli serbe
 | İkili Anlam Grupları | Chunking | `{"content":{"source":"reading_text"},"mode":"chunking","pacer":{"speedWpm":100,"chunkSize":2},"readingPurpose":"practice"}` |
 | Kelime Bahçesi | Vocabulary | `{"mode":"learning","quizType":"word_to_definition","timeLimitPerWord":0,"vocabulary":{"count":8,"difficultyLevel":1,"requireFullPool":true},"learnThenQuiz":true}` |
 | Kelimemi Seçiyorum | Vocabulary | `{"mode":"quiz","quizType":"word_to_definition","timeLimitPerWord":0,"vocabulary":{"count":8,"difficultyLevel":1,"requireFullPool":true}}` |
-| Hikâyemi Seçiyorum | FreeReading | `{"content":{"source":"reading_text"},"mode":"free","readingPurpose":"evaluation"}` |
+| Hikâyemi Seçiyorum | FreeReading | `{"content":{"source":"reading_text","minWordCount":150,"maxWordCount":200},"mode":"free","readingPurpose":"practice","timing":{"minReadingTimeMs":10000,"maxReadingTimeMs":0,"suggestedMinReadingTimeMs":120000,"suggestedMaxReadingTimeMs":120000}}` |
 | Sözcüğü Bul | Scanning | `{"content":{"source":"random_text"},"targetCount":2,"timeLimit":90,"targets":{"mode":"find_all","caseSensitive":false}}` |
 | Sayı Avcısı | SchulteTable | `{"gridSize":3,"sequenceType":"numeric","rules":{"timeLimit":90}}` |
 | Konum Belleği | Focus | `{"mode":"position","nLevel":1,"totalSteps":32,"speedMs":3000,"gridSize":3}` |
@@ -36,7 +36,7 @@ Mevcut metin uzunlukları ve soruları korunur. Anlama ve değerlendirmeli serbe
 | Bağlamdan Kelime | Vocabulary | `{"mode":"learning","quizType":"mixed","timeLimitPerWord":0,"vocabulary":{"count":10,"difficultyLevel":2,"requireFullPool":true},"learnThenQuiz":true}` |
 | Kelimeyi Hatırla | Vocabulary | `{"mode":"quiz","quizType":"mixed","timeLimitPerWord":0,"vocabulary":{"count":10,"difficultyLevel":2,"requireFullPool":true}}` |
 | Metindeki İpuçları | Scanning | `{"content":{"source":"random_text"},"targetCount":3,"timeLimit":90,"targets":{"mode":"find_all","caseSensitive":false}}` |
-| Yeni Bir Hikâye | FreeReading | `{"content":{"source":"reading_text"},"mode":"free","readingPurpose":"evaluation"}` |
+| Yeni Bir Hikâye | FreeReading | `{"content":{"source":"reading_text","minWordCount":200,"maxWordCount":275},"mode":"free","readingPurpose":"practice","timing":{"minReadingTimeMs":10000,"maxReadingTimeMs":0,"suggestedMinReadingTimeMs":180000,"suggestedMaxReadingTimeMs":180000}}` |
 | Sayı Avcısı | SchulteTable | `{"gridSize":3,"sequenceType":"numeric","rules":{"timeLimit":75}}` |
 | Konum Belleği | Focus | `{"mode":"position","nLevel":1,"totalSteps":40,"speedMs":2800,"gridSize":3}` |
 | Hareketi Takip Et | EyeTracking | `{"mode":"tracking","path":{"type":"horizontal"},"timing":{"durationSeconds":40,"speedMs":2800},"content":{"type":"dot","pointSize":36}}` |
@@ -56,7 +56,7 @@ Mevcut metin uzunlukları ve soruları korunur. Anlama ve değerlendirmeli serbe
 | Kelime Bağlantılarını Sına | Vocabulary | `{"mode":"quiz","quizType":"mixed","timeLimitPerWord":0,"vocabulary":{"count":12,"difficultyLevel":3,"requireFullPool":true}}` |
 | Ana Bilgiyi Bul | Scanning | `{"content":{"source":"random_text"},"targetCount":3,"timeLimit":120,"targets":{"mode":"find_all","caseSensitive":false}}` |
 | Metne İlk Bakış | Skimming | `{"content":{"source":"reading_text"},"mode":"skimming","rules":{"timeLimit":120},"timing":{"minReadingTimeMs":3000},"readingPurpose":"evaluation"}` |
-| Kendi Hızımda Okuyorum | FreeReading | `{"content":{"source":"reading_text"},"mode":"free","readingPurpose":"evaluation"}` |
+| Kendi Hızımda Okuyorum | FreeReading | `{"content":{"source":"reading_text","minWordCount":275,"maxWordCount":350},"mode":"free","readingPurpose":"practice","timing":{"minReadingTimeMs":10000,"maxReadingTimeMs":0,"suggestedMinReadingTimeMs":180000,"suggestedMaxReadingTimeMs":240000}}` |
 | Sayı Avcısı | SchulteTable | `{"gridSize":4,"sequenceType":"numeric","rules":{"timeLimit":120}}` |
 | Konum Belleği | Focus | `{"mode":"position","nLevel":1,"totalSteps":48,"speedMs":2600,"gridSize":3}` |
 | Hareketi Takip Et | EyeTracking | `{"mode":"tracking","path":{"type":"circle"},"timing":{"durationSeconds":45,"speedMs":2500},"content":{"type":"dot","pointSize":36}}` |
@@ -82,6 +82,7 @@ Mevcut metin uzunlukları ve soruları korunur. Anlama ve değerlendirmeli serbe
 | Noktaya Odaklan | Fixation | `{"mode":"fixation","timing":{"holdMs":800,"durationSeconds":45},"content":{"type":"letter","points":4,"peripheralCount":1,"pointSize":44}}` |
 | Hedefler Arası Geçiş | Saccade | `{"mode":"saccade","timing":{"holdMs":750,"durationSeconds":55},"content":{"type":"number","pattern":"horizontal","pointSize":44}}` |
 | Çevredeki Harfler | VisualExpansion | `{"mode":"horizontal","rounds":16,"displayDurationMs":950,"startDegrees":8,"targetDegrees":22,"content":{"stimulusType":"letter"}}` |
+| Bağımsız Okuma Pratiği — Seviye 4 | FreeReading | `{"content":{"source":"reading_text","minWordCount":350,"maxWordCount":450},"mode":"free","readingPurpose":"practice","timing":{"minReadingTimeMs":10000,"maxReadingTimeMs":0,"suggestedMinReadingTimeMs":240000,"suggestedMaxReadingTimeMs":300000}}` |
 
 ## Seviye 5
 
@@ -94,7 +95,7 @@ Mevcut metin uzunlukları ve soruları korunur. Anlama ve değerlendirmeli serbe
 | Seçici Bilgi Arama | Scanning | `{"content":{"source":"random_text"},"targetCount":5,"timeLimit":180,"targets":{"mode":"find_all","caseSensitive":false}}` |
 | Metnin Haritası | Skimming | `{"content":{"source":"reading_text"},"mode":"skimming","rules":{"timeLimit":180},"timing":{"minReadingTimeMs":3000},"readingPurpose":"evaluation"}` |
 | Dikkatli Editör | ErrorAnalysis | `{"content":{"source":"reading_text"},"errorCount":5,"timeLimit":240}` |
-| Bağımsız Okuyucu | FreeReading | `{"content":{"source":"reading_text"},"mode":"free","readingPurpose":"evaluation"}` |
+| Bağımsız Okuyucu | FreeReading | `{"content":{"source":"reading_text","minWordCount":450,"maxWordCount":550},"mode":"free","readingPurpose":"practice","timing":{"minReadingTimeMs":10000,"maxReadingTimeMs":0,"suggestedMinReadingTimeMs":300000,"suggestedMaxReadingTimeMs":360000}}` |
 | Sayı Avcısı | SchulteTable | `{"gridSize":5,"sequenceType":"numeric","rules":{"timeLimit":150}}` |
 | Konum Belleği | Focus | `{"mode":"position","nLevel":2,"totalSteps":56,"speedMs":2800,"gridSize":3}` |
 | Hareketi Takip Et | EyeTracking | `{"mode":"tracking","path":{"type":"infinity8"},"timing":{"durationSeconds":60,"speedMs":2800},"content":{"type":"dot","pointSize":36}}` |

@@ -137,14 +137,22 @@
     "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
     "configuration": {
       "engineType": "free_reading",
+      "difficultyLevel": 1,
       "engineConfig": {
         "content": {
-          "source": "reading_text"
+          "source": "reading_text",
+          "minWordCount": 150,
+          "maxWordCount": 200
         },
         "mode": "free",
-        "readingPurpose": "evaluation"
-      },
-      "difficultyLevel": 1
+        "readingPurpose": "practice",
+        "timing": {
+          "minReadingTimeMs": 10000,
+          "maxReadingTimeMs": 0,
+          "suggestedMinReadingTimeMs": 120000,
+          "suggestedMaxReadingTimeMs": 120000
+        }
+      }
     }
   },
   {
@@ -466,14 +474,22 @@
     "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
     "configuration": {
       "engineType": "free_reading",
+      "difficultyLevel": 2,
       "engineConfig": {
         "content": {
-          "source": "reading_text"
+          "source": "reading_text",
+          "minWordCount": 200,
+          "maxWordCount": 275
         },
         "mode": "free",
-        "readingPurpose": "evaluation"
-      },
-      "difficultyLevel": 2
+        "readingPurpose": "practice",
+        "timing": {
+          "minReadingTimeMs": 10000,
+          "maxReadingTimeMs": 0,
+          "suggestedMinReadingTimeMs": 180000,
+          "suggestedMaxReadingTimeMs": 180000
+        }
+      }
     }
   },
   {
@@ -797,14 +813,22 @@
     "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
     "configuration": {
       "engineType": "free_reading",
+      "difficultyLevel": 3,
       "engineConfig": {
         "content": {
-          "source": "reading_text"
+          "source": "reading_text",
+          "minWordCount": 275,
+          "maxWordCount": 350
         },
         "mode": "free",
-        "readingPurpose": "evaluation"
-      },
-      "difficultyLevel": 3
+        "readingPurpose": "practice",
+        "timing": {
+          "minReadingTimeMs": 10000,
+          "maxReadingTimeMs": 0,
+          "suggestedMinReadingTimeMs": 180000,
+          "suggestedMaxReadingTimeMs": 240000
+        }
+      }
     }
   },
   {
@@ -1409,14 +1433,22 @@
     "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
     "configuration": {
       "engineType": "free_reading",
+      "difficultyLevel": 5,
       "engineConfig": {
         "content": {
-          "source": "reading_text"
+          "source": "reading_text",
+          "minWordCount": 450,
+          "maxWordCount": 550
         },
         "mode": "free",
-        "readingPurpose": "evaluation"
-      },
-      "difficultyLevel": 5
+        "readingPurpose": "practice",
+        "timing": {
+          "minReadingTimeMs": 10000,
+          "maxReadingTimeMs": 0,
+          "suggestedMinReadingTimeMs": 300000,
+          "suggestedMaxReadingTimeMs": 360000
+        }
+      }
     }
   },
   {
@@ -2017,6 +2049,33 @@
           "questionCount": 5,
           "minWordCount": 202,
           "maxWordCount": 248
+        }
+      }
+    }
+  },
+  {
+    "id": "53bd907a-627e-5553-8346-9a4ac807a25d",
+    "type": "FreeReading",
+    "title": "Bağımsız Okuma Pratiği — Seviye 4",
+    "description": "Sorusuz bağımsız okuma pratiği. Tempo, okumayı bitirme beyanına dayanır; anlama ölçülmez.",
+    "difficultyLevel": 4,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000001",
+    "configuration": {
+      "engineType": "free_reading",
+      "difficultyLevel": 4,
+      "engineConfig": {
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 350,
+          "maxWordCount": 450
+        },
+        "mode": "free",
+        "readingPurpose": "practice",
+        "timing": {
+          "minReadingTimeMs": 10000,
+          "maxReadingTimeMs": 0,
+          "suggestedMinReadingTimeMs": 240000,
+          "suggestedMaxReadingTimeMs": 300000
         }
       }
     }

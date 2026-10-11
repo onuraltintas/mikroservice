@@ -139,14 +139,22 @@
     "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
     "configuration": {
       "engineType": "free_reading",
+      "difficultyLevel": 1,
       "engineConfig": {
         "content": {
-          "source": "reading_text"
+          "source": "reading_text",
+          "minWordCount": 300,
+          "maxWordCount": 400
         },
         "mode": "free",
-        "readingPurpose": "evaluation"
-      },
-      "difficultyLevel": 1
+        "readingPurpose": "practice",
+        "timing": {
+          "minReadingTimeMs": 10000,
+          "maxReadingTimeMs": 0,
+          "suggestedMinReadingTimeMs": 120000,
+          "suggestedMaxReadingTimeMs": 180000
+        }
+      }
     }
   },
   {
@@ -488,14 +496,22 @@
     "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
     "configuration": {
       "engineType": "free_reading",
+      "difficultyLevel": 2,
       "engineConfig": {
         "content": {
-          "source": "reading_text"
+          "source": "reading_text",
+          "minWordCount": 400,
+          "maxWordCount": 550
         },
         "mode": "free",
-        "readingPurpose": "evaluation"
-      },
-      "difficultyLevel": 2
+        "readingPurpose": "practice",
+        "timing": {
+          "minReadingTimeMs": 10000,
+          "maxReadingTimeMs": 0,
+          "suggestedMinReadingTimeMs": 180000,
+          "suggestedMaxReadingTimeMs": 240000
+        }
+      }
     }
   },
   {
@@ -837,14 +853,22 @@
     "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
     "configuration": {
       "engineType": "free_reading",
+      "difficultyLevel": 3,
       "engineConfig": {
         "content": {
-          "source": "reading_text"
+          "source": "reading_text",
+          "minWordCount": 550,
+          "maxWordCount": 700
         },
         "mode": "free",
-        "readingPurpose": "evaluation"
-      },
-      "difficultyLevel": 3
+        "readingPurpose": "practice",
+        "timing": {
+          "minReadingTimeMs": 10000,
+          "maxReadingTimeMs": 0,
+          "suggestedMinReadingTimeMs": 240000,
+          "suggestedMaxReadingTimeMs": 300000
+        }
+      }
     }
   },
   {
@@ -2125,6 +2149,60 @@
           "questionCount": 5,
           "minWordCount": 432,
           "maxWordCount": 528
+        }
+      }
+    }
+  },
+  {
+    "id": "01d51d67-961f-5304-8191-1b12b37b2c10",
+    "type": "FreeReading",
+    "title": "Bağımsız Okuma Pratiği — Seviye 4",
+    "description": "Sorusuz bağımsız okuma pratiği. Tempo, okumayı bitirme beyanına dayanır; anlama ölçülmez.",
+    "difficultyLevel": 4,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "free_reading",
+      "difficultyLevel": 4,
+      "engineConfig": {
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 700,
+          "maxWordCount": 850
+        },
+        "mode": "free",
+        "readingPurpose": "practice",
+        "timing": {
+          "minReadingTimeMs": 10000,
+          "maxReadingTimeMs": 0,
+          "suggestedMinReadingTimeMs": 300000,
+          "suggestedMaxReadingTimeMs": 360000
+        }
+      }
+    }
+  },
+  {
+    "id": "5c2fb8ef-c44c-5f21-8578-91d91a6fd3be",
+    "type": "FreeReading",
+    "title": "Bağımsız Okuma Pratiği — Seviye 5",
+    "description": "Sorusuz bağımsız okuma pratiği. Tempo, okumayı bitirme beyanına dayanır; anlama ölçülmez.",
+    "difficultyLevel": 5,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "free_reading",
+      "difficultyLevel": 5,
+      "engineConfig": {
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 850,
+          "maxWordCount": 1000
+        },
+        "mode": "free",
+        "readingPurpose": "practice",
+        "timing": {
+          "minReadingTimeMs": 10000,
+          "maxReadingTimeMs": 0,
+          "suggestedMinReadingTimeMs": 360000,
+          "suggestedMaxReadingTimeMs": 420000
         }
       }
     }

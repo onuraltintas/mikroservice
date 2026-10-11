@@ -12,11 +12,9 @@ const componentPath = new URL(
 
 const template = readFileSync(templatePath, 'utf8');
 const component = readFileSync(componentPath, 'utf8');
-const readingPanel = template.match(
-  /engine\.engineType === 'reading_comprehension'[\s\S]*?exercisePhase === 'reading'/,
-)?.[0] ?? '';
-
-assert.match(readingPanel, /engine\.engineType === 'free_reading'/);
+assert.match(template, /isManualReadingEngine\(\) && exercisePhase === 'reading'/);
+const manualReadingEngines = component.match(/isManualReadingEngine\(\): boolean \{[\s\S]*?\n  \}/)?.[0] ?? '';
+assert.match(manualReadingEngines, /'free_reading'/);
 
 const comprehensionText = component.match(
   /getComprehensionText\(\): string \{[\s\S]*?\n  \}/,
@@ -25,8 +23,8 @@ const comprehensionWordCount = component.match(
   /getComprehensionWordCount\(\): number \{[\s\S]*?\n  \}/,
 )?.[0] ?? '';
 
-assert.match(comprehensionText, /engine\?\.engineType === 'free_reading'/);
-assert.match(comprehensionWordCount, /engine\?\.engineType === 'free_reading'/);
+assert.match(comprehensionText, /isManualReadingEngine\(\)/);
+assert.match(comprehensionWordCount, /isManualReadingEngine\(\)/);
 assert.match(template, /engine\?\.engineType === 'free_reading' && result\?\.details\?\.wpm !== null/);
 
 const visualizationPath = new URL(

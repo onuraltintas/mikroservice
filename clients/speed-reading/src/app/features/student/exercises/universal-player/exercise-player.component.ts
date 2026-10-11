@@ -946,7 +946,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   private previewTextMatchesLength(wordCount: number): boolean {
     if (this.exercise?.exerciseTypeName?.toLowerCase() !== 'speedreading'
       && this.exercise?.exerciseTypeName?.toLowerCase() !== 'chunking'
-      && !['reading_comprehension', 'text_fade', 'scanning', 'scan_find', 'regression_reduction', 'subvocalization_reduction'].includes(this.parsedConfig?.['engineType'] || '')) return true;
+      && !['free_reading', 'reading_comprehension', 'text_fade', 'scanning', 'scan_find', 'regression_reduction', 'subvocalization_reduction'].includes(this.parsedConfig?.['engineType'] || '')) return true;
     const content = this.parsedConfig?.['engineConfig']?.['content'] || this.parsedConfig?.['content'] || {};
     const minimum = Number(content.minWordCount) || 0;
     const maximum = Number(content.maxWordCount) || 0;
@@ -1013,7 +1013,8 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     const content = typeof readingText?.content === 'string' ? readingText.content : '';
     const title = typeof readingText?.title === 'string' ? readingText.title : '';
     const wordCount = Number(readingText?.wordCount) || content.split(/\s+/).filter(Boolean).length;
-    const availableQuestions = this.exercise?.exerciseTypeName?.toLowerCase() === 'chunking' ? []
+    const availableQuestions = this.exercise?.exerciseTypeName?.toLowerCase() === 'chunking'
+      || (this.parsedConfig?.['engineType'] === 'free_reading' && !this.previewRequiresQuestions()) ? []
       : Array.isArray(readingText?.questions) ? readingText.questions : [];
     const questions = this.parsedConfig?.['engineType'] === 'skimming'
       ? availableQuestions.filter((question: any) => Number(question.type ?? question.questionType ?? question.QuestionType) === 1)
@@ -3488,7 +3489,33 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     return (this.engine as TextFadeEngine)?.getFontSizeCss?.() || '20px';
   }
 
+  isFreeReadingPractice(): boolean {
+    return this.engine?.engineType === 'free_reading' && !this.isAssessmentMode
+      && (this.backendSessionConfig?.['readingPurpose'] ?? this.backendSessionConfig?.['ReadingPurpose']
+        ?? this.parsedConfig?.['engineConfig']?.['readingPurpose'] ?? this.parsedConfig?.['readingPurpose'] ?? 'practice') !== 'evaluation';
+  }
+
+  getFreeReadingSuggestedTime(): string {
+    const timing = this.parsedConfig?.['engineConfig']?.['timing'] ?? this.parsedConfig?.['timing'];
+    const minimum = Number(timing?.suggestedMinReadingTimeMs) / 60000;
+    const maximum = Number(timing?.suggestedMaxReadingTimeMs) / 60000;
+    return minimum > 0 && maximum >= minimum ? `${minimum}${maximum > minimum ? '–' + maximum : ''} dakika` : '';
+  }
+
+  getFreeReadingResultTimeMs(): number {
+    if (this.resultSaveStatus === 'saved') {
+      const details = this.sessionResult?.detailedResults;
+      const start = Date.parse(details?.readingStartTime);
+      const end = Date.parse(details?.readingEndTime);
+      const paused = Number(details?.readingPausedMilliseconds ?? (details?.readingPausedSeconds ?? 0) * 1000);
+      return Number.isFinite(start) && Number.isFinite(end) && Number.isFinite(paused)
+        ? Math.max(0, end - start - paused) : (this.sessionResult?.timeSpentSeconds ?? 0) * 1000;
+    }
+    return this.result?.details?.readingTimeMs ?? this.result?.totalTime ?? 0;
+  }
+
   private isMeasuredClientResult(result: EngineResult): boolean {
+    if (this.isFreeReadingPractice()) return false;
     if (this.engine?.engineType === 'visualization') {
       return result.details?.measurementStatus === 'Measured';
     }
@@ -3535,6 +3562,10 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   }
 
   private normalizeEngineResultForDisplay(result: EngineResult): EngineResult {
+    if (this.isFreeReadingPractice()) {
+      return { ...result, score:0, accuracy:0, details:{ ...result.details,
+        speedScore:null, comprehensionScore:null, readingPurpose:'practice', measurementStatus:'NotMeasured' } };
+    }
     const paced = this.isPacedReadingEngine();
     const details = { ...(result.details || {}), ...(this.engine?.engineType === 'skimming' ? { wpm: null } : {}), ...(paced ? {
       wpm: null, displayPaceWpm: this.getWpm(),

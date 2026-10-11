@@ -203,6 +203,10 @@ internal sealed class OwnedSpeedReadingDailyProgress(
             throw new BusinessRuleException("DailyProgress.IncompleteReading",
                 "Okuma tamamlanmadığı için günlük ilerlemeye eklenemez. Egzersizi yeniden tamamlayın.");
         var isMeasured = sessionResult.IsMeasured;
+        var isFreeReadingPractice = sessionState.RootElement.TryGetProperty("engineType", out var engineType)
+            && engineType.GetString() == "free_reading"
+            && sessionState.RootElement.TryGetProperty("readingPurpose", out var readingPurpose)
+            && readingPurpose.GetString() == "practice";
         var score = isMeasured ? Math.Clamp(sessionResult.Score, 0, 100) : 0;
         var duration = SpeedReadingDailyProgressRules.ValidateDuration(
             Math.Max(1, sessionResult.TimeSpentSeconds));
@@ -310,7 +314,7 @@ internal sealed class OwnedSpeedReadingDailyProgress(
             now,
             duration,
             score,
-            score >= PassingScore,
+            score >= PassingScore || isFreeReadingPractice,
             authoritativeResultData,
             request.DevicePlatform,
             authoritativeCorrectCount,

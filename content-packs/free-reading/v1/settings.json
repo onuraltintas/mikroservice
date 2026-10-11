@@ -1,0 +1,692 @@
+[
+  {
+    "id": "fa1d80ec-d8ed-5379-9a29-e2cfe8c51af7",
+    "ageGroupId": "10000000-0000-0000-0000-000000000001",
+    "age": "child",
+    "level": 1,
+    "title": "Hikâyemi Seçiyorum",
+    "description": "Çocuk yaş grubunda seçilen seviyeye uygun çalışma.",
+    "previousConfiguration": {
+      "engineType": "free_reading",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "free",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 1
+    },
+    "configuration": {
+      "engineType": "free_reading",
+      "difficultyLevel": 1,
+      "engineConfig": {
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 150,
+          "maxWordCount": 200
+        },
+        "mode": "free",
+        "readingPurpose": "practice",
+        "timing": {
+          "minReadingTimeMs": 10000,
+          "maxReadingTimeMs": 0,
+          "suggestedMinReadingTimeMs": 120000,
+          "suggestedMaxReadingTimeMs": 120000
+        }
+      }
+    }
+  },
+  {
+    "id": "9450063e-4738-583c-9c53-240d6935ed88",
+    "ageGroupId": "10000000-0000-0000-0000-000000000001",
+    "age": "child",
+    "level": 2,
+    "title": "Yeni Bir Hikâye",
+    "description": "Çocuk yaş grubunda seçilen seviyeye uygun çalışma.",
+    "previousConfiguration": {
+      "engineType": "free_reading",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "free",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 2
+    },
+    "configuration": {
+      "engineType": "free_reading",
+      "difficultyLevel": 2,
+      "engineConfig": {
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 200,
+          "maxWordCount": 275
+        },
+        "mode": "free",
+        "readingPurpose": "practice",
+        "timing": {
+          "minReadingTimeMs": 10000,
+          "maxReadingTimeMs": 0,
+          "suggestedMinReadingTimeMs": 180000,
+          "suggestedMaxReadingTimeMs": 180000
+        }
+      }
+    }
+  },
+  {
+    "id": "aa4a55b1-3c0a-5751-baed-8ecc6ddc6e34",
+    "ageGroupId": "10000000-0000-0000-0000-000000000001",
+    "age": "child",
+    "level": 3,
+    "title": "Kendi Hızımda Okuyorum",
+    "description": "Çocuk yaş grubunda seçilen seviyeye uygun çalışma.",
+    "previousConfiguration": {
+      "engineType": "free_reading",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "free",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 3
+    },
+    "configuration": {
+      "engineType": "free_reading",
+      "difficultyLevel": 3,
+      "engineConfig": {
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 275,
+          "maxWordCount": 350
+        },
+        "mode": "free",
+        "readingPurpose": "practice",
+        "timing": {
+          "minReadingTimeMs": 10000,
+          "maxReadingTimeMs": 0,
+          "suggestedMinReadingTimeMs": 180000,
+          "suggestedMaxReadingTimeMs": 240000
+        }
+      }
+    }
+  },
+  {
+    "id": "53bd907a-627e-5553-8346-9a4ac807a25d",
+    "ageGroupId": "10000000-0000-0000-0000-000000000001",
+    "age": "child",
+    "level": 4,
+    "title": "Bağımsız Okuma Pratiği — Seviye 4",
+    "description": "Sorusuz bağımsız okuma pratiği. Tempo, okumayı bitirme beyanına dayanır; anlama ölçülmez.",
+    "previousConfiguration": null,
+    "configuration": {
+      "engineType": "free_reading",
+      "difficultyLevel": 4,
+      "engineConfig": {
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 350,
+          "maxWordCount": 450
+        },
+        "mode": "free",
+        "readingPurpose": "practice",
+        "timing": {
+          "minReadingTimeMs": 10000,
+          "maxReadingTimeMs": 0,
+          "suggestedMinReadingTimeMs": 240000,
+          "suggestedMaxReadingTimeMs": 300000
+        }
+      }
+    }
+  },
+  {
+    "id": "754eacad-704d-569a-a2f3-39abb8c29ff6",
+    "ageGroupId": "10000000-0000-0000-0000-000000000001",
+    "age": "child",
+    "level": 5,
+    "title": "Bağımsız Okuyucu",
+    "description": "Çocuk yaş grubunda seçilen seviyeye uygun çalışma.",
+    "previousConfiguration": {
+      "engineType": "free_reading",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "free",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 5
+    },
+    "configuration": {
+      "engineType": "free_reading",
+      "difficultyLevel": 5,
+      "engineConfig": {
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 450,
+          "maxWordCount": 550
+        },
+        "mode": "free",
+        "readingPurpose": "practice",
+        "timing": {
+          "minReadingTimeMs": 10000,
+          "maxReadingTimeMs": 0,
+          "suggestedMinReadingTimeMs": 300000,
+          "suggestedMaxReadingTimeMs": 360000
+        }
+      }
+    }
+  },
+  {
+    "id": "46c4af23-927f-5cde-bb5e-7a724b0575c7",
+    "ageGroupId": "10000000-0000-0000-0000-000000000002",
+    "age": "teen",
+    "level": 1,
+    "title": "Bağımsız Metin Okuma",
+    "description": "13–16 yaş grubunda seviyeye uygun çalışma.",
+    "previousConfiguration": {
+      "engineType": "free_reading",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "free",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 1
+    },
+    "configuration": {
+      "engineType": "free_reading",
+      "difficultyLevel": 1,
+      "engineConfig": {
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 200,
+          "maxWordCount": 300
+        },
+        "mode": "free",
+        "readingPurpose": "practice",
+        "timing": {
+          "minReadingTimeMs": 10000,
+          "maxReadingTimeMs": 0,
+          "suggestedMinReadingTimeMs": 120000,
+          "suggestedMaxReadingTimeMs": 120000
+        }
+      }
+    }
+  },
+  {
+    "id": "6e09026f-4717-53a4-a57b-44b4296443d7",
+    "ageGroupId": "10000000-0000-0000-0000-000000000002",
+    "age": "teen",
+    "level": 2,
+    "title": "Bağımsız Metin Okuma",
+    "description": "13–16 yaş grubunda seviyeye uygun çalışma.",
+    "previousConfiguration": {
+      "engineType": "free_reading",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "free",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 2
+    },
+    "configuration": {
+      "engineType": "free_reading",
+      "difficultyLevel": 2,
+      "engineConfig": {
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 300,
+          "maxWordCount": 400
+        },
+        "mode": "free",
+        "readingPurpose": "practice",
+        "timing": {
+          "minReadingTimeMs": 10000,
+          "maxReadingTimeMs": 0,
+          "suggestedMinReadingTimeMs": 180000,
+          "suggestedMaxReadingTimeMs": 180000
+        }
+      }
+    }
+  },
+  {
+    "id": "0c6a1808-2389-54e0-b1cc-ccbd478b6c3a",
+    "ageGroupId": "10000000-0000-0000-0000-000000000002",
+    "age": "teen",
+    "level": 3,
+    "title": "Bağımsız Metin Okuma",
+    "description": "13–16 yaş grubunda seviyeye uygun çalışma.",
+    "previousConfiguration": {
+      "engineType": "free_reading",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "free",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 3
+    },
+    "configuration": {
+      "engineType": "free_reading",
+      "difficultyLevel": 3,
+      "engineConfig": {
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 400,
+          "maxWordCount": 500
+        },
+        "mode": "free",
+        "readingPurpose": "practice",
+        "timing": {
+          "minReadingTimeMs": 10000,
+          "maxReadingTimeMs": 0,
+          "suggestedMinReadingTimeMs": 180000,
+          "suggestedMaxReadingTimeMs": 240000
+        }
+      }
+    }
+  },
+  {
+    "id": "a7079c75-35c8-5e53-8cba-cf46d085f34b",
+    "ageGroupId": "10000000-0000-0000-0000-000000000002",
+    "age": "teen",
+    "level": 4,
+    "title": "Bağımsız Okuma Pratiği — Seviye 4",
+    "description": "Sorusuz bağımsız okuma pratiği. Tempo, okumayı bitirme beyanına dayanır; anlama ölçülmez.",
+    "previousConfiguration": null,
+    "configuration": {
+      "engineType": "free_reading",
+      "difficultyLevel": 4,
+      "engineConfig": {
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 500,
+          "maxWordCount": 650
+        },
+        "mode": "free",
+        "readingPurpose": "practice",
+        "timing": {
+          "minReadingTimeMs": 10000,
+          "maxReadingTimeMs": 0,
+          "suggestedMinReadingTimeMs": 240000,
+          "suggestedMaxReadingTimeMs": 300000
+        }
+      }
+    }
+  },
+  {
+    "id": "3bc51888-7425-5e18-8ad6-36d81af1d85d",
+    "ageGroupId": "10000000-0000-0000-0000-000000000002",
+    "age": "teen",
+    "level": 5,
+    "title": "Bağımsız Okuma Pratiği — Seviye 5",
+    "description": "Sorusuz bağımsız okuma pratiği. Tempo, okumayı bitirme beyanına dayanır; anlama ölçülmez.",
+    "previousConfiguration": null,
+    "configuration": {
+      "engineType": "free_reading",
+      "difficultyLevel": 5,
+      "engineConfig": {
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 650,
+          "maxWordCount": 800
+        },
+        "mode": "free",
+        "readingPurpose": "practice",
+        "timing": {
+          "minReadingTimeMs": 10000,
+          "maxReadingTimeMs": 0,
+          "suggestedMinReadingTimeMs": 300000,
+          "suggestedMaxReadingTimeMs": 360000
+        }
+      }
+    }
+  },
+  {
+    "id": "3abafca3-3ee3-5193-9f0e-1c574630e876",
+    "ageGroupId": "10000000-0000-0000-0000-000000000004",
+    "age": "young-adult",
+    "level": 1,
+    "title": "Bağımsız Metin Okuma",
+    "description": "17–21 yaş grubunda seviyeye uygun çalışma.",
+    "previousConfiguration": {
+      "engineType": "free_reading",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "free",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 1
+    },
+    "configuration": {
+      "engineType": "free_reading",
+      "difficultyLevel": 1,
+      "engineConfig": {
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 300,
+          "maxWordCount": 400
+        },
+        "mode": "free",
+        "readingPurpose": "practice",
+        "timing": {
+          "minReadingTimeMs": 10000,
+          "maxReadingTimeMs": 0,
+          "suggestedMinReadingTimeMs": 120000,
+          "suggestedMaxReadingTimeMs": 180000
+        }
+      }
+    }
+  },
+  {
+    "id": "f8d27484-c9b2-5ee7-a75b-9ac0c3667a9a",
+    "ageGroupId": "10000000-0000-0000-0000-000000000004",
+    "age": "young-adult",
+    "level": 2,
+    "title": "Bağımsız Metin Okuma",
+    "description": "17–21 yaş grubunda seviyeye uygun çalışma.",
+    "previousConfiguration": {
+      "engineType": "free_reading",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "free",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 2
+    },
+    "configuration": {
+      "engineType": "free_reading",
+      "difficultyLevel": 2,
+      "engineConfig": {
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 400,
+          "maxWordCount": 550
+        },
+        "mode": "free",
+        "readingPurpose": "practice",
+        "timing": {
+          "minReadingTimeMs": 10000,
+          "maxReadingTimeMs": 0,
+          "suggestedMinReadingTimeMs": 180000,
+          "suggestedMaxReadingTimeMs": 240000
+        }
+      }
+    }
+  },
+  {
+    "id": "1370e6ef-3e26-5b2b-900e-3cab23fdc94e",
+    "ageGroupId": "10000000-0000-0000-0000-000000000004",
+    "age": "young-adult",
+    "level": 3,
+    "title": "Bağımsız Metin Okuma",
+    "description": "17–21 yaş grubunda seviyeye uygun çalışma.",
+    "previousConfiguration": {
+      "engineType": "free_reading",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "free",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 3
+    },
+    "configuration": {
+      "engineType": "free_reading",
+      "difficultyLevel": 3,
+      "engineConfig": {
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 550,
+          "maxWordCount": 700
+        },
+        "mode": "free",
+        "readingPurpose": "practice",
+        "timing": {
+          "minReadingTimeMs": 10000,
+          "maxReadingTimeMs": 0,
+          "suggestedMinReadingTimeMs": 240000,
+          "suggestedMaxReadingTimeMs": 300000
+        }
+      }
+    }
+  },
+  {
+    "id": "01d51d67-961f-5304-8191-1b12b37b2c10",
+    "ageGroupId": "10000000-0000-0000-0000-000000000004",
+    "age": "young-adult",
+    "level": 4,
+    "title": "Bağımsız Okuma Pratiği — Seviye 4",
+    "description": "Sorusuz bağımsız okuma pratiği. Tempo, okumayı bitirme beyanına dayanır; anlama ölçülmez.",
+    "previousConfiguration": null,
+    "configuration": {
+      "engineType": "free_reading",
+      "difficultyLevel": 4,
+      "engineConfig": {
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 700,
+          "maxWordCount": 850
+        },
+        "mode": "free",
+        "readingPurpose": "practice",
+        "timing": {
+          "minReadingTimeMs": 10000,
+          "maxReadingTimeMs": 0,
+          "suggestedMinReadingTimeMs": 300000,
+          "suggestedMaxReadingTimeMs": 360000
+        }
+      }
+    }
+  },
+  {
+    "id": "5c2fb8ef-c44c-5f21-8578-91d91a6fd3be",
+    "ageGroupId": "10000000-0000-0000-0000-000000000004",
+    "age": "young-adult",
+    "level": 5,
+    "title": "Bağımsız Okuma Pratiği — Seviye 5",
+    "description": "Sorusuz bağımsız okuma pratiği. Tempo, okumayı bitirme beyanına dayanır; anlama ölçülmez.",
+    "previousConfiguration": null,
+    "configuration": {
+      "engineType": "free_reading",
+      "difficultyLevel": 5,
+      "engineConfig": {
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 850,
+          "maxWordCount": 1000
+        },
+        "mode": "free",
+        "readingPurpose": "practice",
+        "timing": {
+          "minReadingTimeMs": 10000,
+          "maxReadingTimeMs": 0,
+          "suggestedMinReadingTimeMs": 360000,
+          "suggestedMaxReadingTimeMs": 420000
+        }
+      }
+    }
+  },
+  {
+    "id": "d5c13a2a-389a-5640-82eb-23944b70c932",
+    "ageGroupId": "10000000-0000-0000-0000-000000000003",
+    "age": "adult",
+    "level": 1,
+    "title": "Bağımsız Metin Okuma",
+    "description": "22 yaş ve üzeri yetişkinlerde seviyeye uygun çalışma.",
+    "previousConfiguration": {
+      "engineType": "free_reading",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "free",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 1
+    },
+    "configuration": {
+      "engineType": "free_reading",
+      "difficultyLevel": 1,
+      "engineConfig": {
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 350,
+          "maxWordCount": 450
+        },
+        "mode": "free",
+        "readingPurpose": "practice",
+        "timing": {
+          "minReadingTimeMs": 10000,
+          "maxReadingTimeMs": 0,
+          "suggestedMinReadingTimeMs": 120000,
+          "suggestedMaxReadingTimeMs": 180000
+        }
+      }
+    }
+  },
+  {
+    "id": "54c30ef6-ab72-593b-99bd-07614f2b4bf5",
+    "ageGroupId": "10000000-0000-0000-0000-000000000003",
+    "age": "adult",
+    "level": 2,
+    "title": "Bağımsız Metin Okuma",
+    "description": "22 yaş ve üzeri yetişkinlerde seviyeye uygun çalışma.",
+    "previousConfiguration": {
+      "engineType": "free_reading",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "free",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 2
+    },
+    "configuration": {
+      "engineType": "free_reading",
+      "difficultyLevel": 2,
+      "engineConfig": {
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 450,
+          "maxWordCount": 600
+        },
+        "mode": "free",
+        "readingPurpose": "practice",
+        "timing": {
+          "minReadingTimeMs": 10000,
+          "maxReadingTimeMs": 0,
+          "suggestedMinReadingTimeMs": 180000,
+          "suggestedMaxReadingTimeMs": 240000
+        }
+      }
+    }
+  },
+  {
+    "id": "a110ec60-28d5-5fe3-8015-958f0acc9aab",
+    "ageGroupId": "10000000-0000-0000-0000-000000000003",
+    "age": "adult",
+    "level": 3,
+    "title": "Bağımsız Metin Okuma",
+    "description": "22 yaş ve üzeri yetişkinlerde seviyeye uygun çalışma.",
+    "previousConfiguration": {
+      "engineType": "free_reading",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "free",
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 3
+    },
+    "configuration": {
+      "engineType": "free_reading",
+      "difficultyLevel": 3,
+      "engineConfig": {
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 600,
+          "maxWordCount": 800
+        },
+        "mode": "free",
+        "readingPurpose": "practice",
+        "timing": {
+          "minReadingTimeMs": 10000,
+          "maxReadingTimeMs": 0,
+          "suggestedMinReadingTimeMs": 240000,
+          "suggestedMaxReadingTimeMs": 300000
+        }
+      }
+    }
+  },
+  {
+    "id": "485fddc4-357a-5e02-8253-b88a5757bed2",
+    "ageGroupId": "10000000-0000-0000-0000-000000000003",
+    "age": "adult",
+    "level": 4,
+    "title": "Bağımsız Okuma Pratiği — Seviye 4",
+    "description": "Sorusuz bağımsız okuma pratiği. Tempo, okumayı bitirme beyanına dayanır; anlama ölçülmez.",
+    "previousConfiguration": null,
+    "configuration": {
+      "engineType": "free_reading",
+      "difficultyLevel": 4,
+      "engineConfig": {
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 800,
+          "maxWordCount": 1000
+        },
+        "mode": "free",
+        "readingPurpose": "practice",
+        "timing": {
+          "minReadingTimeMs": 10000,
+          "maxReadingTimeMs": 0,
+          "suggestedMinReadingTimeMs": 300000,
+          "suggestedMaxReadingTimeMs": 360000
+        }
+      }
+    }
+  },
+  {
+    "id": "32b0a329-984c-5249-81b4-61d21a42a8b7",
+    "ageGroupId": "10000000-0000-0000-0000-000000000003",
+    "age": "adult",
+    "level": 5,
+    "title": "Bağımsız Okuma Pratiği — Seviye 5",
+    "description": "Sorusuz bağımsız okuma pratiği. Tempo, okumayı bitirme beyanına dayanır; anlama ölçülmez.",
+    "previousConfiguration": null,
+    "configuration": {
+      "engineType": "free_reading",
+      "difficultyLevel": 5,
+      "engineConfig": {
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 1000,
+          "maxWordCount": 1200
+        },
+        "mode": "free",
+        "readingPurpose": "practice",
+        "timing": {
+          "minReadingTimeMs": 10000,
+          "maxReadingTimeMs": 0,
+          "suggestedMinReadingTimeMs": 360000,
+          "suggestedMaxReadingTimeMs": 420000
+        }
+      }
+    }
+  }
+]

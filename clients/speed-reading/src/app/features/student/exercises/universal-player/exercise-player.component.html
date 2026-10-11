@@ -541,7 +541,13 @@
         <!-- Reading Instructions -->
         <div class="reading-instruction" *ngIf="!engineState.isPaused && engine.engineType !== 'adaptive_fluency' && engine.engineType !== 'skimming'">
             <span class="material-icons">menu_book</span>
-            <span>Metni kendi hızınızda okuyun. Okuma bitince "Okudum" butonuna basın.</span>
+            <span>Metni kendi hızınızda okuyun. Okuma bitince "{{ isFreeReadingPractice() ? 'Okumayı Bitir' : 'Okudum' }}" butonuna basın.</span>
+        </div>
+        <div class="reading-instruction free-reading-guidance" *ngIf="isFreeReadingPractice() && !engineState.isPaused">
+            <span class="material-icons">info</span>
+            <span>Sorusuz bağımsız okuma pratiği.
+                <ng-container *ngIf="getFreeReadingSuggestedTime()">Önerilen süre: {{ getFreeReadingSuggestedTime() }}. Bu süre bir sınır veya hız hedefi değildir.</ng-container>
+            </span>
         </div>
         <div class="reading-instruction" *ngIf="!engineState.isPaused && engine.engineType === 'skimming'">
             <span class="material-icons">article</span>
@@ -558,7 +564,7 @@
             (scroll)="onReadingScroll($event)">
             <h3 *ngIf="engine.engineType === 'skimming'">{{ backendSessionConfig?.readingTextTitle }}</h3>
             <div class="reading-text-content" [ngClass]="'font-' + getComprehensionFontSize()" [style.line-height]="getComprehensionLineHeight()"
-                [style.font-size.px]="engine.engineType === 'skimming' ? $any(engine).getFontSizePx() : null" [style.white-space]="engine.engineType === 'skimming' ? 'pre-line' : null">
+                [style.font-size.px]="engine.engineType === 'skimming' ? $any(engine).getFontSizePx() : null" [style.white-space]="engine.engineType === 'skimming' || engine.engineType === 'free_reading' ? 'pre-line' : null">
                 {{ getComprehensionText() }}
             </div>
         </div>
@@ -1775,7 +1781,10 @@
                     <div class="stat-card"><div class="stat-value">{{ (result?.details?.targetIntervalMs || 0) / 1000 | number:'1.2-2' }} sn</div><div class="stat-label">Hedef geçiş aralığı</div></div>
                 </div>
             </div>
-            <div class="measurement-not-available" *ngIf="result?.details?.measurementStatus === 'NotMeasured' && !result?.details?.displayPaceWpm">
+            <div class="measurement-not-available" *ngIf="isFreeReadingPractice()">
+                Sorusuz okuma pratiği tamamlandı. Anlama puanı ve XP verilmez; seviye tespitine dahil edilmez.
+            </div>
+            <div class="measurement-not-available" *ngIf="result?.details?.measurementStatus === 'NotMeasured' && !result?.details?.displayPaceWpm && !isFreeReadingPractice()">
                 <ng-container *ngIf="engine?.engineType === 'visualization'; else otherUnmeasuredExercise">
                     Anlama ölçülmedi. Görselleştirme egzersizi gerçek okuma hızı veya zihinsel görüntü kalitesi ölçmez.
                 </ng-container>
@@ -1854,10 +1863,14 @@
             <div class="speed-reading-results" *ngIf="engine?.engineType === 'free_reading' && result?.details?.wpm !== null && result?.details?.wpm !== undefined">
                 <div class="result-box wpm-box">
                     <span class="material-icons">speed</span>
-                    <div class="result-value">{{ result?.details?.wpm }} WPM</div>
+                    <div class="result-value">{{ result?.details?.wpm | number:'1.0-0' }} WPM</div>
                     <div class="result-label">Okuma temposu (kelime/dakika)</div>
                     <p *ngIf="result?.details?.comprehensionScore == null">Anlama ölçülmedi; tempo, okumayı bitirdiğiniz beyanına dayanır.</p>
                 </div>
+            </div>
+            <div class="stats-row" *ngIf="isFreeReadingPractice()">
+                <div class="stat-card"><div class="stat-value">{{ sessionResult?.wordsRead ?? result?.details?.wordCount }}</div><div class="stat-label">Metindeki kelime sayısı</div></div>
+                <div class="stat-card"><div class="stat-value">{{ formatTime(getFreeReadingResultTimeMs()) }}</div><div class="stat-label">Aktif okuma süresi</div></div>
             </div>
 
             <!-- Speed Reading / RSVP Results (WPM) -->

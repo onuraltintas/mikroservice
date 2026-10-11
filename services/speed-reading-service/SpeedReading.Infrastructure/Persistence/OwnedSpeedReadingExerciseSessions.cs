@@ -769,12 +769,12 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             session.CorrectCount,
             session.IncorrectCount,
             hasValidWpm: (IsErrorAnalysis(state) && state.ErrorAnalysisCompleted)
-                || (rawWpmCandidate.HasValue && SupportsServerReadingMeasurement(state))
+                || (rawWpmCandidate.HasValue && SupportsServerReadingMeasurement(state) && !IsFreeReadingPractice(state))
                 || (IsFocusExercise(state) && state.FocusCompleted && HasFocusStimulus(state))
                 || (IsVisualExpansionExercise(state) && state.VisualExpansionRound >= state.TotalSteps
                     && state.VisualExpansionRoundResults.Count == state.TotalSteps)
                 || (IsValidatedFixation(state) && state.FocusCompleted && session.CurrentStep > 0));
-        var rawWpm = measurementStatus == SpeedReadingMeasurementStatus.Measured
+        var rawWpm = measurementStatus == SpeedReadingMeasurementStatus.Measured || IsFreeReadingPractice(state)
             ? rawWpmCandidate
             : null;
         var comprehension = IsAdaptiveFluency(state) && state.AdaptiveTransferComprehension.HasValue
@@ -789,7 +789,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                 : SpeedReadingExerciseSessionRules.CalculateCompositeScore(comprehension, rawWpm)
             : IsErrorAnalysis(state) ? ErrorAnalysisScore(state)
             : IsScanning(state) ? Math.Max(0, accuracy - session.IncorrectCount * 10m) : accuracy;
-        var weightedKdp = rawWpm.HasValue ? Math.Round(rawWpm.Value * comprehension / 100, 2) : (decimal?)null;
+        var weightedKdp = rawWpm.HasValue && !IsFreeReadingPractice(state) ? Math.Round(rawWpm.Value * comprehension / 100, 2) : (decimal?)null;
         var xpAwarded = measurementStatus == SpeedReadingMeasurementStatus.Measured && !state.ReadingIncomplete
             ? SpeedReadingExerciseSessionRules.CalculateXp(score ?? 0, accuracy, timeSpent)
             : 0;
@@ -973,7 +973,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             timeSpentSeconds,
             rawWpm,
             comprehension,
-            completedAt);
+            completedAt,
+            isMeasured: !IsFreeReadingPractice(state));
     }
 
     private void AddReadingSessionRecord(
@@ -984,7 +985,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         int timeSpentSeconds,
         decimal? rawWpm,
         decimal comprehension,
-        DateTime completedAt)
+        DateTime completedAt,
+        bool isMeasured = true)
     {
         var source = sourceAnswers.ToList();
         if (source.Any(answer => !IsPersistableReadingAnswer(answer)))
@@ -1023,7 +1025,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             session.StudentId.ToString(),
             null,
             null,
-            isMeasured: rawWpm is > 0);
+            isMeasured: isMeasured && rawWpm is > 0);
         db.ReadingSessions.Add(readingSession);
         db.ReadingSessionAnswers.AddRange(answers.Select(item => ReadingSessionAnswer.Import(
             Guid.NewGuid(),
@@ -3605,6 +3607,9 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             ?? throw new ArgumentException("Cevap A, B, C veya D olmalıdır.", nameof(answer));
     }
 
+    private static bool IsFreeReadingPractice(SessionState state) =>
+        IsEngineType(state.EngineType, "free_reading") && state.ReadingPurpose == "practice";
+
     private static SpeedReading.Application.ExerciseSessions.ExerciseSessionResult ToResult(
         SpeedReading.Domain.Sessions.ExerciseSessionResult result,
         ExerciseSession session,
@@ -3625,7 +3630,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             result.TimeSpentSeconds,
             result.IsMeasured ? score ?? result.Score : null,
             IsVocabularyState(state) || IsScanning(state) || IsFocusExercise(state) || IsVisualizationExercise(state.ExerciseTypeName) || IsEngineType(state.EngineType, "visualization") || result.WordsRead == 0 ? null : result.WordsRead,
-            !IsVocabularyState(state) && !IsScanning(state) && !IsFocusExercise(state) && !IsVisualizationExercise(state.ExerciseTypeName) && !IsEngineType(state.EngineType, "visualization") && result.IsMeasured && result.RawWpm > 0 ? result.RawWpm : null,
+            !IsVocabularyState(state) && !IsScanning(state) && !IsFocusExercise(state) && !IsVisualizationExercise(state.ExerciseTypeName) && !IsEngineType(state.EngineType, "visualization") && (result.IsMeasured || IsFreeReadingPractice(state)) && result.RawWpm > 0 ? result.RawWpm : null,
             result.IsMeasured && state.Questions.Count > 0 ? result.ComprehensionScore : null,
             !IsVocabularyState(state) && !IsScanning(state) && !IsFocusExercise(state) && !IsVisualizationExercise(state.ExerciseTypeName) && !IsEngineType(state.EngineType, "visualization") && result.IsMeasured && result.RawWpm > 0 ? result.WeightedKdp : null,
             xp ?? (result.IsMeasured && !state.ReadingIncomplete

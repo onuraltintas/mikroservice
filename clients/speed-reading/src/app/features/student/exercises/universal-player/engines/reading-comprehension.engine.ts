@@ -1,9 +1,9 @@
 /**
  * Reading Comprehension Engine
- * Serbest okuma + anlama soruları için engine.
+ * Bağımsız okuma pratiği ve anlama egzersizi için ortak motor.
  * 
  * Kullanıcı metni kendi hızında okur, "Okudum" butonuna basar,
- * ardından anlama sorularını cevaplar.
+ * Anlama modunda sorulara geçer; Serbest Okuma pratiği sorusuz biter.
  * 
  * Backend'den gelen veriler:
  * - readingTextContent: Metin içeriği
@@ -77,27 +77,6 @@ export class ReadingComprehensionEngine implements BaseEngine {
         this.displayName = engineType === 'free_reading' ? 'Serbest Okuma' : 'Anlama Testi';
     }
 
-    // Default text pool for testing (fallback only)
-    private defaultTexts = [
-        `Okuma, bilgiye ulaşmanın en temel yollarından biridir. İnsanlık tarihi boyunca yazılı metinler, 
-        bilginin nesilden nesile aktarılmasını sağlamıştır. Günümüzde dijital çağda bile okuma becerisi, 
-        öğrenmenin ve gelişimin temel taşı olmaya devam etmektedir. Hızlı ve etkili okuma, modern 
-        dünyada başarının anahtarlarından biridir. Araştırmalar gösteriyor ki düzenli okuma alışkanlığı 
-        olan bireyler, hem akademik hem de profesyonel yaşamda daha başarılı olmaktadır.`,
-
-        `Beyin, sürekli egzersiz gerektiren bir organdır. Tıpkı kaslarımızı güçlendirmek için 
-        fiziksel egzersiz yapmamız gerektiği gibi, zihinsel kapasitemizi artırmak için de beynimizi 
-        çalıştırmalıyız. Okuma, yazma, bulmaca çözme ve yeni beceriler öğrenme gibi aktiviteler 
-        beyin sağlığını korumaya yardımcı olur. Düzenli zihinsel egzersiz, yaşlanmayla birlikte 
-        ortaya çıkabilecek bilişsel gerilemeyi yavaşlatabilir.`,
-
-        `Dikkat ve odaklanma, başarılı öğrenmenin temel unsurlarıdır. Günümüzün dikkat dağıtıcı 
-        dünyasında, tek bir göreve odaklanma becerisi giderek daha değerli hale gelmektedir. 
-        Meditasyon, düzenli uyku ve fiziksel egzersiz, odaklanma kapasitesini artırabilir. 
-        Ayrıca, çoklu görev yapmaktan kaçınmak ve belirli zaman dilimlerinde tek bir işe 
-        konsantre olmak da verimliliği artırır.`
-    ];
-
     initialize(config: ReadingComprehensionConfig, callbacks: EngineCallbacks): void {
         clearInterval(this.timerInterval);
         this.callbacks = callbacks;
@@ -108,7 +87,7 @@ export class ReadingComprehensionEngine implements BaseEngine {
         // 1. readingTextContent (direct from ComprehensionEngine)
         // 2. Content.Text or content.text (C# sends PascalCase!)
         // 3. text (direct field)
-        // 4. fallback to default
+        // Real content is required; missing content must not fall back to a demo.
         // Backend sends SpeedReadingSessionData with:
         // - Content.Text (PascalCase from C#)
         // - ReadingTextTitle (PascalCase)
@@ -165,9 +144,9 @@ export class ReadingComprehensionEngine implements BaseEngine {
         if ((!resolvedText || invalidAssessmentText) && assessmentMode && cfg.serverAuthoritative !== true) {
             throw new Error('Assessment reading text was not provided by the server.');
         }
-        this.text = resolveReadingText(cfg, resolvedText || (this.engineType === 'free_reading' ? this.getRandomText() : ''));
-        if (this.engineType === 'reading_comprehension' && !this.text.trim())
-            throw new Error('Anlama egzersizi için yayımlanmış gerçek metin gerekli.');
+        this.text = resolveReadingText(cfg, resolvedText);
+        if (!this.text.trim())
+            throw new Error('Okuma egzersizi için yayımlanmış gerçek metin gerekli.');
 
         this.title = cfg.ReadingTextTitle ||   // PascalCase from C#
             config.readingTextTitle ||
@@ -211,11 +190,6 @@ export class ReadingComprehensionEngine implements BaseEngine {
         } else if (config.text) {
         } else {
         }
-    }
-
-    private getRandomText(): string {
-        const index = Math.floor(Math.random() * this.defaultTexts.length);
-        return this.defaultTexts[index];
     }
 
     getTitle(): string {
@@ -349,8 +323,7 @@ export class ReadingComprehensionEngine implements BaseEngine {
         // Calculate WPM
         const readingTimeMinutes = this.state.timeElapsed / 1000 / 60;
         const rawWpm = readingTimeMinutes > 0 ? this.words.length / readingTimeMinutes : 0;
-        const validSpeed = this.engineType !== 'reading_comprehension'
-            || (this.state.timeElapsed >= 3000 && rawWpm >= 20 && rawWpm <= 1500);
+        const validSpeed = this.state.timeElapsed >= 3000 && rawWpm >= 20 && rawWpm <= 1500;
         const wpm = validSpeed ? Math.round(rawWpm) : null;
 
         const result: EngineResult = {

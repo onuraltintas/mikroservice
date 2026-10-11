@@ -17,6 +17,18 @@ function callbacks(onComplete: (result: EngineResult) => void): EngineCallbacks 
 }
 
 describe('ReadingComprehensionEngine', () => {
+  it('offers an unlimited independent practice and exposes its real content', fakeAsync(() => {
+    const engine=new ReadingComprehensionEngine('free_reading');
+    let result:EngineResult|undefined;
+    engine.initialize({ content:Array(200).fill('kelime').join(' '),timing:{ minReadingTimeMs:10000,maxReadingTimeMs:0 } },callbacks(value=>result=value));
+    expect(engine.getWords().length).toBe(200); expect(engine.getWordCount()).toBe(200);
+    expect(engine.getReadingPhase()).toBe('reading'); expect(engine.hasReachedEnd()).toBeFalse();
+    expect(engine.getScrollProgress()).toBe(0); expect(engine.getMinReadingTime()).toBe(10000);
+    engine.start(); tick(5*60000); expect(engine.state.isRunning).toBeTrue(); expect(result).toBeUndefined();
+    engine.handleInput({ scrollProgress:100 }); expect(engine.hasReachedEnd()).toBeTrue();
+    expect(engine.getScrollProgress()).toBe(100); engine.completeReading();
+    expect(engine.getReadingPhase()).toBe('completed'); expect(result?.details?.wpm).toBe(40);
+  }));
   it('requires real free reading content rather than a demo fallback', () => {
     const engine = new ReadingComprehensionEngine('free_reading');
     expect(() => engine.initialize({}, callbacks(() => undefined))).toThrowError(/metin/i);

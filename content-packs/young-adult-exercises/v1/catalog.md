@@ -1,6 +1,6 @@
 # Genç yetişkin egzersiz kataloğu v1
 
-17–21 yaş; 21 tür; toplam 95 egzersiz. Seviye dağılımı: 17 / 18 / 20 / 20 / 20.
+17–21 yaş; 21 tür; toplam 97 egzersiz. Seviye dağılımı: 17 / 18 / 20 / 21 / 21.
 
 Mevcut 75 metin ve soruları korunur. Metin kullanan egzersizler yaş ve tam seviyeye uygun okunmamış rastgele metni seçer; havuz tükenince en az kullanılanlardan seçilir. Kelime etkinlikleri kelime havuzunu kullanır. Visualization metin tabanlı 15 özgün sahne ve 45 soruyla çalışır; her seviyede üç sahne, sahne başına üç soru.
 
@@ -16,7 +16,7 @@ Başlangıç temposu 180, 210, 240, 270, 300 kelime/dk. İlk 7 çalışma günü
 | Hareketi Takip Et | EyeTracking | `{"mode":"tracking","path":{"type":"horizontal"},"timing":{"durationSeconds":40,"speedMs":3000},"content":{"type":"dot","pointSize":36}}` |
 | Noktaya Odaklan | Fixation | `{"mode":"fixation","timing":{"holdMs":900,"durationSeconds":35},"content":{"type":"letter","points":3,"peripheralCount":1,"pointSize":44}}` |
 | Konum Belleği | Focus | `{"mode":"position","nLevel":1,"totalSteps":48,"speedMs":2600,"gridSize":3}` |
-| Bağımsız Metin Okuma | FreeReading | `{"content":{"source":"reading_text"},"mode":"free","readingPurpose":"evaluation"}` |
+| Bağımsız Metin Okuma | FreeReading | `{"content":{"source":"reading_text","minWordCount":300,"maxWordCount":400},"mode":"free","readingPurpose":"practice","timing":{"minReadingTimeMs":10000,"maxReadingTimeMs":0,"suggestedMinReadingTimeMs":120000,"suggestedMaxReadingTimeMs":180000}}` |
 | Hedefler Arası Geçiş | Saccade | `{"mode":"saccade","timing":{"holdMs":800,"durationSeconds":50},"content":{"type":"number","pattern":"horizontal","pointSize":44}}` |
 | Metinde Hedefi Bul | Scanning | `{"content":{"source":"random_text"},"targetCount":3,"timeLimit":180,"targets":{"mode":"find_all","caseSensitive":false}}` |
 | Sayı Avcısı | SchulteTable | `{"gridSize":4,"sequenceType":"numeric","rules":{"timeLimit":120}}` |
@@ -37,7 +37,7 @@ Başlangıç temposu 180, 210, 240, 270, 300 kelime/dk. İlk 7 çalışma günü
 | Hareketi Takip Et | EyeTracking | `{"mode":"tracking","path":{"type":"circle"},"timing":{"durationSeconds":45,"speedMs":2800},"content":{"type":"dot","pointSize":36}}` |
 | Noktaya Odaklan | Fixation | `{"mode":"fixation","timing":{"holdMs":850,"durationSeconds":40},"content":{"type":"letter","points":4,"peripheralCount":1,"pointSize":44}}` |
 | Konum Belleği | Focus | `{"mode":"position","nLevel":2,"totalSteps":48,"speedMs":2900,"gridSize":3}` |
-| Bağımsız Metin Okuma | FreeReading | `{"content":{"source":"reading_text"},"mode":"free","readingPurpose":"evaluation"}` |
+| Bağımsız Metin Okuma | FreeReading | `{"content":{"source":"reading_text","minWordCount":400,"maxWordCount":550},"mode":"free","readingPurpose":"practice","timing":{"minReadingTimeMs":10000,"maxReadingTimeMs":0,"suggestedMinReadingTimeMs":180000,"suggestedMaxReadingTimeMs":240000}}` |
 | Hedefler Arası Geçiş | Saccade | `{"mode":"saccade","timing":{"holdMs":750,"durationSeconds":60},"content":{"type":"number","pattern":"vertical","pointSize":44}}` |
 | Metinde Hedefi Bul | Scanning | `{"content":{"source":"random_text"},"targetCount":4,"timeLimit":180,"targets":{"mode":"find_all","caseSensitive":false}}` |
 | Sayı Avcısı | SchulteTable | `{"gridSize":4,"sequenceType":"numeric","rules":{"timeLimit":100}}` |
@@ -58,7 +58,7 @@ Başlangıç temposu 180, 210, 240, 270, 300 kelime/dk. İlk 7 çalışma günü
 | Hareketi Takip Et | EyeTracking | `{"mode":"tracking","path":{"type":"circle"},"timing":{"durationSeconds":45,"speedMs":2600},"content":{"type":"dot","pointSize":36}}` |
 | Noktaya Odaklan | Fixation | `{"mode":"fixation","timing":{"holdMs":800,"durationSeconds":45},"content":{"type":"letter","points":4,"peripheralCount":1,"pointSize":44}}` |
 | Konum Belleği | Focus | `{"mode":"position","nLevel":2,"totalSteps":56,"speedMs":2600,"gridSize":3}` |
-| Bağımsız Metin Okuma | FreeReading | `{"content":{"source":"reading_text"},"mode":"free","readingPurpose":"evaluation"}` |
+| Bağımsız Metin Okuma | FreeReading | `{"content":{"source":"reading_text","minWordCount":550,"maxWordCount":700},"mode":"free","readingPurpose":"practice","timing":{"minReadingTimeMs":10000,"maxReadingTimeMs":0,"suggestedMinReadingTimeMs":240000,"suggestedMaxReadingTimeMs":300000}}` |
 | Sıralı Kelime Gösterimi | RSVP | `{"mode":"rsvp","content":{"source":"reading_text"},"timing":{"durationMs":250,"intervalMs":0},"readingPurpose":"evaluation"}` |
 | Hedefler Arası Geçiş | Saccade | `{"mode":"saccade","timing":{"holdMs":700,"durationSeconds":70},"content":{"type":"number","pattern":"horizontal","pointSize":44}}` |
 | Metinde Hedefi Bul | Scanning | `{"content":{"source":"random_text"},"targetCount":5,"timeLimit":180,"targets":{"mode":"find_all","caseSensitive":false}}` |
@@ -93,6 +93,7 @@ Başlangıç temposu 180, 210, 240, 270, 300 kelime/dk. İlk 7 çalışma günü
 | Çevredeki Harfler | VisualExpansion | `{"mode":"horizontal","rounds":18,"displayDurationMs":900,"startDegrees":8,"targetDegrees":24,"content":{"stimulusType":"letter"}}` |
 | Sahneyi Zihninde Canlandır | Visualization | `{"mode":"static"}` |
 | Kelime Bilgisi Testi | Vocabulary | `{"mode":"quiz","quizType":"mixed","timeLimitPerWord":0,"vocabulary":{"count":20,"difficultyLevel":5,"requireFullPool":true}}` |
+| Bağımsız Okuma Pratiği — Seviye 4 | FreeReading | `{"content":{"source":"reading_text","minWordCount":700,"maxWordCount":850},"mode":"free","readingPurpose":"practice","timing":{"minReadingTimeMs":10000,"maxReadingTimeMs":0,"suggestedMinReadingTimeMs":300000,"suggestedMaxReadingTimeMs":360000}}` |
 
 ## Seviye 5
 
@@ -137,3 +138,4 @@ Her okuma oturumunda hafif sesli 1–2–3–4 sayma ve 60 BPM görsel ritim. An
 | 3 | `{"targetWpm":240,"msPerWord":250,"chunkSize":2,"displayMode":"highlight","metronomeEnabled":true,"visualMetronome":true,"metronomeBpm":60,"readingPurpose":"evaluation","content":{"source":"reading_text","questionCount":5,"minWordCount":432,"maxWordCount":528}}` |
 | 4 | `{"targetWpm":270,"msPerWord":222,"chunkSize":2,"displayMode":"highlight","metronomeEnabled":true,"visualMetronome":true,"metronomeBpm":60,"readingPurpose":"evaluation","content":{"source":"reading_text","questionCount":5,"minWordCount":486,"maxWordCount":594}}` |
 | 5 | `{"targetWpm":300,"msPerWord":200,"chunkSize":3,"displayMode":"highlight","metronomeEnabled":true,"visualMetronome":true,"metronomeBpm":60,"readingPurpose":"evaluation","content":{"source":"reading_text","questionCount":5,"minWordCount":540,"maxWordCount":660}}` |
+| Bağımsız Okuma Pratiği — Seviye 5 | FreeReading | `{"content":{"source":"reading_text","minWordCount":850,"maxWordCount":1000},"mode":"free","readingPurpose":"practice","timing":{"minReadingTimeMs":10000,"maxReadingTimeMs":0,"suggestedMinReadingTimeMs":360000,"suggestedMaxReadingTimeMs":420000}}` |

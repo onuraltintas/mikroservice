@@ -10,6 +10,34 @@ namespace SpeedReading.Application.UnitTests;
 public sealed class FreeReadingPersistenceTests
 {
     [Fact]
+    public async Task Existing_evaluation_snapshot_keeps_questions_when_catalog_switches_to_practice()
+    {
+        await using var db = Context(); var user = Guid.NewGuid(); var id = await Seed(db, user);
+        var exercise = await db.Exercises.SingleAsync();
+        var practiceConfig = exercise.ConfigurationJson;
+        var config = JsonNode.Parse(practiceConfig)!;
+        config["engineConfig"]!["readingPurpose"] = "evaluation";
+        exercise.Update(exercise.Title, exercise.Description, exercise.TypeCode, config.ToJsonString(), 2,
+            exercise.ExerciseTypeId, exercise.TargetAgeGroupId, user, DateTime.UtcNow);
+        var text = Text(Guid.NewGuid(), id, 2, 100); db.ReadingTexts.Add(text);
+        var question = ReadingQuestion.Create(Guid.NewGuid(), text.Id, "Konu nedir?", "A", 0, 1, 1, 2,
+            "Metne göre.", "Bahçe", "Deniz", "Dağ", "Köprü"); db.ReadingQuestions.Add(question);
+        await db.SaveChangesAsync(); var service = Service(db);
+        var started = await service.StartAsync(user, new() { ExerciseId = id });
+        Assert.Equal(1, started.InitialData.GetProperty("questions").GetArrayLength());
+        exercise.Update(exercise.Title, exercise.Description, exercise.TypeCode, practiceConfig, 2,
+            exercise.ExerciseTypeId, exercise.TargetAgeGroupId, user, DateTime.UtcNow); await db.SaveChangesAsync();
+        var resumed = await service.StartAsync(user, new() { ExerciseId = id });
+        Assert.Equal(started.SessionId, resumed.SessionId);
+        Assert.Equal(1, resumed.InitialData.GetProperty("questions").GetArrayLength());
+        var session = await db.ExerciseSessions.SingleAsync(); var state = JsonNode.Parse(session.SessionDataJson)!;
+        state["readingStartTime"] = DateTime.UtcNow.AddSeconds(-30); session.SetState(state.ToJsonString()); await db.SaveChangesAsync();
+        await service.ValidateActionAsync(user, session.Id, new() { Action = "finish_reading" });
+        await service.ValidateActionAsync(user, session.Id, new() { Action = "answer_question", QuestionId = question.Id, Answer = "A" });
+        var result = await service.CompleteAsync(user, session.Id, new());
+        Assert.Equal(100m, result.ComprehensionScore); Assert.NotNull(result.Score); Assert.True(result.XpGained > 0);
+    }
+    [Fact]
     public async Task Practice_tempo_does_not_award_verified_score_xp_or_reading_achievement()
     {
         await using var db = Context(); var user = Guid.NewGuid(); var exercise = await Seed(db, user);
@@ -25,6 +53,10 @@ public sealed class FreeReadingPersistenceTests
         Assert.Null(result.Score); Assert.Null(result.ComprehensionScore); Assert.Null(result.WeightedKDP);
         Assert.Equal(0, result.XpGained);
         Assert.Empty(db.UserGamifications);
+        Assert.False((await db.ExerciseSessionResults.SingleAsync()).IsMeasured);
+        Assert.False((await db.ReadingSessions.SingleAsync()).IsMeasured);
+        var retry = await service.CompleteAsync(user, started.SessionId, new());
+        Assert.Equal(result.RawWPM, retry.RawWPM); Assert.Null(retry.Score); Assert.Equal(0, retry.XpGained);
     }
     [Theory]
     [InlineData(2)]
