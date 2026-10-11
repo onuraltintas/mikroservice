@@ -2765,20 +2765,32 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
 
         for (var index = 0; index < sequence.Length; index++)
         {
+            bool AllowsPosition(int position) => index == 0
+                || position != sequence[index - 1]
+                || (nLevel == 1 && (index < 2 || sequence[index - 1] != sequence[index - 2]));
             var isTarget = index >= nLevel
                 && (hasConfiguredTargets
                     ? targetIndices.Contains(index)
                     : index == nLevel || Random.Shared.Next(4) == 0);
+            if (isTarget && !AllowsPosition(sequence[index - nLevel]))
+            {
+                if (hasConfiguredTargets)
+                    throw new InvalidOperationException("N-back konum hedefleri ardışık tekrar sınırıyla çelişiyor.");
+                isTarget = false;
+            }
             if (isTarget)
             {
                 sequence[index] = sequence[index - nLevel];
                 continue;
             }
 
-            var nextPosition = Random.Shared.Next(1, positionCount + 1);
-            while (index >= nLevel && nextPosition == sequence[index - nLevel])
-                nextPosition = Random.Shared.Next(1, positionCount + 1);
-            sequence[index] = nextPosition;
+            var candidates = Enumerable.Range(1, positionCount)
+                .Where(position => AllowsPosition(position)
+                    && (index < nLevel || position != sequence[index - nLevel])
+                    // Keep the first eligible target possible after the warm-up.
+                    && (nLevel == 1 || index != nLevel - 1 || position != sequence[0]))
+                .ToArray();
+            sequence[index] = candidates[Random.Shared.Next(candidates.Length)];
         }
 
         return sequence;

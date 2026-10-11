@@ -284,7 +284,7 @@ export class FocusEngine implements BaseEngine {
                 this.isTransitioning = false;
                 this.showStep(nextPosition, nextWord);
             };
-            this.transitionRemainingMs = 150;
+            this.transitionRemainingMs = Math.min(150, this.config.SpeedMs / 4);
             this.scheduleTransition();
         } else {
             this.showStep(nextPosition, nextWord);

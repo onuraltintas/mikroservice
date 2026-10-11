@@ -332,19 +332,22 @@ export function applyCustomPreviewSettings<T extends Record<string, unknown>>(
       const wordPool = Array.isArray(configuredWords) ? [...new Set(configuredWords.filter((word): word is string => typeof word === 'string' && word.trim().length > 0))] : [];
       // Preview stimuli only; normal sessions continue to use server-owned sequences.
       const pool = wordPool.length > 1 ? wordPool : ['kitap', 'kalem', 'masa', 'bulut', 'deniz', 'orman'];
-      const create = <T>(choices: T[]): T[] => {
+      const create = <T>(choices: T[], limitPositionRepeats = false): T[] => {
         const sequence: T[] = [];
         for (let index = 0; index < count; index++) {
-          if (index >= nLevel && (index === nLevel || Math.random() < 0.25)) sequence.push(sequence[index - nLevel]);
+          const allows = (choice: T) => !limitPositionRepeats || index === 0 || choice !== sequence[index - 1]
+            || (nLevel === 1 && (index < 2 || sequence[index - 1] !== sequence[index - 2]));
+          if (index >= nLevel && (index === nLevel || Math.random() < 0.25) && allows(sequence[index - nLevel])) sequence.push(sequence[index - nLevel]);
           else {
-            const candidates = choices.filter(choice => index < nLevel || choice !== sequence[index - nLevel]);
+            const candidates = choices.filter(choice => allows(choice) && (index < nLevel || choice !== sequence[index - nLevel])
+              && (!limitPositionRepeats || nLevel === 1 || index !== nLevel - 1 || choice !== sequence[0]));
             sequence.push(candidates[Math.floor(Math.random() * candidates.length)]);
           }
         }
         return sequence;
       };
       const entries = { Mode: mode, FocusMode: mode, NLevel: nLevel, FocusNLevel: nLevel, GridSize: gridSize,
-        TotalSteps: count, PositionSequence: mode === 'word' ? [] : create(Array.from({ length: gridSize * gridSize }, (_, index) => index + 1)),
+        TotalSteps: count, PositionSequence: mode === 'word' ? [] : create(Array.from({ length: gridSize * gridSize }, (_, index) => index + 1), true),
         WordSequence: mode === 'position' ? [] : create(pool), WordTargetIndices: [], PositionTargetIndices: [] };
       Object.assign(settings, overrideFields(settings, entries));
       updateSessions(entries);
