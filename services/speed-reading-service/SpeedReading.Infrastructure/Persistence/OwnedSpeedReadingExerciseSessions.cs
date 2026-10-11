@@ -1821,13 +1821,13 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             }
         }
         state.CustomData = customData;
-        if (IsEngineType(exerciseEngineType, "regression_reduction"))
+        if (IsEngineType(exerciseEngineType, "regression_reduction") || IsEngineType(exerciseEngineType, "subvocalization_reduction"))
         {
             var content = ReadObject(effectiveConfig, "content");
             var minimumWords = ReadPositiveInt(content, "minWordCount") ?? ReadPositiveInt(ReadObject(config, "content"), "minWordCount") ?? 0;
             var maximumWords = ReadPositiveInt(content, "maxWordCount") ?? ReadPositiveInt(ReadObject(config, "content"), "maxWordCount") ?? 0;
             if (state.Words.Length < minimumWords || maximumWords > 0 && state.Words.Length > maximumWords)
-                throw new BusinessRuleException("ExerciseSession.ReadingContentUnavailable", "Regresyon metni seçilen kelime bandına uygun değil.");
+                throw new BusinessRuleException("ExerciseSession.ReadingContentUnavailable", "Okuma metni seçilen kelime bandına uygun değil.");
         }
         if (IsTextFade(state))
         {

@@ -1,0 +1,488 @@
+[
+  {
+    "id": "d9f20000-0000-5000-8000-000000000014",
+    "age": "child",
+    "ageGroupId": "10000000-0000-0000-0000-000000000001",
+    "level": 4,
+    "seconds": 60,
+    "previousTitle": null,
+    "previousConfiguration": null,
+    "title": "İç Ses Azaltma — Seviye 4",
+    "configuration": {
+      "engineType": "subvocalization_reduction",
+      "difficultyLevel": 4,
+      "engineConfig": {
+        "targetWpm": 160,
+        "msPerWord": 375,
+        "chunkSize": 2,
+        "displayMode": "highlight",
+        "metronomeEnabled": true,
+        "visualMetronome": true,
+        "metronomeBpm": 60,
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "questionCount": 5,
+          "minWordCount": 144,
+          "maxWordCount": 176
+        }
+      }
+    }
+  },
+  {
+    "id": "d9f20000-0000-5000-8000-000000000015",
+    "age": "child",
+    "ageGroupId": "10000000-0000-0000-0000-000000000001",
+    "level": 5,
+    "seconds": 75,
+    "previousTitle": null,
+    "previousConfiguration": null,
+    "title": "İç Ses Azaltma — Seviye 5",
+    "configuration": {
+      "engineType": "subvocalization_reduction",
+      "difficultyLevel": 5,
+      "engineConfig": {
+        "targetWpm": 180,
+        "msPerWord": 333,
+        "chunkSize": 3,
+        "displayMode": "highlight",
+        "metronomeEnabled": true,
+        "visualMetronome": true,
+        "metronomeBpm": 60,
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "questionCount": 5,
+          "minWordCount": 202,
+          "maxWordCount": 248
+        }
+      }
+    }
+  },
+  {
+    "id": "d9f20000-0000-5000-8000-000000000023",
+    "age": "teen",
+    "ageGroupId": "10000000-0000-0000-0000-000000000002",
+    "level": 3,
+    "seconds": 120,
+    "previousTitle": null,
+    "previousConfiguration": null,
+    "title": "İç Ses Azaltma — Seviye 3",
+    "configuration": {
+      "engineType": "subvocalization_reduction",
+      "difficultyLevel": 3,
+      "engineConfig": {
+        "targetWpm": 210,
+        "msPerWord": 286,
+        "chunkSize": 2,
+        "displayMode": "highlight",
+        "metronomeEnabled": true,
+        "visualMetronome": true,
+        "metronomeBpm": 60,
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "questionCount": 5,
+          "minWordCount": 378,
+          "maxWordCount": 463
+        }
+      }
+    }
+  },
+  {
+    "id": "0103a5c2-0ad8-5776-a834-b7d2975d6ca0",
+    "age": "teen",
+    "ageGroupId": "10000000-0000-0000-0000-000000000002",
+    "level": 4,
+    "seconds": 120,
+    "previousTitle": "İç Ses ve Okuma Ritmi",
+    "previousConfiguration": {
+      "engineType": "subvocalization_reduction",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "targetWpm": 240,
+        "msPerWord": 250,
+        "chunkSize": 1,
+        "displayMode": "highlight",
+        "metronomeEnabled": false,
+        "visualMetronome": false,
+        "metronomeBpm": 60,
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 4
+    },
+    "title": "İç Ses Azaltma — Seviye 4",
+    "configuration": {
+      "engineType": "subvocalization_reduction",
+      "difficultyLevel": 4,
+      "engineConfig": {
+        "targetWpm": 240,
+        "msPerWord": 250,
+        "chunkSize": 2,
+        "displayMode": "highlight",
+        "metronomeEnabled": true,
+        "visualMetronome": true,
+        "metronomeBpm": 60,
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "questionCount": 5,
+          "minWordCount": 432,
+          "maxWordCount": 528
+        }
+      }
+    }
+  },
+  {
+    "id": "6720476a-6db8-544a-90a0-88abc9b7f580",
+    "age": "teen",
+    "ageGroupId": "10000000-0000-0000-0000-000000000002",
+    "level": 5,
+    "seconds": 120,
+    "previousTitle": "İç Ses ve Okuma Ritmi",
+    "previousConfiguration": {
+      "engineType": "subvocalization_reduction",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "targetWpm": 270,
+        "msPerWord": 222,
+        "chunkSize": 1,
+        "displayMode": "highlight",
+        "metronomeEnabled": false,
+        "visualMetronome": false,
+        "metronomeBpm": 60,
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 5
+    },
+    "title": "İç Ses Azaltma — Seviye 5",
+    "configuration": {
+      "engineType": "subvocalization_reduction",
+      "difficultyLevel": 5,
+      "engineConfig": {
+        "targetWpm": 270,
+        "msPerWord": 222,
+        "chunkSize": 3,
+        "displayMode": "highlight",
+        "metronomeEnabled": true,
+        "visualMetronome": true,
+        "metronomeBpm": 60,
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "questionCount": 5,
+          "minWordCount": 486,
+          "maxWordCount": 594
+        }
+      }
+    }
+  },
+  {
+    "id": "d9f20000-0000-5000-8000-000000000042",
+    "age": "young-adult",
+    "ageGroupId": "10000000-0000-0000-0000-000000000004",
+    "level": 2,
+    "seconds": 120,
+    "previousTitle": null,
+    "previousConfiguration": null,
+    "title": "İç Ses Azaltma — Seviye 2",
+    "configuration": {
+      "engineType": "subvocalization_reduction",
+      "difficultyLevel": 2,
+      "engineConfig": {
+        "targetWpm": 210,
+        "msPerWord": 286,
+        "chunkSize": 2,
+        "displayMode": "highlight",
+        "metronomeEnabled": true,
+        "visualMetronome": true,
+        "metronomeBpm": 60,
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "questionCount": 5,
+          "minWordCount": 378,
+          "maxWordCount": 463
+        }
+      }
+    }
+  },
+  {
+    "id": "d9f20000-0000-5000-8000-000000000043",
+    "age": "young-adult",
+    "ageGroupId": "10000000-0000-0000-0000-000000000004",
+    "level": 3,
+    "seconds": 120,
+    "previousTitle": null,
+    "previousConfiguration": null,
+    "title": "İç Ses Azaltma — Seviye 3",
+    "configuration": {
+      "engineType": "subvocalization_reduction",
+      "difficultyLevel": 3,
+      "engineConfig": {
+        "targetWpm": 240,
+        "msPerWord": 250,
+        "chunkSize": 2,
+        "displayMode": "highlight",
+        "metronomeEnabled": true,
+        "visualMetronome": true,
+        "metronomeBpm": 60,
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "questionCount": 5,
+          "minWordCount": 432,
+          "maxWordCount": 528
+        }
+      }
+    }
+  },
+  {
+    "id": "082a3f49-6aee-596f-a1fa-7d61ea8b7b93",
+    "age": "young-adult",
+    "ageGroupId": "10000000-0000-0000-0000-000000000004",
+    "level": 4,
+    "seconds": 120,
+    "previousTitle": "İç Ses ve Okuma Ritmi",
+    "previousConfiguration": {
+      "engineType": "subvocalization_reduction",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "targetWpm": 270,
+        "msPerWord": 222,
+        "chunkSize": 1,
+        "displayMode": "highlight",
+        "metronomeEnabled": false,
+        "visualMetronome": false,
+        "metronomeBpm": 60,
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 4
+    },
+    "title": "İç Ses Azaltma — Seviye 4",
+    "configuration": {
+      "engineType": "subvocalization_reduction",
+      "difficultyLevel": 4,
+      "engineConfig": {
+        "targetWpm": 270,
+        "msPerWord": 222,
+        "chunkSize": 2,
+        "displayMode": "highlight",
+        "metronomeEnabled": true,
+        "visualMetronome": true,
+        "metronomeBpm": 60,
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "questionCount": 5,
+          "minWordCount": 486,
+          "maxWordCount": 594
+        }
+      }
+    }
+  },
+  {
+    "id": "0df931f7-e94f-5674-9624-367f02071e9f",
+    "age": "young-adult",
+    "ageGroupId": "10000000-0000-0000-0000-000000000004",
+    "level": 5,
+    "seconds": 120,
+    "previousTitle": "İç Ses ve Okuma Ritmi",
+    "previousConfiguration": {
+      "engineType": "subvocalization_reduction",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "targetWpm": 300,
+        "msPerWord": 200,
+        "chunkSize": 1,
+        "displayMode": "highlight",
+        "metronomeEnabled": false,
+        "visualMetronome": false,
+        "metronomeBpm": 60,
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 5
+    },
+    "title": "İç Ses Azaltma — Seviye 5",
+    "configuration": {
+      "engineType": "subvocalization_reduction",
+      "difficultyLevel": 5,
+      "engineConfig": {
+        "targetWpm": 300,
+        "msPerWord": 200,
+        "chunkSize": 3,
+        "displayMode": "highlight",
+        "metronomeEnabled": true,
+        "visualMetronome": true,
+        "metronomeBpm": 60,
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "questionCount": 5,
+          "minWordCount": 540,
+          "maxWordCount": 660
+        }
+      }
+    }
+  },
+  {
+    "id": "d9f20000-0000-5000-8000-000000000032",
+    "age": "adult",
+    "ageGroupId": "10000000-0000-0000-0000-000000000003",
+    "level": 2,
+    "seconds": 120,
+    "previousTitle": null,
+    "previousConfiguration": null,
+    "title": "İç Ses Azaltma — Seviye 2",
+    "configuration": {
+      "engineType": "subvocalization_reduction",
+      "difficultyLevel": 2,
+      "engineConfig": {
+        "targetWpm": 230,
+        "msPerWord": 261,
+        "chunkSize": 2,
+        "displayMode": "highlight",
+        "metronomeEnabled": true,
+        "visualMetronome": true,
+        "metronomeBpm": 60,
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "questionCount": 5,
+          "minWordCount": 414,
+          "maxWordCount": 507
+        }
+      }
+    }
+  },
+  {
+    "id": "d9f20000-0000-5000-8000-000000000033",
+    "age": "adult",
+    "ageGroupId": "10000000-0000-0000-0000-000000000003",
+    "level": 3,
+    "seconds": 120,
+    "previousTitle": null,
+    "previousConfiguration": null,
+    "title": "İç Ses Azaltma — Seviye 3",
+    "configuration": {
+      "engineType": "subvocalization_reduction",
+      "difficultyLevel": 3,
+      "engineConfig": {
+        "targetWpm": 260,
+        "msPerWord": 231,
+        "chunkSize": 2,
+        "displayMode": "highlight",
+        "metronomeEnabled": true,
+        "visualMetronome": true,
+        "metronomeBpm": 60,
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "questionCount": 5,
+          "minWordCount": 468,
+          "maxWordCount": 572
+        }
+      }
+    }
+  },
+  {
+    "id": "d66774af-d535-5f13-85d6-fff979a33043",
+    "age": "adult",
+    "ageGroupId": "10000000-0000-0000-0000-000000000003",
+    "level": 4,
+    "seconds": 120,
+    "previousTitle": "İç Ses ve Okuma Ritmi",
+    "previousConfiguration": {
+      "engineType": "subvocalization_reduction",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "targetWpm": 290,
+        "msPerWord": 207,
+        "chunkSize": 1,
+        "displayMode": "highlight",
+        "metronomeEnabled": false,
+        "visualMetronome": false,
+        "metronomeBpm": 60,
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 4
+    },
+    "title": "İç Ses Azaltma — Seviye 4",
+    "configuration": {
+      "engineType": "subvocalization_reduction",
+      "difficultyLevel": 4,
+      "engineConfig": {
+        "targetWpm": 290,
+        "msPerWord": 207,
+        "chunkSize": 2,
+        "displayMode": "highlight",
+        "metronomeEnabled": true,
+        "visualMetronome": true,
+        "metronomeBpm": 60,
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "questionCount": 5,
+          "minWordCount": 522,
+          "maxWordCount": 638
+        }
+      }
+    }
+  },
+  {
+    "id": "74c9843a-3cf9-51ba-924c-d4695a58ce8a",
+    "age": "adult",
+    "ageGroupId": "10000000-0000-0000-0000-000000000003",
+    "level": 5,
+    "seconds": 120,
+    "previousTitle": "İç Ses ve Okuma Ritmi",
+    "previousConfiguration": {
+      "engineType": "subvocalization_reduction",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "targetWpm": 320,
+        "msPerWord": 188,
+        "chunkSize": 1,
+        "displayMode": "highlight",
+        "metronomeEnabled": false,
+        "visualMetronome": false,
+        "metronomeBpm": 60,
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 5
+    },
+    "title": "İç Ses Azaltma — Seviye 5",
+    "configuration": {
+      "engineType": "subvocalization_reduction",
+      "difficultyLevel": 5,
+      "engineConfig": {
+        "targetWpm": 320,
+        "msPerWord": 188,
+        "chunkSize": 3,
+        "displayMode": "highlight",
+        "metronomeEnabled": true,
+        "visualMetronome": true,
+        "metronomeBpm": 60,
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "questionCount": 5,
+          "minWordCount": 576,
+          "maxWordCount": 704
+        }
+      }
+    }
+  }
+]

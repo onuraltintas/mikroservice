@@ -692,47 +692,47 @@ export const DIFFICULTY_LEVELS: Record<string, DifficultyLevel[]> = {
       level: 1,
       name: 'Yavaş',
       stars: '⭐',
-      description: 'Yavaş okuma',
+      description: 'Tempoya uyumlu okuma',
       icon: 'volume_off',
       color: '#4caf50',
-      characteristics: ['Yavaş hız', 'Az dikkat dağıtıcı', 'Kolay metin']
+      characteristics: ['Yaşa uygun tempo', 'Metin görünür', 'Anlamayı koruma']
     },
     {
       level: 2,
       name: 'Orta',
       stars: '⭐⭐',
-      description: 'Orta hız',
+      description: 'Sayı sayarak iki kelimelik grupları izleme',
       icon: 'volume_mute',
       color: '#8bc34a',
-      characteristics: ['Orta hız', 'Orta dikkat dağıtıcı', 'Normal metin']
+      characteristics: ['2 kelimelik grup', '60 BPM sayma ritmi', '5 anlama sorusu']
     },
     {
       level: 3,
       name: 'Hızlı',
       stars: '⭐⭐⭐',
-      description: 'Hızlı okuma',
+      description: 'Sayı sayarak iki kelimelik grupları izleme',
       icon: 'voice_over_off',
       color: '#ff9800',
-      characteristics: ['Hızlı', 'Çok dikkat dağıtıcı', 'Zor metin'],
+      characteristics: ['2 kelimelik grup', '60 BPM sayma ritmi', '5 anlama sorusu'],
       recommended: true
     },
     {
       level: 4,
       name: 'Çok Hızlı',
       stars: '⭐⭐⭐⭐',
-      description: 'Çok hızlı',
+      description: 'Artan tempoda sayı sayarak okuma',
       icon: 'speaker_notes_off',
       color: '#f44336',
-      characteristics: ['Çok hızlı', 'Maksimum dikkat dağıtıcı', 'Çok zor']
+      characteristics: ['2 kelimelik grup', '60 BPM sayma ritmi', '5 anlama sorusu']
     },
     {
       level: 5,
-      name: 'Sessiz',
+      name: 'İleri',
       stars: '⭐⭐⭐⭐⭐',
-      description: 'Tam sessiz',
+      description: 'Sayı sayarak üç kelimelik grupları izleme',
       icon: 'mic_off',
       color: '#9c27b0',
-      characteristics: ['Ultra hızlı', 'Kaos seviyesi', 'Ultra zor']
+      characteristics: ['3 kelimelik grup', '60 BPM sayma ritmi', '5 anlama sorusu']
     }
   ],
 

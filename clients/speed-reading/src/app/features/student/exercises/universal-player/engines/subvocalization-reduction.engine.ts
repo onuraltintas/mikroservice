@@ -244,7 +244,7 @@ export class SubvocalizationReductionEngine implements BaseEngine {
     }
 
     resume(): void {
-        if (!this.state.isPaused) return;
+        if (!this.state.isRunning || !this.state.isPaused) return;
 
         // Adjust startTime and readingStartTime to account for pause duration
         const pauseDuration = Date.now() - this.pauseStartTime;
@@ -263,6 +263,7 @@ export class SubvocalizationReductionEngine implements BaseEngine {
     stop(): void {
         this.cleanup();
         this.state.isRunning = false;
+        this.state.isPaused = false;
         this.callbacks.onStateChange({ ...this.state });
     }
 

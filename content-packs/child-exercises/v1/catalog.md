@@ -1,6 +1,6 @@
 # Çocuk egzersiz kataloğu v1
 
-5 seviye, 19 tür ve toplam 88 kayıt. Seviye dağılımı: 16 / 17 / 17 / 19 / 19.
+9–12 yaş; 20 tür; toplam 90 egzersiz. Seviye dağılımı: 16 / 17 / 17 / 20 / 20.
 
 Metin kimliği sabitlenmez. Yaş ve seviyeye uygun havuzdan iki okuma geçmişinde de kullanılmamış metin rastgele seçilir. Havuz tükenince en az kullanılan metinler arasından seçim yapılır. Başlatılıp bırakılan oturum da kullanım sayılır. Kelime etkinlikleri mevcut yaş/seviye kelime havuzunu kullanır.
 
@@ -133,3 +133,12 @@ Visualization: her seviyede üç metin sahnesi, her sahnede ayrıntı/konum/sır
 | Regresyon Azaltma — Seviye 3 | RegressionReduction | `{"targetWpm":160,"chunkSize":1,"maskingType":"trailing","visibleHistoryWords":1,"readingPurpose":"evaluation","content":{"source":"reading_text","questionCount":5,"minWordCount":168,"maxWordCount":206}}` |
 | Regresyon Azaltma — Seviye 4 | RegressionReduction | `{"targetWpm":180,"chunkSize":1,"maskingType":"trailing","visibleHistoryWords":0,"readingPurpose":"evaluation","content":{"source":"reading_text","questionCount":5,"minWordCount":216,"maxWordCount":264}}` |
 | Regresyon Azaltma — Seviye 5 | RegressionReduction | `{"targetWpm":200,"chunkSize":1,"maskingType":"trailing","visibleHistoryWords":0,"readingPurpose":"evaluation","content":{"source":"reading_text","questionCount":5,"minWordCount":270,"maxWordCount":330}}` |
+
+## İç Ses Azaltma v2
+
+Her okuma oturumunda hafif sesli 1–2–3–4 sayma ve 60 BPM görsel ritim. Anlama bozulabilir; iç ses azalması ölçülmez.
+
+| Seviye | Motor parametreleri |
+|---|---|
+| 4 | `{"targetWpm":160,"msPerWord":375,"chunkSize":2,"displayMode":"highlight","metronomeEnabled":true,"visualMetronome":true,"metronomeBpm":60,"readingPurpose":"evaluation","content":{"source":"reading_text","questionCount":5,"minWordCount":144,"maxWordCount":176}}` |
+| 5 | `{"targetWpm":180,"msPerWord":333,"chunkSize":3,"displayMode":"highlight","metronomeEnabled":true,"visualMetronome":true,"metronomeBpm":60,"readingPurpose":"evaluation","content":{"source":"reading_text","questionCount":5,"minWordCount":202,"maxWordCount":248}}` |

@@ -1,10 +1,10 @@
 # Yetişkin egzersiz kataloğu v1
 
-22 yaş ve üzeri; 21 tür; toplam 90 egzersiz. Seviye dağılımı: 16, 16, 18, 20, 20. Önceden kaydedilen 70 egzersizin kimlik ve parametreleri korunur.
+22 yaş ve üzeri; 21 tür; toplam 95 egzersiz. Seviye dağılımı: 17 / 18 / 20 / 20 / 20.
 
 Metin kullanan egzersizler yaş ve tam seviyeye uygun okunmamış rastgele metni seçer; havuz tükenince en az kullanılanlardan seçilir. Mevcut metin ve sorular değiştirilmez. Visualization 15 metin tabanlı sahne ve 45 soruyla çalışır; her seviyede üç sahne, sahne başına üç soru.
 
-RSVP ve TextFading 3–5, RegressionReduction ve SubvocalizationReduction 4–5; Tachistoscope ve Visualization 1–5 seviyelerde. Geri dönüş çalışmasında maskeleme yok; iç ses çalışmasında metronom kapalıdır. Bunları sıfırlamak başarı şartı değildir. İlk 7 çalışma günü sonrası mevcut destek akışı korunur; yeni tekrar/transfer akışı eklenmez.
+RSVP ve TextFading 3–5; RegressionReduction 1–5; SubvocalizationReduction 2–5; Tachistoscope ve Visualization 1–5 seviyelerde. Regresyon v2 geçmiş kelimeleri maskeler. İç Ses Azaltma v2 metni görünür tutar ve bağımsız 60 BPM sayı sayma ritmi kullanır. Bunları sıfırlamak başarı şartı değildir. İlk 7 çalışma günü sonrası mevcut destek akışı korunur; yeni tekrar/transfer akışı eklenmez.
 
 Sınav soru başına 60 saniye; metni okuma dahil değildir. Genişlik ayarları cihaz kalibrasyonu olmadan gerçek görsel açı sayılmaz.
 
@@ -90,7 +90,6 @@ Sınav soru başına 60 saniye; metni okuma dahil değildir. Genişlik ayarları
 | Sayı Avcısı | SchulteTable | `{"gridSize":5,"sequenceType":"numeric","rules":{"timeLimit":120}}` |
 | Metne Genel Bakış | Skimming | `{"content":{"source":"reading_text"},"mode":"skimming","rules":{"timeLimit":240},"timing":{"minReadingTimeMs":3000},"readingPurpose":"evaluation"}` |
 | Dengeli Tempoda Okuma | SpeedReading | `{"content":{"source":"reading_text"},"mode":"guided","pacer":{"speedWpm":290,"chunkSize":1},"readingPurpose":"practice"}` |
-| İç Ses ve Okuma Ritmi | SubvocalizationReduction | `{"content":{"source":"reading_text"},"targetWpm":290,"msPerWord":207,"chunkSize":1,"displayMode":"highlight","metronomeEnabled":false,"visualMetronome":false,"metronomeBpm":60,"readingPurpose":"evaluation"}` |
 | Kısa Gösterimde Tanıma | Tachistoscope | `{"mode":"tachistoscope","content":{"type":"number","count":18},"timing":{"durationMs":550,"intervalMs":500},"adaptive":{"enabled":false,"minDurationMs":200,"maxDurationMs":1500}}` |
 | Kaybolan Metinle Okuma | TextFading | `{"content":{"source":"reading_text"},"fading":{"speedWpm":290,"lagMs":2000},"timing":{"timeLimitSec":0},"readingPurpose":"evaluation"}` |
 | Çevredeki Harfler | VisualExpansion | `{"mode":"horizontal","rounds":18,"displayDurationMs":900,"startDegrees":8,"targetDegrees":24,"content":{"stimulusType":"letter"}}` |
@@ -114,7 +113,6 @@ Sınav soru başına 60 saniye; metni okuma dahil değildir. Genişlik ayarları
 | Sayı Avcısı | SchulteTable | `{"gridSize":5,"sequenceType":"numeric","rules":{"timeLimit":100}}` |
 | Metne Genel Bakış | Skimming | `{"content":{"source":"reading_text"},"mode":"skimming","rules":{"timeLimit":270},"timing":{"minReadingTimeMs":3000},"readingPurpose":"evaluation"}` |
 | Dengeli Tempoda Okuma | SpeedReading | `{"content":{"source":"reading_text"},"mode":"guided","pacer":{"speedWpm":320,"chunkSize":1},"readingPurpose":"practice"}` |
-| İç Ses ve Okuma Ritmi | SubvocalizationReduction | `{"content":{"source":"reading_text"},"targetWpm":320,"msPerWord":188,"chunkSize":1,"displayMode":"highlight","metronomeEnabled":false,"visualMetronome":false,"metronomeBpm":60,"readingPurpose":"evaluation"}` |
 | Kısa Gösterimde Tanıma | Tachistoscope | `{"mode":"tachistoscope","content":{"type":"number","count":20},"timing":{"durationMs":500,"intervalMs":500},"adaptive":{"enabled":false,"minDurationMs":200,"maxDurationMs":1500}}` |
 | Kaybolan Metinle Okuma | TextFading | `{"content":{"source":"reading_text"},"fading":{"speedWpm":320,"lagMs":2000},"timing":{"timeLimitSec":0},"readingPurpose":"evaluation"}` |
 | Çevredeki Harfler | VisualExpansion | `{"mode":"horizontal","rounds":20,"displayDurationMs":850,"startDegrees":8,"targetDegrees":26,"content":{"stimulusType":"letter"}}` |
@@ -130,3 +128,14 @@ Sınav soru başına 60 saniye; metni okuma dahil değildir. Genişlik ayarları
 | Regresyon Azaltma — Seviye 3 | RegressionReduction | `{"targetWpm":270,"chunkSize":1,"maskingType":"trailing","visibleHistoryWords":1,"readingPurpose":"evaluation","content":{"source":"reading_text","questionCount":5,"minWordCount":364,"maxWordCount":446}}` |
 | Regresyon Azaltma — Seviye 4 | RegressionReduction | `{"targetWpm":310,"chunkSize":1,"maskingType":"trailing","visibleHistoryWords":0,"readingPurpose":"evaluation","content":{"source":"reading_text","questionCount":5,"minWordCount":488,"maxWordCount":597}}` |
 | Regresyon Azaltma — Seviye 5 | RegressionReduction | `{"targetWpm":340,"chunkSize":1,"maskingType":"trailing","visibleHistoryWords":0,"readingPurpose":"evaluation","content":{"source":"reading_text","questionCount":5,"minWordCount":612,"maxWordCount":749}}` |
+
+## İç Ses Azaltma v2
+
+Her okuma oturumunda hafif sesli 1–2–3–4 sayma ve 60 BPM görsel ritim. Anlama bozulabilir; iç ses azalması ölçülmez.
+
+| Seviye | Motor parametreleri |
+|---|---|
+| 2 | `{"targetWpm":230,"msPerWord":261,"chunkSize":2,"displayMode":"highlight","metronomeEnabled":true,"visualMetronome":true,"metronomeBpm":60,"readingPurpose":"evaluation","content":{"source":"reading_text","questionCount":5,"minWordCount":414,"maxWordCount":507}}` |
+| 3 | `{"targetWpm":260,"msPerWord":231,"chunkSize":2,"displayMode":"highlight","metronomeEnabled":true,"visualMetronome":true,"metronomeBpm":60,"readingPurpose":"evaluation","content":{"source":"reading_text","questionCount":5,"minWordCount":468,"maxWordCount":572}}` |
+| 4 | `{"targetWpm":290,"msPerWord":207,"chunkSize":2,"displayMode":"highlight","metronomeEnabled":true,"visualMetronome":true,"metronomeBpm":60,"readingPurpose":"evaluation","content":{"source":"reading_text","questionCount":5,"minWordCount":522,"maxWordCount":638}}` |
+| 5 | `{"targetWpm":320,"msPerWord":188,"chunkSize":3,"displayMode":"highlight","metronomeEnabled":true,"visualMetronome":true,"metronomeBpm":60,"readingPurpose":"evaluation","content":{"source":"reading_text","questionCount":5,"minWordCount":576,"maxWordCount":704}}` |

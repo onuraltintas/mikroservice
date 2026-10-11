@@ -43,6 +43,11 @@
 
             <div class="card-body-content">
                 <p class="description">{{ exercise?.description }}</p>
+                <p class="description" *ngIf="engine.engineType === 'subvocalization_reduction' && isSubvocMetronomeEnabled()">
+                    Metni okurken hafif sesle bir–iki–üç–dört sayın; her ritim işaretinde bir sayı söyleyin.
+                    Sayma ritmi okuma temposundan bağımsızdır. Anlama sorularına geçince saymayı bırakın.
+                    Zorlanırsanız duraklatın. Sayı sayma anlamayı zorlaştırabilir; kalıcı iç ses azalması ölçülmez.
+                </p>
 
                 <div class="badges-container">
                     <div class="info-badge level">
@@ -1031,7 +1036,7 @@
         <div class="subvoc-footer">
             <div class="mode-info">
                 <span class="material-icons">spatial_audio_off</span>
-                <span>Tempoya uyumlu okuma pratiği</span>
+                <span>{{ isSubvocMetronomeEnabled() ? 'Hafif sesle bir–iki–üç–dört sayarak okuyun' : 'Tempoya uyumlu okuma pratiği' }}</span>
             </div>
             <div class="target-info">
                 <span class="material-icons">trending_up</span>
@@ -1048,6 +1053,7 @@
     <div *ngIf="engine && engineState.isRunning && engine.engineType === 'subvocalization_reduction' && getSubvocPhase() === 'answering'"
         class="game-container question-container visualization-question-container">
 
+        <p *ngIf="isSubvocMetronomeEnabled()">Sayı saymayı bırakın; şimdi yalnız anlama sorularını yanıtlayın.</p>
         <!-- Reusing modern-header style from visualization -->
         <div class="game-header modern-header">
             <div class="header-left">
@@ -1740,6 +1746,9 @@
             </div>
             <div class="measurement-not-available" *ngIf="result?.details?.displayPaceWpm">
                 {{ getReadingMeasurementMessage() }}
+            </div>
+            <div class="measurement-not-available" *ngIf="engine?.engineType === 'subvocalization_reduction' && isSubvocMetronomeEnabled()">
+                Sayı sayma doğrulanmadı. Mikrofon kullanılmaz; iç ses azalması veya kalıcı beceri gelişimi ölçülmez.
             </div>
             <div class="measurement-not-available" *ngIf="result?.details?.displayPaceWpm && result?.details?.incomplete">
                 Gösterim yarım kaldı. Bu sonuç program veya ödev tamamlanması olarak sayılmaz.

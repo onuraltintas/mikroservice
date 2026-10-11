@@ -26,7 +26,7 @@ public sealed class YoungAdultCatalogSessionTests
         using var sceneCatalog = JsonDocument.Parse(File.ReadAllText(Path.Combine(pack, "scenes.json")));
         var addedTypes = new[] { "Tachistoscope", "Visualization", "RSVP", "TextFading", "RegressionReduction", "SubvocalizationReduction" };
         var entries = catalog.RootElement.EnumerateArray().Where(e => addedTypes.Contains(e.GetProperty("type").GetString())).ToArray();
-        Assert.Equal(packName == "child-exercises" ? 18 : 23, entries.Length);
+        Assert.Equal(packName switch { "child-exercises" => 20, "teen-exercises" => 24, _ => 25 }, entries.Length);
         await using var db = new OwnedSpeedReadingDbContext(new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>()
             .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
         var actor = Guid.NewGuid();
@@ -46,18 +46,21 @@ public sealed class YoungAdultCatalogSessionTests
                 db.ReadingQuestions.Add(ReadingQuestion.Create(Guid.NewGuid(), text.Id, $"Araştırma test sorusu {index + 1}", "A", index, 1, 1,
                     optionA: "Kanıtları değerlendirmek", optionB: "Uyumak", optionC: "Koşmak", optionD: "Yüzmek"));
         }
-        using var regressionContent = JsonDocument.Parse(File.ReadAllText(Path.Combine(directory.FullName, "content-packs", "regression", "v2", "content.json")));
-        foreach (var row in regressionContent.RootElement.EnumerateArray().Where(row => row.GetProperty("ageGroupId").GetGuid() == age))
+        foreach (var contentPack in new[] { "regression", "subvocalization" })
         {
-            var text = ReadingText.Create(row.GetProperty("id").GetGuid(), row.GetProperty("title").GetString()!, row.GetProperty("content").GetString()!,
-                difficultyLevel: row.GetProperty("level").GetInt32(), targetAgeGroupId: age, exerciseId: row.GetProperty("exerciseId").GetGuid());
-            db.ReadingTexts.Add(text);
-            foreach (var question in row.GetProperty("questions").EnumerateArray())
-                db.ReadingQuestions.Add(ReadingQuestion.Create(question.GetProperty("id").GetGuid(), text.Id,
-                    question.GetProperty("questionText").GetString()!, question.GetProperty("correctAnswer").GetString()!, question.GetProperty("orderIndex").GetInt32(),
-                    type: question.GetProperty("type").GetInt32(), bloomLevel: question.GetProperty("bloomLevel").GetInt32(),
-                    optionA: question.GetProperty("optionA").GetString(), optionB: question.GetProperty("optionB").GetString(),
-                    optionC: question.GetProperty("optionC").GetString(), optionD: question.GetProperty("optionD").GetString()));
+            using var readingContent = JsonDocument.Parse(File.ReadAllText(Path.Combine(directory.FullName, "content-packs", contentPack, "v2", "content.json")));
+            foreach (var row in readingContent.RootElement.EnumerateArray().Where(row => row.GetProperty("ageGroupId").GetGuid() == age))
+            {
+                var text = ReadingText.Create(row.GetProperty("id").GetGuid(), row.GetProperty("title").GetString()!, row.GetProperty("content").GetString()!,
+                    difficultyLevel: row.GetProperty("level").GetInt32(), targetAgeGroupId: age, exerciseId: row.GetProperty("exerciseId").GetGuid());
+                db.ReadingTexts.Add(text);
+                foreach (var question in row.GetProperty("questions").EnumerateArray())
+                    db.ReadingQuestions.Add(ReadingQuestion.Create(question.GetProperty("id").GetGuid(), text.Id,
+                        question.GetProperty("questionText").GetString()!, question.GetProperty("correctAnswer").GetString()!, question.GetProperty("orderIndex").GetInt32(),
+                        type: question.GetProperty("type").GetInt32(), bloomLevel: question.GetProperty("bloomLevel").GetInt32(),
+                        optionA: question.GetProperty("optionA").GetString(), optionB: question.GetProperty("optionB").GetString(),
+                        optionC: question.GetProperty("optionC").GetString(), optionD: question.GetProperty("optionD").GetString()));
+            }
         }
         foreach (var scene in sceneCatalog.RootElement.EnumerateArray())
         {

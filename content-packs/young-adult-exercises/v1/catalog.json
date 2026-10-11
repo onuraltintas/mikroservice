@@ -1404,26 +1404,29 @@
   {
     "id": "082a3f49-6aee-596f-a1fa-7d61ea8b7b93",
     "type": "SubvocalizationReduction",
-    "title": "İç Ses ve Okuma Ritmi",
-    "description": "17–21 yaş grubunda seviyeye uygun çalışma. Geri dönüş veya iç sesi tamamen yok etmek başarı şartı değildir.",
+    "title": "İç Ses Azaltma — Seviye 4",
+    "description": "Okurken hafif sesle bir–iki–üç–dört sayın; kelime gruplarının anlamını takip edin. Sonunda beş anlama sorusu. İç ses azalması ölçülmez.",
     "difficultyLevel": 4,
     "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
     "configuration": {
       "engineType": "subvocalization_reduction",
+      "difficultyLevel": 4,
       "engineConfig": {
-        "content": {
-          "source": "reading_text"
-        },
         "targetWpm": 270,
         "msPerWord": 222,
-        "chunkSize": 1,
+        "chunkSize": 2,
         "displayMode": "highlight",
-        "metronomeEnabled": false,
-        "visualMetronome": false,
+        "metronomeEnabled": true,
+        "visualMetronome": true,
         "metronomeBpm": 60,
-        "readingPurpose": "evaluation"
-      },
-      "difficultyLevel": 4
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "questionCount": 5,
+          "minWordCount": 486,
+          "maxWordCount": 594
+        }
+      }
     }
   },
   {
@@ -1850,26 +1853,29 @@
   {
     "id": "0df931f7-e94f-5674-9624-367f02071e9f",
     "type": "SubvocalizationReduction",
-    "title": "İç Ses ve Okuma Ritmi",
-    "description": "17–21 yaş grubunda seviyeye uygun çalışma. Geri dönüş veya iç sesi tamamen yok etmek başarı şartı değildir.",
+    "title": "İç Ses Azaltma — Seviye 5",
+    "description": "Okurken hafif sesle bir–iki–üç–dört sayın; kelime gruplarının anlamını takip edin. Sonunda beş anlama sorusu. İç ses azalması ölçülmez.",
     "difficultyLevel": 5,
     "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
     "configuration": {
       "engineType": "subvocalization_reduction",
+      "difficultyLevel": 5,
       "engineConfig": {
-        "content": {
-          "source": "reading_text"
-        },
         "targetWpm": 300,
         "msPerWord": 200,
-        "chunkSize": 1,
+        "chunkSize": 3,
         "displayMode": "highlight",
-        "metronomeEnabled": false,
-        "visualMetronome": false,
+        "metronomeEnabled": true,
+        "visualMetronome": true,
         "metronomeBpm": 60,
-        "readingPurpose": "evaluation"
-      },
-      "difficultyLevel": 5
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "questionCount": 5,
+          "minWordCount": 540,
+          "maxWordCount": 660
+        }
+      }
     }
   },
   {
@@ -2054,6 +2060,62 @@
           "questionCount": 5,
           "minWordCount": 337,
           "maxWordCount": 413
+        }
+      }
+    }
+  },
+  {
+    "id": "d9f20000-0000-5000-8000-000000000042",
+    "type": "SubvocalizationReduction",
+    "title": "İç Ses Azaltma — Seviye 2",
+    "description": "Okurken hafif sesle bir–iki–üç–dört sayın; kelime gruplarının anlamını takip edin. Sonunda beş anlama sorusu. İç ses azalması ölçülmez.",
+    "difficultyLevel": 2,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "subvocalization_reduction",
+      "difficultyLevel": 2,
+      "engineConfig": {
+        "targetWpm": 210,
+        "msPerWord": 286,
+        "chunkSize": 2,
+        "displayMode": "highlight",
+        "metronomeEnabled": true,
+        "visualMetronome": true,
+        "metronomeBpm": 60,
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "questionCount": 5,
+          "minWordCount": 378,
+          "maxWordCount": 463
+        }
+      }
+    }
+  },
+  {
+    "id": "d9f20000-0000-5000-8000-000000000043",
+    "type": "SubvocalizationReduction",
+    "title": "İç Ses Azaltma — Seviye 3",
+    "description": "Okurken hafif sesle bir–iki–üç–dört sayın; kelime gruplarının anlamını takip edin. Sonunda beş anlama sorusu. İç ses azalması ölçülmez.",
+    "difficultyLevel": 3,
+    "targetAgeGroupId": "10000000-0000-0000-0000-000000000004",
+    "configuration": {
+      "engineType": "subvocalization_reduction",
+      "difficultyLevel": 3,
+      "engineConfig": {
+        "targetWpm": 240,
+        "msPerWord": 250,
+        "chunkSize": 2,
+        "displayMode": "highlight",
+        "metronomeEnabled": true,
+        "visualMetronome": true,
+        "metronomeBpm": 60,
+        "readingPurpose": "evaluation",
+        "content": {
+          "source": "reading_text",
+          "questionCount": 5,
+          "minWordCount": 432,
+          "maxWordCount": 528
         }
       }
     }

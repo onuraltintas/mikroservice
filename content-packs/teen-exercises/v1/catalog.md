@@ -1,10 +1,10 @@
 # Genç egzersiz kataloğu v1
 
-13–16 yaş; 21 tür; toplam 90 egzersiz. Seviye dağılımı: 16, 16, 18, 20, 20. Önceki 70 egzersizin kimlik ve parametreleri korunur.
+13–16 yaş; 21 tür; toplam 94 egzersiz. Seviye dağılımı: 17 / 17 / 20 / 20 / 20.
 
 Metin kullanan egzersizler yaş ve tam seviyeye uygun okunmamış rastgele metni seçer; havuz tükenince en az kullanılanlardan seçilir. Mevcut metin ve sorular değiştirilmez. Visualization için okul bağlamında 15 metin tabanlı sahne ve 45 soru; seviye başına üç sahne, sahne başına üç soru.
 
-RSVP ve TextFading 3–5, RegressionReduction ve SubvocalizationReduction 4–5; Tachistoscope ve Visualization 1–5. Geri dönüş çalışmasında maskeleme yok; iç ses çalışmasında metronom kapalıdır. Bunları sıfırlamak başarı şartı değildir. Mevcut ilk 7 çalışma günü sonrası destek akışı korunur; yeni tekrar/transfer akışı eklenmez.
+RSVP ve TextFading 3–5; RegressionReduction 1–5; SubvocalizationReduction 3–5; Tachistoscope ve Visualization 1–5 seviyelerde. Regresyon v2 geçmiş kelimeleri maskeler. İç Ses Azaltma v2 metni görünür tutar ve bağımsız 60 BPM sayı sayma ritmi kullanır. Bunları sıfırlamak başarı şartı değildir. Mevcut ilk 7 çalışma günü sonrası destek akışı korunur; yeni tekrar/transfer akışı eklenmez.
 
 Sınav soru başına 48 saniye; 10 soruda en fazla 8 dakika cevaplama, metni okuma dahil değildir. Görsel genişlik ayarları cihaz kalibrasyonu olmadan gerçek görsel açı sayılmaz.
 
@@ -90,7 +90,6 @@ Sınav soru başına 48 saniye; 10 soruda en fazla 8 dakika cevaplama, metni oku
 | Sayı Avcısı | SchulteTable | `{"gridSize":5,"sequenceType":"numeric","rules":{"timeLimit":120}}` |
 | Metne Genel Bakış | Skimming | `{"content":{"source":"reading_text"},"mode":"skimming","rules":{"timeLimit":180},"timing":{"minReadingTimeMs":3000},"readingPurpose":"evaluation"}` |
 | Dengeli Tempoda Okuma | SpeedReading | `{"content":{"source":"reading_text"},"mode":"guided","pacer":{"speedWpm":240,"chunkSize":1},"readingPurpose":"practice"}` |
-| İç Ses ve Okuma Ritmi | SubvocalizationReduction | `{"content":{"source":"reading_text"},"targetWpm":240,"msPerWord":250,"chunkSize":1,"displayMode":"highlight","metronomeEnabled":false,"visualMetronome":false,"metronomeBpm":60,"readingPurpose":"evaluation"}` |
 | Kısa Gösterimde Tanıma | Tachistoscope | `{"mode":"tachistoscope","content":{"type":"number","count":18},"timing":{"durationMs":700,"intervalMs":500},"adaptive":{"enabled":false,"minDurationMs":200,"maxDurationMs":1500}}` |
 | Kaybolan Metinle Okuma | TextFading | `{"content":{"source":"reading_text"},"fading":{"speedWpm":240,"lagMs":2500},"timing":{"timeLimitSec":0},"readingPurpose":"evaluation"}` |
 | Çevredeki Harfler | VisualExpansion | `{"mode":"horizontal","rounds":18,"displayDurationMs":900,"startDegrees":8,"targetDegrees":24,"content":{"stimulusType":"letter"}}` |
@@ -114,7 +113,6 @@ Sınav soru başına 48 saniye; 10 soruda en fazla 8 dakika cevaplama, metni oku
 | Sayı Avcısı | SchulteTable | `{"gridSize":5,"sequenceType":"numeric","rules":{"timeLimit":100}}` |
 | Metne Genel Bakış | Skimming | `{"content":{"source":"reading_text"},"mode":"skimming","rules":{"timeLimit":210},"timing":{"minReadingTimeMs":3000},"readingPurpose":"evaluation"}` |
 | Dengeli Tempoda Okuma | SpeedReading | `{"content":{"source":"reading_text"},"mode":"guided","pacer":{"speedWpm":270,"chunkSize":1},"readingPurpose":"practice"}` |
-| İç Ses ve Okuma Ritmi | SubvocalizationReduction | `{"content":{"source":"reading_text"},"targetWpm":270,"msPerWord":222,"chunkSize":1,"displayMode":"highlight","metronomeEnabled":false,"visualMetronome":false,"metronomeBpm":60,"readingPurpose":"evaluation"}` |
 | Kısa Gösterimde Tanıma | Tachistoscope | `{"mode":"tachistoscope","content":{"type":"number","count":20},"timing":{"durationMs":600,"intervalMs":500},"adaptive":{"enabled":false,"minDurationMs":200,"maxDurationMs":1500}}` |
 | Kaybolan Metinle Okuma | TextFading | `{"content":{"source":"reading_text"},"fading":{"speedWpm":270,"lagMs":2500},"timing":{"timeLimitSec":0},"readingPurpose":"evaluation"}` |
 | Çevredeki Harfler | VisualExpansion | `{"mode":"horizontal","rounds":20,"displayDurationMs":850,"startDegrees":8,"targetDegrees":26,"content":{"stimulusType":"letter"}}` |
@@ -130,3 +128,13 @@ Sınav soru başına 48 saniye; 10 soruda en fazla 8 dakika cevaplama, metni oku
 | Regresyon Azaltma — Seviye 3 | RegressionReduction | `{"targetWpm":220,"chunkSize":1,"maskingType":"trailing","visibleHistoryWords":1,"readingPurpose":"evaluation","content":{"source":"reading_text","questionCount":5,"minWordCount":297,"maxWordCount":364}}` |
 | Regresyon Azaltma — Seviye 4 | RegressionReduction | `{"targetWpm":260,"chunkSize":1,"maskingType":"trailing","visibleHistoryWords":0,"readingPurpose":"evaluation","content":{"source":"reading_text","questionCount":5,"minWordCount":409,"maxWordCount":501}}` |
 | Regresyon Azaltma — Seviye 5 | RegressionReduction | `{"targetWpm":290,"chunkSize":1,"maskingType":"trailing","visibleHistoryWords":0,"readingPurpose":"evaluation","content":{"source":"reading_text","questionCount":5,"minWordCount":522,"maxWordCount":638}}` |
+
+## İç Ses Azaltma v2
+
+Her okuma oturumunda hafif sesli 1–2–3–4 sayma ve 60 BPM görsel ritim. Anlama bozulabilir; iç ses azalması ölçülmez.
+
+| Seviye | Motor parametreleri |
+|---|---|
+| 3 | `{"targetWpm":210,"msPerWord":286,"chunkSize":2,"displayMode":"highlight","metronomeEnabled":true,"visualMetronome":true,"metronomeBpm":60,"readingPurpose":"evaluation","content":{"source":"reading_text","questionCount":5,"minWordCount":378,"maxWordCount":463}}` |
+| 4 | `{"targetWpm":240,"msPerWord":250,"chunkSize":2,"displayMode":"highlight","metronomeEnabled":true,"visualMetronome":true,"metronomeBpm":60,"readingPurpose":"evaluation","content":{"source":"reading_text","questionCount":5,"minWordCount":432,"maxWordCount":528}}` |
+| 5 | `{"targetWpm":270,"msPerWord":222,"chunkSize":3,"displayMode":"highlight","metronomeEnabled":true,"visualMetronome":true,"metronomeBpm":60,"readingPurpose":"evaluation","content":{"source":"reading_text","questionCount":5,"minWordCount":486,"maxWordCount":594}}` |
