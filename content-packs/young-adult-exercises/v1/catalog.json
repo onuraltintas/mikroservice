@@ -102,7 +102,7 @@
         },
         "content": {
           "type": "letter",
-          "points": 35,
+          "points": 30,
           "peripheralCount": 2,
           "pointSize": 44,
           "maxPeripheralCount": 4
@@ -448,8 +448,8 @@
         },
         "content": {
           "type": "letter",
-          "points": 40,
-          "peripheralCount": 3,
+          "points": 35,
+          "peripheralCount": 2,
           "pointSize": 44,
           "maxPeripheralCount": 4
         }
@@ -794,7 +794,7 @@
         },
         "content": {
           "type": "letter",
-          "points": 45,
+          "points": 40,
           "peripheralCount": 3,
           "pointSize": 44,
           "maxPeripheralCount": 4
@@ -1211,8 +1211,8 @@
         },
         "content": {
           "type": "letter",
-          "points": 50,
-          "peripheralCount": 4,
+          "points": 45,
+          "peripheralCount": 3,
           "pointSize": 44,
           "maxPeripheralCount": 4
         }
@@ -1653,7 +1653,7 @@
         },
         "content": {
           "type": "letter",
-          "points": 55,
+          "points": 50,
           "peripheralCount": 4,
           "pointSize": 44,
           "maxPeripheralCount": 4
