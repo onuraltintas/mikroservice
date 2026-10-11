@@ -97,7 +97,7 @@ public sealed class ErrorAnalysisPreparedContentTests
                 new { wordIndex = 0, originalWord = "yalnız", errorWord = "yanlız", errorType = "transposition", explanation = "Doğru yazım yalnız." }
             } }
         } });
-        var exercise = Exercise.Create("Hata Analizi", "error_analysis", config, 4, user, type.Id, age);
+        var exercise = Exercise.Create("Hata Analizi", "error_analysis", config, 4, user, type.Id, targetAgeGroupId: age);
         var text = ReadingText.Create(textId, "Metin", "yalnız bugün.", difficultyLevel: 4, exerciseId: exercise.Id, targetAgeGroupId: age);
         db.ExerciseTypes.Add(type); db.Exercises.Add(exercise); db.ReadingTexts.Add(text); await db.SaveChangesAsync();
         return (exercise, text);

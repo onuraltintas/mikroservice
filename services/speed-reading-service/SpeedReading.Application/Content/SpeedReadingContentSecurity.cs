@@ -131,6 +131,7 @@ public static class SpeedReadingContentSecurity
             foreach (var property in obj.ToList())
             {
                 if (property.Key.Equals("errors", StringComparison.OrdinalIgnoreCase)
+                    || property.Key.Equals("errorsByTextId", StringComparison.OrdinalIgnoreCase)
                     || property.Key.Equals("errorAnalysisErrors", StringComparison.OrdinalIgnoreCase)
                     || property.Key.Equals("originalText", StringComparison.OrdinalIgnoreCase)) obj.Remove(property.Key);
                 else RemoveProofreadingKeys(property.Value);
