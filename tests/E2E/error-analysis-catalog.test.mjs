@@ -1,6 +1,12 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+
+test('prepared replacements avoid known valid alternative words',()=>{
+  const pairs=JSON.parse(readFileSync(new URL('../../content-packs/error-analysis/v1/pairs.json',import.meta.url)));
+  for(const pair of pairs) assert.ok(!['kıssa','gözlemediler'].includes(pair.wrong), `Ambiguous valid word: ${pair.wrong}`);
+});
 
 const bands = { child:[[180,240],[240,300]],teen:[[240,320],[320,400]],'young-adult':[[300,380],[380,460]],adult:[[340,420],[420,500]] };
 for(const [age, lengths] of Object.entries(bands)) test(`${age} prepared proofreading covers levels four and five`,()=>{
@@ -25,6 +31,9 @@ test('all eight cells have five real texts with exact, explained and unambiguous
   assert.equal(new Set(texts.map(row=>row.id)).size,40);
   for(const row of texts) {
     const tokens=row.content.trim().split(/\s+/u),[min,max]=bands[row.age][row.level-4];
+    const source=readFileSync(new URL(row.source,new URL('../../content-packs/error-analysis/v1/',import.meta.url)),'utf8').trim().replace(/\r\n/g,'\n');
+    assert.equal(createHash('sha256').update(source).digest('hex'),row.sourceSha256);
+    assert.ok(source.startsWith(row.content));
     assert.equal(tokens.length,row.wordCount); assert.ok(row.wordCount>=min&&row.wordCount<=max);
     for(const error of row.errors) {
       assert.equal(tokens[error.wordIndex],error.originalWord); assert.notEqual(error.originalWord,error.errorWord);
