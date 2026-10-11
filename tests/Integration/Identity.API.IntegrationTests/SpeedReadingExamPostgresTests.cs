@@ -32,10 +32,16 @@ public sealed class SpeedReadingExamPostgresTests(PostgresFixture postgres)
             Assert.Equal(30, start.InitialData.GetProperty("examQuestionTimeSeconds").GetInt32());
             await Assert.ThrowsAsync<KeyNotFoundException>(() => service.ValidateActionAsync(Guid.NewGuid(), start.SessionId, new() { Action = "exam_question_start", QuestionId = question }));
             Assert.False((await service.ValidateActionAsync(student, start.SessionId, new() { Action = "answer_question", QuestionId = question, Answer = "A" })).IsValid);
+            Assert.False((await service.ValidateActionAsync(student, start.SessionId, new() { Action = "exam_question_start", QuestionId = question })).IsValid);
+            await Assert.ThrowsAnyAsync<Exception>(() => service.PauseAsync(student, start.SessionId));
+            Assert.True((await service.ValidateActionAsync(student, start.SessionId, new() { Action = "start_reading" })).IsValid);
+            Assert.True((await service.ValidateActionAsync(student, start.SessionId, new() { Action = "finish_reading" })).IsValid);
             Assert.True((await service.ValidateActionAsync(student, start.SessionId, new() { Action = "exam_question_start", QuestionId = question })).IsValid);
-            Assert.True((await service.ValidateActionAsync(student, start.SessionId, new() { Action = "answer_question", QuestionId = question, Answer = "A", ResponseTime = 999999 })).IsValid);
+            var answer = await service.ValidateActionAsync(student, start.SessionId, new() { Action = "answer_question", QuestionId = question, Answer = "A", ResponseTime = 999999 });
+            Assert.True(answer.IsValid); Assert.Null(answer.IsCorrect); Assert.Null(answer.CorrectAnswer);
             var result = await service.CompleteAsync(student, start.SessionId, new());
             Assert.Null(result.RawWPM); Assert.Equal(100, result.ComprehensionScore);
+            Assert.Equal("A", result.DetailedResults.GetProperty("questions")[0].GetProperty("correctAnswer").GetString());
             await service.CompleteAsync(student, start.SessionId, new()); db.ChangeTracker.Clear();
             Assert.Equal(1, await db.ExerciseSessionResults.CountAsync());
         }

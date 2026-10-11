@@ -90,7 +90,7 @@ export class ExamSimulationEngine implements BaseEngine {
             ? configuredFontSize as 'small' | 'medium' | 'large' : 'medium';
         const lineHeight = typeof display['lineheight'] === 'number' && Number.isFinite(display['lineheight'])
             ? Math.min(3, Math.max(1, display['lineheight'])) : 1.8;
-        const minReadingTimeMs = boundedInteger(timing['minreadingtimems'], 0, 0, 3_600_000);
+        const minReadingTimeMs = boundedInteger(caseInsensitiveField(cfg, 'readingMinimumMs') ?? timing['minreadingtimems'], 0, 0, 3_600_000);
         const configuredMaximum = boundedInteger(caseInsensitiveField(cfg, 'readingMaximumMs') ?? timing['maxreadingtimems'], 180000, 1000, 3_600_000);
         const maxReadingTimeMs = configuredMaximum > 0
             ? Math.max(minReadingTimeMs, configuredMaximum) : 0;

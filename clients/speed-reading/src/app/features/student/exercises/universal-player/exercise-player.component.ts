@@ -2635,6 +2635,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
 
   formatTimeFromSeconds(seconds: number | undefined | null): string {
     if (seconds === undefined || seconds === null || isNaN(seconds)) return '0:00';
+    seconds = Math.max(0, Math.round(seconds));
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;

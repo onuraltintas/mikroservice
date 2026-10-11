@@ -92,4 +92,43 @@ describe('ExamSimulationEngine', () => {
 
     expect(engine.getFontSize()).toBe('large');
   });
+
+  it('restores the server reading clock and caps completion at its deadline', fakeAsync(() => {
+    let result: EngineResult | undefined;
+    const engine = new ExamSimulationEngine();
+    engine.initialize({ content: 'Bir iki üç.', readingTextTitle: 'Test paragrafı',
+      readingStartTime: new Date(Date.now() - 1500).toISOString(), readingMinimumMs: 300,
+      readingMaximumMs: 2000, timing: { minReadingTimeMs: 10000, maxReadingTimeMs: 30000 },
+      display: { fontSize: 'small', lineHeight: 2.2 } } as any, callbacks(value => result = value));
+    expect(engine.getTitle()).toBe('Test paragrafı');
+    expect(engine.getWords()).toEqual(['Bir', 'iki', 'üç.']);
+    expect(engine.getWordCount()).toBe(3);
+    expect(engine.getLineHeight()).toBe(2.2);
+    expect(engine.getMaximumMs()).toBe(2000);
+    engine.start(); engine.start(); tick(100);
+    expect(engine.canComplete()).toBeTrue();
+    tick(500);
+    expect(result?.totalTime).toBe(2000);
+    expect(engine.getReadingPhase()).toBe('completed');
+    engine.destroy();
+  }));
+
+  it('cleans up its clock on stop, reset and destroy', fakeAsync(() => {
+    const engine = new ExamSimulationEngine();
+    engine.initialize({ content: 'Bir iki üç.', display: { lineHeight: 10 } } as any, callbacks(() => undefined));
+    engine.start(); tick(100);
+    engine.pause(); engine.pause(); tick(200);
+    expect(engine.state.timeElapsed).toBe(100);
+    engine.resume(); engine.resume(); tick(100);
+    expect(engine.state.timeElapsed).toBe(200);
+    engine.handleInput({ scrollProgress: 100 });
+    expect(engine.getLineHeight()).toBe(3);
+    engine.stop(); tick(100);
+    expect(engine.state.isRunning).toBeFalse();
+    engine.reset();
+    expect(engine.state.timeElapsed).toBe(0);
+    expect(engine.getReadingPhase()).toBe('reading');
+    engine.start(); engine.destroy(); tick(100);
+    expect(engine.state.timeElapsed).toBe(0);
+  }));
 });

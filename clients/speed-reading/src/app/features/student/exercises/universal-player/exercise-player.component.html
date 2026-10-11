@@ -541,7 +541,7 @@
                 <span class="material-icons">article</span>
                 {{ getComprehensionWordCount() }} kelime
             </div>
-            <button class="ep-btn ep-btn--icon" (click)="togglePause()">
+            <button class="ep-btn ep-btn--icon" *ngIf="engine.engineType !== 'exam_simulation'" (click)="togglePause()">
                 <span class="material-icons">{{ engineState.isPaused ? 'play_arrow' : 'pause' }}</span>
             </button>
             <button class="ep-btn ep-btn--icon ep-btn--warn ep-back-button" (click)="goBack()">
@@ -2007,8 +2007,8 @@
                             </span>
                         </div>
                         <div class="time-info">{{ answer.timeSpent }}sn</div>
-                        <span class="material-icons" class="status-icon" *ngIf="answer.isCorrect">check_circle</span>
-                        <span class="material-icons" class="status-icon" *ngIf="!answer.isCorrect">cancel</span>
+                        <span class="material-icons status-icon" aria-label="Doğru" *ngIf="answer.isCorrect">check_circle</span>
+                        <span class="material-icons status-icon" aria-label="Yanlış veya süre doldu" *ngIf="!answer.isCorrect">cancel</span>
                     </div>
                 </div>
             </div>

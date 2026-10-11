@@ -1,0 +1,125 @@
+[
+  {
+    "id": "17cb6bb9-907c-5085-88c8-5ff79305ca4d",
+    "ageGroupId": "10000000-0000-0000-0000-000000000002",
+    "age": "teen",
+    "level": 5,
+    "previousConfiguration": {
+      "engineType": "exam_simulation",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "readingPurpose": "evaluation",
+        "timing": {
+          "questionTimeSeconds": 48
+        }
+      },
+      "difficultyLevel": 5
+    },
+    "configuration": {
+      "engineType": "exam_simulation",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 540,
+          "maxWordCount": 650,
+          "questionCount": 8
+        },
+        "readingPurpose": "evaluation",
+        "timing": {
+          "minReadingTimeMs": 10000,
+          "maxReadingTimeMs": 180000,
+          "questionTimeSeconds": 48
+        },
+        "display": {
+          "fontSize": "medium",
+          "lineHeight": 1.8
+        }
+      },
+      "difficultyLevel": 5
+    }
+  },
+  {
+    "id": "e10c3526-7c29-5b5d-aa93-e0ccb24959fd",
+    "ageGroupId": "10000000-0000-0000-0000-000000000004",
+    "age": "young-adult",
+    "level": 5,
+    "previousConfiguration": {
+      "engineType": "exam_simulation",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "readingPurpose": "evaluation",
+        "timing": {
+          "questionTimeSeconds": 60
+        }
+      },
+      "difficultyLevel": 5
+    },
+    "configuration": {
+      "engineType": "exam_simulation",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 430,
+          "maxWordCount": 650,
+          "questionCount": 8
+        },
+        "readingPurpose": "evaluation",
+        "timing": {
+          "minReadingTimeMs": 10000,
+          "maxReadingTimeMs": 180000,
+          "questionTimeSeconds": 60
+        },
+        "display": {
+          "fontSize": "medium",
+          "lineHeight": 1.8
+        }
+      },
+      "difficultyLevel": 5
+    }
+  },
+  {
+    "id": "a7c148e6-b342-5841-845c-da09d52be35a",
+    "ageGroupId": "10000000-0000-0000-0000-000000000003",
+    "age": "adult",
+    "level": 5,
+    "previousConfiguration": {
+      "engineType": "exam_simulation",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "readingPurpose": "evaluation",
+        "timing": {
+          "questionTimeSeconds": 60
+        }
+      },
+      "difficultyLevel": 5
+    },
+    "configuration": {
+      "engineType": "exam_simulation",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 480,
+          "maxWordCount": 700,
+          "questionCount": 8
+        },
+        "readingPurpose": "evaluation",
+        "timing": {
+          "minReadingTimeMs": 10000,
+          "maxReadingTimeMs": 240000,
+          "questionTimeSeconds": 60
+        },
+        "display": {
+          "fontSize": "medium",
+          "lineHeight": 1.8
+        }
+      },
+      "difficultyLevel": 5
+    }
+  }
+]

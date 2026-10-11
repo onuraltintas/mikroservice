@@ -283,6 +283,7 @@ export function applyCustomPreviewSettings<T extends Record<string, unknown>>(
       const timing = mergeCaseInsensitiveRecords(configuration, settings, 'timing');
       const minimum = numeric['minReadingTimeSec'] === undefined ? Number(timing['minreadingtimems'] ?? 0) : Math.round(numeric['minReadingTimeSec'] * 1000);
       const maximum = numeric['maxReadingTimeSec'] === undefined ? Number(timing['maxreadingtimems'] ?? 0) : Math.round(numeric['maxReadingTimeSec'] * 1000);
+      if (engine === 'exam_simulation' && maximum <= minimum) throw new Error('İlk okuma süresi minimum süreden uzun olmalıdır.');
       if (maximum > 0 && maximum < minimum) throw new Error('Maksimum okuma süresi minimum süreden kısa olamaz.');
       settings['timing'] = overrideFields({ ...recordOrEmpty(caseInsensitiveField(configuration, 'timing')), ...recordOrEmpty(caseInsensitiveField(settings, 'timing')) }, { minReadingTimeMs: minimum, maxReadingTimeMs: maximum });
     }
