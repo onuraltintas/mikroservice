@@ -2,6 +2,8 @@
 
 Tarih: 11 Ekim 2026. Dal: `codex/platform-hardening`.
 
+> Bu rapor ilk motor geliştirme kontrolünün tarihsel kaydıdır. Motor 11 Ekim'deki `6f315ff3` yayınıyla canlıya alınmıştır; aşağıdaki “gönderilmedi/canlı değişmedi” ifadeleri ilk kontrol anını anlatır. Yeni içerik paketinin sonraki sonuçları [Anlama içerik paketi raporunda](comprehension-content-20261011.md) izlenir.
+
 ## Sonuç ve kapsam
 
 **Motor, soru akışı ve kayıt ayrımı yerelde geliştirildi. Tüm içerik/veritabanı geçişi tamamlanmadı. GitHub'a gönderilmedi; canlı servis, ayar veya içerik değiştirilmedi.** Canlı envanter yalnız okunarak incelendi. Kullanıcı veya eğitim geçmişi silinmedi.

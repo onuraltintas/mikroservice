@@ -1,6 +1,6 @@
-# Anlama çalışma/değerlendirme ayarları — v1 taslağı
+# Anlama çalışma/değerlendirme içerik paketi — v1
 
-**Henüz uygulanabilir/yayımlanmış içerik paketi değildir.** `settings.json` 40 normal egzersizin önerilen ayarlarını içerir. Canlı ayarlar, mevcut metinler, sorular, kullanıcılar ve sonuçlar değiştirilmedi. Dört ayrı seviye tespit egzersizi bu paketin kapsamı dışındadır.
+`settings.json`, `content.json` ve `apply.sql` birlikte uygulanır: 40 normal egzersizin yaş/seviye ve çalışma/değerlendirme ayarları, egzersiz başına iki metin kaydı ve toplam 588 açıklamalı soru. Dört ayrı seviye tespit egzersizi bu paketin kapsamı dışındadır. Yayın durumu doğrulama raporunda ayrıca belirtilir; dosyaların bulunması canlıya uygulanmış olduğu anlamına gelmez.
 
 Her yaş/seviyedeki ilk mevcut egzersiz `learning`, ikincisi `evaluation` olarak eşlenmiştir. Mevcut kimlikleri korunur; yeni adlarda amaç açıkça belirtilir. `readingPurpose=evaluation`, her iki modda soruların yüklenmesini sağlar; `comprehensionMode` cevap gösterimini ve rapor ayrımını belirler. Bunlar iki farklı kavramdır; çalışma modunu `readingPurpose=practice` yapmayın, sorular kaldırılır.
 
@@ -40,14 +40,24 @@ Varsayılan okuma ve soru süre sınırı yoktur. Pacer ve oturum içi otomatik 
 
 Her iki modda sayılar aynı çıktı. **20 yaş/seviye havuzunun 10'u boş.** Bu yalnız sayısal uygunluk kontrolüdür; telif/kullanım yetkisi, soru kalitesi, açıklamaların doğruluğu ve pedagojik ilerleme kontrolü yerine geçmez. Canlı havuzlar daha sonra değişebilir; yayın öncesi yeniden denetlenmelidir.
 
-## Kalan içerik/geçiş adımları
+## İçerik kaynağı ve sınırlar
 
-1. Boş 10 havuza yaş/seviye/bandına uygun, birbiriyle farklı özgün metinler ve hedef sayıda açıklamalı sorular ekle. Her modun seçiminde en az iki uygun metin hedefle. Mevcut metinleri sırf aralığa uydurmak için kısaltma/uzatma.
-2. Dolu havuzları da içerik açısından gözden geçir: S1 açık bilgi, S2 ana fikir/sıra/neden, S3 çıkarım, S4 kanıt/karşılaştırma, S5 bütünleştirme/değerlendirme. Üst seviyelerde de kolay sorular bulunsun; tek doğru seçenek ve metin içi kanıt gerekir. Eski soru etiketlerini bilimsel doğrulama gibi sunma.
-3. Kanonik metin/soru manifesti ve atomik, idempotent uygulama SQL'i hazırla. 40 eski ayarın/kimliğin eşleşmesi, içerik sayıları, kaynak/dosya bütünlüğü, diğer egzersizlere dokunulmaması ve geri dönüş denetlenmeli.
-4. Paketi gerçek geçici PostgreSQL'de tüm 40 egzersiz için uygula; yeniden uygulama, uyuşmazlıkta tam geri alma ve yaş/seviye/metin/soru kontrollerini test et.
-5. Ancak bundan sonra ayrıca onayla yedekli canlı yayın/geçiş ve gerçek kullanıcı oturum kontrolü yap. `settings.json` tek başına canlı veritabanına aktarılmamalıdır.
+80 veritabanı metin kaydı, **35 farklı metin gövdesi** içerir; 80 bağımsız hikâye değildir. Altı özgün kaynak hikâyenin tam paragraf sınırında biten seçkileridir. Çocuk/genç için projede bulunan dört hikâye yeniden kullanılır; tamir atölyesi ve ortak arşiv hikâyeleri bu paket için yazılmıştır. Genç yetişkin/yetişkin kaynakları, çalışma/değerlendirme metinleri ortaktır. Kaynak dosya ve SHA-256 manifestte yer alır; dolgu veya yarım paragraf yoktur.
 
-Bu klasörde henüz uygulanabilir `apply.sql` veya tamamlanmış metin/soru manifesti yoktur. Sayısal ayar testi, içeriğin tamamlandığı anlamına gelmez.
+89 kaynak soru farklı seçkilere eşlenerek 588 kayıt üretir. Her sorunun ilgili seçkide kanıtı, açıklaması ve dört farklı seçeneği vardır. Alt seviyeler ağırlıklı açık bilgi; ilerleyen seviyeler çıkarım ve değerlendirme içerir. Anahtarlar dengeli dağıtılır. Aynı hikâyeyi veya soruları daha önce gören kullanıcının değerlendirmesi bağımsız bir sınav formu sayılmaz. Bunlar test edilebilir pilot içeriklerdir; öğretmen editör incelemesi ve öğrenci pilotundan elde edilen güçlük/ayırt edicilik analizi akademik standardizasyon için ayrıca gerekir.
+
+Eski metin ve sorular silinmez veya bu pakette yeniden yazılmaz. Seçim motoru yaş/seviye/uzunluk/soru uygunluğunu ve kullanım geçmişini kontrol eder; uygun eski ortak metinler de aday olabilir. Bu paket eski havuzların tümü için editoryal kalite onayı vermez.
+
+## Üretim, doğrulama ve geri dönüş
+
+1. `node content-packs/comprehension/v1/generate.mjs`: kaynaklardan deterministik manifest, uygulama ve geri dönüş SQL'i üretir.
+2. `node --test content-packs/comprehension/v1/content.test.mjs`: içerik, kaynak, soru ve üretilen SQL kontrolleri.
+3. `SpeedReadingComprehensionContentPostgresTests`: gerçek geçici PostgreSQL'de 40 akış; yeniden uygulama, uyuşmazlıkta geri alma, sonuç kaydı ve kapsamlı geri dönüş kontrolü.
+4. `tests/E2E/speed-reading-comprehension.config.mjs`: gerçek Angular arayüzü, fixture API ile tüm yaş/seviye/modların masaüstü ve mobil akışları; canlı Identity testi değildir.
+5. Canlı için önce güncel Hızlı Okuma yedeği, geri yüklenmiş geçici veritabanında prova ve diğer kayıtların bütünlük denetimi gerekir. Yalnız Hızlı Okuma API'sini durdur; `psql -X -v ON_ERROR_STOP=1` ile `apply.sql` uygula, doğrula, aynı API imajını tekrar başlat. Identity ve Koçluk veritabanına dokunma.
+
+`apply.sql` atomik/idempotenttir; eski veya bu paketin beklenen yeni ayarı dışında bir yönetici değişikliği varsa durur. Kimlik çakışması veya ekleme hatası bütün işlemi geri alır. Yalnız 40 normal ayar ve 80 metin/588 soru hedeflenir; programlar, lisanslar, kullanıcılar, eski içerik ve açık oturum anlık görüntüleri korunur.
+
+Gerekirse API durdurulup yeni yedek alındıktan sonra `rollback.sql` çalıştırılır. Yalnız bilinen ayarlar/adlar eski hâline gelir; yeni metinler pasife alınır, sorular ve kullanıcı sonuçları **silinmez**. Yönetici hedef ayarı/metni sonradan değiştirmişse otomatik geri dönüş durur. Geri dönüş de tekrar uygulanabilir; arşivlenmiş paketi `apply.sql` ile körlemesine yeniden açmak reddedilir. Yeniden yayın ayrı bir inceleme gerektirir. Kullanıcı yazıları başladıktan sonra tüm veritabanını eski yedekle değiştirmeyin.
 
 Yerel geliştirme ve doğrulama raporu: [Anlama modları — 11 Ekim 2026](../../../docs/reports/comprehension-modes-20261011.md).

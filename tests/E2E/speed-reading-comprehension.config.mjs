@@ -1,7 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
-  testDir: './specs', testMatch: 'speed-reading-comprehension-ui.spec.mjs',
+  testDir: './specs', testMatch: ['speed-reading-comprehension-ui.spec.mjs', 'speed-reading-comprehension-content.spec.mjs'],
   workers: 1, retries: 0, timeout: 30_000,
   outputDir: '../../artifacts/comprehension-ui/results',
   use: { baseURL: 'http://127.0.0.1:4310', channel: 'msedge', trace: 'retain-on-failure', screenshot: 'only-on-failure' },

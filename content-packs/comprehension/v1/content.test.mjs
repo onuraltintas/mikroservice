@@ -87,3 +87,28 @@ test('rendered SQL exactly matches its versioned template and immutable payloads
   assert.equal((sql.match(/^COMMIT;$/gm) ?? []).length, 1);
   assert.doesNotMatch(sql, /\b(?:DELETE\s+FROM|TRUNCATE|UPDATE\s+speed_reading\.(?:student|exercise_session|reading_session|program_template))/iu);
 });
+
+test('rollback restores only known catalog settings and archives new texts without deleting history', () => {
+  const template = readFileSync(new URL('./rollback.template.sql', import.meta.url), 'utf8');
+  const sql = readFileSync(new URL('./rollback.sql', import.meta.url), 'utf8');
+  assert.equal(sql, template.replace('{{SETTINGS}}', JSON.stringify(settings, null, 2))
+    .replace('{{CONTENT}}', JSON.stringify(read('./content.json'), null, 2)));
+  assert.equal((sql.match(/^BEGIN;$/gm) ?? []).length, 1);
+  assert.equal((sql.match(/^COMMIT;$/gm) ?? []).length, 1);
+  assert.match(sql, /SET is_active=false/);
+  assert.doesNotMatch(sql, /\b(?:DELETE\s+FROM|TRUNCATE|UPDATE\s+speed_reading\.(?:student|exercise_session|reading_session|program_template))/iu);
+});
+
+test('production inventory excludes only the exact approved target rows, not whole tables', () => {
+  const sql = readFileSync(new URL('./inventory.sql', import.meta.url), 'utf8');
+  const content = read('./content.json');
+  const targets = {
+    exercises: settings.map(row => row.id), reading_texts: content.map(row => row.id),
+    reading_questions: content.flatMap(row => row.questions.map(q => q.id))
+  };
+  for (const [table, ids] of Object.entries(targets)) {
+    assert.ok(sql.includes(`WHEN '${table}' THEN $where$WHERE id NOT IN (${ids.map(id => `'${id}'::uuid`).join(',')})$where$`));
+  }
+  assert.match(sql, /ELSE '' END/);
+  assert.doesNotMatch(sql, /tablename NOT IN|\bDELETE\b|\bUPDATE\b/iu);
+});
