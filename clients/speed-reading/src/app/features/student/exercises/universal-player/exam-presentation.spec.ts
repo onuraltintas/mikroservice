@@ -1,7 +1,36 @@
 import { ExercisePlayerComponent } from './exercise-player.component';
 import { getCustomPreviewControls } from './custom-preview-settings';
+import { ExamSimulationEngine } from './engines/exam-simulation.engine';
 
 describe('exam presentation', () => {
+  it('keeps answer correctness hidden during the exam', () => {
+    const player = Object.create(ExercisePlayerComponent.prototype) as any;
+    player.engine = { engineType: 'exam_simulation' };
+    player.isAssessmentMode = false;
+    expect(player.defersComprehensionFeedback()).toBeTrue();
+  });
+  it('starts reading before questions in the new exam protocol', async () => {
+    const player = Object.create(ExercisePlayerComponent.prototype) as any;
+    player.engine = { engineType: 'exam_simulation', start: jasmine.createSpy('start') };
+    player.backendSessionConfig = { examProtocolVersion: 1 };
+    player.comprehensionQuestions = [{}]; player.clickedCells = new Set(); player.correctCells = new Set(); player.wrongCells = new Set();
+    player.questionAnswers = []; player.engineState = {}; player.cdr = { detectChanges: () => undefined };
+    player.startQuestionTimer = jasmine.createSpy('question');
+    player.startReadingTracking = (callback: () => void) => callback();
+    await player.startExercise();
+    expect(player.engine.start).toHaveBeenCalled();
+    expect(player.startQuestionTimer).not.toHaveBeenCalled();
+  });
+  it('enforces minimum reading time on the button and has a bounded reading clock', () => {
+    const engine = new ExamSimulationEngine() as any;
+    engine.initialize({ content: { text: 'Gerçek sınav metni.' }, timing: { minReadingTimeMs: 10000, maxReadingTimeMs: 30000 } },
+      { onStateChange: () => undefined, onComplete: () => undefined, onStart: () => undefined });
+    engine.state.isRunning = true; engine.state.timeElapsed = 9999;
+    expect(engine.canComplete()).toBeFalse();
+    engine.state.timeElapsed = 10000;
+    expect(engine.canComplete()).toBeTrue();
+    expect(engine.getMaximumMs()).toBe(30000);
+  });
   it('restores exam answers after refreshing the page', () => {
     const player = Object.create(ExercisePlayerComponent.prototype) as any;
     player.isAssessmentMode = false; player.backendSessionConfig = { engineType: 'exam_simulation' }; player.questionAnswers = []; player.currentQuestionIndex = 0;
