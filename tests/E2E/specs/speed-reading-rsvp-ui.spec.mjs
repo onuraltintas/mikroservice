@@ -87,7 +87,7 @@ for (const [role, available] of [['Admin', true], ['Teacher', true], ['Admin', f
       if (path.endsWith('/auth/refresh-token')) response = { id: 'preview-user', roles: [role],
         token: `e30.${Buffer.from(JSON.stringify({ sub: 'preview-user', exp: Math.floor(Date.now()/1000)+3600, role })).toString('base64url')}.fixture` };
       else if (path.endsWith(`/exercises/${settings.id}`)) response = { id: settings.id, exerciseTypeId: typeId,
-        exerciseTypeName: 'RSVP', title: 'Seri Görsel Sunum', difficultyLevel: row.level, targetAgeGroupId: row.ageGroupId,
+        exerciseTypeName: 'RSVP', title: 'Seri Görsel Sunum', difficultyLevel: row.level, targetAgeGroupConfigurationId: row.ageGroupId,
         configurationJson: JSON.stringify(settings.configuration) };
       else if (path.endsWith('/exercise-types')) response = { items: [{ id: typeId, name: 'RSVP', engineType: 'text_stream', isActive: true }] };
       else if (path.includes('/profile/status')) response = { hasAgeGroupConfiguration: true };

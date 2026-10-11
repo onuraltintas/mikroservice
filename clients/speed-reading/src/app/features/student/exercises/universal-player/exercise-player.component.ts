@@ -941,7 +941,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   private static readonly previewReadingUses = new Map<string, Map<string, number>>();
 
   private previewTextMatchesAge(text: any): boolean {
-    const ageGroup = this.exercise?.targetAgeGroupId;
+    const ageGroup = this.exercise?.targetAgeGroupConfigurationId || this.exercise?.targetAgeGroupId;
     if (this.parsedConfig?.['engineType'] === 'error_analysis') return text.targetAgeGroupConfigurationId === ageGroup;
     return !ageGroup || !text.targetAgeGroupConfigurationId || text.targetAgeGroupConfigurationId === ageGroup;
   }

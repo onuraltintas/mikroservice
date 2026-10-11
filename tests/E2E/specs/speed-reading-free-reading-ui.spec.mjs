@@ -60,12 +60,12 @@ for (const [role, available] of [['Admin',true],['Teacher',true],['Admin',false]
       if(request.method()!=='GET' && !path.endsWith('/auth/refresh-token')) writes.push(path);
       let response={ items:[],totalCount:0 };
       if(path.endsWith('/auth/refresh-token')) response={id:'preview-user',roles:[role],token:`e30.${Buffer.from(JSON.stringify({sub:'preview-user',exp:Math.floor(Date.now()/1000)+3600,role})).toString('base64url')}.fixture`};
-      else if(path.endsWith(`/exercises/${exerciseId}`)) response={id:exerciseId,exerciseTypeId:typeId,exerciseTypeName:'FreeReading',title:'Serbest Okuma',difficultyLevel:1,targetAgeGroupId:row.ageGroupId,configurationJson:JSON.stringify(config)};
+      else if(path.endsWith(`/exercises/${exerciseId}`)) response={id:exerciseId,exerciseTypeId:typeId,exerciseTypeName:'FreeReading',title:'Serbest Okuma',difficultyLevel:1,targetAgeGroupConfigurationId:row.ageGroupId,configurationJson:JSON.stringify(config)};
       else if(path.endsWith('/exercise-types')) response={items:[{id:typeId,name:'FreeReading',engineType:'free_reading',isActive:true}]};
       else if(path.includes('/profile/status')) response={hasAgeGroupConfiguration:true};
       else if(path.endsWith('/my-modules')) response={hasSpeedReading:true};
-      else if(path.endsWith('/reading-texts')) response=available ? [{...row,difficultyLevel:1,exerciseId,targetAgeGroupId:row.ageGroupId,isActive:true}] : [];
-      else if(path.endsWith(`/reading-texts/${row.id}`)) response={...row,difficultyLevel:1,exerciseId,targetAgeGroupId:row.ageGroupId,questions:[{id:'source-question',questionText:'Kaynak soru'}]};
+      else if(path.endsWith('/reading-texts')) response=available ? [{...row,difficultyLevel:1,exerciseId,targetAgeGroupConfigurationId:row.ageGroupId,isActive:true}] : [];
+      else if(path.endsWith(`/reading-texts/${row.id}`)) response={...row,difficultyLevel:1,exerciseId,targetAgeGroupConfigurationId:row.ageGroupId,questions:[{id:'source-question',questionText:'Kaynak soru'}]};
       await route.fulfill({json:response});
     });
     await page.goto(`/student/exercises/universal-player/${exerciseId}?mode=preview`);
