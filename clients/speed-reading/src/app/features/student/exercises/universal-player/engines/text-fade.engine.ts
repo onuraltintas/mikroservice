@@ -1,7 +1,6 @@
 /**
- * Text Fade Engine (Scientific Version)
- * World Standard: Fading tracks the reader based on Target WPM.
- * Forces the eye to move forward and prevents regression.
+ * Fades the supplied text at a fixed display pace after an initial delay.
+ * Display pace is not a measurement of the user's reading speed.
  */
 
 import { BaseEngine, EngineConfig, EngineState, EngineResult, EngineCallbacks } from './base-engine.interface';
@@ -54,14 +53,6 @@ export class TextFadeEngine implements BaseEngine {
     private fadedWordIndex = -1;
     private nextFadeTime = 0;
 
-    private static readonly TEXT_POOL = [
-        "Hızlı okuma becerisi, bilgi çağında hayati bir yetenektir.",
-        "Göz kaslarını geliştirmek için düzenli egzersiz yapmak gerekir.",
-        "Periferik görüş alanını genişleterek daha fazla kelime görebilirsiniz.",
-        "Odaklanma süresini artırmak, okuma verimliliğini doğrudan etkiler.",
-        "Beyin, görsel bilgiyi işleme konusunda olağanüstü bir kapasiteye sahiptir."
-    ];
-
     initialize(config: EngineConfig, callbacks: EngineCallbacks): void {
         this.callbacks = callbacks;
         const root = config as any;
@@ -82,7 +73,8 @@ export class TextFadeEngine implements BaseEngine {
         } as TextFadeConfig;
 
         // Prepare words
-        const text = resolveReadingText(root, TextFadeEngine.TEXT_POOL.join(' '));
+        const text = resolveReadingText(root, '');
+        if (!text.trim()) throw new Error('Text Fade requires a real reading text.');
         this.words = text.split(/\s+/).filter((w: string) => w.length > 0);
 
         // Determine Speed (WPM)

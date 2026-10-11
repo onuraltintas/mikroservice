@@ -596,6 +596,12 @@ public static class ExerciseConfigurationRules
         ValidateOptionalIntRange(config, "targetWpm", 20, 1_500, "Kaybolan metin hedef WPM");
         ValidateOptionalIntRange(config, "lagMs", 0, 10_000, "Kaybolan metin gecikmesi");
         ValidateOptionalInlineText(config);
+        if (TryGetObject(config, "content") is { } content)
+        {
+            ValidateOptionalIntRange(content, "minWordCount", 1, 100_000, "Minimum kelime sayısı");
+            ValidateOptionalIntRange(content, "maxWordCount", 1, 100_000, "Maksimum kelime sayısı");
+            ValidateOptionalIntRange(content, "questionCount", 1, 50, "Anlama soru sayısı");
+        }
         var fading = TryGetObject(config, "fading");
         if (!fading.HasValue)
             return;
@@ -965,6 +971,13 @@ public static class ExerciseConfigurationRules
         }
         ValidateConsistentValues(speeds, "Kaybolan metin hedef WPM");
         ValidateConsistentValues(lags, "Kaybolan metin gecikmesi");
+        var scopes = nested.HasValue ? new[] { root, nested.Value } : new[] { root };
+        foreach (var key in new[] { "minWordCount", "maxWordCount", "questionCount" })
+            ValidateConsistentValues(scopes.SelectMany(scope => ReadNestedInts(scope, "content", key)), key);
+        var minimum = scopes.SelectMany(scope => ReadNestedInts(scope, "content", "minWordCount")).FirstOrDefault();
+        var maximum = scopes.SelectMany(scope => ReadNestedInts(scope, "content", "maxWordCount")).FirstOrDefault();
+        if (minimum > 0 && maximum > 0 && minimum > maximum)
+            throw new ArgumentException("Minimum kelime sayısı maksimumdan büyük olamaz.");
     }
 
     private static void ValidateEffectiveWordHighlightConfiguration(JsonElement root, JsonElement? nested)

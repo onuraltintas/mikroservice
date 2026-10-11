@@ -143,7 +143,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             var isScanText = ExerciseConfigurationRules.NormalizeEngineType(exerciseEngineType) is "scan_find" or "scanning";
             var scanTaskIds = isScanText ? ScanningTaskTextIds(ReadObject(explicitConfig, "engineConfig").ValueKind == JsonValueKind.Object
                 ? ReadObject(explicitConfig, "engineConfig") : explicitConfig) : [];
-            var usesTextBand = isFreeText || isScanText || IsEngineType(exerciseEngineType, "reading_comprehension")
+            var usesTextBand = isFreeText || isScanText || IsEngineType(exerciseEngineType, "reading_comprehension") || IsEngineType(exerciseEngineType, "text_fade")
                 || exerciseTypeName.Equals("SpeedReading", StringComparison.OrdinalIgnoreCase)
                 || exerciseTypeName.Equals("Chunking", StringComparison.OrdinalIgnoreCase);
             var minimumWords = usesTextBand ? ReadPositiveInt(explicitContent, "minWordCount") ?? ReadPositiveInt(ReadObject(explicitConfig, "content"), "minWordCount") ?? 0 : 0;
@@ -333,10 +333,13 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                 var isScanText = normalizedEngineType is "scan_find" or "scanning";
                 var scanTaskIds = isScanText ? ScanningTaskTextIds(ReadObject(parsedConfiguration, "engineConfig").ValueKind == JsonValueKind.Object
                     ? ReadObject(parsedConfiguration, "engineConfig") : parsedConfiguration) : [];
-                var usesTextBand = isFreeReading || isComprehension || isScanText
+                var usesTextBand = isFreeReading || isComprehension || isScanText || normalizedEngineType == "text_fade"
                     || exerciseTypeName.Equals("SpeedReading", StringComparison.OrdinalIgnoreCase)
                     || exerciseTypeName.Equals("Chunking", StringComparison.OrdinalIgnoreCase);
-                var comprehensionQuestionCount = isComprehension
+                var comprehensionQuestionCount = isComprehension || (normalizedEngineType == "text_fade"
+                    && ExerciseConfigurationRules.ResolveReadingPurpose(normalizedEngineType,
+                        ReadString(ReadObject(parsedConfiguration, "engineConfig"), "readingPurpose")
+                            ?? ReadString(parsedConfiguration, "readingPurpose"), request.AssessmentAttemptId.HasValue) == "evaluation")
                     ? ReadPositiveInt(freeContent, "questionCount") ?? ReadPositiveInt(ReadObject(parsedConfiguration, "content"), "questionCount") ?? 0 : 0;
                 var freeMinimumWords = usesTextBand ? ReadPositiveInt(freeContent, "minWordCount") ?? ReadPositiveInt(ReadObject(parsedConfiguration, "content"), "minWordCount") ?? 0 : 0;
                 var freeMaximumWords = usesTextBand ? ReadPositiveInt(freeContent, "maxWordCount") ?? ReadPositiveInt(ReadObject(parsedConfiguration, "content"), "maxWordCount") ?? 0 : 0;
@@ -1550,7 +1553,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                 ReadString(effectiveConfig, "mode") ?? ReadString(config, "mode")))
             state.Questions.Clear();
 
-        if (IsEngineType(exerciseEngineType, "reading_comprehension"))
+        if (IsEngineType(exerciseEngineType, "reading_comprehension")
+            || (IsTextFade(state) && state.ReadingPurpose == "evaluation"))
         {
             var count = ReadPositiveInt(ReadObject(effectiveConfig, "content"), "questionCount")
                 ?? ReadPositiveInt(ReadObject(config, "content"), "questionCount");
@@ -1797,6 +1801,11 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         {
             if (state.Words.Length == 0)
                 throw new InvalidOperationException("Metin Solma için geçerli bir metin gereklidir.");
+            var content = ReadObject(effectiveConfig, "content");
+            var minimumWords = ReadPositiveInt(content, "minWordCount") ?? ReadPositiveInt(ReadObject(config, "content"), "minWordCount") ?? 0;
+            var maximumWords = ReadPositiveInt(content, "maxWordCount") ?? ReadPositiveInt(ReadObject(config, "content"), "maxWordCount") ?? 0;
+            if (state.Words.Length < minimumWords || (maximumWords > 0 && state.Words.Length > maximumWords))
+                throw new BusinessRuleException("ExerciseSession.ReadingContentUnavailable", "Metin Solma metni seçilen kelime bandına uygun değil.");
             var fading = ReadObject(effectiveConfig, "fading");
             var rootFading = ReadObject(config, "fading");
             var timing = ReadObject(effectiveConfig, "timing");
