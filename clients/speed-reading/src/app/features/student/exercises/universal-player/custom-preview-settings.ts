@@ -79,6 +79,14 @@ export function getCustomPreviewControls(configuration: Record<string, unknown>)
       const display = mergeCaseInsensitiveRecords(configuration, settings, 'display');
       const controls: PreviewControl[] = [{ key: 'fontSize', label: 'Metin boyutu', min: 0, max: 0, value: String(display['fontsize'] ?? 'medium').toLowerCase(),
         options: [{ value: 'small', label: 'Küçük' }, { value: 'medium', label: 'Orta' }, { value: 'large', label: 'Büyük' }] }];
+      if (configuration['engineType'] === 'error_analysis') {
+        controls.push(control('timeLimitSeconds', 'Çalışma süresi (saniye)', 15, 3600,
+          caseInsensitiveField(settings, 'timeLimit') ?? 180));
+        const map = recordOrEmpty(caseInsensitiveField(settings, 'errorsByTextId'));
+        const counts = Object.values(map).filter(Array.isArray).map(entries => entries.length);
+        if (counts.length) controls.push(control('errorCount', 'Bulunacak hata sayısı', 1, Math.min(...counts),
+          caseInsensitiveField(settings, 'errorCount') ?? Math.min(...counts)));
+      }
       if (['reading_comprehension', 'free_reading'].includes(String(configuration['engineType']))) controls.push(
         { ...control('minReadingTimeSec', 'Minimum okuma süresi (saniye)', 0, 3600, Number(timing['minreadingtimems'] ?? 0) / 1000), step: 0.001 },
         { ...control('maxReadingTimeSec', 'Maksimum okuma süresi (saniye; 0: sınırsız)', 0, 3600, Number(timing['maxreadingtimems'] ?? 0) / 1000), step: 0.001 },
@@ -248,6 +256,15 @@ export function applyCustomPreviewSettings<T extends Record<string, unknown>>(
     const result = structuredClone(configuration);
     const settings = recordOrEmpty(result['engineConfig']);
     (result as Record<string, unknown>)['engineConfig'] = settings;
+    if (engine === 'error_analysis') {
+      if (numeric['timeLimitSeconds'] !== undefined) settings['timeLimit'] = numeric['timeLimitSeconds'];
+      if (numeric['errorCount'] !== undefined) {
+        settings['errorCount'] = numeric['errorCount'];
+        const map = recordOrEmpty(settings['errorsByTextId']);
+        settings['errorsByTextId'] = Object.fromEntries(Object.entries(map).map(([id, entries]) =>
+          [id, Array.isArray(entries) ? entries.slice(0, numeric['errorCount']) : entries]));
+      }
+    }
     const displayOverrides: Record<string, unknown> = {};
     if (value !== undefined) displayOverrides['fontSize'] = value;
     if (numeric['lineHeightPercent'] !== undefined) displayOverrides['lineHeight'] = numeric['lineHeightPercent'] / 100;

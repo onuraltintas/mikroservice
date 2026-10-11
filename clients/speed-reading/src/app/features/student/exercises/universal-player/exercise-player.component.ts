@@ -860,7 +860,8 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
             retry();
             return;
           }
-          this.backendSessionConfig = this.createPreviewReadingConfig(readingText);
+          try { this.backendSessionConfig = this.createPreviewReadingConfig(readingText); }
+          catch { retry(); return; }
           this.comprehensionQuestions = this.backendSessionConfig['questions'] as any[];
           const requiredQuestions = this.parsedConfig?.['engineType'] === 'text_fade' && this.previewRequiresQuestions() ? 4
             : ['reading_comprehension', 'regression_reduction', 'subvocalization_reduction'].includes(this.parsedConfig?.['engineType'] || '') && this.previewRequiresQuestions()
@@ -940,13 +941,14 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
 
   private previewTextMatchesAge(text: any): boolean {
     const ageGroup = this.exercise?.targetAgeGroupId;
+    if (this.parsedConfig?.['engineType'] === 'error_analysis') return text.targetAgeGroupConfigurationId === ageGroup;
     return !ageGroup || !text.targetAgeGroupConfigurationId || text.targetAgeGroupConfigurationId === ageGroup;
   }
 
   private previewTextMatchesLength(wordCount: number): boolean {
     if (this.exercise?.exerciseTypeName?.toLowerCase() !== 'speedreading'
       && this.exercise?.exerciseTypeName?.toLowerCase() !== 'chunking'
-      && !['free_reading', 'reading_comprehension', 'text_fade', 'scanning', 'scan_find', 'regression_reduction', 'subvocalization_reduction'].includes(this.parsedConfig?.['engineType'] || '')) return true;
+      && !['error_analysis', 'free_reading', 'reading_comprehension', 'text_fade', 'scanning', 'scan_find', 'regression_reduction', 'subvocalization_reduction'].includes(this.parsedConfig?.['engineType'] || '')) return true;
     const content = this.parsedConfig?.['engineConfig']?.['content'] || this.parsedConfig?.['content'] || {};
     const minimum = Number(content.minWordCount) || 0;
     const maximum = Number(content.maxWordCount) || 0;
@@ -954,6 +956,10 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   }
 
   private previewTextMatchesScanningTasks(text: any): boolean {
+    if (this.parsedConfig?.['engineType'] === 'error_analysis') {
+      const map = this.parsedConfig?.['engineConfig']?.['errorsByTextId'];
+      return !!map && Object.hasOwn(map, text.id);
+    }
     if (!['scanning', 'scan_find'].includes(this.parsedConfig?.['engineType'] || '')) return true;
     const tasks = this.parsedConfig?.['engineConfig']?.['targets']?.tasksByTextId
       ?? this.parsedConfig?.['targets']?.tasksByTextId;
@@ -962,6 +968,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
 
   private previewRequiresReadingText(): boolean {
     const type = this.parsedConfig?.['engineType'] || '';
+    if (type === 'error_analysis') return this.parsedConfig?.['engineConfig']?.['content']?.source === 'reading_text';
     return ['word_highlight', 'word_group', 'adaptive_fluency', 'text_fade', 'reading_comprehension', 'free_reading', 'exam_simulation',
       'scanning', 'scan_find', 'skimming', 'regression_reduction', 'subvocalization_reduction'].includes(type)
       || (type === 'text_stream' && this.exercise?.exerciseTypeName?.toLowerCase() !== 'tachistoscope'
@@ -970,6 +977,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   }
 
   private previewRequiresQuestions(): boolean {
+    if (this.parsedConfig?.['engineType'] === 'error_analysis') return false;
     return ['reading_comprehension', 'exam_simulation', 'adaptive_fluency', 'skimming'].includes(this.parsedConfig?.['engineType'] || '')
       || (this.parsedConfig?.['engineConfig']?.['readingPurpose'] ?? this.parsedConfig?.['readingPurpose']) === 'evaluation';
   }
@@ -1010,7 +1018,26 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   }
 
   private createPreviewReadingConfig(readingText: any): Record<string, unknown> {
-    const content = typeof readingText?.content === 'string' ? readingText.content : '';
+    const content: string = typeof readingText?.content === 'string' ? readingText.content : '';
+    if (this.parsedConfig?.['engineType'] === 'error_analysis') {
+      const settings = this.parsedConfig?.['engineConfig'] || {};
+      const errors = settings['errorsByTextId']?.[readingText.id];
+      const words = content.trim().split(/\s+/).filter(Boolean).map((text, index) => ({ index, text }));
+      const indices = new Set<number>();
+      if (!this.previewTextMatchesLength(words.length) || !Array.isArray(errors) || errors.length !== settings['errorCount']
+        || errors.length === 0) throw new Error('Hata analizi içeriği eksik veya tutarsız.');
+      for (const error of errors) {
+        if (!Number.isInteger(error.wordIndex) || error.wordIndex < 0
+          || error.wordIndex >= words.length || indices.has(error.wordIndex)
+          || words[error.wordIndex].text !== error.originalWord || typeof error.errorWord !== 'string'
+          || !error.errorWord.trim() || /\s/.test(error.errorWord) || error.errorWord === error.originalWord) {
+          throw new Error('Hata analizi içeriği eksik veya tutarsız.');
+        }
+        indices.add(error.wordIndex);
+        words[error.wordIndex].text = error.errorWord;
+      }
+      return { words, errors: structuredClone(errors), questions: [], timeLimit: settings['timeLimit'], wordCount: words.length };
+    }
     const title = typeof readingText?.title === 'string' ? readingText.title : '';
     const wordCount = Number(readingText?.wordCount) || content.split(/\s+/).filter(Boolean).length;
     const availableQuestions = this.exercise?.exerciseTypeName?.toLowerCase() === 'chunking'
