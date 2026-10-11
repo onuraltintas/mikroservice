@@ -1,5 +1,6 @@
 using System.Reflection;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Data.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -17,8 +18,10 @@ namespace Identity.API.IntegrationTests;
 [Collection("Database")]
 public sealed class SpeedReadingVisualizationPostgresTests(PostgresFixture postgres)
 {
-    [Fact]
-    public async Task Concurrent_admin_updates_leave_only_one_active_question_set()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Concurrent_admin_updates_leave_only_one_active_question_set(bool retries)
     {
         await using var db = new OwnedSpeedReadingDbContext(new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>()
             .UseNpgsql(postgres.ConnectionString).Options);
@@ -36,7 +39,8 @@ public sealed class SpeedReadingVisualizationPostgresTests(PostgresFixture postg
             async Task Update(string label)
             {
                 await using var writer = new OwnedSpeedReadingDbContext(new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>()
-                    .UseNpgsql(postgres.ConnectionString).AddInterceptors(gate).Options);
+                    .UseNpgsql(postgres.ConnectionString, options => { if (retries) options.EnableRetryOnFailure(); })
+                    .AddInterceptors(gate).Options);
                 var service = (ISpeedReadingVisualization)Activator.CreateInstance(typeof(OwnedSpeedReadingDbContext).Assembly
                     .GetType("SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingVisualization")!,
                     BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, [writer], null)!;
@@ -49,6 +53,14 @@ public sealed class SpeedReadingVisualizationPostgresTests(PostgresFixture postg
             var active = await db.VisualizationQuestions.AsNoTracking().Where(question => question.SceneId == scene.Id && !question.IsDeleted).ToListAsync();
             Assert.Equal(3, active.Count); Assert.Equal(3, active.Select(question => question.DisplayOrder).Distinct().Count());
             Assert.Single(active.Select(question => question.QuestionText.Split(' ')[0]).Distinct());
+            await using var deleter = new OwnedSpeedReadingDbContext(new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>()
+                .UseNpgsql(postgres.ConnectionString, options => { if (retries) options.EnableRetryOnFailure(); }).Options);
+            var deletion = (ISpeedReadingVisualization)Activator.CreateInstance(typeof(OwnedSpeedReadingDbContext).Assembly
+                .GetType("SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingVisualization")!,
+                BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, [deleter], null)!;
+            Assert.True(await deletion.DeleteSceneAsync(scene.Id, actor, "delete-visualization-scene", CancellationToken.None));
+            Assert.True(await deletion.DeleteSceneAsync(scene.Id, actor, "delete-visualization-scene", CancellationToken.None));
+            Assert.False(await db.VisualizationQuestions.AsNoTracking().AnyAsync(question => question.SceneId == scene.Id && !question.IsDeleted));
         }
         finally { await db.Database.EnsureDeletedAsync(); }
     }
@@ -71,9 +83,13 @@ public sealed class SpeedReadingVisualizationPostgresTests(PostgresFixture postg
     }
 
     [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public async Task V2_pack_preserves_old_sessions_rotates_new_scenes_and_rejects_edited_baseline(bool edited)
+    [InlineData("none")]
+    [InlineData("description")]
+    [InlineData("hint")]
+    [InlineData("extra-question")]
+    [InlineData("duplicate-question")]
+    [InlineData("null-options")]
+    public async Task V2_pack_preserves_old_sessions_rotates_new_scenes_and_rejects_edited_baseline(string change)
     {
         await using var db = new OwnedSpeedReadingDbContext(new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>()
             .UseNpgsql(postgres.ConnectionString).Options);
@@ -117,12 +133,30 @@ public sealed class SpeedReadingVisualizationPostgresTests(PostgresFixture postg
                 BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, [db], null)!;
             var previous = await service.StartAsync(student, new() { ExerciseId = exerciseId });
             var snapshot = (await db.ExerciseSessions.SingleAsync()).SessionDataJson;
-            if (edited)
+            if (change != "none")
             {
-                await db.Database.ExecuteSqlRawAsync("UPDATE speed_reading.visualization_scenes SET description='Admin edited scene' WHERE id={0}",
-                    oldScenes[0].GetProperty("id").GetGuid());
-                var error = await Assert.ThrowsAsync<Npgsql.PostgresException>(RunPackAsync);
-                Assert.Contains("baseline edited", error.MessageText);
+                var sql = ReadPack("apply.sql");
+                if (change == "description")
+                    await db.Database.ExecuteSqlRawAsync("UPDATE speed_reading.visualization_scenes SET description='Admin edited scene' WHERE id={0}",
+                        oldScenes[0].GetProperty("id").GetGuid());
+                else if (change == "hint")
+                    await db.Database.ExecuteSqlRawAsync("UPDATE speed_reading.visualization_questions SET hint_text='Admin hint' WHERE id={0}",
+                        oldScenes[0].GetProperty("questions")[0].GetProperty("id").GetGuid());
+                else if (change == "extra-question")
+                {
+                    db.VisualizationQuestions.Add(VisualizationQuestion.Create(Guid.NewGuid(),
+                        oldScenes[0].GetProperty("id").GetGuid(), "Admin added question", "[\"Bir\",\"İki\"]",
+                        "A", "detail", 3, null, student, DateTime.UtcNow));
+                    await db.SaveChangesAsync();
+                }
+                else
+                {
+                    var payload = JsonNode.Parse(ReadPack("scenes.json"))!;
+                    if (change == "duplicate-question") payload[1]!["questions"]![0]!["id"] = payload[0]!["questions"]![0]!["id"]!.GetValue<string>();
+                    else payload[0]!["questions"]![0]!["options"] = null;
+                    sql = ReadPack("apply.template.sql").Replace("{{SCENES}}", payload.ToJsonString()).Replace("{{BASELINE}}", baseline);
+                }
+                await Assert.ThrowsAsync<Npgsql.PostgresException>(() => RunPackAsync(sql));
                 Assert.Equal(60, await db.VisualizationScenes.CountAsync());
                 Assert.False(await db.VisualizationScenes.AnyAsync(scene => scene.IsDeleted));
                 return;
@@ -147,6 +181,11 @@ public sealed class SpeedReadingVisualizationPostgresTests(PostgresFixture postg
             Assert.Equal(3, firstIds.Length);
             Assert.Equal(9, first.InitialData.GetProperty("questions").GetArrayLength());
             Assert.DoesNotContain("correctAnswer", first.InitialData.GetRawText(), StringComparison.OrdinalIgnoreCase);
+            using var firstState = JsonDocument.Parse((await db.ExerciseSessions.SingleAsync(session => session.Id == first.SessionId)).SessionDataJson);
+            foreach (var q in firstState.RootElement.GetProperty("questions").EnumerateArray())
+                Assert.True((await service.ValidateActionAsync(student, first.SessionId, new() {
+                    Action = "answer_question", QuestionId = q.GetProperty("questionId").GetGuid(),
+                    Answer = q.GetProperty("correctAnswer").GetString() })).IsCorrect);
             await service.CompleteAsync(student, first.SessionId, new());
             var second = await service.StartAsync(student, new() { ExerciseId = exerciseId });
             var secondIds = second.InitialData.GetProperty("visualizationScenes").EnumerateArray()
@@ -163,11 +202,11 @@ public sealed class SpeedReadingVisualizationPostgresTests(PostgresFixture postg
         return File.ReadAllText(Path.Combine(directory!.FullName, "content-packs", "visualization", "v2", name));
     }
 
-    private async Task RunPackAsync()
+    private async Task RunPackAsync(string? sql = null)
     {
         await using var connection = new Npgsql.NpgsqlConnection(postgres.ConnectionString);
         await connection.OpenAsync();
-        await using var command = new Npgsql.NpgsqlCommand(ReadPack("apply.sql"), connection);
+        await using var command = new Npgsql.NpgsqlCommand(sql ?? ReadPack("apply.sql"), connection);
         await command.ExecuteNonQueryAsync();
     }
 
