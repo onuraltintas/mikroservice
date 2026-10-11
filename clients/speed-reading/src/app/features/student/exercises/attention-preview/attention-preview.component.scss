@@ -65,4 +65,16 @@ dd { margin: 3px 0 0; font-size: 1.6rem; font-weight: 700; font-variant-numeric:
   .shape-button { min-height: 58px; }
   .shape-button svg { width: 34px; height: 34px; }
   .feedback { min-height: 78px; }
+  .in-session {
+    header { margin: 14px 0 0; }
+    header .eyebrow, header p, .notice { display: none; }
+    h1 { font-size: 1.7rem; margin: 8px 0 0; }
+    .play-panel { margin-top: 16px; padding: 16px 12px; }
+    .play-header h2 { font-size: 1.3rem; }
+    .play-header .eyebrow { font-size: .65rem; }
+    .secondary { padding: 10px 12px; min-height: 44px; }
+    .counters { margin: 14px 0; padding-top: 12px; }
+    .shape-board.large-board .shape-button { min-height: 48px; }
+    .feedback { min-height: 52px; margin-top: 12px; font-size: .9rem; }
+  }
 }

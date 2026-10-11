@@ -1,4 +1,5 @@
-<main class="attention-page">
+<section class="attention-page" aria-label="Dikkat egzersizi önizlemesi"
+  [class.in-session]="game.status === 'playing' || game.status === 'feedback' || game.status === 'paused'">
   <a class="back-link" routerLink="/student/exercises">← Egzersiz kataloğuna dön</a>
   <header>
     <span class="eyebrow">SEÇİCİ DİKKAT · PROTOTİP</span>
@@ -55,7 +56,7 @@
   } @else {
     <section class="play-panel" aria-label="Hedefi Yakala oyun alanı">
       <div class="play-header">
-        <div><span class="eyebrow">{{ game.tutorial ? 'ALIŞTIRMA · SKORA DAHİL DEĞİL' : game.preset.label.toUpperCase() + ' TEMPO' }}</span>
+        <div><span class="eyebrow">{{ game.tutorial ? 'ALIŞTIRMA · SKORA DAHİL DEĞİL' : game.preset.label.toUpperCase() + ' · KAYDEDİLMEZ' }}</span>
           <h2>Tur {{ game.round }} <span>/ {{ game.totalRounds }}</span></h2></div>
         <div class="time">{{ game.tutorial ? 'Süre sınırı yok' : ((game.remainingMs(now) / 1000) | number:'1.1-1') + ' sn' }}</div>
         <button type="button" class="secondary" (click)="togglePause()">{{ game.status === 'paused' ? 'Devam et' : 'Duraklat' }}</button>
@@ -94,4 +95,4 @@
       <p class="target-reminder"><span aria-hidden="true">★</span> Hedefiniz her turda yıldız.</p>
     </section>
   }
-</main>
+</section>
