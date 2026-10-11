@@ -101,7 +101,8 @@ for (const [role, available] of [['Admin', true], ['Teacher', true], ['Admin', f
     if (available) {
       await expect(page.getByText('Özel ayarlı önizleme — sonuç ve ilerleme kaydedilmez.')).toBeVisible();
       await page.locator('.start-button-large').click();
-      await expect(page.locator('.text-stream-container .game-stats')).toContainText('1200');
+      const presentationPace = Math.round(row.wordCount * 60000 / (300 + row.wordCount * 50));
+      await expect(page.locator('.text-stream-container .game-stats')).toContainText(String(presentationPace));
       for (const question of row.questions) {
         await expect(page.getByText(question.questionText, { exact: true })).toBeVisible({ timeout: 20000 });
         await page.getByRole('button', { name: `${question.correctAnswer} ${question['option' + question.correctAnswer]}`, exact: true }).click();

@@ -1072,6 +1072,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
 
     return {
       readingTextContent: content,
+      ...(this.isRsvpPreview() ? { words } : {}),
       readingTextId: readingText.id,
       readingTextTitle: title,
       wordCount,
