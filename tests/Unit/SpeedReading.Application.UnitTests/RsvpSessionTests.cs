@@ -261,8 +261,10 @@ public sealed class RsvpSessionTests
         }
     }
 
-    [Fact]
-    public async Task Version_one_active_snapshot_is_not_retimed_or_replaced()
+    [Theory]
+    [InlineData(1, 2300)]
+    [InlineData(2, 1400)]
+    public async Task Explicit_resume_preserves_active_snapshot_after_catalog_band_changes(int version, int minimumMs)
     {
         await using var db = Context();
         var (service, student, exercise) = await Seed(db, fixation: true);
@@ -271,14 +273,15 @@ public sealed class RsvpSessionTests
         var first = await service.StartAsync(student, new() { ExerciseId = exercise });
         var session = await db.ExerciseSessions.SingleAsync();
         var old = JsonNode.Parse(session.SessionDataJson)!;
-        old["rsvpProtocolVersion"] = 1;
-        old["readingMinimumMs"] = 2300;
+        old["rsvpProtocolVersion"] = version;
+        old["readingMinimumMs"] = minimumMs;
         session.SetState(old.ToJsonString());
         await db.SaveChangesAsync();
-        var resumed = await service.StartAsync(student, new() { ExerciseId = exercise });
+        await Configure(db, new() { ["source"] = "reading_text", ["minWordCount"] = 5, ["maxWordCount"] = 8 });
+        var resumed = await service.StartAsync(student, new() { ExerciseId = exercise, ReadingTextId = session.ReadingTextId });
         resumed.SessionId.Should().Be(first.SessionId);
-        resumed.InitialData.GetProperty("readingMinimumMs").GetInt32().Should().Be(2300);
-        resumed.InitialData.GetProperty("rsvpProtocolVersion").GetInt32().Should().Be(1);
+        resumed.InitialData.GetProperty("readingMinimumMs").GetInt32().Should().Be(minimumMs);
+        resumed.InitialData.GetProperty("rsvpProtocolVersion").GetInt32().Should().Be(version);
     }
 
     private static async Task Configure(OwnedSpeedReadingDbContext db, JsonObject content)
