@@ -1,5 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { buildBatch, buildInventorySql, packs } from '../../tools/releases/pending-speed-reading-20261011/prepare.mjs';
 
 test('the approved five packages share exactly one atomic transaction', () => {
@@ -28,4 +29,16 @@ test('idempotence inventory excludes no table or row', () => {
   const sql = buildInventorySql(true);
   assert.doesNotMatch(sql, /NOT IN|target-exercises-immutable/);
   assert.match(sql, /row_to_json/);
+});
+
+test('promotion requires verified rehearsal, backup and images and restarts only Speed Reading', () => {
+  const script = readFileSync(new URL('../../tools/releases/pending-speed-reading-20261011/deploy.sh', import.meta.url), 'utf8');
+  assert.match(script, /flock -n 9/);
+  assert.match(script, /sha256sum -c payload.sha256/);
+  assert.match(script, /test -s rehearsal-passed.txt/);
+  assert.match(script, /pg_restore.*--no-owner --no-privileges/);
+  assert.match(script, /diff -u rehearsal-first.txt rehearsal-second.txt/);
+  assert.match(script, /backup speedreading-before.dump/);
+  assert.match(script, /up -d --no-deps --pull never speed-reading-service speed-reading-frontend/);
+  assert.doesNotMatch(script, /up .*admin-panel|system prune|volume rm|speedreading_owned_db.*dropdb/);
 });
