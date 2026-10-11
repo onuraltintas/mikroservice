@@ -794,7 +794,8 @@ DO $$ BEGIN
     THEN RAISE EXCEPTION 'Fixation payload incomplete'; END IF;
   IF EXISTS(SELECT 1 FROM fixation_settings s LEFT JOIN speed_reading.exercises e ON e.id=s.id
     LEFT JOIN speed_reading.exercise_types t ON t.id=e.exercise_type_id
-    WHERE e.id IS NULL OR t.name IS DISTINCT FROM 'Fixation' OR NOT t.is_active OR t.is_deleted
+    WHERE e.id IS NULL OR t.name IS DISTINCT FROM 'Fixation' OR t.engine_type IS DISTINCT FROM 'motion_path'
+      OR NOT t.is_active OR t.is_deleted
       OR NOT e.is_active OR e.is_deleted OR e.target_age_group_id IS DISTINCT FROM s.age_id
       OR e.difficulty_level<>s.level
       OR (e.configuration_json IS DISTINCT FROM s.old_config AND e.configuration_json IS DISTINCT FROM s.config))

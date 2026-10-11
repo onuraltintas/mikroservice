@@ -82,6 +82,7 @@ export class MotionPathEngine implements BaseEngine {
 
     private fixationProgress = 0;
     private fixationStartTime = 0;
+    private fixationResponseStartedAt = 0;
     private peripheralChars: PeripheralChar[] = [];
     private currentPointSize = 36;
     private fixationResults: Array<{
@@ -475,6 +476,7 @@ export class MotionPathEngine implements BaseEngine {
 
         // If there are peripheral chars to test, wait for user input
         if (this.peripheralChars.length > 0) {
+            this.fixationResponseStartedAt = Date.now();
             this.fixationPhase = 'awaitingInput';
             this.awaitingPeripheralInput = true;
             this.currentCorrectChars = this.peripheralChars.map(p => p.char).join('');
@@ -744,6 +746,7 @@ export class MotionPathEngine implements BaseEngine {
         this.startTime += pauseDuration;
         this.lastFrameTime = Date.now();
         this.fixationStartTime += pauseDuration;
+        if (this.fixationPhase === 'awaitingInput') this.fixationResponseStartedAt += pauseDuration;
 
         this.state.isPaused = false;
 
@@ -960,7 +963,7 @@ export class MotionPathEngine implements BaseEngine {
             correctChars,
             accuracy,
             fixationTimeMs: this.config.movement?.fixationTimeMs || 2000,
-            responseTimeMs: correctChars ? Math.max(0, Date.now() - this.fixationStartTime - (this.config.movement?.fixationTimeMs || 2000)) : null,
+            responseTimeMs: correctChars ? Math.max(0, Date.now() - this.fixationResponseStartedAt) : null,
             timestamp: new Date().toISOString()
         });
     }
