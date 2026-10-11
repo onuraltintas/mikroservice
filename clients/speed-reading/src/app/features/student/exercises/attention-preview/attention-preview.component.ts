@@ -27,6 +27,8 @@ export class AttentionPreviewComponent implements OnInit, OnDestroy {
     this.timer = setInterval(() => {
       const previousStatus = this.game.status;
       this.now = performance.now(); this.game.tick(this.now);
+      // The surrounding student shell is OnPush; render timer-only changes in this view.
+      this.changeDetector.detectChanges();
       // Restore a usable control when feedback or practice removes/disables the focused button.
       if (previousStatus !== this.game.status && ['playing', 'ready', 'complete'].includes(this.game.status)) {
         this.focusControl();
