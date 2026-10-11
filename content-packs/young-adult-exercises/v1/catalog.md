@@ -17,7 +17,7 @@ Başlangıç temposu 180, 210, 240, 270, 300 kelime/dk. İlk 7 çalışma günü
 | Noktaya Odaklan | Fixation | `{"mode":"fixation","timing":{"holdMs":900,"durationSeconds":35},"content":{"type":"letter","points":3,"peripheralCount":1,"pointSize":44}}` |
 | Konum Belleği | Focus | `{"mode":"position","nLevel":1,"totalSteps":16,"speedMs":2300,"gridSize":3}` |
 | Bağımsız Metin Okuma | FreeReading | `{"content":{"source":"reading_text"},"mode":"free","readingPurpose":"evaluation"}` |
-| Hedefler Arası Geçiş | Saccade | `{"mode":"saccade","timing":{"holdMs":800,"durationSeconds":35},"content":{"type":"number","pattern":"horizontal","pointSize":44}}` |
+| Hedefler Arası Geçiş | Saccade | `{"mode":"saccade","timing":{"holdMs":800,"durationSeconds":50},"content":{"type":"number","pattern":"horizontal","pointSize":44}}` |
 | Metinde Hedefi Bul | Scanning | `{"content":{"source":"random_text"},"targetCount":3,"timeLimit":180,"targets":{"mode":"find_all","caseSensitive":false}}` |
 | Sayı Avcısı | SchulteTable | `{"gridSize":4,"sequenceType":"numeric","rules":{"timeLimit":120}}` |
 | Dengeli Tempoda Okuma | SpeedReading | `{"content":{"source":"reading_text"},"mode":"guided","pacer":{"speedWpm":180,"chunkSize":1},"readingPurpose":"practice"}` |
@@ -38,7 +38,7 @@ Başlangıç temposu 180, 210, 240, 270, 300 kelime/dk. İlk 7 çalışma günü
 | Noktaya Odaklan | Fixation | `{"mode":"fixation","timing":{"holdMs":850,"durationSeconds":40},"content":{"type":"letter","points":4,"peripheralCount":1,"pointSize":44}}` |
 | Konum Belleği | Focus | `{"mode":"position","nLevel":1,"totalSteps":20,"speedMs":2100,"gridSize":3}` |
 | Bağımsız Metin Okuma | FreeReading | `{"content":{"source":"reading_text"},"mode":"free","readingPurpose":"evaluation"}` |
-| Hedefler Arası Geçiş | Saccade | `{"mode":"saccade","timing":{"holdMs":750,"durationSeconds":40},"content":{"type":"number","pattern":"vertical","pointSize":44}}` |
+| Hedefler Arası Geçiş | Saccade | `{"mode":"saccade","timing":{"holdMs":750,"durationSeconds":60},"content":{"type":"number","pattern":"vertical","pointSize":44}}` |
 | Metinde Hedefi Bul | Scanning | `{"content":{"source":"random_text"},"targetCount":4,"timeLimit":180,"targets":{"mode":"find_all","caseSensitive":false}}` |
 | Sayı Avcısı | SchulteTable | `{"gridSize":4,"sequenceType":"numeric","rules":{"timeLimit":100}}` |
 | Dengeli Tempoda Okuma | SpeedReading | `{"content":{"source":"reading_text"},"mode":"guided","pacer":{"speedWpm":210,"chunkSize":1},"readingPurpose":"practice"}` |
@@ -60,7 +60,7 @@ Başlangıç temposu 180, 210, 240, 270, 300 kelime/dk. İlk 7 çalışma günü
 | Konum Belleği | Focus | `{"mode":"position","nLevel":1,"totalSteps":24,"speedMs":2000,"gridSize":3}` |
 | Bağımsız Metin Okuma | FreeReading | `{"content":{"source":"reading_text"},"mode":"free","readingPurpose":"evaluation"}` |
 | Sıralı Kelime Gösterimi | RSVP | `{"mode":"rsvp","content":{"source":"reading_text"},"timing":{"durationMs":250,"intervalMs":0},"readingPurpose":"evaluation"}` |
-| Hedefler Arası Geçiş | Saccade | `{"mode":"saccade","timing":{"holdMs":700,"durationSeconds":45},"content":{"type":"number","pattern":"horizontal","pointSize":44}}` |
+| Hedefler Arası Geçiş | Saccade | `{"mode":"saccade","timing":{"holdMs":700,"durationSeconds":70},"content":{"type":"number","pattern":"horizontal","pointSize":44}}` |
 | Metinde Hedefi Bul | Scanning | `{"content":{"source":"random_text"},"targetCount":5,"timeLimit":180,"targets":{"mode":"find_all","caseSensitive":false}}` |
 | Sayı Avcısı | SchulteTable | `{"gridSize":5,"sequenceType":"numeric","rules":{"timeLimit":150}}` |
 | Metne Genel Bakış | Skimming | `{"content":{"source":"reading_text"},"mode":"skimming","rules":{"timeLimit":180},"timing":{"minReadingTimeMs":3000},"readingPurpose":"evaluation"}` |
@@ -84,7 +84,7 @@ Başlangıç temposu 180, 210, 240, 270, 300 kelime/dk. İlk 7 çalışma günü
 | Konum Belleği | Focus | `{"mode":"position","nLevel":1,"totalSteps":28,"speedMs":1800,"gridSize":3}` |
 | Sıralı Kelime Gösterimi | RSVP | `{"mode":"rsvp","content":{"source":"reading_text"},"timing":{"durationMs":222,"intervalMs":0},"readingPurpose":"evaluation"}` |
 | Okuma Takibi ve Geri Dönüş Farkındalığı | RegressionReduction | `{"content":{"source":"reading_text"},"targetWpm":270,"wordDelayMs":222,"maskingType":"none","readingPurpose":"evaluation"}` |
-| Hedefler Arası Geçiş | Saccade | `{"mode":"saccade","timing":{"holdMs":650,"durationSeconds":45},"content":{"type":"number","pattern":"vertical","pointSize":44}}` |
+| Hedefler Arası Geçiş | Saccade | `{"mode":"saccade","timing":{"holdMs":650,"durationSeconds":80},"content":{"type":"number","pattern":"vertical","pointSize":44}}` |
 | Metinde Hedefi Bul | Scanning | `{"content":{"source":"random_text"},"targetCount":6,"timeLimit":180,"targets":{"mode":"find_all","caseSensitive":false}}` |
 | Sayı Avcısı | SchulteTable | `{"gridSize":5,"sequenceType":"numeric","rules":{"timeLimit":120}}` |
 | Metne Genel Bakış | Skimming | `{"content":{"source":"reading_text"},"mode":"skimming","rules":{"timeLimit":150},"timing":{"minReadingTimeMs":3000},"readingPurpose":"evaluation"}` |
@@ -109,7 +109,7 @@ Başlangıç temposu 180, 210, 240, 270, 300 kelime/dk. İlk 7 çalışma günü
 | Konum Belleği | Focus | `{"mode":"position","nLevel":1,"totalSteps":30,"speedMs":1600,"gridSize":3}` |
 | Sıralı Kelime Gösterimi | RSVP | `{"mode":"rsvp","content":{"source":"reading_text"},"timing":{"durationMs":200,"intervalMs":0},"readingPurpose":"evaluation"}` |
 | Okuma Takibi ve Geri Dönüş Farkındalığı | RegressionReduction | `{"content":{"source":"reading_text"},"targetWpm":300,"wordDelayMs":200,"maskingType":"none","readingPurpose":"evaluation"}` |
-| Hedefler Arası Geçiş | Saccade | `{"mode":"saccade","timing":{"holdMs":600,"durationSeconds":45},"content":{"type":"number","pattern":"random","pointSize":44}}` |
+| Hedefler Arası Geçiş | Saccade | `{"mode":"saccade","timing":{"holdMs":600,"durationSeconds":90},"content":{"type":"number","pattern":"random","pointSize":44}}` |
 | Metinde Hedefi Bul | Scanning | `{"content":{"source":"random_text"},"targetCount":6,"timeLimit":180,"targets":{"mode":"find_all","caseSensitive":false}}` |
 | Sayı Avcısı | SchulteTable | `{"gridSize":5,"sequenceType":"numeric","rules":{"timeLimit":100}}` |
 | Metne Genel Bakış | Skimming | `{"content":{"source":"reading_text"},"mode":"skimming","rules":{"timeLimit":150},"timing":{"minReadingTimeMs":3000},"readingPurpose":"evaluation"}` |

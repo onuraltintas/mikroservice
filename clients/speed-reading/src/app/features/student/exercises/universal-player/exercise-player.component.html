@@ -199,7 +199,7 @@
                 <!-- Saccade mode: show target count instead of time-based progress -->
                 <ng-container *ngIf="isSaccadeMode(); else normalProgress">
                     <span class="target-counter">
-                        {{ engineState.targetCount || 0 }} hedef
+                        {{ engineState.targetCount || 0 }} geçiş
                     </span>
                 </ng-container>
                 <ng-template #normalProgress>
@@ -240,8 +240,7 @@
             <div class="tracking-instruction">
                 <span class="material-icons">{{ isFixationMode() ? 'center_focus_strong' : (isSaccadeMode() ? 'ads_click' : 'visibility')
                     }}</span>
-                <span>{{ isFixationMode() ? 'Bakışınızı noktada tutun; çevresindeki harfleri fark edin' : (isSaccadeMode() ? 'Hedefleri takip edin
-                    (Gerektiğinde tıklayın)' : 'Gözlerinizle noktayı takip edin') }}</span>
+                <span>{{ isFixationMode() ? 'Bakışınızı noktada tutun; çevresindeki harfleri fark edin' : (isSaccadeMode() ? 'Hedefleri gözlerinizle takip edin; tıklamanız veya cevap yazmanız gerekmez' : 'Gözlerinizle noktayı takip edin') }}</span>
             </div>
             <div class="tracking-canvas">
                 <!-- Peripheral Characters (Only in Fixation Mode) -->
@@ -1745,12 +1744,19 @@
             <div class="measurement-not-available" *ngIf="result?.details?.displayPaceWpm && result?.details?.incomplete">
                 Gösterim yarım kaldı. Bu sonuç program veya ödev tamamlanması olarak sayılmaz.
             </div>
+            <div class="saccade-results" *ngIf="isSaccadeMode()">
+                <div class="stats-row">
+                    <div class="stat-card"><div class="stat-value">{{ (result?.totalTime || 0) / 1000 | number:'1.1-1' }} sn</div><div class="stat-label">Aktif çalışma süresi</div></div>
+                    <div class="stat-card"><div class="stat-value">{{ result?.details?.targetCount || 0 }}</div><div class="stat-label">Tamamlanan hedef geçişi</div></div>
+                    <div class="stat-card"><div class="stat-value">{{ (result?.details?.targetIntervalMs || 0) / 1000 | number:'1.2-2' }} sn</div><div class="stat-label">Hedef geçiş aralığı</div></div>
+                </div>
+            </div>
             <div class="measurement-not-available" *ngIf="result?.details?.measurementStatus === 'NotMeasured' && !result?.details?.displayPaceWpm">
                 <ng-container *ngIf="engine?.engineType === 'visualization'; else otherUnmeasuredExercise">
                     Anlama ölçülmedi. Görselleştirme egzersizi gerçek okuma hızı veya zihinsel görüntü kalitesi ölçmez.
                 </ng-container>
                 <ng-template #otherUnmeasuredExercise>
-                <ng-container *ngIf="engine?.engineType === 'motion_path' && !isFixationMode() && !isSaccadeMode(); else otherUnmeasuredMessage">
+                <ng-container *ngIf="engine?.engineType === 'motion_path' && !isFixationMode(); else otherUnmeasuredMessage">
                     Takip oturumu tamamlandı. Göz hareketleri ölçülmedi; takip doğruluğu ve okuma hızı (WPM) hesaplanmaz.
                 </ng-container>
                 <ng-template #otherUnmeasuredMessage>

@@ -22,7 +22,7 @@ Mevcut metin uzunlukları ve soruları korunur. Anlama ve değerlendirmeli serbe
 | Konum Belleği | Focus | `{"mode":"position","nLevel":1,"totalSteps":12,"speedMs":2500,"gridSize":3}` |
 | Hareketi Takip Et | EyeTracking | `{"mode":"tracking","path":{"type":"circle"},"timing":{"durationSeconds":30,"speedMs":3000},"content":{"type":"dot","pointSize":36}}` |
 | Noktaya Odaklan | Fixation | `{"mode":"fixation","timing":{"holdMs":1000,"durationSeconds":30},"content":{"type":"letter","points":3,"peripheralCount":1,"pointSize":44}}` |
-| Hedefler Arası Geçiş | Saccade | `{"mode":"saccade","timing":{"holdMs":900,"durationSeconds":30},"content":{"type":"number","pattern":"horizontal","pointSize":44}}` |
+| Hedefler Arası Geçiş | Saccade | `{"mode":"saccade","timing":{"holdMs":900,"durationSeconds":40},"content":{"type":"number","pattern":"horizontal","pointSize":44}}` |
 | Çevredeki Harfler | VisualExpansion | `{"mode":"horizontal","rounds":10,"displayDurationMs":1200,"startDegrees":8,"targetDegrees":16,"content":{"stimulusType":"letter"}}` |
 
 ## Seviye 2
@@ -41,7 +41,7 @@ Mevcut metin uzunlukları ve soruları korunur. Anlama ve değerlendirmeli serbe
 | Konum Belleği | Focus | `{"mode":"position","nLevel":1,"totalSteps":16,"speedMs":2300,"gridSize":3}` |
 | Hareketi Takip Et | EyeTracking | `{"mode":"tracking","path":{"type":"horizontal"},"timing":{"durationSeconds":40,"speedMs":2800},"content":{"type":"dot","pointSize":36}}` |
 | Noktaya Odaklan | Fixation | `{"mode":"fixation","timing":{"holdMs":900,"durationSeconds":35},"content":{"type":"letter","points":3,"peripheralCount":1,"pointSize":44}}` |
-| Hedefler Arası Geçiş | Saccade | `{"mode":"saccade","timing":{"holdMs":800,"durationSeconds":35},"content":{"type":"number","pattern":"horizontal","pointSize":44}}` |
+| Hedefler Arası Geçiş | Saccade | `{"mode":"saccade","timing":{"holdMs":850,"durationSeconds":45},"content":{"type":"number","pattern":"horizontal","pointSize":44}}` |
 | Çevredeki Harfler | VisualExpansion | `{"mode":"horizontal","rounds":12,"displayDurationMs":1100,"startDegrees":8,"targetDegrees":18,"content":{"stimulusType":"letter"}}` |
 
 ## Seviye 3
@@ -60,7 +60,7 @@ Mevcut metin uzunlukları ve soruları korunur. Anlama ve değerlendirmeli serbe
 | Konum Belleği | Focus | `{"mode":"position","nLevel":1,"totalSteps":20,"speedMs":2100,"gridSize":3}` |
 | Hareketi Takip Et | EyeTracking | `{"mode":"tracking","path":{"type":"circle"},"timing":{"durationSeconds":45,"speedMs":2500},"content":{"type":"dot","pointSize":36}}` |
 | Noktaya Odaklan | Fixation | `{"mode":"fixation","timing":{"holdMs":850,"durationSeconds":40},"content":{"type":"letter","points":4,"peripheralCount":1,"pointSize":44}}` |
-| Hedefler Arası Geçiş | Saccade | `{"mode":"saccade","timing":{"holdMs":750,"durationSeconds":40},"content":{"type":"number","pattern":"vertical","pointSize":44}}` |
+| Hedefler Arası Geçiş | Saccade | `{"mode":"saccade","timing":{"holdMs":800,"durationSeconds":50},"content":{"type":"number","pattern":"vertical","pointSize":44}}` |
 | Çevredeki Harfler | VisualExpansion | `{"mode":"horizontal","rounds":14,"displayDurationMs":1000,"startDegrees":8,"targetDegrees":20,"content":{"stimulusType":"letter"}}` |
 
 ## Seviye 4
@@ -79,7 +79,7 @@ Mevcut metin uzunlukları ve soruları korunur. Anlama ve değerlendirmeli serbe
 | Konum Belleği | Focus | `{"mode":"position","nLevel":1,"totalSteps":24,"speedMs":2000,"gridSize":3}` |
 | Hareketi Takip Et | EyeTracking | `{"mode":"tracking","path":{"type":"infinity8"},"timing":{"durationSeconds":45,"speedMs":3000},"content":{"type":"dot","pointSize":36}}` |
 | Noktaya Odaklan | Fixation | `{"mode":"fixation","timing":{"holdMs":800,"durationSeconds":45},"content":{"type":"letter","points":4,"peripheralCount":1,"pointSize":44}}` |
-| Hedefler Arası Geçiş | Saccade | `{"mode":"saccade","timing":{"holdMs":700,"durationSeconds":45},"content":{"type":"number","pattern":"horizontal","pointSize":44}}` |
+| Hedefler Arası Geçiş | Saccade | `{"mode":"saccade","timing":{"holdMs":750,"durationSeconds":55},"content":{"type":"number","pattern":"horizontal","pointSize":44}}` |
 | Çevredeki Harfler | VisualExpansion | `{"mode":"horizontal","rounds":16,"displayDurationMs":950,"startDegrees":8,"targetDegrees":22,"content":{"stimulusType":"letter"}}` |
 
 ## Seviye 5
@@ -98,7 +98,7 @@ Mevcut metin uzunlukları ve soruları korunur. Anlama ve değerlendirmeli serbe
 | Konum Belleği | Focus | `{"mode":"position","nLevel":1,"totalSteps":24,"speedMs":1800,"gridSize":3}` |
 | Hareketi Takip Et | EyeTracking | `{"mode":"tracking","path":{"type":"infinity8"},"timing":{"durationSeconds":60,"speedMs":2800},"content":{"type":"dot","pointSize":36}}` |
 | Noktaya Odaklan | Fixation | `{"mode":"fixation","timing":{"holdMs":750,"durationSeconds":45},"content":{"type":"letter","points":5,"peripheralCount":1,"pointSize":44}}` |
-| Hedefler Arası Geçiş | Saccade | `{"mode":"saccade","timing":{"holdMs":650,"durationSeconds":45},"content":{"type":"number","pattern":"random","pointSize":44}}` |
+| Hedefler Arası Geçiş | Saccade | `{"mode":"saccade","timing":{"holdMs":700,"durationSeconds":60},"content":{"type":"number","pattern":"random","pointSize":44}}` |
 | Çevredeki Harfler | VisualExpansion | `{"mode":"horizontal","rounds":18,"displayDurationMs":900,"startDegrees":8,"targetDegrees":24,"content":{"stimulusType":"letter"}}` |
 
 

@@ -509,7 +509,9 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             ? await ReviewVocabularyAsync(session, state, request, studentId, now, cancellationToken)
             : actionName switch
             {
-                "tracking_start" when IsObservationOnlyMotionPath(state) && state.TextStreamMode.Equals("tracking", StringComparison.OrdinalIgnoreCase)
+                "tracking_start" when IsObservationOnlyMotionPath(state)
+                    && (state.TextStreamMode.Equals("tracking", StringComparison.OrdinalIgnoreCase)
+                        || state.TextStreamMode.Equals("saccade", StringComparison.OrdinalIgnoreCase))
                     => Valid("Takip başlatıldı.", session.CurrentStep),
                 "start_reading" => StartReading(session, state, now),
                 "finish_reading" => FinishReading(session, state, now, request.IsTimeout),
@@ -1318,7 +1320,9 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                 ?? ReadPositiveInt(ReadObject(config, "timing"), "questionTimeSeconds") ?? 60, 1, 3600);
         state.TextStreamMode = ReadString(effectiveConfig, "mode") ?? ReadString(config, "mode")
             ?? (exerciseTypeName.Replace(" ", "").Replace("_", "").Replace("-", "").Equals("EyeTracking", StringComparison.OrdinalIgnoreCase) ? "tracking" : string.Empty);
-        if (IsEngineType(exerciseEngineType, "motion_path") && state.TextStreamMode.Equals("tracking", StringComparison.OrdinalIgnoreCase))
+        if (IsEngineType(exerciseEngineType, "motion_path")
+            && (state.TextStreamMode.Equals("tracking", StringComparison.OrdinalIgnoreCase)
+                || state.TextStreamMode.Equals("saccade", StringComparison.OrdinalIgnoreCase)))
         {
             var timing = ReadObject(effectiveConfig, "timing");
             var rootTiming = ReadObject(config, "timing");

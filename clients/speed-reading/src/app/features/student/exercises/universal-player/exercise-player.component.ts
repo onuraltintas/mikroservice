@@ -1840,7 +1840,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       return;
     }
 
-    if (this.engine instanceof MotionPathEngine && this.engine.getMode() === 'tracking' && !this.isPreviewSession()) {
+    if (this.engine instanceof MotionPathEngine && ['tracking', 'saccade'].includes(this.engine.getMode()) && !this.isPreviewSession()) {
       try {
         let valid = false;
         await this.enqueueAction({ action: 'tracking_start', timestamp: new Date() } as ActionData, response => valid = response.isValid);
@@ -1942,7 +1942,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     }
     if (this.isPauseTransitionPending) return;
     if (this.engine?.engineType === 'error_analysis' && (this.engine as ErrorAnalysisEngine).isAwaitingServer()) return;
-    if ((this.isTachistoscopeMode() || this.shouldTrackReading() || this.isFixationMode() || this.engine?.engineType === 'error_analysis' || this.engine?.engineType === 'scan_find' || this.engine?.engineType === 'visual_expansion') && this.sessionId && this.sessionId !== 'preview-mode') {
+    if ((this.isTachistoscopeMode() || this.shouldTrackReading() || this.isFixationMode() || this.isSaccadeMode() || this.engine?.engineType === 'error_analysis' || this.engine?.engineType === 'scan_find' || this.engine?.engineType === 'visual_expansion') && this.sessionId && this.sessionId !== 'preview-mode') {
       this.isPauseTransitionPending = true;
       const resuming = this.engineState.isPaused;
       if (!resuming) this.engine?.pause();
@@ -2028,7 +2028,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   async goBack(): Promise<void> {
     // Eğer egzersiz çalışıyorsa, onay iste
     if (this.engineState.isRunning && !this.engineState.isCompleted) {
-      if (this.isTachistoscopeMode() || this.shouldTrackReading() || this.isFixationMode() || this.engine?.engineType === 'scan_find' || this.engine?.engineType === 'visual_expansion') {
+      if (this.isTachistoscopeMode() || this.shouldTrackReading() || this.isFixationMode() || this.isSaccadeMode() || this.engine?.engineType === 'scan_find' || this.engine?.engineType === 'visual_expansion') {
         if (this.isPauseTransitionPending) return;
         if (!this.engineState.isPaused) await this.togglePause();
       } else this.engine?.pause();
@@ -2041,7 +2041,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   async cancelExit(): Promise<void> {
     if (this.isPauseTransitionPending) return;
     this.showExitConfirm = false;
-    if (this.isTachistoscopeMode() || this.shouldTrackReading() || this.isFixationMode() || this.engine?.engineType === 'scan_find' || this.engine?.engineType === 'visual_expansion') {
+    if (this.isTachistoscopeMode() || this.shouldTrackReading() || this.isFixationMode() || this.isSaccadeMode() || this.engine?.engineType === 'scan_find' || this.engine?.engineType === 'visual_expansion') {
       if (this.engineState.isPaused) await this.togglePause();
     } else this.engine?.resume();
   }

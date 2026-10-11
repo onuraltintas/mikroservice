@@ -112,6 +112,7 @@ export class MotionPathEngine implements BaseEngine {
 
     // Saccade State
     private saccadeTargets: any[] = [];
+    private saccadeContent: Record<string, any> | null = null;
     private currentTargetIndex = 0;
     private saccadeInputLocked = false;
 
@@ -203,6 +204,7 @@ export class MotionPathEngine implements BaseEngine {
         } as MotionPathConfig;
 
         if (mode === 'saccade') {
+            this.saccadeContent = null;
             const configuredTargets = field(nestedConfig, 'targets') ?? field(backendConfig, 'targets');
             const rawTargets = Array.isArray(configuredTargets) ? configuredTargets.slice(0, 500) : [];
             this.saccadeTargets = rawTargets
@@ -214,8 +216,10 @@ export class MotionPathEngine implements BaseEngine {
                     value: boundedText(field(item, 'value'), '', 100),
                     number: this.normalizeTargetNumber(field(item, 'number'))
                 }));
-            if (this.saccadeTargets.length === 0)
+            if (this.saccadeTargets.length === 0) {
+                this.saccadeContent = content;
                 this.generateSaccadeTargets(content);
+            }
             this.state.totalSteps = this.isTimeBased ? 0 : this.saccadeTargets.length;
         } else {
             const maxPeripheralCount = boundedInteger(field(content, 'maxPeripheralCount') ?? field(fixation, 'maxPeripheralCount'), 4, 1, 4);
@@ -238,7 +242,7 @@ export class MotionPathEngine implements BaseEngine {
             && mode === 'fixation' && (this.config.fixation?.peripheralCount || 0) > 0;
     }
 
-    private generateSaccadeTargets(content: any): void {
+    private generateSaccadeTargets(content: any, previous?: { x: number; y: number; value: string }): void {
         const pattern = typeof field(content, 'pattern') === 'string' ? field(content, 'pattern').toLowerCase() : 'horizontal';
         // 'type' conflicts with JS keyword, so we access it carefully. content.type is 'dot'|'letter' etc
         const contentType = typeof field(content, 'type') === 'string' ? field(content, 'type').toLowerCase() : 'dot';
@@ -246,27 +250,27 @@ export class MotionPathEngine implements BaseEngine {
 
         const targets = [];
         const count = boundedInteger(field(content, 'points'), 40, 1, 500);
+        let lastValue = previous?.value ?? '';
 
         // Content Generators
         const getVal = () => {
             if (contentType === 'dot') return '';
-            if (contentType === 'letter') return 'ABCDEFGHIJKLMNOPRSTUVYZ'[Math.floor(Math.random() * 23)];
-            if (contentType === 'number') return Math.floor(Math.random() * 10).toString();
-            if (contentType === 'word') {
-                const words = [
+            const choices = contentType === 'number' ? '0123456789'.split('')
+                : contentType === 'letter' ? 'ABCDEFGHIJKLMNOPRSTUVYZ'.split('')
+                : contentType === 'word' ? [
                     'OKU', 'HIZ', 'GÖZ', 'BAK', 'GÖR', 'NET', 'BİL', 'AL', 'AK', 'AS',
                     'AT', 'AZ', 'EL', 'EN', 'EV', 'ET', 'İŞ', 'İZ', 'İL', 'ON',
                     'OT', 'ÖN', 'ÖZ', 'ÜS', 'SU', 'YE', 'YOL', 'VAR', 'ÇOK', 'TEK'
-                ];
-                return words[Math.floor(Math.random() * words.length)];
-            }
-            return '';
+                ] : [];
+            const candidates = choices.filter(value => value !== lastValue);
+            lastValue = candidates.length ? candidates[Math.floor(Math.random() * candidates.length)] : '';
+            return lastValue;
         };
 
         if (pattern === 'horizontal') {
             for (let i = 0; i < count; i++) {
                 targets.push({
-                    x: i % 2 === 0 ? 10 : 90,
+                    x: (i + (previous?.x === 10 ? 1 : 0)) % 2 === 0 ? 10 : 90,
                     y: 50,
                     size: pointSize,
                     value: getVal()
@@ -276,16 +280,23 @@ export class MotionPathEngine implements BaseEngine {
             for (let i = 0; i < count; i++) {
                 targets.push({
                     x: 50,
-                    y: i % 2 === 0 ? 10 : 90,
+                    y: (i + (previous?.y === 10 ? 1 : 0)) % 2 === 0 ? 10 : 90,
                     size: pointSize,
                     value: getVal()
                 });
             }
         } else if (pattern === 'random') {
             for (let i = 0; i < count; i++) {
+                const last = targets.at(-1) ?? previous;
+                let x = 10 + Math.random() * 80, y = 10 + Math.random() * 80;
+                if (last && Math.hypot(x - last.x, y - last.y) < 30) {
+                    // Opposite corner guarantees separation without an unbounded retry loop.
+                    x = last.x <= 50 ? 90 : 10;
+                    y = last.y <= 50 ? 90 : 10;
+                }
                 targets.push({
-                    x: 10 + Math.random() * 80,
-                    y: 10 + Math.random() * 80,
+                    x,
+                    y,
                     size: pointSize,
                     value: getVal()
                 });
@@ -565,10 +576,11 @@ export class MotionPathEngine implements BaseEngine {
             }
         }
 
-        // In time-based mode, loop back to start when targets are exhausted
+        // Regenerate automatic stimuli; preserve explicitly supplied legacy targets.
         if (this.isTimeBased) {
             if (this.currentTargetIndex >= this.saccadeTargets.length) {
-                this.currentTargetIndex = 0; // Loop back
+                if (this.saccadeContent) this.generateSaccadeTargets(this.saccadeContent, this.saccadeTargets.at(-1));
+                this.currentTargetIndex = 0;
             }
         } else {
             // Non-time-based: complete when all targets are shown
@@ -763,7 +775,7 @@ export class MotionPathEngine implements BaseEngine {
 
             this.jumpInterval = setTimeout(() => {
                 if (!this.state.isRunning || this.state.isPaused) return;
-                this.onTargetAction();
+                this.onTargetAction(true);
             }, remaining);
 
         } else {
@@ -854,7 +866,7 @@ export class MotionPathEngine implements BaseEngine {
 
         // Handle saccade clicks
         if (input.type === 'click' || input.type === 'space') {
-            if (mode === 'saccade' && this.state.isRunning && !this.state.isPaused && !this.saccadeInputLocked) {
+            if (mode === 'saccade' && !this.isTimeBased && this.state.isRunning && !this.state.isPaused && !this.saccadeInputLocked) {
                 this.onTargetAction();
             }
         }

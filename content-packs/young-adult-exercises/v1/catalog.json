@@ -162,7 +162,7 @@
         "mode": "saccade",
         "timing": {
           "holdMs": 800,
-          "durationSeconds": 35
+          "durationSeconds": 50
         },
         "content": {
           "type": "number",
@@ -508,7 +508,7 @@
         "mode": "saccade",
         "timing": {
           "holdMs": 750,
-          "durationSeconds": 40
+          "durationSeconds": 60
         },
         "content": {
           "type": "number",
@@ -877,7 +877,7 @@
         "mode": "saccade",
         "timing": {
           "holdMs": 700,
-          "durationSeconds": 45
+          "durationSeconds": 70
         },
         "content": {
           "type": "number",
@@ -1296,7 +1296,7 @@
         "mode": "saccade",
         "timing": {
           "holdMs": 650,
-          "durationSeconds": 45
+          "durationSeconds": 80
         },
         "content": {
           "type": "number",
@@ -1738,7 +1738,7 @@
         "mode": "saccade",
         "timing": {
           "holdMs": 600,
-          "durationSeconds": 45
+          "durationSeconds": 90
         },
         "content": {
           "type": "number",

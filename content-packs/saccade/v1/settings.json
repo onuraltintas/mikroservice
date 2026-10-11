@@ -1,0 +1,742 @@
+[
+  {
+    "id": "aeeca01f-1ce7-5689-9b60-fc7e919f4966",
+    "ageGroupId": "10000000-0000-0000-0000-000000000001",
+    "level": 1,
+    "previousConfiguration": {
+      "engineType": "motion_path",
+      "engineConfig": {
+        "mode": "saccade",
+        "timing": {
+          "holdMs": 900,
+          "durationSeconds": 30
+        },
+        "content": {
+          "type": "number",
+          "pattern": "horizontal",
+          "pointSize": 44
+        }
+      },
+      "difficultyLevel": 1
+    },
+    "configuration": {
+      "engineType": "motion_path",
+      "engineConfig": {
+        "mode": "saccade",
+        "timing": {
+          "holdMs": 900,
+          "durationSeconds": 40
+        },
+        "content": {
+          "type": "number",
+          "pattern": "horizontal",
+          "pointSize": 44
+        }
+      },
+      "difficultyLevel": 1
+    }
+  },
+  {
+    "id": "efd3f58d-5798-5baf-87a2-145dc2a6aaed",
+    "ageGroupId": "10000000-0000-0000-0000-000000000001",
+    "level": 2,
+    "previousConfiguration": {
+      "engineType": "motion_path",
+      "engineConfig": {
+        "mode": "saccade",
+        "timing": {
+          "holdMs": 800,
+          "durationSeconds": 35
+        },
+        "content": {
+          "type": "number",
+          "pattern": "horizontal",
+          "pointSize": 44
+        }
+      },
+      "difficultyLevel": 2
+    },
+    "configuration": {
+      "engineType": "motion_path",
+      "engineConfig": {
+        "mode": "saccade",
+        "timing": {
+          "holdMs": 850,
+          "durationSeconds": 45
+        },
+        "content": {
+          "type": "number",
+          "pattern": "horizontal",
+          "pointSize": 44
+        }
+      },
+      "difficultyLevel": 2
+    }
+  },
+  {
+    "id": "6f062c54-97bc-5182-9ae5-be7474822339",
+    "ageGroupId": "10000000-0000-0000-0000-000000000001",
+    "level": 3,
+    "previousConfiguration": {
+      "engineType": "motion_path",
+      "engineConfig": {
+        "mode": "saccade",
+        "timing": {
+          "holdMs": 750,
+          "durationSeconds": 40
+        },
+        "content": {
+          "type": "number",
+          "pattern": "vertical",
+          "pointSize": 44
+        }
+      },
+      "difficultyLevel": 3
+    },
+    "configuration": {
+      "engineType": "motion_path",
+      "engineConfig": {
+        "mode": "saccade",
+        "timing": {
+          "holdMs": 800,
+          "durationSeconds": 50
+        },
+        "content": {
+          "type": "number",
+          "pattern": "vertical",
+          "pointSize": 44
+        }
+      },
+      "difficultyLevel": 3
+    }
+  },
+  {
+    "id": "b2cb492e-760a-562c-a47c-898aa420bbab",
+    "ageGroupId": "10000000-0000-0000-0000-000000000001",
+    "level": 4,
+    "previousConfiguration": {
+      "engineType": "motion_path",
+      "engineConfig": {
+        "mode": "saccade",
+        "timing": {
+          "holdMs": 700,
+          "durationSeconds": 45
+        },
+        "content": {
+          "type": "number",
+          "pattern": "horizontal",
+          "pointSize": 44
+        }
+      },
+      "difficultyLevel": 4
+    },
+    "configuration": {
+      "engineType": "motion_path",
+      "engineConfig": {
+        "mode": "saccade",
+        "timing": {
+          "holdMs": 750,
+          "durationSeconds": 55
+        },
+        "content": {
+          "type": "number",
+          "pattern": "horizontal",
+          "pointSize": 44
+        }
+      },
+      "difficultyLevel": 4
+    }
+  },
+  {
+    "id": "67fb334c-878b-5cbb-bd12-bb353daf362e",
+    "ageGroupId": "10000000-0000-0000-0000-000000000001",
+    "level": 5,
+    "previousConfiguration": {
+      "engineType": "motion_path",
+      "engineConfig": {
+        "mode": "saccade",
+        "timing": {
+          "holdMs": 650,
+          "durationSeconds": 45
+        },
+        "content": {
+          "type": "number",
+          "pattern": "random",
+          "pointSize": 44
+        }
+      },
+      "difficultyLevel": 5
+    },
+    "configuration": {
+      "engineType": "motion_path",
+      "engineConfig": {
+        "mode": "saccade",
+        "timing": {
+          "holdMs": 700,
+          "durationSeconds": 60
+        },
+        "content": {
+          "type": "number",
+          "pattern": "random",
+          "pointSize": 44
+        }
+      },
+      "difficultyLevel": 5
+    }
+  },
+  {
+    "id": "88c23c60-bb49-5998-9aa7-050432a47089",
+    "ageGroupId": "10000000-0000-0000-0000-000000000002",
+    "level": 1,
+    "previousConfiguration": {
+      "engineType": "motion_path",
+      "engineConfig": {
+        "mode": "saccade",
+        "timing": {
+          "holdMs": 800,
+          "durationSeconds": 35
+        },
+        "content": {
+          "type": "number",
+          "pattern": "horizontal",
+          "pointSize": 44
+        }
+      },
+      "difficultyLevel": 1
+    },
+    "configuration": {
+      "engineType": "motion_path",
+      "engineConfig": {
+        "mode": "saccade",
+        "timing": {
+          "holdMs": 850,
+          "durationSeconds": 45
+        },
+        "content": {
+          "type": "number",
+          "pattern": "horizontal",
+          "pointSize": 44
+        }
+      },
+      "difficultyLevel": 1
+    }
+  },
+  {
+    "id": "7e8c1a46-8816-5166-941d-2d30e1cad08a",
+    "ageGroupId": "10000000-0000-0000-0000-000000000002",
+    "level": 2,
+    "previousConfiguration": {
+      "engineType": "motion_path",
+      "engineConfig": {
+        "mode": "saccade",
+        "timing": {
+          "holdMs": 750,
+          "durationSeconds": 40
+        },
+        "content": {
+          "type": "number",
+          "pattern": "vertical",
+          "pointSize": 44
+        }
+      },
+      "difficultyLevel": 2
+    },
+    "configuration": {
+      "engineType": "motion_path",
+      "engineConfig": {
+        "mode": "saccade",
+        "timing": {
+          "holdMs": 800,
+          "durationSeconds": 50
+        },
+        "content": {
+          "type": "number",
+          "pattern": "vertical",
+          "pointSize": 44
+        }
+      },
+      "difficultyLevel": 2
+    }
+  },
+  {
+    "id": "2733b693-b05e-584b-a103-57d2057e46e0",
+    "ageGroupId": "10000000-0000-0000-0000-000000000002",
+    "level": 3,
+    "previousConfiguration": {
+      "engineType": "motion_path",
+      "engineConfig": {
+        "mode": "saccade",
+        "timing": {
+          "holdMs": 700,
+          "durationSeconds": 45
+        },
+        "content": {
+          "type": "number",
+          "pattern": "horizontal",
+          "pointSize": 44
+        }
+      },
+      "difficultyLevel": 3
+    },
+    "configuration": {
+      "engineType": "motion_path",
+      "engineConfig": {
+        "mode": "saccade",
+        "timing": {
+          "holdMs": 750,
+          "durationSeconds": 60
+        },
+        "content": {
+          "type": "number",
+          "pattern": "horizontal",
+          "pointSize": 44
+        }
+      },
+      "difficultyLevel": 3
+    }
+  },
+  {
+    "id": "bc1f3eca-4c63-590d-a199-d15b6bb36ef2",
+    "ageGroupId": "10000000-0000-0000-0000-000000000002",
+    "level": 4,
+    "previousConfiguration": {
+      "engineType": "motion_path",
+      "engineConfig": {
+        "mode": "saccade",
+        "timing": {
+          "holdMs": 650,
+          "durationSeconds": 45
+        },
+        "content": {
+          "type": "number",
+          "pattern": "vertical",
+          "pointSize": 44
+        }
+      },
+      "difficultyLevel": 4
+    },
+    "configuration": {
+      "engineType": "motion_path",
+      "engineConfig": {
+        "mode": "saccade",
+        "timing": {
+          "holdMs": 700,
+          "durationSeconds": 70
+        },
+        "content": {
+          "type": "number",
+          "pattern": "vertical",
+          "pointSize": 44
+        }
+      },
+      "difficultyLevel": 4
+    }
+  },
+  {
+    "id": "49f3cffd-39cd-5d49-951b-cbf166fc68f7",
+    "ageGroupId": "10000000-0000-0000-0000-000000000002",
+    "level": 5,
+    "previousConfiguration": {
+      "engineType": "motion_path",
+      "engineConfig": {
+        "mode": "saccade",
+        "timing": {
+          "holdMs": 600,
+          "durationSeconds": 45
+        },
+        "content": {
+          "type": "number",
+          "pattern": "random",
+          "pointSize": 44
+        }
+      },
+      "difficultyLevel": 5
+    },
+    "configuration": {
+      "engineType": "motion_path",
+      "engineConfig": {
+        "mode": "saccade",
+        "timing": {
+          "holdMs": 650,
+          "durationSeconds": 80
+        },
+        "content": {
+          "type": "number",
+          "pattern": "random",
+          "pointSize": 44
+        }
+      },
+      "difficultyLevel": 5
+    }
+  },
+  {
+    "id": "d3aabed8-260b-5372-9236-eab48522e9c6",
+    "ageGroupId": "10000000-0000-0000-0000-000000000004",
+    "level": 1,
+    "previousConfiguration": {
+      "engineType": "motion_path",
+      "engineConfig": {
+        "mode": "saccade",
+        "timing": {
+          "holdMs": 800,
+          "durationSeconds": 35
+        },
+        "content": {
+          "type": "number",
+          "pattern": "horizontal",
+          "pointSize": 44
+        }
+      },
+      "difficultyLevel": 1
+    },
+    "configuration": {
+      "engineType": "motion_path",
+      "engineConfig": {
+        "mode": "saccade",
+        "timing": {
+          "holdMs": 800,
+          "durationSeconds": 50
+        },
+        "content": {
+          "type": "number",
+          "pattern": "horizontal",
+          "pointSize": 44
+        }
+      },
+      "difficultyLevel": 1
+    }
+  },
+  {
+    "id": "9fd33b56-157d-5525-9e6f-2bd7c7ab4b51",
+    "ageGroupId": "10000000-0000-0000-0000-000000000004",
+    "level": 2,
+    "previousConfiguration": {
+      "engineType": "motion_path",
+      "engineConfig": {
+        "mode": "saccade",
+        "timing": {
+          "holdMs": 750,
+          "durationSeconds": 40
+        },
+        "content": {
+          "type": "number",
+          "pattern": "vertical",
+          "pointSize": 44
+        }
+      },
+      "difficultyLevel": 2
+    },
+    "configuration": {
+      "engineType": "motion_path",
+      "engineConfig": {
+        "mode": "saccade",
+        "timing": {
+          "holdMs": 750,
+          "durationSeconds": 60
+        },
+        "content": {
+          "type": "number",
+          "pattern": "vertical",
+          "pointSize": 44
+        }
+      },
+      "difficultyLevel": 2
+    }
+  },
+  {
+    "id": "1c633a1e-bd58-5f03-869c-779cb9e8decb",
+    "ageGroupId": "10000000-0000-0000-0000-000000000004",
+    "level": 3,
+    "previousConfiguration": {
+      "engineType": "motion_path",
+      "engineConfig": {
+        "mode": "saccade",
+        "timing": {
+          "holdMs": 700,
+          "durationSeconds": 45
+        },
+        "content": {
+          "type": "number",
+          "pattern": "horizontal",
+          "pointSize": 44
+        }
+      },
+      "difficultyLevel": 3
+    },
+    "configuration": {
+      "engineType": "motion_path",
+      "engineConfig": {
+        "mode": "saccade",
+        "timing": {
+          "holdMs": 700,
+          "durationSeconds": 70
+        },
+        "content": {
+          "type": "number",
+          "pattern": "horizontal",
+          "pointSize": 44
+        }
+      },
+      "difficultyLevel": 3
+    }
+  },
+  {
+    "id": "64fe8828-b439-5cff-b58f-0e9cd88198ad",
+    "ageGroupId": "10000000-0000-0000-0000-000000000004",
+    "level": 4,
+    "previousConfiguration": {
+      "engineType": "motion_path",
+      "engineConfig": {
+        "mode": "saccade",
+        "timing": {
+          "holdMs": 650,
+          "durationSeconds": 45
+        },
+        "content": {
+          "type": "number",
+          "pattern": "vertical",
+          "pointSize": 44
+        }
+      },
+      "difficultyLevel": 4
+    },
+    "configuration": {
+      "engineType": "motion_path",
+      "engineConfig": {
+        "mode": "saccade",
+        "timing": {
+          "holdMs": 650,
+          "durationSeconds": 80
+        },
+        "content": {
+          "type": "number",
+          "pattern": "vertical",
+          "pointSize": 44
+        }
+      },
+      "difficultyLevel": 4
+    }
+  },
+  {
+    "id": "822040a0-3ad3-59ae-a17c-650280175640",
+    "ageGroupId": "10000000-0000-0000-0000-000000000004",
+    "level": 5,
+    "previousConfiguration": {
+      "engineType": "motion_path",
+      "engineConfig": {
+        "mode": "saccade",
+        "timing": {
+          "holdMs": 600,
+          "durationSeconds": 45
+        },
+        "content": {
+          "type": "number",
+          "pattern": "random",
+          "pointSize": 44
+        }
+      },
+      "difficultyLevel": 5
+    },
+    "configuration": {
+      "engineType": "motion_path",
+      "engineConfig": {
+        "mode": "saccade",
+        "timing": {
+          "holdMs": 600,
+          "durationSeconds": 90
+        },
+        "content": {
+          "type": "number",
+          "pattern": "random",
+          "pointSize": 44
+        }
+      },
+      "difficultyLevel": 5
+    }
+  },
+  {
+    "id": "affcd5cd-a45c-5e9e-acbb-739f329d8fb2",
+    "ageGroupId": "10000000-0000-0000-0000-000000000003",
+    "level": 1,
+    "previousConfiguration": {
+      "engineType": "motion_path",
+      "engineConfig": {
+        "mode": "saccade",
+        "timing": {
+          "holdMs": 800,
+          "durationSeconds": 35
+        },
+        "content": {
+          "type": "number",
+          "pattern": "horizontal",
+          "pointSize": 44
+        }
+      },
+      "difficultyLevel": 1
+    },
+    "configuration": {
+      "engineType": "motion_path",
+      "engineConfig": {
+        "mode": "saccade",
+        "timing": {
+          "holdMs": 850,
+          "durationSeconds": 50
+        },
+        "content": {
+          "type": "number",
+          "pattern": "horizontal",
+          "pointSize": 44
+        }
+      },
+      "difficultyLevel": 1
+    }
+  },
+  {
+    "id": "61de30ea-ae36-5cc6-b38b-d0bc0a4f0cb5",
+    "ageGroupId": "10000000-0000-0000-0000-000000000003",
+    "level": 2,
+    "previousConfiguration": {
+      "engineType": "motion_path",
+      "engineConfig": {
+        "mode": "saccade",
+        "timing": {
+          "holdMs": 750,
+          "durationSeconds": 40
+        },
+        "content": {
+          "type": "number",
+          "pattern": "vertical",
+          "pointSize": 44
+        }
+      },
+      "difficultyLevel": 2
+    },
+    "configuration": {
+      "engineType": "motion_path",
+      "engineConfig": {
+        "mode": "saccade",
+        "timing": {
+          "holdMs": 800,
+          "durationSeconds": 60
+        },
+        "content": {
+          "type": "number",
+          "pattern": "vertical",
+          "pointSize": 44
+        }
+      },
+      "difficultyLevel": 2
+    }
+  },
+  {
+    "id": "bf6a1707-20f6-50c6-b12d-98d567296d01",
+    "ageGroupId": "10000000-0000-0000-0000-000000000003",
+    "level": 3,
+    "previousConfiguration": {
+      "engineType": "motion_path",
+      "engineConfig": {
+        "mode": "saccade",
+        "timing": {
+          "holdMs": 700,
+          "durationSeconds": 45
+        },
+        "content": {
+          "type": "number",
+          "pattern": "horizontal",
+          "pointSize": 44
+        }
+      },
+      "difficultyLevel": 3
+    },
+    "configuration": {
+      "engineType": "motion_path",
+      "engineConfig": {
+        "mode": "saccade",
+        "timing": {
+          "holdMs": 750,
+          "durationSeconds": 70
+        },
+        "content": {
+          "type": "number",
+          "pattern": "horizontal",
+          "pointSize": 44
+        }
+      },
+      "difficultyLevel": 3
+    }
+  },
+  {
+    "id": "36fbcbb0-e078-5503-b1b9-ab5dfcef2616",
+    "ageGroupId": "10000000-0000-0000-0000-000000000003",
+    "level": 4,
+    "previousConfiguration": {
+      "engineType": "motion_path",
+      "engineConfig": {
+        "mode": "saccade",
+        "timing": {
+          "holdMs": 650,
+          "durationSeconds": 45
+        },
+        "content": {
+          "type": "number",
+          "pattern": "vertical",
+          "pointSize": 44
+        }
+      },
+      "difficultyLevel": 4
+    },
+    "configuration": {
+      "engineType": "motion_path",
+      "engineConfig": {
+        "mode": "saccade",
+        "timing": {
+          "holdMs": 700,
+          "durationSeconds": 80
+        },
+        "content": {
+          "type": "number",
+          "pattern": "vertical",
+          "pointSize": 44
+        }
+      },
+      "difficultyLevel": 4
+    }
+  },
+  {
+    "id": "489942f0-b120-5a2f-8b1c-5049eb23b298",
+    "ageGroupId": "10000000-0000-0000-0000-000000000003",
+    "level": 5,
+    "previousConfiguration": {
+      "engineType": "motion_path",
+      "engineConfig": {
+        "mode": "saccade",
+        "timing": {
+          "holdMs": 600,
+          "durationSeconds": 45
+        },
+        "content": {
+          "type": "number",
+          "pattern": "random",
+          "pointSize": 44
+        }
+      },
+      "difficultyLevel": 5
+    },
+    "configuration": {
+      "engineType": "motion_path",
+      "engineConfig": {
+        "mode": "saccade",
+        "timing": {
+          "holdMs": 650,
+          "durationSeconds": 90
+        },
+        "content": {
+          "type": "number",
+          "pattern": "random",
+          "pointSize": 44
+        }
+      },
+      "difficultyLevel": 5
+    }
+  }
+]

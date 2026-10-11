@@ -269,7 +269,7 @@
         "mode": "saccade",
         "timing": {
           "holdMs": 900,
-          "durationSeconds": 30
+          "durationSeconds": 40
         },
         "content": {
           "type": "number",
@@ -571,8 +571,8 @@
       "engineConfig": {
         "mode": "saccade",
         "timing": {
-          "holdMs": 800,
-          "durationSeconds": 35
+          "holdMs": 850,
+          "durationSeconds": 45
         },
         "content": {
           "type": "number",
@@ -878,8 +878,8 @@
       "engineConfig": {
         "mode": "saccade",
         "timing": {
-          "holdMs": 750,
-          "durationSeconds": 40
+          "holdMs": 800,
+          "durationSeconds": 50
         },
         "content": {
           "type": "number",
@@ -1185,8 +1185,8 @@
       "engineConfig": {
         "mode": "saccade",
         "timing": {
-          "holdMs": 700,
-          "durationSeconds": 45
+          "holdMs": 750,
+          "durationSeconds": 55
         },
         "content": {
           "type": "number",
@@ -1488,8 +1488,8 @@
       "engineConfig": {
         "mode": "saccade",
         "timing": {
-          "holdMs": 650,
-          "durationSeconds": 45
+          "holdMs": 700,
+          "durationSeconds": 60
         },
         "content": {
           "type": "number",

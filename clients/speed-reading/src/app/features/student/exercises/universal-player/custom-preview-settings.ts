@@ -139,7 +139,8 @@ export function getCustomPreviewControls(configuration: Record<string, unknown>)
               { value: 'random_point', label: 'Rastgele noktalar' }, { value: 'two_point_jump', label: 'İki nokta' }] },
           control('pointSize', 'Nokta boyutu (px)', 8, 200, content['pointsize'] ?? 36)];
       }
-      if (mode === 'saccade') return [control('jumpIntervalMs', 'Hedef geçiş aralığı (ms)', 50, 10000, movement['jumpintervalms'] ?? 1000)];
+      if (mode === 'saccade') return [control('jumpIntervalMs', 'Hedef geçiş aralığı (ms)', 50, 10000,
+        movement['jumpintervalms'] ?? timing['holdms'] ?? movement['fixationtimems'] ?? 1000)];
       const content = mergeCaseInsensitiveRecords(configuration, settings, 'content');
       const fixation = mergeCaseInsensitiveRecords(configuration, settings, 'fixation');
       const hold = control('holdMs', 'Gösterim süresi (ms)', 50, 10000, timing['holdms'] ?? movement['fixationtimems'] ?? 2000);
