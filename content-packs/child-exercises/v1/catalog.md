@@ -125,7 +125,7 @@ Toplam 84 egzersiz, 18 tür. Seviye dağılımı: 16 / 16 / 16 / 18 / 18. Öncek
 | TextFading | 5 | `{"content": {"source": "reading_text"}, "fading": {"speedWpm": 140, "lagMs": 5000}, "timing": {"timeLimitSec": 0}, "readingPurpose": "evaluation"}` |
 | Visualization | 5 | `{"mode": "static"}` |
 
-Visualization: her seviyede üç metin sahnesi, her sahnede ayrıntı/konum/sıra için üç soru; toplam 15 sahne ve 45 soru. Gösterim süreleri 40/45/50/55/60 saniye. Tachistoscope sayı uzunluğu motor tarafından seviye+2 (3–7 basamak) olarak belirlenir. RSVP ve TextFading yalnızca 4–5. seviyelerde katalogda bulunur; isteğe bağlılık ayrı bir otomatik program filtresi değildir. Mevcut yaş/seviye ve kullanım geçmişi üzerinden metin seçimi kullanılır; kısa metin sınırı tanımlanmamıştır. TextFading duraklatılabilir; kaybolan kelimeleri aynı oturumda geri getiren bir katalog parametresi bulunmaz.
+Visualization: her seviyede üç metin sahnesi, her sahnede ayrıntı/konum/sıra için üç soru; toplam 15 sahne ve 45 soru. Gösterim süreleri 40/45/50/55/60 saniye. Tachistoscope sayı uzunluğu motor tarafından seviye+2 (3–7 basamak) olarak belirlenir. RSVP ve TextFading yalnızca 4–5. seviyelerde katalogda bulunur; isteğe bağlılık ayrı bir otomatik program filtresi değildir. Mevcut yaş/seviye ve kullanım geçmişi üzerinden metin seçimi kullanılır. RSVP v2'de 180–240 / 240–300 kelimelik bant ve beş anlama sorusu bulunur; başlangıç sabitlemesi yalnız bir kez gösterilir. TextFading duraklatılabilir; kaybolan kelimeleri aynı oturumda geri getiren bir katalog parametresi bulunmaz.
 
 ## Regresyon v2
 
