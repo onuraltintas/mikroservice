@@ -6,14 +6,14 @@ namespace SpeedReading.Application.UnitTests;
 public sealed class VisualExpansionRoundRulesTests
 {
     [Fact]
-    public void Correct_answer_expands_angle_and_shortens_display_time()
+    public void One_correct_answer_does_not_change_distance_or_duration()
     {
         VisualExpansionRoundRules.AdvanceDifficulty(
             currentDegrees: 4,
             targetDegrees: 30,
             currentDisplayDurationMs: 400,
             isCorrect: true)
-            .Should().Be(new VisualExpansionDifficulty(6, 380));
+            .Should().Be(new VisualExpansionDifficulty(4, 400, 1));
     }
 
     [Fact]
@@ -34,8 +34,34 @@ public sealed class VisualExpansionRoundRulesTests
             currentDegrees: 29,
             targetDegrees: 30,
             currentDisplayDurationMs: 105,
-            isCorrect: true)
-            .Should().Be(new VisualExpansionDifficulty(30, 100));
+            isCorrect: true,
+            consecutiveCorrect: 2)
+            .Should().Be(new VisualExpansionDifficulty(30, 105, 0));
+    }
+
+    [Fact]
+    public void Third_correct_answer_at_target_shortens_only_duration()
+    {
+        VisualExpansionRoundRules.AdvanceDifficulty(30, 30, 400, true, 2)
+            .Should().Be(new VisualExpansionDifficulty(30, 380, 0));
+        VisualExpansionRoundRules.AdvanceDifficulty(30, 30, 100, true, 2)
+            .Should().Be(new VisualExpansionDifficulty(30, 100, 0));
+    }
+
+    [Fact]
+    public void Wrong_answer_resets_streak_without_changing_settings()
+    {
+        VisualExpansionRoundRules.AdvanceDifficulty(8, 16, 1200, false, 2)
+            .Should().Be(new VisualExpansionDifficulty(8, 1200, 0));
+    }
+
+    [Fact]
+    public void Following_round_avoids_previous_stimuli_and_remains_deterministic()
+    {
+        var previous = VisualExpansionRoundRules.CreateStimuli(42, 0, "letter", 2);
+        var next = VisualExpansionRoundRules.CreateStimuli(42, 1, "letter", 2, previous);
+        next.Should().NotIntersectWith(previous);
+        next.Should().Equal(VisualExpansionRoundRules.CreateStimuli(42, 1, "letter", 2, previous));
     }
 
     [Theory]
