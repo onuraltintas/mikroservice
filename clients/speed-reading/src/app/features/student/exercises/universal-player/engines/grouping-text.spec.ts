@@ -43,4 +43,19 @@ describe('Grouping text boundaries', () => {
       content: 'Bir. İki üç dört.', pacer: { chunkSize: 3, speedWpm: 120 } } as any, {} as any);
     expect(engine.getChunks().map(group => group.words.length)).toEqual([3, 1]);
   });
+
+  it('preserves fractional legacy server pace rather than rounding session timing', () => {
+    const engine = new WordHighlightEngine();
+    engine.initialize({ mode: 'chunking', serverAuthoritative: true, content: 'bir iki üç dört',
+      groupingChunkSize: 2, groupingDisplayPaceWpm: 60000 * 2 / 1300,
+      pacer: { chunkSize: 2, speedWpm: 900 } } as any, {} as any);
+    expect(engine.getWpm()).toBe(60000 * 2 / 1300);
+  });
+
+  it('rejects malformed canonical snapshots instead of rebuilding from current catalog', () => {
+    const config = { mode: 'chunking', serverAuthoritative: true, content: 'bir iki üç dört',
+      groupingVersion: 1, groupingChunkSize: 2, groupingDisplayPaceWpm: 200,
+      groupingChunks: [{ endIndex: 3, hasNewline: false }, { endIndex: 4, hasNewline: false }] };
+    expect(() => new WordHighlightEngine().initialize(config as any, {} as any)).toThrow();
+  });
 });

@@ -9,6 +9,43 @@ namespace SpeedReading.Application.UnitTests;
 
 public sealed class GroupingSessionTests
 {
+    [Fact]
+    public async Task Rejects_stale_word_count_metadata_even_when_it_matches_the_band()
+    {
+        await using var db = Context();
+        var (service, student, exercise) = await Seed(db,
+            """{"engineType":"word_highlight","engineConfig":{"mode":"chunking","content":{"minWordCount":5,"maxWordCount":8},"pacer":{"chunkSize":2,"speedWpm":200}}}""");
+        var text = ReadingText.Create(Guid.NewGuid(), "Kısa", "bir iki üç dört", difficultyLevel: 3);
+        db.ReadingTexts.Add(text);
+        db.Entry(text).Property(item => item.WordCount).CurrentValue = 6;
+        await db.SaveChangesAsync();
+        var start = () => service.StartAsync(student, new() { ExerciseId = exercise });
+        await start.Should().ThrowAsync<InvalidOperationException>();
+        db.ExerciseSessions.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task Keeps_open_legacy_session_when_catalog_bands_and_pace_are_updated()
+    {
+        await using var db = Context();
+        var (service, student, exercise) = await Seed(db);
+        db.ReadingTexts.Add(ReadingText.Create(Guid.NewGuid(), "Metin", "bir iki üç dört", difficultyLevel: 3));
+        await db.SaveChangesAsync();
+        var started = await service.StartAsync(student, new() { ExerciseId = exercise });
+        var session = await db.ExerciseSessions.SingleAsync();
+        var state = System.Text.Json.Nodes.JsonNode.Parse(session.SessionDataJson)!;
+        state.AsObject().Remove("groupingVersion");
+        state.AsObject().Remove("groupingChunks");
+        session.SetState(state.ToJsonString());
+        var catalog = await db.Exercises.SingleAsync();
+        db.Entry(catalog).Property(item => item.ConfigurationJson).CurrentValue =
+            """{"engineType":"word_highlight","engineConfig":{"mode":"chunking","content":{"minWordCount":100,"maxWordCount":200},"pacer":{"chunkSize":4,"speedWpm":500}}}""";
+        await db.SaveChangesAsync();
+        var snapshot = session.SessionDataJson;
+        (await service.StartAsync(student, new() { ExerciseId = exercise })).SessionId.Should().Be(started.SessionId);
+        session.SessionDataJson.Should().Be(snapshot);
+    }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
