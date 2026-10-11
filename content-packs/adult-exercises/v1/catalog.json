@@ -98,14 +98,14 @@
       "engineConfig": {
         "mode": "fixation",
         "timing": {
-          "holdMs": 900,
-          "durationSeconds": 35
+          "holdMs": 900
         },
         "content": {
           "type": "letter",
-          "points": 3,
-          "peripheralCount": 1,
-          "pointSize": 44
+          "points": 30,
+          "peripheralCount": 2,
+          "pointSize": 44,
+          "maxPeripheralCount": 4
         }
       },
       "difficultyLevel": 1
@@ -444,14 +444,14 @@
       "engineConfig": {
         "mode": "fixation",
         "timing": {
-          "holdMs": 850,
-          "durationSeconds": 40
+          "holdMs": 850
         },
         "content": {
           "type": "letter",
-          "points": 4,
-          "peripheralCount": 1,
-          "pointSize": 44
+          "points": 35,
+          "peripheralCount": 2,
+          "pointSize": 44,
+          "maxPeripheralCount": 4
         }
       },
       "difficultyLevel": 2
@@ -790,14 +790,14 @@
       "engineConfig": {
         "mode": "fixation",
         "timing": {
-          "holdMs": 800,
-          "durationSeconds": 45
+          "holdMs": 800
         },
         "content": {
           "type": "letter",
-          "points": 4,
-          "peripheralCount": 1,
-          "pointSize": 44
+          "points": 40,
+          "peripheralCount": 3,
+          "pointSize": 44,
+          "maxPeripheralCount": 4
         }
       },
       "difficultyLevel": 3
@@ -1207,14 +1207,14 @@
       "engineConfig": {
         "mode": "fixation",
         "timing": {
-          "holdMs": 750,
-          "durationSeconds": 45
+          "holdMs": 750
         },
         "content": {
           "type": "letter",
-          "points": 5,
-          "peripheralCount": 1,
-          "pointSize": 44
+          "points": 45,
+          "peripheralCount": 3,
+          "pointSize": 44,
+          "maxPeripheralCount": 4
         }
       },
       "difficultyLevel": 4
@@ -1649,14 +1649,14 @@
       "engineConfig": {
         "mode": "fixation",
         "timing": {
-          "holdMs": 700,
-          "durationSeconds": 45
+          "holdMs": 700
         },
         "content": {
           "type": "letter",
-          "points": 5,
-          "peripheralCount": 1,
-          "pointSize": 44
+          "points": 50,
+          "peripheralCount": 4,
+          "pointSize": 44,
+          "maxPeripheralCount": 4
         }
       },
       "difficultyLevel": 5
