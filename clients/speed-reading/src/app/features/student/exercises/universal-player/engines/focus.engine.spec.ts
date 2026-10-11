@@ -8,6 +8,22 @@ function callbacks() {
 }
 
 describe('FocusEngine timing', () => {
+  it('keeps the repeat separation shorter than a fast custom stimulus window', fakeAsync(() => {
+    const engine = new FocusEngine();
+    engine.initialize({ Mode: 'position', NLevel: 1, SpeedMs: 100, PositionSequence: [1, 1, 2] } as any, callbacks());
+    engine.start(); tick(100);
+    expect(engine.isTransitioning).toBeTrue();
+    tick(25);
+    expect(engine.isTransitioning).toBeFalse();
+    expect(engine.state.currentStep).toBe(1);
+    engine.handleInput({ type: 'position_match' });
+    expect(engine.hits).toBe(1);
+    tick(175);
+    expect(engine.state.isCompleted).toBeTrue();
+    expect(engine.misses).toBe(0);
+    engine.destroy();
+  }));
+
   it('matches word casing like the server and permits retry after a rejected response', fakeAsync(() => {
     const engine = new FocusEngine(); const actions: any[] = [];
     engine.initialize({ Mode: 'word', SpeedMs: 1000, NLevel: 1, WordSequence: ['a', 'A', 'b'] } as any,

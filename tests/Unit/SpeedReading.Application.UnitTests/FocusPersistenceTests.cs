@@ -11,6 +11,44 @@ namespace SpeedReading.Application.UnitTests;
 
 public sealed class FocusPersistenceTests
 {
+    [Theory]
+    [InlineData(1)]
+    [InlineData(2)]
+    [InlineData(3)]
+    [InlineData(4)]
+    [InlineData(5)]
+    public async Task Generated_positions_limit_adjacent_repeats_and_preserve_n_back_targets(int nLevel)
+    {
+        await using var db = Context();
+        var (student, exercise) = await Seed(db, config:
+            $$$"""{"engineType":"focus","engineConfig":{"mode":"position","nLevel":{{{nLevel}}},"totalSteps":500,"gridSize":3}}""");
+        var service = Service<ISpeedReadingExerciseSessions>(db, "OwnedSpeedReadingExerciseSessions");
+        await service.StartAsync(student, new() { ExerciseId = exercise });
+        var state = JsonNode.Parse((await db.ExerciseSessions.SingleAsync()).SessionDataJson)!;
+        var positions = state["positionSequence"]!.AsArray().Select(item => item!.GetValue<int>()).ToArray();
+        Assert.Equal(500, positions.Length);
+        Assert.Equal(positions[0], positions[nLevel]);
+        Assert.All(positions, position => Assert.InRange(position, 1, 9));
+        for (var index = nLevel == 1 ? 2 : 1; index < positions.Length; index++)
+        {
+            if (nLevel == 1)
+                Assert.False(positions[index] == positions[index - 1] && positions[index] == positions[index - 2]);
+            else
+                Assert.NotEqual(positions[index - 1], positions[index]);
+        }
+    }
+
+    [Fact]
+    public async Task Conflicting_generated_target_hints_do_not_silently_create_triple_repeats()
+    {
+        await using var db = Context();
+        var (student, exercise) = await Seed(db, config:
+            """{"engineType":"focus","totalSteps":5,"nLevel":1,"positionTargetIndices":[1,2]}""");
+        var service = Service<ISpeedReadingExerciseSessions>(db, "OwnedSpeedReadingExerciseSessions");
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.StartAsync(student, new() { ExerciseId = exercise }));
+        Assert.Empty(db.ExerciseSessions);
+    }
+
     [Fact]
     public async Task Pause_before_focus_start_does_not_reduce_exercise_active_time()
     {
