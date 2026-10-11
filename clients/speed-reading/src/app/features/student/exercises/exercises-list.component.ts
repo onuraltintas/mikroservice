@@ -157,7 +157,7 @@ export class ExercisesListComponent extends BaseComponent implements OnInit {
         name: 'Hedefi Yakala', route: '/student/attention-preview',
         exerciseTypeId: 'attention-prototype', icon: 'stars',
         color: 'linear-gradient(135deg, #0d766e 0%, #164e63 100%)',
-        description: 'Şekiller arasındaki yıldızı bulun. Önce alıştırma yapın, ardından temponuzu seçerek deneyin. Sonuçlar kaydedilmez.',
+        description: 'Şekiller arasındaki yıldızı bulun. Temponuzu seçin, üç alıştırmanın ardından denemeye başlayın. Sonuçlar kaydedilmez.',
         difficulty: 'Prototip', category: 'Odaklanma', estimatedTime: '1–3 dk',
         benefits: ['Hedef seçme alıştırması', 'Doğru, yanlış ve kaçırılan hedef dönütü']
       });

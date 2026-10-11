@@ -192,7 +192,7 @@ test('catalogue card opens the prototype without replacing the Focus catalogue',
   await expect(page.getByRole('heading', { name: 'Odaklanma', exact: true })).toBeVisible();
   const card = page.locator('.exercise-card').filter({ has: page.getByRole('heading', { name: 'Hedefi Yakala', exact: true }) });
   await expect(card).toContainText('Sonuçlar kaydedilmez');
-  await page.getByRole('button', { name: 'Odaklanma', exact: true }).click();
+  await page.locator('.category-tabs').getByRole('button', { name: /Odaklanma/ }).click();
   await expect(page.getByRole('heading', { name: 'Odaklanma', exact: true })).toBeVisible();
   await expect(card).toBeVisible();
   await card.getByRole('button', { name: 'Önizlemeyi başlat' }).click();

@@ -1,0 +1,4 @@
+services:
+  speed-reading-frontend:
+    image: eduivme/speed-reading-frontend:attention-20261011-catalogue
+    pull_policy: never
