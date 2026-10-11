@@ -61,6 +61,7 @@ test('group colors, display pace and completion remain distinct from measured re
   await expect(page.locator('.word-highlight-container .game-stats')).toContainText('Gösterim temposu');
   await page.clock.runFor(2100);
   await expect(page.getByText('Tamamlanan gösterim', { exact: true })).toBeVisible();
+  await expect(page.getByText('Metindeki grup sayısı', { exact: true })).toBeVisible();
   await expect(page.getByText('Anlama ölçülmedi.', { exact: false })).toBeVisible();
   await expect(page.getByText('Önizleme sonucu — kaydedilmedi.', { exact: true })).toBeVisible();
   await expect(page.locator('.comprehension-questions-container')).toHaveCount(0);
@@ -123,7 +124,7 @@ test('student persists server-acknowledged grouping without a fabricated WPM', a
       completions++;
       response = { sessionId, correctCount: 0, incorrectCount: 0, accuracy: null, score: 0,
         rawWPM: null, xpGained: 0, measurementStatus: 'Unmeasured',
-        detailedResults: { groupingDisplayPaceWpm: 200, groupingCompletionPercent: 100, readingIncomplete: false } };
+        detailedResults: { wordCount: 6, totalSteps: 4, groupingDisplayPaceWpm: 200, groupingCompletionPercent: 100, readingIncomplete: false } };
     }
     await route.fulfill({ json: response });
   });

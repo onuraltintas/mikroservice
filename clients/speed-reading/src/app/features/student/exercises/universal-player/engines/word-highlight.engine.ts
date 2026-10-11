@@ -120,7 +120,8 @@ export class WordHighlightEngine implements BaseEngine {
             : typeof explicitWpm === 'number' && Number.isFinite(explicitWpm)
                 ? Math.max(20, Math.min(1500, explicitWpm)) : 200;
         {
-            const rawWords = (backendChunks.length ? backendChunks.join(' ') : text).split(/\s+/).filter(w => w.length > 0);
+            const rawWords = (backendChunks.length ? backendChunks.join(' ') : text)
+                .split(grouping ? /[\p{Z}\t-\r\u0085]+/u : /\s+/).filter(w => w.length > 0);
             const cs = chunkSize;
             let boundaries: GroupingBoundary[];
             if (grouping && root.serverAuthoritative !== true) {

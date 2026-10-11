@@ -7,7 +7,8 @@ export function buildGroupingBoundaries(text: string, chunkSize: number): Groupi
   if (!text.trim() || !Number.isInteger(chunkSize) || chunkSize < 1 || chunkSize > 10) {
     throw new Error('Grouping requires real text and a valid group size.');
   }
-  const tokens = [...text.matchAll(/\S+/g)];
+  // .NET whitespace is Unicode separators, ASCII whitespace and NEL; not BOM.
+  const tokens = [...text.matchAll(/[^\p{Z}\t-\r\u0085]+/gu)];
   const groups: GroupingBoundary[] = [];
   let count = 0;
   tokens.forEach((token, index) => {
@@ -16,7 +17,7 @@ export function buildGroupingBoundaries(text: string, chunkSize: number): Groupi
     const hasNewline = text.slice(token.index + token[0].length, nextOffset).includes('\n');
     const word = token[0].replace(/["'”’)\]}]+$/u, '');
     const sentenceEnd = /[!?…]$/u.test(word) || (word.endsWith('.')
-      && !abbreviations.has(word.toLowerCase()) && !/^\d+\.$/u.test(word)
+      && !abbreviations.has(word.toLowerCase()) && !/^[0-9]+\.$/u.test(word)
       && !/^[A-Za-zÇĞİÖŞÜçğıöşü]\.$/u.test(word));
     if (count === chunkSize || sentenceEnd || hasNewline || index === tokens.length - 1) {
       groups.push({ endIndex: index + 1, hasNewline });

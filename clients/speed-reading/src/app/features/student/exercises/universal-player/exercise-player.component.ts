@@ -3589,6 +3589,9 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
             } : {}),
             ...(sessionResult.detailedResults?.groupingDisplayPaceWpm > 0 ? {
               wordCount: sessionResult.detailedResults.wordCount,
+              ...(this.exercise?.exerciseTypeName?.toLowerCase() === 'chunking' ? {
+                chunkCount: sessionResult.detailedResults.totalSteps
+              } : {}),
               displayPaceWpm: sessionResult.detailedResults.groupingDisplayPaceWpm,
               completionPercent: sessionResult.detailedResults.groupingCompletionPercent,
               incomplete: sessionResult.detailedResults.readingIncomplete === true

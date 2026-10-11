@@ -1595,8 +1595,9 @@
 
     .chunk-group {
         display: inline-flex;
-        flex-wrap: nowrap;
-        white-space: nowrap;
+        max-width: 100%;
+        flex-wrap: wrap;
+        white-space: normal;
         border-radius: 4px;
         transition: all 0.2s ease;
         padding: 0 2px;
@@ -1623,6 +1624,8 @@
     .word-item {
         padding: 0 2px;
         display: inline-block;
+        max-width: 100%;
+        overflow-wrap: anywhere;
 
         &.font-medium {
             font-size: 20px;

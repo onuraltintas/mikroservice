@@ -26,7 +26,7 @@ public static class GroupingTextRules
             var word = token.Value.TrimEnd('"', '\'', '”', '’', ')', ']', '}');
             var sentenceEnd = word.EndsWith('!') || word.EndsWith('?') || word.EndsWith('…')
                 || (word.EndsWith('.') && !Abbreviations.Contains(word)
-                    && !Regex.IsMatch(word, @"^\d+\.$") && !Regex.IsMatch(word, @"^[A-Za-zÇĞİÖŞÜçğıöşü]\.$"));
+                    && !Regex.IsMatch(word, @"^[0-9]+\.$") && !Regex.IsMatch(word, @"^[A-Za-zÇĞİÖŞÜçğıöşü]\.$"));
             if (count == chunkSize || sentenceEnd || paragraphEnd || index == tokens.Count - 1)
             {
                 groups.Add(new(index + 1, paragraphEnd));
