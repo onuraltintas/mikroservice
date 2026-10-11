@@ -11,6 +11,41 @@ namespace SpeedReading.Application.UnitTests;
 
 public sealed class SkimmingSessionTests
 {
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Rejects_text_outside_configured_length_band(bool explicitText)
+    {
+        await using var db = Context();
+        var (service, student, exercise, text, _) = await Seed(db, contentSettings: "\"minWordCount\":100,\"maxWordCount\":200");
+        await ((Func<Task>)(async () => await service.StartAsync(student,
+            new() { ExerciseId = exercise, ReadingTextId = explicitText ? text : null }))).Should().ThrowAsync<Exception>();
+    }
+
+    [Fact]
+    public async Task Requires_configured_number_of_main_idea_questions_even_for_explicit_text()
+    {
+        await using var db = Context();
+        var (service, student, exercise, text, _) = await Seed(db, contentSettings: "\"questionCount\":4");
+        await ((Func<Task>)(async () => await service.StartAsync(student,
+            new() { ExerciseId = exercise, ReadingTextId = text }))).Should().ThrowAsync<BusinessRuleException>();
+    }
+
+    [Fact]
+    public async Task Selects_only_texts_with_enough_main_idea_questions_and_limits_the_session()
+    {
+        await using var db = Context();
+        var (service, student, exercise, _, _) = await Seed(db, contentSettings: "\"questionCount\":2");
+        var sufficient = ReadingText.Create(Guid.NewGuid(), "Uygun metin", "Okuma yeni düşünceler kazandırır.", difficultyLevel: 3);
+        db.ReadingTexts.Add(sufficient);
+        for (var index = 0; index < 3; index++)
+            db.ReadingQuestions.Add(ReadingQuestion.Create(Guid.NewGuid(), sufficient.Id, $"Ana fikir {index}?", "A", index, 1, 2, 3,
+                optionA: "Okumanın katkısı", optionB: "Ulaşım", optionC: "Spor", optionD: "Hava"));
+        await db.SaveChangesAsync();
+        var start = await service.StartAsync(student, new() { ExerciseId = exercise });
+        start.InitialData.GetProperty("readingTextId").GetGuid().Should().Be(sufficient.Id);
+        start.InitialData.GetProperty("questions").GetArrayLength().Should().Be(2);
+    }
     [Fact]
     public async Task Uses_main_idea_questions_not_keyword_targets_or_catalog_text()
     {
@@ -117,13 +152,16 @@ public sealed class SkimmingSessionTests
     private static OwnedSpeedReadingDbContext Context() => new(new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>()
         .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
     private static async Task<(ISpeedReadingExerciseSessions Service, Guid Student, Guid Exercise, Guid Text, Guid Question)> Seed(
-        OwnedSpeedReadingDbContext db, int level = 3, int questionType = 1)
+        OwnedSpeedReadingDbContext db, int level = 3, int questionType = 1, string? contentSettings = null)
     {
         var student = Guid.NewGuid();
         var type = ExerciseType.Create(Guid.NewGuid(), "Skimming", "Göz Gezdirme", "skimming");
         var exercise = Exercise.Create("Göz Gezdirme", "reading", """
             {"engineConfig":{"timeLimitSeconds":90,"timing":{"minReadingTimeMs":5000},"content":{"text":"Katalogdaki eski metin"},"targets":{"words":["eski"]}}}
             """, 3, student, type.Id);
+        if (contentSettings is not null)
+            db.Entry(exercise).Property(item => item.ConfigurationJson).CurrentValue =
+                "{\"engineType\":\"skimming\",\"engineConfig\":{\"timeLimitSeconds\":90,\"timing\":{\"minReadingTimeMs\":5000},\"content\":{" + contentSettings + "}}}";
         var text = ReadingText.Create(Guid.NewGuid(), "Okuma", "Kitaplar öğrenmeyi destekler. Okuma yeni düşünceler kazandırır.", difficultyLevel: level);
         var question = Guid.NewGuid();
         db.ExerciseTypes.Add(type); db.Exercises.Add(exercise); db.ReadingTexts.Add(text);

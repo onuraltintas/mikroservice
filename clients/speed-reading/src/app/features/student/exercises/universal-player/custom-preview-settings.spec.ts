@@ -9,6 +9,14 @@ import { TestBed } from '@angular/core/testing';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 
 describe('Custom preview settings safety', () => {
+  it('uses the same skimming catalogue deadline and minimum as the preview engine', () => {
+    const config = { engineType: 'skimming', engineConfig: {
+      rules: { timeLimit: 150 }, timing: { minReadingTimeMs: 15000 } } };
+    expect(getCustomPreviewControls(config)[0]).toEqual(jasmine.objectContaining({ value: 150, min: 16 }));
+    expect(() => applyCustomPreviewSettings(config, { timeLimitSec: 15 }, { roles: ['Admin'], preview: true })).toThrow();
+    const changed = applyCustomPreviewSettings(config, { timeLimitSec: 30 }, { roles: ['Admin'], preview: true });
+    expect((changed.engineConfig.timing as Record<string, unknown>)['maxReadingTimeMs']).toBe(30000);
+  });
   for (const nLevel of [1, 2, 3, 4, 5]) {
     it(`limits adjacent position repeats in ${nLevel}-back custom preview without losing targets`, () => {
       spyOn(Math, 'random').and.returnValue(0);

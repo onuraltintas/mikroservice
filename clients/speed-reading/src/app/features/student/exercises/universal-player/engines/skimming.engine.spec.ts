@@ -13,6 +13,26 @@ describe('Skimming inspection', () => {
   };
   beforeEach(() => { result = undefined; errors = []; });
 
+  for (const seconds of [120, 150, 180, 210, 240, 270]) {
+    it(`uses the catalogue rules limit of ${seconds} seconds in preview`, () => {
+      const engine = EngineFactory.create('skimming')! as any;
+      engine.initialize({ content: 'Gerçek metin', engineConfig: { rules: { timeLimit: seconds } } }, callbacks);
+      expect(engine.getMaximumMs()).toBe(seconds * 1000);
+      engine.destroy();
+    });
+  }
+
+  it('uses nested rules before a stale root duration and respects explicit maximum timing', () => {
+    const engine = EngineFactory.create('skimming')! as any;
+    engine.initialize({ content: 'Metin', timeLimitSeconds: 90,
+      engineConfig: { Rules: { TimeLimit: 150 } } }, callbacks);
+    expect(engine.getMaximumMs()).toBe(150000);
+    engine.initialize({ content: 'Metin', engineConfig: { rules: { timeLimit: 150 },
+      timing: { maxReadingTimeMs: 120000 } } }, callbacks);
+    expect(engine.getMaximumMs()).toBe(120000);
+    engine.destroy();
+  });
+
   it('exposes inspection presentation and safely resets a completed run', fakeAsync(() => {
     const engine = EngineFactory.create('skimming')! as any;
     engine.initialize({ content: 'Bir kısa metin', readingTextTitle: 'Başlık',

@@ -1,6 +1,14 @@
 import { ExercisePlayerComponent } from './exercise-player.component';
 
 describe('Skimming preview questions', () => {
+  it('enforces the configured text length band in preview', () => {
+    const player = Object.create(ExercisePlayerComponent.prototype) as any;
+    player.parsedConfig = { engineType: 'skimming', engineConfig: { content: { minWordCount: 200, maxWordCount: 280 } } };
+    expect(player.previewTextMatchesLength(199)).toBeFalse();
+    expect(player.previewTextMatchesLength(200)).toBeTrue();
+    expect(player.previewTextMatchesLength(280)).toBeTrue();
+    expect(player.previewTextMatchesLength(281)).toBeFalse();
+  });
   it('keeps only main-idea questions paired with the fetched text', () => {
     const player = Object.create(ExercisePlayerComponent.prototype) as any;
     player.parsedConfig = { engineType: 'skimming' };
