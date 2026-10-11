@@ -1,0 +1,7834 @@
+[
+  {
+    "id": "e2c01001-8d9a-4e6c-a428-000000000005",
+    "ageGroupId": "10000000-0000-0000-0000-000000000001",
+    "previousPattern": {
+      "placementLevel": 5,
+      "week1": {
+        "day1": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day2": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day3": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "FreeReading",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day4": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day5": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day6": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "FreeReading",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day7": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ]
+      },
+      "week2": {
+        "day1": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day2": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day3": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day4": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day5": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "FreeReading",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day6": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day7": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ]
+      },
+      "week3": {
+        "day1": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day2": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "FreeReading",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day3": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day4": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "FreeReading",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day5": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day6": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "FreeReading",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day7": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "FreeReading",
+            "count": 1,
+            "difficulty": 5
+          }
+        ]
+      },
+      "week4": {
+        "day1": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day2": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "FreeReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day3": [
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day4": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "FreeReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day5": [
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "FreeReading",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day6": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "FreeReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day7": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "FreeReading",
+            "count": 1,
+            "difficulty": 5
+          }
+        ]
+      }
+    },
+    "pattern": {
+      "placementLevel": 5,
+      "week1": {
+        "day1": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day2": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day3": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "FreeReading",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day4": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day5": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day6": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "FreeReading",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day7": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ]
+      },
+      "week2": {
+        "day1": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day2": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day3": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day4": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day5": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "FreeReading",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day6": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day7": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ]
+      },
+      "week3": {
+        "day1": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day2": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "FreeReading",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day3": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day4": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "FreeReading",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day5": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day6": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "FreeReading",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day7": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "FreeReading",
+            "count": 1,
+            "difficulty": 5
+          }
+        ]
+      },
+      "week4": {
+        "day1": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day2": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "FreeReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day3": [
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day4": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "FreeReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day5": [
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "FreeReading",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day6": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "FreeReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day7": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "FreeReading",
+            "count": 1,
+            "difficulty": 5
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "e2c01002-8d9a-4e6c-a428-000000000005",
+    "ageGroupId": "10000000-0000-0000-0000-000000000002",
+    "previousPattern": {
+      "placementLevel": 5,
+      "week1": {
+        "day1": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day2": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day3": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day4": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day5": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day6": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day7": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ]
+      },
+      "week2": {
+        "day1": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day2": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day3": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day4": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day5": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day6": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day7": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ]
+      },
+      "week3": {
+        "day1": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "RSVP",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day2": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day3": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day4": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day5": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "TextFading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day6": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day7": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "ErrorAnalysis",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ]
+      },
+      "week4": {
+        "day1": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Skimming",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day2": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day3": [
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day4": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day5": [
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day6": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "ErrorAnalysis",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day7": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "ExamSimulation",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ]
+      }
+    },
+    "pattern": {
+      "placementLevel": 5,
+      "week1": {
+        "day1": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day2": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day3": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day4": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day5": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day6": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day7": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ]
+      },
+      "week2": {
+        "day1": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day2": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day3": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day4": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day5": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day6": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day7": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ]
+      },
+      "week3": {
+        "day1": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "RSVP",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day2": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day3": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day4": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day5": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "TextFading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day6": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day7": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "ErrorAnalysis",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ]
+      },
+      "week4": {
+        "day1": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Skimming",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day2": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day3": [
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day4": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day5": [
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day6": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "ErrorAnalysis",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day7": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "ExamSimulation",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "e2c01004-8d9a-4e6c-a428-000000000005",
+    "ageGroupId": "10000000-0000-0000-0000-000000000004",
+    "previousPattern": {
+      "placementLevel": 5,
+      "week1": {
+        "day1": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day2": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day3": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day4": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day5": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day6": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day7": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ]
+      },
+      "week2": {
+        "day1": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day2": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day3": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day4": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day5": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day6": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day7": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ]
+      },
+      "week3": {
+        "day1": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "RSVP",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day2": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day3": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day4": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day5": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "TextFading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day6": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day7": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "ErrorAnalysis",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ]
+      },
+      "week4": {
+        "day1": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Skimming",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day2": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day3": [
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day4": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day5": [
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day6": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "ErrorAnalysis",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day7": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "ExamSimulation",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ]
+      }
+    },
+    "pattern": {
+      "placementLevel": 5,
+      "week1": {
+        "day1": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day2": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day3": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day4": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day5": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day6": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day7": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ]
+      },
+      "week2": {
+        "day1": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day2": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day3": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day4": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day5": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day6": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day7": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ]
+      },
+      "week3": {
+        "day1": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "RSVP",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day2": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day3": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day4": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day5": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "TextFading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day6": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day7": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "ErrorAnalysis",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ]
+      },
+      "week4": {
+        "day1": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Skimming",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day2": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day3": [
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day4": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day5": [
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day6": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "ErrorAnalysis",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day7": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "ExamSimulation",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "e2c01003-8d9a-4e6c-a428-000000000005",
+    "ageGroupId": "10000000-0000-0000-0000-000000000003",
+    "previousPattern": {
+      "placementLevel": 5,
+      "week1": {
+        "day1": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day2": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day3": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day4": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day5": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day6": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day7": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ]
+      },
+      "week2": {
+        "day1": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day2": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day3": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day4": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day5": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day6": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day7": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ]
+      },
+      "week3": {
+        "day1": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "RSVP",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day2": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day3": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day4": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day5": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "TextFading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day6": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day7": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "ErrorAnalysis",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ]
+      },
+      "week4": {
+        "day1": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Skimming",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day2": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day3": [
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day4": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day5": [
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day6": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "ErrorAnalysis",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day7": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 4
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "ExamSimulation",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ]
+      }
+    },
+    "pattern": {
+      "placementLevel": 5,
+      "week1": {
+        "day1": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day2": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day3": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day4": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day5": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day6": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day7": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ]
+      },
+      "week2": {
+        "day1": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day2": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day3": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day4": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day5": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day6": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day7": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ]
+      },
+      "week3": {
+        "day1": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "RSVP",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day2": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day3": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day4": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day5": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "TextFading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day6": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day7": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "ErrorAnalysis",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ]
+      },
+      "week4": {
+        "day1": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Skimming",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day2": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day3": [
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Fixation",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day4": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "EyeTracking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Vocabulary",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day5": [
+          {
+            "type": "VisualExpansion",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Scanning",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day6": [
+          {
+            "type": "SchulteTable",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Saccade",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "ErrorAnalysis",
+            "count": 1,
+            "difficulty": 5
+          }
+        ],
+        "day7": [
+          {
+            "type": "Focus",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Chunking",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "SpeedReading",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Tachistoscope",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "ExamSimulation",
+            "count": 1,
+            "difficulty": 5
+          },
+          {
+            "type": "Comprehension",
+            "count": 1,
+            "difficulty": 5
+          }
+        ]
+      }
+    }
+  }
+]

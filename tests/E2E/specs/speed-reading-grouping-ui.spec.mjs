@@ -11,7 +11,7 @@ async function prepare(page, role = 'Admin', timeout = false) {
   await page.addInitScript(() => localStorage.setItem('currentUser', JSON.stringify({ id: 'test-user' })));
   const exercise = { id: exerciseId, exerciseTypeId: typeId, title: 'Gruplama testi', difficultyLevel: 3,
     exerciseTypeName: 'Chunking', configurationJson: JSON.stringify({ engineType: 'word_highlight', readingTextId: textId,
-      engineConfig: { mode: 'chunking', content: { chunkSize: 2 }, pacer: { speedWpm: 200 },
+      engineConfig: { mode: 'chunking', readingPurpose: 'practice', content: { chunkSize: 2, minWordCount: 5, maxWordCount: 8 }, pacer: { speedWpm: 200 },
         visuals: { highlightColor: 'blue' }, timing: timeout ? { timeLimitSec: 1 } : {} } }) };
   await page.route('**/api/**', async route => {
     const request = route.request(), path = new URL(request.url()).pathname;
@@ -27,7 +27,8 @@ async function prepare(page, role = 'Admin', timeout = false) {
     } else if (path.endsWith('/exercise-types')) response = { items: [{ id: typeId, name: 'Chunking', displayName: 'Gruplama', engineType: 'word_highlight', isActive: true }], totalCount: 1 };
     else if (path.endsWith(`/exercises/${exerciseId}`)) response = exercise;
     else if (path.endsWith('/exercises')) response = { items: [exercise], totalCount: 1 };
-    else if (path.endsWith(`/reading-texts/${textId}`)) response = { id: textId, title: 'Metin', content: 'bir iki üç dört beş altı', wordCount: 6, questions: [] };
+    else if (path.endsWith(`/reading-texts/${textId}`)) response = { id: textId, title: 'Metin', content: 'bir. iki üç dört.\n\nbeş altı.',
+      difficultyLevel: 3, isActive: true, wordCount: 6, questions: [{ type: 1, correctAnswer: 'A', optionA: 'a', optionB: 'b', optionC: 'c', optionD: 'd' }] };
     else if (path.includes('/profile/status')) response = { hasAgeGroupConfiguration: true };
     else if (path.endsWith('/my-modules')) response = { hasSpeedReading: true };
     await route.fulfill({ json: response });
@@ -51,7 +52,9 @@ test('group colors, display pace and completion remain distinct from measured re
   const { errors, writes } = await prepare(page);
   await launch(page);
   const active = page.locator('.chunk-group.highlight');
-  await expect(active.locator('.word-item')).toHaveCount(2);
+  await expect(active.locator('.word-item')).toHaveCount(1);
+  await expect(page.locator('.chunk-group')).toHaveCount(4);
+  await expect(page.locator('.line-break')).toHaveCount(1);
   await expect(active).toHaveCSS('background-color', 'rgb(219, 234, 254)');
   await expect(active).toHaveCSS('background-image', 'none');
   await expect(page.locator('.word-highlight-container .progress-info')).toContainText('Grup');
@@ -60,6 +63,7 @@ test('group colors, display pace and completion remain distinct from measured re
   await expect(page.getByText('Tamamlanan gösterim', { exact: true })).toBeVisible();
   await expect(page.getByText('Anlama ölçülmedi.', { exact: false })).toBeVisible();
   await expect(page.getByText('Önizleme sonucu — kaydedilmedi.', { exact: true })).toBeVisible();
+  await expect(page.locator('.comprehension-questions-container')).toHaveCount(0);
   expect(errors).toEqual([]);
   expect(writes).toEqual([]);
 });
@@ -85,14 +89,16 @@ test('student persists server-acknowledged grouping without a fabricated WPM', a
   let completions = 0;
   let completionPayload;
   const configuration = { engineType: 'word_highlight', engineConfig: {
-    mode: 'chunking', pacer: { chunkSize: 2, speedWpm: 200 } } };
+    mode: 'chunking', readingPurpose: 'practice', pacer: { chunkSize: 4, speedWpm: 900 } } };
   await page.route('**/api/**/exercise-sessions/**', async route => {
     const path = new URL(route.request().url()).pathname;
     let response = {};
     if (path.endsWith('/start')) response = {
-      sessionId, exerciseId, totalSteps: 3, status: 'Active', configuration,
+      sessionId, exerciseId, totalSteps: 4, status: 'Active', configuration,
       initialData: { engineType: 'word_highlight', exerciseTypeName: 'Chunking',
-        content: 'bir iki üç dört beş altı', totalSteps: 3,
+        content: 'bir. iki üç dört.\n\nbeş altı.', totalSteps: 4, groupingVersion: 1,
+        groupingChunks: [{ endIndex: 1, hasNewline: false }, { endIndex: 3, hasNewline: false },
+          { endIndex: 4, hasNewline: true }, { endIndex: 6, hasNewline: false }],
         groupingChunkSize: 2, groupingDisplayPaceWpm: 200, readingMinimumMs: 1800 }
     };
     else if (path.endsWith('/validate')) {
@@ -110,6 +116,8 @@ test('student persists server-acknowledged grouping without a fabricated WPM', a
   await page.goto(`/student/exercises/universal-player/${exerciseId}`, { waitUntil: 'domcontentloaded' });
   await expect(page.locator('.start-button-large')).toBeVisible();
   await page.locator('.start-button-large').click();
+  await expect(page.locator('.chunk-group')).toHaveCount(4);
+  await expect(page.locator('.word-highlight-container .game-stats')).toContainText('200');
   await expect.poll(() => completions).toBe(1);
   expect(actions).toEqual(['start_reading', 'finish_reading']);
   await expect.poll(() => writes).toEqual(['/api/speed-reading/daily-progress/complete-exercise']);

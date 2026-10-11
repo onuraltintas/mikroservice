@@ -1,0 +1,746 @@
+[
+  {
+    "id": "c034a403-0215-51c1-8727-c6e690c5226f",
+    "age": "child",
+    "ageGroupId": "10000000-0000-0000-0000-000000000001",
+    "level": 1,
+    "previousTitle": "İkili Anlam Grupları",
+    "previousConfiguration": {
+      "engineType": "word_highlight",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "chunking",
+        "pacer": {
+          "speedWpm": 100,
+          "chunkSize": 2
+        },
+        "readingPurpose": "practice"
+      },
+      "difficultyLevel": 1
+    },
+    "title": "Kelime Gruplarıyla Okuma — Seviye 1",
+    "configuration": {
+      "engineType": "word_highlight",
+      "difficultyLevel": 1,
+      "engineConfig": {
+        "mode": "chunking",
+        "readingPurpose": "practice",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 150,
+          "maxWordCount": 200
+        },
+        "pacer": {
+          "chunkSize": 2,
+          "speedWpm": 100
+        }
+      }
+    }
+  },
+  {
+    "id": "42296217-4ce6-5acd-88a3-fe636cbffb30",
+    "age": "child",
+    "ageGroupId": "10000000-0000-0000-0000-000000000001",
+    "level": 2,
+    "previousTitle": "Üçlü Kelime Grupları",
+    "previousConfiguration": {
+      "engineType": "word_highlight",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "chunking",
+        "pacer": {
+          "speedWpm": 130,
+          "chunkSize": 3
+        },
+        "readingPurpose": "practice"
+      },
+      "difficultyLevel": 2
+    },
+    "title": "Kelime Gruplarıyla Okuma — Seviye 2",
+    "configuration": {
+      "engineType": "word_highlight",
+      "difficultyLevel": 2,
+      "engineConfig": {
+        "mode": "chunking",
+        "readingPurpose": "practice",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 195,
+          "maxWordCount": 260
+        },
+        "pacer": {
+          "chunkSize": 3,
+          "speedWpm": 130
+        }
+      }
+    }
+  },
+  {
+    "id": "3e0c4ca7-b16d-5700-8e28-79724f53dd94",
+    "age": "child",
+    "ageGroupId": "10000000-0000-0000-0000-000000000001",
+    "level": 3,
+    "previousTitle": "Dörtlü Kelime Grupları",
+    "previousConfiguration": {
+      "engineType": "word_highlight",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "chunking",
+        "pacer": {
+          "speedWpm": 160,
+          "chunkSize": 4
+        },
+        "readingPurpose": "practice"
+      },
+      "difficultyLevel": 3
+    },
+    "title": "Kelime Gruplarıyla Okuma — Seviye 3",
+    "configuration": {
+      "engineType": "word_highlight",
+      "difficultyLevel": 3,
+      "engineConfig": {
+        "mode": "chunking",
+        "readingPurpose": "practice",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 240,
+          "maxWordCount": 320
+        },
+        "pacer": {
+          "chunkSize": 4,
+          "speedWpm": 160
+        }
+      }
+    }
+  },
+  {
+    "id": "158e91aa-b6b4-50f9-afbc-752d59c9cd07",
+    "age": "child",
+    "ageGroupId": "10000000-0000-0000-0000-000000000001",
+    "level": 4,
+    "previousTitle": "Geniş Kelime Grupları",
+    "previousConfiguration": {
+      "engineType": "word_highlight",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "chunking",
+        "pacer": {
+          "speedWpm": 200,
+          "chunkSize": 4
+        },
+        "readingPurpose": "practice"
+      },
+      "difficultyLevel": 4
+    },
+    "title": "Kelime Gruplarıyla Okuma — Seviye 4",
+    "configuration": {
+      "engineType": "word_highlight",
+      "difficultyLevel": 4,
+      "engineConfig": {
+        "mode": "chunking",
+        "readingPurpose": "practice",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 300,
+          "maxWordCount": 400
+        },
+        "pacer": {
+          "chunkSize": 4,
+          "speedWpm": 200
+        }
+      }
+    }
+  },
+  {
+    "id": "d7b10000-0000-5000-8000-000000000001",
+    "age": "child",
+    "ageGroupId": "10000000-0000-0000-0000-000000000001",
+    "level": 5,
+    "previousTitle": null,
+    "previousConfiguration": null,
+    "title": "Kelime Gruplarıyla Okuma — Seviye 5",
+    "configuration": {
+      "engineType": "word_highlight",
+      "difficultyLevel": 5,
+      "engineConfig": {
+        "mode": "chunking",
+        "readingPurpose": "practice",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 345,
+          "maxWordCount": 460
+        },
+        "pacer": {
+          "chunkSize": 4,
+          "speedWpm": 230
+        }
+      }
+    }
+  },
+  {
+    "id": "89bedb19-f023-5d7f-9a3f-9a986f9d33c2",
+    "age": "teen",
+    "ageGroupId": "10000000-0000-0000-0000-000000000002",
+    "level": 1,
+    "previousTitle": "Anlam Gruplarıyla Okuma",
+    "previousConfiguration": {
+      "engineType": "word_highlight",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "chunking",
+        "pacer": {
+          "speedWpm": 150,
+          "chunkSize": 2
+        },
+        "readingPurpose": "practice"
+      },
+      "difficultyLevel": 1
+    },
+    "title": "Kelime Gruplarıyla Okuma — Seviye 1",
+    "configuration": {
+      "engineType": "word_highlight",
+      "difficultyLevel": 1,
+      "engineConfig": {
+        "mode": "chunking",
+        "readingPurpose": "practice",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 300,
+          "maxWordCount": 375
+        },
+        "pacer": {
+          "chunkSize": 2,
+          "speedWpm": 150
+        }
+      }
+    }
+  },
+  {
+    "id": "4d2d13e4-92b0-5201-b847-5c7f1bd0edbb",
+    "age": "teen",
+    "ageGroupId": "10000000-0000-0000-0000-000000000002",
+    "level": 2,
+    "previousTitle": "Anlam Gruplarıyla Okuma",
+    "previousConfiguration": {
+      "engineType": "word_highlight",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "chunking",
+        "pacer": {
+          "speedWpm": 180,
+          "chunkSize": 3
+        },
+        "readingPurpose": "practice"
+      },
+      "difficultyLevel": 2
+    },
+    "title": "Kelime Gruplarıyla Okuma — Seviye 2",
+    "configuration": {
+      "engineType": "word_highlight",
+      "difficultyLevel": 2,
+      "engineConfig": {
+        "mode": "chunking",
+        "readingPurpose": "practice",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 360,
+          "maxWordCount": 450
+        },
+        "pacer": {
+          "chunkSize": 3,
+          "speedWpm": 180
+        }
+      }
+    }
+  },
+  {
+    "id": "bc66a4fb-0b93-5fe5-9f99-7d96dbdd013f",
+    "age": "teen",
+    "ageGroupId": "10000000-0000-0000-0000-000000000002",
+    "level": 3,
+    "previousTitle": "Anlam Gruplarıyla Okuma",
+    "previousConfiguration": {
+      "engineType": "word_highlight",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "chunking",
+        "pacer": {
+          "speedWpm": 210,
+          "chunkSize": 3
+        },
+        "readingPurpose": "practice"
+      },
+      "difficultyLevel": 3
+    },
+    "title": "Kelime Gruplarıyla Okuma — Seviye 3",
+    "configuration": {
+      "engineType": "word_highlight",
+      "difficultyLevel": 3,
+      "engineConfig": {
+        "mode": "chunking",
+        "readingPurpose": "practice",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 420,
+          "maxWordCount": 525
+        },
+        "pacer": {
+          "chunkSize": 3,
+          "speedWpm": 210
+        }
+      }
+    }
+  },
+  {
+    "id": "c93c2dec-eb3b-50b6-890d-4c416037565d",
+    "age": "teen",
+    "ageGroupId": "10000000-0000-0000-0000-000000000002",
+    "level": 4,
+    "previousTitle": "Anlam Gruplarıyla Okuma",
+    "previousConfiguration": {
+      "engineType": "word_highlight",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "chunking",
+        "pacer": {
+          "speedWpm": 240,
+          "chunkSize": 4
+        },
+        "readingPurpose": "practice"
+      },
+      "difficultyLevel": 4
+    },
+    "title": "Kelime Gruplarıyla Okuma — Seviye 4",
+    "configuration": {
+      "engineType": "word_highlight",
+      "difficultyLevel": 4,
+      "engineConfig": {
+        "mode": "chunking",
+        "readingPurpose": "practice",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 480,
+          "maxWordCount": 600
+        },
+        "pacer": {
+          "chunkSize": 4,
+          "speedWpm": 240
+        }
+      }
+    }
+  },
+  {
+    "id": "d7b10000-0000-5000-8000-000000000002",
+    "age": "teen",
+    "ageGroupId": "10000000-0000-0000-0000-000000000002",
+    "level": 5,
+    "previousTitle": null,
+    "previousConfiguration": null,
+    "title": "Kelime Gruplarıyla Okuma — Seviye 5",
+    "configuration": {
+      "engineType": "word_highlight",
+      "difficultyLevel": 5,
+      "engineConfig": {
+        "mode": "chunking",
+        "readingPurpose": "practice",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 540,
+          "maxWordCount": 675
+        },
+        "pacer": {
+          "chunkSize": 4,
+          "speedWpm": 270
+        }
+      }
+    }
+  },
+  {
+    "id": "617a2e9d-3aed-5afb-b20b-39bcbc2848ba",
+    "age": "young-adult",
+    "ageGroupId": "10000000-0000-0000-0000-000000000004",
+    "level": 1,
+    "previousTitle": "Anlam Gruplarıyla Okuma",
+    "previousConfiguration": {
+      "engineType": "word_highlight",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "chunking",
+        "pacer": {
+          "speedWpm": 180,
+          "chunkSize": 2
+        },
+        "readingPurpose": "practice"
+      },
+      "difficultyLevel": 1
+    },
+    "title": "Kelime Gruplarıyla Okuma — Seviye 1",
+    "configuration": {
+      "engineType": "word_highlight",
+      "difficultyLevel": 1,
+      "engineConfig": {
+        "mode": "chunking",
+        "readingPurpose": "practice",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 360,
+          "maxWordCount": 540
+        },
+        "pacer": {
+          "chunkSize": 2,
+          "speedWpm": 180
+        }
+      }
+    }
+  },
+  {
+    "id": "c53fae0b-d606-539d-b02a-60d080fc8e75",
+    "age": "young-adult",
+    "ageGroupId": "10000000-0000-0000-0000-000000000004",
+    "level": 2,
+    "previousTitle": "Anlam Gruplarıyla Okuma",
+    "previousConfiguration": {
+      "engineType": "word_highlight",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "chunking",
+        "pacer": {
+          "speedWpm": 210,
+          "chunkSize": 3
+        },
+        "readingPurpose": "practice"
+      },
+      "difficultyLevel": 2
+    },
+    "title": "Kelime Gruplarıyla Okuma — Seviye 2",
+    "configuration": {
+      "engineType": "word_highlight",
+      "difficultyLevel": 2,
+      "engineConfig": {
+        "mode": "chunking",
+        "readingPurpose": "practice",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 420,
+          "maxWordCount": 630
+        },
+        "pacer": {
+          "chunkSize": 3,
+          "speedWpm": 210
+        }
+      }
+    }
+  },
+  {
+    "id": "eb87713b-d508-5d54-8556-fe7f0765bd90",
+    "age": "young-adult",
+    "ageGroupId": "10000000-0000-0000-0000-000000000004",
+    "level": 3,
+    "previousTitle": "Anlam Gruplarıyla Okuma",
+    "previousConfiguration": {
+      "engineType": "word_highlight",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "chunking",
+        "pacer": {
+          "speedWpm": 240,
+          "chunkSize": 3
+        },
+        "readingPurpose": "practice"
+      },
+      "difficultyLevel": 3
+    },
+    "title": "Kelime Gruplarıyla Okuma — Seviye 3",
+    "configuration": {
+      "engineType": "word_highlight",
+      "difficultyLevel": 3,
+      "engineConfig": {
+        "mode": "chunking",
+        "readingPurpose": "practice",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 480,
+          "maxWordCount": 720
+        },
+        "pacer": {
+          "chunkSize": 3,
+          "speedWpm": 240
+        }
+      }
+    }
+  },
+  {
+    "id": "57d186e0-8756-5e69-aaa2-3dd457c931b9",
+    "age": "young-adult",
+    "ageGroupId": "10000000-0000-0000-0000-000000000004",
+    "level": 4,
+    "previousTitle": "Anlam Gruplarıyla Okuma",
+    "previousConfiguration": {
+      "engineType": "word_highlight",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "chunking",
+        "pacer": {
+          "speedWpm": 270,
+          "chunkSize": 4
+        },
+        "readingPurpose": "practice"
+      },
+      "difficultyLevel": 4
+    },
+    "title": "Kelime Gruplarıyla Okuma — Seviye 4",
+    "configuration": {
+      "engineType": "word_highlight",
+      "difficultyLevel": 4,
+      "engineConfig": {
+        "mode": "chunking",
+        "readingPurpose": "practice",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 540,
+          "maxWordCount": 810
+        },
+        "pacer": {
+          "chunkSize": 4,
+          "speedWpm": 270
+        }
+      }
+    }
+  },
+  {
+    "id": "d7b10000-0000-5000-8000-000000000004",
+    "age": "young-adult",
+    "ageGroupId": "10000000-0000-0000-0000-000000000004",
+    "level": 5,
+    "previousTitle": null,
+    "previousConfiguration": null,
+    "title": "Kelime Gruplarıyla Okuma — Seviye 5",
+    "configuration": {
+      "engineType": "word_highlight",
+      "difficultyLevel": 5,
+      "engineConfig": {
+        "mode": "chunking",
+        "readingPurpose": "practice",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 600,
+          "maxWordCount": 900
+        },
+        "pacer": {
+          "chunkSize": 5,
+          "speedWpm": 300
+        }
+      }
+    }
+  },
+  {
+    "id": "02fc1e52-80d6-506e-9317-fd5eec33ea2d",
+    "age": "adult",
+    "ageGroupId": "10000000-0000-0000-0000-000000000003",
+    "level": 1,
+    "previousTitle": "Anlam Gruplarıyla Okuma",
+    "previousConfiguration": {
+      "engineType": "word_highlight",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "chunking",
+        "pacer": {
+          "speedWpm": 200,
+          "chunkSize": 2
+        },
+        "readingPurpose": "practice"
+      },
+      "difficultyLevel": 1
+    },
+    "title": "Kelime Gruplarıyla Okuma — Seviye 1",
+    "configuration": {
+      "engineType": "word_highlight",
+      "difficultyLevel": 1,
+      "engineConfig": {
+        "mode": "chunking",
+        "readingPurpose": "practice",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 400,
+          "maxWordCount": 600
+        },
+        "pacer": {
+          "chunkSize": 2,
+          "speedWpm": 200
+        }
+      }
+    }
+  },
+  {
+    "id": "8686e7b0-4d3c-5e51-9aa2-8ee87fbffd65",
+    "age": "adult",
+    "ageGroupId": "10000000-0000-0000-0000-000000000003",
+    "level": 2,
+    "previousTitle": "Anlam Gruplarıyla Okuma",
+    "previousConfiguration": {
+      "engineType": "word_highlight",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "chunking",
+        "pacer": {
+          "speedWpm": 230,
+          "chunkSize": 3
+        },
+        "readingPurpose": "practice"
+      },
+      "difficultyLevel": 2
+    },
+    "title": "Kelime Gruplarıyla Okuma — Seviye 2",
+    "configuration": {
+      "engineType": "word_highlight",
+      "difficultyLevel": 2,
+      "engineConfig": {
+        "mode": "chunking",
+        "readingPurpose": "practice",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 460,
+          "maxWordCount": 690
+        },
+        "pacer": {
+          "chunkSize": 3,
+          "speedWpm": 230
+        }
+      }
+    }
+  },
+  {
+    "id": "1c5d756b-2bef-58e8-99c2-1e32d32e8153",
+    "age": "adult",
+    "ageGroupId": "10000000-0000-0000-0000-000000000003",
+    "level": 3,
+    "previousTitle": "Anlam Gruplarıyla Okuma",
+    "previousConfiguration": {
+      "engineType": "word_highlight",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "chunking",
+        "pacer": {
+          "speedWpm": 260,
+          "chunkSize": 3
+        },
+        "readingPurpose": "practice"
+      },
+      "difficultyLevel": 3
+    },
+    "title": "Kelime Gruplarıyla Okuma — Seviye 3",
+    "configuration": {
+      "engineType": "word_highlight",
+      "difficultyLevel": 3,
+      "engineConfig": {
+        "mode": "chunking",
+        "readingPurpose": "practice",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 520,
+          "maxWordCount": 780
+        },
+        "pacer": {
+          "chunkSize": 3,
+          "speedWpm": 260
+        }
+      }
+    }
+  },
+  {
+    "id": "e4900566-c2ba-5254-bde7-215bb4ae5ca7",
+    "age": "adult",
+    "ageGroupId": "10000000-0000-0000-0000-000000000003",
+    "level": 4,
+    "previousTitle": "Anlam Gruplarıyla Okuma",
+    "previousConfiguration": {
+      "engineType": "word_highlight",
+      "engineConfig": {
+        "content": {
+          "source": "reading_text"
+        },
+        "mode": "chunking",
+        "pacer": {
+          "speedWpm": 290,
+          "chunkSize": 4
+        },
+        "readingPurpose": "practice"
+      },
+      "difficultyLevel": 4
+    },
+    "title": "Kelime Gruplarıyla Okuma — Seviye 4",
+    "configuration": {
+      "engineType": "word_highlight",
+      "difficultyLevel": 4,
+      "engineConfig": {
+        "mode": "chunking",
+        "readingPurpose": "practice",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 580,
+          "maxWordCount": 870
+        },
+        "pacer": {
+          "chunkSize": 4,
+          "speedWpm": 290
+        }
+      }
+    }
+  },
+  {
+    "id": "d7b10000-0000-5000-8000-000000000003",
+    "age": "adult",
+    "ageGroupId": "10000000-0000-0000-0000-000000000003",
+    "level": 5,
+    "previousTitle": null,
+    "previousConfiguration": null,
+    "title": "Kelime Gruplarıyla Okuma — Seviye 5",
+    "configuration": {
+      "engineType": "word_highlight",
+      "difficultyLevel": 5,
+      "engineConfig": {
+        "mode": "chunking",
+        "readingPurpose": "practice",
+        "content": {
+          "source": "reading_text",
+          "minWordCount": 640,
+          "maxWordCount": 960
+        },
+        "pacer": {
+          "chunkSize": 5,
+          "speedWpm": 320
+        }
+      }
+    }
+  }
+]
