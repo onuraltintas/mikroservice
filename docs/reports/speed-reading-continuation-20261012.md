@@ -20,11 +20,12 @@ Yeni tablo: `speed_reading.program_continuations`. Kaynak/yeni ilerleme, ölçü
 
 - Backend birim testleri: 1.254 geçti.
 - Speed Reading Angular testleri: 939 geçti.
-- İlgili geniş entegrasyon seçimi: 193 geçti; son model/başlangıç tekrar kontrolü ayrıca 6 testte geçti.
+- Son ilgili geniş entegrasyon seçimi: 194 geçti; son model/başlangıç tekrar kontrolü ayrıca 6 testte geçti.
 - Gerçek PostgreSQL: yeni migration ileri/geri, karar kaydı, iki kullanıcı kapsamı, eski takip formu, eşzamanlı profil güncelleme, başlangıç yeniden hesaplama/atlama kontrolü.
 - Staff öneri bileşeni: 2 test geçti.
 - Masaüstü/mobil tarayıcı: 8 test geçti. Tarayıcı testleri istek/ekran sözleşmelerini kontrollü API yanıtlarıyla sınar; PostgreSQL testleri gerçek veritabanı davranışını ayrıca doğrular.
 - Üç üretim çıktısı derlendi. Mevcut öğrenci player/staff SCSS boyut uyarıları yayın hatası değil; bu çalışmada kapsam dışı kaldı.
+- Yayın kurtarma testi: sahte Docker/veritabanı ile başarı, komut hatası, SIGINT ve SIGTERM yolları geçti. Hata/kesintide yalnız hedef üç servisin eski imajları açılır.
 
 ## Yayın
 

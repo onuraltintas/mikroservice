@@ -126,9 +126,23 @@ case "${1:-build}" in
   [[ $(docker inspect "$frontend" --format '{{.Image}}') == "$(<previous-web-image.txt)" ]]
   [[ $(docker inspect "$staff" --format '{{.Image}}') == "$(<previous-staff-image.txt)" ]]
   docker ps --format '{{.Names}} {{.ID}} {{.Image}}' | sort > containers-before.txt
-  docker stop --time 30 "$backend"
   rollback() { echo 'Restoring previous application images; additive table is retained' >&2; "${compose[@]}" -f "$release/rollback.override.yml" up -d --no-deps --pull never speed-reading-service speed-reading-frontend staff-portal; }
-  trap rollback ERR
+  succeeded=false
+  stopped=false
+  recover() {
+   status=$?
+   trap - EXIT INT TERM
+   if [[ "$succeeded" != true && "$stopped" == true ]]; then
+    set +e
+    rollback
+   fi
+   exit "$status"
+  }
+  trap recover EXIT
+  trap 'exit 130' INT
+  trap 'exit 143' TERM
+  stopped=true
+  docker stop --time 30 "$backend"
   backup speedreading_owned_db speedreading-before.dump
   backup identity_db identity-before.dump
   psql_owned speedreading_owned_db -qAt < inventory.sql > inventory-before.txt
@@ -142,10 +156,11 @@ case "${1:-build}" in
   diff -u identity-before.txt identity-after.txt
   "${compose[@]}" up -d --no-deps --pull never speed-reading-service speed-reading-frontend staff-portal
   ready
-  trap - ERR
   docker ps --format '{{.Names}} {{.ID}} {{.Image}}' | sort > containers-after.txt
   diff -u <(grep -Ev "^($backend|$frontend|$staff) " containers-before.txt) <(grep -Ev "^($backend|$frontend|$staff) " containers-after.txt)
   date -u +%FT%TZ > deployed-at.txt
+  succeeded=true
+  trap - EXIT INT TERM
   ;;
  *) exit 2 ;;
 esac
