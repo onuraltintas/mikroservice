@@ -158,7 +158,7 @@ internal sealed class OwnedSpeedReadingCatalog(OwnedSpeedReadingDbContext db)
             where exercise.Id == id
                 && !exercise.IsDeleted
                 && !type.IsDeleted
-                && (includeInactive || (exercise.IsActive && type.IsActive && !exercise.IsAssessmentOnly))
+                && (includeInactive || (exercise.IsActive && type.IsActive))
             select new
             {
                 exercise.Id,

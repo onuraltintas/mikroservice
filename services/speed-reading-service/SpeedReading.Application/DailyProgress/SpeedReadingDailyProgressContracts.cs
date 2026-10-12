@@ -227,8 +227,46 @@ public static class SpeedReadingDailyProgressRules
         return duration;
     }
 
-    // Normal Focus catalogue duration, excluding optional unscored practice.
-    // Other exercise estimates retain their existing value.
+    // Configured display/working time only; answering and breaks are excluded.
+    public static int EstimateDurationMinutes(string configurationJson)
+    {
+        try
+        {
+            using var document = JsonDocument.Parse(configurationJson);
+            var root = document.RootElement;
+            if (root.ValueKind != JsonValueKind.Object
+                || !root.TryGetProperty("engineType", out var engine) || engine.ValueKind != JsonValueKind.String
+                || !root.TryGetProperty("engineConfig", out var settings) || settings.ValueKind != JsonValueKind.Object)
+                return 0;
+            static double Number(JsonElement obj, string name) => obj.ValueKind == JsonValueKind.Object
+                && obj.TryGetProperty(name, out var value) && value.ValueKind == JsonValueKind.Number
+                && value.TryGetDouble(out var n) && double.IsFinite(n) && n > 0 ? n : 0;
+            static JsonElement Object(JsonElement obj, string name) => obj.TryGetProperty(name, out var value)
+                && value.ValueKind == JsonValueKind.Object ? value : default;
+            var timing = Object(settings, "timing");
+            var content = Object(settings, "content");
+            var seconds = Number(timing, "durationSeconds");
+            if (engine.GetString() == "focus")
+                seconds = Number(settings, "speedMs") * Number(settings, "totalSteps") / 1000;
+            else if (engine.GetString() == "free_reading")
+                seconds = Number(timing, "suggestedMaxReadingTimeMs") / 1000;
+            else if (engine.GetString() is "word_highlight" or "text_fade" or "regression_reduction" or "subvocalization_reduction")
+            {
+                var pace = Number(Object(settings, "pacer"), "speedWpm");
+                if (pace == 0) pace = Number(Object(settings, "fading"), "speedWpm");
+                if (pace == 0) pace = Number(settings, "targetWpm");
+                seconds = pace > 0 ? Number(content, "maxWordCount") * 60 / pace : 0;
+                if (seconds > 0 && engine.GetString() == "text_fade") seconds += Number(Object(settings, "fading"), "lagMs") / 1000;
+            }
+            else if (engine.GetString() == "text_stream" && settings.TryGetProperty("mode", out var mode)
+                && mode.ValueKind == JsonValueKind.String && mode.GetString() == "rsvp")
+                seconds = Number(timing, "durationMs") * Number(content, "maxWordCount") / 1000;
+            return seconds is > 0 and <= 86400 ? (int)Math.Ceiling(seconds / 60) : 0;
+        }
+        catch (JsonException) { return 0; }
+    }
+
+    // Legacy Focus-only API retained for older consumers.
     public static int EstimateFocusDurationMinutes(string configurationJson)
     {
         try

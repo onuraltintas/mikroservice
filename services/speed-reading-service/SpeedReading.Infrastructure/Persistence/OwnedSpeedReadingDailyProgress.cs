@@ -781,7 +781,7 @@ internal sealed class OwnedSpeedReadingDailyProgress(
                 exercise.Title,
                 exercise.Description,
                 exercise.DifficultyLevel,
-                SpeedReadingDailyProgressRules.EstimateFocusDurationMinutes(exercise.ConfigurationJson),
+                SpeedReadingDailyProgressRules.EstimateDurationMinutes(exercise.ConfigurationJson),
                 completed is not null,
                 completed?.CompletedDate,
                 slot.Order,

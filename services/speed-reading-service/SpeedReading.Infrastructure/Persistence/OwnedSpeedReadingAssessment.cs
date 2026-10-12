@@ -1332,13 +1332,14 @@ internal sealed class OwnedSpeedReadingAssessment(
                 exercise.DifficultyLevel,
                 exercise.ConfigurationJson,
                 exerciseType.Name,
-                exerciseType.EngineType))
+                exerciseType.EngineType,
+                exercise.IsAssessmentOnly))
             .ToListAsync(cancellationToken);
 
         var templateEntries = await GetAssessmentTemplateEntriesAsync(
             ageGroupConfigurationId,
             cancellationToken);
-        var candidatePool = candidates;
+        var candidatePool = candidates.Where(item => item.IsAssessmentOnly).ToList();
         if (templateEntries.Count > 0)
         {
             var templateOrder = templateEntries
@@ -1895,7 +1896,8 @@ internal sealed class OwnedSpeedReadingAssessment(
         int DifficultyLevel,
         string ConfigurationJson,
         string TypeName,
-        string EngineType);
+        string EngineType,
+        bool IsAssessmentOnly);
 
     private sealed record AssessmentReadingTextCandidate(
         Guid Id,

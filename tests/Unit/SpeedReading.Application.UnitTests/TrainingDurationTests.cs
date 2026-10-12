@@ -11,6 +11,9 @@ public sealed class TrainingDurationTests
     [InlineData("{\"engineType\":\"free_reading\",\"engineConfig\":{\"timing\":{\"suggestedMaxReadingTimeMs\":420000}}}", 7)]
     [InlineData("{\"engineType\":\"text_fade\",\"engineConfig\":{\"fading\":{\"speedWpm\":60,\"lagMs\":5000},\"content\":{\"maxWordCount\":120}}}", 3)]
     [InlineData("{\"engineType\":\"focus\",\"engineConfig\":{\"speedMs\":3000,\"totalSteps\":32}}", 2)]
+    [InlineData("{\"engineType\":\"regression_reduction\",\"engineConfig\":{\"targetWpm\":200,\"content\":{\"maxWordCount\":500}}}", 3)]
+    [InlineData("{\"engineType\":\"subvocalization_reduction\",\"engineConfig\":{\"targetWpm\":300,\"content\":{\"maxWordCount\":600}}}", 2)]
+    [InlineData("{\"engineType\":\"text_stream\",\"engineConfig\":{\"mode\":\"rsvp\",\"timing\":{\"durationMs\":200},\"content\":{\"maxWordCount\":500}}}", 2)]
     public void Known_timing_uses_configuration_not_five_minutes(string configuration, int minutes)
         => Assert.Equal(minutes, SpeedReadingDailyProgressRules.EstimateDurationMinutes(configuration));
 
@@ -19,6 +22,10 @@ public sealed class TrainingDurationTests
     [InlineData("null")]
     [InlineData("bad json")]
     [InlineData("{\"engineType\":\"visual_expansion\",\"engineConfig\":{\"rounds\":50}}")]
+    [InlineData("{\"engineType\":42,\"engineConfig\":{}}")]
+    [InlineData("{\"engineType\":\"motion_path\",\"engineConfig\":{\"timing\":{\"durationSeconds\":\"bad\"}}}")]
+    [InlineData("{\"engineType\":\"motion_path\",\"engineConfig\":{\"timing\":{\"durationSeconds\":90000}}}")]
+    [InlineData("{\"engineType\":\"text_stream\",\"engineConfig\":{\"mode\":42}}")]
     public void Response_dependent_duration_is_not_fabricated(string configuration)
         => Assert.Equal(0, SpeedReadingDailyProgressRules.EstimateDurationMinutes(configuration));
 }

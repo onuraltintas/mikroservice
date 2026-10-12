@@ -64,6 +64,7 @@ public static class DependencyInjection
         services.AddScoped<OwnedExerciseTaxonomyBootstrap>();
         services.AddScoped<OwnedSpeedReadingReadingTextWordCountBackfill>();
         services.AddScoped<OwnedSpeedReadingContentAudit>();
+        services.AddScoped<OwnedSpeedReadingTrainingProgramAudit>();
         services.AddScoped<ISpeedReadingPrivacyInventoryRepository, SpeedReadingPrivacyInventoryRepository>();
         services.AddScoped<ISpeedReadingErasureAssessmentService, SpeedReadingErasureAssessmentService>();
         services.AddScoped<ISpeedReadingErasureExecutionService, SpeedReadingErasureExecutionService>();

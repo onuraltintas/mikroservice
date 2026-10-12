@@ -79,6 +79,15 @@ var auditOwnedContent = args.Any(argument =>
 var refreshReadingTextWordCounts = args.Any(argument =>
     string.Equals(argument, "--refresh-reading-text-word-counts", StringComparison.OrdinalIgnoreCase));
 
+if (args.Contains("--audit-training-programs", StringComparer.OrdinalIgnoreCase))
+{
+    builder.Services.AddSpeedReadingInfrastructure(builder.Configuration);
+    await using var auditApp = builder.Build();
+    await using var scope = auditApp.Services.CreateAsyncScope();
+    Console.WriteLine(JsonSerializer.Serialize(await scope.ServiceProvider.GetRequiredService<OwnedSpeedReadingTrainingProgramAudit>().RunAsync()));
+    return;
+}
+
 if (migrationOnly)
 {
     builder.Services.AddSpeedReadingInfrastructure(builder.Configuration);

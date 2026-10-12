@@ -1,0 +1,827 @@
+[
+  {
+    "id": "fa031200-0000-5000-8000-000000000011",
+    "exerciseId": "d8f10000-0000-5000-8000-000000000011",
+    "ageId": "10000000-0000-0000-0000-000000000001",
+    "level": 1,
+    "title": "Kütüphanedeki Harita — kısa çalışma 1",
+    "content": "Ece ve Arda, cumartesi günü okul kütüphanesinde bir okuma köşesi hazırladı. Ece kitapları konularına göre ayırdı. Arda ise rafların yerini gösteren küçük bir harita çizdi. Haritaya masal rafı için bir yıldız ekledi. Sonra haritayı girişteki panoya astılar. Yeni gelen öğrenciler yıldızı izleyerek masal kitaplarını buldu. Görevli, haritanın kitap aramayı kolaylaştırdığını söyledi. Ece ve Arda, bir hafta sonra haritanın anlaşılır olup olmadığını öğrencilere sormaya karar verdi. Böylece yaptıkları işi kullanıcılardan gelen önerilerle geliştirebileceklerdi.\n\nİlk öneri, haritadaki yazıların biraz büyütülmesiydi. İkili bu öneriyi not aldı ve yazıları uzaktan okunabilecek biçimde yeniden düzenledi.\n\nArda çizimi değiştirirken Ece raflardaki başlıkları kontrol etti. Haritadaki adlarla raflardaki adların aynı olması, yanlış yönelmeleri önlemek için önemliydi.",
+    "wordCount": 109,
+    "questions": [
+      {
+        "question": "Ece kitapları nasıl ayırdı?",
+        "options": [
+          "Konularına göre",
+          "Boylarına göre",
+          "Kapak renklerine göre",
+          "Yazarların yaşına göre"
+        ],
+        "correct": "A",
+        "evidence": "Ece kitapları konularına göre ayırdı"
+      },
+      {
+        "question": "Yıldız hangi rafı gösteriyordu?",
+        "options": [
+          "Bilim rafını",
+          "Masal rafını",
+          "Dergi rafını",
+          "Sözlük rafını"
+        ],
+        "correct": "B",
+        "evidence": "masal rafı için bir yıldız"
+      },
+      {
+        "question": "Harita nereye asıldı?",
+        "options": [
+          "Sınıf kapısına",
+          "Bahçedeki ağaca",
+          "Girişteki panoya",
+          "Kitapların arkasına"
+        ],
+        "correct": "C",
+        "evidence": "girişteki panoya astılar"
+      },
+      {
+        "question": "İkili neden öğrencilere haritayı soracaktı?",
+        "options": [
+          "Kitapları satmak için",
+          "Rafları kaldırmak için",
+          "Kütüphaneyi kapatmak için",
+          "Önerilerle işi geliştirmek için"
+        ],
+        "correct": "D",
+        "evidence": "kullanıcılardan gelen önerilerle geliştirebileceklerdi"
+      }
+    ]
+  },
+  {
+    "id": "fa031200-0000-5000-8000-000000000012",
+    "exerciseId": "d8f10000-0000-5000-8000-000000000011",
+    "ageId": "10000000-0000-0000-0000-000000000001",
+    "level": 1,
+    "title": "Yağmurun Kaydı — kısa çalışma 1",
+    "content": "Deniz, okul bahçesindeki yağmuru gözlemlemek için düz kenarlı bir kap kullandı. Kabı ağaçlardan uzakta, açık bir yere koydu. Her sabah aynı saatte kaptaki suyun yüksekliğini ölçtü. Ölçümü milimetre olarak defterine yazdı. Ardından kabı boşalttı. Bir gün rüzgâr kabı devirdi ve su döküldü. Deniz o günün ölçümünü sıfır yazmak yerine eksik olarak işaretledi. Öğretmeni, sıfır yağış ile kaybolmuş ölçümün farklı bilgiler olduğunu açıkladı. Deniz, kap devrilmesin diye yere sağlam bir tutucu yerleştirdi.\n\nDefterde her ölçümün yanında tarih de bulunuyordu. Tarihleri düzenli yazmak, gözlemlerin hangi sırayla yapıldığını daha sonra anlamayı kolaylaştırdı.\n\nDeniz, ölçüm çizgisini okumadan önce kabı düz bir yüzeye koydu. Eğik duran bir kapta su yüksekliğinin yanıltıcı görünebileceğini fark etmişti.",
+    "wordCount": 109,
+    "questions": [
+      {
+        "question": "Deniz kabı nereye koydu?",
+        "options": [
+          "Ağacın altına",
+          "Kapalı bir dolaba",
+          "Ağaçlardan uzaktaki açık yere",
+          "Sınıf masasının altına"
+        ],
+        "correct": "C",
+        "evidence": "ağaçlardan uzakta, açık bir yere"
+      },
+      {
+        "question": "Ölçümler ne zaman yapıldı?",
+        "options": [
+          "Her sabah aynı saatte",
+          "Yalnız gece",
+          "Her gün rastgele bir saatte",
+          "Sadece hafta sonunda"
+        ],
+        "correct": "A",
+        "evidence": "Her sabah aynı saatte"
+      },
+      {
+        "question": "Su dökülen günün ölçümü nasıl kaydedildi?",
+        "options": [
+          "En yüksek değer olarak",
+          "Eksik olarak",
+          "Sıfır olarak",
+          "Önceki günle aynı olarak"
+        ],
+        "correct": "B",
+        "evidence": "eksik olarak işaretledi"
+      },
+      {
+        "question": "Sağlam tutucu neden yerleştirildi?",
+        "options": [
+          "Suyu ısıtmak için",
+          "Ölçü birimini değiştirmek için",
+          "Yağmuru artırmak için",
+          "Kabın devrilmesini önlemek için"
+        ],
+        "correct": "D",
+        "evidence": "kap devrilmesin diye"
+      }
+    ]
+  },
+  {
+    "id": "fa031200-0000-5000-8000-000000000013",
+    "exerciseId": "d8f10000-0000-5000-8000-000000000011",
+    "ageId": "10000000-0000-0000-0000-000000000001",
+    "level": 1,
+    "title": "Tohumların Sırası — kısa çalışma 1",
+    "content": "Mina ve Bora, sınıfta fasulye yetiştirmek için iki saksı hazırladı. Her saksıya aynı sayıda tohum koydular. Saksıları aynı pencerenin önüne yerleştirdiler. Mina, birinci saksıyı pazartesi günü suladı. Bora ikinci saksıyı salı günü suladı. Çocuklar filizlerin boyunu her gün çizgili bir kâğıda işaretledi. Birinci filiz önce göründü, fakat bu durum bütün fasulyelerin pazartesi sulanması gerektiğini kanıtlamıyordu. Öğretmenleri, az sayıda gözlemle genel bir kural kurulamayacağını söyledi. Çocuklar sonucu anlatırken yalnız kendi denemelerinde gördüklerini yazdı.\n\nHer saksının yanına küçük bir etiket koydular. Etiketler, ölçüm sırasında hangi filizin hangi saksıya ait olduğunu karıştırmamalarına yardımcı oldu.\n\nBir sonraki gün kâğıttaki çizgileri tarihlerle eşleştirdiler. Boy değişiminin yalnız son değerden değil, günler arasındaki farktan anlaşılabildiğini fark ettiler.",
+    "wordCount": 110,
+    "questions": [
+      {
+        "question": "Saksılara ne koyuldu?",
+        "options": [
+          "Taş",
+          "Fasulye tohumu",
+          "Kumdan oyuncak",
+          "Kuru yaprak"
+        ],
+        "correct": "B",
+        "evidence": "fasulye yetiştirmek"
+      },
+      {
+        "question": "Saksılar nereye yerleştirildi?",
+        "options": [
+          "Farklı odalara",
+          "Kapalı bir kutuya",
+          "Aynı pencerenin önüne",
+          "Okulun çatısına"
+        ],
+        "correct": "C",
+        "evidence": "aynı pencerenin önüne"
+      },
+      {
+        "question": "Birinci saksıyı kim suladı?",
+        "options": [
+          "Mina",
+          "Bora",
+          "Öğretmen",
+          "Sınıf görevlisi"
+        ],
+        "correct": "A",
+        "evidence": "Mina, birinci saksıyı"
+      },
+      {
+        "question": "Öğretmenin uyarısı neydi?",
+        "options": [
+          "Filizlerin hiç ölçülmemesi",
+          "Bütün saksıların atılması",
+          "Her tohumun aynı gün büyümesi",
+          "Az gözlemle genel kural kurulamayacağı"
+        ],
+        "correct": "D",
+        "evidence": "az sayıda gözlemle genel bir kural kurulamayacağını"
+      }
+    ]
+  },
+  {
+    "id": "fa031200-0000-5000-8000-000000000021",
+    "exerciseId": "d8f10000-0000-5000-8000-000000000012",
+    "ageId": "10000000-0000-0000-0000-000000000001",
+    "level": 2,
+    "title": "Kütüphanedeki Harita — kısa çalışma 2",
+    "content": "Ece ve Arda, cumartesi günü okul kütüphanesinde bir okuma köşesi hazırladı. Ece kitapları konularına göre ayırdı. Arda ise rafların yerini gösteren küçük bir harita çizdi. Haritaya masal rafı için bir yıldız ekledi. Sonra haritayı girişteki panoya astılar. Yeni gelen öğrenciler yıldızı izleyerek masal kitaplarını buldu. Görevli, haritanın kitap aramayı kolaylaştırdığını söyledi. Ece ve Arda, bir hafta sonra haritanın anlaşılır olup olmadığını öğrencilere sormaya karar verdi. Böylece yaptıkları işi kullanıcılardan gelen önerilerle geliştirebileceklerdi.\n\nİlk öneri, haritadaki yazıların biraz büyütülmesiydi. İkili bu öneriyi not aldı ve yazıları uzaktan okunabilecek biçimde yeniden düzenledi.\n\nArda çizimi değiştirirken Ece raflardaki başlıkları kontrol etti. Haritadaki adlarla raflardaki adların aynı olması, yanlış yönelmeleri önlemek için önemliydi.\n\nBir öğrenci, bilim kitaplarını da kolayca bulmak istediğini söyledi. Ece bunun için yıldızdan farklı bir işaret seçmenin daha anlaşılır olacağını düşündü.\n\nHaritaya yeni bir işaret eklemeden önce üç küçük taslak çizdiler. Arkadaşlarından her taslakta hangi rafın gösterildiğini açıklamalarını istediler.",
+    "wordCount": 148,
+    "questions": [
+      {
+        "question": "Ece kitapları nasıl ayırdı?",
+        "options": [
+          "Konularına göre",
+          "Boylarına göre",
+          "Kapak renklerine göre",
+          "Yazarların yaşına göre"
+        ],
+        "correct": "A",
+        "evidence": "Ece kitapları konularına göre ayırdı"
+      },
+      {
+        "question": "Yıldız hangi rafı gösteriyordu?",
+        "options": [
+          "Bilim rafını",
+          "Masal rafını",
+          "Dergi rafını",
+          "Sözlük rafını"
+        ],
+        "correct": "B",
+        "evidence": "masal rafı için bir yıldız"
+      },
+      {
+        "question": "Harita nereye asıldı?",
+        "options": [
+          "Sınıf kapısına",
+          "Bahçedeki ağaca",
+          "Girişteki panoya",
+          "Kitapların arkasına"
+        ],
+        "correct": "C",
+        "evidence": "girişteki panoya astılar"
+      },
+      {
+        "question": "İkili neden öğrencilere haritayı soracaktı?",
+        "options": [
+          "Kitapları satmak için",
+          "Rafları kaldırmak için",
+          "Kütüphaneyi kapatmak için",
+          "Önerilerle işi geliştirmek için"
+        ],
+        "correct": "D",
+        "evidence": "kullanıcılardan gelen önerilerle geliştirebileceklerdi"
+      }
+    ]
+  },
+  {
+    "id": "fa031200-0000-5000-8000-000000000022",
+    "exerciseId": "d8f10000-0000-5000-8000-000000000012",
+    "ageId": "10000000-0000-0000-0000-000000000001",
+    "level": 2,
+    "title": "Yağmurun Kaydı — kısa çalışma 2",
+    "content": "Deniz, okul bahçesindeki yağmuru gözlemlemek için düz kenarlı bir kap kullandı. Kabı ağaçlardan uzakta, açık bir yere koydu. Her sabah aynı saatte kaptaki suyun yüksekliğini ölçtü. Ölçümü milimetre olarak defterine yazdı. Ardından kabı boşalttı. Bir gün rüzgâr kabı devirdi ve su döküldü. Deniz o günün ölçümünü sıfır yazmak yerine eksik olarak işaretledi. Öğretmeni, sıfır yağış ile kaybolmuş ölçümün farklı bilgiler olduğunu açıkladı. Deniz, kap devrilmesin diye yere sağlam bir tutucu yerleştirdi.\n\nDefterde her ölçümün yanında tarih de bulunuyordu. Tarihleri düzenli yazmak, gözlemlerin hangi sırayla yapıldığını daha sonra anlamayı kolaylaştırdı.\n\nDeniz, ölçüm çizgisini okumadan önce kabı düz bir yüzeye koydu. Eğik duran bir kapta su yüksekliğinin yanıltıcı görünebileceğini fark etmişti.\n\nArkadaşı bir gün ölçüme yardım etti. İki öğrenci sonucu birbirinden bağımsız okuyup karşılaştırdı; farklılık varsa ölçüm çizgisine yeniden baktılar.\n\nHaftanın sonunda sayıları küçük bir tabloya aktardılar. En yüksek değeri bulurken eksik işaretli günü karşılaştırmaya katmamaları gerektiğini hatırladılar.",
+    "wordCount": 146,
+    "questions": [
+      {
+        "question": "Deniz kabı nereye koydu?",
+        "options": [
+          "Ağacın altına",
+          "Kapalı bir dolaba",
+          "Ağaçlardan uzaktaki açık yere",
+          "Sınıf masasının altına"
+        ],
+        "correct": "C",
+        "evidence": "ağaçlardan uzakta, açık bir yere"
+      },
+      {
+        "question": "Ölçümler ne zaman yapıldı?",
+        "options": [
+          "Her sabah aynı saatte",
+          "Yalnız gece",
+          "Her gün rastgele bir saatte",
+          "Sadece hafta sonunda"
+        ],
+        "correct": "A",
+        "evidence": "Her sabah aynı saatte"
+      },
+      {
+        "question": "Su dökülen günün ölçümü nasıl kaydedildi?",
+        "options": [
+          "En yüksek değer olarak",
+          "Eksik olarak",
+          "Sıfır olarak",
+          "Önceki günle aynı olarak"
+        ],
+        "correct": "B",
+        "evidence": "eksik olarak işaretledi"
+      },
+      {
+        "question": "Sağlam tutucu neden yerleştirildi?",
+        "options": [
+          "Suyu ısıtmak için",
+          "Ölçü birimini değiştirmek için",
+          "Yağmuru artırmak için",
+          "Kabın devrilmesini önlemek için"
+        ],
+        "correct": "D",
+        "evidence": "kap devrilmesin diye"
+      }
+    ]
+  },
+  {
+    "id": "fa031200-0000-5000-8000-000000000023",
+    "exerciseId": "d8f10000-0000-5000-8000-000000000012",
+    "ageId": "10000000-0000-0000-0000-000000000001",
+    "level": 2,
+    "title": "Tohumların Sırası — kısa çalışma 2",
+    "content": "Mina ve Bora, sınıfta fasulye yetiştirmek için iki saksı hazırladı. Her saksıya aynı sayıda tohum koydular. Saksıları aynı pencerenin önüne yerleştirdiler. Mina, birinci saksıyı pazartesi günü suladı. Bora ikinci saksıyı salı günü suladı. Çocuklar filizlerin boyunu her gün çizgili bir kâğıda işaretledi. Birinci filiz önce göründü, fakat bu durum bütün fasulyelerin pazartesi sulanması gerektiğini kanıtlamıyordu. Öğretmenleri, az sayıda gözlemle genel bir kural kurulamayacağını söyledi. Çocuklar sonucu anlatırken yalnız kendi denemelerinde gördüklerini yazdı.\n\nHer saksının yanına küçük bir etiket koydular. Etiketler, ölçüm sırasında hangi filizin hangi saksıya ait olduğunu karıştırmamalarına yardımcı oldu.\n\nBir sonraki gün kâğıttaki çizgileri tarihlerle eşleştirdiler. Boy değişiminin yalnız son değerden değil, günler arasındaki farktan anlaşılabildiğini fark ettiler.\n\nBora bir işareti yanlış yere çizdiğini görünce silmek yerine yanına düzeltme notu ekledi. Böylece eski kaydın neden değiştiği anlaşılır kaldı.\n\nMina yaprakların rengini de not etmek istedi. İkili, boy ölçümleri ile renk gözlemlerini ayrı sütunlara yazarak farklı bilgileri birbirinden ayırdı.",
+    "wordCount": 150,
+    "questions": [
+      {
+        "question": "Saksılara ne koyuldu?",
+        "options": [
+          "Taş",
+          "Fasulye tohumu",
+          "Kumdan oyuncak",
+          "Kuru yaprak"
+        ],
+        "correct": "B",
+        "evidence": "fasulye yetiştirmek"
+      },
+      {
+        "question": "Saksılar nereye yerleştirildi?",
+        "options": [
+          "Farklı odalara",
+          "Kapalı bir kutuya",
+          "Aynı pencerenin önüne",
+          "Okulun çatısına"
+        ],
+        "correct": "C",
+        "evidence": "aynı pencerenin önüne"
+      },
+      {
+        "question": "Birinci saksıyı kim suladı?",
+        "options": [
+          "Mina",
+          "Bora",
+          "Öğretmen",
+          "Sınıf görevlisi"
+        ],
+        "correct": "A",
+        "evidence": "Mina, birinci saksıyı"
+      },
+      {
+        "question": "Öğretmenin uyarısı neydi?",
+        "options": [
+          "Filizlerin hiç ölçülmemesi",
+          "Bütün saksıların atılması",
+          "Her tohumun aynı gün büyümesi",
+          "Az gözlemle genel kural kurulamayacağı"
+        ],
+        "correct": "D",
+        "evidence": "az sayıda gözlemle genel bir kural kurulamayacağını"
+      }
+    ]
+  },
+  {
+    "id": "fa031200-0000-5000-8000-000000000031",
+    "exerciseId": "d8f10000-0000-5000-8000-000000000013",
+    "ageId": "10000000-0000-0000-0000-000000000001",
+    "level": 3,
+    "title": "Kütüphanedeki Harita — kısa çalışma 3",
+    "content": "Ece ve Arda, cumartesi günü okul kütüphanesinde bir okuma köşesi hazırladı. Ece kitapları konularına göre ayırdı. Arda ise rafların yerini gösteren küçük bir harita çizdi. Haritaya masal rafı için bir yıldız ekledi. Sonra haritayı girişteki panoya astılar. Yeni gelen öğrenciler yıldızı izleyerek masal kitaplarını buldu. Görevli, haritanın kitap aramayı kolaylaştırdığını söyledi. Ece ve Arda, bir hafta sonra haritanın anlaşılır olup olmadığını öğrencilere sormaya karar verdi. Böylece yaptıkları işi kullanıcılardan gelen önerilerle geliştirebileceklerdi.\n\nİlk öneri, haritadaki yazıların biraz büyütülmesiydi. İkili bu öneriyi not aldı ve yazıları uzaktan okunabilecek biçimde yeniden düzenledi.\n\nArda çizimi değiştirirken Ece raflardaki başlıkları kontrol etti. Haritadaki adlarla raflardaki adların aynı olması, yanlış yönelmeleri önlemek için önemliydi.\n\nBir öğrenci, bilim kitaplarını da kolayca bulmak istediğini söyledi. Ece bunun için yıldızdan farklı bir işaret seçmenin daha anlaşılır olacağını düşündü.\n\nHaritaya yeni bir işaret eklemeden önce üç küçük taslak çizdiler. Arkadaşlarından her taslakta hangi rafın gösterildiğini açıklamalarını istediler.\n\nDenemede bir çizim diğerlerinden daha kolay anlaşıldı. İkili, en çok beğenilen çizimi değil, en az karışıklık yaratan çizimi kullanmayı seçti.\n\nEski haritayı hemen atmadılar. Yeni çizimin gerçekten daha kullanışlı olup olmadığını karşılaştırabilmek için eski haritanın bir kopyasını sakladılar.",
+    "wordCount": 186,
+    "questions": [
+      {
+        "question": "Ece kitapları nasıl ayırdı?",
+        "options": [
+          "Konularına göre",
+          "Boylarına göre",
+          "Kapak renklerine göre",
+          "Yazarların yaşına göre"
+        ],
+        "correct": "A",
+        "evidence": "Ece kitapları konularına göre ayırdı"
+      },
+      {
+        "question": "Yıldız hangi rafı gösteriyordu?",
+        "options": [
+          "Bilim rafını",
+          "Masal rafını",
+          "Dergi rafını",
+          "Sözlük rafını"
+        ],
+        "correct": "B",
+        "evidence": "masal rafı için bir yıldız"
+      },
+      {
+        "question": "Harita nereye asıldı?",
+        "options": [
+          "Sınıf kapısına",
+          "Bahçedeki ağaca",
+          "Girişteki panoya",
+          "Kitapların arkasına"
+        ],
+        "correct": "C",
+        "evidence": "girişteki panoya astılar"
+      },
+      {
+        "question": "İkili neden öğrencilere haritayı soracaktı?",
+        "options": [
+          "Kitapları satmak için",
+          "Rafları kaldırmak için",
+          "Kütüphaneyi kapatmak için",
+          "Önerilerle işi geliştirmek için"
+        ],
+        "correct": "D",
+        "evidence": "kullanıcılardan gelen önerilerle geliştirebileceklerdi"
+      }
+    ]
+  },
+  {
+    "id": "fa031200-0000-5000-8000-000000000032",
+    "exerciseId": "d8f10000-0000-5000-8000-000000000013",
+    "ageId": "10000000-0000-0000-0000-000000000001",
+    "level": 3,
+    "title": "Yağmurun Kaydı — kısa çalışma 3",
+    "content": "Deniz, okul bahçesindeki yağmuru gözlemlemek için düz kenarlı bir kap kullandı. Kabı ağaçlardan uzakta, açık bir yere koydu. Her sabah aynı saatte kaptaki suyun yüksekliğini ölçtü. Ölçümü milimetre olarak defterine yazdı. Ardından kabı boşalttı. Bir gün rüzgâr kabı devirdi ve su döküldü. Deniz o günün ölçümünü sıfır yazmak yerine eksik olarak işaretledi. Öğretmeni, sıfır yağış ile kaybolmuş ölçümün farklı bilgiler olduğunu açıkladı. Deniz, kap devrilmesin diye yere sağlam bir tutucu yerleştirdi.\n\nDefterde her ölçümün yanında tarih de bulunuyordu. Tarihleri düzenli yazmak, gözlemlerin hangi sırayla yapıldığını daha sonra anlamayı kolaylaştırdı.\n\nDeniz, ölçüm çizgisini okumadan önce kabı düz bir yüzeye koydu. Eğik duran bir kapta su yüksekliğinin yanıltıcı görünebileceğini fark etmişti.\n\nArkadaşı bir gün ölçüme yardım etti. İki öğrenci sonucu birbirinden bağımsız okuyup karşılaştırdı; farklılık varsa ölçüm çizgisine yeniden baktılar.\n\nHaftanın sonunda sayıları küçük bir tabloya aktardılar. En yüksek değeri bulurken eksik işaretli günü karşılaştırmaya katmamaları gerektiğini hatırladılar.\n\nBazı günler hava bulutlu olduğu halde kapta su yoktu. Deniz, yalnız gökyüzünün görünümüne bakarak yağış miktarına karar verilemeyeceğini öğrendi.\n\nGözlem notlarını sınıfa gösterirken kullandığı kabın yerini de açıkladı. Başka bir yerde aynı sonucun çıkacağını kesin bir bilgi gibi sunmadı.",
+    "wordCount": 185,
+    "questions": [
+      {
+        "question": "Deniz kabı nereye koydu?",
+        "options": [
+          "Ağacın altına",
+          "Kapalı bir dolaba",
+          "Ağaçlardan uzaktaki açık yere",
+          "Sınıf masasının altına"
+        ],
+        "correct": "C",
+        "evidence": "ağaçlardan uzakta, açık bir yere"
+      },
+      {
+        "question": "Ölçümler ne zaman yapıldı?",
+        "options": [
+          "Her sabah aynı saatte",
+          "Yalnız gece",
+          "Her gün rastgele bir saatte",
+          "Sadece hafta sonunda"
+        ],
+        "correct": "A",
+        "evidence": "Her sabah aynı saatte"
+      },
+      {
+        "question": "Su dökülen günün ölçümü nasıl kaydedildi?",
+        "options": [
+          "En yüksek değer olarak",
+          "Eksik olarak",
+          "Sıfır olarak",
+          "Önceki günle aynı olarak"
+        ],
+        "correct": "B",
+        "evidence": "eksik olarak işaretledi"
+      },
+      {
+        "question": "Sağlam tutucu neden yerleştirildi?",
+        "options": [
+          "Suyu ısıtmak için",
+          "Ölçü birimini değiştirmek için",
+          "Yağmuru artırmak için",
+          "Kabın devrilmesini önlemek için"
+        ],
+        "correct": "D",
+        "evidence": "kap devrilmesin diye"
+      }
+    ]
+  },
+  {
+    "id": "fa031200-0000-5000-8000-000000000033",
+    "exerciseId": "d8f10000-0000-5000-8000-000000000013",
+    "ageId": "10000000-0000-0000-0000-000000000001",
+    "level": 3,
+    "title": "Tohumların Sırası — kısa çalışma 3",
+    "content": "Mina ve Bora, sınıfta fasulye yetiştirmek için iki saksı hazırladı. Her saksıya aynı sayıda tohum koydular. Saksıları aynı pencerenin önüne yerleştirdiler. Mina, birinci saksıyı pazartesi günü suladı. Bora ikinci saksıyı salı günü suladı. Çocuklar filizlerin boyunu her gün çizgili bir kâğıda işaretledi. Birinci filiz önce göründü, fakat bu durum bütün fasulyelerin pazartesi sulanması gerektiğini kanıtlamıyordu. Öğretmenleri, az sayıda gözlemle genel bir kural kurulamayacağını söyledi. Çocuklar sonucu anlatırken yalnız kendi denemelerinde gördüklerini yazdı.\n\nHer saksının yanına küçük bir etiket koydular. Etiketler, ölçüm sırasında hangi filizin hangi saksıya ait olduğunu karıştırmamalarına yardımcı oldu.\n\nBir sonraki gün kâğıttaki çizgileri tarihlerle eşleştirdiler. Boy değişiminin yalnız son değerden değil, günler arasındaki farktan anlaşılabildiğini fark ettiler.\n\nBora bir işareti yanlış yere çizdiğini görünce silmek yerine yanına düzeltme notu ekledi. Böylece eski kaydın neden değiştiği anlaşılır kaldı.\n\nMina yaprakların rengini de not etmek istedi. İkili, boy ölçümleri ile renk gözlemlerini ayrı sütunlara yazarak farklı bilgileri birbirinden ayırdı.\n\nBir arkadaşları saksıları farklı pencerelere taşımayı önerdi. Ancak aynı anda birçok şeyi değiştirmenin sonuçları yorumlamayı zorlaştırabileceğini konuştular.\n\nÖğretmenleri, yeni bir denemede neyin karşılaştırılacağını önceden belirlemelerini istedi. Çocuklar önce bir soru yazıp sonra bu soruya uygun düzen kurmayı düşündü.",
+    "wordCount": 188,
+    "questions": [
+      {
+        "question": "Saksılara ne koyuldu?",
+        "options": [
+          "Taş",
+          "Fasulye tohumu",
+          "Kumdan oyuncak",
+          "Kuru yaprak"
+        ],
+        "correct": "B",
+        "evidence": "fasulye yetiştirmek"
+      },
+      {
+        "question": "Saksılar nereye yerleştirildi?",
+        "options": [
+          "Farklı odalara",
+          "Kapalı bir kutuya",
+          "Aynı pencerenin önüne",
+          "Okulun çatısına"
+        ],
+        "correct": "C",
+        "evidence": "aynı pencerenin önüne"
+      },
+      {
+        "question": "Birinci saksıyı kim suladı?",
+        "options": [
+          "Mina",
+          "Bora",
+          "Öğretmen",
+          "Sınıf görevlisi"
+        ],
+        "correct": "A",
+        "evidence": "Mina, birinci saksıyı"
+      },
+      {
+        "question": "Öğretmenin uyarısı neydi?",
+        "options": [
+          "Filizlerin hiç ölçülmemesi",
+          "Bütün saksıların atılması",
+          "Her tohumun aynı gün büyümesi",
+          "Az gözlemle genel kural kurulamayacağı"
+        ],
+        "correct": "D",
+        "evidence": "az sayıda gözlemle genel bir kural kurulamayacağını"
+      }
+    ]
+  },
+  {
+    "id": "fa031200-0000-5000-8000-000000000041",
+    "exerciseId": "b59e48d3-da80-5ce2-90fa-f784b78b9d9d",
+    "ageId": "10000000-0000-0000-0000-000000000001",
+    "level": 4,
+    "title": "Kütüphanedeki Harita — kısa çalışma 4",
+    "content": "Ece ve Arda, cumartesi günü okul kütüphanesinde bir okuma köşesi hazırladı. Ece kitapları konularına göre ayırdı. Arda ise rafların yerini gösteren küçük bir harita çizdi. Haritaya masal rafı için bir yıldız ekledi. Sonra haritayı girişteki panoya astılar. Yeni gelen öğrenciler yıldızı izleyerek masal kitaplarını buldu. Görevli, haritanın kitap aramayı kolaylaştırdığını söyledi. Ece ve Arda, bir hafta sonra haritanın anlaşılır olup olmadığını öğrencilere sormaya karar verdi. Böylece yaptıkları işi kullanıcılardan gelen önerilerle geliştirebileceklerdi.\n\nİlk öneri, haritadaki yazıların biraz büyütülmesiydi. İkili bu öneriyi not aldı ve yazıları uzaktan okunabilecek biçimde yeniden düzenledi.\n\nArda çizimi değiştirirken Ece raflardaki başlıkları kontrol etti. Haritadaki adlarla raflardaki adların aynı olması, yanlış yönelmeleri önlemek için önemliydi.\n\nBir öğrenci, bilim kitaplarını da kolayca bulmak istediğini söyledi. Ece bunun için yıldızdan farklı bir işaret seçmenin daha anlaşılır olacağını düşündü.\n\nHaritaya yeni bir işaret eklemeden önce üç küçük taslak çizdiler. Arkadaşlarından her taslakta hangi rafın gösterildiğini açıklamalarını istediler.\n\nDenemede bir çizim diğerlerinden daha kolay anlaşıldı. İkili, en çok beğenilen çizimi değil, en az karışıklık yaratan çizimi kullanmayı seçti.\n\nEski haritayı hemen atmadılar. Yeni çizimin gerçekten daha kullanışlı olup olmadığını karşılaştırabilmek için eski haritanın bir kopyasını sakladılar.\n\nÇalışmanın sonunda önerileri küçük bir deftere yazdılar. Her önerinin yanına yaptıkları değişikliği ve değişikliğin nedenini ekleyerek kararlarını görünür hale getirdiler.\n\nGörevli, düzenli kontrolün bir işi tamamlamak kadar değerli olduğunu anlattı. Kitaplar başka raflara taşındığında haritanın da güncellenmesi gerektiğini hatırlattı.",
+    "wordCount": 225,
+    "questions": [
+      {
+        "question": "Ece kitapları nasıl ayırdı?",
+        "options": [
+          "Konularına göre",
+          "Boylarına göre",
+          "Kapak renklerine göre",
+          "Yazarların yaşına göre"
+        ],
+        "correct": "A",
+        "evidence": "Ece kitapları konularına göre ayırdı"
+      },
+      {
+        "question": "Yıldız hangi rafı gösteriyordu?",
+        "options": [
+          "Bilim rafını",
+          "Masal rafını",
+          "Dergi rafını",
+          "Sözlük rafını"
+        ],
+        "correct": "B",
+        "evidence": "masal rafı için bir yıldız"
+      },
+      {
+        "question": "Harita nereye asıldı?",
+        "options": [
+          "Sınıf kapısına",
+          "Bahçedeki ağaca",
+          "Girişteki panoya",
+          "Kitapların arkasına"
+        ],
+        "correct": "C",
+        "evidence": "girişteki panoya astılar"
+      },
+      {
+        "question": "İkili neden öğrencilere haritayı soracaktı?",
+        "options": [
+          "Kitapları satmak için",
+          "Rafları kaldırmak için",
+          "Kütüphaneyi kapatmak için",
+          "Önerilerle işi geliştirmek için"
+        ],
+        "correct": "D",
+        "evidence": "kullanıcılardan gelen önerilerle geliştirebileceklerdi"
+      }
+    ]
+  },
+  {
+    "id": "fa031200-0000-5000-8000-000000000042",
+    "exerciseId": "b59e48d3-da80-5ce2-90fa-f784b78b9d9d",
+    "ageId": "10000000-0000-0000-0000-000000000001",
+    "level": 4,
+    "title": "Yağmurun Kaydı — kısa çalışma 4",
+    "content": "Deniz, okul bahçesindeki yağmuru gözlemlemek için düz kenarlı bir kap kullandı. Kabı ağaçlardan uzakta, açık bir yere koydu. Her sabah aynı saatte kaptaki suyun yüksekliğini ölçtü. Ölçümü milimetre olarak defterine yazdı. Ardından kabı boşalttı. Bir gün rüzgâr kabı devirdi ve su döküldü. Deniz o günün ölçümünü sıfır yazmak yerine eksik olarak işaretledi. Öğretmeni, sıfır yağış ile kaybolmuş ölçümün farklı bilgiler olduğunu açıkladı. Deniz, kap devrilmesin diye yere sağlam bir tutucu yerleştirdi.\n\nDefterde her ölçümün yanında tarih de bulunuyordu. Tarihleri düzenli yazmak, gözlemlerin hangi sırayla yapıldığını daha sonra anlamayı kolaylaştırdı.\n\nDeniz, ölçüm çizgisini okumadan önce kabı düz bir yüzeye koydu. Eğik duran bir kapta su yüksekliğinin yanıltıcı görünebileceğini fark etmişti.\n\nArkadaşı bir gün ölçüme yardım etti. İki öğrenci sonucu birbirinden bağımsız okuyup karşılaştırdı; farklılık varsa ölçüm çizgisine yeniden baktılar.\n\nHaftanın sonunda sayıları küçük bir tabloya aktardılar. En yüksek değeri bulurken eksik işaretli günü karşılaştırmaya katmamaları gerektiğini hatırladılar.\n\nBazı günler hava bulutlu olduğu halde kapta su yoktu. Deniz, yalnız gökyüzünün görünümüne bakarak yağış miktarına karar verilemeyeceğini öğrendi.\n\nGözlem notlarını sınıfa gösterirken kullandığı kabın yerini de açıkladı. Başka bir yerde aynı sonucun çıkacağını kesin bir bilgi gibi sunmadı.\n\nÖğretmeni, karşılaştırma yapabilmek için yöntemin değişmemesinin yararlı olduğunu söyledi. Deniz bu nedenle kabı ve ölçüm saatini aynı tutmaya çalıştı.\n\nYeni bir defter sayfasında beklenmedik olaylara yer ayırdı. Güçlü rüzgâr, dökülen su veya unutulan ölçüm varsa bunları sayılardan ayrı olarak kaydetti.",
+    "wordCount": 225,
+    "questions": [
+      {
+        "question": "Deniz kabı nereye koydu?",
+        "options": [
+          "Ağacın altına",
+          "Kapalı bir dolaba",
+          "Ağaçlardan uzaktaki açık yere",
+          "Sınıf masasının altına"
+        ],
+        "correct": "C",
+        "evidence": "ağaçlardan uzakta, açık bir yere"
+      },
+      {
+        "question": "Ölçümler ne zaman yapıldı?",
+        "options": [
+          "Her sabah aynı saatte",
+          "Yalnız gece",
+          "Her gün rastgele bir saatte",
+          "Sadece hafta sonunda"
+        ],
+        "correct": "A",
+        "evidence": "Her sabah aynı saatte"
+      },
+      {
+        "question": "Su dökülen günün ölçümü nasıl kaydedildi?",
+        "options": [
+          "En yüksek değer olarak",
+          "Eksik olarak",
+          "Sıfır olarak",
+          "Önceki günle aynı olarak"
+        ],
+        "correct": "B",
+        "evidence": "eksik olarak işaretledi"
+      },
+      {
+        "question": "Sağlam tutucu neden yerleştirildi?",
+        "options": [
+          "Suyu ısıtmak için",
+          "Ölçü birimini değiştirmek için",
+          "Yağmuru artırmak için",
+          "Kabın devrilmesini önlemek için"
+        ],
+        "correct": "D",
+        "evidence": "kap devrilmesin diye"
+      }
+    ]
+  },
+  {
+    "id": "fa031200-0000-5000-8000-000000000043",
+    "exerciseId": "b59e48d3-da80-5ce2-90fa-f784b78b9d9d",
+    "ageId": "10000000-0000-0000-0000-000000000001",
+    "level": 4,
+    "title": "Tohumların Sırası — kısa çalışma 4",
+    "content": "Mina ve Bora, sınıfta fasulye yetiştirmek için iki saksı hazırladı. Her saksıya aynı sayıda tohum koydular. Saksıları aynı pencerenin önüne yerleştirdiler. Mina, birinci saksıyı pazartesi günü suladı. Bora ikinci saksıyı salı günü suladı. Çocuklar filizlerin boyunu her gün çizgili bir kâğıda işaretledi. Birinci filiz önce göründü, fakat bu durum bütün fasulyelerin pazartesi sulanması gerektiğini kanıtlamıyordu. Öğretmenleri, az sayıda gözlemle genel bir kural kurulamayacağını söyledi. Çocuklar sonucu anlatırken yalnız kendi denemelerinde gördüklerini yazdı.\n\nHer saksının yanına küçük bir etiket koydular. Etiketler, ölçüm sırasında hangi filizin hangi saksıya ait olduğunu karıştırmamalarına yardımcı oldu.\n\nBir sonraki gün kâğıttaki çizgileri tarihlerle eşleştirdiler. Boy değişiminin yalnız son değerden değil, günler arasındaki farktan anlaşılabildiğini fark ettiler.\n\nBora bir işareti yanlış yere çizdiğini görünce silmek yerine yanına düzeltme notu ekledi. Böylece eski kaydın neden değiştiği anlaşılır kaldı.\n\nMina yaprakların rengini de not etmek istedi. İkili, boy ölçümleri ile renk gözlemlerini ayrı sütunlara yazarak farklı bilgileri birbirinden ayırdı.\n\nBir arkadaşları saksıları farklı pencerelere taşımayı önerdi. Ancak aynı anda birçok şeyi değiştirmenin sonuçları yorumlamayı zorlaştırabileceğini konuştular.\n\nÖğretmenleri, yeni bir denemede neyin karşılaştırılacağını önceden belirlemelerini istedi. Çocuklar önce bir soru yazıp sonra bu soruya uygun düzen kurmayı düşündü.\n\nDenemenin sonunda çizimleri sınıf panosunda sergilediler. Okuyanların süreci anlayabilmesi için başlangıç tarihini, saksı etiketlerini ve kullandıkları ölçü birimini eklediler.\n\nMina, kendi beklentisinin gözlemleri değiştirmemesi gerektiğini söyledi. Beklediğinden farklı bir sonuç gördüğünde bunu da diğer sonuçlar kadar dikkatle kaydetti.",
+    "wordCount": 226,
+    "questions": [
+      {
+        "question": "Saksılara ne koyuldu?",
+        "options": [
+          "Taş",
+          "Fasulye tohumu",
+          "Kumdan oyuncak",
+          "Kuru yaprak"
+        ],
+        "correct": "B",
+        "evidence": "fasulye yetiştirmek"
+      },
+      {
+        "question": "Saksılar nereye yerleştirildi?",
+        "options": [
+          "Farklı odalara",
+          "Kapalı bir kutuya",
+          "Aynı pencerenin önüne",
+          "Okulun çatısına"
+        ],
+        "correct": "C",
+        "evidence": "aynı pencerenin önüne"
+      },
+      {
+        "question": "Birinci saksıyı kim suladı?",
+        "options": [
+          "Mina",
+          "Bora",
+          "Öğretmen",
+          "Sınıf görevlisi"
+        ],
+        "correct": "A",
+        "evidence": "Mina, birinci saksıyı"
+      },
+      {
+        "question": "Öğretmenin uyarısı neydi?",
+        "options": [
+          "Filizlerin hiç ölçülmemesi",
+          "Bütün saksıların atılması",
+          "Her tohumun aynı gün büyümesi",
+          "Az gözlemle genel kural kurulamayacağı"
+        ],
+        "correct": "D",
+        "evidence": "az sayıda gözlemle genel bir kural kurulamayacağını"
+      }
+    ]
+  },
+  {
+    "id": "fa031200-0000-5000-8000-000000000051",
+    "exerciseId": "41bbc0ee-6d42-53dc-bde6-c7f65c615d60",
+    "ageId": "10000000-0000-0000-0000-000000000001",
+    "level": 5,
+    "title": "Kütüphanedeki Harita — kısa çalışma 5",
+    "content": "Ece ve Arda, cumartesi günü okul kütüphanesinde bir okuma köşesi hazırladı. Ece kitapları konularına göre ayırdı. Arda ise rafların yerini gösteren küçük bir harita çizdi. Haritaya masal rafı için bir yıldız ekledi. Sonra haritayı girişteki panoya astılar. Yeni gelen öğrenciler yıldızı izleyerek masal kitaplarını buldu. Görevli, haritanın kitap aramayı kolaylaştırdığını söyledi. Ece ve Arda, bir hafta sonra haritanın anlaşılır olup olmadığını öğrencilere sormaya karar verdi. Böylece yaptıkları işi kullanıcılardan gelen önerilerle geliştirebileceklerdi.\n\nİlk öneri, haritadaki yazıların biraz büyütülmesiydi. İkili bu öneriyi not aldı ve yazıları uzaktan okunabilecek biçimde yeniden düzenledi.\n\nArda çizimi değiştirirken Ece raflardaki başlıkları kontrol etti. Haritadaki adlarla raflardaki adların aynı olması, yanlış yönelmeleri önlemek için önemliydi.\n\nBir öğrenci, bilim kitaplarını da kolayca bulmak istediğini söyledi. Ece bunun için yıldızdan farklı bir işaret seçmenin daha anlaşılır olacağını düşündü.\n\nHaritaya yeni bir işaret eklemeden önce üç küçük taslak çizdiler. Arkadaşlarından her taslakta hangi rafın gösterildiğini açıklamalarını istediler.\n\nDenemede bir çizim diğerlerinden daha kolay anlaşıldı. İkili, en çok beğenilen çizimi değil, en az karışıklık yaratan çizimi kullanmayı seçti.\n\nEski haritayı hemen atmadılar. Yeni çizimin gerçekten daha kullanışlı olup olmadığını karşılaştırabilmek için eski haritanın bir kopyasını sakladılar.\n\nÇalışmanın sonunda önerileri küçük bir deftere yazdılar. Her önerinin yanına yaptıkları değişikliği ve değişikliğin nedenini ekleyerek kararlarını görünür hale getirdiler.\n\nGörevli, düzenli kontrolün bir işi tamamlamak kadar değerli olduğunu anlattı. Kitaplar başka raflara taşındığında haritanın da güncellenmesi gerektiğini hatırlattı.\n\nEce ve Arda, kontrolü sırayla yapacakları bir takvim hazırladı. Böylece bütün sorumluluk tek bir kişiye kalmayacak, bir hata fark edildiğinde birlikte düzeltebileceklerdi.",
+    "wordCount": 247,
+    "questions": [
+      {
+        "question": "Ece kitapları nasıl ayırdı?",
+        "options": [
+          "Konularına göre",
+          "Boylarına göre",
+          "Kapak renklerine göre",
+          "Yazarların yaşına göre"
+        ],
+        "correct": "A",
+        "evidence": "Ece kitapları konularına göre ayırdı"
+      },
+      {
+        "question": "Yıldız hangi rafı gösteriyordu?",
+        "options": [
+          "Bilim rafını",
+          "Masal rafını",
+          "Dergi rafını",
+          "Sözlük rafını"
+        ],
+        "correct": "B",
+        "evidence": "masal rafı için bir yıldız"
+      },
+      {
+        "question": "Harita nereye asıldı?",
+        "options": [
+          "Sınıf kapısına",
+          "Bahçedeki ağaca",
+          "Girişteki panoya",
+          "Kitapların arkasına"
+        ],
+        "correct": "C",
+        "evidence": "girişteki panoya astılar"
+      },
+      {
+        "question": "İkili neden öğrencilere haritayı soracaktı?",
+        "options": [
+          "Kitapları satmak için",
+          "Rafları kaldırmak için",
+          "Kütüphaneyi kapatmak için",
+          "Önerilerle işi geliştirmek için"
+        ],
+        "correct": "D",
+        "evidence": "kullanıcılardan gelen önerilerle geliştirebileceklerdi"
+      }
+    ]
+  },
+  {
+    "id": "fa031200-0000-5000-8000-000000000052",
+    "exerciseId": "41bbc0ee-6d42-53dc-bde6-c7f65c615d60",
+    "ageId": "10000000-0000-0000-0000-000000000001",
+    "level": 5,
+    "title": "Yağmurun Kaydı — kısa çalışma 5",
+    "content": "Deniz, okul bahçesindeki yağmuru gözlemlemek için düz kenarlı bir kap kullandı. Kabı ağaçlardan uzakta, açık bir yere koydu. Her sabah aynı saatte kaptaki suyun yüksekliğini ölçtü. Ölçümü milimetre olarak defterine yazdı. Ardından kabı boşalttı. Bir gün rüzgâr kabı devirdi ve su döküldü. Deniz o günün ölçümünü sıfır yazmak yerine eksik olarak işaretledi. Öğretmeni, sıfır yağış ile kaybolmuş ölçümün farklı bilgiler olduğunu açıkladı. Deniz, kap devrilmesin diye yere sağlam bir tutucu yerleştirdi.\n\nDefterde her ölçümün yanında tarih de bulunuyordu. Tarihleri düzenli yazmak, gözlemlerin hangi sırayla yapıldığını daha sonra anlamayı kolaylaştırdı.\n\nDeniz, ölçüm çizgisini okumadan önce kabı düz bir yüzeye koydu. Eğik duran bir kapta su yüksekliğinin yanıltıcı görünebileceğini fark etmişti.\n\nArkadaşı bir gün ölçüme yardım etti. İki öğrenci sonucu birbirinden bağımsız okuyup karşılaştırdı; farklılık varsa ölçüm çizgisine yeniden baktılar.\n\nHaftanın sonunda sayıları küçük bir tabloya aktardılar. En yüksek değeri bulurken eksik işaretli günü karşılaştırmaya katmamaları gerektiğini hatırladılar.\n\nBazı günler hava bulutlu olduğu halde kapta su yoktu. Deniz, yalnız gökyüzünün görünümüne bakarak yağış miktarına karar verilemeyeceğini öğrendi.\n\nGözlem notlarını sınıfa gösterirken kullandığı kabın yerini de açıkladı. Başka bir yerde aynı sonucun çıkacağını kesin bir bilgi gibi sunmadı.\n\nÖğretmeni, karşılaştırma yapabilmek için yöntemin değişmemesinin yararlı olduğunu söyledi. Deniz bu nedenle kabı ve ölçüm saatini aynı tutmaya çalıştı.\n\nYeni bir defter sayfasında beklenmedik olaylara yer ayırdı. Güçlü rüzgâr, dökülen su veya unutulan ölçüm varsa bunları sayılardan ayrı olarak kaydetti.\n\nDeniz, gözlemlerinin tek başına uzun bir hava tahmini oluşturmadığını biliyordu. Amacı büyük bir sonuç ilan etmek değil, düzenli veri toplama alışkanlığı kazanmaktı.",
+    "wordCount": 247,
+    "questions": [
+      {
+        "question": "Deniz kabı nereye koydu?",
+        "options": [
+          "Ağacın altına",
+          "Kapalı bir dolaba",
+          "Ağaçlardan uzaktaki açık yere",
+          "Sınıf masasının altına"
+        ],
+        "correct": "C",
+        "evidence": "ağaçlardan uzakta, açık bir yere"
+      },
+      {
+        "question": "Ölçümler ne zaman yapıldı?",
+        "options": [
+          "Her sabah aynı saatte",
+          "Yalnız gece",
+          "Her gün rastgele bir saatte",
+          "Sadece hafta sonunda"
+        ],
+        "correct": "A",
+        "evidence": "Her sabah aynı saatte"
+      },
+      {
+        "question": "Su dökülen günün ölçümü nasıl kaydedildi?",
+        "options": [
+          "En yüksek değer olarak",
+          "Eksik olarak",
+          "Sıfır olarak",
+          "Önceki günle aynı olarak"
+        ],
+        "correct": "B",
+        "evidence": "eksik olarak işaretledi"
+      },
+      {
+        "question": "Sağlam tutucu neden yerleştirildi?",
+        "options": [
+          "Suyu ısıtmak için",
+          "Ölçü birimini değiştirmek için",
+          "Yağmuru artırmak için",
+          "Kabın devrilmesini önlemek için"
+        ],
+        "correct": "D",
+        "evidence": "kap devrilmesin diye"
+      }
+    ]
+  },
+  {
+    "id": "fa031200-0000-5000-8000-000000000053",
+    "exerciseId": "41bbc0ee-6d42-53dc-bde6-c7f65c615d60",
+    "ageId": "10000000-0000-0000-0000-000000000001",
+    "level": 5,
+    "title": "Tohumların Sırası — kısa çalışma 5",
+    "content": "Mina ve Bora, sınıfta fasulye yetiştirmek için iki saksı hazırladı. Her saksıya aynı sayıda tohum koydular. Saksıları aynı pencerenin önüne yerleştirdiler. Mina, birinci saksıyı pazartesi günü suladı. Bora ikinci saksıyı salı günü suladı. Çocuklar filizlerin boyunu her gün çizgili bir kâğıda işaretledi. Birinci filiz önce göründü, fakat bu durum bütün fasulyelerin pazartesi sulanması gerektiğini kanıtlamıyordu. Öğretmenleri, az sayıda gözlemle genel bir kural kurulamayacağını söyledi. Çocuklar sonucu anlatırken yalnız kendi denemelerinde gördüklerini yazdı.\n\nHer saksının yanına küçük bir etiket koydular. Etiketler, ölçüm sırasında hangi filizin hangi saksıya ait olduğunu karıştırmamalarına yardımcı oldu.\n\nBir sonraki gün kâğıttaki çizgileri tarihlerle eşleştirdiler. Boy değişiminin yalnız son değerden değil, günler arasındaki farktan anlaşılabildiğini fark ettiler.\n\nBora bir işareti yanlış yere çizdiğini görünce silmek yerine yanına düzeltme notu ekledi. Böylece eski kaydın neden değiştiği anlaşılır kaldı.\n\nMina yaprakların rengini de not etmek istedi. İkili, boy ölçümleri ile renk gözlemlerini ayrı sütunlara yazarak farklı bilgileri birbirinden ayırdı.\n\nBir arkadaşları saksıları farklı pencerelere taşımayı önerdi. Ancak aynı anda birçok şeyi değiştirmenin sonuçları yorumlamayı zorlaştırabileceğini konuştular.\n\nÖğretmenleri, yeni bir denemede neyin karşılaştırılacağını önceden belirlemelerini istedi. Çocuklar önce bir soru yazıp sonra bu soruya uygun düzen kurmayı düşündü.\n\nDenemenin sonunda çizimleri sınıf panosunda sergilediler. Okuyanların süreci anlayabilmesi için başlangıç tarihini, saksı etiketlerini ve kullandıkları ölçü birimini eklediler.\n\nMina, kendi beklentisinin gözlemleri değiştirmemesi gerektiğini söyledi. Beklediğinden farklı bir sonuç gördüğünde bunu da diğer sonuçlar kadar dikkatle kaydetti.\n\nBora bir sonraki çalışmada daha çok saksı kullanmayı önerdi. Bunun kesin bir yanıt sağlayacağını söylemedi; yalnız farklı sonuçları karşılaştırmak için daha fazla gözlem sunacağını düşündü.",
+    "wordCount": 251,
+    "questions": [
+      {
+        "question": "Saksılara ne koyuldu?",
+        "options": [
+          "Taş",
+          "Fasulye tohumu",
+          "Kumdan oyuncak",
+          "Kuru yaprak"
+        ],
+        "correct": "B",
+        "evidence": "fasulye yetiştirmek"
+      },
+      {
+        "question": "Saksılar nereye yerleştirildi?",
+        "options": [
+          "Farklı odalara",
+          "Kapalı bir kutuya",
+          "Aynı pencerenin önüne",
+          "Okulun çatısına"
+        ],
+        "correct": "C",
+        "evidence": "aynı pencerenin önüne"
+      },
+      {
+        "question": "Birinci saksıyı kim suladı?",
+        "options": [
+          "Mina",
+          "Bora",
+          "Öğretmen",
+          "Sınıf görevlisi"
+        ],
+        "correct": "A",
+        "evidence": "Mina, birinci saksıyı"
+      },
+      {
+        "question": "Öğretmenin uyarısı neydi?",
+        "options": [
+          "Filizlerin hiç ölçülmemesi",
+          "Bütün saksıların atılması",
+          "Her tohumun aynı gün büyümesi",
+          "Az gözlemle genel kural kurulamayacağı"
+        ],
+        "correct": "D",
+        "evidence": "az sayıda gözlemle genel bir kural kurulamayacağını"
+      }
+    ]
+  }
+]
