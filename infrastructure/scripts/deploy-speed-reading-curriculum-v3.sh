@@ -74,10 +74,12 @@ case "${1:-validate}" in
   rehearse)
     sha256sum -c payload.sha256
     check_images; prepare_environment
-    backup rehearsal-before.dump
+    if test -s rehearsal-before.dump; then sha256sum -c rehearsal-before.dump.sha256; else backup rehearsal-before.dump; fi
     docker exec postgres createdb -U eduplatform -T template0 "$validation_db"
     trap 'docker exec postgres dropdb -U eduplatform "$validation_db"' EXIT
-    docker exec -i postgres pg_restore -U eduplatform --no-owner --no-privileges -d "$validation_db" < rehearsal-before.dump
+    # Same cluster: all original roles exist. Preserve owners/ACLs so the
+    # application account, not only the backup administrator, can migrate.
+    docker exec -i postgres pg_restore -U eduplatform -d "$validation_db" < rehearsal-before.dump
     psql_owned "$validation_db" -qAt < inventory-protected.sql > rehearsal-before.txt
     run_cli rehearsal.env --migrate-only > rehearsal-migration.log 2>&1
     apply_pack "$validation_db"
