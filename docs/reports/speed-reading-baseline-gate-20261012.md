@@ -29,4 +29,14 @@
 
 Migration, katalog/program veri güncellemesi veya kullanıcı sonuç silme yoktur. Identity, Koçluk ve ortak öğretmen/kurum paneli bu yayında değiştirilmez.
 
-Canlı yayın sonucu aşağıya doğrulandıktan sonra eklenecektir.
+## Canlı yayın sonucu
+
+- 12 Ekim 2026, 14:43:17 UTC (17:43:17 Türkiye): kontrollü yayın tamamlandı.
+- API ve öğrenci frontend imajı: `baseline-gate-20261012-fddd945e`; kaynak revizyonu `fddd945e76205118ac7dce944f08af11759b68ef`.
+- Hızlı Okuma veritabanının yedeği ve geri dönüş imajları VPS'te korundu. Salt okunur denetimde 20 program, 560 gün ve 3.640 egzersiz kaydı doğrulandı; tüm tablo parmak izleri değişmeden kaldı.
+- API hazır olma kontrolü `Healthy`, frontend sağlık kontrolü başarılı. Hedef dışındaki çalışan konteynır kimlikleri ve imajları değişmedi.
+- Gerçek alan adında ana sayfa, dashboard ve sınav SPA yolları HTTP 200 döndü. Bu, oturumlu sınav akışının doğrulaması değildir.
+- Alan adından indirilen yeni ana JavaScript ve sınav parçasının SHA-256 değerleri yayın paketine birebir uydu.
+- Oturumsuz faz planı ve başlangıç sınavı başlatma istekleri HTTP 401 ile reddedildi.
+- Geçici servis ortam dosyası kaldırıldı; gizli değerler rapora veya Git'e alınmadı.
+- Oturumlu öğrenci akışları yerel masaüstü/mobil tarayıcı testlerinde, sunucu kuralları gerçek PostgreSQL testlerinde doğrulandı. Canlıda gerçek öğrenci hesabıyla sınav/ilerleme kaydı oluşturulmadı.
