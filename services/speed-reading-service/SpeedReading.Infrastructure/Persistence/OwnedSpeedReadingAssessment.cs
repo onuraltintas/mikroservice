@@ -1482,6 +1482,8 @@ internal sealed class OwnedSpeedReadingAssessment(
         var readingTexts = await (
             from readingText in db.ReadingTexts.AsNoTracking()
             where readingText.IsActive
+                && !string.IsNullOrWhiteSpace(readingText.Content)
+                && !string.IsNullOrWhiteSpace(readingText.Title)
                 && !readingText.IsDeleted
                 && (!ageGroupConfigurationId.HasValue
                     || readingText.TargetAgeGroupId == null

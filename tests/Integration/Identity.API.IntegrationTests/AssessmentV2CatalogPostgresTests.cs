@@ -53,8 +53,14 @@ public sealed class AssessmentV2CatalogPostgresTests(PostgresFixture postgres)
             for (var index = 0; index < 10; index++)
                 db.ReadingQuestions.Add(ReadingQuestion.Create(Guid.NewGuid(), text.Id, "Soru", "A", index + 2, 1, 1,
                     optionA: "A", optionB: "B", optionC: "C", optionD: "D"));
+            var blank = ReadingText.Create(Guid.NewGuid(), "Blank", "Temporary", difficultyLevel: 1, targetAgeGroupId: age);
+            db.ReadingTexts.Add(blank);
+            for (var index = 0; index < 10; index++)
+                db.ReadingQuestions.Add(ReadingQuestion.Create(Guid.NewGuid(), blank.Id, "Soru", "A", index, 1, 1,
+                    optionA: "A", optionB: "B", optionC: "C", optionD: "D"));
         }
         await db.SaveChangesAsync();
+        await db.Database.ExecuteSqlRawAsync("UPDATE speed_reading.reading_texts SET content=E' \\t\\n' WHERE title='Blank'");
         var sql = await File.ReadAllTextAsync(Path.Combine(pack, "apply.sql"));
         var rollback = await File.ReadAllTextAsync(Path.Combine(pack, "rollback.sql"));
         await db.Database.ExecuteSqlRawAsync("UPDATE speed_reading.exercises SET description='Admin edit' WHERE id={0}", rows[0].GetProperty("id").GetGuid());
@@ -111,6 +117,8 @@ public sealed class AssessmentV2CatalogPostgresTests(PostgresFixture postgres)
         foreach (var row in rows)
             Assert.True(JsonNode.DeepEquals(JsonNode.Parse(row.GetProperty("previousConfiguration").GetRawText()),
                 JsonNode.Parse((await db.Exercises.SingleAsync(e => e.Id == row.GetProperty("id").GetGuid())).ConfigurationJson)));
+        await db.Database.ExecuteSqlRawAsync("UPDATE speed_reading.reading_texts SET content=E' \\t\\n'");
+        await Assert.ThrowsAsync<PostgresException>(() => Execute(sql));
         await db.Database.ExecuteSqlRawAsync("UPDATE speed_reading.exercises SET configuration_json='{{}}'::jsonb WHERE id={0}", rows[0].GetProperty("id").GetGuid());
         await Assert.ThrowsAsync<PostgresException>(() => Execute(sql));
         db.ChangeTracker.Clear();

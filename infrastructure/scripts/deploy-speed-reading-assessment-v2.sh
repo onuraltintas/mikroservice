@@ -113,7 +113,7 @@ case "${1:-build}" in
    if [[ "$succeeded" != true && "$stopped" == true ]]; then
     set +e
     echo 'Restoring previous Speed Reading configuration and images' >&2
-    docker stop --time 30 "$backend" >/dev/null
+    docker stop --time 30 "$backend" >/dev/null || { echo 'Cannot stop API; catalog rollback aborted' >&2; exit 1; }
     if [[ "$changed" == true ]]; then psql_owned speedreading_owned_db < rollback.sql || { echo 'Rollback failed; API left stopped for manual recovery' >&2; exit 1; }; fi
     "${compose[@]}" -f "$release/rollback.override.yml" up -d --no-deps --pull never speed-reading-service speed-reading-frontend
    fi
