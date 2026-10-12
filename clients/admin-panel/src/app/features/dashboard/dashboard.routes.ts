@@ -4,6 +4,12 @@ import { ADMIN_PERMISSIONS } from '../../core/auth/permissions';
 
 export const DASHBOARD_ROUTES: Routes = [
     {
+        path: 'course-management',
+        canActivate: [permissionGuard],
+        data: { role: 'SystemAdmin' },
+        loadComponent: () => import('../course-management/course-management-admin.component').then(m => m.CourseManagementAdminComponent)
+    },
+    {
         path: 'coaching/catalog',
         canActivate: [permissionGuard],
         data: { permission: ADMIN_PERMISSIONS.coachingView, role: 'SystemAdmin' },

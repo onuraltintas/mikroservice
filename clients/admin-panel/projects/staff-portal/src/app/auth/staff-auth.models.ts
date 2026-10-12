@@ -1,4 +1,4 @@
-export type StaffProduct = 'coaching' | 'speed-reading';
+export type StaffProduct = 'coaching' | 'speed-reading' | 'course-management';
 
 export interface StaffProductAccess {
   product: StaffProduct;

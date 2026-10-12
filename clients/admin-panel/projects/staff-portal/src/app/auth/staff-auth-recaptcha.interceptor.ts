@@ -23,7 +23,7 @@ export function getStaffAuthRecaptchaAction(request: HttpRequest<unknown>): stri
   const [product, action] = segments;
 
   return segments.length === 2
-      && ['coaching', 'speed-reading'].includes(product)
+      && ['coaching', 'speed-reading', 'course-management'].includes(product)
       && action === 'login'
     ? 'auth_login'
     : null;

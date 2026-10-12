@@ -3,7 +3,8 @@ namespace Identity.Domain.Enums;
 public enum PlatformProduct
 {
     Coaching = 1,
-    SpeedReading = 2
+    SpeedReading = 2,
+    CourseManagement = 3
 }
 
 public enum UserProductAccessSource
@@ -21,6 +22,7 @@ public static class PlatformProductExtensions
     {
         PlatformProduct.Coaching => "coaching",
         PlatformProduct.SpeedReading => "speed-reading",
+        PlatformProduct.CourseManagement => "course-management",
         _ => throw new ArgumentOutOfRangeException(nameof(product))
     };
 
@@ -33,6 +35,9 @@ public static class PlatformProductExtensions
                 return true;
             case "speed-reading":
                 product = PlatformProduct.SpeedReading;
+                return true;
+            case "course-management":
+                product = PlatformProduct.CourseManagement;
                 return true;
             default:
                 product = default;

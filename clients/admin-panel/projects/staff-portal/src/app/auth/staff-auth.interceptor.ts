@@ -39,6 +39,7 @@ function withSession(request: HttpRequest<unknown>, token: string): HttpRequest<
 function isSessionEndpoint(url: string): boolean {
   return url.endsWith('/auth/coaching/login')
     || url.endsWith('/auth/speed-reading/login')
+    || url.endsWith('/auth/course-management/login')
     || url.endsWith('/auth/refresh-token')
     || url.endsWith('/auth/revoke-token')
     || url.endsWith('/auth/mfa/setup')

@@ -10,13 +10,14 @@ import { SpeedReadingTeacherWorkspaceComponent } from './features/speed-reading/
 import { SpeedReadingInstitutionWorkspaceComponent } from './features/speed-reading/speed-reading-institution-workspace.component';
 import { StaffAccountSettingsComponent } from './account/staff-account-settings.component';
 import { StaffNotificationCenterComponent } from './notifications/staff-notification-center.component';
+import { CourseManagementWorkspaceComponent } from './features/course-management/course-management-workspace.component';
 
 type StaffWorkspaceRole = 'teacher' | 'institution';
 
 @Component({
   selector: 'staff-root',
   standalone: true,
-  imports: [FormsModule, CoachingTeacherWorkspaceComponent, CoachingInstitutionWorkspaceComponent, SpeedReadingTeacherWorkspaceComponent, SpeedReadingInstitutionWorkspaceComponent, StaffAccountSettingsComponent, StaffNotificationCenterComponent],
+  imports: [FormsModule, CoachingTeacherWorkspaceComponent, CoachingInstitutionWorkspaceComponent, SpeedReadingTeacherWorkspaceComponent, SpeedReadingInstitutionWorkspaceComponent, StaffAccountSettingsComponent, StaffNotificationCenterComponent, CourseManagementWorkspaceComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
@@ -24,8 +25,12 @@ export class AppComponent {
   readonly auth = inject(StaffAuthService);
   private readonly document = inject(DOCUMENT);
   readonly currentYear = new Date().getFullYear();
-  selectedProduct: StaffProduct = new URLSearchParams(this.document.defaultView?.location.search ?? '')
-    .get('product') === 'speed-reading' ? 'speed-reading' : 'coaching';
+  selectedProduct: StaffProduct = this.initialProduct();
+
+  private initialProduct(): StaffProduct {
+    const product = new URLSearchParams(this.document.defaultView?.location.search ?? '').get('product');
+    return product === 'speed-reading' || product === 'course-management' ? product : 'coaching';
+  }
   email = '';
   password = '';
   rememberMe = false;
@@ -97,6 +102,7 @@ export class AppComponent {
   }
 
   productLabel(product: StaffProduct | null): string {
+    if (product === 'course-management') return 'Kurs Yönetimi';
     return product === 'speed-reading' ? 'Hızlı Okuma' : 'Koçluk';
   }
 

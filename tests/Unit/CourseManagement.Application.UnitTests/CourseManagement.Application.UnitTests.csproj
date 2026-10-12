@@ -11,10 +11,12 @@
     <PackageReference Include="xunit" Version="2.6.6" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.5.6" />
     <PackageReference Include="coverlet.collector" Version="6.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.2" />
   </ItemGroup>
   <ItemGroup>
     <Using Include="Xunit" />
     <ProjectReference Include="../../../services/course-management-service/CourseManagement.Domain/CourseManagement.Domain.csproj" />
+    <ProjectReference Include="../../../services/course-management-service/CourseManagement.Infrastructure/CourseManagement.Infrastructure.csproj" />
     <Compile Include="../../../services/identity-service/Identity.Domain/Enums/PlatformProduct.cs" Link="Identity/PlatformProduct.cs" />
     <Compile Include="../../../services/identity-service/Identity.Domain/Enums/PlatformPermissionScope.cs" Link="Identity/PlatformPermissionScope.cs" />
   </ItemGroup>

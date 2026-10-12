@@ -47,7 +47,7 @@ public sealed class StaffSessionController(
         return Ok(products);
     }
 
-    [HttpPost("switch/{product:regex(coaching|speed-reading)}")]
+    [HttpPost("switch/{product:regex(coaching|speed-reading|course-management)}")]
     [Authorize]
     public async Task<IActionResult> SwitchProduct(
         [FromRoute] string product,

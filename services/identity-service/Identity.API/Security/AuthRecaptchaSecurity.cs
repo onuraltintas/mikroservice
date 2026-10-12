@@ -165,7 +165,8 @@ public static class AuthRecaptchaRules
 
     private static bool IsProduct(string product) =>
         string.Equals(product, "coaching", StringComparison.OrdinalIgnoreCase)
-        || string.Equals(product, "speed-reading", StringComparison.OrdinalIgnoreCase);
+        || string.Equals(product, "speed-reading", StringComparison.OrdinalIgnoreCase)
+        || string.Equals(product, "course-management", StringComparison.OrdinalIgnoreCase);
 }
 
 public interface IAuthRecaptchaVerifier

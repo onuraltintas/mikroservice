@@ -67,6 +67,14 @@ export class SidebarComponent {
       }
     ];
 
+    if (isSystemAdmin) {
+      items.push({
+        label: 'Kurs Yönetimi',
+        route: '/dashboard/course-management',
+        icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path d="M4 5h16v14H4zM8 3v4m8-4v4M4 10h16" /></svg>'
+      });
+    }
+
     if (isManager) {
       items.push({
         label: 'Kullanıcı İşlemleri', // Parent Menu

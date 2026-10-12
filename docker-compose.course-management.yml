@@ -1,0 +1,46 @@
+# Optional development overlay; existing product services keep their configuration.
+services:
+  course-management-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: course_management
+      POSTGRES_USER: course_management
+      POSTGRES_PASSWORD: ${COURSE_MANAGEMENT_DB_PASSWORD:?Set a separate course database password}
+    ports:
+      - "127.0.0.1:${COURSE_MANAGEMENT_DB_PORT:-5435}:5432"
+    volumes:
+      - course_management_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U course_management -d course_management"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks: [edu-network]
+
+  course-management-service:
+    build:
+      context: .
+      dockerfile: services/course-management-service/Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      COURSE_MANAGEMENT_CONNECTION_STRING: "Host=course-management-db;Database=course_management;Username=course_management;Password=${COURSE_MANAGEMENT_DB_PASSWORD}"
+      JWT_SECRET: ${JWT_SECRET:?Set Identity JWT secret}
+      JWT_ISSUER: ${JWT_ISSUER:?Set Identity JWT issuer}
+      JWT_AUDIENCE: ${JWT_AUDIENCE:?Set Identity JWT audience}
+      JWT_KEY_ID: ${JWT_KEY_ID:-}
+      JWT_PREVIOUS_SECRETS: ${JWT_PREVIOUS_SECRETS:-}
+      JWT_PREVIOUS_KEY_IDS: ${JWT_PREVIOUS_KEY_IDS:-}
+      AllowedHosts: "localhost;127.0.0.1;course-management-service"
+    ports:
+      - "127.0.0.1:${COURSE_MANAGEMENT_PORT:-5005}:8080"
+    depends_on:
+      course-management-db:
+        condition: service_healthy
+    networks: [edu-network]
+
+  api-gateway:
+    environment:
+      - ReverseProxy__Clusters__course-management-cluster__Destinations__destination1__Address=http://course-management-service:8080
+
+volumes:
+  course_management_data:
