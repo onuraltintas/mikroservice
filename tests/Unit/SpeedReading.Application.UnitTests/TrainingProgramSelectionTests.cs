@@ -5,6 +5,8 @@ using Microsoft.EntityFrameworkCore;
 using SpeedReading.Domain.Catalog;
 using SpeedReading.Domain.Programs;
 using SpeedReading.Infrastructure.Persistence;
+using SpeedReading.Application.Content;
+using SpeedReading.Application.ExerciseSessions;
 
 namespace SpeedReading.Application.UnitTests;
 
@@ -80,6 +82,38 @@ public sealed class TrainingProgramSelectionTests
 
     private static OwnedSpeedReadingDbContext Store() => new(new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>()
         .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
+
+    [Fact]
+    public async Task Normal_session_cannot_start_an_assessment_only_exercise()
+    {
+        await using var db = Store();
+        var type = ExerciseType.Create(Guid.NewGuid(), "Fixation", "Fixation", "motion_path");
+        var exercise = Exercise.Create("Measurement", type.Name, "{}", 1, Guid.NewGuid(), type.Id, isAssessmentOnly: true);
+        db.ExerciseTypes.Add(type);
+        db.Exercises.Add(exercise);
+        await db.SaveChangesAsync();
+        var serviceType = typeof(OwnedSpeedReadingDbContext).Assembly.GetType(
+            "SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingExerciseSessions")!;
+        var service = (ISpeedReadingExerciseSessions)Activator.CreateInstance(serviceType, db)!;
+        var action = () => service.StartAsync(Guid.NewGuid(), new StartExerciseSessionRequest { ExerciseId = exercise.Id });
+        await action.Should().ThrowAsync<EduPlatform.Shared.Kernel.Exceptions.BusinessRuleException>()
+            .Where(error => error.Code == "Exercise.AssessmentOnly");
+    }
+
+    [Fact]
+    public async Task Student_catalog_excludes_assessment_content_but_admin_can_see_it()
+    {
+        await using var db = Store();
+        var type = ExerciseType.Create(Guid.NewGuid(), "Fixation", "Fixation", "motion_path");
+        db.ExerciseTypes.Add(type);
+        db.Exercises.Add(Exercise.Create("Measurement", type.Name, "{}", 1, Guid.NewGuid(), type.Id, isAssessmentOnly: true));
+        await db.SaveChangesAsync();
+        var serviceType = typeof(OwnedSpeedReadingDbContext).Assembly.GetType(
+            "SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingCatalog")!;
+        var catalog = (ILegacySpeedReadingCatalog)Activator.CreateInstance(serviceType, db)!;
+        (await catalog.GetExercisesAsync(null, null, null, 1, 20, null)).Items.Should().BeEmpty();
+        (await catalog.GetExercisesAsync(null, null, null, 1, 20, null, includeInactive: true)).Items.Should().HaveCount(1);
+    }
 
     private static string Pattern(string type, string? mode = null) => JsonSerializer.Serialize(new
     {
