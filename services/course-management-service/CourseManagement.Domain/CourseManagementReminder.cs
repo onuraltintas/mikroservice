@@ -36,7 +36,8 @@ public sealed class CourseManagementReminder
         if (id == Guid.Empty || workspaceId == Guid.Empty || relatedEntityId == Guid.Empty || recipientUserId == Guid.Empty)
             throw new ArgumentException("Reminder identifiers are required.");
         if (!Enum.IsDefined(type)) throw new ArgumentOutOfRangeException(nameof(type));
-        if (targetAt == default || notifyAt == default || createdAt == default || notifyAt >= targetAt)
+        if (targetAt == default || notifyAt == default || createdAt == default || notifyAt > targetAt
+            || notifyAt == targetAt && type != CourseManagementReminderType.InstallmentDue)
             throw new ArgumentException("Reminder target and notification times are invalid.");
 
         return new CourseManagementReminder
