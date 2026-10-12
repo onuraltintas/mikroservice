@@ -37,7 +37,9 @@ case "${1:-build}" in
   printf 'services:\n  speed-reading-frontend:\n    image: %s\n    pull_policy: never\n' "$web_image" > production.override.yml
   printf 'services:\n  speed-reading-frontend:\n    image: %s\n    pull_policy: never\n' "$(<previous-web-image.txt)" > rollback.override.yml
   prepare_compose
-  docker build --build-arg "PREVIOUS_WEB_IMAGE=$(<previous-web-image.txt)" --build-arg "SOURCE_REVISION=$revision" -f web.Dockerfile -t "$web_image" .
+  # BuildKit resolves a tagged local image, not a bare Docker image ID.
+  docker tag "$(<previous-web-image.txt)" "$web_image-base"
+  docker build --build-arg "PREVIOUS_WEB_IMAGE=$web_image-base" --build-arg "SOURCE_REVISION=$revision" -f web.Dockerfile -t "$web_image" .
   check_image
   docker run --rm "$web_image" nginx -t
   ;;

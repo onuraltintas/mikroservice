@@ -1,4 +1,4 @@
-ARG PREVIOUS_WEB_IMAGE
+ARG PREVIOUS_WEB_IMAGE=nginx:1.27.5-alpine
 FROM ${PREVIOUS_WEB_IMAGE}
 ARG SOURCE_REVISION
 # Keep previously published lazy-loaded assets available for existing tabs.
