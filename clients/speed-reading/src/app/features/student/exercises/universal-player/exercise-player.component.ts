@@ -1189,6 +1189,12 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       ?? config?.EngineType
       ?? this.parsedConfig?.engineType
       ?? '').toLowerCase();
+    // Takistoskop uses server-owned stimuli, not a pinned reading passage.
+    // The same text_stream engine also runs RSVP, which still requires text.
+    if (engineType === 'text_stream'
+      && this.exercise?.exerciseTypeName?.toLowerCase() === 'tachistoscope') {
+      return false;
+    }
     return [
       'reading_comprehension',
       'word_highlight',
