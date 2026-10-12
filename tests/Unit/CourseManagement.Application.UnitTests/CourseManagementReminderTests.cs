@@ -55,6 +55,39 @@ public sealed class CourseManagementReminderTests
             DateTimeOffset.UtcNow, DateTimeOffset.UtcNow.AddHours(1), DateTimeOffset.UtcNow));
     }
 
+    [Fact]
+    public void DueDayReminderCanBeQueuedAtItsTargetTime()
+    {
+        var dueAt = new DateTimeOffset(2026, 11, 18, 9, 0, 0, TimeSpan.FromHours(3));
+
+        var reminder = CourseManagementReminder.Create(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(),
+            CourseManagementReminderType.InstallmentDue, dueAt, dueAt, dueAt.AddDays(-1));
+
+        Assert.Equal(CourseManagementReminderType.InstallmentDue, reminder.Type);
+    }
+
+    [Fact]
+    public void StaleLessonAndUpcomingInstallmentRemindersAreNotDelivered()
+    {
+        var now = new DateTimeOffset(2026, 11, 18, 12, 0, 0, TimeSpan.Zero);
+
+        Assert.False(CourseManagementReminderSchedule.IsDeliverable(CourseManagementReminderType.Lesson,
+            now.AddMinutes(-1), now));
+        Assert.False(CourseManagementReminderSchedule.IsDeliverable(CourseManagementReminderType.InstallmentUpcoming,
+            now, now));
+    }
+
+    [Fact]
+    public void DueDayInstallmentReminderIsDeliveredOnlyOnItsIstanbulCalendarDay()
+    {
+        var dueAt = new DateTimeOffset(2026, 11, 18, 9, 0, 0, TimeSpan.FromHours(3));
+
+        Assert.True(CourseManagementReminderSchedule.IsDeliverable(CourseManagementReminderType.InstallmentDue,
+            dueAt, dueAt.AddHours(4)));
+        Assert.False(CourseManagementReminderSchedule.IsDeliverable(CourseManagementReminderType.InstallmentDue,
+            dueAt, dueAt.AddDays(1)));
+    }
+
     private static CourseManagementReminder CreateReminder() => CourseManagementReminder.Create(
         Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), CourseManagementReminderType.Lesson,
         DateTimeOffset.UtcNow.AddDays(1), DateTimeOffset.UtcNow, DateTimeOffset.UtcNow);
