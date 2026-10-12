@@ -9,6 +9,7 @@
 
 import { BaseEngine, EngineConfig, EngineState, EngineResult, EngineCallbacks } from './base-engine.interface';
 import { visualAngleToAxisOffsetPercent } from './visual-expansion-position';
+import { AssessmentBlockProtocol, assessmentBlockValue, readAssessmentBlockProtocol } from './assessment-block-protocol';
 
 export interface VisualExpansionConfig extends EngineConfig {
     expansion: {
@@ -83,6 +84,8 @@ export class VisualExpansionEngine implements BaseEngine {
     private awaitingServer = false;
     private pendingAnswers: string[] = [];
     private stagedProgression = true;
+    private assessmentProtocol?: AssessmentBlockProtocol;
+    private restoredRound = 0;
     private previousStimuli: string[] = [];
 
     // Stimulus State
@@ -98,6 +101,8 @@ export class VisualExpansionEngine implements BaseEngine {
         // Backend'den gelen yaş ve zorluk bazlı parametreleri al
         // Backend hem PascalCase hem camelCase gönderebilir
         const backendConfig = config as any;
+        this.assessmentProtocol = readAssessmentBlockProtocol(backendConfig.assessmentProtocol, true);
+        this.restoredRound = Number(backendConfig.visualExpansionRound) || 0;
         this.serverAuthoritative = backendConfig.serverAuthoritative === true;
         this.stagedProgression = backendConfig.isAssessmentMode !== true;
 
@@ -174,6 +179,11 @@ export class VisualExpansionEngine implements BaseEngine {
             this.config.timing.durationMs = displayDurationMs;
         }
         this.initialDurationMs = this.config.timing.durationMs;
+        if (this.assessmentProtocol?.version === 2) {
+            this.state.totalSteps = this.assessmentProtocol.practiceRounds + this.assessmentProtocol.roundsPerBlock * 3;
+            this.currentDegrees = assessmentBlockValue(this.assessmentProtocol, 0);
+            this.config.timing.durationMs = 200;
+        }
 
         // Yaş grubu ve zorluk seviyesi
         // Backend artık AgeGroupConfiguration tablosundan dinamik olarak yaş grubu adını gönderiyor
@@ -206,7 +216,7 @@ export class VisualExpansionEngine implements BaseEngine {
         this.state.isRunning = true;
         this.state.isPaused = false;
         this.startTime = Date.now();
-        this.state.currentStep = 0;
+        this.state.currentStep = this.restoredRound;
 
         this.timerInterval = setInterval(() => {
             if (!this.state.isPaused) {
@@ -243,6 +253,10 @@ export class VisualExpansionEngine implements BaseEngine {
     }
 
     private showStimulus(): void {
+        if (this.assessmentProtocol?.version === 2) {
+            this.currentDegrees = assessmentBlockValue(this.assessmentProtocol, this.state.currentStep);
+            this.config.timing.durationMs = 200;
+        }
         this.generateStimuli();
         this.maxDegreesReached = Math.max(this.maxDegreesReached, this.currentDegrees);
         this.isStimulusVisible = true;
@@ -303,10 +317,11 @@ export class VisualExpansionEngine implements BaseEngine {
         }
 
         const isFullyCorrect = userAnswers.length === correctAnswers.length && correctCount === correctAnswers.length;
-        this.totalAnswers++;
+        const isPractice = this.isAssessmentPractice();
+        if (!isPractice) this.totalAnswers++;
 
         // Detaylı tur sonucunu kaydet
-        this.roundResults.push({
+        if (!isPractice) this.roundResults.push({
             round: this.state.currentStep + 1,
             degrees: this.currentDegrees,
             correct: isFullyCorrect,
@@ -319,10 +334,10 @@ export class VisualExpansionEngine implements BaseEngine {
             timestamp: new Date().toISOString()
         });
 
-        if (isFullyCorrect) {
+        if (isFullyCorrect && !isPractice) {
             this.correctAnswers++;
             this.successStreak++;
-            if (!this.stagedProgression || this.successStreak >= 3) {
+            if (!this.assessmentProtocol && (!this.stagedProgression || this.successStreak >= 3)) {
                 if (this.currentDegrees < this.targetDegrees) {
                     this.currentDegrees = Math.min(this.targetDegrees, this.currentDegrees + 2);
                 } else if (this.stagedProgression) {
@@ -333,7 +348,7 @@ export class VisualExpansionEngine implements BaseEngine {
                 this.successStreak = 0;
             }
             this.failStreak = 0;
-        } else {
+        } else if (!isPractice) {
             // Yanlış cevapta hız/açı düşmez, olduğu yerde kalır
             this.failStreak++;
             this.successStreak = 0;
@@ -416,9 +431,12 @@ export class VisualExpansionEngine implements BaseEngine {
                 : serverCorrect === true;
             const correctAnswers = this.lastShownStimuli.map(value => value.toUpperCase());
             const responseTimeMs = Number(response?.feedbackData?.responseTimeMs ?? Date.now() - this.stimulusShownTime);
-            this.totalAnswers++;
-            if (isCorrect) this.correctAnswers++; else this.state.errors++;
-            this.roundResults.push({
+            const isPractice = this.isAssessmentPractice();
+            if (!isPractice) {
+                this.totalAnswers++;
+                if (isCorrect) this.correctAnswers++; else this.state.errors++;
+            }
+            if (!isPractice) this.roundResults.push({
                 round: this.state.currentStep + 1,
                 degrees: this.currentDegrees,
                 correct: isCorrect,
@@ -431,12 +449,16 @@ export class VisualExpansionEngine implements BaseEngine {
                 timestamp: new Date().toISOString()
             });
             this.pendingAnswers = [];
-            this.state.currentStep++;
-            this.state.accuracy = Math.round((this.correctAnswers / this.totalAnswers) * 100);
+            this.state.currentStep = Number.isInteger(response?.nextStep) ? response.nextStep : this.state.currentStep + 1;
+            this.state.accuracy = this.totalAnswers ? Math.round((this.correctAnswers / this.totalAnswers) * 100) : 0;
             this.callbacks.onStepComplete(this.state.currentStep, isCorrect);
             this.callbacks.onStateChange({ ...this.state });
             this.scheduleNextStimulus();
         }
+    }
+
+    private isAssessmentPractice(): boolean {
+        return this.assessmentProtocol?.version === 2 && this.state.currentStep < this.assessmentProtocol.practiceRounds;
     }
 
     private positionStimuli(contents: string[]): Array<{ content: string; x: number; y: number }> {

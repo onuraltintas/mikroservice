@@ -14,6 +14,7 @@ import { AuthService } from '../../../../core/services/auth.service';
 import { canUseStaffTraining } from '../../../../core/guards/staff-training.guard';
 import { applyCustomPreviewSettings, getCustomPreviewControls } from './custom-preview-settings';
 import { resolveSchulteSettings } from './schulte-settings';
+import { assessmentRoundLabel } from './engines/assessment-block-protocol';
 
 import { EngineFactory, EngineType } from './engines/engine-factory';
 import { shouldForwardExerciseAction } from './exercise-action-policy';
@@ -381,6 +382,17 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     return !this.isAssessmentMode && this.engine?.engineType === 'reading_comprehension'
       && (this.backendSessionConfig?.comprehensionMode ?? this.parsedConfig?.['engineConfig']?.['comprehensionMode']
         ?? this.parsedConfig?.['comprehensionMode']) === 'learning';
+  }
+
+  canReviewComprehensionText(): boolean {
+    return this.isComprehensionLearning() || this.isAssessmentMode && this.engine?.engineType === 'reading_comprehension'
+      && this.backendSessionConfig?.assessmentTextReviewAllowed === true;
+  }
+
+  getAssessmentRoundLabel(): string | null {
+    const plan = this.backendSessionConfig ? this.backendSessionConfig.assessmentProtocol
+      : this.parsedConfig?.engineConfig?.['assessmentProtocol'];
+    return assessmentRoundLabel(plan, this.engineState.currentStep);
   }
 
   private defersComprehensionFeedback(): boolean {
@@ -2413,7 +2425,8 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
 
   // Question Timer Methods
   private getQuestionTimeLimit(question: any): number {
-    if (this.engine?.engineType === 'reading_comprehension' && !this.isAssessmentMode) return 0;
+    if (this.engine?.engineType === 'reading_comprehension'
+      && (!this.isAssessmentMode || this.canReviewComprehensionText())) return 0;
     if (this.engine?.engineType === 'exam_simulation') {
       const seconds = this.backendSessionConfig?.examQuestionTimeSeconds
         ?? this.parsedConfig?.['engineConfig']?.['timing']?.questionTimeSeconds

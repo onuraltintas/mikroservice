@@ -359,6 +359,7 @@
                 <span class="word-count-display word-count-display--active">
                     {{ engineState.currentStep }}/{{ engineState.totalSteps }}
                     <small class="word-count-display__label">{{ isTachistoscopeMode() ? 'Uyaran' : 'Kelime' }}</small>
+                    <small *ngIf="getAssessmentRoundLabel() as label">{{ label }}</small>
                 </span>
                 <div class="ep-progress-bar"><div class="ep-progress-bar__fill" [style.width.%]="getProgressPercent()"></div></div>
             </div>
@@ -370,6 +371,8 @@
                 <span class="material-icons">close</span>
             </button>
         </div>
+
+        <p *ngIf="getAssessmentRoundLabel()" role="note">İlk üç tur alıştırmadır; sonuç puanına dahil edilmez.</p>
 
         <div class="flash-area">
             <!-- Fixation Point -->
@@ -613,9 +616,10 @@
             </div>
             <div class="progress-info">
                 <span>Tur {{ engineState.currentStep }} / {{ engineState.totalSteps }}</span>
+                <small *ngIf="getAssessmentRoundLabel() as label">{{ label }}</small>
                 <div class="ep-progress-bar"><div class="ep-progress-bar__fill" [style.width.%]="getProgressPercent()"></div></div>
             </div>
-            <div class="score-badge" *ngIf="engineState.currentStep > 0">
+            <div class="score-badge" *ngIf="engineState.currentStep > 0 && !isAssessmentMode">
                 <span class="correct-count">
                     <span class="material-icons">check_circle</span>
                     {{ getExpansionCorrectCount() }}
@@ -956,7 +960,7 @@
         </div>
 
         <div class="question-area">
-            <div *ngIf="isComprehensionLearning()" class="exam-paragraph-content">
+            <div *ngIf="canReviewComprehensionText()" class="exam-paragraph-content">
                 <button class="ep-btn ep-btn--secondary" type="button" [attr.aria-expanded]="comprehensionTextVisible"
                     aria-controls="comprehension-review-text" (click)="comprehensionTextVisible = !comprehensionTextVisible">
                     {{ comprehensionTextVisible ? 'Metni gizle' : 'Metne tekrar bak' }}
@@ -1672,6 +1676,14 @@
             </div>
 
             <!-- Exercise Info Badges -->
+            <section *ngIf="sessionResult?.detailedResults?.['assessmentBlockResults'] as blocks" aria-label="Blok sonuçları">
+                <h3>{{ engine?.engineType === 'visual_expansion' ? 'Çevresel harf tanıma başarısı' : 'Sayı tanıma başarısı' }}</h3>
+                <p>Alıştırma turları dahil değildir. Bu sonuç klinik bir ölçüm veya okuma hızı değildir.</p>
+                <p *ngFor="let block of blocks">
+                    Blok {{ block.block }} · {{ block.rounds }} tur · %{{ block.accuracy | number:'1.0-1' }}
+                    {{ engine?.engineType === 'text_stream' ? '· ' + block.value + ' ms' : '' }}
+                </p>
+            </section>
             <div class="exercise-info-badges" *ngIf="engine?.engineType !== 'grid_interaction'">
                 <div class="info-tag age-tag" *ngIf="getAgeGroupLabel()">
                     <span class="material-icons">people</span>
@@ -1971,6 +1983,9 @@
                 </div>
             </div>
 
+            <p *ngIf="isAssessmentMode && canReviewComprehensionText()">
+                Hız yalnız ilk okumadan hesaplanır. Anlama sorularında metne dönülebilir; bu iki sonuç ayrı değerlendirilir.
+            </p>
             <p *ngIf="engine?.engineType === 'reading_comprehension' && !result?.details?.wpm">
                 {{ isComprehensionLearning() ? 'Metne tekrar bakılabildiği için bu çalışmada bağımsız okuma hızı verilmez.' : 'Okuma hızı ölçülemedi. Çok kısa veya geçerli ölçüm aralığı dışındaki okumalar hız olarak raporlanmaz.' }}
             </p>

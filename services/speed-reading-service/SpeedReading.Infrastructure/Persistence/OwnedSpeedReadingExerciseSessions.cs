@@ -820,7 +820,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                 : SpeedReadingExerciseSessionRules.CalculateCompositeScore(comprehension, rawWpm)
             : IsErrorAnalysis(state) ? ErrorAnalysisScore(state)
             : IsScanning(state) ? Math.Max(0, accuracy - session.IncorrectCount * 10m) : accuracy;
-        var weightedKdp = rawWpm.HasValue && !IsFreeReadingPractice(state) ? Math.Round(rawWpm.Value * comprehension / 100, 2) : (decimal?)null;
+        var weightedKdp = rawWpm.HasValue && !IsFreeReadingPractice(state) && !state.AssessmentTextReviewAllowed
+            ? Math.Round(rawWpm.Value * comprehension / 100, 2) : (decimal?)null;
         var xpAwarded = measurementStatus == SpeedReadingMeasurementStatus.Measured && !state.ReadingIncomplete
             ? SpeedReadingExerciseSessionRules.CalculateXp(score ?? 0, accuracy, timeSpent)
             : 0;
@@ -1404,6 +1405,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                 : (ReadString(effectiveConfig, "comprehensionMode") ?? ReadString(config, "comprehensionMode") ?? "evaluation").Trim().ToLowerInvariant();
             state.ComprehensionProtocolVersion = !isAssessmentMode
                 && (ReadString(effectiveConfig, "comprehensionMode") ?? ReadString(config, "comprehensionMode")) is not null ? 1 : 0;
+            state.AssessmentTextReviewAllowed = isAssessmentMode && ReadBoolean(effectiveConfig, "assessmentTextReviewAllowed") == true;
+            if (state.AssessmentTextReviewAllowed) state.ComprehensionProtocolVersion = 1;
         }
         if (IsReadingExerciseFlow(state) && state.EngineType is not ("scan_find" or "scanning"))
             state.ReadingPurpose = ExerciseConfigurationRules.ResolveReadingPurpose(
@@ -1413,7 +1416,19 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         if (IsTachistoscope(exerciseTypeName, exerciseEngineType, config))
         {
             state.Tachistoscope = await CreateTachistoscopeAsync(effectiveConfig, difficultyLevel, profileAgeGroupId, cancellationToken);
-            if (isAssessmentMode) state.Tachistoscope.AdaptiveEnabled = false;
+            if (isAssessmentMode)
+            {
+                state.Tachistoscope.AdaptiveEnabled = false;
+                state.AssessmentProtocol = AssessmentBlockProtocol.Parse(effectiveConfig);
+                if (state.AssessmentProtocol is { } plan)
+                {
+                    state.Tachistoscope.AssessmentProtocol = plan;
+                    state.Tachistoscope.Count = plan.TotalRounds;
+                    state.Tachistoscope.TargetLength = 3;
+                    state.Tachistoscope.ContentType = "number";
+                    state.Tachistoscope.DisplayDurationMs = state.Tachistoscope.InitialDurationMs = plan.ValueAt(0);
+                }
+            }
         }
         if (IsGridExercise(exerciseTypeName, config))
         {
@@ -1485,6 +1500,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         {
             var visualConfig = engineConfig.ValueKind == JsonValueKind.Object ? engineConfig : config;
             state.VisualExpansionProtocolVersion = isAssessmentMode ? 1 : 2;
+            if (isAssessmentMode) state.AssessmentProtocol = AssessmentBlockProtocol.Parse(visualConfig, visualExpansion: true);
             var expansion = ReadObject(visualConfig, "expansion");
             var content = ReadObject(visualConfig, "content");
             var timing = ReadObject(visualConfig, "timing");
@@ -1827,6 +1843,18 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
 
         if (IsRsvp(state)) InitializeRsvp(state, config, effectiveConfig);
         if (state.Tachistoscope is { } tachistoscope) state.TotalSteps = tachistoscope.Count;
+        if (state.AssessmentProtocol is { } assessmentPlan)
+        {
+            state.TotalSteps = assessmentPlan.TotalRounds;
+            if (IsVisualExpansionExercise(state))
+            {
+                state.VisualExpansionCurrentDegrees = state.VisualExpansionStartDegrees = assessmentPlan.ValueAt(0);
+                state.VisualExpansionTargetDegrees = assessmentPlan.BlockValues.Last();
+                state.VisualExpansionDisplayDurationMs = 200;
+                state.VisualExpansionPattern = "horizontal";
+                state.VisualExpansionStimulusType = "letter";
+            }
+        }
         if (IsScanning(state)) InitializeScanning(state, effectiveConfig);
         if (IsSkimming(state)) InitializeSkimming(state, effectiveConfig, config);
         if (IsEngineType(exerciseEngineType, "exam_simulation"))
@@ -2182,7 +2210,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                 round = state.VisualExpansionRound,
                 stimuli = state.VisualExpansionExpectedStimuli,
                 displayDurationMs = state.VisualExpansionDisplayDurationMs,
-                degrees = state.VisualExpansionCurrentDegrees
+                degrees = state.VisualExpansionCurrentDegrees,
+                isPractice = state.AssessmentProtocol?.IsPractice(state.VisualExpansionRound) == true
             }, JsonOptions);
             return Valid("Görsel genişleme uyaranı hazır.", state.VisualExpansionRound, feedbackData: existingFeedback);
         }
@@ -2194,7 +2223,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             state.VisualExpansionRound,
             state.VisualExpansionStimulusType,
             state.VisualExpansionPattern.Equals("radial", StringComparison.OrdinalIgnoreCase) ? 4 : 2,
-            state.VisualExpansionProtocolVersion == 2 ? state.VisualExpansionPreviousStimuli : null).ToArray();
+            state.VisualExpansionProtocolVersion == 2 || state.AssessmentProtocol is not null ? state.VisualExpansionPreviousStimuli : null).ToArray();
         state.VisualExpansionPresentedAt = now.ToUniversalTime();
         state.VisualExpansionPausedMilliseconds = 0;
         state.VisualExpansionPausedAt = null;
@@ -2204,7 +2233,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             round = state.VisualExpansionRound,
             stimuli = state.VisualExpansionExpectedStimuli,
             displayDurationMs = state.VisualExpansionDisplayDurationMs,
-            degrees = state.VisualExpansionCurrentDegrees
+            degrees = state.VisualExpansionCurrentDegrees,
+            isPractice = state.AssessmentProtocol?.IsPractice(state.VisualExpansionRound) == true
         }, JsonOptions);
         return Valid("Görsel genişleme uyaranı hazır.", state.VisualExpansionRound, feedbackData: feedback);
     }
@@ -2240,13 +2270,17 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             return Invalid("Visual expansion answer arrived outside its response window.");
         }
 
-        session.Advance(result.IsCorrect);
+        var isPractice = state.AssessmentProtocol?.IsPractice(state.VisualExpansionRound) == true;
+        if (!isPractice) session.Advance(result.IsCorrect);
         var responseTimeMs = Math.Max(0, elapsedMs - state.VisualExpansionDisplayDurationMs);
         state.VisualExpansionRoundResults.Add(new VisualExpansionRoundState(
             state.VisualExpansionRound + 1, state.VisualExpansionCurrentDegrees,
-            state.VisualExpansionDisplayDurationMs, responseTimeMs, result.IsCorrect));
-        state.VisualExpansionMaxPresentedDistance = Math.Max(state.VisualExpansionMaxPresentedDistance, state.VisualExpansionCurrentDegrees);
-        state.VisualExpansionAverageResponseTimeMs = (int)Math.Round(state.VisualExpansionRoundResults.Average(item => item.ResponseTimeMs));
+            state.VisualExpansionDisplayDurationMs, responseTimeMs, result.IsCorrect, isPractice));
+        if (!isPractice)
+        {
+            state.VisualExpansionMaxPresentedDistance = Math.Max(state.VisualExpansionMaxPresentedDistance, state.VisualExpansionCurrentDegrees);
+            state.VisualExpansionAverageResponseTimeMs = (int)Math.Round(state.VisualExpansionRoundResults.Where(item => !item.IsPractice).Average(item => item.ResponseTimeMs));
+        }
         state.VisualExpansionRound++;
         var nextDifficulty = VisualExpansionRoundRules.AdvanceDifficulty(
             state.VisualExpansionCurrentDegrees,
@@ -2255,10 +2289,10 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             result.IsCorrect,
             state.VisualExpansionConsecutiveCorrect,
             staged: state.VisualExpansionProtocolVersion == 2);
-        state.VisualExpansionCurrentDegrees = nextDifficulty.Degrees;
-        state.VisualExpansionDisplayDurationMs = nextDifficulty.DisplayDurationMs;
+        state.VisualExpansionCurrentDegrees = state.AssessmentProtocol?.ValueAt(state.VisualExpansionRound) ?? nextDifficulty.Degrees;
+        state.VisualExpansionDisplayDurationMs = state.AssessmentProtocol is null ? nextDifficulty.DisplayDurationMs : 200;
         state.VisualExpansionConsecutiveCorrect = nextDifficulty.ConsecutiveCorrect;
-        state.VisualExpansionPreviousStimuli = state.VisualExpansionProtocolVersion == 2 ? state.VisualExpansionExpectedStimuli : [];
+        state.VisualExpansionPreviousStimuli = state.VisualExpansionProtocolVersion == 2 || state.AssessmentProtocol is not null ? state.VisualExpansionExpectedStimuli : [];
         state.VisualExpansionExpectedStimuli = [];
         state.VisualExpansionPresentedAt = null;
         return Valid(
@@ -3054,7 +3088,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         return Valid("Takistoskop uyaranı hazır.", tachistoscope.Round, feedbackData: JsonSerializer.SerializeToElement(new
         {
             round = tachistoscope.Round, stimulus = tachistoscope.ExpectedStimulus,
-            displayDurationMs = tachistoscope.DisplayDurationMs, targetLength = tachistoscope.TargetLength
+            displayDurationMs = tachistoscope.DisplayDurationMs, targetLength = tachistoscope.TargetLength,
+            isPractice = tachistoscope.AssessmentProtocol?.IsPractice(tachistoscope.Round) == true
         }, JsonOptions));
     }
 
@@ -3070,7 +3105,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             return Invalid("Takistoskop gösterimi bitmeden yanıt gönderilemez.");
         var correct = tachistoscope.Record(tachistoscope.ExpectedStimulus, request.Answer,
             (int)Math.Clamp(elapsed - tachistoscope.DisplayDurationMs, 0, int.MaxValue));
-        session.Advance(correct);
+        if (!tachistoscope.Trials.Last().IsPractice) session.Advance(correct);
         tachistoscope.ExpectedStimulus = string.Empty;
         tachistoscope.PresentedAt = null;
         return Valid(session.AssessmentAttemptId.HasValue ? "Yanıt kaydedildi." : correct ? "Doğru." : "Yanlış.",
@@ -3706,7 +3741,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             IsVocabularyState(state) || IsScanning(state) || IsFocusExercise(state) || IsVisualizationExercise(state.ExerciseTypeName) || IsEngineType(state.EngineType, "visualization") || result.WordsRead == 0 ? null : result.WordsRead,
             !IsVocabularyState(state) && !IsScanning(state) && !IsFocusExercise(state) && !IsVisualizationExercise(state.ExerciseTypeName) && !IsEngineType(state.EngineType, "visualization") && (result.IsMeasured || IsFreeReadingPractice(state)) && result.RawWpm > 0 ? result.RawWpm : null,
             result.IsMeasured && state.Questions.Count > 0 ? result.ComprehensionScore : null,
-            !IsVocabularyState(state) && !IsScanning(state) && !IsFocusExercise(state) && !IsVisualizationExercise(state.ExerciseTypeName) && !IsEngineType(state.EngineType, "visualization") && result.IsMeasured && result.RawWpm > 0 ? result.WeightedKdp : null,
+            !state.AssessmentTextReviewAllowed && !IsVocabularyState(state) && !IsScanning(state) && !IsFocusExercise(state) && !IsVisualizationExercise(state.ExerciseTypeName) && !IsEngineType(state.EngineType, "visualization") && result.IsMeasured && result.RawWpm > 0 ? result.WeightedKdp : null,
             xp ?? (result.IsMeasured && !state.ReadingIncomplete
                 ? SpeedReadingExerciseSessionRules.CalculateXp(
                     score ?? result.Score,
@@ -3716,7 +3751,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             [],
             false,
             null,
-            SerializePublicState(state, completedResult: !session.AssessmentAttemptId.HasValue),
+            SerializePublicState(state, completedResult: true),
             feedback ?? (score.HasValue ? "Egzersiz tamamlandı." : "Bu oturum daha önce tamamlandı."),
             null,
             result.IsMeasured ? nameof(SpeedReadingMeasurementStatus.Measured) : nameof(SpeedReadingMeasurementStatus.NotMeasured));
@@ -3812,9 +3847,10 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                 tachistoscope.Round, tachistoscope.Count, tachistoscope.ContentType, tachistoscope.Source,
                 tachistoscope.DisplayDurationMs, tachistoscope.InitialDurationMs, tachistoscope.TargetLength,
                 tachistoscope.AdaptiveEnabled,
+                tachistoscope.AssessmentProtocol,
                 correctCount = state.IsAssessmentMode ? (int?)null : tachistoscope.Trials.Count(trial => trial.IsCorrect),
                 incorrectCount = state.IsAssessmentMode ? (int?)null : tachistoscope.Trials.Count(trial => !trial.IsCorrect),
-                trials = tachistoscope.Round == tachistoscope.Count ? tachistoscope.Trials : []
+                trials = !state.IsAssessmentMode && tachistoscope.Round == tachistoscope.Count ? tachistoscope.Trials : []
             }, JsonOptions);
         }
         var result = JsonSerializer.SerializeToElement(json, JsonOptions);
@@ -3835,7 +3871,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         if (completedResult && IsVisualExpansionExercise(state) && state.VisualExpansionProtocolVersion is 1 or 2)
         {
             var targetRounds = state.VisualExpansionRoundResults
-                .Where(round => round.Distance >= state.VisualExpansionTargetDegrees).ToArray();
+                .Where(round => !round.IsPractice && round.Distance >= state.VisualExpansionTargetDegrees).ToArray();
             var correctRounds = targetRounds.Where(round => round.IsCorrect).ToArray();
             sanitized["visualExpansionTargetSummary"] = JsonSerializer.SerializeToNode(new {
                 targetDistance = state.VisualExpansionTargetDegrees,
@@ -3847,6 +3883,18 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             }, JsonOptions);
         }
         sanitized.Remove("visualExpansionPreviousStimuli");
+        if (state.IsAssessmentMode) sanitized.Remove("visualExpansionRoundResults");
+        if (completedResult && state.AssessmentProtocol is { } plan)
+        {
+            sanitized["assessmentBlockResults"] = JsonSerializer.SerializeToNode(
+                Enumerable.Range(0, 3).Select(block => {
+                    var correct = state.Tachistoscope is { } tach
+                        ? tach.Trials.Skip(plan.PracticeRounds + block * plan.RoundsPerBlock).Take(plan.RoundsPerBlock).Count(trial => trial.IsCorrect)
+                        : state.VisualExpansionRoundResults.Skip(plan.PracticeRounds + block * plan.RoundsPerBlock).Take(plan.RoundsPerBlock).Count(round => round.IsCorrect);
+                    return new { block = block + 1, value = plan.BlockValues[block], rounds = plan.RoundsPerBlock,
+                        correct, accuracy = Math.Round(correct * 100m / plan.RoundsPerBlock, 1) };
+                }), JsonOptions);
+        }
         sanitized.Remove("fixationPreviousStimuli");
         if (IsValidatedFixation(state) && state.FixationProtocolVersion is not (1 or 2))
             sanitized.Remove("fixationRoundResults");
@@ -4048,7 +4096,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
     private static ExerciseActionValidationResponse Invalid(string message) =>
         new(false, message, null, null, null, false, false, null, null, null, null);
 
-    private sealed record VisualExpansionRoundState(int Round, int Distance, int DisplayDurationMs, int ResponseTimeMs, bool IsCorrect);
+    private sealed record VisualExpansionRoundState(int Round, int Distance, int DisplayDurationMs, int ResponseTimeMs, bool IsCorrect, bool IsPractice = false);
     private sealed record FixationRoundState(int Round, int HoldMs, int ResponseTimeMs, bool IsCorrect);
 
     private sealed class SessionState
@@ -4105,6 +4153,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         public string? ReadingPurpose { get; set; }
         public string? ComprehensionMode { get; set; }
         public int ComprehensionProtocolVersion { get; set; }
+        public bool AssessmentTextReviewAllowed { get; set; }
+        public AssessmentBlockProtocol? AssessmentProtocol { get; set; }
         public DateTime? ReadingPausedAt { get; set; }
         public int ReadingPausedSeconds { get; set; }
         public long? ReadingPausedMilliseconds { get; set; }

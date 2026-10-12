@@ -24,9 +24,20 @@ public sealed class TachistoscopeState
     public string ExpectedStimulus { get; set; } = string.Empty;
     public DateTime? PresentedAt { get; set; }
     public List<TachistoscopeTrial> Trials { get; set; } = [];
+    public AssessmentBlockProtocol? AssessmentProtocol { get; set; }
+    public List<string> AssessmentPresentedStimuli { get; set; } = [];
 
     public string SelectStimulus()
     {
+        if (AssessmentProtocol is not null)
+        {
+            var used = Trials.Select(trial => trial.Stimulus).Concat(AssessmentPresentedStimuli).ToHashSet();
+            var available = Enumerable.Range(100, 900).Select(value => value.ToString(CultureInfo.InvariantCulture))
+                .Where(value => !used.Contains(value)).ToArray();
+            var selected = available[Random.Shared.Next(available.Length)];
+            AssessmentPresentedStimuli.Add(selected);
+            return selected;
+        }
         if (ContentType == "number" && Source != "custom")
             return string.Concat(Enumerable.Range(0, Math.Clamp(TargetLength, 1, 12)).Select(_ => Random.Shared.Next(10)));
         if (ContentType == "letter" && Source != "custom")
@@ -47,11 +58,13 @@ public sealed class TachistoscopeState
     public bool Record(string stimulus, string answer, int responseTimeMs)
     {
         var correct = Normalize(stimulus) == Normalize(answer);
-        Trials.Add(new(stimulus, answer, correct, Math.Max(0, responseTimeMs), DisplayDurationMs));
+        Trials.Add(new(stimulus, answer, correct, Math.Max(0, responseTimeMs), DisplayDurationMs,
+            AssessmentProtocol?.IsPractice(Round) == true));
         Round++;
         LastStimulus = stimulus;
         ConsecutiveCorrect = correct ? ConsecutiveCorrect + 1 : 0;
-        if (AdaptiveEnabled && Trials.Count % 5 == 0)
+        if (AssessmentProtocol is not null) DisplayDurationMs = AssessmentProtocol.ValueAt(Round);
+        else if (AdaptiveEnabled && Trials.Count % 5 == 0)
         {
             var correctCount = Trials.TakeLast(5).Count(trial => trial.IsCorrect);
             if (correctCount >= 4)
@@ -80,4 +93,4 @@ public sealed class TachistoscopeState
         StringSplitOptions.RemoveEmptyEntries)).Normalize().ToLower(CultureInfo.GetCultureInfo("tr-TR"));
 }
 
-public sealed record TachistoscopeTrial(string Stimulus, string UserAnswer, bool IsCorrect, int ResponseTimeMs, int DisplayDurationMs);
+public sealed record TachistoscopeTrial(string Stimulus, string UserAnswer, bool IsCorrect, int ResponseTimeMs, int DisplayDurationMs, bool IsPractice = false);

@@ -1493,9 +1493,13 @@ internal sealed class OwnedSpeedReadingAssessment(
                 readingText.Content,
                 readingText.WordCount,
                 readingText.DifficultyLevel,
+                readingText.TargetAgeGroupId,
                 db.ReadingQuestions.Any(question =>
                     question.ReadingTextId == readingText.Id
                     && !question.IsDeleted
+                    && question.BloomLevel >= 1 && question.BloomLevel <= 6
+                    && question.Type >= 1 && question.Type <= 3 && question.OrderIndex >= 0
+                    && !string.IsNullOrWhiteSpace(question.QuestionText)
                     && (question.CorrectAnswer == "A"
                         || question.CorrectAnswer == "B"
                         || question.CorrectAnswer == "C"
@@ -1510,6 +1514,9 @@ internal sealed class OwnedSpeedReadingAssessment(
             .AsNoTracking()
             .Where(item => readingTextIds.Contains(item.ReadingTextId)
                 && !item.IsDeleted
+                && item.BloomLevel >= 1 && item.BloomLevel <= 6
+                && item.Type >= 1 && item.Type <= 3 && item.OrderIndex >= 0
+                && !string.IsNullOrWhiteSpace(item.QuestionText)
                 && (item.CorrectAnswer == "A"
                     || item.CorrectAnswer == "B"
                     || item.CorrectAnswer == "C"
@@ -1554,9 +1561,22 @@ internal sealed class OwnedSpeedReadingAssessment(
                 && !candidate.TypeName.Equals("Tachistoscope", StringComparison.OrdinalIgnoreCase))
             {
                 var requiresQuestions = role == "comprehension";
+                using var configuration = JsonDocument.Parse(candidate.ConfigurationJson);
+                var engineConfiguration = configuration.RootElement.TryGetProperty("engineConfig", out var nestedConfiguration)
+                    ? nestedConfiguration : configuration.RootElement;
+                var targetQuestions = engineConfiguration.TryGetProperty("assessmentQuestionCount", out var requestedQuestions)
+                    ? requestedQuestions.GetInt32() : (int?)null;
+                if (targetQuestions is not null && targetQuestions is not (5 or 6 or 8))
+                    throw new InvalidOperationException("Assessment question count must be 5, 6 or 8.");
+                // New forms require visible choices; do not reinterpret legacy pinned forms.
+                var availableQuestions = targetQuestions.HasValue ? questions.Where(question =>
+                    !string.IsNullOrWhiteSpace(question.OptionA) && !string.IsNullOrWhiteSpace(question.OptionB)
+                    && !string.IsNullOrWhiteSpace(question.OptionC) && !string.IsNullOrWhiteSpace(question.OptionD)).ToList() : questions;
                 var text = readingTexts
                     .Where(item => (!requiresQuestions || item.HasQuestions)
                         && item.DifficultyLevel == candidate.DifficultyLevel
+                        && (!targetQuestions.HasValue || item.TargetAgeGroupId == ageGroupConfigurationId
+                            && availableQuestions.Count(question => question.ReadingTextId == item.Id) >= targetQuestions.Value)
                         && !usedReadingTextIds.Contains(item.Id)
                         && (item.ExerciseId == candidate.ExerciseId || item.ExerciseId is null))
                     .OrderBy(item => item.ExerciseId == candidate.ExerciseId ? 0 : 1)
@@ -1576,8 +1596,9 @@ internal sealed class OwnedSpeedReadingAssessment(
                     text.WordCount > 0 ? text.WordCount : CountWords(text.Content));
                 if (requiresQuestions)
                 {
-                    questionSnapshots = questions
+                    questionSnapshots = availableQuestions
                         .Where(item => item.ReadingTextId == text.Id)
+                        .Take(targetQuestions ?? int.MaxValue)
                         .ToList();
                 }
             }
@@ -1594,6 +1615,8 @@ internal sealed class OwnedSpeedReadingAssessment(
                     candidate.EngineType),
                 readingTextSnapshot,
                 questionSnapshots);
+            var snapshotJson = JsonSerializer.Serialize(snapshot, SnapshotJsonOptions);
+            AssessmentContentSnapshotRules.DeserializeRequired(snapshotJson);
             result.Add(AssessmentAttemptExercise.Pin(
                 Guid.NewGuid(),
                 attemptId,
@@ -1601,7 +1624,7 @@ internal sealed class OwnedSpeedReadingAssessment(
                 readingTextId,
                 role,
                 result.Count + 1,
-                JsonSerializer.Serialize(snapshot, SnapshotJsonOptions),
+                snapshotJson,
                 createdAt,
                 createdBy));
         }
@@ -2012,6 +2035,7 @@ internal sealed class OwnedSpeedReadingAssessment(
         string Content,
         int WordCount,
         int DifficultyLevel,
+        Guid? TargetAgeGroupId,
         bool HasQuestions);
 
     private sealed record AssessmentExerciseRow(

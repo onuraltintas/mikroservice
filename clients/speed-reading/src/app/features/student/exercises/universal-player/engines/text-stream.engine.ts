@@ -12,6 +12,7 @@
 
 import { BaseEngine, EngineConfig, EngineState, EngineResult, EngineCallbacks } from './base-engine.interface';
 import { boundedInteger, caseInsensitiveField, mergeCaseInsensitiveRecords, recordOrEmpty } from './reading-pacer-safety';
+import { AssessmentBlockProtocol, assessmentBlockValue, readAssessmentBlockProtocol } from './assessment-block-protocol';
 
 export interface TextStreamConfig extends EngineConfig {
     mode: string;           // 'tachistoscope', 'rsvp', 'sequence'
@@ -67,6 +68,8 @@ export class TextStreamEngine implements BaseEngine {
         timeElapsed: 0,
         errors: 0
     };
+    private assessmentProtocol?: AssessmentBlockProtocol;
+    private assessmentUsedStimuli = new Set<string>();
 
     private config!: TextStreamConfig;
     private callbacks!: EngineCallbacks;
@@ -205,6 +208,14 @@ export class TextStreamEngine implements BaseEngine {
 
         this.serverAuthoritative = root.serverAuthoritative === true && !this.isRsvpMode();
         const serverState = recordOrEmpty(root.tachistoscope);
+        this.assessmentProtocol = readAssessmentBlockProtocol(serverState['assessmentProtocol'] ?? root.assessmentProtocol
+            ?? nested['assessmentProtocol']);
+        this.assessmentUsedStimuli.clear();
+        if (this.assessmentProtocol?.version === 2) {
+            this.config.adaptive.enabled = false;
+            this.config.content.type = 'number';
+            this.config.TotalStimuli = this.assessmentProtocol.practiceRounds + this.assessmentProtocol.roundsPerBlock * 3;
+        }
         const level = boundedInteger(root.difficultyLevel, 1, 1, 5);
         const initialLength = this.config.content.type === 'letter' ? level
             : this.config.content.type === 'number' ? level + 2 : level * 2 + 1;
@@ -234,6 +245,10 @@ export class TextStreamEngine implements BaseEngine {
         }
         if (this.serverAuthoritative) this.currentDurationMs = boundedInteger(serverState['displayDurationMs'], this.currentDurationMs, 50, 5000);
         this.initialDurationMs = this.currentDurationMs;
+        if (this.assessmentProtocol?.version === 2) {
+            this.targetLength = 3;
+            this.currentDurationMs = assessmentBlockValue(this.assessmentProtocol, this.currentStimulusIndex);
+        }
 
 
     }
@@ -304,6 +319,13 @@ export class TextStreamEngine implements BaseEngine {
     }
 
     private selectPreviewStimulus(): string {
+        if (this.assessmentProtocol?.version === 2) {
+            const available = Array.from({ length: 900 }, (_, index) => String(index + 100))
+                .filter(value => !this.assessmentUsedStimuli.has(value));
+            const stimulus = available[Math.floor(Math.random() * available.length)];
+            this.assessmentUsedStimuli.add(stimulus);
+            return stimulus;
+        }
         const type = this.config.content?.type || 'word';
         if (this.config.content?.source !== 'custom' && type === 'letter') {
             const alphabet = 'ABCÇDEFGĞHIİJKLMNOÖPRSŞTUÜVYZ';
@@ -450,6 +472,8 @@ export class TextStreamEngine implements BaseEngine {
             this.callbacks.onAction({ action: 'tachistoscope_present', index: this.currentStimulusIndex });
             return;
         }
+        if (this.assessmentProtocol?.version === 2)
+            this.currentDurationMs = assessmentBlockValue(this.assessmentProtocol, this.currentStimulusIndex);
         this.currentStimulus = this.isRsvpMode() ? this.stimuli[this.currentStimulusIndex] : this.selectPreviewStimulus();
         this.displayStimulus();
     }
@@ -663,11 +687,13 @@ export class TextStreamEngine implements BaseEngine {
             responseTimeMs: Math.max(0, responseTime),
             displayDurationMs: this.currentDurationMs
         };
-        this.trials.push(trial);
+        const isPractice = this.assessmentProtocol?.version === 2
+            && this.currentStimulusIndex < this.assessmentProtocol.practiceRounds;
+        if (!isPractice) this.trials.push(trial);
 
-        if (isCorrect) {
+        if (isCorrect && !isPractice) {
             this.correctCount++;
-        } else {
+        } else if (!isPractice) {
             this.state.errors++;
         }
 

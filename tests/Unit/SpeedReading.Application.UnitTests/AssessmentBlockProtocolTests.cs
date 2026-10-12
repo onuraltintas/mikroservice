@@ -6,11 +6,23 @@ using SpeedReading.Application.ExerciseSessions;
 using SpeedReading.Domain.Assessment;
 using SpeedReading.Domain.Catalog;
 using SpeedReading.Infrastructure.Persistence;
+using SpeedReading.Domain.Sessions;
 
 namespace SpeedReading.Application.UnitTests;
 
 public sealed class AssessmentBlockProtocolTests
 {
+    [Theory]
+    [InlineData("null", false)]
+    [InlineData("[1,500,5000]", true)]
+    [InlineData("[18,13,8]", true)]
+    [InlineData("[200,500,800]", false)]
+    [InlineData("[800,500,1]", false)]
+    public void Invalid_block_values_are_rejected(string values, bool visual)
+    {
+        using var config = JsonDocument.Parse("{\"assessmentProtocol\":{\"version\":2,\"practiceRounds\":3,\"roundsPerBlock\":6,\"blockValues\":" + values + "}}");
+        Assert.Throws<ArgumentException>(() => AssessmentBlockProtocol.Parse(config.RootElement, visual));
+    }
     [Theory]
     [InlineData(1, "Tachistoscope", 6, 1000, 750, 500)]
     [InlineData(2, "Tachistoscope", 8, 800, 600, 400)]
@@ -93,7 +105,15 @@ public sealed class AssessmentBlockProtocolTests
                 Assert.Equal(total, resumed.TotalSteps);
             }
         }
-        var completed = await service.CompleteAsync(actor, started.SessionId, new());
+        var completed = await service.CompleteAsync(actor, started.SessionId, new() { IsAssessmentMode = true });
         Assert.Equal(100, completed.Accuracy);
+        if (tach) Assert.Equal(0, completed.DetailedResults.GetProperty("tachistoscope").GetProperty("trials").GetArrayLength());
+        else Assert.False(completed.DetailedResults.TryGetProperty("visualExpansionRoundResults", out _));
+        Assert.Equal(3, completed.DetailedResults.GetProperty("assessmentBlockResults").GetArrayLength());
+        foreach (var block in completed.DetailedResults.GetProperty("assessmentBlockResults").EnumerateArray())
+        {
+            Assert.Equal(perBlock, block.GetProperty("rounds").GetInt32());
+            Assert.Equal(100, block.GetProperty("accuracy").GetDecimal());
+        }
     }
 }

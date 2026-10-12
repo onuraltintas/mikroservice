@@ -91,7 +91,7 @@ public sealed class VisualExpansionSessionResultsTests
         var state = owned.GetMethod("DeserializeState", BindingFlags.Static | BindingFlags.NonPublic)!.Invoke(null,
             ["""{"engineType":"tachistoscope","isAssessmentMode":true,"tachistoscope":{"round":1,"count":1,"trials":[{"stimulus":"EV","userAnswer":"EV","isCorrect":true,"responseTimeMs":100,"displayDurationMs":100}]}}"""])!;
         var json = (System.Text.Json.JsonElement)owned.GetMethod("ToPublicJson", BindingFlags.Static | BindingFlags.NonPublic)!.Invoke(null, [state])!;
-        Assert.False(json.GetProperty("tachistoscope").GetProperty("trials")[0].TryGetProperty("isCorrect", out _));
+        Assert.Equal(0, json.GetProperty("tachistoscope").GetProperty("trials").GetArrayLength());
     }
     [Theory]
     [InlineData(false)]
