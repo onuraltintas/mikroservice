@@ -1,0 +1,30 @@
+[
+  {
+    "id": "82087c90-eb56-587a-b064-cdc27e15f14b",
+    "title": "Seviye Tespit — Çocuk — Tachistoscope",
+    "exerciseTypeName": "Takistoskop",
+    "configurationJson": "{\"engineType\":\"text_stream\",\"engineConfig\":{\"mode\":\"tachistoscope\",\"timing\":{\"durationMs\":1500,\"intervalMs\":750},\"content\":{\"type\":\"number\",\"count\":6},\"adaptive\":{\"enabled\":false,\"maxDurationMs\":2000,\"minDurationMs\":200}},\"difficultyLevel\":1}",
+    "difficultyLevel": 1
+  },
+  {
+    "id": "291705e1-254f-5379-aecd-c033901c276d",
+    "title": "Seviye Tespit — Genç — Tachistoscope",
+    "exerciseTypeName": "Takistoskop",
+    "configurationJson": "{\"engineType\":\"text_stream\",\"engineConfig\":{\"mode\":\"tachistoscope\",\"timing\":{\"durationMs\":1000,\"intervalMs\":500},\"content\":{\"type\":\"number\",\"count\":6},\"adaptive\":{\"enabled\":false,\"maxDurationMs\":1500,\"minDurationMs\":200}},\"difficultyLevel\":1}",
+    "difficultyLevel": 1
+  },
+  {
+    "id": "4dd52a35-bbee-512a-914a-8f471438c528",
+    "title": "Seviye Tespit — Genç yetişkin — Tachistoscope",
+    "exerciseTypeName": "Takistoskop",
+    "configurationJson": "{\"engineType\":\"text_stream\",\"engineConfig\":{\"mode\":\"tachistoscope\",\"timing\":{\"durationMs\":900,\"intervalMs\":500},\"content\":{\"type\":\"number\",\"count\":6},\"adaptive\":{\"enabled\":false,\"maxDurationMs\":1500,\"minDurationMs\":200}},\"difficultyLevel\":1}",
+    "difficultyLevel": 1
+  },
+  {
+    "id": "9ca42784-5cdb-5aaf-be5b-d0f3924ecdeb",
+    "title": "Seviye Tespit — Yetişkin — Tachistoscope",
+    "exerciseTypeName": "Takistoskop",
+    "configurationJson": "{\"engineType\":\"text_stream\",\"engineConfig\":{\"mode\":\"tachistoscope\",\"timing\":{\"durationMs\":900,\"intervalMs\":500},\"content\":{\"type\":\"number\",\"count\":6},\"adaptive\":{\"enabled\":false,\"maxDurationMs\":1500,\"minDurationMs\":200}},\"difficultyLevel\":1}",
+    "difficultyLevel": 1
+  }
+]

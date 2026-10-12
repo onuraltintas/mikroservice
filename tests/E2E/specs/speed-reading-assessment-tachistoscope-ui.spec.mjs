@@ -1,8 +1,10 @@
 import { test, expect } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 
-const catalog = JSON.parse(readFileSync(new URL('../../../content-packs/assessment/v1/catalog.json', import.meta.url), 'utf8'))
-  .filter(item => item.type === 'Tachistoscope');
+// Public exercise DTO fields captured from the authenticated live API on 2026-10-12.
+// No user/session identifiers or authentication material are retained.
+const catalog = JSON.parse(readFileSync(new URL('../fixtures/assessment-tachistoscope-live-api.json', import.meta.url), 'utf8'))
+  .map(item => ({ ...item, configuration: JSON.parse(item.configurationJson) }));
 const attemptId = '94000000-0000-0000-0000-000000000001';
 const sessionId = '94000000-0000-0000-0000-000000000002';
 
@@ -22,11 +24,17 @@ for (const exercise of catalog) {
         if (request.method() === 'POST') writes.push({ path, body: request.postDataJSON() });
         if (path.endsWith('/auth/refresh-token')) response = { id: 'assessment-ui-test', roles: ['Student'],
           token: `e30.${Buffer.from(JSON.stringify({ sub: 'assessment-ui-test', exp: Math.floor(Date.now() / 1000) + 3600 })).toString('base64url')}.fixture` };
-        else if (path.endsWith(`/exercises/${exercise.id}`)) response = { ...exercise,
-          exerciseTypeName: exercise.type, configurationJson: JSON.stringify(exercise.configuration) };
+        else if (path.endsWith(`/exercises/${exercise.id}`)) {
+          const { configuration, ...dto } = exercise;
+          response = dto;
+        }
         else if (path.endsWith('/exercise-sessions/start')) response = { sessionId, status: resumed ? 2 : 1,
           configuration: exercise.configuration,
-          initialData: { tachistoscope: { count, round, displayDurationMs: durationMs } } };
+          initialData: { exerciseTypeName: 'Tachistoscope', engineType: 'text_stream',
+            isAssessmentMode: true, textStreamMode: 'tachistoscope', content: '',
+            tachistoscope: { count, round, contentType: 'number', source: 'default_pool',
+              displayDurationMs: durationMs, initialDurationMs: durationMs, targetLength: 3,
+              adaptiveEnabled: false, correctCount: null, incorrectCount: null, trials: [] } } };
         else if (path.endsWith('/resume')) response = { message: 'Resumed' };
         else if (path.endsWith('/validate')) {
           const action = request.postDataJSON();
