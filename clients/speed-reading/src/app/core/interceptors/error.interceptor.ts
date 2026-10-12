@@ -77,7 +77,9 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
 
           case 500:
             errorMessage = 'Sunucu hatası. Lütfen daha sonra tekrar deneyin.';
-            router.navigate(['/error/500']);
+            if (!req.headers.has('X-Skip-Error-Redirect')) {
+              router.navigate(['/error/500']);
+            }
             break;
 
           case 503:

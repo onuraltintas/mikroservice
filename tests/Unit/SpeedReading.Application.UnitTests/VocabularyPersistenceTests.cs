@@ -68,12 +68,38 @@ public sealed class VocabularyPersistenceTests
         Assert.Equal(words.Select(w => w.GetProperty("id").GetGuid()), resumed.InitialData.GetProperty("vocabularyWords").EnumerateArray().Select(w => w.GetProperty("id").GetGuid()));
         foreach (var word in words) {
             Assert.True((await service.ValidateActionAsync(student, started.SessionId, Action(word, "quiz"))).IsValid);
-            Assert.All(await db.UserVocabularyProgresses.ToListAsync(), p => Assert.Equal(2, p.Box));
+            Assert.Empty(await db.UserVocabularyProgresses.ToListAsync());
         }
         var result = await service.CompleteAsync(student, started.SessionId, new());
         Assert.Equal(100m, result.Accuracy); Assert.Equal(4, result.CorrectCount);
         Assert.All(await db.UserVocabularyProgresses.ToListAsync(), p => Assert.Equal(2, p.Box));
         Assert.Single(db.ExerciseSessionResults); Assert.Null(result.RawWPM);
+    }
+
+    [Fact]
+    public async Task Exiting_an_incomplete_quiz_discards_answers_without_updating_vocabulary_or_gamification()
+    {
+        await using var db = Context(); var student = Guid.NewGuid();
+        var exerciseId = await Seed(db, student, "quiz"); var service = Service(db);
+        var started = await service.StartAsync(student, new() { ExerciseId = exerciseId });
+        var word = started.InitialData.GetProperty("vocabularyWords")[0];
+        var action = new ExerciseActionRequest { ActionId = Guid.NewGuid(), Action = "vocabulary_review", CustomData = new() {
+            ["vocabularyItemId"] = word.GetProperty("id"), ["reviewKind"] = JsonSerializer.SerializeToElement("quiz"),
+            ["questionType"] = word.GetProperty("questionType"),
+            ["selectedAnswer"] = word.GetProperty(word.GetProperty("questionType").GetString() == "word" ? "definition" : "word")
+        } };
+
+        Assert.True((await service.ValidateActionAsync(student, started.SessionId, action)).IsValid);
+        Assert.Empty(await db.UserVocabularyProgresses.ToListAsync());
+        Assert.Empty(await db.UserGamifications.ToListAsync());
+
+        await service.DiscardIncompleteAsync(student, started.SessionId);
+
+        Assert.False(await db.ExerciseSessions.AnyAsync(item => item.Id == started.SessionId));
+        Assert.False(await db.ExerciseSessionAnswers.AnyAsync(item => item.SessionId == started.SessionId));
+        Assert.Empty(await db.UserVocabularyProgresses.ToListAsync());
+        Assert.Empty(await db.UserGamifications.ToListAsync());
+        Assert.Empty(await db.ExerciseSessionResults.ToListAsync());
     }
 
     [Theory]

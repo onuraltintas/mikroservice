@@ -181,6 +181,15 @@ public interface ISpeedReadingExerciseSessions
     Task<IReadOnlyList<ActiveExerciseSession>> GetActiveAsync(
         Guid studentId,
         CancellationToken cancellationToken = default);
+
+    Task DiscardIncompleteAsync(
+        Guid studentId,
+        Guid sessionId,
+        CancellationToken cancellationToken = default);
+
+    Task DiscardAllIncompleteAsync(
+        Guid studentId,
+        CancellationToken cancellationToken = default);
 }
 
 public static class SpeedReadingExerciseSessionRules

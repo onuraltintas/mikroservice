@@ -33,6 +33,12 @@ public static class SpeedReadingSubscriptionAccessRules
         var section = parts[2];
         if (FreeSections.Contains(section))
             return false;
+        if (section.Equals("exercise-sessions", StringComparison.OrdinalIgnoreCase)
+            && method.Equals("DELETE", StringComparison.OrdinalIgnoreCase)
+            && parts.Length == 4
+            && (parts[3].Equals("active", StringComparison.OrdinalIgnoreCase)
+                || Guid.TryParse(parts[3], out _)))
+            return false;
         if (section.Equals("adaptive-learning", StringComparison.OrdinalIgnoreCase)
             && parts.Length == 4
             && parts[3].Equals("profile", StringComparison.OrdinalIgnoreCase)

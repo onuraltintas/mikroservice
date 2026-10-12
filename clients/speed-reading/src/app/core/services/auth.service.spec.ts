@@ -259,7 +259,7 @@ describe('AuthService', () => {
     });
   });
 
-  it('revokes the session through the backend revoke endpoint on logout', () => {
+  it('discards incomplete exercise sessions before revoking the session on logout', () => {
     const user = {
       id: 'user',
       token: '',
@@ -272,6 +272,10 @@ describe('AuthService', () => {
     (service as any).currentUserSubject.next(user);
 
     service.logout();
+
+    const discard = http.expectOne(request => request.method === 'DELETE'
+      && request.url.endsWith('/exercise-sessions/active'));
+    discard.flush({});
 
     const request = http.expectOne('/api/auth/revoke-token');
     expect(request.request.withCredentials).toBeTrue();

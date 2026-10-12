@@ -345,6 +345,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   sessionId: string | null = null;
   sessionResult: SessionResult | null = null;
   showExitConfirm = false;
+  isDiscardingSession = false;
   isAssessmentMode = false;
   assessmentAttemptId: string | null = null;
   assessmentPhase: number | null = null;
@@ -2172,13 +2173,20 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   }
 
   async goBack(): Promise<void> {
-    // Eğer egzersiz çalışıyorsa, onay iste
-    if (this.engineState.isRunning && !this.engineState.isCompleted) {
-      if (this.isTachistoscopeMode() || this.shouldTrackReading() || this.isFixationMode() || this.isSaccadeMode() || this.engine?.engineType === 'scan_find' || this.engine?.engineType === 'visual_expansion') {
-        if (this.isPauseTransitionPending) return;
-        if (!this.engineState.isPaused) await this.togglePause();
-      } else this.engine?.pause();
+    const hasIncompleteSession = !!this.sessionId
+      && this.sessionId !== 'preview-mode'
+      && !this.isPreviewSession()
+      && !this.engineState.isCompleted;
+    if (this.isDiscardingSession) return;
+    if ((this.engineState.isRunning && !this.engineState.isCompleted) || hasIncompleteSession) {
+      if (this.isPauseTransitionPending) return;
+      if (this.engineState.isRunning && !this.engineState.isPaused) {
+        if (this.isTachistoscopeMode() || this.shouldTrackReading() || this.isFixationMode() || this.isSaccadeMode() || this.engine?.engineType === 'scan_find' || this.engine?.engineType === 'visual_expansion') {
+          await this.togglePause();
+        } else this.engine?.pause();
+      }
       this.showExitConfirm = true;
+      this.cdr.detectChanges();
     } else {
       this.navigateBack();
     }
@@ -2192,10 +2200,24 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     } else this.engine?.resume();
   }
 
-  confirmExit(): void {
-    this.showExitConfirm = false;
-    this.engine?.stop();
-    this.navigateBack();
+  async confirmExit(): Promise<void> {
+    if (this.isDiscardingSession) return;
+    this.isDiscardingSession = true;
+    this.cdr.detectChanges();
+    try {
+      await this.actionQueue.catch(() => undefined);
+      if (this.sessionId && this.sessionId !== 'preview-mode' && !this.isPreviewSession()) {
+        await firstValueFrom(this.sessionService.discardSession(this.sessionId));
+      }
+      this.engine?.stop();
+      this.showExitConfirm = false;
+      this.navigateBack();
+    } catch {
+      this.showToast('Yarım kalan egzersiz silinemedi. Lütfen tekrar deneyin.', 'error', 5000);
+    } finally {
+      this.isDiscardingSession = false;
+      this.cdr.detectChanges();
+    }
   }
 
   /**

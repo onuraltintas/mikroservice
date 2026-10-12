@@ -123,4 +123,8 @@ export class ExerciseSessionService {
   getActiveSessions(): Observable<ActiveSessionDto[]> {
     return this.http.get<ActiveSessionDto[]>(`${this.speedReadingApiUrl}/progress/active-exercise-sessions`);
   }
+
+  discardSession(sessionId: string): Observable<void> {
+    return this.http.delete<void>(`${this.API_URL}/${sessionId}`);
+  }
 }

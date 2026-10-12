@@ -2098,15 +2098,15 @@
         <div class="exit-confirm-card">
             <span class="material-icons exit-icon">warning</span>
             <h3>Egzersizden Çıkmak İstiyor musunuz?</h3>
-            <p>İlerlemeniz kaydedilmeyecek.</p>
+            <p>Yarım kalan deneme silinir; tekrar açtığınızda egzersiz baştan başlar. Tamamlanmış sonuçlarınız etkilenmez.</p>
             <div class="exit-actions">
                 <button class="btn-continue" (click)="cancelExit()">
                     <span class="material-icons">play_arrow</span>
                     Devam Et
                 </button>
-                <button class="btn-exit" (click)="confirmExit()">
+                <button class="btn-exit" (click)="confirmExit()" [disabled]="isDiscardingSession">
                     <span class="material-icons">exit_to_app</span>
-                    Çıkış Yap
+                    {{ isDiscardingSession ? 'Siliniyor…' : 'Çıkış Yap' }}
                 </button>
             </div>
         </div>

@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpContext, HttpErrorResponse } from '@angular/common/http';
-import { BehaviorSubject, Observable, catchError, finalize, firstValueFrom, map, of, shareReplay, switchMap, tap } from 'rxjs';
+import { BehaviorSubject, Observable, catchError, finalize, firstValueFrom, map, of, shareReplay, switchMap, tap, timeout } from 'rxjs';
 import { Router } from '@angular/router';
 import {
   AuthResponse,
@@ -50,6 +50,7 @@ export class AuthService {
   private accessToken: string | null = null;
   private sessionInitialized = false;
   private refreshInFlight$: Observable<AuthResponse> | null = null;
+  private logoutInProgress = false;
 
   private currentUserSubject = new BehaviorSubject<AuthResponse | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
@@ -161,22 +162,32 @@ export class AuthService {
 
   /**
    * Logout current user
-   * Calls backend to log the event, then clears local storage and redirects to login
+   * Discards incomplete exercises, then clears local auth and redirects to login.
    */
   logout(): void {
-    // IMPORTANT: Clear local storage FIRST to prevent error interceptor from calling logout again
-    localStorage.removeItem('currentUser');
-    localStorage.removeItem('token');
-    this.currentUserSubject.next(null);
+    if (this.logoutInProgress) return;
+    this.logoutInProgress = true;
 
-    // Optional: Notify backend (fire-and-forget, ignore errors)
-    this.http.post(`${this.AUTH_URL}/revoke-token`, {}, { withCredentials: true }).subscribe({
-      next: () => console.log('Logout event logged on backend'),
-      error: () => { } // Ignore errors (token might be expired)
-    });
-
-    // Redirect to login
-    this.router.navigate(['/auth/login']);
+    this.http.delete<void>(`${environment.speedReadingApiUrl}/exercise-sessions/active`, {
+      withCredentials: true,
+      context: new HttpContext().set(SKIP_AUTH_REFRESH, true),
+      headers: {
+        'X-Skip-Error-Redirect': 'true',
+        'X-Skip-Error-Toast': 'true'
+      }
+    }).pipe(
+      timeout({ first: 5_000 }),
+      catchError(() => of(void 0)),
+      finalize(() => {
+        this.clearLocalSession();
+        this.http.post(`${this.AUTH_URL}/revoke-token`, {}, { withCredentials: true }).subscribe({
+          next: () => console.log('Logout event logged on backend'),
+          error: () => { }
+        });
+        this.router.navigate(['/auth/login']);
+        this.logoutInProgress = false;
+      })
+    ).subscribe();
   }
 
   /**

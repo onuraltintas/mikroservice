@@ -544,7 +544,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             : state.Tachistoscope is not null && actionName is not ("tachistoscope_present" or "tachistoscope_answer")
             ? Invalid("Takistoskop yalnız doğrulanmış tur aksiyonlarıyla ilerler.")
             : actionName == "vocabulary_review"
-            ? await ReviewVocabularyAsync(session, state, request, studentId, now, cancellationToken)
+            ? await ReviewVocabularyAsync(session, state, request, studentId, cancellationToken)
             : actionName switch
             {
                 "tracking_start" when IsObservationOnlyMotionPath(state)
@@ -753,6 +753,24 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                 : SerializeOptional(request.CustomData);
             session.SetState(session.SessionDataJson, customJson);
         }
+
+        if (IsVocabularyState(state))
+        {
+            foreach (var answer in state.Answers)
+            {
+                var review = await OwnedVocabularyProgressRecorder.RecordAsync(
+                    db,
+                    studentId,
+                    answer.QuestionId,
+                    answer.IsCorrect,
+                    now,
+                    awardVerifiedGamification: state.VocabularyMode == "quiz",
+                    cancellationToken);
+                if (!review.Found)
+                    throw IncompleteSession("Kelime egzersizindeki bir kelime artık kullanılamıyor. Egzersizi yeniden başlatın.");
+            }
+        }
+
         session.Complete(now);
 
         if (state.ReadingPausedAt.HasValue)
@@ -1173,6 +1191,39 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         if (IsValidatedFixation(state) && state.FixationPresentedAt.HasValue)
             state.FixationPausedAt = now;
         session.SetState(JsonSerializer.Serialize(state, JsonOptions), session.CustomDataJson);
+        await db.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task DiscardIncompleteAsync(
+        Guid studentId,
+        Guid sessionId,
+        CancellationToken cancellationToken = default)
+    {
+        var session = await db.ExerciseSessions
+            .Include(item => item.Answers)
+            .SingleOrDefaultAsync(item => item.Id == sessionId
+                && item.StudentId == studentId
+                && (item.Status == OwnedExerciseSessionStatus.Active
+                    || item.Status == OwnedExerciseSessionStatus.Paused), cancellationToken);
+        if (session is null)
+            return;
+
+        db.ExerciseSessions.Remove(session);
+        await db.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task DiscardAllIncompleteAsync(Guid studentId, CancellationToken cancellationToken = default)
+    {
+        var sessions = await db.ExerciseSessions
+            .Include(item => item.Answers)
+            .Where(item => item.StudentId == studentId
+                && (item.Status == OwnedExerciseSessionStatus.Active
+                    || item.Status == OwnedExerciseSessionStatus.Paused))
+            .ToListAsync(cancellationToken);
+        if (sessions.Count == 0)
+            return;
+
+        db.ExerciseSessions.RemoveRange(sessions);
         await db.SaveChangesAsync(cancellationToken);
     }
 
@@ -2610,7 +2661,6 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         SessionState state,
         ExerciseActionRequest request,
         Guid studentId,
-        DateTime reviewedAt,
         CancellationToken cancellationToken)
     {
         var vocabularyItemId = ReadGuid(request.CustomData, "vocabularyItemId");
@@ -2673,16 +2723,18 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             || state.VocabularyWords[state.Answers.Count].Id != itemId))
             return Invalid("Test kelimelerini oturumdaki sırayla yanıtlayın.");
 
-        var review = await OwnedVocabularyProgressRecorder.RecordAsync(
-            db,
-            studentId,
-            itemId,
-            isCorrect,
-            reviewedAt,
-            awardVerifiedGamification: state.VocabularyMode == "quiz",
-            cancellationToken);
-        if (!review.Found)
+        var vocabularyExists = await db.VocabularyItems.AsNoTracking()
+            .AnyAsync(item => item.Id == itemId && !item.IsDeleted, cancellationToken);
+        if (!vocabularyExists)
             return Invalid("Kelime artık merkezi havuzda bulunmuyor.");
+
+        var priorProgress = await db.UserVocabularyProgresses
+            .OrderByDescending(progress => progress.CreatedAt)
+            .FirstOrDefaultAsync(progress => progress.UserId == studentId
+                && progress.VocabularyItemId == itemId, cancellationToken);
+        var currentBox = Math.Clamp(priorProgress?.Box ?? 1, 1, 5);
+        var previewBox = isCorrect ? Math.Min(5, currentBox + 1) : 1;
+        var masteredNow = isCorrect && previewBox == 5 && priorProgress?.HasBeenMastered != true;
 
         session.RecordAnswer(
             itemId,
@@ -2706,8 +2758,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             isCorrect: isCorrect,
             feedbackData: JsonSerializer.SerializeToElement(new
             {
-                box = review.CurrentBox,
-                masteredNow = review.IsNewMastery
+                box = previewBox,
+                masteredNow
             }, JsonOptions));
     }
 

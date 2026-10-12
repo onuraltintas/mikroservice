@@ -87,6 +87,22 @@ public sealed class ExerciseSessionsController(ISpeedReadingExerciseSessions ses
         CancellationToken cancellationToken = default) =>
         sessions.GetActiveAsync(GetCurrentUserId(), cancellationToken);
 
+    [HttpDelete("active")]
+    public async Task<IActionResult> DiscardAllIncomplete(CancellationToken cancellationToken = default)
+    {
+        await sessions.DiscardAllIncompleteAsync(GetCurrentUserId(), cancellationToken);
+        return NoContent();
+    }
+
+    [HttpDelete("{sessionId:guid}")]
+    public async Task<IActionResult> DiscardIncomplete(
+        Guid sessionId,
+        CancellationToken cancellationToken = default)
+    {
+        await sessions.DiscardIncompleteAsync(GetCurrentUserId(), sessionId, cancellationToken);
+        return NoContent();
+    }
+
     private Guid GetCurrentUserId()
     {
         var value = User.FindFirstValue(ClaimTypes.NameIdentifier)

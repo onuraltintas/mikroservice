@@ -15,6 +15,7 @@ public sealed class SpeedReadingSubscriptionAccessMiddleware(RequestDelegate nex
     {
         if (context.User.Identity?.IsAuthenticated == true
             && IsStudentTrainingRequest(context.Request.Path)
+            && !IsIncompleteExerciseSessionCleanup(context.Request.Path, context.Request.Method)
             && !StaffTrainingAccess.IsAllowed(context.User)
             && Guid.TryParse(context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? context.User.FindFirstValue("sub"), out var trainingUserId)
             && await db.StudentProgramProgresses.AsNoTracking().AnyAsync(item => item.UserId == trainingUserId
@@ -91,6 +92,20 @@ public sealed class SpeedReadingSubscriptionAccessMiddleware(RequestDelegate nex
             "/api/speed-reading/gamification/achievements/showcase",
             "/api/speed-reading/gamification/streak/use-freeze"
         }.Any(prefix => path.StartsWithSegments(prefix, StringComparison.OrdinalIgnoreCase));
+
+    private static bool IsIncompleteExerciseSessionCleanup(PathString path, string method)
+    {
+        if (!HttpMethods.IsDelete(method))
+            return false;
+
+        var parts = path.Value?.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        return parts is { Length: 4 }
+            && parts[0].Equals("api", StringComparison.OrdinalIgnoreCase)
+            && parts[1].Equals("speed-reading", StringComparison.OrdinalIgnoreCase)
+            && parts[2].Equals("exercise-sessions", StringComparison.OrdinalIgnoreCase)
+            && (parts[3].Equals("active", StringComparison.OrdinalIgnoreCase)
+                || Guid.TryParse(parts[3], out _));
+    }
 
     private static async Task<bool> IsAssessmentSessionAsync(
         HttpContext context,

@@ -1,4 +1,4 @@
-import { HttpErrorResponse, HttpRequest } from '@angular/common/http';
+import { HttpErrorResponse, HttpHeaders, HttpRequest } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { lastValueFrom, throwError } from 'rxjs';
@@ -55,5 +55,26 @@ describe('errorInterceptor', () => {
       'Güvenlik doğrulaması tamamlanamadı. Lütfen tekrar deneyin.'
     );
     expect(navigate).not.toHaveBeenCalled();
+  });
+
+  it('does not redirect or show a toast for best-effort logout cleanup failures', async () => {
+    spyOn(console, 'error');
+    const navigate = jasmine.createSpy('navigate');
+    const showError = jasmine.createSpy('showError');
+    TestBed.configureTestingModule({ providers: [
+      { provide: Router, useValue: { navigate } },
+      { provide: AuthService, useValue: {} },
+      { provide: ToasterService, useValue: { error: showError } }
+    ] });
+    const request = new HttpRequest('DELETE', '/api/speed-reading/exercise-sessions/active', null, {
+      headers: new HttpHeaders({ 'X-Skip-Error-Redirect': 'true', 'X-Skip-Error-Toast': 'true' })
+    });
+    const response = TestBed.runInInjectionContext(() => errorInterceptor(request, () => throwError(() =>
+      new HttpErrorResponse({ status: 500, url: request.url }))));
+
+    await expectAsync(lastValueFrom(response)).toBeRejected();
+
+    expect(navigate).not.toHaveBeenCalled();
+    expect(showError).not.toHaveBeenCalled();
   });
 });
