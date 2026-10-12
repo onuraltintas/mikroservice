@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-async function setup(page, completed, managed = false) {
+async function setup(page, completed, managed = false, baselineStatus = 4) {
   const writes = [], comparisons = [];
   await page.addInitScript(() => localStorage.setItem('currentUser', JSON.stringify({ id: 'continuation-test' })));
   await page.route('**/api/**', async route => {
@@ -23,7 +23,7 @@ async function setup(page, completed, managed = false) {
       higherOption: { templateId: 'upper', templateName: 'Alternatif seviye 4', level: 4, totalDays: 28 } };
     else if (path.endsWith('/assessment/follow-ups')) response = [{ programProgressId: 'old-program', programName: 'Önceki program',
       completedAt: '2026-10-01T00:00:00Z', additionalTraining: true, plan: { nextPhase: 3, phases: [] } }];
-    else if (path.endsWith('/assessment/phase-plan')) response = { nextPhase: 3, phases: [{ phase: 3, status: 2 }] };
+    else if (path.endsWith('/assessment/phase-plan')) response = { nextPhase: 3, phases: [{ phase: 1, status: baselineStatus }, { phase: 3, status: 2 }] };
     else if (path.endsWith('/assessment/comparison')) {
       comparisons.push(url.searchParams.get('programProgressId'));
       response = { additionalTraining: true, attempts: [{ attemptId: 'post', phase: 2, startedAt: '2026-10-01T00:00:00Z',
@@ -47,6 +47,30 @@ test('completed independent student can explicitly choose one level above', asyn
   await button.click();
   await expect.poll(() => writes.some(item => item.path.endsWith('/confirm-next'))).toBe(true);
   expect(writes.find(item => item.path.endsWith('/confirm-next')).body).toEqual({ templateId: 'upper', sourceProgressId: 'old-program', assessmentAttemptId: 'post', overrideAcknowledged: true });
+});
+
+test('direct baseline URL is blocked while a training program is active', async ({ page }) => {
+  const { writes } = await setup(page, false, false, 1);
+  await page.goto('/student/assessment');
+  await expect(page).toHaveURL(/\/student\/dashboard/);
+  await expect(page.getByText('Başlangıç seviye tespiti şu anda kapalı.', { exact: false })).toBeVisible();
+  expect(writes.some(item => item.path.endsWith('/assessment/attempts'))).toBe(false);
+});
+
+test('initial baseline remains accessible before training is assigned', async ({ page }) => {
+  const { writes } = await setup(page, false, false, 2);
+  await page.goto('/student/assessment?phase=1');
+  await expect.poll(() => writes.some(item => item.path.endsWith('/assessment/attempts'))).toBe(true);
+  expect(writes.find(item => item.path.endsWith('/assessment/attempts')).body.phase).toBe(1);
+  await expect(page).toHaveURL(/\/student\/assessment\?phase=1/);
+});
+
+test('post-training URL still starts the post-training measurement', async ({ page }) => {
+  const { writes } = await setup(page, true);
+  await page.goto('/student/assessment?phase=2');
+  await expect.poll(() => writes.some(item => item.path.endsWith('/assessment/attempts'))).toBe(true);
+  expect(writes.find(item => item.path.endsWith('/assessment/attempts')).body.phase).toBe(2);
+  await expect(page).toHaveURL(/\/student\/assessment\?phase=2/);
 });
 
 test('managed student requests staff approval instead of starting a program', async ({ page }) => {

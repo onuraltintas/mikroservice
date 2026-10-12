@@ -1045,6 +1045,8 @@ internal sealed class OwnedSpeedReadingAssessment(
                 if (attempt is not null && db.Database.IsRelational()) await db.Entry(attempt).ReloadAsync(cancellationToken);
                 var latest = await GetLatestProgramAsync(userId, cancellationToken);
                 var initial = attempt is null || attempt.Phase == AssessmentAttemptPhase.Baseline;
+                if (initial && (attempt is null || attempt.Status == AssessmentAttemptStatus.InProgress))
+                    await EnsureBaselineAvailableAsync(db, userId, cancellationToken);
                 if ((attempt is null || attempt.Status == AssessmentAttemptStatus.InProgress)
                     && (initial ? latest is null : attempt!.ProgramProgressId == latest?.Id))
                 {
