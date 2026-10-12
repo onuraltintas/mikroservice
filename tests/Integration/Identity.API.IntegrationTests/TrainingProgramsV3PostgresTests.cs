@@ -58,7 +58,7 @@ public sealed class TrainingProgramsV3PostgresTests(PostgresFixture postgres)
                             ? fading.RootElement.EnumerateArray().Single(f => f.GetProperty("level").GetInt32() == level) : default;
                         var configuration = source.ValueKind == JsonValueKind.Object ? source.GetProperty("configuration").GetRawText()
                             : JsonSerializer.Serialize(new { engineType = types[name].EngineType, engineConfig = new { comprehensionMode = mode } });
-                        db.Exercises.Add(Exercise.Create(name + mode, name, configuration, level, actor, types[name].Id,
+                        db.Exercises.Add(Exercise.Create(name + mode, source.ValueKind == JsonValueKind.Object && level <= 3 ? "reading" : name, configuration, level, actor, types[name].Id,
                             source.ValueKind == JsonValueKind.Object ? source.GetProperty("id").GetGuid() : null, targetAgeGroupId: age));
                     }
                 }
