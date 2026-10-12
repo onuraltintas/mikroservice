@@ -71,6 +71,7 @@ case "${1:-build}" in
   recover() {
    status=$?
    trap - EXIT INT TERM
+   rm -f -- "$release/runtime.env" || true
    if [[ "$succeeded" != true && "$stopped" == true ]]; then
     set +e
     echo 'Restoring previous Speed Reading images; no database migration was performed' >&2
@@ -93,6 +94,7 @@ case "${1:-build}" in
   network=$(docker inspect "$backend" --format '{{range $name, $value := .NetworkSettings.Networks}}{{println $name}}{{end}}' | head -n1)
   test -n "$network"
   docker run --rm --network "$network" --env-file runtime.env "$api_image" --audit-training-programs > runtime-audit.log 2>&1
+  rm -f -- "$release/runtime.env"
   grep -q '"Programs":20,"Days":560,"Slots":3640' runtime-audit.log
   docker exec -i postgres psql -X -v ON_ERROR_STOP=1 -U eduplatform -d speedreading_owned_db -qAt < inventory.sql > inventory-after.txt
   diff -u inventory-before.txt inventory-after.txt
