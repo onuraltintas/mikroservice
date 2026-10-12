@@ -156,10 +156,15 @@ public sealed class NextProgramRecommendationTests
             var request = new ConfirmNextStudentProgramRequest(upper, progress.Id, post.Id, true);
             if (managed)
             {
+                var missingRequest = () => service.ApproveNextProgramAsync(teacher, user, request, null, CancellationToken.None);
+                (await missingRequest.Should().ThrowAsync<EduPlatform.Shared.Kernel.Exceptions.BusinessRuleException>()).Which.Code.Should().Be("Program.PendingChoiceRequired");
                 await service.RequestNextProgramAsync(user, request, CancellationToken.None);
                 await service.RequestNextProgramAsync(user, request, CancellationToken.None);
                 (await service.GetNextProgramRecommendationAsync(user, CancellationToken.None))!.RequestedTemplateId.Should().Be(upper);
                 (await db.StudentProgramProgresses.CountAsync()).Should().Be(1);
+                var mismatch = () => service.ApproveNextProgramAsync(teacher, user,
+                    new ConfirmNextStudentProgramRequest(result.TemplateId, progress.Id, post.Id), null, CancellationToken.None);
+                (await mismatch.Should().ThrowAsync<EduPlatform.Shared.Kernel.Exceptions.BusinessRuleException>()).Which.Code.Should().Be("Program.PendingChoiceRequired");
                 var bypass = () => service.ConfirmNextProgramAsync(user, request, CancellationToken.None);
                 (await bypass.Should().ThrowAsync<EduPlatform.Shared.Kernel.Exceptions.BusinessRuleException>()).Which.Code.Should().Be("Program.StaffApprovalRequired");
             }

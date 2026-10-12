@@ -114,4 +114,44 @@ public sealed class AssessmentProgramCycleTests
         await foreignPlan.Should().ThrowAsync<KeyNotFoundException>();
         (await db.StudentProgramProgresses.SingleAsync(item => item.Id == active.Id)).IsActive.Should().BeTrue();
     }
+
+    [Fact]
+    public async Task Recalculating_historical_baseline_does_not_overwrite_current_profile()
+    {
+        await using var db = new OwnedSpeedReadingDbContext(new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
+        var user = Guid.NewGuid(); var now = DateTime.UtcNow;
+        var old = CompletedProgram(user, now.AddDays(-60), now.AddDays(-30));
+        var active = StudentProgramProgress.Import(Guid.NewGuid(), user, Guid.NewGuid(), now.AddDays(-10),
+            1, 1, 1, 0, 0, null, true, null, 0, 0, 0, now.AddDays(-10), null, null, null);
+        db.StudentProgramProgresses.AddRange(old, active);
+        var baseline = AssessmentAttempt.Start(Guid.NewGuid(), user, AssessmentAttemptPhase.Baseline, "baseline", "tr", null,
+            3, now.AddDays(-70), null);
+        baseline.Complete(now.AddDays(-70));
+        db.AssessmentAttempts.Add(baseline);
+        var type = ExerciseType.Create(Guid.NewGuid(), "Fixation", "Fixation", "focus");
+        db.ExerciseTypes.Add(type);
+        for (var index = 0; index < 3; index++)
+        {
+            var exercise = Exercise.Create($"Fixation {index}", "Fixation", "{}", 1, user, type.Id);
+            db.Exercises.Add(exercise);
+            db.AssessmentAttemptExercises.Add(AssessmentAttemptExercise.Pin(Guid.NewGuid(), baseline.Id, exercise.Id,
+                null, "focus", index + 1, "{}", now.AddDays(-70), null));
+            db.ExerciseSessionResults.Add(SpeedReading.Domain.Sessions.ExerciseSessionResult.Create(Guid.NewGuid(), Guid.NewGuid(), user,
+                exercise.Id, null, 80, 10, 150, 55, 0, 80, now.AddDays(-70), isMeasured: true, isAssessmentMode: true, assessmentAttemptId: baseline.Id));
+        }
+        var profile = SpeedReading.Domain.Profiles.SpeedReadingUserProfile.CreateDefault(Guid.NewGuid(), user, now);
+        profile.ApplyAssessment(4, 350, 85, user, now);
+        db.UserProfiles.Add(profile);
+        await db.SaveChangesAsync();
+        var assembly = typeof(OwnedSpeedReadingDbContext).Assembly;
+        var catalog = Activator.CreateInstance(assembly.GetType("SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingLevelCatalog")!, db);
+        var service = (ISpeedReadingAssessment)Activator.CreateInstance(assembly.GetType(
+            "SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingAssessment")!, db, catalog)!;
+        await service.CalculateAsync(user, new AssessmentCalculationRequest([], baseline.Id), CancellationToken.None);
+        profile.CurrentLevel.Should().Be(4);
+        profile.TargetWPM.Should().Be(350);
+        profile.TargetComprehension.Should().Be(85);
+        baseline.CompletedAt.Should().Be(now.AddDays(-70));
+    }
 }
