@@ -1,5 +1,58 @@
 # Assessment Takistoskop initialization fix — 2026-10-12
 
+## Follow-up: actual localized API contract (supersedes the release below)
+
+The first fix still failed in the user's actual browser. Its fixtures used the
+canonical `Tachistoscope` exercise name, but all four live exercise GET responses
+return the localized display name `Takistoskop`. Session initial data uses the
+canonical name. A display name is not a reliable engine discriminator.
+
+The corrected gate exempts only `text_stream` with server motor mode
+`tachistoscope`. RSVP, missing/unknown modes and other reading engines retain
+their pinned-passage requirement. No backend, database or assessment settings
+were changed.
+
+Verification for this corrected release:
+
+- Captured authenticated production exercise GET responses for Child, Teen,
+  YoungAdult and Adult (all HTTP 200). The committed fixture keeps only public
+  exercise metadata and configuration; no credentials or user/session data.
+- RED: 11 failures and 11 passes reproduced the localized-name defect.
+- GREEN: 22/22 targeted Angular tests; full Angular suite 971/971.
+- Backend Tachistoscope / AssessmentThreeTask tests: 41/41.
+- Browser replay using the four real exercise DTOs: 16/16 locally and 16/16
+  against the published frontend (fresh/resumed, desktop/mobile). Session and
+  validation responses in this matrix are controlled fixtures, not four newly
+  completed live assessments.
+- Production build passed, with the unchanged stylesheet warning noted below.
+- Separately, the user's real authenticated Adult assessment was opened in
+  Chrome. Its real validation endpoint returned HTTP 200, `isValid: true`, a
+  three-digit stimulus and 900 ms display duration. The player reached the real
+  answer field without an initialization error; no error console entries were
+  captured in the new tab. No answers were submitted and no assessment result
+  was completed. The player was left paused at 0/6 responses.
+- The originally open tab remained pinned to the previous service-worker assets
+  after a normal reload. A new tab at the exact same assessment URL loaded the
+  corrected release and was retained for the user. A subsequent reload of the
+  original user tab also reached the ready/start screen without the old error.
+  Browser storage was not deleted and authentication/security protections were
+  not bypassed.
+
+Corrected production release:
+
+- RED commit: `5a9553a1`; fix/source revision:
+  `de2766f8c64ab30e2ab6b17ef3abbbc40e5ca9a8`.
+- Both commits pushed to GitHub `codex/platform-hardening`.
+- Image: `eduivme/speed-reading-frontend:assessment-tachistoscope-de2766f8`.
+- Published: `2026-10-12T18:06:26Z` (21:06 Turkey time).
+- Frontend healthy; public index matches the release artifact; all non-frontend
+  container IDs/images unchanged. Previous frontend retained for rollback.
+- Local live-browser screenshot:
+  `artifacts/assessment-tachistoscope-mode-live-proof.jpg` (not committed).
+
+The remaining sections document the initial attempt and are retained as history,
+not as proof that its display-name check worked with the real API.
+
 ## Cause and scope
 
 The player required a pinned reading passage for every `text_stream` assessment.
