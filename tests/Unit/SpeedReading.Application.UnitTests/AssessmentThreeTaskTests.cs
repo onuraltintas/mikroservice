@@ -15,7 +15,11 @@ public sealed class AssessmentThreeTaskTests
     [InlineData(2, 10)]
     [InlineData(3, 8)]
     [InlineData(4, 8)]
-    public async Task Three_task_form_pins_age_level_matching_text_and_all_questions(int ageIndex, int questionCount)
+    [InlineData(1, 10, 5)]
+    [InlineData(2, 10, 6)]
+    [InlineData(3, 10, 8)]
+    [InlineData(4, 10, 8)]
+    public async Task Three_task_form_pins_age_level_matching_text_and_all_questions(int ageIndex, int questionCount, int? targetQuestions = null)
     {
         await using var db = new OwnedSpeedReadingDbContext(new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>()
             .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
@@ -30,7 +34,10 @@ public sealed class AssessmentThreeTaskTests
         {
             var type = ExerciseType.Create(Guid.NewGuid(), e.GetProperty("type").GetString()!, "Test", e.GetProperty("configuration").GetProperty("engineType").GetString()!);
             db.ExerciseTypes.Add(type);
-            db.Exercises.Add(Exercise.Create("Test", type.Name, e.GetProperty("configuration").GetRawText(), 1, actor, type.Id, targetAgeGroupId: age, id: e.GetProperty("id").GetGuid()));
+            var configuration = System.Text.Json.Nodes.JsonNode.Parse(e.GetProperty("configuration").GetRawText())!;
+            if (targetQuestions.HasValue && type.Name == "Comprehension")
+                configuration["engineConfig"]!["assessmentQuestionCount"] = targetQuestions.Value;
+            db.Exercises.Add(Exercise.Create("Test", type.Name, configuration.ToJsonString(), 1, actor, type.Id, targetAgeGroupId: age, id: e.GetProperty("id").GetGuid()));
         }
         var plan = JsonSerializer.Serialize(new { week1 = entries.Select((e, i) => new { exerciseId = e.GetProperty("id").GetGuid(), displayOrder = i + 1 }) });
         db.ProgramTemplates.Add(ProgramTemplate.Import(Guid.NewGuid(), "Assessment", "Test", age, 0, 100, plan, 1, 0, 1, 1, 1, true, 0, 0, null, true, DateTime.UtcNow, actor.ToString(), null, null));
@@ -52,6 +59,6 @@ public sealed class AssessmentThreeTaskTests
         Assert.Null(form[1].ReadingTextId);
         Assert.Null(form[2].ReadingTextId);
         using var snapshot = JsonDocument.Parse(form[0].ContentSnapshotJson);
-        Assert.Equal(questionCount, snapshot.RootElement.GetProperty("questions").GetArrayLength());
+        Assert.Equal(targetQuestions ?? questionCount, snapshot.RootElement.GetProperty("questions").GetArrayLength());
     }
 }
