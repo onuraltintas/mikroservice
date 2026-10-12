@@ -14,6 +14,7 @@
   </ItemGroup>
   <ItemGroup>
     <Using Include="Xunit" />
+    <ProjectReference Include="../../../services/course-management-service/CourseManagement.Domain/CourseManagement.Domain.csproj" />
     <Compile Include="../../../services/identity-service/Identity.Domain/Enums/PlatformProduct.cs" Link="Identity/PlatformProduct.cs" />
     <Compile Include="../../../services/identity-service/Identity.Domain/Enums/PlatformPermissionScope.cs" Link="Identity/PlatformPermissionScope.cs" />
   </ItemGroup>
