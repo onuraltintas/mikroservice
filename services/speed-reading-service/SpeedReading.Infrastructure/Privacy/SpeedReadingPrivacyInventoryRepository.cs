@@ -20,6 +20,7 @@ public sealed class SpeedReadingPrivacyInventoryRepository(OwnedSpeedReadingDbCo
             ["readingAttempts"] = await context.StudentReadingAttempts.CountAsync(item => item.UserId == userId, cancellationToken),
             ["assessmentAttempts"] = await context.AssessmentAttempts.CountAsync(item => item.StudentId == userId, cancellationToken),
             ["programProgress"] = await context.StudentProgramProgresses.CountAsync(item => item.UserId == userId, cancellationToken),
+            ["programContinuations"] = await context.ProgramContinuations.CountAsync(item => item.StudentId == userId, cancellationToken),
             ["learningProgress"] =
                 await context.StudentLearningPathProgresses.CountAsync(item => item.StudentId == userId, cancellationToken)
                 + await context.StudentLearningNodeProgresses.CountAsync(item => item.StudentId == userId, cancellationToken),

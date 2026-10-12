@@ -110,7 +110,8 @@ public sealed class NextProgramRecommendationTests
     [InlineData(150, 55, 3)]
     [InlineData(500, 20, 1)]
     [InlineData(50, 95, 1)]
-    public async Task V3_levels_use_both_measurements_and_allow_only_one_level_above_with_explicit_choice(int wpm, int comprehension, int expectedLevel)
+    [InlineData(150, 55, 3, true)]
+    public async Task V3_levels_use_both_measurements_and_allow_only_one_level_above_with_explicit_choice(int wpm, int comprehension, int expectedLevel, bool managed = false)
     {
         await using var db = CreateDb();
         var user = Guid.NewGuid();
@@ -123,6 +124,8 @@ public sealed class NextProgramRecommendationTests
         var progress = StudentProgramProgress.Import(Guid.NewGuid(), user, templates[0].Id, now.AddDays(-30),
             1, 1, 1, 28, 182, now.AddDays(-1), false, now.AddDays(-1), 65, 1, 1, now.AddDays(-30), null, null, null);
         db.StudentProgramProgresses.Add(progress);
+        var teacher = Guid.NewGuid();
+        if (managed) db.TeacherStudentAssignments.Add(SpeedReadingTeacherStudentAssignment.Create(null, teacher, user, user, now));
         var post = AssessmentAttempt.Start(Guid.NewGuid(), user, AssessmentAttemptPhase.PostTraining, "post", "tr", age, 3, now, null);
         post.BindToProgram(progress.Id);
         post.Complete(now);
@@ -135,19 +138,33 @@ public sealed class NextProgramRecommendationTests
         db.ExerciseTypes.Add(type);
         db.Exercises.Add(Exercise.Create("Fixation", "Fixation", "{}", 1, user, type.Id));
         await db.SaveChangesAsync();
-        var service = Service(db);
+        var access = DispatchProxy.Create<ISpeedReadingTeacherAccess, TeacherAccessProxy>();
+        ((TeacherAccessProxy)access).Teacher = teacher;
+        ((TeacherAccessProxy)access).Student = user;
+        var service = Service(db, access);
         var result = await service.GetNextProgramRecommendationAsync(user, CancellationToken.None);
         result!.TemplateId.Should().Be(templates[expectedLevel - 1].Id);
         result.RecommendedTrainingLevel.Should().Be(expectedLevel);
-        result.HigherOption?.TemplateId.Should().Be(expectedLevel == 5 ? null : templates[expectedLevel].Id);
+        if (expectedLevel == 5) result.HigherOption.Should().BeNull();
+        else result.HigherOption!.TemplateId.Should().Be(templates[expectedLevel].Id);
         if (expectedLevel < 5)
         {
             var upper = result.HigherOption!.TemplateId;
             var unacknowledged = () => service.ConfirmNextProgramAsync(user,
                 new ConfirmNextStudentProgramRequest(upper, progress.Id, post.Id), CancellationToken.None);
             await unacknowledged.Should().ThrowAsync<EduPlatform.Shared.Kernel.Exceptions.BusinessRuleException>();
-            var selected = await service.ConfirmNextProgramAsync(user,
-                new ConfirmNextStudentProgramRequest(upper, progress.Id, post.Id, true), CancellationToken.None);
+            var request = new ConfirmNextStudentProgramRequest(upper, progress.Id, post.Id, true);
+            if (managed)
+            {
+                await service.RequestNextProgramAsync(user, request, CancellationToken.None);
+                await service.RequestNextProgramAsync(user, request, CancellationToken.None);
+                (await service.GetNextProgramRecommendationAsync(user, CancellationToken.None))!.RequestedTemplateId.Should().Be(upper);
+                (await db.StudentProgramProgresses.CountAsync()).Should().Be(1);
+                var bypass = () => service.ConfirmNextProgramAsync(user, request, CancellationToken.None);
+                (await bypass.Should().ThrowAsync<EduPlatform.Shared.Kernel.Exceptions.BusinessRuleException>()).Which.Code.Should().Be("Program.StaffApprovalRequired");
+            }
+            var selected = managed ? await service.ApproveNextProgramAsync(teacher, user, request, null, CancellationToken.None)
+                : await service.ConfirmNextProgramAsync(user, request, CancellationToken.None);
             var audit = await db.ProgramContinuations.SingleAsync();
             audit.NewProgressId.Should().Be(selected.ProgramId);
             audit.RecommendedLevel.Should().Be(expectedLevel);

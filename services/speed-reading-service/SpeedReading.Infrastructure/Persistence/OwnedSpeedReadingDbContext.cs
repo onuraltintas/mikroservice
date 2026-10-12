@@ -43,6 +43,7 @@ public sealed class OwnedSpeedReadingDbContext(
     public DbSet<AgeGroupConfiguration> AgeGroupConfigurations => Set<AgeGroupConfiguration>();
     public DbSet<ProgramTemplate> ProgramTemplates => Set<ProgramTemplate>();
     public DbSet<StudentProgramProgress> StudentProgramProgresses => Set<StudentProgramProgress>();
+    public DbSet<ProgramContinuation> ProgramContinuations => Set<ProgramContinuation>();
     public DbSet<DailyExerciseLog> DailyExerciseLogs => Set<DailyExerciseLog>();
     public DbSet<SpeedReadingUserProfile> UserProfiles => Set<SpeedReadingUserProfile>();
     public DbSet<SpeedReadingInstitutionMembership> InstitutionMemberships => Set<SpeedReadingInstitutionMembership>();
@@ -199,6 +200,17 @@ public sealed class OwnedSpeedReadingDbContext(
         ConfigureEntity(modelBuilder.Entity<AgeGroupConfiguration>());
         ConfigureEntity(modelBuilder.Entity<ProgramTemplate>());
         ConfigureEntity(modelBuilder.Entity<StudentProgramProgress>());
+        modelBuilder.Entity<ProgramContinuation>(entity =>
+        {
+            entity.ToTable("program_continuations");
+            entity.HasKey(item => item.SourceProgressId);
+            entity.Property(item => item.PolicyVersion).HasMaxLength(100).IsRequired();
+            entity.HasIndex(item => new { item.StudentId, item.ConfirmedAt });
+            entity.HasOne<StudentProgramProgress>().WithMany().HasForeignKey(item => item.SourceProgressId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne<StudentProgramProgress>().WithMany().HasForeignKey(item => item.NewProgressId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne<AssessmentAttempt>().WithMany().HasForeignKey(item => item.AssessmentAttemptId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne<ProgramTemplate>().WithMany().HasForeignKey(item => item.TemplateId).OnDelete(DeleteBehavior.Restrict);
+        });
         ConfigureEntity(modelBuilder.Entity<DailyExerciseLog>());
         ConfigureEntity(modelBuilder.Entity<SpeedReadingUserProfile>());
         ConfigureEntity(modelBuilder.Entity<SpeedReadingInstitutionMembership>());

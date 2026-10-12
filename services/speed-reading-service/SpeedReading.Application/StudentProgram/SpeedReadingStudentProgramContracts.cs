@@ -5,6 +5,8 @@ public interface ISpeedReadingStudentProgram
     Task<StartStudentProgramResult> StartStaffTrainingAsync(Guid userId, Guid templateId, CancellationToken cancellationToken);
     Task<NextStudentProgramRecommendation?> GetNextProgramRecommendationAsync(Guid userId, CancellationToken cancellationToken);
     Task<StartStudentProgramResult> ConfirmNextProgramAsync(Guid userId, ConfirmNextStudentProgramRequest request, CancellationToken cancellationToken);
+    Task RequestNextProgramAsync(Guid userId, ConfirmNextStudentProgramRequest request, CancellationToken cancellationToken) =>
+        throw new NotSupportedException();
     Task<StartStudentProgramResult> ApproveNextProgramAsync(Guid actorId, Guid userId, ConfirmNextStudentProgramRequest request,
         Guid? institutionId, CancellationToken cancellationToken);
     Task<StudentProgramInfo?> GetMyProgramAsync(Guid userId, CancellationToken cancellationToken);
@@ -23,9 +25,26 @@ public sealed record NextStudentProgramRecommendation(
     Guid TemplateId,
     string TemplateName,
     int TotalDays,
-    bool RequiresStaffApproval);
+    bool RequiresStaffApproval)
+{
+    public int RecommendedTrainingLevel { get; init; }
+    public int MeasuredLevel { get; init; }
+    public string RuleVersion { get; init; } = string.Empty;
+    public string Reason { get; init; } = string.Empty;
+    public decimal AverageWpm { get; init; }
+    public decimal Comprehension { get; init; }
+    public decimal? WpmDelta { get; init; }
+    public decimal? ComprehensionDelta { get; init; }
+    public decimal TrainingSuccessRate { get; init; }
+    public NextProgramOption? HigherOption { get; init; }
+    public Guid? RequestedTemplateId { get; init; }
+    public DateTime? RequestedAt { get; init; }
+}
 
-public sealed record ConfirmNextStudentProgramRequest(Guid TemplateId, Guid SourceProgressId, Guid AssessmentAttemptId);
+public sealed record NextProgramOption(Guid TemplateId, string TemplateName, int TotalDays, int Level);
+
+public sealed record ConfirmNextStudentProgramRequest(Guid TemplateId, Guid SourceProgressId, Guid AssessmentAttemptId,
+    bool OverrideAcknowledged = false);
 
 public sealed record StudentProgramInfo(
     Guid ProgressId,

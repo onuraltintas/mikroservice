@@ -972,15 +972,15 @@ namespace SpeedReading.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("exercise_type_id");
 
-                    b.Property<bool>("IsAssessmentOnly")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_assessment_only")
-                        .HasDefaultValue(false);
-
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean")
                         .HasColumnName("is_active");
+
+                    b.Property<bool>("IsAssessmentOnly")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_assessment_only");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean")
@@ -2712,6 +2712,59 @@ namespace SpeedReading.Infrastructure.Persistence.Migrations
                         .HasFilter("slot_order IS NOT NULL");
 
                     b.ToTable("daily_exercise_logs", "speed_reading");
+                });
+
+            modelBuilder.Entity("SpeedReading.Domain.Programs.ProgramContinuation", b =>
+                {
+                    b.Property<Guid>("SourceProgressId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("AssessmentAttemptId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("ConfirmedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("ConfirmedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("MeasuredLevel")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid?>("NewProgressId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("OverrideAcknowledged")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("PolicyVersion")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int>("RecommendedLevel")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("RequestedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("StudentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TemplateId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("SourceProgressId");
+
+                    b.HasIndex("AssessmentAttemptId");
+
+                    b.HasIndex("NewProgressId");
+
+                    b.HasIndex("TemplateId");
+
+                    b.HasIndex("StudentId", "ConfirmedAt");
+
+                    b.ToTable("program_continuations", "speed_reading");
                 });
 
             modelBuilder.Entity("SpeedReading.Domain.Programs.ProgramTemplate", b =>
@@ -7157,6 +7210,32 @@ namespace SpeedReading.Infrastructure.Persistence.Migrations
                     b.HasOne("SpeedReading.Domain.Programs.StudentProgramProgress", null)
                         .WithMany()
                         .HasForeignKey("StudentProgramProgressId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("SpeedReading.Domain.Programs.ProgramContinuation", b =>
+                {
+                    b.HasOne("SpeedReading.Domain.Assessment.AssessmentAttempt", null)
+                        .WithMany()
+                        .HasForeignKey("AssessmentAttemptId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SpeedReading.Domain.Programs.StudentProgramProgress", null)
+                        .WithMany()
+                        .HasForeignKey("NewProgressId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("SpeedReading.Domain.Programs.StudentProgramProgress", null)
+                        .WithMany()
+                        .HasForeignKey("SourceProgressId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SpeedReading.Domain.Programs.ProgramTemplate", null)
+                        .WithMany()
+                        .HasForeignKey("TemplateId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

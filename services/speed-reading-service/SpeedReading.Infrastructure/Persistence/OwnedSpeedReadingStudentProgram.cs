@@ -6,12 +6,15 @@ using SpeedReading.Domain.Assessment;
 using SpeedReading.Domain.Institutions;
 using SpeedReading.Application.StudentProgram;
 using SpeedReading.Domain.Programs;
+using System.Text.Json;
 
 namespace SpeedReading.Infrastructure.Persistence;
 
 internal sealed class OwnedSpeedReadingStudentProgram(OwnedSpeedReadingDbContext db, ISpeedReadingAssessment assessment,
-    ISpeedReadingTeacherAccess teacherAccess) : ISpeedReadingStudentProgram
+    ISpeedReadingTeacherAccess teacherAccess, ISpeedReadingLevelCatalog levelCatalog) : ISpeedReadingStudentProgram
 {
+    public OwnedSpeedReadingStudentProgram(OwnedSpeedReadingDbContext db, ISpeedReadingAssessment assessment,
+        ISpeedReadingTeacherAccess teacherAccess) : this(db, assessment, teacherAccess, new DefaultSpeedReadingLevelCatalog()) { }
     public async Task<NextStudentProgramRecommendation?> GetNextProgramRecommendationAsync(Guid userId, CancellationToken cancellationToken)
     {
         if (userId == Guid.Empty)
@@ -27,7 +30,7 @@ internal sealed class OwnedSpeedReadingStudentProgram(OwnedSpeedReadingDbContext
             && item.Status == AssessmentAttemptStatus.Completed && !item.IsSkipped)
             .OrderByDescending(item => item.CompletedAt).ThenBy(item => item.Id).FirstOrDefaultAsync(cancellationToken);
         if (post is null) return null;
-        var comparison = await assessment.GetComparisonAsync(userId, cancellationToken);
+        var comparison = await assessment.GetProgramComparisonAsync(userId, progress.Id, cancellationToken);
         var measurement = comparison.Attempts.FirstOrDefault(item => item.AttemptId == post.Id);
         if (measurement?.AverageWpm is not > 0 || measurement.PlacementComprehensionScore is not (>= 0 and <= 100))
             return null;
@@ -36,16 +39,88 @@ internal sealed class OwnedSpeedReadingStudentProgram(OwnedSpeedReadingDbContext
         age ??= await db.ProgramTemplates.AsNoTracking().Where(item => item.Id == progress.ProgramTemplateId)
             .Select(item => (Guid?)item.TargetAgeGroupConfigurationId).SingleOrDefaultAsync(cancellationToken);
         var score = measurement.PlacementComprehensionScore.Value;
-        var template = await db.ProgramTemplates.AsNoTracking().Where(item => item.IsActive && !item.IsDeleted
+        var catalog = await levelCatalog.GetByVersionAsync(post.LevelCatalogVersion, cancellationToken)
+            ?? throw new InvalidOperationException("Ölçümün seviye kataloğu bulunamadı.");
+        var measuredLevel = SpeedReadingAssessmentMeasurementRules.CalculateLevel(measurement.AverageWpm.Value, score, catalog.Definitions);
+        var trainingLevel = Math.Clamp(measuredLevel, 1, 5);
+        var candidates = await db.ProgramTemplates.AsNoTracking().Where(item => item.IsActive && !item.IsDeleted
             && !item.IsAssessment && item.ProgramType == 0 && (item.ExamType == null || item.ExamType == "")
-            && item.TargetAgeGroupConfigurationId == age && item.MinAssessmentScore <= score && item.MaxAssessmentScore >= score)
+            && item.TargetAgeGroupConfigurationId == age)
             .OrderByDescending(item => item.MinAssessmentScore).ThenBy(item => item.DisplayOrder).ThenBy(item => item.Id)
-            .FirstOrDefaultAsync(cancellationToken);
+            .ToListAsync(cancellationToken);
+        var levelTemplates = candidates.Where(item => PlacementLevel(item).HasValue).ToList();
+        var template = levelTemplates.Count > 0
+            ? levelTemplates.FirstOrDefault(item => PlacementLevel(item) == trainingLevel)
+            : candidates.FirstOrDefault(item => item.MinAssessmentScore <= score && item.MaxAssessmentScore >= score);
         if (template is null) return null;
+        var higher = levelTemplates.FirstOrDefault(item => PlacementLevel(item) == trainingLevel + 1);
         var managed = await db.TeacherStudentAssignments.AsNoTracking().AnyAsync(item => item.StudentUserId == userId && item.IsActive, cancellationToken)
             || await db.InstitutionMemberships.AsNoTracking().AnyAsync(item => item.UserId == userId && item.IsActive
                 && item.Role == SpeedReadingInstitutionMemberRole.Student, cancellationToken);
-        return new NextStudentProgramRecommendation(progress.Id, post.Id, template.Id, template.Name, template.TotalDays, managed);
+        var requested = await db.ProgramContinuations.AsNoTracking().SingleOrDefaultAsync(item => item.SourceProgressId == progress.Id
+            && item.StudentId == userId && item.ConfirmedAt == null && item.AssessmentAttemptId == post.Id, cancellationToken);
+        return new NextStudentProgramRecommendation(progress.Id, post.Id, template.Id, template.Name, template.TotalDays, managed)
+        {
+            RecommendedTrainingLevel = PlacementLevel(template) ?? template.InitialDifficultyLevel,
+            MeasuredLevel = measuredLevel, RuleVersion = $"{catalog.Version}:training-1-5-v1",
+            AverageWpm = measurement.AverageWpm.Value, Comprehension = score,
+            WpmDelta = measurement.WpmDeltaFromBaseline, ComprehensionDelta = measurement.ComprehensionDeltaFromBaseline,
+            TrainingSuccessRate = progress.AverageSuccessRate,
+            Reason = "Öneri yaş grubunuz ve son ölçümde hız ile anlamanın birlikte sınırlandırdığı seviyeye dayanır. Başlangıca göre değişim ve eğitim başarısı bilgilendirme amaçlıdır; tek başına seviye yükseltmez.",
+            HigherOption = higher is null ? null : new NextProgramOption(higher.Id, higher.Name, higher.TotalDays, trainingLevel + 1),
+            RequestedTemplateId = requested?.TemplateId, RequestedAt = requested?.RequestedAt
+        };
+    }
+
+    private static int? PlacementLevel(ProgramTemplate template)
+    {
+        using var json = JsonDocument.Parse(template.WeeklyPatternJson);
+        return json.RootElement.TryGetProperty("placementLevel", out var level) && level.TryGetInt32(out var value) ? value : null;
+    }
+
+    private static void ValidateSelection(NextStudentProgramRecommendation? recommendation, ConfirmNextStudentProgramRequest request)
+    {
+        if (recommendation is null || request.SourceProgressId != recommendation.SourceProgressId
+            || request.AssessmentAttemptId != recommendation.AssessmentAttemptId
+            || (request.TemplateId != recommendation.TemplateId && request.TemplateId != recommendation.HigherOption?.TemplateId))
+            throw new BusinessRuleException("Program.RecommendationChanged", "Öneri değişti. Güncel öneriyi yeniden yükleyin.");
+        if (request.TemplateId != recommendation.TemplateId && !request.OverrideAcknowledged)
+            throw new BusinessRuleException("Program.OverrideAcknowledgementRequired", "Üst seviye seçimi için uyarıyı açıkça onaylayın.");
+    }
+
+    public async Task RequestNextProgramAsync(Guid userId, ConfirmNextStudentProgramRequest request, CancellationToken cancellationToken)
+    {
+        var attempt = 0;
+        await OwnedSpeedReadingProgramAssignmentLock.ExecuteAsync(db, async () =>
+        {
+            if (attempt++ > 0) db.ChangeTracker.Clear();
+            await using var transaction = await OwnedSpeedReadingProgramAssignmentLock.AcquireAsync(db, userId, cancellationToken);
+            var recommendation = await GetNextProgramRecommendationAsync(userId, cancellationToken);
+            ValidateSelection(recommendation, request);
+            if (!recommendation!.RequiresStaffApproval)
+                throw new BusinessRuleException("Program.StaffApprovalNotRequired", "Önerinizi doğrudan onaylayabilirsiniz.");
+            await SaveDecisionAsync(userId, recommendation, request, cancellationToken);
+            await db.SaveChangesAsync(cancellationToken);
+            if (transaction is not null) await transaction.CommitAsync(cancellationToken);
+            return true;
+        });
+    }
+
+    private async Task<ProgramContinuation> SaveDecisionAsync(Guid userId, NextStudentProgramRecommendation recommendation,
+        ConfirmNextStudentProgramRequest request, CancellationToken cancellationToken)
+    {
+        var existing = await db.ProgramContinuations.SingleOrDefaultAsync(item => item.SourceProgressId == request.SourceProgressId, cancellationToken);
+        if (existing?.ConfirmedAt is not null) throw new BusinessRuleException("Program.AlreadyContinued", "Bu eğitim için geçiş zaten tamamlandı.");
+        if (existing is not null)
+        {
+            existing.ChangeSelection(request.AssessmentAttemptId, request.TemplateId, recommendation.RecommendedTrainingLevel,
+                recommendation.MeasuredLevel, recommendation.RuleVersion, request.OverrideAcknowledged, DateTime.UtcNow);
+            return existing;
+        }
+        var decision = ProgramContinuation.Request(request.SourceProgressId, userId, request.AssessmentAttemptId, request.TemplateId,
+            recommendation.RecommendedTrainingLevel, recommendation.MeasuredLevel, recommendation.RuleVersion, request.OverrideAcknowledged, DateTime.UtcNow);
+        db.ProgramContinuations.Add(decision);
+        return decision;
     }
 
     public async Task<StudentProgramInfo?> GetMyProgramAsync(
@@ -134,12 +209,17 @@ internal sealed class OwnedSpeedReadingStudentProgram(OwnedSpeedReadingDbContext
                 {
                     if (activePrograms[0].IsStaffTraining != isStaffTraining)
                         throw new BusinessRuleException("Program.ModeMismatch", "Aktif program farklı bir kullanım akışına ait.");
+                    if (confirmation is not null && !await db.ProgramContinuations.AnyAsync(item => item.StudentId == userId
+                        && item.SourceProgressId == confirmation.SourceProgressId && item.AssessmentAttemptId == confirmation.AssessmentAttemptId
+                        && item.TemplateId == templateId && item.NewProgressId == activePrograms[0].Id, cancellationToken))
+                        throw new BusinessRuleException("Program.RecommendationChanged", "Bu onay aktif programa ait değil.");
                     return new StartStudentProgramResult(true, activePrograms[0].Id, template.Name,
                         "Bu program zaten aktif; mevcut ilerlemeniz korundu.");
                 }
                 if (activePrograms.Count > 0)
                     throw new BusinessRuleException("Program.ActiveTrainingExists",
                         "Yeni bir programa başlamadan önce aktif programınızı tamamlamalısınız.");
+                NextStudentProgramRecommendation? approvedRecommendation = null;
                 if (isStaffTraining)
                 {
                     if (template.IsAssessment)
@@ -148,7 +228,7 @@ internal sealed class OwnedSpeedReadingStudentProgram(OwnedSpeedReadingDbContext
                 else if (await db.StudentProgramProgresses.AsNoTracking().AnyAsync(item => item.UserId == userId, cancellationToken))
                 {
                     var recommendation = await GetNextProgramRecommendationAsync(userId, cancellationToken);
-                    if (recommendation is null || recommendation.TemplateId != templateId
+                    if (recommendation is null || (recommendation.TemplateId != templateId && recommendation.HigherOption?.TemplateId != templateId)
                         || (confirmation is not null && (confirmation.SourceProgressId != recommendation.SourceProgressId
                             || confirmation.AssessmentAttemptId != recommendation.AssessmentAttemptId)))
                         throw new BusinessRuleException("Program.RecommendationChanged",
@@ -159,6 +239,8 @@ internal sealed class OwnedSpeedReadingStudentProgram(OwnedSpeedReadingDbContext
                     if (confirmation is null)
                         throw new BusinessRuleException("Program.ExplicitConfirmationRequired",
                             "Yeni programa başlamak için güncel öneriyi açıkça onaylamalısınız.");
+                    ValidateSelection(recommendation, confirmation);
+                    approvedRecommendation = recommendation;
                 }
                 else if (confirmation is not null)
                     throw new BusinessRuleException("Program.RecommendationChanged", "Tamamlanmış program önerisi bulunamadı.");
@@ -181,6 +263,11 @@ internal sealed class OwnedSpeedReadingStudentProgram(OwnedSpeedReadingDbContext
                     actorId,
                     now);
                 db.StudentProgramProgresses.Add(progress);
+                if (approvedRecommendation is not null && confirmation is not null)
+                {
+                    var decision = await SaveDecisionAsync(userId, approvedRecommendation, confirmation, cancellationToken);
+                    decision.Confirm(actorId, progress.Id, now);
+                }
                 await db.SaveChangesAsync(cancellationToken);
                 if (transaction is not null)
                     await transaction.CommitAsync(cancellationToken);

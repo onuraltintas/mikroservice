@@ -77,6 +77,14 @@ public sealed class StudentProgramController(ISpeedReadingStudentProgram student
         }
     }
 
+    [HttpPost("request-next")]
+    public async Task<IActionResult> RequestNextProgram([FromBody] ConfirmNextStudentProgramRequest request, CancellationToken cancellationToken = default)
+    {
+        if (!TryGetCurrentUserId(out var userId)) return Unauthorized();
+        await studentProgram.RequestNextProgramAsync(userId, request, cancellationToken);
+        return Ok(new { success = true, message = "Program seçiminiz öğretmen/kurum onayına gönderildi." });
+    }
+
     private bool TryGetCurrentUserId(out Guid userId)
     {
         var value = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");

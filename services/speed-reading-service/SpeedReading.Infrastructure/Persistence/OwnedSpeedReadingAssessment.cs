@@ -1156,7 +1156,7 @@ internal sealed class OwnedSpeedReadingAssessment(
             return levelTemplates.FirstOrDefault(item =>
             {
                 using var pattern = JsonDocument.Parse(item.WeeklyPatternJson);
-                return pattern.RootElement.GetProperty("placementLevel").GetInt32() == assessmentLevel;
+                return pattern.RootElement.GetProperty("placementLevel").GetInt32() == (assessmentLevel.HasValue ? Math.Clamp(assessmentLevel.Value, 1, 5) : null);
             });
         }
 
