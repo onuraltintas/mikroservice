@@ -51,6 +51,7 @@ public static class Permissions
         public const string View = PlatformPermissions.SpeedReading.View;
         public const string ContentManage = PlatformPermissions.SpeedReading.ContentManage;
         public const string ProgramManage = PlatformPermissions.SpeedReading.ProgramManage;
+        public const string StudentProgramApprove = PlatformPermissions.SpeedReading.StudentProgramApprove;
         public const string ProgressView = PlatformPermissions.SpeedReading.ProgressView;
         public const string ReportView = PlatformPermissions.SpeedReading.ReportView;
         public const string PlatformAnalyticsView = PlatformPermissions.SpeedReading.PlatformAnalyticsView;

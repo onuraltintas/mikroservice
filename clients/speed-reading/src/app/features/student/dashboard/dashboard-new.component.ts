@@ -1,11 +1,12 @@
 import { Component, OnInit, signal, effect, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { takeUntil, finalize } from 'rxjs/operators';
 import { forkJoin } from 'rxjs';
 import { BaseComponent } from '../../../core/components/base.component';
 import { AuthService } from '../../../core/services/auth.service';
-import { AssessmentService } from '../../../services/assessment.service';
+import { AssessmentService, AssessmentFollowUpPlanDto } from '../../../services/assessment.service';
+import { FormsModule } from '@angular/forms';
 import { GamificationService } from '../../../core/services/gamification.service';
 import { CountUpDirective } from '../../../shared/directives/count-up.directive';
 import { DailyPlanWidgetComponent } from './widgets/daily-plan-widget.component';
@@ -25,6 +26,8 @@ import { AssignmentsWidgetComponent } from './widgets/assignments-widget.compone
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
+    RouterLink,
     CountUpDirective,
     DailyPlanWidgetComponent,
     StreakWidgetComponent,
@@ -70,6 +73,9 @@ export class DashboardNewComponent extends BaseComponent implements OnInit {
   nextProgramRecommendation = signal<NextProgramRecommendation | null>(null);
   nextProgramStarting = signal(false);
   nextProgramError = signal<string | null>(null);
+  overrideAcknowledged = false;
+  followUps = signal<AssessmentFollowUpPlanDto[]>([]);
+  followUpError = signal(false);
 
   constructor(
     private authService: AuthService,
@@ -101,6 +107,7 @@ export class DashboardNewComponent extends BaseComponent implements OnInit {
 
     // Load dashboard stats
     this.loadDashboardStats();
+    this.loadFollowUps();
   }
 
   override ngOnDestroy(): void {
@@ -266,17 +273,50 @@ export class DashboardNewComponent extends BaseComponent implements OnInit {
     });
   }
 
-  confirmNextProgram(): void {
+  confirmNextProgram(useHigher = false): void {
     const recommendation = this.nextProgramRecommendation();
     if (!recommendation || recommendation.requiresStaffApproval || this.nextProgramStarting()) return;
+    if (useHigher && (!recommendation.higherOption || !this.overrideAcknowledged)) return;
     this.nextProgramStarting.set(true);
     this.nextProgramError.set(null);
-    this.studentProgramService.confirmNextProgram({ templateId: recommendation.templateId,
-      sourceProgressId: recommendation.sourceProgressId, assessmentAttemptId: recommendation.assessmentAttemptId })
+    this.studentProgramService.confirmNextProgram({ templateId: useHigher ? recommendation.higherOption!.templateId : recommendation.templateId,
+      sourceProgressId: recommendation.sourceProgressId, assessmentAttemptId: recommendation.assessmentAttemptId,
+      ...(useHigher ? { overrideAcknowledged: true } : {}) })
       .pipe(takeUntil(this.destroy$), finalize(() => this.nextProgramStarting.set(false))).subscribe({
         next: () => this.loadDashboardStats(),
         error: error => this.nextProgramError.set(error?.error?.message || 'Program başlatılamadı. Lütfen öneriyi yenileyin.')
       });
+  }
+
+  requestNextProgram(useHigher = false): void {
+    const recommendation = this.nextProgramRecommendation();
+    if (!recommendation?.requiresStaffApproval || this.nextProgramStarting()
+      || (useHigher && (!recommendation.higherOption || !this.overrideAcknowledged))) return;
+    this.nextProgramStarting.set(true);
+    this.nextProgramError.set(null);
+    this.studentProgramService.requestNextProgram({ templateId: useHigher ? recommendation.higherOption!.templateId : recommendation.templateId,
+      sourceProgressId: recommendation.sourceProgressId, assessmentAttemptId: recommendation.assessmentAttemptId,
+      ...(useHigher ? { overrideAcknowledged: true } : {}) })
+      .pipe(takeUntil(this.destroy$), finalize(() => this.nextProgramStarting.set(false))).subscribe({
+        next: () => this.loadNextProgramRecommendation(),
+        error: error => this.nextProgramError.set(error?.error?.message || 'Geçiş talebi gönderilemedi.')
+      });
+  }
+
+  loadFollowUps(): void {
+    this.followUpError.set(false);
+    this.assessmentService.getFollowUpPlans().pipe(takeUntil(this.destroy$)).subscribe({
+      next: plans => this.followUps.set(plans), error: () => this.followUpError.set(true)
+    });
+  }
+
+  startFollowUp(item: AssessmentFollowUpPlanDto): void {
+    if (!item.plan.nextPhase) return;
+    this.router.navigate(['/student/assessment'], { queryParams: { phase: item.plan.nextPhase, programProgressId: item.programProgressId } });
+  }
+
+  followUpLabel(phase: number): string {
+    return ({ 2: 'Eğitim sonrası', 3: 'Kalıcılık', 4: 'Transfer' } as Record<number, string>)[phase] || 'Ölçüm';
   }
 
   loadCompletionAssessmentPlan(): void {

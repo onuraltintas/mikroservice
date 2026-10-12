@@ -11,6 +11,14 @@ interface ProgramRecommendation {
   sourceProgressId: string;
   assessmentAttemptId: string;
   requiresStaffApproval: boolean;
+  reason?: string;
+  measuredLevel?: number;
+  recommendedTrainingLevel?: number;
+  averageWpm?: number;
+  comprehension?: number;
+  higherOption?: { templateId: string; templateName: string; level: number; totalDays: number } | null;
+  requestedTemplateId?: string | null;
+  requestedAt?: string | null;
 }
 
 @Component({
@@ -24,7 +32,18 @@ interface ProgramRecommendation {
       @if (recommendation(); as suggestion) {
         <p><strong>{{ suggestion.templateName }}</strong> — {{ suggestion.totalDays }} gün</p>
         <p>Öneri, öğrencinin tamamlanan programına ait eğitim sonrası ölçümüne dayanır.</p>
-        <button type="button" [disabled]="busy()" (click)="approve()">Önerilen programı onayla ve başlat</button>
+        <p>{{ suggestion.reason }}</p>
+        @if (suggestion.recommendedTrainingLevel) {
+          <p>Ölçülen seviye: {{ suggestion.measuredLevel }} · Önerilen eğitim seviyesi: {{ suggestion.recommendedTrainingLevel }}.
+            {{ suggestion.averageWpm | number:'1.0-0' }} kelime/dk · %{{ suggestion.comprehension | number:'1.0-1' }} anlama.</p>
+        }
+        @if (!suggestion.requestedTemplateId) { <p>Öğrencinin program seçimi yapıp onay talebi göndermesi bekleniyor.</p> }
+        @if (suggestion.requestedTemplateId) {
+          <p>Öğrencinin seçimi: {{ suggestion.requestedTemplateId === suggestion.higherOption?.templateId ? suggestion.higherOption?.templateName : suggestion.templateName }}
+            · {{ suggestion.requestedAt | date:'dd.MM.yyyy HH:mm' }}.</p>
+          <p>Üst seçim ölçülen seviyeyi değiştirmez; seçim ve onay geçmişe kaydedilir.</p>
+          <button type="button" [disabled]="busy()" (click)="approve(true)">Öğrencinin seçimini onayla ve başlat</button>
+        }
       }
       @if (message()) { <p role="status">{{ message() }}</p> }
       @if (error()) { <p role="alert">{{ error() }}</p> }
@@ -68,13 +87,17 @@ export class ProgramRecommendationPanelComponent implements OnChanges, OnDestroy
       });
   }
 
-  approve(): void {
+  approve(useRequested = false): void {
     const suggestion = this.recommendation();
     if (!suggestion || this.busy()) return;
+    const templateId = useRequested ? suggestion.requestedTemplateId : suggestion.templateId;
+    if (!templateId || templateId !== suggestion.requestedTemplateId
+      || (templateId !== suggestion.templateId && templateId !== suggestion.higherOption?.templateId)) return;
     this.busy.set(true);
     this.error.set(null);
-    this.request = this.http.post(this.url('approve-next'), { templateId: suggestion.templateId,
-      sourceProgressId: suggestion.sourceProgressId, assessmentAttemptId: suggestion.assessmentAttemptId }, { params: this.params() })
+    this.request = this.http.post(this.url('approve-next'), { templateId,
+      sourceProgressId: suggestion.sourceProgressId, assessmentAttemptId: suggestion.assessmentAttemptId,
+      ...(templateId !== suggestion.templateId ? { overrideAcknowledged: true } : {}) }, { params: this.params() })
       .pipe(finalize(() => this.busy.set(false))).subscribe({
         next: () => {
           this.recommendation.set(null);

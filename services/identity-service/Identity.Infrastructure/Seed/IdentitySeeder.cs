@@ -102,6 +102,7 @@ public static class IdentitySeeder
                 Identity.Domain.Constants.Permissions.SpeedReading.View,
                 Identity.Domain.Constants.Permissions.SpeedReading.ProgressView,
                 Identity.Domain.Constants.Permissions.SpeedReading.ReportView,
+                Identity.Domain.Constants.Permissions.SpeedReading.StudentProgramApprove,
                 Identity.Domain.Constants.Permissions.SpeedReading.LeaderboardView
             };
 
@@ -113,7 +114,8 @@ public static class IdentitySeeder
             var teacherPermissions = new List<string>
             {
                 Identity.Domain.Constants.Permissions.SpeedReading.LeaderboardView,
-                Identity.Domain.Constants.Permissions.SpeedReading.ReportView
+                Identity.Domain.Constants.Permissions.SpeedReading.ReportView,
+                Identity.Domain.Constants.Permissions.SpeedReading.StudentProgramApprove
             };
 
             // Coaching admin access is tenant-scoped by the Coaching API and

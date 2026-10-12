@@ -11,12 +11,12 @@ namespace SpeedReading.API.Controllers;
 [ApiController]
 [Route("api/speed-reading/program-management/students/{studentId:guid}")]
 [Authorize(Roles = "Teacher,InstitutionAdmin,InstitutionOwner")]
-[HasPermission(PlatformPermissions.SpeedReading.ReportView)]
 [MfaCategory(MfaOperationCategories.SpeedReading)]
 public sealed class StudentProgramManagementController(
     ISpeedReadingStudentProgram programs, ISpeedReadingTeacherAccess access) : ControllerBase
 {
     [HttpGet("next-recommendation")]
+    [HasPermission(PlatformPermissions.SpeedReading.ReportView)]
     public async Task<IActionResult> GetRecommendation(Guid studentId, [FromQuery] Guid? institutionId,
         CancellationToken cancellationToken = default)
     {
@@ -29,6 +29,7 @@ public sealed class StudentProgramManagementController(
     }
 
     [HttpPost("approve-next")]
+    [HasPermission(PlatformPermissions.SpeedReading.StudentProgramApprove)]
     public async Task<IActionResult> Approve(Guid studentId, [FromBody] ConfirmNextStudentProgramRequest request,
         [FromQuery] Guid? institutionId, CancellationToken cancellationToken = default)
     {

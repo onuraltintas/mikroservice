@@ -25,7 +25,6 @@ namespace SpeedReading.Infrastructure.Persistence.Migrations
                     PolicyVersion = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     OverrideAcknowledged = table.Column<bool>(type: "boolean", nullable: false),
                     RequestedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    ConfirmedBy = table.Column<Guid>(type: "uuid", nullable: true),
                     ConfirmedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     NewProgressId = table.Column<Guid>(type: "uuid", nullable: true)
                 },

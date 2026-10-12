@@ -45,6 +45,7 @@ export class AssessmentComponent implements OnInit, OnDestroy {
   result = signal<any>(null);
   assessmentAttemptId = signal<string | null>(null);
   assessmentPhase = signal(1);
+  programProgressId = signal<string | null>(null);
 
   // Comprehension Exercise State
 
@@ -69,6 +70,7 @@ export class AssessmentComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.assessmentPhase.set(this.getRequestedPhase());
+    this.programProgressId.set(this.route.snapshot.queryParamMap.get('programProgressId'));
     this.loadAssessmentExercises();
   }
 
@@ -84,11 +86,12 @@ export class AssessmentComponent implements OnInit, OnDestroy {
       formVersion: this.formVersionForPhase(),
       language: 'tr-TR',
       ageGroupConfigurationId: this.authService.currentUserValue?.ageGroupId ?? undefined,
-      expectedExerciseCount: 3
+      expectedExerciseCount: 3,
+      programProgressId: this.programProgressId() ?? undefined
     }).pipe(
       switchMap(attempt => {
         this.assessmentAttemptId.set(attempt.id);
-        return this.assessmentService.getAssessmentExercises();
+        return this.assessmentService.getAssessmentExercises(attempt.id);
       })
     ).subscribe({
       next: (data: any) => {
@@ -147,14 +150,16 @@ export class AssessmentComponent implements OnInit, OnDestroy {
         assessmentStep: index + 1,
         assessmentAttemptId: this.assessmentAttemptId(),
         assessmentPhase: this.assessmentPhase(),
-        returnUrl: `/student/assessment?phase=${this.assessmentPhase()}`
+        assessmentProgramProgressId: this.programProgressId(),
+        returnUrl: this.assessmentReturnUrl()
       },
       state: {
         assessmentMode: true,
         assessmentStep: index + 1,
         assessmentAttemptId: this.assessmentAttemptId(),
         assessmentPhase: this.assessmentPhase(),
-        returnUrl: `/student/assessment?phase=${this.assessmentPhase()}`
+        assessmentProgramProgressId: this.programProgressId(),
+        returnUrl: this.assessmentReturnUrl()
       }
     });
   }
@@ -198,6 +203,11 @@ export class AssessmentComponent implements OnInit, OnDestroy {
         this.calculating.set(false);
       }
     });
+  }
+
+  private assessmentReturnUrl(): string {
+    return `/student/assessment?phase=${this.assessmentPhase()}`
+      + (this.programProgressId() ? `&programProgressId=${encodeURIComponent(this.programProgressId()!)}` : '');
   }
 
   goToDashboard(): void {

@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { StudentProgramInfo, StudentProgramService } from '../../../core/services/student-program.service';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { ReportsService } from '../../../core/services/reports.service';
 import { AuthService } from '../../../core/services/auth.service';
@@ -28,6 +29,12 @@ export class StudentReportsComponent extends BaseComponent implements OnInit {
   private authService = inject(AuthService);
   private assessmentService = inject(AssessmentService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
+  private programs = inject(StudentProgramService);
+  programHistory = signal<StudentProgramInfo[]>([]);
+  selectedProgramId = signal<string | null>(null);
+  programHistoryError = signal(false);
+  private reportRequestVersion = 0;
 
   dateRangeControl = new FormControl('last7days');
   startDateControl = new FormControl(subDays(new Date(), 7));
@@ -39,26 +46,31 @@ export class StudentReportsComponent extends BaseComponent implements OnInit {
   currentStudentId = this.authService.currentUserValue?.id || '';
 
   ngOnInit(): void {
+    this.selectedProgramId.set(this.route.snapshot.queryParamMap.get('programProgressId'));
+    this.programs.getMyPrograms().pipe(takeUntil(this.destroy$)).subscribe({ next: history => this.programHistory.set(history),
+      error: () => this.programHistoryError.set(true) });
     this.onDateRangeChange();
     this.loadAssessmentComparison();
     this.loadPhasePlan();
   }
 
   private loadAssessmentComparison(): void {
-    this.assessmentService.getAttemptComparison()
+    const version = this.reportRequestVersion;
+    this.assessmentService.getAttemptComparison(this.selectedProgramId() ?? undefined)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: comparison => this.assessmentComparison.set(comparison),
-        error: () => this.assessmentComparison.set(null)
+        next: comparison => { if (version === this.reportRequestVersion) this.assessmentComparison.set(comparison); },
+        error: () => { if (version === this.reportRequestVersion) this.assessmentComparison.set(null); }
       });
   }
 
   private loadPhasePlan(): void {
-    this.assessmentService.getPhasePlan()
+    const version = this.reportRequestVersion;
+    this.assessmentService.getPhasePlan(this.selectedProgramId() ?? undefined)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: plan => this.phasePlan.set(plan),
-        error: () => this.phasePlan.set(null)
+        next: plan => { if (version === this.reportRequestVersion) this.phasePlan.set(plan); },
+        error: () => { if (version === this.reportRequestVersion) this.phasePlan.set(null); }
       });
   }
 
@@ -70,6 +82,20 @@ export class StudentReportsComponent extends BaseComponent implements OnInit {
       case 4: return 'Transfer';
       default: return 'Değerlendirme';
     }
+  }
+
+  selectProgram(programId: string): void {
+    this.reportRequestVersion++;
+    this.selectedProgramId.set(programId || null);
+    this.assessmentComparison.set(null);
+    this.phasePlan.set(null);
+    this.loadAssessmentComparison();
+    this.loadPhasePlan();
+  }
+
+  selectedProgram(): StudentProgramInfo | null {
+    return this.programHistory().find(program => program.progressId === this.selectedProgramId())
+      ?? (!this.selectedProgramId() ? this.programHistory()[0] : null) ?? null;
   }
 
   metric(value: number | null | undefined, suffix = ''): string {
@@ -113,7 +139,7 @@ export class StudentReportsComponent extends BaseComponent implements OnInit {
     }
 
     this.router.navigate(['/student/assessment'], {
-      queryParams: { phase: phase.phase }
+      queryParams: { phase: phase.phase, ...(this.selectedProgramId() ? { programProgressId: this.selectedProgramId() } : {}) }
     });
   }
 

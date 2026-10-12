@@ -433,3 +433,6 @@
 .db-no-program {
   transition: background 0.25s ease, border-color 0.25s ease;
 }
+ .db-program-choice,.db-followup{margin-top:18px;padding:18px;border:1px solid var(--border-color,#dce2ef);border-radius:12px}
+ .db-program-choice label{display:flex;gap:10px;align-items:flex-start;margin:12px 0}
+ .db-followup a{display:block;margin-top:12px}

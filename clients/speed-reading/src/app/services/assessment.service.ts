@@ -1,5 +1,5 @@
 import { Injectable, inject, signal } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, map, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
 import {
@@ -27,6 +27,7 @@ export interface StartAssessmentAttemptRequest {
   language?: string;
   ageGroupConfigurationId?: string;
   expectedExerciseCount?: number;
+  programProgressId?: string;
 }
 
 export interface AssessmentAttemptSummaryDto {
@@ -60,6 +61,15 @@ export interface AssessmentComparisonPointDto {
 export interface AssessmentComparisonDto {
   attempts: AssessmentComparisonPointDto[];
   baseline?: AssessmentComparisonPointDto | null;
+  additionalTraining?: boolean;
+}
+
+export interface AssessmentFollowUpPlanDto {
+  programProgressId: string;
+  programName: string;
+  completedAt: string;
+  additionalTraining: boolean;
+  plan: AssessmentPhasePlanDto;
 }
 
 export interface AssessmentPhasePlanItemDto {
@@ -135,18 +145,18 @@ export class AssessmentService {
     );
   }
 
-  getAttemptComparison(): Observable<AssessmentComparisonDto> {
+  getAttemptComparison(programProgressId?: string): Observable<AssessmentComparisonDto> {
     return this.http.get<ApiResponse<AssessmentComparisonDto> | AssessmentComparisonDto>(
-      `${this.apiUrl}/comparison`
+      `${this.apiUrl}/comparison`, { params: programProgressId ? new HttpParams().set('programProgressId', programProgressId) : new HttpParams() }
     ).pipe(
       map((response: ApiResponse<AssessmentComparisonDto> | AssessmentComparisonDto) =>
         'data' in response ? response.data : response)
     );
   }
 
-  getPhasePlan(): Observable<AssessmentPhasePlanDto> {
+  getPhasePlan(programProgressId?: string): Observable<AssessmentPhasePlanDto> {
     return this.http.get<ApiResponse<AssessmentPhasePlanDto> | AssessmentPhasePlanDto>(
-      `${this.apiUrl}/phase-plan`
+      `${this.apiUrl}/phase-plan`, { params: programProgressId ? new HttpParams().set('programProgressId', programProgressId) : new HttpParams() }
     ).pipe(
       map((response: ApiResponse<AssessmentPhasePlanDto> | AssessmentPhasePlanDto) =>
         'data' in response ? response.data : response)
@@ -156,11 +166,17 @@ export class AssessmentService {
   /**
    * Gets the 3 exercises for initial assessment
    */
-  getAssessmentExercises(): Observable<ApiResponse<AssessmentExercisesDto>> {
+  getFollowUpPlans(): Observable<AssessmentFollowUpPlanDto[]> {
+    return this.http.get<AssessmentFollowUpPlanDto[]>(`${this.apiUrl}/follow-ups`);
+  }
+
+  getAssessmentExercises(attemptId?: string): Observable<ApiResponse<AssessmentExercisesDto>> {
     this.loading.set(true);
     this.error.set(null);
 
-    return this.http.get<ApiResponse<AssessmentExercisesDto>>(`${this.apiUrl}/exercises`).pipe(
+    return this.http.get<ApiResponse<AssessmentExercisesDto>>(`${this.apiUrl}/exercises`, {
+      params: attemptId ? new HttpParams().set('attemptId', attemptId) : new HttpParams()
+    }).pipe(
       tap({
         next: (response: any) => {
           // Handle both wrapped (ApiResponse) and flat responses

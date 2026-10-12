@@ -11,20 +11,21 @@ namespace Identity.API.IntegrationTests;
 public sealed class SpeedReadingErasureExecutionServiceTests
 {
     [Fact]
-    public async Task Erasing_approver_anonymizes_actor_without_removing_another_students_decision()
+    public async Task Continuation_keeps_no_approver_identity_and_subject_erasure_removes_own_decision()
     {
         await using var context = CreateContext();
-        var actor = Guid.NewGuid();
-        var decision = SpeedReading.Domain.Programs.ProgramContinuation.Request(Guid.NewGuid(), Guid.NewGuid(),
+        var student = Guid.NewGuid();
+        var decision = SpeedReading.Domain.Programs.ProgramContinuation.Request(Guid.NewGuid(), student,
             Guid.NewGuid(), Guid.NewGuid(), 3, 3, "test-v1", false, DateTime.UtcNow);
-        decision.Confirm(actor, Guid.NewGuid(), DateTime.UtcNow);
+        decision.Confirm(Guid.NewGuid(), DateTime.UtcNow);
         context.ProgramContinuations.Add(decision);
         await context.SaveChangesAsync();
         var inventory = new SpeedReadingPrivacyInventoryRepository(context);
-        (await inventory.CountByUserAsync(actor, CancellationToken.None)).GetValueOrDefault("programContinuationApprovals").Should().Be(1);
+        typeof(SpeedReading.Domain.Programs.ProgramContinuation).GetProperty("ConfirmedBy").Should().BeNull();
+        (await inventory.CountByUserAsync(student, CancellationToken.None)).GetValueOrDefault("programContinuations").Should().Be(1);
         var service = new SpeedReadingErasureExecutionService(context, inventory, TimeProvider.System);
-        await service.ExecuteAsync(Request(actor), CancellationToken.None);
-        (await context.ProgramContinuations.SingleAsync()).ConfirmedBy.Should().BeNull();
+        await service.ExecuteAsync(Request(student), CancellationToken.None);
+        (await context.ProgramContinuations.CountAsync()).Should().Be(0);
     }
 
     [Fact]

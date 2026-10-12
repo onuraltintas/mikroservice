@@ -20,7 +20,7 @@ describe('staff next program approval', () => {
     const get = http.expectOne(request => request.url.endsWith('/program-management/students/student/next-recommendation'));
     expect(get.request.params.get('institutionId')).toBe('institution');
     get.flush({ templateId: 'next', sourceProgressId: 'old', assessmentAttemptId: 'post',
-      templateName: 'Next program', totalDays: 28, requiresStaffApproval: true });
+      templateName: 'Next program', totalDays: 28, requiresStaffApproval: true, requestedTemplateId: 'next' });
     fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('Next program');
     fixture.componentInstance.approve();

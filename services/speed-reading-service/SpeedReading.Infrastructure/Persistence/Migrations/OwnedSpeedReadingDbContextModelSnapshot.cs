@@ -2725,9 +2725,6 @@ namespace SpeedReading.Infrastructure.Persistence.Migrations
                     b.Property<DateTime?>("ConfirmedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid?>("ConfirmedBy")
-                        .HasColumnType("uuid");
-
                     b.Property<int>("MeasuredLevel")
                         .HasColumnType("integer");
 

@@ -131,7 +131,10 @@ internal sealed class OwnedSpeedReadingStudentProgram(OwnedSpeedReadingDbContext
             .Where(item => item.Progress.IsActive)
             .OrderByDescending(item => item.Progress.CreatedAt)
             .FirstOrDefaultAsync(cancellationToken);
-        return row is null ? null : ToInfo(row);
+        if (row is null) return null;
+        var decision = await db.ProgramContinuations.AsNoTracking().SingleOrDefaultAsync(item => item.StudentId == userId
+            && item.NewProgressId == row.Progress.Id, cancellationToken);
+        return ToInfo(row, decision);
     }
 
     public async Task<IReadOnlyList<StudentProgramInfo>> GetMyProgramsAsync(
@@ -142,7 +145,9 @@ internal sealed class OwnedSpeedReadingStudentProgram(OwnedSpeedReadingDbContext
             .OrderByDescending(item => item.Progress.IsActive)
             .ThenByDescending(item => item.Progress.CreatedAt)
             .ToListAsync(cancellationToken);
-        return rows.Select(ToInfo).ToList();
+        var decisions = await db.ProgramContinuations.AsNoTracking().Where(item => item.StudentId == userId && item.NewProgressId.HasValue)
+            .ToDictionaryAsync(item => item.NewProgressId!.Value, cancellationToken);
+        return rows.Select(row => ToInfo(row, decisions.GetValueOrDefault(row.Progress.Id))).ToList();
     }
 
     public Task<StartStudentProgramResult> StartProgramAsync(Guid userId, Guid templateId, CancellationToken cancellationToken) =>
@@ -220,6 +225,7 @@ internal sealed class OwnedSpeedReadingStudentProgram(OwnedSpeedReadingDbContext
                     throw new BusinessRuleException("Program.ActiveTrainingExists",
                         "Yeni bir programa başlamadan önce aktif programınızı tamamlamalısınız.");
                 NextStudentProgramRecommendation? approvedRecommendation = null;
+                ProgramContinuation? staffDecision = null;
                 if (isStaffTraining)
                 {
                     if (template.IsAssessment)
@@ -241,6 +247,11 @@ internal sealed class OwnedSpeedReadingStudentProgram(OwnedSpeedReadingDbContext
                             "Yeni programa başlamak için güncel öneriyi açıkça onaylamalısınız.");
                     ValidateSelection(recommendation, confirmation);
                     approvedRecommendation = recommendation;
+                    if (actorId != userId)
+                        staffDecision = await db.ProgramContinuations.SingleOrDefaultAsync(item => item.SourceProgressId == confirmation.SourceProgressId
+                            && item.StudentId == userId && item.AssessmentAttemptId == confirmation.AssessmentAttemptId
+                            && item.TemplateId == confirmation.TemplateId && item.ConfirmedAt == null, cancellationToken)
+                            ?? throw new BusinessRuleException("Program.PendingChoiceRequired", "Önce öğrencinin bu program için güncel geçiş talebi göndermesi gerekir.");
                 }
                 else if (confirmation is not null)
                     throw new BusinessRuleException("Program.RecommendationChanged", "Tamamlanmış program önerisi bulunamadı.");
@@ -265,8 +276,8 @@ internal sealed class OwnedSpeedReadingStudentProgram(OwnedSpeedReadingDbContext
                 db.StudentProgramProgresses.Add(progress);
                 if (approvedRecommendation is not null && confirmation is not null)
                 {
-                    var decision = await SaveDecisionAsync(userId, approvedRecommendation, confirmation, cancellationToken);
-                    decision.Confirm(actorId, progress.Id, now);
+                    var decision = staffDecision ?? await SaveDecisionAsync(userId, approvedRecommendation, confirmation, cancellationToken);
+                    decision.Confirm(progress.Id, now);
                 }
                 await db.SaveChangesAsync(cancellationToken);
                 if (transaction is not null)
@@ -295,7 +306,7 @@ internal sealed class OwnedSpeedReadingStudentProgram(OwnedSpeedReadingDbContext
             AgeGroupName = ageGroup == null ? "Bilinmiyor" : ageGroup.DisplayName
         };
 
-    private static StudentProgramInfo ToInfo(StudentProgramRow row)
+    private static StudentProgramInfo ToInfo(StudentProgramRow row, ProgramContinuation? decision = null)
     {
         var programTypeName = row.Template.ProgramType == 1 ? "Sınav Hazırlık" : "Standart Program";
         var visibleDay = row.Progress.IsActive && !row.Progress.CompletedDate.HasValue
@@ -327,7 +338,12 @@ internal sealed class OwnedSpeedReadingStudentProgram(OwnedSpeedReadingDbContext
             row.Progress.AssignedDate,
             row.Progress.LastCompletionDate,
             row.Progress.IsActive,
-            row.Progress.CompletedDate);
+            row.Progress.CompletedDate)
+        {
+            MeasuredLevel = decision?.MeasuredLevel, RecommendedTrainingLevel = decision?.RecommendedLevel,
+            SelectedTrainingLevel = decision is null ? null : PlacementLevel(row.Template) ?? row.Template.InitialDifficultyLevel,
+            SelectionPolicyVersion = decision?.PolicyVersion
+        };
     }
 
     private sealed record StudentProgramRow

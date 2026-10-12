@@ -81,6 +81,7 @@ public sealed class NextProgramRecommendationTests
         var request = new ConfirmNextStudentProgramRequest(expected.Id, progress.Id, post.Id);
         var wrongViewer = () => Service(db, access).ApproveNextProgramAsync(Guid.NewGuid(), user, request, null, CancellationToken.None);
         await wrongViewer.Should().ThrowAsync<UnauthorizedAccessException>();
+        if (managed) await Service(db, access).RequestNextProgramAsync(user, request, CancellationToken.None);
         var accepted = managed
             ? await Service(db, access).ApproveNextProgramAsync(teacher, user, request, null, CancellationToken.None)
             : await Service(db, access).ConfirmNextProgramAsync(user, request, CancellationToken.None);

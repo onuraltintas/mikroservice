@@ -340,9 +340,13 @@ internal sealed class OwnedSpeedReadingAssessment(
                     .ToList()
                 : [])).ToList();
         var points = AssessmentComparisonCalculator.Calculate(inputs);
+        var postAt = attempts.Where(item => item.Phase == AssessmentAttemptPhase.PostTraining)
+            .Max(item => item.CompletedAt);
+        var additionalTraining = postAt.HasValue && program is not null && await db.StudentProgramProgresses.AsNoTracking().AnyAsync(item =>
+            item.UserId == userId && item.Id != program.Id && item.AssignedDate > postAt.Value, cancellationToken);
         return new AssessmentComparisonSummary(
             points,
-            points.FirstOrDefault(item => item.Phase == AssessmentAttemptPhase.Baseline));
+            points.FirstOrDefault(item => item.Phase == AssessmentAttemptPhase.Baseline)) { AdditionalTraining = additionalTraining };
     }
 
     public async Task<AssessmentPhasePlanSummary> GetPhasePlanAsync(
@@ -851,15 +855,11 @@ internal sealed class OwnedSpeedReadingAssessment(
             .Average();
         var focusScore = fixationScore;
 
-        var profile = await GetOrCreateProfileAsync(userId, cancellationToken);
+        var profile = await db.UserProfiles.AsNoTracking().SingleOrDefaultAsync(item => item.UserId == userId, cancellationToken);
         var targetWpm = (int)(averageWpm * 1.2m);
         var targetComprehension = Math.Max(70m, averageComprehension);
         var now = DateTime.UtcNow;
-        var latestProgram = await GetLatestProgramAsync(userId, cancellationToken);
-        // Historical follow-ups must not replace the current training profile.
-        if (attempt is null || attempt.Phase == AssessmentAttemptPhase.Baseline || attempt.ProgramProgressId == latestProgram?.Id)
-            profile.ApplyAssessment(level, targetWpm, targetComprehension, userId, now);
-        var recommendationAgeGroupId = attempt?.AgeGroupConfigurationId ?? profile.AgeGroupConfigurationId;
+        var recommendationAgeGroupId = attempt?.AgeGroupConfigurationId ?? profile?.AgeGroupConfigurationId;
         var template = await FindBaselineTemplateAsync(
             recommendationAgeGroupId,
             averageComprehension,
@@ -876,6 +876,9 @@ internal sealed class OwnedSpeedReadingAssessment(
             attempt,
             template,
             now,
+            level,
+            targetWpm,
+            targetComprehension,
             cancellationToken);
 
         var recommendedSeriesId = assignment?.TemplateId ?? template?.Id;
@@ -895,8 +898,8 @@ internal sealed class OwnedSpeedReadingAssessment(
             (int)Math.Round(visualExpansionScore),
             (int)Math.Round(fixationScore),
             (int)Math.Round(focusScore),
-            profile.TargetWPM,
-            profile.TargetComprehension,
+            targetWpm,
+            targetComprehension,
             recommendedSeriesId,
             recommendedProgressId,
             recommendedSeriesName,
@@ -917,6 +920,9 @@ internal sealed class OwnedSpeedReadingAssessment(
                     cancellationToken);
 
                 var profile = await GetOrCreateProfileAsync(userId, cancellationToken);
+                if (await GetLatestProgramAsync(userId, cancellationToken) is not null)
+                    return new AssessmentSkipResult(profile.CurrentLevel, profile.TargetWPM, profile.TargetComprehension,
+                        "Eğitim geçmişiniz zaten var; mevcut seviyeniz korundu. Sonraki programı eğitim sonrası ölçüm ve program önerisi üzerinden seçin.");
                 var now = DateTime.UtcNow;
                 var beginnerTemplate = await FindBaselineTemplateAsync(
                     profile.AgeGroupConfigurationId,
@@ -1000,6 +1006,9 @@ internal sealed class OwnedSpeedReadingAssessment(
         AssessmentAttempt? attempt,
         ProgramTemplate? template,
         DateTime completedAt,
+        int measuredLevel,
+        int targetWpm,
+        decimal targetComprehension,
         CancellationToken cancellationToken)
     {
         return await OwnedSpeedReadingProgramAssignmentLock.ExecuteAsync(
@@ -1010,9 +1019,19 @@ internal sealed class OwnedSpeedReadingAssessment(
                     db,
                     userId,
                     cancellationToken);
+                if (attempt is not null && db.Database.IsRelational()) await db.Entry(attempt).ReloadAsync(cancellationToken);
+                var latest = await GetLatestProgramAsync(userId, cancellationToken);
+                var initial = attempt is null || attempt.Phase == AssessmentAttemptPhase.Baseline;
+                if ((attempt is null || attempt.Status == AssessmentAttemptStatus.InProgress)
+                    && (initial ? latest is null : attempt!.ProgramProgressId == latest?.Id))
+                {
+                    var profile = await GetOrCreateProfileAsync(userId, cancellationToken);
+                    if (db.Database.IsRelational() && db.Entry(profile).State != EntityState.Added)
+                        await db.Entry(profile).ReloadAsync(cancellationToken);
+                    profile.ApplyAssessment(measuredLevel, targetWpm, targetComprehension, userId, completedAt);
+                }
                 BaselineProgramAssignment? assignment = null;
-                if (template is not null
-                    && (attempt is null || attempt.Phase == AssessmentAttemptPhase.Baseline))
+                if (template is not null && initial && latest is null)
                 {
                     assignment = await TryAssignBaselineProgramAsync(
                         userId,
@@ -1084,36 +1103,29 @@ internal sealed class OwnedSpeedReadingAssessment(
         DateTime assignedAt,
         CancellationToken cancellationToken)
     {
-        var activeProgress = await db.StudentProgramProgresses
-            .Where(item => item.UserId == userId
-                && item.IsActive
-                && item.CompletedDate == null)
-            .OrderByDescending(item => item.AssignedDate)
-            .FirstOrDefaultAsync(cancellationToken);
-        if (activeProgress is not null)
-        {
-            var activeTemplateName = await db.ProgramTemplates
-                .AsNoTracking()
-                .Where(item => item.Id == activeProgress.ProgramTemplateId)
-                .Select(item => item.Name)
-                .SingleOrDefaultAsync(cancellationToken);
-            return new BaselineProgramAssignment(
-                activeProgress.Id,
-                activeProgress.ProgramTemplateId,
-                activeTemplateName ?? template.Name);
-        }
-
-        var previousProgress = await db.StudentProgramProgresses
-            .AsNoTracking()
+        var existingProgress = await db.StudentProgramProgresses
             .Where(item => item.UserId == userId)
             .OrderByDescending(item => item.AssignedDate)
             .FirstOrDefaultAsync(cancellationToken);
+        if (existingProgress is not null)
+        {
+            var activeTemplateName = await db.ProgramTemplates
+                .AsNoTracking()
+                .Where(item => item.Id == existingProgress.ProgramTemplateId)
+                .Select(item => item.Name)
+                .SingleOrDefaultAsync(cancellationToken);
+            return new BaselineProgramAssignment(
+                existingProgress.Id,
+                existingProgress.ProgramTemplateId,
+                activeTemplateName ?? template.Name);
+        }
+
         var progress = StudentProgramProgress.Start(
             Guid.NewGuid(),
             userId,
             template,
-            previousProgress?.CurrentStreak ?? 0,
-            previousProgress?.LongestStreak ?? 0,
+            0,
+            0,
             userId,
             assignedAt);
         progress.SetSchedule(

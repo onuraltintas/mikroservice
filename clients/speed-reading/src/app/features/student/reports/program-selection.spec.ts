@@ -8,7 +8,7 @@ describe('program report selection', () => {
     const plans = [new Subject<any>(), new Subject<any>()];
     const instance = Object.create(StudentReportsComponent.prototype) as any;
     Object.assign(instance, {
-      selectedProgramId: signal(null), assessmentComparison: signal(null), phasePlan: signal(null),
+      selectedProgramId: signal(null), assessmentComparison: signal(null), phasePlan: signal(null), reportRequestVersion: 0,
       destroy$: new Subject<void>(), assessmentService: {
         getAttemptComparison: jasmine.createSpy().and.returnValues(...comparisons),
         getPhasePlan: jasmine.createSpy().and.returnValues(...plans)

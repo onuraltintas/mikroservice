@@ -347,6 +347,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   isAssessmentMode = false;
   assessmentAttemptId: string | null = null;
   assessmentPhase: number | null = null;
+  assessmentProgramProgressId: string | null = null;
 
   // Tachistoscope specific
   tachistoscopeAnswer = '';
@@ -480,6 +481,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       this.pathItemId = params['pathItemId'] || null;
       this.isAssessmentMode = state?.assessmentMode === true || params['assessmentMode'] === 'true';
       this.assessmentAttemptId = state?.assessmentAttemptId || params['assessmentAttemptId'] || null;
+      this.assessmentProgramProgressId = state?.assessmentProgramProgressId || params['assessmentProgramProgressId'] || null;
       const phase = Number(state?.assessmentPhase || params['assessmentPhase']);
       this.assessmentPhase = Number.isInteger(phase) && phase >= 1 && phase <= 4 ? phase : null;
     });
@@ -2183,7 +2185,8 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     // 1. Assessment Mode
     if (this.isAssessmentMode) {
       this.router.navigate(['/student/assessment'], {
-        queryParams: this.assessmentPhase ? { phase: this.assessmentPhase } : {}
+        queryParams: { ...(this.assessmentPhase ? { phase: this.assessmentPhase } : {}),
+          ...(this.assessmentProgramProgressId ? { programProgressId: this.assessmentProgramProgressId } : {}) }
       });
       return;
     }

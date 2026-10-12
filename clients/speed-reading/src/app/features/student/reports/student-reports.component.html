@@ -5,6 +5,22 @@
     <p class="rp-header__sub">Performansını ve ilerlemenizi analiz et</p>
   </div>
 
+  <label>Ölçüm raporu için eğitim programı
+    <select #programSelect (change)="selectProgram(programSelect.value)" [value]="selectedProgramId() || ''">
+      <option value="">Güncel program</option>
+      @for (program of programHistory(); track program.progressId) {
+        <option [value]="program.progressId">{{ program.templateName }} · {{ program.assignedDate | date:'dd.MM.yyyy' }}</option>
+      }
+    </select>
+  </label>
+  @if (programHistoryError()) { <p role="alert">Program geçmişi yüklenemedi. Sayfayı yeniden deneyin.</p> }
+  @if (selectedProgram(); as program) {
+    @if (program.selectionPolicyVersion) {
+      <p>Bu eğitim seçildiğinde ölçülen seviye: {{ program.measuredLevel }} · Önerilen eğitim seviyesi: {{ program.recommendedTrainingLevel }}
+        · Seçilen eğitim seviyesi: {{ program.selectedTrainingLevel }}.</p>
+    }
+  }
+
   @if (phasePlan(); as plan) {
   <section class="rp-phase-card sp-card" aria-labelledby="assessment-phase-plan-title">
     <div class="rp-phase-card__header">
@@ -25,7 +41,9 @@
           <span class="rp-phase-item__status">{{ phaseStatusLabel(phase.status) }}</span>
         </div>
         @if (phase.status === 1 && phase.prerequisitePhase) {
-        <p>{{ phaseLabel(phase.prerequisitePhase) }} tamamlanınca açılır.</p>
+        <p>{{ phase.availableAt ? 'Açılma tarihi: ' : phaseLabel(phase.prerequisitePhase) + ' tamamlanınca açılır.' }}
+          @if (phase.availableAt) { {{ phase.availableAt | date:'dd.MM.yyyy HH:mm' }} }
+        </p>
         } @else if (phase.status === 2) {
         <p>Bu ölçüm için hazırsınız.</p>
         } @else if (phase.status === 3) {
@@ -50,6 +68,8 @@
       <div>
         <h2 id="assessment-comparison-title">Değerlendirme gelişimi</h2>
         <p>Faz sonuçlarını başlangıç ölçümünüzle karşılaştırın.</p>
+        @if (comparison.additionalTraining) { <p>Bu programın eğitim sonrası ölçümünden sonra başka bir eğitim başladı.
+          Takip ölçümleri yalnız eski programın etkisini göstermez.</p> }
       </div>
       <span class="rp-assessment-card__badge">{{ comparison.attempts.length }} ölçüm</span>
     </div>

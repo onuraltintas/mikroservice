@@ -46,6 +46,10 @@ export interface StudentProgramInfo {
   lastCompletionDate: string | null;
   isActive: boolean;
   completedDate: string | null;
+  measuredLevel?: number | null;
+  recommendedTrainingLevel?: number | null;
+  selectedTrainingLevel?: number | null;
+  selectionPolicyVersion?: string | null;
 }
 
 export interface NextProgramRecommendation {
@@ -55,6 +59,18 @@ export interface NextProgramRecommendation {
   templateName: string;
   totalDays: number;
   requiresStaffApproval: boolean;
+  recommendedTrainingLevel?: number;
+  measuredLevel?: number;
+  ruleVersion?: string;
+  reason?: string;
+  averageWpm?: number;
+  comprehension?: number;
+  wpmDelta?: number | null;
+  comprehensionDelta?: number | null;
+  trainingSuccessRate?: number;
+  higherOption?: { templateId: string; templateName: string; totalDays: number; level: number } | null;
+  requestedTemplateId?: string | null;
+  requestedAt?: string | null;
 }
 
 /**
@@ -85,8 +101,12 @@ export class StudentProgramService {
     return this.http.get<NextProgramRecommendation | null>(`${this.apiUrl}/next-recommendation`);
   }
 
-  confirmNextProgram(request: { templateId: string; sourceProgressId: string; assessmentAttemptId: string }): Observable<{ success: boolean }> {
+  confirmNextProgram(request: { templateId: string; sourceProgressId: string; assessmentAttemptId: string; overrideAcknowledged?: boolean }): Observable<{ success: boolean }> {
     return this.http.post<{ success: boolean }>(`${this.apiUrl}/confirm-next`, request);
+  }
+
+  requestNextProgram(request: { templateId: string; sourceProgressId: string; assessmentAttemptId: string; overrideAcknowledged?: boolean }): Observable<{ success: boolean }> {
+    return this.http.post<{ success: boolean }>(`${this.apiUrl}/request-next`, request);
   }
 
   /**

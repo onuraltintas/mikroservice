@@ -93,17 +93,61 @@
         @if (nextProgramRecommendation(); as recommendation) {
           <h3>Önerilen program: {{ recommendation.templateName }}</h3>
           <p>{{ recommendation.totalDays }} günlük eğitim. Öneri, tamamladığınız programın eğitim sonrası ölçümüne dayanır.</p>
+          <p>{{ recommendation.reason }}</p>
+          <p>Son ölçüm: {{ recommendation.averageWpm | number:'1.0-0' }} kelime/dk · %{{ recommendation.comprehension | number:'1.0-1' }} anlama.
+            Eğitim başarısı: %{{ recommendation.trainingSuccessRate | number:'1.0-1' }}.</p>
+          @if (recommendation.wpmDelta != null) { <p>Başlangıca göre hız değişimi: {{ recommendation.wpmDelta | number:'1.0-1' }} kelime/dk;
+            anlama değişimi: {{ recommendation.comprehensionDelta | number:'1.0-1' }} puan.</p> }
           @if (recommendation.requiresStaffApproval) {
             <p>Bu programı başlatmak için öğretmeninizin veya kurum yöneticinizin onayı gerekiyor.</p>
+            <button type="button" class="db-cta-btn" [disabled]="nextProgramStarting()" (click)="requestNextProgram()">Önerilen program için onay iste</button>
+            @if (recommendation.requestedAt) { <p role="status">Seçiminiz {{ recommendation.requestedAt | date:'dd.MM.yyyy HH:mm' }} tarihinde onaya gönderildi.
+              {{ recommendation.requestedTemplateId === recommendation.higherOption?.templateId ? 'Bir üst seviye' : 'Önerilen program' }} için onay bekleniyor.</p> }
           } @else {
             <button type="button" class="db-cta-btn" [disabled]="nextProgramStarting()" (click)="confirmNextProgram()">
               {{ nextProgramStarting() ? 'Başlatılıyor…' : 'Önerilen programı onayla ve başla' }}
             </button>
           }
+          @if (recommendation.higherOption; as higher) {
+            <div class="db-program-choice">
+              <h3>Alternatif: {{ higher.templateName }}</h3>
+              <p>Bu program ölçümünüze göre önerilenden bir seviye daha zordur. Seçiminiz ölçülen seviyenizi yükseltmez.</p>
+              <label><input type="checkbox" [(ngModel)]="overrideAcknowledged" />Uyarıyı okudum; bir üst seviyeyi seçmek istiyorum.</label>
+              <button type="button" class="db-cta-btn" [disabled]="nextProgramStarting() || !overrideAcknowledged"
+                (click)="recommendation.requiresStaffApproval ? requestNextProgram(true) : confirmNextProgram(true)">
+                {{ recommendation.requiresStaffApproval ? 'Üst seviye için onay iste' : 'Bir üst seviyeyi seç ve başla' }}
+              </button>
+            </div>
+          }
         }
         @if (nextProgramError()) {
           <p role="alert">{{ nextProgramError() }}</p>
           <button type="button" [disabled]="nextProgramStarting()" (click)="loadNextProgramRecommendation()">Öneriyi yenile</button>
+        }
+      </section>
+    }
+
+    @if (followUpError()) {
+      <p role="alert">Takip ölçümleri yüklenemedi.</p>
+      <button type="button" class="db-cta-btn" (click)="loadFollowUps()">Takip ölçümlerini yeniden yükle</button>
+    }
+    @if (followUps().length) {
+      <section class="db-onboarding__card" aria-label="Bekleyen takip ölçümleri">
+        <h2>Bekleyen takip ölçümleri</h2>
+        <p>Yeni eğitiminiz sürerken önceki programınızın ölçümlerine devam edebilirsiniz.</p>
+        @for (item of followUps(); track item.programProgressId) {
+          <article class="db-followup">
+            <h3>{{ item.programName }}</h3><p>Tamamlanma: {{ item.completedAt | date:'dd.MM.yyyy' }}</p>
+            @if (item.additionalTraining) { <p>Bu programın son ölçümünden sonra yeni eğitim başladı. Takip sonucu yalnız önceki eğitimin etkisi olarak yorumlanmamalı.</p> }
+            @if (item.plan.nextPhase; as phase) {
+              <button type="button" class="db-cta-btn" (click)="startFollowUp(item)">{{ followUpLabel(phase) }} ölçümüne devam et</button>
+            } @else {
+              @for (phase of item.plan.phases; track phase.phase) {
+                @if (phase.status === 1 && phase.availableAt) { <p>{{ followUpLabel(phase.phase) }}: {{ phase.availableAt | date:'dd.MM.yyyy HH:mm' }} tarihinde açılır.</p> }
+              }
+            }
+            <a routerLink="/student/reports" [queryParams]="{ programProgressId: item.programProgressId }">Bu programın ölçüm raporu</a>
+          </article>
         }
       </section>
     }

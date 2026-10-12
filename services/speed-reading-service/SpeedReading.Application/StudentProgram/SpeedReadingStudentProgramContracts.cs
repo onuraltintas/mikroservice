@@ -70,7 +70,13 @@ public sealed record StudentProgramInfo(
     DateTime AssignedDate,
     DateTime? LastCompletionDate,
     bool IsActive,
-    DateTime? CompletedDate);
+    DateTime? CompletedDate)
+{
+    public int? MeasuredLevel { get; init; }
+    public int? RecommendedTrainingLevel { get; init; }
+    public int? SelectedTrainingLevel { get; init; }
+    public string? SelectionPolicyVersion { get; init; }
+}
 
 public sealed record StartStudentProgramResult(
     bool Success,

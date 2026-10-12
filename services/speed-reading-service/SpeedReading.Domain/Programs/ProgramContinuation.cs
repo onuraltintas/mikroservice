@@ -12,7 +12,6 @@ public sealed class ProgramContinuation
     public string PolicyVersion { get; private set; } = string.Empty;
     public bool OverrideAcknowledged { get; private set; }
     public DateTime RequestedAt { get; private set; }
-    public Guid? ConfirmedBy { get; private set; }
     public DateTime? ConfirmedAt { get; private set; }
     public Guid? NewProgressId { get; private set; }
 
@@ -24,11 +23,12 @@ public sealed class ProgramContinuation
         OverrideAcknowledged = acknowledged, RequestedAt = now
     };
 
-    public void Confirm(Guid actor, Guid progress, DateTime now)
+    public void Confirm(Guid progress, DateTime now)
     {
         if (NewProgressId.HasValue) throw new InvalidOperationException("Geçiş zaten onaylandı.");
-        ConfirmedBy = actor; NewProgressId = progress; ConfirmedAt = now;
+        NewProgressId = progress; ConfirmedAt = now;
     }
+
 
     public void ChangeSelection(Guid assessment, Guid template, int recommendedLevel, int measuredLevel,
         string policyVersion, bool acknowledged, DateTime now)

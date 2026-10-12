@@ -40,7 +40,10 @@ public sealed record AssessmentComparisonPoint(
 
 public sealed record AssessmentComparisonSummary(
     IReadOnlyList<AssessmentComparisonPoint> Attempts,
-    AssessmentComparisonPoint? Baseline);
+    AssessmentComparisonPoint? Baseline)
+{
+    public bool AdditionalTraining { get; init; }
+}
 
 public static class AssessmentComparisonCalculator
 {
