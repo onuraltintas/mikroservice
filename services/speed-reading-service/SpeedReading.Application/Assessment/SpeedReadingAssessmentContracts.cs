@@ -9,6 +9,7 @@ public sealed class StartAssessmentAttemptRequest
     public string Language { get; init; } = "tr-TR";
     public Guid? AgeGroupConfigurationId { get; init; }
     public int ExpectedExerciseCount { get; init; } = 3;
+    public Guid? ProgramProgressId { get; init; }
 }
 
 public sealed record AssessmentAttemptSummary(
@@ -116,6 +117,14 @@ public sealed record AssessmentTemplateExerciseInput(
 
 public interface ISpeedReadingAssessment
 {
+    Task<AssessmentPhasePlanSummary> GetProgramPhasePlanAsync(Guid userId, Guid programProgressId, CancellationToken cancellationToken) =>
+        throw new NotSupportedException();
+    Task<AssessmentComparisonSummary> GetProgramComparisonAsync(Guid userId, Guid programProgressId, CancellationToken cancellationToken) =>
+        throw new NotSupportedException();
+    Task<IReadOnlyList<AssessmentFollowUpPlan>> GetFollowUpPlansAsync(Guid userId, CancellationToken cancellationToken) =>
+        throw new NotSupportedException();
+    Task<AssessmentExercisesSummary> GetAttemptExercisesAsync(Guid userId, Guid attemptId, CancellationToken cancellationToken) =>
+        throw new NotSupportedException();
     Task<AssessmentAttemptSummary> StartAttemptAsync(
         Guid userId,
         StartAssessmentAttemptRequest request,
@@ -143,3 +152,6 @@ public interface ISpeedReadingAssessment
     Task<bool> UpdateTemplateAsync(Guid userId, Guid id, UpdateAssessmentTemplateRequest request, CancellationToken cancellationToken);
     Task<bool> DeleteTemplateAsync(Guid userId, Guid id, CancellationToken cancellationToken);
 }
+
+public sealed record AssessmentFollowUpPlan(Guid ProgramProgressId, string ProgramName, DateTime CompletedAt,
+    bool AdditionalTraining, AssessmentPhasePlanSummary Plan);

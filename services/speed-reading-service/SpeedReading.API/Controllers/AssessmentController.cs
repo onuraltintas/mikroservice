@@ -30,24 +30,36 @@ public sealed class AssessmentController(ISpeedReadingAssessment assessment) : C
     }
 
     [HttpGet("comparison")]
-    public async Task<IActionResult> GetComparison(CancellationToken cancellationToken = default)
+    public async Task<IActionResult> GetComparison(CancellationToken cancellationToken = default, [FromQuery] Guid? programProgressId = null)
     {
         if (!TryGetUserId(out var userId)) return Unauthorized();
-        return Ok(await assessment.GetComparisonAsync(userId, cancellationToken));
+        return Ok(programProgressId.HasValue
+            ? await assessment.GetProgramComparisonAsync(userId, programProgressId.Value, cancellationToken)
+            : await assessment.GetComparisonAsync(userId, cancellationToken));
     }
 
     [HttpGet("phase-plan")]
-    public async Task<IActionResult> GetPhasePlan(CancellationToken cancellationToken = default)
+    public async Task<IActionResult> GetPhasePlan(CancellationToken cancellationToken = default, [FromQuery] Guid? programProgressId = null)
     {
         if (!TryGetUserId(out var userId)) return Unauthorized();
-        return Ok(await assessment.GetPhasePlanAsync(userId, cancellationToken));
+        return Ok(programProgressId.HasValue
+            ? await assessment.GetProgramPhasePlanAsync(userId, programProgressId.Value, cancellationToken)
+            : await assessment.GetPhasePlanAsync(userId, cancellationToken));
+    }
+
+    [HttpGet("follow-ups")]
+    public async Task<IActionResult> GetFollowUps(CancellationToken cancellationToken = default)
+    {
+        if (!TryGetUserId(out var userId)) return Unauthorized();
+        return Ok(await assessment.GetFollowUpPlansAsync(userId, cancellationToken));
     }
 
     [HttpGet("exercises")]
-    public async Task<IActionResult> GetExercises(CancellationToken cancellationToken = default)
+    public async Task<IActionResult> GetExercises(CancellationToken cancellationToken = default, [FromQuery] Guid? attemptId = null)
     {
         if (!TryGetUserId(out var userId)) return Unauthorized();
-        return Ok(await assessment.GetExercisesAsync(userId, cancellationToken));
+        return Ok(attemptId.HasValue ? await assessment.GetAttemptExercisesAsync(userId, attemptId.Value, cancellationToken)
+            : await assessment.GetExercisesAsync(userId, cancellationToken));
     }
 
     [HttpGet("status")]

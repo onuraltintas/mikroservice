@@ -46,9 +46,15 @@ internal sealed class OwnedSpeedReadingAssessment(
         if (userId == Guid.Empty)
             throw new ArgumentException("A valid user is required.", nameof(userId));
         ArgumentNullException.ThrowIfNull(request);
-        var program = await GetLatestProgramAsync(userId, cancellationToken);
+        if (request.ProgramProgressId.HasValue && request.Phase == AssessmentAttemptPhase.Baseline)
+            throw new ArgumentException("Başlangıç ölçümü eski bir programa bağlanamaz.");
+        var program = request.ProgramProgressId.HasValue
+            ? await GetOwnedProgramAsync(userId, request.ProgramProgressId.Value, cancellationToken)
+            : await GetLatestProgramAsync(userId, cancellationToken);
         if (request.Phase != AssessmentAttemptPhase.Baseline
-            && !await HasCompletedTrainingAsync(userId, cancellationToken))
+            && (request.ProgramProgressId.HasValue
+                ? program?.CompletedDate is null || program.IsActive
+                : !await HasCompletedTrainingAsync(userId, cancellationToken)))
             throw new BusinessRuleException("Assessment.TrainingIncomplete",
                 "Eğitim sonrası ölçüm için önce eğitim programınızı tamamlamalısınız.");
 
@@ -69,7 +75,10 @@ internal sealed class OwnedSpeedReadingAssessment(
                 nameof(request));
         }
 
-        var ageGroupConfigurationId = profileAgeGroupConfigurationId ?? request.AgeGroupConfigurationId;
+        var ageGroupConfigurationId = program is not null && request.Phase != AssessmentAttemptPhase.Baseline
+            ? await db.ProgramTemplates.Where(item => item.Id == program.ProgramTemplateId)
+                .Select(item => (Guid?)item.TargetAgeGroupConfigurationId).SingleAsync(cancellationToken)
+            : profileAgeGroupConfigurationId ?? request.AgeGroupConfigurationId;
         if (ageGroupConfigurationId.HasValue
             && !await db.AgeGroupConfigurations.AsNoTracking().AnyAsync(item =>
                 item.Id == ageGroupConfigurationId.Value
@@ -254,7 +263,14 @@ internal sealed class OwnedSpeedReadingAssessment(
         if (userId == Guid.Empty)
             throw new ArgumentException("A valid user is required.", nameof(userId));
 
-        var program = await GetLatestProgramAsync(userId, cancellationToken);
+        return await GetComparisonCoreAsync(userId, await GetLatestProgramAsync(userId, cancellationToken), cancellationToken);
+    }
+
+    public async Task<AssessmentComparisonSummary> GetProgramComparisonAsync(Guid userId, Guid programProgressId, CancellationToken cancellationToken) =>
+        await GetComparisonCoreAsync(userId, await GetOwnedProgramAsync(userId, programProgressId, cancellationToken), cancellationToken);
+
+    private async Task<AssessmentComparisonSummary> GetComparisonCoreAsync(Guid userId, StudentProgramProgress? program, CancellationToken cancellationToken)
+    {
         var attempts = await db.AssessmentAttempts
             .AsNoTracking()
             .Where(item => item.StudentId == userId
@@ -336,7 +352,43 @@ internal sealed class OwnedSpeedReadingAssessment(
         if (userId == Guid.Empty)
             throw new ArgumentException("A valid user is required.", nameof(userId));
 
-        var program = await GetLatestProgramAsync(userId, cancellationToken);
+        return await GetPhasePlanCoreAsync(userId, await GetLatestProgramAsync(userId, cancellationToken),
+            await HasCompletedTrainingAsync(userId, cancellationToken), cancellationToken);
+    }
+
+    public async Task<AssessmentPhasePlanSummary> GetProgramPhasePlanAsync(Guid userId, Guid programProgressId, CancellationToken cancellationToken)
+    {
+        var program = await GetOwnedProgramAsync(userId, programProgressId, cancellationToken);
+        return await GetPhasePlanCoreAsync(userId, program, program.CompletedDate.HasValue && !program.IsActive, cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<AssessmentFollowUpPlan>> GetFollowUpPlansAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        var programs = await (from progress in db.StudentProgramProgresses.AsNoTracking()
+            join template in db.ProgramTemplates.AsNoTracking() on progress.ProgramTemplateId equals template.Id
+            where progress.UserId == userId && progress.CompletedDate.HasValue && !progress.IsActive && !progress.IsStaffTraining
+            orderby progress.CompletedDate descending
+            select new { Progress = progress, template.Name }).ToListAsync(cancellationToken);
+        var result = new List<AssessmentFollowUpPlan>();
+        foreach (var item in programs)
+        {
+            var plan = await GetProgramPhasePlanAsync(userId, item.Progress.Id, cancellationToken);
+            if (plan.Phases.Where(phase => phase.Phase != AssessmentAttemptPhase.Baseline)
+                .All(phase => phase.Status == AssessmentPhasePlanStatus.Completed)) continue;
+            var postAt = await db.AssessmentAttempts.AsNoTracking().Where(attempt => attempt.StudentId == userId
+                && attempt.ProgramProgressId == item.Progress.Id && attempt.Phase == AssessmentAttemptPhase.PostTraining
+                && attempt.Status == AssessmentAttemptStatus.Completed)
+                .MaxAsync(attempt => attempt.CompletedAt, cancellationToken);
+            var additional = postAt.HasValue && await db.StudentProgramProgresses.AsNoTracking().AnyAsync(progress =>
+                progress.UserId == userId && progress.Id != item.Progress.Id && progress.AssignedDate > postAt.Value, cancellationToken);
+            result.Add(new AssessmentFollowUpPlan(item.Progress.Id, item.Name, item.Progress.CompletedDate!.Value, additional, plan));
+        }
+        return result;
+    }
+
+    private async Task<AssessmentPhasePlanSummary> GetPhasePlanCoreAsync(Guid userId, StudentProgramProgress? program,
+        bool trainingCompleted, CancellationToken cancellationToken)
+    {
         var attempts = await db.AssessmentAttempts
             .AsNoTracking()
             .Where(item => item.StudentId == userId
@@ -354,7 +406,7 @@ internal sealed class OwnedSpeedReadingAssessment(
             .ToListAsync(cancellationToken);
 
         var plan = AssessmentPhasePlanCalculator.Calculate(attempts);
-        if (await HasCompletedTrainingAsync(userId, cancellationToken))
+        if (trainingCompleted)
             return plan;
         var phases = plan.Phases.Select(item => item.Phase == AssessmentAttemptPhase.PostTraining
             && item.Status != AssessmentPhasePlanStatus.Completed
@@ -387,11 +439,25 @@ internal sealed class OwnedSpeedReadingAssessment(
             .ThenBy(item => item.Id)
             .FirstOrDefaultAsync(cancellationToken);
 
+    private async Task<StudentProgramProgress> GetOwnedProgramAsync(Guid userId, Guid programProgressId, CancellationToken cancellationToken) =>
+        await db.StudentProgramProgresses.AsNoTracking().SingleOrDefaultAsync(item => item.Id == programProgressId && item.UserId == userId, cancellationToken)
+            ?? throw new KeyNotFoundException("Eğitim programı bulunamadı.");
+
     public async Task<AssessmentExercisesSummary> GetExercisesAsync(
         Guid userId,
         CancellationToken cancellationToken)
+        => await GetExercisesCoreAsync(userId, null, cancellationToken);
+
+    public async Task<AssessmentExercisesSummary> GetAttemptExercisesAsync(Guid userId, Guid attemptId, CancellationToken cancellationToken)
     {
-        var activeAttemptId = await db.AssessmentAttempts
+        if (!await db.AssessmentAttempts.AnyAsync(item => item.Id == attemptId && item.StudentId == userId, cancellationToken))
+            throw new KeyNotFoundException("Ölçüm bulunamadı.");
+        return await GetExercisesCoreAsync(userId, attemptId, cancellationToken);
+    }
+
+    private async Task<AssessmentExercisesSummary> GetExercisesCoreAsync(Guid userId, Guid? requestedAttemptId, CancellationToken cancellationToken)
+    {
+        var activeAttemptId = requestedAttemptId ?? await db.AssessmentAttempts
             .AsNoTracking()
             .Where(item => item.StudentId == userId && item.Status == AssessmentAttemptStatus.InProgress)
             .OrderByDescending(item => item.StartedAt)
@@ -789,7 +855,10 @@ internal sealed class OwnedSpeedReadingAssessment(
         var targetWpm = (int)(averageWpm * 1.2m);
         var targetComprehension = Math.Max(70m, averageComprehension);
         var now = DateTime.UtcNow;
-        profile.ApplyAssessment(level, targetWpm, targetComprehension, userId, now);
+        var latestProgram = await GetLatestProgramAsync(userId, cancellationToken);
+        // Historical follow-ups must not replace the current training profile.
+        if (attempt is null || attempt.Phase == AssessmentAttemptPhase.Baseline || attempt.ProgramProgressId == latestProgram?.Id)
+            profile.ApplyAssessment(level, targetWpm, targetComprehension, userId, now);
         var recommendationAgeGroupId = attempt?.AgeGroupConfigurationId ?? profile.AgeGroupConfigurationId;
         var template = await FindBaselineTemplateAsync(
             recommendationAgeGroupId,

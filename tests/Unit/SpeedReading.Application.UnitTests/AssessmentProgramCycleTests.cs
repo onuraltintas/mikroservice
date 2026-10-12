@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using SpeedReading.Application.Assessment;
 using SpeedReading.Domain.Assessment;
 using SpeedReading.Domain.Programs;
+using SpeedReading.Domain.Catalog;
 using SpeedReading.Infrastructure.Persistence;
 
 namespace SpeedReading.Application.UnitTests;
@@ -71,6 +72,20 @@ public sealed class AssessmentProgramCycleTests
         var active = StudentProgramProgress.Import(Guid.NewGuid(), user, Guid.NewGuid(), now.AddDays(-5),
             1, 1, 1, 0, 0, null, true, null, 0, 0, 0, now.AddDays(-5), null, null, null);
         db.StudentProgramProgresses.AddRange(first, active);
+        var age = Guid.NewGuid();
+        db.AgeGroupConfigurations.Add(SpeedReading.Domain.AgeGroups.AgeGroupConfiguration.Create(age, "teen", "Genç",
+            13, 16, 100, 200, 300, 70, 15, 1, 1, true, null, user, now));
+        db.ProgramTemplates.AddRange(new[] { first, active }.Select(progress => ProgramTemplate.Import(
+            progress.ProgramTemplateId, "Test program", "", age, 0, 100, "{}", 1, 2, 5, 1, 1, true, 1, 0, null,
+            false, now, null, null, null)));
+        var typeId = Guid.NewGuid();
+        db.ExerciseTypes.Add(ExerciseType.Create(typeId, "Fixation", "Fixation", "focus"));
+        var exercises = Enumerable.Range(0, 3).Select(index => Exercise.Create($"Fixation {index}", "Fixation", "{}", 1,
+            user, typeId, isAssessmentOnly: true)).ToArray();
+        db.Exercises.AddRange(exercises);
+        db.ProgramTemplates.Add(ProgramTemplate.Import(Guid.NewGuid(), "Assessment", "", age, 0, 100,
+            System.Text.Json.JsonSerializer.Serialize(new { week1 = exercises.Select(exercise => new { exerciseId = exercise.Id }) }),
+            1, 2, 5, 1, 1, true, 1, 0, null, true, now, null, null, null));
         var baseline = AssessmentAttempt.Start(Guid.NewGuid(), user, AssessmentAttemptPhase.Baseline,
             "baseline", "tr", null, 3, now.AddDays(-50), null);
         baseline.Complete(now.AddDays(-50));
@@ -80,18 +95,21 @@ public sealed class AssessmentProgramCycleTests
         post.Complete(now.AddDays(-14));
         db.AssessmentAttempts.AddRange(baseline, post);
         await db.SaveChangesAsync();
-        var service = (ISpeedReadingAssessment)Activator.CreateInstance(typeof(OwnedSpeedReadingDbContext).Assembly.GetType(
-            "SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingAssessment")!, db, null)!;
+        var assembly = typeof(OwnedSpeedReadingDbContext).Assembly;
+        var catalog = Activator.CreateInstance(assembly.GetType("SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingLevelCatalog")!, db);
+        var service = (ISpeedReadingAssessment)Activator.CreateInstance(assembly.GetType(
+            "SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingAssessment")!, db, catalog)!;
         var plan = await service.GetProgramPhasePlanAsync(user, first.Id, CancellationToken.None);
         plan.NextPhase.Should().Be(AssessmentAttemptPhase.Retention);
         var pending = await service.GetFollowUpPlansAsync(user, CancellationToken.None);
         pending.Should().ContainSingle(item => item.ProgramProgressId == first.Id && item.AdditionalTraining);
-        var start = () => service.StartAttemptAsync(user, new StartAssessmentAttemptRequest
+        var started = await service.StartAttemptAsync(user, new StartAssessmentAttemptRequest
         {
             Phase = AssessmentAttemptPhase.Retention, ProgramProgressId = first.Id
         }, CancellationToken.None);
-        // It reaches the missing fixture level catalog, not the active-program gate.
-        await start.Should().ThrowAsync<NullReferenceException>();
+        started.ProgramProgressId.Should().Be(first.Id);
+        var form = await service.GetAttemptExercisesAsync(user, started.Id, CancellationToken.None);
+        form.Exercises.Should().HaveCount(3);
         var foreignPlan = () => service.GetProgramPhasePlanAsync(Guid.NewGuid(), first.Id, CancellationToken.None);
         await foreignPlan.Should().ThrowAsync<KeyNotFoundException>();
         (await db.StudentProgramProgresses.SingleAsync(item => item.Id == active.Id)).IsActive.Should().BeTrue();
