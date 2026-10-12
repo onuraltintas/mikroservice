@@ -197,14 +197,15 @@ public sealed class SystemAdminMfaLoginTests
     }
 
     [Theory]
-    [InlineData("InstitutionAdmin")]
-    [InlineData("InstitutionOwner")]
-    [InlineData("Editor")]
-    public async Task PrivilegedAdminPasswordLogin_WhenMfaIsEnabled_ShouldReturnMfaChallenge(string roleName)
+    [InlineData("InstitutionAdmin", PlatformProduct.Coaching)]
+    [InlineData("InstitutionOwner", PlatformProduct.Coaching)]
+    [InlineData("Editor", PlatformProduct.Coaching)]
+    [InlineData("CourseInstitutionOwner", PlatformProduct.CourseManagement)]
+    public async Task PrivilegedAdminPasswordLogin_WhenMfaIsEnabled_ShouldReturnMfaChallenge(string roleName, PlatformProduct product)
     {
-        var user = CreateUserWithRole(roleName, PlatformProduct.Coaching);
+        var user = CreateUserWithRole(roleName, product);
         user.GrantProductAccess(
-            PlatformProduct.Coaching,
+            product,
             UserProductAccessSource.Admin,
             grantedByUserId: null,
             DateTimeOffset.UtcNow);
@@ -227,7 +228,7 @@ public sealed class SystemAdminMfaLoginTests
                 user.Email,
                 "correct-password",
                 RememberMe: true,
-                Product: PlatformProduct.Coaching),
+                Product: product),
             CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
