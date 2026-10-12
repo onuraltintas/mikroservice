@@ -1,0 +1,112 @@
+[
+  {
+    "id": "d8f10000-0000-5000-8000-000000000011",
+    "level": 1,
+    "configuration": {
+      "engineType": "text_fade",
+      "engineConfig": {
+        "fading": {
+          "lagMs": 5000,
+          "speedWpm": 60
+        },
+        "timing": {
+          "timeLimitSec": 0
+        },
+        "content": {
+          "source": "reading_text",
+          "questionCount": 4
+        },
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 1
+    }
+  },
+  {
+    "id": "d8f10000-0000-5000-8000-000000000012",
+    "level": 2,
+    "configuration": {
+      "engineType": "text_fade",
+      "engineConfig": {
+        "fading": {
+          "lagMs": 5000,
+          "speedWpm": 80
+        },
+        "timing": {
+          "timeLimitSec": 0
+        },
+        "content": {
+          "source": "reading_text",
+          "questionCount": 4
+        },
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 2
+    }
+  },
+  {
+    "id": "d8f10000-0000-5000-8000-000000000013",
+    "level": 3,
+    "configuration": {
+      "engineType": "text_fade",
+      "engineConfig": {
+        "fading": {
+          "lagMs": 5000,
+          "speedWpm": 100
+        },
+        "timing": {
+          "timeLimitSec": 0
+        },
+        "content": {
+          "source": "reading_text",
+          "questionCount": 4
+        },
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 3
+    }
+  },
+  {
+    "id": "b59e48d3-da80-5ce2-90fa-f784b78b9d9d",
+    "level": 4,
+    "configuration": {
+      "engineType": "text_fade",
+      "engineConfig": {
+        "fading": {
+          "lagMs": 5000,
+          "speedWpm": 120
+        },
+        "timing": {
+          "timeLimitSec": 0
+        },
+        "content": {
+          "source": "reading_text",
+          "questionCount": 4
+        },
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 4
+    }
+  },
+  {
+    "id": "41bbc0ee-6d42-53dc-bde6-c7f65c615d60",
+    "level": 5,
+    "configuration": {
+      "engineType": "text_fade",
+      "engineConfig": {
+        "fading": {
+          "lagMs": 5000,
+          "speedWpm": 140
+        },
+        "timing": {
+          "timeLimitSec": 0
+        },
+        "content": {
+          "source": "reading_text",
+          "questionCount": 4
+        },
+        "readingPurpose": "evaluation"
+      },
+      "difficultyLevel": 5
+    }
+  }
+]
