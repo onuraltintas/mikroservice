@@ -197,6 +197,11 @@ export class AssessmentComponent implements OnInit, OnDestroy {
         this.calculating.set(false);
       },
       error: (error) => {
+        if (error.error?.code === 'Assessment.BaselineDuringTraining') {
+          this.calculating.set(false);
+          this.router.navigate(['/student/dashboard']);
+          return;
+        }
         console.error('Calculate level error:', error);
 
         // Check if it's because exercises not completed

@@ -13,6 +13,11 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(req).pipe(
     catchError((error: HttpErrorResponse) => {
+      if (error.error?.code === 'Assessment.BaselineDuringTraining') {
+        toaster.info(error.error.detail || 'Programınız devam ediyor. Program sonunda eğitim sonrası ölçümünü yapabilirsiniz.');
+        router.navigate(['/student/dashboard']);
+        return throwError(() => error);
+      }
       let errorMessage = 'Bir hata oluştu';
       const isAuthCaptchaFailure = error.error?.code === 'Auth.CaptchaFailed';
 
