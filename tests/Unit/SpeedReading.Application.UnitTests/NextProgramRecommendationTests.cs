@@ -105,6 +105,57 @@ public sealed class NextProgramRecommendationTests
     private static OwnedSpeedReadingDbContext CreateDb() => new(new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>()
         .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
 
+    [Theory]
+    [InlineData(300, 75, 5)]
+    [InlineData(150, 55, 3)]
+    [InlineData(500, 20, 1)]
+    [InlineData(50, 95, 1)]
+    public async Task V3_levels_use_both_measurements_and_allow_only_one_level_above_with_explicit_choice(int wpm, int comprehension, int expectedLevel)
+    {
+        await using var db = CreateDb();
+        var user = Guid.NewGuid();
+        var age = Guid.NewGuid();
+        var now = DateTime.UtcNow;
+        var templates = Enumerable.Range(1, 5).Select(level => ProgramTemplate.Import(Guid.NewGuid(), $"Level {level}", "", age, 0, 100,
+            $"{{\"placementLevel\":{level},\"week1\":{{\"day1\":[{{\"Type\":\"Fixation\",\"Count\":1,\"Difficulty\":1}}]}}}}",
+            level, 0, 5, 1, 1, true, level, 0, null, false, now, null, null, null)).ToArray();
+        db.ProgramTemplates.AddRange(templates);
+        var progress = StudentProgramProgress.Import(Guid.NewGuid(), user, templates[0].Id, now.AddDays(-30),
+            1, 1, 1, 28, 182, now.AddDays(-1), false, now.AddDays(-1), 65, 1, 1, now.AddDays(-30), null, null, null);
+        db.StudentProgramProgresses.Add(progress);
+        var post = AssessmentAttempt.Start(Guid.NewGuid(), user, AssessmentAttemptPhase.PostTraining, "post", "tr", age, 3, now, null);
+        post.BindToProgram(progress.Id);
+        post.Complete(now);
+        db.AssessmentAttempts.Add(post);
+        for (var index = 0; index < 3; index++)
+            db.ExerciseSessionResults.Add(ExerciseSessionResult.Create(Guid.NewGuid(), Guid.NewGuid(), user, Guid.NewGuid(), null,
+                80, 10, rawWpm: wpm, comprehensionScore: comprehension, weightedKdp: 0, score: 80, completedAt: now,
+                isMeasured: true, isAssessmentMode: true, assessmentAttemptId: post.Id));
+        var type = ExerciseType.Create(Guid.NewGuid(), "Fixation", "Fixation", "focus");
+        db.ExerciseTypes.Add(type);
+        db.Exercises.Add(Exercise.Create("Fixation", "Fixation", "{}", 1, user, type.Id));
+        await db.SaveChangesAsync();
+        var service = Service(db);
+        var result = await service.GetNextProgramRecommendationAsync(user, CancellationToken.None);
+        result!.TemplateId.Should().Be(templates[expectedLevel - 1].Id);
+        result.RecommendedTrainingLevel.Should().Be(expectedLevel);
+        result.HigherOption?.TemplateId.Should().Be(expectedLevel == 5 ? null : templates[expectedLevel].Id);
+        if (expectedLevel < 5)
+        {
+            var upper = result.HigherOption!.TemplateId;
+            var unacknowledged = () => service.ConfirmNextProgramAsync(user,
+                new ConfirmNextStudentProgramRequest(upper, progress.Id, post.Id), CancellationToken.None);
+            await unacknowledged.Should().ThrowAsync<EduPlatform.Shared.Kernel.Exceptions.BusinessRuleException>();
+            var selected = await service.ConfirmNextProgramAsync(user,
+                new ConfirmNextStudentProgramRequest(upper, progress.Id, post.Id, true), CancellationToken.None);
+            var audit = await db.ProgramContinuations.SingleAsync();
+            audit.NewProgressId.Should().Be(selected.ProgramId);
+            audit.RecommendedLevel.Should().Be(expectedLevel);
+            audit.TemplateId.Should().Be(upper);
+            audit.OverrideAcknowledged.Should().BeTrue();
+        }
+    }
+
     private static ISpeedReadingStudentProgram Service(OwnedSpeedReadingDbContext db, ISpeedReadingTeacherAccess? access = null)
     {
         var assembly = typeof(OwnedSpeedReadingDbContext).Assembly;
