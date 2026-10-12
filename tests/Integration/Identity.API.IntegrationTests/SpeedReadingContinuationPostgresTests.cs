@@ -23,8 +23,10 @@ namespace Identity.API.IntegrationTests;
 [Collection("Database")]
 public sealed class SpeedReadingContinuationPostgresTests(PostgresFixture postgres)
 {
-    [Fact]
-    public async Task Historical_calculation_rechecks_latest_program_after_waiting_for_assignment_lock()
+    [Theory]
+    [InlineData(AssessmentAttemptPhase.Baseline)]
+    [InlineData(AssessmentAttemptPhase.PostTraining)]
+    public async Task Historical_calculation_rechecks_latest_program_after_waiting_for_assignment_lock(AssessmentAttemptPhase phase)
     {
         var options = new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>().UseNpgsql(postgres.ConnectionString).Options;
         await using var db = new OwnedSpeedReadingDbContext(options);
@@ -40,8 +42,9 @@ public sealed class SpeedReadingContinuationPostgresTests(PostgresFixture postgr
             var source = StudentProgramProgress.Import(Guid.NewGuid(), user, template.Id, now.AddDays(-60), 1, 1, 1, 28, 100,
                 now.AddDays(-1), false, now.AddDays(-1), 65, 1, 1, now.AddDays(-60), null, null, null);
             db.StudentProgramProgresses.Add(source);
-            var post = AssessmentAttempt.Start(Guid.NewGuid(), user, AssessmentAttemptPhase.PostTraining, "post", "tr", age.Id, 3, now, null);
-            post.BindToProgram(source.Id); db.AssessmentAttempts.Add(post);
+            var post = AssessmentAttempt.Start(Guid.NewGuid(), user, phase, "post", "tr", age.Id, 3, now, null);
+            if (phase != AssessmentAttemptPhase.Baseline) post.BindToProgram(source.Id);
+            db.AssessmentAttempts.Add(post);
             var type = ExerciseType.Create(Guid.NewGuid(), "Fixation", "Fixation", "focus"); db.ExerciseTypes.Add(type);
             for (var index = 0; index < 3; index++)
             {
@@ -71,10 +74,17 @@ public sealed class SpeedReadingContinuationPostgresTests(PostgresFixture postgr
             db.StudentProgramProgresses.Add(StudentProgramProgress.Start(Guid.NewGuid(), user, template, 0, 0, user, now.AddSeconds(2)));
             profile.ApplyAssessment(5, 450, 90, user, now.AddSeconds(2));
             await db.SaveChangesAsync(); await transaction.CommitAsync();
-            await calculation;
+            if (phase == AssessmentAttemptPhase.Baseline)
+            {
+                var error = await Assert.ThrowsAsync<EduPlatform.Shared.Kernel.Exceptions.BusinessRuleException>(() => calculation);
+                Assert.Equal("Assessment.BaselineDuringTraining", error.Code);
+            }
+            else await calculation;
             db.ChangeTracker.Clear();
             var saved = await db.UserProfiles.SingleAsync();
             Assert.Equal(5, saved.CurrentLevel); Assert.Equal(450, saved.TargetWPM); Assert.Equal(90, saved.TargetComprehension);
+            if (phase == AssessmentAttemptPhase.Baseline)
+                Assert.Null((await db.AssessmentAttempts.SingleAsync()).CompletedAt);
         }
         finally { await db.Database.EnsureDeletedAsync(); }
     }

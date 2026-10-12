@@ -115,8 +115,10 @@ public sealed class AssessmentProgramCycleTests
         (await db.StudentProgramProgresses.SingleAsync(item => item.Id == active.Id)).IsActive.Should().BeTrue();
     }
 
-    [Fact]
-    public async Task Recalculating_historical_baseline_does_not_overwrite_current_profile()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Historical_baseline_does_not_overwrite_current_profile_and_unfinished_baseline_is_blocked(bool completedBaseline)
     {
         await using var db = new OwnedSpeedReadingDbContext(new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>()
             .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
@@ -127,7 +129,7 @@ public sealed class AssessmentProgramCycleTests
         db.StudentProgramProgresses.AddRange(old, active);
         var baseline = AssessmentAttempt.Start(Guid.NewGuid(), user, AssessmentAttemptPhase.Baseline, "baseline", "tr", null,
             3, now.AddDays(-70), null);
-        baseline.Complete(now.AddDays(-70));
+        if (completedBaseline) baseline.Complete(now.AddDays(-70));
         db.AssessmentAttempts.Add(baseline);
         var type = ExerciseType.Create(Guid.NewGuid(), "Fixation", "Fixation", "focus");
         db.ExerciseTypes.Add(type);
@@ -148,10 +150,17 @@ public sealed class AssessmentProgramCycleTests
         var catalog = Activator.CreateInstance(assembly.GetType("SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingLevelCatalog")!, db);
         var service = (ISpeedReadingAssessment)Activator.CreateInstance(assembly.GetType(
             "SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingAssessment")!, db, catalog)!;
-        await service.CalculateAsync(user, new AssessmentCalculationRequest([], baseline.Id), CancellationToken.None);
+        if (completedBaseline)
+            await service.CalculateAsync(user, new AssessmentCalculationRequest([], baseline.Id), CancellationToken.None);
+        else
+        {
+            var calculate = () => service.CalculateAsync(user, new AssessmentCalculationRequest([], baseline.Id), CancellationToken.None);
+            var error = await calculate.Should().ThrowAsync<EduPlatform.Shared.Kernel.Exceptions.BusinessRuleException>();
+            error.Which.Code.Should().Be("Assessment.BaselineDuringTraining");
+        }
         profile.CurrentLevel.Should().Be(4);
         profile.TargetWPM.Should().Be(350);
         profile.TargetComprehension.Should().Be(85);
-        baseline.CompletedAt.Should().Be(now.AddDays(-70));
+        baseline.CompletedAt.Should().Be(completedBaseline ? now.AddDays(-70) : null);
     }
 }
