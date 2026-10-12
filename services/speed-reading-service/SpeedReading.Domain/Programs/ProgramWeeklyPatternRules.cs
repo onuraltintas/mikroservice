@@ -91,6 +91,10 @@ public static class ProgramWeeklyPatternRules
             {
                 throw new ArgumentException("Programdaki egzersiz zorluğu 0 ile 10 arasında olmalıdır.", parameterName);
             }
+            if (entry.TryGetProperty("comprehensionMode", out var mode) && mode.ValueKind != JsonValueKind.Null
+                && (type.GetString() != "Comprehension" || mode.ValueKind != JsonValueKind.String
+                    || mode.GetString() is not ("learning" or "evaluation")))
+                throw new ArgumentException("Anlama modu yalnız Comprehension için learning veya evaluation olabilir.", parameterName);
         }
     }
 

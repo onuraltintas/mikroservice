@@ -113,6 +113,12 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                     && item.IsActive
                     && !item.IsDeleted, cancellationToken)
                 ?? throw new KeyNotFoundException("Exercise not found.");
+            if (exercise.IsAssessmentOnly && !request.AssessmentAttemptId.HasValue
+                && !await db.ExerciseSessions.AnyAsync(item => item.StudentId == studentId
+                    && item.ExerciseId == exercise.Id && item.AssessmentAttemptId == null
+                    && item.StudentAssignmentId == request.StudentAssignmentId
+                    && (item.Status == OwnedExerciseSessionStatus.Active || item.Status == OwnedExerciseSessionStatus.Paused), cancellationToken))
+                throw new BusinessRuleException("Exercise.AssessmentOnly", "Bu egzersiz yalnız seviye tespiti kapsamında başlatılabilir.");
             var exerciseType = await db.ExerciseTypes
                 .AsNoTracking()
                 .SingleOrDefaultAsync(item => item.Id == exercise.ExerciseTypeId

@@ -30,7 +30,7 @@ internal static class OwnedSpeedReadingProgramSchedule
             .Where(item => item.IsActive && !item.IsDeleted)
             .ToListAsync(cancellationToken);
         var exercises = await db.Exercises.AsNoTracking()
-            .Where(item => !item.IsDeleted
+            .Where(item => !item.IsDeleted && !item.IsAssessmentOnly
                 && (item.TargetAgeGroupId == null
                     || item.TargetAgeGroupId == template.TargetAgeGroupConfigurationId))
             .ToListAsync(cancellationToken);
@@ -76,7 +76,8 @@ internal static class OwnedSpeedReadingProgramSchedule
                     template.MaxDifficultyLevel);
                 var available = exercises
                     .Where(item => item.IsActive && item.ExerciseTypeId == exerciseType.Id
-                        && item.DifficultyLevel <= difficulty)
+                        && item.DifficultyLevel <= difficulty
+                        && (pattern.ComprehensionMode is null || ComprehensionMode(item.ConfigurationJson) == pattern.ComprehensionMode))
                     .ToList();
                 var bestDifficulty = available.Count == 0 ? 0 : available.Max(item => item.DifficultyLevel);
                 var reusable = available
@@ -122,5 +123,13 @@ internal static class OwnedSpeedReadingProgramSchedule
         public string Type { get; set; } = string.Empty;
         public int Count { get; set; }
         public int Difficulty { get; set; }
+        public string? ComprehensionMode { get; set; }
+    }
+
+    private static string? ComprehensionMode(string configurationJson)
+    {
+        using var document = JsonDocument.Parse(configurationJson);
+        return document.RootElement.TryGetProperty("engineConfig", out var config)
+            && config.TryGetProperty("comprehensionMode", out var mode) ? mode.GetString() : null;
     }
 }

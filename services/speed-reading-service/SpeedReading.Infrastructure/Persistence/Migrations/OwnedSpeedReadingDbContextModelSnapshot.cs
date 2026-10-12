@@ -972,6 +972,12 @@ namespace SpeedReading.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("exercise_type_id");
 
+                    b.Property<bool>("IsAssessmentOnly")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_assessment_only")
+                        .HasDefaultValue(false);
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean")
                         .HasColumnName("is_active");

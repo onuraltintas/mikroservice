@@ -1150,6 +1150,7 @@ public sealed class OwnedSpeedReadingDbContext(
             entity.Property(item => item.Description).HasMaxLength(2_000).IsRequired();
             entity.Property(item => item.TypeCode).HasColumnName("type_code");
             entity.Property(item => item.TypeCode).HasMaxLength(100).IsRequired();
+            entity.Property(item => item.IsAssessmentOnly).HasColumnName("is_assessment_only").HasDefaultValue(false);
             entity.Property(item => item.DifficultyLevel).HasColumnName("difficulty_level");
             entity.Property(item => item.ConfigurationJson).HasColumnName("configuration_json");
             entity.Property(item => item.ConfigurationJson).HasColumnType("jsonb").IsRequired();

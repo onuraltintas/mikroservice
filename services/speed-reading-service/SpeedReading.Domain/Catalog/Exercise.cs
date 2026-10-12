@@ -22,6 +22,7 @@ public sealed class Exercise : AggregateRoot
     public Guid? TargetAgeGroupId { get; private set; }
     public Guid CreatorId { get; private set; }
     public bool IsActive { get; private set; } = true;
+    public bool IsAssessmentOnly { get; private set; }
     public bool IsDeleted { get; private set; }
     public DateTime? DeletedAt { get; private set; }
     public string? DeletedBy { get; private set; }
@@ -35,7 +36,8 @@ public sealed class Exercise : AggregateRoot
         Guid exerciseTypeId,
         Guid? id = null,
         string? description = null,
-        Guid? targetAgeGroupId = null)
+        Guid? targetAgeGroupId = null,
+        bool isAssessmentOnly = false)
     {
         if (string.IsNullOrWhiteSpace(title))
             throw new ArgumentException("Exercise title is required.", nameof(title));
@@ -59,7 +61,8 @@ public sealed class Exercise : AggregateRoot
             ConfigurationJson = string.IsNullOrWhiteSpace(configurationJson) ? "{}" : configurationJson,
             TargetAgeGroupId = targetAgeGroupId,
             CreatorId = creatorId,
-            IsActive = true
+            IsActive = true,
+            IsAssessmentOnly = isAssessmentOnly
         };
 
         return exercise;

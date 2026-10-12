@@ -85,7 +85,7 @@ internal sealed class OwnedSpeedReadingCatalog(OwnedSpeedReadingDbContext db)
             select new { exercise, type };
 
         if (!includeInactive)
-            query = query.Where(item => item.exercise.IsActive && item.type.IsActive);
+            query = query.Where(item => item.exercise.IsActive && item.type.IsActive && !item.exercise.IsAssessmentOnly);
 
         if (exerciseTypeId.HasValue)
             query = query.Where(item => item.exercise.ExerciseTypeId == exerciseTypeId.Value);
@@ -158,7 +158,7 @@ internal sealed class OwnedSpeedReadingCatalog(OwnedSpeedReadingDbContext db)
             where exercise.Id == id
                 && !exercise.IsDeleted
                 && !type.IsDeleted
-                && (includeInactive || (exercise.IsActive && type.IsActive))
+                && (includeInactive || (exercise.IsActive && type.IsActive && !exercise.IsAssessmentOnly))
             select new
             {
                 exercise.Id,
