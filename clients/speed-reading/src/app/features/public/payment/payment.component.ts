@@ -56,6 +56,11 @@ export class PaymentComponent implements OnInit {
     const requestedPlanId = this.route.snapshot.queryParamMap.get('plan');
     if (requestedPlanId) this.selectedPlanId.set(requestedPlanId);
 
+    if (!this.auth.isAuthenticated) {
+      this.continueToLogin();
+      return;
+    }
+
     this.subscriptions.getPublicPlans().subscribe({
       next: plans => {
         this.plans = plans.filter(plan => !plan.isContactOnly);
@@ -95,19 +100,19 @@ export class PaymentComponent implements OnInit {
   }
 
   continueToLogin(): void {
-    const planId = this.selectedPlan?.id;
+    const planId = this.selectedPlanId();
     const returnUrl = planId ? `/odeme?plan=${encodeURIComponent(planId)}` : '/odeme';
     void this.router.navigate(['/auth/login'], { queryParams: { returnUrl } });
   }
 
   submitBankTransferRequest(): void {
+    if (!this.auth.isAuthenticated) {
+      this.continueToLogin();
+      return;
+    }
     const plan = this.selectedPlan;
     if (!plan || !this.settings()) {
       this.error.set('Ödeme talebi için satışa açık bir plan ve banka bilgisi gereklidir.');
-      return;
-    }
-    if (!this.auth.isAuthenticated) {
-      this.continueToLogin();
       return;
     }
     if (!this.paymentReference.trim()) {

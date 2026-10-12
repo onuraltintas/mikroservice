@@ -5,7 +5,7 @@
     <div class="container">
       <p class="eyebrow">Güvenli erişim başvurusu</p>
       <h1>Hızlı Okuma Programına Katılım</h1>
-      <p>Planınızı seçin, banka transferini yapın ve işlem referansınızı iletin. Erişiminiz doğrulama sonrasında açılır.</p>
+      <p>Hesabınızdan planınızı seçin, banka transferini yapın ve işlem referansınızı iletin. Erişiminiz doğrulama sonrasında açılır.</p>
     </div>
   </section>
 
@@ -43,7 +43,7 @@
         </div>
       </section>
 
-      @if (selectedPlan; as plan) {
+      @if (isAuthenticated && selectedPlan; as plan) {
         <section class="transfer-panel" aria-labelledby="transfer-heading">
           <div class="section-heading">
             <p class="step">2. Adım</p>
@@ -130,6 +130,7 @@
     <section class="faq-section" aria-labelledby="process-heading">
       <h2 id="process-heading">İşleyiş</h2>
       <ol>
+        <li>Giriş yapın veya kayıt olup hesabınıza giriş yapın.</li>
         <li>Size uygun erişim planını seçin.</li>
         <li>Yayınlanan banka hesabına havale/EFT yapın.</li>
         <li>İşlem referansını ödeme talebiyle iletin.</li>

@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { authGuard } from '../../core/guards/auth.guard';
 
 export const publicRoutes: Routes = [
   {
@@ -19,6 +20,7 @@ export const publicRoutes: Routes = [
   },
   {
     path: 'odeme',
+    canActivate: [authGuard],
     loadComponent: () => import('./payment/payment.component').then(m => m.PaymentComponent)
   },
   {
