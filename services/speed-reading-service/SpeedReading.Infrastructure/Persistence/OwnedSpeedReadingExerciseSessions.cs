@@ -49,6 +49,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         var profileAgeGroupId = await GetAgeGroupIdAsync(studentId, cancellationToken);
         Guid? pinnedReadingTextId = null;
         AssessmentContentSnapshot? assessmentSnapshot = null;
+        var baselineAttempt = false;
         if (request.AssessmentAttemptId.HasValue)
         {
             var pinnedItem = await (
@@ -59,7 +60,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                     && attempt.StudentId == studentId
                     && attempt.Status == AssessmentAttemptStatus.InProgress
                     && formItem.ExerciseId == request.ExerciseId
-                select new { formItem.ReadingTextId, formItem.ContentSnapshotJson })
+                select new { formItem.ReadingTextId, formItem.ContentSnapshotJson, attempt.Phase })
                 .SingleOrDefaultAsync(cancellationToken);
             if (pinnedItem is null)
             {
@@ -67,6 +68,9 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             }
 
             pinnedReadingTextId = pinnedItem.ReadingTextId;
+            baselineAttempt = pinnedItem.Phase == AssessmentAttemptPhase.Baseline;
+            if (baselineAttempt)
+                await OwnedSpeedReadingAssessment.EnsureBaselineAvailableAsync(db, studentId, cancellationToken);
             assessmentSnapshot = DeserializeAssessmentSnapshot(pinnedItem.ContentSnapshotJson);
             if (assessmentSnapshot is not null
                 && assessmentSnapshot.Exercise.Id != request.ExerciseId)
@@ -219,11 +223,16 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                 : null;
             if (startTransaction is not null)
             {
+                if (baselineAttempt)
+                    await OwnedSpeedReadingProgramAssignmentLock.LockCurrentTransactionAsync(db, studentId, token);
                 var startLockKey = $"speed-reading-session:{studentId:N}:{request.ExerciseId:N}";
                 await db.Database.ExecuteSqlInterpolatedAsync(
                     $"SELECT pg_advisory_xact_lock(hashtext({startLockKey}))",
                     token);
             }
+
+            if (baselineAttempt)
+                await OwnedSpeedReadingAssessment.EnsureBaselineAvailableAsync(db, studentId, token);
 
             // Re-check completion after taking the same lock as the active-session
             // query. A completion can commit between the initial validation above

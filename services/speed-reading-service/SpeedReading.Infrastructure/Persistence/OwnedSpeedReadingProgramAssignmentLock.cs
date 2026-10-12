@@ -48,9 +48,7 @@ internal static class OwnedSpeedReadingProgramAssignmentLock
         var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
         try
         {
-            await db.Database.ExecuteSqlInterpolatedAsync(
-                $"SELECT pg_advisory_xact_lock({GetLockKey(userId)})",
-                cancellationToken);
+            await LockCurrentTransactionAsync(db, userId, cancellationToken);
             return transaction;
         }
         catch
@@ -62,6 +60,10 @@ internal static class OwnedSpeedReadingProgramAssignmentLock
 
     private static bool IsPostgres(OwnedSpeedReadingDbContext db) =>
         db.Database.ProviderName?.Contains("Npgsql", StringComparison.OrdinalIgnoreCase) == true;
+
+    internal static Task LockCurrentTransactionAsync(OwnedSpeedReadingDbContext db, Guid userId,
+        CancellationToken cancellationToken) => db.Database.ExecuteSqlInterpolatedAsync(
+            $"SELECT pg_advisory_xact_lock({GetLockKey(userId)})", cancellationToken);
 
     private static long GetLockKey(Guid userId)
     {

@@ -125,6 +125,12 @@ export class AssessmentComponent implements OnInit, OnDestroy {
         this.loading.set(false);
       },
       error: (error) => {
+        if (error.error?.code === 'Assessment.BaselineDuringTraining') {
+          // A program may have been assigned after the route's availability check.
+          this.loading.set(false);
+          this.router.navigate(['/student/dashboard']);
+          return;
+        }
         console.error('Assessment exercises error:', error);
         this.toaster.error('Değerlendirme egzersizleri yüklenirken hata oluştu', 3000);
         this.loading.set(false);

@@ -48,6 +48,8 @@ internal sealed class OwnedSpeedReadingAssessment(
         ArgumentNullException.ThrowIfNull(request);
         if (request.ProgramProgressId.HasValue && request.Phase == AssessmentAttemptPhase.Baseline)
             throw new ArgumentException("Başlangıç ölçümü eski bir programa bağlanamaz.");
+        if (request.Phase == AssessmentAttemptPhase.Baseline)
+            await EnsureBaselineAvailableAsync(db, userId, cancellationToken);
         var program = request.ProgramProgressId.HasValue
             ? await GetOwnedProgramAsync(userId, request.ProgramProgressId.Value, cancellationToken)
             : await GetLatestProgramAsync(userId, cancellationToken);
@@ -410,6 +412,18 @@ internal sealed class OwnedSpeedReadingAssessment(
             .ToListAsync(cancellationToken);
 
         var plan = AssessmentPhasePlanCalculator.Calculate(attempts);
+        var baselineLocked = await db.StudentProgramProgresses.AsNoTracking()
+            .AnyAsync(item => item.UserId == userId && item.IsActive, cancellationToken);
+        if (baselineLocked)
+        {
+            var lockedPhases = plan.Phases.Select(item => item.Phase == AssessmentAttemptPhase.Baseline
+                && item.Status != AssessmentPhasePlanStatus.Completed
+                    ? item with { Status = AssessmentPhasePlanStatus.Locked, AvailableAt = null }
+                    : item).ToList();
+            plan = new AssessmentPhasePlanSummary(lockedPhases,
+                lockedPhases.FirstOrDefault(item => item.Status is AssessmentPhasePlanStatus.Available
+                    or AssessmentPhasePlanStatus.InProgress)?.Phase);
+        }
         if (trainingCompleted)
             return plan;
         var phases = plan.Phases.Select(item => item.Phase == AssessmentAttemptPhase.PostTraining
@@ -434,6 +448,15 @@ internal sealed class OwnedSpeedReadingAssessment(
             .Select(item => new { item.CompletedDate })
             .FirstOrDefaultAsync(cancellationToken);
         return latest?.CompletedDate.HasValue == true;
+    }
+
+    internal static async Task EnsureBaselineAvailableAsync(OwnedSpeedReadingDbContext db, Guid userId,
+        CancellationToken cancellationToken)
+    {
+        if (await db.StudentProgramProgresses.AsNoTracking()
+            .AnyAsync(item => item.UserId == userId && item.IsActive, cancellationToken))
+            throw new BusinessRuleException("Assessment.BaselineDuringTraining",
+                "Programınız devam ederken başlangıç seviye tespit sınavı yapılamaz. Programınızı tamamladıktan sonra eğitim sonrası ölçümünü yapabilirsiniz.");
     }
 
     private Task<StudentProgramProgress?> GetLatestProgramAsync(Guid userId, CancellationToken cancellationToken) =>

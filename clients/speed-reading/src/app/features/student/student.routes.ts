@@ -1,7 +1,7 @@
 import { Routes } from '@angular/router';
 import { authGuard } from '../../core/guards/auth.guard';
 import { profileSetupGuard } from '../../core/guards/profile-setup.guard';
-import { assessmentGuard, assessmentCompletedGuard } from '../../core/guards/assessment.guard';
+import { assessmentGuard, assessmentCompletedGuard, assessmentEntryGuard } from '../../core/guards/assessment.guard';
 import { subscriptionGuard } from '../../core/guards/subscription.guard';
 import { staffOnboardingGuard } from '../../core/guards/staff-onboarding.guard';
 import { studentPageGuard } from '../../core/guards/student-page.guard';
@@ -36,7 +36,7 @@ export const studentRoutes: Routes = [
       },
       {
         path: 'assessment',
-        canActivate: [authGuard, staffOnboardingGuard, profileSetupGuard],
+        canActivate: [authGuard, staffOnboardingGuard, profileSetupGuard, assessmentEntryGuard],
         loadComponent: () => import('./assessment/assessment.component').then(m => m.AssessmentComponent)
       },
       {

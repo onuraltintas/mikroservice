@@ -2,7 +2,32 @@ import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
 import { AssessmentService } from '../../services/assessment.service';
 import { AuthService } from '../services/auth.service';
+import { ToasterService } from '../services/toaster.service';
 import { map, catchError, of } from 'rxjs';
+
+/** Initial placement is not a repeat assessment during an assigned training cycle. */
+export const assessmentEntryGuard: CanActivateFn = (route) => {
+  const phase = Number(route.queryParamMap.get('phase'));
+  // Historical post-training/retention/transfer eligibility is checked by the API.
+  if (Number.isInteger(phase) && phase >= 2 && phase <= 4) return true;
+  const assessment = inject(AssessmentService);
+  const router = inject(Router);
+  const toaster = inject(ToasterService);
+  return assessment.getPhasePlan().pipe(
+    map(plan => {
+      const baseline = plan.phases.find(item => item.phase === 1);
+      if (baseline?.status === 2 || baseline?.status === 3) return true;
+      toaster.info('Başlangıç seviye tespiti şu anda kapalı. Program sonunda eğitim sonrası ölçümünü yapabilirsiniz.');
+      router.navigate(['/student/dashboard']);
+      return false;
+    }),
+    catchError(() => {
+      toaster.error('Ölçüm durumu kontrol edilemedi. Lütfen yeniden deneyin.');
+      router.navigate(['/student/dashboard']);
+      return of(false);
+    })
+  );
+};
 
 /**
  * Guard that checks if user has completed assessment
