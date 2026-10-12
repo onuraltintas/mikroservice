@@ -33,10 +33,10 @@ SELECT p.id,jsonb_agg(CASE WHEN old.is_assessment_only THEN jsonb_set(slot.item,
 FROM affected_training a JOIN speed_reading.student_program_progress p ON p.id=a.id
 CROSS JOIN LATERAL jsonb_array_elements(p."ScheduleJson"::jsonb) WITH ORDINALITY slot(item,position)
 JOIN speed_reading.exercises old ON old.id=(slot.item->>'ExerciseId')::uuid
-LEFT JOIN LATERAL(SELECT e.id FROM speed_reading.exercises e
+LEFT JOIN LATERAL(SELECT e.id FROM speed_reading.exercises e JOIN speed_reading.exercise_types t ON t.id=e.exercise_type_id
  WHERE e.exercise_type_id=old.exercise_type_id AND e.target_age_group_id=old.target_age_group_id
  AND e.difficulty_level=old.difficulty_level AND e.is_active AND NOT e.is_deleted AND NOT e.is_assessment_only
- AND (e.type_code<>'Comprehension' OR e.configuration_json #>> '{engineConfig,comprehensionMode}'=
+ AND (t.name<>'Comprehension' OR e.configuration_json #>> '{engineConfig,comprehensionMode}'=
     CASE WHEN (slot.item->>'DayNumber')::int=7 THEN 'evaluation' ELSE 'learning' END)
  ORDER BY e.id LIMIT 1) normal ON true
 GROUP BY p.id;
