@@ -31,4 +31,24 @@ describe('staff next program approval', () => {
     fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('Program onaylandı');
   });
+
+  it('shows and approves the students requested higher program with explicit acknowledgement', () => {
+    const fixture = TestBed.createComponent(ProgramRecommendationPanelComponent);
+    fixture.componentRef.setInput('studentId', 'student');
+    fixture.detectChanges();
+    const http = TestBed.inject(HttpTestingController);
+    fixture.componentInstance.load();
+    http.expectOne(request => request.url.endsWith('/next-recommendation')).flush({ templateId: 'normal', sourceProgressId: 'old',
+      assessmentAttemptId: 'post', templateName: 'Normal program', totalDays: 28, requiresStaffApproval: true,
+      requestedTemplateId: 'upper', requestedAt: '2026-10-12T12:00:00Z',
+      higherOption: { templateId: 'upper', templateName: 'Upper program', level: 4, totalDays: 28 } });
+    fixture.detectChanges();
+    const button = Array.from(fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>)
+      .find(element => element.textContent?.includes('Öğrencinin seçimini onayla'));
+    expect(button).toBeDefined();
+    button?.click();
+    const post = http.expectOne(request => request.url.endsWith('/approve-next'));
+    expect(post.request.body).toEqual({ templateId: 'upper', sourceProgressId: 'old', assessmentAttemptId: 'post', overrideAcknowledged: true });
+    post.flush({ success: true });
+  });
 });
