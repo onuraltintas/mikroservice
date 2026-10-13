@@ -15,7 +15,10 @@ describe('StaffAuthService product-scoped sessions', () => {
     service = TestBed.inject(StaffAuthService);
   });
 
-  afterEach(() => http.verify());
+  afterEach(() => {
+    http.verify();
+    vi.restoreAllMocks();
+  });
 
   it('logs into the selected product and loads only server-authorized staff products', async () => {
     const login = service.login('coaching', 'teacher@example.com', 'correct horse battery staple');
@@ -94,6 +97,84 @@ describe('StaffAuthService product-scoped sessions', () => {
 
     expect(service.activeProduct()).toBe('speed-reading');
     expect(service.getAccessToken()).toBe('speed-reading-access');
+  });
+
+  it('uses an independent course session for switching, refresh and logout', async () => {
+    const login = service.login('coaching', 'teacher@example.com', 'password');
+    http.expectOne('/api/auth/coaching/login').flush({
+      accessToken: 'coaching-access', expiresInMinutes: 15, tokenType: 'Bearer'
+    });
+    await Promise.resolve();
+    http.expectOne('/api/auth/staff-session/products').flush([
+      { product: 'coaching', roles: ['Teacher'] },
+      { product: 'course-management', roles: ['CourseTeacher'] }
+    ]);
+    await login;
+
+    const switching = service.switchProduct('course-management');
+    const switchRequest = http.expectOne('/api/auth/course-management/session');
+    expect(switchRequest.request.withCredentials).toBe(true);
+    switchRequest.flush({ accessToken: 'course-management-access', expiresInMinutes: 15, tokenType: 'Bearer' });
+    await switching;
+    expect(service.activeProduct()).toBe('course-management');
+    expect(sessionStorage.getItem('eduplatform_staff_active_product')).toBe('course-management');
+
+    const refreshing = service.refreshSession();
+    const refreshRequest = http.expectOne('/api/auth/course-management/refresh-token');
+    refreshRequest.flush({ accessToken: 'course-management-refreshed', expiresInMinutes: 15, tokenType: 'Bearer' });
+    await expect(refreshing).resolves.toBe(true);
+
+    const loggingOut = service.logout();
+    const revokeRequest = http.expectOne('/api/auth/course-management/revoke-token');
+    expect(revokeRequest.request.withCredentials).toBe(true);
+    revokeRequest.flush(null);
+    await loggingOut;
+    expect(sessionStorage.getItem('eduplatform_staff_active_product')).toBeNull();
+  });
+
+  it('keeps the active session usable when per-tab storage is unavailable', async () => {
+    const login = service.login('coaching', 'teacher@example.com', 'password');
+    http.expectOne('/api/auth/coaching/login').flush({
+      accessToken: 'coaching-access', expiresInMinutes: 15, tokenType: 'Bearer'
+    });
+    await Promise.resolve();
+    http.expectOne('/api/auth/staff-session/products').flush([
+      { product: 'coaching', roles: ['Teacher'] },
+      { product: 'course-management', roles: ['CourseTeacher'] }
+    ]);
+    await login;
+
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => { throw new Error('Storage unavailable'); });
+    const switching = service.switchProduct('course-management');
+    http.expectOne('/api/auth/course-management/session').flush({
+      accessToken: 'course-management-access', expiresInMinutes: 15, tokenType: 'Bearer'
+    });
+    await switching;
+    expect(service.activeProduct()).toBe('course-management');
+
+    vi.spyOn(Storage.prototype, 'removeItem').mockImplementation(() => { throw new Error('Storage unavailable'); });
+    const loggingOut = service.logout();
+    http.expectOne('/api/auth/course-management/revoke-token').flush(null);
+    await loggingOut;
+    expect(service.isAuthenticated()).toBe(false);
+  });
+
+  it('routes course management MFA setup and verification through its own cookie scope', async () => {
+    const setup = service.startMfaSetup('course-challenge', 'course-management');
+    http.expectOne('/api/auth/course-management/mfa/setup').flush({
+      secret: 'TOTP-SECRET', otpAuthUri: 'otpauth://example', setupToken: 'setup-token'
+    });
+    await setup;
+
+    const verifying = service.verifyMfa('course-management', 'course-challenge', '123456');
+    const request = http.expectOne('/api/auth/course-management/mfa/verify');
+    expect(request.request.withCredentials).toBe(true);
+    request.flush({ accessToken: 'course-management-access', tokenType: 'Bearer', expiresInMinutes: 15 });
+    await Promise.resolve();
+    http.expectOne('/api/auth/staff-session/products').flush([
+      { product: 'course-management', roles: ['CourseInstitutionOwner'] }
+    ]);
+    await verifying;
   });
 
   it('starts MFA enrollment with the login challenge', async () => {
