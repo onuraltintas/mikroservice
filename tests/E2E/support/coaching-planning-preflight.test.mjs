@@ -1,10 +1,20 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { validatePlanningProcess, validateIdentityFixtureProcess } from './coaching-planning-preflight.mjs';
+import { validatePlanningProcess, validateIdentityFixtureProcess, validateNotificationProcess } from './coaching-planning-preflight.mjs';
 
 const path = 'D:/Calismalar/microservice/services/coaching-service/Coaching.API/bin/Debug/net10.0/Coaching.API.dll';
 const connection = 'Host=127.0.0.1;Port=55441;Database=coaching_planning_e2e;Username=planning_test;Password=disposable-planning-only';
 const identity = '--Services:IdentityService http://127.0.0.1:4600';
+test('notification delivery requires its exact API and dedicated local database', () => {
+  const assembly = 'D:/Calismalar/microservice/services/notification-service/Notification.API/bin/Debug/net10.0/Notification.API.dll';
+  const database = 'Host=127.0.0.1;Port=55441;Database=coaching_notification_e2e_20261013;Username=planning_test;Password=disposable-planning-only';
+  const local = `dotnet "${assembly}" --ConnectionStrings:DefaultConnection "${database}" ${identity}`;
+  assert.doesNotThrow(() => validateNotificationProcess(local));
+  assert.throws(() => validateNotificationProcess(`dotnet other.dll --decoy "${assembly}" --ConnectionStrings:DefaultConnection "${database}" ${identity}`));
+  assert.throws(() => validateNotificationProcess(local.replace(database, connection)));
+  assert.throws(() => validateNotificationProcess(`${local} --ConnectionStrings:DefaultConnection=Host=production`));
+  assert.throws(() => validateNotificationProcess(local.replace('http://127.0.0.1:4600', 'https://production.example')));
+});
 test('requires the exact workspace Identity fixture process, not a decoy argument', () => {
   const fixture = 'D:/Calismalar/microservice/tests/E2E/support/coaching-planning-session.mjs';
   assert.doesNotThrow(() => validateIdentityFixtureProcess(`node "${fixture}"`));
