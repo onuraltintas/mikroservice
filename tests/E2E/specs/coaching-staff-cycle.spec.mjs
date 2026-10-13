@@ -156,3 +156,60 @@ test('institution reads real comparison and warnings then opens the scoped stude
   expect(response.status()).toBe(403);
   await context.close();
 });
+
+test('institution edits and removes members through scoped Identity contracts with pending-save guards', async ({ browser }) => {
+  const context = await browser.newContext(); const page = await context.newPage();
+  await staffSession(page, planningManager, 'InstitutionAdmin');
+  const replacementTeacher = randomUUID();
+  let members = [{ ...student }];
+  let teachers = [
+    { userId: planningTeacher, firstName: 'Test', lastName: 'Koç', email: 'coach@example.invalid' },
+    { userId: replacementTeacher, firstName: 'Yeni', lastName: 'Koç', email: 'new@example.invalid' }
+  ];
+  let updateBody; let removalCount = 0; let releaseSave;
+  const saving = new Promise(resolve => { releaseSave = resolve; });
+  await page.route(`**/api/coaching-admin/institutions/${planningInstitution}/students?*`, route => route.fulfill({ json: { students: members, totalCount: members.length } }));
+  await page.route(`**/api/coaching-admin/institutions/${planningInstitution}/teachers?*`, route => route.fulfill({ json: { teachers, totalCount: teachers.length } }));
+  await page.route(`**/api/institution/students/${planningStudent}`, async route => {
+    if (route.request().method() === 'PUT') {
+      updateBody = route.request().postDataJSON();
+      await saving;
+      members = [{ ...student, gradeLevel: updateBody.gradeLevel, teacherUserId: updateBody.teacherUserId, teacherName: 'Yeni Koç' }];
+    } else if (route.request().method() === 'DELETE') { removalCount++; members = []; }
+    else throw new Error('Unexpected student membership method');
+    await route.fulfill({ status: 204 });
+  });
+  await page.route(`**/api/institution/teachers/${replacementTeacher}`, async route => {
+    expect(route.request().method()).toBe('DELETE');
+    teachers = teachers.filter(teacher => teacher.userId !== replacementTeacher);
+    await route.fulfill({ status: 204 });
+  });
+  await page.getByTestId('institution-students-tab').click();
+  await page.getByTestId(`edit-student-${planningStudent}`).click();
+  const editor = page.locator('.member-editor');
+  await editor.getByLabel('Öğrencinin sınıfı', { exact: true }).fill('9');
+  await editor.getByRole('combobox', { name: /^Atanacak öğretmen/ }).selectOption(replacementTeacher);
+  await editor.getByRole('button', { name: 'Değişikliği kaydet' }).click();
+  await expect.poll(() => updateBody).toEqual({ gradeLevel: 9, teacherUserId: replacementTeacher });
+  await expect(page.getByRole('searchbox', { name: 'Öğrenci ara', exact: true })).toBeDisabled();
+  await expect(editor.getByRole('button', { name: 'Değişikliği kaydet' })).toBeDisabled();
+  await page.getByRole('button', { name: 'Güvenli çıkış' }).click();
+  await expect(page.getByText('Üye işlemi sürüyor. Tamamlanmasını bekleyin.')).toBeVisible();
+  releaseSave();
+  await expect(editor).toHaveCount(0);
+  const row = page.getByRole('row').filter({ hasText: 'Ada Test' });
+  await expect(row).toContainText('9. sınıf'); await expect(row).toContainText('Yeni Koç');
+  page.once('dialog', dialog => dialog.dismiss());
+  await page.getByTestId(`remove-student-${planningStudent}`).click();
+  expect(removalCount).toBe(0);
+  page.once('dialog', dialog => dialog.accept());
+  await page.getByTestId(`remove-student-${planningStudent}`).click();
+  await expect(row).toHaveCount(0); expect(removalCount).toBe(1);
+  await page.getByTestId('institution-teachers-tab').click();
+  page.once('dialog', dialog => dialog.accept());
+  await page.getByTestId(`remove-teacher-${replacementTeacher}`).click();
+  await expect(page.getByTestId(`remove-teacher-${replacementTeacher}`)).toHaveCount(0);
+  await page.getByTestId('institution-students-tab').click();
+  await expect(page.getByTestId('institution-student-invite-teacher').locator(`option[value="${replacementTeacher}"]`)).toHaveCount(0);
+  await context.close();
+});

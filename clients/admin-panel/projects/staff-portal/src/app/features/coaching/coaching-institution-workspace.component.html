@@ -16,6 +16,9 @@
       <span class="scope-badge"><span aria-hidden="true"></span> Yetkili kurum kapsamı</span>
     </header>
 
+    @if (membershipError()) { <p class="workspace-alert error" role="alert">{{ membershipError() }}</p> }
+    @if (membershipSuccess()) { <p class="workspace-alert success" role="status">{{ membershipSuccess() }}</p> }
+
     @if (errorMessage()) {
       <div class="workspace-alert error" role="alert">
         <p>{{ errorMessage() }}</p>
@@ -96,7 +99,7 @@
       <section class="roster-section" aria-labelledby="institution-students-title">
         <div class="section-heading">
           <div><h3 id="institution-students-title">Kurum öğrencileri</h3><p>{{ studentTotalCount() }} öğrenci · sunucu tarafında kurum kapsamı, arama ve filtreleme</p></div>
-          <button type="button" class="outline-button" (click)="loadStudents()" [disabled]="isLoadingStudents()">Yenile</button>
+          <button type="button" class="outline-button" (click)="loadStudents()" [disabled]="isLoadingStudents() || isMembershipSaving() || !!editingStudentId()">Yenile</button>
         </div>
 
         <form class="filter-row invitation-form" (ngSubmit)="sendStudentInvitation()" aria-label="Koçluk öğrencisi davet et">
@@ -115,9 +118,9 @@
         @if (pendingInvitationsVisible()) { <staff-pending-invitations [product]="'coaching'" [refreshKey]="invitationRefreshKey()" /> }
 
         <div class="filter-row" aria-label="Öğrenci filtreleri">
-          <label class="filter-field search-field"><span>Öğrenci ara</span><input #studentSearch type="search" [value]="studentSearchTerm()" (change)="searchStudents(studentSearch.value)" (keydown.enter)="$event.preventDefault(); searchStudents(studentSearch.value)" placeholder="Ad, soyad veya e-posta" /></label>
-          <label class="filter-field"><span>Öğretmen</span><select [value]="studentTeacherFilter()" [disabled]="isLoadingTeacherFilter()" (change)="setTeacherFilter($any($event.target).value)"><option value="">Tüm öğretmenler</option>@for (teacher of teacherFilterOptions(); track teacher.userId) { <option [value]="teacher.userId">{{ teacher.firstName }} {{ teacher.lastName }}</option> }</select></label>
-          <label class="filter-field"><span>Sınıf</span><select [value]="studentGradeFilter() ?? ''" (change)="setGradeFilter($any($event.target).value)"><option value="">Tüm sınıflar</option>@for (grade of [1,2,3,4,5,6,7,8,9,10,11,12]; track grade) { <option [value]="grade">{{ grade }}. sınıf</option> }</select></label>
+          <label class="filter-field search-field"><span>Öğrenci ara</span><input #studentSearch type="search" [value]="studentSearchTerm()" [disabled]="isMembershipSaving() || !!editingStudentId()" (change)="searchStudents(studentSearch.value)" (keydown.enter)="$event.preventDefault(); searchStudents(studentSearch.value)" placeholder="Ad, soyad veya e-posta" /></label>
+          <label class="filter-field"><span>Öğretmen</span><select [value]="studentTeacherFilter()" [disabled]="isLoadingTeacherFilter() || isMembershipSaving() || !!editingStudentId()" (change)="setTeacherFilter($any($event.target).value)"><option value="">Tüm öğretmenler</option>@for (teacher of teacherFilterOptions(); track teacher.userId) { <option [value]="teacher.userId">{{ teacher.firstName }} {{ teacher.lastName }}</option> }</select></label>
+          <label class="filter-field"><span>Sınıf</span><select [value]="studentGradeFilter() ?? ''" [disabled]="isMembershipSaving() || !!editingStudentId()" (change)="setGradeFilter($any($event.target).value)"><option value="">Tüm sınıflar</option>@for (grade of [1,2,3,4,5,6,7,8,9,10,11,12]; track grade) { <option [value]="grade">{{ grade }}. sınıf</option> }</select></label>
         </div>
         @if (teacherFilterPageNumber() < teacherFilterTotalPages()) { <button type="button" class="load-more filter-options-more" (click)="loadMoreTeacherFilterOptions()" [disabled]="isLoadingTeacherFilter()">{{ isLoadingTeacherFilter() ? 'Yükleniyor…' : 'Daha fazla öğretmen seçeneği' }}</button> }
         @if (isLoadingStudents()) {
@@ -127,22 +130,41 @@
         } @else {
           <div class="table-scroll">
             <table>
-              <thead><tr><th>Öğrenci</th><th>Sınıf</th><th>Öğretmen</th><th>E-posta</th><th>Rapor</th></tr></thead>
+              <thead><tr><th>Öğrenci</th><th>Sınıf</th><th>Öğretmen</th><th>E-posta</th><th>İşlemler</th></tr></thead>
               <tbody>
                 @for (student of students(); track student.userId) {
-                  <tr><td class="primary-cell">{{ student.firstName }} {{ student.lastName }}</td><td>{{ student.gradeLevel ? student.gradeLevel + '. sınıf' : '—' }}</td><td>{{ student.teacherName || 'Atanmamış' }}</td><td>{{ student.email }}</td><td><button type="button" class="report-button" [attr.data-testid]="'student-report-' + student.userId" (click)="openStudentReport(student)">Raporu incele</button></td></tr>
+                  <tr><td class="primary-cell">{{ student.firstName }} {{ student.lastName }}</td><td>{{ student.gradeLevel ? student.gradeLevel + '. sınıf' : '—' }}</td><td>{{ student.teacherName || 'Atanmamış' }}</td><td>{{ student.email }}</td><td><div class="member-actions">
+                    <button type="button" class="report-button" [disabled]="isMembershipSaving()" [attr.data-testid]="'student-report-' + student.userId" (click)="openStudentReport(student)">Raporu incele</button>
+                    <button type="button" class="report-button" [disabled]="isMembershipSaving()" [attr.data-testid]="'edit-student-' + student.userId" (click)="startStudentEdit(student)">Sınıf / öğretmen</button>
+                    <button type="button" class="report-button danger" [disabled]="isMembershipSaving() || !!editingStudentId()" [attr.data-testid]="'remove-student-' + student.userId" (click)="removeStudent(student)">Kurumdan çıkar</button>
+                  </div></td></tr>
+                  @if (editingStudentId() === student.userId) {
+                    <tr><td colspan="5"><form #memberForm="ngForm" (ngSubmit)="saveStudentEdit()" class="member-editor">
+                      <fieldset [disabled]="isMembershipSaving()">
+                        <label class="filter-field">Öğrencinin sınıfı<input type="number" [(ngModel)]="editStudentGrade" (ngModelChange)="membershipDirty = true" name="memberGrade" min="1" max="12" step="1" required></label>
+                        <label class="filter-field">Atanacak öğretmen<select [(ngModel)]="editStudentTeacherId" (ngModelChange)="membershipDirty = true" name="memberTeacher">
+                          <option value="">Öğretmen atamasını kaldır</option>
+                          @if (student.teacherUserId && !hasTeacherOption(student.teacherUserId)) { <option [value]="student.teacherUserId">{{ student.teacherName || 'Mevcut öğretmen' }}</option> }
+                          @for (teacher of teacherFilterOptions(); track teacher.userId) { <option [value]="teacher.userId">{{ teacher.firstName }} {{ teacher.lastName }}</option> }
+                        </select></label>
+                        <button type="submit" class="report-button" [disabled]="memberForm.invalid">Değişikliği kaydet</button>
+                        <button type="button" class="report-button" (click)="cancelStudentEdit()">Vazgeç</button>
+                      </fieldset>
+                      @if (teacherFilterPageNumber() < teacherFilterTotalPages()) { <button type="button" class="report-button" (click)="loadMoreTeacherFilterOptions()" [disabled]="isLoadingTeacherFilter() || isMembershipSaving()">Diğer öğretmenleri yükle</button> }
+                    </form></td></tr>
+                  }
                 }
               </tbody>
             </table>
           </div>
-          @if (studentPageNumber() < studentTotalPages()) { <button type="button" class="load-more" (click)="loadMoreStudents()" [disabled]="loadingMoreStudents()">{{ loadingMoreStudents() ? 'Yükleniyor…' : 'Daha fazla öğrenci yükle' }}</button> }
+          @if (studentPageNumber() < studentTotalPages()) { <button type="button" class="load-more" (click)="loadMoreStudents()" [disabled]="loadingMoreStudents() || isMembershipSaving() || !!editingStudentId()">{{ loadingMoreStudents() ? 'Yükleniyor…' : 'Daha fazla öğrenci yükle' }}</button> }
         }
       </section>
     } @else if (activeSection() === 'teachers') {
       <section class="roster-section" aria-labelledby="institution-teachers-title">
         <div class="section-heading">
           <div><h3 id="institution-teachers-title">Kurum öğretmenleri</h3><p>{{ teacherTotalCount() }} öğretmen · kurumunuza bağlı aktif öğretmenler</p></div>
-          <button type="button" class="outline-button" (click)="loadTeachers()" [disabled]="isLoadingTeachers()">Yenile</button>
+          <button type="button" class="outline-button" (click)="loadTeachers()" [disabled]="isLoadingTeachers() || isMembershipSaving()">Yenile</button>
         </div>
         <form class="filter-row invitation-form" (ngSubmit)="sendTeacherInvitation()" aria-label="Koçluk öğretmeni davet et">
           <label class="filter-field"><span>Öğretmen e-posta adresi</span><input data-testid="institution-teacher-invite-email" name="teacherInviteEmail" type="email" autocomplete="email" maxlength="320" [(ngModel)]="teacherInviteEmail" required placeholder="ogretmen@ornek.com" /></label>
@@ -152,7 +174,7 @@
         @if (teacherInvitationSuccess()) { <p class="workspace-alert success" role="status">{{ teacherInvitationSuccess() }}</p> }
         <button type="button" class="outline-button" data-testid="toggle-pending-invitations" [attr.aria-expanded]="pendingInvitationsVisible()" (click)="togglePendingInvitations()">{{ pendingInvitationsVisible() ? 'Bekleyen davetleri gizle' : 'Bekleyen davetleri yönet' }}</button>
         @if (pendingInvitationsVisible()) { <staff-pending-invitations [product]="'coaching'" [refreshKey]="invitationRefreshKey()" /> }
-        <label class="filter-field teacher-search"><span>Öğretmen ara</span><input #teacherSearch type="search" [value]="teacherSearchTerm()" (change)="searchTeachers(teacherSearch.value)" (keydown.enter)="$event.preventDefault(); searchTeachers(teacherSearch.value)" placeholder="Ad, soyad veya e-posta" /></label>
+        <label class="filter-field teacher-search"><span>Öğretmen ara</span><input #teacherSearch type="search" [value]="teacherSearchTerm()" [disabled]="isMembershipSaving()" (change)="searchTeachers(teacherSearch.value)" (keydown.enter)="$event.preventDefault(); searchTeachers(teacherSearch.value)" placeholder="Ad, soyad veya e-posta" /></label>
         @if (isLoadingTeachers()) {
           <p class="workspace-state" role="status">Öğretmenler yükleniyor…</p>
         } @else if (!teachers().length) {
@@ -160,10 +182,12 @@
         } @else {
           <div class="teacher-grid">
             @for (teacher of teachers(); track teacher.userId) {
-              <article class="teacher-card"><span class="avatar" aria-hidden="true">{{ teacher.firstName.slice(0, 1) }}{{ teacher.lastName.slice(0, 1) }}</span><div><strong>{{ teacher.firstName }} {{ teacher.lastName }}</strong><span>{{ teacher.email }}</span></div><button type="button" class="report-button" [attr.data-testid]="'teacher-report-' + teacher.userId" (click)="openTeacherReport(teacher)">Raporu incele</button></article>
+              <article class="teacher-card"><span class="avatar" aria-hidden="true">{{ teacher.firstName.slice(0, 1) }}{{ teacher.lastName.slice(0, 1) }}</span><div><strong>{{ teacher.firstName }} {{ teacher.lastName }}</strong><span>{{ teacher.email }}</span></div>
+                <div class="member-actions"><button type="button" class="report-button" [disabled]="isMembershipSaving()" [attr.data-testid]="'teacher-report-' + teacher.userId" (click)="openTeacherReport(teacher)">Raporu incele</button>
+                  <button type="button" class="report-button danger" [disabled]="isMembershipSaving()" [attr.data-testid]="'remove-teacher-' + teacher.userId" (click)="removeTeacher(teacher)">Kurumdan çıkar</button></div></article>
             }
           </div>
-          @if (teacherPageNumber() < teacherTotalPages()) { <button type="button" class="load-more" (click)="loadMoreTeachers()" [disabled]="loadingMoreTeachers()">{{ loadingMoreTeachers() ? 'Yükleniyor…' : 'Daha fazla öğretmen yükle' }}</button> }
+          @if (teacherPageNumber() < teacherTotalPages()) { <button type="button" class="load-more" (click)="loadMoreTeachers()" [disabled]="loadingMoreTeachers() || isMembershipSaving()">{{ loadingMoreTeachers() ? 'Yükleniyor…' : 'Daha fazla öğretmen yükle' }}</button> }
         }
       </section>
     }

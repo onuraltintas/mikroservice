@@ -149,7 +149,7 @@ describe('Staff portal workspace role selection', () => {
 describe('Staff portal product deep links', () => {
   it('blocks role, product and logout transitions while an institution membership save is pending', async () => {
     const auth = { products: signal<StaffProductAccess[]>([{ product: 'coaching', roles: ['Teacher', 'InstitutionAdmin'] }]),
-      activeProduct: signal('coaching'), switchProduct: vi.fn(), logout: vi.fn() };
+      activeProduct: signal<'coaching'>('coaching'), switchProduct: vi.fn(), logout: vi.fn() };
     const component = createComponent(auth);
     component.coachingInstitutionWorkspace = { canLeavePage: () => false };
     component.selectWorkspaceRole('teacher'); await component.switchProduct('speed-reading'); await component.logout();

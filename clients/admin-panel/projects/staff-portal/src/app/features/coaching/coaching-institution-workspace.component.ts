@@ -1,8 +1,9 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, DestroyRef, HostListener, OnInit, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
-import { finalize } from 'rxjs';
+import { Observable, finalize } from 'rxjs';
 import {
   CoachingInstitutionOverview,
   CoachingInstitutionService,
@@ -25,6 +26,76 @@ type InstitutionSection = 'overview' | 'students' | 'teachers' | 'analytics';
 })
 export class CoachingInstitutionWorkspaceComponent implements OnInit {
   private readonly institutionService = inject(CoachingInstitutionService);
+  private readonly destroyRef = inject(DestroyRef);
+  readonly editingStudentId = signal<string | null>(null);
+  readonly isMembershipSaving = signal(false);
+  readonly membershipError = signal<string | null>(null);
+  readonly membershipSuccess = signal<string | null>(null);
+  editStudentGrade: number | null = null;
+  editStudentTeacherId = '';
+  membershipDirty = false;
+
+  canLeavePage(): boolean {
+    if (this.isMembershipSaving()) { this.membershipError.set('Üye işlemi sürüyor. Tamamlanmasını bekleyin.'); return false; }
+    return !this.membershipDirty || window.confirm('Kaydedilmemiş öğrenci değişikliklerinden vazgeçerek ayrılmak istiyor musunuz?');
+  }
+  @HostListener('window:beforeunload', ['$event'])
+  beforeUnload(event: BeforeUnloadEvent): void {
+    if (this.isMembershipSaving() || this.membershipDirty) { event.preventDefault(); event.returnValue = ''; }
+  }
+  startStudentEdit(student: CoachingInstitutionStudent): void {
+    if (!this.students().some(item => item.userId === student.userId) || !this.canLeavePage()) return;
+    this.editingStudentId.set(student.userId); this.editStudentGrade = student.gradeLevel ?? null;
+    this.editStudentTeacherId = student.teacherUserId ?? ''; this.membershipDirty = false; this.membershipError.set(null);
+  }
+  cancelStudentEdit(): void {
+    this.editingStudentId.set(null); this.membershipDirty = false;
+  }
+  saveStudentEdit(): void {
+    const id = this.editingStudentId(); const grade = this.editStudentGrade;
+    if (!id || this.isMembershipSaving()) return;
+    if (grade === null || !Number.isInteger(grade) || grade < 1 || grade > 12) {
+      this.membershipError.set('1–12 arasında geçerli bir sınıf seçin.'); return;
+    }
+    const original = this.students().find(student => student.userId === id);
+    if (!original) return;
+    if (this.editStudentTeacherId && this.editStudentTeacherId !== original.teacherUserId
+      && !this.teacherFilterOptions().some(teacher => teacher.userId === this.editStudentTeacherId)) {
+      this.membershipError.set('Kurum öğretmenlerinden birini seçin.'); return;
+    }
+    this.changeMembership(this.institutionService.updateStudent(id, grade, this.editStudentTeacherId || null), 'Öğrenci sınıfı ve öğretmen ataması güncellendi.', () => {
+      this.cancelStudentEdit(); this.loadStudents();
+    });
+  }
+  removeStudent(student: CoachingInstitutionStudent): void {
+    if (this.isMembershipSaving() || this.editingStudentId() || !this.students().some(item => item.userId === student.userId)) return;
+    if (!window.confirm(`${student.firstName} ${student.lastName} kurumdan çıkarılsın mı? Kurum ve öğretmen erişimi sona erer; geçmiş koçluk kayıtları silinmez.`)) return;
+    this.changeMembership(this.institutionService.removeStudent(student.userId), 'Öğrencinin kurum ilişkisi sona erdi.', () => this.loadStudents());
+  }
+  removeTeacher(teacher: CoachingInstitutionTeacher): void {
+    if (this.isMembershipSaving() || this.editingStudentId() || !this.teachers().some(item => item.userId === teacher.userId)) return;
+    if (!window.confirm(`${teacher.firstName} ${teacher.lastName} kurumdan çıkarılsın mı? Bu kurumdaki öğrenci atamaları sona erer; geçmiş koçluk kayıtları silinmez.`)) return;
+    this.changeMembership(this.institutionService.removeTeacher(teacher.userId), 'Öğretmenin kurum ilişkisi sona erdi.', () => {
+      this.teachers.update(current => current.filter(item => item.userId !== teacher.userId));
+      this.teacherFilterOptions.update(current => current.filter(item => item.userId !== teacher.userId));
+      if (this.studentTeacherFilter() === teacher.userId) this.studentTeacherFilter.set('');
+      if (this.studentInviteTeacherUserId === teacher.userId) this.studentInviteTeacherUserId = '';
+      this.loadTeachers(); this.loadTeacherFilterOptions();
+      if (this.students().length) this.loadStudents();
+    });
+  }
+  private changeMembership(operation: Observable<void>, message: string, refresh: () => void): void {
+    this.isMembershipSaving.set(true); this.membershipError.set(null); this.membershipSuccess.set(null);
+    operation.pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.isMembershipSaving.set(false))).subscribe({
+      next: () => { this.isMembershipSaving.set(false); this.membershipSuccess.set(message); refresh(); this.loadOverview(); },
+      error: error => this.membershipError.set(error.status === 403 ? 'Kurum yetkiniz doğrulanamadı. Oturumunuzu yenileyin.' : 'Üye işlemi kaydedilemedi. Kurum ilişkisini ve alanları kontrol edip yeniden deneyin.')
+    });
+  }
+  private prepareMemberNavigation(): boolean {
+    if (!this.canLeavePage()) return false;
+    this.cancelStudentEdit(); return true;
+  }
+  hasTeacherOption(id: string): boolean { return this.teacherFilterOptions().some(teacher => teacher.userId === id); }
   private studentRequestId = 0;
   private teacherRequestId = 0;
   private filterTeacherRequestId = 0;
@@ -73,6 +144,8 @@ export class CoachingInstitutionWorkspaceComponent implements OnInit {
   }
 
   selectSection(section: InstitutionSection): void {
+    if (!this.canLeavePage()) return;
+    this.cancelStudentEdit();
     this.activeSection.set(section);
     this.selectedStudent.set(null);
     this.selectedTeacher.set(null);
@@ -87,6 +160,8 @@ export class CoachingInstitutionWorkspaceComponent implements OnInit {
   }
 
   openStudentReport(student: CoachingInstitutionStudent): void {
+    if (!this.canLeavePage()) return;
+    this.cancelStudentEdit();
     this.selectedStudent.set(student);
   }
 
@@ -95,6 +170,8 @@ export class CoachingInstitutionWorkspaceComponent implements OnInit {
   }
 
   openTeacherReport(teacher: CoachingInstitutionTeacher): void {
+    if (!this.canLeavePage()) return;
+    this.cancelStudentEdit();
     this.selectedTeacher.set(teacher);
   }
 
@@ -129,6 +206,7 @@ export class CoachingInstitutionWorkspaceComponent implements OnInit {
   }
 
   loadStudents(append = false): void {
+    if (!this.prepareMemberNavigation()) return;
     const institutionId = this.institutionId();
     if (!institutionId) return;
     const requestId = ++this.studentRequestId;
@@ -160,18 +238,21 @@ export class CoachingInstitutionWorkspaceComponent implements OnInit {
   }
 
   searchStudents(value: string): void {
+    if (!this.prepareMemberNavigation()) return;
     this.studentSearchTerm.set(value.trim());
     this.studentPageNumber.set(1);
     this.loadStudents();
   }
 
   setTeacherFilter(value: string): void {
+    if (!this.prepareMemberNavigation()) return;
     this.studentTeacherFilter.set(value);
     this.studentPageNumber.set(1);
     this.loadStudents();
   }
 
   setGradeFilter(value: string): void {
+    if (!this.prepareMemberNavigation()) return;
     const grade = value ? Number(value) : null;
     this.studentGradeFilter.set(grade !== null && Number.isInteger(grade) && grade >= 1 && grade <= 12 ? grade : null);
     this.studentPageNumber.set(1);
@@ -184,6 +265,7 @@ export class CoachingInstitutionWorkspaceComponent implements OnInit {
   }
 
   loadTeachers(append = false): void {
+    if (!this.prepareMemberNavigation()) return;
     const institutionId = this.institutionId();
     if (!institutionId) return;
     const requestId = ++this.teacherRequestId;
@@ -211,6 +293,7 @@ export class CoachingInstitutionWorkspaceComponent implements OnInit {
   }
 
   searchTeachers(value: string): void {
+    if (!this.prepareMemberNavigation()) return;
     this.teacherSearchTerm.set(value.trim());
     this.teacherPageNumber.set(1);
     this.loadTeachers();
@@ -287,6 +370,7 @@ export class CoachingInstitutionWorkspaceComponent implements OnInit {
   }
 
   private loadTeacherFilterOptions(append = false): void {
+    if (this.isMembershipSaving()) return;
     const institutionId = this.institutionId();
     if (!institutionId) return;
     const requestId = ++this.filterTeacherRequestId;
@@ -299,7 +383,8 @@ export class CoachingInstitutionWorkspaceComponent implements OnInit {
     ).subscribe({
       next: page => {
         if (requestId !== this.filterTeacherRequestId) return;
-        this.teacherFilterOptions.update(current => [...new Map([...current, ...page.teachers].map(teacher => [teacher.userId, teacher])).values()]);
+        this.teacherFilterOptions.update(current => append
+          ? [...new Map([...current, ...page.teachers].map(teacher => [teacher.userId, teacher])).values()] : page.teachers);
         this.teacherFilterPageNumber.set(pageNumber);
         this.teacherFilterTotalPages.set(Math.max(1, Math.ceil(page.totalCount / 100)));
       },

@@ -64,7 +64,7 @@ describe('CoachingInstitutionWorkspaceComponent', () => {
     service.getTeacherRoster.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 503 })));
     vi.spyOn(window, 'confirm').mockReturnValue(true); component.removeTeacher(teacher('teacher-1'));
     expect(component.teacherFilterOptions()).toEqual([]); expect(component.teachers()).toEqual([]);
-    expect(component.errorMessage()).toBeTruthy();
+    expect(service.getTeacherRoster).toHaveBeenCalledTimes(4);
   });
   it('opens scoped analysis only after selecting the institution analytics tab', async () => {
     const fixture = await createFixture(); fixture.detectChanges();

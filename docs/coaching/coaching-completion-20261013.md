@@ -14,6 +14,7 @@
 - Öğretmen hedeflerini mevcut aktif okul/üniversite kataloğuna ve sınav türü/puan ölçeğine bağlayabiliyor. Hedef sahibi öğretmen ve aktif atama birlikte doğrulanıyor. Öğrenci ve kurum öğretmen hedefini değiştiremiyor.
 - Hedef kaydı sonrası kart ve düzenleme formu güncelleniyor; sonraki başlık değişikliği yeni puan ölçeğini sıfırlamıyor. Öğrenci/hedef kapsamı değişince eski istekler iptal ediliyor.
 - Kurumun “Analiz ve uyarılar” sekmesi mevcut karşılaştırma/erken uyarı API'lerine bağlandı. Tarih/sınıf filtreleri, 25 kişilik sayfalama, yetki kaybında veri temizleme ve uyarıdan öğrenci raporuna geçiş var. Geri dönüş filtre/sayfa bağlamını koruyor. Filtre değişiminde eski istek ve sonuçlar temizleniyor.
+- Kurum öğrenci sınıfını ve öğretmen atamasını düzenleyebiliyor, öğrenci/öğretmeni onayla kurumdan çıkarabiliyor. Identity kurum kapsamındaki mevcut uçlar kullanılıyor. Bekleyen kayıt filtre, gezinme ve çıkışı engelliyor; çıkarılan öğretmen liste yenilemesi başarısız olsa da seçim önbelleğinden hemen kaldırılıyor.
 
 ## Test kanıtları
 
@@ -22,12 +23,14 @@ Yerel sonuçlar `artifacts/coaching-completion-20261013/` altında tutuluyor.
 - `coaching-regression-stage2-final.trx`: 696 başarılı, 0 başarısız, 0 atlanan; gerçek Testcontainers PostgreSQL dahil.
 - `staff-regression-stage2.log`: personel panelinde 149 başarılı test, 22 dosya.
 - `staff-regression-stage3.log`: kurum analizi dahil personel panelinde 155 başarılı test, 23 dosya.
+- `staff-regression-stage4-final.log`: kurum üyelik yönetimi dahil 163 başarılı test, 23 dosya. `membership-review-red.log` bekleyen öğretmen araması ve çıkarma sonrası başarısız yenileme hatalarını yeniden üretiyor.
 - `staff-target-ui-final.log`: ortak hedef düzenleyicisi ve kapsamlı HTTP yollarında 14 başarılı test.
 - `institution-dates-red.log` / `institution-dates-green.log`: tarih sapması yeniden üretildi ve 6 test geçti.
 - `exam-rows-red.log` / `exam-rows-green.log`: yapısal ders puanı formunda 12 test geçti.
 - Abonelik/middleware seçili testleri 67; eski yönlendirme Edge/Karma testleri 3 başarılı.
 - `e2e-results.json`: dört Playwright senaryosu başarılı; plan yayımlama/tamamlama/kurum raporu, hedefin 450/500 LGS ölçeğinin başlık düzenlemesinden sonra korunması, yetkisiz erişimin reddi ve kurum analizinden rapora geçiş/geri dönüş. Mobil analiz ekranı 390 pikselde yatay taşma olmadan doğrulandı. Gerçek yerel Coaching API ve PostgreSQL kullanılıyor; Identity oturumu ve ilişkiler yalnız sentetik yerel fixture ile sağlanıyor. Gerçek Identity giriş veya canlı kullanıcı testi olarak değerlendirilmemeli.
 - `staff-enum-green.log`: katı sunucu enum sözleşmesiyle hedef/sınav servislerinde 9 test başarılı.
+- Son `e2e-results.json` beş başarılı senaryo içeriyor. Ek üyelik senaryosu sınıf/öğretmen düzenleme, bekleyen kayıtta çıkış engeli, çıkarma onayı ve eski öğretmen seçeneğinin temizlenmesini sentetik Identity HTTP yanıtlarıyla doğruluyor; gerçek Identity üyelik entegrasyonu kanıtı değildir.
 
 Frontend testlerinde bu Windows ortamındaki geçici modül çözümleme sorunu için `artifacts/coaching-completion-20261013/vitest-runner.mjs` kullanılıyor. Geçici TEMP/TMP dizini client `.tmp` altında. Backend testleri `-m:1 -p:UseSharedCompilation=false` ile seri derleniyor.
 
@@ -35,7 +38,7 @@ Frontend testlerinde bu Windows ortamındaki geçici modül çözümleme sorunu 
 
 Bu çalışma henüz bütün ürün eksiklerinin tamamlandığı anlamına gelmiyor. Önceki karşılaştırmadan kalan işler:
 
-1. Kurum paneline öğrenci–öğretmen atama/çıkarma ve abonelik/koltuk yönetimi arayüzlerini bağlamak.
+1. Kurum abonelik/koltuk yönetimini bağlamak; üyelik akışının gerçek Identity veritabanı doğrulamasını genişletmek.
 2. Haftalar arası çalışma karşılaştırması, seans öncesi birleşik öğrenci özeti ve veriye dayalı konu öncelikleri.
 3. Plan işlerinde kaynak ve soru sayısı takibi; yaklaşan çalışma/seans hatırlatmaları.
 4. Koçluk öğrenci ücret/borç/taksit/kasa akışının mevcut kurs finansından ayrı ürün kapsamıyla ele alınması.

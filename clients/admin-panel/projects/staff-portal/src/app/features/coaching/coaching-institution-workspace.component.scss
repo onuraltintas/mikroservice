@@ -1,5 +1,8 @@
 .institution-workspace { display: grid; gap: 1rem; margin-top: 1.8rem; color: #253244; }
 .analytics-container { min-width: 0; }
+.member-actions { display: flex; flex-wrap: wrap; gap: .45rem; }
+.member-editor fieldset { display: flex; flex-wrap: wrap; align-items: end; gap: .75rem; border: 0; margin: .5rem 0; padding: 0; }
+.report-button.danger { color: #9f1239; border-color: #efc7b9; }
 .institution-heading, .section-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
 .institution-heading { align-items: flex-start; }
 .eyebrow { margin: 0 0 .4rem; color: #64876e; font-size: .68rem; font-weight: 800; letter-spacing: .1em; }
