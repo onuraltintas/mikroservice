@@ -32,6 +32,8 @@ describe('CoachingInstitutionWorkspaceComponent', () => {
     component.searchStudents('Ece'); component.setTeacherFilter('teacher-2'); component.setGradeFilter('9'); component.loadStudents();
     expect(service.getStudentRoster).toHaveBeenCalledTimes(1);
     expect(component.studentSearchTerm()).toBe(''); expect(component.studentTeacherFilter()).toBe(''); expect(component.studentGradeFilter()).toBeNull();
+    component.teacherPageNumber.set(2); component.searchTeachers('Yeni');
+    expect(component.teacherSearchTerm()).toBe(''); expect(component.teacherPageNumber()).toBe(2);
     expect(service.updateStudent).toHaveBeenCalledTimes(1); expect(component.activeSection()).toBe('students'); expect(component.canLeavePage()).toBe(false);
     pending.complete(); expect(component.isMembershipSaving()).toBe(false);
   });
@@ -54,6 +56,15 @@ describe('CoachingInstitutionWorkspaceComponent', () => {
     service.getTeacherRoster.mockReturnValue(of({ teachers: [], totalCount: 0 }));
     vi.spyOn(window, 'confirm').mockReturnValue(true); component.removeTeacher(teacher('teacher-1'));
     expect(component.teacherFilterOptions()).toEqual([]);
+  });
+  it('evicts a successfully removed teacher even when subsequent roster refresh fails', async () => {
+    const service = institutionService({ teachers: [teacher('teacher-1')] });
+    const fixture = await createFixture(service); fixture.detectChanges(); const component = fixture.componentInstance;
+    component.selectSection('students'); component.selectSection('teachers');
+    service.getTeacherRoster.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 503 })));
+    vi.spyOn(window, 'confirm').mockReturnValue(true); component.removeTeacher(teacher('teacher-1'));
+    expect(component.teacherFilterOptions()).toEqual([]); expect(component.teachers()).toEqual([]);
+    expect(component.errorMessage()).toBeTruthy();
   });
   it('opens scoped analysis only after selecting the institution analytics tab', async () => {
     const fixture = await createFixture(); fixture.detectChanges();
