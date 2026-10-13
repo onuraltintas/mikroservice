@@ -18,6 +18,17 @@ describe('StudentStudyReportComponent', () => {
   });
   const weeklyData = { fromDate: '2026-10-19', toDate: '2026-10-25', source: 'StudentReported', reason: 'CurrentStatusOfScheduledWork',
     scheduledTasks: 2, completedTasks: 1, completionPercentage: 50, plannedMinutes: 90, actualMinutes: 40, topics: [] };
+  it('shows recorded question totals with coverage and preserves zero versus unknown', () => {
+    const { component, fixture, http } = setup(); component.load();
+    http.expectOne(r => r.url.endsWith('/reports')).flush({ success: true, data: { ...weeklyData,
+      completedTasks: 2, plannedQuestions: 25, actualQuestions: 0, plannedQuestionTasks: 1, actualQuestionTasks: 1 } });
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Planlanan soru: 25 · 1 / 2 çalışmada sayı var');
+    expect(fixture.nativeElement.textContent).toContain('Kaydedilen soru: 0 · 1 / 2 tamamlanmış çalışmada sayı var');
+    component.load(); http.expectOne(r => r.url.endsWith('/reports')).flush({ success: true, data: weeklyData }); fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Planlanan soru: Kayıt yok');
+    expect(fixture.nativeElement.textContent).toContain('Kaydedilen soru: Kayıt yok');
+  });
   it('compares adjacent seven-day periods without treating missing actual minutes as zero', () => {
     const { component, fixture, http } = setup(); component.fromDate = '2026-10-19'; component.toDate = '2026-10-25'; component.compareWeekly = true; component.load();
     const current = http.expectOne(r => r.params.get('fromDate') === '2026-10-19');
