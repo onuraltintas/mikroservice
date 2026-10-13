@@ -50,6 +50,7 @@ public sealed class CoachingStaffStudyPlanTests(PostgresFixture postgres)
             Assert.False((await service.GetForStudentAsync(student, goal.Id))!.CanEdit);
             await Assert.ThrowsAsync<BusinessRuleException>(() => service.ReplaceForStudentAsync(student, goal.Id, new(scored.Version, null, null)));
             actor.Roles = ["Teacher", "InstitutionAdmin"]; identity.Active = false;
+            Assert.False((await service.GetForStudentAsync(student, goal.Id))!.CanEdit);
             await Assert.ThrowsAsync<BusinessRuleException>(() => service.ReplaceForStudentAsync(student, goal.Id, new(scored.Version, null, null)));
         }
         finally { await db.Database.EnsureDeletedAsync(); }
@@ -138,7 +139,7 @@ public sealed class CoachingStaffStudyPlanTests(PostgresFixture postgres)
         var roles = controller.GetCustomAttributes(typeof(Microsoft.AspNetCore.Authorization.AuthorizeAttribute), true)
             .Cast<Microsoft.AspNetCore.Authorization.AuthorizeAttribute>().Single().Roles;
         Assert.Contains("InstitutionAdmin", roles);
-        foreach (var method in new[] { "Create", "Replace", "Publish", "Archive", "Reschedule" })
+        foreach (var method in new[] { "Create", "Replace", "Publish", "Archive", "Reschedule", "ReplaceGoalTarget", "ReplaceGoalScoreTarget" })
         {
             var writeRoles = controller.GetMethod(method)!.GetCustomAttributes(typeof(Microsoft.AspNetCore.Authorization.AuthorizeAttribute), true)
                 .Cast<Microsoft.AspNetCore.Authorization.AuthorizeAttribute>().Single().Roles;
