@@ -24,8 +24,8 @@ describe('CoachingNotificationsComponent', () => {
       expect(component.errorMessage()).toBeTruthy();
       expect(component.isUpdating()).toBe(false);
       expect((fixture.nativeElement.querySelector('article button') as HTMLButtonElement).disabled).toBe(false);
-      service[action].mockReturnValue(of(undefined) as typeof pending);
-      component[action]('n-1'); fixture.detectChanges();
+      const retried = new Subject<void>(); service[action].mockReturnValue(retried);
+      component[action]('n-1'); retried.complete(); fixture.detectChanges();
       expect(service[action]).toHaveBeenCalledTimes(2);
       expect(component.errorMessage()).toBeNull(); expect(component.isUpdating()).toBe(false);
     });

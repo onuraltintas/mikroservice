@@ -1251,6 +1251,56 @@ namespace Coaching.Infrastructure.Data.Migrations
                     b.ToTable("payment_records", "coaching");
                 });
 
+            modelBuilder.Entity("Coaching.Domain.Entities.CoachingReminderReceipt", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("DueAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("OccurrenceKey")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<Guid>("RecipientUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("SourceId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RecipientUserId");
+
+                    b.HasIndex("Kind", "SourceId", "RecipientUserId", "OccurrenceKey")
+                        .IsUnique();
+
+                    b.ToTable("reminder_receipts", "coaching", t =>
+                        {
+                            t.HasCheckConstraint("ck_reminder_kind", "\"Kind\" IN ('StudyDay', 'Session')");
+                        });
+                });
+
             modelBuilder.Entity("Coaching.Domain.Entities.CoachingSession", b =>
                 {
                     b.Property<Guid>("Id")

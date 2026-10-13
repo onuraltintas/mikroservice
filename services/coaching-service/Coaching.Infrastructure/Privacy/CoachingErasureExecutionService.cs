@@ -24,6 +24,7 @@ public sealed class CoachingErasureExecutionService(
         {
             var key = "coaching-study-plan:" + message.SubjectUserId;
             await context.Database.ExecuteSqlInterpolatedAsync($"SELECT pg_advisory_xact_lock(hashtextextended({key}, 0))", cancellationToken);
+            await context.Database.ExecuteSqlRawAsync("SELECT pg_advisory_xact_lock(hashtextextended('coaching-session-scheduling', 0))", cancellationToken);
             return await ExecuteLockedAsync(message, cancellationToken);
         }
         if (context.Database.CurrentTransaction is not null) return await RunAsync();
@@ -81,6 +82,7 @@ public sealed class CoachingErasureExecutionService(
         var studyPlans = await context.StudyPlanRevisions.Where(x => x.StudentId == message.SubjectUserId).ToListAsync(cancellationToken);
         var studyAvailability = await context.StudyAvailability.Where(x => x.StudentId == message.SubjectUserId).ToListAsync(cancellationToken);
         var studyMessages = await CoachingStudyPlanErasureMessages.ForStudent(context, message.SubjectUserId).ToListAsync(cancellationToken);
+        var reminders = await context.CoachingReminderReceipts.Where(x => x.RecipientUserId == message.SubjectUserId).ToListAsync(cancellationToken);
         var goals = await context.AcademicGoals
             .Where(row => row.StudentId == message.SubjectUserId)
             .ToListAsync(cancellationToken);
@@ -94,7 +96,7 @@ public sealed class CoachingErasureExecutionService(
         var deletedRecordCount = attachments.Count
             + assignmentStudents.Count
             + examResults.Count
-            + studentExams.Count + studyTasks.Count + studyPlans.Count + studyAvailability.Count + studyMessages.Count
+            + studentExams.Count + studyTasks.Count + studyPlans.Count + studyAvailability.Count + studyMessages.Count + reminders.Count
             + goals.Count
             + attendances.Count
             + acknowledgements.Count;
@@ -109,6 +111,7 @@ public sealed class CoachingErasureExecutionService(
         context.StudyPlanRevisions.RemoveRange(studyPlans);
         context.StudyAvailability.RemoveRange(studyAvailability);
         context.RemoveRange(studyMessages);
+        context.CoachingReminderReceipts.RemoveRange(reminders);
         context.AcademicGoals.RemoveRange(goals);
         context.SessionAttendances.RemoveRange(attendances);
         context.CoachingAgreementAcknowledgements.RemoveRange(acknowledgements);

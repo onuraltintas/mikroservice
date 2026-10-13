@@ -84,7 +84,10 @@ public sealed class CoachingDataExportRepository(CoachingDbContext context)
         var hours = await context.StudyAvailability.AsNoTracking().SingleOrDefaultAsync(x => x.StudentId == studentId, cancellationToken);
         var availability = hours is null ? null : new Coaching.Application.StudyPlanning.StudyAvailabilityView(hours.Version, hours.TimeZoneId,
             hours.Windows.Select(x => new Coaching.Application.StudyPlanning.StudyWindowInput(x.Day, x.StartMinute, x.EndMinute)).ToArray());
+        var reminders = await context.CoachingReminderReceipts.AsNoTracking().Where(x => x.RecipientUserId == studentId)
+            .OrderBy(x => x.CreatedAt).ThenBy(x => x.Id)
+            .Select(x => new CoachingDataReminderDto(x.Id, x.SourceId, x.Kind, x.DueAt, x.CreatedAt)).ToListAsync(cancellationToken);
         return new CoachingDataExportDto(
-            "1.1", studentId, exportedAt, assignments, exams, goals, sessions, agreements, plans, availability);
+            "1.2", studentId, exportedAt, assignments, exams, goals, sessions, agreements, plans, availability, reminders);
     }
 }

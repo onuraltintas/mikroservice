@@ -40,8 +40,10 @@ test('real coaching reminders reach only their recipients and student can retry 
     const teacher = (await list(teacherHeaders)).filter(ownReminder);
     expect(teacher).toHaveLength(1); expect(teacher[0].type).toBe('SessionReminder');
     expect((await list({ Authorization: `Bearer ${planningToken(planningManager, ['InstitutionAdmin'])}` })).filter(ownReminder)).toHaveLength(0);
-    await expect.poll(() => received.filter(frame => frame.includes('ReceiveNotification') && (frame.includes('StudyPlanReminder') || frame.includes('SessionReminder'))).length).toBe(2);
-    const card = page.locator('article').filter({ has: page.getByRole('heading', { name: 'Bugünkü çalışma planın', exact: true }) });
+    await expect.poll(() => received.filter(frame => frame.includes('ReceiveNotification')
+      && (frame.includes('StudyPlanReminder') && frame.includes(plan.id) || frame.includes('SessionReminder') && frame.includes(sessionId))).length).toBe(2);
+    const study = own.find(item => item.type === 'StudyPlanReminder');
+    const card = page.locator(`article[data-notification-id="${study.id}"]`);
     await expect(card).toHaveCount(1); await expect(card.getByText('Yeni', { exact: true })).toBeVisible();
     let failOnce = true;
     await page.route('**/api/notifications/*/mark-as-read', async route => {
@@ -53,7 +55,6 @@ test('real coaching reminders reach only their recipients and student can retry 
     await expect(card.getByRole('button', { name: 'Okundu', exact: true })).toBeEnabled();
     await card.getByRole('button', { name: 'Okundu', exact: true }).click();
     await expect(card.getByText('Yeni', { exact: true })).toHaveCount(0);
-    const study = own.find(item => item.type === 'StudyPlanReminder');
     expect((await list(studentHeaders)).find(item => item.id === study.id).isRead).toBe(true);
     expect((await request.post(`${notifications}/${study.id}/mark-as-read`, { headers: teacherHeaders })).status()).toBe(404);
     await page.reload(); await expect(card).toHaveCount(1); await expect(card.getByText('Yeni', { exact: true })).toHaveCount(0);

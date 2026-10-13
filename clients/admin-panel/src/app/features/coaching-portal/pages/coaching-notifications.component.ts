@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
+import { finalize } from 'rxjs';
 import { NotificationService } from '../../../core/services/notification.service';
 
 @Component({
@@ -25,9 +26,8 @@ export class CoachingNotificationsComponent {
   markAsRead(id: string) {
     this.isUpdating.set(true);
     this.errorMessage.set(null);
-    this.notificationService.markAsRead(id).subscribe({
-      error: () => this.errorMessage.set('Bildirim okunmuş olarak işaretlenemedi.'),
-      complete: () => this.isUpdating.set(false)
+    this.notificationService.markAsRead(id).pipe(finalize(() => this.isUpdating.set(false))).subscribe({
+      error: () => this.errorMessage.set('Bildirim okunmuş olarak işaretlenemedi.')
     });
   }
 
@@ -35,18 +35,16 @@ export class CoachingNotificationsComponent {
     if (this.unreadCount() === 0) return;
     this.isUpdating.set(true);
     this.errorMessage.set(null);
-    this.notificationService.markAllAsRead().subscribe({
-      error: () => this.errorMessage.set('Bildirimler okunmuş olarak işaretlenemedi.'),
-      complete: () => this.isUpdating.set(false)
+    this.notificationService.markAllAsRead().pipe(finalize(() => this.isUpdating.set(false))).subscribe({
+      error: () => this.errorMessage.set('Bildirimler okunmuş olarak işaretlenemedi.')
     });
   }
 
   deleteNotification(id: string) {
     this.isUpdating.set(true);
     this.errorMessage.set(null);
-    this.notificationService.deleteNotification(id).subscribe({
-      error: () => this.errorMessage.set('Bildirim silinemedi.'),
-      complete: () => this.isUpdating.set(false)
+    this.notificationService.deleteNotification(id).pipe(finalize(() => this.isUpdating.set(false))).subscribe({
+      error: () => this.errorMessage.set('Bildirim silinemedi.')
     });
   }
 

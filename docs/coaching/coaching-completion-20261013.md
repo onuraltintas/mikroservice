@@ -22,12 +22,21 @@
 - Öğretmen/öğrenci planında isteğe bağlı kaynak/sayfa ve planlanan soru sayısı var. Öğrenci gerçekleşen soru sayısını süreyle birlikte kaydediyor. Tamamlanmış sayı değiştirilemiyor; açık sıfır ile eksik kayıt ayrılıyor. Sabit iş otomatik taslağa taşınırken kaynak ve planlanan sayı korunuyor. Kurum/admin geçmişi ve gizlilik dışa aktarımı aynı alanları içeriyor.
 - Çalışma raporu planlanan/kaydedilen soru toplamını ve kaç işte sayı girildiğini gösteriyor. Eksik sayılar sıfır kabul edilmiyor. Uzun boşluksuz kaynak metni öğrenci/kurum mobil görünümünde taşmıyor.
 - Manuel seans oluşturma/yeniden planlama aynı öğretmen veya katılımcının çakışan saatini veritabanında atomik reddediyor. Bitişte başlayan seans serbest; iptal edilen aralık açılıyor. Eski çakışmalı kayıtlar ve metadata düzenlemeleri korunuyor. Öğretmen/admin409 yanıtında formu koruyup başka saat seçilmesini istiyor. Katılım silme ile seans güncellemesinin kilit sırası da doğrulandı.
+- Tamamlanmamış günlük çalışma için öğrencinin saat diliminde 09:00 sonrası, plan/gün başına bir uygulama içi hatırlatma hazırlanıyor. Yaklaşan seans için bir saat içinde öğretmen ve katılımcılar ayrı hatırlatma alıyor. İptal, yeniden planlama, 100 alıcılık kümeler, işlem tekrarı ve yeniden başlatmada mükerrer gönderim engelleniyor. Gönderilmiş kayıtlar aday sorgusunda eleniyor; yeniden öğrenci kilidi alınmıyor.
+- Hatırlatma kaydı ve mesaj aynı veritabanı işlemiyle kuyruğa alınır; kayıt tek başına teslim kanıtı değildir. Bildirim servisi sabit hatırlatma kimliğiyle tekrarları önler. Mesaj kişisel plan/seans başlığı veya görüşme bağlantısı taşımaz. Öğrenci dışa aktarımı kendi hatırlatmalarını içerir; veri silme kendi kayıtlarını ve teslim edilmemiş mesajlarını da temizler.
+- Öğrenci bildirim ekranında okunmuş işaretleme, toplu okuma veya silme hatasından sonra işlem kilidi kaldırılır; veri korunur ve tekrar denenebilir.
 
 ## Test kanıtları
 
 Haftalık rapor artık önceki yedi gün ile karşılaştırılabiliyor; bilinmeyen gerçekleşen süre sıfıra çevrilmiyor. Ders/konu öncelikleri yanlış ve boş cevap oranından üretiliyor, sınav türü ve veri kaynağı korunuyor. Öğretmen ve kurumun seans hazırlık özeti güncel genel ilerleme ile iki haftayı birlikte getiriyor; yeniden açılış da raporu yeniliyor. Kurum görünümü salt okunur, kirli öğretmen taslağından geçiş onayla korunuyor. İstanbul DateOnly başlıkları ve 390 piksel rapor genişliği doğrulandı.
 
 Yerel sonuçlar `artifacts/coaching-completion-20261013/` altında tutuluyor.
+
+- `coaching-reminders-full-green.trx`: 732 başarılı, 0 başarısız/atlanan. `reminder-scan-race-red.trx` eşzamanlı daha önce sıralanan planın eklenmesi ve kayıtlı planın tekrar kilitlenmesini iki başarısız testle gösterir; `reminder-scan-fix-green.trx` 11 seçili test başarılıdır. Commit öncesi/sonrası geçici bağlantı kaybı, worker hatası/yeniden başlatma, 101 alıcı, saat dilimi ve gizlilik senaryoları dahil.
+- `reminder-notifications-ui-red.log` üç hata sonrası kilit testini yeniden üretir; `reminder-notifications-ui-green.log` 5/5 başarılıdır. `notification-preflight-green.log` 6/6 test; exact Notification API, ayrılmış veritabanı ve yerel Identity zorunluluğunu doğrular.
+- `reminders-real-delivery-e2e.log`: gerçek yerel Coaching API → RabbitMQ → Notification API/veritabanı → SignalR → öğrenci ekranı zincirinde 1 başarılı senaryo. Öğrenci iki hatırlatma, öğretmen yalnız seans hatırlatması alır; kurum almaz. 503 sonrası tekrar, okunmuş durumunun yenilemede korunması, başka kullanıcının 404 alması ve 390 piksel genişlik doğrulanır. Gerçek saat kullanılır; günlük çalışma senaryosu İstanbul'da 09:00 sonrası çalıştırılmıştır. `e2e-reminders-regression.log` ayrıca mevcut 8 plan/kurum/admin senaryosunun tümünü yeniden doğrular. Identity ilişki/oturumları sentetik fixture sınırındadır.
+- `reminders-repeat-identity-red.log` test tekrarında sabit başlığın eski/yeni iki kartla eşleşmesini gösterir. Kart seçimi bildirim kimliğiyle, SignalR kontrolü bu testin plan/seans kimliğiyle sınırlandı; `reminders-repeat-identity-green.log` eski kayıtlar silinmeden 1/1 başarılıdır.
+- `reminder-coverage-green.log`: yeni hatırlatma işlemcisi/worker/kayıt/tüketici kapsamı, 10 başarılı testle 145/150 satır (%96,67), 85/98 dal (%86,73). `coaching-workflow-coverage-final.log` ve `weekly-workflow-coverage-summary.json`: yalnız ortak plan formu, çalışma raporu ve plan HTTP servisi için 275 testlik koçluk çalıştırmasında ifadeler %92,27, dallar %85,44, fonksiyonlar %82,82, satırlar %94,48. Bunlar bütün deponun kapsam oranı değildir.
 
 - `coaching-regression-stage10.trx`: 724 başarılı, 0 başarısız, 0 atlanan; `e2e-stage10-sessions.log` 8 başarılı tarayıcı senaryosu. Yeni seans senaryosu öğretmen/admin409, korunmuş form, bitişik görüşme ve gerçek ICS başlangıcını doğrular. Identity kapsamı hâlâ yalnız yerel sentetik fixture'dır.
 - `session-conflicts-red.trx` öğretmen/öğrenci eşzamanlı çift rezervasyonu3 testte yeniden üretir. `session-lock-order-red.trx`40P01 kilit sırası hatasını gösterir; BEFORE STATEMENT kilit düzeltmesinden sonra `session-conflicts-migration-green.trx`7 seçili PostgreSQL/API/gizlilik testi geçti. Down/Up eski seansları silmez. `session-conflicts-teacher-ui-green.log`7, `session-conflicts-admin-ui-green.log`4 seçili UI testi başarılı.
@@ -60,13 +69,14 @@ Frontend testlerinde bu Windows ortamındaki geçici modül çözümleme sorunu 
 
 ## Açık iş listesi
 
+Karşılaştırma kaynağı: [EduMy çözümleri](https://edumy.com.tr/edumy-cozumler) ücret/taksit/kasa, süreli deneme ve kazanım analizini; [EduMy sistem](https://edumy.com.tr/edumy-sistem) Zoom ve SMS'i kamuya açık ürün tanıtımında listeliyor. Rakibin giriş gerektiren panelleri veya gerçek teslimat kalitesi test edilmedi. Bizde doğrulanan haftalık döngü, kurum takibi, kaynak/soru kayıtları ve uygulama içi hatırlatmalardan sonra aşağıdaki ürün işleri kalıyor.
+
 Bu çalışma henüz bütün ürün eksiklerinin tamamlandığı anlamına gelmiyor. Önceki karşılaştırmadan kalan işler:
 
-1. Yaklaşan çalışma/seans hatırlatmaları.
-2. Koçluk öğrenci ücret/borç/taksit/kasa akışının mevcut kurs finansından ayrı ürün kapsamıyla ele alınması.
-3. Koçluk soru bankası, süreli sınav alma/puanlama ve kazanım takibi.
-5. Tamamlanan bölümleri kapsayan mobil/masaüstü tarayıcı senaryoları ve son kapsam incelemesi.
+1. Koçluk öğrenci ücret/borç/taksit/kasa akışının mevcut kurs finansından ayrı ürün kapsamıyla ele alınması.
+2. Koçluk soru bankası, süreli sınav alma/puanlama ve kazanım takibi.
+3. Bu yeni bölümleri kapsayan mobil/masaüstü tarayıcı senaryoları ve son kapsam incelemesi.
 
 Zoom ve SMS sağlayıcı/hesabı kullanıcıda şu an yok. Mevcut manuel toplantı bağlantısı, ICS ve uygulama içi bildirimler kullanılabilir. Gerçek sağlayıcı entegrasyonu veya teslimat testi yapılmış değildir. Canlıya dağıtım yapılmadı.
 
-Dağıtım sırası: yeni `/api/internal/coaching/institution-student` Identity ucu, Koçluk sürümünden önce yayımlanmalı. Eski Identity ile kurum koltuk erişimi 404 nedeniyle erişim vermeyi reddeder. Son backend doğrulamasında başka çalışmanın açık Gateway sürecine dokunmadan önce Koçluk API'si derlendi, test projesi `-p:BuildProjectReferences=false` ile mevcut derlenmiş bağımlılıklara karşı çalıştırıldı. Frontend V8 kapsam ölçümü `@vitest/coverage-v8` kurulmadığı için başlamadı; kapsam yüzdesi iddia edilmiyor.
+Dağıtım sırası: yeni `/api/internal/coaching/institution-student` Identity ucu, Koçluk sürümünden önce yayımlanmalı. Eski Identity ile kurum koltuk erişimi 404 nedeniyle erişim vermeyi reddeder. Hatırlatma için `20261013130901_AddCoachingReminderReceipts` Koçluk migration'ı ve Notification tüketici sürümü gerekir; worker varsayılan etkin, `Coaching:Reminders:Enabled=false` ile kapatılabilir. Son backend doğrulamasında başka çalışmanın açık Gateway sürecine dokunmadan önce Koçluk API'si derlendi, test projesi `-p:BuildProjectReferences=false` ile mevcut derlenmiş bağımlılıklara karşı çalıştırıldı. Frontend V8 sağlayıcısı geçici görev dizinine kuruldu; uygulama package/lock dosyası değiştirilmedi.

@@ -18,7 +18,8 @@ public sealed record CoachingDataExportDto(
     IReadOnlyList<CoachingDataSessionDto> Sessions,
     IReadOnlyList<CoachingDataAgreementDto> Agreements,
     IReadOnlyList<CoachingDataStudyPlanDto>? StudyPlans = null,
-    Coaching.Application.StudyPlanning.StudyAvailabilityView? StudyAvailability = null)
+    Coaching.Application.StudyPlanning.StudyAvailabilityView? StudyAvailability = null,
+    IReadOnlyList<CoachingDataReminderDto>? Reminders = null)
 {
     public static CoachingDataExportDto Empty(Guid studentId, DateTimeOffset exportedAt) =>
         new("1.0", studentId, exportedAt, [], [], [], [], []);
@@ -51,6 +52,7 @@ public sealed record CoachingDataAgreementDto(
     Guid AcknowledgementId, Guid DocumentId, string DocumentVersion, string Locale,
     string Title, string DocumentReference, string ContentSha256, string PartyRole,
     DateTime AcknowledgedAt, DateTime? WithdrawnAt);
+public sealed record CoachingDataReminderDto(Guid Id, Guid SourceId, string Kind, DateTime DueAt, DateTime QueuedAt);
 
 public sealed class ExportCoachingDataQueryHandler(
     ICoachingDataExportRepository repository,

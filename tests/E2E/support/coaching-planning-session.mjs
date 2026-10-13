@@ -99,7 +99,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
       response.end(JSON.stringify({ accessToken: planningToken(), tokenType: 'Bearer', expiresInMinutes: 15 }));
       return;
     }
-    if (!request.url || !/^\/api\/(coaching\/|coaching-admin\/|goals(?:\/|\?|$)|reports\/|exams\/|sessions(?:\/|\?|$)|calendar\/)/.test(request.url)) {
+    if (!request.url || !/^\/api\/(coaching\/|coaching-admin\/|goals(?:\/|\?|$)|reports\/|exams\/|sessions(?:\/|\?|$)|calendar\/|notifications(?:\/|\?|$))/.test(request.url)) {
       response.writeHead(404); response.end(); return;
     }
     try {
@@ -110,7 +110,8 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
         chunks.push(chunk);
       }
       const headers = { ...request.headers }; delete headers.host; delete headers.connection;
-      const upstream = await fetch(`http://127.0.0.1:5006${request.url}`, {
+      const port = /^\/api\/notifications(?:\/|\?|$)/.test(request.url) ? 5012 : 5006;
+      const upstream = await fetch(`http://127.0.0.1:${port}${request.url}`, {
         method: request.method, headers, body: chunks.length ? Buffer.concat(chunks) : undefined,
         signal: AbortSignal.timeout(15_000)
       });

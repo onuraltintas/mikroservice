@@ -28,6 +28,7 @@ public class CoachingDbContext : DbContext
     public DbSet<StudyPlanRevision> StudyPlanRevisions => Set<StudyPlanRevision>();
     public DbSet<StudyPlanTask> StudyPlanTasks => Set<StudyPlanTask>();
     public DbSet<StudyAvailability> StudyAvailability => Set<StudyAvailability>();
+    public DbSet<CoachingReminderReceipt> CoachingReminderReceipts => Set<CoachingReminderReceipt>();
     public DbSet<Assignment> Assignments => Set<Assignment>();
     public DbSet<AssignmentStudent> AssignmentStudents => Set<AssignmentStudent>();
     public DbSet<AssignmentSubmissionAttachment> AssignmentSubmissionAttachments => Set<AssignmentSubmissionAttachment>();

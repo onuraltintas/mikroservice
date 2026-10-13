@@ -13,15 +13,23 @@ export function validateIdentityFixtureProcess(commandLine) {
     'Use the exact workspace fixture using its absolute script path.');
 }
 export function validatePlanningProcess(commandLine) {
+  validateApiProcess(commandLine, assembly, connection);
+}
+export function validateNotificationProcess(commandLine) {
+  validateApiProcess(commandLine,
+    fileURLToPath(new URL('../../../services/notification-service/Notification.API/bin/Debug/net10.0/Notification.API.dll', import.meta.url)),
+    'Host=127.0.0.1;Port=55441;Database=coaching_notification_e2e_20261013;Username=planning_test;Password=disposable-planning-only');
+}
+function validateApiProcess(commandLine, expectedAssembly, expectedConnection) {
   const args = (commandLine.match(/"[^"]*"|\S+/g) ?? []).map(x => x.replace(/^"|"$/g, ''));
   assert.match(args[0] ?? '', /(?:^|[\\/])dotnet(?:\.exe)?$/i, 'Expected the dotnet API host.');
-  assert.equal(resolve(args[1] ?? '').toLowerCase(), resolve(assembly).toLowerCase(), 'Start the exact workspace API using its absolute assembly path.');
+  assert.equal(resolve(args[1] ?? '').toLowerCase(), resolve(expectedAssembly).toLowerCase(), 'Start the exact workspace API using its absolute assembly path.');
   // Reject duplicate keys in ANY command-line spelling before accepting our strict spaced form.
   assert.equal((commandLine.match(/ConnectionStrings:DefaultConnection/gi) ?? []).length, 1,
     'Exactly one database override is allowed.');
   const index = args.findIndex(x => /^--ConnectionStrings:DefaultConnection$/i.test(x));
   assert.ok(index >= 2, 'Start the API with an explicit spaced database override.');
-  assert.equal(args[index + 1], connection, 'API database must be the dedicated loopback test database.');
+  assert.equal(args[index + 1], expectedConnection, 'API database must be the dedicated loopback test database.');
   assert.equal((commandLine.match(/Services:IdentityService/gi) ?? []).length, 1,
     'Exactly one explicit Identity fixture override is required.');
   const identityIndex = args.findIndex(x => /^--Services:IdentityService$/i.test(x));
@@ -40,4 +48,10 @@ export default function preflight() {
     '$listeners=@(Get-NetTCPConnection -State Listen -LocalPort 4600); if(!$listeners.Count -or @($listeners | Where-Object {$_.LocalAddress -notin @("127.0.0.1","::1")}).Count){throw "Expected loopback-only fixture listeners"}; $pids=@($listeners | Select-Object -ExpandProperty OwningProcess -Unique); if($pids.Count -ne 1){throw "Expected one local fixture process"}; (Get-CimInstance Win32_Process -Filter ("ProcessId="+$pids[0])).CommandLine'],
   { encoding: 'utf8', timeout: 15_000 });
   validateIdentityFixtureProcess(fixtureCommandLine.trim());
+  if (process.env.E2E_COACHING_NOTIFICATIONS === 'true') {
+    const notificationCommandLine = execFileSync('powershell.exe', ['-NoProfile', '-Command',
+      '$listeners=@(Get-NetTCPConnection -State Listen -LocalPort 5012); if(!$listeners.Count -or @($listeners | Where-Object {$_.LocalAddress -notin @("127.0.0.1","::1")}).Count){throw "Expected loopback-only notification listeners"}; $pids=@($listeners | Select-Object -ExpandProperty OwningProcess -Unique); if($pids.Count -ne 1){throw "Expected one local notification process"}; (Get-CimInstance Win32_Process -Filter ("ProcessId="+$pids[0])).CommandLine'],
+    { encoding: 'utf8', timeout: 15_000 });
+    validateNotificationProcess(notificationCommandLine.trim());
+  }
 }
