@@ -23,8 +23,10 @@ describe('CoachingTeacherGoalsComponent', () => {
     expect(component.errorMessage()).toContain('Listeyi yenileyip'); expect(component.form.title).toBe('Benim değişikliğim'); expect(component.isSaving()).toBe(false);
     fixture.detectChanges();
     const refresh = fixture.nativeElement.querySelector('[data-testid="reload-conflicted-goals"]') as HTMLButtonElement;
-    expect(refresh).toBeTruthy(); refresh.click();
-    expect(service.getTeacherGoals).toHaveBeenCalledTimes(2); expect(component.editingGoalId()).toBeNull();
+    expect(refresh).toBeTruthy(); service.getTeacherGoals.mockReturnValueOnce(throwError(() => new HttpErrorResponse({ status: 503 }))); refresh.click(); fixture.detectChanges();
+    const retry = fixture.nativeElement.querySelector('[data-testid="reload-conflicted-goals"]') as HTMLButtonElement;
+    expect(retry).toBeTruthy(); retry.click();
+    expect(service.getTeacherGoals).toHaveBeenCalledTimes(3); expect(component.editingGoalId()).toBeNull();
   });
   it('preserves a newly saved score target during subsequent title editing', () => {
     const service = goalsService([goal('goal-1')]);

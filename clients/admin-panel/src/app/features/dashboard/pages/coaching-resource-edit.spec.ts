@@ -18,7 +18,7 @@ describe('CoachingResourceEditComponent goal versions', () => {
       { provide: Router, useValue: { navigate, createUrlTree: vi.fn(), serializeUrl: vi.fn(() => '/') } },
       { provide: PLATFORM_ID, useValue: 'browser' }, { provide: CoachingAdminService, useValue: service }
     ] });
-    const fixture = TestBed.createComponent(CoachingResourceEditComponent); fixture.componentInstance.ngOnInit();
+    const fixture = TestBed.createComponent(CoachingResourceEditComponent); fixture.detectChanges();
     return { fixture, component: fixture.componentInstance, service, navigate };
   }
   it('sends the version read with the admin goal definition', () => {
@@ -31,6 +31,9 @@ describe('CoachingResourceEditComponent goal versions', () => {
     expect(navigate).not.toHaveBeenCalled(); expect(component.goal.title).toBe('Eski form değişikliği');
     fixture.detectChanges();
     const reload = fixture.nativeElement.querySelector('[data-testid="reload-admin-goal"]') as HTMLButtonElement;
-    expect(reload).toBeTruthy(); reload.click(); expect(service.getGoal).toHaveBeenCalledTimes(2); expect(component.goal.title).toBe('Hedef');
+    expect(reload).toBeTruthy(); service.getGoal.mockReturnValueOnce(throwError(() => new HttpErrorResponse({ status: 503 }))); reload.click(); fixture.detectChanges();
+    const retry = fixture.nativeElement.querySelector('[data-testid="reload-admin-goal"]') as HTMLButtonElement;
+    expect(retry).toBeTruthy(); expect(component.goal.title).toBe('Eski form değişikliği');
+    retry.click(); expect(service.getGoal).toHaveBeenCalledTimes(3); expect(component.goal.title).toBe('Hedef');
   });
 });
