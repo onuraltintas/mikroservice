@@ -72,6 +72,8 @@ public sealed class CoachingStaffStudyPlanTests(PostgresFixture postgres)
             await Assert.ThrowsAsync<BusinessRuleException>(() => plans.ListForStudentAsync(student, 1, 20, null));
             actor.Roles = ["Teacher"]; identity.Active = false;
             await Assert.ThrowsAsync<BusinessRuleException>(() => plans.CreateForStudentAsync(student, input));
+            membership.Active = true; actor.Roles = ["Teacher", "InstitutionAdmin"];
+            await Assert.ThrowsAsync<BusinessRuleException>(() => plans.CreateForStudentAsync(student, input));
             Assert.Equal(3, await db.StudyPlanRevisions.CountAsync());
         }
         finally { await db.Database.EnsureDeletedAsync(); }
