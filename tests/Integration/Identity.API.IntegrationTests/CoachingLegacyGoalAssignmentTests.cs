@@ -21,25 +21,35 @@ public sealed class CoachingLegacyGoalAssignmentTests
     [InlineData(false, true)]
     [InlineData(true, false)]
     [InlineData(true, true)]
-    public async Task RevokedTeacherCannotEditOrDeleteHistoricalGoal(bool delete, bool dualRole)
+    [InlineData(false, false, true)]
+    [InlineData(true, true, true)]
+    public async Task RevokedTeacherCannotEditOrDeleteHistoricalGoal(bool delete, bool dualRole, bool active = false)
     {
         await using var db = new CoachingDbContext(new DbContextOptionsBuilder<CoachingDbContext>()
             .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
         var teacher = Guid.NewGuid(); var student = Guid.NewGuid();
         var goal = AcademicGoal.Create(student, "Korunan hedef", GoalCategory.ExamPreparation, teacher);
         db.Add(goal); await db.SaveChangesAsync();
-        var publisher = new Publisher(); var identity = new Identity(teacher, student);
+        var publisher = new Publisher(); var identity = new Identity(teacher, student) { Active = active };
         using var services = new ServiceCollection()
             .AddSingleton<IAcademicGoalRepository>(new AcademicGoalRepository(db))
             .AddSingleton<Coaching.Application.Interfaces.IUnitOfWork>(new UnitOfWork(db))
             .AddSingleton<ICoachingAccessPolicy>(new CoachingAccessPolicy(new Actor(teacher, dualRole)))
             .AddSingleton<ICoachingEventPublisher>(publisher)
             .AddSingleton<ICoachingIdentityAuthorizationClient>(identity).BuildServiceProvider();
-        var failure = await Assert.ThrowsAsync<BusinessRuleException>(async () => {
+        async Task Perform() {
             if (delete) await ActivatorUtilities.CreateInstance<DeleteGoalCommandHandler>(services).Handle(new(goal.Id), default);
             else await ActivatorUtilities.CreateInstance<UpdateGoalCommandHandler>(services).Handle(
                 new(goal.Id, "Yetkisiz değişiklik", null, GoalCategory.Other, null, null, null, null), default);
-        });
+        }
+        if (active)
+        {
+            await Perform(); Assert.Equal(1, identity.Calls); db.ChangeTracker.Clear();
+            if (delete) Assert.Empty(await db.AcademicGoals.ToListAsync());
+            else Assert.Equal("Yetkisiz değişiklik", (await db.AcademicGoals.SingleAsync()).Title);
+            Assert.Equal(delete ? 0 : 1, publisher.Count); return;
+        }
+        var failure = await Assert.ThrowsAsync<BusinessRuleException>(Perform);
         Assert.Equal("Authorization.Forbidden", failure.Code); Assert.Equal(1, identity.Calls);
         db.ChangeTracker.Clear(); Assert.Equal("Korunan hedef", (await db.AcademicGoals.SingleAsync()).Title);
         Assert.Equal(0, publisher.Count);
@@ -59,13 +69,16 @@ public sealed class CoachingLegacyGoalAssignmentTests
     }
     private sealed class Identity(Guid teacher, Guid student) : ICoachingIdentityAuthorizationClient
     {
+        public bool Active { get; init; }
         public int Calls { get; private set; }
         public Task<CoachingAdminAccessScope?> AuthorizeCoachingAdminAsync(Guid viewer, CancellationToken ct) => throw new NotSupportedException();
         public Task<IReadOnlyCollection<Guid>> AuthorizeStudentReadAsync(Guid viewer, IReadOnlyCollection<Guid> students, CancellationToken ct) => throw new NotSupportedException();
         public Task<Guid?> AuthorizeTeacherTargetsAsync(Guid teacherId, IReadOnlyCollection<Guid> studentIds, Guid? institutionId, bool global, CancellationToken ct)
         {
             Assert.Equal(teacher, teacherId); Assert.Equal(new[] { student }, studentIds); Assert.False(global); Assert.Null(institutionId);
-            Calls++; throw new BusinessRuleException("Authorization.Forbidden", "Atama sona erdi.");
+            Calls++;
+            if (!Active) throw new BusinessRuleException("Authorization.Forbidden", "Atama sona erdi.");
+            return Task.FromResult<Guid?>(null);
         }
     }
 }

@@ -53,17 +53,20 @@ public sealed class UpdateGoalCommandHandler
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICoachingAccessPolicy _accessPolicy;
     private readonly ICoachingEventPublisher _eventPublisher;
+    private readonly ICoachingIdentityAuthorizationClient _identityAuthorizationClient;
 
     public UpdateGoalCommandHandler(
         IAcademicGoalRepository repository,
         IUnitOfWork unitOfWork,
         ICoachingAccessPolicy accessPolicy,
-        ICoachingEventPublisher eventPublisher)
+        ICoachingEventPublisher eventPublisher,
+        ICoachingIdentityAuthorizationClient identityAuthorizationClient)
     {
         _repository = repository;
         _unitOfWork = unitOfWork;
         _accessPolicy = accessPolicy;
         _eventPublisher = eventPublisher;
+        _identityAuthorizationClient = identityAuthorizationClient;
     }
 
     public async Task<UpdateGoalResponse> Handle(
@@ -76,6 +79,9 @@ public sealed class UpdateGoalCommandHandler
         if (goal.SetByTeacherId.HasValue)
         {
             _accessPolicy.RequireTeacher(goal.SetByTeacherId.Value, command.IsInstitutionAdminOperation);
+            if (!_accessPolicy.IsSystemAdministrator && !command.IsInstitutionAdminOperation)
+                await _identityAuthorizationClient.AuthorizeTeacherTargetsAsync(
+                    goal.SetByTeacherId.Value, [goal.StudentId], null, false, cancellationToken);
         }
         else
         {

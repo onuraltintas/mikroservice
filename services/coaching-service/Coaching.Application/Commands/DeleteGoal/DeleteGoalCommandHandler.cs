@@ -10,15 +10,18 @@ public class DeleteGoalCommandHandler : IRequestHandler<DeleteGoalCommand>
     private readonly IAcademicGoalRepository _repository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICoachingAccessPolicy _accessPolicy;
+    private readonly ICoachingIdentityAuthorizationClient _identityAuthorizationClient;
 
     public DeleteGoalCommandHandler(
         IAcademicGoalRepository repository,
         IUnitOfWork unitOfWork,
-        ICoachingAccessPolicy accessPolicy)
+        ICoachingAccessPolicy accessPolicy,
+        ICoachingIdentityAuthorizationClient identityAuthorizationClient)
     {
         _repository = repository;
         _unitOfWork = unitOfWork;
         _accessPolicy = accessPolicy;
+        _identityAuthorizationClient = identityAuthorizationClient;
     }
 
     public async Task Handle(DeleteGoalCommand command, CancellationToken cancellationToken)
@@ -29,6 +32,9 @@ public class DeleteGoalCommandHandler : IRequestHandler<DeleteGoalCommand>
         if (goal.SetByTeacherId.HasValue)
         {
             _accessPolicy.RequireTeacher(goal.SetByTeacherId.Value, command.IsInstitutionAdminOperation);
+            if (!_accessPolicy.IsSystemAdministrator && !command.IsInstitutionAdminOperation)
+                await _identityAuthorizationClient.AuthorizeTeacherTargetsAsync(
+                    goal.SetByTeacherId.Value, [goal.StudentId], null, false, cancellationToken);
         }
         else
         {
