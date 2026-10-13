@@ -29,6 +29,21 @@ public sealed class IdentityAuthorizationClient :
         _logger = logger;
     }
 
+    public async Task<bool> IsActiveInstitutionStudentAsync(Guid institutionId, Guid studentId, CancellationToken cancellationToken)
+    {
+        if (institutionId == Guid.Empty || studentId == Guid.Empty) return false;
+        EnsureServiceApiKey();
+        using var request = new HttpRequestMessage(HttpMethod.Post, $"{_baseUrl}/api/internal/coaching/institution-student")
+        { Content = JsonContent.Create(new { institutionId, studentId }) };
+        request.Headers.Add(InternalServiceAuthentication.HeaderName, _serviceApiKey);
+        using var response = await _httpClient.SendAsync(request, cancellationToken);
+        if (response.StatusCode is System.Net.HttpStatusCode.Forbidden or System.Net.HttpStatusCode.Unauthorized) return false;
+        response.EnsureSuccessStatusCode();
+        return (await response.Content.ReadFromJsonAsync<InstitutionStudentResponse>(cancellationToken: cancellationToken))?.IsActive
+            ?? throw new InvalidOperationException("Identity institution student response was empty.");
+    }
+    private sealed record InstitutionStudentResponse(bool IsActive);
+
     public async Task<CoachingAdminAccessScope?> AuthorizeCoachingAdminAsync(
         Guid viewerUserId,
         CancellationToken cancellationToken)

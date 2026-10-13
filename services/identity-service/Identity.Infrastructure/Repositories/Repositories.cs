@@ -1254,6 +1254,12 @@ public class InstitutionRepository : IInstitutionRepository
         return new CoachingTeacherAuthorization(institutionId);
     }
 
+    public Task<bool> IsActiveCoachingInstitutionStudentAsync(Guid institutionId, Guid studentUserId, CancellationToken cancellationToken) =>
+        _context.StudentProfiles.AsNoTracking().AnyAsync(profile =>
+            profile.UserId == studentUserId && profile.InstitutionId == institutionId
+            && profile.IsActive && profile.User.IsActive && profile.Institution != null && profile.Institution.IsActive
+            && profile.User.Roles.Any(userRole => userRole.Role.Name == "Student" && !userRole.Role.IsDeleted), cancellationToken);
+
     public async Task<CoachingStudentReadAuthorization?> AuthorizeCoachingStudentReadAsync(
         Guid viewerUserId,
         IReadOnlyCollection<Guid> studentUserIds,

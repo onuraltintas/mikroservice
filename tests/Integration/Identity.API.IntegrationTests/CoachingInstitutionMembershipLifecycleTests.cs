@@ -39,13 +39,17 @@ public sealed class CoachingInstitutionMembershipLifecycleTests(PostgresFixture 
             var newTeacher = TeacherProfile.Create(newTeacherUser.Id, "Yeni", "Koç", institution.Id);
             var foreignTeacher = TeacherProfile.Create(foreignTeacherUser.Id, "Dış", "Koç", outside.Id);
             var oldAssignment = TeacherStudentAssignment.Create(oldTeacher.Id, student.Id, institution.Id);
+            var studentRole = Role.Create("Student", "Student", true);
             db.AddRange(institution, outside, admin, studentUser, oldTeacherUser, newTeacherUser, foreignTeacherUser,
                 student, oldTeacher, newTeacher, foreignTeacher, oldAssignment,
+                studentRole, new Identity.Domain.Entities.UserRole(studentUser.Id, studentRole.Id),
                 InstitutionAdmin.Create(admin.Id, institution.Id, InstitutionAdminRole.Admin, PlatformProduct.Coaching));
             await db.SaveChangesAsync();
             var institutions = new InstitutionRepository(db); var students = new StudentRepository(db);
             var teachers = new TeacherRepository(db); var unit = new UnitOfWork(db); var actor = new Actor(admin.Id, role);
             var update = new UpdateInstitutionStudentCommandHandler(institutions, students, teachers, unit, actor);
+            Assert.True(await institutions.IsActiveCoachingInstitutionStudentAsync(institution.Id, studentUser.Id, default));
+            Assert.False(await institutions.IsActiveCoachingInstitutionStudentAsync(outside.Id, studentUser.Id, default));
             Assert.True((await update.Handle(new(studentUser.Id, 9, foreignTeacherUser.Id), default)).IsFailure);
             Assert.Null(student.GradeLevel); Assert.True(oldAssignment.IsActive);
             Assert.True((await update.Handle(new(studentUser.Id, 9, newTeacherUser.Id), default)).IsSuccess);
@@ -59,6 +63,7 @@ public sealed class CoachingInstitutionMembershipLifecycleTests(PostgresFixture 
             Assert.True((await new RemoveStudentFromInstitutionCommandHandler(institutions, students, teachers, unit, actor)
                 .Handle(new(studentUser.Id), default)).IsSuccess);
             Assert.Null(student.InstitutionId);
+            Assert.False(await institutions.IsActiveCoachingInstitutionStudentAsync(institution.Id, studentUser.Id, default));
             Assert.Equal(2, await db.TeacherStudentAssignments.CountAsync());
             Assert.Equal(1, await db.StudentProfiles.CountAsync()); Assert.Equal(3, await db.TeacherProfiles.CountAsync());
         }

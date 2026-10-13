@@ -352,15 +352,17 @@ public sealed class CoachingCmsAndSubscriptionServiceTests
     public async Task InstitutionSubscription_GrantsSeatAccessAndSuspensionRevokesIt()
     {
         await using var db = CreateDbContext();
-        var subscriptions = new CoachingSubscriptionService(db, new TestIdentityAuthorizationClient());
+        var identity = new TestIdentityAuthorizationClient();
+        var subscriptions = new CoachingSubscriptionService(db, identity);
         var actorId = Guid.NewGuid();
         var studentId = Guid.NewGuid();
+        var institutionId = Guid.NewGuid(); identity.InstitutionStudents.Add((institutionId, studentId));
         var planId = await subscriptions.CreatePlanAsync(
             Plan("institution-annual", "Kurum yıllık", "Institution", 10000m, 20), actorId);
         await subscriptions.UpdateSettingsAsync(new CoachingSubscriptionSettingsRequest(
             true, "TRY", null, null, null, null, false), actorId, "settings-institution-test-key-01");
         var license = await subscriptions.CreateSubscriptionAsync(new CoachingSubscriptionCreateRequest(
-            planId!.Value, null, null, null, Guid.NewGuid(), [studentId], DateTime.UtcNow, null), actorId);
+            planId!.Value, null, null, null, institutionId, [studentId], DateTime.UtcNow, null), actorId);
 
         license.Should().NotBeNull();
         (await subscriptions.GetMyAccessAsync(studentId)).HasAccess.Should().BeTrue();

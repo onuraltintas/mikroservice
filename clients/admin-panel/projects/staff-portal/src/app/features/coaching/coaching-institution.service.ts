@@ -8,6 +8,15 @@ export interface CoachingInstitutionReadScope {
   institutionId: string | null;
 }
 
+export interface CoachingInstitutionSubscription {
+  subscriptionId: string;
+  planName: string;
+  accessUntil: string;
+  includedStudentSeats: number;
+  usedStudentSeats: number;
+  students: { studentId: string; isSuspended: boolean; suspensionReason?: string | null; assignedAt: string }[];
+}
+
 export interface CoachingInstitutionAssignmentSummary {
   id: string;
   teacherId: string;
@@ -132,6 +141,12 @@ export interface CoachingInvitationResponse {
 
 @Injectable({ providedIn: 'root' })
 export class CoachingInstitutionService {
+  getSubscription(): Observable<CoachingInstitutionSubscription | null> {
+    return this.http.get<CoachingInstitutionSubscription | null>(`${environment.apiUrl}/coaching/institution-subscription`);
+  }
+  setSubscriptionSeat(subscriptionId: string, studentId: string, isSuspended: boolean): Observable<void> {
+    return this.http.put<void>(`${environment.apiUrl}/coaching/institution-subscription/${encodeURIComponent(subscriptionId)}/students/${encodeURIComponent(studentId)}`, { isSuspended });
+  }
   updateStudent(studentId: string, gradeLevel: number, teacherUserId: string | null): Observable<void> {
     return this.http.put<void>(`${environment.apiUrl}/institution/students/${encodeURIComponent(studentId)}`, { gradeLevel, teacherUserId });
   }

@@ -114,6 +114,8 @@ public interface IInstitutionRepository
         Guid? requestedInstitutionId,
         bool isSystemAdministrator,
         CancellationToken cancellationToken);
+    Task<bool> IsActiveCoachingInstitutionStudentAsync(Guid institutionId, Guid studentUserId, CancellationToken cancellationToken) =>
+        Task.FromResult(false);
     Task<CoachingStudentReadAuthorization?> AuthorizeCoachingStudentReadAsync(
         Guid viewerUserId,
         IReadOnlyCollection<Guid> studentUserIds,

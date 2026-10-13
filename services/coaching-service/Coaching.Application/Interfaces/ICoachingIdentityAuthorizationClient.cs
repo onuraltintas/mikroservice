@@ -2,6 +2,8 @@ namespace Coaching.Application.Interfaces;
 
 public interface ICoachingIdentityAuthorizationClient
 {
+    Task<bool> IsActiveInstitutionStudentAsync(Guid institutionId, Guid studentId, CancellationToken cancellationToken) =>
+        Task.FromResult(false);
     Task<CoachingAdminAccessScope?> AuthorizeCoachingAdminAsync(
         Guid viewerUserId,
         CancellationToken cancellationToken);

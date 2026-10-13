@@ -1118,6 +1118,9 @@ public sealed class CoachingSubscriptionService(
         var eligibleRows = new List<(CoachingSubscription Subscription, CoachingSubscriptionPlan Plan)>();
         foreach (var row in rows)
         {
+            if (row.subscription.InstitutionId is { } institutionId
+                && !await identityAuthorizationClient.IsActiveInstitutionStudentAsync(institutionId, userId, cancellationToken))
+                continue;
             if (row.plan.Audience == "Teacher"
                 && (!row.subscription.UserId.HasValue
                     || !await IsAssignedIndependentTeacherStudentAsync(row.subscription.UserId.Value, userId, cancellationToken)))

@@ -73,6 +73,16 @@ public sealed class InternalCoachingController : ControllerBase
             : Ok(new CoachingAuthorizationResponse(authorization.InstitutionId));
     }
 
+    [HttpPost("institution-student")]
+    [AllowAnonymous]
+    [InternalServiceKey]
+    [RequestSizeLimit(4_096)]
+    public async Task<IActionResult> IsInstitutionStudent([FromBody] CoachingInstitutionStudentRequest request, CancellationToken cancellationToken)
+    {
+        if (request.InstitutionId == Guid.Empty || request.StudentId == Guid.Empty) return BadRequest();
+        return Ok(new { isActive = await _institutionRepository.IsActiveCoachingInstitutionStudentAsync(request.InstitutionId, request.StudentId, cancellationToken) });
+    }
+
     [HttpPost("authorize-admin")]
     [AllowAnonymous]
     [InternalServiceKey]
@@ -253,6 +263,7 @@ public sealed record CoachingAgreementRepresentativeAuthorizationResponse(
     string PartyRole);
 
 public sealed record CoachingAdminAuthorizationRequest(Guid ViewerUserId);
+public sealed record CoachingInstitutionStudentRequest(Guid InstitutionId, Guid StudentId);
 
 public sealed record CoachingAdminAuthorizationResponse(bool IsGlobal, Guid? InstitutionId);
 
