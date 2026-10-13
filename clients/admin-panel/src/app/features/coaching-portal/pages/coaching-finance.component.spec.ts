@@ -32,7 +32,7 @@ describe('CoachingFinanceComponent', () => {
   });
   it('rejects overpayment and invalid cent precision before sending', () => {
     const component = setup().componentInstance; component.openPayment(fee);
-    for (const amount of [1001, 1.001, -1, 0, NaN]) { component.amount = amount; component.submit(); }
+    for (const amount of [1001, 1.001, -1, 0, NaN, 0.00000001, 0.01000001]) { component.amount = amount; component.submit(); }
     expect(api.pay).not.toHaveBeenCalled(); expect(component.error()).toBeTruthy();
   });
   it('checks the complete installment schedule in cents', () => {
@@ -74,5 +74,27 @@ describe('CoachingFinanceComponent', () => {
     const fixture = setup(); fixture.componentRef.setInput('studentId', 'new-student'); fixture.detectChanges();
     old.next({ ...account(), balance: 9999 }); expect(fixture.componentInstance.account()?.balance).toBe(1000);
     expect(api.account).toHaveBeenLastCalledWith('staff', 'new-student', 1);
+  });
+  it('shows DateOnly installment dates without a timezone conversion', () => {
+    const fixture = setup(); expect(fixture.nativeElement.textContent).toContain('01.10.2026');
+    expect(fixture.nativeElement.textContent).not.toContain('30.09.2026');
+  });
+  it('clears the previous cash account before loading another student, including failed reads', () => {
+    const fixture = TestBed.createComponent(CoachingFinanceComponent); fixture.componentRef.setInput('mode', 'staff'); fixture.componentRef.setInput('cashView', true); fixture.detectChanges();
+    const component = fixture.componentInstance;
+    const receipt = { id: 'receipt', agreementId: fee.id, studentId: 'student', recordedByUserId: 'manager', reversalOfPaymentId: null, method: 'Cash' as const, amount: 100, receivedOn: '2026-10-01', reference: null, createdAt: '2026-10-01T00:00:00Z' };
+    component.openCashAccount(receipt); expect(component.account()).not.toBeNull();
+    api.account.mockReturnValueOnce(throwError(() => new HttpErrorResponse({ status: 503 })));
+    component.openCashAccount({ ...receipt, studentId: 'other' }); expect(component.account()).toBeNull(); expect(component.canManage()).toBe(false);
+    expect(api.account).toHaveBeenLastCalledWith('staff', 'other', 1);
+  });
+  it('asks once before switching from a dirty form to another cash account', () => {
+    const fixture = TestBed.createComponent(CoachingFinanceComponent); fixture.componentRef.setInput('mode', 'staff'); fixture.componentRef.setInput('cashView', true); fixture.detectChanges();
+    const component = fixture.componentInstance;
+    const receipt = { id: 'receipt', agreementId: fee.id, studentId: 'student', recordedByUserId: 'manager', reversalOfPaymentId: null, method: 'Cash' as const, amount: 100, receivedOn: '2026-10-01', reference: null, createdAt: '2026-10-01T00:00:00Z' };
+    component.openCashAccount(receipt); component.openPayment(fee);
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValueOnce(true).mockReturnValue(false);
+    component.openCashAccount({ ...receipt, studentId: 'other' }); expect(confirm).toHaveBeenCalledOnce();
+    expect(component.form()).toBeNull(); expect(api.account).toHaveBeenLastCalledWith('staff', 'other', 1); confirm.mockRestore();
   });
 });
