@@ -25,6 +25,13 @@ describe('CoachingInstitutionStudentReportComponent', () => {
       source: 'StudentReported', reason: 'NoScheduledTasks', scheduledTasks: 0, completedTasks: 0, plannedMinutes: 0, actualMinutes: null, completionPercentage: null, topics: [] } });
     fixture.detectChanges(); http.expectNone(r => r.url.includes('/study/plans') || r.url.includes('/study/availability')); http.verify();
     expect(fixture.nativeElement.textContent).toContain('Seans hazırlık özeti'); expect(fixture.nativeElement.textContent).not.toContain('Yeni taslak');
+    fixture.componentInstance.openSessionBrief(); fixture.detectChanges();
+    expect(service.getStudentDetail).toHaveBeenCalledTimes(3);
+    const refreshed = http.match(r => r.url === '/api/coaching/staff/students/student-1/study/report');
+    expect(refreshed.length).toBe(2);
+    for (const report of refreshed) report.flush({ success: true, data: { fromDate: report.request.params.get('fromDate'), toDate: report.request.params.get('toDate'),
+      source: 'StudentReported', reason: 'NoScheduledTasks', scheduledTasks: 0, completedTasks: 0, plannedMinutes: 0, actualMinutes: null, completionPercentage: null, topics: [] } });
+    http.verify();
   });
   it('loads the student summary and the first page of assignment history', () => {
     const service = reportService();

@@ -91,6 +91,12 @@ describe('CoachingTeacherStudentDetailComponent', () => {
     http.expectNone(r => r.url.includes('/study/plans') || r.url.includes('/study/availability')); fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('Seans hazırlık özeti'); expect(fixture.nativeElement.textContent).toContain('Haftalar arası çalışma karşılaştırması');
     expect(fixture.debugElement.query(By.directive(StudentStudyPlansComponent))).toBeNull();
+    fixture.componentInstance.openSessionBrief(); fixture.detectChanges();
+    http.expectOne('/api/reports/student/student-1/progress').flush(fixture.componentInstance.progress());
+    const refreshed = http.match(r => r.url === '/api/coaching/staff/students/student-1/study/report');
+    expect(refreshed.length).toBe(2);
+    for (const report of refreshed) report.flush({ success: true, data: { fromDate: report.request.params.get('fromDate'), toDate: report.request.params.get('toDate'),
+      source: 'StudentReported', reason: 'NoScheduledTasks', scheduledTasks: 0, completedTasks: 0, plannedMinutes: 0, actualMinutes: null, completionPercentage: null, topics: [] } });
   });
 
   it.each(['section', 'roster', 'brief'])('protects an unsaved weekly plan when leaving through %s', transition => {
