@@ -56,7 +56,14 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, R
         var targetProduct = requestedProduct ?? existingRefreshToken.Product;
         var isProductSwitch = requestedProduct.HasValue;
         if (requestedProduct is { } productToSwitchTo
-            && StaffProductAccessPolicy.GetStaffRoles(user, productToSwitchTo).Count == 0)
+            && StaffProductAccessPolicy.GetStaffRoles(user, productToSwitchTo).Count == 0
+            && !(productToSwitchTo == Identity.Domain.Enums.PlatformProduct.CourseManagement
+                && request.AllowCourseManagementStudentSession
+                && user.HasProductAccess(Identity.Domain.Enums.PlatformProduct.CourseManagement)
+                && user.GetRolesForProductScope(Identity.Domain.Enums.PlatformProduct.CourseManagement).Any(userRole =>
+                    userRole.Role is not null
+                    && !userRole.Role.IsDeleted
+                    && string.Equals(userRole.Role.Name, "CourseStudent", StringComparison.OrdinalIgnoreCase))))
         {
             return Result.Failure<RefreshTokenResponse>(new Error(
                 "Auth.ProductAccessDenied",
@@ -85,6 +92,7 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, R
             && (string.Equals(role.Role.Name, "SystemAdmin", StringComparison.OrdinalIgnoreCase)
                 || string.Equals(role.Role.Name, "InstitutionAdmin", StringComparison.OrdinalIgnoreCase)
                 || string.Equals(role.Role.Name, "InstitutionOwner", StringComparison.OrdinalIgnoreCase)
+                || targetProduct == Identity.Domain.Enums.PlatformProduct.CourseManagement && string.Equals(role.Role.Name, "CourseInstitutionOwner", StringComparison.OrdinalIgnoreCase)
                 || string.Equals(role.Role.Name, "Editor", StringComparison.OrdinalIgnoreCase)));
         if (isPrivilegedAdministrator
             && user.MfaEnabled

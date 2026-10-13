@@ -20,6 +20,7 @@ interface AccessTokenClaims {
 
 @Injectable({ providedIn: 'root' })
 export class StaffAuthService {
+  private static readonly activeProductStorageKey = 'eduplatform_staff_active_product';
   private readonly http = inject(HttpClient);
   private readonly _accessToken = signal('');
   private readonly _products = signal<StaffProductAccess[]>([]);
@@ -91,8 +92,11 @@ export class StaffAuthService {
     code: string | null,
     recoveryCode: string | null = null
   ): Promise<void> {
+    const verifyUrl = product === 'course-management'
+      ? `${environment.apiUrl}/auth/course-management/mfa/verify`
+      : `${environment.apiUrl}/auth/mfa/verify`;
     const response = await firstValueFrom(this.http.post<AuthSessionResponse>(
-      `${environment.apiUrl}/auth/mfa/verify`,
+      verifyUrl,
       { challengeToken, code, recoveryCode },
       { withCredentials: true }
     ));
@@ -104,9 +108,11 @@ export class StaffAuthService {
     }
   }
 
-  async startMfaSetup(challengeToken: string): Promise<StaffMfaSetupResponse> {
+  async startMfaSetup(challengeToken: string, product?: StaffProduct): Promise<StaffMfaSetupResponse> {
     return firstValueFrom(this.http.post<StaffMfaSetupResponse>(
-      `${environment.apiUrl}/auth/mfa/setup`,
+      product === 'course-management'
+        ? `${environment.apiUrl}/auth/course-management/mfa/setup`
+        : `${environment.apiUrl}/auth/mfa/setup`,
       { challengeToken }
     ));
   }
@@ -118,7 +124,9 @@ export class StaffAuthService {
     code: string
   ): Promise<string[]> {
     const response = await firstValueFrom(this.http.post<AuthSessionResponse & { recoveryCodes?: string[] | null }>(
-      `${environment.apiUrl}/auth/mfa/enable`,
+      product === 'course-management'
+        ? `${environment.apiUrl}/auth/course-management/mfa/enable`
+        : `${environment.apiUrl}/auth/mfa/enable`,
       { challengeToken, setupToken, code },
       { withCredentials: true }
     ));
@@ -136,13 +144,22 @@ export class StaffAuthService {
       throw new Error('Bu ürün için personel erişiminiz bulunmuyor.');
     }
 
+    const switchUrl = product === 'course-management'
+      ? `${environment.apiUrl}/auth/course-management/session`
+      : `${environment.apiUrl}/auth/staff-session/switch/${product}`;
     const response = await firstValueFrom(this.http.post<AuthSessionResponse>(
-      `${environment.apiUrl}/auth/staff-session/switch/${product}`,
+      switchUrl,
       {},
       { withCredentials: true }
     ));
     this.applySession(response, product);
     this._activeProduct.set(product);
+  }
+
+  async joinCourseManagement(role: 'Teacher' | 'InstitutionOwner'): Promise<void> {
+    await firstValueFrom(this.http.post<void>(`${environment.apiUrl}/auth/course-management/join`, { role }));
+    await this.loadStaffProducts();
+    await this.switchProduct('course-management');
   }
 
   async restoreSession(): Promise<void> {
@@ -170,10 +187,13 @@ export class StaffAuthService {
   }
 
   async logout(): Promise<void> {
+    const revokeUrl = this._activeProduct() === 'course-management'
+      ? `${environment.apiUrl}/auth/course-management/revoke-token`
+      : `${environment.apiUrl}/auth/revoke-token`;
     this.clearSession();
     try {
       await firstValueFrom(this.http.post(
-        `${environment.apiUrl}/auth/revoke-token`,
+        revokeUrl,
         {},
         { withCredentials: true }
       ));
@@ -184,8 +204,12 @@ export class StaffAuthService {
 
   private async performRefresh(): Promise<boolean> {
     try {
+      const product = this._activeProduct() ?? this.getStoredActiveProduct();
+      const refreshUrl = product === 'course-management'
+        ? `${environment.apiUrl}/auth/course-management/refresh-token`
+        : `${environment.apiUrl}/auth/refresh-token`;
       const response = await firstValueFrom(this.http.post<AuthSessionResponse>(
-        `${environment.apiUrl}/auth/refresh-token`,
+        refreshUrl,
         {},
         { withCredentials: true }
       ));
@@ -194,7 +218,7 @@ export class StaffAuthService {
         return false;
       }
 
-      this.applySession(response);
+      this.applySession(response, product ?? undefined);
       return true;
     } catch {
       this.clearSession();
@@ -225,7 +249,9 @@ export class StaffAuthService {
     this.accessTokenExpiresAt = claims?.exp
       ? claims.exp * 1000
       : Date.now() + response.expiresInMinutes * 60_000;
-    this._activeProduct.set(claims?.platform_product ?? fallbackProduct ?? null);
+    const product = claims?.platform_product ?? fallbackProduct ?? null;
+    this._activeProduct.set(product);
+    if (product) this.storeActiveProduct(product);
   }
 
   private clearSession(): void {
@@ -233,5 +259,28 @@ export class StaffAuthService {
     this._products.set([]);
     this._activeProduct.set(null);
     this.accessTokenExpiresAt = 0;
+    try {
+      if (typeof window !== 'undefined') window.sessionStorage.removeItem(StaffAuthService.activeProductStorageKey);
+    } catch {
+      // Session state remains in memory when browser storage is unavailable.
+    }
+  }
+
+  private getStoredActiveProduct(): StaffProduct | null {
+    if (typeof window === 'undefined') return null;
+    try {
+      const product = window.sessionStorage.getItem(StaffAuthService.activeProductStorageKey);
+      return product === 'coaching' || product === 'speed-reading' || product === 'course-management' ? product : null;
+    } catch {
+      return null;
+    }
+  }
+
+  private storeActiveProduct(product: StaffProduct): void {
+    try {
+      if (typeof window !== 'undefined') window.sessionStorage.setItem(StaffAuthService.activeProductStorageKey, product);
+    } catch {
+      // Session state remains in memory when browser storage is unavailable.
+    }
   }
 }

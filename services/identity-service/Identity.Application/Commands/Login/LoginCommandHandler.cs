@@ -74,6 +74,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<LoginRes
             r.Role.Name == "SystemAdmin" || 
             r.Role.Name == "InstitutionAdmin" || 
             r.Role.Name == "InstitutionOwner" ||
+            request.Product == PlatformProduct.CourseManagement && r.Role.Name == "CourseInstitutionOwner" ||
             r.Role.Name == "Editor");
 
         var isSystemAdministrator = productRoles.Any(role =>

@@ -24,7 +24,8 @@ public static class StaffProductAccessPolicy
             .Where(userRole => userRole.Product == product
                 && userRole.Role is not null
                 && !userRole.Role.IsDeleted
-                && IsStaffRole(userRole.Role.Name))
+                && (IsStaffRole(userRole.Role.Name)
+                    || product == PlatformProduct.CourseManagement && userRole.Role.Name is "CourseTeacher" or "CourseInstitutionOwner"))
             .Select(userRole => userRole.Role.Name)
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .OrderBy(role => role, StringComparer.OrdinalIgnoreCase)

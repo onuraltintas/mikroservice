@@ -25,7 +25,7 @@ describe('Staff portal MFA flow', () => {
 
     await component.submitLogin();
 
-    expect(auth.startMfaSetup).toHaveBeenCalledWith('mfa-challenge');
+    expect(auth.startMfaSetup).toHaveBeenCalledWith('mfa-challenge', 'coaching');
     expect((component as unknown as { mfaStage: string }).mfaStage).toBe('setup');
     expect((component as unknown as { mfaSecret: string }).mfaSecret).toBe('TOTP-SECRET');
   });
