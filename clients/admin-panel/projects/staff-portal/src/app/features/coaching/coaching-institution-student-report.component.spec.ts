@@ -48,14 +48,14 @@ describe('CoachingInstitutionStudentReportComponent', () => {
     component.applyFilters();
 
     expect(service.getStudentHistory).toHaveBeenLastCalledWith('student-1', 'Assignments', {
-      pageNumber: 1, pageSize: 25, fromDate: '2026-01-01T00:00:00.000Z',
-      toDate: '2026-01-31T23:59:59.999Z', status: 'Submitted', search: 'matematik'
+      pageNumber: 1, pageSize: 25, fromDate: new Date(2026, 0, 1).toISOString(),
+      toDate: new Date(new Date(2026, 1, 1).getTime() - 1).toISOString(), status: 'Submitted', search: 'matematik'
     });
     expect(component.historyTotalPages()).toBe(3);
     component.nextPage();
     expect(service.getStudentHistory).toHaveBeenLastCalledWith('student-1', 'Assignments', {
-      pageNumber: 2, pageSize: 25, fromDate: '2026-01-01T00:00:00.000Z',
-      toDate: '2026-01-31T23:59:59.999Z', status: 'Submitted', search: 'matematik'
+      pageNumber: 2, pageSize: 25, fromDate: new Date(2026, 0, 1).toISOString(),
+      toDate: new Date(new Date(2026, 1, 1).getTime() - 1).toISOString(), status: 'Submitted', search: 'matematik'
     });
   });
 
