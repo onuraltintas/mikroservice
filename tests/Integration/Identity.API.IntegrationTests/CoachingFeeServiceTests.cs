@@ -8,6 +8,8 @@ using Coaching.Infrastructure.Finance;
 using EduPlatform.Shared.Kernel.Exceptions;
 using EduPlatform.Shared.Security.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
+using System.Data.Common;
 using Shared.IntegrationTests.Fixtures;
 
 namespace Identity.API.IntegrationTests;
@@ -20,6 +22,57 @@ public sealed class CoachingFeeServiceTests(PostgresFixture postgres)
     private static CoachingFeeCreate Input() => new(Guid.NewGuid(), "Koçluk dönemi", 1000m, [new(Today.AddDays(-1), 400m), new(Today.AddMonths(1), 600m)]);
     private DbContextOptions<CoachingDbContext> Options => new DbContextOptionsBuilder<CoachingDbContext>()
         .UseNpgsql(postgres.ConnectionString, x => x.EnableRetryOnFailure()).Options;
+
+    [Theory]
+    [InlineData("create", false)]
+    [InlineData("create", true)]
+    [InlineData("pay", false)]
+    [InlineData("pay", true)]
+    [InlineData("reverse", false)]
+    [InlineData("reverse", true)]
+    [InlineData("cancel", false)]
+    [InlineData("cancel", true)]
+    public async Task TransientCommitFailuresRecoverExactlyOneFinancialOperation(string operation, bool afterCommit)
+    {
+        var failure = new CommitFailure(afterCommit);
+        var options = new DbContextOptionsBuilder<CoachingDbContext>().UseNpgsql(postgres.ConnectionString, retry => retry.EnableRetryOnFailure(2, TimeSpan.Zero, null))
+            .AddInterceptors(failure).Options;
+        await using var db = new CoachingDbContext(options); await db.Database.EnsureDeletedAsync(); await db.Database.EnsureCreatedAsync();
+        try {
+            var student = Guid.NewGuid(); var actor = new Actor(Guid.NewGuid(), "InstitutionAdmin");
+            var service = new CoachingFeeService(db, actor, new Identity(student), new Scope(new(false, Guid.NewGuid(), [student])), Time);
+            var fee = await service.CreateAsync(student, Input()); var paymentId = Guid.NewGuid(); var requestId = Guid.NewGuid(); var input = Input();
+            if (operation == "reverse") fee = await service.PayAsync(student, fee.Id, new(paymentId, fee.Version, 250m, CoachingFeePaymentMethod.Cash, Today, null));
+            Task<CoachingFeeView> Run() => operation switch {
+                "create" => service.CreateAsync(student, input),
+                "pay" => service.PayAsync(student, fee.Id, new(requestId, fee.Version, 250m, CoachingFeePaymentMethod.Cash, Today, null)),
+                "reverse" => service.ReverseAsync(student, fee.Id, paymentId, new(requestId, fee.Version, Today, "Düzeltme")),
+                _ => service.CancelAsync(student, fee.Id, new(fee.Version, "İptal"))
+            };
+            failure.Armed = true; var first = await Run(); var replay = await Run();
+            Assert.Equal(first.Id, replay.Id); Assert.Equal(first.Version, replay.Version); Assert.Equal(1, failure.Failures);
+            Assert.Equal(operation == "create" ? 2 : 1, await db.CoachingFeeAgreements.CountAsync());
+            Assert.Equal(operation == "pay" ? 1 : operation == "reverse" ? 2 : 0, await db.CoachingFeePayments.CountAsync());
+            Assert.Equal(operation == "pay" ? 250m : 0m, await db.CoachingFeeAgreements.SumAsync(x => x.PaidAmount));
+            Assert.Equal(operation == "cancel", first.IsCancelled);
+        } finally { await db.Database.EnsureDeletedAsync(); }
+    }
+
+    [Fact]
+    public async Task AReceiptCannotBeDeletedWhileItsAgreementIsRetained()
+    {
+        await using var db = new CoachingDbContext(Options); await db.Database.EnsureDeletedAsync(); await db.Database.EnsureCreatedAsync();
+        try {
+            var student = Guid.NewGuid(); var actor = new Actor(Guid.NewGuid(), "Teacher");
+            var service = new CoachingFeeService(db, actor, new Identity(student), new Scope(CoachingAdminScope.Global), Time);
+            var fee = await service.CreateAsync(student, Input());
+            await service.PayAsync(student, fee.Id, new(Guid.NewGuid(), fee.Version, 50m, CoachingFeePaymentMethod.Cash, Today, null));
+            db.CoachingFeePayments.Remove(await db.CoachingFeePayments.SingleAsync());
+            await Assert.ThrowsAsync<InvalidOperationException>(() => db.SaveChangesAsync()); db.ChangeTracker.Clear();
+            Assert.Equal(50m, (await db.CoachingFeePayments.AsNoTracking().SingleAsync()).Amount);
+            Assert.Equal(50m, (await db.CoachingFeeAgreements.AsNoTracking().SingleAsync()).PaidAmount);
+        } finally { await db.Database.EnsureDeletedAsync(); }
+    }
 
     [Fact]
     public async Task InstitutionAndIndependentCoachOwnSeparateFeesAndStudentIsReadOnly()
@@ -117,6 +170,12 @@ public sealed class CoachingFeeServiceTests(PostgresFixture postgres)
     }
 
     private sealed class Clock : TimeProvider { public override DateTimeOffset GetUtcNow() => new(2026, 10, 13, 12, 0, 0, TimeSpan.Zero); }
+    private sealed class CommitFailure(bool afterCommit) : DbTransactionInterceptor {
+        public bool Armed; public int Failures;
+        private void Fail(bool after) { if (Armed && after == afterCommit) { Armed = false; Failures++; throw new Npgsql.NpgsqlException("Injected transient financial commit failure", new TimeoutException()); } }
+        public override ValueTask<InterceptionResult> TransactionCommittingAsync(DbTransaction transaction, TransactionEventData data, InterceptionResult result, CancellationToken ct = default) { Fail(false); return ValueTask.FromResult(result); }
+        public override Task TransactionCommittedAsync(DbTransaction transaction, TransactionEndEventData data, CancellationToken ct = default) { Fail(true); return Task.CompletedTask; }
+    }
     private sealed class Actor(Guid id, params string[] roles) : ICurrentUserService {
         public Guid? UserId { get; set; } = id; public IEnumerable<string> Roles { get; set; } = roles;
         public string? Email => null; public string? FullName => null; public bool IsAuthenticated => true; public ClaimsPrincipal? User => null;
