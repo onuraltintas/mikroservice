@@ -19,7 +19,7 @@ export function planningToken(userId = planningStudent, roles = ['Student'], pro
     'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier': userId,
     'http://schemas.microsoft.com/ws/2008/06/identity/claims/role': roles,
     platform_product: product, given_name: 'Planning', family_name: 'Test', email: 'planning@example.invalid',
-    permission: roles.includes('SystemAdmin') ? ['Permissions.Coaching.View', 'Permissions.Coaching.ContentManage', 'Permissions.Coaching.Manage']
+    permission: roles.includes('SystemAdmin') ? ['Permissions.Coaching.View', 'Permissions.Coaching.ContentManage', 'Permissions.Coaching.Manage', 'Permissions.Coaching.SubscriptionManage']
       : roles.includes('InstitutionAdmin') ? ['Permissions.Coaching.View'] : [],
     amr: roles.includes('SystemAdmin') ? ['mfa'] : [],
     iss: 'EduPlatform', aud: 'EduPlatform', iat: now, nbf: now, exp: now + 900 })}`;
@@ -32,6 +32,17 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
       if (request.headers['x-internal-service-key'] !== internalKey) { response.writeHead(403); response.end(); return; }
       response.writeHead(200, { 'content-type': 'application/json' });
       response.end(JSON.stringify({ mode: 'disabled' })); return;
+    }
+    if (request.url === '/api/internal/coaching/institution-student' && request.method === 'POST') {
+      if (request.headers['x-internal-service-key'] !== internalKey) { response.writeHead(403); response.end(); return; }
+      try {
+        const chunks = []; let length = 0;
+        for await (const chunk of request) { length += chunk.length; if (length > 4096) throw new Error('Body limit'); chunks.push(chunk); }
+        const payload = JSON.parse(Buffer.concat(chunks).toString());
+        response.writeHead(200, { 'content-type': 'application/json' });
+        response.end(JSON.stringify({ isActive: payload.institutionId === planningInstitution && payload.studentId === planningStudent }));
+      } catch { response.writeHead(400); response.end(); }
+      return;
     }
     // Only the external Identity ownership contract is stubbed; Coaching queries remain real.
     if (['/api/internal/coaching/authorize', '/api/internal/coaching/authorize-admin', '/api/internal/coaching/report-students', '/api/internal/coaching/report-student-page'].includes(request.url)

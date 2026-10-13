@@ -14,7 +14,7 @@ export interface CoachingInstitutionSubscription {
   accessUntil: string;
   includedStudentSeats: number;
   usedStudentSeats: number;
-  students: { studentId: string; isSuspended: boolean; suspensionReason?: string | null; assignedAt: string }[];
+  students: { studentId: string; isSuspended: boolean; assignedAt: string; isCurrentMember: boolean }[];
 }
 
 export interface CoachingInstitutionAssignmentSummary {

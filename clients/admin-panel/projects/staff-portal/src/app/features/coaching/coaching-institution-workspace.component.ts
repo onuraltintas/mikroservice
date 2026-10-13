@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, HostListener, OnInit, inject, signal } from '@angular/core';
+import { Component, DestroyRef, HostListener, OnInit, ViewChild, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
@@ -12,19 +12,21 @@ import {
 } from './coaching-institution.service';
 import { CoachingInstitutionStudentReportComponent } from './coaching-institution-student-report.component';
 import { CoachingInstitutionAnalyticsComponent } from './coaching-institution-analytics.component';
+import { CoachingInstitutionSubscriptionComponent } from './coaching-institution-subscription.component';
 import { CoachingInstitutionTeacherReportComponent } from './coaching-institution-teacher-report.component';
 import { StaffPendingInvitationsComponent } from '../staff-pending-invitations.component';
 
-type InstitutionSection = 'overview' | 'students' | 'teachers' | 'analytics';
+type InstitutionSection = 'overview' | 'students' | 'teachers' | 'analytics' | 'subscription';
 
 @Component({
   selector: 'staff-coaching-institution-workspace',
   standalone: true,
-  imports: [CommonModule, FormsModule, CoachingInstitutionStudentReportComponent, CoachingInstitutionTeacherReportComponent, CoachingInstitutionAnalyticsComponent, StaffPendingInvitationsComponent],
+  imports: [CommonModule, FormsModule, CoachingInstitutionStudentReportComponent, CoachingInstitutionTeacherReportComponent, CoachingInstitutionAnalyticsComponent, CoachingInstitutionSubscriptionComponent, StaffPendingInvitationsComponent],
   templateUrl: './coaching-institution-workspace.component.html',
   styleUrl: './coaching-institution-workspace.component.scss'
 })
 export class CoachingInstitutionWorkspaceComponent implements OnInit {
+  @ViewChild(CoachingInstitutionSubscriptionComponent) subscriptionPanel?: Pick<CoachingInstitutionSubscriptionComponent, 'canLeavePage'>;
   private readonly institutionService = inject(CoachingInstitutionService);
   private readonly destroyRef = inject(DestroyRef);
   readonly editingStudentId = signal<string | null>(null);
@@ -36,6 +38,7 @@ export class CoachingInstitutionWorkspaceComponent implements OnInit {
   membershipDirty = false;
 
   canLeavePage(): boolean {
+    if (!(this.subscriptionPanel?.canLeavePage() ?? true)) return false;
     if (this.isMembershipSaving()) { this.membershipError.set('Üye işlemi sürüyor. Tamamlanmasını bekleyin.'); return false; }
     return !this.membershipDirty || window.confirm('Kaydedilmemiş öğrenci değişikliklerinden vazgeçerek ayrılmak istiyor musunuz?');
   }

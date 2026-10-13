@@ -39,7 +39,12 @@
       <button type="button" data-testid="institution-analytics-tab"
         [attr.aria-pressed]="activeSection() === 'analytics'"
         [class.active]="activeSection() === 'analytics'" (click)="selectSection('analytics')">Analiz ve uyarılar</button>
+      <button type="button" data-testid="institution-subscription-tab" [attr.aria-pressed]="activeSection() === 'subscription'" [class.active]="activeSection() === 'subscription'" (click)="selectSection('subscription')">Abonelik ve kontenjan</button>
     </nav>
+
+    @if (activeSection() === 'subscription') {
+      <staff-coaching-institution-subscription [institutionId]="institutionId()!" />
+    }
 
     @if (activeSection() === 'analytics') {
       <div class="analytics-container" [hidden]="!!selectedStudent() || !!selectedTeacher()">

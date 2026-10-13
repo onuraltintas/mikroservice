@@ -213,3 +213,45 @@ test('institution edits and removes members through scoped Identity contracts wi
   await expect(page.getByTestId('institution-student-invite-teacher').locator(`option[value="${replacementTeacher}"]`)).toHaveCount(0);
   await context.close();
 });
+
+test('institution assigns and suspends a real subscription seat and student access follows it', async ({ browser, request }) => {
+  const base = 'http://127.0.0.1:5006';
+  const adminHeaders = { Authorization: `Bearer ${planningToken(randomUUID(), ['SystemAdmin'])}` };
+  const plan = await request.post(`${base}/api/coaching-admin/subscriptions/plans`, { headers: adminHeaders, data: {
+    slug: `institution-e2e-${randomUUID()}`, name: 'E2E kurum kontenjanı', description: 'Disposable local test', audience: 'Institution', price: 1000,
+    isContactOnly: false, billingPeriod: 'Annual', durationDays: 365, includedStudentSeats: 1, features: [], isActive: true, isPublic: false, sortOrder: 0
+  } });
+  expect(plan.ok(), await plan.text()).toBeTruthy();
+  const planId = (await plan.json()).data.id;
+  const license = await request.post(`${base}/api/coaching-admin/subscriptions`, { headers: adminHeaders, data: {
+    planId, institutionId: planningInstitution, studentIds: [], startDate: new Date().toISOString(), notes: 'Disposable E2E'
+  } });
+  expect(license.ok(), await license.text()).toBeTruthy();
+  const subscriptionId = (await license.json()).data.id;
+  const context = await browser.newContext(); const page = await context.newPage();
+  try {
+    await staffSession(page, planningManager, 'InstitutionAdmin');
+    await page.getByTestId('institution-subscription-tab').click();
+    const panel = page.locator('staff-coaching-institution-subscription');
+    await expect(panel.getByText('E2E kurum kontenjanı', { exact: true })).toBeVisible();
+    await panel.getByTestId(`institution-seat-${planningStudent}`).click();
+    await expect(panel.getByTestId(`institution-seat-${planningStudent}`)).toHaveText('Kontenjanı kaldır');
+    const access = await request.get(`${base}/api/coaching/subscriptions/my-access`, { headers: { Authorization: `Bearer ${planningToken(planningStudent)}` } });
+    expect(access.ok(), await access.text()).toBeTruthy();
+    expect((await access.json()).data.subscriptions.map(item => item.id)).toContain(subscriptionId);
+    await panel.getByTestId(`institution-seat-${planningStudent}`).click();
+    await expect(panel.getByTestId(`institution-seat-${planningStudent}`)).toHaveText('Koltuk ata');
+    const removed = await request.get(`${base}/api/coaching/subscriptions/my-access`, { headers: { Authorization: `Bearer ${planningToken(planningStudent)}` } });
+    expect((await removed.json()).data.subscriptions.map(item => item.id)).not.toContain(subscriptionId);
+    await page.setViewportSize({ width: 390, height: 844 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+    await page.screenshot({ path: '../../artifacts/coaching-completion-20261013/institution-subscription-proof.png', fullPage: true });
+    const forbidden = await request.put(`${base}/api/coaching/institution-subscription/${subscriptionId}/students/${randomUUID()}`, {
+      headers: { Authorization: `Bearer ${planningToken(planningManager, ['InstitutionAdmin'])}` }, data: { isSuspended: false }
+    });
+    expect(forbidden.status()).toBe(403);
+  } finally {
+    await context.close();
+    expect((await request.put(`${base}/api/coaching-admin/subscriptions/${subscriptionId}`, { headers: adminHeaders, data: { status: 'Cancelled', endDate: null, notes: 'Disposable test complete' } })).ok()).toBeTruthy();
+  }
+});
