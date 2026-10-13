@@ -23,6 +23,30 @@ public sealed class CoachingFeeServiceTests(PostgresFixture postgres)
     private DbContextOptions<CoachingDbContext> Options => new DbContextOptionsBuilder<CoachingDbContext>()
         .UseNpgsql(postgres.ConnectionString, x => x.EnableRetryOnFailure()).Options;
 
+    [Fact]
+    public async Task ReceivablesRetainUnpaidFormerStudentsAndExcludeForeignClosedOrCancelledFees()
+    {
+        await using var db = new CoachingDbContext(Options); await db.Database.EnsureDeletedAsync(); await db.Database.EnsureCreatedAsync();
+        try {
+            var student = Guid.NewGuid(); var institution = Guid.NewGuid(); var actor = new Actor(Guid.NewGuid(), "InstitutionAdmin");
+            var scope = new Scope(new(false, institution, [student]));
+            var service = new CoachingFeeService(db, actor, new Identity(student), scope, Time);
+            var unpaid = await service.CreateAsync(student, Input());
+            var closed = await service.CreateAsync(student, Input());
+            await service.PayAsync(student, closed.Id, new(Guid.NewGuid(), closed.Version, 1000m, CoachingFeePaymentMethod.Cash, Today, null));
+            var cancelled = await service.CreateAsync(student, Input()); await service.CancelAsync(student, cancelled.Id, new(cancelled.Version, "Vazgeçildi"));
+            scope.Value = new(false, Guid.NewGuid(), [student]); await service.CreateAsync(student, Input());
+            scope.Value = new(false, institution, []);
+            var rows = await service.GetReceivablesAsync(pageSize: 1);
+            Assert.Equal(1, rows.TotalCount); Assert.Equal(unpaid.Id, Assert.Single(rows.Items).Id);
+            Assert.Equal(1000m, rows.Balance); Assert.Equal(400m, rows.OverdueAmount);
+            Assert.Empty((await service.GetReceivablesAsync(pageNumber: 2, pageSize: 1)).Items);
+            await Assert.ThrowsAsync<ArgumentException>(() => service.GetReceivablesAsync(pageSize: 101));
+            actor.Roles = ["Student"]; actor.UserId = student;
+            await Assert.ThrowsAsync<BusinessRuleException>(() => service.GetReceivablesAsync());
+        } finally { await db.Database.EnsureDeletedAsync(); }
+    }
+
     [Theory]
     [InlineData("create", false)]
     [InlineData("create", true)]
