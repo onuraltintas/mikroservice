@@ -84,6 +84,19 @@ public sealed class CoachingCmsAndSubscriptionRulesTests
     [InlineData("/api/coaching/subscriptions-extra/paid", true)]
     [InlineData("/api/coaching/cms/pages/about", false)]
     [InlineData("/health/ready", false)]
+    [InlineData("/api/assignments", true)]
+    [InlineData("/api/assignments/student/123", true)]
+    [InlineData("/api/assignments/123/submit", true)]
+    [InlineData("/api/sessions/student/123", true)]
+    [InlineData("/api/exams/student/123", true)]
+    [InlineData("/api/goals/123/progress", true)]
+    [InlineData("/api/reports/student/123/progress", true)]
+    [InlineData("/api/calendar/student.ics", true)]
+    [InlineData("/api/coaching/study-planning/plans", true)]
+    [InlineData("/api/coaching-agreements", false)]
+    [InlineData("/api/data-privacy/export", false)]
+    [InlineData("/api/coaching-admin/subscriptions", false)]
+    [InlineData("/api/assignments-extra/student/123", false)]
     public void SubscriptionAccess_OnlyProtectsCoachingLearningEndpoints(string path, bool expected)
     {
         CoachingSubscriptionAccessRules.RequiresSubscription(path).Should().Be(expected);
