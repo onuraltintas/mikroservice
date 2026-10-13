@@ -98,7 +98,7 @@ public class AddExamResultCommandHandler : IRequestHandler<AddExamResultCommand>
         
         if (command.SubjectScores != null)
         {
-            result.SetSubjectScores(command.SubjectScores);
+            result.SetSubjectScores(command.SubjectScores, exam.MaxScore);
         }
 
         if (command.Ranking.HasValue)

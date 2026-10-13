@@ -71,8 +71,51 @@ test('teacher publishes a weekly plan, student completes work, teacher and insti
   await expect(institutionEditor.getByText(/Tamamlandı · 40 dk/)).toBeVisible();
   await expect(institutionEditor.getByRole('button', { name: 'Yeni taslak' })).toHaveCount(0);
   await expect(institutionEditor.getByRole('button', { name: 'Tamamla', exact: true })).toHaveCount(0);
+  const institutionReport = institutionPage.locator('app-student-study-report');
+  await institutionReport.getByLabel('Başlangıç').fill('2026-10-19');
+  await institutionReport.getByLabel('Bitiş').fill('2026-10-25');
+  await institutionReport.getByRole('button', { name: 'Raporu göster' }).click();
+  await expect(institutionReport.getByText(`${initialActualMinutes + 40} dakika`, { exact: true })).toBeVisible();
   await institutionPage.screenshot({ path: '../../artifacts/coaching-completion-20261013/institution-plan-proof.png', fullPage: true });
   await Promise.all([teacherContext.close(), studentContext.close(), institutionContext.close()]);
+});
+
+test('teacher score targets survive title editing and stay read-only for student and institution', async ({ browser, request }) => {
+  const context = await browser.newContext(); const page = await context.newPage();
+  await staffSession(page, planningTeacher, 'Teacher');
+  await page.getByTestId('goals-tab').click();
+  const goals = page.locator('staff-coaching-teacher-goals');
+  const title = `Puan hedefi ${randomUUID()}`;
+  await goals.getByRole('combobox', { name: /^Öğrenci/ }).selectOption(planningStudent);
+  await goals.getByLabel('Hedef başlığı', { exact: true }).fill(title);
+  await goals.getByRole('button', { name: 'Hedef oluştur', exact: true }).click();
+  let card = goals.locator('article').filter({ hasText: title });
+  await card.getByRole('button', { name: 'Okul / üniversite hedefini görüntüle' }).click();
+  const editor = card.locator('app-student-goal-target');
+  await editor.getByRole('combobox', { name: /^Sınav türü/ }).selectOption('LGS');
+  await editor.getByLabel('Hedef puan', { exact: true }).fill('450');
+  await editor.getByLabel('En yüksek puan (ölçek)', { exact: true }).fill('500');
+  await editor.getByRole('button', { name: 'Puan hedefini kaydet' }).click();
+  await expect(editor.getByText(/Puan hedefi kaydedildi/)).toBeVisible();
+  const goalId = await card.getByRole('button', { name: 'Düzenle', exact: true }).getAttribute('data-testid');
+  await card.getByRole('button', { name: 'Düzenle', exact: true }).click();
+  await goals.getByLabel('Hedef başlığı', { exact: true }).fill(`${title} güncel`);
+  await goals.getByRole('button', { name: 'Hedefi güncelle', exact: true }).click();
+  await expect(goals.getByRole('heading', { name: `${title} güncel`, exact: true })).toBeVisible();
+  const id = goalId.replace('edit-goal-', '');
+  for (const [url, user, role, canEdit] of [
+    [`${api}/${planningStudent}/study/goals/${id}/target`, planningTeacher, 'Teacher', true],
+    [`${api}/${planningStudent}/study/goals/${id}/target`, planningManager, 'InstitutionAdmin', false],
+    [`http://127.0.0.1:5006/api/coaching/study-planning/goals/${id}/target`, planningStudent, 'Student', false]
+  ]) {
+    const response = await request.get(url, { headers: { Authorization: `Bearer ${planningToken(user, [role])}` } });
+    expect(response.ok(), await response.text()).toBeTruthy();
+    const data = (await response.json()).data;
+    expect(data.scoreTarget).toMatchObject({ targetScore: 450, maxScore: 500, examType: 'LGS' });
+    expect(data.canEdit).toBe(canEdit);
+  }
+  await page.screenshot({ path: '../../artifacts/coaching-completion-20261013/teacher-target-proof.png', fullPage: true });
+  await context.close();
 });
 
 test('real staff endpoints reject foreign students, student role and institution writes', async ({ request }) => {

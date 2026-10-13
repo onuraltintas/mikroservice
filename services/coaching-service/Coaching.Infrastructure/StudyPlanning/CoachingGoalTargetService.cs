@@ -10,26 +10,31 @@ using Microsoft.EntityFrameworkCore;
 namespace Coaching.Infrastructure.StudyPlanning;
 
 public sealed class CoachingGoalTargetService(CoachingDbContext db, ICoachingAccessPolicy access,
-    ICoachingEventPublisher events) : IGoalTargetService
+    ICoachingEventPublisher events, CoachingStudyPlanAccess? staffAccess = null) : IGoalTargetService
 {
-    public async Task<GoalTargetView?> GetAsync(Guid goalId, CancellationToken cancellationToken = default)
+    public Task<GoalTargetView?> GetAsync(Guid goalId, CancellationToken cancellationToken = default) => GetCoreAsync(goalId, null, cancellationToken);
+    public Task<GoalTargetView?> GetForStudentAsync(Guid studentId, Guid goalId, CancellationToken cancellationToken = default) => GetCoreAsync(goalId, studentId, cancellationToken);
+    private async Task<GoalTargetView?> GetCoreAsync(Guid goalId, Guid? staffStudentId, CancellationToken cancellationToken)
     {
-        var studentId = RequireStudent();
+        var studentId = await RequireAsync(staffStudentId, false, cancellationToken);
         var goal = await db.AcademicGoals.AsNoTracking()
             .SingleOrDefaultAsync(x => x.Id == goalId && x.StudentId == studentId, cancellationToken);
-        return goal is null ? null : await ViewAsync(goal, cancellationToken);
+        return goal is null ? null : await ViewAsync(goal, cancellationToken,
+            staffStudentId.HasValue ? await CanTeacherEditAsync(goal, cancellationToken) : null);
     }
 
-    public async Task<GoalTargetView> ReplaceAsync(Guid goalId, GoalTargetUpdate request, CancellationToken cancellationToken = default)
+    public Task<GoalTargetView> ReplaceAsync(Guid goalId, GoalTargetUpdate request, CancellationToken cancellationToken = default) => ReplaceCoreAsync(goalId, request, null, cancellationToken);
+    public Task<GoalTargetView> ReplaceForStudentAsync(Guid studentId, Guid goalId, GoalTargetUpdate request, CancellationToken cancellationToken = default) => ReplaceCoreAsync(goalId, request, studentId, cancellationToken);
+    private async Task<GoalTargetView> ReplaceCoreAsync(Guid goalId, GoalTargetUpdate request, Guid? staffStudentId, CancellationToken cancellationToken)
     {
-        var studentId = RequireStudent();
+        var studentId = await RequireAsync(staffStudentId, true, cancellationToken);
         ArgumentNullException.ThrowIfNull(request);
         if (request.ExpectedVersion < 0 || request.TargetSchoolId == Guid.Empty || request.TargetUniversityProgramId == Guid.Empty
             || (request.TargetSchoolId.HasValue && request.TargetUniversityProgramId.HasValue))
             throw new ArgumentException("Tek bir okul veya üniversite programı seçin.");
         var goal = await db.AcademicGoals.SingleOrDefaultAsync(x => x.Id == goalId && x.StudentId == studentId, cancellationToken)
             ?? throw new KeyNotFoundException("Hedef bulunamadı.");
-        if (goal.SetByTeacherId.HasValue)
+        if (staffStudentId.HasValue ? !IsTeacherOwner(goal) : goal.SetByTeacherId.HasValue)
             throw new BusinessRuleException("Authorization.Forbidden", "Öğretmenin oluşturduğu hedefi yalnız yetkili öğretmen düzenleyebilir.");
         if (goal.Version != request.ExpectedVersion)
             throw new BusinessRuleException("StudyPlanning.Conflict", "Hedef değişti. Güncel kaydı yükleyip tekrar deneyin.");
@@ -40,29 +45,47 @@ public sealed class CoachingGoalTargetService(CoachingDbContext db, ICoachingAcc
             && !await db.TargetUniversityPrograms.AnyAsync(x => x.Id == programId && x.IsActive, cancellationToken))
             throw new ArgumentException("Seçilen üniversite programı artık kullanılamıyor.");
         if (goal.TargetSchoolId == request.TargetSchoolId && goal.TargetUniversityProgramId == request.TargetUniversityProgramId)
-            return await ViewAsync(goal, cancellationToken);
+            return await ViewAsync(goal, cancellationToken, staffStudentId.HasValue ? true : null);
         goal.SetCatalogTarget(request.TargetUniversityProgramId, request.TargetSchoolId);
         // The registered publisher uses the same scoped Coaching EF bus outbox.
         await events.PublishAsync(new GoalUpdatedEvent(goal.Id, goal.StudentId, goal.SetByTeacherId, goal.Title), cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
-        return await ViewAsync(goal, cancellationToken);
+        return await ViewAsync(goal, cancellationToken, staffStudentId.HasValue ? true : null);
     }
 
-    public async Task<GoalTargetView> ReplaceScoreAsync(Guid goalId, GoalScoreTargetUpdate request, CancellationToken cancellationToken = default)
+    public Task<GoalTargetView> ReplaceScoreAsync(Guid goalId, GoalScoreTargetUpdate request, CancellationToken cancellationToken = default) => ReplaceScoreCoreAsync(goalId, request, null, cancellationToken);
+    public Task<GoalTargetView> ReplaceScoreForStudentAsync(Guid studentId, Guid goalId, GoalScoreTargetUpdate request, CancellationToken cancellationToken = default) => ReplaceScoreCoreAsync(goalId, request, studentId, cancellationToken);
+    private async Task<GoalTargetView> ReplaceScoreCoreAsync(Guid goalId, GoalScoreTargetUpdate request, Guid? staffStudentId, CancellationToken cancellationToken)
     {
-        var studentId = RequireStudent();
+        var studentId = await RequireAsync(staffStudentId, true, cancellationToken);
         ArgumentNullException.ThrowIfNull(request);
         if (request.ExpectedVersion < 0) throw new ArgumentException("A valid version is required.");
         var goal = await db.AcademicGoals.SingleOrDefaultAsync(x => x.Id == goalId && x.StudentId == studentId, cancellationToken)
             ?? throw new KeyNotFoundException("Hedef bulunamadı.");
-        if (goal.SetByTeacherId.HasValue)
+        if (staffStudentId.HasValue ? !IsTeacherOwner(goal) : goal.SetByTeacherId.HasValue)
             throw new BusinessRuleException("Authorization.Forbidden", "Öğretmenin oluşturduğu hedefi öğrenci değiştiremez.");
         if (goal.Version != request.ExpectedVersion)
             throw new BusinessRuleException("StudyPlanning.Conflict", "Hedef değişti. Güncel kaydı yükleyip tekrar deneyin.");
         goal.SetScoreTarget(request.TargetScore, request.MaxScore, request.ExamType);
         await events.PublishAsync(new GoalUpdatedEvent(goal.Id, goal.StudentId, goal.SetByTeacherId, goal.Title), cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
-        return await ViewAsync(goal, cancellationToken);
+        return await ViewAsync(goal, cancellationToken, staffStudentId.HasValue ? true : null);
+    }
+
+    private bool IsTeacherOwner(AcademicGoal goal) => access.CurrentUserId is { } actor && access.IsCurrentTeacher(actor) && goal.SetByTeacherId == actor;
+    private async Task<bool> CanTeacherEditAsync(AcademicGoal goal, CancellationToken ct)
+    {
+        if (!IsTeacherOwner(goal) || staffAccess is null) return false;
+        try { await staffAccess.RequireTeacherWriteAsync(goal.StudentId, ct); return true; }
+        catch (BusinessRuleException ex) when (ex.Code.StartsWith("Authorization.", StringComparison.Ordinal)) { return false; }
+    }
+    private async Task<Guid> RequireAsync(Guid? studentId, bool write, CancellationToken ct)
+    {
+        if (!studentId.HasValue) return RequireStudent();
+        if (staffAccess is null) throw new BusinessRuleException("Authorization.Forbidden", "Personel kapsamı doğrulanamadı.");
+        if (write) await staffAccess.RequireTeacherWriteAsync(studentId.Value, ct);
+        else await staffAccess.RequireAsync(studentId.Value, ct);
+        return studentId.Value;
     }
 
     private Guid RequireStudent()
@@ -71,7 +94,7 @@ public sealed class CoachingGoalTargetService(CoachingDbContext db, ICoachingAcc
             throw new BusinessRuleException("Authorization.Forbidden", "Bu işlem yalnız öğrencinin kendi hesabıyla kullanılabilir.");
         return studentId;
     }
-    private async Task<GoalTargetView> ViewAsync(AcademicGoal goal, CancellationToken cancellationToken)
+    private async Task<GoalTargetView> ViewAsync(AcademicGoal goal, CancellationToken cancellationToken, bool? canEdit = null)
     {
         // Existing links remain readable even when the catalog entry becomes inactive.
         GoalCatalogTargetView? target = null;
@@ -84,7 +107,7 @@ public sealed class CoachingGoalTargetService(CoachingDbContext db, ICoachingAcc
                 .Select(x => new GoalCatalogTargetView(x.UniversityName + " — " + x.Name, x.ScoreType ?? "", x.IsActive))
                 .SingleOrDefaultAsync(cancellationToken);
         return new(goal.Id, goal.Version, goal.TargetUniversityProgramId, goal.TargetSchoolId,
-            !goal.SetByTeacherId.HasValue, target,
+            canEdit ?? !goal.SetByTeacherId.HasValue, target,
             new(goal.TargetScore, goal.TargetMaxScore, goal.TargetExamType, goal.TargetSubject));
     }
 }

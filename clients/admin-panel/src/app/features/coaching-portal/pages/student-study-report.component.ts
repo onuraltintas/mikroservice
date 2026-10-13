@@ -21,6 +21,18 @@ interface StudyReport {
 }
 
 @Component({ selector: 'app-student-study-report', standalone: true, imports: [CommonModule, FormsModule],
+  styles: [`
+    :host-context(staff-coaching-study) { display: block; margin-top: 1.25rem; }
+    :host-context(staff-coaching-study) section { padding: 1rem; border: 1px solid #e2e7dd; border-radius: .75rem; }
+    :host-context(staff-coaching-study) .flex { display: flex; flex-wrap: wrap; align-items: end; gap: .75rem; margin: 1rem 0; }
+    :host-context(staff-coaching-study) label { display: grid; gap: .3rem; }
+    :host-context(staff-coaching-study) input, :host-context(staff-coaching-study) button { padding: .6rem .8rem; border: 1px solid #d5dfd2; border-radius: .5rem; background: white; color: #355348; font: inherit; }
+    :host-context(staff-coaching-study) button { cursor: pointer; background: #f5f8f1; }
+    :host-context(staff-coaching-study) dl { display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: 1rem; }
+    :host-context(staff-coaching-study) dd { margin: .3rem 0 0; font-weight: 700; }
+    :host-context(staff-coaching-study) table { width: 100%; border-collapse: collapse; text-align: left; }
+    :host-context(staff-coaching-study) th, :host-context(staff-coaching-study) td { padding: .6rem; border-bottom: 1px solid #e2e7dd; }
+  `],
   template: `
     <section class="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900" aria-labelledby="study-report-title">
       <h2 id="study-report-title" class="text-lg font-semibold">{{ adminStudentId || staffStudentId ? 'Öğrencinin çalışma planı raporu' : 'Çalışma planı raporum' }}</h2>

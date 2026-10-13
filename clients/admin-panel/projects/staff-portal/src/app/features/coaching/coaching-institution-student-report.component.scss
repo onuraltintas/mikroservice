@@ -29,6 +29,7 @@ button:disabled { cursor: wait; opacity: .55; }
 .report-error { display: flex; align-items: center; justify-content: space-between; gap: .8rem; padding: .75rem; border: 1px solid #fecaca; border-radius: .65rem; background: #fff1f2; color: #9f1239; font-size: .75rem; }
 .report-error button { flex: 0 0 auto; padding: .4rem .6rem; border: 1px solid #f3b2bd; border-radius: .5rem; background: white; color: #9f1239; font: inherit; font-weight: 700; cursor: pointer; }
 .table-scroll { overflow-x: auto; }
+.study-toggle { padding: .65rem .85rem; margin-bottom: 1rem; border: 1px solid #d5dfd2; border-radius: .55rem; background: #f5f8f1; color: #355348; font: inherit; font-weight: 700; cursor: pointer; }
 table { width: 100%; border-collapse: collapse; text-align: left; font-size: .76rem; }
 th { padding: .62rem .65rem; background: #f5f7f2; color: #71807a; font-size: .64rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; }
 td { padding: .68rem .65rem; border-top: 1px solid #edf0e9; color: #64716d; }

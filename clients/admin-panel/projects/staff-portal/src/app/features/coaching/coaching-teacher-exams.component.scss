@@ -50,6 +50,8 @@ button:disabled { cursor: wait; opacity: .55; }
 .student-name { min-width: 9rem; font-weight: 700; }
 .result-note { min-width: 10rem; max-width: 18rem; color: #64748b; white-space: pre-wrap; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+.subject-score-row { display: flex; flex-wrap: wrap; align-items: end; gap: .75rem; margin: .75rem 0; }
+.subject-score-row .field { flex: 1 1 8rem; }
 
 @media (max-width: 850px) {
   .form-grid, .result-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }

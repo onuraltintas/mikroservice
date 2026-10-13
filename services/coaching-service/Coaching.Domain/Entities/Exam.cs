@@ -258,9 +258,24 @@ public class ExamResult : Entity
         EmptyAnswers = empty;
     }
 
-    public void SetSubjectScores(Dictionary<string, decimal> subjectScores)
+    public void SetSubjectScores(Dictionary<string, decimal> subjectScores, decimal maxScore = 999.99m)
     {
-        SubjectScoresJson = System.Text.Json.JsonSerializer.Serialize(subjectScores);
+        SubjectScoresJson = SerializeSubjectScores(subjectScores, maxScore);
+    }
+
+    private static string? SerializeSubjectScores(Dictionary<string, decimal>? scores, decimal maxScore)
+    {
+        if (scores is null) return null;
+        var normalized = new Dictionary<string, decimal>();
+        var names = new HashSet<string>(StringComparer.Create(System.Globalization.CultureInfo.GetCultureInfo("tr-TR"), true));
+        foreach (var (name, score) in scores)
+        {
+            var subject = name.Trim();
+            if (subject.Length is < 1 or > 100 || score < 0 || score > maxScore || !names.Add(subject))
+                throw new BusinessRuleException("Exam.SubjectScoreInvalid", "Ders adları tekil ve 1-100 karakter, puanları sınavın puan aralığında olmalıdır.");
+            normalized.Add(subject, score);
+        }
+        return System.Text.Json.JsonSerializer.Serialize(normalized);
     }
 
     public void SetLessonAnswers(IReadOnlyList<LessonAnswerStatistics> lessons)
@@ -317,18 +332,13 @@ public class ExamResult : Entity
         if (ranking is < 1)
             throw new ArgumentOutOfRangeException(nameof(ranking), "Ranking must be greater than 0.");
 
-        if (subjectScores?.Values.Any(value => value is < 0 || value > maxScore) == true)
-            throw new BusinessRuleException(
-                "Exam.SubjectScoreInvalid",
-                "Ders puanları 0 ile maksimum puan arasında olmalıdır.");
+        var subjectScoresJson = SerializeSubjectScores(subjectScores, maxScore);
 
         Score = score;
         CorrectAnswers = correctAnswers;
         WrongAnswers = wrongAnswers;
         EmptyAnswers = emptyAnswers;
-        SubjectScoresJson = subjectScores is null
-            ? null
-            : System.Text.Json.JsonSerializer.Serialize(subjectScores);
+        SubjectScoresJson = subjectScoresJson;
         Ranking = ranking;
         TeacherNotes = string.IsNullOrWhiteSpace(teacherNotes) ? null : teacherNotes.Trim();
         UpdatedAt = DateTime.UtcNow;

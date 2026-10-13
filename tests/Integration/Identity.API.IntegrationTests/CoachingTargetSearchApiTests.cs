@@ -10,10 +10,10 @@ namespace Identity.API.IntegrationTests;
 public sealed class CoachingTargetSearchApiTests
 {
     [Fact]
-    public void Api_RequiresStudentAndBoundsSearchTraffic()
+    public void Api_RequiresStudentOrCoachingStaffAndBoundsSearchTraffic()
     {
         var type = typeof(TargetCatalogController);
-        Assert.Equal("Student", Assert.Single(type.GetCustomAttributes(typeof(AuthorizeAttribute), false).Cast<AuthorizeAttribute>()).Roles);
+        Assert.Equal("Student,Teacher,InstitutionAdmin,InstitutionOwner", Assert.Single(type.GetCustomAttributes(typeof(AuthorizeAttribute), false).Cast<AuthorizeAttribute>()).Roles);
         Assert.Equal("api/coaching/study-planning/targets", Assert.Single(type.GetCustomAttributes(typeof(RouteAttribute), false).Cast<RouteAttribute>()).Template);
         Assert.Equal("target-catalog-search", Assert.Single(type.GetCustomAttributes(typeof(EnableRateLimitingAttribute), false).Cast<EnableRateLimitingAttribute>()).PolicyName);
     }

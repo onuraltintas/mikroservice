@@ -16,8 +16,24 @@ namespace Coaching.API.Controllers;
 [Authorize(Roles = "Teacher,InstitutionAdmin,InstitutionOwner")]
 [Route("api/coaching/staff/students/{studentId:guid}/study")]
 public sealed class CoachingStaffStudyController(CoachingManualStudyPlanService plans,
-    CoachingStudentStudyReportService reports, CoachingStudyPlanAccess access, CoachingDbContext db) : ControllerBase
+    CoachingStudentStudyReportService reports, CoachingStudyPlanAccess access, CoachingDbContext db,
+    CoachingGoalTargetService goalTargets) : ControllerBase
 {
+    [HttpGet("goals/{goalId:guid}/target")]
+    public Task<IActionResult> GetGoalTarget(Guid studentId, Guid goalId, CancellationToken ct) => Respond(async () =>
+    {
+        var target = await goalTargets.GetForStudentAsync(studentId, goalId, ct);
+        return target is null ? NotFound() : Ok(new { success = true, data = target });
+    });
+
+    [HttpPut("goals/{goalId:guid}/target"), Authorize(Roles = "Teacher"), RequestSizeLimit(1024), EnableRateLimiting("study-planning-write")]
+    public Task<IActionResult> ReplaceGoalTarget(Guid studentId, Guid goalId, GoalTargetUpdate request, CancellationToken ct) => Respond(async () =>
+        Ok(new { success = true, data = await goalTargets.ReplaceForStudentAsync(studentId, goalId, request, ct) }));
+
+    [HttpPut("goals/{goalId:guid}/target/score"), Authorize(Roles = "Teacher"), RequestSizeLimit(1024), EnableRateLimiting("study-planning-write")]
+    public Task<IActionResult> ReplaceGoalScoreTarget(Guid studentId, Guid goalId, GoalScoreTargetUpdate request, CancellationToken ct) => Respond(async () =>
+        Ok(new { success = true, data = await goalTargets.ReplaceScoreForStudentAsync(studentId, goalId, request, ct) }));
+
     [HttpGet("plans")]
     public Task<IActionResult> List(Guid studentId, int pageNumber = 1, int pageSize = 20,
         StudyPlanStatus? status = null, CancellationToken ct = default) => Respond(async () =>
@@ -80,6 +96,7 @@ public sealed class CoachingStaffStudyController(CoachingManualStudyPlanService 
         { return UnprocessableEntity(new { success = false, message = ex.Message, code = ex.Code }); }
         catch (ConcurrencyException)
         { return Conflict(new { success = false, message = "Plan değişti. Güncel planı yeniden açın." }); }
+        catch (KeyNotFoundException) { return NotFound(); }
         catch (ArgumentException)
         { return BadRequest(new { success = false, message = "Öğrenci, tarih, plan ve süre alanlarını kontrol edin." }); }
     }

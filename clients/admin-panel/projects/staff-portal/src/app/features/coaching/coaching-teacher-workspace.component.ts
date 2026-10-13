@@ -17,7 +17,8 @@ type CoachingTeacherSection = 'students' | 'assignments' | 'sessions' | 'goals' 
 })
 export class CoachingTeacherWorkspaceComponent {
   @ViewChild(CoachingTeacherStudentsComponent) private students?: CoachingTeacherStudentsComponent;
-  canLeavePage(): boolean { return this.students?.canLeavePage() ?? true; }
+  @ViewChild(CoachingTeacherGoalsComponent) private goals?: CoachingTeacherGoalsComponent;
+  canLeavePage(): boolean { return (this.students?.canLeavePage() ?? true) && (this.goals?.canLeavePage() ?? true); }
   readonly activeSection = signal<CoachingTeacherSection>('students');
 
   selectSection(section: CoachingTeacherSection): void {

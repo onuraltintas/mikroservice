@@ -51,6 +51,7 @@
 .goals-loading div { height: 86px; border-radius: 12px; background: linear-gradient(90deg, #e9ebe3, #f3f3ed, #e9ebe3); background-size: 200% 100%; animation: goals-shimmer 1.4s linear infinite; }
 .load-goals-wrap { display: flex; justify-content: center; margin-top: 12px; }
 .visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+.goal-target-editor { border: 0; padding: 0; margin: 0; min-width: 0; }
 @keyframes goals-shimmer { to { background-position: -200% 0; } }
 @media (max-width: 760px) { .three-columns { grid-template-columns: 1fr; } }
 @media (max-width: 560px) { .goals-heading { align-items: flex-start; flex-direction: column; } .two-columns { grid-template-columns: 1fr; } }

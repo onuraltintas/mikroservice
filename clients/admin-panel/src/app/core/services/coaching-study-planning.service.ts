@@ -69,15 +69,19 @@ export class CoachingStudyPlanningService {
     const params = new HttpParams().set('search', search.trim()).set('scoreType', scoreType.trim()).set('pageNumber', pageNumber).set('pageSize', 20);
     return this.http.get<ApiResult<TargetPage<UniversityTarget>>>(`${this.targetUrl}/university-programs`, { params }).pipe(map(result => result.data));
   }
-  getGoalTarget(goalId: string) {
-    return this.http.get<ApiResult<GoalTarget>>(`${environment.apiUrl}/coaching/study-planning/goals/${encodeURIComponent(goalId)}/target`).pipe(map(result => result.data));
+  private goalTargetUrl(goalId: string, studentId?: string) {
+    const root = studentId ? `${environment.apiUrl}/coaching/staff/students/${encodeURIComponent(studentId)}/study` : `${environment.apiUrl}/coaching/study-planning`;
+    return `${root}/goals/${encodeURIComponent(goalId)}/target`;
   }
-  saveGoalTarget(goalId: string, expectedVersion: number, targetUniversityProgramId: string | null, targetSchoolId: string | null) {
-    return this.http.put<ApiResult<GoalTarget>>(`${environment.apiUrl}/coaching/study-planning/goals/${encodeURIComponent(goalId)}/target`,
+  getGoalTarget(goalId: string, studentId?: string) {
+    return this.http.get<ApiResult<GoalTarget>>(this.goalTargetUrl(goalId, studentId)).pipe(map(result => result.data));
+  }
+  saveGoalTarget(goalId: string, expectedVersion: number, targetUniversityProgramId: string | null, targetSchoolId: string | null, studentId?: string) {
+    return this.http.put<ApiResult<GoalTarget>>(this.goalTargetUrl(goalId, studentId),
       { expectedVersion, targetUniversityProgramId, targetSchoolId }).pipe(map(result => result.data));
   }
-  saveGoalScoreTarget(goalId: string, expectedVersion: number, targetScore: number | null, maxScore: number | null, examType: string | null) {
-    return this.http.put<ApiResult<GoalTarget>>(`${environment.apiUrl}/coaching/study-planning/goals/${encodeURIComponent(goalId)}/target/score`,
+  saveGoalScoreTarget(goalId: string, expectedVersion: number, targetScore: number | null, maxScore: number | null, examType: string | null, studentId?: string) {
+    return this.http.put<ApiResult<GoalTarget>>(`${this.goalTargetUrl(goalId, studentId)}/score`,
       { expectedVersion, targetScore, maxScore, examType }).pipe(map(result => result.data));
   }
 

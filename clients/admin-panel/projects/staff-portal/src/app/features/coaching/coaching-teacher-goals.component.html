@@ -125,6 +125,9 @@
             <div class="progress-value" [style.width.%]="progressWidth(goal.progress)"></div>
           </div>
           <footer><button type="button" [attr.data-testid]="'edit-goal-' + goal.id" (click)="editGoal(goal)">Düzenle</button></footer>
+          <fieldset [disabled]="isSaving()" class="goal-target-editor">
+            <app-student-goal-target [goalId]="goal.id" [staffStudentId]="goal.studentId" (targetChanged)="goalTargetChanged($event)" />
+          </fieldset>
         </article>
       }
     </div>

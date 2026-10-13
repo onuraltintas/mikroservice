@@ -8,7 +8,7 @@ namespace Coaching.API.Controllers;
 
 [ApiController]
 [ApiVersion(1.0)]
-[Authorize(Roles = "Student")]
+[Authorize(Roles = "Student,Teacher,InstitutionAdmin,InstitutionOwner")]
 [EnableRateLimiting("target-catalog-search")]
 [Route("api/coaching/study-planning/targets")]
 public sealed class TargetCatalogController(ITargetSearchService targets) : ControllerBase

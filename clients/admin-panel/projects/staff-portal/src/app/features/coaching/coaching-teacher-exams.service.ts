@@ -2,6 +2,7 @@ import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { coachingExamTypes } from './coaching-enum-contract';
 
 export interface CoachingTeacherExam {
   id: string;
@@ -94,6 +95,7 @@ export class CoachingTeacherExamsService {
     const headers = new HttpHeaders({ 'Idempotency-Key': idempotencyKey });
     return this.http.post<{ examId: string }>(this.url, {
       ...request,
+      type: coachingExamTypes[request.type],
       title: request.title.trim(),
       institutionId: request.institutionId || null,
       description: request.description?.trim() || null
@@ -105,6 +107,7 @@ export class CoachingTeacherExamsService {
       `${this.url}/${encodeURIComponent(examId)}`,
       {
         ...request,
+        type: coachingExamTypes[request.type],
         examId,
         title: request.title.trim(),
         subject: request.subject?.trim() || null,

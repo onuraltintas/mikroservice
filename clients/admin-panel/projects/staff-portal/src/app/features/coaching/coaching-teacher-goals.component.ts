@@ -1,6 +1,8 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, QueryList, ViewChildren, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { StudentGoalTargetComponent } from '../../../../../../src/app/features/coaching-portal/pages/student-goal-target.component';
+import { GoalTarget } from '../../../../../../src/app/core/services/coaching-study-planning.service';
 import { finalize, forkJoin } from 'rxjs';
 import { StaffAuthService } from '../../auth/staff-auth.service';
 import { CoachingTeacherStudent, CoachingTeacherStudentsService } from './coaching-teacher-students.service';
@@ -25,11 +27,23 @@ interface GoalForm {
 @Component({
   selector: 'staff-coaching-teacher-goals',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, StudentGoalTargetComponent],
   templateUrl: './coaching-teacher-goals.component.html',
   styleUrl: './coaching-teacher-goals.component.scss'
 })
 export class CoachingTeacherGoalsComponent implements OnInit {
+  @ViewChildren(StudentGoalTargetComponent) private targets?: QueryList<StudentGoalTargetComponent>;
+  canLeavePage(): boolean { return !this.isSaving() && (this.targets?.toArray().every(target => target.canLeavePage()) ?? true); }
+  goalTargetChanged(target: GoalTarget): void {
+    if (!target.scoreTarget) return;
+    const targetScore = target.scoreTarget.targetScore ?? undefined;
+    const targetExamType = target.scoreTarget.examType ?? undefined;
+    this.goals.update(goals => goals.map(goal => goal.id === target.goalId ? { ...goal, targetScore, targetExamType } : goal));
+    if (this.editingGoalId() === target.goalId) {
+      this.form.targetScore = targetScore;
+      this.form.targetExamType = this.examTypes.find(type => type.key === targetExamType)?.value;
+    }
+  }
   private readonly authService = inject(StaffAuthService);
   private readonly goalsService = inject(CoachingTeacherGoalsService);
   private readonly studentsService = inject(CoachingTeacherStudentsService);
@@ -82,6 +96,7 @@ export class CoachingTeacherGoalsComponent implements OnInit {
   }
 
   loadGoals(append = false): void {
+    if (!this.canLeavePage()) return;
     const teacherId = this.authService.getCurrentUserId();
     if (!teacherId) {
       this.isLoading.set(false);
@@ -141,6 +156,7 @@ export class CoachingTeacherGoalsComponent implements OnInit {
   }
 
   saveGoal(): void {
+    if (!this.canLeavePage()) return;
     const teacherId = this.authService.getCurrentUserId();
     const title = this.form.title.trim();
     if (!teacherId || !title || !this.form.studentId) {
@@ -279,6 +295,7 @@ export class CoachingTeacherGoalsComponent implements OnInit {
   }
 
   private completeSave(message: string): void {
+    this.isSaving.set(false);
     this.successMessage.set(message);
     this.cancelGoalEdit();
     this.loadGoals();

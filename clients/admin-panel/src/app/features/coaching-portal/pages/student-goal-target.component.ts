@@ -1,17 +1,37 @@
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, HostListener, Input, inject, signal } from '@angular/core';
+import { Component, DestroyRef, EventEmitter, HostListener, Input, OnChanges, Output, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { Observable, finalize, map } from 'rxjs';
+import { Observable, Subject, finalize, map, takeUntil } from 'rxjs';
 import { CoachingStudyPlanningService, GoalTarget, TargetPage } from '../../../core/services/coaching-study-planning.service';
 
 interface TargetResult { id: string; label: string; detail: string; minimumScore: number | null; scoreYear: number | null }
 @Component({
   selector: 'app-student-goal-target', standalone: true, imports: [CommonModule, FormsModule],
-  templateUrl: './student-goal-target.component.html'
+  templateUrl: './student-goal-target.component.html',
+  styles: [`
+    :host-context(staff-coaching-teacher-goals) { display: block; margin-top: 1rem; }
+    :host-context(staff-coaching-teacher-goals) button { padding: .55rem .8rem; border: 1px solid #d5dfd2; border-radius: .5rem; background: #f5f8f1; color: #355348; font: inherit; cursor: pointer; }
+    :host-context(staff-coaching-teacher-goals) button:disabled { opacity: .5; cursor: default; }
+    :host-context(staff-coaching-teacher-goals) fieldset { display: grid; gap: .75rem; border: 0; padding: .75rem 0; }
+    :host-context(staff-coaching-teacher-goals) label { display: grid; gap: .3rem; }
+    :host-context(staff-coaching-teacher-goals) input, :host-context(staff-coaching-teacher-goals) select { width: 100%; box-sizing: border-box; padding: .6rem; border: 1px solid #d5dfd2; border-radius: .5rem; background: white; font: inherit; }
+    :host-context(staff-coaching-teacher-goals) ul { list-style: none; padding: 0; }
+    :host-context(staff-coaching-teacher-goals) li { padding: .75rem; margin-top: .5rem; border: 1px solid #e2e7dd; border-radius: .5rem; }
+  `]
 })
-export class StudentGoalTargetComponent {
+export class StudentGoalTargetComponent implements OnChanges {
   @Input({ required: true }) goalId = '';
+  @Input() staffStudentId: string | null = null;
+  @Output() readonly targetChanged = new EventEmitter<GoalTarget>();
+  private readonly scopeChanged = new Subject<void>();
+  ngOnChanges(): void {
+    this.scopeChanged.next(); this.expanded.set(false); this.target.set(null); this.results.set([]);
+    this.busy.set(false); this.saving.set(false); this.stale.set(false); this.error.set(''); this.success.set('');
+    this.query = ''; this.city = ''; this.district = ''; this.scoreType = ''; this.page = 1; this.total = 0; this.searched = false;
+    this.score = null; this.maxScore = null; this.examType = '';
+  }
+  private get studentArgument(): [] | [string] { return this.staffStudentId ? [this.staffStudentId] : []; }
   private readonly service = inject(CoachingStudyPlanningService);
   private readonly destroyRef = inject(DestroyRef);
   readonly expanded = signal(false);
@@ -35,7 +55,7 @@ export class StudentGoalTargetComponent {
     this.expanded.set(true); this.target.set(null); this.results.set([]);
     this.stale.set(false); this.error.set(''); this.success.set(''); this.searched = false;
     this.busy.set(true);
-    this.service.getGoalTarget(this.goalId).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.busy.set(false))).subscribe({
+    this.service.getGoalTarget(this.goalId, ...this.studentArgument).pipe(takeUntil(this.scopeChanged), takeUntilDestroyed(this.destroyRef), finalize(() => this.busy.set(false))).subscribe({
       next: value => { this.target.set(value); this.loadScore(value); },
       error: () => this.error.set('Hedef bilgisi yüklenemedi. Yeniden yükleyebilirsiniz.')
     });
@@ -50,7 +70,7 @@ export class StudentGoalTargetComponent {
     const search: Observable<TargetPage<TargetResult>> = this.kind === 'school'
       ? this.service.searchSchools(this.query, this.city, this.district, page).pipe(map(value => ({ ...value, items: value.items.map(x => ({ ...x, label: x.name, detail: `${x.city} / ${x.district}` })) })))
       : this.service.searchPrograms(this.query, this.scoreType, page).pipe(map(value => ({ ...value, items: value.items.map(x => ({ ...x, label: `${x.universityName} — ${x.name}`, detail: [x.programCode, x.scoreType].filter(Boolean).join(' · ') })) })));
-    search.pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.busy.set(false))).subscribe({
+    search.pipe(takeUntil(this.scopeChanged), takeUntilDestroyed(this.destroyRef), finalize(() => this.busy.set(false))).subscribe({
       next: (value: TargetPage<TargetResult>) => { this.results.set(value.items); this.page = value.pageNumber; this.total = value.totalCount; this.searched = true; },
       error: () => this.error.set('Arama sonuçları yüklenemedi. Filtreleri kontrol edip yeniden deneyin.')
     });
@@ -80,9 +100,9 @@ export class StudentGoalTargetComponent {
     const target = this.target();
     if (!target?.canEdit || this.busy() || this.saving() || this.stale()) return;
     this.saving.set(true); this.error.set(''); this.success.set('');
-    this.service.saveGoalScoreTarget(this.goalId, target.version, score, maxScore, examType)
-      .pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.saving.set(false))).subscribe({
-        next: value => { this.target.set(value); this.loadScore(value); this.success.set(score === null ? 'Puan hedefi kaldırıldı.' : 'Puan hedefi kaydedildi. Raporu yenileyerek hesabı görebilirsiniz.'); },
+    this.service.saveGoalScoreTarget(this.goalId, target.version, score, maxScore, examType, ...this.studentArgument)
+      .pipe(takeUntil(this.scopeChanged), takeUntilDestroyed(this.destroyRef), finalize(() => this.saving.set(false))).subscribe({
+        next: value => { this.target.set(value); this.loadScore(value); this.targetChanged.emit(value); this.success.set(score === null ? 'Puan hedefi kaldırıldı.' : 'Puan hedefi kaydedildi. Raporu yenileyerek hesabı görebilirsiniz.'); },
         error: err => { this.stale.set(err.status === 409); this.error.set(err.status === 409
           ? 'Hedef değişti. Güncel bilgileri yeniden yükleyin.' : 'Puan hedefi kaydedilemedi. Bilgileri kontrol edip yeniden deneyin.'); }
       });
@@ -91,9 +111,9 @@ export class StudentGoalTargetComponent {
     const target = this.target();
     if (!target?.canEdit || this.busy() || this.saving() || this.stale()) return;
     this.saving.set(true); this.error.set(''); this.success.set('');
-    this.service.saveGoalTarget(this.goalId, target.version, programId, schoolId)
-      .pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.saving.set(false))).subscribe({
-        next: value => { this.target.set(value); this.success.set(programId || schoolId ? 'Hedef bağlantısı kaydedildi.' : 'Hedef bağlantısı kaldırıldı.'); },
+    this.service.saveGoalTarget(this.goalId, target.version, programId, schoolId, ...this.studentArgument)
+      .pipe(takeUntil(this.scopeChanged), takeUntilDestroyed(this.destroyRef), finalize(() => this.saving.set(false))).subscribe({
+        next: value => { this.target.set(value); this.targetChanged.emit(value); this.success.set(programId || schoolId ? 'Hedef bağlantısı kaydedildi.' : 'Hedef bağlantısı kaldırıldı.'); },
         error: err => {
           this.stale.set(err.status === 409);
           this.error.set(err.status === 409 ? 'Hedef değişti. Güncel bilgileri yeniden yükleyin.' : 'Bağlantı kaydedilemedi. Seçilen kayıt artık aktif olmayabilir; yeniden arayın.');
