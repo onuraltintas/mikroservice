@@ -220,6 +220,7 @@ builder.Services.AddMassTransit(x =>
     x.AddConsumer<GoalCreatedConsumer>();
     x.AddConsumer<GoalUpdatedConsumer>();
     x.AddConsumer<StudyPlanPublishedConsumer>();
+    x.AddConsumer<CoachingReminderDueConsumer>();
     x.AddConsumer<NotificationErasureAssessmentRequestedConsumer>();
     x.AddConsumer<NotificationErasureExecutionRequestedConsumer>();
     
@@ -357,6 +358,12 @@ builder.Services.AddMassTransit(x =>
                 retry.Exponential(5, TimeSpan.FromSeconds(1), TimeSpan.FromMinutes(1), TimeSpan.FromSeconds(5)));
             e.UseEntityFrameworkOutbox<NotificationDbContext>(context);
             e.ConfigureConsumer<StudyPlanPublishedConsumer>(context);
+        });
+        cfg.ReceiveEndpoint("coaching-reminder-due", e =>
+        {
+            e.UseMessageRetry(retry => retry.Exponential(5, TimeSpan.FromSeconds(1), TimeSpan.FromMinutes(1), TimeSpan.FromSeconds(5)));
+            e.UseEntityFrameworkOutbox<NotificationDbContext>(context);
+            e.ConfigureConsumer<CoachingReminderDueConsumer>(context);
         });
 
         cfg.ReceiveEndpoint("notification-privacy-erasure-assessment", e =>
