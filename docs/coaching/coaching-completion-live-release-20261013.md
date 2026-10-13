@@ -4,7 +4,7 @@
 
 Koçluk tamamlayıcı değişiklikleri canlıya alındı. Beş uygulama `coaching-completion-20261013-ac014834` imaj etiketinde çalışıyor. Ana uygulama yayını 17:36:17 UTC / 20:36:17 İstanbul saatinde tamamlandı. Son smoke kontrolü 17:58:36 UTC'de geçti: ana yayından 22 dakika, son edge geçişinden 15 dakika geçmişti. Üç API hazır, iki panel sağlıklı, yeniden başlama ve uygulama hata sayıları sıfırdı.
 
-Gerçek SystemAdmin oturumunda koçluk finansı, katalog filtreleme ve operasyon listeleme test edildi. **Öğretmen–öğrenci–kurum haftalık plan döngüsünün canlı oturumlu testi tamamlanmadı.** Canlı kullanıcı listesinde iki Student ve bir SystemAdmin bulunuyor; Teacher, InstitutionAdmin veya InstitutionOwner hesabı yok. Kullanıcıdan test hesapları ve test kurumu bilgisi istendi. Sağlık veya anonim 401 kontrolleri bu eksik rol testlerinin yerine sayılmıyor.
+Gerçek SystemAdmin oturumunda koçluk finansı, katalog filtreleme ve operasyon listeleme test edildi. Kullanıcının test hesabı oluşturma yetkisiyle üç sentetik hesap ve ayrı test kurumu açıldı. **Öğretmen → öğrenci → öğretmen/kurum haftalık plan döngüsü canlıda, normal Identity girişleriyle tamamlandı.** Öğretmenin yayımladığı 45 dakika/30 soruluk çalışma öğrenci tarafından 40 dakika/24 soru olarak tamamlandı; iki personel raporunda 1/1, %100 ve haftalık karşılaştırma doğrulandı. Kurumun manuel ücret/tahsilat kaydı öğrenci ve adminin salt okunur ekranlarına yansıdı, ardından düzeltme ve iptal ile test borcu/net tahsilat sıfırlandı. Ayrıntı ve kanıtlar [canlı rol testi raporunda](coaching-live-role-tests-20261013.md). Son sağlık kontrolü 19:53:13 UTC / 22:53:13 İstanbul'da geçti; üç API hata sayısı ve beş servisin restart sayısı sıfır.
 
 ## Kaynak ve yayın kapsamı
 
@@ -48,7 +48,10 @@ Yedek SHA256 özetleri:
 | Gerçek admin finans oturumu | Açık ücret/kasa sorguları ve yenilemeler çalıştı; mevcut ücret/tahsilat kayıtları boş |
 | Gerçek admin katalog oturumu | 169 ders; Matematik filtresinde 20 kayıt |
 | Gerçek admin operasyon oturumu | Seans ve sınav sekmeleri boş durumla, hedef sekmesi 13 mevcut kayıtla açıldı |
-| Personel giriş ekranı | Koçluk ürünü seçili; öğretmen/kurum girişi görüntülendi; oturumlu personel akışı yapılmadı |
+| Öğretmen, öğrenci, kurum girişleri | Üç sentetik hesapla normal canlı Identity girişi başarılı; haftalık plan yayımlama/tamamlama/rapor döngüsü geçti |
+| Kurum lisansı ve öğrenci erişimi | Özel ücretsiz 7 günlük kurum lisansı, 1/1 koltuk ve öğrencide aktif erişim doğrulandı |
+| Canlı finans döngüsü | Kurum 100 TL ücret/25 TL manuel kayıt; öğrenci/admin salt okuma; düzeltme + iptal sonrası borç/net tahsilat 0, iki hareket geçmişte korunuyor |
+| Canlı uygulama içi bildirim | Öğrencide StudyPlanPublished ve StudyPlanReminder göründü |
 | Anonim öğrenci planı, kendi ücretleri, personel açık ücretleri, admin açık ücretleri, personel planı ve kurum listesi | Altı uç HTTP 401 |
 | Öğrenci finans, admin finans, personel girişi, Hızlı Okuma girişi | Dört public adres HTTP 200 |
 | Hedef dışı container kimlikleri/imajları | Yayın öncesiyle birebir aynı |
@@ -70,4 +73,4 @@ Edge değişikliği 17:43:17 UTC'de doğrulandı; mevcut yapılandırma yedeklen
 
 İlk edge denemeleri public yönlendirme kontrolünden geçmedi ve önceki yapılandırmaya geri döndü. Reload, validate edilen aday dosyaya sabitlendi; iç proxy ve public kontroller ardından geçti. Bu kontrol hataları başarılı rol testleri olarak sayılmıyor.
 
-Otomatik geri dönüş yalnız beş hedef imajı eski sabitlenmiş sürümlere geçirir, komut sonucunu, imaj kimliklerini ve readiness'i denetler. Edge için ayrı doğrulanmış yapılandırma geri dönüşü bulunur. **Finans migration'ının Down işlemi veri tablolarını düşürür; canlı geri dönüşte kullanılmaz.** Yedekler ve önceki imajlar korunur. Test kurum/hesapları hazır olunca haftalık plan yayımlama → öğrenci tamamlaması → öğretmen/kurum raporu ve rol bazlı finans yetkileri ayrıca canlıda doğrulanmalıdır.
+Otomatik geri dönüş yalnız beş hedef imajı eski sabitlenmiş sürümlere geçirir, komut sonucunu, imaj kimliklerini ve readiness'i denetler. Edge için ayrı doğrulanmış yapılandırma geri dönüşü bulunur. **Finans migration'ının Down işlemi veri tablolarını düşürür; canlı geri dönüşte kullanılmaz.** Yedekler ve önceki imajlar korunur. Dört rolün canlı temel akışları ayrıca tamamlandı; bu testler tüm yerel regresyon senaryolarının canlıda yeniden çalıştırıldığı anlamına gelmez.
