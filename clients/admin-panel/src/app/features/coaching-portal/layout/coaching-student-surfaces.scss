@@ -1,4 +1,7 @@
 // Shared components inherit this treatment only inside the student portal.
+@media (max-width: 800px) {
+  body:has(.coaching-shell) .grecaptcha-badge { bottom: calc(86px + env(safe-area-inset-bottom)) !important; }
+}
 .coaching-shell .coaching-content {
   > :not(router-outlet) { display: block; min-width: 0; }
   h1 { font-size: clamp(1.65rem, 2.5vw, 2.15rem); font-weight: 750; letter-spacing: -.7px; line-height: 1.25; }

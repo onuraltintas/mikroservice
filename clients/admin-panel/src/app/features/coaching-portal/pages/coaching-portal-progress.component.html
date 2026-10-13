@@ -21,7 +21,7 @@
   </div>
 
   <ng-container *ngIf="!isLoading()">
-    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+    <div class="grid grid-cols-2 gap-4 lg:grid-cols-5">
       <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <p class="text-sm text-slate-500">Tamamlanan hedef</p>
         <p class="mt-2 text-3xl font-bold">{{ summary()?.completedGoals ?? '—' }}<span class="text-base font-medium text-slate-400"> / {{ summary()?.totalGoals ?? '—' }}</span></p>

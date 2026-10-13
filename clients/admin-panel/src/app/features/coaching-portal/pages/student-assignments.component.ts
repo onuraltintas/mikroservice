@@ -70,7 +70,9 @@ export class StudentAssignmentsComponent implements OnInit {
   assignmentStatusLabel(assignment: StudentAssignment) {
     if (assignment.assignmentStatus === 'Cancelled') return 'İptal edildi';
     if (assignment.assignmentStatus === 'Completed') return 'Tamamlandı';
-    return assignment.isOverdue ? 'Gecikti' : assignment.status;
+    if (assignment.status === 'Graded') return 'Değerlendirildi';
+    if (assignment.submittedAt || assignment.status === 'Submitted') return 'Teslim edildi';
+    return assignment.isOverdue ? 'Gecikti' : 'Çalışmanı bekliyor';
   }
 
   setFilter(value: 'all' | 'pending' | 'submitted' | 'overdue' | 'cancelled') {
