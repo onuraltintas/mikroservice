@@ -20,6 +20,7 @@ test('teacher publishes a weekly plan, student completes work, teacher and insti
   const initialReport = await request.get(`${api}/${planningStudent}/study/report?fromDate=2026-10-19&toDate=2026-10-25`, { headers: teacherHeaders });
   expect(initialReport.ok(), await initialReport.text()).toBeTruthy();
   const initialActualMinutes = (await initialReport.json()).data.actualMinutes ?? 0;
+  const initialActualQuestions = (await initialReport.json()).data.actualQuestions ?? 0;
   const drafts = await request.get(`${api}/${planningStudent}/study/plans?status=Draft`, { headers: teacherHeaders });
   expect(drafts.ok(), await drafts.text()).toBeTruthy();
   for (const draft of (await drafts.json()).data.items) {
@@ -33,10 +34,13 @@ test('teacher publishes a weekly plan, student completes work, teacher and insti
   const teacherEditor = teacherPage.locator('app-student-study-plans');
   await teacherEditor.getByRole('button', { name: 'Yeni taslak', exact: true }).click();
   const title = `Koç haftası ${randomUUID()}`;
+  const source = `Matematik kitabı s.20–25 ${'x'.repeat(250)}`;
   await teacherEditor.getByLabel('Plan başlığı', { exact: true }).fill(title);
   await teacherEditor.getByLabel('Çalışma başlığı', { exact: true }).fill('Kesirler tekrarı');
   await teacherEditor.getByLabel('Tarih', { exact: true }).fill('2026-10-19');
   await teacherEditor.getByLabel('Süre (dk)', { exact: true }).fill('45');
+  await teacherEditor.getByLabel('Kaynak / sayfa (isteğe bağlı)', { exact: true }).fill(source);
+  await teacherEditor.getByLabel('Planlanan soru (isteğe bağlı)', { exact: true }).fill('30');
   await teacherEditor.getByRole('button', { name: 'Taslağı kaydet', exact: true }).click();
   await teacherEditor.getByLabel('Planımı kontrol ettim, yayımlamayı onaylıyorum.').check();
   await teacherEditor.getByRole('button', { name: 'Planı yayımla', exact: true }).click();
@@ -49,8 +53,13 @@ test('teacher publishes a weekly plan, student completes work, teacher and insti
   await studentPage.goto('http://127.0.0.1:4300/coaching-portal/study-plans');
   await studentPage.getByRole('button', { name: new RegExp(title) }).click();
   await studentPage.getByLabel('Gerçek süre (dk)', { exact: true }).fill('40');
+  await studentPage.getByLabel('Gerçek soru (isteğe bağlı)', { exact: true }).fill('24');
   await studentPage.getByRole('button', { name: 'Tamamla', exact: true }).click();
   await expect(studentPage.getByText(/Tamamlandı · 40 dk/)).toBeVisible();
+  await expect(studentPage.getByText(`Kaynak: ${source}`, { exact: true })).toBeVisible();
+  await expect(studentPage.getByText('Kaydedilen soru: 24', { exact: true })).toBeVisible();
+  await studentPage.setViewportSize({ width: 390, height: 844 });
+  expect(await studentPage.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
 
   await teacherEditor.getByRole('button', { name: new RegExp(title) }).click();
   await expect(teacherEditor.getByText(/Tamamlandı · 40 dk/)).toBeVisible();
@@ -60,6 +69,7 @@ test('teacher publishes a weekly plan, student completes work, teacher and insti
   await teacherReport.getByRole('checkbox', { name: /Önceki haftayla karşılaştır/ }).check();
   await teacherReport.getByRole('button', { name: 'Raporu göster' }).click();
   await expect(teacherReport.getByText(`${initialActualMinutes + 40} dakika`, { exact: true })).toBeVisible();
+  await expect(teacherReport.getByText(new RegExp(`Kaydedilen soru: ${initialActualQuestions + 24} ·`))).toBeVisible();
   await expect(teacherReport.getByText('Haftalar arası çalışma karşılaştırması', { exact: true })).toBeVisible();
   await teacherPage.getByTestId('open-session-brief').click();
   await expect(teacherEditor).toHaveCount(0);
@@ -74,6 +84,9 @@ test('teacher publishes a weekly plan, student completes work, teacher and insti
   const institutionEditor = institutionPage.locator('app-student-study-plans');
   await institutionEditor.getByRole('button', { name: new RegExp(title) }).click();
   await expect(institutionEditor.getByText(/Tamamlandı · 40 dk/)).toBeVisible();
+  await expect(institutionEditor.getByText(`Kaynak: ${source}`, { exact: true })).toBeVisible();
+  await expect(institutionEditor.getByText('Planlanan soru: 30', { exact: true })).toBeVisible();
+  await expect(institutionEditor.getByText('Kaydedilen soru: 24', { exact: true })).toBeVisible();
   await expect(institutionEditor.getByRole('button', { name: 'Yeni taslak' })).toHaveCount(0);
   await expect(institutionEditor.getByRole('button', { name: 'Tamamla', exact: true })).toHaveCount(0);
   const institutionReport = institutionPage.locator('app-student-study-report');
