@@ -265,3 +265,41 @@ test('institution assigns and suspends a real subscription seat and student acce
     expect((await request.put(`${base}/api/coaching-admin/subscriptions/${subscriptionId}`, { headers: adminHeaders, data: { status: 'Cancelled', endDate: null, notes: 'Disposable test complete' } })).ok()).toBeTruthy();
   }
 });
+
+test('admin goal form rejects a stale version and explicitly reloads the current score scale', async ({ browser, request }) => {
+  const base = 'http://127.0.0.1:5006';
+  const teacherHeaders = { Authorization: `Bearer ${planningToken(planningTeacher, ['Teacher'])}` };
+  const adminToken = planningToken(randomUUID(), ['SystemAdmin']); const adminHeaders = { Authorization: `Bearer ${adminToken}` };
+  const created = await request.post(`${base}/api/goals`, { headers: { ...teacherHeaders, 'Idempotency-Key': randomUUID() }, data: {
+    studentId: planningStudent, teacherId: planningTeacher, title: `Admin sürüm testi ${randomUUID()}`, category: 'ExamPreparation', targetScore: 400
+  } });
+  expect(created.ok(), await created.text()).toBeTruthy(); const id = (await created.json()).goalId;
+  const context = await browser.newContext(); const page = await context.newPage();
+  try {
+    await page.route('**/api/auth/refresh-token', route => route.fulfill({ json: { accessToken: adminToken, tokenType: 'Bearer', expiresInMinutes: 15 } }));
+    await page.goto(`http://127.0.0.1:4300/dashboard/coaching/operations/goal/${id}/edit`);
+    const form = page.locator('app-coaching-resource-edit');
+    await expect(form.getByLabel('Hedef puan', { exact: true })).toHaveValue('400');
+    const detail = await request.get(`${base}/api/coaching-admin/goals/${id}`, { headers: adminHeaders });
+    expect(detail.ok(), await detail.text()).toBeTruthy(); const oldVersion = (await detail.json()).version;
+    const score = await request.put(`${api}/${planningStudent}/study/goals/${id}/target/score`, { headers: teacherHeaders,
+      data: { expectedVersion: oldVersion, targetScore: 450, maxScore: 500, examType: 'LGS' } });
+    expect(score.ok(), await score.text()).toBeTruthy();
+    await form.getByLabel('Başlık', { exact: true }).fill('Admin eski form');
+    await form.getByRole('button', { name: 'Kaydet', exact: true }).click();
+    await expect(form.getByTestId('reload-admin-goal')).toBeVisible();
+    await expect(form.getByLabel('Başlık', { exact: true })).toHaveValue('Admin eski form');
+    await form.getByTestId('reload-admin-goal').click();
+    await expect(form.getByLabel('Hedef puan', { exact: true })).toHaveValue('450');
+    await form.getByLabel('Başlık', { exact: true }).fill('Admin güncel form');
+    await form.getByRole('button', { name: 'Kaydet', exact: true }).click();
+    await expect(page).toHaveURL(/\/dashboard\/coaching\/operations$/);
+    const target = await request.get(`${api}/${planningStudent}/study/goals/${id}/target`, { headers: teacherHeaders });
+    expect((await target.json()).data.scoreTarget).toMatchObject({ targetScore: 450, maxScore: 500, examType: 'LGS' });
+    const current = await request.get(`${base}/api/coaching-admin/goals/${id}`, { headers: adminHeaders });
+    expect((await current.json()).title).toBe('Admin güncel form');
+  } finally {
+    await context.close();
+    expect((await request.delete(`${base}/api/goals/${id}`, { headers: teacherHeaders })).ok()).toBeTruthy();
+  }
+});

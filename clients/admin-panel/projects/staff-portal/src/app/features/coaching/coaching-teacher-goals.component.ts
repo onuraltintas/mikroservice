@@ -62,7 +62,7 @@ export class CoachingTeacherGoalsComponent implements OnInit {
   readonly goalConflict = signal(false);
   reloadConflictedGoals(): void {
     if (!this.canLeavePage()) return;
-    this.cancelGoalEdit(); this.loadGoals();
+    this.cancelGoalEdit(); this.goalConflict.set(true); this.loadGoals();
   }
   readonly successMessage = signal<string | null>(null);
   readonly editingGoalId = signal<string | null>(null);
@@ -119,6 +119,7 @@ export class CoachingTeacherGoalsComponent implements OnInit {
     ).subscribe({
       next: page => {
         this.goals.update(current => append ? [...current, ...page.items] : page.items);
+        this.goalConflict.set(false);
         this.goalPageNumber.set(page.pageNumber);
         this.goalTotalPages.set(page.totalPages ?? Math.max(1, Math.ceil(page.totalCount / page.pageSize)));
         this.loadStudentNames(page.items);

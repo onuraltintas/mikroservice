@@ -13,6 +13,7 @@
 - Gerçek API tarayıcı testiyle bulunan öğretmen hedef/sınav enum biçimi uyumsuzluğu düzeltildi: sayısal form seçenekleri HTTP sınırında sunucunun beklediği enum adına çevriliyor; sunucunun katı sözleşmesi korunuyor.
 - Öğretmen hedeflerini mevcut aktif okul/üniversite kataloğuna ve sınav türü/puan ölçeğine bağlayabiliyor. Hedef sahibi öğretmen ve aktif atama birlikte doğrulanıyor. Öğrenci ve kurum öğretmen hedefini değiştiremiyor.
 - Hedef kaydı sonrası kart ve düzenleme formu güncelleniyor; sonraki başlık değişikliği yeni puan ölçeğini sıfırlamıyor. Öğrenci/hedef kapsamı değişince eski istekler iptal ediliyor.
+- Öğretmen ve admin hedef düzenleme formları okudukları sürümü gönderiyor. Eski sürümdeki form 409 alıyor; güncel puan/ölçek değiştirilmiyor. Kullanıcı güncel kaydı yüklemeyi seçene kadar form korunuyor; yenileme başarısız olsa da tekrar deneme eylemi erişilebilir kalıyor. Eski istemciler için sürüm alanı isteğe bağlıdır.
 - Kurumun “Analiz ve uyarılar” sekmesi mevcut karşılaştırma/erken uyarı API'lerine bağlandı. Tarih/sınıf filtreleri, 25 kişilik sayfalama, yetki kaybında veri temizleme ve uyarıdan öğrenci raporuna geçiş var. Geri dönüş filtre/sayfa bağlamını koruyor. Filtre değişiminde eski istek ve sonuçlar temizleniyor.
 - Kurum öğrenci sınıfını ve öğretmen atamasını düzenleyebiliyor, öğrenci/öğretmeni onayla kurumdan çıkarabiliyor. Identity kurum kapsamındaki mevcut uçlar kullanılıyor. Bekleyen kayıt filtre, gezinme ve çıkışı engelliyor; çıkarılan öğretmen liste yenilemesi başarısız olsa da seçim önbelleğinden hemen kaldırılıyor.
 - Kurum abonelik/kontenjan sekmesi etkin lisansı gösteriyor; mevcut kurum öğrencisine koltuk atama, askıya alma ve ayrılan öğrencinin rezerve koltuğunu serbest bırakma sunucuda kurum kapsamıyla doğrulanıyor. Son koltuk eşzamanlı atamalarda aşılmıyor. Kurumdan ayrılan öğrencinin geçmiş koltuğu aktif erişim vermiyor.
@@ -37,6 +38,7 @@ Yerel sonuçlar `artifacts/coaching-completion-20261013/` altında tutuluyor.
 - `staff-enum-green.log`: katı sunucu enum sözleşmesiyle hedef/sınav servislerinde 9 test başarılı.
 - Son `e2e-results.json` beş başarılı senaryo içeriyor. Ek üyelik senaryosu sınıf/öğretmen düzenleme, bekleyen kayıtta çıkış engeli, çıkarma onayı ve eski öğretmen seçeneğinin temizlenmesini sentetik Identity HTTP yanıtlarıyla doğruluyor; gerçek Identity üyelik entegrasyonu kanıtı değildir.
 - Güncel E2E sonucu altı başarılı senaryoya ulaştı. Son senaryo gerçek yönetici plan/lisans oluşturma API'si, kurum koltuk atama/kaldırma API'si ve öğrenci abonelik erişimi API'sini birlikte doğruluyor; kurum üyeliği yine sentetik Identity fixture'dır. Lisans test sonunda iptal edilir; ücret tahsilatı yapılmaz. Kontenjan ekranı 390 pikselde taşmıyor.
+- Hedef sürüm kontrolü sonrasında E2E yedi başarılı senaryo: ek admin formu eski 400 hedefini kaydetmeyi reddediyor; öğretmenin yeni 450/500 hedefini yükleyip yeni başlıkla kaydediyor. `admin-goal-version-green.trx` 8, `admin-goal-version-ui-green-final.log` 15, `goal-version-ui-green-final.log` 12 başarılı seçili test içeriyor. `*-goal-recovery-retry-red.log` iki panelde 409 sonrası başarısız yenileme sorununu yeniden üretiyor.
 
 Frontend testlerinde bu Windows ortamındaki geçici modül çözümleme sorunu için `artifacts/coaching-completion-20261013/vitest-runner.mjs` kullanılıyor. Geçici TEMP/TMP dizini client `.tmp` altında. Backend testleri `-m:1 -p:UseSharedCompilation=false` ile seri derleniyor.
 
@@ -44,12 +46,11 @@ Frontend testlerinde bu Windows ortamındaki geçici modül çözümleme sorunu 
 
 Bu çalışma henüz bütün ürün eksiklerinin tamamlandığı anlamına gelmiyor. Önceki karşılaştırmadan kalan işler:
 
-1. Hedefin farklı tarayıcıdan eski sürümle düzenlenmesini engellemek.
-2. Haftalar arası çalışma karşılaştırması, seans öncesi birleşik öğrenci özeti ve veriye dayalı konu öncelikleri.
-3. Plan işlerinde kaynak ve soru sayısı takibi; yaklaşan çalışma/seans hatırlatmaları.
-4. Koçluk öğrenci ücret/borç/taksit/kasa akışının mevcut kurs finansından ayrı ürün kapsamıyla ele alınması.
-5. Koçluk soru bankası, süreli sınav alma/puanlama ve kazanım takibi.
-6. Tamamlanan bölümleri kapsayan mobil/masaüstü tarayıcı senaryoları ve son kapsam incelemesi.
+1. Haftalar arası çalışma karşılaştırması, seans öncesi birleşik öğrenci özeti ve veriye dayalı konu öncelikleri.
+2. Plan işlerinde kaynak ve soru sayısı takibi; yaklaşan çalışma/seans hatırlatmaları.
+3. Koçluk öğrenci ücret/borç/taksit/kasa akışının mevcut kurs finansından ayrı ürün kapsamıyla ele alınması.
+4. Koçluk soru bankası, süreli sınav alma/puanlama ve kazanım takibi.
+5. Tamamlanan bölümleri kapsayan mobil/masaüstü tarayıcı senaryoları ve son kapsam incelemesi.
 
 Zoom ve SMS sağlayıcı/hesabı kullanıcıda şu an yok. Mevcut manuel toplantı bağlantısı, ICS ve uygulama içi bildirimler kullanılabilir. Gerçek sağlayıcı entegrasyonu veya teslimat testi yapılmış değildir. Canlıya dağıtım yapılmadı.
 

@@ -24,7 +24,8 @@ public sealed record CoachingAdminGoalDetailDto(
     DateTime? TargetDate,
     int CurrentProgress,
     bool IsCompleted,
-    DateTime CreatedAt);
+    DateTime CreatedAt,
+    int Version = 0);
 
 public sealed class GetCoachingAdminGoalQueryHandler(
     IAcademicGoalRepository repository)
@@ -59,6 +60,7 @@ public sealed class GetCoachingAdminGoalQueryHandler(
             goal.TargetDate,
             goal.CurrentProgress,
             goal.IsCompleted,
-            goal.CreatedAt);
+            goal.CreatedAt,
+            goal.Version);
     }
 }

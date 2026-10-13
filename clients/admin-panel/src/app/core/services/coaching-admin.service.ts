@@ -303,6 +303,7 @@ export interface CoachingAdminExamDetail {
 }
 
 export interface CoachingAdminGoalDetail {
+  version?: number;
   id: string;
   studentId: string;
   setByTeacherId?: string;
@@ -447,6 +448,7 @@ export interface CoachingAdminExamResultUpdateRequest {
 }
 
 export interface CoachingAdminGoalUpdateRequest {
+  expectedVersion?: number;
   goalId: string;
   title: string;
   description?: string | null;
