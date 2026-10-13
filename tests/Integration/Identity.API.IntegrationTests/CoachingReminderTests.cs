@@ -23,6 +23,31 @@ namespace Identity.API.IntegrationTests;
 public sealed class CoachingReminderTests(PostgresFixture postgres)
 {
     [Fact]
+    public async Task OverdueFeesProduceOnePrivateStudentReminderPerLocalDayAndStopAfterSettlement()
+    {
+        var clock = new Clock { Now = new(DateTime.UtcNow.Date.AddDays(1).AddHours(6), TimeSpan.Zero) };
+        var today = DateOnly.FromDateTime(clock.Now.UtcDateTime); var student = Guid.NewGuid(); var other = Guid.NewGuid(); var actor = Guid.NewGuid();
+        await using var provider = Services().BuildServiceProvider(); await using var scope = provider.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<CoachingDbContext>(); await db.Database.EnsureDeletedAsync(); await db.Database.MigrateAsync();
+        try {
+            CoachingFeeAgreement Fee(Guid owner, DateOnly due) => CoachingFeeAgreement.Create(Guid.NewGuid(), owner, Guid.NewGuid(), null, actor,
+                "Private fee title", 100m, [new(due, 100m)], clock.Now.UtcDateTime);
+            var first = Fee(student, today.AddDays(-1)); var second = Fee(student, today.AddDays(-2));
+            var future = Fee(other, today.AddDays(1)); var cancelled = Fee(other, today.AddDays(-1)); cancelled.Cancel(actor, "Cancelled", clock.Now.UtcDateTime);
+            db.AddRange(first, second, future, cancelled); await db.SaveChangesAsync(); db.ChangeTracker.Clear();
+            var processor = new CoachingReminderProcessor(db, new MassTransitCoachingEventPublisher(scope.ServiceProvider.GetRequiredService<IPublishEndpoint>()), clock);
+            clock.Now = clock.Now.AddMinutes(-1); Assert.Equal(0, await processor.ProcessAsync());
+            clock.Now = clock.Now.AddMinutes(1); Assert.Equal(1, await processor.ProcessAsync()); Assert.Equal(0, await processor.ProcessAsync());
+            var receipt = Assert.Single(await db.CoachingReminderReceipts.AsNoTracking().ToListAsync());
+            Assert.Equal("FeeOverdue", receipt.Kind); Assert.Equal(student, receipt.RecipientUserId); Assert.Equal(student, receipt.SourceId);
+            var message = Assert.Single(await db.Set<OutboxMessage>().AsNoTracking().ToListAsync()); Assert.DoesNotContain("Private fee title", message.Body);
+            foreach (var fee in await db.CoachingFeeAgreements.Where(x => x.StudentId == student).ToListAsync())
+                db.CoachingFeePayments.Add(fee.AddPayment(Guid.NewGuid(), actor, fee.Balance, CoachingFeePaymentMethod.Cash, today, clock.Now.UtcDateTime, null));
+            await db.SaveChangesAsync(); db.ChangeTracker.Clear(); clock.Now = clock.Now.AddDays(1);
+            Assert.Equal(0, await processor.ProcessAsync()); Assert.Single(await db.CoachingReminderReceipts.AsNoTracking().ToListAsync());
+        } finally { await db.Database.EnsureDeletedAsync(); }
+    }
+    [Fact]
     public async Task ConcurrentEarlierPlanDoesNotShiftAQueuedReminderOntoTheNextPage()
     {
         var clock = new Clock { Now = new(DateTime.UtcNow.Date.AddDays(1).AddHours(6), TimeSpan.Zero) };

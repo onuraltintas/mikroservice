@@ -92,6 +92,7 @@ public sealed class CoachingNotificationConsumerTests
             var reminderId = Guid.NewGuid();
             await harness.Bus.Publish(new CoachingReminderDueEvent(reminderId, firstStudentId, Guid.NewGuid(), "StudyDay", DateTime.UtcNow));
             await harness.Bus.Publish(new CoachingReminderDueEvent(Guid.NewGuid(), teacherId, Guid.NewGuid(), "Session", DateTime.UtcNow));
+            await harness.Bus.Publish(new CoachingReminderDueEvent(Guid.NewGuid(), firstStudentId, firstStudentId, "FeeOverdue", DateTime.UtcNow));
 
             (await harness.Consumed.Any<AssignmentCreatedEvent>()).Should().BeTrue();
             (await harness.Consumed.Any<AssignmentUpdatedEvent>()).Should().BeTrue();
@@ -108,12 +109,13 @@ public sealed class CoachingNotificationConsumerTests
             (await harness.Consumed.Any<StudyPlanPublishedEvent>()).Should().BeTrue();
             (await harness.Consumed.Any<CoachingReminderDueEvent>()).Should().BeTrue();
 
-            for (var attempt = 0; attempt < 50 && recordingDispatcher.Calls.Count < 15; attempt++)
+            for (var attempt = 0; attempt < 50 && recordingDispatcher.Calls.Count < 16; attempt++)
             {
                 await Task.Delay(20);
             }
 
-            recordingDispatcher.Calls.Should().HaveCount(15);
+            recordingDispatcher.Calls.Should().HaveCount(16);
+            recordingDispatcher.Calls.Single(call => call.Type == "FeeOverdueReminder").RecipientIds.Should().Equal(firstStudentId);
             recordingDispatcher.Calls.Single(call => call.Type == "SessionReminder").RecipientIds.Should().Equal(teacherId);
             var reminder = recordingDispatcher.Calls.Single(call => call.Type == "StudyPlanReminder");
             reminder.RecipientIds.Should().Equal(firstStudentId); reminder.EventMessageId.Should().Be(reminderId);
