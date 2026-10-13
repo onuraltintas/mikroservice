@@ -4,6 +4,16 @@ import { CoachingStudyPlanningService } from '../../../core/services/coaching-st
 import { StudentGoalTargetComponent } from './student-goal-target.component';
 
 describe('StudentGoalTargetComponent', () => {
+  it('sends teacher target reads and writes in the selected student scope', () => {
+    const { component, fixture, service } = setup();
+    fixture.componentRef.setInput('staffStudentId', 'student');
+    component.open();
+    expect(service.getGoalTarget).toHaveBeenCalledWith('goal', 'student');
+    component.searchTargets(); component.choose('school');
+    expect(service.saveGoalTarget).toHaveBeenCalledWith('goal', 3, null, 'school', 'student');
+    component.score = 450; component.maxScore = 500; component.examType = 'LGS'; component.saveScore();
+    expect(service.saveGoalScoreTarget).toHaveBeenCalledWith('goal', 4, 450, 500, 'LGS', 'student');
+  });
   it('shows the linked catalog name and warns when its record is inactive', () => {
     const { component, fixture } = setup();
     component.open();

@@ -7,6 +7,21 @@ describe('staff study planning requests', () => {
   beforeEach(() => TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] }));
   afterEach(() => TestBed.inject(HttpTestingController).verify());
 
+  it('uses versioned staff endpoints for teacher catalog and score targets', () => {
+    const service = TestBed.inject(CoachingStudyPlanningService);
+    const http = TestBed.inject(HttpTestingController);
+    service.getGoalTarget('goal', 'student').subscribe();
+    http.expectOne('/api/coaching/staff/students/student/study/goals/goal/target').flush({ data: { version: 3 } });
+    service.saveGoalTarget('goal', 3, null, 'school', 'student').subscribe();
+    const catalog = http.expectOne('/api/coaching/staff/students/student/study/goals/goal/target');
+    expect(catalog.request.body).toEqual({ expectedVersion: 3, targetUniversityProgramId: null, targetSchoolId: 'school' });
+    catalog.flush({ data: { version: 4 } });
+    service.saveGoalScoreTarget('goal', 4, 450, 500, 'LGS', 'student').subscribe();
+    const score = http.expectOne('/api/coaching/staff/students/student/study/goals/goal/target/score');
+    expect(score.request.body).toEqual({ expectedVersion: 4, targetScore: 450, maxScore: 500, examType: 'LGS' });
+    score.flush({ data: { version: 5 } });
+  });
+
   it('reads the selected student through the staff API without changing self-service URLs', () => {
     const service = TestBed.inject(CoachingStudyPlanningService);
     const http = TestBed.inject(HttpTestingController);
