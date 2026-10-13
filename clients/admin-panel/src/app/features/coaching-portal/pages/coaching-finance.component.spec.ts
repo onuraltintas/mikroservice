@@ -103,4 +103,15 @@ describe('CoachingFinanceComponent', () => {
     const button = fixture.nativeElement.querySelector('[data-open-receivable="fee"]') as HTMLButtonElement;
     expect(button).not.toBeNull(); button.click(); expect(api.account).toHaveBeenLastCalledWith('staff', 'student', 1);
   });
+  for (const denied of ['cash', 'receivables'] as const) it(`invalidates every parallel read after ${denied} denies access`, () => {
+    const cash = new Subject<{ items: never[]; totalCount: number; pageNumber: number; pageSize: number; cashTotal: number; bankTransferTotal: number }>();
+    const receivables = new Subject<{ items: CoachingFee[]; totalCount: number; pageNumber: number; pageSize: number; balance: number; overdueAmount: number }>();
+    api.cash.mockReturnValue(cash); api.receivables.mockReturnValue(receivables);
+    const fixture = TestBed.createComponent(CoachingFinanceComponent); fixture.componentRef.setInput('mode', 'staff'); fixture.componentRef.setInput('cashView', true); fixture.detectChanges();
+    const component = fixture.componentInstance;
+    if (denied === 'cash') { cash.error(new HttpErrorResponse({ status: 403 })); receivables.next({ items: [fee], totalCount: 1, pageNumber: 1, pageSize: 25, balance: 1000, overdueAmount: 400 }); }
+    else { receivables.error(new HttpErrorResponse({ status: 403 })); cash.next({ items: [], totalCount: 0, pageNumber: 1, pageSize: 25, cashTotal: 500, bankTransferTotal: 0 }); }
+    expect(component.cash()).toBeNull(); expect(component.receivables()).toBeNull(); expect(component.account()).toBeNull();
+    expect(component.loading()).toBe(false); expect(component.receivablesLoading()).toBe(false); expect(component.pending()).toBe(false);
+  });
 });
