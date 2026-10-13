@@ -332,6 +332,23 @@ public sealed class CoachingCmsAndSubscriptionServiceTests
     }
 
     [Fact]
+    public async Task InstitutionSeatStopsGrantingAccessWhenStudentLeavesInstitution()
+    {
+        await using var db = CreateDbContext();
+        var identity = new TestIdentityAuthorizationClient();
+        var subscriptions = new CoachingSubscriptionService(db, identity);
+        var actorId = Guid.NewGuid(); var institutionId = Guid.NewGuid(); var studentId = Guid.NewGuid();
+        identity.InstitutionStudents.Add((institutionId, studentId));
+        var planId = await subscriptions.CreatePlanAsync(Plan("institution-revoked", "Kurum", "Institution", 1000m, 20), actorId);
+        await subscriptions.UpdateSettingsAsync(new(true, "TRY", null, null, null, null, false), actorId, "institution-revoked-settings-01");
+        await subscriptions.CreateSubscriptionAsync(new(planId!.Value, null, null, null, institutionId, [studentId], DateTime.UtcNow, null), actorId);
+        Assert.True((await subscriptions.GetMyAccessAsync(studentId)).HasAccess);
+        identity.InstitutionStudents.Clear();
+        Assert.False((await subscriptions.GetMyAccessAsync(studentId)).HasAccess);
+        Assert.Single(await db.CoachingSubscriptionSeats.ToListAsync());
+    }
+
+    [Fact]
     public async Task InstitutionSubscription_GrantsSeatAccessAndSuspensionRevokesIt()
     {
         await using var db = CreateDbContext();
@@ -528,6 +545,9 @@ public sealed class CoachingCmsAndSubscriptionServiceTests
         public HashSet<Guid> ActiveTeachers { get; } = [];
         public HashSet<(Guid TeacherId, Guid StudentId)> TeacherAssignments { get; } = [];
         public Dictionary<Guid, Guid> TeacherInstitutions { get; } = [];
+        public HashSet<(Guid InstitutionId, Guid StudentId)> InstitutionStudents { get; } = [];
+        public Task<bool> IsActiveInstitutionStudentAsync(Guid institutionId, Guid studentId, CancellationToken cancellationToken) =>
+            Task.FromResult(InstitutionStudents.Contains((institutionId, studentId)));
 
         public Task<CoachingAdminAccessScope?> AuthorizeCoachingAdminAsync(Guid viewerUserId, CancellationToken cancellationToken) =>
             Task.FromResult<CoachingAdminAccessScope?>(null);

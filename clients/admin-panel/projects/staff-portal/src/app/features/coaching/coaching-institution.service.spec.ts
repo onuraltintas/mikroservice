@@ -4,6 +4,13 @@ import { TestBed } from '@angular/core/testing';
 import { CoachingInstitutionService } from './coaching-institution.service';
 
 describe('CoachingInstitutionService', () => {
+  it('loads and manages institution seats without accepting a client institution scope', () => {
+    service.getSubscription().subscribe();
+    const read = http.expectOne('/api/coaching/institution-subscription'); expect(read.request.method).toBe('GET'); read.flush(null);
+    service.setSubscriptionSeat('subscription/1', 'student/1', false).subscribe();
+    const assign = http.expectOne('/api/coaching/institution-subscription/subscription%2F1/students/student%2F1');
+    expect(assign.request.method).toBe('PUT'); expect(assign.request.body).toEqual({ isSuspended: false }); assign.flush(null);
+  });
   it('updates teacher assignment and grade through the current institution scope', () => {
     service.updateStudent('student/1', 8, 'teacher-1').subscribe();
     const update = http.expectOne('/api/institution/students/student%2F1');
