@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { CoachingTeacherStudentsComponent } from './coaching-teacher-students.component';
+import { CoachingTeacherGoalsComponent } from './coaching-teacher-goals.component';
 import { of } from 'rxjs';
 import { vi } from 'vitest';
 import { StaffAuthService } from '../../auth/staff-auth.service';
@@ -87,6 +88,11 @@ describe('CoachingTeacherWorkspaceComponent', () => {
     await fixture.whenStable();
     fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('Hedeflerim');
+    const goals = fixture.debugElement.query(By.directive(CoachingTeacherGoalsComponent)).componentInstance;
+    const goalGuard = vi.spyOn(goals, 'canLeavePage').mockReturnValue(false);
+    fixture.componentInstance.selectSection('exams');
+    expect(fixture.componentInstance.activeSection()).toBe('goals');
+    goalGuard.mockReturnValue(true);
 
     (fixture.nativeElement.querySelector('[data-testid="exams-tab"]') as HTMLButtonElement).click();
     fixture.detectChanges();

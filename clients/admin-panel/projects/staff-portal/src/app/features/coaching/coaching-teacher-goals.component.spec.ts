@@ -1,4 +1,7 @@
 import { TestBed } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { By } from '@angular/platform-browser';
+import { StudentGoalTargetComponent } from '../../../../../../src/app/features/coaching-portal/pages/student-goal-target.component';
 import { of } from 'rxjs';
 import { vi } from 'vitest';
 import { StaffAuthService } from '../../auth/staff-auth.service';
@@ -7,6 +10,27 @@ import { CoachingTeacherGoal, CoachingTeacherGoalsService } from './coaching-tea
 import { CoachingTeacherGoalsComponent } from './coaching-teacher-goals.component';
 
 describe('CoachingTeacherGoalsComponent', () => {
+  it('preserves a newly saved score target during subsequent title editing', () => {
+    const service = goalsService([goal('goal-1')]);
+    const fixture = createFixture(service); fixture.detectChanges();
+    fixture.componentInstance.goalTargetChanged({ goalId: 'goal-1', version: 4, targetSchoolId: null, targetUniversityProgramId: null,
+      canEdit: true, scoreTarget: { targetScore: 450, maxScore: 500, examType: 'LGS', subject: null } });
+    fixture.componentInstance.editGoal(fixture.componentInstance.goals()[0]);
+    fixture.componentInstance.form.title = 'Başlık değişti'; fixture.componentInstance.saveGoal();
+    expect(service.updateGoal).toHaveBeenCalledWith('goal-1', expect.objectContaining({ targetScore: 450, targetExamType: 4 }));
+  });
+  it('protects a pending target save from list refresh and goal replacement', () => {
+    const service = goalsService([goal('goal-1')]);
+    const fixture = createFixture(service); fixture.detectChanges();
+    const target = fixture.debugElement.query(By.directive(StudentGoalTargetComponent)).componentInstance;
+    target.saving.set(true);
+    expect(fixture.componentInstance.canLeavePage()).toBe(false);
+    fixture.componentInstance.loadGoals();
+    expect(service.getTeacherGoals).toHaveBeenCalledTimes(1);
+    fixture.componentInstance.form.studentId = 'student-1'; fixture.componentInstance.form.title = 'Yeni';
+    fixture.componentInstance.saveGoal();
+    expect(service.createGoal).not.toHaveBeenCalled();
+  });
   it('loads only the authenticated teacher goals and displays authorized student context', () => {
     const goals = goalsService([goal('goal-1')]);
     const students = studentService();
@@ -96,6 +120,7 @@ function createFixture(goals = goalsService([]), students = studentService(), te
   TestBed.configureTestingModule({
     imports: [CoachingTeacherGoalsComponent],
     providers: [
+      provideHttpClient(),
       { provide: StaffAuthService, useValue: { getCurrentUserId: () => teacherId } },
       { provide: CoachingTeacherGoalsService, useValue: goals },
       { provide: CoachingTeacherStudentsService, useValue: students }

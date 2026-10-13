@@ -1,9 +1,20 @@
 import { TestBed } from '@angular/core/testing';
 import { of, Subject, throwError } from 'rxjs';
-import { CoachingStudyPlanningService } from '../../../core/services/coaching-study-planning.service';
+import { CoachingStudyPlanningService, GoalTarget } from '../../../core/services/coaching-study-planning.service';
 import { StudentGoalTargetComponent } from './student-goal-target.component';
 
 describe('StudentGoalTargetComponent', () => {
+  it('cancels old target loads when the selected student changes', () => {
+    const { component, fixture, service } = setup();
+    const pending = new Subject<GoalTarget>();
+    service.getGoalTarget.mockReturnValueOnce(pending);
+    fixture.componentRef.setInput('staffStudentId', 'old'); fixture.detectChanges(); component.open();
+    fixture.componentRef.setInput('staffStudentId', 'new'); fixture.detectChanges();
+    expect(pending.observed).toBe(false);
+    pending.next({ goalId: 'goal', version: 5, targetSchoolId: null, targetUniversityProgramId: null, canEdit: true });
+    expect(component.target()).toBeNull(); component.clear();
+    expect(service.saveGoalTarget).not.toHaveBeenCalled();
+  });
   it('sends teacher target reads and writes in the selected student scope', () => {
     const { component, fixture, service } = setup();
     fixture.componentRef.setInput('staffStudentId', 'student');
@@ -25,7 +36,7 @@ describe('StudentGoalTargetComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('pasif');
   });
   function setup(canEdit = true) {
-    const target = { goalId: 'goal', version: 3, targetSchoolId: null, targetUniversityProgramId: null, canEdit };
+    const target: GoalTarget = { goalId: 'goal', version: 3, targetSchoolId: null, targetUniversityProgramId: null, canEdit };
     const service = {
       getGoalTarget: vi.fn(() => of(target)),
       saveGoalScoreTarget: vi.fn(() => of({ ...target, version: 4 })),
