@@ -132,7 +132,7 @@ export interface CoachingInvitationResponse {
 
 @Injectable({ providedIn: 'root' })
 export class CoachingInstitutionService {
-  updateStudent(studentId: string, gradeLevel: number | null, teacherUserId: string | null): Observable<void> {
+  updateStudent(studentId: string, gradeLevel: number, teacherUserId: string | null): Observable<void> {
     return this.http.put<void>(`${environment.apiUrl}/institution/students/${encodeURIComponent(studentId)}`, { gradeLevel, teacherUserId });
   }
 

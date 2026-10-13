@@ -9,9 +9,9 @@ describe('CoachingInstitutionService', () => {
     const update = http.expectOne('/api/institution/students/student%2F1');
     expect(update.request.method).toBe('PUT'); expect(update.request.body).toEqual({ gradeLevel: 8, teacherUserId: 'teacher-1' });
     update.flush(null);
-    service.updateStudent('student/1', null, null).subscribe();
+    service.updateStudent('student/1', 8, null).subscribe();
     const unassign = http.expectOne('/api/institution/students/student%2F1');
-    expect(unassign.request.body).toEqual({ gradeLevel: null, teacherUserId: null }); unassign.flush(null);
+    expect(unassign.request.body).toEqual({ gradeLevel: 8, teacherUserId: null }); unassign.flush(null);
   });
 
   it('removes current institution members through role-scoped endpoints', () => {
