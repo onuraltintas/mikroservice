@@ -100,6 +100,12 @@ public sealed class CoachingFeeServiceTests(PostgresFixture postgres)
             Assert.False(own.CanCreate);
             await Assert.ThrowsAsync<BusinessRuleException>(() => service.CreateAsync(student, Input()));
             await Assert.ThrowsAsync<BusinessRuleException>(() => service.GetStudentAsync(Guid.NewGuid()));
+            actor.Roles = ["Student", "Teacher"];
+            var ownWithTeacherRole = await service.GetStudentAsync(student, studentView: true);
+            Assert.Equal(3, ownWithTeacherRole.TotalCount); Assert.False(ownWithTeacherRole.CanManage); Assert.False(ownWithTeacherRole.CanCreate);
+            Assert.Equal(0, (await service.GetPaymentsAsync(student, fee.Id, studentView: true)).TotalCount);
+            Assert.Equal(fee.Id, (await service.GetAsync(student, fee.Id, studentView: true)).Id);
+            await Assert.ThrowsAsync<BusinessRuleException>(() => service.GetStudentAsync(Guid.NewGuid(), studentView: true));
             actor.UserId = manager; actor.Roles = ["InstitutionOwner"]; scope.Value = new(false, Guid.NewGuid(), [student]);
             Assert.Empty((await service.GetStudentAsync(student)).Agreements);
             actor.Roles = ["SystemAdmin"]; Assert.Equal(3, (await service.GetStudentAsync(student)).TotalCount);
