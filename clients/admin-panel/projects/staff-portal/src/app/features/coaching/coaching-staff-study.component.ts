@@ -9,6 +9,7 @@ import { StudentStudyReportComponent } from '../../../../../../src/app/features/
 @Component({
   selector: 'staff-coaching-study', standalone: true,
   imports: [CommonModule, StudentStudyPlansComponent, StudentStudyReportComponent],
+  styles: [':host { display: block; min-width: 0; } section { min-width: 0; }'],
   template: `
     <section aria-label="Öğrencinin haftalık koçluk planı" class="space-y-5">
       <h3>Haftalık çalışma saatleri</h3>

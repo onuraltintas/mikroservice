@@ -22,7 +22,8 @@ interface StudyReport {
 
 @Component({ selector: 'app-student-study-report', standalone: true, imports: [CommonModule, FormsModule],
   styles: [`
-    :host-context(staff-coaching-study) { display: block; margin-top: 1.25rem; }
+    :host-context(staff-coaching-study) { display: block; margin-top: 1.25rem; min-width: 0; }
+    :host-context(staff-coaching-study) .overflow-x-auto { overflow-x: auto; max-width: 100%; }
     :host-context(staff-coaching-study) section { padding: 1rem; border: 1px solid #e2e7dd; border-radius: .75rem; }
     :host-context(staff-coaching-study) .flex { display: flex; flex-wrap: wrap; align-items: end; gap: .75rem; margin: 1rem 0; }
     :host-context(staff-coaching-study) label { display: grid; gap: .3rem; }
@@ -56,7 +57,7 @@ interface StudyReport {
         @if (previousReport(); as previous) {
           <div class="mt-4 overflow-x-auto">
             <table class="w-full text-left text-sm"><caption class="py-2 text-left font-semibold">Haftalar arası çalışma karşılaştırması</caption>
-              <thead><tr><th>Ölçüm</th><th>Önceki hafta<br>{{ previous.fromDate | date:'dd.MM.yyyy':'UTC' }} – {{ previous.toDate | date:'dd.MM.yyyy':'UTC' }}</th><th>Seçilen hafta</th><th>Değişim</th></tr></thead>
+              <thead><tr><th>Ölçüm</th><th>Önceki hafta<br>{{ previous.fromDate | date:'dd.MM.yyyy' }} – {{ previous.toDate | date:'dd.MM.yyyy' }}</th><th>Seçilen hafta</th><th>Değişim</th></tr></thead>
               <tbody>
                 <tr><th>Tamamlanan iş</th><td>{{ previous.completedTasks }} / {{ previous.scheduledTasks }}</td><td>{{ data.completedTasks }} / {{ data.scheduledTasks }}</td><td>{{ data.completedTasks - previous.completedTasks }} iş</td></tr>
                 <tr><th>Planlanan süre (dk)</th><td>{{ previous.plannedMinutes }}</td><td>{{ data.plannedMinutes }}</td><td>{{ data.plannedMinutes - previous.plannedMinutes }}</td></tr>
