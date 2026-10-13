@@ -16,6 +16,46 @@ namespace Identity.API.IntegrationTests;
 public sealed class CoachingStaffStudyPlanTests(PostgresFixture postgres)
 {
     [Fact]
+    public async Task TeacherCatalogAndScoreTargetsAreScopedVersionedAndInstitutionReadOnly()
+    {
+        await using var db = new CoachingDbContext(new DbContextOptionsBuilder<CoachingDbContext>().UseNpgsql(postgres.ConnectionString).Options);
+        await db.Database.EnsureDeletedAsync();
+        await db.Database.EnsureCreatedAsync();
+        try
+        {
+            var student = Guid.NewGuid();
+            var teacher = Guid.NewGuid();
+            var actor = new Actor(teacher, "Teacher");
+            var policy = new CoachingAccessPolicy(actor);
+            var identity = new Identity(student);
+            var scope = new CoachingStudyPlanAccess(policy, identity, new Scope(student));
+            var service = new CoachingGoalTargetService(db, policy, new RecordingStudyPublisher(), scope);
+            var goal = AcademicGoal.Create(student, "Okul hedefi", Coaching.Domain.Enums.GoalCategory.ExamPreparation, teacher);
+            var school = TargetSchool.Create("test", "school", "Test Lisesi", "İstanbul", "Kadıköy", null, null);
+            school.SetActive(true);
+            db.AddRange(goal, school); await db.SaveChangesAsync(); db.ChangeTracker.Clear();
+            var target = (await service.GetForStudentAsync(student, goal.Id))!;
+            Assert.True(target.CanEdit);
+            var linked = await service.ReplaceForStudentAsync(student, goal.Id, new(target.Version, null, school.Id));
+            Assert.Equal(school.Id, linked.TargetSchoolId);
+            var scored = await service.ReplaceScoreForStudentAsync(student, goal.Id, new(linked.Version, 450, 500, Coaching.Domain.Enums.ExamType.LGS));
+            Assert.Equal(500, scored.ScoreTarget!.MaxScore);
+            await Assert.ThrowsAsync<BusinessRuleException>(() => service.ReplaceScoreForStudentAsync(student, goal.Id, new(linked.Version, 460, 500, Coaching.Domain.Enums.ExamType.LGS)));
+            Assert.Null(await service.GetForStudentAsync(student, Guid.NewGuid()));
+            var otherGoal = AcademicGoal.Create(student, "Başka öğretmen", Coaching.Domain.Enums.GoalCategory.Other, Guid.NewGuid());
+            db.Add(otherGoal); await db.SaveChangesAsync();
+            Assert.False((await service.GetForStudentAsync(student, otherGoal.Id))!.CanEdit);
+            await Assert.ThrowsAsync<BusinessRuleException>(() => service.ReplaceForStudentAsync(student, otherGoal.Id, new(otherGoal.Version, null, school.Id)));
+            actor.Roles = ["InstitutionAdmin"];
+            Assert.False((await service.GetForStudentAsync(student, goal.Id))!.CanEdit);
+            await Assert.ThrowsAsync<BusinessRuleException>(() => service.ReplaceForStudentAsync(student, goal.Id, new(scored.Version, null, null)));
+            actor.Roles = ["Teacher", "InstitutionAdmin"]; identity.Active = false;
+            await Assert.ThrowsAsync<BusinessRuleException>(() => service.ReplaceForStudentAsync(student, goal.Id, new(scored.Version, null, null)));
+        }
+        finally { await db.Database.EnsureDeletedAsync(); }
+    }
+
+    [Fact]
     public async Task TeacherPublishesStudentCompletesAndInstitutionReadsTheSamePlan()
     {
         await using var db = new CoachingDbContext(new DbContextOptionsBuilder<CoachingDbContext>()

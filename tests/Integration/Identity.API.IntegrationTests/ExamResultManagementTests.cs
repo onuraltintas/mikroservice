@@ -7,6 +7,28 @@ namespace Identity.API.IntegrationTests;
 public sealed class ExamResultManagementTests
 {
     [Theory]
+    [InlineData("Matematik", -1)]
+    [InlineData("Matematik", 101)]
+    [InlineData(" ", 80)]
+    public void SubjectScores_RejectInvalidCreateAndUpdateWithoutMutation(string name, int score)
+    {
+        var result = ExamResult.Create(Guid.NewGuid(), Guid.NewGuid(), 85);
+        var invalid = new Dictionary<string, decimal> { [name] = score };
+        Assert.Throws< EduPlatform.Shared.Kernel.Exceptions.BusinessRuleException>(() => result.SetSubjectScores(invalid, 100));
+        Assert.Throws<EduPlatform.Shared.Kernel.Exceptions.BusinessRuleException>(() => result.UpdateEditableDetails(85, 0, 0, 0, invalid, null, null, 100));
+        Assert.Null(result.GetSubjectScores());
+    }
+
+    [Fact]
+    public void SubjectScores_RejectNormalizedDuplicatesAndNormalizeValidNames()
+    {
+        var result = ExamResult.Create(Guid.NewGuid(), Guid.NewGuid(), 85);
+        Assert.Throws<EduPlatform.Shared.Kernel.Exceptions.BusinessRuleException>(() => result.SetSubjectScores(new() { ["Matematik"] = 80, [" matematik "] = 75 }, 100));
+        result.SetSubjectScores(new() { [" Matematik "] = 80 }, 100);
+        Assert.Equal(80, result.GetSubjectScores()!["Matematik"]);
+    }
+
+    [Theory]
     [InlineData(-1, 0, 0)]
     [InlineData(0, -1, 0)]
     [InlineData(0, 0, -1)]
