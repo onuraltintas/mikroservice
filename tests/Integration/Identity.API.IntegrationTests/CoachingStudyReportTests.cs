@@ -6,6 +6,23 @@ namespace Identity.API.IntegrationTests;
 public sealed class CoachingStudyReportTests
 {
     [Fact]
+    public void QuestionTotals_PreserveUnknownAndExposePartialRecording()
+    {
+        var date = new DateOnly(2026, 10, 19);
+        var unknown = StudyReportCalculator.Calculate(date, date, [new(StudyPlanStatus.Active, date, null, 30, true, 25)]);
+        Assert.Null(unknown.PlannedQuestions); Assert.Null(unknown.ActualQuestions);
+        Assert.Equal(0, unknown.PlannedQuestionTasks); Assert.Equal(0, unknown.ActualQuestionTasks);
+        var mixed = StudyReportCalculator.Calculate(date, date, [
+            new(StudyPlanStatus.Active, date, null, 30, true, 25, 20, 0),
+            new(StudyPlanStatus.Active, date, null, 30, true, 25),
+            new(StudyPlanStatus.Draft, date, null, 30, true, 25, 100, 100),
+            new(StudyPlanStatus.Archived, date, null, 30, false, null, 100, null)]);
+        Assert.Equal(20, mixed.PlannedQuestions); Assert.Equal(0, mixed.ActualQuestions);
+        Assert.Equal(1, mixed.PlannedQuestionTasks); Assert.Equal(1, mixed.ActualQuestionTasks);
+        Assert.Equal(2, mixed.CompletedTasks);
+        Assert.Equal(0, mixed.Topics.Single().ActualQuestions);
+    }
+    [Fact]
     public void EmptyPeriod_IsUnknownRatherThanZeroAchievement()
     {
         var report = StudyReportCalculator.Calculate(new(2026, 10, 1), new(2026, 10, 2), []);

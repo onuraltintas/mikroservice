@@ -74,15 +74,19 @@ public sealed class CoachingStaffStudyPlanTests(PostgresFixture postgres)
             var publisher = new RecordingStudyPublisher();
             var plans = new CoachingManualStudyPlanService(db, policy,
                 new CoachingAutomaticStudyPlanPreviewService(db, policy), publisher, scope);
-            var input = new ManualStudyPlanInput("Haftalık koç planı", [new(new(2026, 10, 19), "Matematik", 45, null, true)]);
+            var input = new ManualStudyPlanInput("Haftalık koç planı", [new(new(2026, 10, 19), "Matematik", 45, null, true, "Matematik kitabı", 30)]);
             var draft = await plans.CreateForStudentAsync(student, input);
             var active = await plans.PublishForStudentAsync(student, draft.Id, draft.Version);
             Assert.Equal(StudyPlanStatus.Active, active.Status);
             await Assert.ThrowsAsync<BusinessRuleException>(() => plans.GetForStudentAsync(Guid.NewGuid(), active.Id));
 
             actor.UserId = student; actor.Roles = ["Student"];
-            var completed = await plans.CompleteTaskAsync(active.Id, active.Tasks.Single().Id, active.Version, 40);
+            var completed = await plans.CompleteTaskAsync(active.Id, active.Tasks.Single().Id, active.Version, 40, 24);
             Assert.True(completed.Tasks.Single().IsCompleted);
+            Assert.Equal("Matematik kitabı", completed.Tasks.Single().SourceName);
+            Assert.Equal(30, completed.Tasks.Single().PlannedQuestions); Assert.Equal(24, completed.Tasks.Single().ActualQuestions);
+            await Assert.ThrowsAsync<BusinessRuleException>(() => plans.CompleteTaskAsync(active.Id, active.Tasks.Single().Id, completed.Version, 40, 25));
+            Assert.Equal(24, (await plans.CompleteTaskAsync(active.Id, active.Tasks.Single().Id, completed.Version, 40, 24)).Tasks.Single().ActualQuestions);
             await Assert.ThrowsAsync<BusinessRuleException>(() => plans.PublishForStudentAsync(Guid.NewGuid(), active.Id, active.Version));
 
             actor.UserId = Guid.NewGuid(); actor.Roles = ["Teacher"];
@@ -101,6 +105,7 @@ public sealed class CoachingStaffStudyPlanTests(PostgresFixture postgres)
             var report = await reportService.GetForStudentAsync(student, new(2026, 10, 19), new(2026, 10, 25));
             Assert.Equal(1, report.CompletedTasks);
             Assert.Equal(40, report.ActualMinutes);
+            Assert.Equal(30, report.PlannedQuestions); Assert.Equal(24, report.ActualQuestions);
             var followingWeek = await plans.CreateForStudentAsync(student, input with { Title = "Sonraki hafta" });
             await plans.PublishForStudentAsync(student, followingWeek.Id, followingWeek.Version);
             Assert.True((await plans.GetForStudentAsync(student, active.Id))!.Tasks.Single().IsCompleted);

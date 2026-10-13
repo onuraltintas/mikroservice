@@ -35,7 +35,7 @@ public sealed class CoachingAutomaticDraftTests(PostgresFixture postgres)
             await db.SaveChangesAsync(); db.ChangeTracker.Clear();
             var plans = new CoachingManualStudyPlanService(db, access, new CoachingAutomaticStudyPlanPreviewService(db, access), new RecordingStudyPublisher());
             var date = new DateOnly(2026, 10, 5);
-            var first = await plans.CreateDraftAsync(new("Current", [new(date, "Pinned", 15, null, true), new(date, "Completed", 15, null, false)]));
+            var first = await plans.CreateDraftAsync(new("Current", [new(date, "Pinned", 15, null, true, "Kitap", 20), new(date, "Completed", 15, null, false)]));
             var active = await plans.PublishAsync(first.Id, first.Version);
             active = await plans.CompleteTaskAsync(active.Id, active.Tasks.Single(x => x.Title == "Completed").Id, active.Version, 20);
             var request = new AutomaticStudyDraftRequest("Automatic", new(date, 1, hours.Version, [new(topic.Id, 30)]), active.Id, active.Version);
@@ -45,6 +45,8 @@ public sealed class CoachingAutomaticDraftTests(PostgresFixture postgres)
             Assert.Equal(StudyPlanStatus.Draft, draft.Status);
             Assert.Equal(2, draft.Tasks.Count);
             Assert.Contains(draft.Tasks, x => x.IsPinned && x.Title == "Pinned");
+            Assert.Equal("Kitap", draft.Tasks.Single(x => x.IsPinned).SourceName);
+            Assert.Equal(20, draft.Tasks.Single(x => x.IsPinned).PlannedQuestions);
             Assert.DoesNotContain(draft.Tasks, x => x.IsCompleted);
             Assert.Equal(StudyPlanStatus.Active, (await plans.GetAsync(active.Id))!.Status);
             await Assert.ThrowsAsync<BusinessRuleException>(() => plans.CreateAutomaticDraftAsync(request));
