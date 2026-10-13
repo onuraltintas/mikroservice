@@ -27,9 +27,11 @@ Fixture etiketi `coaching-live-20261013-r1`, kurum `fc4a2a09-87de-46d8-b034-f09f
 
 | Rol | Test e-postası |
 | --- | --- |
-| Teacher | `teacher.coaching-live-20261013-r1@example.invalid` |
-| Student | `student.coaching-live-20261013-r1@example.invalid` |
-| InstitutionAdmin | `manager.coaching-live-20261013-r1@example.invalid` |
+| Teacher | `testogretmen@eduivme.com` |
+| Student | `testogrenci@eduivme.com` |
+| InstitutionAdmin | `testkurum@eduivme.com` |
+
+Tablo güncel giriş adreslerini gösterir. İlk canlı döngüde `teacher/student/manager.coaching-live-20261013-r1@example.invalid` adresleri kullanıldı; aşağıdaki hesap güncellemesi aynı kullanıcı kimliklerini korur.
 
 Hesap oluşturma terminalden, gerçek domain/EF modelleri ve üretim PasswordHasher ile yapıldı; kayıt formu/e-posta teslimatı testi olarak sunulmuyor. Sentetik hesapların e-postaları operatör tarafından doğrulanmış başlangıç durumunda oluşturuldu. Her hesapta yalnız tek Koçluk rolü ve ürün erişimi var; yeni SystemAdmin oluşturulmadı. Mevcut admin yalnız kayıt aktör kimliği olarak okunuyor. Kurum limiti 1 öğretmen/1 öğrenci, lisans özel/ücretsiz/7 gün/1 koltuk. Genel erişim ayarları, MFA, CAPTCHA veya JWT denetimi değiştirilmedi; tarayıcıya token veya sahte oturum yerleştirilmedi.
 
@@ -50,7 +52,7 @@ Yerel kanıt dizini: `artifacts/coaching-live-20261013/`.
 
 Son fixture arşivi `coaching-role-fixtures-final.tar.gz`; SHA256 yerel/sunucu eşleşmesi `840d211d11f98a2afe9946e84268fe4e377b40dfdc81d9a44e5a9ffc0941d080`. Manifestte 176 içerik dosyası, manifestle toplam 177 dosya var; tamamı sunucuda tekrar doğrulandı. Önceki deneme arşivleri son paket değildir.
 
-Özel sunucu dizini `/var/lib/eduivme/releases/coaching-live-role-tests-20261013-r1` root erişiminde. Parolalar yalnız 0700/0600 korumalı state dosyasında; rapora, Git'e veya public kanıt paketine eklenmedi. Test hesapları/kurumu ve tamamlanan plan kanıt için korunuyor; özel lisans 20 Ekim 2026'da sona erer. Sentetik finans kaydı iptal edildi ve net 0, geçmişi korunuyor. Personel test oturumu kapatıldı. İki kendi prova veritabanımız 19:56:26 UTC'de temizlendi; üretim yedekleri korundu.
+Özel sunucu dizini `/var/lib/eduivme/releases/coaching-live-role-tests-20261013-r1` root erişiminde. Parolalar yalnız 0700/0600 korumalı state dosyasında; rapora, Git'e veya public kanıt paketine eklenmedi. Test hesapları/kurumu ve tamamlanan plan kanıt için korunuyor; özel lisans kullanıcının sonraki isteğiyle 20 Kasım 2026'ya uzatıldı. Sentetik finans kaydı iptal edildi ve net 0, geçmişi korunuyor. Personel test oturumu kapatıldı. İki kendi prova veritabanımız 19:56:26 UTC'de temizlendi; üretim yedekleri korundu.
 
 Yeni rol testi öncesi yedek SHA256:
 
@@ -64,3 +66,15 @@ Yeni rol testi öncesi yedek SHA256:
 19:53:13 UTC / 22:53:13 İstanbul: üç API Healthy ve yayın başlangıcından itibaren log hata sayısı 0; beş hedef serviste restart 0. Migration geçmişi birebir, çakışma trigger'ları 4, finans/hatırlatma tabloları 4. Altı anonim korumalı uç 401; dört public adres 200; üç eski koçluk adresi 302. Hedef dışı container kimlikleri/imajları yayından öncekiyle aynı.
 
 Bu rapor dört rolün temel canlı akışlarını kanıtlar. Yerel 767 backend, 308 öğrenci/admin, 180 personel ve 12 farklı E2E sayıları tümünün canlıda tekrar koşulduğu anlamına gelmez. Süresi bitmiş lisans ve başka kuruma erişim gibi negatif senaryoların tümü canlıda yeniden yürütülmedi; canlı genel ayarlar değiştirilmedi. Gerçek ödeme sağlayıcısı/Zoom/SMS teslimatı veya yeni kullanıcı kayıt formu/e-posta doğrulama zinciri test edilmedi. Soru bankası → süreli sınav → otomatik puanlama kullanıcının kararıyla ileride ayrı servis kapsamındadır.
+
+## Test hesaplarını güncelleme — 23:20 İstanbul
+
+Kullanıcının açık isteğiyle üç test hesabı yukarıdaki `eduivme.com` adreslerine taşındı ve verilen ortak test parolası üretim PasswordHasher ile ayrı salt'larla hashlenerek uygulandı. Eski aktif refresh tokenları iptal edildi, parola sıfırlama tokenları temizlendi. Kullanıcı kimlikleri, Koçluk rolleri, kurum/profil ilişkileri, öğrenci ataması ve tamamlanan çalışma planı korundu. Bu işlem gerçek kişilerin hesaplarına veya admin parolasına uygulanmadı.
+
+Kendi kurumunun Identity lisansı ile Coaching aboneliğinin mevcut 20 Ekim bitişlerine bir takvim ayı eklendi. Yeni bitişler sırasıyla `2026-11-20T19:37:47.682044Z` ve `2026-11-20T19:37:53.070508Z`; İstanbul'da 20 Kasım 22:37. Özel ücretsiz plan ve 1/1 koltuk aynı kaldı; katalog planının süresi değiştirilmedi, yalnız mevcut abonelik uzatıldı.
+
+Bakım aracı `tools/releases/coaching-test-account-update-20261013/` altında. Sabit fixture kimlikleri/kurum/rol/lisans denetimleri ve başka hesaba ait e-posta çakışma koruması var. Parola kaynak koduna girmez; özel request dosyasından okunur. İki çalışma derlemesi ve bağımsız kod/C# incelemeleri geçti. Yeni üretim yedekleri iki özel kopyaya geri yüklendi; e-posta/parola/lisans doğrulamaları ve ikinci çalıştırmada ek ay eklememe kontrolü başarılı (20:19:37 UTC). Canlı güncelleme ve hash/tarih doğrulaması 20:20:30 UTC / 23:20:30 İstanbul'da tamamlandı. Yeni uygulama imajı veya migration yayımlanmadı.
+
+Üç hesapla da normal canlı giriş yeniden yapıldı. Öğrenci abonelik ekranında `Aktif · 13.10.2026 – 20.11.2026 / Erişim açık`, kurum ekranında `20.11.2026 tarihine kadar`, `1/1` ve yeni öğrenci e-postası görüldü. Öğretmenin 1 öğrencisi ve öğrencinin mevcut tamamlanmış planı korundu. Test oturumları kapatıldı; yalnız bu doğrulama için açılan sekmeler temizlendi. Yeni iki prova veritabanı 20:22:10 UTC'de temizlendi; yedekler sunucuda korundu. Son kontrolde Identity ve Coaching Healthy.
+
+Yeni kanıtlar `artifacts/coaching-account-update-20261013/`: üç ekran (`teacher-login-updated.png`, `student-subscription-updated.png`, `institution-subscription-updated.png`), derleme günlükleri ve `evidence/` altında parolasız prova/canlı doğrulamaları. Bakım arşivi SHA256: `06a5930d37a062a761e4cfb898bf75ef5235fe199fe6e9c8659f28aa99586e32`, sunucuda aynı özet doğrulandı. Parola girdi dosyasının yerel geçici kopyası temizlendi; korumalı sunucu state kaydı yeni bilgilerle güncellendi. Eski fixture verifier eski `example.invalid` adreslerini beklediğinden bundan sonra yeni bakım dizininde `bash update.sh verify` kullanılmalıdır.
