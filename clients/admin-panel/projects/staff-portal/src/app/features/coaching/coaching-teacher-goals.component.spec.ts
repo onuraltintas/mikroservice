@@ -1,8 +1,8 @@
 import { TestBed } from '@angular/core/testing';
-import { provideHttpClient } from '@angular/common/http';
+import { HttpErrorResponse, provideHttpClient } from '@angular/common/http';
 import { By } from '@angular/platform-browser';
 import { StudentGoalTargetComponent } from '../../../../../../src/app/features/coaching-portal/pages/student-goal-target.component';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 import { StaffAuthService } from '../../auth/staff-auth.service';
 import { CoachingTeacherStudentsService } from './coaching-teacher-students.service';
@@ -10,6 +10,22 @@ import { CoachingTeacherGoal, CoachingTeacherGoalsService } from './coaching-tea
 import { CoachingTeacherGoalsComponent } from './coaching-teacher-goals.component';
 
 describe('CoachingTeacherGoalsComponent', () => {
+  it('keeps the latest version when a catalog-only target change has no score target', () => {
+    const service = goalsService([goal('goal-1')]); const fixture = createFixture(service); fixture.detectChanges();
+    const component = fixture.componentInstance; component.editGoal(component.goals()[0]);
+    component.goalTargetChanged({ goalId: 'goal-1', version: 5, targetSchoolId: 'school-1', targetUniversityProgramId: null, canEdit: true, scoreTarget: null });
+    component.saveGoal(); expect(service.updateGoal).toHaveBeenCalledWith('goal-1', expect.objectContaining({ expectedVersion: 5, targetScore: 85 }));
+  });
+  it('keeps the stale form visible and asks for a fresh goal after a conflict', () => {
+    const service = goalsService([goal('goal-1')]); service.updateGoal.mockReturnValueOnce(throwError(() => new HttpErrorResponse({ status: 409 })));
+    const fixture = createFixture(service); fixture.detectChanges(); const component = fixture.componentInstance;
+    component.editGoal(goal('goal-1')); component.form.title = 'Benim değişikliğim'; component.saveGoal();
+    expect(component.errorMessage()).toContain('Listeyi yenileyip'); expect(component.form.title).toBe('Benim değişikliğim'); expect(component.isSaving()).toBe(false);
+    fixture.detectChanges();
+    const refresh = fixture.nativeElement.querySelector('[data-testid="reload-conflicted-goals"]') as HTMLButtonElement;
+    expect(refresh).toBeTruthy(); refresh.click();
+    expect(service.getTeacherGoals).toHaveBeenCalledTimes(2); expect(component.editingGoalId()).toBeNull();
+  });
   it('preserves a newly saved score target during subsequent title editing', () => {
     const service = goalsService([goal('goal-1')]);
     const fixture = createFixture(service); fixture.detectChanges();
