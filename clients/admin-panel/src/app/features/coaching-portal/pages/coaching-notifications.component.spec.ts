@@ -1,12 +1,35 @@
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { of } from 'rxjs';
+import { of, Subject } from 'rxjs';
 import { vi } from 'vitest';
 import { Notification } from '../../../core/services/notification.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { CoachingNotificationsComponent } from './coaching-notifications.component';
 
 describe('CoachingNotificationsComponent', () => {
+  for (const action of ['markAsRead', 'markAllAsRead', 'deleteNotification'] as const) {
+    it(`allows retrying ${action} after an API error`, () => {
+      const pending = new Subject<void>();
+      const service = {
+        notifications: signal<Notification[]>([notification('n-1', false)]).asReadonly(),
+        unreadCount: signal(1).asReadonly(), fetchNotifications: vi.fn(),
+        markAsRead: vi.fn(() => pending), markAllAsRead: vi.fn(() => pending), deleteNotification: vi.fn(() => pending)
+      };
+      TestBed.configureTestingModule({ imports: [CoachingNotificationsComponent], providers: [{ provide: NotificationService, useValue: service }] });
+      const fixture = TestBed.createComponent(CoachingNotificationsComponent);
+      const component = fixture.componentInstance;
+      component[action]('n-1'); fixture.detectChanges();
+      expect(component.isUpdating()).toBe(true);
+      pending.error(new Error('Temporary API failure')); fixture.detectChanges();
+      expect(component.errorMessage()).toBeTruthy();
+      expect(component.isUpdating()).toBe(false);
+      expect((fixture.nativeElement.querySelector('article button') as HTMLButtonElement).disabled).toBe(false);
+      service[action].mockReturnValue(of(undefined) as typeof pending);
+      component[action]('n-1'); fixture.detectChanges();
+      expect(service[action]).toHaveBeenCalledTimes(2);
+      expect(component.errorMessage()).toBeNull(); expect(component.isUpdating()).toBe(false);
+    });
+  }
   it('delegates mark-as-read and mark-all actions to the shared notification service', () => {
     const notifications = signal<Notification[]>([notification('n-1', false), notification('n-2', true)]);
     const unreadCount = signal(1);
