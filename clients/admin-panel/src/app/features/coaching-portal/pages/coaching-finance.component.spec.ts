@@ -17,6 +17,10 @@ describe('CoachingFinanceComponent', () => {
     fixture.componentRef.setInput('mode', mode); fixture.componentRef.setInput('studentId', 'student'); fixture.detectChanges();
     return fixture;
   }
+  it('loads the authenticated learner account when opened directly as a route without inputs', () => {
+    const fixture = TestBed.createComponent(CoachingFinanceComponent); fixture.detectChanges();
+    expect(api.account).toHaveBeenCalledWith('student', '', 1); expect(fixture.componentInstance.account()).not.toBeNull();
+  });
   for (const mode of ['student', 'admin'] as const) it(`${mode} remains readonly even when a malformed response claims write access`, () => {
     const fixture = setup(mode), component = fixture.componentInstance;
     expect(fixture.nativeElement.querySelector('[data-create-fee]')).toBeNull();
