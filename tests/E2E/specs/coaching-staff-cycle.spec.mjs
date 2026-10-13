@@ -126,3 +126,33 @@ test('real staff endpoints reject foreign students, student role and institution
   expect((await request.post(target, { headers: { Authorization: `Bearer ${planningToken(planningManager, ['InstitutionAdmin'])}` },
     data: { title: 'Forbidden institution write', tasks: [] } })).status()).toBe(403);
 });
+
+test('institution reads real comparison and warnings then opens the scoped student report', async ({ browser, request }) => {
+  const context = await browser.newContext(); const page = await context.newPage();
+  await staffSession(page, planningManager, 'InstitutionAdmin');
+  await page.getByTestId('institution-analytics-tab').click();
+  const analytics = page.locator('staff-coaching-institution-analytics');
+  await expect(page.getByRole('heading', { name: 'Kurum öğretmenleri', exact: true })).toHaveCount(0);
+  await analytics.getByLabel('Başlangıç tarihi').fill('2026-10-01');
+  await analytics.getByLabel('Bitiş tarihi').fill('2026-10-13');
+  await analytics.getByRole('combobox', { name: /^Sınıf/ }).selectOption({ label: '8. sınıf' });
+  await analytics.getByRole('button', { name: 'Raporu göster', exact: true }).click();
+  await expect(analytics.getByRole('cell', { name: 'Ada Test', exact: true })).toBeVisible();
+  await analytics.getByRole('button', { name: 'Öğrenci raporu', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Ada Test', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Haftalık plan ve çalışma raporu', exact: true }).click();
+  await expect(page.locator('app-student-study-plans').getByRole('heading', { name: 'Öğrencinin çalışma planları' })).toBeVisible();
+  await page.getByTestId('back-to-roster').click();
+  await expect(analytics.getByLabel('Başlangıç tarihi')).toHaveValue('2026-10-01');
+  await expect(analytics.getByLabel('Bitiş tarihi')).toHaveValue('2026-10-13');
+  await expect(analytics.getByRole('cell', { name: 'Ada Test', exact: true })).toBeVisible();
+  await page.setViewportSize({ width: 390, height: 844 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  await expect(analytics.getByRole('heading', { name: 'Kurum analizi ve erken uyarılar' })).toBeVisible();
+  await page.screenshot({ path: '../../artifacts/coaching-completion-20261013/institution-analytics-mobile-proof.png', fullPage: true });
+  const response = await request.get(`http://127.0.0.1:5006/api/reports/institution/${randomUUID()}/comparison`, {
+    headers: { Authorization: `Bearer ${planningToken(planningManager, ['InstitutionAdmin'])}` }
+  });
+  expect(response.status()).toBe(403);
+  await context.close();
+});
