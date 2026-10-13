@@ -38,6 +38,22 @@ describe('StudentStudyPlansComponent', () => {
     component.publish();
     expect(service.publish).toHaveBeenCalledWith('plan', 4);
   });
+  it('retains draft source and planned questions and submits them when saved', () => {
+    const { fixture, component, service } = setup();
+    const draft = { ...active, status: 'Draft' as const, tasks: [{ ...active.tasks[0], sourceName: 'Kitap s.20', plannedQuestions: 25 }] };
+    service.get.mockReturnValue(of(draft)); component.open('plan'); fixture.detectChanges();
+    expect(component.editTasks[0]).toMatchObject({ sourceName: 'Kitap s.20', plannedQuestions: 25 });
+    expect(fixture.nativeElement.querySelector('input[name="source-0"]')).toBeTruthy();
+    component.dirty = true; component.saveDraft();
+    expect(service.replace).toHaveBeenCalledWith('plan', 4, { title: 'Planım', tasks: [expect.objectContaining({ sourceName: 'Kitap s.20', plannedQuestions: 25 })] });
+  });
+  it('submits explicit zero questions and rejects negative and fractional counts', () => {
+    const { component, service } = setup(); component.open('plan');
+    component.complete(active.tasks[0], 25, -1); component.complete(active.tasks[0], 25, 1.5);
+    expect(service.complete).not.toHaveBeenCalled();
+    component.complete(active.tasks[0], 25, 0);
+    expect(service.complete).toHaveBeenCalledWith('plan', 'task', 4, 25, 0);
+  });
   it('archives only a clean draft after explicit confirmation so regeneration is possible', () => {
     const { component, service } = setup();
     const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
