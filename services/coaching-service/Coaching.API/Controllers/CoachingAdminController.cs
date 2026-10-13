@@ -1005,6 +1005,10 @@ public sealed class CoachingAdminController : ControllerBase
                 IsInstitutionAdminOperation = !scope.IsGlobal
             }, cancellationToken));
         }
+        catch (BusinessRuleException ex) when (ex.Code == "Goal.Conflict")
+        {
+            return Conflict(new { error = ex.Message, code = ex.Code });
+        }
         catch (InvalidOperationException ex)
         {
             return NotFound(new { error = ex.Message });

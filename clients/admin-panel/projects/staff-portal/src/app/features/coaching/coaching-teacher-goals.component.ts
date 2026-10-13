@@ -14,6 +14,7 @@ import {
 } from './coaching-teacher-goals.service';
 
 interface GoalForm {
+  expectedVersion?: number;
   studentId: string;
   title: string;
   category: number;
@@ -35,6 +36,8 @@ export class CoachingTeacherGoalsComponent implements OnInit {
   @ViewChildren(StudentGoalTargetComponent) private targets?: QueryList<StudentGoalTargetComponent>;
   canLeavePage(): boolean { return !this.isSaving() && (this.targets?.toArray().every(target => target.canLeavePage()) ?? true); }
   goalTargetChanged(target: GoalTarget): void {
+    this.goals.update(goals => goals.map(goal => goal.id === target.goalId ? { ...goal, version: target.version } : goal));
+    if (this.editingGoalId() === target.goalId) this.form.expectedVersion = target.version;
     if (!target.scoreTarget) return;
     const targetScore = target.scoreTarget.targetScore ?? undefined;
     const targetExamType = target.scoreTarget.examType ?? undefined;
@@ -56,6 +59,11 @@ export class CoachingTeacherGoalsComponent implements OnInit {
   readonly isLoadingStudents = signal(false);
   readonly isSaving = signal(false);
   readonly errorMessage = signal<string | null>(null);
+  readonly goalConflict = signal(false);
+  reloadConflictedGoals(): void {
+    if (!this.canLeavePage()) return;
+    this.cancelGoalEdit(); this.loadGoals();
+  }
   readonly successMessage = signal<string | null>(null);
   readonly editingGoalId = signal<string | null>(null);
   readonly goalPageNumber = signal(1);
@@ -192,13 +200,17 @@ export class CoachingTeacherGoalsComponent implements OnInit {
     if (goalId) {
       const request: CoachingTeacherGoalUpdateRequest = {
         goalId,
+        expectedVersion: this.form.expectedVersion,
         ...requestFields,
         targetExamType: this.form.targetExamType ?? null,
         targetSubject: this.form.targetSubject.trim() || null
       };
       this.goalsService.updateGoal(goalId, request).pipe(finalize(() => this.isSaving.set(false))).subscribe({
         next: () => this.completeSave('Hedef güncellendi.'),
-        error: () => this.errorMessage.set('Hedef güncellenemedi. Alanları ve yetkinizi kontrol edin.')
+        error: error => {
+          this.goalConflict.set(error.status === 409);
+          this.errorMessage.set(error.status === 409 ? 'Hedef başka bir işlemde değişti. Listeyi yenileyip güncel hedefi yeniden açın.' : 'Hedef güncellenemedi. Alanları ve yetkinizi kontrol edin.');
+        }
       });
       return;
     }
@@ -218,6 +230,7 @@ export class CoachingTeacherGoalsComponent implements OnInit {
     this.editingGoalId.set(goal.id);
     const targetDate = goal.targetDate ? this.toLocalDateTime(goal.targetDate) : '';
     this.form = {
+      expectedVersion: goal.version,
       studentId: goal.studentId,
       title: goal.title,
       category: this.goalCategories.find(category => category.key === goal.category)?.value ?? 99,
@@ -231,6 +244,7 @@ export class CoachingTeacherGoalsComponent implements OnInit {
   }
 
   cancelGoalEdit(): void {
+    this.goalConflict.set(false);
     this.editingGoalId.set(null);
     this.form = this.emptyForm();
     this.errorMessage.set(null);

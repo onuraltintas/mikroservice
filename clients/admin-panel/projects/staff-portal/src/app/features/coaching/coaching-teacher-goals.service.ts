@@ -5,6 +5,7 @@ import { environment } from '../../../environments/environment';
 import { coachingExamTypes, coachingGoalCategories } from './coaching-enum-contract';
 
 export interface CoachingTeacherGoal {
+  version?: number;
   id: string;
   studentId: string;
   title: string;
@@ -38,6 +39,7 @@ export interface CoachingTeacherGoalCreateRequest {
 }
 
 export interface CoachingTeacherGoalUpdateRequest {
+  expectedVersion?: number;
   goalId: string;
   title: string;
   category: number;

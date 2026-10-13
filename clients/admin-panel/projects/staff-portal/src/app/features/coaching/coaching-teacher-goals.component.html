@@ -9,6 +9,7 @@
   </header>
 
   @if (errorMessage()) { <div class="goals-error" role="alert">{{ errorMessage() }}</div> }
+  @if (goalConflict()) { <button type="button" data-testid="reload-conflicted-goals" (click)="reloadConflictedGoals()" [disabled]="isSaving() || isLoading()">Listeyi yenile ve düzenlemeden çık</button> }
   @if (successMessage()) { <div class="goals-success" role="status">{{ successMessage() }}</div> }
   @if (studentNameLookupFailed()) { <div class="student-lookup-warning" role="status">Bazı öğrenci adları alınamadı; hedef verileri yine de görüntüleniyor.</div> }
 

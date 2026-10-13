@@ -32,7 +32,8 @@ public record TeacherGoalDto(
     string? TargetSubject,
     int Progress,
     bool IsCompleted,
-    DateTime? CompletedAt);
+    DateTime? CompletedAt,
+    int Version = 0);
 
 public sealed class GetTeacherGoalsQueryHandler
     : IRequestHandler<GetTeacherGoalsQuery, PagedResponse<TeacherGoalDto>>
@@ -83,7 +84,8 @@ public sealed class GetTeacherGoalsQueryHandler
             goal.TargetSubject,
             goal.CurrentProgress,
             goal.IsCompleted,
-            goal.CompletedAt)).ToList();
+            goal.CompletedAt,
+            goal.Version)).ToList();
 
         return new PagedResponse<TeacherGoalDto>(goals, query.PageNumber, query.PageSize, page.TotalCount);
     }

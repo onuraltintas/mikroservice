@@ -90,6 +90,14 @@ test('teacher score targets survive title editing and stay read-only for student
   await goals.getByLabel('Hedef başlığı', { exact: true }).fill(title);
   await goals.getByRole('button', { name: 'Hedef oluştur', exact: true }).click();
   let card = goals.locator('article').filter({ hasText: title });
+  const goalId = await card.getByRole('button', { name: 'Düzenle', exact: true }).getAttribute('data-testid');
+  const id = goalId.replace('edit-goal-', '');
+  const initialTarget = await request.get(`${api}/${planningStudent}/study/goals/${id}/target`, { headers: { Authorization: `Bearer ${planningToken(planningTeacher, ['Teacher'])}` } });
+  expect(initialTarget.ok(), await initialTarget.text()).toBeTruthy();
+  const oldVersion = (await initialTarget.json()).data.version;
+  const teacherList = await request.get(`http://127.0.0.1:5006/api/goals/teacher/${planningTeacher}?pageNumber=1&pageSize=25`, { headers: { Authorization: `Bearer ${planningToken(planningTeacher, ['Teacher'])}` } });
+  expect(teacherList.ok(), await teacherList.text()).toBeTruthy();
+  expect((await teacherList.json()).items.find(goal => goal.id === id)?.version).toBe(oldVersion);
   await card.getByRole('button', { name: 'Okul / üniversite hedefini görüntüle' }).click();
   const editor = card.locator('app-student-goal-target');
   await editor.getByRole('combobox', { name: /^Sınav türü/ }).selectOption('LGS');
@@ -97,12 +105,14 @@ test('teacher score targets survive title editing and stay read-only for student
   await editor.getByLabel('En yüksek puan (ölçek)', { exact: true }).fill('500');
   await editor.getByRole('button', { name: 'Puan hedefini kaydet' }).click();
   await expect(editor.getByText(/Puan hedefi kaydedildi/)).toBeVisible();
-  const goalId = await card.getByRole('button', { name: 'Düzenle', exact: true }).getAttribute('data-testid');
+  const staleEdit = await request.put(`http://127.0.0.1:5006/api/goals/${id}`, { headers: { Authorization: `Bearer ${planningToken(planningTeacher, ['Teacher'])}` },
+    data: { goalId: id, title: 'Stale goal form', description: null, category: 'ExamPreparation', targetDate: null,
+      targetScore: null, targetExamType: null, targetSubject: null, expectedVersion: oldVersion } });
+  expect(staleEdit.status(), await staleEdit.text()).toBe(409);
   await card.getByRole('button', { name: 'Düzenle', exact: true }).click();
   await goals.getByLabel('Hedef başlığı', { exact: true }).fill(`${title} güncel`);
   await goals.getByRole('button', { name: 'Hedefi güncelle', exact: true }).click();
   await expect(goals.getByRole('heading', { name: `${title} güncel`, exact: true })).toBeVisible();
-  const id = goalId.replace('edit-goal-', '');
   for (const [url, user, role, canEdit] of [
     [`${api}/${planningStudent}/study/goals/${id}/target`, planningTeacher, 'Teacher', true],
     [`${api}/${planningStudent}/study/goals/${id}/target`, planningManager, 'InstitutionAdmin', false],

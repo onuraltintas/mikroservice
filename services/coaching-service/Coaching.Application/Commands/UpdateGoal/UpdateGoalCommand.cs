@@ -19,6 +19,7 @@ public record UpdateGoalCommand(
     string? TargetSubject
 ) : IRequest<UpdateGoalResponse>
 {
+    public int? ExpectedVersion { get; init; }
     [JsonIgnore]
     public bool IsInstitutionAdminOperation { get; init; }
 }
@@ -30,6 +31,7 @@ public sealed class UpdateGoalCommandValidator : AbstractValidator<UpdateGoalCom
     public UpdateGoalCommandValidator()
     {
         RuleFor(command => command.GoalId).NotEmpty();
+        RuleFor(command => command.ExpectedVersion).GreaterThanOrEqualTo(0).When(command => command.ExpectedVersion.HasValue);
         RuleFor(command => command.Title).NotEmpty().MaximumLength(200);
         RuleFor(command => command.Category).IsInEnum();
         RuleFor(command => command.TargetDate)
@@ -87,6 +89,9 @@ public sealed class UpdateGoalCommandHandler
         {
             _accessPolicy.RequireStudent(goal.StudentId, command.IsInstitutionAdminOperation);
         }
+
+        if (command.ExpectedVersion.HasValue && command.ExpectedVersion.Value != goal.Version)
+            throw new EduPlatform.Shared.Kernel.Exceptions.BusinessRuleException("Goal.Conflict", "Hedef değişti. Güncel hedefi yükleyip tekrar deneyin.");
 
         goal.UpdateEditableDetails(
             command.Title,

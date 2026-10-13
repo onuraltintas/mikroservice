@@ -97,6 +97,10 @@ public class GoalsController : ControllerBase
         {
             return Ok(await _mediator.Send(command, cancellationToken));
         }
+        catch (BusinessRuleException ex) when (ex.Code == "Goal.Conflict")
+        {
+            return Conflict(new { error = ex.Message, code = ex.Code });
+        }
         catch (InvalidOperationException ex)
         {
             return NotFound(new { error = ex.Message });
