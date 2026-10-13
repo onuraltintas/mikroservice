@@ -12,8 +12,26 @@ using MassTransit.EntityFrameworkCoreIntegration;
 namespace Coaching.Infrastructure.StudyPlanning;
 
 public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachingAccessPolicy access,
-    IAutomaticStudyPlanPreviewService previews, ICoachingEventPublisher events) : IManualStudyPlanService, IAutomaticStudyPlanDraftService
+    IAutomaticStudyPlanPreviewService previews, ICoachingEventPublisher events,
+    CoachingStudyPlanAccess? staffAccess = null) : IManualStudyPlanService, IAutomaticStudyPlanDraftService
 {
+    public Task<StudyPlanPage> ListAsync(int pageNumber, int pageSize, StudyPlanStatus? status, CancellationToken ct = default)
+        => ListCoreAsync(pageNumber, pageSize, status, ct);
+    public Task<StudyPlanPage> ListForStudentAsync(Guid student, int pageNumber, int pageSize, StudyPlanStatus? status, CancellationToken ct = default)
+        => ListCoreAsync(pageNumber, pageSize, status, ct, student);
+    public Task<ManualStudyPlanView?> GetAsync(Guid id, CancellationToken ct = default) => GetCoreAsync(id, ct);
+    public Task<ManualStudyPlanView?> GetForStudentAsync(Guid student, Guid id, CancellationToken ct = default) => GetCoreAsync(id, ct, student);
+    public Task<ManualStudyPlanView> CreateDraftAsync(ManualStudyPlanInput request, CancellationToken ct = default) => CreateCoreAsync(request, ct);
+    public Task<ManualStudyPlanView> CreateForStudentAsync(Guid student, ManualStudyPlanInput request, CancellationToken ct = default) => CreateCoreAsync(request, ct, student);
+    public Task<ManualStudyPlanView> ReplaceDraftAsync(Guid id, int version, ManualStudyPlanInput request, CancellationToken ct = default) => ReplaceCoreAsync(id, version, request, ct);
+    public Task<ManualStudyPlanView> ReplaceForStudentAsync(Guid student, Guid id, int version, ManualStudyPlanInput request, CancellationToken ct = default) => ReplaceCoreAsync(id, version, request, ct, student);
+    public Task<ManualStudyPlanView> PublishAsync(Guid id, int version, CancellationToken ct = default) => PublishCoreAsync(id, version, ct);
+    public Task<ManualStudyPlanView> PublishForStudentAsync(Guid student, Guid id, int version, CancellationToken ct = default) => PublishCoreAsync(id, version, ct, student);
+    public Task<ManualStudyPlanView> ArchiveDraftAsync(Guid id, int version, CancellationToken ct = default) => ArchiveCoreAsync(id, version, ct);
+    public Task<ManualStudyPlanView> ArchiveForStudentAsync(Guid student, Guid id, int version, CancellationToken ct = default) => ArchiveCoreAsync(id, version, ct, student);
+    public Task<ManualStudyPlanView> RescheduleTaskAsync(Guid id, Guid task, int version, DateOnly date, CancellationToken ct = default) => RescheduleCoreAsync(id, task, version, date, ct);
+    public Task<ManualStudyPlanView> RescheduleForStudentAsync(Guid student, Guid id, Guid task, int version, DateOnly date, CancellationToken ct = default) => RescheduleCoreAsync(id, task, version, date, ct, student);
+
     public Task<ManualStudyPlanView> CreateAutomaticDraftAsync(AutomaticStudyDraftRequest request, CancellationToken cancellationToken = default)
         => LockedAsync(async student =>
         {
@@ -44,7 +62,7 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
             await db.SaveChangesAsync(cancellationToken);
             return await ViewAsync(revision, cancellationToken);
         }, cancellationToken);
-    public Task<StudyPlanPage> ListAsync(int pageNumber, int pageSize, StudyPlanStatus? status, CancellationToken cancellationToken = default)
+    private Task<StudyPlanPage> ListCoreAsync(int pageNumber, int pageSize, StudyPlanStatus? status, CancellationToken cancellationToken, Guid? targetStudent = null)
         => LockedAsync(async student =>
         {
             if (pageNumber is < 1 or > 10000 || pageSize is < 1 or > 50 || (status.HasValue && !Enum.IsDefined(status.Value)))
@@ -56,16 +74,16 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
                 .Skip((pageNumber - 1) * pageSize).Take(pageSize)
                 .Select(x => new StudyPlanSummary(x.Id, x.Version, x.Title, x.Status)).ToListAsync(cancellationToken);
             return new StudyPlanPage(items, total, pageNumber, pageSize);
-        }, cancellationToken);
+        }, cancellationToken, targetStudent);
 
-    public Task<ManualStudyPlanView?> GetAsync(Guid id, CancellationToken cancellationToken = default)
+    private Task<ManualStudyPlanView?> GetCoreAsync(Guid id, CancellationToken cancellationToken, Guid? targetStudent = null)
         => LockedAsync<ManualStudyPlanView?>(async student =>
         {
             var revision = await db.StudyPlanRevisions.AsNoTracking().SingleOrDefaultAsync(x => x.Id == id && x.StudentId == student, cancellationToken);
             return revision is null ? null : await ViewAsync(revision, cancellationToken);
-        }, cancellationToken);
+        }, cancellationToken, targetStudent);
 
-    public Task<ManualStudyPlanView> CreateDraftAsync(ManualStudyPlanInput request, CancellationToken cancellationToken = default)
+    private Task<ManualStudyPlanView> CreateCoreAsync(ManualStudyPlanInput request, CancellationToken cancellationToken, Guid? targetStudent = null)
         => LockedAsync(async student =>
         {
             ArgumentNullException.ThrowIfNull(request);
@@ -77,9 +95,9 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
             db.StudyPlanTasks.AddRange(tasks);
             await db.SaveChangesAsync(cancellationToken);
             return await ViewAsync(revision, cancellationToken);
-        }, cancellationToken);
+        }, cancellationToken, targetStudent);
 
-    public Task<ManualStudyPlanView> ReplaceDraftAsync(Guid id, int expectedVersion, ManualStudyPlanInput request, CancellationToken cancellationToken = default)
+    private Task<ManualStudyPlanView> ReplaceCoreAsync(Guid id, int expectedVersion, ManualStudyPlanInput request, CancellationToken cancellationToken, Guid? targetStudent = null)
         => LockedAsync(async student =>
         {
             ArgumentNullException.ThrowIfNull(request);
@@ -95,9 +113,9 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
             db.StudyPlanTasks.AddRange(tasks);
             await db.SaveChangesAsync(cancellationToken);
             return await ViewAsync(revision, cancellationToken);
-        }, cancellationToken);
+        }, cancellationToken, targetStudent);
 
-    public Task<ManualStudyPlanView> PublishAsync(Guid id, int expectedVersion, CancellationToken cancellationToken = default)
+    private Task<ManualStudyPlanView> PublishCoreAsync(Guid id, int expectedVersion, CancellationToken cancellationToken, Guid? targetStudent = null)
         => LockedAsync(async student =>
         {
             var revision = await OwnedAsync(id, student, expectedVersion, cancellationToken);
@@ -124,7 +142,7 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
             await events.PublishAsync(new StudyPlanPublishedEvent(revision.Id, student), cancellationToken);
             await db.SaveChangesAsync(cancellationToken);
             return await ViewAsync(revision, cancellationToken);
-        }, cancellationToken);
+        }, cancellationToken, targetStudent);
 
     private async Task<StudyPlanRevision> OwnedAsync(Guid id, Guid student, int version, CancellationToken cancellationToken)
     {
@@ -134,7 +152,7 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
         return revision;
     }
 
-    public Task<ManualStudyPlanView> ArchiveDraftAsync(Guid id, int expectedVersion, CancellationToken cancellationToken = default)
+    private Task<ManualStudyPlanView> ArchiveCoreAsync(Guid id, int expectedVersion, CancellationToken cancellationToken, Guid? targetStudent = null)
         => LockedAsync(async student =>
         {
             var revision = await OwnedAsync(id, student, expectedVersion, cancellationToken);
@@ -142,7 +160,7 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
             revision.Archive();
             await db.SaveChangesAsync(cancellationToken);
             return await ViewAsync(revision, cancellationToken);
-        }, cancellationToken);
+        }, cancellationToken, targetStudent);
 
     public Task<ManualStudyPlanView> CompleteTaskAsync(Guid id, Guid taskId, int expectedVersion, int actualMinutes, CancellationToken cancellationToken = default)
         => LockedAsync(async student =>
@@ -161,7 +179,7 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
             return await ViewAsync(revision, cancellationToken);
         }, cancellationToken);
 
-    public Task<ManualStudyPlanView> RescheduleTaskAsync(Guid id, Guid taskId, int expectedVersion, DateOnly plannedDate, CancellationToken cancellationToken = default)
+    private Task<ManualStudyPlanView> RescheduleCoreAsync(Guid id, Guid taskId, int expectedVersion, DateOnly plannedDate, CancellationToken cancellationToken, Guid? targetStudent = null)
         => LockedAsync(async student =>
         {
             var revision = await OwnedAsync(id, student, expectedVersion, cancellationToken);
@@ -176,7 +194,7 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
             revision.RecordTaskChange();
             await db.SaveChangesAsync(cancellationToken);
             return await ViewAsync(revision, cancellationToken);
-        }, cancellationToken);
+        }, cancellationToken, targetStudent);
 
     private async Task<StudyPlanTask> ActiveTaskAsync(StudyPlanRevision revision, Guid taskId, CancellationToken cancellationToken)
     {
@@ -208,9 +226,15 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
         return new(revision.Id, revision.Version, revision.Title, revision.Status, tasks);
     }
 
-    private async Task<T> LockedAsync<T>(Func<Guid, Task<T>> action, CancellationToken cancellationToken)
+    private async Task<T> LockedAsync<T>(Func<Guid, Task<T>> action, CancellationToken cancellationToken, Guid? targetStudent = null)
     {
-        if (access.CurrentUserId is not { } student || !access.IsCurrentStudent(student))
+        var student = targetStudent ?? access.CurrentUserId ?? Guid.Empty;
+        if (targetStudent.HasValue)
+        {
+            if (staffAccess is null) throw new BusinessRuleException("Authorization.Forbidden", "Personel erişimi doğrulanamadı.");
+            await staffAccess.RequireAsync(student, cancellationToken);
+        }
+        else if (student == Guid.Empty || !access.IsCurrentStudent(student))
             throw new BusinessRuleException("Authorization.Forbidden", "Bu işlem yalnız öğrencinin kendi hesabıyla kullanılabilir.");
         T completedResult = default!;
         var resultReady = false;

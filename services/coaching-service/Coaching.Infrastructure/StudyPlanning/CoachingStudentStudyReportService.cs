@@ -8,8 +8,16 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Coaching.Infrastructure.StudyPlanning;
 
-public sealed class CoachingStudentStudyReportService(CoachingDbContext db, ICoachingAccessPolicy access) : IStudentStudyReportService
+public sealed class CoachingStudentStudyReportService(CoachingDbContext db, ICoachingAccessPolicy access,
+    CoachingStudyPlanAccess? staffAccess = null) : IStudentStudyReportService
 {
+    public async Task<StudentStudyReport> GetForStudentAsync(Guid studentId, DateOnly fromDate, DateOnly toDate,
+        CancellationToken cancellationToken = default)
+    {
+        if (staffAccess is null) throw new BusinessRuleException("Authorization.Forbidden", "Personel erişimi doğrulanamadı.");
+        await staffAccess.RequireAsync(studentId, cancellationToken);
+        return await ReadAsync(db, studentId, fromDate, toDate, cancellationToken);
+    }
     public async Task<StudentStudyReport> GetAsync(DateOnly fromDate, DateOnly toDate, CancellationToken cancellationToken = default)
     {
         if (access.CurrentUserId is not { } student || !access.IsCurrentStudent(student))
