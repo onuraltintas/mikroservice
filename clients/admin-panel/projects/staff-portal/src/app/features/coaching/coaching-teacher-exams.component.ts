@@ -33,7 +33,7 @@ interface ExamResultForm {
   emptyAnswers: number;
   ranking: number | undefined;
   notes: string;
-  subjectScoresText: string;
+  subjectScores: { subject: string; score: number | null }[];
 }
 
 @Component({
@@ -306,7 +306,7 @@ export class CoachingTeacherExamsComponent implements OnInit {
       emptyAnswers: result.emptyAnswers ?? 0,
       ranking: result.ranking ?? undefined,
       notes: result.teacherNotes ?? '',
-      subjectScoresText: result.subjectScores ? JSON.stringify(result.subjectScores, null, 2) : ''
+      subjectScores: Object.entries(result.subjectScores ?? {}).map(([subject, score]) => ({ subject, score }))
     };
   }
 
@@ -340,7 +340,7 @@ export class CoachingTeacherExamsComponent implements OnInit {
       this.errorMessage.set('Öğretmen notu 2.000 karakteri aşamaz.');
       return;
     }
-    const subjectScores = this.parseSubjectScores(this.resultForm.subjectScoresText, exam.maxScore);
+    const subjectScores = this.parseSubjectScores(this.resultForm.subjectScores, exam.maxScore);
     if (subjectScores === undefined) return;
 
     const request: CoachingTeacherExamResultRequest = {
@@ -444,22 +444,33 @@ export class CoachingTeacherExamsComponent implements OnInit {
     });
   }
 
-  private parseSubjectScores(value: string, maxScore: number): Record<string, number> | null | undefined {
-    if (!value.trim()) return null;
-    try {
-      const parsed: unknown = JSON.parse(value);
-      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error();
-      const entries = Object.entries(parsed as Record<string, unknown>);
-      if (entries.some(([subject, score]) => !subject.trim()
-        || typeof score !== 'number'
-        || !Number.isFinite(score)
-        || score < 0
-        || score > maxScore)) throw new Error();
-      return Object.fromEntries(entries) as Record<string, number>;
-    } catch {
-      this.errorMessage.set(`Ders puanları geçerli JSON olmalı ve her değer 0-${maxScore} aralığında olmalıdır (örnek: {"Matematik": 85}).`);
-      return undefined;
+  addSubjectScore(): void {
+    this.resultForm.subjectScores.push({ subject: '', score: null });
+  }
+
+  private parseSubjectScores(rows: ExamResultForm['subjectScores'], maxScore: number): Record<string, number> | null | undefined {
+    if (!rows.length) return null;
+    const entries: [string, number][] = [];
+    const names = new Set<string>();
+    for (const row of rows) {
+      const subject = row.subject.trim();
+      if (!subject || subject.length > 100) {
+        this.errorMessage.set('Ders adı 1-100 karakter olmalıdır. Kullanılmayan satırı kaldırın.');
+        return undefined;
+      }
+      const normalized = subject.toLocaleLowerCase('tr-TR');
+      if (names.has(normalized)) {
+        this.errorMessage.set('Her ders yalnız bir kez girilebilir.');
+        return undefined;
+      }
+      if (row.score === null || !Number.isFinite(row.score) || row.score < 0 || row.score > maxScore) {
+        this.errorMessage.set(`Ders puanları 0-${maxScore} aralığında olmalıdır.`);
+        return undefined;
+      }
+      names.add(normalized);
+      entries.push([subject, row.score]);
     }
+    return Object.fromEntries(entries);
   }
 
   private emptyExamForm(): ExamForm {
@@ -472,7 +483,7 @@ export class CoachingTeacherExamsComponent implements OnInit {
   private emptyResultForm(): ExamResultForm {
     return {
       studentId: '', score: 0, correctAnswers: 0, wrongAnswers: 0,
-      emptyAnswers: 0, ranking: undefined, notes: '', subjectScoresText: ''
+      emptyAnswers: 0, ranking: undefined, notes: '', subjectScores: []
     };
   }
 

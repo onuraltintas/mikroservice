@@ -173,10 +173,21 @@
             <span>Boş</span>
             <input [(ngModel)]="resultForm.emptyAnswers" name="resultEmpty" type="number" min="0" step="1" />
           </label>
-          <label class="field span-two">
-            <span>Ders puanları (JSON)</span>
-            <textarea [(ngModel)]="resultForm.subjectScoresText" name="resultSubjectScores" maxlength="4000" rows="2" placeholder='{"Matematik": 85}'></textarea>
-          </label>
+          <fieldset class="span-two">
+            <legend>Ders puanları (opsiyonel)</legend>
+            @for (row of resultForm.subjectScores; track row; let index = $index) {
+              <div class="subject-score-row">
+                <label class="field">Ders adı
+                  <input [(ngModel)]="row.subject" [name]="'subjectName' + index" maxlength="100" />
+                </label>
+                <label class="field">Ders puanı
+                  <input [(ngModel)]="row.score" [name]="'subjectScore' + index" type="number" min="0" [max]="exam.maxScore" step="0.01" />
+                </label>
+                <button type="button" class="secondary-button" (click)="resultForm.subjectScores.splice(index, 1)" [attr.aria-label]="(row.subject || 'Ders') + ' satırını kaldır'">Kaldır</button>
+              </div>
+            }
+            <button type="button" class="secondary-button" (click)="addSubjectScore()">Ders ekle</button>
+          </fieldset>
           <label class="field span-two">
             <span>Öğretmen notu</span>
             <textarea [(ngModel)]="resultForm.notes" name="resultNotes" maxlength="2000" rows="2"></textarea>
