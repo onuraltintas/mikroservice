@@ -33,8 +33,16 @@
       <button type="button" data-testid="institution-teachers-tab"
         [attr.aria-pressed]="activeSection() === 'teachers'"
         [class.active]="activeSection() === 'teachers'" (click)="selectSection('teachers')">Öğretmenler</button>
+      <button type="button" data-testid="institution-analytics-tab"
+        [attr.aria-pressed]="activeSection() === 'analytics'"
+        [class.active]="activeSection() === 'analytics'" (click)="selectSection('analytics')">Analiz ve uyarılar</button>
     </nav>
 
+    @if (activeSection() === 'analytics') {
+      <div class="analytics-container" [hidden]="!!selectedStudent() || !!selectedTeacher()">
+        <staff-coaching-institution-analytics [institutionId]="institutionId()!" (studentSelected)="openStudentReport($event)" />
+      </div>
+    }
     @if (selectedStudent(); as reportStudent) {
       @defer (on immediate) {
         <staff-coaching-institution-student-report [student]="reportStudent" (back)="closeStudentReport()" />
@@ -130,7 +138,7 @@
           @if (studentPageNumber() < studentTotalPages()) { <button type="button" class="load-more" (click)="loadMoreStudents()" [disabled]="loadingMoreStudents()">{{ loadingMoreStudents() ? 'Yükleniyor…' : 'Daha fazla öğrenci yükle' }}</button> }
         }
       </section>
-    } @else {
+    } @else if (activeSection() === 'teachers') {
       <section class="roster-section" aria-labelledby="institution-teachers-title">
         <div class="section-heading">
           <div><h3 id="institution-teachers-title">Kurum öğretmenleri</h3><p>{{ teacherTotalCount() }} öğretmen · kurumunuza bağlı aktif öğretmenler</p></div>

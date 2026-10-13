@@ -34,7 +34,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
       response.end(JSON.stringify({ mode: 'disabled' })); return;
     }
     // Only the external Identity ownership contract is stubbed; Coaching queries remain real.
-    if (['/api/internal/coaching/authorize', '/api/internal/coaching/authorize-admin', '/api/internal/coaching/report-students'].includes(request.url)
+    if (['/api/internal/coaching/authorize', '/api/internal/coaching/authorize-admin', '/api/internal/coaching/report-students', '/api/internal/coaching/report-student-page'].includes(request.url)
         && request.method === 'POST') {
       if (request.headers['x-internal-service-key'] !== internalKey) { response.writeHead(403); response.end(); return; }
       try {
@@ -49,9 +49,19 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
           result = { institutionId: planningInstitution };
         } else {
           assert.equal(payload.viewerUserId, planningManager);
-          if (request.url.endsWith('/report-students')) {
+          if (request.url.endsWith('/report-students') || request.url.endsWith('/report-student-page')) {
             assert.equal(payload.institutionId, planningInstitution);
-            result = { studentUserIds: [planningStudent] };
+            const matches = (payload.gradeLevel == null || payload.gradeLevel === 8)
+              && (payload.teacherUserId == null || payload.teacherUserId === planningTeacher)
+              && (payload.search == null || 'ada test'.includes(payload.search.toLowerCase()));
+            result = { studentUserIds: matches ? [planningStudent] : [] };
+            if (request.url.endsWith('/report-student-page')) {
+              assert.ok(Number.isInteger(payload.pageNumber) && payload.pageNumber >= 1 && payload.pageNumber <= 1000);
+              assert.ok(Number.isInteger(payload.pageSize) && payload.pageSize >= 1 && payload.pageSize <= 100);
+              const students = matches && payload.pageNumber === 1 ? [{ userId: planningStudent, firstName: 'Ada', lastName: 'Test',
+                email: 'ada@example.invalid', gradeLevel: 8, teacherName: 'Test Koç', teacherUserId: planningTeacher }] : [];
+              result = { studentUserIds: students.map(student => student.userId), students, totalCount: matches ? 1 : 0 };
+            }
           } else result = { isGlobal: false, institutionId: planningInstitution };
         }
         response.writeHead(200, { 'content-type': 'application/json' }); response.end(JSON.stringify(result));

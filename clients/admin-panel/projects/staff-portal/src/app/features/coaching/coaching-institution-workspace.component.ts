@@ -10,15 +10,16 @@ import {
   CoachingInstitutionTeacher
 } from './coaching-institution.service';
 import { CoachingInstitutionStudentReportComponent } from './coaching-institution-student-report.component';
+import { CoachingInstitutionAnalyticsComponent } from './coaching-institution-analytics.component';
 import { CoachingInstitutionTeacherReportComponent } from './coaching-institution-teacher-report.component';
 import { StaffPendingInvitationsComponent } from '../staff-pending-invitations.component';
 
-type InstitutionSection = 'overview' | 'students' | 'teachers';
+type InstitutionSection = 'overview' | 'students' | 'teachers' | 'analytics';
 
 @Component({
   selector: 'staff-coaching-institution-workspace',
   standalone: true,
-  imports: [CommonModule, FormsModule, CoachingInstitutionStudentReportComponent, CoachingInstitutionTeacherReportComponent, StaffPendingInvitationsComponent],
+  imports: [CommonModule, FormsModule, CoachingInstitutionStudentReportComponent, CoachingInstitutionTeacherReportComponent, CoachingInstitutionAnalyticsComponent, StaffPendingInvitationsComponent],
   templateUrl: './coaching-institution-workspace.component.html',
   styleUrl: './coaching-institution-workspace.component.scss'
 })
