@@ -142,11 +142,17 @@ export class CoachingInstitutionStudentReportComponent implements OnInit {
     return {
       pageNumber: 1,
       pageSize: 25,
-      ...(this.historyFromDate ? { fromDate: `${this.historyFromDate}T00:00:00.000Z` } : {}),
-      ...(this.historyToDate ? { toDate: `${this.historyToDate}T23:59:59.999Z` } : {}),
+      ...(this.historyFromDate ? { fromDate: this.localDayBoundary(this.historyFromDate, false) } : {}),
+      ...(this.historyToDate ? { toDate: this.localDayBoundary(this.historyToDate, true) } : {}),
       ...(this.historyStatus ? { status: this.historyStatus } : {}),
       ...(this.historySearch.trim() ? { search: this.historySearch.trim().slice(0, 100) } : {})
     };
+  }
+
+  private localDayBoundary(value: string, end: boolean): string {
+    const [year, month, day] = value.split('-').map(Number);
+    const boundary = new Date(year, month - 1, day + (end ? 1 : 0));
+    return new Date(boundary.getTime() - (end ? 1 : 0)).toISOString();
   }
 
   private validateHistoryRange(): boolean {
