@@ -20,6 +20,7 @@ describe('CoachingInstitutionWorkspaceComponent', () => {
     comparison.flush({ studentCount: 1, assignedAssignmentCount: 0, submittedAssignmentCount: 0, goalCount: 0, completedGoalCount: 0 });
     warnings.flush({ items: [], totalCount: 0, pageNumber: 1, totalPages: 0 }); fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('Kurum analizi ve erken uyarılar');
+    expect(fixture.nativeElement.querySelector('#institution-teachers-title')).toBeNull();
     const analytics = fixture.debugElement.query(By.directive(CoachingInstitutionAnalyticsComponent)).componentInstance;
     analytics.fromDate = '2026-10-01'; analytics.gradeLevel = 8;
     analytics.warnings.set({ items: [], totalCount: 30, pageNumber: 2, totalPages: 2 });
