@@ -7,6 +7,18 @@ import { CoachingInstitutionService, CoachingInstitutionStudent, CoachingInstitu
 import { CoachingInstitutionWorkspaceComponent } from './coaching-institution-workspace.component';
 
 describe('CoachingInstitutionWorkspaceComponent', () => {
+  it('opens scoped analysis only after selecting the institution analytics tab', async () => {
+    const fixture = await createFixture(); fixture.detectChanges();
+    const http = TestBed.inject(HttpTestingController);
+    http.expectNone(request => request.url.includes('/reports/institution/'));
+    const tab = fixture.nativeElement.querySelector('[data-testid="institution-analytics-tab"]') as HTMLButtonElement;
+    expect(tab).toBeTruthy(); tab.click(); fixture.detectChanges();
+    const comparison = http.expectOne(request => request.url === '/api/reports/institution/institution-1/comparison');
+    const warnings = http.expectOne(request => request.url === '/api/reports/institution/institution-1/early-warnings');
+    comparison.flush({ studentCount: 1, assignedAssignmentCount: 0, submittedAssignmentCount: 0, goalCount: 0, completedGoalCount: 0 });
+    warnings.flush({ items: [], totalCount: 0, pageNumber: 1, totalPages: 0 }); fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Kurum analizi ve erken uyarılar');
+  });
   it('uses the authenticated institution scope and loads an operational overview', async () => {
     const service = institutionService();
     const fixture = await createFixture(service);
