@@ -80,6 +80,13 @@ public sealed class CoachingFeeDomainTests
     }
 
     [Fact]
+    public void NullInstallmentIsRejectedAsInvalidInput()
+    {
+        Assert.Throws<ArgumentException>(() => CoachingFeeAgreement.Create(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), null,
+            Guid.NewGuid(), "Ücret", 1000m, [null!], Now));
+    }
+
+    [Fact]
     public void OwnershipMustBeEitherOneInstitutionOrOneIndependentCoach()
     {
         foreach (var owners in new (Guid? Institution, Guid? Coach)[] { (null, null), (Guid.NewGuid(), Guid.NewGuid()), (Guid.Empty, null), (null, Guid.Empty) })
