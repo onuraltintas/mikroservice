@@ -81,8 +81,19 @@ describe('CoachingTeacherStudentDetailComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Kesirler çalışma kağıdı');
     expect(fixture.nativeElement.textContent).toContain('önceki kurumlarında oluşan Koçluk kayıtları da kapsanır');
   });
+  it('opens a session briefing with fresh summary and two scoped weekly reports without a plan editor', () => {
+    const fixture = createDetail(); flushInitialReport(); fixture.detectChanges();
+    fixture.componentInstance.openSessionBrief();
+    http.expectOne('/api/reports/student/student-1/progress').flush(fixture.componentInstance.progress()); fixture.detectChanges();
+    const reports = http.match(r => r.url === '/api/coaching/staff/students/student-1/study/report'); expect(reports.length).toBe(2);
+    for (const report of reports) report.flush({ success: true, data: { fromDate: report.request.params.get('fromDate'), toDate: report.request.params.get('toDate'),
+      source: 'StudentReported', reason: 'NoScheduledTasks', scheduledTasks: 0, completedTasks: 0, plannedMinutes: 0, actualMinutes: null, completionPercentage: null, topics: [] } });
+    http.expectNone(r => r.url.includes('/study/plans') || r.url.includes('/study/availability')); fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Seans hazırlık özeti'); expect(fixture.nativeElement.textContent).toContain('Haftalar arası çalışma karşılaştırması');
+    expect(fixture.debugElement.query(By.directive(StudentStudyPlansComponent))).toBeNull();
+  });
 
-  it.each(['section', 'roster'])('protects an unsaved weekly plan when leaving through %s', transition => {
+  it.each(['section', 'roster', 'brief'])('protects an unsaved weekly plan when leaving through %s', transition => {
     const fixture = createDetail(); flushInitialReport(); fixture.detectChanges();
     const toggle = Array.from(fixture.nativeElement.querySelectorAll('button')).find((button: any) => button.textContent.includes('Haftalık plan')) as HTMLButtonElement;
     toggle.click(); fixture.detectChanges();
@@ -93,6 +104,7 @@ describe('CoachingTeacherStudentDetailComponent', () => {
     vi.spyOn(window, 'confirm').mockReturnValue(false);
     const back = vi.spyOn(fixture.componentInstance.back, 'emit');
     if (transition === 'section') toggle.click();
+    else if (transition === 'brief') fixture.componentInstance.openSessionBrief();
     else (fixture.nativeElement.querySelector('[data-testid="back-to-roster"]') as HTMLButtonElement).click();
     fixture.detectChanges();
     expect(fixture.debugElement.query(By.directive(StudentStudyPlansComponent))).toBeTruthy();

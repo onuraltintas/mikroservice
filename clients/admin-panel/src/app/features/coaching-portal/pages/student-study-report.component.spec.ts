@@ -4,6 +4,18 @@ import { TestBed } from '@angular/core/testing';
 import { StudentStudyReportComponent } from './student-study-report.component';
 
 describe('StudentStudyReportComponent', () => {
+  it('automatically loads a rolling local week and its previous week for session preparation', () => {
+    vi.useFakeTimers(); vi.setSystemTime(new Date(2026, 9, 13, 0, 30));
+    try {
+      const { component, fixture, http } = setup(); fixture.componentRef.setInput('staffStudentId', 'student-one'); fixture.componentRef.setInput('autoWeekly', true); fixture.detectChanges();
+      const current = http.expectOne(r => r.url.endsWith('/staff/students/student-one/study/report') && r.params.get('fromDate') === '2026-10-07' && r.params.get('toDate') === '2026-10-13');
+      const previous = http.expectOne(r => r.params.get('fromDate') === '2026-09-30' && r.params.get('toDate') === '2026-10-06');
+      component.useLastWeek(); http.expectNone(() => true);
+      current.flush({ success: true, data: { ...weeklyData, fromDate: '2026-10-07', toDate: '2026-10-13' } });
+      previous.flush({ success: true, data: { ...weeklyData, fromDate: '2026-09-30', toDate: '2026-10-06' } });
+      expect(component.compareWeekly).toBe(true); expect(component.previousReport()?.toDate).toBe('2026-10-06');
+    } finally { vi.useRealTimers(); }
+  });
   const weeklyData = { fromDate: '2026-10-19', toDate: '2026-10-25', source: 'StudentReported', reason: 'CurrentStatusOfScheduledWork',
     scheduledTasks: 2, completedTasks: 1, completionPercentage: 50, plannedMinutes: 90, actualMinutes: 40, topics: [] };
   it('compares adjacent seven-day periods without treating missing actual minutes as zero', () => {
