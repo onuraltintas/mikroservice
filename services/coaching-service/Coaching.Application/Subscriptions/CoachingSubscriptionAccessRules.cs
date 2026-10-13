@@ -11,13 +11,19 @@ public static class CoachingSubscriptionAccessRules
         "payment"
     };
 
+    private static readonly HashSet<string> LearningSections = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "assignments", "exams", "goals", "sessions", "reports", "calendar"
+    };
+
     public static bool RequiresSubscription(string path)
     {
         var parts = path.Split('/', StringSplitOptions.RemoveEmptyEntries);
-        return parts.Length >= 3
+        return parts.Length >= 2
             && parts[0].Equals("api", StringComparison.OrdinalIgnoreCase)
-            && parts[1].Equals("coaching", StringComparison.OrdinalIgnoreCase)
-            && !FreeSections.Contains(parts[2]);
+            && (LearningSections.Contains(parts[1])
+                || parts.Length >= 3 && parts[1].Equals("coaching", StringComparison.OrdinalIgnoreCase)
+                    && !FreeSections.Contains(parts[2]));
     }
 
     public static bool HasAccess(
