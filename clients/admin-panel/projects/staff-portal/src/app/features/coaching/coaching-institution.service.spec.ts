@@ -4,6 +4,22 @@ import { TestBed } from '@angular/core/testing';
 import { CoachingInstitutionService } from './coaching-institution.service';
 
 describe('CoachingInstitutionService', () => {
+  it('updates teacher assignment and grade through the current institution scope', () => {
+    service.updateStudent('student/1', 8, 'teacher-1').subscribe();
+    const update = http.expectOne('/api/institution/students/student%2F1');
+    expect(update.request.method).toBe('PUT'); expect(update.request.body).toEqual({ gradeLevel: 8, teacherUserId: 'teacher-1' });
+    update.flush(null);
+    service.updateStudent('student/1', null, null).subscribe();
+    const unassign = http.expectOne('/api/institution/students/student%2F1');
+    expect(unassign.request.body).toEqual({ gradeLevel: null, teacherUserId: null }); unassign.flush(null);
+  });
+
+  it('removes current institution members through role-scoped endpoints', () => {
+    service.removeStudent('student').subscribe();
+    const student = http.expectOne('/api/institution/students/student'); expect(student.request.method).toBe('DELETE'); student.flush(null);
+    service.removeTeacher('teacher').subscribe();
+    const teacher = http.expectOne('/api/institution/teachers/teacher'); expect(teacher.request.method).toBe('DELETE'); teacher.flush(null);
+  });
   let http: HttpTestingController;
   let service: CoachingInstitutionService;
 
