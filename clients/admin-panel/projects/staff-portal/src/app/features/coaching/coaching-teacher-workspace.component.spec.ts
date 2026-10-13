@@ -1,4 +1,6 @@
 import { TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
+import { CoachingTeacherStudentsComponent } from './coaching-teacher-students.component';
 import { of } from 'rxjs';
 import { vi } from 'vitest';
 import { StaffAuthService } from '../../auth/staff-auth.service';
@@ -60,6 +62,14 @@ describe('CoachingTeacherWorkspaceComponent', () => {
 
     expect(fixture.nativeElement.textContent).toContain('Öğrencilerim');
     expect(assignments.getTeacherAssignments).not.toHaveBeenCalled();
+
+    const roster = fixture.debugElement.query(By.directive(CoachingTeacherStudentsComponent)).componentInstance;
+    const guard = vi.spyOn(roster, 'canLeavePage').mockReturnValue(false);
+    (fixture.nativeElement.querySelector('[data-testid="assignments-tab"]') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    expect(fixture.componentInstance.activeSection()).toBe('students');
+    expect(assignments.getTeacherAssignments).not.toHaveBeenCalled();
+    guard.mockReturnValue(true);
 
     (fixture.nativeElement.querySelector('[data-testid="assignments-tab"]') as HTMLButtonElement).click();
     fixture.detectChanges();

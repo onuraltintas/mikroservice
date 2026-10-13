@@ -1,6 +1,8 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
+import { StudentStudyPlansComponent } from '../../../../../../src/app/features/coaching-portal/pages/student-study-plans.component';
 import { CoachingTeacherStudentDetailComponent } from './coaching-teacher-student-detail.component';
 import { CoachingTeacherStudent } from './coaching-teacher-students.service';
 
@@ -78,6 +80,24 @@ describe('CoachingTeacherStudentDetailComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('6 / 8 teslim');
     expect(fixture.nativeElement.textContent).toContain('Kesirler çalışma kağıdı');
     expect(fixture.nativeElement.textContent).toContain('önceki kurumlarında oluşan Koçluk kayıtları da kapsanır');
+  });
+
+  it.each(['section', 'roster'])('protects an unsaved weekly plan when leaving through %s', transition => {
+    const fixture = createDetail(); flushInitialReport(); fixture.detectChanges();
+    const toggle = Array.from(fixture.nativeElement.querySelectorAll('button')).find((button: any) => button.textContent.includes('Haftalık plan')) as HTMLButtonElement;
+    toggle.click(); fixture.detectChanges();
+    http.expectOne('/api/coaching/staff/students/student-1/study/availability').flush({ success: true, data: null });
+    http.expectOne('/api/coaching/staff/students/student-1/study/plans?pageNumber=1&pageSize=20').flush({ success: true, data: { items: [], totalCount: 0, pageNumber: 1, pageSize: 20 } });
+    const editor = fixture.debugElement.query(By.directive(StudentStudyPlansComponent)).componentInstance as StudentStudyPlansComponent;
+    editor.newDraft(); editor.editTitle = 'Kaydedilmemiş hafta';
+    vi.spyOn(window, 'confirm').mockReturnValue(false);
+    const back = vi.spyOn(fixture.componentInstance.back, 'emit');
+    if (transition === 'section') toggle.click();
+    else (fixture.nativeElement.querySelector('[data-testid="back-to-roster"]') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    expect(fixture.debugElement.query(By.directive(StudentStudyPlansComponent))).toBeTruthy();
+    expect(back).not.toHaveBeenCalled();
+    expect(editor.editTitle).toBe('Kaydedilmemiş hafta');
   });
 
   it('filters a category and paginates its history', () => {
