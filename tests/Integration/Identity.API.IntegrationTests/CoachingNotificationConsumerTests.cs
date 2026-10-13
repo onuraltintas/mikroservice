@@ -51,6 +51,7 @@ public sealed class CoachingNotificationConsumerTests
             configurator.AddConsumer<GoalCreatedConsumer>();
             configurator.AddConsumer<GoalUpdatedConsumer>();
             configurator.AddConsumer<StudyPlanPublishedConsumer>();
+            configurator.AddConsumer<CoachingReminderDueConsumer>();
             configurator.UsingInMemory((context, busConfigurator) => busConfigurator.ConfigureEndpoints(context));
         });
 
@@ -88,6 +89,8 @@ public sealed class CoachingNotificationConsumerTests
             await harness.Bus.Publish(new GoalUpdatedEvent(
                 Guid.NewGuid(), secondStudentId, teacherId, "Read three books"));
             await harness.Bus.Publish(new StudyPlanPublishedEvent(Guid.NewGuid(), firstStudentId));
+            var reminderId = Guid.NewGuid();
+            await harness.Bus.Publish(new CoachingReminderDueEvent(reminderId, firstStudentId, Guid.NewGuid(), "StudyDay", DateTime.UtcNow));
 
             (await harness.Consumed.Any<AssignmentCreatedEvent>()).Should().BeTrue();
             (await harness.Consumed.Any<AssignmentUpdatedEvent>()).Should().BeTrue();
@@ -102,13 +105,16 @@ public sealed class CoachingNotificationConsumerTests
             (await harness.Consumed.Any<GoalCreatedEvent>()).Should().BeTrue();
             (await harness.Consumed.Any<GoalUpdatedEvent>()).Should().BeTrue();
             (await harness.Consumed.Any<StudyPlanPublishedEvent>()).Should().BeTrue();
+            (await harness.Consumed.Any<CoachingReminderDueEvent>()).Should().BeTrue();
 
-            for (var attempt = 0; attempt < 50 && recordingDispatcher.Calls.Count < 13; attempt++)
+            for (var attempt = 0; attempt < 50 && recordingDispatcher.Calls.Count < 14; attempt++)
             {
                 await Task.Delay(20);
             }
 
-            recordingDispatcher.Calls.Should().HaveCount(13);
+            recordingDispatcher.Calls.Should().HaveCount(14);
+            var reminder = recordingDispatcher.Calls.Single(call => call.Type == "StudyPlanReminder");
+            reminder.RecipientIds.Should().Equal(firstStudentId); reminder.EventMessageId.Should().Be(reminderId);
             recordingDispatcher.Calls.Single(call => call.Type == "StudyPlanPublished").RecipientIds.Should().Equal(firstStudentId);
             recordingDispatcher.Calls.Single(call => call.Type == "AssignmentSubmitted")
                 .RecipientIds.Should().Equal(teacherId);
