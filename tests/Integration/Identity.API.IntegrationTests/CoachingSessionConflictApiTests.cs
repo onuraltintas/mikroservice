@@ -28,7 +28,7 @@ public sealed class CoachingSessionConflictApiTests
         Assert.Equal(409, Assert.IsAssignableFrom<ObjectResult>(create.Result).StatusCode);
         var id = Guid.NewGuid();
         var update = await controller.UpdateSession(id, new(id, "Session", null, DateTime.UtcNow.AddDays(2), 60, null, null), default);
-        Assert.Equal(409, Assert.IsAssignableFrom<ObjectResult>(update).StatusCode);
+        Assert.Equal(409, Assert.IsAssignableFrom<ObjectResult>(update.Result).StatusCode);
     }
 
     private sealed class CreateConflict : IRequestHandler<CreateSessionCommand, CreateSessionResponse>

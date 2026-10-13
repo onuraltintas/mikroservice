@@ -21,12 +21,16 @@
 - Koltuk kayıtlarında işlem tekrarının hem commit öncesi geri alma hem commit sonrası yanıt kaybı senaryosu doğrulandı; tekrar önce gerçek veritabanı durumunu yüklüyor. Kurum kapsamı değişince eski okuma/yazma istekleri ve bildirimler temizleniyor.
 - Öğretmen/öğrenci planında isteğe bağlı kaynak/sayfa ve planlanan soru sayısı var. Öğrenci gerçekleşen soru sayısını süreyle birlikte kaydediyor. Tamamlanmış sayı değiştirilemiyor; açık sıfır ile eksik kayıt ayrılıyor. Sabit iş otomatik taslağa taşınırken kaynak ve planlanan sayı korunuyor. Kurum/admin geçmişi ve gizlilik dışa aktarımı aynı alanları içeriyor.
 - Çalışma raporu planlanan/kaydedilen soru toplamını ve kaç işte sayı girildiğini gösteriyor. Eksik sayılar sıfır kabul edilmiyor. Uzun boşluksuz kaynak metni öğrenci/kurum mobil görünümünde taşmıyor.
+- Manuel seans oluşturma/yeniden planlama aynı öğretmen veya katılımcının çakışan saatini veritabanında atomik reddediyor. Bitişte başlayan seans serbest; iptal edilen aralık açılıyor. Eski çakışmalı kayıtlar ve metadata düzenlemeleri korunuyor. Öğretmen/admin409 yanıtında formu koruyup başka saat seçilmesini istiyor. Katılım silme ile seans güncellemesinin kilit sırası da doğrulandı.
 
 ## Test kanıtları
 
 Haftalık rapor artık önceki yedi gün ile karşılaştırılabiliyor; bilinmeyen gerçekleşen süre sıfıra çevrilmiyor. Ders/konu öncelikleri yanlış ve boş cevap oranından üretiliyor, sınav türü ve veri kaynağı korunuyor. Öğretmen ve kurumun seans hazırlık özeti güncel genel ilerleme ile iki haftayı birlikte getiriyor; yeniden açılış da raporu yeniliyor. Kurum görünümü salt okunur, kirli öğretmen taslağından geçiş onayla korunuyor. İstanbul DateOnly başlıkları ve 390 piksel rapor genişliği doğrulandı.
 
 Yerel sonuçlar `artifacts/coaching-completion-20261013/` altında tutuluyor.
+
+- `coaching-regression-stage10.trx`: 724 başarılı, 0 başarısız, 0 atlanan; `e2e-stage10-sessions.log` 8 başarılı tarayıcı senaryosu. Yeni seans senaryosu öğretmen/admin409, korunmuş form, bitişik görüşme ve gerçek ICS başlangıcını doğrular. Identity kapsamı hâlâ yalnız yerel sentetik fixture'dır.
+- `session-conflicts-red.trx` öğretmen/öğrenci eşzamanlı çift rezervasyonu3 testte yeniden üretir. `session-lock-order-red.trx`40P01 kilit sırası hatasını gösterir; BEFORE STATEMENT kilit düzeltmesinden sonra `session-conflicts-migration-green.trx`7 seçili PostgreSQL/API/gizlilik testi geçti. Down/Up eski seansları silmez. `session-conflicts-teacher-ui-green.log`7, `session-conflicts-admin-ui-green.log`4 seçili UI testi başarılı.
 
 - `coaching-regression-stage9-final.trx`: 718 başarılı, 0 başarısız, 0 atlanan. `task-questions-green.trx` 34; yeni gizlilik alanlarını içeren `task-questions-privacy-green.trx` 1; yeni migration Down/Up ve DB sınırlarını içeren `task-questions-migration-green.trx` 2 seçili test başarılı. İlk tam stage9 sonucu eski tabloyu yeniden oluşturan testte yeni sütun bulunamadığını gösterdi; test güncel migration'ı tekrar uygular ve tüm718 yeniden geçti.
 - `task-questions-ui-green-final.log`: kaynak/soru formu, ortak rapor, HTTP sözleşmesi ve admin geçmişinde 33 başarılı test. `staff-stage9.log` 175 başarılı personel testi. `admin-coaching-regression-stage8.log` kaynak/soru aşamasından önce 270 başarılı koçluk testi.
@@ -61,7 +65,6 @@ Bu çalışma henüz bütün ürün eksiklerinin tamamlandığı anlamına gelmi
 1. Yaklaşan çalışma/seans hatırlatmaları.
 2. Koçluk öğrenci ücret/borç/taksit/kasa akışının mevcut kurs finansından ayrı ürün kapsamıyla ele alınması.
 3. Koçluk soru bankası, süreli sınav alma/puanlama ve kazanım takibi.
-4. Manuel görüşme planlamasında çakışma denetimi.
 5. Tamamlanan bölümleri kapsayan mobil/masaüstü tarayıcı senaryoları ve son kapsam incelemesi.
 
 Zoom ve SMS sağlayıcı/hesabı kullanıcıda şu an yok. Mevcut manuel toplantı bağlantısı, ICS ve uygulama içi bildirimler kullanılabilir. Gerçek sağlayıcı entegrasyonu veya teslimat testi yapılmış değildir. Canlıya dağıtım yapılmadı.

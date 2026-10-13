@@ -15,6 +15,52 @@ async function staffSession(page, user, role) {
   await page.goto('http://127.0.0.1:4301/?product=coaching');
 }
 
+test('session conflicts preserve teacher and admin forms and allow an adjacent meeting with ICS', async ({ browser, request }) => {
+  const base = 'http://127.0.0.1:5006';
+  const headers = { Authorization: `Bearer ${planningToken(planningTeacher, ['Teacher'])}` };
+  const adminToken = planningToken(randomUUID(), ['SystemAdmin']); const adminHeaders = { Authorization: `Bearer ${adminToken}` };
+  const title = `Seans çakışma testi ${randomUUID()}`;
+  const start = '2030-04-04T10:00:00Z'; const ids = [];
+  const context = await browser.newContext({ timezoneId: 'Europe/Istanbul' });
+  const adminContext = await browser.newContext({ timezoneId: 'Europe/Istanbul' });
+  try {
+    const original = await request.post(`${base}/api/sessions`, { headers: { ...headers, 'Idempotency-Key': randomUUID() }, data: {
+      teacherId: planningTeacher, studentId: planningStudent, startTime: start, durationMinutes: 60, subject: title, type: 'OneOnOne', meetingLink: 'https://example.invalid/meeting'
+    } });
+    expect(original.ok(), await original.text()).toBeTruthy(); ids.push((await original.json()).sessionId);
+    const adminConflict = await request.post(`${base}/api/coaching-admin/sessions`, { headers: { ...adminHeaders, 'Idempotency-Key': randomUUID() }, data: {
+      teacherId: planningTeacher, studentId: planningStudent, startTime: start, durationMinutes: 60, subject: title, type: 'OneOnOne'
+    } });
+    expect(adminConflict.status(), await adminConflict.text()).toBe(409); expect((await adminConflict.json()).code).toBe('Session.Conflict');
+    const page = await context.newPage(); await staffSession(page, planningTeacher, 'Teacher');
+    await page.getByTestId('sessions-tab').click(); await page.getByTestId('create-session').click();
+    const form = page.locator('staff-coaching-teacher-session-form');
+    await form.getByLabel('Başlangıç', { exact: true }).fill('2030-04-04T13:00');
+    await form.getByLabel('Ders / konu', { exact: true }).fill(title);
+    await form.getByRole('checkbox', { name: /Ada Test/ }).check();
+    await form.getByRole('button', { name: 'Seansı planla', exact: true }).click();
+    await expect(form.getByRole('alert')).toContainText('Başka bir saat seçin');
+    await expect(form.getByLabel('Ders / konu', { exact: true })).toHaveValue(title);
+    await form.getByLabel('Başlangıç', { exact: true }).fill('2030-04-04T14:00');
+    const createdResponse = page.waitForResponse(response => response.url().endsWith('/api/sessions') && response.request().method() === 'POST' && response.status() === 201);
+    await form.getByRole('button', { name: 'Seansı planla', exact: true }).click();
+    ids.push((await (await createdResponse).json()).sessionId); await expect(form).toHaveCount(0);
+    const adminPage = await adminContext.newPage();
+    await adminPage.route('**/api/auth/refresh-token', route => route.fulfill({ json: { accessToken: adminToken, tokenType: 'Bearer', expiresInMinutes: 15 } }));
+    await adminPage.goto(`http://127.0.0.1:4300/dashboard/coaching/operations/session/${ids[1]}/edit`);
+    const adminForm = adminPage.locator('app-coaching-resource-edit');
+    await adminForm.getByLabel('Tarih', { exact: true }).fill('2030-04-04T13:30');
+    await adminForm.getByRole('button', { name: 'Kaydet', exact: true }).click();
+    await expect(adminForm.getByText('Öğretmen veya öğrencinin bu saat aralığında başka bir seansı var. Başka bir saat seçin.', { exact: true })).toBeVisible();
+    await expect(adminForm.getByLabel('Tarih', { exact: true })).toHaveValue('2030-04-04T13:30');
+    const feed = await request.get(`${base}/api/calendar/teacher.ics?fromDate=2030-04-04T00:00:00Z&toDate=2030-04-05T00:00:00Z`, { headers });
+    expect(feed.ok(), await feed.text()).toBeTruthy(); expect(await feed.text()).toContain('DTSTART:20300404T100000Z');
+  } finally {
+    for (const id of ids) expect((await request.post(`${base}/api/sessions/${id}/cancel`, { headers })).ok()).toBeTruthy();
+    await Promise.all([context.close(), adminContext.close()]);
+  }
+});
+
 test('teacher publishes a weekly plan, student completes work, teacher and institution read the result', async ({ browser, request }) => {
   const teacherHeaders = { Authorization: `Bearer ${planningToken(planningTeacher, ['Teacher'])}` };
   const initialReport = await request.get(`${api}/${planningStudent}/study/report?fromDate=2026-10-19&toDate=2026-10-25`, { headers: teacherHeaders });

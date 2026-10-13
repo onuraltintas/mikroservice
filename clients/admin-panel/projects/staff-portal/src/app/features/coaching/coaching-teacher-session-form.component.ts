@@ -193,7 +193,9 @@ export class CoachingTeacherSessionFormComponent implements OnInit {
           this.successMessage.set('Seans güncellendi.');
           this.saved.emit();
         },
-        error: () => this.errorMessage.set('Seans güncellenemedi. Alanları kontrol edip tekrar deneyin.')
+        error: error => this.errorMessage.set(error.status === 409 && error.error?.code === 'Session.Conflict'
+          ? 'Öğretmen veya öğrencinin bu saat aralığında başka bir seansı var. Başka bir saat seçin.'
+          : 'Seans güncellenemedi. Alanları kontrol edip tekrar deneyin.')
       });
       return;
     }
@@ -217,7 +219,9 @@ export class CoachingTeacherSessionFormComponent implements OnInit {
         this.successMessage.set('Seans planlandı.');
         this.saved.emit();
       },
-      error: () => this.errorMessage.set('Seans oluşturulamadı. Alanları ve öğrenci atamalarını kontrol edin.')
+      error: error => this.errorMessage.set(error.status === 409 && error.error?.code === 'Session.Conflict'
+        ? 'Öğretmen veya öğrencinin bu saat aralığında başka bir seansı var. Başka bir saat seçin.'
+        : 'Seans oluşturulamadı. Alanları ve öğrenci atamalarını kontrol edin.')
     });
   }
 

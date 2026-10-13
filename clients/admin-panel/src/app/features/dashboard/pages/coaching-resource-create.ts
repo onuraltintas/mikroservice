@@ -239,7 +239,9 @@ export class CoachingResourceCreateComponent implements OnInit {
     };
     this.coaching.createSession(request, this.idempotencyKey()).pipe(finalize(() => this.submitting.set(false))).subscribe({
       next: () => this.router.navigate(['/dashboard/coaching/operations']),
-      error: () => this.error.set('Seans oluşturulamadı; alanları ve yetkinizi kontrol edin.')
+      error: error => this.error.set(error.status === 409 && error.error?.code === 'Session.Conflict'
+        ? 'Öğretmen veya öğrencinin bu saat aralığında başka bir seansı var. Başka bir saat seçin.'
+        : 'Seans oluşturulamadı; alanları ve yetkinizi kontrol edin.')
     });
   }
 

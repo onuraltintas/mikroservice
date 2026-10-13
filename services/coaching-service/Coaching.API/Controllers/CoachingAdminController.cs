@@ -516,7 +516,8 @@ public sealed class CoachingAdminController : ControllerBase
         {
             return StatusCode(StatusCodes.Status403Forbidden, new { error = ex.Message, code = ex.Code });
         }
-        catch (BusinessRuleException ex) when (ex.Code.Equals("Idempotency.Conflict", StringComparison.OrdinalIgnoreCase))
+        catch (BusinessRuleException ex) when (ex.Code.Equals("Idempotency.Conflict", StringComparison.OrdinalIgnoreCase)
+            || ex.Code == "Session.Conflict")
         {
             return Conflict(new { error = ex.Message, code = ex.Code });
         }
@@ -600,6 +601,10 @@ public sealed class CoachingAdminController : ControllerBase
         catch (BusinessRuleException ex) when (ex.Code.StartsWith("Authorization.", StringComparison.OrdinalIgnoreCase))
         {
             return StatusCode(StatusCodes.Status403Forbidden, new { error = ex.Message, code = ex.Code });
+        }
+        catch (BusinessRuleException ex) when (ex.Code == "Session.Conflict")
+        {
+            return Conflict(new { error = ex.Message, code = ex.Code });
         }
         catch (ValidationException ex)
         {

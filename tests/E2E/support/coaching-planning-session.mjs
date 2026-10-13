@@ -56,7 +56,8 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
         if (request.url.endsWith('/authorize')) {
           assert.equal(payload.teacherId, planningTeacher);
           assert.ok(Array.isArray(payload.studentIds) && payload.studentIds.length === 1 && payload.studentIds[0] === planningStudent);
-          assert.equal(payload.isSystemAdministrator, false);
+          assert.equal(typeof payload.isSystemAdministrator, 'boolean');
+          assert.ok(payload.institutionId == null || payload.institutionId === planningInstitution);
           result = { institutionId: planningInstitution };
         } else {
           assert.equal(payload.viewerUserId, planningManager);
@@ -98,7 +99,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
       response.end(JSON.stringify({ accessToken: planningToken(), tokenType: 'Bearer', expiresInMinutes: 15 }));
       return;
     }
-    if (!request.url || !/^\/api\/(coaching\/|coaching-admin\/|goals(?:\/|\?|$)|reports\/|exams\/)/.test(request.url)) {
+    if (!request.url || !/^\/api\/(coaching\/|coaching-admin\/|goals(?:\/|\?|$)|reports\/|exams\/|sessions(?:\/|\?|$)|calendar\/)/.test(request.url)) {
       response.writeHead(404); response.end(); return;
     }
     try {

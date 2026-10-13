@@ -280,6 +280,11 @@ public class CoachingDbContext : DbContext
         {
             throw new IdempotencyConflictException(exception);
         }
+        catch (DbUpdateException exception) when (exception.GetBaseException() is PostgresException { SqlState: "23P01", ConstraintName: "coaching_session_overlap" })
+        {
+            throw new EduPlatform.Shared.Kernel.Exceptions.BusinessRuleException("Session.Conflict",
+                "Öğretmen veya öğrencinin bu saat aralığında başka bir seansı var. Başka bir saat seçin.");
+        }
         catch (DbUpdateConcurrencyException exception)
         {
             throw ToConcurrencyException(exception);
@@ -299,6 +304,11 @@ public class CoachingDbContext : DbContext
         try
         {
             return base.SaveChanges(acceptAllChangesOnSuccess);
+        }
+        catch (DbUpdateException exception) when (exception.GetBaseException() is PostgresException { SqlState: "23P01", ConstraintName: "coaching_session_overlap" })
+        {
+            throw new EduPlatform.Shared.Kernel.Exceptions.BusinessRuleException("Session.Conflict",
+                "Öğretmen veya öğrencinin bu saat aralığında başka bir seansı var. Başka bir saat seçin.");
         }
         catch (DbUpdateConcurrencyException exception)
         {

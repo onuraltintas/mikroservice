@@ -3,6 +3,8 @@ using Coaching.Domain.Enums;
 using Coaching.Infrastructure.Data;
 using EduPlatform.Shared.Kernel.Exceptions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Shared.IntegrationTests.Fixtures;
 
 namespace Identity.API.IntegrationTests;
@@ -11,6 +13,31 @@ namespace Identity.API.IntegrationTests;
 public sealed class CoachingSessionConflictTests(PostgresFixture postgres)
 {
     private DbContextOptions<CoachingDbContext> Options => new DbContextOptionsBuilder<CoachingDbContext>().UseNpgsql(postgres.ConnectionString).Options;
+
+    [Fact]
+    public async Task MigrationPreservesLegacyOverlapsAndMetadataAndRollsBackWithoutDeletingSessions()
+    {
+        await using var db = new CoachingDbContext(Options);
+        await db.Database.EnsureDeletedAsync();
+        var migrator = db.GetService<IMigrator>();
+        const string previous = "20261013121249_AddStudyTaskQuestionTracking";
+        const string current = "20261013123111_GuardCoachingSessionOverlap";
+        await migrator.MigrateAsync(previous);
+        try
+        {
+            var teacher = Guid.NewGuid(); var student = Guid.NewGuid(); var start = DateTime.UtcNow.AddDays(2);
+            await Save(teacher, student, start); var second = await Save(teacher, student, start);
+            await migrator.MigrateAsync(current);
+            var legacy = await db.CoachingSessions.SingleAsync(x => x.Id == second);
+            legacy.UpdateDetails(title: "Legacy metadata correction"); await db.SaveChangesAsync();
+            Assert.Equal(2, await db.CoachingSessions.CountAsync());
+            await Assert.ThrowsAsync<BusinessRuleException>(() => Save(teacher, student, start.AddMinutes(30)));
+            await migrator.MigrateAsync(previous); Assert.Equal(2, await db.CoachingSessions.CountAsync());
+            await migrator.MigrateAsync(current);
+            await Assert.ThrowsAsync<BusinessRuleException>(() => Save(teacher, student, start));
+        }
+        finally { await db.Database.EnsureDeletedAsync(); }
+    }
 
     [Fact]
     public async Task SessionUpdateAndAttendanceErasureAcquireSchedulingLockBeforeRows()
@@ -25,7 +52,8 @@ public sealed class CoachingSessionConflictTests(PostgresFixture postgres)
             await using var updateTransaction = await updating.Database.BeginTransactionAsync();
             await using var deleteTransaction = await deleting.Database.BeginTransactionAsync();
             var deletePid = ((Npgsql.NpgsqlConnection)deleting.Database.GetDbConnection()).ProcessID;
-            await updating.Database.ExecuteSqlInterpolatedAsync($"UPDATE coaching.coaching_sessions SET title = {'U' + "pdated"} WHERE id = {row.Id}");
+            var changedTitle = "Updated"; var changedNote = "Note";
+            await updating.Database.ExecuteSqlInterpolatedAsync($"UPDATE coaching.coaching_sessions SET title = {changedTitle} WHERE id = {row.Id}");
             var deleteTask = deleting.Database.ExecuteSqlInterpolatedAsync($"DELETE FROM coaching.session_attendances WHERE id = {attendanceId}");
             try
             {
@@ -36,7 +64,7 @@ public sealed class CoachingSessionConflictTests(PostgresFixture postgres)
                     if (!waiting) await Task.Delay(20);
                 }
                 Assert.True(waiting, "Attendance deletion must wait for the scheduling transaction.");
-                await updating.Database.ExecuteSqlInterpolatedAsync($"UPDATE coaching.session_attendances SET teacher_note = {'N' + "ote"} WHERE id = {attendanceId}");
+                await updating.Database.ExecuteSqlInterpolatedAsync($"UPDATE coaching.session_attendances SET teacher_note = {changedNote} WHERE id = {attendanceId}");
                 await updateTransaction.CommitAsync(); await deleteTask; await deleteTransaction.CommitAsync();
                 Assert.False(await db.SessionAttendances.AnyAsync(x => x.Id == attendanceId));
             }
