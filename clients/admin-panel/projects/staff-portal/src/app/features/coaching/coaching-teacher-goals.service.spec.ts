@@ -34,7 +34,7 @@ describe('CoachingTeacherGoalsService', () => {
     expect(request.request.headers.get('Idempotency-Key')).toBe('goal-idempotency-key');
     expect(request.request.body).toMatchObject({
       teacherId: 'teacher-1', studentId: 'student-1', title: 'LGS hazırlığı',
-      category: 1, description: 'Haftalık tekrar', targetScore: 85
+      category: 'ExamPreparation', description: 'Haftalık tekrar', targetScore: 85
     });
     request.flush({ goalId: 'goal-1' });
   });
@@ -49,8 +49,8 @@ describe('CoachingTeacherGoalsService', () => {
     const request = http.expectOne('/api/goals/goal-1');
     expect(request.request.method).toBe('PUT');
     expect(request.request.body).toMatchObject({
-      goalId: 'goal-1', title: 'Yeni hedef', category: 2,
-      description: 'Açıklama', targetScore: 90, targetExamType: 4, targetSubject: 'Matematik'
+      goalId: 'goal-1', title: 'Yeni hedef', category: 'SubjectMastery',
+      description: 'Açıklama', targetScore: 90, targetExamType: 'LGS', targetSubject: 'Matematik'
     });
     expect(request.request.body['studentId']).toBeUndefined();
     request.flush({ goalId: 'goal-1', title: 'Yeni hedef' });

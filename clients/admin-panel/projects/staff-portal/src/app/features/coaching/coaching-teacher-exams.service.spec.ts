@@ -31,7 +31,7 @@ describe('CoachingTeacherExamsService', () => {
     expect(request.request.method).toBe('POST');
     expect(request.request.headers.get('Idempotency-Key')).toBe('exam-key');
     expect(request.request.body).toEqual({
-      teacherId: 'teacher-1', title: 'LGS denemesi', type: 4,
+      teacherId: 'teacher-1', title: 'LGS denemesi', type: 'LGS',
       examDate: '2030-01-05T10:00:00Z', maxScore: 100, institutionId: null, description: 'Açıklama'
     });
     request.flush({ examId: 'exam-1' });
@@ -46,7 +46,7 @@ describe('CoachingTeacherExamsService', () => {
     const request = http.expectOne('/api/exams/exam-1');
     expect(request.request.method).toBe('PUT');
     expect(request.request.body).toEqual({
-      examId: 'exam-1', title: 'Deneme 2', type: 1, subject: 'Matematik', description: 'Not',
+      examId: 'exam-1', title: 'Deneme 2', type: 'Mock', subject: 'Matematik', description: 'Not',
       examDate: '2030-02-01T10:00:00Z', durationMinutes: 90, maxScore: 120, targetGradeLevel: 8
     });
     request.flush({ examId: 'exam-1', examDate: '2030-02-01T10:00:00Z', maxScore: 120 });
