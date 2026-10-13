@@ -95,7 +95,7 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
             db.StudyPlanTasks.AddRange(tasks);
             await db.SaveChangesAsync(cancellationToken);
             return await ViewAsync(revision, cancellationToken);
-        }, cancellationToken, targetStudent);
+        }, cancellationToken, targetStudent, true);
 
     private Task<ManualStudyPlanView> ReplaceCoreAsync(Guid id, int expectedVersion, ManualStudyPlanInput request, CancellationToken cancellationToken, Guid? targetStudent = null)
         => LockedAsync(async student =>
@@ -113,7 +113,7 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
             db.StudyPlanTasks.AddRange(tasks);
             await db.SaveChangesAsync(cancellationToken);
             return await ViewAsync(revision, cancellationToken);
-        }, cancellationToken, targetStudent);
+        }, cancellationToken, targetStudent, true);
 
     private Task<ManualStudyPlanView> PublishCoreAsync(Guid id, int expectedVersion, CancellationToken cancellationToken, Guid? targetStudent = null)
         => LockedAsync(async student =>
@@ -142,7 +142,7 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
             await events.PublishAsync(new StudyPlanPublishedEvent(revision.Id, student), cancellationToken);
             await db.SaveChangesAsync(cancellationToken);
             return await ViewAsync(revision, cancellationToken);
-        }, cancellationToken, targetStudent);
+        }, cancellationToken, targetStudent, true);
 
     private async Task<StudyPlanRevision> OwnedAsync(Guid id, Guid student, int version, CancellationToken cancellationToken)
     {
@@ -160,7 +160,7 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
             revision.Archive();
             await db.SaveChangesAsync(cancellationToken);
             return await ViewAsync(revision, cancellationToken);
-        }, cancellationToken, targetStudent);
+        }, cancellationToken, targetStudent, true);
 
     public Task<ManualStudyPlanView> CompleteTaskAsync(Guid id, Guid taskId, int expectedVersion, int actualMinutes, CancellationToken cancellationToken = default)
         => LockedAsync(async student =>
@@ -194,7 +194,7 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
             revision.RecordTaskChange();
             await db.SaveChangesAsync(cancellationToken);
             return await ViewAsync(revision, cancellationToken);
-        }, cancellationToken, targetStudent);
+        }, cancellationToken, targetStudent, true);
 
     private async Task<StudyPlanTask> ActiveTaskAsync(StudyPlanRevision revision, Guid taskId, CancellationToken cancellationToken)
     {
@@ -226,13 +226,15 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
         return new(revision.Id, revision.Version, revision.Title, revision.Status, tasks);
     }
 
-    private async Task<T> LockedAsync<T>(Func<Guid, Task<T>> action, CancellationToken cancellationToken, Guid? targetStudent = null)
+    private async Task<T> LockedAsync<T>(Func<Guid, Task<T>> action, CancellationToken cancellationToken,
+        Guid? targetStudent = null, bool teacherWrite = false)
     {
         var student = targetStudent ?? access.CurrentUserId ?? Guid.Empty;
         if (targetStudent.HasValue)
         {
             if (staffAccess is null) throw new BusinessRuleException("Authorization.Forbidden", "Personel erişimi doğrulanamadı.");
-            await staffAccess.RequireAsync(student, cancellationToken);
+            if (teacherWrite) await staffAccess.RequireTeacherWriteAsync(student, cancellationToken);
+            else await staffAccess.RequireAsync(student, cancellationToken);
         }
         else if (student == Guid.Empty || !access.IsCurrentStudent(student))
             throw new BusinessRuleException("Authorization.Forbidden", "Bu işlem yalnız öğrencinin kendi hesabıyla kullanılabilir.");

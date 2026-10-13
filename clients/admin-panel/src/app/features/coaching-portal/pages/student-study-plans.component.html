@@ -1,8 +1,10 @@
 <section class="study-plans" aria-labelledby="study-plans-title">
   <header class="page-heading">
-    <div><p class="eyebrow">Kendi çalışma ritmin</p><h1 id="study-plans-title">Çalışma planlarım</h1>
-      <p>Taslağını hazırla, kontrol ederek yayımla ve günlük çalışmalarını takip et.</p></div>
+    <div><p class="eyebrow">{{ staffStudentId ? 'Haftalık koçluk takibi' : 'Kendi çalışma ritmin' }}</p><h1 id="study-plans-title">{{ staffStudentId ? 'Öğrencinin çalışma planları' : 'Çalışma planlarım' }}</h1>
+      <p>{{ readOnly ? 'Planları ve öğrencinin kaydettiği çalışmaları inceleyin.' : 'Taslağı hazırla, kontrol ederek yayımla ve günlük çalışmaları takip et.' }}</p></div>
+    @if (!readOnly) {
     <button type="button" (click)="newDraft()" [disabled]="busy() || dirty || loading()">{{ knownDraftId() || selected()?.status === 'Draft' ? 'Taslağı düzenle' : 'Yeni taslak' }}</button>
+    }
   </header>
   @if (error()) { <p role="alert" class="notice error">{{ error() }}</p> }
   @if (success()) { <p role="status" class="notice success">{{ success() }}</p> }
@@ -65,11 +67,13 @@
             <h3>{{ task.title }}</h3><p>{{ task.plannedDate | date:'dd.MM.yyyy' }} · {{ task.plannedMinutes }} dk @if (task.isPinned) { · Sabit }</p>
             @if (task.isCompleted) {
               <p class="completion">Tamamlandı · {{ task.actualMinutes }} dk · {{ task.completedAt | date:'dd.MM.yyyy HH:mm' }}</p>
-            } @else if (plan.status === 'Active') {
+            } @else if (plan.status === 'Active' && !readOnly) {
+              @if (!staffStudentId) {
               <div class="fields">
                 <label>Gerçek süre (dk)<input type="number" [(ngModel)]="actualMinutes[task.id]" min="1" max="1440" step="1" [disabled]="busy()"></label>
                 <button type="button" (click)="complete(task, actualMinutes[task.id])" [disabled]="busy()">Tamamla</button>
               </div>
+              } @else { <p class="muted">Öğrencinin çalışma kaydı bekleniyor.</p> }
               <div class="fields">
                 <label>Yeni tarih<input type="date" [(ngModel)]="targetDates[task.id]" [disabled]="busy()"></label>
                 <button type="button" class="secondary" (click)="reschedule(task, targetDates[task.id])" [disabled]="busy()">Tarihi değiştir</button>

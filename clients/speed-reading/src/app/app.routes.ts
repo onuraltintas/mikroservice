@@ -3,6 +3,10 @@ import { authGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
   {
+    path: 'student/coaching',
+    loadComponent: () => import('./features/coaching/coaching-redirect.component').then(m => m.CoachingRedirectComponent)
+  },
+  {
     path: 'auth',
     loadChildren: () => import('./features/auth/auth.routes').then(m => m.authRoutes)
   },

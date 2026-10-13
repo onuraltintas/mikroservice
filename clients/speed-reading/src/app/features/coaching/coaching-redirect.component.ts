@@ -3,7 +3,7 @@ import { Component, OnInit, PLATFORM_ID, inject } from '@angular/core';
 import { environment } from '../../../environments/environment';
 
 export function resolveCoachingDestination(pathname: string): string {
-  return pathname === '/student/coaching'
+  return pathname.replace(/\/+$/, '') === '/student/coaching'
     ? new URL('/coaching-portal', environment.centralAdminUrl).href
     : 'https://onuraltintas.net/staff/?product=coaching';
 }

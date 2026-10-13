@@ -1,8 +1,9 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, DestroyRef, EventEmitter, Input, OnInit, Output, inject, signal } from '@angular/core';
+import { Component, DestroyRef, EventEmitter, Input, OnInit, Output, ViewChild, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { CoachingStaffStudyComponent } from './coaching-staff-study.component';
 import { finalize } from 'rxjs';
 import {
   coachingHistoryCsv,
@@ -23,7 +24,7 @@ import {
 @Component({
   selector: 'staff-coaching-teacher-student-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, CoachingStaffStudyComponent],
   templateUrl: './coaching-teacher-student-detail.component.html',
   styleUrl: './coaching-teacher-student-detail.component.scss'
 })
@@ -35,8 +36,16 @@ export class CoachingTeacherStudentDetailComponent implements OnInit {
 
   @Input({ required: true }) student!: CoachingTeacherStudent;
   @Output() readonly back = new EventEmitter<void>();
+  @ViewChild(CoachingStaffStudyComponent) private study?: CoachingStaffStudyComponent;
+  canLeavePage(): boolean { return this.study?.canLeavePage() ?? true; }
+  goBack(): void { if (this.canLeavePage()) this.back.emit(); }
+  toggleStudy(): void {
+    if (this.studyVisible() && !this.canLeavePage()) return;
+    this.studyVisible.set(!this.studyVisible());
+  }
 
   readonly progress = signal<CoachingStudentProgressSummary | null>(null);
+  readonly studyVisible = signal(false);
   readonly history = signal<CoachingStudentHistoryItem[]>([]);
   readonly historyTypes: CoachingStudentHistoryType[] = ['Assignments', 'Exams', 'Sessions', 'Goals'];
   readonly historyLabels: Record<CoachingStudentHistoryType, string> = {

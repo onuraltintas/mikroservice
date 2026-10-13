@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, ViewChild, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CoachingTeacherStudent, CoachingTeacherStudentsService } from './coaching-teacher-students.service';
 import { CoachingTeacherStudentDetailComponent } from './coaching-teacher-student-detail.component';
@@ -14,6 +14,8 @@ import { StaffPendingInvitationsComponent } from '../staff-pending-invitations.c
   styleUrl: './coaching-teacher-students.component.scss'
 })
 export class CoachingTeacherStudentsComponent implements OnInit {
+  @ViewChild(CoachingTeacherStudentDetailComponent) private detail?: CoachingTeacherStudentDetailComponent;
+  canLeavePage(): boolean { return this.detail?.canLeavePage() ?? true; }
   private readonly studentsService = inject(CoachingTeacherStudentsService);
   private requestVersion = 0;
 

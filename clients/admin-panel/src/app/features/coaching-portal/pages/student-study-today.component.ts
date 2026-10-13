@@ -36,8 +36,9 @@ export class StudentStudyTodayComponent implements OnInit {
     forkJoin({ plans: this.service.list(1, 'Active'), hours: this.service.getAvailability().pipe(catchError(error =>
       error?.status === 404 ? of({ timeZoneId: Intl.DateTimeFormat().resolvedOptions().timeZone }) : throwError(() => error))) })
       .pipe(switchMap(({ plans, hours }) => {
-        this.timeZone.set(hours.timeZoneId);
-        const parts = new Intl.DateTimeFormat('en-US', { timeZone: hours.timeZoneId, year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(new Date(Date.now()));
+        const timeZone = hours?.timeZoneId ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
+        this.timeZone.set(timeZone);
+        const parts = new Intl.DateTimeFormat('en-US', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(new Date(Date.now()));
         const part = (type: string) => parts.find(x => x.type === type)!.value;
         this.today.set(`${part('year')}-${part('month')}-${part('day')}`);
         return plans.items.length ? this.service.get(plans.items[0].id) : of(null);

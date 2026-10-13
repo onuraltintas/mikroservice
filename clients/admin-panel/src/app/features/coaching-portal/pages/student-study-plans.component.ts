@@ -1,8 +1,8 @@
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, HostListener, OnInit, inject, signal } from '@angular/core';
+import { Component, DestroyRef, HostListener, Input, OnChanges, OnInit, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { Observable, finalize } from 'rxjs';
+import { Observable, Subject, finalize, takeUntil } from 'rxjs';
 import { CoachingStudyPlanningService, StudyPlan, StudyPlanPage, StudyPlanStatus, StudyTask, StudyTaskInput } from '../../../core/services/coaching-study-planning.service';
 
 @Component({
@@ -12,7 +12,12 @@ import { CoachingStudyPlanningService, StudyPlan, StudyPlanPage, StudyPlanStatus
   templateUrl: './student-study-plans.component.html',
   styleUrl: './student-study-plans.component.scss'
 })
-export class StudentStudyPlansComponent implements OnInit {
+export class StudentStudyPlansComponent implements OnInit, OnChanges {
+  @Input() staffStudentId: string | null = null;
+  @Input() readOnly = false;
+  private readonly scopeChanged = new Subject<void>();
+  private initialized = false;
+  private get studentArgument(): [string] | [] { return this.staffStudentId ? [this.staffStudentId] : []; }
   private readonly service = inject(CoachingStudyPlanningService);
   private readonly destroyRef = inject(DestroyRef);
   readonly page = signal<StudyPlanPage>({ items: [], totalCount: 0, pageNumber: 1, pageSize: 20 });
@@ -31,7 +36,15 @@ export class StudentStudyPlansComponent implements OnInit {
   actualMinutes: Record<string, number> = {};
   targetDates: Record<string, string> = {};
 
-  ngOnInit() { this.loadList(); }
+  ngOnInit() { this.initialized = true; this.loadList(); }
+  ngOnChanges() {
+    if (!this.initialized) return;
+    this.scopeChanged.next();
+    this.selected.set(null); this.page.set({ items: [], totalCount: 0, pageNumber: 1, pageSize: 20 });
+    this.knownDraftId.set(null); this.filter = ''; this.editing = false; this.dirty = false;
+    this.busy.set(false); this.loading.set(false); this.success.set(null); this.error.set(null);
+    this.loadList();
+  }
 
   canLeavePage() {
     if (this.busy()) { this.error.set('İşlem sürüyor. Tamamlanmasını bekleyin.'); return false; }
@@ -47,8 +60,8 @@ export class StudentStudyPlansComponent implements OnInit {
     if (this.loading()) return;
     this.loading.set(true);
     this.error.set(null);
-    this.service.list(pageNumber, this.filter || undefined).pipe(
-      takeUntilDestroyed(this.destroyRef), finalize(() => this.loading.set(false))
+    this.service.list(pageNumber, this.filter || undefined, ...this.studentArgument).pipe(
+      takeUntil(this.scopeChanged), takeUntilDestroyed(this.destroyRef), finalize(() => this.loading.set(false))
     ).subscribe({ next: page => {
       this.page.set(page);
       if (pageNumber === 1 && (!this.filter || this.filter === 'Draft')) {
@@ -61,11 +74,12 @@ export class StudentStudyPlansComponent implements OnInit {
     if (!this.canLeaveEditor()) return;
     this.busy.set(true);
     this.error.set(null);
-    this.service.get(id).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.busy.set(false)))
+    this.service.get(id, ...this.studentArgument).pipe(takeUntil(this.scopeChanged), takeUntilDestroyed(this.destroyRef), finalize(() => this.busy.set(false)))
       .subscribe({ next: plan => this.applyPlan(plan), error: error => this.showError(error, 'Plan açılamadı.') });
   }
 
   newDraft() {
+    if (this.readOnly) return;
     if (!this.canLeaveEditor()) return;
     const draftId = this.selected()?.status === 'Draft' ? this.selected()!.id : this.knownDraftId();
     if (draftId) { this.open(draftId); return; }
@@ -103,6 +117,7 @@ export class StudentStudyPlansComponent implements OnInit {
   }
 
   saveDraft() {
+    if (this.readOnly) return;
     const selected = this.selected();
     if (this.busy() || !this.editing || (selected && selected.status !== 'Draft')) return;
     if (!this.editTitle.trim() || this.editTitle.length > 200 || this.editTasks.some(task =>
@@ -112,22 +127,25 @@ export class StudentStudyPlansComponent implements OnInit {
       return;
     }
     const input = { title: this.editTitle.trim(), tasks: this.editTasks.map(task => ({ ...task, title: task.title.trim() })) };
-    this.mutate(selected ? this.service.replace(selected.id, selected.version, input) : this.service.create(input), 'Taslak kaydedildi. Henüz yayımlanmadı.');
+    this.mutate(selected ? this.service.replace(selected.id, selected.version, input, ...this.studentArgument) : this.service.create(input, ...this.studentArgument), 'Taslak kaydedildi. Henüz yayımlanmadı.');
   }
 
   publish() {
+    if (this.readOnly) return;
     const plan = this.selected();
     if (!plan || plan.status !== 'Draft' || !plan.tasks.length || !this.publishConfirmed || this.dirty || this.busy()) return;
-    this.mutate(this.service.publish(plan.id, plan.version), 'Plan yayımlandı. Önceki planın geçmişi korundu.');
+    this.mutate(this.service.publish(plan.id, plan.version, ...this.studentArgument), 'Plan yayımlandı. Önceki planın geçmişi korundu.');
   }
   archiveDraft() {
+    if (this.readOnly) return;
     const plan = this.selected();
     if (!plan || plan.status !== 'Draft' || this.busy() || this.dirty || typeof window === 'undefined') return;
     if (!window.confirm('Taslak arşivlensin mi? Çalışmalar geçmişte korunacak; yeni bir taslak hazırlayabileceksiniz.')) return;
-    this.mutate(this.service.archive(plan.id, plan.version), 'Taslak arşivlendi. Geçmiş korundu; yeni taslak hazırlayabilirsin.');
+    this.mutate(this.service.archive(plan.id, plan.version, ...this.studentArgument), 'Taslak arşivlendi. Geçmiş korundu; yeni taslak hazırlayabilirsin.');
   }
 
   complete(task: StudyTask, actualMinutes: number) {
+    if (this.staffStudentId || this.readOnly) return;
     const plan = this.selected();
     if (!plan || plan.status !== 'Active' || task.isCompleted || this.busy()) return;
     if (!Number.isInteger(actualMinutes) || actualMinutes < 1 || actualMinutes > 1440) {
@@ -138,17 +156,18 @@ export class StudentStudyPlansComponent implements OnInit {
   }
 
   reschedule(task: StudyTask, plannedDate: string) {
+    if (this.readOnly) return;
     const plan = this.selected();
     if (!plan || plan.status !== 'Active' || task.isCompleted || this.busy()) return;
     if (!plannedDate) { this.error.set('Yeni çalışma tarihini seçin.'); return; }
-    this.mutate(this.service.reschedule(plan.id, task.id, plan.version, plannedDate), 'Çalışma tarihi güncellendi.');
+    this.mutate(this.service.reschedule(plan.id, task.id, plan.version, plannedDate, ...this.studentArgument), 'Çalışma tarihi güncellendi.');
   }
 
   statusLabel(status: StudyPlanStatus) { return { Draft: 'Taslak', Active: 'Aktif', Archived: 'Arşiv' }[status]; }
 
   private applyPlan(plan: StudyPlan) {
     this.selected.set(plan);
-    this.editing = plan.status === 'Draft';
+    this.editing = plan.status === 'Draft' && !this.readOnly;
     this.editTitle = plan.title;
     this.editTasks = plan.tasks.map(({ plannedDate, title, plannedMinutes, topicId, isPinned }) => ({ plannedDate, title, plannedMinutes, topicId, isPinned }));
     this.actualMinutes = Object.fromEntries(plan.tasks.map(task => [task.id, task.actualMinutes ?? task.plannedMinutes]));
@@ -170,7 +189,7 @@ export class StudentStudyPlansComponent implements OnInit {
     this.busy.set(true);
     this.error.set(null);
     this.success.set(null);
-    request.pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.busy.set(false))).subscribe({
+    request.pipe(takeUntil(this.scopeChanged), takeUntilDestroyed(this.destroyRef), finalize(() => this.busy.set(false))).subscribe({
       next: plan => { this.applyPlan(plan); this.success.set(message); this.loadList(this.page().pageNumber); },
       error: error => this.showError(error, 'İşlem tamamlanamadı. Lütfen tekrar deneyin.')
     });

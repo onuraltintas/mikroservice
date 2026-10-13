@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, EventEmitter, Input, OnInit, Output, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { CoachingStaffStudyComponent } from './coaching-staff-study.component';
 import { finalize } from 'rxjs';
 import {
   CoachingInstitutionHistoryType,
@@ -14,7 +15,7 @@ import {
 @Component({
   selector: 'staff-coaching-institution-student-report',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, CoachingStaffStudyComponent],
   templateUrl: './coaching-institution-student-report.component.html',
   styleUrl: './coaching-institution-student-report.component.scss'
 })
@@ -28,6 +29,7 @@ export class CoachingInstitutionStudentReportComponent implements OnInit {
   @Output() readonly back = new EventEmitter<void>();
 
   readonly detail = signal<CoachingInstitutionStudentDetail | null>(null);
+  readonly studyVisible = signal(false);
   readonly history = signal<CoachingInstitutionStudentHistoryItem[]>([]);
   readonly historyTypes: CoachingInstitutionHistoryType[] = ['Assignments', 'Exams', 'Sessions', 'Goals'];
   readonly historyLabels: Record<CoachingInstitutionHistoryType, string> = {

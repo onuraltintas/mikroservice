@@ -7,6 +7,9 @@ import { pathToFileURL } from 'node:url';
 
 assert.equal(process.env.E2E_DISPOSABLE_ENV, 'true', 'This fixture is only for disposable local tests.');
 export const planningStudent = 'dba472ec-a13e-453b-af7f-fec507c08817';
+export const planningTeacher = '5ca5cb1c-b825-4d42-a378-0289b3f0a801';
+export const planningManager = 'd7b42a6f-9284-435b-9e7e-40bef7f730f5';
+export const planningInstitution = '9dc2d193-f024-4e86-b102-76a1c83165c7';
 const key = 'local-planning-e2e-signing-key-20261002-never-use-in-production-123456789';
 const internalKey = 'local-planning-e2e-internal-key-never-use-in-production-123456789';
 export function planningToken(userId = planningStudent, roles = ['Student'], product = 'coaching') {
@@ -16,7 +19,8 @@ export function planningToken(userId = planningStudent, roles = ['Student'], pro
     'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier': userId,
     'http://schemas.microsoft.com/ws/2008/06/identity/claims/role': roles,
     platform_product: product, given_name: 'Planning', family_name: 'Test', email: 'planning@example.invalid',
-    permission: roles.includes('SystemAdmin') ? ['Permissions.Coaching.View', 'Permissions.Coaching.ContentManage', 'Permissions.Coaching.Manage'] : [],
+    permission: roles.includes('SystemAdmin') ? ['Permissions.Coaching.View', 'Permissions.Coaching.ContentManage', 'Permissions.Coaching.Manage']
+      : roles.includes('InstitutionAdmin') ? ['Permissions.Coaching.View'] : [],
     amr: roles.includes('SystemAdmin') ? ['mfa'] : [],
     iss: 'EduPlatform', aud: 'EduPlatform', iat: now, nbf: now, exp: now + 900 })}`;
   return `${body}.${createHmac('sha256', key).update(body).digest('base64url')}`;
@@ -30,6 +34,30 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
       response.end(JSON.stringify({ mode: 'disabled' })); return;
     }
     // Only the external Identity ownership contract is stubbed; Coaching queries remain real.
+    if (['/api/internal/coaching/authorize', '/api/internal/coaching/authorize-admin', '/api/internal/coaching/report-students'].includes(request.url)
+        && request.method === 'POST') {
+      if (request.headers['x-internal-service-key'] !== internalKey) { response.writeHead(403); response.end(); return; }
+      try {
+        const chunks = []; let length = 0;
+        for await (const chunk of request) { length += chunk.length; if (length > 16_384) throw new Error('Body limit'); chunks.push(chunk); }
+        const payload = JSON.parse(Buffer.concat(chunks).toString());
+        let result;
+        if (request.url.endsWith('/authorize')) {
+          assert.equal(payload.teacherId, planningTeacher);
+          assert.ok(Array.isArray(payload.studentIds) && payload.studentIds.length === 1 && payload.studentIds[0] === planningStudent);
+          assert.equal(payload.isSystemAdministrator, false);
+          result = { institutionId: planningInstitution };
+        } else {
+          assert.equal(payload.viewerUserId, planningManager);
+          if (request.url.endsWith('/report-students')) {
+            assert.equal(payload.institutionId, planningInstitution);
+            result = { studentUserIds: [planningStudent] };
+          } else result = { isGlobal: false, institutionId: planningInstitution };
+        }
+        response.writeHead(200, { 'content-type': 'application/json' }); response.end(JSON.stringify(result));
+      } catch { response.writeHead(403); response.end(); }
+      return;
+    }
     if (request.url === '/api/internal/coaching/authorize-student-read' && request.method === 'POST') {
       if (request.headers['x-internal-service-key'] !== internalKey) { response.writeHead(403); response.end(); return; }
       try {
@@ -39,7 +67,8 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
         assert.match(payload.viewerUserId, /^[0-9a-f-]{36}$/i);
         assert.ok(Array.isArray(payload.studentIds) && payload.studentIds.length <= 100);
         response.writeHead(200, { 'content-type': 'application/json' });
-        response.end(JSON.stringify({ allowedStudentUserIds: payload.studentIds.filter(id => id === payload.viewerUserId) }));
+        response.end(JSON.stringify({ allowedStudentUserIds: payload.studentIds.filter(id => id === payload.viewerUserId
+          || id === planningStudent && [planningTeacher, planningManager].includes(payload.viewerUserId)) }));
       } catch { response.writeHead(400); response.end(); }
       return;
     }

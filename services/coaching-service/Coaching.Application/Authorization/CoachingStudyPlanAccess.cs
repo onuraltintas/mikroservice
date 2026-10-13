@@ -6,6 +6,14 @@ namespace Coaching.Application.Authorization;
 public sealed class CoachingStudyPlanAccess(ICoachingAccessPolicy access,
     ICoachingIdentityAuthorizationClient identity, ICoachingAdminScopeAuthorization institutions)
 {
+    public async Task<Guid> RequireTeacherWriteAsync(Guid studentId, CancellationToken ct)
+    {
+        if (studentId == Guid.Empty || access.CurrentUserId is not { } actor || !access.IsCurrentTeacher(actor))
+            throw Forbidden();
+        await identity.AuthorizeTeacherTargetsAsync(actor, [studentId], null, false, ct);
+        return studentId;
+    }
+
     public async Task<Guid> RequireAsync(Guid studentId, CancellationToken ct)
     {
         if (studentId == Guid.Empty || access.CurrentUserId is not { } actor) throw Forbidden();

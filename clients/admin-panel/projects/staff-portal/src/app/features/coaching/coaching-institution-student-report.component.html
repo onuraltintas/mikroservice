@@ -16,6 +16,8 @@
   </header>
 
   <section class="summary-panel" aria-label="Öğrenci koçluk özeti">
+    <button type="button" (click)="studyVisible.set(!studyVisible())" [attr.aria-expanded]="studyVisible()">Haftalık plan ve çalışma raporu</button>
+    @if (studyVisible()) { <staff-coaching-study [studentId]="student.userId" [readOnly]="true" /> }
     <div class="section-heading"><div><p class="report-eyebrow">GENEL BAKIŞ</p><h3>İlerleme özeti</h3></div></div>
     @if (isDetailLoading()) {
       <p class="inline-status" role="status">Öğrenci özeti yükleniyor…</p>

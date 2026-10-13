@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, ViewChild, inject } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -23,6 +23,7 @@ type StaffWorkspaceRole = 'teacher' | 'institution';
   styleUrl: './app.component.scss'
 })
 export class AppComponent {
+  @ViewChild(CoachingTeacherWorkspaceComponent) coachingTeacherWorkspace?: CoachingTeacherWorkspaceComponent;
   readonly auth = inject(StaffAuthService);
   private readonly document = inject(DOCUMENT);
   readonly currentYear = new Date().getFullYear();
@@ -97,6 +98,7 @@ export class AppComponent {
   selectWorkspaceRole(role: StaffWorkspaceRole): void {
     if (role === 'teacher' && !this.hasTeacherRole) return;
     if (role === 'institution' && !this.isInstitutionManager) return;
+    if (role !== this.activeWorkspaceRole && !(this.coachingTeacherWorkspace?.canLeavePage() ?? true)) return;
     const product = this.auth.activeProduct();
     if (product) this.selectedWorkspaceRoles[product] = role;
   }
@@ -208,6 +210,7 @@ export class AppComponent {
 
   async switchProduct(product: StaffProduct): Promise<void> {
     if (product === this.auth.activeProduct()) return;
+    if (!(this.coachingTeacherWorkspace?.canLeavePage() ?? true)) return;
     this.switchError = '';
     try {
       await this.auth.switchProduct(product);
@@ -223,6 +226,7 @@ export class AppComponent {
   }
 
   async logout(): Promise<void> {
+    if (!(this.coachingTeacherWorkspace?.canLeavePage() ?? true)) return;
     await this.auth.logout();
     this.accountSettingsVisible = false;
     this.notificationsVisible = false;

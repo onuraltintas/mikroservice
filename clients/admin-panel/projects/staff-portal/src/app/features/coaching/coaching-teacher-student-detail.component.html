@@ -1,5 +1,5 @@
 <section class="student-report" aria-labelledby="student-report-title">
-  <button class="back-link" type="button" data-testid="back-to-roster" (click)="back.emit()">
+  <button class="back-link" type="button" data-testid="back-to-roster" (click)="goBack()">
     <span aria-hidden="true">←</span> Öğrenci listesine dön
   </button>
 
@@ -56,6 +56,8 @@
   </section>
 
   <section class="history-panel" aria-labelledby="history-title">
+    <button type="button" (click)="toggleStudy()" [attr.aria-expanded]="studyVisible()">Haftalık plan ve çalışma raporu</button>
+    @if (studyVisible()) { <staff-coaching-study [studentId]="student.userId" /> }
     <header class="history-heading">
       <div>
         <p class="report-eyebrow">KAYIT DÖKÜMÜ</p>

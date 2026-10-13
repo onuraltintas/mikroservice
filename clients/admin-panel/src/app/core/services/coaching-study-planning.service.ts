@@ -81,39 +81,44 @@ export class CoachingStudyPlanningService {
       { expectedVersion, targetScore, maxScore, examType }).pipe(map(result => result.data));
   }
 
-  getAvailability() {
-    return this.http.get<ApiResult<StudyAvailability>>(this.availabilityUrl).pipe(map(result => result.data));
+  getAvailability(studentId: string | null = null) {
+    const url = studentId ? `${environment.apiUrl}/coaching/staff/students/${encodeURIComponent(studentId)}/study/availability` : this.availabilityUrl;
+    return this.http.get<ApiResult<StudyAvailability | null>>(url).pipe(map(result => result.data));
   }
   saveAvailability(update: StudyAvailabilityUpdate) {
     return this.http.put<ApiResult<StudyAvailability>>(this.availabilityUrl, update).pipe(map(result => result.data));
   }
 
-  list(pageNumber = 1, status?: StudyPlanStatus) {
+  private plansUrl(studentId: string | null = null) {
+    return studentId ? `${environment.apiUrl}/coaching/staff/students/${encodeURIComponent(studentId)}/study/plans` : this.url;
+  }
+
+  list(pageNumber = 1, status?: StudyPlanStatus, studentId: string | null = null) {
     let params = new HttpParams().set('pageNumber', pageNumber).set('pageSize', 20);
     if (status) params = params.set('status', status);
-    return this.http.get<ApiResult<StudyPlanPage>>(this.url, { params }).pipe(map(result => result.data));
+    return this.http.get<ApiResult<StudyPlanPage>>(this.plansUrl(studentId), { params }).pipe(map(result => result.data));
   }
-  get(id: string) {
-    return this.http.get<ApiResult<StudyPlan>>(`${this.url}/${encodeURIComponent(id)}`).pipe(map(result => result.data));
+  get(id: string, studentId: string | null = null) {
+    return this.http.get<ApiResult<StudyPlan>>(`${this.plansUrl(studentId)}/${encodeURIComponent(id)}`).pipe(map(result => result.data));
   }
-  create(plan: StudyPlanInput) {
-    return this.http.post<ApiResult<StudyPlan>>(this.url, plan).pipe(map(result => result.data));
+  create(plan: StudyPlanInput, studentId: string | null = null) {
+    return this.http.post<ApiResult<StudyPlan>>(this.plansUrl(studentId), plan).pipe(map(result => result.data));
   }
-  replace(id: string, expectedVersion: number, plan: StudyPlanInput) {
-    return this.http.put<ApiResult<StudyPlan>>(`${this.url}/${encodeURIComponent(id)}`, { expectedVersion, plan }).pipe(map(result => result.data));
+  replace(id: string, expectedVersion: number, plan: StudyPlanInput, studentId: string | null = null) {
+    return this.http.put<ApiResult<StudyPlan>>(`${this.plansUrl(studentId)}/${encodeURIComponent(id)}`, { expectedVersion, plan }).pipe(map(result => result.data));
   }
-  publish(id: string, expectedVersion: number) {
-    return this.http.post<ApiResult<StudyPlan>>(`${this.url}/${encodeURIComponent(id)}/publish`, { expectedVersion }).pipe(map(result => result.data));
+  publish(id: string, expectedVersion: number, studentId: string | null = null) {
+    return this.http.post<ApiResult<StudyPlan>>(`${this.plansUrl(studentId)}/${encodeURIComponent(id)}/publish`, { expectedVersion }).pipe(map(result => result.data));
   }
-  archive(id: string, expectedVersion: number) {
-    return this.http.post<ApiResult<StudyPlan>>(`${this.url}/${encodeURIComponent(id)}/archive`, { expectedVersion }).pipe(map(result => result.data));
+  archive(id: string, expectedVersion: number, studentId: string | null = null) {
+    return this.http.post<ApiResult<StudyPlan>>(`${this.plansUrl(studentId)}/${encodeURIComponent(id)}/archive`, { expectedVersion }).pipe(map(result => result.data));
   }
   complete(id: string, taskId: string, expectedVersion: number, actualMinutes: number) {
     return this.http.put<ApiResult<StudyPlan>>(`${this.url}/${encodeURIComponent(id)}/tasks/${encodeURIComponent(taskId)}/completion`,
       { expectedVersion, actualMinutes }).pipe(map(result => result.data));
   }
-  reschedule(id: string, taskId: string, expectedVersion: number, plannedDate: string) {
-    return this.http.put<ApiResult<StudyPlan>>(`${this.url}/${encodeURIComponent(id)}/tasks/${encodeURIComponent(taskId)}/schedule`,
+  reschedule(id: string, taskId: string, expectedVersion: number, plannedDate: string, studentId: string | null = null) {
+    return this.http.put<ApiResult<StudyPlan>>(`${this.plansUrl(studentId)}/${encodeURIComponent(id)}/tasks/${encodeURIComponent(taskId)}/schedule`,
       { expectedVersion, plannedDate }).pipe(map(result => result.data));
   }
 }

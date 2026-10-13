@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, ViewChild, signal } from '@angular/core';
 import { CoachingTeacherAssignmentsComponent } from './coaching-teacher-assignments.component';
 import { CoachingTeacherSessionsComponent } from './coaching-teacher-sessions.component';
 import { CoachingTeacherGoalsComponent } from './coaching-teacher-goals.component';
@@ -16,9 +16,13 @@ type CoachingTeacherSection = 'students' | 'assignments' | 'sessions' | 'goals' 
   styleUrl: './coaching-teacher-workspace.component.scss'
 })
 export class CoachingTeacherWorkspaceComponent {
+  @ViewChild(CoachingTeacherStudentsComponent) private students?: CoachingTeacherStudentsComponent;
+  canLeavePage(): boolean { return this.students?.canLeavePage() ?? true; }
   readonly activeSection = signal<CoachingTeacherSection>('students');
 
   selectSection(section: CoachingTeacherSection): void {
+    if (section === this.activeSection()) return;
+    if (!this.canLeavePage()) return;
     this.activeSection.set(section);
   }
 }

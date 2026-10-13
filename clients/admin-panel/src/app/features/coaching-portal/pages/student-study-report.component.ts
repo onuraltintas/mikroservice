@@ -23,7 +23,7 @@ interface StudyReport {
 @Component({ selector: 'app-student-study-report', standalone: true, imports: [CommonModule, FormsModule],
   template: `
     <section class="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900" aria-labelledby="study-report-title">
-      <h2 id="study-report-title" class="text-lg font-semibold">{{ adminStudentId ? 'Öğrencinin çalışma planı raporu' : 'Çalışma planı raporum' }}</h2>
+      <h2 id="study-report-title" class="text-lg font-semibold">{{ adminStudentId || staffStudentId ? 'Öğrencinin çalışma planı raporu' : 'Çalışma planı raporum' }}</h2>
       <p class="mt-2 text-sm text-slate-500">Öğrenci beyanı · Seçilen tarihlere planlanmış işlerin güncel durumu. Resmî ölçüm veya geçmiş tarihli durum görüntüsü değildir.</p>
       <div class="my-4 flex flex-wrap items-end gap-3">
         <label class="text-sm">Başlangıç<input class="mt-1 block rounded-lg border p-2 dark:bg-slate-800" type="date" [(ngModel)]="fromDate" [disabled]="busy()"></label>
@@ -58,7 +58,7 @@ interface StudyReport {
             <tbody><tr *ngFor="let lesson of data.lessonResults" class="border-t dark:border-slate-800"><td class="p-2">{{ lesson.lessonName ?? 'Ders adı bulunamadı' }} · {{ lesson.topicName ?? 'Ders toplamı' }}</td><td class="p-2">{{ sourceLabel(lesson.source) }} · {{ lesson.examType }}</td><td class="p-2">{{ lesson.questionCount }}</td><td class="p-2">{{ lesson.correct }} / {{ lesson.wrong }} / {{ lesson.empty }}</td></tr></tbody>
           </table>
         </div>
-        <h3 class="mt-6 font-semibold">{{ adminStudentId ? 'Öğrencinin güncel hedefleri' : 'Güncel hedeflerim' }}</h3>
+        <h3 class="mt-6 font-semibold">{{ adminStudentId || staffStudentId ? 'Öğrencinin güncel hedefleri' : 'Güncel hedeflerim' }}</h3>
         <p class="mt-2 text-xs text-slate-500">Seçilen dönemin geçmiş durumunu göstermez. İlerleme, hedef kaydına girilen değerdir; sınavlardan veya çalışma planından otomatik hesaplanmaz. Otomatik başarı veya yerleşme tahmini değildir.</p>
         <p *ngIf="!data.goals?.length" class="mt-2 text-sm">Henüz kayıtlı hedefin yok.</p>
         <ul class="mt-3 space-y-3">
@@ -86,6 +86,7 @@ interface StudyReport {
 })
 export class StudentStudyReportComponent implements OnChanges {
   @Input() adminStudentId: string | null = null;
+  @Input() staffStudentId: string | null = null;
   private request?: Subscription;
   ngOnChanges() { this.request?.unsubscribe(); this.report.set(null); this.error.set(null); this.busy.set(false); }
   private readonly http = inject(HttpClient);
@@ -114,7 +115,8 @@ export class StudentStudyReportComponent implements OnChanges {
     }
     this.busy.set(true);
     const params = new HttpParams().set('fromDate', this.fromDate).set('toDate', this.toDate);
-    const url = this.adminStudentId ? `${environment.apiUrl}/coaching-admin/students/${encodeURIComponent(this.adminStudentId)}/study/report` : `${environment.apiUrl}/coaching/study-planning/reports`;
+    const url = this.staffStudentId ? `${environment.apiUrl}/coaching/staff/students/${encodeURIComponent(this.staffStudentId)}/study/report`
+      : this.adminStudentId ? `${environment.apiUrl}/coaching-admin/students/${encodeURIComponent(this.adminStudentId)}/study/report` : `${environment.apiUrl}/coaching/study-planning/reports`;
     this.request = this.http.get<{ success: boolean; data: StudyReport }>(url, { params })
       .pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.busy.set(false)))
       .subscribe({ next: response => this.report.set(response.data), error: () => this.error.set('Çalışma raporu yüklenemedi. Yeniden deneyebilirsin.') });
