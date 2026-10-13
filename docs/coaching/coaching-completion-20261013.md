@@ -19,12 +19,18 @@
 - Kurum abonelik/kontenjan sekmesi etkin lisansı gösteriyor; mevcut kurum öğrencisine koltuk atama, askıya alma ve ayrılan öğrencinin rezerve koltuğunu serbest bırakma sunucuda kurum kapsamıyla doğrulanıyor. Son koltuk eşzamanlı atamalarda aşılmıyor. Kurumdan ayrılan öğrencinin geçmiş koltuğu aktif erişim vermiyor.
 - Eski hedef düzenleme/silme uçları da aktif öğretmen atamasını doğruluyor; kaldırılmış atama veya birleşik kurum/öğretmen rolü geçmiş hedefi değiştiremiyor.
 - Koltuk kayıtlarında işlem tekrarının hem commit öncesi geri alma hem commit sonrası yanıt kaybı senaryosu doğrulandı; tekrar önce gerçek veritabanı durumunu yüklüyor. Kurum kapsamı değişince eski okuma/yazma istekleri ve bildirimler temizleniyor.
+- Öğretmen/öğrenci planında isteğe bağlı kaynak/sayfa ve planlanan soru sayısı var. Öğrenci gerçekleşen soru sayısını süreyle birlikte kaydediyor. Tamamlanmış sayı değiştirilemiyor; açık sıfır ile eksik kayıt ayrılıyor. Sabit iş otomatik taslağa taşınırken kaynak ve planlanan sayı korunuyor. Kurum/admin geçmişi ve gizlilik dışa aktarımı aynı alanları içeriyor.
+- Çalışma raporu planlanan/kaydedilen soru toplamını ve kaç işte sayı girildiğini gösteriyor. Eksik sayılar sıfır kabul edilmiyor. Uzun boşluksuz kaynak metni öğrenci/kurum mobil görünümünde taşmıyor.
 
 ## Test kanıtları
 
 Haftalık rapor artık önceki yedi gün ile karşılaştırılabiliyor; bilinmeyen gerçekleşen süre sıfıra çevrilmiyor. Ders/konu öncelikleri yanlış ve boş cevap oranından üretiliyor, sınav türü ve veri kaynağı korunuyor. Öğretmen ve kurumun seans hazırlık özeti güncel genel ilerleme ile iki haftayı birlikte getiriyor; yeniden açılış da raporu yeniliyor. Kurum görünümü salt okunur, kirli öğretmen taslağından geçiş onayla korunuyor. İstanbul DateOnly başlıkları ve 390 piksel rapor genişliği doğrulandı.
 
 Yerel sonuçlar `artifacts/coaching-completion-20261013/` altında tutuluyor.
+
+- `coaching-regression-stage9-final.trx`: 718 başarılı, 0 başarısız, 0 atlanan. `task-questions-green.trx` 34; yeni gizlilik alanlarını içeren `task-questions-privacy-green.trx` 1; yeni migration Down/Up ve DB sınırlarını içeren `task-questions-migration-green.trx` 2 seçili test başarılı. İlk tam stage9 sonucu eski tabloyu yeniden oluşturan testte yeni sütun bulunamadığını gösterdi; test güncel migration'ı tekrar uygular ve tüm718 yeniden geçti.
+- `task-questions-ui-green-final.log`: kaynak/soru formu, ortak rapor, HTTP sözleşmesi ve admin geçmişinde 33 başarılı test. `staff-stage9.log` 175 başarılı personel testi. `admin-coaching-regression-stage8.log` kaynak/soru aşamasından önce 270 başarılı koçluk testi.
+- `e2e-stage9-questions-final.log`: 7 başarılı senaryo; gerçek API ile kaynak/planlanan30/gerçekleşen24 soru döngüsü ve 390 piksel öğrenci/kurum görünümü dahil. `task-source-mobile-red.log` uzun kaynakla390→1719 piksel taşmayı yeniden üretir. `task-questions-report-red.log` eşzamanlı derlemedeki eski form imzası nedeniyle derleme RED'idir; ilgili checkpoint başlığındaki runtime test sayısı kanıt olarak kullanılmamalıdır.
 
 - `coaching-regression-stage7.trx`: 716 başarılı, 0 başarısız, 0 atlanan.
 - `staff-stage8.log`: 175 başarılı personel testi, 24 dosya. `session-brief-refresh-red.log` tekrar açılıştaki eski raporu iki panelde yeniden üretir.
@@ -52,7 +58,7 @@ Frontend testlerinde bu Windows ortamındaki geçici modül çözümleme sorunu 
 
 Bu çalışma henüz bütün ürün eksiklerinin tamamlandığı anlamına gelmiyor. Önceki karşılaştırmadan kalan işler:
 
-1. Plan işlerinde kaynak ve soru sayısı takibi; yaklaşan çalışma/seans hatırlatmaları.
+1. Yaklaşan çalışma/seans hatırlatmaları.
 2. Koçluk öğrenci ücret/borç/taksit/kasa akışının mevcut kurs finansından ayrı ürün kapsamıyla ele alınması.
 3. Koçluk soru bankası, süreli sınav alma/puanlama ve kazanım takibi.
 4. Manuel görüşme planlamasında çakışma denetimi.

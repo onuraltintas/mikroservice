@@ -5,17 +5,19 @@ using Coaching.Domain.Entities;
 namespace Coaching.Application.StudyPlanning;
 
 public sealed record ManualStudyTaskInput(DateOnly PlannedDate, [Required] string Title,
-    int PlannedMinutes, Guid? TopicId, bool IsPinned);
+    int PlannedMinutes, Guid? TopicId, bool IsPinned, [MaxLength(300)] string? SourceName = null,
+    [Range(0, 100000)] int? PlannedQuestions = null);
 public sealed record ManualStudyPlanInput([Required] string Title,
     [Required] IReadOnlyList<ManualStudyTaskInput> Tasks);
 public sealed record ManualStudyPlanUpdate([property: JsonRequired] [Range(0, int.MaxValue)] int ExpectedVersion, [Required] ManualStudyPlanInput Plan);
 public sealed record StudyPlanPublishInput([property: JsonRequired] [Range(0, int.MaxValue)] int ExpectedVersion);
 public sealed record StudyTaskCompleteInput([property: JsonRequired] [Range(0, int.MaxValue)] int ExpectedVersion,
-    [Range(1, 1440)] int ActualMinutes);
+    [Range(1, 1440)] int ActualMinutes, [Range(0, 100000)] int? ActualQuestions = null);
 public sealed record StudyTaskRescheduleInput([property: JsonRequired] [Range(0, int.MaxValue)] int ExpectedVersion,
     DateOnly PlannedDate);
 public sealed record ManualStudyTaskView(Guid Id, DateOnly PlannedDate, string Title, int PlannedMinutes,
-    Guid? TopicId, bool IsPinned, bool IsCompleted, int? ActualMinutes, DateTime? CompletedAt = null);
+    Guid? TopicId, bool IsPinned, bool IsCompleted, int? ActualMinutes, DateTime? CompletedAt = null,
+    string? SourceName = null, int? PlannedQuestions = null, int? ActualQuestions = null);
 public sealed record ManualStudyPlanView(Guid Id, int Version, string Title, StudyPlanStatus Status,
     IReadOnlyList<ManualStudyTaskView> Tasks);
 public sealed record StudyPlanSummary(Guid Id, int Version, string Title, StudyPlanStatus Status);
@@ -30,5 +32,6 @@ public interface IManualStudyPlanService
     Task<ManualStudyPlanView> PublishAsync(Guid id, int expectedVersion, CancellationToken cancellationToken = default);
     Task<ManualStudyPlanView> ArchiveDraftAsync(Guid id, int expectedVersion, CancellationToken cancellationToken = default);
     Task<ManualStudyPlanView> CompleteTaskAsync(Guid id, Guid taskId, int expectedVersion, int actualMinutes, CancellationToken cancellationToken = default);
+    Task<ManualStudyPlanView> CompleteTaskAsync(Guid id, Guid taskId, int expectedVersion, int actualMinutes, int? actualQuestions, CancellationToken cancellationToken = default);
     Task<ManualStudyPlanView> RescheduleTaskAsync(Guid id, Guid taskId, int expectedVersion, DateOnly plannedDate, CancellationToken cancellationToken = default);
 }

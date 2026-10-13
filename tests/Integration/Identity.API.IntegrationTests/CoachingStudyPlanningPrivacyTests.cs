@@ -32,7 +32,7 @@ public sealed class CoachingStudyPlanningPrivacyTests(PostgresFixture postgres)
             otherExam.AddResult(ExamResult.Create(otherExam.Id, other, 70));
             var plan = StudyPlanRevision.Create(student, Guid.NewGuid(), 1, "Plan");
             plan.Activate();
-            var task = StudyPlanTask.Create(plan, new(2026, 10, 1), "Review", 30); task.Complete(25);
+            var task = StudyPlanTask.Create(plan, new(2026, 10, 1), "Review", 30, sourceName: "My book", plannedQuestions: 20); task.Complete(25, 0);
             var hours = StudyAvailability.Create(student, "Europe/Istanbul"); hours.ReplaceWindows([new(DayOfWeek.Monday, 600, 660)]);
             var otherHours = StudyAvailability.Create(other, "Europe/Istanbul");
             db.AddRange(exam, teacherExam, otherExam, plan, task, hours, otherHours); await db.SaveChangesAsync(); db.ChangeTracker.Clear();
@@ -40,6 +40,9 @@ public sealed class CoachingStudyPlanningPrivacyTests(PostgresFixture postgres)
             Assert.Equal("StudentReported", export.Exams.Single(x => x.ExamId == exam.Id).Source);
             Assert.Single(export.Exams.Single(x => x.ExamId == exam.Id).LessonAnswers!);
             Assert.Equal(25, export.StudyPlans!.Single().Tasks.Single().ActualMinutes);
+            Assert.Equal("My book", export.StudyPlans!.Single().Tasks.Single().SourceName);
+            Assert.Equal(20, export.StudyPlans!.Single().Tasks.Single().PlannedQuestions);
+            Assert.Equal(0, export.StudyPlans!.Single().Tasks.Single().ActualQuestions);
             Assert.Equal("Europe/Istanbul", export.StudyAvailability!.TimeZoneId);
             var requestId = Guid.NewGuid(); var eventId = Guid.NewGuid(); var now = DateTime.UtcNow;
             var assessment = await new CoachingErasureAssessmentService(db, TimeProvider.System)

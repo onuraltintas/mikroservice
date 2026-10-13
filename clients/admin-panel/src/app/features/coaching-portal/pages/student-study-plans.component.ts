@@ -34,6 +34,7 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
   editTasks: StudyTaskInput[] = [];
   publishConfirmed = false;
   actualMinutes: Record<string, number> = {};
+  actualQuestions: Record<string, number | null> = {};
   targetDates: Record<string, string> = {};
 
   ngOnInit() { this.initialized = true; this.loadList(); }
@@ -122,11 +123,12 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
     if (this.busy() || !this.editing || (selected && selected.status !== 'Draft')) return;
     if (!this.editTitle.trim() || this.editTitle.length > 200 || this.editTasks.some(task =>
       !task.title.trim() || task.title.length > 200 || !task.plannedDate || !Number.isInteger(task.plannedMinutes)
-      || task.plannedMinutes < 1 || task.plannedMinutes > 1440)) {
-      this.error.set('Başlıkları, tarihleri ve süreleri kontrol edin. Süreler 1–1440 dakika olmalıdır.');
+      || task.plannedMinutes < 1 || task.plannedMinutes > 1440 || (task.sourceName?.trim().length ?? 0) > 300
+      || (task.plannedQuestions != null && (!Number.isInteger(task.plannedQuestions) || task.plannedQuestions < 0 || task.plannedQuestions > 100000)))) {
+      this.error.set('Başlık, tarih, süre, kaynak ve soru sayılarını kontrol edin. Süre 1–1440 dakika, soru sayısı 0–100000 olmalıdır.');
       return;
     }
-    const input = { title: this.editTitle.trim(), tasks: this.editTasks.map(task => ({ ...task, title: task.title.trim() })) };
+    const input = { title: this.editTitle.trim(), tasks: this.editTasks.map(task => ({ ...task, title: task.title.trim(), sourceName: task.sourceName?.trim() || null })) };
     this.mutate(selected ? this.service.replace(selected.id, selected.version, input, ...this.studentArgument) : this.service.create(input, ...this.studentArgument), 'Taslak kaydedildi. Henüz yayımlanmadı.');
   }
 
@@ -144,7 +146,7 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
     this.mutate(this.service.archive(plan.id, plan.version, ...this.studentArgument), 'Taslak arşivlendi. Geçmiş korundu; yeni taslak hazırlayabilirsin.');
   }
 
-  complete(task: StudyTask, actualMinutes: number) {
+  complete(task: StudyTask, actualMinutes: number, actualQuestions: number | null = null) {
     if (this.staffStudentId || this.readOnly) return;
     const plan = this.selected();
     if (!plan || plan.status !== 'Active' || task.isCompleted || this.busy()) return;
@@ -152,7 +154,10 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
       this.error.set('Gerçek çalışma süresini 1–1440 dakika arasında girin.');
       return;
     }
-    this.mutate(this.service.complete(plan.id, task.id, plan.version, actualMinutes), 'Çalışma tamamlandı.');
+    if (actualQuestions != null && (!Number.isInteger(actualQuestions) || actualQuestions < 0 || actualQuestions > 100000)) {
+      this.error.set('Gerçek soru sayısını 0–100000 arasında tam sayı olarak girin.'); return;
+    }
+    this.mutate(this.service.complete(plan.id, task.id, plan.version, actualMinutes, actualQuestions), 'Çalışma tamamlandı.');
   }
 
   reschedule(task: StudyTask, plannedDate: string) {
@@ -169,8 +174,10 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
     this.selected.set(plan);
     this.editing = plan.status === 'Draft' && !this.readOnly;
     this.editTitle = plan.title;
-    this.editTasks = plan.tasks.map(({ plannedDate, title, plannedMinutes, topicId, isPinned }) => ({ plannedDate, title, plannedMinutes, topicId, isPinned }));
+    this.editTasks = plan.tasks.map(({ plannedDate, title, plannedMinutes, topicId, isPinned, sourceName, plannedQuestions }) =>
+      ({ plannedDate, title, plannedMinutes, topicId, isPinned, sourceName: sourceName ?? null, plannedQuestions: plannedQuestions ?? null }));
     this.actualMinutes = Object.fromEntries(plan.tasks.map(task => [task.id, task.actualMinutes ?? task.plannedMinutes]));
+    this.actualQuestions = Object.fromEntries(plan.tasks.map(task => [task.id, task.actualQuestions ?? null]));
     this.targetDates = Object.fromEntries(plan.tasks.map(task => [task.id, task.plannedDate]));
     this.dirty = false;
     this.publishConfirmed = false;

@@ -31,9 +31,11 @@ public sealed class StudyPlanTaskConfiguration : IEntityTypeConfiguration<StudyP
         {
             table.HasCheckConstraint("ck_study_task_minutes", "\"PlannedMinutes\" BETWEEN 1 AND 1440 AND (\"ActualMinutes\" IS NULL OR \"ActualMinutes\" BETWEEN 1 AND 1440)");
             table.HasCheckConstraint("ck_study_task_completion", "(\"IsCompleted\" AND \"ActualMinutes\" IS NOT NULL AND \"CompletedAt\" IS NOT NULL) OR (NOT \"IsCompleted\" AND \"ActualMinutes\" IS NULL AND \"CompletedAt\" IS NULL)");
+            table.HasCheckConstraint("ck_study_task_questions", "(\"PlannedQuestions\" IS NULL OR \"PlannedQuestions\" BETWEEN 0 AND 100000) AND (\"ActualQuestions\" IS NULL OR \"ActualQuestions\" BETWEEN 0 AND 100000) AND (\"IsCompleted\" OR \"ActualQuestions\" IS NULL)");
         });
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Title).HasMaxLength(200).IsRequired();
+        builder.Property(x => x.SourceName).HasMaxLength(300);
         builder.Property(x => x.Version).IsConcurrencyToken();
         builder.HasOne<StudyPlanRevision>().WithMany().HasForeignKey(x => new { x.RevisionId, x.StudentId })
             .HasPrincipalKey(x => new { x.Id, x.StudentId }).OnDelete(DeleteBehavior.Restrict);

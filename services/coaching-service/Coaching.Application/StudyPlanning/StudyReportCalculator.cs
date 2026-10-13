@@ -4,9 +4,10 @@ using Coaching.Domain.Enums;
 namespace Coaching.Application.StudyPlanning;
 
 public sealed record StudyReportTask(StudyPlanStatus Status, DateOnly PlannedDate, Guid? TopicId,
-    int PlannedMinutes, bool IsCompleted, int? ActualMinutes);
+    int PlannedMinutes, bool IsCompleted, int? ActualMinutes, int? PlannedQuestions = null, int? ActualQuestions = null);
 public sealed record StudyTopicReport(Guid? TopicId, int ScheduledTasks, int CompletedTasks,
-    long PlannedMinutes, long? ActualMinutes, string? TopicName = null);
+    long PlannedMinutes, long? ActualMinutes, string? TopicName = null,
+    long? PlannedQuestions = null, long? ActualQuestions = null, int PlannedQuestionTasks = 0, int ActualQuestionTasks = 0);
 public sealed record StudyExamGroup(string Source, ExamType ExamType, decimal MaxScore, int Count, decimal AveragePercentage);
 public sealed record StudyLessonResult(string Source, ExamType ExamType, Guid LessonId, Guid? TopicId,
     string? LessonName, string? TopicName, long QuestionCount, long Correct, long Wrong, long Empty);
@@ -21,6 +22,10 @@ public sealed record StudentStudyReport(DateOnly FromDate, DateOnly ToDate, stri
     long? ActualMinutes, IReadOnlyList<StudyTopicReport> Topics)
 {
     public IReadOnlyList<StudyExamGroup> ExamGroups { get; init; } = [];
+    public long? PlannedQuestions { get; init; }
+    public long? ActualQuestions { get; init; }
+    public int PlannedQuestionTasks { get; init; }
+    public int ActualQuestionTasks { get; init; }
     public IReadOnlyList<StudyLessonResult> LessonResults { get; init; } = [];
     public IReadOnlyList<StudyGoalReport> Goals { get; init; } = [];
     public string GoalReason { get; init; } = "CurrentGoalsWithRecordedProgress";
@@ -37,10 +42,14 @@ public static class StudyReportCalculator
         var completed = eligible.Count(x => x.IsCompleted);
         var topics = eligible.GroupBy(x => x.TopicId).OrderBy(x => x.Key)
             .Select(g => new StudyTopicReport(g.Key, g.Count(), g.Count(x => x.IsCompleted),
-                g.Sum(x => (long)x.PlannedMinutes), Actual(g))).ToArray();
-        return new(from, to, "StudentReported", eligible.Length == 0 ? "NoScheduledTasks" : "CurrentStatusOfScheduledWork",
+                g.Sum(x => (long)x.PlannedMinutes), Actual(g), PlannedQuestions: Questions(g, false), ActualQuestions: Questions(g, true),
+                PlannedQuestionTasks: g.Count(x => x.PlannedQuestions.HasValue), ActualQuestionTasks: g.Count(x => x.IsCompleted && x.ActualQuestions.HasValue))).ToArray();
+        return new StudentStudyReport(from, to, "StudentReported", eligible.Length == 0 ? "NoScheduledTasks" : "CurrentStatusOfScheduledWork",
             eligible.Length, completed, eligible.Length == 0 ? null : decimal.Round(100m * completed / eligible.Length, 1),
-            eligible.Sum(x => (long)x.PlannedMinutes), Actual(eligible), topics);
+            eligible.Sum(x => (long)x.PlannedMinutes), Actual(eligible), topics) {
+                PlannedQuestions = Questions(eligible, false), ActualQuestions = Questions(eligible, true),
+                PlannedQuestionTasks = eligible.Count(x => x.PlannedQuestions.HasValue),
+                ActualQuestionTasks = eligible.Count(x => x.IsCompleted && x.ActualQuestions.HasValue) };
     }
 
     public static void ValidatePeriod(DateOnly from, DateOnly to)
@@ -53,5 +62,10 @@ public static class StudyReportCalculator
     {
         var recorded = tasks.Where(x => x.IsCompleted && x.ActualMinutes.HasValue).ToArray();
         return recorded.Length == 0 ? null : recorded.Sum(x => (long)x.ActualMinutes!.Value);
+    }
+    private static long? Questions(IEnumerable<StudyReportTask> tasks, bool actual)
+    {
+        var recorded = tasks.Where(x => actual ? x.IsCompleted && x.ActualQuestions.HasValue : x.PlannedQuestions.HasValue).ToArray();
+        return recorded.Length == 0 ? null : recorded.Sum(x => (long)(actual ? x.ActualQuestions!.Value : x.PlannedQuestions!.Value));
     }
 }

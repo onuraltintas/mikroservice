@@ -38,9 +38,11 @@
             @for (task of editTasks; track $index; let i = $index) {
               <div class="draft-task">
                 <label>Çalışma başlığı<input [name]="'title-' + i" [(ngModel)]="task.title" (ngModelChange)="dirty = true" required maxlength="200"></label>
+                <label>Kaynak / sayfa (isteğe bağlı)<input [name]="'source-' + i" [(ngModel)]="task.sourceName" (ngModelChange)="dirty = true" maxlength="300"></label>
                 <div class="fields">
                   <label>Tarih<input type="date" [name]="'date-' + i" [(ngModel)]="task.plannedDate" (ngModelChange)="dirty = true" required></label>
                   <label>Süre (dk)<input type="number" [name]="'minutes-' + i" [(ngModel)]="task.plannedMinutes" (ngModelChange)="dirty = true" min="1" max="1440" step="1" required></label>
+                  <label>Planlanan soru (isteğe bağlı)<input type="number" [name]="'questions-' + i" [(ngModel)]="task.plannedQuestions" (ngModelChange)="dirty = true" min="0" max="100000" step="1"></label>
                 </div>
                 <label class="check"><input type="checkbox" [name]="'pin-' + i" [(ngModel)]="task.isPinned" (ngModelChange)="dirty = true">Sabit çalışma</label>
                 <button type="button" class="secondary" (click)="removeTask(i)">Çalışmayı kaldır</button>
@@ -65,13 +67,17 @@
         @for (task of plan.tasks; track task.id) {
           <article class="task" [class.completed]="task.isCompleted">
             <h3>{{ task.title }}</h3><p>{{ task.plannedDate | date:'dd.MM.yyyy' }} · {{ task.plannedMinutes }} dk @if (task.isPinned) { · Sabit }</p>
+            @if (task.sourceName) { <p>Kaynak: {{ task.sourceName }}</p> }
+            <p>Planlanan soru: {{ task.plannedQuestions ?? 'Kayıt yok' }}</p>
             @if (task.isCompleted) {
               <p class="completion">Tamamlandı · {{ task.actualMinutes }} dk · {{ task.completedAt | date:'dd.MM.yyyy HH:mm' }}</p>
+              <p>Kaydedilen soru: {{ task.actualQuestions ?? 'Kayıt yok' }}</p>
             } @else if (plan.status === 'Active' && !readOnly) {
               @if (!staffStudentId) {
               <div class="fields">
                 <label>Gerçek süre (dk)<input type="number" [(ngModel)]="actualMinutes[task.id]" min="1" max="1440" step="1" [disabled]="busy()"></label>
-                <button type="button" (click)="complete(task, actualMinutes[task.id])" [disabled]="busy()">Tamamla</button>
+                <label>Gerçek soru (isteğe bağlı)<input type="number" [(ngModel)]="actualQuestions[task.id]" min="0" max="100000" step="1" [disabled]="busy()"></label>
+                <button type="button" (click)="complete(task, actualMinutes[task.id], actualQuestions[task.id])" [disabled]="busy()">Tamamla</button>
               </div>
               } @else { <p class="muted">Öğrencinin çalışma kaydı bekleniyor.</p> }
               <div class="fields">

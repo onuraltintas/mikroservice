@@ -70,7 +70,7 @@ public sealed class ManualStudyPlansController(IManualStudyPlanService plans) : 
     [EnableRateLimiting("study-planning-write")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public Task<IActionResult> Complete(Guid id, Guid taskId, [FromBody] StudyTaskCompleteInput request, CancellationToken cancellationToken = default)
-        => Respond(async () => Ok(new { success = true, data = await plans.CompleteTaskAsync(id, taskId, request.ExpectedVersion, request.ActualMinutes, cancellationToken) }));
+        => Respond(async () => Ok(new { success = true, data = await plans.CompleteTaskAsync(id, taskId, request.ExpectedVersion, request.ActualMinutes, request.ActualQuestions, cancellationToken) }));
 
     [HttpPut("{id:guid}/tasks/{taskId:guid}/schedule")]
     [RequestSizeLimit(1024)]

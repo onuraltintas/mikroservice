@@ -10,11 +10,14 @@ export interface StudyTaskInput {
   plannedMinutes: number;
   topicId: string | null;
   isPinned: boolean;
+  sourceName?: string | null;
+  plannedQuestions?: number | null;
 }
 export interface StudyTask extends StudyTaskInput {
   id: string;
   isCompleted: boolean;
   actualMinutes: number | null;
+  actualQuestions?: number | null;
   completedAt: string | null;
 }
 export interface StudyPlanSummary { id: string; version: number; title: string; status: StudyPlanStatus }
@@ -117,9 +120,9 @@ export class CoachingStudyPlanningService {
   archive(id: string, expectedVersion: number, studentId: string | null = null) {
     return this.http.post<ApiResult<StudyPlan>>(`${this.plansUrl(studentId)}/${encodeURIComponent(id)}/archive`, { expectedVersion }).pipe(map(result => result.data));
   }
-  complete(id: string, taskId: string, expectedVersion: number, actualMinutes: number) {
+  complete(id: string, taskId: string, expectedVersion: number, actualMinutes: number, actualQuestions: number | null = null) {
     return this.http.put<ApiResult<StudyPlan>>(`${this.url}/${encodeURIComponent(id)}/tasks/${encodeURIComponent(taskId)}/completion`,
-      { expectedVersion, actualMinutes }).pipe(map(result => result.data));
+      { expectedVersion, actualMinutes, actualQuestions }).pipe(map(result => result.data));
   }
   reschedule(id: string, taskId: string, expectedVersion: number, plannedDate: string, studentId: string | null = null) {
     return this.http.put<ApiResult<StudyPlan>>(`${this.plansUrl(studentId)}/${encodeURIComponent(id)}/tasks/${encodeURIComponent(taskId)}/schedule`,

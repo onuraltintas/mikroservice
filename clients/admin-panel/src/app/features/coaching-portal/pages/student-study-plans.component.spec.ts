@@ -43,7 +43,8 @@ describe('StudentStudyPlansComponent', () => {
     const draft = { ...active, status: 'Draft' as const, tasks: [{ ...active.tasks[0], sourceName: 'Kitap s.20', plannedQuestions: 25 }] };
     service.get.mockReturnValue(of(draft)); component.open('plan'); fixture.detectChanges();
     expect(component.editTasks[0]).toMatchObject({ sourceName: 'Kitap s.20', plannedQuestions: 25 });
-    expect(fixture.nativeElement.querySelector('input[name="source-0"]')).toBeTruthy();
+    const sourceLabel = Array.from(fixture.nativeElement.querySelectorAll('label')).find((label: any) => label.textContent.includes('Kaynak / sayfa')) as HTMLLabelElement;
+    expect(sourceLabel?.querySelector('input')).toBeTruthy();
     component.dirty = true; component.saveDraft();
     expect(service.replace).toHaveBeenCalledWith('plan', 4, { title: 'Planım', tasks: [expect.objectContaining({ sourceName: 'Kitap s.20', plannedQuestions: 25 })] });
   });
@@ -81,7 +82,7 @@ describe('StudentStudyPlansComponent', () => {
     component.selected.set(active);
     service.complete.mockReturnValue(throwError(() => ({ status: 409, error: { message: 'Plan değişti.' } })));
     component.complete(active.tasks[0], 25);
-    expect(service.complete).toHaveBeenCalledWith('plan', 'task', 4, 25);
+    expect(service.complete).toHaveBeenCalledWith('plan', 'task', 4, 25, null);
     expect(component.busy()).toBe(false);
     expect(component.error()).toContain('Plan değişti');
     expect(component.selected()?.version).toBe(4);

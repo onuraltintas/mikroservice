@@ -10,7 +10,9 @@ interface StudyReport {
   fromDate: string; toDate: string; source: string; reason: string;
   scheduledTasks: number; completedTasks: number; completionPercentage: number | null;
   plannedMinutes: number; actualMinutes: number | null;
-  topics: { topicId: string | null; topicName?: string | null; scheduledTasks: number; completedTasks: number; plannedMinutes: number; actualMinutes: number | null }[];
+  plannedQuestions?: number | null; actualQuestions?: number | null; plannedQuestionTasks?: number; actualQuestionTasks?: number;
+  topics: { topicId: string | null; topicName?: string | null; scheduledTasks: number; completedTasks: number; plannedMinutes: number; actualMinutes: number | null;
+    plannedQuestions?: number | null; actualQuestions?: number | null; plannedQuestionTasks?: number; actualQuestionTasks?: number }[];
   examGroups?: { source: string; examType: string; maxScore: number; count: number; averagePercentage: number }[];
   lessonResults?: { source: string; examType: string; lessonName?: string | null; topicName?: string | null;
     questionCount: number; correct: number; wrong: number; empty: number }[];
@@ -54,6 +56,8 @@ interface StudyReport {
           <div><dt>Planlanan süre</dt><dd class="text-xl font-semibold">{{ data.plannedMinutes }} dakika</dd></div>
           <div><dt>Kaydedilen süre</dt><dd class="text-xl font-semibold">{{ data.actualMinutes === null ? 'Henüz süre kaydı yok' : data.actualMinutes + ' dakika' }}</dd></div>
         </dl>
+        <p class="mt-3 text-sm">Planlanan soru: {{ data.plannedQuestions ?? 'Kayıt yok' }} · {{ data.plannedQuestionTasks ?? 0 }} / {{ data.scheduledTasks }} çalışmada sayı var</p>
+        <p class="mt-2 text-sm">Kaydedilen soru: {{ data.actualQuestions ?? 'Kayıt yok' }} · {{ data.actualQuestionTasks ?? 0 }} / {{ data.completedTasks }} tamamlanmış çalışmada sayı var</p>
         @if (previousReport(); as previous) {
           <div class="mt-4 overflow-x-auto">
             <table class="w-full text-left text-sm"><caption class="py-2 text-left font-semibold">Haftalar arası çalışma karşılaştırması</caption>
@@ -69,8 +73,8 @@ interface StudyReport {
         <p class="mt-3 text-xs text-slate-500">Taslaklar ve arşivlenen planların tamamlanmamış işleri hesaba katılmaz. Tamamlanmış eski işler korunur.</p>
         <div *ngIf="data.topics.length" class="mt-4 overflow-x-auto">
           <table class="w-full text-left text-sm"><caption class="py-2 text-left font-semibold">Konu bazında çalışma · Öğrenci beyanı</caption>
-            <thead><tr><th class="p-2">Konu</th><th class="p-2">Tamamlanan / planlanan</th><th class="p-2">Planlanan / kaydedilen dakika</th></tr></thead>
-            <tbody><tr *ngFor="let topic of data.topics" class="border-t dark:border-slate-800"><td class="p-2">{{ topic.topicName ?? (topic.topicId ? 'Konu adı bulunamadı' : 'Kataloğa bağlanmamış çalışma') }}</td><td class="p-2">{{ topic.completedTasks }} / {{ topic.scheduledTasks }}</td><td class="p-2">{{ topic.plannedMinutes }} / {{ topic.actualMinutes ?? 'Kayıt yok' }}</td></tr></tbody>
+            <thead><tr><th class="p-2">Konu</th><th class="p-2">Tamamlanan / planlanan</th><th class="p-2">Planlanan / kaydedilen dakika</th><th class="p-2">Planlanan / kaydedilen soru</th></tr></thead>
+            <tbody><tr *ngFor="let topic of data.topics" class="border-t dark:border-slate-800"><td class="p-2">{{ topic.topicName ?? (topic.topicId ? 'Konu adı bulunamadı' : 'Kataloğa bağlanmamış çalışma') }}</td><td class="p-2">{{ topic.completedTasks }} / {{ topic.scheduledTasks }}</td><td class="p-2">{{ topic.plannedMinutes }} / {{ topic.actualMinutes ?? 'Kayıt yok' }}</td><td class="p-2">{{ topic.plannedQuestions ?? 'Kayıt yok' }} / {{ topic.actualQuestions ?? 'Kayıt yok' }}<br>Plan: {{ topic.plannedQuestionTasks ?? 0 }} / {{ topic.scheduledTasks }} iş · Kayıt: {{ topic.actualQuestionTasks ?? 0 }} / {{ topic.completedTasks }} iş</td></tr></tbody>
           </table>
         </div>
         @if (priorities().length) {

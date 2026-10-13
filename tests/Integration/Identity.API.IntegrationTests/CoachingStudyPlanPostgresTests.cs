@@ -27,6 +27,12 @@ public sealed class CoachingStudyPlanPostgresTests(PostgresFixture postgres)
             const string current = "20261002111022_TrackAutomaticStudyPlanSource";
             await db.Database.ExecuteSqlRawAsync(migrator.GenerateScript(current, previous));
             await db.Database.ExecuteSqlRawAsync(migrator.GenerateScript(previous, current));
+            // The historical plan-table round trip predates the nullable tracking columns.
+            const string trackingPrevious = "20261005090416_RecordAdultPayerDeclaration";
+            const string trackingCurrent = "20261013121249_AddStudyTaskQuestionTracking";
+            await db.Database.ExecuteSqlRawAsync(migrator.GenerateScript(trackingPrevious, trackingCurrent));
+            await db.Database.ExecuteSqlRawAsync(migrator.GenerateScript(trackingCurrent, trackingPrevious));
+            await db.Database.ExecuteSqlRawAsync(migrator.GenerateScript(trackingPrevious, trackingCurrent));
             var student = Guid.NewGuid();
             var plan = StudyPlanRevision.Create(student, Guid.NewGuid(), 1, "Plan");
             plan.Activate();
@@ -48,6 +54,10 @@ public sealed class CoachingStudyPlanPostgresTests(PostgresFixture postgres)
             db.ChangeTracker.Clear();
             await Assert.ThrowsAsync<Npgsql.PostgresException>(() => db.Database.ExecuteSqlInterpolatedAsync(
                 $"UPDATE coaching.study_plan_tasks SET \"StudentId\" = {Guid.NewGuid()} WHERE \"Id\" = {task.Id}"));
+            await Assert.ThrowsAsync<Npgsql.PostgresException>(() => db.Database.ExecuteSqlInterpolatedAsync(
+                $"UPDATE coaching.study_plan_tasks SET \"PlannedQuestions\" = {-1} WHERE \"Id\" = {task.Id}"));
+            await Assert.ThrowsAsync<Npgsql.PostgresException>(() => db.Database.ExecuteSqlInterpolatedAsync(
+                $"UPDATE coaching.study_plan_tasks SET \"ActualQuestions\" = {0} WHERE \"Id\" = {task.Id}"));
             await using var concurrentDb = new CoachingDbContext(options);
             var first = await db.StudyPlanTasks.SingleAsync();
             var stale = await concurrentDb.StudyPlanTasks.SingleAsync();

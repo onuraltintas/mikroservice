@@ -21,6 +21,7 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
 .pagination { align-items: center; justify-content: space-between; font-size: .75rem; margin: 1rem 0; gap: .4rem; }
 .pagination button { padding: .4rem .5rem; font-size: .75rem; }
 .draft-task, .task { border-top: 1px solid var(--ui-border); padding: 1rem 0; margin-top: .7rem; }
+.task { overflow-wrap: anywhere; }
 .fields > label { flex: 1; min-width: 130px; }
 .fields > button { margin-bottom: .8rem; }
 .check { display: flex; align-items: center; gap: .5rem; margin: .8rem 0; }

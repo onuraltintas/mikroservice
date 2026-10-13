@@ -2132,6 +2132,9 @@ namespace Coaching.Infrastructure.Data.Migrations
                     b.Property<int?>("ActualMinutes")
                         .HasColumnType("integer");
 
+                    b.Property<int?>("ActualQuestions")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime?>("CompletedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -2153,8 +2156,15 @@ namespace Coaching.Infrastructure.Data.Migrations
                     b.Property<int>("PlannedMinutes")
                         .HasColumnType("integer");
 
+                    b.Property<int?>("PlannedQuestions")
+                        .HasColumnType("integer");
+
                     b.Property<Guid>("RevisionId")
                         .HasColumnType("uuid");
+
+                    b.Property<string>("SourceName")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
 
                     b.Property<Guid>("StudentId")
                         .HasColumnType("uuid");
@@ -2190,6 +2200,8 @@ namespace Coaching.Infrastructure.Data.Migrations
                             t.HasCheckConstraint("ck_study_task_completion", "(\"IsCompleted\" AND \"ActualMinutes\" IS NOT NULL AND \"CompletedAt\" IS NOT NULL) OR (NOT \"IsCompleted\" AND \"ActualMinutes\" IS NULL AND \"CompletedAt\" IS NULL)");
 
                             t.HasCheckConstraint("ck_study_task_minutes", "\"PlannedMinutes\" BETWEEN 1 AND 1440 AND (\"ActualMinutes\" IS NULL OR \"ActualMinutes\" BETWEEN 1 AND 1440)");
+
+                            t.HasCheckConstraint("ck_study_task_questions", "(\"PlannedQuestions\" IS NULL OR \"PlannedQuestions\" BETWEEN 0 AND 100000) AND (\"ActualQuestions\" IS NULL OR \"ActualQuestions\" BETWEEN 0 AND 100000) AND (\"IsCompleted\" OR \"ActualQuestions\" IS NULL)");
                         });
                 });
 

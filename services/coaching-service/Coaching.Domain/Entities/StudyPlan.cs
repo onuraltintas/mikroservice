@@ -80,32 +80,39 @@ public sealed class StudyPlanTask : AggregateRoot
     public string Title { get; private set; } = string.Empty;
     public int PlannedMinutes { get; private set; }
     public int? ActualMinutes { get; private set; }
+    public string? SourceName { get; private set; }
+    public int? PlannedQuestions { get; private set; }
+    public int? ActualQuestions { get; private set; }
     public bool IsPinned { get; private set; }
     public bool IsCompleted { get; private set; }
     public DateTime? CompletedAt { get; private set; }
     private StudyPlanTask() { }
 
     public static StudyPlanTask Create(StudyPlanRevision revision, DateOnly plannedDate, string title,
-        int plannedMinutes, Guid? topicId = null, bool isPinned = false)
+        int plannedMinutes, Guid? topicId = null, bool isPinned = false, string? sourceName = null, int? plannedQuestions = null)
     {
         ArgumentNullException.ThrowIfNull(revision);
         if (revision.Status == StudyPlanStatus.Archived) throw new InvalidOperationException("Cannot add tasks to archived revisions.");
         if (plannedMinutes is < 1 or > 1440) throw new ArgumentOutOfRangeException(nameof(plannedMinutes));
         if (topicId == Guid.Empty || plannedDate == default) throw new ArgumentException("Valid task date and topic are required.");
+        if (plannedQuestions is < 0 or > 100000) throw new ArgumentOutOfRangeException(nameof(plannedQuestions));
+        var source = string.IsNullOrWhiteSpace(sourceName) ? null : StudyCatalogText.Require(sourceName, 300);
         return new StudyPlanTask { RevisionId = revision.Id, StudentId = revision.StudentId,
             PlannedDate = plannedDate, Title = StudyCatalogText.Require(title, 200), PlannedMinutes = plannedMinutes,
-            TopicId = topicId, IsPinned = isPinned };
+            TopicId = topicId, IsPinned = isPinned, SourceName = source, PlannedQuestions = plannedQuestions };
     }
 
-    public void Complete(int actualMinutes)
+    public void Complete(int actualMinutes, int? actualQuestions = null)
     {
         if (actualMinutes is < 1 or > 1440) throw new ArgumentOutOfRangeException(nameof(actualMinutes));
+        if (actualQuestions is < 0 or > 100000) throw new ArgumentOutOfRangeException(nameof(actualQuestions));
         if (IsCompleted)
         {
-            if (ActualMinutes != actualMinutes) throw new InvalidOperationException("Completed work cannot be silently overwritten.");
+            if (ActualMinutes != actualMinutes || ActualQuestions != actualQuestions) throw new InvalidOperationException("Completed work cannot be silently overwritten.");
             return;
         }
         ActualMinutes = actualMinutes;
+        ActualQuestions = actualQuestions;
         IsCompleted = true;
         CompletedAt = DateTime.UtcNow;
         UpdatedAt = CompletedAt;

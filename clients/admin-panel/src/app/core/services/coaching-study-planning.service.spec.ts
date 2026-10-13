@@ -63,10 +63,10 @@ describe('CoachingStudyPlanningService', () => {
     service.list(2, 'Active').subscribe(page => expect(page.totalCount).toBe(1));
     const list = http.expectOne('/api/coaching/study-planning/plans?pageNumber=2&pageSize=20&status=Active');
     list.flush({ success: true, data: { items: [], totalCount: 1, pageNumber: 2, pageSize: 20 } });
-    service.complete('plan', 'task', 7, 45).subscribe();
+    service.complete('plan', 'task', 7, 45, 0).subscribe();
     const complete = http.expectOne('/api/coaching/study-planning/plans/plan/tasks/task/completion');
     expect(complete.request.method).toBe('PUT');
-    expect(complete.request.body).toEqual({ expectedVersion: 7, actualMinutes: 45 });
+    expect(complete.request.body).toEqual({ expectedVersion: 7, actualMinutes: 45, actualQuestions: 0 });
     complete.flush({ success: true, data: {} });
     service.reschedule('plan', 'task', 8, '2026-10-07').subscribe();
     const move = http.expectOne('/api/coaching/study-planning/plans/plan/tasks/task/schedule');

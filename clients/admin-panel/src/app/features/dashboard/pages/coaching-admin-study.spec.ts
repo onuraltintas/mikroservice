@@ -21,6 +21,7 @@ describe('CoachingAdminStudyComponent', () => {
     fixture.detectChanges(); const text = fixture.nativeElement.textContent;
     expect(text).toContain('Europe/Istanbul'); expect(text).toContain('History task'); expect(text).toContain('25');
     expect(text).toContain('Matematik kitabı'); expect(text).toContain('20 / 0');
+    expect(text).toContain('02.10.2026');
     expect(fixture.nativeElement.querySelector('button[type="submit"]')).toBeNull();
     expect(fixture.nativeElement.textContent).toContain('Düzeltme ve işlem geçmişini aç');
   });
