@@ -3,7 +3,7 @@ import { DOCUMENT } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { StaffAuthService } from './auth/staff-auth.service';
-import { StaffProduct } from './auth/staff-auth.models';
+import { StaffProduct, StaffProductAccess } from './auth/staff-auth.models';
 import { CoachingTeacherWorkspaceComponent } from './features/coaching/coaching-teacher-workspace.component';
 import { CoachingInstitutionWorkspaceComponent } from './features/coaching/coaching-institution-workspace.component';
 import { SpeedReadingTeacherWorkspaceComponent } from './features/speed-reading/speed-reading-teacher-workspace.component';
@@ -11,13 +11,14 @@ import { SpeedReadingInstitutionWorkspaceComponent } from './features/speed-read
 import { StaffAccountSettingsComponent } from './account/staff-account-settings.component';
 import { StaffNotificationCenterComponent } from './notifications/staff-notification-center.component';
 import { CourseManagementWorkspaceComponent } from './features/course-management/course-management-workspace.component';
+import { CourseManagementEnrollmentComponent } from './features/course-management/course-management-enrollment.component';
 
 type StaffWorkspaceRole = 'teacher' | 'institution';
 
 @Component({
   selector: 'staff-root',
   standalone: true,
-  imports: [FormsModule, CoachingTeacherWorkspaceComponent, CoachingInstitutionWorkspaceComponent, SpeedReadingTeacherWorkspaceComponent, SpeedReadingInstitutionWorkspaceComponent, StaffAccountSettingsComponent, StaffNotificationCenterComponent, CourseManagementWorkspaceComponent],
+  imports: [FormsModule, CoachingTeacherWorkspaceComponent, CoachingInstitutionWorkspaceComponent, SpeedReadingTeacherWorkspaceComponent, SpeedReadingInstitutionWorkspaceComponent, StaffAccountSettingsComponent, StaffNotificationCenterComponent, CourseManagementWorkspaceComponent, CourseManagementEnrollmentComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
@@ -25,6 +26,7 @@ export class AppComponent {
   readonly auth = inject(StaffAuthService);
   private readonly document = inject(DOCUMENT);
   readonly currentYear = new Date().getFullYear();
+  readonly hasCourseAccess = (access: StaffProductAccess): boolean => access.product === 'course-management';
   selectedProduct: StaffProduct = this.initialProduct();
 
   private initialProduct(): StaffProduct {
@@ -55,11 +57,13 @@ export class AppComponent {
 
   get isInstitutionManager(): boolean {
     return this.activeAccess?.roles.some(role =>
-      role === 'InstitutionAdmin' || role === 'InstitutionOwner') ?? false;
+      role === 'InstitutionAdmin' || role === 'InstitutionOwner'
+        || this.auth.activeProduct() === 'course-management' && role === 'CourseInstitutionOwner') ?? false;
   }
 
   get hasTeacherRole(): boolean {
-    return this.activeAccess?.roles.includes('Teacher') ?? false;
+    return this.activeAccess?.roles.some(role => role === 'Teacher'
+      || this.auth.activeProduct() === 'course-management' && role === 'CourseTeacher') ?? false;
   }
 
   get canSwitchWorkspaceRole(): boolean {
@@ -107,10 +111,10 @@ export class AppComponent {
   }
 
   roleLabel(roles: string[]): string {
-    if (roles.some(role => role === 'InstitutionAdmin' || role === 'InstitutionOwner')) {
+    if (roles.some(role => role === 'InstitutionAdmin' || role === 'InstitutionOwner' || role === 'CourseInstitutionOwner')) {
       return 'Kurum yöneticisi';
     }
-    return roles.includes('Teacher') ? 'Öğretmen' : 'Personel';
+    return roles.some(role => role === 'Teacher' || role === 'CourseTeacher') ? 'Öğretmen' : 'Personel';
   }
 
   async submitLogin(): Promise<void> {
@@ -133,7 +137,7 @@ export class AppComponent {
 
         this.mfaChallengeToken = result.mfaChallengeToken;
         if (result.mfaEnrollmentRequired) {
-          const setup = await this.auth.startMfaSetup(this.mfaChallengeToken);
+          const setup = await this.auth.startMfaSetup(this.mfaChallengeToken, this.selectedProduct);
           this.mfaSecret = setup.secret;
           this.mfaOtpAuthUri = setup.otpAuthUri;
           this.mfaSetupToken = setup.setupToken;

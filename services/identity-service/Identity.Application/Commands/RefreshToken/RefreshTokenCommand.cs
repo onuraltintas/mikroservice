@@ -7,7 +7,8 @@ namespace Identity.Application.Commands.RefreshToken;
 public record RefreshTokenCommand(
     string RefreshToken,
     PlatformProduct? TargetProduct = null,
-    Guid? ExpectedUserId = null) : IRequest<Result<RefreshTokenResponse>>;
+    Guid? ExpectedUserId = null,
+    bool AllowCourseManagementStudentSession = false) : IRequest<Result<RefreshTokenResponse>>;
 
 public record RefreshTokenResponse(
     string AccessToken,
