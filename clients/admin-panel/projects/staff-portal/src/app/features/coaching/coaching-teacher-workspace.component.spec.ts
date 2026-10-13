@@ -14,6 +14,12 @@ import { CoachingTeacherSubscriptionService } from './coaching-teacher-subscript
 import { CoachingTeacherWorkspaceComponent } from './coaching-teacher-workspace.component';
 
 describe('CoachingTeacherWorkspaceComponent', () => {
+  it('retains the finance section while its operation is pending', () => {
+    TestBed.configureTestingModule({ imports: [CoachingTeacherWorkspaceComponent] });
+    const component = TestBed.createComponent(CoachingTeacherWorkspaceComponent).componentInstance;
+    component.activeSection.set('finance'); component.financePanel = { canLeavePage: () => false };
+    component.selectSection('students'); expect(component.activeSection()).toBe('finance'); expect(component.canLeavePage()).toBe(false);
+  });
   it('switches between student reports and teacher assignments in the Coaching workspace', async () => {
     const assignments = {
       getTeacherAssignments: vi.fn(() => of({ items: [], pageNumber: 1, pageSize: 25, totalCount: 0, totalPages: 1 })),

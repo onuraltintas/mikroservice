@@ -9,6 +9,14 @@ import { CoachingInstitutionService, CoachingInstitutionStudent, CoachingInstitu
 import { CoachingInstitutionWorkspaceComponent } from './coaching-institution-workspace.component';
 
 describe('CoachingInstitutionWorkspaceComponent', () => {
+  it('retains the student report and section while a financial operation is pending', async () => {
+    const fixture = await createFixture(institutionService()); fixture.detectChanges();
+    const component = fixture.componentInstance; const selected = student('student-1'); component.openStudentReport(selected);
+    component.studentReportPanel = { canLeavePage: () => false }; component.closeStudentReport(); component.selectSection('finance');
+    expect(component.selectedStudent()).toEqual(selected); expect(component.activeSection()).toBe('overview');
+    component.studentReportPanel = undefined; component.financePanel = { canLeavePage: () => false };
+    expect(component.canLeavePage()).toBe(false);
+  });
   it('opens institution subscription management and delegates its pending navigation guard', async () => {
     const service = institutionService(); const fixture = await createFixture(service); fixture.detectChanges();
     const tab = fixture.nativeElement.querySelector('[data-testid="institution-subscription-tab"]') as HTMLButtonElement;

@@ -7,6 +7,12 @@ import { CoachingTeacherStudentDetailComponent } from './coaching-teacher-studen
 import { CoachingTeacherStudent } from './coaching-teacher-students.service';
 
 describe('CoachingTeacherStudentDetailComponent', () => {
+  it('does not close or navigate away from a pending finance form', () => {
+    const fixture = createDetail(); flushInitialReport(); const component = fixture.componentInstance;
+    component.financeVisible.set(true); component.financePanel = { canLeavePage: () => false };
+    const back = vi.spyOn(component.back, 'emit'); component.toggleFinance(); component.goBack();
+    expect(component.financeVisible()).toBe(true); expect(back).not.toHaveBeenCalled(); expect(component.canLeavePage()).toBe(false);
+  });
   let http: HttpTestingController;
   const student: CoachingTeacherStudent = {
     userId: 'student-1',
