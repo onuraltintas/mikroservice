@@ -41,4 +41,13 @@ describe('CoachingInstitutionSubscriptionComponent', () => {
     view.componentInstance.load(); expect(view.componentInstance.subscription()).toBeNull(); expect(view.componentInstance.students()).toEqual([]);
     expect(view.componentInstance.error()).toBeTruthy();
   });
+  it('cancels a pending write and clears notices when the institution input changes', async () => {
+    const mock = service(); const pending = new Subject<undefined>(); mock.setSubscriptionSeat.mockReturnValueOnce(pending);
+    const view = await fixture(mock); const component = view.componentInstance;
+    component.success.set('Önceki kurum'); component.setSeat('student-1', false);
+    view.componentRef.setInput('institutionId', 'institution-2'); view.detectChanges();
+    expect(pending.observed).toBe(false); expect(component.saving()).toBe(false); expect(component.success()).toBeNull();
+    expect(mock.getSubscription).toHaveBeenCalledTimes(2);
+    pending.next(undefined); expect(mock.getSubscription).toHaveBeenCalledTimes(2); expect(component.success()).toBeNull();
+  });
 });
