@@ -127,7 +127,7 @@ describe('CoachingTeacherExamsComponent', () => {
     component.openResults(exam('exam-1'));
     component.resultForm.studentId = 'student-1';
     component.resultForm.score = 80;
-    component.resultForm.subjectScoresText = '{"Matematik":80}';
+    component.resultForm.subjectScores = [{ subject: ' Matematik ', score: 80 }];
     component.saveExamResult();
 
     expect(exams.addExamResult).toHaveBeenCalledOnce();
@@ -137,7 +137,7 @@ describe('CoachingTeacherExamsComponent', () => {
     expect(key).toEqual(expect.any(String));
   });
 
-  it('rejects malformed or out-of-range subject score JSON and duplicate-invalid score data', () => {
+  it('rejects out-of-range, blank and duplicate subject score rows', () => {
     const exams = examsService([exam('exam-1')]);
     exams.getExamDetail.mockReturnValue(of(examDetail('exam-1', [])));
     const fixture = createFixture(exams);
@@ -149,13 +149,29 @@ describe('CoachingTeacherExamsComponent', () => {
     component.saveExamResult();
     expect(component.errorMessage()).toContain('0 ile 100');
     component.resultForm.score = 80;
-    component.resultForm.subjectScoresText = '{broken';
+    component.resultForm.subjectScores = [{ subject: '', score: 80 }];
     component.saveExamResult();
-    expect(component.errorMessage()).toContain('geçerli JSON');
-    component.resultForm.subjectScoresText = '{"Matematik":101}';
+    expect(component.errorMessage()).toContain('Ders adı');
+    component.resultForm.subjectScores = [{ subject: 'Matematik', score: 101 }];
     component.saveExamResult();
     expect(component.errorMessage()).toContain('0-100');
+    component.resultForm.subjectScores = [{ subject: 'Matematik', score: 80 }, { subject: ' Matematik ', score: 75 }];
+    component.saveExamResult();
+    expect(component.errorMessage()).toContain('bir kez');
     expect(exams.addExamResult).not.toHaveBeenCalled();
+  });
+
+  it('edits existing subject scores using rows and clears removed subjects', () => {
+    const exams = examsService([exam('exam-1')]);
+    const fixture = createFixture(exams);
+    fixture.detectChanges();
+    const component = fixture.componentInstance;
+    component.openResults(exam('exam-1'));
+    component.editExamResult(result('result-1'));
+    expect(component.resultForm.subjectScores).toEqual([{ subject: 'Matematik', score: 80 }]);
+    component.resultForm.subjectScores = [];
+    component.saveExamResult();
+    expect(exams.updateExamResult).toHaveBeenCalledWith('exam-1', 'result-1', expect.objectContaining({ subjectScores: null }));
   });
 
   it('updates a result without changing the linked student', () => {
