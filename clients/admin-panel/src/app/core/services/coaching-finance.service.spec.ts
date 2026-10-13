@@ -22,6 +22,13 @@ describe('CoachingFinanceService', () => {
     service.cash('admin', '2026-10-01', '2026-10-13', 2).subscribe();
     http.expectOne('/api/coaching-admin/finance/cash?fromDate=2026-10-01&toDate=2026-10-13&pageNumber=2&pageSize=25').flush({ success: true, data: {} });
   });
+  it('lists scoped open fees without requiring the current student roster', () => {
+    const service = TestBed.inject(CoachingFinanceService), http = TestBed.inject(HttpTestingController);
+    service.receivables('staff', 2).subscribe();
+    http.expectOne('/api/coaching/finance/receivables?pageNumber=2&pageSize=25').flush({ success: true, data: {} });
+    service.receivables('admin').subscribe();
+    http.expectOne('/api/coaching-admin/finance/receivables?pageNumber=1&pageSize=25').flush({ success: true, data: {} });
+  });
   it('sends stable operation IDs and versions without client supplied ownership', () => {
     const service = TestBed.inject(CoachingFinanceService), http = TestBed.inject(HttpTestingController);
     const input = { requestId: 'retry-id', expectedVersion: 7, amount: 250, method: 'Cash' as const, receivedOn: '2026-10-13', reference: null };

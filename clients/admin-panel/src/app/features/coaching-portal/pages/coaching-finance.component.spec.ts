@@ -7,9 +7,9 @@ import { CoachingFee, CoachingFeeAccount, CoachingFinanceService } from '../../.
 const fee: CoachingFee = { id: 'fee', studentId: 'student', institutionId: 'institution', coachId: null, version: 7, title: 'Aylık koçluk', currency: 'TRY', totalAmount: 1000, paidAmount: 0, balance: 1000, overdueAmount: 500, isCancelled: false, cancellationReason: null, cancelledAt: null, installments: [{ id: 'part', sequence: 1, dueOn: '2026-10-01', amount: 1000, balance: 1000, isOverdue: true }] };
 const account = (manage = true, create = true): CoachingFeeAccount => ({ totalAmount: 1000, paidAmount: 0, balance: 1000, overdueAmount: 500, canManage: manage, canCreate: create, totalCount: 1, pageNumber: 1, pageSize: 25, agreements: [fee] });
 describe('CoachingFinanceComponent', () => {
-  let api: { account: ReturnType<typeof vi.fn>; payments: ReturnType<typeof vi.fn>; create: ReturnType<typeof vi.fn>; pay: ReturnType<typeof vi.fn>; reverse: ReturnType<typeof vi.fn>; cancel: ReturnType<typeof vi.fn>; cash: ReturnType<typeof vi.fn> };
+  let api: { account: ReturnType<typeof vi.fn>; payments: ReturnType<typeof vi.fn>; create: ReturnType<typeof vi.fn>; pay: ReturnType<typeof vi.fn>; reverse: ReturnType<typeof vi.fn>; cancel: ReturnType<typeof vi.fn>; cash: ReturnType<typeof vi.fn>; receivables: ReturnType<typeof vi.fn> };
   beforeEach(() => {
-    api = { account: vi.fn(() => of(account())), payments: vi.fn(() => of({ items: [], totalCount: 0, pageNumber: 1, pageSize: 25 })), create: vi.fn(() => of(fee)), pay: vi.fn(() => of({ ...fee, version: 8 })), reverse: vi.fn(() => of(fee)), cancel: vi.fn(() => of(fee)), cash: vi.fn(() => of({ items: [], totalCount: 0, pageNumber: 1, pageSize: 25, cashTotal: 0, bankTransferTotal: 0 })) };
+    api = { account: vi.fn(() => of(account())), payments: vi.fn(() => of({ items: [], totalCount: 0, pageNumber: 1, pageSize: 25 })), create: vi.fn(() => of(fee)), pay: vi.fn(() => of({ ...fee, version: 8 })), reverse: vi.fn(() => of(fee)), cancel: vi.fn(() => of(fee)), cash: vi.fn(() => of({ items: [], totalCount: 0, pageNumber: 1, pageSize: 25, cashTotal: 0, bankTransferTotal: 0 })), receivables: vi.fn(() => of({ items: [], totalCount: 0, pageNumber: 1, pageSize: 25, balance: 0, overdueAmount: 0 })) };
     TestBed.configureTestingModule({ imports: [CoachingFinanceComponent], providers: [{ provide: CoachingFinanceService, useValue: api }] });
   });
   function setup(mode: 'staff' | 'student' | 'admin' = 'staff') {
@@ -96,5 +96,11 @@ describe('CoachingFinanceComponent', () => {
     const confirm = vi.spyOn(window, 'confirm').mockReturnValueOnce(true).mockReturnValue(false);
     component.openCashAccount({ ...receipt, studentId: 'other' }); expect(confirm).toHaveBeenCalledOnce();
     expect(component.form()).toBeNull(); expect(api.account).toHaveBeenLastCalledWith('staff', 'other', 1); confirm.mockRestore();
+  });
+  it('opens an unpaid historical account from the open fee list', () => {
+    api.receivables.mockReturnValue(of({ items: [fee], totalCount: 1, pageNumber: 1, pageSize: 25, balance: fee.balance, overdueAmount: fee.overdueAmount }));
+    const fixture = TestBed.createComponent(CoachingFinanceComponent); fixture.componentRef.setInput('mode', 'staff'); fixture.componentRef.setInput('cashView', true); fixture.detectChanges();
+    const button = fixture.nativeElement.querySelector('[data-open-receivable="fee"]') as HTMLButtonElement;
+    expect(button).not.toBeNull(); button.click(); expect(api.account).toHaveBeenLastCalledWith('staff', 'student', 1);
   });
 });
