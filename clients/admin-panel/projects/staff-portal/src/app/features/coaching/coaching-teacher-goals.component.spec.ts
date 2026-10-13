@@ -17,7 +17,7 @@ describe('CoachingTeacherGoalsComponent', () => {
       canEdit: true, scoreTarget: { targetScore: 450, maxScore: 500, examType: 'LGS', subject: null } });
     fixture.componentInstance.editGoal(fixture.componentInstance.goals()[0]);
     fixture.componentInstance.form.title = 'Başlık değişti'; fixture.componentInstance.saveGoal();
-    expect(service.updateGoal).toHaveBeenCalledWith('goal-1', expect.objectContaining({ targetScore: 450, targetExamType: 4 }));
+    expect(service.updateGoal).toHaveBeenCalledWith('goal-1', expect.objectContaining({ targetScore: 450, targetExamType: 4, expectedVersion: 4 }));
   });
   it('protects a pending target save from list refresh and goal replacement', () => {
     const service = goalsService([goal('goal-1')]);

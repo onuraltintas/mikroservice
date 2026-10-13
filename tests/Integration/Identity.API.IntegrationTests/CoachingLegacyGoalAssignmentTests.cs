@@ -16,6 +16,26 @@ namespace Identity.API.IntegrationTests;
 
 public sealed class CoachingLegacyGoalAssignmentTests
 {
+    [Fact]
+    public async Task StaleGoalDefinitionCannotOverwriteNewScoreScale()
+    {
+        await using var db = new CoachingDbContext(new DbContextOptionsBuilder<CoachingDbContext>().UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
+        var teacher = Guid.NewGuid(); var student = Guid.NewGuid(); var goal = AcademicGoal.Create(student, "Hedef", GoalCategory.ExamPreparation, teacher);
+        goal.SetTarget(targetScore: 400, targetExamType: ExamType.LGS); db.Add(goal); await db.SaveChangesAsync();
+        var oldVersion = goal.Version; goal.SetScoreTarget(450, 500, ExamType.LGS); await db.SaveChangesAsync(); var currentVersion = goal.Version; db.ChangeTracker.Clear();
+        var publisher = new Publisher();
+        using var services = new ServiceCollection().AddSingleton<IAcademicGoalRepository>(new AcademicGoalRepository(db))
+            .AddSingleton<Coaching.Application.Interfaces.IUnitOfWork>(new UnitOfWork(db))
+            .AddSingleton<ICoachingAccessPolicy>(new CoachingAccessPolicy(new Actor(teacher, false)))
+            .AddSingleton<ICoachingEventPublisher>(publisher).AddSingleton<ICoachingIdentityAuthorizationClient>(new Identity(teacher, student) { Active = true }).BuildServiceProvider();
+        var handler = ActivatorUtilities.CreateInstance<UpdateGoalCommandHandler>(services);
+        var stale = new UpdateGoalCommand(goal.Id, "Eski form", null, GoalCategory.ExamPreparation, null, 400, ExamType.LGS, null) { ExpectedVersion = oldVersion };
+        var conflict = await Assert.ThrowsAsync<BusinessRuleException>(() => handler.Handle(stale, default));
+        Assert.Equal("Goal.Conflict", conflict.Code); Assert.Equal(0, publisher.Count);
+        var updated = await handler.Handle(stale with { Title = "Güncel form", TargetScore = 450, ExpectedVersion = currentVersion }, default);
+        Assert.Equal("Güncel form", updated.Title); db.ChangeTracker.Clear();
+        Assert.Equal(500, (await db.AcademicGoals.SingleAsync()).TargetMaxScore);
+    }
     [Theory]
     [InlineData(false, false)]
     [InlineData(false, true)]
