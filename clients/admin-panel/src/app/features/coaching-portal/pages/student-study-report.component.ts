@@ -124,8 +124,9 @@ interface StudyReport {
 export class StudentStudyReportComponent implements OnChanges {
   @Input() adminStudentId: string | null = null;
   @Input() staffStudentId: string | null = null;
+  @Input() autoWeekly = false;
   private request?: Subscription;
-  ngOnChanges() { this.request?.unsubscribe(); this.report.set(null); this.previousReport.set(null); this.error.set(null); this.busy.set(false); }
+  ngOnChanges() { this.request?.unsubscribe(); this.report.set(null); this.previousReport.set(null); this.error.set(null); this.busy.set(false); if (this.autoWeekly) this.useLastWeek(); }
   private readonly http = inject(HttpClient);
   private readonly destroyRef = inject(DestroyRef);
   readonly report = signal<StudyReport | null>(null);

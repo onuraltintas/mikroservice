@@ -12,6 +12,7 @@ import { StudentStudyReportComponent } from '../../../../../../src/app/features/
   styles: [':host { display: block; min-width: 0; } section { min-width: 0; }'],
   template: `
     <section aria-label="Öğrencinin haftalık koçluk planı" class="space-y-5">
+      @if (!briefOnly) {
       <h3>Haftalık çalışma saatleri</h3>
       @if (loading()) { <p role="status">Çalışma saatleri yükleniyor…</p> }
       @if (error()) { <p role="alert">{{ error() }}</p><button type="button" (click)="loadAvailability()">Tekrar dene</button> }
@@ -21,12 +22,14 @@ import { StudentStudyReportComponent } from '../../../../../../src/app/features/
         @if (!hours.windows.length) { <p>Öğrenci henüz çalışma saati belirlememiş.</p> }
       } @else if (!loading()) { <p>Öğrenci henüz çalışma saati belirlememiş.</p> }
       <app-student-study-plans [staffStudentId]="studentId" [readOnly]="readOnly" />
-      <app-student-study-report [staffStudentId]="studentId" />
+      } @else { <h3>Seans hazırlık özeti</h3> }
+      <app-student-study-report [staffStudentId]="studentId" [autoWeekly]="briefOnly" />
     </section>`
 })
 export class CoachingStaffStudyComponent implements OnChanges {
   @Input({ required: true }) studentId!: string;
   @Input() readOnly = false;
+  @Input() briefOnly = false;
   @ViewChild(StudentStudyPlansComponent) private editor?: StudentStudyPlansComponent;
   canLeavePage(): boolean { return this.editor?.canLeavePage() ?? true; }
   private readonly service = inject(CoachingStudyPlanningService);
@@ -39,7 +42,7 @@ export class CoachingStaffStudyComponent implements OnChanges {
   ngOnChanges(): void { this.loadAvailability(); }
   loadAvailability(): void {
     this.request?.unsubscribe(); this.availability.set(null); this.error.set(null);
-    if (!this.studentId) return;
+    if (this.briefOnly || !this.studentId) { this.loading.set(false); return; }
     this.loading.set(true);
     this.request = this.service.getAvailability(this.studentId).pipe(takeUntilDestroyed(this.destroyRef),
       finalize(() => this.loading.set(false))).subscribe({ next: hours => this.availability.set(hours),

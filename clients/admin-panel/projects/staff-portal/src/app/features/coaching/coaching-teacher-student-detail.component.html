@@ -56,8 +56,9 @@
   </section>
 
   <section class="history-panel" aria-labelledby="history-title">
-    <button class="study-toggle" type="button" (click)="toggleStudy()" [attr.aria-expanded]="studyVisible()">Haftalık plan ve çalışma raporu</button>
-    @if (studyVisible()) { <staff-coaching-study [studentId]="student.userId" /> }
+    <button class="study-toggle" type="button" (click)="toggleStudy()" [attr.aria-expanded]="studyVisible() && !briefMode()">Haftalık plan ve çalışma raporu</button>
+    <button class="study-toggle" type="button" data-testid="open-session-brief" (click)="openSessionBrief()" [attr.aria-pressed]="studyVisible() && briefMode()">Seans hazırlık özeti</button>
+    @if (studyVisible()) { <staff-coaching-study [studentId]="student.userId" [briefOnly]="briefMode()" /> }
     <header class="history-heading">
       <div>
         <p class="report-eyebrow">KAYIT DÖKÜMÜ</p>

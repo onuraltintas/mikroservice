@@ -41,11 +41,17 @@ export class CoachingTeacherStudentDetailComponent implements OnInit {
   goBack(): void { if (this.canLeavePage()) this.back.emit(); }
   toggleStudy(): void {
     if (this.studyVisible() && !this.canLeavePage()) return;
-    this.studyVisible.set(!this.studyVisible());
+    if (this.briefMode()) { this.briefMode.set(false); this.studyVisible.set(true); }
+    else this.studyVisible.set(!this.studyVisible());
+  }
+  openSessionBrief(): void {
+    if (!this.canLeavePage()) return;
+    this.briefMode.set(true); this.studyVisible.set(true); this.loadProgress();
   }
 
   readonly progress = signal<CoachingStudentProgressSummary | null>(null);
   readonly studyVisible = signal(false);
+  readonly briefMode = signal(false);
   readonly history = signal<CoachingStudentHistoryItem[]>([]);
   readonly historyTypes: CoachingStudentHistoryType[] = ['Assignments', 'Exams', 'Sessions', 'Goals'];
   readonly historyLabels: Record<CoachingStudentHistoryType, string> = {
