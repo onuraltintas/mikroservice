@@ -31,7 +31,9 @@ export class CoachingStaffStudyComponent implements OnChanges {
   @Input() readOnly = false;
   @Input() briefOnly = false;
   @ViewChild(StudentStudyPlansComponent) private editor?: StudentStudyPlansComponent;
+  @ViewChild(StudentStudyReportComponent) private report?: StudentStudyReportComponent;
   canLeavePage(): boolean { return this.editor?.canLeavePage() ?? true; }
+  refreshBrief(): void { if (this.briefOnly) this.report?.useLastWeek(); }
   private readonly service = inject(CoachingStudyPlanningService);
   private readonly destroyRef = inject(DestroyRef);
   private request?: Subscription;

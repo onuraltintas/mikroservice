@@ -61,6 +61,9 @@ test('teacher publishes a weekly plan, student completes work, teacher and insti
   await teacherReport.getByRole('button', { name: 'Raporu göster' }).click();
   await expect(teacherReport.getByText(`${initialActualMinutes + 40} dakika`, { exact: true })).toBeVisible();
   await expect(teacherReport.getByText('Haftalar arası çalışma karşılaştırması', { exact: true })).toBeVisible();
+  await teacherPage.getByTestId('open-session-brief').click();
+  await expect(teacherEditor).toHaveCount(0);
+  await expect(teacherReport.getByText('Haftalar arası çalışma karşılaştırması', { exact: true })).toBeVisible();
 
   const institutionContext = await browser.newContext();
   const institutionPage = await institutionContext.newPage();
@@ -83,6 +86,10 @@ test('teacher publishes a weekly plan, student completes work, teacher and insti
   await institutionPage.setViewportSize({ width: 390, height: 844 });
   expect(await institutionPage.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
   await institutionPage.screenshot({ path: '../../artifacts/coaching-completion-20261013/institution-plan-proof.png', fullPage: true });
+  await institutionPage.getByTestId('open-session-brief').click();
+  await expect(institutionEditor).toHaveCount(0);
+  await expect(institutionReport.getByText('Haftalar arası çalışma karşılaştırması', { exact: true })).toBeVisible();
+  expect(await institutionPage.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
   await Promise.all([teacherContext.close(), studentContext.close(), institutionContext.close()]);
 });
 

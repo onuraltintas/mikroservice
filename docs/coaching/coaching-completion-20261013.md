@@ -22,7 +22,13 @@
 
 ## Test kanıtları
 
+Haftalık rapor artık önceki yedi gün ile karşılaştırılabiliyor; bilinmeyen gerçekleşen süre sıfıra çevrilmiyor. Ders/konu öncelikleri yanlış ve boş cevap oranından üretiliyor, sınav türü ve veri kaynağı korunuyor. Öğretmen ve kurumun seans hazırlık özeti güncel genel ilerleme ile iki haftayı birlikte getiriyor; yeniden açılış da raporu yeniliyor. Kurum görünümü salt okunur, kirli öğretmen taslağından geçiş onayla korunuyor. İstanbul DateOnly başlıkları ve 390 piksel rapor genişliği doğrulandı.
+
 Yerel sonuçlar `artifacts/coaching-completion-20261013/` altında tutuluyor.
+
+- `coaching-regression-stage7.trx`: 716 başarılı, 0 başarısız, 0 atlanan.
+- `staff-stage8.log`: 175 başarılı personel testi, 24 dosya. `session-brief-refresh-red.log` tekrar açılıştaki eski raporu iki panelde yeniden üretir.
+- `e2e-stage8.log`: 7 başarılı senaryo; öğretmen ve kurum seans özeti, iki haftalık karşılaştırma ve kurum raporunun 390 piksel görünümü dahil. Yerel Identity fixture sınırı devam eder.
 
 - `coaching-regression-stage2-final.trx`: 696 başarılı, 0 başarısız, 0 atlanan; gerçek Testcontainers PostgreSQL dahil.
 - `staff-regression-stage2.log`: personel panelinde 149 başarılı test, 22 dosya.
@@ -46,10 +52,10 @@ Frontend testlerinde bu Windows ortamındaki geçici modül çözümleme sorunu 
 
 Bu çalışma henüz bütün ürün eksiklerinin tamamlandığı anlamına gelmiyor. Önceki karşılaştırmadan kalan işler:
 
-1. Haftalar arası çalışma karşılaştırması, seans öncesi birleşik öğrenci özeti ve veriye dayalı konu öncelikleri.
-2. Plan işlerinde kaynak ve soru sayısı takibi; yaklaşan çalışma/seans hatırlatmaları.
-3. Koçluk öğrenci ücret/borç/taksit/kasa akışının mevcut kurs finansından ayrı ürün kapsamıyla ele alınması.
-4. Koçluk soru bankası, süreli sınav alma/puanlama ve kazanım takibi.
+1. Plan işlerinde kaynak ve soru sayısı takibi; yaklaşan çalışma/seans hatırlatmaları.
+2. Koçluk öğrenci ücret/borç/taksit/kasa akışının mevcut kurs finansından ayrı ürün kapsamıyla ele alınması.
+3. Koçluk soru bankası, süreli sınav alma/puanlama ve kazanım takibi.
+4. Manuel görüşme planlamasında çakışma denetimi.
 5. Tamamlanan bölümleri kapsayan mobil/masaüstü tarayıcı senaryoları ve son kapsam incelemesi.
 
 Zoom ve SMS sağlayıcı/hesabı kullanıcıda şu an yok. Mevcut manuel toplantı bağlantısı, ICS ve uygulama içi bildirimler kullanılabilir. Gerçek sağlayıcı entegrasyonu veya teslimat testi yapılmış değildir. Canlıya dağıtım yapılmadı.

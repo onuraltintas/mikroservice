@@ -16,8 +16,8 @@
   </header>
 
   <section class="summary-panel" aria-label="Öğrenci koçluk özeti">
-    <button class="study-toggle" type="button" (click)="studyVisible.set(!studyVisible())" [attr.aria-expanded]="studyVisible()">Haftalık plan ve çalışma raporu</button>
-    @if (studyVisible()) { <staff-coaching-study [studentId]="student.userId" [readOnly]="true" /> }
+    <button class="study-toggle" type="button" (click)="toggleStudy()" [attr.aria-expanded]="studyVisible() && !briefMode()">Haftalık plan ve çalışma raporu</button>
+    <button class="study-toggle" type="button" data-testid="open-session-brief" (click)="openSessionBrief()" [attr.aria-pressed]="studyVisible() && briefMode()">Seans hazırlık özeti</button>
     <div class="section-heading"><div><p class="report-eyebrow">GENEL BAKIŞ</p><h3>İlerleme özeti</h3></div></div>
     @if (isDetailLoading()) {
       <p class="inline-status" role="status">Öğrenci özeti yükleniyor…</p>
@@ -31,6 +31,7 @@
         <article class="summary-card goal-card"><span>Hedefler</span><strong>{{ summary.totalGoals }}</strong><small>Toplam hedef</small></article>
       </div>
     }
+    @if (studyVisible()) { <staff-coaching-study [studentId]="student.userId" [readOnly]="true" [briefOnly]="briefMode()" /> }
   </section>
 
   <section class="history-panel" aria-labelledby="history-title">

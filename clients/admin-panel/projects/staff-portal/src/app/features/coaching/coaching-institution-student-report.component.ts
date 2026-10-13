@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, EventEmitter, Input, OnInit, Output, inject, signal } from '@angular/core';
+import { Component, DestroyRef, EventEmitter, Input, OnInit, Output, ViewChild, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CoachingStaffStudyComponent } from './coaching-staff-study.component';
@@ -27,9 +27,19 @@ export class CoachingInstitutionStudentReportComponent implements OnInit {
 
   @Input({ required: true }) student!: CoachingInstitutionStudent;
   @Output() readonly back = new EventEmitter<void>();
+  @ViewChild(CoachingStaffStudyComponent) private study?: CoachingStaffStudyComponent;
 
   readonly detail = signal<CoachingInstitutionStudentDetail | null>(null);
   readonly studyVisible = signal(false);
+  readonly briefMode = signal(false);
+  toggleStudy(): void {
+    if (this.briefMode()) { this.briefMode.set(false); this.studyVisible.set(true); }
+    else this.studyVisible.set(!this.studyVisible());
+  }
+  openSessionBrief(): void {
+    if (this.briefMode()) this.study?.refreshBrief();
+    this.briefMode.set(true); this.studyVisible.set(true); this.loadDetail();
+  }
   readonly history = signal<CoachingInstitutionStudentHistoryItem[]>([]);
   readonly historyTypes: CoachingInstitutionHistoryType[] = ['Assignments', 'Exams', 'Sessions', 'Goals'];
   readonly historyLabels: Record<CoachingInstitutionHistoryType, string> = {

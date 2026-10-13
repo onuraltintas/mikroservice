@@ -46,6 +46,7 @@ export class CoachingTeacherStudentDetailComponent implements OnInit {
   }
   openSessionBrief(): void {
     if (!this.canLeavePage()) return;
+    if (this.briefMode()) this.study?.refreshBrief();
     this.briefMode.set(true); this.studyVisible.set(true); this.loadProgress();
   }
 
