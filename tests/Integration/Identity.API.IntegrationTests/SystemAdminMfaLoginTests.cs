@@ -773,6 +773,89 @@ public sealed class SystemAdminMfaLoginTests
     }
 
     [Fact]
+    public async Task CourseManagementStudentSession_ShouldAllowOnlyDedicatedCourseSessionUpgrade()
+    {
+        var user = CreateUserWithRole("CourseStudent", PlatformProduct.CourseManagement);
+        user.GrantProductAccess(
+            PlatformProduct.Coaching,
+            UserProductAccessSource.SelfRegistration,
+            grantedByUserId: null,
+            DateTimeOffset.UtcNow);
+        user.GrantProductAccess(
+            PlatformProduct.CourseManagement,
+            UserProductAccessSource.SelfRegistration,
+            grantedByUserId: null,
+            DateTimeOffset.UtcNow);
+        var refreshToken = RefreshToken.Create(
+            user.Id,
+            "course-student-source-session",
+            DateTime.UtcNow.AddDays(1),
+            "127.0.0.1",
+            product: PlatformProduct.Coaching);
+        user.AddRefreshToken(refreshToken);
+        var tokenService = new IssuingTokenService();
+        var repository = new StubUserRepository(user);
+        var handler = new RefreshTokenCommandHandler(
+            repository,
+            tokenService,
+            new StubConfigurationService(),
+            NullLogger<RefreshTokenCommandHandler>.Instance);
+
+        var result = await handler.Handle(
+            new RefreshTokenCommand(
+                refreshToken.Token,
+                PlatformProduct.CourseManagement,
+                user.Id,
+                AllowCourseManagementStudentSession: true),
+            CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        tokenService.AccessTokenProduct.Should().Be(PlatformProduct.CourseManagement);
+        tokenService.RefreshTokenProduct.Should().Be(PlatformProduct.CourseManagement);
+        repository.RotationCalls.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task StaffProductSwitch_ShouldNotGrantCourseStudentSessionWithoutDedicatedFlag()
+    {
+        var user = CreateUserWithRole("CourseStudent", PlatformProduct.CourseManagement);
+        user.GrantProductAccess(
+            PlatformProduct.Coaching,
+            UserProductAccessSource.SelfRegistration,
+            grantedByUserId: null,
+            DateTimeOffset.UtcNow);
+        user.GrantProductAccess(
+            PlatformProduct.CourseManagement,
+            UserProductAccessSource.SelfRegistration,
+            grantedByUserId: null,
+            DateTimeOffset.UtcNow);
+        var refreshToken = RefreshToken.Create(
+            user.Id,
+            "course-student-for-staff-switch",
+            DateTime.UtcNow.AddDays(1),
+            "127.0.0.1",
+            product: PlatformProduct.Coaching);
+        user.AddRefreshToken(refreshToken);
+        var tokenService = new IssuingTokenService();
+        var repository = new StubUserRepository(user);
+        var handler = new RefreshTokenCommandHandler(
+            repository,
+            tokenService,
+            new StubConfigurationService(),
+            NullLogger<RefreshTokenCommandHandler>.Instance);
+
+        var result = await handler.Handle(
+            new RefreshTokenCommand(refreshToken.Token, PlatformProduct.CourseManagement, user.Id),
+            CancellationToken.None);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("Auth.ProductAccessDenied");
+        tokenService.AccessTokenRequested.Should().BeFalse();
+        repository.RotationCalls.Should().Be(0);
+        refreshToken.IsActive.Should().BeTrue();
+    }
+
+    [Fact]
     public async Task StaffProductSwitch_ToMfaProtectedInstitutionRole_ShouldKeepCurrentSessionActive()
     {
         var user = CreateUserWithRole("Teacher", PlatformProduct.Coaching);
