@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 import { StaffAuthService } from '../../auth/staff-auth.service';
 import { CoachingTeacherStudentsService } from './coaching-teacher-students.service';
@@ -7,6 +7,16 @@ import { CoachingTeacherSessionsService } from './coaching-teacher-sessions.serv
 import { CoachingTeacherSessionFormComponent } from './coaching-teacher-session-form.component';
 
 describe('CoachingTeacherSessionFormComponent', () => {
+  it.each([null, 'session-1'])('keeps the form and asks for another time on a booking conflict for %s', sessionId => {
+    const service = sessionsService(); const fixture = createFixture(service, studentService(), sessionId); fixture.detectChanges();
+    service.createSession.mockReturnValue(throwError(() => ({ status: 409, error: { code: 'Session.Conflict' } })));
+    service.updateSession.mockReturnValue(throwError(() => ({ status: 409, error: { code: 'Session.Conflict' } })));
+    const component = fixture.componentInstance; component.form.subject = 'Matematik'; component.form.startTime = '2030-01-04T10:00';
+    if (!sessionId) component.toggleStudent('student-1');
+    const saved = vi.spyOn(component.saved, 'emit'); component.submit();
+    expect(component.errorMessage()).toContain('başka bir seansı'); expect(component.errorMessage()).toContain('Başka bir saat');
+    expect(component.form.subject).toBe('Matematik'); expect(saved).not.toHaveBeenCalled();
+  });
   it('creates a future session for the authenticated teacher and selected student', () => {
     const service = sessionsService();
     const students = studentService();
