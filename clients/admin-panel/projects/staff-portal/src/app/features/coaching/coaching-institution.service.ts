@@ -132,6 +132,17 @@ export interface CoachingInvitationResponse {
 
 @Injectable({ providedIn: 'root' })
 export class CoachingInstitutionService {
+  updateStudent(studentId: string, gradeLevel: number | null, teacherUserId: string | null): Observable<void> {
+    return this.http.put<void>(`${environment.apiUrl}/institution/students/${encodeURIComponent(studentId)}`, { gradeLevel, teacherUserId });
+  }
+
+  removeStudent(studentId: string): Observable<void> {
+    return this.http.delete<void>(`${environment.apiUrl}/institution/students/${encodeURIComponent(studentId)}`);
+  }
+
+  removeTeacher(teacherId: string): Observable<void> {
+    return this.http.delete<void>(`${environment.apiUrl}/institution/teachers/${encodeURIComponent(teacherId)}`);
+  }
   private readonly http = inject(HttpClient);
   private readonly url = `${environment.apiUrl}/coaching-admin`;
 
