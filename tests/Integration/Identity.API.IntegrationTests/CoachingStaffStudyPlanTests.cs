@@ -45,6 +45,17 @@ public sealed class CoachingStaffStudyPlanTests(PostgresFixture postgres)
             await Assert.ThrowsAsync<BusinessRuleException>(() => plans.PublishForStudentAsync(Guid.NewGuid(), active.Id, active.Version));
 
             actor.UserId = Guid.NewGuid(); actor.Roles = ["Teacher"];
+            var stale = await Assert.ThrowsAsync<BusinessRuleException>(() =>
+                plans.RescheduleForStudentAsync(student, active.Id, active.Tasks.Single().Id, active.Version, new(2026, 10, 20)));
+            Assert.Equal("StudyPlanning.Conflict", stale.Code);
+            await Assert.ThrowsAsync<BusinessRuleException>(() =>
+                plans.RescheduleForStudentAsync(student, active.Id, active.Tasks.Single().Id, completed.Version, new(2026, 10, 20)));
+            var unchanged = (await plans.GetForStudentAsync(student, active.Id))!.Tasks.Single();
+            Assert.Equal(40, unchanged.ActualMinutes);
+            Assert.Equal(new DateOnly(2026, 10, 19), unchanged.PlannedDate);
+            var foreign = StudyPlanRevision.Create(Guid.NewGuid(), Guid.NewGuid(), 1, "Other student's private plan");
+            db.StudyPlanRevisions.Add(foreign); await db.SaveChangesAsync(); db.ChangeTracker.Clear();
+            Assert.Null(await plans.GetForStudentAsync(student, foreign.Id));
             var reportService = new CoachingStudentStudyReportService(db, policy, scope);
             var report = await reportService.GetForStudentAsync(student, new(2026, 10, 19), new(2026, 10, 25));
             Assert.Equal(1, report.CompletedTasks);
@@ -61,7 +72,7 @@ public sealed class CoachingStaffStudyPlanTests(PostgresFixture postgres)
             await Assert.ThrowsAsync<BusinessRuleException>(() => plans.ListForStudentAsync(student, 1, 20, null));
             actor.Roles = ["Teacher"]; identity.Active = false;
             await Assert.ThrowsAsync<BusinessRuleException>(() => plans.CreateForStudentAsync(student, input));
-            Assert.Equal(2, await db.StudyPlanRevisions.CountAsync());
+            Assert.Equal(3, await db.StudyPlanRevisions.CountAsync());
         }
         finally { await db.Database.EnsureDeletedAsync(); }
     }
@@ -76,6 +87,22 @@ public sealed class CoachingStaffStudyPlanTests(PostgresFixture postgres)
         var access = new CoachingStudyPlanAccess(new CoachingAccessPolicy(new Actor(Guid.NewGuid(), role)),
             new Identity(student), new Scope(student));
         await Assert.ThrowsAsync<BusinessRuleException>(() => access.RequireAsync(student, default));
+    }
+
+    [Fact]
+    public void StaffApiRestrictsWritesToTeachersAndDoesNotExposeStudentCompletion()
+    {
+        var controller = typeof(Coaching.API.Controllers.CoachingStaffStudyController);
+        var roles = controller.GetCustomAttributes(typeof(Microsoft.AspNetCore.Authorization.AuthorizeAttribute), true)
+            .Cast<Microsoft.AspNetCore.Authorization.AuthorizeAttribute>().Single().Roles;
+        Assert.Contains("InstitutionAdmin", roles);
+        foreach (var method in new[] { "Create", "Replace", "Publish", "Archive", "Reschedule" })
+        {
+            var writeRoles = controller.GetMethod(method)!.GetCustomAttributes(typeof(Microsoft.AspNetCore.Authorization.AuthorizeAttribute), true)
+                .Cast<Microsoft.AspNetCore.Authorization.AuthorizeAttribute>().Single().Roles;
+            Assert.Equal("Teacher", writeRoles);
+        }
+        Assert.Null(controller.GetMethod("Complete"));
     }
 
     private sealed class Actor(Guid id, string role) : ICurrentUserService
