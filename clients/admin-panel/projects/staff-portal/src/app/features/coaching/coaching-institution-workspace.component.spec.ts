@@ -9,6 +9,16 @@ import { CoachingInstitutionService, CoachingInstitutionStudent, CoachingInstitu
 import { CoachingInstitutionWorkspaceComponent } from './coaching-institution-workspace.component';
 
 describe('CoachingInstitutionWorkspaceComponent', () => {
+  it('opens institution subscription management and delegates its pending navigation guard', async () => {
+    const service = institutionService(); const fixture = await createFixture(service); fixture.detectChanges();
+    const tab = fixture.nativeElement.querySelector('[data-testid="institution-subscription-tab"]') as HTMLButtonElement;
+    expect(tab).toBeTruthy(); tab.click(); fixture.detectChanges();
+    expect(service.getSubscription).toHaveBeenCalled();
+    fixture.componentInstance.subscriptionPanel = { canLeavePage: () => false };
+    fixture.componentInstance.selectSection('students');
+    expect(fixture.componentInstance.activeSection()).toBe('subscription');
+    expect(fixture.componentInstance.canLeavePage()).toBe(false);
+  });
   it('reassigns a roster student while preserving a valid grade and refreshes the roster', async () => {
     const service = institutionService({ students: [student('student-1')], teachers: [teacher('teacher-1'), teacher('teacher-2')] });
     const fixture = await createFixture(service); fixture.detectChanges();
@@ -294,6 +304,8 @@ async function createFixture(service = institutionService()) {
 
 function institutionService(options: { students?: CoachingInstitutionStudent[]; teachers?: CoachingInstitutionTeacher[] } = {}) {
   return {
+    getSubscription: vi.fn(() => of(null)),
+    setSubscriptionSeat: vi.fn(() => of(void 0)),
     getReadScope: vi.fn(() => of({ isGlobal: false, institutionId: 'institution-1' as string | null })),
     inviteTeacher: vi.fn(() => of({ invitationId: 'teacher-invitation-1' })),
     inviteStudent: vi.fn(() => of({ invitationId: 'student-invitation-1' })),
