@@ -6,6 +6,8 @@ using Coaching.Infrastructure.Management;
 using EduPlatform.Shared.Kernel.Exceptions;
 using EduPlatform.Shared.Security.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
+using System.Data.Common;
 using Shared.IntegrationTests.Fixtures;
 
 namespace Identity.API.IntegrationTests;
@@ -13,6 +15,39 @@ namespace Identity.API.IntegrationTests;
 [Collection("Database")]
 public sealed class CoachingInstitutionSubscriptionTests(PostgresFixture postgres)
 {
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task RetryAfterLostCommitDoesNotReportRolledBackActivationAsSuccess(bool afterCommit)
+    {
+        var failure = new CommitFailure(afterCommit);
+        var options = new DbContextOptionsBuilder<CoachingDbContext>().UseNpgsql(postgres.ConnectionString,
+            retry => retry.EnableRetryOnFailure(2, TimeSpan.Zero, null)).AddInterceptors(failure).Options;
+        await using var db = new CoachingDbContext(options);
+        await db.Database.EnsureDeletedAsync(); await db.Database.EnsureCreatedAsync();
+        try
+        {
+            var institution = Guid.NewGuid(); var student = Guid.NewGuid(); var actor = new Actor();
+            var plan = new CoachingSubscriptionPlan { Slug = "retry-institution", Name = "Kurum", Audience = "Institution", IncludedStudentSeats = 1 };
+            var subscription = new CoachingSubscription { PlanId = plan.Id, InstitutionId = institution, StartDate = DateTime.UtcNow.AddDays(-1), EndDate = DateTime.UtcNow.AddDays(1) };
+            db.AddRange(plan, subscription, new CoachingSubscriptionSeat { SubscriptionId = subscription.Id, StudentId = student, IsSuspended = true });
+            await db.SaveChangesAsync(); db.ChangeTracker.Clear(); failure.Armed = true;
+            Assert.True(await new CoachingInstitutionSubscriptionService(db, new Scope(new(false, institution, [student])), actor).SetSeatAsync(subscription.Id, student, false));
+            Assert.Equal(1, failure.Failures);
+            await using var verification = new CoachingDbContext(new DbContextOptionsBuilder<CoachingDbContext>().UseNpgsql(postgres.ConnectionString).Options);
+            var persisted = await verification.CoachingSubscriptionSeats.SingleAsync();
+            Assert.False(persisted.IsSuspended); Assert.Equal(actor.UserId, persisted.AssignedBy);
+        }
+        finally { await db.Database.EnsureDeletedAsync(); }
+    }
+    [Fact]
+    public void SeatApiRequiresInstitutionRoleAndMfaForWrites()
+    {
+        var controller = typeof(Coaching.API.Controllers.CoachingInstitutionSubscriptionsController);
+        Assert.Equal("InstitutionAdmin,InstitutionOwner", controller.GetCustomAttributes(typeof(Microsoft.AspNetCore.Authorization.AuthorizeAttribute), true)
+            .Cast<Microsoft.AspNetCore.Authorization.AuthorizeAttribute>().Single().Roles);
+        Assert.NotEmpty(controller.GetMethod("SetSeat")!.GetCustomAttributes(typeof(EduPlatform.Shared.Security.Authorization.MfaCategoryAttribute), true));
+    }
     [Fact]
     public async Task ScopeCapacitySuspensionAndConcurrentAssignmentsAreEnforced()
     {
@@ -57,6 +92,16 @@ public sealed class CoachingInstitutionSubscriptionTests(PostgresFixture postgre
     {
         public CoachingAdminScope Value { get; set; } = scope;
         public Task<CoachingAdminScope> RequireReadScopeAsync(CancellationToken ct) => Task.FromResult(Value);
+    }
+    private sealed class CommitFailure(bool afterCommit) : DbTransactionInterceptor
+    {
+        public bool Armed { get; set; }
+        public int Failures { get; private set; }
+        private void Fail(bool after) { if (Armed && after == afterCommit) { Armed = false; Failures++; throw new Npgsql.NpgsqlException("Injected transient commit failure", new TimeoutException()); } }
+        public override ValueTask<InterceptionResult> TransactionCommittingAsync(DbTransaction transaction, TransactionEventData eventData,
+            InterceptionResult result, CancellationToken cancellationToken = default) { Fail(false); return ValueTask.FromResult(result); }
+        public override Task TransactionCommittedAsync(DbTransaction transaction, TransactionEndEventData eventData,
+            CancellationToken cancellationToken = default) { Fail(true); return Task.CompletedTask; }
     }
     private sealed class Actor : ICurrentUserService
     {
