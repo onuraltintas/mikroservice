@@ -3,12 +3,45 @@ import { By } from '@angular/platform-browser';
 import { CoachingInstitutionAnalyticsComponent } from './coaching-institution-analytics.component';
 import { HttpErrorResponse, provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { of, throwError } from 'rxjs';
+import { of, Subject, throwError } from 'rxjs';
 import { vi } from 'vitest';
 import { CoachingInstitutionService, CoachingInstitutionStudent, CoachingInstitutionTeacher } from './coaching-institution.service';
 import { CoachingInstitutionWorkspaceComponent } from './coaching-institution-workspace.component';
 
 describe('CoachingInstitutionWorkspaceComponent', () => {
+  it('reassigns a roster student while preserving a valid grade and refreshes the roster', async () => {
+    const service = institutionService({ students: [student('student-1')], teachers: [teacher('teacher-1'), teacher('teacher-2')] });
+    const fixture = await createFixture(service); fixture.detectChanges();
+    const component = fixture.componentInstance; component.selectSection('students');
+    component.startStudentEdit(student('student-1'));
+    component.editStudentGrade = 9; component.editStudentTeacherId = 'teacher-2'; component.saveStudentEdit();
+    expect(service.updateStudent).toHaveBeenCalledWith('student-1', 9, 'teacher-2');
+    expect(service.getStudentRoster).toHaveBeenCalledTimes(2);
+    expect(component.editingStudentId()).toBeNull();
+  });
+
+  it('rejects invalid grade and blocks navigation and duplicate membership saves while pending', async () => {
+    const service = institutionService({ students: [student('student-1')] });
+    const fixture = await createFixture(service); fixture.detectChanges();
+    const component = fixture.componentInstance; component.selectSection('students'); component.startStudentEdit(student('student-1'));
+    component.editStudentGrade = 13; component.saveStudentEdit(); expect(service.updateStudent).not.toHaveBeenCalled();
+    component.editStudentGrade = 8;
+    const pending = new Subject<void>(); service.updateStudent.mockReturnValueOnce(pending);
+    component.saveStudentEdit(); component.saveStudentEdit(); component.selectSection('teachers');
+    expect(service.updateStudent).toHaveBeenCalledTimes(1); expect(component.activeSection()).toBe('students'); expect(component.canLeavePage()).toBe(false);
+    pending.complete(); expect(component.isMembershipSaving()).toBe(false);
+  });
+
+  it('confirms member removal and keeps authorization failures visible without clearing the roster', async () => {
+    const service = institutionService({ students: [student('student-1')], teachers: [teacher('teacher-1')] });
+    const fixture = await createFixture(service); fixture.detectChanges(); const component = fixture.componentInstance; component.selectSection('students');
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    component.removeStudent(student('student-1')); expect(service.removeStudent).not.toHaveBeenCalled();
+    confirm.mockReturnValue(true); service.removeStudent.mockReturnValueOnce(throwError(() => new HttpErrorResponse({ status: 403 })));
+    component.removeStudent(student('student-1')); expect(component.students().length).toBe(1); expect(component.membershipError()).toBeTruthy();
+    component.selectSection('teachers'); component.removeTeacher(teacher('teacher-1'));
+    expect(service.removeTeacher).toHaveBeenCalledWith('teacher-1'); expect(service.getTeacherRoster).toHaveBeenCalledTimes(3);
+  });
   it('opens scoped analysis only after selecting the institution analytics tab', async () => {
     const fixture = await createFixture(); fixture.detectChanges();
     const http = TestBed.inject(HttpTestingController);
@@ -240,6 +273,9 @@ function institutionService(options: { students?: CoachingInstitutionStudent[]; 
     getReadScope: vi.fn(() => of({ isGlobal: false, institutionId: 'institution-1' as string | null })),
     inviteTeacher: vi.fn(() => of({ invitationId: 'teacher-invitation-1' })),
     inviteStudent: vi.fn(() => of({ invitationId: 'student-invitation-1' })),
+    updateStudent: vi.fn(() => of(void 0)),
+    removeStudent: vi.fn(() => of(void 0)),
+    removeTeacher: vi.fn(() => of(void 0)),
     getOverview: vi.fn(() => of({
       totalAssignments: 12, activeAssignments: 4, completedAssignments: 8, cancelledAssignments: 0,
       totalAssignmentStudents: 30, submittedAssignmentStudents: 24, totalExams: 5, totalExamResults: 21,
