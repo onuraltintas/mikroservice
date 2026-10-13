@@ -47,4 +47,12 @@ describe('StudentStudyTodayComponent', () => {
     expect(component.title()).toBe('My plan');
     expect(service.get).toHaveBeenCalledTimes(2);
   });
+  it('shows the manual plan when availability returns an explicit null', () => {
+    const { component, service } = setup();
+    service.getAvailability.mockReturnValueOnce(of(null) as any);
+    component.load();
+    expect(component.error()).toBeNull();
+    expect(component.title()).toBe('My plan');
+    expect(component.timeZone()).toBe(Intl.DateTimeFormat().resolvedOptions().timeZone);
+  });
 });
