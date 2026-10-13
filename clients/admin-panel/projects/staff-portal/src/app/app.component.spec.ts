@@ -75,6 +75,19 @@ describe('Staff portal MFA flow', () => {
 });
 
 describe('Staff portal workspace role selection', () => {
+  it.each(['role', 'product', 'logout'])('preserves the teacher plan when %s navigation is declined', async transition => {
+    const auth = { products: signal<StaffProductAccess[]>([{ product: 'coaching', roles: ['Teacher', 'InstitutionAdmin'] }]),
+      activeProduct: signal<'coaching'>('coaching'), switchProduct: vi.fn().mockResolvedValue(undefined), logout: vi.fn().mockResolvedValue(undefined) };
+    const component = createComponent(auth);
+    component.selectWorkspaceRole('teacher');
+    component.coachingTeacherWorkspace = { canLeavePage: () => false } as any;
+    if (transition === 'role') component.selectWorkspaceRole('institution');
+    else if (transition === 'product') await component.switchProduct('speed-reading');
+    else await component.logout();
+    expect(component.activeWorkspaceRole).toBe('teacher');
+    expect(auth.switchProduct).not.toHaveBeenCalled();
+    expect(auth.logout).not.toHaveBeenCalled();
+  });
   it('defaults dual-role coaching accounts to the institution workspace without rendering both panels', () => {
     const component = createWorkspaceComponent();
 
