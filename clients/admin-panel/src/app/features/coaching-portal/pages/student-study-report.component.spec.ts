@@ -4,6 +4,47 @@ import { TestBed } from '@angular/core/testing';
 import { StudentStudyReportComponent } from './student-study-report.component';
 
 describe('StudentStudyReportComponent', () => {
+  const weeklyData = { fromDate: '2026-10-19', toDate: '2026-10-25', source: 'StudentReported', reason: 'CurrentStatusOfScheduledWork',
+    scheduledTasks: 2, completedTasks: 1, completionPercentage: 50, plannedMinutes: 90, actualMinutes: 40, topics: [] };
+  it('compares adjacent seven-day periods without treating missing actual minutes as zero', () => {
+    const { component, fixture, http } = setup(); component.fromDate = '2026-10-19'; component.toDate = '2026-10-25'; component.compareWeekly = true; component.load();
+    const current = http.expectOne(r => r.params.get('fromDate') === '2026-10-19');
+    const previous = http.expectOne(r => r.params.get('fromDate') === '2026-10-12' && r.params.get('toDate') === '2026-10-18');
+    current.flush({ success: true, data: weeklyData }); expect(component.report()).toBeNull();
+    previous.flush({ success: true, data: { ...weeklyData, fromDate: '2026-10-12', toDate: '2026-10-18', completedTasks: 0, completionPercentage: 0, actualMinutes: null } });
+    expect(component.previousReport()?.actualMinutes).toBeNull(); fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Önceki hafta'); expect(fixture.nativeElement.textContent).toContain('Kayıt yok');
+  });
+  it('rejects comparisons that are not seven days or have no valid previous week', () => {
+    const { component, http } = setup(); component.compareWeekly = true; component.fromDate = '2026-10-01'; component.toDate = '2026-10-14'; component.load();
+    http.expectNone(() => true); expect(component.error()).toBeTruthy();
+    component.fromDate = '0001-01-08'; component.toDate = '0001-01-14'; component.load();
+    http.expectNone(() => true); expect(component.error()).toBeTruthy(); expect(component.busy()).toBe(false);
+  });
+  it('cancels both weekly report requests when the selected staff student changes', () => {
+    const { component, fixture, http } = setup(); fixture.componentRef.setInput('staffStudentId', 'student-one'); fixture.detectChanges();
+    component.compareWeekly = true; component.fromDate = '2026-10-19'; component.toDate = '2026-10-25'; component.load();
+    const requests = http.match(r => r.url.endsWith('/staff/students/student-one/study/report')); expect(requests.length).toBe(2);
+    fixture.componentRef.setInput('staffStudentId', 'student-two'); fixture.detectChanges();
+    expect(requests.every(request => request.cancelled)).toBe(true); expect(component.previousReport()).toBeNull(); expect(component.report()).toBeNull();
+  });
+  it('clears both periods if either weekly request fails', () => {
+    const { component, http } = setup(); component.compareWeekly = true; component.fromDate = '2026-10-19'; component.toDate = '2026-10-25'; component.load();
+    http.expectOne(r => r.params.get('fromDate') === '2026-10-19').flush({ success: true, data: weeklyData });
+    http.expectOne(r => r.params.get('fromDate') === '2026-10-12').flush({}, { status: 403, statusText: 'Forbidden' });
+    expect(component.report()).toBeNull(); expect(component.previousReport()).toBeNull(); expect(component.busy()).toBe(false); expect(component.error()).toBeTruthy();
+  });
+  it('orders repeat priorities by wrong or empty question share and preserves their source', () => {
+    const { component, fixture } = setup(); component.report.set({ ...weeklyData, lessonResults: [
+      { source: 'StudentReported', examType: 'LGS', lessonName: 'Matematik', topicName: 'Kesirler', questionCount: 10, correct: 3, wrong: 4, empty: 3 },
+      { source: 'TeacherRecorded', examType: 'LGS', lessonName: 'Matematik', topicName: 'Geometri', questionCount: 20, correct: 14, wrong: 6, empty: 0 },
+      { source: 'StudentReported', examType: 'LGS', questionCount: 0, correct: 0, wrong: 0, empty: 0 },
+      { source: 'StudentReported', examType: 'LGS', questionCount: 10, correct: 10, wrong: 0, empty: 0 }
+    ] });
+    expect(component.priorities().map(topic => topic.topicName)).toEqual(['Kesirler', 'Geometri']); fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Tekrar öncelikleri'); expect(fixture.nativeElement.textContent).toContain('7 yanlış/boş / 10 soru');
+    expect(fixture.nativeElement.textContent).toContain('Öğretmen kaydı');
+  });
   it('uses the protected admin report endpoint and cancels it when student selection changes', () => {
     const { fixture, component, http } = setup();
     fixture.componentRef.setInput('adminStudentId', 'student-one'); fixture.detectChanges(); component.load();
