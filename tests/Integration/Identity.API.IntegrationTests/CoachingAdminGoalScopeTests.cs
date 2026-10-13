@@ -42,6 +42,7 @@ public sealed class CoachingAdminGoalScopeTests
             CancellationToken.None);
 
         ownResult.Should().NotBeNull();
+        ownResult!.Version.Should().Be(ownGoal.Version);
         otherResult.Should().BeNull();
         unscopedResult.Should().BeNull();
     }
