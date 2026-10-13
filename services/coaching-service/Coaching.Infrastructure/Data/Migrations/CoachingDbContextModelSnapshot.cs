@@ -998,6 +998,9 @@ namespace Coaching.Infrastructure.Data.Migrations
                     b.Property<int>("StudyPlanningRecordCount")
                         .HasColumnType("integer");
 
+                    b.Property<int>("FinanceRecordCount")
+                        .HasColumnType("integer");
+
                     b.Property<Guid>("SubjectUserId")
                         .HasColumnType("uuid");
 
@@ -1058,6 +1061,187 @@ namespace Coaching.Infrastructure.Data.Migrations
                         .IsUnique();
 
                     b.ToTable("CoachingErasureExecutions", "coaching");
+                });
+
+            modelBuilder.Entity("Coaching.Domain.Entities.CoachingFeeAgreement", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CancellationReason")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<DateTime?>("CancelledAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CancelledByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("CoachId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("InstitutionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsCancelled")
+                        .HasColumnType("boolean");
+
+                    b.Property<decimal>("PaidAmount")
+                        .HasPrecision(11, 2)
+                        .HasColumnType("numeric(11,2)");
+
+                    b.Property<Guid>("StudentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<decimal>("TotalAmount")
+                        .HasPrecision(11, 2)
+                        .HasColumnType("numeric(11,2)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StudentId");
+
+                    b.HasIndex("CoachId", "StudentId");
+
+                    b.HasIndex("InstitutionId", "StudentId");
+
+                    b.ToTable("fee_agreements", "coaching", t =>
+                        {
+                            t.HasCheckConstraint("ck_fee_amounts", "\"TotalAmount\" > 0 AND \"TotalAmount\" <= 999999999.99 AND \"PaidAmount\" BETWEEN 0 AND \"TotalAmount\"");
+
+                            t.HasCheckConstraint("ck_fee_cancelled", "NOT \"IsCancelled\" OR (\"PaidAmount\" = 0 AND \"CancelledAt\" IS NOT NULL AND \"CancelledByUserId\" IS NOT NULL AND \"CancellationReason\" IS NOT NULL)");
+
+                            t.HasCheckConstraint("ck_fee_owner", "(\"InstitutionId\" IS NOT NULL) <> (\"CoachId\" IS NOT NULL)");
+                        });
+                });
+
+            modelBuilder.Entity("Coaching.Domain.Entities.CoachingFeeInstallment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("AgreementId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(11, 2)
+                        .HasColumnType("numeric(11,2)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<DateOnly>("DueOn")
+                        .HasColumnType("date");
+
+                    b.Property<int>("Sequence")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DueOn");
+
+                    b.HasIndex("AgreementId", "Sequence")
+                        .IsUnique();
+
+                    b.ToTable("fee_installments", "coaching", t =>
+                        {
+                            t.HasCheckConstraint("ck_fee_installment", "\"Amount\" > 0 AND \"Amount\" <= 999999999.99 AND \"Sequence\" BETWEEN 1 AND 24");
+                        });
+                });
+
+            modelBuilder.Entity("Coaching.Domain.Entities.CoachingFeePayment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("AgreementId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(11, 2)
+                        .HasColumnType("numeric(11,2)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<int>("Method")
+                        .HasColumnType("integer");
+
+                    b.Property<DateOnly>("ReceivedOn")
+                        .HasColumnType("date");
+
+                    b.Property<Guid>("RecordedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Reference")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<Guid?>("ReversalOfPaymentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReversalOfPaymentId")
+                        .IsUnique()
+                        .HasFilter("\"ReversalOfPaymentId\" IS NOT NULL");
+
+                    b.HasIndex("AgreementId", "ReceivedOn");
+
+                    b.HasIndex("AgreementId", "ReversalOfPaymentId");
+
+                    b.ToTable("fee_payments", "coaching", t =>
+                        {
+                            t.HasCheckConstraint("ck_fee_payment_amount", "ABS(\"Amount\") BETWEEN 0.01 AND 999999999.99 AND ((\"ReversalOfPaymentId\" IS NULL AND \"Amount\" > 0) OR (\"ReversalOfPaymentId\" IS NOT NULL AND \"Amount\" < 0))");
+
+                            t.HasCheckConstraint("ck_fee_payment_method", "\"Method\" IN (1, 2)");
+                        });
                 });
 
             modelBuilder.Entity("Coaching.Domain.Entities.CoachingLegalHold", b =>
@@ -1297,7 +1481,7 @@ namespace Coaching.Infrastructure.Data.Migrations
 
                     b.ToTable("reminder_receipts", "coaching", t =>
                         {
-                            t.HasCheckConstraint("ck_reminder_kind", "\"Kind\" IN ('StudyDay', 'Session')");
+                            t.HasCheckConstraint("ck_reminder_kind", "\"Kind\" IN ('StudyDay', 'Session', 'FeeOverdue')");
                         });
                 });
 
@@ -2673,6 +2857,30 @@ namespace Coaching.Infrastructure.Data.Migrations
                     b.Navigation("AgreementDocument");
                 });
 
+            modelBuilder.Entity("Coaching.Domain.Entities.CoachingFeeInstallment", b =>
+                {
+                    b.HasOne("Coaching.Domain.Entities.CoachingFeeAgreement", null)
+                        .WithMany("Installments")
+                        .HasForeignKey("AgreementId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Coaching.Domain.Entities.CoachingFeePayment", b =>
+                {
+                    b.HasOne("Coaching.Domain.Entities.CoachingFeeAgreement", null)
+                        .WithMany("Payments")
+                        .HasForeignKey("AgreementId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Coaching.Domain.Entities.CoachingFeePayment", null)
+                        .WithMany()
+                        .HasForeignKey("AgreementId", "ReversalOfPaymentId")
+                        .HasPrincipalKey("AgreementId", "Id")
+                        .OnDelete(DeleteBehavior.NoAction);
+                });
+
             modelBuilder.Entity("Coaching.Domain.Entities.ExamResult", b =>
                 {
                     b.HasOne("Coaching.Domain.Entities.Exam", "Exam")
@@ -2755,6 +2963,13 @@ namespace Coaching.Infrastructure.Data.Migrations
             modelBuilder.Entity("Coaching.Domain.Entities.AssignmentStudent", b =>
                 {
                     b.Navigation("SubmissionAttachments");
+                });
+
+            modelBuilder.Entity("Coaching.Domain.Entities.CoachingFeeAgreement", b =>
+                {
+                    b.Navigation("Installments");
+
+                    b.Navigation("Payments");
                 });
 
             modelBuilder.Entity("Coaching.Domain.Entities.CoachingSession", b =>

@@ -4,6 +4,7 @@ import { Component, DestroyRef, EventEmitter, Input, OnInit, Output, ViewChild, 
 import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CoachingStaffStudyComponent } from './coaching-staff-study.component';
+import { CoachingFinanceComponent } from '../../../../../../src/app/features/coaching-portal/pages/coaching-finance.component';
 import { finalize } from 'rxjs';
 import {
   coachingHistoryCsv,
@@ -24,7 +25,7 @@ import {
 @Component({
   selector: 'staff-coaching-teacher-student-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, CoachingStaffStudyComponent],
+  imports: [CommonModule, FormsModule, CoachingStaffStudyComponent, CoachingFinanceComponent],
   templateUrl: './coaching-teacher-student-detail.component.html',
   styleUrl: './coaching-teacher-student-detail.component.scss'
 })
@@ -37,7 +38,13 @@ export class CoachingTeacherStudentDetailComponent implements OnInit {
   @Input({ required: true }) student!: CoachingTeacherStudent;
   @Output() readonly back = new EventEmitter<void>();
   @ViewChild(CoachingStaffStudyComponent) private study?: CoachingStaffStudyComponent;
-  canLeavePage(): boolean { return this.study?.canLeavePage() ?? true; }
+  @ViewChild(CoachingFinanceComponent) financePanel?: Pick<CoachingFinanceComponent, 'canLeavePage'>;
+  readonly financeVisible = signal(false);
+  canLeavePage(): boolean { return (this.financePanel?.canLeavePage() ?? true) && (this.study?.canLeavePage() ?? true); }
+  toggleFinance(): void {
+    if (this.financeVisible() && !(this.financePanel?.canLeavePage() ?? true)) return;
+    this.financeVisible.set(!this.financeVisible());
+  }
   goBack(): void { if (this.canLeavePage()) this.back.emit(); }
   toggleStudy(): void {
     if (this.studyVisible() && !this.canLeavePage()) return;

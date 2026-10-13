@@ -15,6 +15,11 @@ export const DASHBOARD_ROUTES: Routes = [
         data: { permission: ADMIN_PERMISSIONS.coachingView, role: 'SystemAdmin' },
         loadComponent: () => import('./pages/coaching-catalog').then(m => m.CoachingCatalogComponent)
     },
+      {
+        path: 'coaching/finance', canActivate: [permissionGuard],
+        data: { permission: ADMIN_PERMISSIONS.coachingView, role: 'SystemAdmin' },
+        loadComponent: () => import('./pages/coaching-finance').then(m => m.CoachingAdminFinanceComponent)
+      },
     {
         path: '',
         loadComponent: () => import('./pages/dashboard-home/dashboard-home').then(m => m.DashboardHomeComponent),

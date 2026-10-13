@@ -27,6 +27,7 @@
     }
 
     <nav class="institution-tabs" aria-label="Koçluk kurum işlemleri">
+      <button type="button" data-testid="institution-finance-tab" [attr.aria-pressed]="activeSection() === 'finance'" [class.active]="activeSection() === 'finance'" (click)="selectSection('finance')">Tahsilat hareketleri</button>
       <button type="button" data-testid="institution-overview-tab"
         [attr.aria-pressed]="activeSection() === 'overview'"
         [class.active]="activeSection() === 'overview'" (click)="selectSection('overview')">Genel bakış</button>
@@ -45,6 +46,7 @@
     @if (activeSection() === 'subscription') {
       <staff-coaching-institution-subscription [institutionId]="institutionId()!" />
     }
+    @if (activeSection() === 'finance') { <app-coaching-finance mode="staff" [cashView]="true" /> }
 
     @if (activeSection() === 'analytics') {
       <div class="analytics-container" [hidden]="!!selectedStudent() || !!selectedTeacher()">

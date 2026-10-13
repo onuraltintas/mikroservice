@@ -29,6 +29,9 @@ public class CoachingDbContext : DbContext
     public DbSet<StudyPlanTask> StudyPlanTasks => Set<StudyPlanTask>();
     public DbSet<StudyAvailability> StudyAvailability => Set<StudyAvailability>();
     public DbSet<CoachingReminderReceipt> CoachingReminderReceipts => Set<CoachingReminderReceipt>();
+    public DbSet<CoachingFeeAgreement> CoachingFeeAgreements => Set<CoachingFeeAgreement>();
+    public DbSet<CoachingFeeInstallment> CoachingFeeInstallments => Set<CoachingFeeInstallment>();
+    public DbSet<CoachingFeePayment> CoachingFeePayments => Set<CoachingFeePayment>();
     public DbSet<Assignment> Assignments => Set<Assignment>();
     public DbSet<AssignmentStudent> AssignmentStudents => Set<AssignmentStudent>();
     public DbSet<AssignmentSubmissionAttachment> AssignmentSubmissionAttachments => Set<AssignmentSubmissionAttachment>();
@@ -319,6 +322,12 @@ public class CoachingDbContext : DbContext
 
     private void AdvanceConcurrencyTokens()
     {
+        var deletedFees = ChangeTracker.Entries<CoachingFeeAgreement>().Where(x => x.State == EntityState.Deleted).Select(x => x.Entity.Id).ToHashSet();
+        if (ChangeTracker.Entries().Any(x => x.Entity is CoachingFeePayment payment
+                && (x.State == EntityState.Modified || x.State == EntityState.Deleted && !deletedFees.Contains(payment.AgreementId))
+            || x.Entity is CoachingFeeInstallment installment
+                && (x.State == EntityState.Modified || x.State == EntityState.Deleted && !deletedFees.Contains(installment.AgreementId))))
+            throw new InvalidOperationException("Fee installments and receipts are immutable; cancel or reverse instead.");
         foreach (var entry in ChangeTracker.Entries<AggregateRoot>())
         {
             if (entry.State != EntityState.Modified)

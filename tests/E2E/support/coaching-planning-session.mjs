@@ -10,6 +10,9 @@ export const planningStudent = 'dba472ec-a13e-453b-af7f-fec507c08817';
 export const planningTeacher = '5ca5cb1c-b825-4d42-a378-0289b3f0a801';
 export const planningManager = 'd7b42a6f-9284-435b-9e7e-40bef7f730f5';
 export const planningInstitution = '9dc2d193-f024-4e86-b102-76a1c83165c7';
+export const planningIndependentTeacher = '10876a7f-50f5-43bd-afc6-5c787d4d8c9a';
+export const planningIndependentStudent = '1d012718-05bb-4c74-9fc5-7939bf3b1eb6';
+export const planningFinanceReminderStudent = 'cf2123e1-dc59-4a26-b0b8-29dc589e4d65';
 const key = 'local-planning-e2e-signing-key-20261002-never-use-in-production-123456789';
 const internalKey = 'local-planning-e2e-internal-key-never-use-in-production-123456789';
 export function planningToken(userId = planningStudent, roles = ['Student'], product = 'coaching') {
@@ -54,11 +57,13 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
         const payload = JSON.parse(Buffer.concat(chunks).toString());
         let result;
         if (request.url.endsWith('/authorize')) {
-          assert.equal(payload.teacherId, planningTeacher);
-          assert.ok(Array.isArray(payload.studentIds) && payload.studentIds.length === 1 && payload.studentIds[0] === planningStudent);
+          const independent = payload.teacherId === planningIndependentTeacher;
+          assert.ok(independent || payload.teacherId === planningTeacher);
+          assert.ok(Array.isArray(payload.studentIds) && payload.studentIds.length === 1 && (independent
+            ? [planningIndependentStudent, planningFinanceReminderStudent].includes(payload.studentIds[0]) : payload.studentIds[0] === planningStudent));
           assert.equal(typeof payload.isSystemAdministrator, 'boolean');
-          assert.ok(payload.institutionId == null || payload.institutionId === planningInstitution);
-          result = { institutionId: planningInstitution };
+          assert.ok(payload.institutionId == null || !independent && payload.institutionId === planningInstitution);
+          result = { institutionId: independent ? null : planningInstitution };
         } else {
           assert.equal(payload.viewerUserId, planningManager);
           if (request.url.endsWith('/report-students') || request.url.endsWith('/report-student-page')) {
@@ -90,7 +95,8 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
         assert.ok(Array.isArray(payload.studentIds) && payload.studentIds.length <= 100);
         response.writeHead(200, { 'content-type': 'application/json' });
         response.end(JSON.stringify({ allowedStudentUserIds: payload.studentIds.filter(id => id === payload.viewerUserId
-          || id === planningStudent && [planningTeacher, planningManager].includes(payload.viewerUserId)) }));
+          || id === planningStudent && [planningTeacher, planningManager].includes(payload.viewerUserId)
+          || [planningIndependentStudent, planningFinanceReminderStudent].includes(id) && payload.viewerUserId === planningIndependentTeacher) }));
       } catch { response.writeHead(400); response.end(); }
       return;
     }

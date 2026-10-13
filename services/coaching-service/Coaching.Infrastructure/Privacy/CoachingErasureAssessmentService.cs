@@ -48,6 +48,9 @@ public sealed class CoachingErasureAssessmentService(
             + await CoachingStudyPlanErasureMessages.ForStudent(context, message.SubjectUserId).CountAsync(cancellationToken)
             + await context.CoachingReminderReceipts.CountAsync(x => x.RecipientUserId == message.SubjectUserId, cancellationToken);
 
+        var financeCount = await context.CoachingFeeAgreements.CountAsync(x => x.StudentId == message.SubjectUserId, cancellationToken)
+            + await context.CoachingFeeInstallments.CountAsync(x => context.CoachingFeeAgreements.Any(fee => fee.Id == x.AgreementId && fee.StudentId == message.SubjectUserId), cancellationToken)
+            + await context.CoachingFeePayments.CountAsync(x => context.CoachingFeeAgreements.Any(fee => fee.Id == x.AgreementId && fee.StudentId == message.SubjectUserId), cancellationToken);
         var assessment = CoachingErasureAssessment.Create(
             message.RequestId,
             message.SubjectUserId,
@@ -59,7 +62,7 @@ public sealed class CoachingErasureAssessmentService(
             goalCount,
             sessionCount,
             agreementCount,
-            assessedAt, planningCount);
+            assessedAt, planningCount, financeCount);
         context.CoachingErasureAssessments.Add(assessment);
         await context.SaveChangesAsync(cancellationToken);
         return assessment;

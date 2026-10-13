@@ -24,6 +24,8 @@ public sealed class CoachingErasureExecutionService(
         {
             var key = "coaching-study-plan:" + message.SubjectUserId;
             await context.Database.ExecuteSqlInterpolatedAsync($"SELECT pg_advisory_xact_lock(hashtextextended({key}, 0))", cancellationToken);
+            var financeKey = "coaching-finance:" + message.SubjectUserId;
+            await context.Database.ExecuteSqlInterpolatedAsync($"SELECT pg_advisory_xact_lock(hashtextextended({financeKey}, 0))", cancellationToken);
             await context.Database.ExecuteSqlRawAsync("SELECT pg_advisory_xact_lock(hashtextextended('coaching-session-scheduling', 0))", cancellationToken);
             return await ExecuteLockedAsync(message, cancellationToken);
         }
@@ -83,6 +85,10 @@ public sealed class CoachingErasureExecutionService(
         var studyAvailability = await context.StudyAvailability.Where(x => x.StudentId == message.SubjectUserId).ToListAsync(cancellationToken);
         var studyMessages = await CoachingStudyPlanErasureMessages.ForStudent(context, message.SubjectUserId).ToListAsync(cancellationToken);
         var reminders = await context.CoachingReminderReceipts.Where(x => x.RecipientUserId == message.SubjectUserId).ToListAsync(cancellationToken);
+        var fees = await context.CoachingFeeAgreements.Where(x => x.StudentId == message.SubjectUserId).ToListAsync(cancellationToken);
+        var financeCount = fees.Count
+            + await context.CoachingFeeInstallments.CountAsync(x => context.CoachingFeeAgreements.Any(fee => fee.Id == x.AgreementId && fee.StudentId == message.SubjectUserId), cancellationToken)
+            + await context.CoachingFeePayments.CountAsync(x => context.CoachingFeeAgreements.Any(fee => fee.Id == x.AgreementId && fee.StudentId == message.SubjectUserId), cancellationToken);
         var goals = await context.AcademicGoals
             .Where(row => row.StudentId == message.SubjectUserId)
             .ToListAsync(cancellationToken);
@@ -96,7 +102,7 @@ public sealed class CoachingErasureExecutionService(
         var deletedRecordCount = attachments.Count
             + assignmentStudents.Count
             + examResults.Count
-            + studentExams.Count + studyTasks.Count + studyPlans.Count + studyAvailability.Count + studyMessages.Count + reminders.Count
+            + studentExams.Count + studyTasks.Count + studyPlans.Count + studyAvailability.Count + studyMessages.Count + reminders.Count + financeCount
             + goals.Count
             + attendances.Count
             + acknowledgements.Count;
@@ -112,6 +118,7 @@ public sealed class CoachingErasureExecutionService(
         context.StudyAvailability.RemoveRange(studyAvailability);
         context.RemoveRange(studyMessages);
         context.CoachingReminderReceipts.RemoveRange(reminders);
+        context.CoachingFeeAgreements.RemoveRange(fees);
         context.AcademicGoals.RemoveRange(goals);
         context.SessionAttendances.RemoveRange(attendances);
         context.CoachingAgreementAcknowledgements.RemoveRange(acknowledgements);

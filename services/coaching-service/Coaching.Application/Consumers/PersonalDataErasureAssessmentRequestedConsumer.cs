@@ -36,7 +36,7 @@ public sealed class PersonalDataErasureAssessmentRequestedConsumer(
                     ["Assignments"] = assessment.AssignmentCount, ["Attachments"] = assessment.AttachmentCount,
                     ["ExamResults"] = assessment.ExamResultCount, ["Goals"] = assessment.GoalCount,
                     ["Sessions"] = assessment.SessionCount, ["Agreements"] = assessment.AgreementCount,
-                    ["StudyPlanning"] = assessment.StudyPlanningRecordCount }),
+                    ["StudyPlanning"] = assessment.StudyPlanningRecordCount, ["Finance"] = assessment.FinanceRecordCount }),
             publishContext =>
             {
                 publishContext.MessageId = assessment.Id;

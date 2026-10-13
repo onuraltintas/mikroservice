@@ -19,7 +19,8 @@ public sealed record CoachingDataExportDto(
     IReadOnlyList<CoachingDataAgreementDto> Agreements,
     IReadOnlyList<CoachingDataStudyPlanDto>? StudyPlans = null,
     Coaching.Application.StudyPlanning.StudyAvailabilityView? StudyAvailability = null,
-    IReadOnlyList<CoachingDataReminderDto>? Reminders = null)
+    IReadOnlyList<CoachingDataReminderDto>? Reminders = null,
+    IReadOnlyList<CoachingDataFeeDto>? Fees = null)
 {
     public static CoachingDataExportDto Empty(Guid studentId, DateTimeOffset exportedAt) =>
         new("1.0", studentId, exportedAt, [], [], [], [], []);
@@ -53,6 +54,11 @@ public sealed record CoachingDataAgreementDto(
     string Title, string DocumentReference, string ContentSha256, string PartyRole,
     DateTime AcknowledgedAt, DateTime? WithdrawnAt);
 public sealed record CoachingDataReminderDto(Guid Id, Guid SourceId, string Kind, DateTime DueAt, DateTime QueuedAt);
+public sealed record CoachingDataFeeInstallmentDto(Guid Id, int Sequence, DateOnly DueOn, decimal Amount);
+public sealed record CoachingDataFeeDto(Guid Id, Guid? InstitutionId, Guid? CoachId, Guid CreatedByUserId, string Title,
+    string Currency, decimal TotalAmount, decimal PaidAmount, bool IsCancelled, Guid? CancelledByUserId,
+    string? CancellationReason, DateTime? CancelledAt, DateTime CreatedAt,
+    IReadOnlyList<CoachingDataFeeInstallmentDto> Installments, IReadOnlyList<Coaching.Application.Finance.CoachingFeePaymentView> Payments);
 
 public sealed class ExportCoachingDataQueryHandler(
     ICoachingDataExportRepository repository,

@@ -224,6 +224,11 @@ export class SidebarComponent {
             route: '/dashboard/coaching/subscriptions',
             permission: ADMIN_PERMISSIONS.coachingSubscriptionManage,
             icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5m-18 0 1.5 12h13.5l1.5-12M6.75 5.25h10.5m-9-3h7.5" /></svg>'
+            },
+            {
+              label: 'Ücret ve tahsilat denetimi', route: '/dashboard/coaching/finance',
+              permission: ADMIN_PERMISSIONS.coachingView, role: 'SystemAdmin',
+              icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M4 5h16v14H4zM8 9h8M8 13h8" /></svg>'
           }
         ]
       });
@@ -362,6 +367,7 @@ export class SidebarComponent {
       '/dashboard/coaching/cms': ADMIN_PERMISSIONS.coachingContentManage,
       '/dashboard/coaching/catalog': ADMIN_PERMISSIONS.coachingView,
       '/dashboard/coaching/subscriptions': ADMIN_PERMISSIONS.coachingSubscriptionManage,
+      '/dashboard/coaching/finance': ADMIN_PERMISSIONS.coachingView,
       '/dashboard/speed-reading': ADMIN_PERMISSIONS.speedReadingView,
       '/dashboard/speed-reading/analytics': ADMIN_PERMISSIONS.speedReadingPlatformAnalytics,
       '/dashboard/speed-reading/progress': ADMIN_PERMISSIONS.speedReadingProgressView,

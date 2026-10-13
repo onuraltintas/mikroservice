@@ -1,0 +1,110 @@
+<section class="finance" aria-label="Koçluk ücret takibi">
+  <header><div><h2>{{ cashView ? 'Tahsilat hareketleri' : mode === 'student' ? 'Ücretlerim' : 'Öğrenci ücret hesabı' }}</h2>
+    <p>Koçluk ücretleri ve manuel tahsilat kayıtları. Tutarlar Türk lirasıdır.</p></div>
+    @if (!cashView) { <button type="button" [disabled]="pending() || loading()" (click)="loadAccount(account()?.pageNumber ?? 1)">Yenile</button> }
+  </header>
+  @if (notice()) { <p role="status" class="success">{{ notice() }}</p> }
+  @if (error()) { <p role="alert" class="error">{{ error() }}</p>
+    @if (conflict()) { <button type="button" [disabled]="pending() || loading()" (click)="reloadConflict()">Güncel ücret kaydını yükle</button> }
+    @else if (!form()) { <button type="button" [disabled]="loading()" (click)="cashView ? loadCash() : loadAccount()">Yeniden dene</button> }
+  }
+  @if (loading()) { <p role="status">Kayıtlar yükleniyor…</p> }
+  @if (cashView && mode !== 'student') {
+    <section class="history"><header><h3>Açık ücretler</h3><button type="button" [disabled]="pending() || receivablesLoading()" (click)="loadReceivables()">Açık ücretleri yenile</button></header>
+      @if (receivablesLoading()) { <p role="status">Açık ücretler yükleniyor…</p> }
+      @if (receivablesError()) { <p role="alert" class="error">{{ receivablesError() }}</p> }
+      @if (receivables(); as openFees) {
+        <div class="totals"><p>Açık borç toplamı<strong>{{ currency(openFees.balance) }}</strong></p><p class="overdue">Vadesi geçen<strong>{{ currency(openFees.overdueAmount) }}</strong></p></div>
+        <p class="hint">Geçmiş öğrenci ilişkilerine ait açık ücretler de dâhildir.</p>
+        @for (fee of openFees.items; track fee.id) { <article class="row"><div><h3>{{ fee.title }}</h3><p>Kalan: {{ currency(fee.balance) }} · Vadesi geçen: {{ currency(fee.overdueAmount) }}</p></div><button type="button" [attr.data-open-receivable]="fee.id" [disabled]="pending() || loading()" (click)="openAccount(fee.studentId)">Ücret hesabını aç</button></article> }
+        @empty { <p>Açık ücret bulunmuyor.</p> }
+        <nav class="row" aria-label="Açık ücret sayfaları"><span>{{ openFees.totalCount }} ücret · {{ openFees.pageNumber }}. sayfa</span><button type="button" [disabled]="openFees.pageNumber <= 1 || receivablesLoading() || pending()" (click)="loadReceivables(openFees.pageNumber - 1)">Önceki</button><button type="button" [disabled]="openFees.pageNumber * openFees.pageSize >= openFees.totalCount || receivablesLoading() || pending()" (click)="loadReceivables(openFees.pageNumber + 1)">Sonraki</button></nav>
+      }
+    </section>
+    <form class="row" (ngSubmit)="loadCash()">
+      <label>Başlangıç<input type="date" name="cashFrom" [(ngModel)]="fromDate" [disabled]="pending() || loading()"></label>
+      <label>Bitiş<input type="date" name="cashTo" [(ngModel)]="toDate" [disabled]="pending() || loading()"></label>
+      <button type="submit" [disabled]="pending() || loading()">Hareketleri göster</button>
+    </form>
+    @if (cash(); as statement) {
+      <div class="totals"><p>Nakit net tahsilat<strong>{{ currency(statement.cashTotal) }}</strong></p><p>Havale net tahsilat<strong>{{ currency(statement.bankTransferTotal) }}</strong></p></div>
+      <p class="hint">Düzeltme kayıtları negatif tutarla toplamdan düşülür. Bu ekran banka bakiyesi göstermez.</p>
+      <div class="records">
+        @for (payment of statement.items; track payment.id) {
+          <article class="row"><div><strong>{{ currency(payment.amount) }}</strong><p>{{ payment.receivedOn | date:'dd.MM.yyyy' }} · {{ paymentMethod(payment.method) }} · {{ payment.reversalOfPaymentId ? 'Tahsilat düzeltmesi' : 'Tahsilat' }}</p><p class="wrap">{{ payment.reference }}</p></div>
+            <button type="button" [disabled]="pending() || loading()" (click)="openCashAccount(payment)">Ücret hesabını aç</button>
+          </article>
+        } @empty { <p>Bu tarih aralığında tahsilat yok.</p> }
+      </div>
+      <nav class="row" aria-label="Tahsilat sayfaları"><span>{{ statement.totalCount }} hareket · {{ statement.pageNumber }}. sayfa</span><button type="button" [disabled]="statement.pageNumber <= 1 || loading() || pending()" (click)="loadCash(statement.pageNumber - 1)">Önceki</button><button type="button" [disabled]="statement.pageNumber * statement.pageSize >= statement.totalCount || loading() || pending()" (click)="loadCash(statement.pageNumber + 1)">Sonraki</button></nav>
+    }
+  }
+  @if (account(); as summary) {
+    <div class="totals"><p>Toplam ücret<strong>{{ currency(summary.totalAmount) }}</strong></p><p>Net tahsilat<strong>{{ currency(summary.paidAmount) }}</strong></p><p>Kalan borç<strong>{{ currency(summary.balance) }}</strong></p><p class="overdue">Vadesi geçen<strong>{{ currency(summary.overdueAmount) }}</strong></p></div>
+    @if (canCreate()) { <button data-create-fee type="button" [disabled]="pending() || loading()" (click)="openCreate()">Ücret ve taksit oluştur</button> }
+    @if (canManage() && !canCreate()) { <p class="hint">Geçmiş ücretler için tahsilat ve düzeltme yapabilirsiniz. Yeni ücret için aktif öğrenci ilişkisi gerekir.</p> }
+    <div class="records">
+      @for (fee of summary.agreements; track fee.id) {
+        <article class="fee" [attr.data-fee-id]="fee.id">
+          <header><div><h3>{{ fee.title }}</h3><p>{{ fee.isCancelled ? 'İptal edildi' : fee.balance === 0 ? 'Borç kapandı' : 'Açık ücret' }} · {{ fee.institutionId ? 'Kurum koçluğu' : 'Bağımsız koçluk' }}</p></div><strong>{{ currency(fee.totalAmount) }}</strong></header>
+          <p>Tahsilat: {{ currency(fee.paidAmount) }} · Kalan: {{ currency(fee.balance) }}</p>
+          @if (fee.isCancelled) { <p class="wrap">İptal gerekçesi: {{ fee.cancellationReason }}</p> }
+          @else {
+            <ol class="installments">@for (part of fee.installments; track part.id) {
+              <li [class.overdue]="part.isOverdue"><span>{{ part.sequence }}. taksit · {{ part.dueOn | date:'dd.MM.yyyy' }}</span><span>{{ currency(part.amount) }} · Kalan {{ currency(part.balance) }}{{ part.isOverdue ? ' · Vadesi geçti' : '' }}</span></li>
+            }</ol>
+          }
+          <div class="row">
+            <button type="button" [disabled]="pending() || loading()" (click)="loadHistory(fee)">Tahsilat geçmişi</button>
+            @if (canManage() && !fee.isCancelled) {
+              @if (fee.balance > 0) { <button data-pay-fee type="button" [disabled]="pending() || loading()" (click)="openPayment(fee)">Tahsilat kaydet</button> }
+              @if (fee.paidAmount === 0) { <button type="button" [disabled]="pending() || loading()" (click)="openCancel(fee)">Ücreti iptal et</button> }
+            }
+          </div>
+        </article>
+      } @empty { <p>Ücret kaydı bulunmuyor.</p> }
+    </div>
+    <nav class="row" aria-label="Ücret sayfaları"><span>{{ summary.totalCount }} ücret · {{ summary.pageNumber }}. sayfa</span><button type="button" [disabled]="summary.pageNumber <= 1 || loading() || pending()" (click)="loadAccount(summary.pageNumber - 1)">Önceki</button><button type="button" [disabled]="summary.pageNumber * summary.pageSize >= summary.totalCount || loading() || pending()" (click)="loadAccount(summary.pageNumber + 1)">Sonraki</button></nav>
+  }
+  @if (historyFee(); as selectedFee) {
+    <section class="history"><h3>{{ selectedFee.title }} · Tahsilat geçmişi</h3>
+      @if (historyLoading()) { <p role="status">Tahsilatlar yükleniyor…</p> }
+      @if (historyError()) { <p role="alert" class="error">{{ historyError() }}</p><button type="button" [disabled]="historyLoading() || pending()" (click)="loadHistory(selectedFee)">Geçmişi yeniden yükle</button> }
+      @if (history(); as payments) {
+        @for (payment of payments.items; track payment.id) {
+          <article class="row receipt" [attr.data-payment-id]="payment.id"><div><strong>{{ currency(payment.amount) }}</strong><p>{{ payment.receivedOn | date:'dd.MM.yyyy' }} · {{ paymentMethod(payment.method) }} · {{ payment.reversalOfPaymentId ? 'Düzeltme' : 'Tahsilat' }}</p><p class="wrap">{{ payment.reference }}</p></div>
+            @if (canManage() && !selectedFee.isCancelled && payment.amount > 0) { <button type="button" [disabled]="pending() || loading()" (click)="openReverse(selectedFee, payment)">Tahsilatı düzelt</button> }
+          </article>
+        } @empty { <p>Tahsilat kaydı yok.</p> }
+        <nav class="row" aria-label="Tahsilat geçmişi sayfaları"><span>{{ payments.totalCount }} hareket · {{ payments.pageNumber }}. sayfa</span><button type="button" [disabled]="payments.pageNumber <= 1 || historyLoading() || pending()" (click)="loadHistory(selectedFee, payments.pageNumber - 1)">Önceki</button><button type="button" [disabled]="payments.pageNumber * payments.pageSize >= payments.totalCount || historyLoading() || pending()" (click)="loadHistory(selectedFee, payments.pageNumber + 1)">Sonraki</button></nav>
+      }
+    </section>
+  }
+  @if (form(); as kind) {
+    <form class="entry" (ngSubmit)="submit()" aria-label="Manuel ücret işlemi">
+      <h3>{{ kind === 'create' ? 'Yeni ücret ve taksitler' : kind === 'payment' ? 'Manuel tahsilat' : kind === 'reverse' ? 'Tahsilat düzeltmesi' : 'Ücret iptali' }}</h3>
+      <p class="hint">{{ kind === 'payment' ? 'Daha önce alınan tutarı kaydedin. Bu işlem bankadan para çekmez.' : kind === 'reverse' ? 'İlk kayıt korunur; aynı tutarda negatif bir düzeltme eklenir.' : kind === 'cancel' ? 'Net tahsilatı sıfır olan ücret iptal edilir; geçmiş korunur.' : 'Taksit tutarlarının toplamı ücrete eşit olmalıdır.' }}</p>
+      <fieldset [disabled]="pending() || attempted()">
+        @if (kind === 'create') {
+          <label>Ücret başlığı<input name="feeTitle" [(ngModel)]="title" maxlength="200" required></label>
+          <label>Toplam ücret (₺)<input name="feeTotal" type="number" [(ngModel)]="amount" min="0.01" max="999999999.99" step="0.01" required></label>
+          @for (part of installments; track $index) {
+            <div class="row"><label>{{ $index + 1 }}. taksit vadesi<input [name]="'due' + $index" type="date" [(ngModel)]="part.dueOn" required></label><label>Tutar (₺)<input [name]="'part' + $index" type="number" [(ngModel)]="part.amount" min="0.01" step="0.01" required></label><button type="button" [disabled]="installments.length <= 1" (click)="removeInstallment($index)">Taksiti çıkar</button></div>
+          }
+          <button type="button" [disabled]="installments.length >= 24" (click)="addInstallment()">Taksit ekle</button>
+        }
+        @if (kind === 'payment') {
+          <label>Tahsilat tutarı (₺)<input name="receiptAmount" type="number" [(ngModel)]="amount" min="0.01" step="0.01" required></label>
+          <label>Yöntem<select name="receiptMethod" [(ngModel)]="method"><option value="Cash">Nakit</option><option value="BankTransfer">Banka havalesi</option></select></label>
+          <label>Açıklama / referans<input name="receiptReference" [(ngModel)]="reference" maxlength="300"></label>
+        }
+        @if (kind === 'payment' || kind === 'reverse') { <label>İşlem tarihi<input name="receiptDate" type="date" [(ngModel)]="receivedOn" [max]="today()" required></label> }
+        @if (kind === 'reverse' || kind === 'cancel') {
+          <label>Gerekçe<textarea name="financeReason" [(ngModel)]="reason" maxlength="300" required></textarea></label>
+          <label class="check"><input type="checkbox" name="confirmFinance" [(ngModel)]="confirmed">Bu {{ kind === 'reverse' ? 'düzeltmeyi' : 'iptali' }} onaylıyorum.</label>
+        }
+      </fieldset>
+      <div class="row"><button type="submit" [disabled]="pending() || conflict() || loading()">{{ pending() ? 'Kaydediliyor…' : attempted() ? 'Aynı işlemi yeniden dene' : 'Kaydet' }}</button><button type="button" [disabled]="pending()" (click)="closeForm()">İşlemden çık</button></div>
+    </form>
+  }
+</section>

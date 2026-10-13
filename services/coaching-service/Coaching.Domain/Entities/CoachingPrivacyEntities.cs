@@ -72,6 +72,7 @@ public sealed class CoachingErasureAssessment : AggregateRoot
     public int SessionCount { get; private set; }
     public int AgreementCount { get; private set; }
     public int StudyPlanningRecordCount { get; private set; }
+    public int FinanceRecordCount { get; private set; }
     public DateTime AssessedAt { get; private set; }
 
     private CoachingErasureAssessment() { }
@@ -89,7 +90,7 @@ public sealed class CoachingErasureAssessment : AggregateRoot
         int sessionCount,
         int agreementCount,
         DateTime assessedAt,
-        int studyPlanningRecordCount = 0)
+        int studyPlanningRecordCount = 0, int financeRecordCount = 0)
     {
         if (requestId == Guid.Empty || subjectUserId == Guid.Empty)
             throw new ArgumentException("Request and subject are required.");
@@ -112,6 +113,7 @@ public sealed class CoachingErasureAssessment : AggregateRoot
             SessionCount = sessionCount,
             AgreementCount = agreementCount,
             StudyPlanningRecordCount = studyPlanningRecordCount,
+            FinanceRecordCount = financeRecordCount,
             AssessedAt = assessedAt,
             CreatedAt = assessedAt
         };

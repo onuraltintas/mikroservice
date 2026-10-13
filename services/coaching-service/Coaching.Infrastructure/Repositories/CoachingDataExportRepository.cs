@@ -3,6 +3,8 @@ using Coaching.Application.Queries.ExportCoachingData;
 using Coaching.Domain.Enums;
 using Coaching.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
+using System.Data;
 
 namespace Coaching.Infrastructure.Repositories;
 
@@ -13,6 +15,20 @@ public sealed class CoachingDataExportRepository(CoachingDbContext context)
         Guid studentId,
         DateTimeOffset exportedAt,
         CancellationToken cancellationToken)
+    {
+        if (!context.Database.IsRelational()) return await ExportSnapshotAsync(studentId, exportedAt, cancellationToken);
+        if (context.Database.CurrentTransaction is { } current) {
+            if (current.GetDbTransaction().IsolationLevel is not (IsolationLevel.RepeatableRead or IsolationLevel.Serializable))
+                throw new InvalidOperationException("Coaching exports require a consistent read snapshot.");
+            return await ExportSnapshotAsync(studentId, exportedAt, cancellationToken);
+        }
+        return await context.Database.CreateExecutionStrategy().ExecuteAsync(async () => {
+            await using var transaction = await context.Database.BeginTransactionAsync(IsolationLevel.RepeatableRead, cancellationToken);
+            return await ExportSnapshotAsync(studentId, exportedAt, cancellationToken);
+        });
+    }
+
+    private async Task<CoachingDataExportDto> ExportSnapshotAsync(Guid studentId, DateTimeOffset exportedAt, CancellationToken cancellationToken)
     {
         var assignmentRows = await context.AssignmentStudents
             .AsNoTracking()
@@ -87,7 +103,14 @@ public sealed class CoachingDataExportRepository(CoachingDbContext context)
         var reminders = await context.CoachingReminderReceipts.AsNoTracking().Where(x => x.RecipientUserId == studentId)
             .OrderBy(x => x.CreatedAt).ThenBy(x => x.Id)
             .Select(x => new CoachingDataReminderDto(x.Id, x.SourceId, x.Kind, x.DueAt, x.CreatedAt)).ToListAsync(cancellationToken);
+        var feeRows = await context.CoachingFeeAgreements.AsNoTracking().Where(x => x.StudentId == studentId)
+            .Include(x => x.Installments).Include(x => x.Payments).AsSplitQuery().OrderBy(x => x.CreatedAt).ThenBy(x => x.Id).ToListAsync(cancellationToken);
+        var fees = feeRows.Select(x => new CoachingDataFeeDto(x.Id, x.InstitutionId, x.CoachId, x.CreatedByUserId, x.Title,
+            "TRY", x.TotalAmount, x.PaidAmount, x.IsCancelled, x.CancelledByUserId, x.CancellationReason, x.CancelledAt, x.CreatedAt,
+            x.Installments.OrderBy(i => i.Sequence).Select(i => new CoachingDataFeeInstallmentDto(i.Id, i.Sequence, i.DueOn, i.Amount)).ToArray(),
+            x.Payments.OrderBy(p => p.CreatedAt).ThenBy(p => p.Id).Select(p => new Coaching.Application.Finance.CoachingFeePaymentView(p.Id,
+                x.Id, x.StudentId, p.RecordedByUserId, p.ReversalOfPaymentId, p.Method, p.Amount, p.ReceivedOn, p.Reference, p.CreatedAt)).ToArray())).ToArray();
         return new CoachingDataExportDto(
-            "1.2", studentId, exportedAt, assignments, exams, goals, sessions, agreements, plans, availability, reminders);
+            "1.3", studentId, exportedAt, assignments, exams, goals, sessions, agreements, plans, availability, reminders, fees);
     }
 }

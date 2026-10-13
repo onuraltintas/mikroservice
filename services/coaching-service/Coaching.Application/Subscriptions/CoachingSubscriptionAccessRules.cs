@@ -8,7 +8,8 @@ public static class CoachingSubscriptionAccessRules
         "subscription-plans",
         "subscriptions",
         "bank-transfer",
-        "payment"
+        "payment",
+        "finance"
     };
 
     private static readonly HashSet<string> LearningSections = new(StringComparer.OrdinalIgnoreCase)

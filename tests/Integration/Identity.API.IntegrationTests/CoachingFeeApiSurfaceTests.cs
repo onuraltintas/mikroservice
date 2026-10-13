@@ -13,7 +13,7 @@ public sealed class CoachingFeeApiSurfaceTests
     {
         foreach (var name in new[] { nameof(CoachingFeesController.Create), nameof(CoachingFeesController.Pay), nameof(CoachingFeesController.Reverse), nameof(CoachingFeesController.Cancel) }) {
             var method = typeof(CoachingFeesController).GetMethod(name)!;
-            var roles = Assert.Single(method.GetCustomAttributes(typeof(AuthorizeAttribute), false).Cast<AuthorizeAttribute>()).Roles!;
+            var roles = Assert.Single(method.GetCustomAttributes(typeof(AuthorizeAttribute), false).Cast<AuthorizeAttribute>().Where(x => x.Roles is not null)).Roles!;
             Assert.Contains("InstitutionOwner", roles); Assert.Contains("Teacher", roles); Assert.DoesNotContain("Student", roles); Assert.DoesNotContain("SystemAdmin", roles);
             Assert.Single(method.GetCustomAttributes(typeof(MfaCategoryAttribute), false));
             Assert.Single(method.GetCustomAttributes(typeof(RequestSizeLimitAttribute), false));
@@ -27,7 +27,7 @@ public sealed class CoachingFeeApiSurfaceTests
     public void AdminFinancialReviewIsReadOnlyAndRequiresPermissionAndMfa()
     {
         var controller = typeof(CoachingAdminFeesController);
-        Assert.Contains("SystemAdmin", controller.GetCustomAttributes(typeof(AuthorizeAttribute), false).Cast<AuthorizeAttribute>().Single().Roles!);
+        Assert.Contains("SystemAdmin", controller.GetCustomAttributes(typeof(AuthorizeAttribute), false).Cast<AuthorizeAttribute>().Single(x => x.Roles is not null).Roles!);
         Assert.Single(controller.GetCustomAttributes(typeof(HasPermissionAttribute), false));
         Assert.Single(controller.GetCustomAttributes(typeof(MfaCategoryAttribute), false));
         Assert.DoesNotContain(controller.GetMethods(), method => method.GetCustomAttributes(typeof(HttpPostAttribute), false).Length > 0);

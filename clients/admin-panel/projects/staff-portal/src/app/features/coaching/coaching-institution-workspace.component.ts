@@ -15,18 +15,21 @@ import { CoachingInstitutionAnalyticsComponent } from './coaching-institution-an
 import { CoachingInstitutionSubscriptionComponent } from './coaching-institution-subscription.component';
 import { CoachingInstitutionTeacherReportComponent } from './coaching-institution-teacher-report.component';
 import { StaffPendingInvitationsComponent } from '../staff-pending-invitations.component';
+import { CoachingFinanceComponent } from '../../../../../../src/app/features/coaching-portal/pages/coaching-finance.component';
 
-type InstitutionSection = 'overview' | 'students' | 'teachers' | 'analytics' | 'subscription';
+type InstitutionSection = 'overview' | 'students' | 'teachers' | 'analytics' | 'subscription' | 'finance';
 
 @Component({
   selector: 'staff-coaching-institution-workspace',
   standalone: true,
-  imports: [CommonModule, FormsModule, CoachingInstitutionStudentReportComponent, CoachingInstitutionTeacherReportComponent, CoachingInstitutionAnalyticsComponent, CoachingInstitutionSubscriptionComponent, StaffPendingInvitationsComponent],
+  imports: [CommonModule, FormsModule, CoachingInstitutionStudentReportComponent, CoachingInstitutionTeacherReportComponent, CoachingInstitutionAnalyticsComponent, CoachingInstitutionSubscriptionComponent, StaffPendingInvitationsComponent, CoachingFinanceComponent],
   templateUrl: './coaching-institution-workspace.component.html',
   styleUrl: './coaching-institution-workspace.component.scss'
 })
 export class CoachingInstitutionWorkspaceComponent implements OnInit {
   @ViewChild(CoachingInstitutionSubscriptionComponent) subscriptionPanel?: Pick<CoachingInstitutionSubscriptionComponent, 'canLeavePage'>;
+  @ViewChild(CoachingInstitutionStudentReportComponent) studentReportPanel?: Pick<CoachingInstitutionStudentReportComponent, 'canLeavePage'>;
+  @ViewChild(CoachingFinanceComponent) financePanel?: Pick<CoachingFinanceComponent, 'canLeavePage'>;
   private readonly institutionService = inject(CoachingInstitutionService);
   private readonly destroyRef = inject(DestroyRef);
   readonly editingStudentId = signal<string | null>(null);
@@ -38,6 +41,7 @@ export class CoachingInstitutionWorkspaceComponent implements OnInit {
   membershipDirty = false;
 
   canLeavePage(): boolean {
+    if (!(this.studentReportPanel?.canLeavePage() ?? true) || !(this.financePanel?.canLeavePage() ?? true)) return false;
     if (!(this.subscriptionPanel?.canLeavePage() ?? true)) return false;
     if (this.isMembershipSaving()) { this.membershipError.set('Üye işlemi sürüyor. Tamamlanmasını bekleyin.'); return false; }
     return !this.membershipDirty || window.confirm('Kaydedilmemiş öğrenci değişikliklerinden vazgeçerek ayrılmak istiyor musunuz?');
@@ -169,6 +173,7 @@ export class CoachingInstitutionWorkspaceComponent implements OnInit {
   }
 
   closeStudentReport(): void {
+    if (!this.canLeavePage()) return;
     this.selectedStudent.set(null);
   }
 

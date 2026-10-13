@@ -8,6 +8,7 @@
   </div>
 
   <nav class="workspace-tabs" aria-label="Koçluk öğretmen işlemleri">
+    <button type="button" data-testid="teacher-finance-tab" [attr.aria-pressed]="activeSection() === 'finance'" [class.active]="activeSection() === 'finance'" (click)="selectSection('finance')">Tahsilat hareketleri</button>
     <button type="button" data-testid="students-tab"
       [attr.aria-pressed]="activeSection() === 'students'"
       [class.active]="activeSection() === 'students'" (click)="selectSection('students')">
@@ -58,6 +59,8 @@
     } @placeholder {
       <p class="section-loading" role="status">Sınavlar hazırlanıyor…</p>
     }
+  } @else if (activeSection() === 'finance') {
+    <app-coaching-finance mode="staff" [cashView]="true" />
   } @else {
     <staff-coaching-teacher-subscription />
   }

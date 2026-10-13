@@ -3,6 +3,7 @@ import { Component, DestroyRef, EventEmitter, Input, OnInit, Output, ViewChild, 
 import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CoachingStaffStudyComponent } from './coaching-staff-study.component';
+import { CoachingFinanceComponent } from '../../../../../../src/app/features/coaching-portal/pages/coaching-finance.component';
 import { finalize } from 'rxjs';
 import {
   CoachingInstitutionHistoryType,
@@ -15,7 +16,7 @@ import {
 @Component({
   selector: 'staff-coaching-institution-student-report',
   standalone: true,
-  imports: [CommonModule, FormsModule, CoachingStaffStudyComponent],
+  imports: [CommonModule, FormsModule, CoachingStaffStudyComponent, CoachingFinanceComponent],
   templateUrl: './coaching-institution-student-report.component.html',
   styleUrl: './coaching-institution-student-report.component.scss'
 })
@@ -28,6 +29,13 @@ export class CoachingInstitutionStudentReportComponent implements OnInit {
   @Input({ required: true }) student!: CoachingInstitutionStudent;
   @Output() readonly back = new EventEmitter<void>();
   @ViewChild(CoachingStaffStudyComponent) private study?: CoachingStaffStudyComponent;
+  @ViewChild(CoachingFinanceComponent) private finance?: CoachingFinanceComponent;
+  readonly financeVisible = signal(false);
+  canLeavePage(): boolean { return this.finance?.canLeavePage() ?? true; }
+  toggleFinance(): void {
+    if (this.financeVisible() && !this.canLeavePage()) return;
+    this.financeVisible.set(!this.financeVisible());
+  }
 
   readonly detail = signal<CoachingInstitutionStudentDetail | null>(null);
   readonly studyVisible = signal(false);

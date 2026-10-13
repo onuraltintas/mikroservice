@@ -8,6 +8,10 @@ import type { StudentExamResultsComponent } from './pages/student-exam-results.c
 
 export const COACHING_PORTAL_ROUTES: Routes = [
   {
+    path: 'finance', canActivate: [coachingRoleGuard], data: { coachingRoles: ['Student'] },
+    loadComponent: () => import('./pages/coaching-finance.component').then(m => m.CoachingFinanceComponent)
+  },
+  {
     path: 'exam-results', canActivate: [coachingRoleGuard], data: { coachingRoles: ['Student'] },
     canDeactivate: [(component: StudentExamResultsComponent) => component.canLeavePage()],
     loadComponent: () => import('./pages/student-exam-results.component').then(m => m.StudentExamResultsComponent)

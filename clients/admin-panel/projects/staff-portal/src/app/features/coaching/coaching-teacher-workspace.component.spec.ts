@@ -14,8 +14,8 @@ import { CoachingTeacherSubscriptionService } from './coaching-teacher-subscript
 import { CoachingTeacherWorkspaceComponent } from './coaching-teacher-workspace.component';
 
 describe('CoachingTeacherWorkspaceComponent', () => {
-  it('retains the finance section while its operation is pending', () => {
-    TestBed.configureTestingModule({ imports: [CoachingTeacherWorkspaceComponent] });
+  it('retains the finance section while its operation is pending', async () => {
+    await TestBed.configureTestingModule({ imports: [CoachingTeacherWorkspaceComponent] }).compileComponents();
     const component = TestBed.createComponent(CoachingTeacherWorkspaceComponent).componentInstance;
     component.activeSection.set('finance'); component.financePanel = { canLeavePage: () => false };
     component.selectSection('students'); expect(component.activeSection()).toBe('finance'); expect(component.canLeavePage()).toBe(false);

@@ -118,4 +118,43 @@ describe('CoachingFinanceComponent', () => {
     expect(component.cash()).toBeNull(); expect(component.receivables()).toBeNull(); expect(component.account()).toBeNull();
     expect(component.loading()).toBe(false); expect(component.receivablesLoading()).toBe(false); expect(component.pending()).toBe(false);
   });
+  it('cancels only an unpaid fee with an explicit reason and confirmation', () => {
+    const component = setup().componentInstance; component.openCancel({ ...fee, paidAmount: 10 }); expect(component.form()).toBeNull();
+    component.openCancel(fee); component.reason = 'Hatalı ücret'; component.confirmed = true; component.submit();
+    expect(api.cancel).toHaveBeenCalledWith('student', 'fee', { expectedVersion: 7, reason: 'Hatalı ücret' }); expect(component.form()).toBeNull();
+  });
+  it('rejects invalid or future receipt dates before sending money', () => {
+    const component = setup().componentInstance; component.openPayment(fee); component.amount = 10;
+    for (const date of ['2026-02-31', '0000-01-01', 'not-a-date', '2999-01-01']) { component.receivedOn = date; component.submit(); }
+    expect(api.pay).not.toHaveBeenCalled();
+  });
+  it('rejects invalid installment dates, amounts and unequal sums', () => {
+    const component = setup().componentInstance; component.openCreate(); component.title = 'Paket'; component.amount = 100;
+    for (const part of [{ dueOn: '2026-02-31', amount: 100 }, { dueOn: '2026-01-01', amount: -100 }, { dueOn: '2026-01-01', amount: 99 }, { dueOn: '', amount: null }]) {
+      component.installments = [part]; component.submit();
+    }
+    expect(api.create).not.toHaveBeenCalled();
+    component.installments = [{ dueOn: '2026-01-01', amount: 100 }]; component.addInstallment(); expect(component.installments).toHaveLength(2);
+    component.removeInstallment(1); expect(component.installments).toHaveLength(1); component.removeInstallment(0); expect(component.installments).toHaveLength(1);
+  });
+  it('shows history failures and clears the account when history access is revoked', () => {
+    const component = setup().componentInstance;
+    api.payments.mockReturnValueOnce(throwError(() => new HttpErrorResponse({ status: 503 }))); component.loadHistory(fee);
+    expect(component.historyError()).toBeTruthy(); expect(component.historyLoading()).toBe(false); expect(component.account()).not.toBeNull();
+    api.payments.mockReturnValueOnce(throwError(() => new HttpErrorResponse({ status: 403 }))); component.loadHistory(fee);
+    expect(component.account()).toBeNull(); expect(component.historyFee()).toBeNull(); expect(component.historyLoading()).toBe(false);
+  });
+  it('keeps a dirty form when departure is declined and warns before closing the browser', () => {
+    const component = setup().componentInstance; component.openCreate();
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false); component.closeForm(); expect(component.form()).toBe('create');
+    const event = new Event('beforeunload', { cancelable: true }); component.beforeUnload(event as BeforeUnloadEvent); expect(event.defaultPrevented).toBe(true); confirm.mockRestore();
+  });
+  it('does not request cash for a learner or an invalid period', () => {
+    const component = setup('student').componentInstance; component.loadCash(); expect(api.cash).not.toHaveBeenCalled();
+    const staff = setup('staff').componentInstance;
+    for (const dates of [['2026-10-13', '2026-10-01'], ['2024-01-01', '2026-01-01'], ['invalid', '2026-10-01']]) {
+      [staff.fromDate, staff.toDate] = dates; staff.loadCash();
+    }
+    expect(api.cash).not.toHaveBeenCalled(); expect(staff.error()).toBeTruthy();
+  });
 });
