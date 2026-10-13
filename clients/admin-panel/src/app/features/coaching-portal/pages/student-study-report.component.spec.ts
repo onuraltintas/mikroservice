@@ -14,6 +14,7 @@ describe('StudentStudyReportComponent', () => {
     previous.flush({ success: true, data: { ...weeklyData, fromDate: '2026-10-12', toDate: '2026-10-18', completedTasks: 0, completionPercentage: 0, actualMinutes: null } });
     expect(component.previousReport()?.actualMinutes).toBeNull(); fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('Önceki hafta'); expect(fixture.nativeElement.textContent).toContain('Kayıt yok');
+    expect(fixture.nativeElement.textContent).toContain('12.10.2026 – 18.10.2026');
   });
   it('rejects comparisons that are not seven days or have no valid previous week', () => {
     const { component, http } = setup(); component.compareWeekly = true; component.fromDate = '2026-10-01'; component.toDate = '2026-10-14'; component.load();
