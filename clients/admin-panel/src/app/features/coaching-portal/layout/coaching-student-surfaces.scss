@@ -1,0 +1,33 @@
+// Shared components inherit this treatment only inside the student portal.
+.coaching-shell .coaching-content {
+  > :not(router-outlet) { display: block; min-width: 0; }
+  h1 { font-size: clamp(1.65rem, 2.5vw, 2.15rem); font-weight: 750; letter-spacing: -.7px; line-height: 1.25; }
+  h2 { letter-spacing: -.3px; } :is(p, h1, h2, h3, strong, td) { overflow-wrap: anywhere; }
+  :is(.text-slate-500, .text-slate-600, .text-slate-400, [class*="dark:text-slate-400"], [class*="dark:text-slate-300"]) { color: var(--ui-text-muted); }
+  :is(.text-slate-950, [class*="dark:text-white"]) { color: var(--ui-text); }
+  :is(.text-indigo-600, .text-indigo-700, .text-indigo-950, [class*="dark:text-indigo-"]) { color: var(--ui-success); }
+  :is(.bg-white, [class*="dark:bg-slate-900"]) { background: var(--ui-surface); }
+  :is(.bg-slate-50, .bg-slate-100, [class*="dark:bg-slate-800"]) { background: var(--ui-surface-muted); }
+  :is(.border-slate-200, .border-slate-300, [class*="dark:border-slate-"]) { border-color: var(--ui-border); }
+  :is(.bg-indigo-50, .bg-indigo-100, [class*="dark:bg-indigo-"]) { background: var(--ui-brand-soft); }
+  :is(.bg-indigo-600, .bg-indigo-700) { background: var(--ui-brand); color: white; }
+  :is(.rounded-2xl, .panel, .finance) { border-radius: 20px; box-shadow: 0 3px 15px #19332f04; }
+  :is(input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]), select, textarea) { min-height: 44px; min-width: 0; border: 1px solid var(--ui-border); border-radius: 10px; padding: 10px 12px; background: var(--ui-surface); color: var(--ui-text); font: inherit; font-size: 16px; }
+  input[type=checkbox] { accent-color: var(--ui-brand); width: 18px; height: 18px; flex-shrink: 0; }
+  :is(button, a.rounded-lg, a.rounded-full) { min-height: 44px; transition: background .18s, border-color .18s; }
+  button:disabled { opacity: .55; } .overflow-x-auto { max-width: 100%; overscroll-behavior-x: contain; }
+  table { border-collapse: collapse; th, td { padding: 12px; border-bottom: 1px solid var(--ui-border); } th { color: var(--ui-text-muted); font-weight: 600; } }
+  .coaching-page-heading { margin-bottom: 24px; > p:first-child { font-size: 11px; font-weight: 650; text-transform: uppercase; letter-spacing: 1.4px; color: var(--ui-success); } h1 { margin: 6px 0 10px; } > p:last-child { max-width: 65ch; color: var(--ui-text-muted); font-size: 14px; } }
+  .study-plans {
+    .eyebrow { color: var(--ui-success); letter-spacing: 1.2px; font-size: 11px; }
+    .page-heading > div > p:last-child { color: var(--ui-text-muted); max-width: 65ch; }
+    button:not(.secondary):not(.plan-row) { background: var(--ui-brand); color: white; }
+    .plan-row { padding: 16px; border-radius: 13px; margin-top: 10px; .badge { font-size: 10px; } &.selected { border-color: var(--ui-brand); background: var(--ui-brand-soft); box-shadow: inset 3px 0 var(--ui-brand); } }
+    .task { border: 1px solid var(--ui-border); border-radius: 16px; padding: 22px; margin-top: 16px; > h3 { font-size: 17px; margin-bottom: 8px; } > p { margin-top: 6px; opacity: 1; color: var(--ui-text-muted); } &.completed { background: var(--ui-brand-soft); border-left: 4px solid var(--ui-brand); } .completion { color: var(--ui-success); font-weight: 650; } }
+    .fields { margin-top: 18px; } .publish-box { border-color: var(--ui-brand); border-radius: 0 16px 16px 0; }
+    .draft-task { padding: 20px; border: 1px solid var(--ui-border); border-radius: 16px; margin: 20px 0; background: var(--ui-surface-muted); }
+  }
+  app-student-study-report { display: block; margin: 24px 0; button { border-radius: 10px; padding: 10px 16px; border: 1px solid var(--ui-border); } }
+  app-coaching-finance { color: var(--ui-text); .finance { padding: 24px; border-color: var(--ui-border); } }
+}
+@media (max-width: 600px) { .coaching-shell .coaching-content { .study-plans .task, .study-plans .draft-task, app-coaching-finance .finance { padding: 16px; } .study-plans .fields { gap: 10px; > label { flex-basis: 100%; } > button { width: 100%; } } table { font-size: 13px; th, td { padding: 10px; } } } }

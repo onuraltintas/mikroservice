@@ -1,54 +1,37 @@
-<section class="space-y-6">
-  <app-student-study-today *ngIf="isStudent()" />
-  <div class="rounded-2xl bg-gradient-to-br from-indigo-700 to-violet-700 p-6 text-white shadow-lg sm:p-8">
-    <p class="text-sm font-medium text-indigo-100">Koçluk çalışma alanın</p>
-    <h1 class="mt-2 text-2xl font-bold sm:text-3xl">Merhaba, {{ user()?.firstName || 'Hoş geldin' }}.</h1>
-    <p class="mt-3 max-w-2xl text-sm leading-6 text-indigo-100">
-      Hedeflerini, ödevlerini ve koçunla yürüttüğün çalışmaları tek bir yerden takip et.
-    </p>
+<section class="student-home">
+  <header class="home-welcome">
+    <div><p class="home-eyebrow">BUGÜN SENİN GÜNÜN</p><h1>{{ user()?.firstName ? 'Merhaba, ' + user()?.firstName + '.' : 'Tekrar hoş geldin.' }}</h1><p>Hedefine giden yol, bugün atacağın küçük bir adımla başlar.</p></div>
+    <a routerLink="/coaching-portal/progress" class="home-progress-link">Gelişimimi gör <app-coaching-icon name="arrow" /></a>
+  </header>
+  <div class="home-grid" *ngIf="isStudent()">
+    <app-student-study-today />
+    <aside class="home-next-steps" aria-label="Çalışma kısayolları">
+      <p class="home-eyebrow">SANA GÖRE BİR PLAN</p><h2>Bir sonraki adımın</h2><p class="home-muted">Çalışma düzenini küçük adımlarla güçlendir.</p>
+      <a routerLink="/coaching-portal/study-availability"><span class="step-icon"><app-coaching-icon name="clock" /></span><span><strong>Zamanını kendine ayır</strong><small>Uygun çalışma saatlerini belirle.</small></span><app-coaching-icon name="arrow" /></a>
+      <a routerLink="/coaching-portal/automatic-plan"><span class="step-icon amber"><app-coaching-icon name="spark" /></span><span><strong>Haftanı kolayca planla</strong><small>Konularından bir taslak oluştur.</small></span><app-coaching-icon name="arrow" /></a>
+      <a routerLink="/coaching-portal/exam-results"><span class="step-icon blue"><app-coaching-icon name="target" /></span><span><strong>Nerede olduğunu gör</strong><small>Sınav sonucunu ekle, takip et.</small></span><app-coaching-icon name="arrow" /></a>
+      <div class="home-gentle-note"><app-coaching-icon name="book" /><p>Uzun bir yapılacaklar listesi yerine, bugün tamamlayabileceğin bir çalışmayla başla.</p></div>
+    </aside>
   </div>
-
-  <div *ngIf="errorMessage()" role="alert" class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-200">
-    {{ errorMessage() }}
+  <div class="home-hero">
+    <div><span class="hero-tag"><span></span> KENDİ RİTMİNİ BUL</span><h2>Bugün bir adım.<br><em>Yarın bir alışkanlık.</em></h2><p>Her şeyi bir anda bitirmen gerekmiyor. Planını aç, bir çalışma seç ve kendi hızında devam et.</p><a routerLink="/coaching-portal/study-plans">Çalışma planımı aç <app-coaching-icon name="arrow" /></a></div>
+    <svg class="hero-illustration" viewBox="0 0 240 200" fill="none" aria-hidden="true">
+      <circle cx="134" cy="101" r="80" fill="#d4e8d7" /><circle cx="198" cy="32" r="12" fill="#e5c084" />
+      <path d="M51 167h158" stroke="#83a492" stroke-width="2" stroke-linecap="round" />
+      <rect x="71" y="134" width="110" height="26" rx="7" fill="#204739" /><path d="M87 143h76M87 151h58" stroke="#bbd6b5" stroke-width="2" />
+      <rect x="62" y="103" width="110" height="26" rx="7" fill="#d7af71" /><path d="M78 112h76M78 120h58" stroke="#fff3d8" stroke-width="2" />
+      <path d="m101 109-5-57c-1-9 5-16 14-16l57-5c9-1 15 5 16 14l5 57-87 7Z" fill="#fffdf1" stroke="#204739" stroke-width="2" />
+      <path d="m111 52 57-5M113 65l30-3M115 82l6 5 11-14M141 81l27-2M116 97l53-4" stroke="#5b8e71" stroke-width="2" stroke-linecap="round" />
+      <path d="m47 80 4-8 4 8 8 4-8 4-4 8-4-8-8-4 8-4Z" fill="#5d966f" /><path d="M204 94v13m-6-6h12" stroke="#376649" stroke-width="2" stroke-linecap="round" />
+    </svg>
   </div>
-
-  <div *ngIf="isLoading()" class="grid gap-4 sm:grid-cols-3" aria-label="Yükleniyor">
-    <div *ngFor="let item of [1, 2, 3]" class="h-28 animate-pulse rounded-2xl bg-slate-200 dark:bg-slate-800"></div>
-  </div>
-
-  <ng-container *ngIf="!isLoading() && isStudent()">
-    <div class="grid gap-4 sm:grid-cols-3">
-      <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-        <p class="text-sm text-slate-500 dark:text-slate-400">Yaklaşan ödevler</p>
-        <p class="mt-2 text-3xl font-bold text-slate-950 dark:text-white">{{ assignments().length }}</p>
-      </div>
-      <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-        <p class="text-sm text-slate-500 dark:text-slate-400">Teslim edilen</p>
-        <p class="mt-2 text-3xl font-bold text-emerald-600">{{ assignments().filter(item => item.submittedAt).length }}</p>
-      </div>
-      <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-        <p class="text-sm text-slate-500 dark:text-slate-400">Aksiyon</p>
-        <a routerLink="/coaching-portal/assignments" class="mt-3 inline-flex text-sm font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-300">Ödevlerime git →</a>
-      </div>
-    </div>
-
-    <div class="rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
-      <div class="flex items-center justify-between border-b border-slate-200 px-5 py-4 dark:border-slate-800">
-        <div>
-          <h2 class="font-semibold">Son ödevlerin</h2>
-          <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Önceliklendirilmiş çalışma listesi.</p>
-        </div>
-        <a routerLink="/coaching-portal/assignments" class="text-sm font-semibold text-indigo-600 dark:text-indigo-300">Tümü</a>
-      </div>
-      <div *ngIf="assignments().length === 0" class="p-6 text-sm text-slate-500 dark:text-slate-400">Henüz atanmış ödev bulunmuyor.</div>
-      <a *ngFor="let assignment of assignments()" [routerLink]="['/coaching-portal/assignments', assignment.id]"
-        class="flex items-center justify-between gap-4 border-b border-slate-100 px-5 py-4 last:border-0 hover:bg-slate-50 dark:border-slate-800/70 dark:hover:bg-slate-800/50">
-        <div class="min-w-0">
-          <p class="truncate font-medium">{{ assignment.title }}</p>
-          <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Son tarih: {{ assignment.dueDate | date:'d MMM y' }}</p>
-        </div>
-        <span class="rounded-full px-2.5 py-1 text-xs font-semibold" [ngClass]="assignment.assignmentStatus === 'Cancelled' || assignment.assignmentStatus === 'Completed' ? 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300' : assignment.isOverdue ? 'bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-200' : 'bg-indigo-100 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-200'">{{ assignment.assignmentStatus === 'Cancelled' ? 'İptal edildi' : assignment.assignmentStatus === 'Completed' ? 'Tamamlandı' : assignment.status }}</span>
-      </a>
-    </div>
-  </ng-container>
+  <div *ngIf="errorMessage()" role="alert" class="home-error">{{ errorMessage() }}</div>
+  <div *ngIf="isLoading()" class="home-loading" role="status">Ödevlerin yükleniyor…</div>
+  <section *ngIf="!isLoading() && !errorMessage() && isStudent()" class="home-assignments" aria-labelledby="recent-home-assignments">
+    <header><div><p class="home-eyebrow">KOÇUNLA BİRLİKTE</p><h2 id="recent-home-assignments">Son ödevlerin</h2><p>Son {{ assignments().length }} ödevinde {{ pendingAssignments().length }} çalışma seni bekliyor.</p></div><a routerLink="/coaching-portal/assignments">Tüm ödevlerim <app-coaching-icon name="arrow" /></a></header>
+    <div *ngIf="!assignments().length" class="home-empty"><span class="step-icon"><app-coaching-icon name="book" /></span><div><strong>Yeni çalışmalar için yerin hazır.</strong><p>Henüz atanmış ödev bulunmuyor. Bu arada kendi çalışma planından devam edebilirsin.</p></div><a routerLink="/coaching-portal/study-plans">Planıma git</a></div>
+    <a *ngFor="let assignment of assignments()" [routerLink]="['/coaching-portal/assignments', assignment.id]" class="home-assignment-row">
+      <span class="assignment-symbol"><app-coaching-icon name="book" /></span><span class="assignment-copy"><strong>{{ assignment.title }}</strong><small>{{ assignment.subject || 'Koçluk çalışması' }} · Son tarih: {{ assignment.dueDate | date:'dd.MM.yyyy' }}</small></span><span class="assignment-status" [class.is-overdue]="assignment.isOverdue && !assignment.submittedAt && assignment.assignmentStatus !== 'Cancelled' && assignment.assignmentStatus !== 'Completed'" [class.is-done]="!!assignment.submittedAt || assignment.assignmentStatus === 'Completed'">{{ assignmentStatus(assignment) }}</span><app-coaching-icon name="arrow" />
+    </a>
+  </section>
 </section>

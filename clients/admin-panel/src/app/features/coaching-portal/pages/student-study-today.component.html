@@ -1,0 +1,23 @@
+<section class="today-focus" aria-labelledby="today-plan-title">
+  <header><div><p class="today-eyebrow">BUGÜNKÜ ODAĞIN</p><h2 id="today-plan-title">Çalışma planım</h2></div><span class="today-date" *ngIf="today()">{{ today() | date:'dd.MM.yyyy' }}</span></header>
+  <p *ngIf="busy()" role="status" class="today-loading">Çalışmalar yükleniyor…</p>
+  <div *ngIf="error()" role="alert" class="today-error">{{ error() }} <button type="button" (click)="load()" [disabled]="busy()">Yeniden dene</button></div>
+  <ng-container *ngIf="!busy() && !error()">
+    <div *ngIf="!title()" class="today-empty"><span class="today-empty-icon"><app-coaching-icon name="plan" /></span><h3>İlk adımın, sana uygun bir plan.</h3><p>Henüz aktif çalışma planın yok. Manuel veya otomatik bir taslak hazırlayabilirsin.</p><a routerLink="/coaching-portal/study-plans" class="today-primary">Planımı oluştur <app-coaching-icon name="arrow" /></a></div>
+    <ng-container *ngIf="title()">
+      <div class="today-overview">
+        <div class="daily-ring" [style.--completion]="(dailyPercentage() ?? 0) + '%'" [attr.role]="dailyPercentage() === null ? null : 'progressbar'" aria-label="Bugünkü çalışma tamamlama" [attr.aria-valuemin]="dailyPercentage() === null ? null : 0" [attr.aria-valuemax]="dailyPercentage() === null ? null : 100" [attr.aria-valuenow]="dailyPercentage()" [attr.aria-valuetext]="completedToday() + ' / ' + scheduledToday() + ' çalışma tamamlandı'"><div aria-hidden="true"><strong>{{ dailyPercentage() === null ? '—' : '%' + dailyPercentage() }}</strong><span>bugünkü plan</span></div></div>
+        <div class="today-overview-copy"><p class="today-plan-name">{{ title() }}</p><h3>{{ todayTasks().length ? 'Sıradaki adımın hazır.' : completedToday() ? 'Bugünkü planın tamamlandı.' : 'Bugün için planında yer var.' }}</h3><p>{{ scheduledToday() ? completedToday() + ' / ' + scheduledToday() + ' çalışma tamamlandı' : 'Bugüne planlanmış çalışma yok.' }}</p><span *ngIf="recordedMinutes() !== null" class="today-record"><app-coaching-icon name="check" /> Bu çalışmalarda {{ recordedMinutes() }} dakika kaydettin</span></div>
+      </div>
+      <div *ngIf="todayTasks().length" class="today-task-list"><div class="today-list-heading"><h3>Bugünkü çalışmalar</h3><span>{{ remainingMinutes() }} dk planlandı · kalan çalışmalar</span></div>
+        <a *ngFor="let task of todayTasks().slice(0, 3)" routerLink="/coaching-portal/study-plans" [queryParams]="{ plan: planId() }" class="today-task"><span class="today-task-marker"></span><span><strong>{{ task.title }}</strong><small *ngIf="task.sourceName">{{ task.sourceName }}</small></span><span class="today-duration">{{ task.plannedMinutes }} dk</span><app-coaching-icon name="arrow" /></a>
+        <p *ngIf="todayTasks().length > 3" class="today-more">Diğer {{ todayTasks().length - 3 }} çalışma planında seni bekliyor.</p>
+      </div>
+      <p *ngIf="!todayTasks().length && completedToday()" class="today-complete-note">Bugünkü çalışmalarını tamamladın. Bir mola verip bir sonraki adımını planlayabilirsin.</p>
+      <div *ngIf="overdue().length" class="today-catch-up"><app-coaching-icon name="calendar" /><div><strong>{{ overdue().length }} çalışma için yeni bir başlangıç</strong><p>Gecikmiş çalışmalarını tamamlayabilir veya sana uygun bir güne taşıyabilirsin.</p><ul><li *ngFor="let task of overdue().slice(0, 3)">{{ task.title }} · {{ task.plannedDate | date:'dd.MM.yyyy' }}</li></ul></div></div>
+      <a routerLink="/coaching-portal/study-plans" [queryParams]="{ plan: planId() }" class="today-primary">{{ todayTasks().length ? 'Çalışmaya başla' : 'Planımı yönet' }} <app-coaching-icon name="arrow" /></a>
+      <p class="today-source">Kendi kayıtların · {{ timeZone() }} · Öğrenci beyanı</p>
+    </ng-container>
+  </ng-container>
+  <footer><a routerLink="/coaching-portal/progress">Raporlarım <app-coaching-icon name="chart" /></a><a routerLink="/coaching-portal/exam-results">Sınav sonucu ekle <app-coaching-icon name="target" /></a></footer>
+</section>

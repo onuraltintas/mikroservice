@@ -7,6 +7,24 @@ import { CoachingPortalViewService } from '../coaching-portal-view.service';
 import { CoachingPortalLayoutComponent } from './coaching-portal-layout.component';
 
 describe('CoachingPortalLayoutComponent multi-role view', () => {
+  it('exposes every student destination and closes the mobile drawer with Escape', () => {
+    const profile = signal<any>({ roles: ['Student'], product: 'coaching', firstName: 'Ada' });
+    TestBed.configureTestingModule({ imports: [CoachingPortalLayoutComponent], providers: [
+      provideRouter([]), { provide: AuthService, useValue: { userProfile: profile } }
+    ] });
+    const fixture = TestBed.createComponent(CoachingPortalLayoutComponent);
+    fixture.detectChanges();
+    const links = [...fixture.nativeElement.querySelectorAll('.coaching-navigation a')] as HTMLAnchorElement[];
+    expect(links).toHaveLength(11);
+    expect(links.some(link => link.getAttribute('href') === '/coaching-portal/subscription')).toBe(true);
+    fixture.componentInstance.menuOpen.set(true); fixture.detectChanges();
+    const toggle = fixture.nativeElement.querySelector('.coaching-menu-toggle') as HTMLButtonElement;
+    (fixture.nativeElement.querySelector('.coaching-navigation a') as HTMLAnchorElement).focus();
+    expect(fixture.nativeElement.querySelector('.coaching-menu-toggle').getAttribute('aria-expanded')).toBe('true');
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' })); fixture.detectChanges();
+    expect(fixture.componentInstance.menuOpen()).toBe(false);
+    expect(document.activeElement).toBe(toggle);
+  });
   it('keeps dual-role users in the student experience and omits the legacy teacher navigation', () => {
     const profile = signal<any>({ roles: ['Student', 'Teacher'], product: 'coaching', firstName: 'Ada' });
     TestBed.configureTestingModule({ imports: [CoachingPortalLayoutComponent], providers: [

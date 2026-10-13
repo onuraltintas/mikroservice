@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, HostListener, Input, OnChanges, OnInit, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { Observable, Subject, finalize, takeUntil } from 'rxjs';
 import { CoachingStudyPlanningService, StudyPlan, StudyPlanPage, StudyPlanStatus, StudyTask, StudyTaskInput } from '../../../core/services/coaching-study-planning.service';
 
@@ -20,6 +21,7 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
   private get studentArgument(): [string] | [] { return this.staffStudentId ? [this.staffStudentId] : []; }
   private readonly service = inject(CoachingStudyPlanningService);
   private readonly destroyRef = inject(DestroyRef);
+  private requestedPlanId = inject(ActivatedRoute, { optional: true })?.snapshot.queryParamMap.get('plan') ?? null;
   readonly page = signal<StudyPlanPage>({ items: [], totalCount: 0, pageNumber: 1, pageSize: 20 });
   readonly selected = signal<StudyPlan | null>(null);
   readonly busy = signal(false);
@@ -65,6 +67,9 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
       takeUntil(this.scopeChanged), takeUntilDestroyed(this.destroyRef), finalize(() => this.loading.set(false))
     ).subscribe({ next: page => {
       this.page.set(page);
+      if (!this.staffStudentId && this.requestedPlanId) {
+        const id = this.requestedPlanId; this.requestedPlanId = null; this.open(id);
+      }
       if (pageNumber === 1 && (!this.filter || this.filter === 'Draft')) {
         this.knownDraftId.set(page.items.find(plan => plan.status === 'Draft')?.id ?? null);
       }

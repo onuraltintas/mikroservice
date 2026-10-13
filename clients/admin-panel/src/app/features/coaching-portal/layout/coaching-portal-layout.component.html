@@ -1,53 +1,32 @@
-<div class="min-h-screen bg-[var(--ui-page)] text-[var(--ui-text)]">
-  <header class="border-b border-[var(--ui-border)] bg-[var(--ui-surface)] backdrop-blur">
-    <div class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
-      <a routerLink="/coaching-portal" class="flex items-center gap-3" aria-label="Koçluk ana sayfası">
-        <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-600 text-lg font-bold text-white">E</span>
-        <span>
-          <span class="block text-sm font-semibold text-slate-950 dark:text-white">Eduİvme</span>
-          <span class="block text-xs text-indigo-600 dark:text-indigo-300">Öğrenci Koçluğu</span>
-        </span>
-      </a>
-
-      <div class="flex items-center gap-3">
-        <div class="hidden text-right sm:block">
-          <p class="text-sm font-semibold">{{ user()?.firstName }} {{ user()?.lastName }}</p>
-          <p class="text-xs text-slate-500 dark:text-slate-400">{{ user()?.role }}</p>
-        </div>
-        <button type="button" (click)="logout()"
-          class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 transition hover:border-red-300 hover:text-red-600 dark:border-slate-700 dark:text-slate-200 dark:hover:border-red-500 dark:hover:text-red-300">
-          Çıkış
-        </button>
-      </div>
-    </div>
-
-    <nav class="mx-auto flex max-w-7xl gap-1 overflow-x-auto px-4 pb-3 sm:px-6 lg:px-8" aria-label="Koçluk menüsü">
-      <a routerLink="/coaching-portal" [routerLinkActiveOptions]="{ exact: true }" routerLinkActive="bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-200"
-        class="whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">Genel Bakış</a>
-      <a *ngIf="isStudent()" routerLink="/coaching-portal/assignments" routerLinkActive="bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-200"
-        class="whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">Ödevlerim</a>
-      <a *ngIf="isStudent()" routerLink="/coaching-portal/study-availability" routerLinkActive="bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-200"
-        class="whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">Çalışma saatlerim</a>
-      <a *ngIf="isStudent()" routerLink="/coaching-portal/study-plans" routerLinkActive="bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-200"
-        class="whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">Çalışma planlarım</a>
-      <a *ngIf="isStudent()" routerLink="/coaching-portal/automatic-plan" routerLinkActive="bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-200"
-        class="whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">Otomatik plan</a>
-      <a *ngIf="isStudent()" routerLink="/coaching-portal/exam-results" routerLinkActive="bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-200"
-        class="whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">Sınav sonuçlarım</a>
-      <a *ngIf="isStudent()" routerLink="/coaching-portal/progress" routerLinkActive="bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-200"
-        class="whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">İlerlemem</a>
-      <a *ngIf="isStudent()" routerLink="/coaching-portal/finance" routerLinkActive="bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-200"
-        class="whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">Ücretlerim</a>
-      <a *ngIf="isStudent()" routerLink="/coaching-portal/subscription" routerLinkActive="bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-200"
-        class="whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">Abonelik ve ödeme</a>
-      <a *ngIf="isStudent()" routerLink="/coaching-portal/sessions" routerLinkActive="bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-200"
-        class="whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">Seanslar</a>
-      <a routerLink="/coaching-portal/notifications" routerLinkActive="bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-200"
-        class="whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">Bildirimler</a>
+<div class="coaching-shell" [class.menu-open]="menuOpen()">
+  <a class="coaching-skip" href="#coaching-main">İçeriğe geç</a>
+  <button *ngIf="menuOpen()" class="coaching-scrim" type="button" aria-label="Menüyü kapat" (click)="closeMenu()"></button>
+  <aside id="coaching-navigation" class="coaching-sidebar" [cdkTrapFocus]="menuOpen()" [cdkTrapFocusAutoCapture]="menuOpen()" [attr.role]="menuOpen() ? 'dialog' : null" [attr.aria-modal]="menuOpen() ? true : null" aria-label="Öğrenci çalışma alanı">
+    <a routerLink="/coaching-portal" class="coaching-brand" aria-label="Koçluk ana sayfası" (click)="closeMenu()">
+      <span class="brand-symbol">E<span></span></span><span><strong>eduivme<span>.</span></strong><small>Öğrenci Koçluğu</small></span>
+    </a>
+    <button class="coaching-drawer-close" type="button" aria-label="Menüyü kapat" (click)="closeMenu()"><app-coaching-icon name="close" /></button>
+    <nav aria-label="Koçluk menüsü" class="coaching-navigation" *ngIf="isStudent()">
+      <section *ngFor="let group of navigation" class="coaching-nav-group">
+        <h2>{{ group.label }}</h2>
+        <a *ngFor="let link of group.links" [routerLink]="link.path" [routerLinkActiveOptions]="{ exact: !!link.exact }" routerLinkActive="is-active" ariaCurrentWhenActive="page" (click)="closeMenu()">
+          <app-coaching-icon [name]="link.icon" /><span>{{ link.label }}</span>
+        </a>
+      </section>
     </nav>
-  </header>
-
-  <main class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-    <router-outlet></router-outlet>
-  </main>
+    <div class="coaching-sidebar-note"><app-coaching-icon name="spark" /><p>Küçük adımlar.<br><strong>Kalıcı alışkanlıklar.</strong></p><a routerLink="/coaching-portal/study-plans" (click)="closeMenu()">Kendi ritmini oluştur <app-coaching-icon name="arrow" /></a></div>
+    <div class="coaching-profile"><span class="coaching-avatar">{{ initials() }}</span><span><strong>{{ user()?.firstName || 'Öğrenci' }} {{ user()?.lastName }}</strong><small>Öğrenci hesabı</small></span><button type="button" (click)="logout()" aria-label="Çıkış" title="Çıkış"><app-coaching-icon name="logout" /></button></div>
+  </aside>
+  <div class="coaching-body">
+    <header class="coaching-topbar">
+      <button #menuToggle class="coaching-menu-toggle" type="button" [attr.aria-expanded]="menuOpen()" aria-controls="coaching-navigation" aria-label="Koçluk menüsünü aç" (click)="menuOpen() ? closeMenu() : menuOpen.set(true)"><app-coaching-icon name="menu" /></button>
+      <div class="coaching-breadcrumb"><span>Çalışma alanım</span><span aria-hidden="true">/</span><strong>{{ pageLabel() }}</strong></div>
+      <div class="coaching-topbar-actions"><span class="coaching-product-label">Kendi hızında, kendi yolunda.</span><a routerLink="/coaching-portal/notifications" class="coaching-icon-button" aria-label="Bildirimlerimi aç"><app-coaching-icon name="bell" /></a><span class="coaching-avatar compact" aria-label="Öğrenci hesabı">{{ initials() }}</span></div>
+    </header>
+    <main id="coaching-main" class="coaching-content" tabindex="-1"><router-outlet /></main>
+    <footer class="coaching-footer"><span>Eduİvme · Öğrenci Koçluğu</span><span>Bugünkü emeğin, yarının temeli.</span></footer>
+  </div>
+  <nav *ngIf="isStudent()" class="coaching-mobile-nav" aria-label="Hızlı erişim">
+    <a *ngFor="let link of mobileLinks; let i = index" [routerLink]="link.path" [routerLinkActiveOptions]="{ exact: !!link.exact }" routerLinkActive="is-active" ariaCurrentWhenActive="page" [attr.aria-label]="link.label"><app-coaching-icon [name]="link.icon" /><span>{{ ['Bugün', 'Planım', 'Ödevler', 'Gelişim'][i] }}</span></a>
+  </nav>
 </div>

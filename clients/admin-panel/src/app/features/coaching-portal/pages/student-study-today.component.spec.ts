@@ -28,6 +28,8 @@ describe('StudentStudyTodayComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Overdue work');
     expect(fixture.nativeElement.textContent).not.toContain('Done work');
     expect(fixture.nativeElement.textContent).not.toContain('Future work');
+    expect(fixture.nativeElement.querySelector('.today-date').textContent).toContain('02.10.2026');
+    expect(fixture.nativeElement.querySelector('.today-catch-up').textContent).toContain('01.10.2026');
   });
   it('distinguishes no active plan from a failed request', () => {
     const { fixture, service } = setup(true);
@@ -54,5 +56,28 @@ describe('StudentStudyTodayComponent', () => {
     expect(component.error()).toBeNull();
     expect(component.title()).toBe('My plan');
     expect(component.timeZone()).toBe(Intl.DateTimeFormat().resolvedOptions().timeZone);
+  });
+  it('derives daily progress only from scheduled tasks, with no invented duration', () => {
+    const { fixture, component } = setup();
+    expect(component.scheduledToday()).toBe(2);
+    expect(component.completedToday()).toBe(1);
+    expect(component.dailyPercentage()).toBe(50);
+    expect(component.remainingMinutes()).toBe(30);
+    expect(component.recordedMinutes()).toBeNull();
+    expect(fixture.nativeElement.querySelector('[role="progressbar"]').getAttribute('aria-valuenow')).toBe('50');
+  });
+  it('does not present an empty day or failed load as 100% complete', () => {
+    const { fixture, component, service } = setup();
+    service.get.mockReturnValueOnce(of({ title: 'Tomorrow', tasks: [] }));
+    component.load(); fixture.detectChanges();
+    expect(component.dailyPercentage()).toBeNull();
+    expect(fixture.nativeElement.querySelector('[role="progressbar"]')).toBeNull();
+    expect(fixture.nativeElement.textContent).toContain('Bugüne planlanmış çalışma yok');
+    service.list.mockReturnValueOnce(throwError(() => new Error('offline')));
+    component.load(); fixture.detectChanges();
+    expect(component.error()).toBeTruthy();
+    expect(component.completedToday()).toBe(0);
+    expect(component.dailyPercentage()).toBeNull();
+    expect(fixture.nativeElement.querySelector('[role="progressbar"]')).toBeNull();
   });
 });

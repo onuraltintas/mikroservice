@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { ActivatedRoute, convertToParamMap } from '@angular/router';
 import { of, Subject, throwError } from 'rxjs';
 import { CoachingStudyPlanningService, StudyPlan } from '../../../core/services/coaching-study-planning.service';
 import { StudentStudyPlansComponent } from './student-study-plans.component';
@@ -8,7 +9,7 @@ describe('StudentStudyPlansComponent', () => {
     { id: 'task', plannedDate: '2026-10-06', title: 'Matematik', plannedMinutes: 30, topicId: null,
       isPinned: true, isCompleted: false, actualMinutes: null, completedAt: null }
   ] };
-  function setup() {
+  function setup(requestedPlanId: string | null = null) {
     const service = {
       list: vi.fn(() => of({ items: [{ ...active, tasks: undefined }], totalCount: 1, pageNumber: 1, pageSize: 20 })),
       get: vi.fn(() => of(active)), create: vi.fn(() => of({ ...active, status: 'Draft' })),
@@ -16,7 +17,10 @@ describe('StudentStudyPlansComponent', () => {
       complete: vi.fn(() => of({ ...active, version: 5 })), reschedule: vi.fn(() => of({ ...active, version: 5 })),
       archive: vi.fn(() => of({ ...active, status: 'Archived' as const, version: 5 }))
     };
-    TestBed.configureTestingModule({ imports: [StudentStudyPlansComponent], providers: [{ provide: CoachingStudyPlanningService, useValue: service }] });
+    TestBed.configureTestingModule({ imports: [StudentStudyPlansComponent], providers: [
+      { provide: CoachingStudyPlanningService, useValue: service },
+      { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: convertToParamMap(requestedPlanId ? { plan: requestedPlanId } : {}) } } }
+    ] });
     const fixture = TestBed.createComponent(StudentStudyPlansComponent);
     fixture.detectChanges();
     return { fixture, component: fixture.componentInstance, service };
@@ -28,6 +32,13 @@ describe('StudentStudyPlansComponent', () => {
     expect(service.get).toHaveBeenCalledWith('plan');
     expect(fixture.nativeElement.textContent).toContain('Matematik');
     expect(fixture.nativeElement.textContent).toContain('Tamamla');
+  });
+  it('opens the requested own plan from the daily focus link only once', () => {
+    const { component, service } = setup('plan');
+    expect(service.get).toHaveBeenCalledWith('plan');
+    expect(component.selected()?.id).toBe('plan');
+    component.loadList();
+    expect(service.get).toHaveBeenCalledTimes(1);
   });
   it('requires explicit publication confirmation', () => {
     const { component, service } = setup();
