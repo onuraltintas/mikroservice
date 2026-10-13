@@ -6,9 +6,17 @@ import { CoachingAdminService } from '../../../../../../src/app/core/services/co
 import { CoachingInstitutionAnalyticsComponent } from './coaching-institution-analytics.component';
 
 describe('institution coaching analytics', () => {
+  it('clears old results and cancels pending requests when filters change', () => {
+    const { component, service, comparison } = setup();
+    const pending = new Subject<typeof comparison>(); service.getInstitutionComparison.mockReturnValueOnce(pending);
+    component.load(2); component.fromDate = '2026-10-02'; component.filtersChanged();
+    expect(pending.observed).toBe(false); expect(component.comparison()).toBeNull(); expect(component.warnings()).toBeNull();
+    component.load();
+    expect(service.getInstitutionEarlyWarnings).toHaveBeenLastCalledWith('institution', expect.objectContaining({ pageNumber: 1 }));
+  });
   function setup() {
     const warning = { studentId: 'student', studentName: 'Ada Test', studentEmail: 'ada@example.invalid', gradeLevel: 8,
-      teacherName: 'Test Koç', riskLevel: 'High', riskScore: 70, reasonCodes: ['LowAssignmentSubmission'],
+      teacherName: 'Test Koç', riskLevel: 'High' as const, riskScore: 70, reasonCodes: ['low_assignment_submission'],
       assignmentCount: 5, submittedAssignmentCount: 1, recordedAttendanceCount: 2, attendedSessionCount: 1, goalCount: 1, averageGoalProgress: 10 };
     const comparison = { institutionId: 'institution', studentCount: 1, assignmentCount: 5, submittedAssignmentCount: 1,
       examResultCount: 0, averageExamPercentage: null, attendancePercentage: 50, completedGoalCount: 0, goalCount: 1 };

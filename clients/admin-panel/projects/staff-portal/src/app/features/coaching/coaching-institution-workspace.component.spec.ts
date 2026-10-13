@@ -1,4 +1,6 @@
 import { TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
+import { CoachingInstitutionAnalyticsComponent } from './coaching-institution-analytics.component';
 import { HttpErrorResponse, provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { of, throwError } from 'rxjs';
@@ -18,6 +20,14 @@ describe('CoachingInstitutionWorkspaceComponent', () => {
     comparison.flush({ studentCount: 1, assignedAssignmentCount: 0, submittedAssignmentCount: 0, goalCount: 0, completedGoalCount: 0 });
     warnings.flush({ items: [], totalCount: 0, pageNumber: 1, totalPages: 0 }); fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('Kurum analizi ve erken uyarılar');
+    const analytics = fixture.debugElement.query(By.directive(CoachingInstitutionAnalyticsComponent)).componentInstance;
+    analytics.fromDate = '2026-10-01'; analytics.gradeLevel = 8;
+    analytics.warnings.set({ items: [], totalCount: 30, pageNumber: 2, totalPages: 2 });
+    fixture.componentInstance.openStudentReport(student('student-1')); fixture.detectChanges();
+    fixture.componentInstance.closeStudentReport(); fixture.detectChanges();
+    const returned = fixture.debugElement.query(By.directive(CoachingInstitutionAnalyticsComponent)).componentInstance;
+    expect(returned).toBe(analytics); expect(returned.fromDate).toBe('2026-10-01'); expect(returned.gradeLevel).toBe(8);
+    expect(returned.warnings()?.pageNumber).toBe(2);
   });
   it('uses the authenticated institution scope and loads an operational overview', async () => {
     const service = institutionService();
