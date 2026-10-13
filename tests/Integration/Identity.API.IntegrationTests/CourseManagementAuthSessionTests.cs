@@ -4,6 +4,7 @@ using Identity.API.Security;
 using Identity.Application.Commands.Login;
 using Identity.Application.Commands.RefreshToken;
 using Identity.Application.Commands.RevokeToken;
+using Identity.Application.Commands.OpenCourseManagementSession;
 using Identity.Domain.Enums;
 using MediatR;
 using Microsoft.AspNetCore.Hosting;
@@ -73,10 +74,38 @@ public sealed class CourseManagementAuthSessionTests
         Assert.IsType<OkObjectResult>(result);
         var command = Assert.IsType<RefreshTokenCommand>(capture.Request);
         Assert.Equal("course-refresh-token", command.RefreshToken);
-        Assert.Equal(PlatformProduct.CourseManagement, command.TargetProduct);
-        Assert.True(command.AllowCourseManagementStudentSession);
+        Assert.Null(command.TargetProduct);
+        Assert.False(command.AllowCourseManagementStudentSession);
         Assert.Contains(RefreshTokenCookiePolicy.CourseManagementCookieName, controller.Response.Headers.SetCookie.ToString());
         Assert.DoesNotContain("course-refresh-token", System.Text.Json.JsonSerializer.Serialize(((OkObjectResult)result).Value));
+    }
+
+    [Fact]
+    public async Task OpenSession_WithoutCourseCookie_ShouldIssueIndependentSessionAndLeaveSourceCookieAlone()
+    {
+        var mediator = DispatchProxy.Create<IMediator, CapturingMediatorProxy>();
+        var capture = (CapturingMediatorProxy)(object)mediator;
+        var userId = Guid.NewGuid();
+        var verifiedAt = DateTimeOffset.UtcNow.AddMinutes(-2);
+        var httpContext = new DefaultHttpContext();
+        httpContext.Request.Headers.Cookie = $"{RefreshTokenCookiePolicy.CookieName}=source-refresh-token";
+        httpContext.User = new ClaimsPrincipal(new ClaimsIdentity(
+        [
+            new Claim("sub", userId.ToString()),
+            new Claim("amr", "mfa"),
+            new Claim("auth_time", verifiedAt.ToUnixTimeSeconds().ToString())
+        ], "test"));
+        var controller = CreateController(mediator, httpContext);
+
+        var result = await controller.OpenSession(CancellationToken.None);
+
+        Assert.IsType<OkObjectResult>(result);
+        var command = Assert.IsType<OpenCourseManagementSessionCommand>(capture.Request);
+        Assert.Equal(userId, command.UserId);
+        Assert.Equal(verifiedAt.ToUnixTimeSeconds(), command.MfaVerifiedAt!.Value.ToUnixTimeSeconds());
+        Assert.Contains(RefreshTokenCookiePolicy.CourseManagementCookieName, controller.Response.Headers.SetCookie.ToString());
+        Assert.Contains("path=/api/auth/course-management", controller.Response.Headers.SetCookie.ToString());
+        Assert.DoesNotContain(RefreshTokenCookiePolicy.CookieName + "=", controller.Response.Headers.SetCookie.ToString());
     }
 
     [Fact]
@@ -132,6 +161,7 @@ public sealed class CourseManagementAuthSessionTests
             {
                 LoginCommand => Task.FromResult(Result.Success(new LoginResponse("access-token", "course-refresh-token", DateTime.UtcNow.AddDays(1), true))),
                 RefreshTokenCommand => Task.FromResult(Result.Success(new RefreshTokenResponse("refreshed-access", "next-course-refresh", DateTime.UtcNow.AddDays(1), true))),
+                OpenCourseManagementSessionCommand => Task.FromResult(Result.Success(new LoginResponse("course-access", "new-course-refresh", DateTime.UtcNow.AddDays(1), false))),
                 RevokeTokenCommand => Task.FromResult(Result.Success()),
                 _ => throw new InvalidOperationException($"Unexpected request: {Request?.GetType().Name}")
             };
