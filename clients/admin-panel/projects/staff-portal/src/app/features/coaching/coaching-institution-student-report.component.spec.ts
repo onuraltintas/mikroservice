@@ -1,4 +1,6 @@
 import { TestBed } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 import {
@@ -12,6 +14,18 @@ import {
 import { CoachingInstitutionStudentReportComponent } from './coaching-institution-student-report.component';
 
 describe('CoachingInstitutionStudentReportComponent', () => {
+  it('opens the same scoped session briefing read-only with a refreshed institution summary', () => {
+    TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
+    const service = reportService(); const fixture = createFixture(service); fixture.detectChanges();
+    fixture.componentInstance.openSessionBrief(); fixture.detectChanges();
+    expect(service.getStudentDetail).toHaveBeenCalledTimes(2);
+    const http = TestBed.inject(HttpTestingController);
+    const reports = http.match(r => r.url === '/api/coaching/staff/students/student-1/study/report'); expect(reports.length).toBe(2);
+    for (const report of reports) report.flush({ success: true, data: { fromDate: report.request.params.get('fromDate'), toDate: report.request.params.get('toDate'),
+      source: 'StudentReported', reason: 'NoScheduledTasks', scheduledTasks: 0, completedTasks: 0, plannedMinutes: 0, actualMinutes: null, completionPercentage: null, topics: [] } });
+    fixture.detectChanges(); http.expectNone(r => r.url.includes('/study/plans') || r.url.includes('/study/availability')); http.verify();
+    expect(fixture.nativeElement.textContent).toContain('Seans hazırlık özeti'); expect(fixture.nativeElement.textContent).not.toContain('Yeni taslak');
+  });
   it('loads the student summary and the first page of assignment history', () => {
     const service = reportService();
     const fixture = createFixture(service);
