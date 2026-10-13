@@ -44,9 +44,10 @@ export const routes: Routes = [
   },
   {
     path: 'coaching',
-    canActivate: [authGuard],
-    data: { role: ['Coach'] },
-    loadChildren: () => import('./features/coaching/coaching.routes').then(m => m.coachingRoutes)
+    children: [
+      { path: '', pathMatch: 'full', loadComponent: () => import('./features/coaching/coaching-redirect.component').then(m => m.CoachingRedirectComponent) },
+      { path: '**', loadComponent: () => import('./features/coaching/coaching-redirect.component').then(m => m.CoachingRedirectComponent) }
+    ]
   },
   // Veli paneli eduivme.com üzerindeki portalda çalışır; speed-reading alanında
   // CMS catch-all'a düşüp gereksiz bir 404 API isteği üretmemelidir.

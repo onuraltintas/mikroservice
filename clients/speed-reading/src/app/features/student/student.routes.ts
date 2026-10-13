@@ -131,8 +131,7 @@ export const studentRoutes: Routes = [
       },
       {
         path: 'coaching',
-        canActivate: [authGuard, profileSetupGuard],
-        loadComponent: () => import('./coaching/student-coaching.component').then(m => m.StudentCoachingComponent)
+        loadComponent: () => import('../coaching/coaching-redirect.component').then(m => m.CoachingRedirectComponent)
       },
       {
         path: '',
