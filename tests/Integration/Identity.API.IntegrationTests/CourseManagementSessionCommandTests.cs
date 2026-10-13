@@ -5,6 +5,7 @@ using Identity.Application.Interfaces;
 using Identity.Application.Services;
 using Identity.Domain.Entities;
 using Identity.Domain.Enums;
+using Microsoft.Extensions.Logging.Abstractions;
 using System.Reflection;
 
 namespace Identity.API.IntegrationTests;
@@ -17,7 +18,8 @@ public sealed class CourseManagementSessionCommandTests
         var user = CreateUser("CourseStudent", PlatformProduct.CourseManagement);
         user.GrantProductAccess(PlatformProduct.CourseManagement, UserProductAccessSource.SelfRegistration, null, DateTimeOffset.UtcNow);
         var issuer = new CapturingSessionIssuer();
-        var handler = new OpenCourseManagementSessionCommandHandler(CreateRepository(user), issuer);
+        var handler = new OpenCourseManagementSessionCommandHandler(
+            CreateRepository(user), issuer, CreateConfiguration("Enabled"), NullLogger<OpenCourseManagementSessionCommandHandler>.Instance);
         var verifiedAt = DateTimeOffset.UtcNow.AddMinutes(-1);
 
         var result = await handler.Handle(
@@ -37,7 +39,8 @@ public sealed class CourseManagementSessionCommandTests
         var user = User.Create(Guid.NewGuid(), "unjoined@example.test");
         user.GrantProductAccess(PlatformProduct.CourseManagement, UserProductAccessSource.SelfRegistration, null, DateTimeOffset.UtcNow);
         var issuer = new CapturingSessionIssuer();
-        var handler = new OpenCourseManagementSessionCommandHandler(CreateRepository(user), issuer);
+        var handler = new OpenCourseManagementSessionCommandHandler(
+            CreateRepository(user), issuer, CreateConfiguration("Enabled"), NullLogger<OpenCourseManagementSessionCommandHandler>.Instance);
 
         var result = await handler.Handle(
             new OpenCourseManagementSessionCommand(user.Id, "127.0.0.1", null),
@@ -48,6 +51,49 @@ public sealed class CourseManagementSessionCommandTests
         Assert.Null(issuer.UserId);
     }
 
+    [Fact]
+    public async Task PrivilegedCourseSession_ShouldRequireMfaWhenCentralPolicyRequiresIt()
+    {
+        var user = CreateUser("CourseInstitutionOwner", PlatformProduct.CourseManagement);
+        user.GrantProductAccess(PlatformProduct.CourseManagement, UserProductAccessSource.SelfRegistration, null, DateTimeOffset.UtcNow);
+        user.EnableMfa("protected-secret", ["recovery-hash"], DateTimeOffset.UtcNow);
+        var issuer = new CapturingSessionIssuer();
+        var handler = new OpenCourseManagementSessionCommandHandler(
+            CreateRepository(user), issuer, CreateConfiguration("Enabled"), NullLogger<OpenCourseManagementSessionCommandHandler>.Instance);
+
+        var denied = await handler.Handle(
+            new OpenCourseManagementSessionCommand(user.Id, "127.0.0.1", null),
+            CancellationToken.None);
+        var verifiedAt = DateTimeOffset.UtcNow;
+        var allowed = await handler.Handle(
+            new OpenCourseManagementSessionCommand(user.Id, "127.0.0.1", verifiedAt),
+            CancellationToken.None);
+
+        Assert.True(denied.IsFailure);
+        Assert.Equal("Auth.MfaRequired", denied.Error.Code);
+        Assert.True(allowed.IsSuccess);
+        Assert.Equal(verifiedAt, issuer.MfaVerifiedAt);
+    }
+
+    [Fact]
+    public async Task PrivilegedCourseSession_ShouldMatchMfaProtectedRoleNamesCaseInsensitively()
+    {
+        var user = CreateUser("systemadmin", PlatformProduct.CourseManagement);
+        user.GrantProductAccess(PlatformProduct.CourseManagement, UserProductAccessSource.SelfRegistration, null, DateTimeOffset.UtcNow);
+        user.EnableMfa("protected-secret", ["recovery-hash"], DateTimeOffset.UtcNow);
+        var issuer = new CapturingSessionIssuer();
+        var handler = new OpenCourseManagementSessionCommandHandler(
+            CreateRepository(user), issuer, CreateConfiguration("Enabled"), NullLogger<OpenCourseManagementSessionCommandHandler>.Instance);
+
+        var result = await handler.Handle(
+            new OpenCourseManagementSessionCommand(user.Id, "127.0.0.1", null),
+            CancellationToken.None);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("Auth.MfaRequired", result.Error.Code);
+        Assert.Null(issuer.UserId);
+    }
+
     private static IUserRepository CreateRepository(User user)
     {
         var repository = DispatchProxy.Create<IUserRepository, UserRepositoryProxy>();
@@ -55,17 +101,24 @@ public sealed class CourseManagementSessionCommandTests
         return repository;
     }
 
+    private static IConfigurationService CreateConfiguration(string? mfaMode)
+    {
+        var configuration = DispatchProxy.Create<IConfigurationService, ConfigurationServiceProxy>();
+        ((ConfigurationServiceProxy)(object)configuration).MfaMode = mfaMode;
+        return configuration;
+    }
+
     private static User CreateUser(string roleName, PlatformProduct product)
     {
         var user = User.Create(Guid.NewGuid(), "student@example.test");
         var role = Role.Create(roleName, roleName);
-        var userRole = new UserRole(user.Id, role.Id, product);
-        typeof(UserRole).GetProperty(nameof(UserRole.Role))!.SetValue(userRole, role);
+        var userRole = new Identity.Domain.Entities.UserRole(user.Id, role.Id, product);
+        typeof(Identity.Domain.Entities.UserRole).GetProperty(nameof(Identity.Domain.Entities.UserRole.Role))!.SetValue(userRole, role);
         user.AddRole(userRole);
         return user;
     }
 
-    private sealed class UserRepositoryProxy : DispatchProxy
+    private class UserRepositoryProxy : DispatchProxy
     {
         public User? User { get; set; }
 
@@ -74,6 +127,18 @@ public sealed class CourseManagementSessionCommandTests
             if (targetMethod?.Name == nameof(IUserRepository.GetByIdAsync))
                 return Task.FromResult(User);
             throw new InvalidOperationException($"Unexpected repository call: {targetMethod?.Name}");
+        }
+    }
+
+    private class ConfigurationServiceProxy : DispatchProxy
+    {
+        public string? MfaMode { get; set; }
+
+        protected override object? Invoke(MethodInfo? targetMethod, object?[]? args)
+        {
+            if (targetMethod?.Name == nameof(IConfigurationService.GetConfigurationValueAsync))
+                return Task.FromResult(MfaMode);
+            throw new InvalidOperationException($"Unexpected configuration call: {targetMethod?.Name}");
         }
     }
 

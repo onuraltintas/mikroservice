@@ -117,7 +117,7 @@ public sealed class CourseManagementAuthSessionTests
         httpContext.Request.Headers.Cookie = $"{RefreshTokenCookiePolicy.CourseManagementCookieName}=course-refresh-token";
         var controller = CreateController(mediator, httpContext);
 
-        var result = await controller.RevokeToken(new RevokeTokenRequest(), CancellationToken.None);
+        var result = await controller.RevokeToken(CancellationToken.None);
 
         Assert.IsType<OkResult>(result);
         Assert.Equal("course-refresh-token", Assert.IsType<RevokeTokenCommand>(capture.Request).Token);
@@ -137,9 +137,19 @@ public sealed class CourseManagementAuthSessionTests
             .GetMethod(nameof(CourseManagementAuthController.VerifyMfa))!
             .GetCustomAttributes<HttpPostAttribute>()
             .Select(attribute => attribute.Template);
+        var mfaSetupRoutes = typeof(CourseManagementAuthController)
+            .GetMethod(nameof(CourseManagementAuthController.StartMfaSetup))!
+            .GetCustomAttributes<HttpPostAttribute>()
+            .Select(attribute => attribute.Template);
+        var mfaEnableRoutes = typeof(CourseManagementAuthController)
+            .GetMethod(nameof(CourseManagementAuthController.EnableMfa))!
+            .GetCustomAttributes<HttpPostAttribute>()
+            .Select(attribute => attribute.Template);
 
         Assert.Contains("login/{product:regex(coaching|speed-reading|course-management)}", loginRoutes);
         Assert.Contains("mfa/verify", mfaRoutes);
+        Assert.Contains("mfa/setup", mfaSetupRoutes);
+        Assert.Contains("mfa/enable", mfaEnableRoutes);
     }
 
     private static CourseManagementAuthController CreateController(IMediator mediator, DefaultHttpContext? context = null)
@@ -149,7 +159,7 @@ public sealed class CourseManagementAuthSessionTests
         return controller;
     }
 
-    private sealed class CapturingMediatorProxy : DispatchProxy
+    private class CapturingMediatorProxy : DispatchProxy
     {
         public object? Request { get; private set; }
 
