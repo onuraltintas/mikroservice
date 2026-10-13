@@ -13,6 +13,43 @@ public sealed class CoachingSessionConflictTests(PostgresFixture postgres)
     private DbContextOptions<CoachingDbContext> Options => new DbContextOptionsBuilder<CoachingDbContext>().UseNpgsql(postgres.ConnectionString).Options;
 
     [Fact]
+    public async Task SessionUpdateAndAttendanceErasureAcquireSchedulingLockBeforeRows()
+    {
+        await using var db = new CoachingDbContext(Options);
+        await db.Database.EnsureDeletedAsync(); await db.Database.MigrateAsync();
+        try
+        {
+            var row = CoachingSession.Create(Guid.NewGuid(), "Session", DateTime.UtcNow.AddDays(2), SessionType.OneOnOne); row.AddStudent(Guid.NewGuid());
+            db.Add(row); await db.SaveChangesAsync(); db.ChangeTracker.Clear(); var attendanceId = row.Attendances.Single().Id;
+            await using var updating = new CoachingDbContext(Options); await using var deleting = new CoachingDbContext(Options);
+            await using var updateTransaction = await updating.Database.BeginTransactionAsync();
+            await using var deleteTransaction = await deleting.Database.BeginTransactionAsync();
+            var deletePid = ((Npgsql.NpgsqlConnection)deleting.Database.GetDbConnection()).ProcessID;
+            await updating.Database.ExecuteSqlInterpolatedAsync($"UPDATE coaching.coaching_sessions SET title = {'U' + "pdated"} WHERE id = {row.Id}");
+            var deleteTask = deleting.Database.ExecuteSqlInterpolatedAsync($"DELETE FROM coaching.session_attendances WHERE id = {attendanceId}");
+            try
+            {
+                var waiting = false;
+                for (var i = 0; i < 100 && !waiting; i++)
+                {
+                    waiting = await db.Database.SqlQuery<bool>($"SELECT EXISTS(SELECT 1 FROM pg_stat_activity WHERE pid = {deletePid} AND wait_event = 'advisory') AS \"Value\"").SingleAsync();
+                    if (!waiting) await Task.Delay(20);
+                }
+                Assert.True(waiting, "Attendance deletion must wait for the scheduling transaction.");
+                await updating.Database.ExecuteSqlInterpolatedAsync($"UPDATE coaching.session_attendances SET teacher_note = {'N' + "ote"} WHERE id = {attendanceId}");
+                await updateTransaction.CommitAsync(); await deleteTask; await deleteTransaction.CommitAsync();
+                Assert.False(await db.SessionAttendances.AnyAsync(x => x.Id == attendanceId));
+            }
+            finally
+            {
+                await updateTransaction.DisposeAsync();
+                await deleteTask; // Observe a failed/deadlock operation after the other transaction releases its locks.
+            }
+        }
+        finally { await db.Database.EnsureDeletedAsync(); }
+    }
+
+    [Fact]
     public async Task DatabaseRejectsTeacherAndStudentOverlapButAllowsAdjacentAndCancelledSlots()
     {
         await using var db = new CoachingDbContext(Options);
