@@ -1,16 +1,20 @@
 using Coaching.Domain.Entities;
 using Coaching.Domain.Enums;
+using Coaching.Application.Interfaces;
 using Coaching.Infrastructure.Data;
 using Coaching.Infrastructure.Messaging;
 using Coaching.Infrastructure.Reminders;
 using Coaching.Infrastructure.Privacy;
 using Coaching.Infrastructure.Repositories;
 using EduPlatform.Shared.Contracts.Events.Privacy;
+using EduPlatform.Shared.Contracts.Events.Coaching;
 using MassTransit;
 using MassTransit.EntityFrameworkCoreIntegration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Shared.IntegrationTests.Fixtures;
 
 namespace Identity.API.IntegrationTests;
@@ -18,6 +22,116 @@ namespace Identity.API.IntegrationTests;
 [Collection("Database")]
 public sealed class CoachingReminderTests(PostgresFixture postgres)
 {
+    [Fact]
+    public async Task ConcurrentEarlierPlanDoesNotShiftAQueuedReminderOntoTheNextPage()
+    {
+        var clock = new Clock { Now = new(DateTime.UtcNow.Date.AddDays(1).AddHours(6), TimeSpan.Zero) };
+        var date = DateOnly.FromDateTime(clock.Now.UtcDateTime);
+        await using var provider = Services().BuildServiceProvider(); await using var scope = provider.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<CoachingDbContext>(); await db.Database.EnsureDeletedAsync(); await db.Database.MigrateAsync();
+        try
+        {
+            for (var i = 1; i <= 100; i++)
+            {
+                var student = Guid.Parse($"10000000-0000-0000-0000-{i:D12}"); var plan = StudyPlanRevision.Create(student, Guid.NewGuid(), 1, "Plan"); plan.Activate();
+                db.AddRange(plan, StudyPlanTask.Create(plan, date, "Task", 30), StudyAvailability.Create(student, i == 1 ? "Europe/London" : "Europe/Istanbul"));
+            }
+            await db.SaveChangesAsync(); db.ChangeTracker.Clear();
+            var publisher = new PageInsertPublisher(new MassTransitCoachingEventPublisher(scope.ServiceProvider.GetRequiredService<IPublishEndpoint>()), async () => {
+                await using var concurrent = new CoachingDbContext(new DbContextOptionsBuilder<CoachingDbContext>().UseNpgsql(postgres.ConnectionString).Options);
+                var plan = StudyPlanRevision.Create(Guid.Parse("00000001-0000-0000-0000-000000000001"), Guid.NewGuid(), 1, "Concurrent plan"); plan.Activate();
+                concurrent.AddRange(plan, StudyPlanTask.Create(plan, date, "Task", 30)); await concurrent.SaveChangesAsync();
+            });
+            var processor = new CoachingReminderProcessor(db, publisher, clock);
+            Assert.Equal(99, await processor.ProcessAsync()); Assert.Equal(1, await processor.ProcessAsync());
+            Assert.Equal(100, await db.CoachingReminderReceipts.CountAsync()); Assert.Equal(100, await db.Set<OutboxMessage>().CountAsync());
+        }
+        finally { await db.Database.EnsureDeletedAsync(); }
+    }
+
+    [Fact]
+    public async Task AlreadyQueuedStudyRemindersDoNotLockStudentsAgain()
+    {
+        var counter = new StudyLockCounter(); var clock = new Clock { Now = new(DateTime.UtcNow.Date.AddDays(1).AddHours(6), TimeSpan.Zero) };
+        await using var provider = Services(counter: counter).BuildServiceProvider(); await using var scope = provider.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<CoachingDbContext>(); await db.Database.EnsureDeletedAsync(); await db.Database.MigrateAsync();
+        try
+        {
+            var plan = StudyPlanRevision.Create(Guid.NewGuid(), Guid.NewGuid(), 1, "Plan"); plan.Activate();
+            db.AddRange(plan, StudyPlanTask.Create(plan, DateOnly.FromDateTime(clock.Now.UtcDateTime), "Task", 30)); await db.SaveChangesAsync(); db.ChangeTracker.Clear();
+            var processor = new CoachingReminderProcessor(db, new MassTransitCoachingEventPublisher(scope.ServiceProvider.GetRequiredService<IPublishEndpoint>()), clock);
+            Assert.Equal(1, await processor.ProcessAsync()); Assert.Equal(1, counter.Count); counter.Count = 0;
+            Assert.Equal(0, await processor.ProcessAsync()); Assert.Equal(0, counter.Count);
+        }
+        finally { await db.Database.EnsureDeletedAsync(); }
+    }
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task TransientCommitFailureQueuesExactlyOneReminder(bool beforeCommit)
+    {
+        var ack = new ReminderAckFault { BeforeCommit = beforeCommit };
+        var clock = new Clock { Now = new(DateTime.UtcNow.Date.AddDays(1).AddHours(6), TimeSpan.Zero) };
+        await using var provider = Services(ack: ack).BuildServiceProvider(); await using var scope = provider.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<CoachingDbContext>(); await db.Database.EnsureDeletedAsync(); await db.Database.MigrateAsync();
+        try
+        {
+            var plan = StudyPlanRevision.Create(Guid.NewGuid(), Guid.NewGuid(), 1, "Plan"); plan.Activate();
+            db.AddRange(plan, StudyPlanTask.Create(plan, DateOnly.FromDateTime(clock.Now.UtcDateTime), "Task", 30)); await db.SaveChangesAsync(); db.ChangeTracker.Clear();
+            var processor = new CoachingReminderProcessor(db, new MassTransitCoachingEventPublisher(scope.ServiceProvider.GetRequiredService<IPublishEndpoint>()), clock);
+            ack.Enabled = true; Assert.Equal(1, await processor.ProcessAsync()); Assert.Equal(0, await processor.ProcessAsync());
+            Assert.Single(await db.CoachingReminderReceipts.AsNoTracking().ToListAsync()); Assert.Single(await db.Set<OutboxMessage>().AsNoTracking().ToListAsync());
+        }
+        finally { await db.Database.EnsureDeletedAsync(); }
+    }
+
+    [Fact]
+    public async Task WorkerLogsFailureAndConcurrentRestartsRecoverWithoutDuplicateNotifications()
+    {
+        var fault = new ReminderFault(); var clock = new Clock { Now = new(DateTime.UtcNow.Date.AddDays(1).AddHours(6), TimeSpan.Zero) };
+        await using var provider = Services(fault, clock: clock).BuildServiceProvider(); await using var scope = provider.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<CoachingDbContext>(); await db.Database.EnsureDeletedAsync(); await db.Database.MigrateAsync();
+        try
+        {
+            var plan = StudyPlanRevision.Create(Guid.NewGuid(), Guid.NewGuid(), 1, "Plan"); plan.Activate();
+            db.AddRange(plan, StudyPlanTask.Create(plan, DateOnly.FromDateTime(clock.Now.UtcDateTime), "Task", 30)); await db.SaveChangesAsync(); db.ChangeTracker.Clear();
+            var logger = new WorkerLogger(); fault.Enabled = true;
+            using (var worker = new CoachingReminderWorker(provider.GetRequiredService<IServiceScopeFactory>(), clock, logger))
+            {
+                try { await worker.StartAsync(default); await logger.Logged.Task.WaitAsync(TimeSpan.FromSeconds(5)); }
+                finally { await worker.StopAsync(default); }
+            }
+            Assert.Empty(await db.CoachingReminderReceipts.AsNoTracking().ToListAsync()); fault.Enabled = false;
+            using var first = new CoachingReminderWorker(provider.GetRequiredService<IServiceScopeFactory>(), clock, NullLogger<CoachingReminderWorker>.Instance);
+            using var second = new CoachingReminderWorker(provider.GetRequiredService<IServiceScopeFactory>(), clock, NullLogger<CoachingReminderWorker>.Instance);
+            try
+            {
+                await first.StartAsync(default); await second.StartAsync(default);
+                var deadline = DateTime.UtcNow.AddSeconds(5);
+                while (!await db.CoachingReminderReceipts.AnyAsync() && DateTime.UtcNow < deadline) await Task.Delay(20);
+            }
+            finally { await first.StopAsync(default); await second.StopAsync(default); }
+            Assert.Single(await db.CoachingReminderReceipts.AsNoTracking().ToListAsync()); Assert.Single(await db.Set<OutboxMessage>().AsNoTracking().ToListAsync());
+        }
+        finally { await db.Database.EnsureDeletedAsync(); }
+    }
+
+    [Fact]
+    public async Task SessionBatchContinuesToLastRecipientOnTheNextCycle()
+    {
+        var clock = new Clock { Now = new(DateTime.UtcNow.Date.AddDays(1).AddHours(6), TimeSpan.Zero) };
+        await using var provider = Services().BuildServiceProvider(); await using var scope = provider.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<CoachingDbContext>(); await db.Database.EnsureDeletedAsync(); await db.Database.MigrateAsync();
+        try
+        {
+            var session = CoachingSession.Create(Guid.NewGuid(), "Group", clock.Now.UtcDateTime.AddMinutes(30), SessionType.Group);
+            session.AddStudents(Enumerable.Range(0, 100).Select(_ => Guid.NewGuid())); db.Add(session); await db.SaveChangesAsync(); db.ChangeTracker.Clear();
+            var processor = new CoachingReminderProcessor(db, new MassTransitCoachingEventPublisher(scope.ServiceProvider.GetRequiredService<IPublishEndpoint>()), clock);
+            Assert.Equal(100, await processor.ProcessAsync()); Assert.Equal(1, await processor.ProcessAsync()); Assert.Equal(0, await processor.ProcessAsync());
+            Assert.Equal(101, await db.CoachingReminderReceipts.CountAsync()); Assert.Equal(101, await db.Set<OutboxMessage>().CountAsync());
+        }
+        finally { await db.Database.EnsureDeletedAsync(); }
+    }
     [Fact]
     public async Task RemindersRespectLocalNineAndSessionHourDeduplicateAndFollowRescheduledWork()
     {
@@ -80,13 +194,17 @@ public sealed class CoachingReminderTests(PostgresFixture postgres)
         finally { await db.Database.EnsureDeletedAsync(); }
     }
 
-    private ServiceCollection Services(ReminderFault? fault = null)
+    private ServiceCollection Services(ReminderFault? fault = null, ReminderAckFault? ack = null, TimeProvider? clock = null, StudyLockCounter? counter = null)
     {
         var services = new ServiceCollection(); services.AddLogging();
         services.AddDbContext<CoachingDbContext>(options => {
             options.UseNpgsql(postgres.ConnectionString, pg => pg.EnableRetryOnFailure());
             if (fault is not null) options.AddInterceptors(fault);
+            if (ack is not null) options.AddInterceptors(ack);
+            if (counter is not null) options.AddInterceptors(counter);
         });
+        services.AddSingleton<TimeProvider>(clock ?? TimeProvider.System);
+        services.AddScoped<ICoachingEventPublisher, MassTransitCoachingEventPublisher>(); services.AddScoped<CoachingReminderProcessor>();
         services.AddMassTransit(bus => {
             bus.AddEntityFrameworkOutbox<CoachingDbContext>(outbox => { outbox.UsePostgres(); outbox.UseBusOutbox(); });
             bus.UsingInMemory((context, cfg) => cfg.ConfigureEndpoints(context));
@@ -94,6 +212,46 @@ public sealed class CoachingReminderTests(PostgresFixture postgres)
         return services;
     }
     private sealed class Clock : TimeProvider { public DateTimeOffset Now; public override DateTimeOffset GetUtcNow() => Now; }
+    private sealed class PageInsertPublisher(ICoachingEventPublisher inner, Func<Task> insert) : ICoachingEventPublisher
+    {
+        private int count;
+        public async Task PublishAsync<T>(T message, CancellationToken ct = default) where T : class
+        {
+            await inner.PublishAsync(message, ct);
+            if (message is CoachingReminderDueEvent { Kind: "StudyDay" } && ++count == 99) await insert();
+        }
+    }
+    private sealed class StudyLockCounter : DbCommandInterceptor
+    {
+        public int Count;
+        public override ValueTask<InterceptionResult<int>> NonQueryExecutingAsync(System.Data.Common.DbCommand command, CommandEventData data, InterceptionResult<int> result, CancellationToken ct = default)
+        {
+            if (command.CommandText.Contains("pg_advisory_xact_lock") && command.Parameters.Cast<System.Data.Common.DbParameter>().Any(x => x.Value is string key && key.StartsWith("coaching-study-plan:"))) Count++;
+            return ValueTask.FromResult(result);
+        }
+    }
+    private sealed class WorkerLogger : ILogger<CoachingReminderWorker>
+    {
+        public TaskCompletionSource Logged { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
+        public bool IsEnabled(LogLevel level) => true;
+        public void Log<TState>(LogLevel level, EventId id, TState state, Exception? error, Func<TState, Exception?, string> formatter)
+        { if (level == LogLevel.Error && error is not null) Logged.TrySetResult(); }
+    }
+    private sealed class ReminderAckFault : DbTransactionInterceptor
+    {
+        public bool Enabled; public bool BeforeCommit;
+        public override ValueTask<InterceptionResult> TransactionCommittingAsync(System.Data.Common.DbTransaction transaction, TransactionEventData data, InterceptionResult result, CancellationToken ct = default)
+        {
+            if (Enabled && BeforeCommit) { Enabled = false; throw new Npgsql.NpgsqlException("Simulated pre-commit connection loss.", new IOException("Connection interrupted.")); }
+            return ValueTask.FromResult(result);
+        }
+        public override Task TransactionCommittedAsync(System.Data.Common.DbTransaction transaction, TransactionEndEventData data, CancellationToken ct = default)
+        {
+            if (Enabled && !BeforeCommit) { Enabled = false; throw new Npgsql.NpgsqlException("Simulated lost COMMIT acknowledgement.", new IOException("Connection interrupted.")); }
+            return Task.CompletedTask;
+        }
+    }
     private sealed class ReminderFault : SaveChangesInterceptor
     {
         public bool Enabled;
