@@ -11,6 +11,71 @@ namespace Identity.API.IntegrationTests;
 public sealed class CrossProductEnrollmentTests
 {
     [Theory]
+    [InlineData(PlatformProduct.Coaching)]
+    [InlineData(PlatformProduct.SpeedReading)]
+    public async Task MultipleInstitutionsRequireSelectionAndPreserveAllSourceLinks(PlatformProduct target)
+    {
+        var f = new Fixture(target, "institution");
+        var second = Institution.Create("Second institution", InstitutionType.School);
+        f.Institutions.Add(second);
+        f.SourceAdmins.Add(InstitutionAdmin.Create(f.User.Id, second.Id, InstitutionAdminRole.Admin, f.Source));
+        var result = await f.Join();
+        var error = Assert.IsType<InstitutionSelectionRequiredError>(result.Error);
+        Assert.Equal(2, error.Institutions.Count);
+        Assert.Contains(error.Institutions, item => item.Id == second.Id && item.Name == second.Name);
+        Assert.Empty(f.AddedAdmins);
+        Assert.False(f.User.HasProductAccess(target));
+        Assert.Equal(0, f.Consents);
+        Assert.True((await f.Join(institutionId: second.Id)).IsSuccess);
+        var added = Assert.Single(f.AddedAdmins);
+        Assert.Equal(second.Id, added.InstitutionId);
+        Assert.Equal(InstitutionAdminRole.Admin, added.Role);
+        Assert.Equal(2, f.SourceAdmins.Count);
+        Assert.All(f.SourceAdmins, link => Assert.True(link.IsActive));
+    }
+
+    [Fact]
+    public async Task InstitutionChoicesRequireMfaButDoNotConsumeTheCodeBeforeSelection()
+    {
+        var f = new Fixture(PlatformProduct.Coaching, "institution");
+        var second = Institution.Create("Second institution", InstitutionType.School);
+        f.Institutions.Add(second);
+        f.SourceAdmins.Add(InstitutionAdmin.Create(f.User.Id, second.Id, InstitutionAdminRole.Manager, f.Source));
+        f.User.EnableMfa("protected", ["recovery"], DateTimeOffset.UtcNow);
+        Assert.Equal("Auth.ExistingAccountMfaRequired", (await f.Join()).Error.Code);
+        var discovery = await f.Join(mfaCode: "123456");
+        Assert.IsType<InstitutionSelectionRequiredError>(discovery.Error);
+        Assert.Null(f.User.LastAcceptedMfaTimeStep);
+        Assert.Equal(0, f.Saves);
+        Assert.True((await f.Join(mfaCode: "123456", institutionId: second.Id)).IsSuccess);
+        Assert.Equal(100, f.User.LastAcceptedMfaTimeStep);
+    }
+
+    [Fact]
+    public async Task ForeignInstitutionSelectionCannotGrantAccess()
+    {
+        var f = new Fixture(PlatformProduct.SpeedReading, "institution");
+        Assert.Equal("Auth.InvalidInstitutionSelection", (await f.Join(institutionId: Guid.NewGuid())).Error.Code);
+        Assert.Empty(f.AddedAdmins);
+        Assert.False(f.User.HasProductAccess(f.Target));
+        Assert.Equal(0, f.Saves);
+    }
+
+    [Fact]
+    public async Task RevokedInstitutionChoiceIsRevalidatedAtSubmission()
+    {
+        var f = new Fixture(PlatformProduct.Coaching, "institution");
+        var second = Institution.Create("Second", InstitutionType.School);
+        f.Institutions.Add(second);
+        var link = InstitutionAdmin.Create(f.User.Id, second.Id, InstitutionAdminRole.Manager, f.Source);
+        f.SourceAdmins.Add(link);
+        Assert.IsType<InstitutionSelectionRequiredError>((await f.Join()).Error);
+        link.Deactivate();
+        Assert.Equal("Auth.InvalidInstitutionSelection", (await f.Join(institutionId: second.Id)).Error.Code);
+        Assert.Empty(f.AddedAdmins);
+        Assert.False(f.User.HasProductAccess(f.Target));
+    }
+    [Theory]
     [InlineData(PlatformProduct.Coaching, "student")]
     [InlineData(PlatformProduct.SpeedReading, "student")]
     [InlineData(PlatformProduct.Coaching, "teacher")]
@@ -105,6 +170,8 @@ public sealed class CrossProductEnrollmentTests
         public TeacherProfile Teacher;
         public Dictionary<string, Role> Roles = new[] { "Student", "Teacher", "InstitutionAdmin", "InstitutionOwner" }.ToDictionary(x => x, x => Role.Create(x, x, true));
         public List<InstitutionAdmin> AddedAdmins = [];
+        public List<InstitutionAdmin> SourceAdmins = [];
+        public List<Institution> Institutions = [];
         public int Saves, ProfilesAdded, Consents;
         public bool FailSave;
         private readonly ExistingAccountEnrollment enrollment;
@@ -121,13 +188,15 @@ public sealed class CrossProductEnrollmentTests
             typeof(Identity.Domain.Entities.UserRole).GetProperty("Role")!.SetValue(membership, role); User.AddRole(membership);
             Student = StudentProfile.Create(User.Id, "Original", "Account", Institution.Id);
             Teacher = TeacherProfile.Create(User.Id, "Original", "Account", Institution.Id);
+            Institutions.Add(Institution);
+            SourceAdmins.Add(InstitutionAdmin.Create(User.Id, Institution.Id, InstitutionAdminRole.Manager, Source));
             enrollment = new ExistingAccountEnrollment(
                 Stub<IUserRepository>((m, _) => m.Name == "GetByEmailAsync" ? Task.FromResult<User?>(User) : null),
                 Stub<IStudentRepository>((m, _) => m.Name == "GetExistingForRegistrationAsync" ? Task.FromResult<StudentProfile?>(Student) : AddProfile()),
                 Stub<ITeacherRepository>((m, _) => m.Name == "GetExistingForRegistrationAsync" ? Task.FromResult<TeacherProfile?>(Teacher) : AddProfile()),
                 Stub<IInstitutionRepository>((m, args) => m.Name switch {
-                    "GetByIdAsync" => Task.FromResult<Institution?>(Institution),
-                    "GetAdminsForRegistrationAsync" => Task.FromResult<IReadOnlyList<InstitutionAdmin>>([InstitutionAdmin.Create(User.Id, Institution.Id, InstitutionAdminRole.Manager, Source)]),
+                    "GetByIdAsync" => Task.FromResult<Institution?>(Institutions.SingleOrDefault(item => item.Id == (Guid)args![0]!)),
+                    "GetAdminsForRegistrationAsync" => Task.FromResult<IReadOnlyList<InstitutionAdmin>>(SourceAdmins),
                     "AddAdminAsync" => AddAdmin((InstitutionAdmin)args![0]!),
                     _ => throw new NotSupportedException(m.Name) }),
                 Stub<IRoleRepository>((_, args) => Task.FromResult<Role?>(Roles[(string)args![0]!])), hasher,
@@ -135,7 +204,7 @@ public sealed class CrossProductEnrollmentTests
                 Stub<IUnitOfWork>((m, _) => m.Name == "SaveChangesAsync" ? Save() : null),
                 Stub<IRegistrationLegalConsentService>((_, _) => { Consents++; return null; }), TimeProvider.System, new TestAuthenticationLock());
         }
-        public Task<EduPlatform.Shared.Kernel.Results.Result<Guid>> Join(string password = Password, string? role = null, string? mfaCode = null) => enrollment.JoinAsync(User.Email, password, Target, role ?? account, [], mfaCode, CancellationToken.None);
+        public Task<EduPlatform.Shared.Kernel.Results.Result<Guid>> Join(string password = Password, string? role = null, string? mfaCode = null, Guid? institutionId = null) => enrollment.JoinAsync(User.Email, password, Target, role ?? account, [], mfaCode, CancellationToken.None, institutionId);
         private Task AddProfile() { ProfilesAdded++; return Task.CompletedTask; }
         private Task AddAdmin(InstitutionAdmin admin) { AddedAdmins.Add(admin); return Task.CompletedTask; }
         private Task<int> Save() { Saves++; if (FailSave) throw new InvalidOperationException("Write failed"); return Task.FromResult(1); }

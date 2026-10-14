@@ -1,4 +1,4 @@
-import { Component, ViewChild, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, ViewChild, inject } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -30,6 +30,7 @@ export class AppComponent {
   }
   readonly auth = inject(StaffAuthService);
   private readonly document = inject(DOCUMENT);
+  private readonly changeDetector = inject(ChangeDetectorRef);
   readonly currentYear = new Date().getFullYear();
   readonly hasCourseAccess = (access: StaffProductAccess): boolean => access.product === 'course-management';
   selectedProduct: StaffProduct = this.initialProduct();
@@ -156,6 +157,7 @@ export class AppComponent {
       this.errorMessage = this.getErrorMessage(error);
     } finally {
       this.isSubmitting = false;
+      this.changeDetector.markForCheck();
     }
   }
 
@@ -181,6 +183,7 @@ export class AppComponent {
       this.errorMessage = this.getErrorMessage(error);
     } finally {
       this.isSubmitting = false;
+      this.changeDetector.markForCheck();
     }
   }
 
@@ -205,6 +208,7 @@ export class AppComponent {
       this.errorMessage = this.getErrorMessage(error);
     } finally {
       this.isSubmitting = false;
+      this.changeDetector.markForCheck();
     }
   }
 
@@ -226,6 +230,7 @@ export class AppComponent {
       this.switchError = code === 'Auth.MfaRequired' || message.toLocaleLowerCase('tr').includes('iki adımlı')
         ? 'Bu kurum hesabı için yeniden giriş yapıp iki adımlı doğrulamayı tamamlayın. Açık oturumunuz korunuyor.'
         : message;
+      this.changeDetector.markForCheck();
     }
   }
 

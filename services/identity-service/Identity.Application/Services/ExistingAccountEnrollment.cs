@@ -15,10 +15,11 @@ public sealed class ExistingAccountEnrollment(
 {
     public async Task<Result<Guid>> JoinAsync(string email, string password, PlatformProduct target,
         string account, IReadOnlyList<PlatformLegalPageDto> documents, string? mfaCode,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken, Guid? institutionId = null)
     {
         if (target is not (PlatformProduct.Coaching or PlatformProduct.SpeedReading)
-            || account is not ("student" or "teacher" or "institution"))
+            || account is not ("student" or "teacher" or "institution")
+            || institutionId.HasValue && (account != "institution" || institutionId == Guid.Empty))
             return Failure("Auth.InvalidProduct", "Geçersiz servis veya hesap türü.");
 
         var user = await users.GetByEmailAsync(email.Trim(), cancellationToken);
@@ -46,19 +47,29 @@ public sealed class ExistingAccountEnrollment(
         StudentProfile? student = null;
         TeacherProfile? teacher = null;
         InstitutionAdmin? sourceAdmin = null;
+        var institutionChoices = new List<InstitutionEnrollmentChoice>();
         var targetRoleNames = new List<string> { sourceRole };
         if (account == "institution")
         {
             var links = await institutions.GetAdminsForRegistrationAsync(user.Id, cancellationToken);
             if (links.Any(a => a.Product == target))
                 return Failure("Identity.UserExists", "Bu servis için mevcut kurum bağlantınız var. Yöneticinizle görüşün.");
-            var sourceLinks = links.Where(a => a.Product == source && a.IsActive).ToList();
-            if (sourceLinks.Count != 1)
-                return Failure("Auth.ExistingAccountNotEligible", "Katılım için tek bir aktif kurum bağlantısı gerekir. Kurum seçimini yöneticinizle tamamlayın.");
-            sourceAdmin = sourceLinks[0];
-            if (!await IsActiveInstitution(sourceAdmin.InstitutionId, cancellationToken))
-                return Failure("Auth.ExistingAccountNotEligible", "Mevcut kurumunuz aktif olmalıdır.");
-            if (sourceAdmin.Role == InstitutionAdminRole.Owner)
+            var sourceLinks = new List<InstitutionAdmin>();
+            foreach (var link in links.Where(a => a.UserId == user.Id && a.Product == source && a.IsActive))
+            {
+                var institution = await institutions.GetByIdAsync(link.InstitutionId, cancellationToken);
+                if (institution is not { IsActive: true }) continue;
+                sourceLinks.Add(link);
+                institutionChoices.Add(new(link.InstitutionId, institution.Name, link.Role.ToString()));
+            }
+            if (sourceLinks.Count == 0)
+                return Failure("Auth.ExistingAccountNotEligible", "Katılım için aktif bir kurum bağlantısı gerekir.");
+            sourceAdmin = institutionId.HasValue
+                ? sourceLinks.SingleOrDefault(link => link.InstitutionId == institutionId)
+                : sourceLinks.Count == 1 ? sourceLinks[0] : null;
+            if (institutionId.HasValue && sourceAdmin is null)
+                return Failure("Auth.InvalidInstitutionSelection", "Seçilen kuruma ait aktif yetkiniz bulunmuyor. Kurum listesini yeniden yükleyin.");
+            if (sourceAdmin?.Role == InstitutionAdminRole.Owner)
             {
                 if (!HasSourceRole("InstitutionOwner"))
                     return Failure("Auth.SourceRoleRequired", "Kurum sahibi yetkisi doğrulanamadı.");
@@ -88,6 +99,7 @@ public sealed class ExistingAccountEnrollment(
                 return Failure("Identity.RoleNotFound", "Katılım rolü şu anda kullanılamıyor.");
             targetRoles.Add(role);
         }
+        long? acceptedMfaStep = null;
         if (user.MfaEnabled)
         {
             var now = timeProvider.GetUtcNow();
@@ -97,13 +109,20 @@ public sealed class ExistingAccountEnrollment(
                 return Failure("Auth.ExistingAccountMfaRequired", "Mevcut hesabınızın doğrulama uygulamasındaki altı haneli kodu girin.");
             var step = string.IsNullOrWhiteSpace(user.MfaSecretProtected) ? null
                 : multiFactor.FindMatchingTimeStep(user.MfaSecretProtected, mfaCode);
-            if (!step.HasValue || !user.TryAcceptMfaTimeStep(step.Value))
+            if (!step.HasValue || user.LastAcceptedMfaTimeStep >= step.Value)
             {
                 user.RecordFailedMfaAttempt(now);
                 await unitOfWork.SaveChangesAsync(cancellationToken);
                 return Failure("Auth.InvalidMfaCode", "Doğrulama kodu geçersiz veya kullanılmış. Yeni kodla tekrar deneyin.");
             }
+            acceptedMfaStep = step;
         }
+
+        if (account == "institution" && sourceAdmin is null)
+            return Result.Failure<Guid>(new InstitutionSelectionRequiredError(institutionChoices
+                .OrderBy(choice => choice.Name, StringComparer.OrdinalIgnoreCase).ThenBy(choice => choice.Id).ToArray()));
+        if (acceptedMfaStep.HasValue && !user.TryAcceptMfaTimeStep(acceptedMfaStep.Value))
+            return Failure("Auth.InvalidMfaCode", "Doğrulama kodu kullanılmış. Yeni kodla tekrar deneyin.");
 
         // Reuse profiles and institution IDs; enrollment never changes source membership or subscriptions.
         if (target == PlatformProduct.Coaching && account == "student" && student is null)

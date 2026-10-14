@@ -215,10 +215,17 @@ public sealed class GoogleAuthRecaptchaVerifier(
 
             var result = await response.Content.ReadFromJsonAsync<GoogleRecaptchaResponse>(
                 cancellationToken: cancellationToken);
-            return AuthRecaptchaRules.IsAccepted(
-                options,
-                result?.ToVerification(),
-                action);
+            var verification = result?.ToVerification();
+            var accepted = AuthRecaptchaRules.IsAccepted(options, verification, action);
+            if (!accepted)
+            {
+                logger.LogInformation("Google auth CAPTCHA rejected: success={Success}, score={Score}, actionMatches={ActionMatches}, hostnameAllowed={HostnameAllowed}.",
+                    verification?.Success, verification?.Score,
+                    string.Equals(verification?.Action, action, StringComparison.Ordinal),
+                    options.AllowedHostnames.Any(host => string.Equals(host.Trim().TrimEnd('.'),
+                        verification?.Hostname?.Trim().TrimEnd('.'), StringComparison.OrdinalIgnoreCase)));
+            }
+            return accepted;
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {

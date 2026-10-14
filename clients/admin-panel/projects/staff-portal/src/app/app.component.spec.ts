@@ -1,9 +1,33 @@
-import { signal } from '@angular/core';
+import { ChangeDetectorRef, signal } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import { vi } from 'vitest';
 import { StaffAuthService } from './auth/staff-auth.service';
 import { StaffProductAccess } from './auth/staff-auth.models';
 import { AppComponent } from './app.component';
+
+describe('Staff login rejection rendering', () => {
+  it('releases the submit button and renders a CAPTCHA rejection after the async response', async () => {
+    let rejectLogin!: (error: unknown) => void;
+    TestBed.configureTestingModule({ imports: [AppComponent], providers: [{ provide: StaffAuthService, useValue: {
+      login: vi.fn().mockImplementation(() => new Promise((_, reject) => { rejectLogin = reject; }))
+    } }] });
+    TestBed.overrideComponent(AppComponent, { set: { template: '<button [disabled]="isSubmitting" (click)="submitLogin()">Giriş</button><p role="alert">{{errorMessage}}</p>' } });
+    await TestBed.compileComponents();
+    const fixture = TestBed.createComponent(AppComponent);
+    fixture.detectChanges();
+    fixture.nativeElement.querySelector('button').click();
+    await fixture.whenStable();
+    expect(fixture.nativeElement.querySelector('button').disabled).toBe(true);
+    rejectLogin(new HttpErrorResponse({ status: 403, error: {
+      code: 'Auth.CaptchaFailed', message: 'Güvenlik doğrulaması tamamlanamadı. Lütfen tekrar deneyin.'
+    } }));
+    await new Promise(resolve => setTimeout(resolve, 0));
+    await fixture.whenStable();
+    expect(fixture.nativeElement.querySelector('button').disabled).toBe(false);
+    expect(fixture.nativeElement.querySelector('[role="alert"]').textContent).toContain('Güvenlik doğrulaması tamamlanamadı');
+  });
+});
 
 describe('Staff portal MFA flow', () => {
   it('starts the enrollment setup when Identity requires first-time MFA enrollment', async () => {
@@ -175,7 +199,7 @@ describe('Staff portal product deep links', () => {
 
 function createComponent(auth: Partial<StaffAuthService>): AppComponent {
   TestBed.configureTestingModule({
-    providers: [{ provide: StaffAuthService, useValue: auth }]
+    providers: [{ provide: StaffAuthService, useValue: auth }, { provide: ChangeDetectorRef, useValue: { markForCheck: vi.fn() } }]
   });
   return TestBed.runInInjectionContext(() => new AppComponent());
 }
