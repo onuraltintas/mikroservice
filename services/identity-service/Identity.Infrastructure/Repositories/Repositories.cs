@@ -633,6 +633,8 @@ public class UserRepository : IUserRepository
 
 public class InstitutionRepository : IInstitutionRepository
 {
+    public async Task<IReadOnlyList<InstitutionAdmin>> GetAdminsForRegistrationAsync(Guid userId, CancellationToken cancellationToken) =>
+        await _context.InstitutionAdmins.IgnoreQueryFilters().Where(admin => admin.UserId == userId).ToListAsync(cancellationToken);
     private readonly IdentityDbContext _context;
 
     private sealed record TeacherReadProfile(Guid Id, Guid? InstitutionId, bool CanViewAllInstitutionStudents);
@@ -1070,8 +1072,9 @@ public class InstitutionRepository : IInstitutionRepository
             .Where(user => user.Id == viewerUserId && user.IsActive)
             .Select(user => new
             {
+                HasCoachingAccess = user.ProductAccesses.Any(access => access.Product == PlatformProduct.Coaching && access.IsActive),
                 Roles = user.Roles
-                    .Where(userRole => !userRole.Role.IsDeleted)
+                    .Where(userRole => !userRole.Role.IsDeleted && (userRole.Product == PlatformProduct.Coaching || userRole.Role.Name == "SystemAdmin"))
                     .Select(userRole => userRole.Role.Name)
                     .ToList()
             })
@@ -1091,7 +1094,7 @@ public class InstitutionRepository : IInstitutionRepository
         var isInstitutionAdministrator = viewer.Roles.Any(role =>
             string.Equals(role, "InstitutionAdmin", StringComparison.OrdinalIgnoreCase)
             || string.Equals(role, "InstitutionOwner", StringComparison.OrdinalIgnoreCase));
-        if (!isInstitutionAdministrator)
+        if (!viewer.HasCoachingAccess || !isInstitutionAdministrator)
         {
             return null;
         }
@@ -1099,6 +1102,7 @@ public class InstitutionRepository : IInstitutionRepository
         var institutionId = await _context.InstitutionAdmins
             .AsNoTracking()
             .Where(admin => admin.UserId == viewerUserId
+                && admin.Product == PlatformProduct.Coaching
                 && admin.IsActive
                 && admin.User.IsActive
                 && admin.Institution.IsActive)
@@ -1747,6 +1751,8 @@ public class UnitOfWork : IUnitOfWork
 
 public class TeacherRepository : ITeacherRepository
 {
+    public Task<TeacherProfile?> GetExistingForRegistrationAsync(Guid userId, CancellationToken cancellationToken) =>
+        _context.TeacherProfiles.IgnoreQueryFilters().SingleOrDefaultAsync(profile => profile.UserId == userId, cancellationToken);
     private readonly IdentityDbContext _context;
     public TeacherRepository(IdentityDbContext context) => _context = context;
 

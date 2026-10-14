@@ -159,7 +159,8 @@ public static class DependencyInjection
         services.AddScoped<ISpeedReadingAdaptiveText, OwnedSpeedReadingAdaptiveText>();
 
         services.AddScoped<ISpeedReadingTeacherAccess, OwnedSpeedReadingTeacherAccess>();
-        services.AddHttpClient<ISpeedReadingProgressAccess, IdentityProgressAccessClient>(client =>
+        services.AddScoped<ISpeedReadingProgressAccess, OwnedSpeedReadingProgressAccess>();
+        services.AddHttpClient<IdentityProgressAccessClient>(client =>
         {
             client.Timeout = TimeSpan.FromSeconds(5);
         }).AddCorrelationIdPropagation();

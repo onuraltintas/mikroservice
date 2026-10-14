@@ -91,7 +91,11 @@
 
                 <p class="mb-5 text-sm text-gray-500 dark:text-gray-400">Başka bir Eduİvme servisinde hesabın varsa aynı e-posta adresini ve mevcut şifreni kullanarak Koçluk'a katılabilirsin. Bu işlem mevcut şifreni değiştirmez.</p>
 
-                <form [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-col gap-5">
+                <button mat-stroked-button type="button" class="mb-5" (click)="joinExisting = !joinExisting" [attr.aria-expanded]="joinExisting">
+                    {{ joinExisting ? 'Yeni hesap oluştur' : 'Mevcut hesabımla katıl' }}
+                </button>
+                @if (joinExisting) { <app-existing-product-join product="coaching" account="student" /> }
+                <form [style.display]="joinExisting ? 'none' : null" [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-col gap-5">
 
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">

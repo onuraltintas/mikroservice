@@ -77,6 +77,7 @@ public interface IRoleRepository
 
 public interface IInstitutionRepository
 {
+    Task<IReadOnlyList<InstitutionAdmin>> GetAdminsForRegistrationAsync(Guid userId, CancellationToken cancellationToken);
     Task AddAsync(Institution institution, CancellationToken cancellationToken);
     Task AddAdminAsync(InstitutionAdmin admin, CancellationToken cancellationToken);
     Task<PagedList<InstitutionDto>> GetAllAsync(int page, int pageSize, string? searchTerm, bool? isActive, Guid? institutionId, CancellationToken cancellationToken);
@@ -209,6 +210,7 @@ public interface IUnitOfWork
 
 public interface ITeacherRepository
 {
+    Task<TeacherProfile?> GetExistingForRegistrationAsync(Guid userId, CancellationToken cancellationToken);
     Task AddAsync(TeacherProfile teacher, CancellationToken cancellationToken);
     Task<TeacherProfile?> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken);
     Task<TeacherProfile?> GetByUserIdAsync(Guid userId, Guid? institutionId, CancellationToken cancellationToken);

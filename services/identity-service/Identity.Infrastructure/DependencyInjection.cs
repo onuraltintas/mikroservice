@@ -38,6 +38,12 @@ public static class DependencyInjection
         var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
         dataSourceBuilder.EnableDynamicJson();
         var dataSource = dataSourceBuilder.Build();
+        services.AddSingleton<IAuthenticationLock>(_ => new PostgreSqlAuthenticationLock(
+            new NpgsqlDataSourceBuilder(new NpgsqlConnectionStringBuilder(connectionString)
+            {
+                Pooling = false,
+                ApplicationName = "Identity.AuthenticationLock"
+            }.ConnectionString).Build()));
         
         // Register dataSource as Singleton to be disposed properly (Optional but recommended, or let DI handle it if registered)
         // For simplicity within AddDbContext usage:

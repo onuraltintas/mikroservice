@@ -22,6 +22,8 @@ public sealed class AuthRecaptchaSecurityTests
     [InlineData("/api/auth/coaching/google-register-complete", "auth_register")]
     [InlineData("/api/auth/speed-reading/google-register-complete", "auth_register")]
     [InlineData("/api/auth/coaching/register/student", "auth_register")]
+    [InlineData("/api/auth/coaching/register/join", "auth_register")]
+    [InlineData("/api/auth/speed-reading/register/join", "auth_register")]
     [InlineData("/api/auth/speed-reading/register/teacher", "auth_register")]
     [InlineData("/api/auth/coaching/register/institution", "auth_register")]
     [InlineData("/api/auth/coaching/register/parent", "auth_register")]

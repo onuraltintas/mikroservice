@@ -75,6 +75,17 @@ public class AuthController : ControllerBase
             UseSecureSessionCookie));
     }
 
+    [HttpPost("{product:regex(coaching|speed-reading)}/register/join")]
+    [AllowAnonymous]
+    public async Task<IActionResult> JoinProduct(string product,
+        [FromBody] Identity.Application.Commands.JoinProduct.JoinProductCommand command)
+    {
+        if (!TryResolveProduct(product, out var platformProduct))
+            return BadRequest(new Error("Auth.InvalidProduct", "Geçersiz platform."));
+        var result = await _mediator.Send(command with { Product = platformProduct });
+        return result.IsFailure ? RegistrationFailure(result) : Ok(new { UserId = result.Value });
+    }
+
     [HttpPost("{product:regex(coaching|speed-reading)}/register/student")]
     [AllowAnonymous]
     public async Task<IActionResult> RegisterStudent(

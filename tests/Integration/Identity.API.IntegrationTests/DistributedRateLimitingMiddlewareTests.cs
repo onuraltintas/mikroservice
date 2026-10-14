@@ -15,6 +15,8 @@ public sealed class DistributedRateLimitingMiddlewareTests
     [InlineData("/api/auth/reset-password", "POST", "auth-password-reset", 10, 900)]
     [InlineData("/api/auth/confirm-email", "POST", "auth-email-confirmation", 10, 900)]
     [InlineData("/api/auth/coaching/register/student", "POST", "auth-registration", 15, 60)]
+    [InlineData("/api/auth/coaching/register/join", "POST", "auth-registration", 15, 60)]
+    [InlineData("/api/auth/speed-reading/register/join", "POST", "auth-registration", 15, 60)]
     [InlineData("/api/auth/speed-reading/register/institution", "POST", "auth-registration", 15, 60)]
     [InlineData("/api/auth/login", "POST", "auth", 30, 60)]
     [InlineData("/api/auth/coaching/login", "POST", "auth", 30, 60)]

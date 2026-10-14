@@ -144,7 +144,7 @@ public static class AuthRecaptchaRules
         if (segments.Length == 5
             && IsProduct(segments[2])
             && string.Equals(segments[3], "register", StringComparison.OrdinalIgnoreCase)
-            && segments[4].ToLowerInvariant() is "student" or "teacher" or "institution" or "parent")
+            && segments[4].ToLowerInvariant() is "student" or "teacher" or "institution" or "parent" or "join")
         {
             return "auth_register";
         }

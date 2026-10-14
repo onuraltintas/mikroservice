@@ -21,11 +21,13 @@ import { resolveAuthDestination, resolveInvitationReturnUrl } from '../auth-role
 import { getErrorMessage } from '../../../core/utils/error-message';
 import { RegistrationLegalAcceptance } from '../../../core/models/user.model';
 import { RegistrationLegalConsentComponent } from '../registration-legal-consent.component';
+import { ExistingProductJoinComponent } from '../existing-product-join.component';
 
 @Component({
   selector: 'app-register',
   standalone: true,
   imports: [
+    ExistingProductJoinComponent,
     CommonModule,
     ReactiveFormsModule,
     RouterLink,
@@ -57,6 +59,7 @@ export class RegisterComponent implements AfterViewInit, OnDestroy {
   passwordErrorMessages = PASSWORD_ERROR_MESSAGES;
   hidePassword = true; // Added visibility toggle state
   hideConfirmPassword = true;
+  joinExisting = false;
   legalReady = false;
   legalAcceptances: RegistrationLegalAcceptance[] = [];
 

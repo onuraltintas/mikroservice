@@ -37,6 +37,7 @@ public sealed class MfaAuthenticationCoordinator
     private readonly IUnitOfWork _unitOfWork;
     private readonly TimeProvider _timeProvider;
     private readonly IPasswordHasher _passwordHasher;
+    private readonly IAuthenticationLock _authenticationLock;
 
     public MfaAuthenticationCoordinator(
         IUserRepository users,
@@ -44,7 +45,8 @@ public sealed class MfaAuthenticationCoordinator
         IAuthenticationSessionIssuer sessionIssuer,
         IUnitOfWork unitOfWork,
         TimeProvider timeProvider,
-        IPasswordHasher passwordHasher)
+        IPasswordHasher passwordHasher,
+        IAuthenticationLock authenticationLock)
     {
         _users = users;
         _multiFactor = multiFactor;
@@ -52,6 +54,7 @@ public sealed class MfaAuthenticationCoordinator
         _unitOfWork = unitOfWork;
         _timeProvider = timeProvider;
         _passwordHasher = passwordHasher;
+        _authenticationLock = authenticationLock;
     }
 
     public async Task<Result<MfaSetupResponse>> StartSetupAsync(
@@ -169,6 +172,10 @@ public sealed class MfaAuthenticationCoordinator
             return Result.Failure<MfaCompletionResponse>(context.Error);
         }
 
+        await using var lease = await _authenticationLock.AcquireAsync(context.Value.User.Id, cancellationToken);
+        _unitOfWork.ClearTracking();
+        context = await LoadContextAsync(challengeToken, cancellationToken);
+        if (context.IsFailure) return Result.Failure<MfaCompletionResponse>(context.Error);
         var user = context.Value.User;
         var now = _timeProvider.GetUtcNow();
         if (!user.MfaEnabled || string.IsNullOrWhiteSpace(user.MfaSecretProtected))

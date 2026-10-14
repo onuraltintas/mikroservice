@@ -74,7 +74,11 @@
                     </p>
                 </div>
 
-                <form [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-col gap-4">
+                <button mat-stroked-button type="button" class="mb-5" (click)="joinExisting = !joinExisting" [attr.aria-expanded]="joinExisting">
+                    {{ joinExisting ? 'Yeni hesap oluştur' : 'Mevcut hesabımla katıl' }}
+                </button>
+                @if (joinExisting) { <app-existing-product-join product="coaching" account="institution" /> }
+                <form [style.display]="joinExisting ? 'none' : null" [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-col gap-4">
 
 
                     <!-- Institution Info -->
@@ -92,9 +96,25 @@
                                 <mat-error>Kurum adı gereklidir</mat-error>
                             </mat-form-field>
                             <mat-form-field appearance="outline" class="w-full">
-                                <mat-label>Vergi Numarası</mat-label>
-                                <input matInput formControlName="taxNumber" placeholder="10 haneli vergi no">
-                                <mat-error>Vergi no gereklidir</mat-error>
+                                <mat-label>Kurum türü</mat-label>
+                                <mat-select formControlName="institutionType">
+                                    <mat-option [value]="1">Okul</mat-option>
+                                    <mat-option [value]="2">Dershane</mat-option>
+                                    <mat-option [value]="3">Etüt merkezi</mat-option>
+                                    <mat-option [value]="4">Online platform</mat-option>
+                                </mat-select>
+                            </mat-form-field>
+                            <mat-form-field appearance="outline" class="w-full">
+                                <mat-label>İl</mat-label>
+                                <mat-select formControlName="provinceId" (selectionChange)="onProvinceChange()">
+                                    @for (province of provinces; track province.id) { <mat-option [value]="province.id">{{ province.name }}</mat-option> }
+                                </mat-select>
+                            </mat-form-field>
+                            <mat-form-field appearance="outline" class="w-full">
+                                <mat-label>İlçe</mat-label>
+                                <mat-select formControlName="districtId">
+                                    @for (district of districts; track district.id) { <mat-option [value]="district.id">{{ district.name }}</mat-option> }
+                                </mat-select>
                             </mat-form-field>
                         </div>
                     </div>

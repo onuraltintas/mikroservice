@@ -22,11 +22,13 @@ import { getErrorMessage } from '../../../core/utils/error-message';
 import { resolveInvitationReturnUrl } from '../auth-role-routing';
 import { RegistrationLegalAcceptance } from '../../../core/models/user.model';
 import { RegistrationLegalConsentComponent } from '../registration-legal-consent.component';
+import { ExistingProductJoinComponent } from '../existing-product-join.component';
 
 @Component({
   selector: 'app-register-teacher',
   standalone: true,
   imports: [
+    ExistingProductJoinComponent,
     CommonModule,
     ReactiveFormsModule,
     RouterLink,
@@ -58,6 +60,7 @@ export class RegisterTeacherComponent implements AfterViewInit, OnDestroy {
   successMessage = '';
   hidePassword = true;
   hideConfirmPassword = true;
+  joinExisting = false;
   legalReady = false;
   legalAcceptances: RegistrationLegalAcceptance[] = [];
 

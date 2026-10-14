@@ -18,11 +18,13 @@ import { DistrictOption, LocationsService, ProvinceOption } from '../../../core/
 import { getErrorMessage } from '../../../core/utils/error-message';
 import { RegistrationLegalAcceptance } from '../../../core/models/user.model';
 import { RegistrationLegalConsentComponent } from '../registration-legal-consent.component';
+import { ExistingProductJoinComponent } from '../existing-product-join.component';
 
 @Component({
   selector: 'app-register-school',
   standalone: true,
   imports: [
+    ExistingProductJoinComponent,
     CommonModule,
     ReactiveFormsModule,
     RouterLink,
@@ -57,6 +59,7 @@ export class RegisterSchoolComponent implements OnInit {
   filteredDistricts: DistrictOption[] = [];
   readonly provinceFilter = new FormControl('', { nonNullable: true });
   readonly districtFilter = new FormControl('', { nonNullable: true });
+  joinExisting = false;
   legalReady = false;
   legalAcceptances: RegistrationLegalAcceptance[] = [];
 

@@ -5,6 +5,7 @@ using EduPlatform.Shared.Security.Services;
 using Identity.Application.Commands.RegisterStudent;
 using Identity.Application.Interfaces;
 using Identity.Application.LegalPages;
+using Identity.Application.Services;
 using Identity.Domain.Entities;
 using Identity.Domain.Enums;
 using MassTransit;
@@ -44,7 +45,6 @@ public sealed class CoachingExistingAccountRegistrationTests
     [InlineData("coaching-role", "Identity.UserExists")]
     [InlineData("role-missing", "Identity.RoleNotFound")]
     [InlineData("inactive-profile", "Auth.ExistingAccountNotEligible")]
-    [InlineData("institution-profile", "Auth.ExistingAccountNotEligible")]
     public async Task IneligibleOrUnprovenAccountCannotGainCoachingAccess(string scenario, string expectedCode)
     {
         var fixture = new Fixture(confirmed: scenario != "unconfirmed");
@@ -143,6 +143,10 @@ public sealed class CoachingExistingAccountRegistrationTests
             User.SetPassword(hash, salt);
             if (confirmed) User.ConfirmEmail();
             User.GrantProductAccess(PlatformProduct.SpeedReading, UserProductAccessSource.SelfRegistration, null, DateTimeOffset.UtcNow);
+            var sourceRole = Role.Create("Student", "Student", true);
+            var sourceMembership = new Identity.Domain.Entities.UserRole(User.Id, sourceRole.Id, PlatformProduct.SpeedReading);
+            typeof(Identity.Domain.Entities.UserRole).GetProperty("Role")!.SetValue(sourceMembership, sourceRole);
+            User.AddRole(sourceMembership);
             handler = new RegisterStudentCommandHandler(
                 Stub<IIdentityService>((method, _) => method.Name switch
                 {
@@ -165,9 +169,17 @@ public sealed class CoachingExistingAccountRegistrationTests
                 Stub<IUnitOfWork>((_, _) => Save()),
                 Stub<IPublishEndpoint>((method, _) => throw new NotSupportedException(method.Name)),
                 Stub<IConfigurationService>((_, _) => Task.FromResult<string?>("true")),
-                Legal, hasher,
-                Stub<IRoleRepository>((_, _) => Task.FromResult(StudentRole)));
+                Legal, CreateEnrollment(hasher));
         }
+
+        private ExistingAccountEnrollment CreateEnrollment(PasswordHasher hasher) => new(
+            Stub<IUserRepository>((method, _) => method.Name == nameof(IUserRepository.GetByEmailAsync) ? Task.FromResult<User?>(User) : null),
+            Stub<IStudentRepository>((method, _) => method.Name == nameof(IStudentRepository.GetExistingForRegistrationAsync) ? Task.FromResult(ExistingProfile) : AddProfile()),
+            Stub<ITeacherRepository>((method, _) => throw new NotSupportedException(method.Name)),
+            Stub<IInstitutionRepository>((method, _) => throw new NotSupportedException(method.Name)),
+            Stub<IRoleRepository>((_, _) => Task.FromResult(StudentRole)), hasher,
+            Stub<IMultiFactorService>((method, _) => throw new NotSupportedException(method.Name)),
+            Stub<IUnitOfWork>((m, _) => m.Name == "SaveChangesAsync" ? Save() : null), Legal, TimeProvider.System, new TestAuthenticationLock());
 
         public Task<Result<Guid>> Register(string password = Password, PlatformProduct product = PlatformProduct.Coaching) =>
             handler.Handle(new RegisterStudentCommand(User.Email, password, "Replacement", "Name", null, product), CancellationToken.None);

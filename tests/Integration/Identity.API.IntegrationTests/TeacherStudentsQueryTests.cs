@@ -107,6 +107,7 @@ public sealed class TeacherStudentsQueryTests
 
     private sealed class StubTeacherRepository(PagedList<TeacherStudentDto> result) : ITeacherRepository
     {
+        public Task<TeacherProfile?> GetExistingForRegistrationAsync(Guid userId, CancellationToken ct) => throw new NotSupportedException();
         public Task<PagedList<TeacherStudentDto>> GetStudentsByTeacherUserIdAsync(
             Guid teacherUserId,
             int pageNumber,
@@ -133,6 +134,7 @@ public sealed class TeacherStudentsQueryTests
 
     private sealed class CapturingTeacherRepository : ITeacherRepository
     {
+        public Task<TeacherProfile?> GetExistingForRegistrationAsync(Guid userId, CancellationToken ct) => throw new NotSupportedException();
         public Guid CapturedTeacherUserId { get; private set; }
         public int CapturedPageNumber { get; private set; }
         public int CapturedPageSize { get; private set; }

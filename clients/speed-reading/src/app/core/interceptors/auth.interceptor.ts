@@ -13,6 +13,7 @@ const anonymousAuthEndpoints = [
   '/auth/speed-reading/login',
   '/auth/register',
   '/auth/speed-reading/register/student',
+  '/auth/speed-reading/register/join',
   '/auth/speed-reading/register/teacher',
   '/auth/speed-reading/register/institution',
   '/auth/speed-reading/register/parent',

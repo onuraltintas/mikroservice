@@ -18,12 +18,14 @@ import { environment } from '../../../../../environments/environment';
 import { AuthService } from '../../../../core/auth/auth.service';
 import { ConfigurationService } from '../../../../core/services/settings/configuration.service';
 import { RegistrationLegalConsentComponent } from '../../registration-legal-consent.component';
+import { ExistingProductJoinComponent } from '../../existing-product-join.component';
 import { RegistrationLegalAcceptance } from '../../../../core/services/identity.service';
 
 @Component({
     selector: 'app-student-register',
     standalone: true,
     imports: [
+        ExistingProductJoinComponent,
         CommonModule, ReactiveFormsModule, RouterLink,
         MatCardModule, MatInputModule, MatButtonModule, MatIconModule, MatProgressSpinnerModule,
         GoogleSigninButtonModule, RegistrationLegalConsentComponent
@@ -44,6 +46,7 @@ export class StudentRegisterComponent implements OnInit {
     isLoading = signal(false);
     errorMessage = signal<string | null>(null);
     hidePassword = signal(true);
+    joinExisting = false;
     legalReady = false;
     legalAcceptances: RegistrationLegalAcceptance[] = [];
 

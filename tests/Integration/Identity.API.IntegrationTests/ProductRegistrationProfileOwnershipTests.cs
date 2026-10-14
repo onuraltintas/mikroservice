@@ -26,7 +26,7 @@ public sealed class ProductRegistrationProfileOwnershipTests
             DispatchProxy.Create<IUnitOfWork, UnitOfWorkProxy>(),
             DispatchProxy.Create<IPublishEndpoint, PublishEndpointProxy>(),
             DispatchProxy.Create<IConfigurationService, ConfigurationServiceProxy>(),
-            new RejectingLegalConsentService());
+            new RejectingLegalConsentService(), null!);
 
         var result = await handler.Handle(
             new RegisterTeacherCommand(
@@ -54,9 +54,7 @@ public sealed class ProductRegistrationProfileOwnershipTests
             DispatchProxy.Create<IUnitOfWork, UnitOfWorkProxy>(),
             DispatchProxy.Create<IPublishEndpoint, PublishEndpointProxy>(),
             DispatchProxy.Create<IConfigurationService, ConfigurationServiceProxy>(),
-            new AcceptingLegalConsentService(),
-            new EduPlatform.Shared.Security.Services.PasswordHasher(),
-            DispatchProxy.Create<IRoleRepository, RoleRepositoryProxy>());
+            new AcceptingLegalConsentService(), null!);
 
         var result = await handler.Handle(
             new RegisterStudentCommand(
@@ -82,7 +80,7 @@ public sealed class ProductRegistrationProfileOwnershipTests
             DispatchProxy.Create<IUnitOfWork, UnitOfWorkProxy>(),
             DispatchProxy.Create<IPublishEndpoint, PublishEndpointProxy>(),
             DispatchProxy.Create<IConfigurationService, ConfigurationServiceProxy>(),
-            new AcceptingLegalConsentService());
+            new AcceptingLegalConsentService(), null!);
 
         var result = await handler.Handle(
             new RegisterTeacherCommand(

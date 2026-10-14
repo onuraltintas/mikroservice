@@ -70,7 +70,11 @@
                     </p>
                 </div>
 
-                <form [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-col gap-5">
+                <button mat-stroked-button type="button" class="mb-5" (click)="joinExisting = !joinExisting" [attr.aria-expanded]="joinExisting">
+                    {{ joinExisting ? 'Yeni hesap oluştur' : 'Mevcut hesabımla katıl' }}
+                </button>
+                @if (joinExisting) { <app-existing-product-join product="coaching" account="teacher" /> }
+                <form [style.display]="joinExisting ? 'none' : null" [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-col gap-5">
 
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">

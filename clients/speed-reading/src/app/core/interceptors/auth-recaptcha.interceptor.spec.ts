@@ -5,6 +5,11 @@ import { AuthRecaptchaService } from '../services/auth-recaptcha.service';
 import { authRecaptchaInterceptor, getAuthRecaptchaAction } from './auth-recaptcha.interceptor';
 
 describe('auth reCAPTCHA interceptor', () => {
+  it('protects existing-account enrollment in either product', () => {
+    for (const product of ['coaching', 'speed-reading']) {
+      expect(getAuthRecaptchaAction(new HttpRequest('POST', `/api/auth/${product}/register/join`, {}))).toBe('auth_register');
+    }
+  });
   it('protects EFT using the product CAPTCHA configuration', async () => {
     const createToken = jasmine.createSpy('createToken').and.resolveTo('eft-token');
     TestBed.configureTestingModule({ providers: [provideAuthCaptcha(createToken)] });

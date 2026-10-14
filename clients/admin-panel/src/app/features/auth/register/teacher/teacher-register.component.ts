@@ -16,12 +16,14 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { environment } from '../../../../../environments/environment.development';
 import { ConfigurationService } from '../../../../core/services/settings/configuration.service';
 import { RegistrationLegalConsentComponent } from '../../registration-legal-consent.component';
+import { ExistingProductJoinComponent } from '../../existing-product-join.component';
 import { RegistrationLegalAcceptance } from '../../../../core/services/identity.service';
 
 @Component({
     selector: 'app-teacher-register',
     standalone: true,
     imports: [
+        ExistingProductJoinComponent,
         CommonModule, ReactiveFormsModule, RouterLink,
         MatCardModule, MatInputModule, MatButtonModule, MatIconModule, MatSelectModule, MatProgressSpinnerModule,
         RegistrationLegalConsentComponent
@@ -39,6 +41,7 @@ export class TeacherRegisterComponent implements OnInit {
     isLoading = signal(false);
     errorMessage = signal<string | null>(null);
     hidePassword = signal(true);
+    joinExisting = false;
     legalReady = false;
     legalAcceptances: RegistrationLegalAcceptance[] = [];
 

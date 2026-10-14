@@ -35,7 +35,7 @@ export function getAuthRecaptchaAction(request: HttpRequest<unknown>): string | 
   if (segments.length === 3
       && ['coaching', 'speed-reading'].includes(first)
       && second === 'register'
-      && ['student', 'teacher', 'institution', 'parent'].includes(third)) {
+      && ['student', 'teacher', 'institution', 'parent', 'join'].includes(third)) {
     return 'auth_register';
   }
 

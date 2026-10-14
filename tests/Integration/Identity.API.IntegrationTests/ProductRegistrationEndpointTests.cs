@@ -19,6 +19,17 @@ namespace Identity.API.IntegrationTests;
 public sealed class ProductRegistrationEndpointTests
 {
     [Fact]
+    public async Task JoinProductIgnoresProductSpoofedInTheBody()
+    {
+        var mediator = DispatchProxy.Create<IMediator, CapturingMediatorProxy>();
+        var capture = (CapturingMediatorProxy)(object)mediator;
+        var controller = new AuthController(mediator, new TestWebHostEnvironment());
+        var result = await controller.JoinProduct("speed-reading", new Identity.Application.Commands.JoinProduct.JoinProductCommand(
+            "existing@example.test", "ExistingPassword1!", "teacher", Product: PlatformProduct.Coaching));
+        Assert.IsType<OkObjectResult>(result);
+        Assert.Equal(PlatformProduct.SpeedReading, Assert.IsType<Identity.Application.Commands.JoinProduct.JoinProductCommand>(capture.Request).Product);
+    }
+    [Fact]
     public async Task RegisterStudent_ShouldUseProductFromRouteInsteadOfRequestBody()
     {
         var mediator = DispatchProxy.Create<IMediator, CapturingMediatorProxy>();
@@ -152,9 +163,9 @@ public sealed class ProductRegistrationEndpointTests
     [Fact]
     public async Task RegistrationHandlers_ShouldRejectMissingProductScope()
     {
-        var studentHandler = new RegisterStudentCommandHandler(null!, null!, null!, null!, null!, null!, null!, null!, null!);
-        var teacherHandler = new RegisterTeacherCommandHandler(null!, null!, null!, null!, null!, null!, null!);
-        var institutionHandler = new RegisterInstitutionCommandHandler(null!, null!, null!, null!, null!, null!, null!, null!);
+        var studentHandler = new RegisterStudentCommandHandler(null!, null!, null!, null!, null!, null!, null!, null!);
+        var teacherHandler = new RegisterTeacherCommandHandler(null!, null!, null!, null!, null!, null!, null!, null!);
+        var institutionHandler = new RegisterInstitutionCommandHandler(null!, null!, null!, null!, null!, null!, null!, null!, null!);
 
         var studentResult = await studentHandler.Handle(
             new RegisterStudentCommand("student@example.test", "password", "Test", "Student", null),

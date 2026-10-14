@@ -2,6 +2,7 @@ using EduPlatform.Shared.Kernel.Results;
 using EduPlatform.Shared.Security.Interfaces;
 using Identity.Application.Interfaces;
 using Identity.Application.LegalPages;
+using Identity.Application.Services;
 using Identity.Domain.Entities;
 using Identity.Domain.Enums;
 using MediatR;
@@ -19,6 +20,7 @@ public class RegisterTeacherCommandHandler : IRequestHandler<RegisterTeacherComm
     private readonly IPublishEndpoint _publishEndpoint;
     private readonly IConfigurationService _configurationService;
     private readonly IRegistrationLegalConsentService _registrationLegalConsentService;
+    private readonly ExistingAccountEnrollment _enrollment;
 
     public RegisterTeacherCommandHandler(
         IIdentityService identityService,
@@ -27,7 +29,8 @@ public class RegisterTeacherCommandHandler : IRequestHandler<RegisterTeacherComm
         IUnitOfWork unitOfWork,
         IPublishEndpoint publishEndpoint,
         IConfigurationService configurationService,
-        IRegistrationLegalConsentService registrationLegalConsentService)
+        IRegistrationLegalConsentService registrationLegalConsentService,
+        ExistingAccountEnrollment enrollment)
     {
         _identityService = identityService;
         _userRepository = userRepository;
@@ -36,6 +39,7 @@ public class RegisterTeacherCommandHandler : IRequestHandler<RegisterTeacherComm
         _publishEndpoint = publishEndpoint;
         _configurationService = configurationService;
         _registrationLegalConsentService = registrationLegalConsentService;
+        _enrollment = enrollment;
     }
 
     public async Task<Result<Guid>> Handle(RegisterTeacherCommand request, CancellationToken cancellationToken)
@@ -68,6 +72,9 @@ public class RegisterTeacherCommandHandler : IRequestHandler<RegisterTeacherComm
 
         if (identityResult.IsFailure)
         {
+            if (product is PlatformProduct.Coaching or PlatformProduct.SpeedReading && identityResult.Error.Code == "Identity.UserExists")
+                return await _enrollment.JoinAsync(request.Email, request.Password, product, "teacher",
+                    legalValidation.Value, null, cancellationToken);
             return Result.Failure<Guid>(identityResult.Error);
         }
 

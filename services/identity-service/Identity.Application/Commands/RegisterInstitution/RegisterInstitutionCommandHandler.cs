@@ -1,6 +1,7 @@
 using EduPlatform.Shared.Kernel.Results;
 using Identity.Application.Interfaces;
 using Identity.Application.LegalPages;
+using Identity.Application.Services;
 using Identity.Domain.Entities;
 using Identity.Domain.Enums;
 using MediatR;
@@ -19,6 +20,7 @@ public class RegisterInstitutionCommandHandler : IRequestHandler<RegisterInstitu
     private readonly IConfigurationService _configurationService;
     private readonly ILocationRepository _locationRepository;
     private readonly IRegistrationLegalConsentService _registrationLegalConsentService;
+    private readonly ExistingAccountEnrollment _enrollment;
 
     public RegisterInstitutionCommandHandler(
         IIdentityService identityService,
@@ -28,7 +30,8 @@ public class RegisterInstitutionCommandHandler : IRequestHandler<RegisterInstitu
         IPublishEndpoint publishEndpoint,
         IConfigurationService configurationService,
         ILocationRepository locationRepository,
-        IRegistrationLegalConsentService registrationLegalConsentService)
+        IRegistrationLegalConsentService registrationLegalConsentService,
+        ExistingAccountEnrollment enrollment)
     {
         _identityService = identityService;
         _userRepository = userRepository;
@@ -38,6 +41,7 @@ public class RegisterInstitutionCommandHandler : IRequestHandler<RegisterInstitu
         _configurationService = configurationService;
         _locationRepository = locationRepository;
         _registrationLegalConsentService = registrationLegalConsentService;
+        _enrollment = enrollment;
     }
 
     public async Task<Result<Guid>> Handle(RegisterInstitutionCommand request, CancellationToken cancellationToken)
@@ -60,6 +64,11 @@ public class RegisterInstitutionCommandHandler : IRequestHandler<RegisterInstitu
             cancellationToken);
         if (legalValidation.IsFailure)
             return Result.Failure<Guid>(legalValidation.Error);
+
+        if (product is PlatformProduct.Coaching or PlatformProduct.SpeedReading
+            && await _userRepository.GetByEmailAsync(request.Email, cancellationToken) is not null)
+            return await _enrollment.JoinAsync(request.Email, request.Password, product, "institution",
+                legalValidation.Value, null, cancellationToken);
 
         var location = await _locationRepository.GetLocationAsync(
             request.ProvinceId,
