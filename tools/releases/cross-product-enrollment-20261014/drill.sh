@@ -41,13 +41,15 @@ cleanup() {
 }
 trap cleanup EXIT
 rabbit_image=$(docker inspect rabbitmq --format '{{.Image}}')
+rabbit_uid=$(docker exec rabbitmq id -u rabbitmq)
+rabbit_gid=$(docker exec rabbitmq id -g rabbitmq)
 drill_user=cross-product-drill
 drill_password=$(openssl rand -hex 20)
 export REGISTRATION_DRILL_PASSWORD=$drill_password
 printf 'RABBITMQ_DEFAULT_USER=%s\nRABBITMQ_DEFAULT_PASS=%s\n' "$drill_user" "$drill_password" > rabbit-drill.env
 printf 'RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS=+S 2:2 +SDcpu 1 +SDio 1\nRABBITMQ_CTL_ERL_ARGS=+S 1:1 +SDcpu 1 +SDio 1\n' >> rabbit-drill.env
 docker run -d --name "$rabbit" --label eduivme.drill=cross-product-enrollment-20261014 --network eduplatform-production \
-  --env-file rabbit-drill.env "$rabbit_image" > rabbit-drill.log
+  --tmpfs "/var/lib/rabbitmq:rw,uid=$rabbit_uid,gid=$rabbit_gid,mode=0700" --env-file rabbit-drill.env "$rabbit_image" > rabbit-drill.log
 containers+=("$rabbit")
 redis_image=$(docker inspect redis --format '{{.Image}}')
 docker run -d --name "$redis" --label eduivme.drill=cross-product-enrollment-20261014 --network eduplatform-production "$redis_image" redis-server --save '' --appendonly no > redis-drill.log
@@ -58,6 +60,7 @@ for attempt in $(seq 1 20); do
 done
 docker exec "$redis" redis-cli ping | grep -qx PONG
 for attempt in $(seq 1 40); do
+  [[ $(docker inspect "$rabbit" --format '{{.State.Running}}') == true ]] || exit 1
   if docker exec "$rabbit" rabbitmq-diagnostics -q ping >/dev/null 2>&1; then break; fi
   sleep 2
 done
