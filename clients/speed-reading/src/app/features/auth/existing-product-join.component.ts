@@ -72,7 +72,7 @@ export class ExistingProductJoinComponent {
 
   get loginUrl(): string {
     if (this.account !== 'student') return 'https://onuraltintas.net/staff/?product=' + this.product;
-    return this.product === 'coaching' ? 'https://eduivme.com/auth/login' : 'https://onuraltintas.net/auth/login';
+    return this.product === 'coaching' ? 'https://eduivme.com/auth/login' : 'https://masterhizliokuma.com/auth/login';
   }
 
   submit(): void {

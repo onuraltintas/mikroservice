@@ -4,6 +4,12 @@ import { TestBed } from '@angular/core/testing';
 import { ExistingProductJoinComponent } from './existing-product-join.component';
 
 describe('ExistingProductJoinComponent', () => {
+  it('uses the dedicated Speed Reading origin for student login', () => {
+    TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
+    const c = TestBed.runInInjectionContext(() => new ExistingProductJoinComponent());
+    c.product = 'speed-reading'; c.account = 'student';
+    expect(c.loginUrl).toBe('https://masterhizliokuma.com/auth/login');
+  });
   function create(account: 'student' | 'teacher' | 'institution' = 'student') {
     TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
     const c = TestBed.runInInjectionContext(() => new ExistingProductJoinComponent());

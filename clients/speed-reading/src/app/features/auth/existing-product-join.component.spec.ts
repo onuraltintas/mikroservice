@@ -26,6 +26,7 @@ describe('ExistingProductJoinComponent', () => {
       req.flush({ userId: 'preserved-user-id' });
       expect(c.joined).toBe(true); expect(c.loading).toBe(false);
       expect(c.loginUrl).toContain(account === 'student' ? '/auth/login' : '/staff/');
+      if (account === 'student') expect(c.loginUrl).toBe('https://masterhizliokuma.com/auth/login');
       http.verify();
     });
   }
