@@ -37,6 +37,7 @@ API: `POST /api/auth/{coaching|speed-reading}/register/join`. Route ürün bilgi
 - Altı kayıt URL'si, öğrenci paneli ve staff girişi HTTP200; iki yeni katılım uç noktası CAPTCHA olmadan HTTP403 `Auth.CaptchaFailed` döndürdü. Bu son kontrol korumayı doğrular, başarılı canlı kayıt yerine geçmez.
 - Yetkili üç test hesabıyla normal canlı UI giriş denemeleri headless CAPTCHA tarafından HTTP403 ile reddedildi. Öğrenci/öğretmen/kurum panel oturumları bu yayında otomatik olarak doğrulanmış sayılmaz. CAPTCHA kapatılmadı veya atlanmadı.
 - Canlı test hesaplarının kullanıcı, rol, erişim, kurum, kurum yönetici bağlantısı ve profil satırları yayın öncesi/sonrası hash karşılaştırmasında aynı. Test hesaplarının mevcut şifreleri, abonelikleri ve çalışma kayıtları değiştirilmedi.
+- Son sağlık kontrolü13:26:01 (Europe/Istanbul): son ön yüz yayınının üzerinden15 dakika29 saniye geçti. Dört servis running, restart0; iki API'nin yayından sonraki kayıtlarında HTTP5xx/ERR/FTL eşleşmesi0. Hedef dışı container kimlikleri korunuyor.
 
 Kanıtlar: `artifacts/cross-product-relational-results.json`, `artifacts/cross-product-live-public-smoke.json`, `artifacts/cross-product-live-ui/results.json`, `artifacts/cross-product-live-ui/role-results.json` ve aynı dizindeki altı gerçek ekran görüntüsü. Başarısız canlı giriş görüntüleri başarılı panel kanıtı değildir.
 
