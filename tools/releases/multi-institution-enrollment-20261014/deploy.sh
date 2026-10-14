@@ -20,7 +20,17 @@ waitService() {
   if [[ "$service" == staff-portal ]]; then port=80; path=/; headers=(-H 'Host: onuraltintas.net'); fi
   for attempt in $(seq 1 40); do
     ip=$(docker inspect "$container" --format '{{range .NetworkSettings.Networks}}{{println .IPAddress}}{{end}}' | head -1)
-    if [[ "$ip" =~ ^[0-9.]+$ ]] && curl -fsS --max-time 5 "${headers[@]}" "http://$ip:$port$path" >/dev/null; then return 0; fi
+    if [[ "$ip" =~ ^[0-9.]+$ ]] && curl -fsS --max-time 5 "${headers[@]}" "http://$ip:$port$path" >/dev/null; then
+      if [[ "$service" == staff-portal ]]; then
+        local html script
+        html=$(curl -fsS --max-time 5 "http://$ip:80/")
+        grep -qF '<base href="/staff/">' <<< "$html" || return 1
+        script=$(grep -oE 'src="main-[^"]+\.js"' <<< "$html" | cut -d'"' -f2)
+        [[ "$script" =~ ^main-[A-Za-z0-9_-]+\.js$ ]] || return 1
+        curl -fsS --max-time 5 "http://$ip:80/$script" >/dev/null || return 1
+      fi
+      return 0
+    fi
     sleep 2
   done
   return 1
