@@ -13,12 +13,19 @@ type RegistrationAccount = 'student' | 'teacher' | 'institution';
 })
 export class RegistrationShellComponent {
   @Input() account: RegistrationAccount = 'student';
+  @Input() mode: 'register' | 'login' = 'register';
   readonly accounts = [
     { value: 'student', label: 'Öğrenci', icon: 'menu_book', route: '/auth/register' },
     { value: 'teacher', label: 'Öğretmen', icon: 'school', route: '/auth/register-teacher' },
     { value: 'institution', label: 'Kurum', icon: 'domain', route: '/auth/register-school' }
   ];
   readonly content = {
+    login: {
+      title: 'Tekrar hoş geldin.', description: 'Okuma yolculuğuna kaldığın yerden devam et.',
+      headline: 'Her gün, bir adım ileri.',
+      introduction: 'Çalışmalarına dön, ilerlemeni gör ve hedeflerine yaklaş.',
+      benefits: ['Programına kaldığın yerden devam et', 'Okuma gelişimini takip et', 'Öğrenci, öğretmen ve kurum erişimi']
+    },
     student: {
       title: 'Öğrenci hesabını oluştur', description: 'Okuma yolculuğun için ilk adımı at.',
       headline: 'Okurken daha fazlasını keşfet.',
@@ -38,4 +45,5 @@ export class RegistrationShellComponent {
       benefits: ['Kurum üyelerini yönetme', 'Öğrenci gelişimini takip etme', 'Öğretmenlerle birlikte çalışma']
     }
   };
+  get copy() { return this.content[this.mode === 'login' ? 'login' : this.account]; }
 }

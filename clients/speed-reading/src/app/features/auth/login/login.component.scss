@@ -1,86 +1,27 @@
-.auth-page {
-  min-height: 100dvh;
-  display: grid;
-  place-items: center;
-  padding: 2rem 1rem;
-  background:
-    radial-gradient(circle at 12% 12%, rgba(20, 184, 166, 0.2), transparent 28rem),
-    radial-gradient(circle at 88% 88%, rgba(245, 158, 11, 0.14), transparent 25rem),
-    #f5f8f8;
-}
+@use '../registration-form';
 
-.auth-shell {
-  width: min(100%, 28rem);
-}
-
-.auth-brand {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.7rem;
-  color: #153e3d;
-  text-decoration: none;
-  margin-bottom: 1.25rem;
-
-  span { display: grid; gap: 0.08rem; }
-  strong { font-size: 1rem; line-height: 1.2; }
-  small { color: #5f7473; font-size: 0.7rem; letter-spacing: 0.04em; }
-}
-
-.auth-brand-mark {
-  width: 2.65rem;
-  height: 2.65rem;
-  padding: 0.35rem;
-  border-radius: 0.85rem;
-  background: #e8f7f4;
-}
-
-.login-card {
-  width: 100%;
-  box-sizing: border-box;
-  border: 1px solid #dbe7e5;
-  border-radius: 1.25rem;
-  box-shadow: 0 1.5rem 3.5rem rgba(25, 70, 67, 0.12);
-  background: #fff;
-  padding: 1.65rem;
-}
-
-.auth-heading { margin-bottom: 1.4rem; }
-.auth-heading h1 { margin: 0.2rem 0 0.4rem; color: #163e3d; font-size: 1.7rem; letter-spacing: -0.03em; }
-.auth-heading p:not(.auth-eyebrow) { margin: 0; color: #617271; font-size: 0.9rem; line-height: 1.5; }
-.auth-eyebrow { margin: 0; color: #0f766e; font-size: 0.68rem; font-weight: 800; letter-spacing: 0.12em; }
-
-form, .mfa-login-panel { display: flex; flex-direction: column; gap: 0.85rem; }
-.full-width { width: 100%; }
-input[matInput]:focus-visible { outline: none; box-shadow: none; }
-.error-message { color: #b42318; font-size: 0.84rem; }
-.remember-forgot-row { display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; margin: -0.25rem 0 0.15rem; }
-.forgot-link { color: #0f766e; font-size: 0.82rem; font-weight: 700; text-decoration: none; }
-.forgot-link:hover { text-decoration: underline; }
-
-button[type='submit'] { min-height: 3rem; border-radius: 0.75rem; font-weight: 800; background: #0f766e !important; color: #fff !important; box-shadow: 0 0.5rem 1rem rgba(15, 118, 110, 0.2); }
-button[type='submit']:hover:not(:disabled) { background: #0b5e58 !important; }
-button[type='submit']:disabled { opacity: 0.6; }
-.divider { margin: 0.6rem 0; position: relative; text-align: center; }
-.divider .divider-text { display: inline-block; padding: 0 0.75rem; background: #fff; color: #778785; font-size: 0.78rem; position: relative; z-index: 1; }
-.divider::before { content: ''; position: absolute; inset: 50% 0 auto; border-top: 1px solid #e2ebea; }
+.login-card { margin-top: 1.5rem; }
+app-google-registration-consent { display: block; margin-top: 1.5rem; }
+.remember-forgot-row { display: flex; justify-content: space-between; align-items: center; gap: .6rem; margin: -.2rem 0 .3rem; }
+.forgot-link { color: #145f50; font-size: .8rem; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; min-height: 2.75rem; display: inline-flex; align-items: center; }
+button[type='submit'], .mfa-login-panel > button:first-of-type { min-height: 3.2rem; border-radius: .75rem; font-weight: 750; background: #145f50 !important; color: #fff !important; }
+button[type='submit']:disabled { background: #e3e9e0 !important; color: #73806e !important; }
 .google-button { display: flex; justify-content: center; min-height: 2.75rem; }
-
-.register-options { display: grid; gap: 0.45rem; margin-top: 0.65rem; }
-.register-options p { margin: 0.25rem 0; color: #617271; font-size: 0.8rem; text-align: center; }
-.register-option { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; padding: 0.65rem 0.75rem; border: 1px solid #dbe7e5; border-radius: 0.75rem; color: #244c4a; text-decoration: none; }
-.register-option span { display: grid; gap: 0.1rem; }
-.register-option strong { font-size: 0.82rem; }
-.register-option small { color: #6a7e7c; font-size: 0.72rem; }
-.register-option mat-icon { color: #0f766e; }
-.register-option:hover, .register-option:focus-visible { border-color: #14b8a6; background: #f0fdfa; outline: none; }
-.verification-warning { padding: 0.75rem; border: 1px solid #f5d98b; border-radius: 0.7rem; background: #fffbeb; color: #7c5b0c; font-size: 0.82rem; }
-.mfa-login-panel h3 { margin: 0; color: #163e3d; }
-.mfa-login-panel p { color: #617271; line-height: 1.5; }
-.mfa-recovery-codes { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.45rem; padding: 0.8rem; background: #f5f8f8; border-radius: 0.75rem; }
-.mfa-recovery-codes code, .mfa-secret { color: #163e3d; font-size: 0.76rem; }
-
-@media (max-width: 32rem) {
-  .auth-page { padding: 1.1rem 0.75rem; align-items: start; }
-  .login-card { padding: 1.2rem; border-radius: 1rem; }
-  .remember-forgot-row { align-items: flex-start; flex-direction: column; }
-}
+.register-options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .5rem; margin-top: .5rem; }
+.register-options > p { grid-column: 1 / -1; color: #536c60; font-size: .8rem; line-height: 1.6; margin: 0 0 .4rem; }
+.register-option { display: flex; align-items: center; justify-content: space-between; gap: .3rem; padding: .75rem; border: 1px solid #dfe8dc; border-radius: .75rem; color: #315c4d; text-decoration: none; min-height: 2.75rem; }
+.register-option span { display: grid; gap: .35rem; }
+.register-option strong { font-size: .79rem; }
+.register-option small { color: #56695c; font-size: .68rem; line-height: 1.5; }
+.register-option mat-icon { width: 1rem; height: 1rem; font-size: 1rem; flex-shrink: 0; }
+.register-option:hover { border-color: #487d63; background: #f0f6ec; }
+a:focus-visible, button:focus-visible { outline: 3px solid #487d63; outline-offset: 3px; }
+.verification-warning { padding: 1rem; border: 1px solid #ead7ab; border-radius: .75rem; background: #fff8e9; color: #755310; font-size: .8rem; line-height: 1.6; }
+.verification-warning p { margin: 0 0 .75rem; }
+.verification-warning button { white-space: normal; height: auto; min-height: 2.75rem; }
+.mfa-login-panel { display: flex; flex-direction: column; gap: 1rem; }
+.mfa-login-panel h2 { margin: 0; color: #173c3b; font-size: 1.2rem; line-height: 1.4; }
+.mfa-login-panel p { margin: 0; color: #536c60; font-size: .9rem; line-height: 1.6; }
+.mfa-recovery-codes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem; padding: 1rem; border-radius: .75rem; background: #f0f6ec; }
+.mfa-recovery-codes code, .mfa-secret { color: #315c4d; font-size: .8rem; overflow-wrap: anywhere; }
+@media (max-width: 34rem) { .remember-forgot-row { align-items: flex-start; flex-direction: column; gap: 0; } .register-options { grid-template-columns: 1fr; } .register-option span { gap: .15rem; } }

@@ -8,7 +8,6 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatDividerModule } from '@angular/material/divider';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { AuthService } from '../../../core/services/auth.service';
@@ -23,11 +22,13 @@ import {
 import { resolveAuthDestination, resolveInvitationReturnUrl } from '../auth-role-routing';
 import { GoogleRegistrationConsentComponent } from '../google-registration-consent.component';
 import { RegistrationLegalAcceptance } from '../../../core/models/user.model';
+import { RegistrationShellComponent } from '../registration-shell.component';
 
 @Component({
   selector: 'app-login',
   standalone: true,
   imports: [
+    RegistrationShellComponent,
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
@@ -37,7 +38,6 @@ import { RegistrationLegalAcceptance } from '../../../core/models/user.model';
     MatInputModule,
     MatButtonModule,
     MatProgressSpinnerModule,
-    MatDividerModule,
     MatIconModule,
     MatCheckboxModule,
     GoogleRegistrationConsentComponent

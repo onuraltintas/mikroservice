@@ -1,26 +1,17 @@
+<app-registration-shell mode="login">
 @if (googleRegistrationToken) {
   <app-google-registration-consent product="speed-reading" [busy]="loading" [error]="error"
     (confirm)="completeGoogleRegistration($event)" (cancel)="cancelGoogleRegistration()" />
 }
 <div [hidden]="!!googleRegistrationToken">
-<div class="auth-page">
-  <div class="auth-shell">
-    <a routerLink="/" class="auth-brand" aria-label="Master Hızlı Okuma ana sayfası">
-      <img src="brand/onal-mark.svg" alt="ONAL" class="auth-brand-mark">
-      <span><strong>Master Hızlı Okuma</strong><small>ONAL Yazılım ve Otomasyon</small></span>
-    </a>
-    <mat-card class="login-card">
-      <header class="auth-heading">
-        <p class="auth-eyebrow">HESABINIZA ERİŞİN</p>
-        <h1>Giriş yapın</h1>
-        <p>Çalışma planınıza kaldığınız yerden devam edin.</p>
-      </header>
+
+    <mat-card class="register-card login-card">
       <mat-card-content>
         @if (mfaStage === 'none') {
-        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+        <form [formGroup]="loginForm" [attr.aria-busy]="loading" (ngSubmit)="onSubmit()">
           <mat-form-field appearance="outline" class="full-width">
             <mat-label>E-posta</mat-label>
-            <input matInput type="email" formControlName="email" placeholder="ornek@email.com">
+            <input matInput type="email" formControlName="email" placeholder="ornek@email.com" autocomplete="username">
             @if (loginForm.get('email')?.hasError('required') && loginForm.get('email')?.touched) {
             <mat-error>E-posta gereklidir</mat-error>
             }
@@ -32,7 +23,7 @@
           <mat-form-field appearance="outline" class="full-width">
             <mat-label>Şifre</mat-label>
             <input matInput [type]="hidePassword ? 'password' : 'text'" formControlName="password"
-              placeholder="Şifreniz">
+              placeholder="Şifreniz" autocomplete="current-password">
             <button mat-icon-button matSuffix type="button" (click)="hidePassword = !hidePassword"
               [attr.aria-label]="'Şifreyi ' + (hidePassword ? 'göster' : 'gizle')">
               <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
@@ -48,11 +39,11 @@
           </div>
 
           @if (error) {
-          <div class="error-message">{{ error }}</div>
+          <div class="error-message" role="alert">{{ error }}</div>
           }
 
           @if (showEmailVerificationWarning) {
-          <div class="verification-warning">
+          <div class="verification-warning" role="status">
             <p>E-posta adresiniz doğrulanmadı. Doğrulama e-postasını almadınız mı?</p>
             <button mat-stroked-button color="primary" type="button" (click)="resendVerificationEmail()"
               [disabled]="resendingEmail">
@@ -66,7 +57,7 @@
           }
 
           <button mat-raised-button color="primary" type="submit" [disabled]="loading || loginForm.invalid"
-            class="full-width">
+            class="submit-btn full-width">
             @if (loading) {
             <mat-spinner diameter="20"></mat-spinner>
             } @else {
@@ -74,9 +65,9 @@
             }
           </button>
 
-          <mat-divider class="divider">
+          <div class="divider">
             <span class="divider-text">veya</span>
-          </mat-divider>
+          </div>
 
           <div id="google-signin-button" class="google-button"></div>
 
@@ -98,7 +89,7 @@
         </form>
         } @else if (mfaStage === 'recovery') {
         <section class="mfa-login-panel">
-          <h3>İki adımlı doğrulama etkinleştirildi</h3>
+          <h2>İki adımlı doğrulama etkinleştirildi</h2>
           <p>Bu kurtarma kodlarını güvenli bir yerde saklayın. Her biri yalnızca bir kez kullanılabilir.</p>
           <div class="mfa-recovery-codes">
             @for (code of mfaRecoveryCodes; track code) {
@@ -110,7 +101,7 @@
         </section>
         } @else {
         <form (ngSubmit)="submitMfa()" class="mfa-login-panel">
-          <h3>{{ mfaStage === 'setup' ? 'İki adımlı doğrulamayı etkinleştir' : 'İki adımlı doğrulama' }}</h3>
+          <h2>{{ mfaStage === 'setup' ? 'İki adımlı doğrulamayı etkinleştir' : 'İki adımlı doğrulama' }}</h2>
           @if (mfaStage === 'setup') {
           <p>Authenticator uygulamanıza aşağıdaki anahtarı ekleyin ve üretilen 6 haneli kodu girin.</p>
           <code class="mfa-secret">{{ mfaSecret }}</code>
@@ -128,7 +119,7 @@
           </mat-form-field>
           }
           @if (error) {
-          <div class="error-message">{{ error }}</div>
+          <div class="error-message" role="alert">{{ error }}</div>
           }
           <button mat-raised-button color="primary" type="submit" class="full-width"
             [disabled]="loading || (mfaUsingRecoveryCode ? !mfaRecoveryCode.trim() : !isMfaCodeValid())">
@@ -147,6 +138,5 @@
         }
       </mat-card-content>
     </mat-card>
-  </div>
 </div>
-</div>
+</app-registration-shell>

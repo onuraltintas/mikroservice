@@ -6,27 +6,29 @@
     </a>
     <div class="story-content">
       <p class="story-eyebrow">OKU. ANLA. İLERLE.</p>
-      <h2>{{ content[account].headline }}</h2>
-      <p class="story-introduction">{{ content[account].introduction }}</p>
+      <h2>{{ copy.headline }}</h2>
+      <p class="story-introduction">{{ copy.introduction }}</p>
       <div class="reading-visual" aria-hidden="true">
         <div class="reading-paper"><span class="paper-label">HER SAYFADA BİR ADIM</span><i></i><i></i><i></i><i></i><i></i><span class="paper-sign">M<span>+</span></span></div>
         <span class="reading-caption">Odak <b>·</b> Anlama <b>·</b> Akıcılık</span>
       </div>
       <ul class="story-benefits">
-        @for (benefit of content[account].benefits; track benefit) { <li><mat-icon aria-hidden="true">check</mat-icon><span>{{ benefit }}</span></li> }
+        @for (benefit of copy.benefits; track benefit) { <li><mat-icon aria-hidden="true">check</mat-icon><span>{{ benefit }}</span></li> }
       </ul>
     </div>
     <a routerLink="/" class="home-link"><mat-icon aria-hidden="true">arrow_back</mat-icon> Ana sayfaya dön</a>
   </aside>
   <main class="registration-main">
-    <div class="registration-topline"><span>Yeni bir başlangıç</span><a routerLink="/auth/login" queryParamsHandling="preserve">Giriş yap <mat-icon aria-hidden="true">arrow_forward</mat-icon></a></div>
+    <div class="registration-topline"><span>{{ mode === 'login' ? 'Okuma yolculuğuna devam et' : 'Yeni bir başlangıç' }}</span><a [routerLink]="mode === 'login' ? '/auth/register' : '/auth/login'" queryParamsHandling="preserve">{{ mode === 'login' ? 'Hesap oluştur' : 'Giriş yap' }} <mat-icon aria-hidden="true">arrow_forward</mat-icon></a></div>
     <div class="registration-workspace">
-      <header class="registration-heading"><p>MASTER HIZLI OKUMA</p><h1>{{ content[account].title }}</h1><span>{{ content[account].description }}</span></header>
+      <header class="registration-heading"><p>MASTER HIZLI OKUMA</p><h1>{{ copy.title }}</h1><span>{{ copy.description }}</span></header>
+      @if (mode === 'register') {
       <nav class="account-navigation" aria-label="Kayıt türü">
         @for (option of accounts; track option.value) {
           <a [routerLink]="option.route" queryParamsHandling="preserve" [attr.aria-current]="account === option.value ? 'page' : null"><mat-icon aria-hidden="true">{{ option.icon }}</mat-icon>{{ option.label }}</a>
         }
       </nav>
+      }
       <ng-content />
       <p class="registration-footnote"><mat-icon aria-hidden="true">lock_outline</mat-icon> Hesabın sana özel, gelişimin seninle birlikte.</p>
     </div>
