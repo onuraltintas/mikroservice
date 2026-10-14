@@ -21,7 +21,7 @@ foreach (var mode in new[] { "training", "legacy-training", "legacy-assessment",
     var configuration = JsonSerializer.Serialize(new { engineType = "visual_expansion", engineConfig = new {
         rounds = mode == "block-assessment" ? 21 : 6, startDegrees = 8, targetDegrees = 16, displayDurationMs = 400,
         assessmentProtocol = mode == "block-assessment" ? new { version = 2, practiceRounds = 3, roundsPerBlock = 6, blockValues = new[] { 6, 10, 14 } } : null
-    } });
+    } }, new JsonSerializerOptions { DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull });
     var exercise = Exercise.Create("Visual expansion release fixture", "attention", configuration, 1, student, type.Id);
     db.ExerciseTypes.Add(type); db.Exercises.Add(exercise);
     var request = new StartExerciseSessionRequest { ExerciseId = exercise.Id };
