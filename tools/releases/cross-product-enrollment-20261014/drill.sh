@@ -49,6 +49,10 @@ containers+=("$rabbit")
 redis_image=$(docker inspect redis --format '{{.Image}}')
 docker run -d --name "$redis" --label eduivme.drill=cross-product-enrollment-20261014 --network eduplatform-production "$redis_image" redis-server --save '' --appendonly no > redis-drill.log
 containers+=("$redis")
+for attempt in $(seq 1 20); do
+  if docker exec "$redis" redis-cli ping 2>/dev/null | grep -qx PONG; then break; fi
+  sleep 1
+done
 docker exec "$redis" redis-cli ping | grep -qx PONG
 for attempt in $(seq 1 40); do
   if docker exec "$rabbit" rabbitmq-diagnostics -q ping >/dev/null 2>&1; then break; fi
