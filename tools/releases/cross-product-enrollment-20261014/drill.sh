@@ -34,6 +34,8 @@ containers=()
 cleanup() {
   for container in "${containers[@]}"; do
     [[ $(docker inspect "$container" --format '{{index .Config.Labels "eduivme.drill"}}') == cross-product-enrollment-20261014 ]] || continue
+    docker inspect "$container" --format '{{json .State}}' > "$container-state.json"
+    docker logs "$container" > "$container-output.log" 2>&1 || true
     docker rm -fv "$container" >/dev/null 2>&1 || true
   done
 }
@@ -43,6 +45,7 @@ drill_user=cross-product-drill
 drill_password=$(openssl rand -hex 20)
 export REGISTRATION_DRILL_PASSWORD=$drill_password
 printf 'RABBITMQ_DEFAULT_USER=%s\nRABBITMQ_DEFAULT_PASS=%s\n' "$drill_user" "$drill_password" > rabbit-drill.env
+printf 'RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS=+S 2:2 +SDcpu 1 +SDio 1\nRABBITMQ_CTL_ERL_ARGS=+S 1:1 +SDcpu 1 +SDio 1\n' >> rabbit-drill.env
 docker run -d --name "$rabbit" --label eduivme.drill=cross-product-enrollment-20261014 --network eduplatform-production \
   --env-file rabbit-drill.env "$rabbit_image" > rabbit-drill.log
 containers+=("$rabbit")
