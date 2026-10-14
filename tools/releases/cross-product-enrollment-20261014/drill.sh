@@ -68,7 +68,7 @@ docker exec "$rabbit" rabbitmq-diagnostics -q ping >/dev/null
 connection=$(jq -er '.ConnectionStrings__DefaultConnection' identity-service.environment.json)
 [[ "$connection" == *'Database=identity_db;'* ]]
 export REGISTRATION_CONNECTION=${connection/Database=identity_db;/Database=$database;}
-jq --arg host "$rabbit" --arg redis "$redis" --arg user "$drill_user" \
+jq -r --arg host "$rabbit" --arg redis "$redis" --arg user "$drill_user" \
   '.ConnectionStrings__DefaultConnection=env.REGISTRATION_CONNECTION | .POSTGRES_DB_IDENTITY="cross_product_enrollment_drill_20261014"
    | .RabbitMQ__Host=$host | .RABBITMQ_HOST=$host
    | .RabbitMQ__Username=$user | .RABBITMQ_DEFAULT_USER=$user
@@ -78,10 +78,14 @@ jq --arg host "$rabbit" --arg redis "$redis" --arg user "$drill_user" \
    | .AuthRecaptcha__Enabled="false" | .DataProtection__KeysPath="/tmp/cross-product-drill-keys"
    | .DataProtection__CertificatePath="" | .DataProtection__CertificatePassword=""
    | to_entries[] | "\(.key)=\(.value)"' identity-service.environment.json > api-drill.env
+grep -qx 'ASPNETCORE_ENVIRONMENT=Development' api-drill.env
+grep -qx 'POSTGRES_DB_IDENTITY=cross_product_enrollment_drill_20261014' api-drill.env
+grep -qx 'AuthRecaptcha__Enabled=false' api-drill.env
 docker run -d --name "$api" --label eduivme.drill=cross-product-enrollment-20261014 --network eduplatform-production \
   --env-file api-drill.env "$image" > api-drill.log
 containers+=("$api")
 for attempt in $(seq 1 40); do
+  [[ $(docker inspect "$api" --format '{{.State.Running}}') == true ]] || exit 1
   ip=$(docker inspect "$api" --format '{{range .NetworkSettings.Networks}}{{println .IPAddress}}{{end}}' | head -1)
   if [[ "$ip" =~ ^[0-9.]+$ ]] && curl -fsS --max-time 5 "http://$ip:8080/health/ready" >/dev/null; then break; fi
   sleep 2
