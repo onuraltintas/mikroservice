@@ -53,7 +53,8 @@ foreach (var mode in new[] { "training", "legacy-training", "legacy-assessment",
             : mode == "legacy-assessment" ? Math.Min(16, 8 + 2 * round)
             : round < 9 ? 6 : round < 15 ? 10 : 14;
         Check(data.GetProperty("degrees").GetInt32() == distance, mode + "-distance-" + round);
-        if (mode != "legacy-assessment") Check(data.GetProperty("displayDurationMs").GetInt32() == (training ? 400 : 200), mode + "-duration-" + round);
+        var duration = mode == "legacy-assessment" ? new[] { 400, 380, 361, 343, 326, 310 }[round] : training ? 400 : 200;
+        Check(data.GetProperty("displayDurationMs").GetInt32() == duration, mode + "-duration-" + round);
         var answers = data.GetProperty("stimuli").EnumerateArray().Select(item => item.GetString()!).ToList();
         var session = await db.ExerciseSessions.SingleAsync(item => item.Id == started.SessionId);
         var state = JsonNode.Parse(session.SessionDataJson)!;
@@ -64,7 +65,7 @@ foreach (var mode in new[] { "training", "legacy-training", "legacy-assessment",
         });
         Check(answer.IsValid, mode + "-accepted-" + round);
     }
-    var result = await service.CompleteAsync(student, started.SessionId, new());
+    var result = await service.CompleteAsync(student, started.SessionId, new() { IsAssessmentMode = !training });
     Check(result.RawWPM is null, mode + "-no-reading-wpm");
     if (mode == "training") Check(result.DetailedResults.GetProperty("visualExpansionMaxPresentedDistance").GetInt32() == 12, "training-presented-distance-only");
 }
