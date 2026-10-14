@@ -2339,7 +2339,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             state.VisualExpansionDisplayDurationMs,
             result.IsCorrect,
             state.VisualExpansionConsecutiveCorrect,
-            staged: state.VisualExpansionProtocolVersion == 2);
+            staged: !state.IsAssessmentMode);
         state.VisualExpansionCurrentDegrees = state.AssessmentProtocol?.ValueAt(state.VisualExpansionRound) ?? nextDifficulty.Degrees;
         state.VisualExpansionDisplayDurationMs = state.AssessmentProtocol is null ? nextDifficulty.DisplayDurationMs : 200;
         state.VisualExpansionConsecutiveCorrect = nextDifficulty.ConsecutiveCorrect;

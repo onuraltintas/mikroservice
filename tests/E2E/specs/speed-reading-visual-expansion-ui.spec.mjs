@@ -89,6 +89,32 @@ for (const [pattern, type] of [['radial','word'], ['vertical','symbol']]) test(`
   expect(errors).toEqual([]); expect(writes).toEqual([]);
 });
 
+test('every correct preview answer expands by one and an incorrect answer holds position', async ({ page }) => {
+  const { errors, writes } = await prepare(page, 'Admin', 'horizontal', 'letter', {
+    engineType: 'visual_expansion', engineConfig: { rounds: 4, startDegrees: 8, targetDegrees: 16,
+      displayDurationMs: 100, timing: { intervalMs: 100 }, content: { stimulusType: 'letter' }, mode: 'horizontal' }
+  });
+  await page.getByRole('button', { name: 'Özel ayarlarla dene' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Denemeyi başlat' }).click();
+  await expect(page.locator('.start-button-large')).toBeVisible();
+  await page.clock.install(); await page.clock.pauseAt(new Date());
+  await page.locator('.start-button-large').click();
+  for (const [round, left] of [44, 43.25, 43.25, 42.5].entries()) {
+    await page.clock.runFor(100);
+    const stimuli = page.locator('.expansion-stimulus');
+    await expect(stimuli.nth(0)).toHaveAttribute('style', new RegExp(`left: ${left}%`));
+    const answers = (await stimuli.allTextContents()).map(value => value.trim());
+    await page.clock.runFor(100);
+    for (let index = 0; index < answers.length; index++) {
+      await page.locator('.expansion-answer-area input').nth(index).fill(round === 1 ? '?' : answers[index]);
+      await page.clock.runFor(20);
+    }
+    await page.getByRole('button', { name: /Onayla/ }).click();
+  }
+  await expect(page.getByText('Önizleme sonucu — kaydedilmedi.', { exact: true })).toBeVisible();
+  expect(errors).toEqual([]); expect(writes).toEqual([]);
+});
+
 for (const age of ['child', 'teen', 'young-adult', 'adult']) {
   const catalog = JSON.parse(readFileSync(new URL(`../../../content-packs/${age}-exercises/v1/catalog.json`, import.meta.url)));
   for (const level of [1, 5]) test(`${age} level ${level} custom preview preserves nested catalog settings`, async ({ page }) => {
@@ -109,7 +135,7 @@ for (const age of ['child', 'teen', 'young-adult', 'adult']) {
       const stimuli = page.locator('.expansion-stimulus');
       const answers = (await stimuli.allTextContents()).map(value => value.trim());
       expect(answers).toHaveLength(2);
-      await expect(stimuli.nth(0)).toHaveAttribute('style', new RegExp(`left: ${round < 3 ? 44 : 42.5}%`));
+      await expect(stimuli.nth(0)).toHaveAttribute('style', new RegExp(`left: ${44 - round * .75}%`));
       await page.clock.runFor(config.displayDurationMs - 1);
       await expect(stimuli).toHaveCount(2);
       await page.clock.runFor(1);

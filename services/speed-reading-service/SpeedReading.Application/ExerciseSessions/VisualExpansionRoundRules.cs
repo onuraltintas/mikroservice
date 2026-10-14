@@ -82,12 +82,12 @@ public static class VisualExpansionRoundRules
         if (!isCorrect)
             return new VisualExpansionDifficulty(degrees, duration);
 
+        if (staged && degrees < target)
+            return new VisualExpansionDifficulty(Math.Min(target, degrees + 1), duration);
+
         var streak = Math.Clamp(consecutiveCorrect, 0, 2) + 1;
         if (staged && streak < 3)
             return new VisualExpansionDifficulty(degrees, duration, streak);
-
-        if (staged && degrees < target)
-            return new VisualExpansionDifficulty(Math.Min(target, degrees + AngleIncreaseDegrees), duration);
 
         return new VisualExpansionDifficulty(
             staged ? degrees : Math.Min(target, degrees + AngleIncreaseDegrees),

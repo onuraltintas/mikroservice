@@ -3,7 +3,7 @@ import { VisualExpansionEngine } from './visual-expansion.engine';
 import { visualAngleToAxisOffsetPercent, visualAngleToOffsetPercent } from './visual-expansion-position';
 
 describe('VisualExpansionEngine server protocol', () => {
-  it('keeps distance and speed until three consecutive correct answers', fakeAsync(() => {
+  it('increases distance by one immediately after a correct answer and holds after a wrong answer', fakeAsync(() => {
     const engine = new VisualExpansionEngine();
     engine.initialize({
       rounds: 2,
@@ -29,14 +29,14 @@ describe('VisualExpansionEngine server protocol', () => {
     tick(400);
     engine.handleInput({ answers });
 
-    expect(engine.currentDegrees).toBe(4);
+    expect(engine.currentDegrees).toBe(5);
     expect(engine.getCurrentDisplayDurationMs()).toBe(400);
 
     tick(1);
     tick(400);
     engine.handleInput({ answers: ['?', '?'] });
 
-    expect(engine.currentDegrees).toBe(4);
+    expect(engine.currentDegrees).toBe(5);
     expect(engine.getCurrentDisplayDurationMs()).toBe(400);
   }));
 
@@ -52,8 +52,8 @@ describe('VisualExpansionEngine server protocol', () => {
     let previous: string[] = [];
     for (let round = 0; round < 7; round++) {
       tick(1);
-      expect(engine.currentDegrees).toBe(round < 3 ? 8 : 10);
-      expect(engine.getCurrentDisplayDurationMs()).toBe(round < 6 ? 400 : 380);
+      expect(engine.currentDegrees).toBe(Math.min(10, 8 + round));
+      expect(engine.getCurrentDisplayDurationMs()).toBe(round < 5 ? 400 : 380);
       const answers = engine.getCurrentStimuli().map(item => item.content);
       expect(answers.some(value => previous.includes(value))).toBeFalse();
       previous = answers;
@@ -61,25 +61,25 @@ describe('VisualExpansionEngine server protocol', () => {
       engine.handleInput({ answers });
     }
     expect(result.details.targetSummary).toEqual({ targetDistance: 10, targetReached: true,
-      targetRounds: 4, targetCorrectRounds: 4, targetAccuracy: 100, shortestCorrectDisplayDurationMs: 380 });
+      targetRounds: 5, targetCorrectRounds: 5, targetAccuracy: 100, shortestCorrectDisplayDurationMs: 380 });
     engine.destroy();
   }));
 
   it('does not claim a target reached by the final answer but never displayed', fakeAsync(() => {
     const engine = new VisualExpansionEngine(); let result: any;
-    engine.initialize({ rounds: 3, startDegrees: 8, targetDegrees: 10,
+    engine.initialize({ rounds: 2, startDegrees: 8, targetDegrees: 10,
       timing: { durationMs: 100, intervalMs: 1 } } as any, {
       onStart() {}, onPause() {}, onResume() {}, onComplete: value => result = value,
       onError() {}, onStateChange() {}, onStepComplete() {}, onAction() {}
     });
     engine.start();
-    for (let round = 0; round < 3; round++) {
+    for (let round = 0; round < 2; round++) {
       tick(1); const answers = engine.getCurrentStimuli().map(item => item.content);
       tick(100); engine.handleInput({ answers });
     }
     expect(result.details.targetSummary.targetReached).toBeFalse();
     expect(result.details.targetSummary.targetAccuracy).toBeNull();
-    expect(result.details.maxDegreesReached).toBe(8);
+    expect(result.details.maxDegreesReached).toBe(9);
     engine.destroy();
   }));
 

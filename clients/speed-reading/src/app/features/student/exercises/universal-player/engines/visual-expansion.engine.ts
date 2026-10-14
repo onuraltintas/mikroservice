@@ -337,9 +337,9 @@ export class VisualExpansionEngine implements BaseEngine {
         if (isFullyCorrect && !isPractice) {
             this.correctAnswers++;
             this.successStreak++;
-            if (!this.assessmentProtocol && (!this.stagedProgression || this.successStreak >= 3)) {
+            if (!this.assessmentProtocol && (!this.stagedProgression || this.currentDegrees < this.targetDegrees || this.successStreak >= 3)) {
                 if (this.currentDegrees < this.targetDegrees) {
-                    this.currentDegrees = Math.min(this.targetDegrees, this.currentDegrees + 2);
+                    this.currentDegrees = Math.min(this.targetDegrees, this.currentDegrees + (this.stagedProgression ? 1 : 2));
                 } else if (this.stagedProgression) {
                     this.config.timing.durationMs = Math.max(100, Math.round(this.config.timing.durationMs * 0.95));
                 }

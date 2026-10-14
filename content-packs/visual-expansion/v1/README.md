@@ -13,8 +13,8 @@ harf içeriği ve yatay düzen değişmez. Koçluk ve Identity veritabanları ka
 
 ## Çalışma kuralları
 
-- Yeni eğitim oturumları protokol 2 kullanır. Üç ardışık tam doğru cevap
-  uzaklığı iki eski yapılandırma birimi artırır; gösterim süresi değişmez.
+- Eğitim oturumları protokol 2 kullanır. 14 Ekim 2026 güncellemesiyle her
+  tam doğru cevap uzaklığı bir yapılandırma birimi artırır; gösterim süresi değişmez.
 - Hedef uzaklıkta üç ardışık doğru cevap gösterim süresini %5 azaltır;
   uzaklık sabit kalır. Alt sınır 100 ms'dir. Yanlış cevap seriyi sıfırlar,
   uzaklık ve süreyi değiştirmez.
@@ -30,8 +30,8 @@ harf içeriği ve yatay düzen değişmez. Koçluk ve Identity veritabanları ka
 - Uzaklık bir ekran konumudur; fiziksel görüş açısı veya okuma hızı ölçümü değildir.
   Bu sayılar eğitim yapılandırmasıdır, yaşa göre doğrulanmış klinik norm değildir.
 
-Altı turluk seviye tespiti ve eski protokol 1 oturumları önceki ilerleme
-kuralıyla çalışmaya devam eder. Açık oturumlar kendi ayar anlık görüntüsünü
+Seviye tespiti önceki ilerleme kuralıyla çalışmaya devam eder. Eski eğitim
+oturumları da her doğru cevapta bir birim artar. Açık oturumlar kendi ayar anlık görüntüsünü
 korur; yeni katalog ayarları yalnız yeni oturumlarda kullanılır.
 
 ## Kontrollü uygulama

@@ -6,14 +6,32 @@ namespace SpeedReading.Application.UnitTests;
 public sealed class VisualExpansionRoundRulesTests
 {
     [Fact]
-    public void One_correct_answer_does_not_change_distance_or_duration()
+    public void Every_correct_training_answer_increases_distance_by_one_without_changing_duration()
     {
         VisualExpansionRoundRules.AdvanceDifficulty(
             currentDegrees: 4,
             targetDegrees: 30,
             currentDisplayDurationMs: 400,
             isCorrect: true)
-            .Should().Be(new VisualExpansionDifficulty(4, 400, 1));
+            .Should().Be(new VisualExpansionDifficulty(5, 400, 0));
+    }
+
+    [Fact]
+    public void Wrong_answer_does_not_undo_progress_or_delay_the_next_correct_increase()
+    {
+        var first = VisualExpansionRoundRules.AdvanceDifficulty(8, 16, 400, true);
+        var wrong = VisualExpansionRoundRules.AdvanceDifficulty(first.Degrees, 16, first.DisplayDurationMs, false);
+        var next = VisualExpansionRoundRules.AdvanceDifficulty(wrong.Degrees, 16, wrong.DisplayDurationMs, true);
+        first.Should().Be(new VisualExpansionDifficulty(9, 400));
+        wrong.Should().Be(first);
+        next.Should().Be(new VisualExpansionDifficulty(10, 400));
+    }
+
+    [Fact]
+    public void Legacy_assessment_rule_keeps_its_two_unit_increase_and_duration_change()
+    {
+        VisualExpansionRoundRules.AdvanceDifficulty(8, 16, 400, true, staged: false)
+            .Should().Be(new VisualExpansionDifficulty(10, 380));
     }
 
     [Fact]
