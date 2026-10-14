@@ -40,7 +40,7 @@ Kullanıcı normal tarayıcıda CAPTCHA açıkken son canlı doğrulamaları yap
 | Öğretmen | Giriş ve Hızlı Okuma → Koçluk geçişleri başarılı |
 | Öğrenci | eduivme.com ve masterhizliokuma.com üzerinde iki servise de giriş başarılı |
 
-Bu manuel sonuçlar kullanıcı bildirimiyle doğrulanmıştır; otomatik tarayıcıdan alınmış panel ekran görüntüsü olarak sunulmaz.
+Bu manuel sonuçlar kullanıcı bildirimiyle doğrulanmıştır; otomatik tarayıcıdan alınmış panel ekran görüntüsü olarak sunulmaz. Canlı Identity kayıtlarında aynı kontrol dönemindeki iki ürün girişleri ve her iki staff switch yönü HTTP200 ile doğrulandı; salt okunur sunucu kanıtı artifacts/multi-institution-manual-server-success.log içindedir.
 
 ## Test hesapları ve veri korunması
 
