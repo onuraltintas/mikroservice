@@ -198,6 +198,7 @@ async Task<Fixture> Seed(PlatformProduct target, string account, bool independen
     var linkRole = owner ? InstitutionAdminRole.Owner : InstitutionAdminRole.Manager;
     if (account == "institution") db.InstitutionAdmins.Add(InstitutionAdmin.Create(user.Id, institution.Id, linkRole, source));
     await db.SaveChangesAsync();
+    await db.Entry(institution).ReloadAsync();
     return new(user, password, source, target, account, institution.Id, institution.SubscriptionEndDate, profileId, independent, owner ? 2 : 1, linkRole);
 }
 
