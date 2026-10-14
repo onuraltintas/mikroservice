@@ -1,45 +1,35 @@
-<div class="register-container">
+<app-registration-shell account="institution">
     <mat-card class="register-card">
-        <mat-card-header>
-            <div class="header-content">
-                <a routerLink="/" class="auth-brand" aria-label="Master Hızlı Okuma ana sayfası">
-                    <img src="brand/onal-mark.svg" alt="ONAL" class="auth-brand-mark">
-                    <span><strong>Master Hızlı Okuma</strong><small>ONAL Yazılım ve Otomasyon</small></span>
-                </a>
-                <p class="auth-eyebrow">KURUM KAYDI</p>
-                <h1 class="header-text">Kurum hesabınızı oluşturun</h1>
-                <mat-card-subtitle>Öğrenci erişimlerini ve gelişimi kurum panelinden yönetin.</mat-card-subtitle>
-            </div>
-        </mat-card-header>
+
 
         <mat-card-content>
-            <button mat-stroked-button type="button" (click)="joinExisting = !joinExisting" [attr.aria-expanded]="joinExisting">
+            <div class="existing-account"><p>Zaten Koçluk hesabın var mı?</p><button mat-stroked-button type="button" (click)="joinExisting = !joinExisting" [attr.aria-expanded]="joinExisting">
               {{ joinExisting ? 'Yeni hesap oluştur' : 'Mevcut hesabımla katıl' }}
-            </button>
+            </button></div>
             @if (joinExisting) { <app-existing-product-join product="speed-reading" account="institution" /> }
-            <form [style.display]="joinExisting ? 'none' : null" [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+            <form [style.display]="joinExisting ? 'none' : null" [formGroup]="registerForm" [attr.aria-busy]="isLoading" (ngSubmit)="onSubmit()">
 
                 <!-- Messages -->
                 <div class="messages-container" *ngIf="successMessage || error">
-                    <div *ngIf="successMessage" class="success-msg">
+                    <div *ngIf="successMessage" class="success-msg" role="status">
                         <mat-icon>check_circle</mat-icon>
                         {{ successMessage }}
                     </div>
-                    <div *ngIf="error" class="error-msg">
+                    <div *ngIf="error" class="error-msg" role="alert">
                         <mat-icon>error</mat-icon>
                         {{ error }}
                     </div>
                 </div>
 
                 <!-- Section 1: School Info -->
-                <div class="section-title">
+                <h2 class="section-title">
                     <mat-icon>school</mat-icon>
-                    <span>Kurum Bilgileri</span>
-                </div>
+                    <span>Kurum bilgileri</span>
+                </h2>
 
                 <mat-form-field appearance="outline" class="full-width">
                     <mat-label>Okul / Kurum Adı</mat-label>
-                    <input matInput formControlName="schoolName" placeholder="Örn: Atatürk Anadolu Lisesi">
+                    <input matInput formControlName="schoolName" placeholder="Örn: Atatürk Anadolu Lisesi" autocomplete="organization">
                     <mat-error *ngIf="registerForm.get('schoolName')?.hasError('required')">Kurum adı
                         zorunludur</mat-error>
                 </mat-form-field>
@@ -48,14 +38,14 @@
                     <mat-form-field appearance="outline">
                         <mat-label>Kurumsal E-posta</mat-label>
                         <input matInput formControlName="contactEmail" type="email"
-                            placeholder="info@okuladresiniz.com">
+                            placeholder="info@okuladresiniz.com" autocomplete="email">
                         <mat-error *ngIf="registerForm.get('contactEmail')?.hasError('email')">Geçerli bir e-posta
                             giriniz</mat-error>
                     </mat-form-field>
 
                     <mat-form-field appearance="outline">
                         <mat-label>Kurum Telefon</mat-label>
-                        <input matInput formControlName="phoneNumber" type="tel" placeholder="05XXXXXXXXX">
+                        <input matInput formControlName="phoneNumber" type="tel" placeholder="05XXXXXXXXX" autocomplete="tel">
                         <mat-icon matSuffix>phone</mat-icon>
                         <mat-error *ngIf="registerForm.get('phoneNumber')?.hasError('required')">Telefon
                             zorunludur</mat-error>
@@ -65,10 +55,10 @@
                 </div>
 
                 <!-- Section 2: Location -->
-                <div class="section-title">
+                <h2 class="section-title">
                     <mat-icon>location_on</mat-icon>
-                    <span>Lokasyon Bilgileri</span>
-                </div>
+                    <span>Konum bilgileri</span>
+                </h2>
 
                 <div class="row">
                     <mat-form-field appearance="outline">
@@ -99,31 +89,31 @@
                 <mat-divider></mat-divider>
 
                 <!-- Section 3: Admin Info -->
-                <div class="section-title">
+                <h2 class="section-title">
                     <mat-icon>admin_panel_settings</mat-icon>
-                    <span>Yetkili Yönetici Hesabı</span>
-                </div>
+                    <span>Yönetici hesabı</span>
+                </h2>
 
                 <div class="row">
                     <mat-form-field appearance="outline">
                         <mat-label>Yönetici Adı</mat-label>
-                        <input matInput formControlName="firstName">
+                        <input matInput formControlName="firstName" autocomplete="given-name">
                     </mat-form-field>
                     <mat-form-field appearance="outline">
                         <mat-label>Yönetici Soyadı</mat-label>
-                        <input matInput formControlName="lastName">
+                        <input matInput formControlName="lastName" autocomplete="family-name">
                     </mat-form-field>
                 </div>
 
                 <mat-form-field appearance="outline" class="full-width">
                     <mat-label>Yönetici E-posta (Giriş için)</mat-label>
-                    <input matInput formControlName="adminEmail" type="email">
+                    <input matInput formControlName="adminEmail" type="email" autocomplete="email">
                 </mat-form-field>
 
                 <div class="row">
                     <mat-form-field appearance="outline">
                         <mat-label>Şifre Oluşturun</mat-label>
-                        <input matInput formControlName="password" [type]="hidePassword ? 'password' : 'text'">
+                        <input matInput formControlName="password" [type]="hidePassword ? 'password' : 'text'" autocomplete="new-password">
                         <button mat-icon-button matSuffix type="button" aria-label="Parolayı göster veya gizle" (click)="hidePassword = !hidePassword">
                             <mat-icon>{{hidePassword ? 'visibility_off' : 'visibility'}}</mat-icon>
                         </button>
@@ -144,7 +134,7 @@
                     <mat-form-field appearance="outline">
                         <mat-label>Şifre Tekrar</mat-label>
                         <input matInput formControlName="confirmPassword"
-                            [type]="hideConfirmPassword ? 'password' : 'text'">
+                            [type]="hideConfirmPassword ? 'password' : 'text'" autocomplete="new-password">
                         <button mat-icon-button matSuffix type="button" aria-label="Parola tekrarını göster veya gizle"
                             (click)="hideConfirmPassword = !hideConfirmPassword">
                             <mat-icon>{{hideConfirmPassword ? 'visibility_off' : 'visibility'}}</mat-icon>
@@ -163,7 +153,7 @@
                     <button mat-raised-button color="primary" type="submit"
                         [disabled]="registerForm.invalid || !hasRequiredLegalAcceptances || isLoading" class="submit-btn full-width">
                         <mat-spinner diameter="24" *ngIf="isLoading" class="ui-spinner--centered"></mat-spinner>
-                        <span *ngIf="!isLoading">KAYDI TAMAMLA</span>
+                        <span *ngIf="!isLoading">Kurum hesabını oluştur</span>
                     </button>
 
                     <div class="login-link">
@@ -174,4 +164,4 @@
             </form>
         </mat-card-content>
     </mat-card>
-</div>
+</app-registration-shell>

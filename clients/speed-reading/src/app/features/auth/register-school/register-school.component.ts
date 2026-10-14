@@ -19,12 +19,14 @@ import { getErrorMessage } from '../../../core/utils/error-message';
 import { RegistrationLegalAcceptance } from '../../../core/models/user.model';
 import { RegistrationLegalConsentComponent } from '../registration-legal-consent.component';
 import { ExistingProductJoinComponent } from '../existing-product-join.component';
+import { RegistrationShellComponent } from '../registration-shell.component';
 
 @Component({
   selector: 'app-register-school',
   standalone: true,
   imports: [
     ExistingProductJoinComponent,
+    RegistrationShellComponent,
     CommonModule,
     ReactiveFormsModule,
     RouterLink,

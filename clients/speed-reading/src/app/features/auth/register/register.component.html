@@ -1,29 +1,19 @@
-<div class="register-container">
+<app-registration-shell account="student">
     <mat-card class="register-card">
-      <mat-card-header>
-        <div class="header-content">
-          <a routerLink="/" class="auth-brand" aria-label="Master Hızlı Okuma ana sayfası">
-            <img src="brand/onal-mark.svg" alt="ONAL" class="auth-brand-mark">
-            <span><strong>Master Hızlı Okuma</strong><small>ONAL Yazılım ve Otomasyon</small></span>
-          </a>
-          <p class="auth-eyebrow">ÖĞRENCİ KAYDI</p>
-          <h1 class="header-title">Çalışma hesabınızı oluşturun</h1>
-          <mat-card-subtitle>Seviyenize uygun programla başlayın.</mat-card-subtitle>
-        </div>
-    </mat-card-header>
+
 
     <mat-card-content>
-      <button mat-stroked-button type="button" (click)="joinExisting = !joinExisting" [attr.aria-expanded]="joinExisting">
+      <div class="existing-account"><p>Zaten Koçluk hesabın var mı?</p><button mat-stroked-button type="button" (click)="joinExisting = !joinExisting" [attr.aria-expanded]="joinExisting">
         {{ joinExisting ? 'Yeni hesap oluştur' : 'Mevcut hesabımla katıl' }}
-      </button>
+      </button></div>
       @if (joinExisting) { <app-existing-product-join product="speed-reading" account="student" /> }
-      <form [style.display]="joinExisting ? 'none' : null" [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+      <form [style.display]="joinExisting ? 'none' : null" [formGroup]="registerForm" [attr.aria-busy]="loading" (ngSubmit)="onSubmit()">
 
         <!-- Row 1: Names -->
         <div class="form-row">
           <mat-form-field appearance="outline" class="half-width">
             <mat-label>Ad</mat-label>
-            <input matInput type="text" formControlName="firstName" placeholder="Adınız">
+            <input matInput type="text" formControlName="firstName" placeholder="Adınız" autocomplete="given-name">
             @if (registerForm.get('firstName')?.hasError('required') && registerForm.get('firstName')?.touched) {
             <mat-error>Gerekli</mat-error>
             }
@@ -31,7 +21,7 @@
 
           <mat-form-field appearance="outline" class="half-width">
             <mat-label>Soyad</mat-label>
-            <input matInput type="text" formControlName="lastName" placeholder="Soyadınız">
+            <input matInput type="text" formControlName="lastName" placeholder="Soyadınız" autocomplete="family-name">
             @if (registerForm.get('lastName')?.hasError('required') && registerForm.get('lastName')?.touched) {
             <mat-error>Gerekli</mat-error>
             }
@@ -41,7 +31,7 @@
         <!-- Row 2: Email -->
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>E-posta Adresi</mat-label>
-          <input matInput type="email" formControlName="email" placeholder="ornek@email.com">
+          <input matInput type="email" formControlName="email" placeholder="ornek@email.com" autocomplete="email">
           <mat-icon matSuffix>email</mat-icon>
           @if (registerForm.get('email')?.hasError('required') && registerForm.get('email')?.touched) {
           <mat-error>E-posta gereklidir</mat-error>
@@ -55,7 +45,7 @@
         <div class="form-row">
           <mat-form-field appearance="outline" class="half-width">
             <mat-label>Şifre</mat-label>
-            <input matInput [type]="hidePassword ? 'password' : 'text'" formControlName="password" placeholder="******">
+            <input matInput [type]="hidePassword ? 'password' : 'text'" formControlName="password" placeholder="******" autocomplete="new-password">
             <button mat-icon-button matSuffix type="button" aria-label="Parolayı göster veya gizle" (click)="hidePassword = !hidePassword">
               <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
             </button>
@@ -65,9 +55,9 @@
           </mat-form-field>
 
           <mat-form-field appearance="outline" class="half-width">
-            <mat-label>Tekrar</mat-label>
+            <mat-label>Şifre tekrar</mat-label>
             <input matInput [type]="hideConfirmPassword ? 'password' : 'text'" formControlName="confirmPassword"
-              placeholder="******">
+              placeholder="******" autocomplete="new-password">
             <button mat-icon-button matSuffix type="button" aria-label="Parola tekrarını göster veya gizle" (click)="hideConfirmPassword = !hideConfirmPassword">
               <mat-icon>{{ hideConfirmPassword ? 'visibility_off' : 'visibility' }}</mat-icon>
             </button>
@@ -89,7 +79,7 @@
           (readinessChange)="legalReady = $event"></app-registration-legal-consent>
 
         @if (error) {
-        <div class="error-message">
+        <div class="error-message" role="alert">
           <mat-icon>error_outline</mat-icon> {{ error }}
         </div>
         }
@@ -101,7 +91,7 @@
           <mat-spinner diameter="24"></mat-spinner>
           } @else {
           <span class="btn-content">
-            Kayıt Ol ve Başla
+            Öğrenci hesabını oluştur
             <mat-icon>arrow_forward</mat-icon>
           </span>
           }
@@ -120,4 +110,4 @@
       </form>
     </mat-card-content>
   </mat-card>
-</div>
+</app-registration-shell>
