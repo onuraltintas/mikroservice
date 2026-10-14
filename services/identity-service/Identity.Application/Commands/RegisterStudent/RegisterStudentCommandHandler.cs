@@ -19,6 +19,8 @@ public class RegisterStudentCommandHandler : IRequestHandler<RegisterStudentComm
     private readonly IPublishEndpoint _publishEndpoint;
     private readonly IConfigurationService _configurationService;
     private readonly IRegistrationLegalConsentService _registrationLegalConsentService;
+    private readonly IPasswordHasher _passwordHasher;
+    private readonly IRoleRepository _roleRepository;
 
     public RegisterStudentCommandHandler(
         IIdentityService identityService,
@@ -27,7 +29,9 @@ public class RegisterStudentCommandHandler : IRequestHandler<RegisterStudentComm
         IUnitOfWork unitOfWork,
         IPublishEndpoint publishEndpoint,
         IConfigurationService configurationService,
-        IRegistrationLegalConsentService registrationLegalConsentService)
+        IRegistrationLegalConsentService registrationLegalConsentService,
+        IPasswordHasher passwordHasher,
+        IRoleRepository roleRepository)
     {
         _identityService = identityService;
         _userRepository = userRepository;
@@ -36,6 +40,8 @@ public class RegisterStudentCommandHandler : IRequestHandler<RegisterStudentComm
         _publishEndpoint = publishEndpoint;
         _configurationService = configurationService;
         _registrationLegalConsentService = registrationLegalConsentService;
+        _passwordHasher = passwordHasher;
+        _roleRepository = roleRepository;
     }
 
     public async Task<Result<Guid>> Handle(RegisterStudentCommand request, CancellationToken cancellationToken)
@@ -68,6 +74,9 @@ public class RegisterStudentCommandHandler : IRequestHandler<RegisterStudentComm
 
         if (identityResult.IsFailure)
         {
+            if (product == PlatformProduct.Coaching && identityResult.Error.Code == "Identity.UserExists")
+                return await JoinExistingAccountAsync(request, legalValidation.Value, cancellationToken);
+
             if (identityResult.Error.Code == "User.Duplicate")
             {
                 // Check local DB if user exists but inactive (Soft Deleted)
@@ -158,5 +167,49 @@ public class RegisterStudentCommandHandler : IRequestHandler<RegisterStudentComm
             await _identityService.DeleteUserAsync(userId, cancellationToken);
             return Result.Failure<Guid>(new Error("Registration.Failed", "Registration could not be completed. Please try again later."));
         }
+    }
+
+    private async Task<Result<Guid>> JoinExistingAccountAsync(
+        RegisterStudentCommand request,
+        IReadOnlyList<PlatformLegalPageDto> legalDocuments,
+        CancellationToken cancellationToken)
+    {
+        var user = await _userRepository.GetByEmailAsync(request.Email, cancellationToken);
+        if (user is null || !_passwordHasher.VerifyPasswordHash(request.Password, user.PasswordHash, user.PasswordSalt))
+            return Result.Failure<Guid>(new Error("Auth.ExistingAccountPasswordRequired",
+                "Bu e-posta ile mevcut bir hesabınız var. Koçluk'a katılmak için yeni şifre oluşturmak yerine mevcut hesabınızın şifresini girin."));
+
+        if (!user.IsActive || !user.EmailConfirmed)
+            return Result.Failure<Guid>(new Error("Auth.ExistingAccountNotEligible",
+                "Koçluk'a katılmak için mevcut hesabınızın aktif ve e-posta adresinin doğrulanmış olması gerekir."));
+
+        if (user.MfaEnabled)
+            return Result.Failure<Guid>(new Error("Auth.ExistingAccountMfaRequired",
+                "Bu hesap iki adımlı doğrulama kullanıyor. Koçluk katılımını doğrulanmış oturum üzerinden yöneticiyle tamamlayın."));
+
+        // Registration must not reactivate revoked access or change an existing Coaching role.
+        if (user.ProductAccesses.Any(access => access.Product == PlatformProduct.Coaching)
+            || user.Roles.Any(role => role.Product == PlatformProduct.Coaching))
+            return Result.Failure<Guid>(new Error("Identity.UserExists",
+                "Bu hesabın Koçluk kaydı zaten var. Giriş yapın; erişim kapatılmışsa Koçluk yöneticisiyle iletişime geçin."));
+
+        var role = await _roleRepository.GetByNameAsync("Student", cancellationToken);
+        if (role is null || role.IsDeleted)
+            return Result.Failure<Guid>(new Error("Identity.RoleNotFound", "Öğrenci kayıt rolü şu anda kullanılamıyor."));
+
+        var profile = await _studentRepository.GetExistingForRegistrationAsync(user.Id, cancellationToken);
+        if (profile is not null && (!profile.IsActive || profile.InstitutionId.HasValue))
+            return Result.Failure<Guid>(new Error("Auth.ExistingAccountNotEligible",
+                "Mevcut öğrenci profiliniz pasif veya bir kuruma bağlı. Koçluk katılımını yöneticinizle tamamlayın."));
+        if (profile is null)
+            await _studentRepository.AddAsync(StudentProfile.Create(user.Id, user.FirstName, user.LastName, null, null), cancellationToken);
+
+        user.AddRole(new Identity.Domain.Entities.UserRole(user.Id, role.Id, PlatformProduct.Coaching));
+        if (user.GrantProductAccess(PlatformProduct.Coaching, UserProductAccessSource.SelfRegistration, user.Id, DateTimeOffset.UtcNow))
+            _userRepository.TrackProductAccessIfNew(user, PlatformProduct.Coaching);
+        _registrationLegalConsentService.TrackAcceptedDocuments(user.Id, PlatformProduct.Coaching, legalDocuments, "password");
+        // Persist membership, profile and consent together; the existing identity is never deleted on failure.
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        return Result.Success(user.Id);
     }
 }

@@ -237,6 +237,7 @@ public interface ITeacherRepository
 public interface IStudentRepository
 {
     Task AddAsync(StudentProfile student, CancellationToken cancellationToken);
+    Task<StudentProfile?> GetExistingForRegistrationAsync(Guid userId, CancellationToken cancellationToken);
     Task<StudentProfile?> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken);
     Task<StudentProfile?> GetByUserIdAsync(Guid userId, Guid? institutionId, CancellationToken cancellationToken);
     Task<StudentProfile?> GetByIdAsync(Guid id, CancellationToken cancellationToken);

@@ -1,4 +1,5 @@
 import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -10,7 +11,41 @@ import { ToasterService } from '../../../../core/services/toaster.service';
 import { ConfigurationService } from '../../../../core/services/settings/configuration.service';
 import { StudentRegisterComponent } from './student-register.component';
 
-describe('StudentRegisterComponent Google registration', () => {
+describe('StudentRegisterComponent registration', () => {
+  it('shows the actionable API conflict description instead of a generic registration error', async () => {
+    const toaster = { error: vi.fn() };
+    const component = createComponent(new Subject(), {}, toaster);
+    component.form.setValue({ firstName: 'Test', lastName: 'Student', email: 'existing@example.test',
+      password: 'ExistingPassword1!', confirmPassword: 'ExistingPassword1!' });
+    await component.onSubmit();
+    const http = TestBed.inject(HttpTestingController);
+    http.expectOne(request => request.url.endsWith('/auth/coaching/register/student')).flush({
+      code: 'Identity.UserExists', description: 'Bu hesabın Koçluk kaydı zaten var. Giriş yapın.'
+    }, { status: 409, statusText: 'Conflict' });
+    expect(component.errorMessage()).toBe('Bu hesabın Koçluk kaydı zaten var. Giriş yapın.');
+    expect(toaster.error).toHaveBeenCalledWith(component.errorMessage());
+    expect(component.isLoading()).toBe(false);
+    http.verify();
+  });
+
+  it('sends existing credentials and current Coaching acceptances without changing the password', async () => {
+    const toaster = { success: vi.fn() };
+    const router = { navigate: vi.fn() };
+    const component = createComponent(new Subject(), {}, toaster, router);
+    component.errorMessage.set('Previous error');
+    component.form.setValue({ firstName: 'Test', lastName: 'Student', email: 'existing@example.test',
+      password: 'ExistingPassword1!', confirmPassword: 'ExistingPassword1!' });
+    await component.onSubmit();
+    expect(component.errorMessage()).toBeNull();
+    const http = TestBed.inject(HttpTestingController);
+    const request = http.expectOne(candidate => candidate.url.endsWith('/auth/coaching/register/student'));
+    expect(request.request.body.password).toBe('ExistingPassword1!');
+    expect(request.request.body.legalAcceptances).toEqual(component.legalAcceptances);
+    request.flush({ userId: 'existing-user' });
+    expect(router.navigate).toHaveBeenCalledWith(['/auth/login'], { queryParams: { registered: 'true', role: 'student' } });
+    expect(toaster.success).toHaveBeenCalled();
+    http.verify();
+  });
   it('does not send Google registration without current legal acceptances', async () => {
     const authState = new Subject<{ idToken?: string }>();
     const authService = { loginWithGoogle: vi.fn() };
@@ -95,6 +130,7 @@ describe('StudentRegisterComponent Google registration', () => {
       imports: [ReactiveFormsModule],
       providers: [
         provideHttpClient(),
+        provideHttpClientTesting(),
         { provide: AuthService, useValue: authService },
         { provide: SocialAuthService, useValue: { authState } },
         { provide: Router, useValue: router },

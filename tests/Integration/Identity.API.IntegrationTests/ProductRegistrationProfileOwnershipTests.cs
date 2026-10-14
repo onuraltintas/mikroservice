@@ -54,7 +54,9 @@ public sealed class ProductRegistrationProfileOwnershipTests
             DispatchProxy.Create<IUnitOfWork, UnitOfWorkProxy>(),
             DispatchProxy.Create<IPublishEndpoint, PublishEndpointProxy>(),
             DispatchProxy.Create<IConfigurationService, ConfigurationServiceProxy>(),
-            new AcceptingLegalConsentService());
+            new AcceptingLegalConsentService(),
+            new EduPlatform.Shared.Security.Services.PasswordHasher(),
+            DispatchProxy.Create<IRoleRepository, RoleRepositoryProxy>());
 
         var result = await handler.Handle(
             new RegisterStudentCommand(
@@ -140,6 +142,12 @@ public sealed class ProductRegistrationProfileOwnershipTests
             nameof(IUserRepository.TrackProductAccessIfNew) => null,
             _ => throw new NotSupportedException($"Unexpected user-repository call: {targetMethod?.Name}")
         };
+    }
+
+    public class RoleRepositoryProxy : DispatchProxy
+    {
+        protected override object? Invoke(MethodInfo? targetMethod, object?[]? args) =>
+            throw new NotSupportedException($"Unexpected role-repository call: {targetMethod?.Name}");
     }
 
     public class StudentRepositoryProxy : DispatchProxy

@@ -89,6 +89,7 @@ export class StudentRegisterComponent implements OnInit {
         if (this.form.invalid || !this.hasRequiredLegalAcceptances) return;
 
         this.isLoading.set(true);
+        this.errorMessage.set(null);
         const formData = this.form.value;
 
         const payload = {
@@ -104,12 +105,15 @@ export class StudentRegisterComponent implements OnInit {
 
         this.http.post(`${environment.apiUrl}/auth/coaching/register/student`, payload).subscribe({
             next: () => {
-                this.toaster.success('Kayıt işleminiz başarıyla tamamlandı. E-posta adresinizi doğrulamak için size gönderdiğimiz onay linkine tıklayın.', 'Doğrulama Gerekli');
+                this.toaster.success('Koçluk kaydınız tamamlandı. Yeni hesaplarda e-posta adresinizi gönderilen bağlantıyla doğrulayın; mevcut doğrulanmış hesabınız varsa giriş yapabilirsiniz.');
                 this.router.navigate(['/auth/login'], { queryParams: { registered: 'true', role: 'student' } });
             },
             error: (err) => {
                 this.isLoading.set(false);
-                const msg = err.error?.Error || 'Kayıt başarısız oldu.';
+                const apiError = err.error;
+                const msg = apiError?.description || apiError?.message
+                    || (typeof apiError?.Error === 'string' ? apiError.Error : apiError?.Error?.description)
+                    || 'Kayıt başarısız oldu. Lütfen yeniden deneyin.';
                 this.toaster.error(msg);
                 this.errorMessage.set(msg);
             }

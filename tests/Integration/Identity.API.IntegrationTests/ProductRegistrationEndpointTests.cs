@@ -152,7 +152,7 @@ public sealed class ProductRegistrationEndpointTests
     [Fact]
     public async Task RegistrationHandlers_ShouldRejectMissingProductScope()
     {
-        var studentHandler = new RegisterStudentCommandHandler(null!, null!, null!, null!, null!, null!, null!);
+        var studentHandler = new RegisterStudentCommandHandler(null!, null!, null!, null!, null!, null!, null!, null!, null!);
         var teacherHandler = new RegisterTeacherCommandHandler(null!, null!, null!, null!, null!, null!, null!);
         var institutionHandler = new RegisterInstitutionCommandHandler(null!, null!, null!, null!, null!, null!, null!, null!);
 

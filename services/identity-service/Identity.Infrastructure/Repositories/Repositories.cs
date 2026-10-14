@@ -2168,6 +2168,9 @@ public class StudentRepository : IStudentRepository
     private readonly IdentityDbContext _context;
     public StudentRepository(IdentityDbContext context) => _context = context;
 
+    public Task<StudentProfile?> GetExistingForRegistrationAsync(Guid userId, CancellationToken cancellationToken) =>
+        _context.StudentProfiles.IgnoreQueryFilters().SingleOrDefaultAsync(profile => profile.UserId == userId, cancellationToken);
+
     public async Task AddAsync(StudentProfile student, CancellationToken cancellationToken)
     {
         await _context.StudentProfiles.AddAsync(student, cancellationToken);

@@ -1236,6 +1236,7 @@ public sealed class SystemAdminMfaLoginTests
     private sealed class RejectingStudentRepository : IStudentRepository
     {
         public Task AddAsync(StudentProfile student, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<StudentProfile?> GetExistingForRegistrationAsync(Guid userId, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<StudentProfile?> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<StudentProfile?> GetByUserIdAsync(Guid userId, Guid? institutionId, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<StudentProfile?> GetByIdAsync(Guid id, CancellationToken cancellationToken) => throw new NotSupportedException();
