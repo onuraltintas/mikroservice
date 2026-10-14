@@ -12,11 +12,20 @@
     <PackageReference Include="xunit.runner.visualstudio" Version="2.5.6" />
     <PackageReference Include="coverlet.collector" Version="6.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.2" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.2" />
   </ItemGroup>
   <ItemGroup>
     <Using Include="Xunit" />
+    <Using Include="Microsoft.Extensions.DependencyInjection" />
+    <Using Include="Microsoft.Extensions.Hosting" />
+    <Using Include="Microsoft.Extensions.Logging" />
+    <ProjectReference Include="../../../services/course-management-service/CourseManagement.Application/CourseManagement.Application.csproj" />
     <ProjectReference Include="../../../services/course-management-service/CourseManagement.Domain/CourseManagement.Domain.csproj" />
     <ProjectReference Include="../../../services/course-management-service/CourseManagement.Infrastructure/CourseManagement.Infrastructure.csproj" />
+    <ProjectReference Include="../../../shared/EduPlatform.Shared.Contracts/EduPlatform.Shared.Contracts.csproj" />
+    <Compile Include="../../../services/course-management-service/CourseManagement.API/CourseAssignmentAttachmentCleanupService.cs" Link="CourseManagement/API/CourseAssignmentAttachmentCleanupService.cs" />
+    <Compile Include="../../../services/course-management-service/CourseManagement.API/CourseAssignmentAttachmentCleanupQueue.cs" Link="CourseManagement/API/CourseAssignmentAttachmentCleanupQueue.cs" />
+    <Compile Include="../../../services/course-management-service/CourseManagement.API/CourseManagementMeters.cs" Link="CourseManagement/API/CourseManagementMeters.cs" />
     <Compile Include="../../../services/identity-service/Identity.Domain/Enums/PlatformProduct.cs" Link="Identity/PlatformProduct.cs" />
     <Compile Include="../../../services/identity-service/Identity.Domain/Enums/PlatformPermissionScope.cs" Link="Identity/PlatformPermissionScope.cs" />
   </ItemGroup>

@@ -39,6 +39,18 @@ public sealed class MembershipAndInvitationTests
     }
 
     [Fact]
+    public void ExistingStudentRecordCanOnlyBeAttachedToStudentInvitation()
+    {
+        var studentRecordId = Guid.NewGuid();
+        var invitation = WorkspaceInvitation.Create(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), WorkspaceRole.Student,
+            DateTimeOffset.UtcNow, studentRecordId);
+
+        Assert.Equal(studentRecordId, invitation.StudentRecordId);
+        Assert.Throws<ArgumentException>(() => WorkspaceInvitation.Create(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(),
+            WorkspaceRole.Teacher, DateTimeOffset.UtcNow, studentRecordId));
+    }
+
+    [Fact]
     public void ExpiredAndCancelledInvitationsCannotBeAccepted()
     {
         var target = Guid.NewGuid();

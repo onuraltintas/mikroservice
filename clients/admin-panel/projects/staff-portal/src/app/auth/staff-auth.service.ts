@@ -156,6 +156,29 @@ export class StaffAuthService {
     this._activeProduct.set(product);
   }
 
+  async getProductAccessToken(product: StaffProduct): Promise<string> {
+    if (!this._products().some(access => access.product === product)) {
+      throw new Error('Bu kaynak ürün için personel erişiminiz bulunmuyor.');
+    }
+    if (!this.isAuthenticated() && !await this.refreshSession()) {
+      throw new Error('Oturum süresi dolmuş. Yeniden giriş yapın.');
+    }
+    if (this._activeProduct() === product) return this.getAccessToken();
+
+    const sessionUrl = product === 'course-management'
+      ? `${environment.apiUrl}/auth/course-management/session`
+      : `${environment.apiUrl}/auth/staff-session/switch/${product}`;
+    const response = await firstValueFrom(this.http.post<AuthSessionResponse>(sessionUrl, {}, { withCredentials: true }));
+    let claims: AccessTokenClaims;
+    try {
+      claims = jwtDecode<AccessTokenClaims>(response.accessToken);
+    } catch {
+      throw new Error('Kaynak ürün oturumu doğrulanamadı.');
+    }
+    if (claims.platform_product !== product) throw new Error('Kaynak ürün oturumu eşleşmiyor.');
+    return response.accessToken;
+  }
+
   async joinCourseManagement(role: 'Teacher' | 'InstitutionOwner'): Promise<void> {
     await firstValueFrom(this.http.post<void>(`${environment.apiUrl}/auth/course-management/join`, { role }));
     await this.loadStaffProducts();

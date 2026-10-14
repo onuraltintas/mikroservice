@@ -27,6 +27,10 @@
         }
       </nav>
 
+      @defer (when !auth.products().some(hasCourseAccess)) {
+        <staff-course-management-enrollment />
+      }
+
       <div class="sidebar-bottom">
         <span class="secure-dot" aria-hidden="true"></span>
         <div><strong>Güvenli oturum</strong><small>Ürün erişimi ayrı doğrulanır</small></div>
@@ -37,8 +41,8 @@
       <header class="topbar">
         <div class="breadcrumb"><span>Personel portalı</span><span aria-hidden="true">/</span><strong>{{ currentProductLabel }}</strong></div>
         <div class="topbar-actions">
-          @if (auth.activeProduct() !== 'course-management') {
           <button class="account-button" type="button" data-testid="toggle-notifications" [attr.aria-expanded]="notificationsVisible" (click)="notificationsVisible = !notificationsVisible">{{ notificationsVisible ? 'Bildirimleri gizle' : 'Bildirimler' }}</button>
+          @if (auth.activeProduct() !== 'course-management') {
           <button class="account-button" type="button" data-testid="toggle-account-settings" [attr.aria-expanded]="accountSettingsVisible" (click)="accountSettingsVisible = !accountSettingsVisible">{{ accountSettingsVisible ? 'Hesap ayarlarını gizle' : 'Hesap ayarları' }}</button>
           }
           <button class="logout-button" type="button" (click)="logout()"><span aria-hidden="true">↪</span> Güvenli çıkış</button>
@@ -100,9 +104,12 @@
 
         @if (accountSettingsVisible && auth.activeProduct() !== 'course-management') { <staff-account-settings /> }
         @if (notificationsVisible && auth.activeProduct() !== 'course-management') { <staff-notification-center [product]="auth.activeProduct() === 'speed-reading' ? 'speed-reading' : 'coaching'" /> }
+        @if (notificationsVisible && auth.activeProduct() === 'course-management') { <staff-notification-center [product]="'course-management'" /> }
 
-        @if (auth.activeProduct() === 'course-management' && activeWorkspaceRole; as courseRole) {
-          <staff-course-management-workspace [role]="courseRole" />
+        @defer (when auth.activeProduct() === 'course-management' && activeWorkspaceRole) {
+          @if (auth.activeProduct() === 'course-management' && activeWorkspaceRole; as courseRole) {
+            <staff-course-management-workspace [role]="courseRole" />
+          }
         }
 
         @if (isTeacherWorkspaceSelected) {

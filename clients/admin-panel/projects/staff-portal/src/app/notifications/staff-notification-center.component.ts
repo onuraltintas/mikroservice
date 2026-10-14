@@ -125,7 +125,19 @@ export class StaffNotificationCenterComponent implements OnChanges, OnInit {
     this.preferences.update(items => items.map(item => ({ ...item, enableEmail: enabled })));
   }
 
-  typeLabel(type: number): string {
+  typeLabel(type: number | string): string {
+    if (typeof type === 'string') {
+      const courseLabels: Record<string, string> = {
+        'CourseManagement.LessonScheduled': 'Yeni ders',
+        'CourseManagement.LessonRescheduled': 'Ders saati değişti',
+        'CourseManagement.LessonCancelled': 'Ders iptal edildi',
+        'CourseManagement.AssignmentPublished': 'Yeni ödev',
+        'CourseManagement.AssignmentSubmitted': 'Ödev teslim edildi',
+        'CourseManagement.AssignmentReviewed': 'Ödev değerlendirildi',
+        'CourseManagement.PaymentRecorded': 'Finans özeti güncellendi'
+      };
+      return courseLabels[type] ?? type;
+    }
     const labels: Record<number, string> = {
       1: 'Yeni ödev', 2: 'Yaklaşan ödev', 3: 'Gecikmiş ödev', 4: 'Egzersiz tamamlandı',
       5: 'Kilometre taşı', 6: 'Haftalık ilerleme', 7: 'Aylık ilerleme', 8: 'Günlük hatırlatma',

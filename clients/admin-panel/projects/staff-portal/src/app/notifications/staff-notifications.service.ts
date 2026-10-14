@@ -27,16 +27,17 @@ export class StaffNotificationsService {
   private readonly http = inject(HttpClient);
   private readonly coachingUrl = '/api/notifications';
   private readonly speedReadingUrl = '/api/speed-reading/notifications';
+  private readonly courseManagementUrl = '/api/course-management/notifications';
 
   getNotifications(product: StaffProduct): Observable<StaffNotification[]> {
-    const url = product === 'speed-reading' ? this.speedReadingUrl : this.coachingUrl;
+    const url = this.urlFor(product);
     return this.http.get<StaffNotification[] | { items?: StaffNotification[] }>(
       `${url}?pageNumber=1&pageSize=100`
     ).pipe(map(response => Array.isArray(response) ? response : response.items ?? []));
   }
 
   markAsRead(product: StaffProduct, id: string): Observable<unknown> {
-    const url = product === 'speed-reading' ? this.speedReadingUrl : this.coachingUrl;
+    const url = this.urlFor(product);
     const method = product === 'speed-reading' ? 'put' : 'post';
     return method === 'put'
       ? this.http.put(`${url}/${encodeURIComponent(id)}/mark-read`, {})
@@ -44,7 +45,7 @@ export class StaffNotificationsService {
   }
 
   markAllAsRead(product: StaffProduct): Observable<unknown> {
-    const url = product === 'speed-reading' ? this.speedReadingUrl : this.coachingUrl;
+    const url = this.urlFor(product);
     const method = product === 'speed-reading' ? 'put' : 'post';
     return method === 'put'
       ? this.http.put(`${url}/mark-all-read`, {})
@@ -52,7 +53,7 @@ export class StaffNotificationsService {
   }
 
   deleteNotification(product: StaffProduct, id: string): Observable<unknown> {
-    const url = product === 'speed-reading' ? this.speedReadingUrl : this.coachingUrl;
+    const url = this.urlFor(product);
     return this.http.delete(`${url}/${encodeURIComponent(id)}`);
   }
 
@@ -62,5 +63,10 @@ export class StaffNotificationsService {
 
   saveSpeedReadingPreferences(preferences: SpeedReadingNotificationPreference[]): Observable<unknown> {
     return this.http.put(`${this.speedReadingUrl}/preferences`, preferences);
+  }
+
+  private urlFor(product: StaffProduct): string {
+    if (product === 'speed-reading') return this.speedReadingUrl;
+    return product === 'course-management' ? this.courseManagementUrl : this.coachingUrl;
   }
 }

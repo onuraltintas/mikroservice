@@ -3,6 +3,7 @@ using EduPlatform.Shared.Infrastructure.Observability;
 using MassTransit;
 using Notification.Application.Privacy;
 using Notification.Application.Consumers;
+using OpenTelemetry.Metrics;
 using Notification.Application.Configuration;
 using Notification.Application.Interfaces;
 using Notification.Application.Services;
@@ -69,6 +70,7 @@ InternalServiceAuthentication.ValidateConfiguration(builder.Configuration);
 builder.Host.UseCustomSerilog();
 builder.Services.AddPersistentDataProtection(builder.Configuration, "EduPlatform.Notification", builder.Environment.IsProduction());
 builder.Services.AddEduPlatformOpenTelemetry(builder.Configuration, builder.Environment, "EduPlatform.Notification");
+builder.Services.AddOpenTelemetry().WithMetrics(metrics => metrics.AddMeter(CourseManagementEventDeliveryMetrics.MeterName));
 builder.Services.AddGlobalExceptionHandler();
 // Keep notification/admin authorization in sync with the identity MFA policy
 // categories.
@@ -160,6 +162,7 @@ builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddScoped<IEmailDeliveryQueue, EmailDeliveryQueue>();
 builder.Services.AddScoped<INotificationService, Notification.API.Services.NotificationManager>();
 builder.Services.AddScoped<ICoachingNotificationDispatcher, CoachingNotificationDispatcher>();
+builder.Services.AddScoped<ICourseManagementNotificationDispatcher, CourseManagementNotificationDispatcher>();
 builder.Services.AddHostedService<EmailDeliveryWorker>();
 builder.Services.AddHostedService<SupportForwardDeliveryWorker>();
 builder.Services.AddSingleton<IUserIdProvider, CustomUserIdProvider>();
@@ -197,6 +200,12 @@ builder.Services.AddCustomAuthentication(builder.Configuration, options =>
     });
 
 builder.Services.AddCustomAuthorization();
+builder.Services.AddAuthorization(options => options.AddPolicy("CourseManagementNotifications", policy =>
+    policy.RequireAuthenticatedUser()
+        .RequireClaim("platform_product", "course-management")
+        .RequireAssertion(context => Guid.TryParse(
+            context.User.FindFirstValue("sub") ?? context.User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId)
+            && userId != Guid.Empty)));
 
 // MassTransit Config
 builder.Services.AddMassTransit(x =>
@@ -221,6 +230,14 @@ builder.Services.AddMassTransit(x =>
     x.AddConsumer<GoalUpdatedConsumer>();
     x.AddConsumer<StudyPlanPublishedConsumer>();
     x.AddConsumer<NotificationErasureAssessmentRequestedConsumer>();
+    x.AddConsumer<CourseManagementLessonScheduledConsumer>();
+    x.AddConsumer<CourseManagementLessonRescheduledConsumer>();
+    x.AddConsumer<CourseManagementLessonCancelledConsumer>();
+    x.AddConsumer<CourseManagementAssignmentPublishedConsumer>();
+    x.AddConsumer<CourseManagementAssignmentSubmittedConsumer>();
+    x.AddConsumer<CourseManagementAssignmentReviewedConsumer>();
+    x.AddConsumer<CourseManagementPaymentRecordedConsumer>();
+    x.AddConsumer<CourseManagementReminderDueConsumer>();
     x.AddConsumer<NotificationErasureExecutionRequestedConsumer>();
     
     // Outbox Pattern Configuration
@@ -366,6 +383,56 @@ builder.Services.AddMassTransit(x =>
             e.UseEntityFrameworkOutbox<NotificationDbContext>(context);
             e.ConfigureConsumer<NotificationErasureAssessmentRequestedConsumer>(context);
         });
+        cfg.ReceiveEndpoint("course-management-lesson-scheduled", e =>
+        {
+            e.UseMessageRetry(retry => retry.Exponential(5, TimeSpan.FromSeconds(1), TimeSpan.FromMinutes(1), TimeSpan.FromSeconds(5)));
+            e.UseEntityFrameworkOutbox<NotificationDbContext>(context);
+            e.ConfigureConsumer<CourseManagementLessonScheduledConsumer>(context);
+        });
+        cfg.ReceiveEndpoint("course-management-lesson-rescheduled", e =>
+        {
+            e.UseMessageRetry(retry => retry.Exponential(5, TimeSpan.FromSeconds(1), TimeSpan.FromMinutes(1), TimeSpan.FromSeconds(5)));
+            e.UseEntityFrameworkOutbox<NotificationDbContext>(context);
+            e.ConfigureConsumer<CourseManagementLessonRescheduledConsumer>(context);
+        });
+        cfg.ReceiveEndpoint("course-management-lesson-cancelled", e =>
+        {
+            e.UseMessageRetry(retry => retry.Exponential(5, TimeSpan.FromSeconds(1), TimeSpan.FromMinutes(1), TimeSpan.FromSeconds(5)));
+            e.UseEntityFrameworkOutbox<NotificationDbContext>(context);
+            e.ConfigureConsumer<CourseManagementLessonCancelledConsumer>(context);
+        });
+        cfg.ReceiveEndpoint("course-management-assignment-published", e =>
+        {
+            e.UseMessageRetry(retry => retry.Exponential(5, TimeSpan.FromSeconds(1), TimeSpan.FromMinutes(1), TimeSpan.FromSeconds(5)));
+            e.UseEntityFrameworkOutbox<NotificationDbContext>(context);
+            e.ConfigureConsumer<CourseManagementAssignmentPublishedConsumer>(context);
+        });
+        cfg.ReceiveEndpoint("course-management-assignment-submitted", e =>
+        {
+            e.UseMessageRetry(retry => retry.Exponential(5, TimeSpan.FromSeconds(1), TimeSpan.FromMinutes(1), TimeSpan.FromSeconds(5)));
+            e.UseEntityFrameworkOutbox<NotificationDbContext>(context);
+            e.ConfigureConsumer<CourseManagementAssignmentSubmittedConsumer>(context);
+        });
+        cfg.ReceiveEndpoint("course-management-assignment-reviewed", e =>
+        {
+            e.UseMessageRetry(retry => retry.Exponential(5, TimeSpan.FromSeconds(1), TimeSpan.FromMinutes(1), TimeSpan.FromSeconds(5)));
+            e.UseEntityFrameworkOutbox<NotificationDbContext>(context);
+            e.ConfigureConsumer<CourseManagementAssignmentReviewedConsumer>(context);
+        });
+        cfg.ReceiveEndpoint("course-management-payment-recorded", e =>
+        {
+            e.UseMessageRetry(retry => retry.Exponential(5, TimeSpan.FromSeconds(1), TimeSpan.FromMinutes(1), TimeSpan.FromSeconds(5)));
+            e.UseEntityFrameworkOutbox<NotificationDbContext>(context);
+            e.ConfigureConsumer<CourseManagementPaymentRecordedConsumer>(context);
+        });
+
+        cfg.ReceiveEndpoint("course-management-reminder-due", e =>
+        {
+            e.UseMessageRetry(retry => retry.Exponential(5, TimeSpan.FromSeconds(1), TimeSpan.FromMinutes(1), TimeSpan.FromSeconds(5)));
+            e.UseEntityFrameworkOutbox<NotificationDbContext>(context);
+            e.ConfigureConsumer<CourseManagementReminderDueConsumer>(context);
+        });
+
 
         cfg.ReceiveEndpoint("notification-privacy-erasure-execution", e =>
         {

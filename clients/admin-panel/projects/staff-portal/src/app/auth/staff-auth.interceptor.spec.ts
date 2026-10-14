@@ -71,4 +71,20 @@ describe('staffAuthInterceptor', () => {
     expect(refreshSession).not.toHaveBeenCalled();
     expect(forward).toHaveBeenCalledOnce();
   });
+
+  it('does not refresh the active course session when a temporary source session fails', async () => {
+    const forward = vi.fn((request: HttpRequest<unknown>) =>
+      throwError(() => new HttpErrorResponse({ status: 401, url: request.url })));
+    const refreshSession = vi.fn();
+    TestBed.configureTestingModule({
+      providers: [{ provide: StaffAuthService, useValue: { getAccessToken: () => 'course-token', refreshSession } }]
+    });
+
+    const request = new HttpRequest('POST', '/api/auth/staff-session/switch/speed-reading', {});
+    const response = TestBed.runInInjectionContext(() => staffAuthInterceptor(request, forward));
+
+    await expect(lastValueFrom(response)).rejects.toMatchObject({ status: 401 });
+    expect(refreshSession).not.toHaveBeenCalled();
+    expect(forward).toHaveBeenCalledOnce();
+  });
 });

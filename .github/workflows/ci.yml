@@ -60,10 +60,11 @@ jobs:
           PY
           docker compose --env-file .env.example config --quiet
 
-      - name: Verify Coaching VPS-local storage contract
+      - name: Verify protected product and hosting contracts
         run: |
           node --test tests/E2E/support/production-local-storage.contract.test.mjs
           node --test tests/E2E/support/staff-portal-hosting.contract.test.mjs
+          node --test tests/E2E/course-management-foundation.contract.test.mjs
 
   frontend:
     name: Frontend checks
@@ -100,6 +101,21 @@ jobs:
 
       - name: Build the separate staff portal bundle
         run: npm run build -- --project staff-portal --configuration production --base-href /staff/
+
+      - name: Build the separate Course Management student application
+        run: |
+          npm ci --prefix ../course-management
+          npm audit --prefix ../course-management --audit-level=high
+          npm run build --prefix ../course-management -- --configuration production
+
+      - name: Install Course Management browser-smoke dependencies
+        run: npm ci --prefix ../../tests/E2E
+
+      - name: Install Chromium for Course Management panel smoke
+        run: npx --prefix ../../tests/E2E playwright install --with-deps chromium
+
+      - name: Verify Course Management student and staff panels
+        run: node --test ../../tests/E2E/course-management-panels.smoke.test.mjs
 
   speed-reading-frontend:
     name: Speed Reading frontend checks
@@ -146,6 +162,8 @@ jobs:
             project: services/notification-service/Notification.API/Notification.API.csproj
           - name: speed-reading
             project: services/speed-reading-service/SpeedReading.API/SpeedReading.API.csproj
+          - name: course-management
+            project: services/course-management-service/CourseManagement.API/CourseManagement.API.csproj
           - name: gateway
             project: services/api-gateway/EduPlatform.Gateway.csproj
     steps:
@@ -204,6 +222,11 @@ jobs:
           dotnet test tests/Unit/SpeedReading.Application.UnitTests/SpeedReading.Application.UnitTests.csproj
           --configuration Release --logger "trx;LogFileName=speed-reading-unit-tests.trx"
 
+      - name: Run Course Management unit tests
+        run: >-
+          dotnet test tests/Unit/CourseManagement.Application.UnitTests/CourseManagement.Application.UnitTests.csproj
+          --configuration Release --logger "trx;LogFileName=course-management-unit-tests.trx"
+
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
@@ -212,7 +235,106 @@ jobs:
           path: |
             tests/Integration/Identity.API.IntegrationTests/TestResults/
             tests/Unit/SpeedReading.Application.UnitTests/TestResults/
+            tests/Unit/CourseManagement.Application.UnitTests/TestResults/
           if-no-files-found: warn
+
+  course-management-messaging-integration:
+    name: Course Management RabbitMQ and PostgreSQL integration
+    runs-on: ubuntu-latest
+    needs: [source-safety, dotnet]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore Course Management integration test project
+        run: dotnet restore tests/Integration/CourseManagement.IntegrationTests/CourseManagement.IntegrationTests.csproj --disable-parallel -m:1 -p:BuildInParallel=false
+
+      - name: Run RabbitMQ and PostgreSQL end-to-end test
+        run: >-
+          dotnet test tests/Integration/CourseManagement.IntegrationTests/CourseManagement.IntegrationTests.csproj
+          --configuration Release --no-restore --logger "trx;LogFileName=course-management-messaging.trx"
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: course-management-messaging-results
+          path: tests/Integration/CourseManagement.IntegrationTests/TestResults/
+          if-no-files-found: warn
+
+  course-management-postgres-smoke:
+    name: Course Management PostgreSQL migration and restore smoke
+    runs-on: ubuntu-latest
+    needs: [source-safety, dotnet]
+    timeout-minutes: 25
+    env:
+      COURSE_MANAGEMENT_CONNECTION_STRING: Host=127.0.0.1;Database=course_management_ci;Username=course_management;Password=ci-course-management-only
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.x
+
+      - name: Restore and build Course Management API for the smoke test
+        run: |
+          dotnet restore services/course-management-service/CourseManagement.API/CourseManagement.API.csproj
+          dotnet build services/course-management-service/CourseManagement.API/CourseManagement.API.csproj --configuration Debug --no-restore
+          dotnet restore services/api-gateway/EduPlatform.Gateway.csproj
+          dotnet build services/api-gateway/EduPlatform.Gateway.csproj --configuration Debug --no-restore
+
+      - name: Install EF CLI for the Course Management migration artifact
+        shell: bash
+        run: dotnet tool install --tool-path "$RUNNER_TEMP/dotnet-tools" dotnet-ef --version 9.0.2
+
+      - name: Generate idempotent Course Management migration SQL
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/course-management
+          "$RUNNER_TEMP/dotnet-tools/dotnet-ef" migrations script \
+            --idempotent \
+            --no-build \
+            --configuration Debug \
+            --project services/course-management-service/CourseManagement.Infrastructure/CourseManagement.Infrastructure.csproj \
+            --startup-project services/course-management-service/CourseManagement.Infrastructure/CourseManagement.Infrastructure.csproj \
+            --output artifacts/course-management/course-management-idempotent.sql
+          test -s artifacts/course-management/course-management-idempotent.sql
+          grep -q '20261013085551_P0AccountErasure' artifacts/course-management/course-management-idempotent.sql
+          grep -q '20261013144126_P0FailClosedLegalHoldStatus' artifacts/course-management/course-management-idempotent.sql
+          grep -q '20261013155811_P6AttachmentCleanupRetryQueue' artifacts/course-management/course-management-idempotent.sql
+
+      - name: Upload Course Management migration SQL for review
+        uses: actions/upload-artifact@v4
+        with:
+          name: course-management-migrations-${{ github.run_id }}
+          path: artifacts/course-management/course-management-idempotent.sql
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Verify isolated PostgreSQL migrations, API, backup and restore
+        shell: pwsh
+        run: ./tests/E2E/course-management-migration.smoke.ps1
+
+      - name: Verify pinned Course Management ClamAV upload scanning
+        shell: pwsh
+        run: ./tests/E2E/course-management-clamav.smoke.ps1
+
+      - name: Verify Course Management OpenTelemetry delivery
+        shell: pwsh
+        run: ./tests/E2E/course-management-otel.smoke.ps1
 
   privacy-erasure-e2e:
     name: Distributed privacy erasure E2E
@@ -229,6 +351,8 @@ jobs:
       RABBITMQ_DEFAULT_USER: eduplatform
       RABBITMQ_DEFAULT_PASS: ci-disposable-rabbit-012345678901234567890123
       REDIS_PASSWORD: ci-disposable-redis-012345678901234567890123
+      COURSE_MANAGEMENT_DB_PASSWORD: ci-disposable-course-db-012345678901234567890123
+      E2E_COURSE_MANAGEMENT_ENABLED: 'true'
       SPEED_READING_OWNED_CONNECTION_STRING: Host=postgres;Port=5432;Database=speedreading_owned_db;Username=eduplatform;Password=ci-disposable-postgres-012345678901234567890123
     steps:
       - name: Checkout
@@ -240,7 +364,16 @@ jobs:
           node-version: 24.x
 
       - name: Start disposable service stack
-        run: docker compose --env-file .env.example --profile speed-reading up -d --build identity-service coaching-service notification-service speed-reading-service api-gateway
+        run: >-
+          docker compose --env-file .env.example -f docker-compose.yml -f docker-compose.course-management.yml
+          --profile speed-reading up -d --build postgres redis rabbitmq identity-service coaching-service
+          notification-service speed-reading-service api-gateway course-management-db
+
+      - name: Migrate and start Course Management
+        run: |
+          docker compose --env-file .env.example -f docker-compose.yml -f docker-compose.course-management.yml build course-management-service
+          docker compose --env-file .env.example -f docker-compose.yml -f docker-compose.course-management.yml run --rm --no-deps course-management-service --migrate-only
+          docker compose --env-file .env.example -f docker-compose.yml -f docker-compose.course-management.yml up -d course-management-service
 
       - name: Verify distributed erasure and Coaching restore
         run: node --test tests/E2E/support/privacy-docker.test.mjs tests/E2E/privacy-erasure.docker.test.mjs tests/E2E/coaching-backup-restore.docker.test.mjs tests/E2E/coaching-data-export-route.contract.test.mjs
@@ -259,11 +392,11 @@ jobs:
 
       - name: Preserve service logs on failure
         if: failure()
-        run: docker compose --env-file .env.example --profile speed-reading logs --no-color --tail 100 identity-service coaching-service notification-service speed-reading-service api-gateway
+        run: docker compose --env-file .env.example -f docker-compose.yml -f docker-compose.course-management.yml --profile speed-reading logs --no-color --tail 100 identity-service coaching-service notification-service speed-reading-service api-gateway course-management-service course-management-db
 
       - name: Remove disposable CI stack
         if: always()
-        run: docker compose --env-file .env.example --profile speed-reading down -v --remove-orphans
+        run: docker compose --env-file .env.example -f docker-compose.yml -f docker-compose.course-management.yml --profile speed-reading down -v --remove-orphans
 
   migration-drift:
     name: EF migration drift
@@ -277,6 +410,7 @@ jobs:
       POSTGRES_DB_IDENTITY: identity_db
       POSTGRES_DB_COACHING: coaching_db
       POSTGRES_DB_NOTIFICATION: notification_db
+      COURSE_MANAGEMENT_CONNECTION_STRING: Host=127.0.0.1;Database=course_management_ci;Username=course_management;Password=ci-course-management-only
       INTERNAL_SERVICE_API_KEY: ci-internal-service-key-012345678901234567890123
       JWT_SECRET: ci-jwt-secret-012345678901234567890123456789
       JWT_ISSUER: eduplatform.identity
@@ -305,6 +439,7 @@ jobs:
           dotnet restore services/coaching-service/Coaching.API/Coaching.API.csproj
           dotnet restore services/notification-service/Notification.API/Notification.API.csproj
           dotnet restore services/speed-reading-service/SpeedReading.API/SpeedReading.API.csproj
+          dotnet restore services/course-management-service/CourseManagement.API/CourseManagement.API.csproj
 
       - name: Fail when EF models have unapplied changes
         shell: bash
@@ -327,6 +462,10 @@ jobs:
             --project services/speed-reading-service/SpeedReading.Infrastructure/SpeedReading.Infrastructure.csproj \
             --startup-project services/speed-reading-service/SpeedReading.API/SpeedReading.API.csproj \
             --context OwnedSpeedReadingDbContext \
+            --configuration Release
+          "$ef" migrations has-pending-model-changes \
+            --project services/course-management-service/CourseManagement.Infrastructure/CourseManagement.Infrastructure.csproj \
+            --startup-project services/course-management-service/CourseManagement.Infrastructure/CourseManagement.Infrastructure.csproj \
             --configuration Release
 
   gateway-smoke:
@@ -416,6 +555,11 @@ jobs:
           docker compose --env-file .env.example --profile speed-reading config --quiet
           docker compose --env-file .env.example -f docker-compose.yml -f docker-compose.scale.yml config --quiet
 
+      - name: Validate the optional Course Management development overlay
+        env:
+          COURSE_MANAGEMENT_DB_PASSWORD: ci-course-management-only
+        run: docker compose --env-file .env.example -f docker-compose.yml -f docker-compose.course-management.yml config --quiet
+
       - name: Validate staging VPS configuration
         env:
           SPEED_READING_CONNECTION_STRING: 'Host=ci-speed-reading;Port=5432;Database=speedreading;Username=ci;Password=ci-only'
@@ -427,21 +571,43 @@ jobs:
 
       - name: Validate production and observability overlays
         env:
+          COURSE_MANAGEMENT_ALLOWED_HOSTS: course-management-service
+          COURSE_MANAGEMENT_CONNECTION_STRING: 'Host=postgres;Port=5432;Database=course_management_ci;Username=ci;Password=ci-only'
+          COURSE_MANAGEMENT_OTLP_ENDPOINT: https://otel-ci.invalid:4317
           DATAPROTECTION_CERTIFICATE_HOST_PATH: ${{ runner.temp }}/dataprotection-ci.pfx
           DATAPROTECTION_CERTIFICATE_PASSWORD: ci-config-only
           GRAFANA_ADMIN_PASSWORD: ci-config-only
           RELEASE_TAG: ci
+          SMTP_HOST: smtp-ci.invalid
+          SMTP_PORT: 25
+          SMTP_FROM_EMAIL: ci@example.invalid
+          SMTP_USERNAME: ci-only
+          SMTP_PASSWORD: ci-only
           SPEED_READING_CONNECTION_STRING: 'Host=ci-speed-reading;Port=5432;Database=speedreading;Username=ci;Password=ci-only'
         run: |
           node --test tests/E2E/support/coaching-storage-preflight.test.mjs
           docker compose --env-file .env.example \
             -f docker-compose.yml \
             -f docker-compose.production.yml \
-            -f docker-compose.observability.yml config --quiet
+            -f docker-compose.observability.yml \
+            config --format json |
+            node -e 'const config=JSON.parse(require("fs").readFileSync(0,"utf8")); if (config.services["course-management-service"]) throw new Error("The shared observability overlay must not enable Course Management.");'
           docker compose --env-file .env.example \
             -f docker-compose.yml \
             -f docker-compose.production.yml \
             config --format json | node tools/coaching-storage-preflight.mjs
+          docker compose --env-file .env.example \
+            -f docker-compose.yml \
+            -f docker-compose.production.yml \
+            -f docker-compose.course-management.production.yml config --format json |
+            node -e 'const config=JSON.parse(require("fs").readFileSync(0,"utf8")); const env=config.services["course-management-service"]?.environment; if (env?.OTEL_EXPORTER_OTLP_ENDPOINT!=="https://otel-ci.invalid:4317" || env?.OTEL_SERVICE_NAME!=="EduPlatform.CourseManagement") throw new Error("Course Management OTLP environment was not applied.");'
+          docker compose --env-file .env.example \
+            -f docker-compose.yml \
+            -f docker-compose.production.yml \
+            -f docker-compose.course-management.production.yml \
+            -f docker-compose.observability.yml \
+            -f docker-compose.course-management.observability.yml config --format json |
+            node -e 'const config=JSON.parse(require("fs").readFileSync(0,"utf8")); const env=config.services["course-management-service"]?.environment; if (env?.OTEL_EXPORTER_OTLP_ENDPOINT!=="http://otel-collector:4317" || env?.OTEL_SERVICE_NAME!=="EduPlatform.CourseManagement") throw new Error("Course Management OTLP environment was not merged.");'
 
       - name: Validate monitoring configuration files
         run: |
@@ -451,6 +617,9 @@ jobs:
           docker run --rm --entrypoint /bin/promtool \
             -v "$PWD/monitoring/prometheus:/etc/prometheus:ro" \
             prom/prometheus:v3.5.0 check rules /etc/prometheus/rules/eduplatform.yml
+          docker run --rm --entrypoint /bin/promtool \
+            -v "$PWD/monitoring/prometheus:/etc/prometheus:ro" \
+            prom/prometheus:v3.5.0 test rules /etc/prometheus/tests/course-management-alerts.test.yml
           docker run --rm --entrypoint /bin/amtool \
             -v "$PWD/monitoring/alertmanager:/etc/alertmanager:ro" \
             prom/alertmanager:v0.28.1 check-config /etc/alertmanager/alertmanager.yml
@@ -497,6 +666,7 @@ jobs:
             services/coaching-service/Coaching.API/Coaching.API.csproj
             services/notification-service/Notification.API/Notification.API.csproj
             services/speed-reading-service/SpeedReading.API/SpeedReading.API.csproj
+            services/course-management-service/CourseManagement.API/CourseManagement.API.csproj
             services/api-gateway/EduPlatform.Gateway.csproj
           )
           for project in "${projects[@]}"; do
@@ -513,7 +683,7 @@ jobs:
   container-build:
     name: Container build (${{ matrix.name }})
     runs-on: ubuntu-latest
-    needs: [dotnet, tests, privacy-erasure-e2e, migration-drift, gateway-smoke, compose, vulnerabilities, frontend, speed-reading-frontend]
+    needs: [dotnet, tests, course-management-postgres-smoke, privacy-erasure-e2e, migration-drift, gateway-smoke, compose, vulnerabilities, frontend, speed-reading-frontend]
     strategy:
       fail-fast: false
       matrix:
@@ -530,6 +700,9 @@ jobs:
           - name: speed-reading
             context: .
             dockerfile: services/speed-reading-service/Dockerfile
+          - name: course-management
+            context: .
+            dockerfile: services/course-management-service/Dockerfile
           - name: gateway
             context: .
             dockerfile: services/api-gateway/Dockerfile

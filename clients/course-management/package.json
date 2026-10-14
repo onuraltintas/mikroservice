@@ -2,18 +2,22 @@
   "name": "course-management-student",
   "version": "0.1.0",
   "private": true,
-  "scripts": { "start": "ng serve --port 4203", "build": "ng build" },
+  "scripts": {
+    "start": "ng serve --port 4203",
+    "build": "ng build"
+  },
   "dependencies": {
     "@angular/common": "21.2.24",
     "@angular/compiler": "21.2.24",
     "@angular/core": "21.2.24",
+    "@angular/forms": "21.2.24",
     "@angular/platform-browser": "21.2.24",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0"
   },
   "devDependencies": {
-    "@angular/build": "21.2.24",
-    "@angular/cli": "21.2.24",
+    "@angular/build": "21.2.26",
+    "@angular/cli": "21.2.26",
     "@angular/compiler-cli": "21.2.24",
     "typescript": "~5.9.2"
   }

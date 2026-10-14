@@ -3,11 +3,11 @@ import { Injectable, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 
 export interface StudentSession { accessToken?: string; requiresMfa?: boolean; mfaEnrollmentRequired?: boolean; mfaChallengeToken?: string; }
-export interface StudentWorkspace { id: string; name: string; role: string; }
-export interface StudentInvitation { id: string; workspaceName: string; role: string; }
+export interface StudentWorkspace { id: string; name: string; role: string; isReadOnly: boolean; }
+export interface StudentInvitation { id: string; workspaceId: string; workspaceName: string; role: string; isReadOnly: boolean; }
 export interface StudentCourse { id: string; name: string; subject: string; groupName: string; }
 export interface StudentLesson {
-  id: string; workspaceName: string; courseName: string; subject: string;
+  id: string; workspaceId: string; workspaceName: string; courseName: string; subject: string;
   groupName: string | null; teacherName: string | null; startsAt: string; endsAt: string;
 }
 export interface StudentMakeupCredit {

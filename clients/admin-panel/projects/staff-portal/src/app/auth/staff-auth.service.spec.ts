@@ -99,6 +99,36 @@ describe('StaffAuthService product-scoped sessions', () => {
     expect(service.getAccessToken()).toBe('speed-reading-access');
   });
 
+  it('gets a source product token without switching or persisting the active course session', async () => {
+    const accessToken = (product: string) => {
+      const payload = btoa(JSON.stringify({
+        platform_product: product,
+        exp: Math.floor(Date.now() / 1000) + 900
+      }));
+      return `e30.${payload}.signature`;
+    };
+    const login = service.login('course-management', 'owner@example.com', 'password');
+    http.expectOne('/api/auth/course-management/login').flush({
+      accessToken: accessToken('course-management'), expiresInMinutes: 15, tokenType: 'Bearer'
+    });
+    await Promise.resolve();
+    http.expectOne('/api/auth/staff-session/products').flush([
+      { product: 'course-management', roles: ['CourseInstitutionOwner'] },
+      { product: 'speed-reading', roles: ['InstitutionOwner'] }
+    ]);
+    await login;
+
+    const sourceTokenRequest = service.getProductAccessToken('speed-reading');
+    const switchRequest = http.expectOne('/api/auth/staff-session/switch/speed-reading');
+    expect(switchRequest.request.withCredentials).toBe(true);
+    switchRequest.flush({ accessToken: accessToken('speed-reading'), expiresInMinutes: 15, tokenType: 'Bearer' });
+    await expect(sourceTokenRequest).resolves.toBe(accessToken('speed-reading'));
+
+    expect(service.activeProduct()).toBe('course-management');
+    expect(service.getAccessToken()).toBe(accessToken('course-management'));
+    expect(sessionStorage.getItem('eduplatform_staff_active_product')).toBe('course-management');
+  });
+
   it('uses an independent course session for switching, refresh and logout', async () => {
     const login = service.login('coaching', 'teacher@example.com', 'password');
     http.expectOne('/api/auth/coaching/login').flush({

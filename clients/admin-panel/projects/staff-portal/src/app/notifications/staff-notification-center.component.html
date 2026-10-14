@@ -1,7 +1,7 @@
 <section class="notification-center" aria-labelledby="notification-title">
   <div class="section-heading">
     <div>
-      <p class="eyebrow">{{ product === 'speed-reading' ? 'HIZLI OKUMA' : 'KOÇLUK' }} · BİLDİRİMLER</p>
+      <p class="eyebrow">{{ product === 'speed-reading' ? 'HIZLI OKUMA' : product === 'course-management' ? 'KURS YÖNETİMİ' : 'KOÇLUK' }} · BİLDİRİMLER</p>
       <h2 id="notification-title">Bildirim merkezi</h2>
       <p>Okunmamış {{ unreadCount }} bildiriminiz var.</p>
     </div>

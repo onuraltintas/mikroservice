@@ -9,7 +9,7 @@ namespace Identity.API.IntegrationTests;
 public sealed class DataSubjectRequestScopeTests
 {
     [Theory]
-    [InlineData(PersonalDataScope.Account, "Coaching", "Notification", "SpeedReading")]
+    [InlineData(PersonalDataScope.Account, "Coaching", "Notification", "SpeedReading", "CourseManagement")]
     [InlineData(PersonalDataScope.Coaching, "Coaching")]
     [InlineData(PersonalDataScope.SpeedReading, "SpeedReading")]
     public void RequiredServices_ShouldBeIsolatedByProductScope(

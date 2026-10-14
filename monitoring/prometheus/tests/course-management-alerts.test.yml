@@ -1,0 +1,23 @@
+rule_files:
+  - ../rules/eduplatform.yml
+
+evaluation_interval: 15s
+
+tests:
+  - interval: 15s
+    input_series:
+      - series: course_management_attachment_cleanup_queue_failures_total
+        values: '0 0 1'
+    alert_rule_test:
+      - eval_time: 15s
+        alertname: CourseManagementAttachmentCleanupQueuePersistenceFailed
+        exp_alerts: []
+      - eval_time: 30s
+        alertname: CourseManagementAttachmentCleanupQueuePersistenceFailed
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              service: EduPlatform.CourseManagement
+            exp_annotations:
+              summary: "Course Management could not persist an attachment cleanup retry"
+              description: "Attachment deletion and retry-queue persistence both failed. Investigate storage and database health, then reconcile orphaned files."

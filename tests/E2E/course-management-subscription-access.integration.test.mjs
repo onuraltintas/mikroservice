@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createHmac } from 'node:crypto';
-import { mkdtemp, rm } from 'node:fs/promises';
+import { mkdir, mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { spawn } from 'node:child_process';
 import { createServer } from 'node:net';
@@ -28,7 +28,12 @@ test('expired or suspended workspaces remain readable but reject writes until Sy
   const port = reservation.address().port;
   await new Promise(resolve => reservation.close(resolve));
   const base = `http://127.0.0.1:${port}`;
-  const attachmentRoot = await mkdtemp(join(tmpdir(), 'course-subscription-attachments-'));
+  const configuredAttachmentRoot = process.env.COURSE_MANAGEMENT_TEST_ATTACHMENT_ROOT;
+  const attachmentRoot = configuredAttachmentRoot
+    ? resolve(configuredAttachmentRoot)
+    : await mkdtemp(join(tmpdir(), 'course-subscription-attachments-'));
+  const preserveAttachmentRoot = process.env.COURSE_MANAGEMENT_TEST_PRESERVE_ATTACHMENTS === '1';
+  await mkdir(attachmentRoot, { recursive: true });
   const child = spawn('dotnet', [resolve(root, 'services/course-management-service/CourseManagement.API/bin/Debug/net10.0/CourseManagement.API.dll')], {
     cwd: root, stdio: process.env.COURSE_MANAGEMENT_TEST_API_LOG === '1' ? 'inherit' : 'ignore', env: { ...process.env,
       ASPNETCORE_URLS: base, ASPNETCORE_ENVIRONMENT: 'Development',
@@ -67,6 +72,11 @@ test('expired or suspended workspaces remain readable but reject writes until Sy
       body: JSON.stringify(value) });
     const createCourse = id => request(`${workspacePath}/courses`, owner, { method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id, name: `Kurs ${id.slice(0, 8)}`, subject: 'Matematik' }) });
+    const createStudent = id => request(`${workspacePath}/students`, owner, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, displayName: 'Test öğrencisi', email: null, phoneNumber: null }) });
+    const recordPayment = id => request(`${workspacePath}/finance/payments`, owner, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, studentId: '6d8a14eb-43b5-4079-b639-99c66e3735d8', method: 1,
+        amount: 100, receivedAt: new Date().toISOString(), note: null, allocations: [] }) });
 
     const workspace = await request('/api/course-management/v1/workspaces', owner, { method: 'POST',
       headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: workspaceId, name: 'Abonelik testi', type: 2 }) });
@@ -74,11 +84,26 @@ test('expired or suspended workspaces remain readable but reject writes until Sy
     assert.equal((await setPlan(plan())).status, 200);
     assert.equal((await createCourse('b228ae2c-d74c-4f0f-8dd0-1c0b82566e65')).status, 201,
       'active subscription permits workspace writes');
+    assert.equal((await createStudent('6d8a14eb-43b5-4079-b639-99c66e3735d8')).status, 201,
+      'active subscription permits student creation');
+    assert.equal((await recordPayment('b0fc3d62-2bd7-466f-a62a-342031a160a0')).status, 201,
+      'active subscription permits manual payment recording');
 
     assert.equal((await setPlan(plan(end, 2))).status, 200);
     const suspendedCourseWrite = await createCourse('e95947d2-a8d0-4aaf-98af-3d0eed721b92');
     assert.equal(suspendedCourseWrite.status, 409, 'suspended subscription blocks workspace writes');
     assert.deepEqual(await suspendedCourseWrite.json(), { code: 'Subscription.ReadOnly' });
+    const suspendedStudentWrite = await createStudent('9e61ed5e-82a7-48bc-a253-2104224a827b');
+    assert.equal(suspendedStudentWrite.status, 409, 'suspended subscription blocks student creation');
+    assert.deepEqual(await suspendedStudentWrite.json(), { code: 'Subscription.ReadOnly' });
+    const suspendedPaymentWrite = await recordPayment('f469ca4b-e97a-46e5-994e-f2d113813bc1');
+    assert.equal(suspendedPaymentWrite.status, 409, 'suspended subscription blocks manual payment recording');
+    assert.deepEqual(await suspendedPaymentWrite.json(), { code: 'Subscription.ReadOnly' });
+    const suspendedInvitation = await request(`${workspacePath}/invitations`, owner, { method: 'POST',
+      headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: '3241f87a-4339-42bd-aa92-47821b805834',
+        targetUserId: 'b2582581-c02e-48c3-b2da-6dc1438cc8b7', role: 1 }) });
+    assert.equal(suspendedInvitation.status, 409, 'suspended subscription blocks invitations');
+    assert.deepEqual(await suspendedInvitation.json(), { code: 'Subscription.ReadOnly' });
     assert.equal((await request(`${workspacePath}/courses`, owner)).status, 200,
       'workspace course records remain readable while suspended');
     assert.equal((await request('/api/course-management/v1/me/profile', owner, { method: 'PUT',
@@ -100,8 +125,10 @@ test('expired or suspended workspaces remain readable but reject writes until Sy
       body: JSON.stringify({ id: invitationId, targetUserId: inviteeId, role: 1 }) })).status, 201);
     assert.equal((await setPlan(plan(end, 2))).status, 200);
     const invitee = token('speed-reading', inviteeId, 'Student');
-    assert.equal((await request('/api/course-management/v1/participation/invitations', invitee)).status, 200,
-      'pending invitations remain readable');
+    const pendingInvitations = await request('/api/course-management/v1/participation/invitations', invitee);
+    assert.equal(pendingInvitations.status, 200, 'pending invitations remain readable');
+    assert.equal((await pendingInvitations.json())[0].isReadOnly, true,
+      'invitees can see that the target workspace is read-only');
     const invitationAccept = await request(`/api/course-management/v1/participation/invitations/${invitationId}/accept`, invitee, {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ displayName: 'Davetli öğrenci' })
     });
@@ -111,12 +138,17 @@ test('expired or suspended workspaces remain readable but reject writes until Sy
     assert.equal((await request(`/api/course-management/v1/participation/invitations/${invitationId}/accept`, invitee, {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ displayName: 'Davetli öğrenci' })
     })).status, 200, 'invitation acceptance works again after SystemAdmin reactivation');
+    const courseStudent = token('course-management', inviteeId, 'Student');
+    assert.equal((await (await request('/api/course-management/v1/me/memberships', courseStudent)).json())[0].isReadOnly, false);
+    assert.equal((await setPlan(plan(end, 2))).status, 200);
+    assert.equal((await (await request('/api/course-management/v1/me/memberships', courseStudent)).json())[0].isReadOnly, true,
+      'members can see the workspace read-only state');
   } finally {
     if (child.exitCode === null) {
       const exited = new Promise(resolve => child.once('exit', resolve));
       child.kill();
       await exited;
     }
-    await rm(attachmentRoot, { recursive: true, force: true });
+    if (!preserveAttachmentRoot) await rm(attachmentRoot, { recursive: true, force: true });
   }
 });

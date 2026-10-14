@@ -81,3 +81,14 @@ groups:
         annotations:
           summary: "Redis memory usage is above 80%"
           description: "Redis memory usage is {{ $value | humanizePercentage }}."
+
+  - name: course-management
+    rules:
+      - alert: CourseManagementAttachmentCleanupQueuePersistenceFailed
+        expr: course_management_attachment_cleanup_queue_failures_total > 0
+        labels:
+          severity: critical
+          service: EduPlatform.CourseManagement
+        annotations:
+          summary: "Course Management could not persist an attachment cleanup retry"
+          description: "Attachment deletion and retry-queue persistence both failed. Investigate storage and database health, then reconcile orphaned files."

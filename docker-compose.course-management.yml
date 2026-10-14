@@ -30,12 +30,25 @@ services:
       JWT_KEY_ID: ${JWT_KEY_ID:-}
       JWT_PREVIOUS_SECRETS: ${JWT_PREVIOUS_SECRETS:-}
       JWT_PREVIOUS_KEY_IDS: ${JWT_PREVIOUS_KEY_IDS:-}
+      INTERNAL_SERVICE_API_KEY: ${INTERNAL_SERVICE_API_KEY:?Set Identity internal service key}
+      Services__IdentityService: http://identity-service:8080
+      RabbitMQ__Host: rabbitmq
+      RabbitMQ__Username: ${RABBITMQ_DEFAULT_USER:?Set RabbitMQ user}
+      RabbitMQ__Password: ${RABBITMQ_DEFAULT_PASS:?Set RabbitMQ password}
+      CourseManagement__AssignmentAttachments__RootPath: /var/lib/course-management/attachments
+      CourseManagement__AssignmentAttachments__ScannerProvider: Development
       AllowedHosts: "localhost;127.0.0.1;course-management-service"
     ports:
       - "127.0.0.1:${COURSE_MANAGEMENT_PORT:-5005}:8080"
     depends_on:
       course-management-db:
         condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      identity-service:
+        condition: service_started
+    volumes:
+      - course_management_assignment_attachments:/var/lib/course-management/attachments
     networks: [edu-network]
 
   api-gateway:
@@ -44,3 +57,4 @@ services:
 
 volumes:
   course_management_data:
+  course_management_assignment_attachments:
