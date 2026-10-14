@@ -14,6 +14,8 @@ Kod, `codex/course-management-isolated` dalında ayrılmıştır. Dalın temel a
 
 P8 için hâlâ dış ortam veya onay gerektiren kapılar vardır: hosted CI ve migration artifact; genel kişisel veri saklama/purge matrisi ve KVKK/işleme dayanağı; production host, yedekleme/geri yükleme/rollback provası, SLO/RPO/RTO ve alarm teslimatı; mobil/erişilebilirlik kontrolü; pilot ölçümü ve yayın kararı. Korunan Hızlı Okuma uygulama dosyaları değiştirilmemiştir; önceki tam frontend suite kaydı 991/993 olup fixation-player ve visual-expansion-player testleri başarısızdı. Bu turdaki yalnız bu iki testi hedefleyen tekrar Angular build aşamasında 2 dakikadan uzun süre sonuç üretmedi; tam ürün regresyon kapısı temiz olarak doğrulanmış sayılmaz. Bu kapılar kapanmadan ürün production-ready veya pilot-ready sayılmaz. Pilot gözlemi için 2–4 takvim haftası ayrıca gereklidir.
 
+Hosted CI için ayrılmış dal GitHub'da yayımlanmıştır; mevcut commit için Actions run'ı, status check ve açık PR bulunmuyor. CI workflow'u yalnız PR, `main`/`master` push'u veya manuel `workflow_dispatch` ile tetiklenir. PR oluşturma GitHub connector'ında 403 `Resource not accessible by integration` ile reddedildiğinden migration artifact kapısı PR açılması veya repo sahibi tarafından workflow dispatch edilmesi sonrasında doğrulanabilir.
+
 ## Kodla karşılaştırma (13 Ekim 2026)
 
 Bu çalışma MVP veya üretim hazır olduğu anlamına gelmez. Faz bazında güncel durum ve kalan çıkış işleri Bölüm 9'dadır; ayrıntılı uygulama/doğrulama kaydı [geliştirme durum belgesinde](COURSE_MANAGEMENT_IMPLEMENTATION_STATUS.md) tutulur.
