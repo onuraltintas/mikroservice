@@ -1579,6 +1579,11 @@ export interface SpeedReadingBankTransferSettings {
   updatedAt: string | null;
 }
 
+export interface SpeedReadingSubscriptionRequirementSettings {
+  requireActiveSubscription: boolean;
+  updatedAt: string | null;
+}
+
 export interface SpeedReadingBankTransferSettingsRequest {
   accountHolder: string;
   bankName: string;
@@ -1720,6 +1725,17 @@ export class SpeedReadingAdminService {
   getBankTransferSettings() {
     return this.http.get<{ success: boolean; data: SpeedReadingBankTransferSettings | null }>(`${this.url}/bank-transfer/settings`)
       .pipe(map(response => response.data ?? null));
+  }
+
+  getSubscriptionRequirementSettings() {
+    return this.http.get<{ success: boolean; data: SpeedReadingSubscriptionRequirementSettings }>(`${this.url}/subscriptions/settings`)
+      .pipe(map(response => response.data));
+  }
+
+  updateSubscriptionRequirementSettings(requireActiveSubscription: boolean) {
+    return this.http.put<{ success: boolean; data: SpeedReadingSubscriptionRequirementSettings }>(
+      `${this.url}/subscriptions/settings`, { requireActiveSubscription }, { headers: this.idempotencyHeaders() }
+    ).pipe(map(response => response.data));
   }
 
   updateBankTransferSettings(request: SpeedReadingBankTransferSettingsRequest, idempotencyKey?: string) {

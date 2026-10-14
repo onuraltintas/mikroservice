@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { PLATFORM_ID } from '@angular/core';
-import { of } from 'rxjs';
+import { of, Subject, throwError } from 'rxjs';
 import { vi } from 'vitest';
 import { CoachingAdminService } from '../../../core/services/coaching-admin.service';
 import { CoachingBankTransferRequest, CoachingManagementService, CoachingSubscriptionPlanRequest } from '../../../core/services/coaching-management.service';
@@ -10,10 +10,65 @@ import { ToasterService } from '../../../core/services/toaster.service';
 import { CoachingSubscriptionsComponent } from './coaching-subscriptions';
 
 describe('CoachingSubscriptionsComponent', () => {
+  it('opens the persisted requirement setting first and preserves bank data when toggling', async () => {
+    const saved = { requireActiveSubscription: false, currency: 'TRY', accountHolder: 'Original', bankName: 'Bank',
+      iban: 'TR330006100519786457841326', paymentInstructions: 'Original instructions', bankTransferEnabled: true,
+      isPubliclyAvailable: true, updatedAt: null };
+    const service = { getPlans: vi.fn(() => of([])), getSubscriptionSettings: vi.fn(() => of(saved)),
+      updateSubscriptionSettings: vi.fn(request => of({ ...saved, ...request })) };
+    await TestBed.configureTestingModule({ imports: [CoachingSubscriptionsComponent], providers: [
+      { provide: CoachingManagementService, useValue: service },
+      { provide: PLATFORM_ID, useValue: 'browser' },
+      { provide: IdentityService, useValue: {} }, { provide: CoachingAdminService, useValue: {} },
+      { provide: InstitutionService, useValue: { getAll: () => of({ items: [] }) } },
+      { provide: ToasterService, useValue: { success: vi.fn() } }
+    ] }).compileComponents();
+    const fixture = TestBed.createComponent(CoachingSubscriptionsComponent); fixture.detectChanges(); await fixture.whenStable();
+    const component = fixture.componentInstance;
+    expect(component.tab()).toBe('settings');
+    const toggle = fixture.nativeElement.querySelector('[role="switch"]') as HTMLInputElement;
+    expect(toggle.checked).toBe(false);
+    toggle.click(); await fixture.whenStable();
+    await component.saveSettings(); await fixture.whenStable();
+    expect(service.updateSubscriptionSettings).toHaveBeenLastCalledWith(expect.objectContaining({
+      requireActiveSubscription: true, accountHolder: 'Original', bankName: 'Bank', bankTransferEnabled: true
+    }));
+    expect(fixture.nativeElement.textContent).toContain('Açık — abonelik gerekli');
+    toggle.click(); await fixture.whenStable(); await component.saveSettings(); await fixture.whenStable();
+    expect(component.settings()?.requireActiveSubscription).toBe(false);
+  });
+
+  it('blocks failed-load defaults and overlapping settings requests', async () => {
+    const saved = { requireActiveSubscription: false, currency: 'TRY', accountHolder: null, bankName: null,
+      iban: null, paymentInstructions: null, bankTransferEnabled: false, isPubliclyAvailable: false, updatedAt: null };
+    const service = { getPlans: () => of([]), getSubscriptionSettings: vi.fn(() => of(saved)), updateSubscriptionSettings: vi.fn(request => of({ ...saved, ...request })) };
+    await TestBed.configureTestingModule({ imports: [CoachingSubscriptionsComponent], providers: [
+      { provide: CoachingManagementService, useValue: service }, { provide: PLATFORM_ID, useValue: 'browser' },
+      { provide: IdentityService, useValue: {} }, { provide: CoachingAdminService, useValue: {} },
+      { provide: InstitutionService, useValue: { getAll: () => of({ items: [] }) } },
+      { provide: ToasterService, useValue: { success: vi.fn() } }
+    ] }).compileComponents();
+    const component = TestBed.createComponent(CoachingSubscriptionsComponent).componentInstance;
+    service.getSubscriptionSettings.mockImplementationOnce(() => throwError(() => new Error('offline')));
+    component.ngOnInit(); await component.saveSettings();
+    expect(service.updateSubscriptionSettings).not.toHaveBeenCalled();
+    component.loadSettings();
+    const pending = new Subject<typeof saved>(); service.getSubscriptionSettings.mockReturnValue(pending);
+    component.loadSettings(); component.loadSettings(); await component.saveSettings();
+    expect(service.getSubscriptionSettings).toHaveBeenCalledTimes(3);
+    expect(service.updateSubscriptionSettings).not.toHaveBeenCalled();
+    pending.next(saved); pending.complete();
+    const save = new Subject<typeof saved>(); service.updateSubscriptionSettings.mockReturnValue(save);
+    component.settingsDraft.requireActiveSubscription = true;
+    const operation = component.saveSettings(); component.loadSettings();
+    expect(service.getSubscriptionSettings).toHaveBeenCalledTimes(3);
+    save.next({ ...saved, requireActiveSubscription: true }); save.complete(); await operation;
+    expect(component.settings()?.requireActiveSubscription).toBe(true);
+  });
   it.each([false, true])('lets administrators create a teacher plan; contact-only=%s', async (contactOnly) => {
     const createdPlans: CoachingSubscriptionPlanRequest[] = [];
     const service = {
-      getPlans: vi.fn(() => of([])),
+      getPlans: vi.fn(() => of([])), getSubscriptionSettings: vi.fn(() => of({ requireActiveSubscription: false, currency: 'TRY', accountHolder: null, bankName: null, iban: null, paymentInstructions: null, bankTransferEnabled: false, isPubliclyAvailable: false, updatedAt: null })),
       createPlan: vi.fn((request: CoachingSubscriptionPlanRequest) => {
         createdPlans.push(request);
         return of({ data: { id: 'teacher-plan-id' } });
@@ -37,6 +92,7 @@ describe('CoachingSubscriptionsComponent', () => {
     const component = fixture.componentInstance;
     expect(component.adultPayerLabel({ adultPayerDeclarationVersion: null, adultPayerDeclaredAt: null })).toBe('Yetişkin beyanı kaydı yok (eski talep)');
     expect(component.adultPayerLabel({ adultPayerDeclarationVersion: 1, adultPayerDeclaredAt: '2026-10-05T09:00:00Z' })).toContain('yaş doğrulaması değildir');
+    component.selectTab('plans');
     component.startPlanCreate();
     expect(component.planDraft.isPublic).toBe(false);
     component.planDraft = {
@@ -61,7 +117,7 @@ describe('CoachingSubscriptionsComponent', () => {
 
   it('requires a visible reason before rejecting an EFT request', async () => {
     const service = {
-      getPlans: vi.fn(() => of([])),
+      getPlans: vi.fn(() => of([])), getSubscriptionSettings: vi.fn(() => of({ requireActiveSubscription: false, currency: 'TRY', accountHolder: null, bankName: null, iban: null, paymentInstructions: null, bankTransferEnabled: false, isPubliclyAvailable: false, updatedAt: null })),
       getTransferRequests: vi.fn(() => of({ items: [], pageNumber: 1, pageSize: 25, totalCount: 0 })),
       reviewTransferRequest: vi.fn(() => of(undefined))
     };
@@ -90,7 +146,7 @@ describe('CoachingSubscriptionsComponent', () => {
 
   it('warns that deleting an approved EFT request preserves access and payment history', async () => {
     const service = {
-      getPlans: vi.fn(() => of([])),
+      getPlans: vi.fn(() => of([])), getSubscriptionSettings: vi.fn(() => of({ requireActiveSubscription: false, currency: 'TRY', accountHolder: null, bankName: null, iban: null, paymentInstructions: null, bankTransferEnabled: false, isPubliclyAvailable: false, updatedAt: null })),
       getTransferRequests: vi.fn(() => of({ items: [], pageNumber: 1, pageSize: 25, totalCount: 0 })),
       deleteTransferRequest: vi.fn(() => of(undefined))
     };

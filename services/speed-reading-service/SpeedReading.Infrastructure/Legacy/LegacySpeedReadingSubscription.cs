@@ -1,6 +1,7 @@
 using System.Text.Json;
 using EduPlatform.Shared.Kernel.Exceptions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using EduPlatform.Shared.Contracts.Reporting;
 using SpeedReading.Application.Assignments;
 using SpeedReading.Application.Content;
@@ -14,6 +15,8 @@ public sealed class LegacySpeedReadingSubscription : ISpeedReadingSubscription
 {
     private static readonly Guid BankTransferSettingsId = Guid.Parse("4c18b5a8-96e8-4af6-9195-0d4fdde3dcf2");
     private const string BankTransferSettingsScope = "speed-reading.bank-transfer.settings";
+    private const string SubscriptionRequirementScope = "speed-reading.subscription.requirement";
+    private const long SettingsWriteLockKey = 0x5352535542534D;
     private const string BankTransferRequestScope = "speed-reading.bank-transfer.request";
     private const string BankTransferReviewScope = "speed-reading.bank-transfer.review";
 
@@ -232,6 +235,43 @@ public sealed class LegacySpeedReadingSubscription : ISpeedReadingSubscription
         return true;
     }
 
+    public async Task<SubscriptionRequirementSettings> GetSubscriptionRequirementAsync(CancellationToken cancellationToken = default)
+    {
+        var settings = await db.BankTransferPaymentSettings.AsNoTracking()
+            .SingleOrDefaultAsync(item => item.Id == BankTransferSettingsId, cancellationToken);
+        return new(settings?.RequireActiveSubscription ?? true, settings?.UpdatedAt);
+    }
+
+    public Task<SubscriptionRequirementSettings> UpdateSubscriptionRequirementAsync(
+        bool requireActiveSubscription, Guid actorId, string idempotencyKey, CancellationToken cancellationToken = default)
+        => ExecuteSettingsWriteAsync(async () =>
+    {
+        OwnedContentMutationIdempotency.Validate(actorId, idempotencyKey);
+        await using var settingsTransaction = await BeginSettingsWriteAsync(cancellationToken);
+        var key = idempotencyKey.Trim();
+        var hash = OwnedContentMutationIdempotency.CreateRequestHash(actorId, SubscriptionRequirementScope, BankTransferSettingsId, requireActiveSubscription);
+        var replay = await OwnedContentMutationIdempotency.GetAsync(ownedDb, SubscriptionRequirementScope, key, cancellationToken);
+        if (replay is not null)
+        {
+            OwnedContentMutationIdempotency.EnsureReplayMatches(replay, hash);
+            return await GetSubscriptionRequirementAsync(cancellationToken);
+        }
+        var now = DateTime.UtcNow;
+        var settings = await db.BankTransferPaymentSettings.SingleOrDefaultAsync(item => item.Id == BankTransferSettingsId, cancellationToken);
+        if (settings is null)
+        {
+            settings = new LegacyBankTransferPaymentSettings { Id = BankTransferSettingsId, CreatedBy = actorId, CreatedAt = now };
+            db.BankTransferPaymentSettings.Add(settings);
+        }
+        settings.RequireActiveSubscription = requireActiveSubscription;
+        settings.UpdatedBy = actorId; settings.UpdatedAt = now;
+        OwnedContentMutationIdempotency.Add(ownedDb, SubscriptionRequirementScope, key, hash, BankTransferSettingsId, now);
+        var concurrent = await OwnedContentMutationIdempotency.SaveAsync(ownedDb, SubscriptionRequirementScope, key, cancellationToken);
+        if (concurrent is not null) OwnedContentMutationIdempotency.EnsureReplayMatches(concurrent, hash);
+        if (settingsTransaction is not null) await settingsTransaction.CommitAsync(cancellationToken);
+        return await GetSubscriptionRequirementAsync(cancellationToken);
+    });
+
     public async Task<BankTransferPaymentSettingsSummary?> GetPublicBankTransferSettingsAsync(CancellationToken cancellationToken = default)
     {
         var settings = await db.BankTransferPaymentSettings.AsNoTracking()
@@ -249,13 +289,15 @@ public sealed class LegacySpeedReadingSubscription : ISpeedReadingSubscription
         return settings is null ? null : ToBankTransferSettingsSummary(settings);
     }
 
-    public async Task<BankTransferPaymentSettingsSummary?> UpdateBankTransferSettingsAsync(
+    public Task<BankTransferPaymentSettingsSummary?> UpdateBankTransferSettingsAsync(
         UpdateBankTransferPaymentSettingsRequest request,
         Guid actorId,
         string idempotencyKey,
         CancellationToken cancellationToken = default)
+        => ExecuteSettingsWriteAsync<BankTransferPaymentSettingsSummary?>(async () =>
     {
         OwnedContentMutationIdempotency.Validate(actorId, idempotencyKey);
+        await using var settingsTransaction = await BeginSettingsWriteAsync(cancellationToken);
         var key = idempotencyKey.Trim();
         var requestHash = OwnedContentMutationIdempotency.CreateRequestHash(actorId, BankTransferSettingsScope, BankTransferSettingsId, request);
         var replay = await OwnedContentMutationIdempotency.GetAsync(ownedDb, BankTransferSettingsScope, key, cancellationToken);
@@ -302,7 +344,32 @@ public sealed class LegacySpeedReadingSubscription : ISpeedReadingSubscription
             OwnedContentMutationIdempotency.EnsureReplayMatches(concurrent, requestHash);
         }
 
+        if (settingsTransaction is not null) await settingsTransaction.CommitAsync(cancellationToken);
         return await GetBankTransferSettingsAsync(cancellationToken);
+    });
+
+    private Task<T> ExecuteSettingsWriteAsync<T>(Func<Task<T>> write) =>
+        ownedDb.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
+        {
+            if (ownedDb.Database.IsNpgsql()) ownedDb.ChangeTracker.Clear();
+            return await write();
+        });
+
+    private async Task<IDbContextTransaction?> BeginSettingsWriteAsync(CancellationToken cancellationToken)
+    {
+        if (!ownedDb.Database.IsNpgsql()) return null;
+        var transaction = await ownedDb.Database.BeginTransactionAsync(cancellationToken);
+        try
+        {
+            await ownedDb.Database.ExecuteSqlInterpolatedAsync(
+                $"SELECT pg_advisory_xact_lock({SettingsWriteLockKey})", cancellationToken);
+            return transaction;
+        }
+        catch
+        {
+            await transaction.DisposeAsync();
+            throw;
+        }
     }
 
     public async Task<BankTransferPaymentRequestSummary?> CreateBankTransferPaymentRequestAsync(
@@ -834,6 +901,8 @@ public sealed class LegacySpeedReadingSubscription : ISpeedReadingSubscription
             }
         }
 
+        if (!(await GetSubscriptionRequirementAsync(cancellationToken)).RequireActiveSubscription)
+            slugs.Add("hizliokuma");
         var ordered = slugs.OrderBy(item => item, StringComparer.OrdinalIgnoreCase).ToList();
         return new UserAccessSummary(ordered, ordered.Contains("hizliokuma", StringComparer.OrdinalIgnoreCase), ordered.Contains("kocluk", StringComparer.OrdinalIgnoreCase));
     }

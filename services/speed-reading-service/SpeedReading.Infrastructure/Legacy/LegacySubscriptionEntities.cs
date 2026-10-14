@@ -103,6 +103,7 @@ internal sealed class LegacyPayment
 internal sealed class LegacyBankTransferPaymentSettings
 {
     public Guid Id { get; set; }
+    public bool RequireActiveSubscription { get; set; } = true;
     public string AccountHolder { get; set; } = string.Empty;
     public string BankName { get; set; } = string.Empty;
     public string Iban { get; set; } = string.Empty;

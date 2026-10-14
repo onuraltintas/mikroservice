@@ -12,6 +12,23 @@ namespace Identity.API.IntegrationTests;
 
 public sealed class CoachingCmsAndSubscriptionServiceTests
 {
+    [Fact]
+    public async Task SubscriptionRequirementCanBeTurnedOnAndOffWithoutCreatingALicense()
+    {
+        await using var db = CreateDbContext();
+        var service = new CoachingSubscriptionService(db, new TestIdentityAuthorizationClient());
+        var actor = Guid.NewGuid(); var student = Guid.NewGuid();
+        foreach (var required in new[] { false, true, false })
+        {
+            await service.UpdateSettingsAsync(new(required, "TRY", null, null, null, null, false),
+                actor, "requirement-test-" + Guid.NewGuid().ToString("N"));
+            db.ChangeTracker.Clear();
+            var access = await service.GetMyAccessAsync(student);
+            access.HasAccess.Should().Be(!required);
+            access.EnforcementEnabled.Should().Be(required);
+        }
+        (await db.CoachingSubscriptions.CountAsync()).Should().Be(0);
+    }
     [Theory]
     [InlineData("Teacher")]
     [InlineData("Institution")]

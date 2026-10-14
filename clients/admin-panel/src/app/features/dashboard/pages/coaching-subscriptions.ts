@@ -30,7 +30,7 @@ type SubscriptionTab = 'plans' | 'requests' | 'subscriptions' | 'settings' | 'pa
       <header>
         <p class="text-sm font-medium text-indigo-600 dark:text-indigo-400">Koçluk servisi</p>
         <h1 id="coaching-subscriptions-title" class="mt-1 text-2xl font-bold text-gray-900 dark:text-white">Koçluk abonelikleri</h1>
-        <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">Koçluk planları, banka/EFT onayı, bireysel ve kurum erişimleri bu servisin veritabanında bağımsız yönetilir. Aktif abonelik zorunluluğu başlangıçta kapalıdır.</p>
+        <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">Koçluk abonelik zorunluluğunu açıp kapatın; planları, banka/EFT onaylarını ve erişimleri bu servis için bağımsız yönetin.</p>
       </header>
 
       <nav class="ui-tab-list flex flex-wrap gap-2" aria-label="Koçluk abonelik sekmeleri">
@@ -98,8 +98,8 @@ type SubscriptionTab = 'plans' | 'requests' | 'subscriptions' | 'settings' | 'pa
       }
 
       @if (tab() === 'settings') {
-        <section class="space-y-4" aria-labelledby="coaching-settings-heading"><div><h2 id="coaching-settings-heading" class="text-lg font-semibold">Abonelik ve ödeme ayarları</h2><p class="muted">Erişim zorunluluğu varsayılan olarak kapalıdır. Açıldığında öğrenci uçlarına bireysel, kurum veya atanmış öğrenciler için etkin öğretmen kontenjanı gerekir; öğretmen ve yöneticilerin mevcut erişimi sürer.</p></div>
-          <form class="form-card" (ngSubmit)="saveSettings()"><div class="form-grid"><label>Para birimi<select [(ngModel)]="settingsDraft.currency" name="currency"><option value="TRY">TRY</option><option value="EUR">EUR</option><option value="USD">USD</option></select></label><label class="check"><input type="checkbox" [(ngModel)]="settingsDraft.requireActiveSubscription" name="requireSubscription" /> Öğrenciler için aktif abonelik zorunlu olsun</label><label class="check"><input type="checkbox" [(ngModel)]="settingsDraft.bankTransferEnabled" name="bankEnabled" /> Havale/EFT bilgilerini yayınla</label><label>Hesap sahibi<input [(ngModel)]="settingsDraft.accountHolder" name="accountHolder" maxlength="200" /></label><label>Banka<input [(ngModel)]="settingsDraft.bankName" name="bankName" maxlength="200" /></label><label class="wide">IBAN<input [(ngModel)]="settingsDraft.iban" name="iban" maxlength="34" placeholder="TR…" /></label><label class="wide">Ödeme yönergesi<textarea [(ngModel)]="settingsDraft.paymentInstructions" name="paymentInstructions" maxlength="2000" rows="3"></textarea></label></div><p class="muted">Durum: {{ settings()?.isPubliclyAvailable ? 'Banka bilgileri ödeme akışında yayınlanıyor.' : 'Banka bilgileri yayınlanmıyor.' }}</p><div class="form-actions"><button class="primary" type="submit" [disabled]="saving()">Ayarları kaydet</button></div></form>
+        <section class="space-y-4" aria-labelledby="coaching-settings-heading"><div><h2 id="coaching-settings-heading" class="text-lg font-semibold">Abonelik zorunluluğu ve ödeme ayarları</h2><p class="muted">Açıkken öğrencilerin çalışma erişimi için aktif Koçluk aboneliği gerekir. Kapalıyken abonelik aranmaz; giriş ve servis yetkisi gerekir. Hızlı Okuma ayarı bundan bağımsızdır.</p></div>
+          <form class="form-card" (ngSubmit)="saveSettings()"><div class="form-grid"><label>Para birimi<select [(ngModel)]="settingsDraft.currency" name="currency"><option value="TRY">TRY</option><option value="EUR">EUR</option><option value="USD">USD</option></select></label><label class="check"><input type="checkbox" role="switch" [(ngModel)]="settingsDraft.requireActiveSubscription" name="requireSubscription" [attr.aria-checked]="settingsDraft.requireActiveSubscription" [disabled]="saving() || settingsLoading() || !settings()" /> Koçluk aboneliği zorunlu</label><label class="check"><input type="checkbox" [(ngModel)]="settingsDraft.bankTransferEnabled" name="bankEnabled" /> Havale/EFT bilgilerini yayınla</label><label>Hesap sahibi<input [(ngModel)]="settingsDraft.accountHolder" name="accountHolder" maxlength="200" /></label><label>Banka<input [(ngModel)]="settingsDraft.bankName" name="bankName" maxlength="200" /></label><label class="wide">IBAN<input [(ngModel)]="settingsDraft.iban" name="iban" maxlength="34" placeholder="TR…" /></label><label class="wide">Ödeme yönergesi<textarea [(ngModel)]="settingsDraft.paymentInstructions" name="paymentInstructions" maxlength="2000" rows="3"></textarea></label></div>@if (settings(); as saved) { <p class="muted">Kaydedilmiş durum: {{ saved.requireActiveSubscription ? 'Açık — abonelik gerekli' : 'Kapalı — abonelik gerekli değil' }}</p> }<p class="muted">Durum: {{ settings()?.isPubliclyAvailable ? 'Banka bilgileri ödeme akışında yayınlanıyor.' : 'Banka bilgileri yayınlanmıyor.' }}</p><div class="form-actions"><button class="primary" type="submit" [disabled]="saving() || settingsLoading() || !settings()">Ayarları kaydet</button></div></form>
         </section>
       }
 
@@ -142,7 +142,7 @@ export class CoachingSubscriptionsComponent implements OnInit {
     { value: 'plans', label: 'Planlar' }, { value: 'requests', label: 'EFT talepleri' },
     { value: 'subscriptions', label: 'Erişimler' }, { value: 'settings', label: 'Ödeme ve erişim ayarı' }, { value: 'payments', label: 'Ödeme geçmişi' }
   ];
-  readonly tab = signal<SubscriptionTab>('plans');
+  readonly tab = signal<SubscriptionTab>('settings');
   readonly loading = signal(false);
   readonly saving = signal(false);
   readonly error = signal<string | null>(null);
@@ -151,6 +151,7 @@ export class CoachingSubscriptionsComponent implements OnInit {
   readonly subscriptions = signal<CoachingManagementPage<CoachingSubscription>>({ items: [], pageNumber: 1, pageSize: 25, totalCount: 0 });
   readonly payments = signal<CoachingManagementPage<CoachingPayment>>({ items: [], pageNumber: 1, pageSize: 25, totalCount: 0 });
   readonly settings = signal<CoachingSubscriptionSettings | null>(null);
+  readonly settingsLoading = signal(false);
   readonly institutions = signal<InstitutionDto[]>([]);
   readonly users = signal<UserDto[]>([]);
   readonly students = signal<CoachingStudentRosterItem[]>([]);
@@ -179,7 +180,7 @@ export class CoachingSubscriptionsComponent implements OnInit {
   settingsDraft: CoachingSubscriptionSettingsRequest = this.emptySettingsDraft();
   subscriptionDraft = { planId: '', userId: null as string | null, userName: null as string | null, userEmail: null as string | null, institutionId: null as string | null, paymentReference: '', notes: '', studentIds: [] as string[] };
 
-  ngOnInit() { if (isPlatformBrowser(this.platformId)) { this.loadPlans(); this.loadInstitutions(); } }
+  ngOnInit() { if (isPlatformBrowser(this.platformId)) { this.loadSettings(); this.loadPlans(); this.loadInstitutions(); } }
 
   selectTab(tab: SubscriptionTab) {
     this.tab.set(tab); this.error.set(null);
@@ -191,7 +192,11 @@ export class CoachingSubscriptionsComponent implements OnInit {
   }
 
   loadPlans() { this.loading.set(true); this.service.getPlans(true).subscribe({ next: items => { this.plans.set(items); this.loading.set(false); }, error: () => { this.error.set('Koçluk planları yüklenemedi.'); this.loading.set(false); } }); }
-  loadSettings() { this.loading.set(true); this.service.getSubscriptionSettings().subscribe({ next: settings => { this.settings.set(settings); this.settingsDraft = this.toSettingsRequest(settings); this.loading.set(false); }, error: () => { this.error.set('Koçluk ödeme ayarları yüklenemedi.'); this.loading.set(false); } }); }
+  loadSettings() {
+    if (this.settingsLoading() || this.saving()) return;
+    this.settingsLoading.set(true);
+    this.service.getSubscriptionSettings().subscribe({ next: settings => { this.settings.set(settings); this.settingsDraft = this.toSettingsRequest(settings); this.settingsLoading.set(false); }, error: () => { this.settings.set(null); this.error.set('Koçluk ödeme ayarları yüklenemedi.'); this.settingsLoading.set(false); } });
+  }
   loadInstitutions() { this.institutionService.getAll(1, 100, '', true).subscribe({ next: result => this.institutions.set(result.items ?? []), error: () => this.error.set('Kurum listesi yüklenemedi.') }); }
   loadRequests() { this.loading.set(true); this.service.getTransferRequests(this.requestPage, 25, this.requestSearch, this.requestStatus).subscribe({ next: page => { this.requests.set(page); this.loading.set(false); }, error: () => { this.error.set('EFT bildirimleri yüklenemedi.'); this.loading.set(false); } }); }
   loadSubscriptions() { this.loading.set(true); this.service.getSubscriptions(this.subscriptionPage, 25, this.subscriptionSearch, this.subscriptionStatus).subscribe({ next: page => { this.subscriptions.set(page); this.loading.set(false); }, error: () => { this.error.set('Koçluk abonelikleri yüklenemedi.'); this.loading.set(false); } }); }
@@ -245,6 +250,7 @@ export class CoachingSubscriptionsComponent implements OnInit {
   }
 
   async saveSettings() {
+    if (!this.settings() || this.saving() || this.settingsLoading()) return;
     this.saving.set(true); this.error.set(null);
     try { const result = await firstValueFrom(this.service.updateSubscriptionSettings(this.settingsDraft)); this.settings.set(result); this.settingsDraft = this.toSettingsRequest(result); this.toaster.success('Koçluk abonelik ayarları kaydedildi.'); }
     catch (error) { this.error.set(this.apiError(error, 'Ayarlar kaydedilemedi; yayınlanan banka bilgileri ve IBAN doğruluğunu kontrol edin.')); }

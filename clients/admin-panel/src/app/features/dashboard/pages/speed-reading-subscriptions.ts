@@ -16,13 +16,14 @@ import {
   SpeedReadingProduct,
   SpeedReadingProductRequest,
   SpeedReadingSubscription,
+  SpeedReadingSubscriptionRequirementSettings,
   SpeedReadingSubscriptionUpdateRequest
 } from '../../../core/services/speed-reading-admin.service';
 import { IdentityService, UserDto } from '../../../core/services/identity.service';
 import { InstitutionDto, InstitutionService } from '../../../core/services/institution.service';
 import { ToasterService } from '../../../core/services/toaster.service';
 
-type SubscriptionTab = 'products' | 'plans' | 'bankSettings' | 'transferRequests' | 'subscriptions' | 'institutions' | 'payments';
+type SubscriptionTab = 'settings' | 'products' | 'plans' | 'bankSettings' | 'transferRequests' | 'subscriptions' | 'institutions' | 'payments';
 
 @Component({
   selector: 'app-speed-reading-subscriptions',
@@ -43,6 +44,19 @@ type SubscriptionTab = 'products' | 'plans' | 'bankSettings' | 'transferRequests
       </nav>
 
       @if (error()) { <div role="alert" class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/30 dark:text-red-300">{{ error() }}</div> }
+
+      @if (selectedTab() === 'settings') {
+        <section class="space-y-4" aria-labelledby="subscription-settings-title">
+          <h2 id="subscription-settings-title" class="text-lg font-semibold text-gray-900 dark:text-white">Abonelik zorunluluğu</h2>
+          <p class="muted">Açıkken öğrencilerin çalışma erişimi için aktif Hızlı Okuma aboneliği gerekir. Kapalıyken abonelik aranmaz; giriş ve servis yetkisi gerekir. Koçluk ayarı bundan bağımsızdır.</p>
+          <form (ngSubmit)="saveSubscriptionRequirement()" class="form-card">
+            <label class="check"><input type="checkbox" role="switch" [(ngModel)]="requireActiveSubscription" name="requireSubscription"
+              [attr.aria-checked]="requireActiveSubscription" [disabled]="saving() || settingsLoading() || !subscriptionRequirement()" /> Hızlı Okuma aboneliği zorunlu</label>
+            @if (subscriptionRequirement(); as settings) { <p class="muted">Kaydedilmiş durum: {{ settings.requireActiveSubscription ? 'Açık — abonelik gerekli' : 'Kapalı — abonelik gerekli değil' }}</p> }
+            <div class="form-actions"><button type="submit" class="primary" [disabled]="saving() || settingsLoading() || !subscriptionRequirement()">Ayarı kaydet</button></div>
+          </form>
+        </section>
+      }
 
       @if (selectedTab() === 'products') {
         <section class="space-y-4" aria-labelledby="products-title">
@@ -137,12 +151,16 @@ export class SpeedReadingSubscriptionsComponent implements OnInit {
   private readonly platformId = inject(PLATFORM_ID);
 
   readonly tabs: ReadonlyArray<{ value: SubscriptionTab; label: string }> = [
+    { value: 'settings', label: 'Abonelik ayarı' },
     { value: 'products', label: 'Ürünler' }, { value: 'plans', label: 'Planlar' },
     { value: 'bankSettings', label: 'Banka ayarı' }, { value: 'transferRequests', label: 'EFT talepleri' },
     { value: 'subscriptions', label: 'Bireysel onaylar' }, { value: 'institutions', label: 'Kurum toplu onayı' },
     { value: 'payments', label: 'Ödeme geçmişi' }
   ];
-  readonly selectedTab = signal<SubscriptionTab>('products');
+  readonly selectedTab = signal<SubscriptionTab>('settings');
+  readonly subscriptionRequirement = signal<SpeedReadingSubscriptionRequirementSettings | null>(null);
+  readonly settingsLoading = signal(false);
+  requireActiveSubscription = true;
   readonly products = signal<SpeedReadingProduct[]>([]);
   readonly plans = signal<SpeedReadingPlan[]>([]);
   readonly subscriptions = signal<{ items: SpeedReadingSubscription[]; totalCount: number; pageNumber: number; pageSize: number }>({ items: [], totalCount: 0, pageNumber: 1, pageSize: 25 });
@@ -186,11 +204,12 @@ export class SpeedReadingSubscriptionsComponent implements OnInit {
   subscriptionDraft: SpeedReadingManualSubscriptionRequest = this.emptySubscription();
   bankTransferSettingsDraft: SpeedReadingBankTransferSettingsRequest = this.emptyBankTransferSettings();
 
-  ngOnInit(): void { if (isPlatformBrowser(this.platformId)) this.loadProducts(); }
+  ngOnInit(): void { if (isPlatformBrowser(this.platformId)) { this.loadSubscriptionRequirement(); this.loadProducts(); } }
 
   selectTab(tab: SubscriptionTab): void {
     if (this.selectedTab() === tab) return;
     this.selectedTab.set(tab);
+    if (tab === 'settings') this.loadSubscriptionRequirement();
     if (tab === 'products') this.loadProducts();
     if (tab === 'plans') this.loadPlans();
     if (tab === 'bankSettings') this.loadBankTransferSettings();
@@ -294,6 +313,20 @@ export class SpeedReadingSubscriptionsComponent implements OnInit {
   }
 
   loadProducts(): void { this.loadRequest(this.service.getSubscriptionProducts(), value => this.products.set(value)); }
+  loadSubscriptionRequirement(): void {
+    if (this.settingsLoading() || this.saving()) return;
+    this.settingsLoading.set(true);
+    this.service.getSubscriptionRequirementSettings().pipe(finalize(() => this.settingsLoading.set(false))).subscribe({
+      next: value => { this.requireActiveSubscription = value.requireActiveSubscription; this.subscriptionRequirement.set(value); },
+      error: () => { this.subscriptionRequirement.set(null); this.error.set('Abonelik ayarı yüklenemedi.'); }
+    });
+  }
+  saveSubscriptionRequirement(): void {
+    if (!this.subscriptionRequirement() || this.saving() || this.settingsLoading()) return;
+    this.saveRequest(this.service.updateSubscriptionRequirementSettings(this.requireActiveSubscription), value => {
+      this.requireActiveSubscription = value.requireActiveSubscription; this.subscriptionRequirement.set(value);
+    });
+  }
   loadPlans(): void { this.loadRequest(this.service.getSubscriptionPlans(), value => this.plans.set(value)); }
   loadSubscriptions(): void { this.loadRequest(this.service.getUserSubscriptions(this.subscriptionPage, this.pageSize, this.subscriptionStatus || undefined, this.subscriptionSearch), value => this.subscriptions.set(value)); }
   loadPayments(): void { this.loadRequest(this.service.getPaymentHistory(this.paymentPage, this.pageSize, this.paymentStatus || undefined, this.paymentSearch), value => this.payments.set(value)); }

@@ -16,6 +16,16 @@ describe('SpeedReadingAdminService', () => {
   });
 
   afterEach(() => http.verify());
+  it('loads and saves subscription enforcement independently of bank settings', () => {
+    service.getSubscriptionRequirementSettings().subscribe(value => expect(value.requireActiveSubscription).toBe(true));
+    http.expectOne('/api/speed-reading/subscriptions/settings').flush({ success: true, data: { requireActiveSubscription: true, updatedAt: null } });
+    service.updateSubscriptionRequirementSettings(false).subscribe(value => expect(value.requireActiveSubscription).toBe(false));
+    const request = http.expectOne('/api/speed-reading/subscriptions/settings');
+    expect(request.request.method).toBe('PUT');
+    expect(request.request.body).toEqual({ requireActiveSubscription: false });
+    expect(request.request.headers.get('Idempotency-Key')).toBeTruthy();
+    request.flush({ success: true, data: { requireActiveSubscription: false, updatedAt: null } });
+  });
 
   it('loads capabilities through the Gateway speed-reading route', () => {
     const response = {

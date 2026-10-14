@@ -813,6 +813,7 @@ public sealed class OwnedSpeedReadingDbContext(
         {
             entity.ToTable("bank_transfer_payment_settings");
             entity.HasKey(item => item.Id);
+            entity.Property(item => item.RequireActiveSubscription).HasDefaultValue(true).HasSentinel(true);
             entity.Property(item => item.AccountHolder).HasMaxLength(200).IsRequired();
             entity.Property(item => item.BankName).HasMaxLength(200).IsRequired();
             entity.Property(item => item.Iban).HasMaxLength(34).IsRequired();

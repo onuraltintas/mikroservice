@@ -51,6 +51,10 @@ public sealed record UserAccessSummary(
     bool HasSpeedReading,
     bool HasCoaching);
 
+public sealed record SubscriptionRequirementSettings(bool RequireActiveSubscription, DateTime? UpdatedAt);
+public sealed record UpdateSubscriptionRequirementRequest(
+    [param: System.ComponentModel.DataAnnotations.Required] bool? RequireActiveSubscription);
+
 public sealed record PaymentSummary(
     Guid Id,
     Guid UserId,
@@ -300,6 +304,8 @@ public sealed record PaymentVerificationResult(
 
 public interface ISpeedReadingSubscription
 {
+    Task<SubscriptionRequirementSettings> GetSubscriptionRequirementAsync(CancellationToken cancellationToken = default);
+    Task<SubscriptionRequirementSettings> UpdateSubscriptionRequirementAsync(bool requireActiveSubscription, Guid actorId, string idempotencyKey, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<ProductSummary>> GetProductsAsync(bool includeInactive, CancellationToken cancellationToken = default);
     Task<ProductSummary?> GetProductAsync(Guid id, CancellationToken cancellationToken = default);
     Task<Guid> CreateProductAsync(CreateProductRequest request, Guid actorId, CancellationToken cancellationToken = default);

@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
-import { of } from 'rxjs';
+import { PLATFORM_ID } from '@angular/core';
+import { of, Subject, throwError } from 'rxjs';
 import { vi } from 'vitest';
 import {
   SpeedReadingAdminService,
@@ -21,6 +22,8 @@ describe('SpeedReadingSubscriptionsComponent', () => {
 
   function createComponent() {
     const service = {
+      getSubscriptionRequirementSettings: vi.fn(() => of({ requireActiveSubscription: true, updatedAt: null })),
+      updateSubscriptionRequirementSettings: vi.fn((required: boolean) => of({ requireActiveSubscription: required, updatedAt: null })),
       getSubscriptionProducts: vi.fn(() => of([])),
       getSubscriptionPlans: vi.fn(() => of([])),
       getUserSubscriptions: vi.fn(() => of(emptyPage)),
@@ -39,6 +42,7 @@ describe('SpeedReadingSubscriptionsComponent', () => {
     TestBed.configureTestingModule({
       imports: [SpeedReadingSubscriptionsComponent],
       providers: [
+        { provide: PLATFORM_ID, useValue: 'browser' },
         { provide: SpeedReadingAdminService, useValue: service },
         { provide: IdentityService, useValue: { getAllUsers: vi.fn(() => of({ items: [] })) } },
         { provide: InstitutionService, useValue: { getAll: vi.fn(() => of({ items: [] })) } },
@@ -52,6 +56,63 @@ describe('SpeedReadingSubscriptionsComponent', () => {
       toaster
     };
   }
+
+  it('renders the off/on switch and the saved state in the admin settings form', async () => {
+    createComponent();
+    await TestBed.compileComponents();
+    const fixture = TestBed.createComponent(SpeedReadingSubscriptionsComponent); fixture.detectChanges(); await fixture.whenStable();
+    const toggle = fixture.nativeElement.querySelector('[role="switch"]') as HTMLInputElement;
+    expect(toggle.checked).toBe(true);
+    toggle.click(); await fixture.whenStable();
+    fixture.nativeElement.querySelector('form button[type="submit"]').click(); await fixture.whenStable();
+    expect(fixture.nativeElement.textContent).toContain('Kapalı — abonelik gerekli değil');
+    toggle.click(); await fixture.whenStable();
+    fixture.nativeElement.querySelector('form button[type="submit"]').click(); await fixture.whenStable();
+    expect(fixture.nativeElement.textContent).toContain('Açık — abonelik gerekli');
+  });
+
+  it('loads the saved requirement first and saves off then on without changing bank settings', () => {
+    const { component, service } = createComponent();
+    component.ngOnInit();
+    expect(component.selectedTab()).toBe('settings');
+    expect(component.requireActiveSubscription).toBe(true);
+    component.requireActiveSubscription = false; component.saveSubscriptionRequirement();
+    expect(service.updateSubscriptionRequirementSettings).toHaveBeenLastCalledWith(false);
+    expect(component.subscriptionRequirement()?.requireActiveSubscription).toBe(false);
+    component.requireActiveSubscription = true; component.saveSubscriptionRequirement();
+    expect(service.updateSubscriptionRequirementSettings).toHaveBeenLastCalledWith(true);
+    expect(component.subscriptionRequirement()?.requireActiveSubscription).toBe(true);
+  });
+  it('keeps the published state when saving fails', () => {
+    const { component, service } = createComponent(); component.ngOnInit();
+    service.updateSubscriptionRequirementSettings.mockImplementation(() => throwError(() => new Error('offline')));
+    component.requireActiveSubscription = false; component.saveSubscriptionRequirement();
+    expect(component.subscriptionRequirement()?.requireActiveSubscription).toBe(true);
+    expect(component.saving()).toBe(false); expect(component.error()).toContain('kaydedilemedi');
+  });
+  it('does not save a default value if the persisted setting could not be loaded', () => {
+    const { component, service } = createComponent();
+    service.getSubscriptionRequirementSettings.mockImplementation(() => throwError(() => new Error('offline')));
+    component.ngOnInit(); component.saveSubscriptionRequirement();
+    expect(service.updateSubscriptionRequirementSettings).not.toHaveBeenCalled();
+  });
+
+  it('prevents overlapping settings reads and writes from reverting a saved switch', () => {
+    const { component, service } = createComponent(); component.ngOnInit();
+    const pending = new Subject<{ requireActiveSubscription: boolean; updatedAt: null }>();
+    service.getSubscriptionRequirementSettings.mockReturnValue(pending);
+    component.loadSubscriptionRequirement(); component.loadSubscriptionRequirement();
+    component.requireActiveSubscription = false; component.saveSubscriptionRequirement();
+    expect(service.updateSubscriptionRequirementSettings).not.toHaveBeenCalled();
+    expect(service.getSubscriptionRequirementSettings).toHaveBeenCalledTimes(2);
+    pending.next({ requireActiveSubscription: true, updatedAt: null }); pending.complete();
+    const save = new Subject<{ requireActiveSubscription: boolean; updatedAt: null }>();
+    service.updateSubscriptionRequirementSettings.mockReturnValue(save);
+    component.requireActiveSubscription = false; component.saveSubscriptionRequirement(); component.loadSubscriptionRequirement();
+    expect(service.getSubscriptionRequirementSettings).toHaveBeenCalledTimes(2);
+    save.next({ requireActiveSubscription: false, updatedAt: null }); save.complete();
+    expect(component.subscriptionRequirement()?.requireActiveSubscription).toBe(false);
+  });
 
   it('loads plans when the user opens the subscriptions tab', () => {
     const { component, service } = createComponent();

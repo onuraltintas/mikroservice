@@ -15,6 +15,25 @@ namespace SpeedReading.API.Controllers;
 [Authorize]
 public sealed class SubscriptionsController(ISpeedReadingSubscription subscriptions) : ControllerBase
 {
+    [HttpGet("settings")]
+    [Authorize(Roles = "Admin,SystemAdmin")]
+    [HasPermission(PlatformPermissions.SpeedReading.ContentManage)]
+    public async Task<IActionResult> GetSettings(CancellationToken cancellationToken = default) =>
+        Ok(new { success = true, data = await subscriptions.GetSubscriptionRequirementAsync(cancellationToken) });
+
+    [HttpPut("settings")]
+    [Authorize(Roles = "Admin,SystemAdmin")]
+    [HasPermission(PlatformPermissions.SpeedReading.ContentManage)]
+    public async Task<IActionResult> UpdateSettings([FromBody] UpdateSubscriptionRequirementRequest request,
+        [FromHeader(Name = "Idempotency-Key")] string? idempotencyKey, CancellationToken cancellationToken = default)
+    {
+        if (!request.RequireActiveSubscription.HasValue)
+            return BadRequest(new { success = false, message = "Abonelik zorunluluğu açık veya kapalı olarak belirtilmelidir." });
+        if (!TryGetActor(out var actorId)) return Unauthorized();
+        return Ok(new { success = true, data = await subscriptions.UpdateSubscriptionRequirementAsync(
+            request.RequireActiveSubscription.Value, actorId, idempotencyKey ?? string.Empty, cancellationToken) });
+    }
+
     [HttpGet]
     [HasPermission(PlatformPermissions.SpeedReading.ContentManage)]
     public async Task<IActionResult> GetAll(
