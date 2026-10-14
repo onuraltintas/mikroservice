@@ -5,7 +5,7 @@ import { FocusEngine } from './engines/focus.engine';
 import { MotionPathEngine } from './engines/motion-path.engine';
 import { TextStreamEngine } from './engines/text-stream.engine';
 import { CustomPreviewDialogComponent } from './custom-preview-dialog.component';
-import { TestBed } from '@angular/core/testing';
+import { fakeAsync, TestBed, tick } from '@angular/core/testing';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 
 describe('Custom preview settings safety', () => {
@@ -96,13 +96,13 @@ describe('Custom preview settings safety', () => {
     expect(config.engineConfig.DisplayDurationMs).toBe(1100);
     engine.destroy();
   });
-  it('keeps adaptive tachistoscope custom settings within the catalogue age limits', () => {
+  it('allows 75 ms tachistoscope previews while preserving catalogue length limits', () => {
     const config = { engineType: 'text_stream', difficultyLevel: 5, engineConfig: { mode: 'tachistoscope',
       content: { type: 'number', length: 5, count: 40 }, timing: { durationMs: 1100 },
       adaptive: { enabled: true, minLength: 3, maxLength: 5, minDurationMs: 400, maxDurationMs: 2000 } } };
     const controls = getCustomPreviewControls(config);
     expect(controls.find(item => item.key === 'stimulusLength')).toEqual(jasmine.objectContaining({ min: 3, max: 5, value: 5 }));
-    expect(controls.find(item => item.key === 'displayDurationMs')).toEqual(jasmine.objectContaining({ min: 400, max: 2000 }));
+    expect(controls.find(item => item.key === 'displayDurationMs')).toEqual(jasmine.objectContaining({ min: 75, max: 2000 }));
     const changed = applyCustomPreviewSettings(config, { stimulusLength: 4, displayDurationMs: 800, stimulusCount: 30 }, { roles: ['Admin'], preview: true });
     expect(changed.engineConfig.content.length).toBe(4);
     expect(changed.engineConfig.content.count).toBe(30);
@@ -110,7 +110,42 @@ describe('Custom preview settings safety', () => {
     expect(changed.engineConfig.timing.durationMs).toBe(800);
     expect(config.engineConfig.content.length).toBe(5);
     expect(() => applyCustomPreviewSettings(config, { stimulusLength: 6 }, { roles: ['Admin'], preview: true })).toThrow();
-    expect(() => applyCustomPreviewSettings(config, { displayDurationMs: 200 }, { roles: ['Admin'], preview: true })).toThrow();
+    expect(changed.engineConfig.adaptive.minDurationMs).toBe(75);
+    expect(() => applyCustomPreviewSettings(config, { displayDurationMs: 74 }, { roles: ['Admin'], preview: true })).toThrow();
+  });
+  it('actually presents at 75 ms and keeps three digits after successful five-answer blocks', fakeAsync(() => {
+    const config = { engineType: 'text_stream', engineConfig: { mode: 'tachistoscope',
+      content: { type: 'number', length: 3, count: 16 }, timing: { durationMs: 1500, intervalMs: 0 },
+      visuals: { showFixation: false }, adaptive: { enabled: true, minLength: 3, maxLength: 5, minDurationMs: 400, maxDurationMs: 2000 } } };
+    const changed = applyCustomPreviewSettings(config, { displayDurationMs: 75 }, { roles: ['Teacher'], preview: true });
+    const engine = new TextStreamEngine();
+    engine.initialize({ ...changed, previewOnly: true } as any, { onStart: () => undefined, onStateChange: () => undefined,
+      onStepComplete: () => undefined, onComplete: () => undefined } as any);
+    engine.start();
+    for (let round = 0; round < 15; round++) {
+      const stimulus = engine.getCurrentStimulus();
+      expect(stimulus.length).toBe(3);
+      expect(engine.getCurrentDuration()).toBe(75);
+      tick(74); expect(engine.isShowingContent()).toBeTrue();
+      tick(1); expect(engine.isShowingContent()).toBeFalse();
+      engine.handleInput({ answer: stimulus }); tick(600);
+    }
+    expect(engine.getCurrentStimulus().length).toBe(3);
+    expect(config.engineConfig.adaptive.minDurationMs).toBe(400);
+    for (const context of [{ roles: ['Student'], preview: true }, { roles: ['Teacher'], preview: false }])
+      expect(applyCustomPreviewSettings(config, { displayDurationMs: 75 }, context)).toBe(config);
+    engine.destroy();
+  }));
+  it('overrides inherited and legacy-cased duration floors only in the temporary preview', () => {
+    const config = { engineType: 'text_stream', adaptive: { enabled: true, MinDurationMs: 400, maxDurationMs: 2000 },
+      engineConfig: { mode: 'tachistoscope', content: { type: 'number' }, Adaptive: { MinDurationMs: 300 }, timing: { durationMs: 1500 } } };
+    const changed = applyCustomPreviewSettings(config, { displayDurationMs: 75 }, { roles: ['Admin'], preview: true });
+    const engine = new TextStreamEngine();
+    engine.initialize(changed as any, { onStateChange: () => undefined } as any);
+    expect(engine.getCurrentDuration()).toBe(75);
+    expect(config.engineConfig.Adaptive.MinDurationMs).toBe(300);
+    expect(config.adaptive.MinDurationMs).toBe(400);
+    engine.destroy();
   });
   it('offers inspection time rather than word-search targets for skimming', () => {
     const config = { engineType: 'skimming', engineConfig: { timing: { minReadingTimeMs: 3000, maxReadingTimeMs: 45000 }, targets: { words: ['eski'] } } };

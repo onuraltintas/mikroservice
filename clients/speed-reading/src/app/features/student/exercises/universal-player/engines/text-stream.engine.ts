@@ -229,6 +229,12 @@ export class TextStreamEngine implements BaseEngine {
         this.maxTargetLength = boundedInteger(adaptive['maxlength'], maximumLength, this.minTargetLength, maximumLength);
         this.targetLength = Math.max(this.minTargetLength, Math.min(this.maxTargetLength, this.targetLength));
         this.initialTargetLength = this.targetLength;
+        if (root.previewOnly === true && !this.serverAuthoritative && root.isAssessmentMode !== true
+            && !this.isRsvpMode() && this.config.content.type === 'number') {
+            this.minTargetLength = this.maxTargetLength = this.targetLength;
+            this.config.adaptive.minDurationMs = 75;
+            this.config.adaptive.maxDurationMs = Math.max(75, this.config.adaptive.maxDurationMs);
+        }
         if (this.serverAuthoritative) {
             this.stimuli = new Array(boundedInteger(serverState['count'], totalStimuli, 1, 500)).fill('');
             this.currentStimulusIndex = boundedInteger(serverState['round'], 0, 0, this.stimuli.length);

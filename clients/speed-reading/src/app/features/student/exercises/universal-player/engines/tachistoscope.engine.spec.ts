@@ -3,6 +3,36 @@ import { EngineCallbacks, EngineResult } from './base-engine.interface';
 import { TextStreamEngine } from './text-stream.engine';
 
 describe('Tachistoscope runtime', () => {
+  it('keeps the selected digit count at both duration bounds only in previews', fakeAsync(() => {
+    const { engine } = create({ previewOnly: true, content: { type: 'number', length: 4, count: 500 },
+      timing: { durationMs: 400 }, adaptive: { enabled: true, minLength: 3, maxLength: 5, minDurationMs: 400, maxDurationMs: 600 } });
+    engine.start();
+    const answerBlocks = (correct: boolean, blocks: number) => {
+      for (let round = 0; round < blocks * 5; round++) {
+        const stimulus = engine.getCurrentStimulus();
+        expect(stimulus.length).toBe(4);
+        tick(engine.getCurrentDuration());
+        engine.handleInput({ answer: correct ? stimulus : 'wrong' }); tick(600);
+      }
+    };
+    answerBlocks(true, 25);
+    expect(engine.getCurrentDuration()).toBe(75);
+    expect(engine.getCurrentStimulus().length).toBe(4);
+    answerBlocks(false, 30);
+    expect(engine.getCurrentDuration()).toBe(600);
+    expect(engine.getCurrentStimulus().length).toBe(4);
+    engine.reset(); engine.start();
+    expect(engine.getCurrentStimulus().length).toBe(4);
+    expect(engine.getCurrentDuration()).toBe(400);
+    engine.destroy();
+  }));
+  it('preserves the server-owned student duration when a preview flag is also present', () => {
+    const { engine } = create({ previewOnly: true, serverAuthoritative: true,
+      content: { type: 'number', length: 3 }, timing: { durationMs: 75 },
+      adaptive: { enabled: true, minLength: 3, maxLength: 5, minDurationMs: 400, maxDurationMs: 2000 } });
+    expect(engine.getCurrentDuration()).toBe(400);
+    engine.destroy();
+  });
   for (const [correctCount, duration] of [[0, 550], [2, 550], [3, 500], [4, 450], [5, 450]]) {
     it(`adapts a preview block with ${correctCount} correct answers to ${duration} ms`, fakeAsync(() => {
       const { engine } = create({ content: { type: 'number', length: 3, count: 6 },

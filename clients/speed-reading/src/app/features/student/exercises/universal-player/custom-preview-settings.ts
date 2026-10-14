@@ -131,7 +131,7 @@ export function getCustomPreviewControls(configuration: Record<string, unknown>)
       const adapts = !isRsvp && adaptive['enabled'] !== false;
       return [
       control('displayDurationMs', 'Başlangıç gösterim süresi (ms)',
-        adapts ? Number(adaptive['mindurationms'] ?? 50) : 50,
+        !isRsvp && content['type'] === 'number' ? 75 : adapts ? Number(adaptive['mindurationms'] ?? 50) : 50,
         adapts ? Number(adaptive['maxdurationms'] ?? 5000) : 5000,
         read('displayDurationMs') ?? read('intervalMs') ?? timing['durationms'] ?? 500),
       control('intervalMs', 'Gösterimler arası bekleme (ms)', 0, 10000, timing['intervalms'] ?? 0),
@@ -439,6 +439,11 @@ export function applyCustomPreviewSettings<T extends Record<string, unknown>>(
       settings['displayDurationMs'] = validated['displayDurationMs'];
       if (mergeCaseInsensitiveRecords(configuration, settings, 'timing')['durationms'] !== undefined)
         merge('timing', { durationMs: validated['displayDurationMs'] });
+      const adaptive = mergeCaseInsensitiveRecords(configuration, settings, 'adaptive');
+      const content = mergeCaseInsensitiveRecords(configuration, settings, 'content');
+      const mode = caseInsensitiveField(settings, 'mode') ?? caseInsensitiveField(configuration, 'mode');
+      if (String(mode).toLowerCase() !== 'rsvp' && content['type'] === 'number' && adaptive['enabled'] !== false)
+        merge('adaptive', { minDurationMs: 75 });
     }
     if (validated['stimulusLength'] !== undefined) merge('content', { length: validated['stimulusLength'] });
     if (validated['intervalMs'] !== undefined) merge('timing', { intervalMs: validated['intervalMs'] });
