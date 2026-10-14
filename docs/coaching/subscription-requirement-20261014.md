@@ -5,7 +5,7 @@
 ## Kullanım
 
 - Hızlı Okuma: `/dashboard/speed-reading/subscriptions` → **Abonelik ayarı** → **Hızlı Okuma aboneliği zorunlu** → **Ayarı kaydet**.
-- Koçluk: `/dashboard/coaching/subscriptions` → **Ödeme ve erişim ayarı** → **Koçluk aboneliği zorunlu** → **Ayarları kaydet**.
+- Koçluk: `/dashboard/coaching/subscriptions` → **Abonelik ayarı** → **Koçluk aboneliği zorunlu** → **Ayarı kaydet**. Banka bilgileri ayrı **Banka ayarı** sekmesindedir.
 
 Açıkken öğrencinin çalışma erişiminde aktif abonelik aranır. Kapalıyken bu serviste abonelik aranmaz. Kullanıcı girişi, servis yetkileri, rol ve kurum kapsamı kontrolleri devam eder. Ayarlar bağımsızdır; ödeme, abonelik ve kurum bağlantısı kayıtlarını değiştirmez veya yeni lisans oluşturmaz. Mevcut ilk değerlendirme/profil kurulum istisnaları korunur.
 
@@ -38,3 +38,11 @@ Canlı yayın etiketi: `subscription-requirement-20261014`. API imajı `8403a4cd
 Kanıtlar: `artifacts/subscription-requirement-backend-tests.log`, `subscription-requirement-ui-tests.log`, `subscription-requirement-relational-results.json`, `subscription-requirement-live-state.log`, `subscription-requirement-ui/`, `subscription-requirement-live-ui/`. Yayın betikleri: `tools/releases/subscription-requirement-20261014/`.
 
 İzleme `2026-10-14T15:46:35Z` tarihinde tamamlandı: 90 kamu HTTP kontrolünün tamamı 200, en yüksek ölçülen yanıt süresi 0,366 saniye; iki servis sağlıklı ve restart sayıları 0. Son imaj eşleşmesi, diğer konteynerlerin korunması ve CAPTCHA yapılandırması doğrulandı. Kanıt: `artifacts/subscription-requirement-final-health.log` ve `artifacts/subscription-requirement-20261014/monitor-*.log`.
+
+## Koçluk ayarının ayrı sekmeye taşınması
+
+`639cb289` kaynak commit'i, `coaching-subscription-layout-20261014` etiketiyle `2026-10-14T15:59:07Z` tarihinde canlıya alındı. Yalnız admin paneli güncellendi; migration yok. Koçluk ayarlarının tamamının hash'i önce/sonra aynı, diğer konteynerlerin kimlikleri aynı ve yeni admin imajı sağlıklı/restart 0 olarak doğrulandı.
+
+Koçluk **Abonelik ayarı** artık ilk ve varsayılan sekmedir; yalnız anahtar, kaydedilmiş durum ve kayıt düğmesi gösterilir. **Banka ayarı** sekmesinde anahtar bulunmaz. Abonelik kaydı kaydedilmiş banka bilgilerini, banka kaydı kaydedilmiş abonelik değerini kullanır; diğer sekmenin kaydedilmemiş taslağı gönderilmez.
+
+16 bileşen testi, yerel üretim derlemesinde 6 masaüstü/mobil senaryo ve canlıdan sunulan arayüzde aynı 6 senaryo geçti. Tarayıcı senaryolarında API/oturum yanıtları fixture ile karşılandı; canlı genel ayarlar test amacıyla değiştirilmedi. Kanıt: `artifacts/coaching-subscription-setting-layout-tests.log`, `artifacts/coaching-subscription-layout-browser-proof.log`, `artifacts/coaching-subscription-layout-live-browser-proof.log`. Betikler: `tools/releases/coaching-subscription-layout-20261014/`.
