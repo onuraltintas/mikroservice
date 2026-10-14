@@ -25,17 +25,34 @@ describe('CoachingSubscriptionsComponent', () => {
     ] }).compileComponents();
     const fixture = TestBed.createComponent(CoachingSubscriptionsComponent); fixture.detectChanges(); await fixture.whenStable();
     const component = fixture.componentInstance;
-    expect(component.tab()).toBe('settings');
+    expect(component.tab()).toBe('requirement');
+    expect(component.tabs[0].label).toBe('Abonelik ayarı');
+    expect(fixture.nativeElement.querySelector('input[name="accountHolder"]')).toBeNull();
     const toggle = fixture.nativeElement.querySelector('[role="switch"]') as HTMLInputElement;
     expect(toggle.checked).toBe(false);
     toggle.click(); await fixture.whenStable();
-    await component.saveSettings(); await fixture.whenStable();
+    fixture.nativeElement.querySelector('form button[type="submit"]').click(); await fixture.whenStable();
     expect(service.updateSubscriptionSettings).toHaveBeenLastCalledWith(expect.objectContaining({
       requireActiveSubscription: true, accountHolder: 'Original', bankName: 'Bank', bankTransferEnabled: true
     }));
     expect(fixture.nativeElement.textContent).toContain('Açık — abonelik gerekli');
-    toggle.click(); await fixture.whenStable(); await component.saveSettings(); await fixture.whenStable();
+    toggle.click(); await fixture.whenStable();
+    fixture.nativeElement.querySelector('form button[type="submit"]').click(); await fixture.whenStable();
     expect(component.settings()?.requireActiveSubscription).toBe(false);
+    component.selectTab('settings'); await fixture.whenStable();
+    expect(fixture.nativeElement.querySelector('[role="switch"]')).toBeNull();
+    expect(fixture.nativeElement.querySelector('input[name="accountHolder"]')).not.toBeNull();
+    expect(fixture.nativeElement.textContent).toContain('Banka ve ödeme ayarları');
+    component.settingsDraft.requireActiveSubscription = true;
+    component.settingsDraft.bankName = 'Updated bank'; await component.saveSettings();
+    expect(service.updateSubscriptionSettings).toHaveBeenLastCalledWith(expect.objectContaining({
+      requireActiveSubscription: false, bankName: 'Updated bank'
+    }));
+    component.settingsDraft.bankName = 'Unsaved bank';
+    component.settingsDraft.requireActiveSubscription = true; await component.saveSubscriptionRequirement();
+    expect(service.updateSubscriptionSettings).toHaveBeenLastCalledWith(expect.objectContaining({
+      requireActiveSubscription: true, bankName: 'Updated bank'
+    }));
   });
 
   it('blocks failed-load defaults and overlapping settings requests', async () => {
@@ -50,17 +67,17 @@ describe('CoachingSubscriptionsComponent', () => {
     ] }).compileComponents();
     const component = TestBed.createComponent(CoachingSubscriptionsComponent).componentInstance;
     service.getSubscriptionSettings.mockImplementationOnce(() => throwError(() => new Error('offline')));
-    component.ngOnInit(); await component.saveSettings();
+    component.ngOnInit(); await component.saveSettings(); await component.saveSubscriptionRequirement();
     expect(service.updateSubscriptionSettings).not.toHaveBeenCalled();
     component.loadSettings();
     const pending = new Subject<typeof saved>(); service.getSubscriptionSettings.mockReturnValue(pending);
-    component.loadSettings(); component.loadSettings(); await component.saveSettings();
+    component.loadSettings(); component.loadSettings(); await component.saveSettings(); await component.saveSubscriptionRequirement();
     expect(service.getSubscriptionSettings).toHaveBeenCalledTimes(3);
     expect(service.updateSubscriptionSettings).not.toHaveBeenCalled();
     pending.next(saved); pending.complete();
     const save = new Subject<typeof saved>(); service.updateSubscriptionSettings.mockReturnValue(save);
     component.settingsDraft.requireActiveSubscription = true;
-    const operation = component.saveSettings(); component.loadSettings();
+    const operation = component.saveSubscriptionRequirement(); component.loadSettings();
     expect(service.getSubscriptionSettings).toHaveBeenCalledTimes(3);
     save.next({ ...saved, requireActiveSubscription: true }); save.complete(); await operation;
     expect(component.settings()?.requireActiveSubscription).toBe(true);

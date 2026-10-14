@@ -19,7 +19,7 @@ import {
 } from '../../../core/services/coaching-management.service';
 import { ToasterService } from '../../../core/services/toaster.service';
 
-type SubscriptionTab = 'plans' | 'requests' | 'subscriptions' | 'settings' | 'payments';
+type SubscriptionTab = 'requirement' | 'plans' | 'requests' | 'subscriptions' | 'settings' | 'payments';
 
 @Component({
   selector: 'app-coaching-subscriptions',
@@ -97,9 +97,20 @@ type SubscriptionTab = 'plans' | 'requests' | 'subscriptions' | 'settings' | 'pa
         </section>
       }
 
+      @if (tab() === 'requirement') {
+        <section class="space-y-4" aria-labelledby="coaching-requirement-heading">
+          <div><h2 id="coaching-requirement-heading" class="text-lg font-semibold">Abonelik zorunluluğu</h2><p class="muted">Açıkken öğrencilerin çalışma erişimi için aktif Koçluk aboneliği gerekir. Kapalıyken abonelik aranmaz; giriş ve servis yetkisi gerekir. Hızlı Okuma ayarı bundan bağımsızdır.</p></div>
+          <form class="form-card" (ngSubmit)="saveSubscriptionRequirement()">
+            <label class="check"><input type="checkbox" role="switch" [(ngModel)]="settingsDraft.requireActiveSubscription" name="requireSubscription" [attr.aria-checked]="settingsDraft.requireActiveSubscription" [disabled]="saving() || settingsLoading() || !settings()" /> Koçluk aboneliği zorunlu</label>
+            @if (settings(); as saved) { <p class="muted">Kaydedilmiş durum: {{ saved.requireActiveSubscription ? 'Açık — abonelik gerekli' : 'Kapalı — abonelik gerekli değil' }}</p> }
+            <div class="form-actions"><button class="primary" type="submit" [disabled]="saving() || settingsLoading() || !settings()">Ayarı kaydet</button></div>
+          </form>
+        </section>
+      }
+
       @if (tab() === 'settings') {
-        <section class="space-y-4" aria-labelledby="coaching-settings-heading"><div><h2 id="coaching-settings-heading" class="text-lg font-semibold">Abonelik zorunluluğu ve ödeme ayarları</h2><p class="muted">Açıkken öğrencilerin çalışma erişimi için aktif Koçluk aboneliği gerekir. Kapalıyken abonelik aranmaz; giriş ve servis yetkisi gerekir. Hızlı Okuma ayarı bundan bağımsızdır.</p></div>
-          <form class="form-card" (ngSubmit)="saveSettings()"><div class="form-grid"><label>Para birimi<select [(ngModel)]="settingsDraft.currency" name="currency"><option value="TRY">TRY</option><option value="EUR">EUR</option><option value="USD">USD</option></select></label><label class="check"><input type="checkbox" role="switch" [(ngModel)]="settingsDraft.requireActiveSubscription" name="requireSubscription" [attr.aria-checked]="settingsDraft.requireActiveSubscription" [disabled]="saving() || settingsLoading() || !settings()" /> Koçluk aboneliği zorunlu</label><label class="check"><input type="checkbox" [(ngModel)]="settingsDraft.bankTransferEnabled" name="bankEnabled" /> Havale/EFT bilgilerini yayınla</label><label>Hesap sahibi<input [(ngModel)]="settingsDraft.accountHolder" name="accountHolder" maxlength="200" /></label><label>Banka<input [(ngModel)]="settingsDraft.bankName" name="bankName" maxlength="200" /></label><label class="wide">IBAN<input [(ngModel)]="settingsDraft.iban" name="iban" maxlength="34" placeholder="TR…" /></label><label class="wide">Ödeme yönergesi<textarea [(ngModel)]="settingsDraft.paymentInstructions" name="paymentInstructions" maxlength="2000" rows="3"></textarea></label></div>@if (settings(); as saved) { <p class="muted">Kaydedilmiş durum: {{ saved.requireActiveSubscription ? 'Açık — abonelik gerekli' : 'Kapalı — abonelik gerekli değil' }}</p> }<p class="muted">Durum: {{ settings()?.isPubliclyAvailable ? 'Banka bilgileri ödeme akışında yayınlanıyor.' : 'Banka bilgileri yayınlanmıyor.' }}</p><div class="form-actions"><button class="primary" type="submit" [disabled]="saving() || settingsLoading() || !settings()">Ayarları kaydet</button></div></form>
+        <section class="space-y-4" aria-labelledby="coaching-settings-heading"><div><h2 id="coaching-settings-heading" class="text-lg font-semibold">Banka ve ödeme ayarları</h2><p class="muted">Para birimini ve öğrencilere gösterilecek havale/EFT bilgilerini yönetin.</p></div>
+          <form class="form-card" (ngSubmit)="saveSettings()"><div class="form-grid"><label>Para birimi<select [(ngModel)]="settingsDraft.currency" name="currency"><option value="TRY">TRY</option><option value="EUR">EUR</option><option value="USD">USD</option></select></label><label class="check"><input type="checkbox" [(ngModel)]="settingsDraft.bankTransferEnabled" name="bankEnabled" /> Havale/EFT bilgilerini yayınla</label><label>Hesap sahibi<input [(ngModel)]="settingsDraft.accountHolder" name="accountHolder" maxlength="200" /></label><label>Banka<input [(ngModel)]="settingsDraft.bankName" name="bankName" maxlength="200" /></label><label class="wide">IBAN<input [(ngModel)]="settingsDraft.iban" name="iban" maxlength="34" placeholder="TR…" /></label><label class="wide">Ödeme yönergesi<textarea [(ngModel)]="settingsDraft.paymentInstructions" name="paymentInstructions" maxlength="2000" rows="3"></textarea></label></div><p class="muted">Durum: {{ settings()?.isPubliclyAvailable ? 'Banka bilgileri ödeme akışında yayınlanıyor.' : 'Banka bilgileri yayınlanmıyor.' }}</p><div class="form-actions"><button class="primary" type="submit" [disabled]="saving() || settingsLoading() || !settings()">Banka ayarlarını kaydet</button></div></form>
         </section>
       }
 
@@ -139,10 +150,11 @@ export class CoachingSubscriptionsComponent implements OnInit {
   private readonly platformId = inject(PLATFORM_ID);
 
   readonly tabs: ReadonlyArray<{ value: SubscriptionTab; label: string }> = [
+    { value: 'requirement', label: 'Abonelik ayarı' },
     { value: 'plans', label: 'Planlar' }, { value: 'requests', label: 'EFT talepleri' },
-    { value: 'subscriptions', label: 'Erişimler' }, { value: 'settings', label: 'Ödeme ve erişim ayarı' }, { value: 'payments', label: 'Ödeme geçmişi' }
+    { value: 'subscriptions', label: 'Erişimler' }, { value: 'settings', label: 'Banka ayarı' }, { value: 'payments', label: 'Ödeme geçmişi' }
   ];
-  readonly tab = signal<SubscriptionTab>('settings');
+  readonly tab = signal<SubscriptionTab>('requirement');
   readonly loading = signal(false);
   readonly saving = signal(false);
   readonly error = signal<string | null>(null);
@@ -187,7 +199,7 @@ export class CoachingSubscriptionsComponent implements OnInit {
     if (tab === 'plans') this.loadPlans();
     else if (tab === 'requests') this.loadRequests();
     else if (tab === 'subscriptions') { this.loadPlans(); this.loadSubscriptions(); this.loadInstitutions(); }
-    else if (tab === 'settings') this.loadSettings();
+    else if (tab === 'settings' || tab === 'requirement') this.loadSettings();
     else this.loadPayments();
   }
 
@@ -250,9 +262,20 @@ export class CoachingSubscriptionsComponent implements OnInit {
   }
 
   async saveSettings() {
-    if (!this.settings() || this.saving() || this.settingsLoading()) return;
+    const saved = this.settings();
+    if (!saved || this.saving() || this.settingsLoading()) return;
+    await this.persistSettings({ ...this.settingsDraft, requireActiveSubscription: saved.requireActiveSubscription });
+  }
+
+  async saveSubscriptionRequirement() {
+    const saved = this.settings();
+    if (!saved || this.saving() || this.settingsLoading()) return;
+    await this.persistSettings({ ...this.toSettingsRequest(saved), requireActiveSubscription: this.settingsDraft.requireActiveSubscription });
+  }
+
+  private async persistSettings(request: CoachingSubscriptionSettingsRequest) {
     this.saving.set(true); this.error.set(null);
-    try { const result = await firstValueFrom(this.service.updateSubscriptionSettings(this.settingsDraft)); this.settings.set(result); this.settingsDraft = this.toSettingsRequest(result); this.toaster.success('Koçluk abonelik ayarları kaydedildi.'); }
+    try { const result = await firstValueFrom(this.service.updateSubscriptionSettings(request)); this.settings.set(result); this.settingsDraft = this.toSettingsRequest(result); this.toaster.success('Koçluk ayarları kaydedildi.'); }
     catch (error) { this.error.set(this.apiError(error, 'Ayarlar kaydedilemedi; yayınlanan banka bilgileri ve IBAN doğruluğunu kontrol edin.')); }
     finally { this.saving.set(false); }
   }
