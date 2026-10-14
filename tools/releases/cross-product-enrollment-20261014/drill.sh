@@ -48,7 +48,7 @@ drill_password=$(openssl rand -hex 20)
 export REGISTRATION_DRILL_PASSWORD=$drill_password
 printf 'RABBITMQ_DEFAULT_USER=%s\nRABBITMQ_DEFAULT_PASS=%s\n' "$drill_user" "$drill_password" > rabbit-drill.env
 printf 'RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS=+S 2:2 +SDcpu 1 +SDio 1\nRABBITMQ_CTL_ERL_ARGS=+S 1:1 +SDcpu 1 +SDio 1\n' >> rabbit-drill.env
-docker run -d --name "$rabbit" --label eduivme.drill=cross-product-enrollment-20261014 --network eduplatform-production \
+docker run -d --name "$rabbit" --user "$rabbit_uid:$rabbit_gid" --label eduivme.drill=cross-product-enrollment-20261014 --network eduplatform-production \
   --tmpfs "/var/lib/rabbitmq:rw,uid=$rabbit_uid,gid=$rabbit_gid,mode=0700" --env-file rabbit-drill.env "$rabbit_image" > rabbit-drill.log
 containers+=("$rabbit")
 redis_image=$(docker inspect redis --format '{{.Image}}')
