@@ -26,7 +26,9 @@ Kullanıcının ilk kaydında `Failed to fetch dynamically imported module: /chu
 - Yeni Chrome bağlamında hata veren iki eski modül gerçek canlı asset'lerden dinamik import edildi; ikisi de başarıyla export verdi. Bu testte API çağrıları mock; gerçek kullanıcı girişi yapılmadı.
 - Canlıdan sunulan mevcut kullanıcı erişim yönetiminde masaüstü/mobil 20 ve önceki yeni kullanıcı regresyonunda 26 senaryo geçti. SystemAdmin checkbox kaldırma kontrolündeki test zamanlaması alanın DOM'dan ayrılmasını bekleyecek şekilde düzeltildi.
 
-Üretim anahtarıyla iki dakikalık rol/izin içermeyen tanı token'ı üretip SignalR uçlarına gönderecek test otomatik onay denetimince reddedildi; ret sebebi hassas payload kullanımına ayrıca açık izin olmamasıydı. Bu komut yürütülmedi ve başka bir yöntemle token üretilerek tekrar denenmedi. Kimliksiz yol kontrolleri ve mevcut günlükler kullanıldı. **Yayın sonrası gerçek oturumlu SignalR bağlantısı/mesaj teslimi doğrulanmış sayılmaz**; kullanıcıdan normal açık oturumda yenileyip bildirim alanını ve yeni konsol hatalarını kontrol etmesi istendi. Yetkilendirme veya CAPTCHA ayarları değiştirilmedi.
+Üretim anahtarıyla iki dakikalık rol/izin içermeyen tanı token'ı üretip SignalR uçlarına gönderecek test otomatik onay denetimince reddedildi; ret sebebi hassas payload kullanımına ayrıca açık izin olmamasıydı. Bu komut yürütülmedi ve başka bir yöntemle token üretilerek tekrar denenmedi. Kimliksiz yol kontrolleri ve mevcut günlükler kullanıldı. Yetkilendirme veya CAPTCHA ayarları değiştirilmedi.
+
+15 Ekim 2026'da kullanıcı, normal açık admin oturumunda Ctrl+F5 ile yenileme ve bildirim zilini açma kontrolüne **“Yeni hata yok, bildirim alanı açılıyor”** yanıtını verdi. Böylece gerçek kullanıcı oturumunda yeni WebSocket hatası oluşmadığı ve bildirim alanının açıldığı doğrulandı. Bu kontrol yeni bir bildirim gönderilip teslim alındığına dair kanıt değildir; mesaj teslimi ayrıca sınanmadı.
 
 Kanıtlar: `artifacts/admin-login-recovery-live/static-results.json`, `browser-results.json`, `artifacts/admin-edit-access-live/`, `artifacts/admin-user-dual-service-live/`. Betikler `tools/releases/admin-login-recovery-20261015/`.
 
