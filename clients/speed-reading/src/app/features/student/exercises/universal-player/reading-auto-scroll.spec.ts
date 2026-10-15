@@ -146,6 +146,13 @@ describe('reading player three-line auto-scroll', () => {
     expect(scroll).toHaveBeenCalledTimes(1);
   });
 
+  it('counts three complete rows when the viewport ends part-way through a line', () => {
+    const player = playerFor(modes[0]);
+    activeTop = 310;
+    player.handleWordHighlightScroll();
+    expect(scroll).toHaveBeenCalledOnceWith({ top: 290, behavior: 'smooth' });
+  });
+
   it('honors reduced motion for the block transition', () => {
     const player = playerFor(modes[0]);
     (window.matchMedia as jasmine.Spy).and.returnValue({ matches: true });
