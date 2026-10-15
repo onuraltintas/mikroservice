@@ -141,10 +141,13 @@ for (const daily of [false, true]) test(`student persists grouping without fabri
   const dailyQuery = daily ? '?slotOrder=2&programDay=1&programProgressId=30000000-0000-0000-0000-000000000005' : '';
   await page.goto(`/student/exercises/universal-player/${exerciseId}${dailyQuery}`, { waitUntil: 'domcontentloaded' });
   await expect(page.locator('.start-button-large')).toBeVisible();
+  const completedResponse = page.waitForResponse(response => response.url().endsWith('/complete') && response.request().method() === 'POST');
   await page.locator('.start-button-large').click();
   await expect(page.locator('.chunk-group')).toHaveCount(4);
   await expect(page.locator('.word-highlight-container .game-stats')).toContainText('200');
   await expect.poll(() => completions).toBe(1);
+  await (await completedResponse).finished();
+  await expect(page.getByText('Sonuç kaydedildi.', { exact: true })).toBeVisible();
   expect(actions).toEqual(['start_reading', 'finish_reading']);
   await expect.poll(() => writes).toEqual(daily ? ['/api/speed-reading/daily-progress/complete-exercise'] : []);
   if (daily) expect(dailyRequests).toEqual([expect.objectContaining({ sessionId, exerciseId, slotOrder: 2, programDay: 1,
