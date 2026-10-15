@@ -33,7 +33,7 @@ public sealed class UserAccessManagementService : IUserAccessManagementService
             // Serialize first grants and opposing updates; retry attempts must reload state.
             _context.ChangeTracker.Clear();
             await _context.Database.ExecuteSqlInterpolatedAsync(
-                $"SELECT \"Id\" FROM identity.users WHERE \"Id\" = {userId} FOR UPDATE", cancellationToken);
+                $"SELECT \"Id\" FROM identity.users WHERE \"Id\" = {userId} FOR NO KEY UPDATE", cancellationToken);
         }
 
         var user = await _context.Users

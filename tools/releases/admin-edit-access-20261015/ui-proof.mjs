@@ -60,7 +60,7 @@ try {
         const retry = failOnce;
         await modal.getByRole('button', { name: label + ' erişimini kapat', exact: true }).click();
         if (retry) {
-          await modal.getByText('Test: MFA doğrulamasını yenileyin.', { exact: true }).waitFor();
+          await modal.getByText("Bu işlem için MFA doğrulaması gerekiyor. Profil ayarlarından MFA'yı tamamlayın.", { exact: true }).waitFor();
           await row.getByText('Erişim açık', { exact: true }).waitFor();
           await modal.getByRole('button', { name: label + ' erişimini kapat', exact: true }).click();
         }
