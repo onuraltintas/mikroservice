@@ -52,4 +52,18 @@ describe('program progression administration', () => {
     http.expectOne('/api/speed-reading/program-progression/settings').flush({}, { status: 503, statusText: 'Unavailable' });
     fixture.componentInstance.save(); http.expectNone(request => request.method === 'PUT'); http.verify();
   });
+
+  it.each(['loading', 'accessLoading'] as const)('blocks policy writes while %s is pending', busy => {
+    const fixture = TestBed.createComponent(EditUserModalComponent); const component = fixture.componentInstance;
+    component.userData = { userId: 'student-1', firstName: 'Test', lastName: 'Student', fullName: 'Test Student', email: 'student@example.test', role: 'Student',
+      roles: ['Student'], permissions: [], isActive: true, emailConfirmed: true,
+      productRoles: [{ role: 'Student', product: 'speed-reading' }], productAccesses: [{ product: 'speed-reading', isActive: true }] };
+    fixture.detectChanges(); const http = TestBed.inject(HttpTestingController);
+    http.expectOne('/api/speed-reading/program-progression/users/student-1').flush({ mode: 'inherit', allowEarlyAdvance: false, defaultAllowEarlyAdvance: false });
+    if (busy === 'loading') component.loading.set(true); else component.accessLoading.set('speed-reading');
+    fixture.detectChanges();
+    component.progressionMode = 'allow'; component.saveProgression();
+    expect(fixture.nativeElement.querySelector('#user-progression-mode').disabled).toBe(true);
+    http.expectNone(request => request.method === 'PUT'); http.verify();
+  });
 });
