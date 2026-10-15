@@ -1,4 +1,4 @@
-import { of } from 'rxjs';
+import { of, Subject, throwError } from 'rxjs';
 import { ExercisesListComponent } from './exercises-list.component';
 import { ExercisePlayerComponent } from './universal-player/exercise-player.component';
 
@@ -57,4 +57,16 @@ describe('Reading catalogue age and daily task scope', () => {
       expect(instance.completeDailyProgress).not.toHaveBeenCalled();
     });
   }
+
+  it('shows the actionable catalogue error instead of suggesting a network failure', () => {
+    spyOn(console, 'error');
+    const detail = 'Bu seviye profilinizin yaş grubuna ait değil.';
+    const instance = player({ destroy$: new Subject<void>(), resetActionTracking: () => {},
+      finishLoading: jasmine.createSpy(), sessionService: {
+        startSession: () => throwError(() => ({ status: 400, error: { code: 'Exercise.AgeGroupMismatch', detail } }))
+      } });
+    (ExercisePlayerComponent.prototype as any).startSession.call(instance);
+    expect(instance.error).toBe(detail);
+    expect(instance.finishLoading).toHaveBeenCalled();
+  });
 });
