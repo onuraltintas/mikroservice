@@ -29,6 +29,7 @@ public sealed class SpeedReadingErasureExecutionService(
 
         var userId = message.SubjectUserId;
         var deleted = 0;
+        deleted += await RemoveAsync(context.ProgramProgressionPolicies.Where(item => userId != Guid.Empty && item.UserId == userId), cancellationToken);
         deleted += await RemoveAsync(context.ProgramContinuations.Where(item => item.StudentId == userId), cancellationToken);
         deleted += await RemoveAsync(context.ReviewCompletions.Where(item => item.UserId == userId), cancellationToken);
         deleted += await RemoveAsync(context.ExerciseSessionAnswers

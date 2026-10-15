@@ -15,6 +15,7 @@ public sealed class SpeedReadingPrivacyInventoryRepository(OwnedSpeedReadingDbCo
         var counts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
         {
             ["profiles"] = await context.UserProfiles.CountAsync(item => item.UserId == userId, cancellationToken),
+            ["programProgressionPreferences"] = await context.ProgramProgressionPolicies.CountAsync(item => userId != Guid.Empty && item.UserId == userId, cancellationToken),
             ["exerciseSessions"] = await context.ExerciseSessions.CountAsync(item => item.StudentId == userId, cancellationToken),
             ["readingSessions"] = await context.ReadingSessions.CountAsync(item => item.UserId == userId, cancellationToken),
             ["readingAttempts"] = await context.StudentReadingAttempts.CountAsync(item => item.UserId == userId, cancellationToken),

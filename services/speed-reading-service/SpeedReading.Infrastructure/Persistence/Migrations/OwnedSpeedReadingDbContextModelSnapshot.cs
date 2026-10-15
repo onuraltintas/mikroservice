@@ -2764,6 +2764,25 @@ namespace SpeedReading.Infrastructure.Persistence.Migrations
                     b.ToTable("program_continuations", "speed_reading");
                 });
 
+            modelBuilder.Entity("SpeedReading.Domain.Programs.ProgramProgressionPolicy", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool?>("AllowEarlyAdvance")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UpdatedBy")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("UserId");
+
+                    b.ToTable("program_progression_policies", "speed_reading");
+                });
+
             modelBuilder.Entity("SpeedReading.Domain.Programs.ProgramTemplate", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2907,6 +2926,11 @@ namespace SpeedReading.Infrastructure.Persistence.Migrations
 
                     b.Property<int>("DaysCompleted")
                         .HasColumnType("integer");
+
+                    b.Property<int>("EarlyAdvanceDays")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
 
                     b.Property<int>("ExercisesCompleted")
                         .HasColumnType("integer");
