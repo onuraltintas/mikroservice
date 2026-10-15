@@ -112,6 +112,13 @@ export class ExercisesListComponent extends BaseComponent implements OnInit {
 
   processData(types: any[], exercises: Exercise[]): void {
     this.exercises = [];
+    if (this.authService.hasRole('Student')) {
+      const ageGroupId = this.authService.currentUserValue?.ageGroupId;
+      exercises = exercises.filter(exercise => {
+        const targetAgeGroupId = exercise.targetAgeGroupId ?? exercise.targetAgeGroupConfigurationId;
+        return !targetAgeGroupId || targetAgeGroupId === ageGroupId;
+      });
+    }
 
     // Group exercises by TypeId
     const exerciseGroups = new Map<string, Exercise[]>();

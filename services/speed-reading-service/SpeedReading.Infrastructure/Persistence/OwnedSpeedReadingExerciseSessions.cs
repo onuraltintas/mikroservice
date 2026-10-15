@@ -102,6 +102,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         string exerciseEngineType;
         string configurationJson;
         int difficultyLevel;
+        Guid? exerciseAgeGroupId = null;
         var assessmentOnly = false;
         if (assessmentSnapshot is not null)
         {
@@ -130,6 +131,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
             exerciseEngineType = exerciseType.EngineType;
             configurationJson = exercise.ConfigurationJson;
             difficultyLevel = exercise.DifficultyLevel;
+            exerciseAgeGroupId = exercise.TargetAgeGroupId;
             profileAgeGroupId ??= exercise.TargetAgeGroupId;
         }
 
@@ -351,6 +353,11 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                 exerciseTypeName,
                 exerciseEngineType,
                 parsedConfiguration);
+            if (assessmentSnapshot is null && requiresReadingText
+                && exerciseAgeGroupId.HasValue && profileAgeGroupId.HasValue
+                && exerciseAgeGroupId != profileAgeGroupId)
+                throw new BusinessRuleException("Exercise.AgeGroupMismatch",
+                    "Bu seviye profilinizin yaş grubuna ait değil. Egzersiz listesinden kendi yaş grubunuzdaki seviyeyi seçin.");
             if (assessmentSnapshot is null
                 && !readingTextId.HasValue
                 && requiresReadingText)
@@ -439,16 +446,9 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                     .ThenBy(_ => Guid.NewGuid())
                     .Select(item => (Guid?)item.Id)
                     .FirstOrDefaultAsync(token);
-                if (isGrouping && !readingTextId.HasValue)
-                    throw new InvalidOperationException("Seçilen yaş, seviye ve metin uzunluğuna uygun aktif metin bulunamadı.");
-                if (isRsvp && !readingTextId.HasValue)
-                    throw new InvalidOperationException("Seçilen RSVP seviyesine uygun aktif metin bulunamadı.");
-                if (isTextFade && !readingTextId.HasValue)
-                    throw new InvalidOperationException("Seçilen Metin Solma seviyesine uygun aktif metin bulunamadı.");
-                if (isRegression && !readingTextId.HasValue)
-                    throw new InvalidOperationException("Seçilen Regresyon Azaltma seviyesine uygun aktif metin bulunamadı.");
-                if (isSubvocalization && !readingTextId.HasValue)
-                    throw new InvalidOperationException("Seçilen İç Ses Azaltma seviyesine uygun aktif metin bulunamadı.");
+                if ((isGrouping || isRsvp || isTextFade || isRegression || isSubvocalization) && !readingTextId.HasValue)
+                    throw new BusinessRuleException("Exercise.ReadingTextUnavailable",
+                        "Bu yaş grubu ve seviyeye uygun yayımlanmış metin bulunamadı. Başka bir seviye seçin veya öğretmeninize bildirin.");
             }
 
             var state = await CreateSessionStateAsync(

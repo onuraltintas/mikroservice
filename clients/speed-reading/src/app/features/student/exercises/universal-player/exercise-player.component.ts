@@ -3775,7 +3775,8 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
                 this.showToast('Öğrenme yolu ilerlemesi kaydedilemedi. Lütfen tekrar deneyin.', 'error', 5000);
               }
             });
-        } else if (!incomplete && !isAssessmentMode && !isPracticeMode && !this.reviewItemId && this.exercise?.id) {
+        } else if (!incomplete && !isAssessmentMode && !isPracticeMode && !this.reviewItemId && this.exercise?.id
+          && this.dailySlotOrder && this.dailyProgramDay && this.dailyProgramProgressId) {
           this.completeDailyProgress(result, customData, isMeasured);
         }
       },
