@@ -160,8 +160,8 @@ public interface ISpeedReadingDailyProgress
 
 public static class SpeedReadingDailyProgressRules
 {
-    public static int GetAvailableDay(DateTime assignedAt, DateTime now, bool isStaffTraining) =>
-        isStaffTraining ? int.MaxValue : GetCalendarAvailableDay(assignedAt, now);
+    public static int GetAvailableDay(DateTime assignedAt, DateTime now, bool isStaffTraining, int earlyAdvanceDays = 0) =>
+        isStaffTraining ? int.MaxValue : checked(GetCalendarAvailableDay(assignedAt, now) + Math.Max(0, earlyAdvanceDays));
     public static int GetCalendarAvailableDay(DateTime assignedAt, DateTime now)
     {
         var zone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Istanbul");

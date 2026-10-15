@@ -10,8 +10,16 @@ namespace SpeedReading.API.Controllers;
 [ApiVersion(1.0)]
 [Route("api/speed-reading/daily-progress")]
 [Authorize]
-public sealed class DailyProgressController(ISpeedReadingDailyProgress dailyProgress) : ControllerBase
+public sealed class DailyProgressController(ISpeedReadingDailyProgress dailyProgress, ISpeedReadingProgramProgression progression) : ControllerBase
 {
+    [HttpGet("day-advance")]
+    [Authorize(Roles = "Student")]
+    public Task<ProgramDayAdvanceState> GetDayAdvance(CancellationToken cancellationToken) => progression.GetAdvanceStateAsync(GetCurrentUserId(), cancellationToken);
+
+    [HttpPost("advance-day")]
+    [Authorize(Roles = "Student")]
+    public Task<ProgramDayAdvanceState> AdvanceDay(AdvanceProgramDayRequest request, CancellationToken cancellationToken) => progression.AdvanceAsync(GetCurrentUserId(), request, cancellationToken);
+
     [HttpGet("today-exercises")]
     public async Task<ActionResult<IReadOnlyList<DailyExerciseSummary>>> GetTodayExercises(
         CancellationToken cancellationToken = default)

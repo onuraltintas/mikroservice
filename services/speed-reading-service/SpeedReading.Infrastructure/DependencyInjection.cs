@@ -136,6 +136,7 @@ public static class DependencyInjection
         services.AddScoped<ILegacySpeedReadingPrograms, OwnedSpeedReadingPrograms>();
         services.AddScoped<ISpeedReadingProgramAdminWriter, OwnedSpeedReadingProgramAdminWriter>();
         services.AddScoped<ISpeedReadingDailyProgress, OwnedSpeedReadingDailyProgress>();
+        services.AddScoped<ISpeedReadingProgramProgression, OwnedSpeedReadingProgramProgression>();
         services.AddScoped<ISpeedReadingAgeGroups, OwnedSpeedReadingAgeGroups>();
         services.AddScoped<ISpeedReadingStudentProgram, OwnedSpeedReadingStudentProgram>();
         services.AddScoped<ISpeedReadingAssessment, OwnedSpeedReadingAssessment>();

@@ -40,7 +40,7 @@ internal sealed class OwnedSpeedReadingDailyProgress(
 
         var (week, day) = SpeedReadingDailyProgressRules.GetWeekAndDay(
             Math.Min(((program.Value.Progress.CurrentWeek - 1) * 7) + program.Value.Progress.CurrentDay,
-                SpeedReadingDailyProgressRules.GetAvailableDay(program.Value.Progress.AssignedDate, DateTime.UtcNow, program.Value.Progress.IsStaffTraining)));
+                SpeedReadingDailyProgressRules.GetAvailableDay(program.Value.Progress.AssignedDate, DateTime.UtcNow, program.Value.Progress.IsStaffTraining, program.Value.Progress.EarlyAdvanceDays)));
         return await BuildExercisesAsync(
             userId,
             program.Value.Progress,
@@ -61,7 +61,7 @@ internal sealed class OwnedSpeedReadingDailyProgress(
         var currentProgramDay = ((program.Value.Progress.CurrentWeek - 1) * 7) + program.Value.Progress.CurrentDay;
         var visibleDay = program.Value.Progress.IsActive
             ? Math.Min(currentProgramDay,
-                SpeedReadingDailyProgressRules.GetAvailableDay(program.Value.Progress.AssignedDate, DateTime.UtcNow, program.Value.Progress.IsStaffTraining))
+                SpeedReadingDailyProgressRules.GetAvailableDay(program.Value.Progress.AssignedDate, DateTime.UtcNow, program.Value.Progress.IsStaffTraining, program.Value.Progress.EarlyAdvanceDays))
             : currentProgramDay;
         if (dayNumber > visibleDay)
             return [];
@@ -127,7 +127,7 @@ internal sealed class OwnedSpeedReadingDailyProgress(
         db.StudentProgramProgresses.Attach(progress);
         var now = DateTime.UtcNow;
         if (((progress.CurrentWeek - 1) * 7) + progress.CurrentDay
-            > SpeedReadingDailyProgressRules.GetAvailableDay(progress.AssignedDate, now, progress.IsStaffTraining))
+            > SpeedReadingDailyProgressRules.GetAvailableDay(progress.AssignedDate, now, progress.IsStaffTraining, progress.EarlyAdvanceDays))
             throw new BusinessRuleException("DailyProgress.DayLocked", "Sonraki program günü yarın açılacak.");
         var (week, day) = SpeedReadingDailyProgressRules.GetWeekAndDay(
             ((progress.CurrentWeek - 1) * 7) + progress.CurrentDay);
@@ -612,7 +612,7 @@ internal sealed class OwnedSpeedReadingDailyProgress(
             program.Value.Progress.Id,
             SpeedReadingDailyProgressRules.GetWeekAndDay(Math.Min(
                 ((program.Value.Progress.CurrentWeek - 1) * 7) + program.Value.Progress.CurrentDay,
-                SpeedReadingDailyProgressRules.GetAvailableDay(program.Value.Progress.AssignedDate, DateTime.UtcNow, program.Value.Progress.IsStaffTraining))).Day,
+                SpeedReadingDailyProgressRules.GetAvailableDay(program.Value.Progress.AssignedDate, DateTime.UtcNow, program.Value.Progress.IsStaffTraining, program.Value.Progress.EarlyAdvanceDays))).Day,
             program.Value.Progress.DaysCompleted,
             program.Value.Progress.ExercisesCompleted,
             logs.Count,
@@ -623,7 +623,7 @@ internal sealed class OwnedSpeedReadingDailyProgress(
             results.Count == 0 ? 0 : results.Average(item => item.ComprehensionScore),
             SpeedReadingDailyProgressRules.GetWeekAndDay(Math.Min(
                 ((program.Value.Progress.CurrentWeek - 1) * 7) + program.Value.Progress.CurrentDay,
-                SpeedReadingDailyProgressRules.GetAvailableDay(program.Value.Progress.AssignedDate, DateTime.UtcNow, program.Value.Progress.IsStaffTraining))).Week);
+                SpeedReadingDailyProgressRules.GetAvailableDay(program.Value.Progress.AssignedDate, DateTime.UtcNow, program.Value.Progress.IsStaffTraining, program.Value.Progress.EarlyAdvanceDays))).Week);
     }
 
     public async Task<WeeklyProgressSummary> GetWeeklyStatsAsync(
@@ -791,7 +791,7 @@ internal sealed class OwnedSpeedReadingDailyProgress(
         return result;
     }
 
-    private static DailyExerciseLog? FindCompletedSlot(
+    internal static DailyExerciseLog? FindCompletedSlot(
         ScheduledProgramExercise slot,
         IReadOnlyList<ScheduledProgramExercise> slots,
         IReadOnlyList<DailyExerciseLog> logs) => logs

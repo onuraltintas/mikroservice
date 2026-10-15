@@ -26,6 +26,7 @@ public sealed class StudentProgramProgress : AggregateRoot
     public int AdaptiveDifficultyOffset { get; private set; }
     public string? ScheduleJson { get; private set; }
     public bool IsStaffTraining { get; private set; }
+    public int EarlyAdvanceDays { get; private set; }
     public int DaysCompleted { get; private set; }
     public int ExercisesCompleted { get; private set; }
     public DateTime? LastCompletionDate { get; private set; }
@@ -136,6 +137,7 @@ public sealed class StudentProgramProgress : AggregateRoot
 
         CurrentDay = 1;
         CurrentWeek = 1;
+        EarlyAdvanceDays = 0;
         AdaptiveDifficultyOffset = 0;
         DaysCompleted = 0;
         ExercisesCompleted = 0;
@@ -284,6 +286,15 @@ public sealed class StudentProgramProgress : AggregateRoot
             oldDay,
             oldWeek,
             oldDifficultyLevel);
+    }
+
+    public void GrantEarlyDays(int days, Guid actorId, DateTime at)
+    {
+        if (days <= 0 || actorId == Guid.Empty)
+            throw new ArgumentException("Positive early days and a valid actor are required.");
+        EarlyAdvanceDays = checked(EarlyAdvanceDays + days);
+        UpdatedAt = EnsureUtc(at);
+        UpdatedBy = actorId.ToString();
     }
 
     private static int CalculateNextStreak(

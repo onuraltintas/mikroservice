@@ -311,7 +311,7 @@ internal sealed class OwnedSpeedReadingStudentProgram(OwnedSpeedReadingDbContext
         var programTypeName = row.Template.ProgramType == 1 ? "Sınav Hazırlık" : "Standart Program";
         var visibleDay = row.Progress.IsActive && !row.Progress.CompletedDate.HasValue
             ? Math.Min(((row.Progress.CurrentWeek - 1) * 7) + row.Progress.CurrentDay,
-                SpeedReading.Application.DailyProgress.SpeedReadingDailyProgressRules.GetAvailableDay(row.Progress.AssignedDate, DateTime.UtcNow, row.Progress.IsStaffTraining))
+                SpeedReading.Application.DailyProgress.SpeedReadingDailyProgressRules.GetAvailableDay(row.Progress.AssignedDate, DateTime.UtcNow, row.Progress.IsStaffTraining, row.Progress.EarlyAdvanceDays))
             : ((row.Progress.CurrentWeek - 1) * 7) + row.Progress.CurrentDay;
         var (week, day) = SpeedReading.Application.DailyProgress.SpeedReadingDailyProgressRules.GetWeekAndDay(Math.Max(visibleDay, 1));
         return new StudentProgramInfo(

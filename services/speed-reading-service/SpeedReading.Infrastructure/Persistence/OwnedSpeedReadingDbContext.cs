@@ -43,6 +43,7 @@ public sealed class OwnedSpeedReadingDbContext(
     public DbSet<AgeGroupConfiguration> AgeGroupConfigurations => Set<AgeGroupConfiguration>();
     public DbSet<ProgramTemplate> ProgramTemplates => Set<ProgramTemplate>();
     public DbSet<StudentProgramProgress> StudentProgramProgresses => Set<StudentProgramProgress>();
+    public DbSet<ProgramProgressionPolicy> ProgramProgressionPolicies => Set<ProgramProgressionPolicy>();
     public DbSet<ProgramContinuation> ProgramContinuations => Set<ProgramContinuation>();
     public DbSet<DailyExerciseLog> DailyExerciseLogs => Set<DailyExerciseLog>();
     public DbSet<SpeedReadingUserProfile> UserProfiles => Set<SpeedReadingUserProfile>();
@@ -200,6 +201,12 @@ public sealed class OwnedSpeedReadingDbContext(
         ConfigureEntity(modelBuilder.Entity<AgeGroupConfiguration>());
         ConfigureEntity(modelBuilder.Entity<ProgramTemplate>());
         ConfigureEntity(modelBuilder.Entity<StudentProgramProgress>());
+        modelBuilder.Entity<ProgramProgressionPolicy>(entity =>
+        {
+            entity.ToTable("program_progression_policies");
+            entity.HasKey(item => item.UserId);
+            entity.Property(item => item.UserId).ValueGeneratedNever();
+        });
         modelBuilder.Entity<ProgramContinuation>(entity =>
         {
             entity.ToTable("program_continuations");
@@ -1487,6 +1494,7 @@ public sealed class OwnedSpeedReadingDbContext(
             entity.ToTable("student_program_progress");
             entity.Property(item => item.ScheduleJson).HasColumnType("jsonb");
             entity.Property(item => item.IsStaffTraining).HasColumnName("is_staff_training");
+            entity.Property(item => item.EarlyAdvanceDays).HasDefaultValue(0);
             entity.Property(item => item.AverageSuccessRate).HasPrecision(5, 2);
             entity.HasIndex(item => new { item.UserId, item.IsActive, item.AssignedDate });
             entity.HasIndex(item => item.UserId)
