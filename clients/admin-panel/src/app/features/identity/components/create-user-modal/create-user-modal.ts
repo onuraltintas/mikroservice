@@ -130,18 +130,17 @@ import { productRoleLabel } from '../../../../core/services/user-product-roles';
                                 @if (f.role.value === 'SystemAdmin') {
                                     <p class="text-sm text-gray-600 dark:text-gray-300">Sistem yöneticisi tüm servislerde geçerli genel bir roldür. Bu işlem ayrıca servis erişimi veya abonelik oluşturmaz.</p>
                                 } @else {
-                                    <div class="group">
-                                        <label for="new-user-product" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Servis</label>
-                                        <select id="new-user-product" formControlName="product" aria-required="true" [class.border-red-500]="form.hasError('productRequired') && f.product.touched" class="block w-full rounded-lg border-gray-300 shadow-sm p-2.5 dark:bg-gray-800 dark:border-gray-600 dark:text-white">
-                                            <option [ngValue]="null">Servis seçin</option>
-                                            <option [ngValue]="1">Koçluk</option>
-                                            <option [ngValue]="2">Hızlı Okuma</option>
-                                        </select>
-                                        @if (form.hasError('productRequired') && f.product.touched) {
-                                            <p role="alert" class="mt-1 text-xs text-red-500">Lütfen Koçluk veya Hızlı Okuma servisini seçin.</p>
+                                    <fieldset class="group">
+                                        <legend class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Servisler</legend>
+                                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                            <label class="flex items-center gap-3 rounded-lg border border-gray-300 p-3 text-sm text-gray-900 dark:border-gray-600 dark:text-white cursor-pointer"><input type="checkbox" formControlName="coaching" class="h-4 w-4 rounded accent-blue-600">Koçluk</label>
+                                            <label class="flex items-center gap-3 rounded-lg border border-gray-300 p-3 text-sm text-gray-900 dark:border-gray-600 dark:text-white cursor-pointer"><input type="checkbox" formControlName="speedReading" class="h-4 w-4 rounded accent-blue-600">Hızlı Okuma</label>
+                                        </div>
+                                        @if (form.hasError('productRequired') && (f.coaching.touched || f.speedReading.touched)) {
+                                            <p role="alert" class="mt-1 text-xs text-red-500">En az bir servis seçin. İkisini birlikte seçebilirsiniz.</p>
                                         }
-                                        <p class="mt-2 text-xs text-gray-500">Hesap yalnızca seçilen serviste yetkilendirilir. Abonelik ve kurum bağlantısı ayrıca yönetilir.</p>
-                                    </div>
+                                        <p class="mt-2 text-xs text-gray-500">Tek hesap ve ortak parola kullanılır. Seçtiğiniz rol her servise ayrı atanır; roller, abonelikler ve kurum bağlantıları servis bazında ayrıca yönetilir.</p>
+                                    </fieldset>
                                 }
                             </div>
                         </form>
@@ -231,8 +230,9 @@ export class CreateUserModalComponent implements OnInit {
     email: ['', [Validators.required, Validators.email]],
     phoneNumber: ['', [Validators.pattern('^[+]*[(]{0,1}[0-9]{1,4}[)]{0,1}[-\\s\\./0-9]*$')]],
     role: ['Student', Validators.required],
-    product: this.fb.control<1 | 2 | null>(null)
-  }, { validators: form => form.get('role')?.value === 'SystemAdmin' || [1, 2].includes(form.get('product')?.value)
+    coaching: this.fb.nonNullable.control(false),
+    speedReading: this.fb.nonNullable.control(false)
+  }, { validators: form => form.get('role')?.value === 'SystemAdmin' || form.get('coaching')?.value || form.get('speedReading')?.value
       ? null : { productRequired: true } });
 
   // Getter for easy template access
@@ -274,8 +274,15 @@ export class CreateUserModalComponent implements OnInit {
     this.error.set(null);
 
     const val = this.form.value;
-    const product = val.role === 'SystemAdmin' ? null : val.product!;
-    const scope = productRoleLabel({ role: val.role!, product: product === 1 ? 'coaching' : product === 2 ? 'speed-reading' : null });
+    const products: (1 | 2)[] = [];
+    if (val.role !== 'SystemAdmin') {
+      if (val.coaching) products.push(1);
+      if (val.speedReading) products.push(2);
+    }
+    // Older servers reject dual selection instead of silently creating only one service.
+    const product = products.length === 1 ? products[0] : null;
+    const scope = products.length ? products.map(product => productRoleLabel({ role: val.role!, product: product === 1 ? 'coaching' : 'speed-reading' })).join(' / ')
+      : productRoleLabel({ role: val.role!, product: null });
 
     this.identityService.createUser({
       firstName: val.firstName!,
@@ -283,7 +290,8 @@ export class CreateUserModalComponent implements OnInit {
       email: val.email!,
       phoneNumber: val.phoneNumber!,
       role: val.role!,
-      product
+      product,
+      products
     }).subscribe({
       next: () => {
         this.loading.set(false);

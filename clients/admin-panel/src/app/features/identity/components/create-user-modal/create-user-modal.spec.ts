@@ -72,7 +72,7 @@ describe('CreateUserModalComponent', () => {
       email: 'test@example.com',
       phoneNumber: '',
       role: 'Student',
-      product: 1
+      coaching: true, speedReading: false
     });
     component.save();
 
@@ -98,32 +98,50 @@ describe('CreateUserModalComponent', () => {
     expect(component.form.invalid).toBe(true);
   });
 
-  it.each(['Student', 'Teacher', 'InstitutionAdmin', 'InstitutionOwner'].flatMap(role => [1, 2].map(product => ({ role, product }))))(
+  it.each(['Student', 'Teacher', 'InstitutionAdmin', 'InstitutionOwner'].flatMap(role => [1, 2, 0].map(product => ({ role, product }))))(
     'creates $role in service $product and preserves its selection on error', ({ role, product }) => {
       TestBed.configureTestingModule({ imports: [CreateUserModalComponent], providers: [provideHttpClient(), provideHttpClientTesting(),
         { provide: ToasterService, useValue: { success: vi.fn(), error: vi.fn() } }] });
       const component = TestBed.createComponent(CreateUserModalComponent).componentInstance;
-      component.form.patchValue({ firstName: 'Test', lastName: 'User', email: 'user@example.test', role, product: product as 1 | 2 });
+      component.form.patchValue({ firstName: 'Test', lastName: 'User', email: 'user@example.test', role, coaching: product === 1 || product === 0, speedReading: product === 2 || product === 0 });
       component.save();
       component.save();
       const http = TestBed.inject(HttpTestingController);
       const request = http.expectOne('/api/users');
-      expect(request.request.body).toMatchObject({ role, product });
+      expect(request.request.body).toMatchObject({ role, product: product === 0 ? null : product, products: product === 0 ? [1, 2] : [product] });
       request.flush({ message: 'Test error' }, { status: 400, statusText: 'Bad request' });
-      expect(component.form.value.product).toBe(product);
+      expect(component.form.value.coaching).toBe(product === 1 || product === 0);
+      expect(component.form.value.speedReading).toBe(product === 2 || product === 0);
       expect(component.createdUser()).toBeNull();
       expect(component.loading()).toBe(false);
       http.verify();
     });
 
+  it('confirms both independently scoped roles after a dual-service creation', () => {
+    TestBed.configureTestingModule({ imports: [CreateUserModalComponent], providers: [provideHttpClient(), provideHttpClientTesting(),
+      { provide: ToasterService, useValue: { success: vi.fn(), error: vi.fn() } }] });
+    const fixture = TestBed.createComponent(CreateUserModalComponent);
+    const component = fixture.componentInstance;
+    component.form.patchValue({ firstName: 'Test', lastName: 'Student', email: 'dual@example.test', role: 'Student', coaching: true, speedReading: true });
+    component.save();
+    const http = TestBed.inject(HttpTestingController);
+    http.expectOne('/api/users').flush({ userId: 'dual-1' });
+    fixture.detectChanges();
+    expect(component.createdUser()?.scope).toBe('Student · Koçluk / Student · Hızlı Okuma');
+    expect(fixture.nativeElement.textContent).toContain('Student · Koçluk / Student · Hızlı Okuma');
+    http.expectOne('/api/users/roles').flush(['Student']);
+    http.verify();
+  });
+
   it('creates SystemAdmin globally without granting the previously selected service', () => {
     TestBed.configureTestingModule({ imports: [CreateUserModalComponent], providers: [provideHttpClient(), provideHttpClientTesting(),
       { provide: ToasterService, useValue: { success: vi.fn(), error: vi.fn() } }] });
     const component = TestBed.createComponent(CreateUserModalComponent).componentInstance;
-    component.form.patchValue({ firstName: 'Test', lastName: 'Admin', email: 'admin@example.test', role: 'SystemAdmin', product: 2 });
+    component.form.patchValue({ firstName: 'Test', lastName: 'Admin', email: 'admin@example.test', role: 'SystemAdmin', coaching: true, speedReading: true });
     component.save();
     const http = TestBed.inject(HttpTestingController);
     const request = http.expectOne('/api/users');
+    expect(request.request.body.products).toEqual([]);
     expect(request.request.body.product).toBeNull();
     request.flush({ userId: 'admin-1' });
     expect(component.createdUser()?.scope).toBe('SystemAdmin · Tüm servisler');

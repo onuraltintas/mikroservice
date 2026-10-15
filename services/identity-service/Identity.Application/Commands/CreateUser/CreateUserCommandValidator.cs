@@ -24,8 +24,12 @@ public class CreateUserCommandValidator : AbstractValidator<CreateUserCommand>
             .WithMessage("Rol seçimi zorunludur.")
             .MaximumLength(50).WithMessage("Rol en fazla 50 karakter olabilir.");
 
-        RuleFor(x => x.Product)
-            .Must(product => product is Identity.Domain.Enums.PlatformProduct.Coaching or Identity.Domain.Enums.PlatformProduct.SpeedReading)
+        RuleFor(x => x)
+            .Must(request =>
+            {
+                var products = request.Products ?? (request.Product is { } product ? [product] : []);
+                return products.Length > 0 && products.All(product => product is Identity.Domain.Enums.PlatformProduct.Coaching or Identity.Domain.Enums.PlatformProduct.SpeedReading);
+            })
             .When(x => !string.Equals(x.Role?.Trim(), "SystemAdmin", StringComparison.OrdinalIgnoreCase))
             .WithMessage("Koçluk veya Hızlı Okuma servisi seçilmelidir.");
 

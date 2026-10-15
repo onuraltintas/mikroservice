@@ -62,11 +62,15 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, Resul
         if (hasBuiltInRole)
             roleName = parsedRole.ToString();
 
-        var product = userRole == UserRoleType.SystemAdmin ? null : request.Product;
-        if (userRole != UserRoleType.SystemAdmin && product is not (PlatformProduct.Coaching or PlatformProduct.SpeedReading))
+        PlatformProduct[] products = userRole == UserRoleType.SystemAdmin ? []
+            : request.Products ?? (request.Product is { } legacyProduct ? [legacyProduct] : []);
+        if (userRole != UserRoleType.SystemAdmin && (products.Length == 0
+            || products.Any(product => product is not (PlatformProduct.Coaching or PlatformProduct.SpeedReading))))
         {
             return Result.Failure<CreateUserResponse>(new Error("Auth.InvalidProduct", "Koçluk veya Hızlı Okuma servisi seçilmelidir."));
         }
+        products = products.Distinct().Order().ToArray();
+        PlatformProduct? product = products.Length == 0 ? null : products[0];
 
         if (userRole == UserRoleType.SystemAdmin
             && !_currentUserService.Roles.Any(role =>
@@ -100,7 +104,7 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, Resul
         // 4. Create Profile based on Role
         try 
         {
-            if (product is { } selectedProduct)
+            if (product.HasValue)
             {
                 var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
                 if (user is null)
@@ -108,13 +112,19 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, Resul
                     throw new InvalidOperationException("Provisioned user was not found in the Identity database.");
                 }
 
-                if (user.GrantProductAccess(
-                    selectedProduct,
-                    UserProductAccessSource.Admin,
-                    _currentUserService.UserId,
-                    DateTimeOffset.UtcNow))
+                var roleId = user.Roles.Single(role => role.Product == product).RoleId;
+                foreach (var selectedProductScope in products)
                 {
-                    _userRepository.TrackProductAccessIfNew(user, selectedProduct);
+                    if (selectedProductScope != product)
+                        user.AddRole(new Identity.Domain.Entities.UserRole(userId, roleId, selectedProductScope));
+                    if (user.GrantProductAccess(
+                        selectedProductScope,
+                        UserProductAccessSource.Admin,
+                        _currentUserService.UserId,
+                        DateTimeOffset.UtcNow))
+                    {
+                        _userRepository.TrackProductAccessIfNew(user, selectedProductScope);
+                    }
                 }
             }
 
@@ -151,7 +161,18 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, Resul
         catch (Exception ex)
         {
              _logger.LogError(ex, "User profile provisioning failed for {UserId}.", userId);
-             await _identityService.DeleteUserAsync(userId, cancellationToken);
+             _unitOfWork.ClearTracking();
+             using var cleanupTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+             try
+             {
+                 var cleanup = await _identityService.DeleteUserAsync(userId, cleanupTimeout.Token);
+                 if (cleanup.IsFailure)
+                     _logger.LogError("New account cleanup failed for {UserId}: {Code}", userId, cleanup.Error.Code);
+             }
+             catch (Exception cleanupException)
+             {
+                 _logger.LogError(cleanupException, "New account cleanup failed for {UserId}.", userId);
+             }
              return Result.Failure<CreateUserResponse>(new Error("CreateUser.Failed", "Kullanıcı oluşturulamadı. Lütfen daha sonra tekrar deneyin."));
         }
     }

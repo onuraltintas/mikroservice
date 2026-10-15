@@ -118,6 +118,7 @@ export interface CreateUserRequest {
     role: string;
     phoneNumber?: string;
     product: 1 | 2 | null;
+    products?: (1 | 2)[];
 }
 
 export interface CreateUserResponse {

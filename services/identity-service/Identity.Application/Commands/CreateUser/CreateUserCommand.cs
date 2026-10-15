@@ -15,4 +15,5 @@ public record CreateUserCommand(
 ) : IRequest<Result<CreateUserResponse>>
 {
     public PlatformProduct? Product { get; init; } = PlatformProduct.Coaching;
+    public PlatformProduct[]? Products { get; init; }
 }

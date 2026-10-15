@@ -39,6 +39,55 @@ public sealed class AdminUserProductProvisioningTests
     }
 
     [Theory]
+    [InlineData("Student", 1, 0)]
+    [InlineData("Teacher", 0, 1)]
+    [InlineData("InstitutionAdmin", 0, 0)]
+    [InlineData("InstitutionOwner", 0, 0)]
+    public async Task Both_services_share_one_account_but_have_distinct_role_and_access_records(string role, int students, int teachers)
+    {
+        var fixture = new Fixture();
+        var command = Command(role, null) with { Products = [PlatformProduct.SpeedReading, PlatformProduct.Coaching, PlatformProduct.SpeedReading] };
+        Assert.True((await fixture.Handler.Handle(command, CancellationToken.None)).IsSuccess);
+        Assert.Equal(1, fixture.Identity.RegisterCount);
+        Assert.Equal(PlatformProduct.Coaching, fixture.Identity.Product);
+        var user = fixture.Users.User;
+        Assert.Equal(2, user.ProductAccesses.Count);
+        Assert.Equal(2, user.Roles.Count);
+        Assert.Equal(user.Roles.First().RoleId, user.Roles.Last().RoleId);
+        Assert.Equal(2, user.Roles.Select(r => r.Product).Distinct().Count());
+        Assert.Equal(students, fixture.Students.AddCount);
+        Assert.Equal(teachers, fixture.Teachers.AddCount);
+        Assert.Equal(1, fixture.Publisher.PublishCount);
+        Assert.Equal("coaching", fixture.Publisher.Event!.Product);
+        user.RemoveRole(user.Roles.First().RoleId, PlatformProduct.Coaching);
+        Assert.Equal(PlatformProduct.SpeedReading, Assert.Single(user.Roles).Product);
+        Assert.True(user.HasProductAccess(PlatformProduct.SpeedReading));
+    }
+
+    [Theory]
+    [InlineData(new int[] { })]
+    [InlineData(new[] { 1, 3 })]
+    [InlineData(new[] { 2, 99 })]
+    public async Task Invalid_explicit_service_lists_do_not_fall_back_to_legacy_product(int[] values)
+    {
+        var fixture = new Fixture();
+        var command = Command("Student", PlatformProduct.Coaching) with { Products = values.Select(v => (PlatformProduct)v).ToArray() };
+        Assert.False((await new CreateUserCommandValidator().ValidateAsync(command)).IsValid);
+        Assert.True((await fixture.Handler.Handle(command, CancellationToken.None)).IsFailure);
+        Assert.Equal(0, fixture.Identity.RegisterCount);
+    }
+
+    [Fact]
+    public async Task Explicit_service_list_takes_precedence_over_legacy_product()
+    {
+        var fixture = new Fixture();
+        var command = Command("Teacher", PlatformProduct.Coaching) with { Products = [PlatformProduct.SpeedReading] };
+        Assert.True((await fixture.Handler.Handle(command, CancellationToken.None)).IsSuccess);
+        Assert.Equal(PlatformProduct.SpeedReading, fixture.Identity.Product);
+        Assert.False(fixture.Users.User.HasProductAccess(PlatformProduct.Coaching));
+    }
+
+    [Theory]
     [InlineData(null)]
     [InlineData((PlatformProduct)0)]
     [InlineData(PlatformProduct.CourseManagement)]
@@ -113,6 +162,7 @@ public sealed class AdminUserProductProvisioningTests
             var users = DispatchProxy.Create<IUserRepository, UsersProxy>();
             Users = (UsersProxy)(object)users;
             Identity.UserId = Users.User.Id;
+            Identity.User = Users.User;
             var students = DispatchProxy.Create<IStudentRepository, ProfileProxy>();
             Students = (ProfileProxy)(object)students;
             var teachers = DispatchProxy.Create<ITeacherRepository, ProfileProxy>();
@@ -126,6 +176,7 @@ public sealed class AdminUserProductProvisioningTests
     public class IdentityProxy : DispatchProxy
     {
         public Guid UserId { get; set; }
+        public User User { get; set; } = null!;
         public PlatformProduct? Product { get; private set; }
         public string? Role { get; private set; }
         public int RegisterCount { get; private set; }
@@ -135,6 +186,7 @@ public sealed class AdminUserProductProvisioningTests
             if (method!.Name == nameof(IIdentityService.RegisterUserWithRoleAsync))
             {
                 RegisterCount++; Role = (string)args![3]!; Product = (PlatformProduct?)args[4];
+                User.AddRole(new Identity.Domain.Entities.UserRole(UserId, Guid.NewGuid(), Product));
                 return Task.FromResult(Result.Success(new ProvisionedUser(UserId, "one-time-setup-token", DateTime.UtcNow.AddHours(1))));
             }
             if (method.Name == nameof(IIdentityService.DeleteUserAsync)) { DeleteCount++; return Task.FromResult(Result.Success()); }
@@ -166,10 +218,11 @@ public sealed class AdminUserProductProvisioningTests
     {
         public UserCreatedEvent? Event { get; private set; }
         public bool Fail { get; set; }
+        public int PublishCount { get; private set; }
         protected override object? Invoke(MethodInfo? method, object?[]? args)
         {
             if (Fail) throw new InvalidOperationException("Test publication failure");
-            Event = Assert.IsType<UserCreatedEvent>(args![0]); return Task.CompletedTask;
+            PublishCount++; Event = Assert.IsType<UserCreatedEvent>(args![0]); return Task.CompletedTask;
         }
     }
     public class UnitOfWorkProxy : DispatchProxy
