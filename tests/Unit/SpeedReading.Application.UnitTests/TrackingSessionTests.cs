@@ -4,6 +4,7 @@ using EduPlatform.Shared.Kernel.Exceptions;
 using Microsoft.EntityFrameworkCore;
 using SpeedReading.Application.ExerciseSessions;
 using SpeedReading.Domain.Catalog;
+using SpeedReading.Domain.Assignments;
 using SpeedReading.Infrastructure.Persistence;
 
 namespace SpeedReading.Application.UnitTests;
@@ -29,7 +30,10 @@ public sealed class TrackingSessionTests
         var implementation = typeof(OwnedSpeedReadingDbContext).Assembly.GetType("SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingExerciseSessions")!;
         var service = (ISpeedReadingExerciseSessions)Activator.CreateInstance(implementation,
             BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, [db], null)!;
-        var start = await service.StartAsync(student, new() { ExerciseId = exercise.Id });
+        var assignment = Assignment.Create(Guid.NewGuid(), exercise.Id, null, "Takip ödevi", "", DateTime.UtcNow.AddDays(1));
+        var studentAssignment = StudentAssignment.Assign(assignment.Id, student);
+        db.Assignments.Add(assignment); db.StudentAssignments.Add(studentAssignment); await db.SaveChangesAsync();
+        var start = await service.StartAsync(student, new() { ExerciseId = exercise.Id, StudentAssignmentId = studentAssignment.Id });
         Assert.Equal("tracking", start.InitialData.GetProperty("textStreamMode").GetString());
         await Assert.ThrowsAsync<BusinessRuleException>(() => service.CompleteAsync(student, start.SessionId, new()));
         Assert.True((await service.ValidateActionAsync(student, start.SessionId, new() { Action = "tracking_start" })).IsValid);
@@ -45,7 +49,12 @@ public sealed class TrackingSessionTests
         var result = await service.CompleteAsync(student, start.SessionId, new());
         Assert.Equal("NotMeasured", result.MeasurementStatus);
         Assert.Null(result.RawWPM); Assert.Null(result.WordsRead); Assert.Null(result.WeightedKDP);
+        Assert.True(studentAssignment.IsCompleted);
+        Assert.NotNull(studentAssignment.ResultId);
+        Assert.Null(studentAssignment.Score);
+        Assert.Null(studentAssignment.KeyPerformanceMetric);
         await service.CompleteAsync(student, start.SessionId, new());
         Assert.Equal(1, await db.ExerciseSessionResults.CountAsync());
+        Assert.Null((await db.StudentAssignments.SingleAsync()).Score);
     }
 }

@@ -37,6 +37,7 @@ describe('SpeedReadingAssignmentManagementComponent', () => {
       items: [{ id: 'exercise-1', title: 'Metin çalışması', exerciseTypeId: 'type-1' }], totalCount: 1, pageNumber: 1, pageSize: 100,
     });
     fixture.componentInstance.selectedExerciseId = 'exercise-1';
+    fixture.componentInstance.dueDate = '2026-10-16';
     fixture.componentInstance.toggleStudent('student-1', true);
     fixture.componentInstance.submitAssignment();
 
@@ -47,6 +48,7 @@ describe('SpeedReadingAssignmentManagementComponent', () => {
       readingTextId: null,
       studentIds: ['student-1'],
       title: 'Haftalık okuma',
+      dueDate: '2026-10-16T20:59:59.000Z',
     });
     request.flush('assignment-1');
     http.expectOne(candidate => candidate.url === '/api/speed-reading/assignments/teacher-assignments').flush({
@@ -85,6 +87,7 @@ describe('SpeedReadingAssignmentManagementComponent', () => {
       items: [{ id: 'exercise-1', title: 'Metin çalışması', exerciseTypeId: 'type-1' }], totalCount: 1, pageNumber: 1, pageSize: 100,
     });
     fixture.componentInstance.selectedExerciseId = 'exercise-1';
+    fixture.componentInstance.dueDate = '2026-12-31';
     fixture.componentInstance.toggleStudent('student-1', true);
     fixture.componentInstance.submitAssignment();
 
@@ -92,6 +95,7 @@ describe('SpeedReadingAssignmentManagementComponent', () => {
     expect(request.request.method).toBe('POST');
     expect(request.request.body).toMatchObject({
       teacherId: 'teacher-1', exerciseId: 'exercise-1', studentIds: ['student-1'],
+      dueDate: '2026-12-31T20:59:59.000Z',
     });
     request.flush('assignment-1');
     http.expectOne(candidate => candidate.url === '/api/speed-reading/institutions/institution-1/assignments').flush({
