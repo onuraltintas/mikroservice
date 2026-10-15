@@ -2067,7 +2067,7 @@
                             <div class="answer-question">{{ i + 1 }}. {{ answer.questionText }}</div>
                             <div class="answer-details">
                                 <span class="user-answer" [class.wrong]="!answer.isCorrect">
-                                    Cevabınız: {{ answer.selectedAnswer || 'Cüre Doldu' }}
+                                    Cevabınız: {{ answer.selectedAnswer || answer.userAnswer || 'Yanıt verilmedi' }}
                                 </span>
                                 <span class="correct-answer" *ngIf="!answer.isCorrect">
                                     Doğru: {{ answer.correctAnswer }}
