@@ -134,6 +134,9 @@ try {
         Check(!events.Values.Any(e => e.Email == failedEmail), "Failed provisioning emitted a setup event");
     }
     await using (var sql = await source.OpenConnectionAsync()) {
+        await using var pending = new NpgsqlCommand("SELECT count(*) FROM identity.\"OutboxMessage\" WHERE \"Body\" LIKE @email", sql);
+        pending.Parameters.AddWithValue("email", "%" + failedEmail + "%");
+        Check(Convert.ToInt64(await pending.ExecuteScalarAsync()) == 0, "Failed provisioning left a pending setup event in the database outbox");
         await using var command = new NpgsqlCommand("DROP TRIGGER admin_dual_fail_role ON identity.\"UserRoles\"; DROP FUNCTION identity.admin_dual_fail_role();", sql);
         await command.ExecuteNonQueryAsync();
     }
@@ -164,6 +167,7 @@ try {
     var legacyResult = await legacy.Content.ReadFromJsonAsync<JsonElement>();
     Check(legacyResult.GetProperty("succeeded").GetInt32() == 1, "Legacy bulk import failed");
     checks.Add("legacy-bulk-constructor-compatible");
+    Check(!events.Values.Any(e => e.Email == failedEmail), "Failed provisioning event appeared after broker delivery delay");
     Console.WriteLine(JsonSerializer.Serialize(new { passed = checks.Count, checks }));
 }
 finally { await bus.StopAsync(); }
