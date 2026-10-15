@@ -11,6 +11,7 @@ import { RoleManagementModalComponent } from '../../components/role-management-m
 import { AuthService, hasRequiredAccess } from '../../../../core/auth/auth.service';
 import { ADMIN_PERMISSIONS } from '../../../../core/auth/permissions';
 import { getAdminErrorMessage } from '../../../../core/auth/admin-error-message';
+import { productRoleLabel, userProductRoles } from '../../../../core/services/user-product-roles';
 
 @Component({
   selector: 'app-user-list',
@@ -20,6 +21,8 @@ import { getAdminErrorMessage } from '../../../../core/auth/admin-error-message'
   styleUrls: ['./user-list.scss']
 })
 export class UserListComponent {
+  readonly userProductRoles = userProductRoles;
+  readonly productRoleLabel = productRoleLabel;
   private identityService = inject(IdentityService);
   private toaster = inject(ToasterService);
   private platformId = inject(PLATFORM_ID);

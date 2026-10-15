@@ -11,6 +11,7 @@ import {
 } from '../../../core/services/identity.service';
 import { ToasterService } from '../../../core/services/toaster.service';
 import { getAdminErrorMessage } from '../../../core/auth/admin-error-message';
+import { productRoleLabel, RoleProduct, userProductRoles } from '../../../core/services/user-product-roles';
 
 const MAX_IMPORT_BYTES = 5 * 1024 * 1024;
 
@@ -60,15 +61,16 @@ const MAX_IMPORT_BYTES = 5 * 1024 * 1024;
 
       @if (canEdit()) {
         <section class="data-card space-y-4" aria-labelledby="bulk-role-title">
-          <div><h2 id="bulk-role-title" class="text-lg font-semibold text-gray-900 dark:text-white">Toplu rol ataması</h2><p class="muted">Rol ataması sunucuda MFA ve SystemAdmin politikalarıyla doğrulanır. Liste seçimleri en fazla 100 kullanıcıyla sınırlıdır.</p></div>
+          <div><h2 id="bulk-role-title" class="text-lg font-semibold text-gray-900 dark:text-white">Toplu rol ataması</h2><p class="muted">İşlem yalnızca seçilen servisin rollerini değiştirir; diğer servisin rolleri korunur. Rol ataması sunucuda MFA ve SystemAdmin politikalarıyla doğrulanır. Liste seçimleri en fazla 100 kullanıcıyla sınırlıdır.</p></div>
+          <label>Rolün ekleneceği servis<select [(ngModel)]="assignmentProduct" [disabled]="busy()"><option value="">Servis seçin</option><option value="coaching">Koçluk</option><option value="speed-reading">Hızlı Okuma</option></select></label>
           <form (ngSubmit)="loadUsers()" class="grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,1fr)_minmax(0,14rem)_auto] md:items-end">
             <label>Arama<input [(ngModel)]="userSearch" name="userSearch" maxlength="100" placeholder="Ad veya e-posta" /></label>
             <label>Rol<select [(ngModel)]="userRoleFilter" name="userRoleFilter"><option value="">Tüm roller</option>@for (role of roles(); track role) { <option [value]="role">{{ role }}</option> }</select></label>
             <button type="submit" class="secondary" [disabled]="loadingUsers()">{{ loadingUsers() ? 'Yükleniyor…' : 'Kullanıcıları yükle' }}</button>
           </form>
           <div class="flex flex-wrap items-center gap-3 text-sm"><button type="button" class="secondary" (click)="toggleAll()" [disabled]="users().length === 0">{{ allSelected() ? 'Tümünü kaldır' : 'Tümünü seç' }}</button><span class="muted">{{ selectedUserIds().length }} kullanıcı seçildi</span></div>
-          <div class="overflow-x-auto"><table class="data-table"><thead><tr><th><span class="sr-only">Seç</span></th><th>E-posta</th><th>Ad soyad</th><th>Roller</th></tr></thead><tbody>@for (user of users(); track user.userId) { <tr><td><input type="checkbox" [checked]="isSelected(user.userId)" (change)="toggleUser(user.userId)" [attr.aria-label]="user.email + ' seç'" /></td><td>{{ user.email }}</td><td>{{ user.fullName }}</td><td>{{ user.roles.join(', ') || 'Rol atanmadı' }}</td></tr> } @empty { <tr><td colspan="4" class="empty">Kullanıcı listesi boş.</td></tr> }</tbody></table></div>
-          <div class="grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,14rem)_auto_auto] md:items-end"><label>Atanacak rol<select [(ngModel)]="assignmentRole" name="assignmentRole"><option value="">Rol seçin</option>@for (role of roles(); track role) { <option [value]="role">{{ role }}</option> }</select></label><label class="check"><input type="checkbox" [(ngModel)]="removeExistingRoles" name="removeExistingRoles" /> Mevcut rolleri kaldır</label><button type="button" class="primary" (click)="assignRole()" [disabled]="busy() || selectedUserIds().length === 0 || !assignmentRole">{{ assigning() ? 'Atanıyor…' : 'Seçili kullanıcılara ata' }}</button></div>
+          <div class="overflow-x-auto"><table class="data-table"><thead><tr><th><span class="sr-only">Seç</span></th><th>E-posta</th><th>Ad soyad</th><th>Roller</th></tr></thead><tbody>@for (user of users(); track user.userId) { <tr><td><input type="checkbox" [checked]="isSelected(user.userId)" (change)="toggleUser(user.userId)" [attr.aria-label]="user.email + ' seç'" /></td><td>{{ user.email }}</td><td>{{ user.fullName }}</td><td>@for (assignment of userProductRoles(user); track assignment.role + ':' + assignment.product) { <span class="block">{{ productRoleLabel(assignment) }}</span> } @empty { Rol atanmadı }</td></tr> } @empty { <tr><td colspan="4" class="empty">Kullanıcı listesi boş.</td></tr> }</tbody></table></div>
+          <div class="grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,14rem)_auto_auto] md:items-end"><label>Atanacak rol<select [(ngModel)]="assignmentRole" name="assignmentRole" [disabled]="busy()"><option value="">Rol seçin</option>@for (role of serviceRoles(); track role) { <option [value]="role">{{ role }}</option> }</select></label><label class="check"><input type="checkbox" [(ngModel)]="removeExistingRoles" name="removeExistingRoles" [disabled]="busy()" /> Seçilen servisin mevcut rollerini kaldır</label><button type="button" class="primary" (click)="assignRole()" [disabled]="busy() || selectedUserIds().length === 0 || !assignmentRole || !assignmentProduct">{{ assigning() ? 'Atanıyor…' : 'Seçili kullanıcılara ata' }}</button></div>
           @if (assignmentResult(); as result) { <div class="result-card"><strong>Rol atama sonucu</strong><p class="muted">Başarılı: {{ result.succeeded }} · Başarısız: {{ result.failed }}</p><ul class="error-list">@for (item of result.errors; track item) { <li>{{ item }}</li> }</ul></div> }
         </section>
       }
@@ -89,6 +91,9 @@ const MAX_IMPORT_BYTES = 5 * 1024 * 1024;
   `]
 })
 export class BulkUserOperationsComponent {
+  readonly productRoleLabel = productRoleLabel;
+  readonly userProductRoles = userProductRoles;
+  readonly serviceRoles = computed(() => this.roles().filter(role => role !== 'SystemAdmin'));
   private readonly identityService = inject(IdentityService);
   private readonly authService = inject(AuthService);
   private readonly toaster = inject(ToasterService);
@@ -115,6 +120,7 @@ export class BulkUserOperationsComponent {
   userSearch = '';
   userRoleFilter = '';
   assignmentRole = '';
+  assignmentProduct: RoleProduct | '' = '';
   removeExistingRoles = false;
 
   constructor() {
@@ -217,12 +223,17 @@ export class BulkUserOperationsComponent {
 
   async assignRole(): Promise<void> {
     const userIds = this.selectedUserIds();
-    if (!this.assignmentRole || userIds.length === 0 || this.busy()) return;
-    if (!await this.toaster.confirm(`${userIds.length} kullanıcı için ${this.assignmentRole} rolü uygulansın mı?`, { title: 'Toplu rol ataması' })) return;
+    const product = this.assignmentProduct;
+    const role = this.assignmentRole;
+    const removeExisting = this.removeExistingRoles;
+    if (!role || role === 'SystemAdmin' || !product || userIds.length === 0 || this.busy()) return;
+    const label = productRoleLabel({ role, product });
+    if (!await this.toaster.confirm(`${userIds.length} kullanıcı için ${label} rolü uygulansın mı?${removeExisting ? ' Yalnızca bu servisin mevcut rolleri kaldırılacak.' : ''}`, { title: 'Toplu rol ataması' })) return;
+    if (this.busy()) return;
 
     this.assigning.set(true);
     this.error.set('');
-    this.identityService.assignBulkRole(userIds, this.assignmentRole, this.removeExistingRoles).pipe(
+    this.identityService.assignBulkRole(userIds, role, removeExisting, product).pipe(
       finalize(() => this.assigning.set(false))
     ).subscribe({
       next: result => {

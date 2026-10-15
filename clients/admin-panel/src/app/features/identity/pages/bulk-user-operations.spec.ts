@@ -81,11 +81,25 @@ describe('BulkUserOperationsComponent', () => {
     const component = TestBed.createComponent(BulkUserOperationsComponent).componentInstance;
     component.selectedUserIds.set(['user-1', 'user-2']);
     component.assignmentRole = 'Editor';
+    component.assignmentProduct = 'speed-reading';
 
     await component.assignRole();
 
-    expect(identityService.assignBulkRole).toHaveBeenCalledWith(['user-1', 'user-2'], 'Editor', false);
+    expect(identityService.assignBulkRole).toHaveBeenCalledWith(['user-1', 'user-2'], 'Editor', false, 'speed-reading');
+    expect(toaster.confirm).toHaveBeenCalledWith(expect.stringContaining('Editor · Hızlı Okuma'), expect.anything());
     expect(component.assignmentResult()).toEqual({ succeeded: 2, failed: 0, errors: [] });
     expect(toaster.success).toHaveBeenCalled();
+  });
+
+  it('requires a service and never assigns SystemAdmin as a product role', async () => {
+    const component = TestBed.createComponent(BulkUserOperationsComponent).componentInstance;
+    component.selectedUserIds.set(['user-1']);
+    component.assignmentRole = 'Teacher';
+    await component.assignRole();
+    component.assignmentProduct = 'coaching';
+    component.assignmentRole = 'SystemAdmin';
+    await component.assignRole();
+    expect(identityService.assignBulkRole).not.toHaveBeenCalled();
+    expect(toaster.confirm).not.toHaveBeenCalled();
   });
 });

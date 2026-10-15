@@ -138,20 +138,20 @@
                                 </td>
                                 <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-300">
                                     <div class="flex flex-wrap gap-1">
-                                        @for (roleName of user.roles; track roleName) {
+                                        @for (assignment of userProductRoles(user); track assignment.role + ':' + assignment.product) {
                                         <span
                                             class="inline-flex rounded-full px-2 text-xs font-semibold leading-5 shadow-sm"
                                             [ngClass]="{
-                                                            'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300': roleName === 'Student',
-                                                            'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300': roleName === 'Teacher',
-                                                            'bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300': roleName === 'InstitutionAdmin' || roleName === 'InstitutionOwner',
-                                                            'bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300': roleName === 'SystemAdmin',
-                                                            'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300': roleName === 'Parent'
+                                                            'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300': assignment.role === 'Student',
+                                                            'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300': assignment.role === 'Teacher',
+                                                            'bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300': assignment.role === 'InstitutionAdmin' || assignment.role === 'InstitutionOwner',
+                                                            'bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300': assignment.role === 'SystemAdmin',
+                                                            'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300': assignment.role === 'Parent'
                                                           }">
-                                            {{ roleName }}
+                                            {{ productRoleLabel(assignment) }}
                                         </span>
                                         }
-                                        @if (!user.roles || user.roles.length === 0) {
+                                        @if (userProductRoles(user).length === 0) {
                                         <span class="text-gray-400 italic text-xs">Rol atanmadı</span>
                                         }
                                     </div>

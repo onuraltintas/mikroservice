@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
+import type { RoleProduct } from './user-product-roles';
 
 export interface PlatformLegalPageDto {
     slug: string;
@@ -408,9 +409,9 @@ export class IdentityService {
         return this.http.get(`${this.baseUrl}/bulk/export`, { params, responseType: 'blob' });
     }
 
-    assignBulkRole(userIds: string[], roleName: string, removeExistingRoles = false) {
+    assignBulkRole(userIds: string[], roleName: string, removeExistingRoles: boolean, product: RoleProduct) {
         const request: BulkRoleAssignmentRequest = { userIds, roleName, removeExistingRoles };
-        return this.http.post<BulkUserOperationResult>(`${this.baseUrl}/bulk/coaching/role`, request);
+        return this.http.post<BulkUserOperationResult>(`${this.baseUrl}/bulk/${product}/role`, request);
     }
 
     deleteUser(userId: string, permanent: boolean = false) {
@@ -495,12 +496,13 @@ export class IdentityService {
         return this.http.put(`${this.rolesUrl}/${id}/restore`, {});
     }
 
-    assignRole(userId: string, roleName: string) {
-        return this.http.post(`${this.baseUrl}/${userId}/products/coaching/roles`, { roleName });
+    assignRole(userId: string, roleName: string, product: RoleProduct) {
+        return this.http.post(`${this.baseUrl}/${userId}/products/${product}/roles`, { roleName });
     }
 
-    removeRole(userId: string, roleName: string, product: 'coaching' | 'speed-reading' = 'coaching') {
-        return this.http.delete(`${this.baseUrl}/${userId}/products/${product}/roles/${roleName}`);
+    removeRole(userId: string, roleName: string, product: RoleProduct | null) {
+        const scope = product === null ? '' : `/products/${product}`;
+        return this.http.delete(`${this.baseUrl}/${userId}${scope}/roles/${encodeURIComponent(roleName)}`);
     }
 
     // Permission Methods

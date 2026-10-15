@@ -61,23 +61,30 @@ describe('IdentityService user access management', () => {
     request.flush(null);
   });
 
-  it('assigns roles within the coaching product boundary', () => {
+  it.each(['coaching', 'speed-reading'] as const)('assigns roles only within the selected %s service', (product) => {
     const service = TestBed.inject(IdentityService);
 
-    service.assignRole('user-1', 'Teacher').subscribe();
+    service.assignRole('user-1', 'Teacher', product).subscribe();
 
-    const request = http.expectOne('/api/users/user-1/products/coaching/roles');
+    const request = http.expectOne(`/api/users/user-1/products/${product}/roles`);
     expect(request.request.method).toBe('POST');
     expect(request.request.body).toEqual({ roleName: 'Teacher' });
     request.flush(null);
   });
 
-  it('removes roles within the selected product boundary', () => {
+  it.each(['coaching', 'speed-reading'] as const)('removes roles only within the selected %s service', (product) => {
     const service = TestBed.inject(IdentityService);
 
-    service.removeRole('user-1', 'Teacher', 'coaching').subscribe();
+    service.removeRole('user-1', 'Teacher', product).subscribe();
 
-    const request = http.expectOne('/api/users/user-1/products/coaching/roles/Teacher');
+    const request = http.expectOne(`/api/users/user-1/products/${product}/roles/Teacher`);
+    expect(request.request.method).toBe('DELETE');
+    request.flush(null);
+  });
+
+  it('uses the global removal endpoint only when explicitly requested', () => {
+    TestBed.inject(IdentityService).removeRole('user-1', 'SystemAdmin', null).subscribe();
+    const request = http.expectOne('/api/users/user-1/roles/SystemAdmin');
     expect(request.request.method).toBe('DELETE');
     request.flush(null);
   });
@@ -101,8 +108,8 @@ describe('IdentityService user access management', () => {
     expect(exportRequest.request.params.get('role')).toBe('Editor');
     expect(exportRequest.request.params.get('isActive')).toBe('true');
 
-    service.assignBulkRole(['user-1'], 'Editor', true).subscribe();
-    const roleRequest = http.expectOne('/api/users/bulk/coaching/role');
+    service.assignBulkRole(['user-1'], 'Editor', true, 'speed-reading').subscribe();
+    const roleRequest = http.expectOne('/api/users/bulk/speed-reading/role');
     expect(roleRequest.request.method).toBe('POST');
     expect(roleRequest.request.body).toEqual({ userIds: ['user-1'], roleName: 'Editor', removeExistingRoles: true });
 

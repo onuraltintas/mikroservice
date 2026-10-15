@@ -1,13 +1,15 @@
-import { Component, EventEmitter, Input, Output, inject, signal, OnInit } from '@angular/core';
+import { Component, EventEmitter, Input, Output, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { IdentityService, UserDto } from '../../../../core/services/identity.service';
+import { FormsModule } from '@angular/forms';
+import { IdentityService, UserDto, UserProductRoleDto } from '../../../../core/services/identity.service';
+import { isRoleProduct, productRoleLabel, RoleProduct, userProductRoles } from '../../../../core/services/user-product-roles';
 import { ToasterService } from '../../../../core/services/toaster.service';
 import { getAdminErrorMessage } from '../../../../core/auth/admin-error-message';
 
 @Component({
     selector: 'app-role-management-modal',
     standalone: true,
-    imports: [CommonModule],
+    imports: [CommonModule, FormsModule],
     template: `
     <div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
       <!-- Backdrop -->
@@ -26,7 +28,7 @@ import { getAdminErrorMessage } from '../../../../core/auth/admin-error-message'
                   </svg>
                 </div>
                 <div>
-                  <h3 class="text-lg font-bold text-gray-900 dark:text-white leading-tight">Rol Yönetimi</h3>
+                  <h3 id="modal-title" class="text-lg font-bold text-gray-900 dark:text-white leading-tight">Rol Yönetimi</h3>
                   <p class="text-sm text-gray-500 dark:text-gray-400">{{ user()?.fullName }}</p>
                 </div>
               </div>
@@ -43,11 +45,11 @@ import { getAdminErrorMessage } from '../../../../core/auth/admin-error-message'
             <div>
               <label class="block text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">Tanımlı Roller</label>
               <div class="flex flex-wrap gap-2">
-                @for (role of user()?.roles; track role) {
+                @for (assignment of assignments(); track assignment.role + ':' + assignment.product) {
                   <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-800 group transition-all">
-                    {{ role }}
-                    <button (click)="removeRole(role)" [disabled]="actionLoading() === role" class="ml-2 text-indigo-400 hover:text-red-500 dark:hover:text-red-400 focus:outline-none transition-colors">
-                      @if (actionLoading() === role) {
+                    {{ productRoleLabel(assignment) }}
+                    <button (click)="removeRole(assignment)" [attr.aria-label]="productRoleLabel(assignment) + ' rolünü kaldır'" [disabled]="busy() || !canRemove(assignment)" class="ml-2 text-indigo-400 hover:text-red-500 dark:hover:text-red-400 focus:outline-none disabled:opacity-40 transition-colors">
+                      @if (actionLoading() === roleKey(assignment)) {
                         <svg class="animate-spin h-3 w-3" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                       } @else {
                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
@@ -65,17 +67,28 @@ import { getAdminErrorMessage } from '../../../../core/auth/admin-error-message'
             <!-- Available Roles -->
             <div>
               <label class="block text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">Rol Ekle</label>
+              <label for="role-product" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Rolün ekleneceği servis</label>
+              <select id="role-product" [ngModel]="selectedProduct()" (ngModelChange)="selectedProduct.set($event)" [disabled]="busy()" class="w-full mb-3 rounded-lg border border-gray-300 bg-white p-2 text-sm text-gray-900 dark:bg-gray-700 dark:text-white dark:border-gray-600">
+                <option value="">Servis seçin</option>
+                <option value="coaching">Koçluk</option>
+                <option value="speed-reading">Hızlı Okuma</option>
+              </select>
+              <p class="text-xs text-gray-500 mb-3">Ekleme ve kaldırma yalnızca belirtilen servisin rolünü değiştirir. Abonelik ve kurum bağlantıları ayrı yönetilir. SystemAdmin tüm servislerde geçerli genel roldür; bu listeden atanmaz.</p>
+              @if (refreshFailed()) {
+                <p role="alert" class="text-sm text-red-600 mb-2">Rol değişti ancak güncel liste alınamadı. Devam etmek için listeyi yeniden yükleyin.</p>
+                <button (click)="refreshUser()" [disabled]="actionLoading() !== null" class="text-sm text-indigo-600 underline mb-3">Listeyi yeniden yükle</button>
+              }
               <div class="grid grid-cols-1 gap-2">
-                @for (roleName of availableRoles(); track roleName) {
+                @for (roleName of serviceRoles(); track roleName) {
                   @if (!hasRole(roleName)) {
-                    <button (click)="assignRole(roleName)" [disabled]="actionLoading() === roleName" class="flex items-center justify-between px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-700/50 hover:bg-white dark:hover:bg-gray-700 hover:shadow-sm border border-transparent hover:border-indigo-200 dark:hover:border-indigo-800 transition-all group">
+                    <button (click)="assignRole(roleName)" [disabled]="busy() || !selectedProduct()" class="flex items-center justify-between px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-700/50 hover:bg-white dark:hover:bg-gray-700 hover:shadow-sm border border-transparent hover:border-indigo-200 dark:hover:border-indigo-800 disabled:opacity-40 transition-all group">
                       <div class="flex items-center space-x-3">
                         <div class="w-8 h-8 rounded-lg bg-white dark:bg-gray-800 flex items-center justify-center shadow-sm text-sm group-hover:scale-110 transition-transform">
                           {{ getRoleEmoji(roleName) }}
                         </div>
-                        <span class="text-sm font-medium text-gray-700 dark:text-gray-200">{{ roleName }}</span>
+                        <span class="text-sm font-medium text-gray-700 dark:text-gray-200">{{ selectedProduct() ? productRoleLabel({ role: roleName, product: selectedProduct() }) : roleName }}</span>
                       </div>
-                      @if (actionLoading() === roleName) {
+                      @if (actionLoading() === roleKey({ role: roleName, product: selectedProduct() })) {
                         <svg class="animate-spin h-4 w-4 text-indigo-500" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                       } @else {
                         <svg class="w-5 h-5 text-gray-300 group-hover:text-indigo-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
@@ -110,8 +123,22 @@ export class RoleManagementModalComponent implements OnInit {
 
     user = signal<UserDto | null>(null);
     availableRoles = signal<string[]>([]);
+    selectedProduct = signal<RoleProduct | ''>('');
+    assignments = computed(() => userProductRoles(this.user()));
+    serviceRoles = computed(() => this.availableRoles().filter(role => role !== 'SystemAdmin'));
+    refreshFailed = signal(false);
     actionLoading = signal<string | null>(null);
+    busy = computed(() => this.actionLoading() !== null || this.refreshFailed());
     changed = signal(false);
+    readonly productRoleLabel = productRoleLabel;
+
+    roleKey(assignment: UserProductRoleDto): string {
+        return `${assignment.role}:${assignment.product ?? 'global'}`;
+    }
+
+    canRemove(assignment: UserProductRoleDto): boolean {
+        return assignment.role === 'SystemAdmin' ? assignment.product === null : isRoleProduct(assignment.product);
+    }
 
     ngOnInit() {
         this.loadRoles();
@@ -125,7 +152,7 @@ export class RoleManagementModalComponent implements OnInit {
     }
 
     hasRole(roleName: string): boolean {
-        return this.user()?.roles.includes(roleName) || false;
+        return this.assignments().some(assignment => assignment.role === roleName && assignment.product === this.selectedProduct());
     }
 
     getRoleEmoji(roleName: string): string {
@@ -142,13 +169,13 @@ export class RoleManagementModalComponent implements OnInit {
 
     assignRole(roleName: string) {
         const userId = this.user()?.userId;
-        if (!userId) return;
+        const product = this.selectedProduct();
+        if (!userId || !product || this.busy() || roleName === 'SystemAdmin' || this.hasRole(roleName)) return;
 
-        this.actionLoading.set(roleName);
-        this.identityService.assignRole(userId, roleName).subscribe({
+        this.actionLoading.set(this.roleKey({ role: roleName, product }));
+        this.identityService.assignRole(userId, roleName, product).subscribe({
             next: () => {
-                this.actionLoading.set(null);
-                this.toaster.success(`${roleName} rolü başarıyla eklendi.`);
+                this.toaster.success(`${productRoleLabel({ role: roleName, product })} rolü başarıyla eklendi.`);
                 this.changed.set(true);
                 this.refreshUser();
             },
@@ -159,15 +186,15 @@ export class RoleManagementModalComponent implements OnInit {
         });
     }
 
-    removeRole(roleName: string) {
+    removeRole(assignment: UserProductRoleDto) {
         const userId = this.user()?.userId;
-        if (!userId) return;
+        if (!userId || this.busy() || !this.canRemove(assignment)) return;
 
-        this.actionLoading.set(roleName);
-        this.identityService.removeRole(userId, roleName).subscribe({
+        const product = isRoleProduct(assignment.product) ? assignment.product : null;
+        this.actionLoading.set(this.roleKey(assignment));
+        this.identityService.removeRole(userId, assignment.role, product).subscribe({
             next: () => {
-                this.actionLoading.set(null);
-                this.toaster.success(`${roleName} rolü başarıyla kaldırıldı.`);
+                this.toaster.success(`${productRoleLabel(assignment)} rolü başarıyla kaldırıldı.`);
                 this.changed.set(true);
                 this.refreshUser();
             },
@@ -178,19 +205,29 @@ export class RoleManagementModalComponent implements OnInit {
         });
     }
 
-    private refreshUser() {
+    refreshUser() {
         const userId = this.user()?.userId;
         if (!userId) return;
 
+        this.actionLoading.set('refresh');
         this.identityService.getUserById(userId).subscribe({
             next: (userProfile) => {
                 const currentUser = this.user();
                 if (currentUser) {
                     this.user.set({
                         ...currentUser,
-                        roles: userProfile.roles
+                        roles: userProfile.roles,
+                        productRoles: userProfile.productRoles,
+                        productAccesses: userProfile.productAccesses
                     });
                 }
+                this.refreshFailed.set(false);
+                this.actionLoading.set(null);
+            },
+            error: (err) => {
+                this.actionLoading.set(null);
+                this.refreshFailed.set(true);
+                this.toaster.error(getAdminErrorMessage(err, 'Güncel rol listesi alınamadı. Listeyi yeniden yükleyin.'));
             }
         });
     }
