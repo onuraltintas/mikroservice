@@ -1,5 +1,7 @@
 # Görsel genişleme: ilk cevaptan sayım ve iki doğruda ilerleme
 
+> Tarihsel yayın kaydıdır. Kullanıcının sonraki isteğiyle 15 Ekim 20:35'te kural yeniden her doğru cevapta ilerleme olarak değişti. Güncel sürüm: [her doğruda ilerleme raporu](visual-expansion-each-correct-20261015.md).
+
 15 Ekim 2026, Türkiye saati 20:10:20 (`2026-10-15T17:10:20Z`) canlıya alındı. Ürün kaynağı: `51b530423c36d3a848a1a53c28d7025526d68662`. Yayın: `visual-expansion-two-correct-20261015`.
 
 ## Düzeltilen davranış

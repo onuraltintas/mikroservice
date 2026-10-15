@@ -1,6 +1,6 @@
 # Görsel genişleme: her doğru cevapta küçük ilerleme
 
-> Güncel kural (15 Ekim 2026): normal öğrenci çalışması ve önizlemede artık **her iki doğru cevapta** bir adım ilerlenir; yanlışta genişlik ve birikmiş tek doğru korunur. Sayaçlar ilk cevaptan başlar. Aşağıdaki metin 14 Ekim yayınının tarihsel kaydıdır. Güncel doğrulama ve yayın ayrıntıları: [15 Ekim raporu](../reports/visual-expansion-two-correct-20261015.md).
+> Güncel kural (15 Ekim 2026, 20:35): normal öğrenci çalışması ve önizlemede **her doğru cevapta** bir adım ilerlenir; yanlışta genişlik aynı kalır. Sayaçlar ilk cevaptan başlar. Aşağıdaki metin 14 Ekim yayınının tarihsel kaydıdır. Güncel doğrulama ve yayın ayrıntıları: [15 Ekim son yayın raporu](../reports/visual-expansion-each-correct-20261015.md).
 
 14 Ekim 2026 saat 21:36'da (Türkiye), `2026-10-14T18:36:07Z` tarihinde canlıya alındı. Uygulama değişikliği `325c3ef7`; son doğrulama/yayın kaynağı `ca70d5619df538bba29bab1601352b04a0bd501f`. Yayın etiketi `visual-expansion-step-20261014`.
 
