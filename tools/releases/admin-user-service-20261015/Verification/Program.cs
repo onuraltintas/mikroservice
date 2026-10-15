@@ -91,9 +91,11 @@ try {
         Check((int)response.StatusCode is 401 or 403, "Anonymous account creation allowed");
         checks.Add("anonymous-creation-denied");
     }
+    var policyUpdate = await http.PutAsJsonAsync("/api/configurations/mfa/users", new { value = "required" });
+    Check(policyUpdate.IsSuccessStatusCode, $"Isolated MFA policy setup failed: {(int)policyUpdate.StatusCode}");
     http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", await tokens.GenerateAccessTokenAsync(creator));
     var noMfa = await http.PostAsJsonAsync("/api/users", new { firstName = "Test", lastName = "User", email = "no-mfa@example.test", role = "Student", product = 2 });
-    Check((int)noMfa.StatusCode == 403, "MFA-less creation allowed"); checks.Add("mfa-required");
+    Check((int)noMfa.StatusCode == 403, $"Expected MFA denial, received {(int)noMfa.StatusCode}"); checks.Add("mfa-required");
     http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
     using var csv = new MultipartFormDataContent();
     csv.Add(new StringContent("firstName,lastName,email,phoneNumber,role\nLegacy,Import,legacy-" + Guid.NewGuid().ToString("N") + "@example.test,,Student\n"), "file", "users.csv");
