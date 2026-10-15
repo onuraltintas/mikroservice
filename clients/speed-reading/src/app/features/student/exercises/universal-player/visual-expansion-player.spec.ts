@@ -1,9 +1,42 @@
 import { ExercisePlayerComponent } from './exercise-player.component';
 import { of } from 'rxjs';
+import { fakeAsync, tick } from '@angular/core/testing';
+import { VisualExpansionEngine } from './engines/visual-expansion.engine';
 
 describe('visual expansion answer UI', () => {
+  for (const serverAuthoritative of [false, true]) {
+    it(`counts training answers from the first round despite catalog assessment metadata (server=${serverAuthoritative})`, fakeAsync(() => {
+      const engine = new VisualExpansionEngine();
+      const actions: any[] = [];
+      const value = Object.create(ExercisePlayerComponent.prototype) as any;
+      value.engine = engine;
+      engine.initialize({ serverAuthoritative, isAssessmentMode: false, rounds: 4,
+        startDegrees: 8, targetDegrees: 16, timing: { durationMs: 400, intervalMs: 1 },
+        assessmentProtocol: { version: 2, practiceRounds: 3, roundsPerBlock: 6, blockValues: [8, 12, 16] }
+      } as any, { onStart() {}, onPause() {}, onResume() {}, onError() {}, onComplete() {},
+        onStateChange() {}, onStepComplete() {}, onAction: action => actions.push(action) });
+      engine.start();
+      expect(engine.state.totalSteps).toBe(4);
+      for (let round = 0; round < 4; round++) {
+        tick(1);
+        if (serverAuthoritative) engine.reconcileServerResponse(actions.at(-1), {
+          isValid: true, feedbackData: { stimuli: ['A', 'B'], degrees: 8, displayDurationMs: 400 }
+        });
+        const answers = engine.getCurrentStimuli().map(item => item.content);
+        tick(engine.getCurrentDisplayDurationMs());
+        engine.handleInput({ answers: round % 2 === 0 ? answers : ['?', '?'] });
+        if (serverAuthoritative) engine.reconcileServerResponse(actions.at(-1), {
+          isValid: true, isCorrect: round % 2 === 0, nextStep: round + 1
+        });
+        expect(value.getExpansionCorrectCount()).toBe(Math.ceil((round + 1) / 2));
+        expect(value.getExpansionWrongCount()).toBe(Math.floor((round + 1) / 2));
+      }
+      engine.destroy();
+    }));
+  }
   function player(stimuli: string[]) {
     const value = Object.create(ExercisePlayerComponent.prototype) as any;
+    value.authService = { canPreviewExercises: () => false, hasRole: (role: string) => role === 'Student' };
     value.expansionAnswers = [];
     value.engine = { engineType: 'visual_expansion', getLastShownStimuli: () => stimuli,
       getExpectedAnswerCount: () => stimuli.length, getPattern: () => 'radial',
@@ -41,9 +74,12 @@ describe('visual expansion answer UI', () => {
       resumeSession: jasmine.createSpy('resume').and.returnValue(of({})) };
     await value.goBack();
     expect(value.sessionService.pauseSession).toHaveBeenCalledWith('session');
+    expect(value.engineState.isPaused).toBeTrue();
+    expect(value.showExitConfirm).toBeTrue();
     await value.cancelExit();
     expect(value.sessionService.resumeSession).toHaveBeenCalledWith('session');
     expect(value.engineState.isPaused).toBeFalse();
+    expect(value.showExitConfirm).toBeFalse();
   });
   it('uses verified server round summaries instead of local preview estimates', () => {
     const value = player(['A','B']);
