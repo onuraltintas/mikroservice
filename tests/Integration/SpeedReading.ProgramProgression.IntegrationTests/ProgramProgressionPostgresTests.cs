@@ -14,11 +14,14 @@ namespace SpeedReading.ProgramProgression.IntegrationTests;
 
 public sealed class ProgramProgressionPostgresTests(PostgresFixture postgres) : IClassFixture<PostgresFixture>
 {
-    private OwnedSpeedReadingDbContext Open(bool failOnce = false)
+    private OwnedSpeedReadingDbContext Open(FailOnceAfterSave? failure = null)
     {
         var options = new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>()
-            .UseNpgsql(postgres.ConnectionString, builder => builder.EnableRetryOnFailure(2, TimeSpan.Zero, null));
-        if (failOnce) options.AddInterceptors(new FailOnceAfterSave());
+            .UseNpgsql(postgres.ConnectionString, builder => {
+                builder.EnableRetryOnFailure(2, TimeSpan.Zero, null);
+                builder.MigrationsHistoryTable("__ef_migrations_history", "speed_reading");
+            });
+        if (failure is not null) options.AddInterceptors(failure);
         return new(options.Options);
     }
 
@@ -65,12 +68,19 @@ public sealed class ProgramProgressionPostgresTests(PostgresFixture postgres) : 
         var before = JsonSerializer.Serialize(logs);
         var assigned = (await setup.StudentProgramProgresses.AsNoTracking().SingleAsync()).AssignedDate;
         var request = new AdvanceProgramDayRequest(progress.Id, 1);
+        var failure = new FailOnceAfterSave();
         async Task Advance(bool retry)
         {
-            await using var db = Open(retry);
+            await using var db = Open(retry ? failure : null);
             await Service(db).AdvanceAsync(user, request);
         }
-        await Task.WhenAll(Advance(failOnce), Advance(false));
+        if (failOnce)
+        {
+            // Force the mutation to hit the injected failure before any other request can grant the day.
+            await Advance(true);
+            Assert.True(failure.Failed, "The transaction retry case must actually inject its failure.");
+        }
+        await Task.WhenAll(Advance(false), Advance(false));
         await Advance(false);
         setup.ChangeTracker.Clear();
         var saved = await setup.StudentProgramProgresses.SingleAsync();
@@ -92,12 +102,12 @@ public sealed class ProgramProgressionPostgresTests(PostgresFixture postgres) : 
 
     private sealed class FailOnceAfterSave : SaveChangesInterceptor
     {
-        private bool failed;
+        public bool Failed { get; private set; }
         public override ValueTask<int> SavedChangesAsync(SaveChangesCompletedEventData eventData, int result, CancellationToken cancellationToken = default)
         {
-            if (!failed)
+            if (!Failed)
             {
-                failed = true;
+                Failed = true;
                 throw new NpgsqlException("Injected transient failure before commit", new TimeoutException());
             }
             return ValueTask.FromResult(result);
