@@ -80,7 +80,7 @@ public sealed class StudentReadingPersistenceTests
         context.ReadingTexts.Add(ReadingText.Create(Guid.NewGuid(), "Wrong", "Yanlış seviyede katalog metni.", difficultyLevel: 1));
         await context.SaveChangesAsync();
         var action = () => CreateExerciseSessionService(context).StartAsync(user, new StartExerciseSessionRequest { ExerciseId = exercise });
-        await action.Should().ThrowAsync<InvalidOperationException>();
+        await action.Should().ThrowAsync<BusinessRuleException>();
     }
 
     [Theory]

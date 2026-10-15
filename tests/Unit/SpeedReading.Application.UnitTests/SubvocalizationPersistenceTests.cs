@@ -67,7 +67,7 @@ public sealed class SubvocalizationPersistenceTests
         var start = () => Service(db).StartAsync(student,
             new() { ExerciseId = exercise.Id, ReadingTextId = explicitText ? text.Id : null });
         if (explicitText) await Assert.ThrowsAsync<KeyNotFoundException>(start);
-        else await Assert.ThrowsAsync<InvalidOperationException>(start);
+        else await Assert.ThrowsAsync<EduPlatform.Shared.Kernel.Exceptions.BusinessRuleException>(start);
         Assert.Empty(await db.ExerciseSessions.ToListAsync());
     }
 

@@ -226,7 +226,7 @@ public sealed class GroupingSessionTests
         db.ReadingTexts.Add(ReadingText.Create(Guid.NewGuid(), "Başka seviye", "bir iki üç dört", difficultyLevel: 1));
         await db.SaveChangesAsync();
         var start = () => service.StartAsync(student, new() { ExerciseId = exercise });
-        await start.Should().ThrowAsync<InvalidOperationException>();
+        await start.Should().ThrowAsync<EduPlatform.Shared.Kernel.Exceptions.BusinessRuleException>();
     }
 
     [Fact]

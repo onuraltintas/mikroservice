@@ -657,7 +657,8 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
         },
         error: (err) => {
           console.error('Session start failed:', err);
-          this.error = 'Oturum başlatılamadı. Lütfen internet bağlantınızı kontrol edin.';
+          this.error = err?.error?.detail || err?.error?.message
+            || 'Oturum başlatılamadı. Lütfen internet bağlantınızı kontrol edin.';
           this.finishLoading();
         }
       });

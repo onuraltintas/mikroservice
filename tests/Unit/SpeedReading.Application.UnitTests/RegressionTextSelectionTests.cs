@@ -59,9 +59,7 @@ public sealed class RegressionTextSelectionTests
             ReadingTextId = explicitlySelected ? wrongText : null };
         if (explicitlySelected)
             await Assert.ThrowsAsync<KeyNotFoundException>(() => service.StartAsync(student, request));
-        else if (engine == "skimming")
-            await Assert.ThrowsAsync<EduPlatform.Shared.Kernel.Exceptions.BusinessRuleException>(() => service.StartAsync(student, request));
         else
-            await Assert.ThrowsAsync<InvalidOperationException>(() => service.StartAsync(student, request));
+            await Assert.ThrowsAsync<EduPlatform.Shared.Kernel.Exceptions.BusinessRuleException>(() => service.StartAsync(student, request));
     }
 }
