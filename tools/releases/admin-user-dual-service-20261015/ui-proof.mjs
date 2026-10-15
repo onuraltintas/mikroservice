@@ -74,6 +74,7 @@ try {
     await modal.getByRole('checkbox', { name: 'Koçluk', exact: true }).check();
     await modal.getByRole('checkbox', { name: 'Hızlı Okuma', exact: true }).check();
     await modal.getByLabel('Kullanıcı Rolü', { exact: true }).selectOption('SystemAdmin');
+    await modal.getByRole('checkbox').first().waitFor({ state: 'detached' });
     assert.equal(await modal.getByRole('checkbox').count(), 0);
     await modal.getByRole('button', { name: 'Kullanıcı Oluştur', exact: true }).click();
     await modal.getByText('SystemAdmin · Tüm servisler', { exact: true }).waitFor();
