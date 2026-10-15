@@ -26,7 +26,7 @@ async function prepare(page, variant, instant = true) {
     const scrollTo = Element.prototype.scrollTo;
     Element.prototype.scrollTo = function(options, y) {
       if (!this.matches('.highlight-display-area,.text-display-area,.regression-text-area,.subvoc-display-area.highlight-mode')) {
-        return scrollTo.call(this, options, y);
+        return typeof options === 'object' ? scrollTo.call(this, options) : scrollTo.call(this, options, y);
       }
       const active = this.querySelector('.chunk-group.highlight,.fading-word-item.active,.regression-word.active,.subvoc-word.active');
       const bounds = this.getBoundingClientRect(), current = active?.getBoundingClientRect();
@@ -85,8 +85,8 @@ for (const variant of variants) test(`${variant.name} advances in three-line blo
   }
   expect(events.length).toBeGreaterThanOrEqual(2);
   for (const event of events) {
-    expect(event.linesRemaining).toBeGreaterThanOrEqual(2.4);
-    expect(event.linesRemaining).toBeLessThanOrEqual(3.1);
+    expect(event.linesRemaining).toBeGreaterThanOrEqual(2.95);
+    expect(event.linesRemaining).toBeLessThan(4.05);
     expect(event.to - event.from).toBeGreaterThan(2 * event.lineHeight);
     expect(event.to).toBeLessThanOrEqual(event.max + 1);
   }
@@ -116,4 +116,20 @@ test('native smooth scrolling follows timer updates without any extra click', as
   expect(activeBox.y).toBeGreaterThanOrEqual(panelBox.y - 1);
   expect(activeBox.y + activeBox.height).toBeLessThanOrEqual(Math.min(page.viewportSize().height, panelBox.y + panelBox.height) + 1);
   expect(errors).toEqual([]); expect(writes).toEqual([]);
+});
+
+test('highlight metronome fits narrow mobile headers', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'mobile', 'Narrow mobile layout');
+  for (const width of [320, 360]) {
+    await page.setViewportSize({ width, height: 727 });
+    await prepare(page, { ...variants[4], config: { ...variants[4].config, metronomeEnabled: true, visualMetronome: true } });
+    await page.clock.install(); await page.clock.pauseAt(new Date());
+    await page.locator('.start-button-large').click();
+    const rhythm = page.locator('.subvoc-pulse-rhythm');
+    const indicator = page.locator('.visual-metronome-indicator');
+    await expect(indicator).toBeVisible();
+    const rhythmBox = await rhythm.boundingBox(), indicatorBox = await indicator.boundingBox();
+    expect(rhythmBox.x + rhythmBox.width).toBeLessThanOrEqual(indicatorBox.x);
+    expect(indicatorBox.x + indicatorBox.width).toBeLessThanOrEqual(width - 8);
+  }
 });
