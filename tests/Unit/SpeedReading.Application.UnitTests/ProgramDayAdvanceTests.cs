@@ -6,6 +6,8 @@ using SpeedReading.Application.Institutions;
 using SpeedReading.Domain.Institutions;
 using SpeedReading.Domain.Programs;
 using SpeedReading.Infrastructure.Persistence;
+using SpeedReading.Infrastructure.Privacy;
+using EduPlatform.Shared.Contracts.Events.Privacy;
 
 namespace SpeedReading.Application.UnitTests;
 
@@ -109,6 +111,25 @@ public sealed class ProgramDayAdvanceTests
     {
         public bool Allowed = true;
         public Task<bool> IsEligibleAsync(Guid userId, SpeedReadingInstitutionMemberRole role, CancellationToken token = default) => Task.FromResult(Allowed);
+    }
+
+    [Fact]
+    public async Task User_erasure_includes_preferences_and_keeps_the_global_default_and_other_users()
+    {
+        await using var fixture = await Fixture.Create();
+        await fixture.Service.UpdateSettingsAsync(true, fixture.Actor);
+        await fixture.Service.UpdatePreferenceAsync(fixture.User, "allow", fixture.Actor);
+        var other = Guid.NewGuid();
+        await fixture.Service.UpdatePreferenceAsync(other, "deny", fixture.Actor);
+        var inventory = new SpeedReadingPrivacyInventoryRepository(fixture.Db);
+        (await inventory.CountByUserAsync(fixture.User, default)).GetValueOrDefault("programProgressionPreferences").Should().Be(1);
+        var erasure = new SpeedReadingErasureExecutionService(fixture.Db, inventory, TimeProvider.System);
+        var requestId = Guid.NewGuid();
+        await erasure.ExecuteAsync(new PersonalDataErasureExecutionRequestedV1(requestId, requestId, fixture.User,
+            DateTime.UtcNow, PersonalDataScope.SpeedReading), default);
+        (await fixture.Db.ProgramProgressionPolicies.AnyAsync(item => item.UserId == fixture.User)).Should().BeFalse();
+        (await fixture.Service.GetSettingsAsync()).AllowEarlyAdvance.Should().BeTrue();
+        (await fixture.Service.GetPreferenceAsync(other)).Mode.Should().Be("deny");
     }
 
     private sealed class Fixture : IAsyncDisposable
