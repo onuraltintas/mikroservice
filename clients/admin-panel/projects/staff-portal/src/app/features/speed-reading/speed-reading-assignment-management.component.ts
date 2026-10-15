@@ -200,7 +200,8 @@ export class SpeedReadingAssignmentManagementComponent implements OnInit {
       this.actionErrorMessage.set('Başlık, içerik, en az bir öğrenci ve kurum alanında öğretmen seçimi gereklidir.');
       return;
     }
-    const dueDate = new Date(`${this.dueDate}T23:59:59.000Z`);
+    // The selected calendar day ends in Turkey's time zone, then travels as UTC.
+    const dueDate = new Date(`${this.dueDate}T23:59:59.000+03:00`);
     if (!this.dueDate || Number.isNaN(dueDate.getTime())) {
       this.actionErrorMessage.set('Geçerli bir teslim tarihi seçin.');
       return;

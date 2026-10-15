@@ -889,7 +889,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
                     && item.StudentId == studentId
                     && item.IsActive,
                 cancellationToken);
-            studentAssignment?.Complete(result.Id, score ?? 0, weightedKdp ?? 0, now);
+            studentAssignment?.Complete(result.Id, score, weightedKdp, now);
         }
 
         var isVerifiedCompletion = measurementStatus == SpeedReadingMeasurementStatus.Measured && !state.ReadingIncomplete

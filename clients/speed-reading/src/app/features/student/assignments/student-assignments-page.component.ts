@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
@@ -20,6 +20,7 @@ export class StudentAssignmentsPageComponent implements OnInit {
     private assignmentService = inject(AssignmentService);
     private router = inject(Router);
     private toaster = inject(ToasterService);
+    private readonly changeDetector = inject(ChangeDetectorRef);
 
     assignments: AssignmentDto[] = [];
     filteredAssignments: AssignmentDto[] = [];
@@ -41,11 +42,15 @@ export class StudentAssignmentsPageComponent implements OnInit {
         this.searchControl.valueChanges.pipe(
             debounceTime(300),
             distinctUntilChanged()
-        ).subscribe(() => this.filterAssignments());
+        ).subscribe(() => {
+            this.filterAssignments();
+            this.changeDetector.markForCheck();
+        });
     }
 
     loadAssignments() {
         this.loading = true;
+        this.changeDetector.markForCheck();
         this.assignmentService.getMyAssignments().subscribe({
             next: (res) => {
                 this.assignments = res;
@@ -58,11 +63,13 @@ export class StudentAssignmentsPageComponent implements OnInit {
                 }
 
                 this.loading = false;
+                this.changeDetector.markForCheck();
             },
             error: (err) => {
                 console.error('Error loading assignments', err);
                 this.toaster.error('Ödevler yüklenirken bir hata oluştu');
                 this.loading = false;
+                this.changeDetector.markForCheck();
             }
         });
     }

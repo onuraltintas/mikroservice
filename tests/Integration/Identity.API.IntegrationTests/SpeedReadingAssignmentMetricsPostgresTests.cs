@@ -44,6 +44,8 @@ public sealed class SpeedReadingAssignmentMetricsPostgresTests(PostgresFixture p
             unmatched.Complete(Guid.NewGuid(), 65, 50, DateTime.UtcNow);
             db.StudentAssignments.AddRange(rows.Append(unmatched));
             await db.SaveChangesAsync();
+            var persistedCompletionDate = await db.StudentAssignments.AsNoTracking()
+                .Where(item => item.Id == rows[0].Id).Select(item => item.CompletionDate).SingleAsync();
 
             var migration = new ClearUnmeasuredAssignmentMetrics();
             var commands = db.GetService<IMigrationsSqlGenerator>().Generate(migration.UpOperations, db.Model);
@@ -55,7 +57,7 @@ public sealed class SpeedReadingAssignmentMetricsPostgresTests(PostgresFixture p
             var unmeasured = await db.StudentAssignments.SingleAsync(item => item.Id == rows[0].Id);
             Assert.True(unmeasured.IsCompleted);
             Assert.Equal(rows[0].ResultId, unmeasured.ResultId);
-            Assert.Equal(rows[0].CompletionDate, unmeasured.CompletionDate);
+            Assert.Equal(persistedCompletionDate, unmeasured.CompletionDate);
             Assert.Null(unmeasured.Score);
             Assert.Null(unmeasured.KeyPerformanceMetric);
             Assert.Equal(0m, (await db.StudentAssignments.SingleAsync(item => item.Id == rows[1].Id)).Score);

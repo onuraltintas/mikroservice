@@ -9,13 +9,14 @@ import { StudentAssignmentsPageComponent } from './student-assignments-page.comp
 describe('StudentAssignmentsPageComponent', () => {
   function create(): StudentAssignmentsPageComponent {
     TestBed.configureTestingModule({
+      imports: [StudentAssignmentsPageComponent],
       providers: [
         { provide: AssignmentService, useValue: {} },
         { provide: Router, useValue: {} },
         { provide: ToasterService, useValue: {} }
       ]
     });
-    return TestBed.runInInjectionContext(() => new StudentAssignmentsPageComponent());
+    return TestBed.createComponent(StudentAssignmentsPageComponent).componentInstance;
   }
 
   it('averages only completed assignments with a recorded score', () => {

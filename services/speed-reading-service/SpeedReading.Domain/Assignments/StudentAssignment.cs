@@ -74,8 +74,8 @@ public sealed class StudentAssignment : Entity
 
     public void Complete(
         Guid resultId,
-        decimal score,
-        decimal keyPerformanceMetric,
+        decimal? score,
+        decimal? keyPerformanceMetric,
         DateTime completedAt)
     {
         if (resultId == Guid.Empty)
