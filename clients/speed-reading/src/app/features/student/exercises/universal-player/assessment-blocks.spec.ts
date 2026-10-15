@@ -31,7 +31,7 @@ describe('fixed assessment blocks', () => {
     it(`previews ${perBlock * 3} scored visual rounds at 200ms without adapting`, fakeAsync(() => {
       const engine = new VisualExpansionEngine();
       let result: any;
-      engine.initialize({ rounds: 3 + perBlock * 3, startDegrees: 8, targetDegrees: 18,
+      engine.initialize({ isAssessmentMode: true, rounds: 3 + perBlock * 3, startDegrees: 8, targetDegrees: 18,
         timing: { durationMs: 200, intervalMs: 1 }, assessmentProtocol: {
           version: 2, practiceRounds: 3, roundsPerBlock: perBlock, blockValues: [8, 13, 18]
         } } as any, { onStart() {}, onPause() {}, onResume() {}, onError() {},

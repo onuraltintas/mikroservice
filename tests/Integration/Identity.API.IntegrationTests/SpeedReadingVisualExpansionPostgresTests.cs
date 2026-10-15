@@ -38,7 +38,7 @@ public sealed class SpeedReadingVisualExpansionPostgresTests(PostgresFixture pos
         for (var round = 0; round < 4; round++)
         {
             var present = await service.ValidateActionAsync(student, started.SessionId, new() { Action = "visual_expansion_present" });
-            Assert.Equal(round < 3 ? 10 : 12, present.FeedbackData!.Value.GetProperty("degrees").GetInt32());
+            Assert.Equal(10 + round / 2, present.FeedbackData!.Value.GetProperty("degrees").GetInt32());
             var expected = present.FeedbackData!.Value.GetProperty("stimuli").EnumerateArray().Select(item => item.GetString()!).ToList();
             var session = await db.ExerciseSessions.SingleAsync();
             var state = JsonNode.Parse(session.SessionDataJson)!;
@@ -57,13 +57,18 @@ public sealed class SpeedReadingVisualExpansionPostgresTests(PostgresFixture pos
             var answer = await service.ValidateActionAsync(student, started.SessionId,
                 new() { Action = "visual_expansion_answer", Answers = round < 3 ? expected : ["?", "?"] });
             Assert.True(answer.IsValid);
+            Assert.Equal(round < 3, answer.IsCorrect);
+            var nextState = JsonNode.Parse(session.SessionDataJson)!;
+            Assert.Equal(10 + Math.Min(round + 1, 3) / 2, nextState["visualExpansionCurrentDegrees"]!.GetValue<int>());
+            Assert.Equal(Math.Min(round + 1, 3), session.CorrectCount);
+            Assert.Equal(round == 3 ? 1 : 0, session.IncorrectCount);
             Assert.InRange(answer.FeedbackData!.Value.GetProperty("responseTimeMs").GetInt32(), 490, 1000);
             Assert.False((await service.ValidateActionAsync(student, started.SessionId, new() { Action = "visual_expansion_answer", Answers = expected })).IsValid);
         }
         var result = await service.CompleteAsync(student, started.SessionId, new() { CustomData = new() { ["maxDegreesReached"] = System.Text.Json.JsonSerializer.SerializeToElement(999) } });
         Assert.Equal(75, result.Accuracy);
         Assert.Null(result.RawWPM); Assert.Null(result.WordsRead);
-        Assert.Equal(12, result.DetailedResults.GetProperty("visualExpansionMaxPresentedDistance").GetInt32());
+        Assert.Equal(11, result.DetailedResults.GetProperty("visualExpansionMaxPresentedDistance").GetInt32());
         Assert.Equal(4, result.DetailedResults.GetProperty("visualExpansionRoundResults").GetArrayLength());
         var summary = result.DetailedResults.GetProperty("visualExpansionTargetSummary");
         Assert.False(summary.GetProperty("targetReached").GetBoolean());

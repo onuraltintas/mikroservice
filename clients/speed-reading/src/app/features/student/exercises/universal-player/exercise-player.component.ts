@@ -391,6 +391,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   }
 
   getAssessmentRoundLabel(): string | null {
+    if (!this.isAssessmentMode) return null;
     const plan = this.backendSessionConfig ? this.backendSessionConfig.assessmentProtocol
       : this.parsedConfig?.engineConfig?.['assessmentProtocol'];
     return assessmentRoundLabel(plan, this.engineState.currentStep);

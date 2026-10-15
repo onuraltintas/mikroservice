@@ -13,7 +13,7 @@ public sealed class VisualExpansionSessionResultsTests
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public async Task Legacy_training_resumes_with_one_unit_steps_and_pinned_assessment_keeps_original_progression(bool assessment)
+    public async Task Legacy_training_resumes_with_two_correct_steps_and_pinned_assessment_keeps_original_progression(bool assessment)
     {
         await using var db = new OwnedSpeedReadingDbContext(new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>()
             .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
@@ -53,13 +53,13 @@ public sealed class VisualExpansionSessionResultsTests
             state["visualExpansionProtocolVersion"] = 1;
             session.SetState(state.ToJsonString()); await db.SaveChangesAsync();
         }
-        for (var round = 0; round < 2; round++)
+        for (var round = 0; round < 3; round++)
         {
             var presentation = await service.ValidateActionAsync(student, started.SessionId,
                 new() { Action = "visual_expansion_present" });
             var data = presentation.FeedbackData!.Value;
-            Assert.Equal(8 + round * (assessment ? 2 : 1), data.GetProperty("degrees").GetInt32());
-            Assert.Equal(assessment && round > 0 ? 380 : 400, data.GetProperty("displayDurationMs").GetInt32());
+            Assert.Equal(8 + (assessment ? round * 2 : round / 2), data.GetProperty("degrees").GetInt32());
+            Assert.Equal(assessment ? (int)Math.Round(400 * Math.Pow(0.95, round)) : 400, data.GetProperty("displayDurationMs").GetInt32());
             var answers = data.GetProperty("stimuli").EnumerateArray().Select(item => item.GetString()!).ToList();
             session = await db.ExerciseSessions.SingleAsync();
             state = JsonNode.Parse(session.SessionDataJson)!;
