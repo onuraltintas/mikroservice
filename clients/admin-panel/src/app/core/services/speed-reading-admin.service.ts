@@ -1634,6 +1634,22 @@ export class SpeedReadingAdminService {
   private readonly http = inject(HttpClient);
   private readonly url = `${environment.apiUrl}/speed-reading`;
 
+  getProgramProgressionSettings() {
+    return this.http.get<{ allowEarlyAdvance: boolean; updatedAt?: string | null }>(`${this.url}/program-progression/settings`);
+  }
+
+  updateProgramProgressionSettings(allowEarlyAdvance: boolean) {
+    return this.http.put<{ allowEarlyAdvance: boolean }>(`${this.url}/program-progression/settings`, { allowEarlyAdvance });
+  }
+
+  getStudentProgression(userId: string) {
+    return this.http.get<{ mode: 'inherit' | 'allow' | 'deny'; allowEarlyAdvance: boolean; defaultAllowEarlyAdvance: boolean }>(`${this.url}/program-progression/users/${userId}`);
+  }
+
+  updateStudentProgression(userId: string, mode: 'inherit' | 'allow' | 'deny') {
+    return this.http.put<{ mode: 'inherit' | 'allow' | 'deny'; allowEarlyAdvance: boolean; defaultAllowEarlyAdvance: boolean }>(`${this.url}/program-progression/users/${userId}`, { mode });
+  }
+
   getSubscriptionProducts() {
     return this.http.get<{ success: boolean; data: SpeedReadingProduct[] }>(`${this.url}/products/all`)
       .pipe(map(response => response.data ?? []));

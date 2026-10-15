@@ -31,7 +31,7 @@ describe('program progression administration', () => {
 
   it.each(['inherit', 'allow', 'deny'] as const)('saves only the %s user policy and preserves roles, access and profile', mode => {
     const fixture = TestBed.createComponent(EditUserModalComponent); const component = fixture.componentInstance;
-    component.userData = { userId: 'student-1', fullName: 'Test Student', email: 'student@example.test', role: 'Student',
+    component.userData = { userId: 'student-1', firstName: 'Test', lastName: 'Student', fullName: 'Test Student', email: 'student@example.test', role: 'Student',
       roles: ['Student'], permissions: [], isActive: true, emailConfirmed: true,
       productRoles: [{ role: 'Student', product: 'speed-reading' }], productAccesses: [{ product: 'speed-reading', isActive: true }] };
     fixture.detectChanges(); const http = TestBed.inject(HttpTestingController);

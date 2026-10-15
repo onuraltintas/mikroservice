@@ -1,5 +1,5 @@
 import { signal } from '@angular/core';
-import { of, Subject, throwError } from 'rxjs';
+import { of, Subject } from 'rxjs';
 import { DailyExercisesComponent } from './daily-exercises.component';
 
 describe('daily next day action', () => {

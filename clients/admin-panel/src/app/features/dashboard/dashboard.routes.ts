@@ -89,6 +89,12 @@ export const DASHBOARD_ROUTES: Routes = [
       loadComponent: () => import('./pages/speed-reading-content-configuration').then(m => m.SpeedReadingContentConfigurationComponent)
     },
     {
+      path: 'speed-reading/program-progression',
+      canActivate: [permissionGuard],
+      data: { permission: ADMIN_PERMISSIONS.speedReadingSettingsManage },
+      loadComponent: () => import('./pages/speed-reading-program-progression').then(m => m.SpeedReadingProgramProgressionComponent)
+    },
+    {
       path: 'speed-reading/visualization-scenes',
       canActivate: [permissionGuard],
       data: { permission: ADMIN_PERMISSIONS.speedReadingContentManage },

@@ -8,6 +8,7 @@ import { getAdminErrorMessage } from '../../../../core/auth/admin-error-message'
 import { AuthService, hasRequiredAccess } from '../../../../core/auth/auth.service';
 import { ADMIN_PERMISSIONS } from '../../../../core/auth/permissions';
 import { RoleProduct, userProductRoles } from '../../../../core/services/user-product-roles';
+import { SpeedReadingAdminService } from '../../../../core/services/speed-reading-admin.service';
 
 @Component({
   selector: 'app-edit-user-modal',
@@ -74,6 +75,19 @@ import { RoleProduct, userProductRoles } from '../../../../core/services/user-pr
                                         }
                                     </div>
                                     <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">Roller: {{ rolesForProduct(service.product) || 'Atanmamış — Roller bölümünden ayrıca tanımlayın.' }}</p>
+                                    @if (service.product === 'speed-reading' && canManageProgression()) {
+                                      <div class="mt-4 space-y-2 border-t pt-3">
+                                        <label for="user-progression-mode" class="block text-sm font-semibold">Program ilerleme izni</label>
+                                        <select id="user-progression-mode" class="w-full rounded-lg border p-2 dark:bg-gray-800" [value]="progressionMode" (change)="progressionMode = $any($event.target).value" [disabled]="progressionLoading() || progressionSaving() || !progression()">
+                                          <option value="inherit">Genel ayarı kullan</option>
+                                          <option value="allow">Beklemeden ilerleyebilir</option>
+                                          <option value="deny">Ertesi günü beklesin</option>
+                                        </select>
+                                        @if (progression(); as policy) { <p class="text-xs text-gray-500">Geçerli izin: {{ policy.allowEarlyAdvance ? 'Beklemeden ilerleyebilir' : 'Takvime bağlı' }} · Genel ayar: {{ policy.defaultAllowEarlyAdvance ? 'Açık' : 'Kapalı' }}</p> }
+                                        @if (progressionError()) { <p role="alert" class="text-sm text-red-600">{{ progressionError() }}</p> }
+                                        <button type="button" class="rounded-lg border border-indigo-200 px-3 py-2 text-sm font-semibold text-indigo-700 disabled:opacity-50" (click)="saveProgression()" [disabled]="progressionLoading() || progressionSaving() || !progression()">{{ progressionSaving() ? 'Kaydediliyor…' : 'İlerleme iznini kaydet' }}</button>
+                                      </div>
+                                    }
                                 </div>
                             }
                             <p class="text-xs text-gray-500 dark:text-gray-400">Erişim kapatılınca yeni giriş ve oturum yenileme durur. Açık oturumun mevcut erişim süresi sona erene kadar devam etmesi mümkündür.</p>
@@ -220,6 +234,12 @@ export class EditUserModalComponent implements OnInit {
   private identityService = inject(IdentityService);
   private toaster = inject(ToasterService);
   private institutionService = inject(InstitutionService);
+  private readonly progressionService = inject(SpeedReadingAdminService);
+  readonly progression = signal<{ mode: 'inherit' | 'allow' | 'deny'; allowEarlyAdvance: boolean; defaultAllowEarlyAdvance: boolean } | null>(null);
+  readonly progressionLoading = signal(false);
+  readonly progressionSaving = signal(false);
+  readonly progressionError = signal<string | null>(null);
+  progressionMode: 'inherit' | 'allow' | 'deny' = 'inherit';
   readonly auth = inject(AuthService);
   readonly services: { product: RoleProduct; label: string }[] = [
     { product: 'coaching', label: 'Koçluk' },
@@ -252,10 +272,22 @@ export class EditUserModalComponent implements OnInit {
 
   ngOnInit() {
     this.initForm();
+    this.loadProgression();
     if (this.isProfileUser()) {
       this.institutionService.getAll(1, 100, '', true).subscribe({
         next: response => this.institutions.set(response.items),
         error: () => this.toaster.error('Kurum listesi yüklenemedi.')
+      });
+    }
+  }
+
+  loadProgression(): void {
+    if (this.canManageProgression()) {
+      this.progressionLoading.set(true);
+      this.progression.set(null); this.progressionError.set(null);
+      this.progressionService.getStudentProgression(this.user()!.userId).subscribe({
+        next: value => { this.progression.set(value); this.progressionMode = value.mode; this.progressionLoading.set(false); },
+        error: error => { this.progressionLoading.set(false); this.progressionError.set(getAdminErrorMessage(error, 'İlerleme izni yüklenemedi.')); }
       });
     }
   }
@@ -298,9 +330,28 @@ export class EditUserModalComponent implements OnInit {
   hasProductAccessPermission() { return hasRequiredAccess(this.auth.userProfile(), ADMIN_PERMISSIONS.usersEdit, 'SystemAdmin'); }
   canManageProductAccess() { return this.hasProductAccessPermission() && this.auth.userProfile()?.mfaVerified === true && !this.isGlobalAdministrator(); }
 
+  canManageProgression(): boolean {
+    return userProductRoles(this.user()).some(role => role.product === 'speed-reading' && role.role === 'Student')
+      && this.hasProductAccess('speed-reading') && hasRequiredAccess(this.auth.userProfile(), ADMIN_PERMISSIONS.speedReadingSettingsManage)
+      && this.auth.userProfile()?.roles.some(role => role === 'Admin' || role === 'SystemAdmin') === true;
+  }
+
+  saveProgression(): void {
+    const user = this.user();
+    if (!user || !this.canManageProgression() || !this.progression() || this.progressionSaving() || this.progressionLoading()) return;
+    this.progressionSaving.set(true); this.progressionError.set(null);
+    this.progressionService.updateStudentProgression(user.userId, this.progressionMode).subscribe({
+      next: value => {
+        this.progression.set(value); this.progressionMode = value.mode; this.progressionSaving.set(false);
+        this.accessChanged = true; this.toaster.success('Hızlı Okuma ilerleme izni kaydedildi.');
+      },
+      error: error => { this.progressionSaving.set(false); this.progressionError.set(getAdminErrorMessage(error, 'İlerleme izni kaydedilemedi.')); }
+    });
+  }
+
   setProductAccess(product: RoleProduct, isActive: boolean) {
     const user = this.user();
-    if (!user || !this.canManageProductAccess() || this.loading() || this.accessLoading() !== null) return;
+    if (!user || !this.canManageProductAccess() || this.loading() || this.accessLoading() !== null || this.progressionSaving()) return;
     this.accessLoading.set(product);
     this.accessError.set(null);
     this.identityService.setProductAccess(user.userId, product, isActive).subscribe({
@@ -310,6 +361,7 @@ export class EditUserModalComponent implements OnInit {
         ] } : current);
         this.accessChanged = true;
         this.accessLoading.set(null);
+        if (product === 'speed-reading' && isActive) this.loadProgression();
         this.toaster.success(`${this.services.find(service => service.product === product)!.label} erişimi ${isActive ? 'açıldı' : 'kapatıldı'}.`);
       },
       error: err => {
@@ -320,13 +372,13 @@ export class EditUserModalComponent implements OnInit {
   }
 
   closeModal(saved: boolean = false) {
-    if (this.loading() || this.accessLoading() !== null) return;
+    if (this.loading() || this.accessLoading() !== null || this.progressionSaving()) return;
     this.close.emit(saved || this.accessChanged);
   }
 
   save() {
     const currentUser = this.user();
-    if (!currentUser || this.loading() || this.accessLoading() !== null) return;
+    if (!currentUser || this.loading() || this.accessLoading() !== null || this.progressionSaving()) return;
 
     if (this.form.invalid) {
       this.form.markAllAsTouched();
