@@ -89,7 +89,7 @@ for (const [pattern, type] of [['radial','word'], ['vertical','symbol']]) test(`
   expect(errors).toEqual([]); expect(writes).toEqual([]);
 });
 
-test('two correct preview answers expand by one while errors count immediately and hold position', async ({ page }) => {
+test('each correct preview answer expands by one while errors count immediately and hold position', async ({ page }) => {
   const { errors, writes } = await prepare(page, 'Admin', 'horizontal', 'letter', {
     engineType: 'visual_expansion', engineConfig: { rounds: 4, startDegrees: 8, targetDegrees: 16,
       displayDurationMs: 100, timing: { intervalMs: 100 }, content: { stimulusType: 'letter' }, mode: 'horizontal' }
@@ -99,7 +99,7 @@ test('two correct preview answers expand by one while errors count immediately a
   await expect(page.locator('.start-button-large')).toBeVisible();
   await page.clock.install(); await page.clock.pauseAt(new Date());
   await page.locator('.start-button-large').click();
-  for (const [round, left] of [44, 44, 44, 43.25].entries()) {
+  for (const [round, left] of [44, 43.25, 43.25, 42.5].entries()) {
     await page.clock.runFor(100);
     const stimuli = page.locator('.expansion-stimulus');
     await expect(stimuli.nth(0)).toHaveAttribute('style', new RegExp(`left: ${left}%`));
@@ -139,7 +139,7 @@ for (const age of ['child', 'teen', 'young-adult', 'adult']) {
       const stimuli = page.locator('.expansion-stimulus');
       const answers = (await stimuli.allTextContents()).map(value => value.trim());
       expect(answers).toHaveLength(2);
-      await expect(stimuli.nth(0)).toHaveAttribute('style', new RegExp(`left: ${44 - Math.floor(round / 2) * .75}%`));
+      await expect(stimuli.nth(0)).toHaveAttribute('style', new RegExp(`left: ${44 - round * .75}%`));
       await page.clock.runFor(config.displayDurationMs - 1);
       await expect(stimuli).toHaveCount(2);
       await page.clock.runFor(1);

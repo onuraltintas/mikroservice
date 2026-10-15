@@ -3,7 +3,7 @@ import { VisualExpansionEngine } from './visual-expansion.engine';
 import { visualAngleToAxisOffsetPercent, visualAngleToOffsetPercent } from './visual-expansion-position';
 
 describe('VisualExpansionEngine server protocol', () => {
-  it('increases distance after two correct answers and preserves partial progress across a wrong answer', fakeAsync(() => {
+  it('increases distance after each correct answer and holds it after a wrong answer', fakeAsync(() => {
     const engine = new VisualExpansionEngine();
     engine.initialize({
       rounds: 3,
@@ -29,21 +29,21 @@ describe('VisualExpansionEngine server protocol', () => {
     tick(400);
     engine.handleInput({ answers });
 
-    expect(engine.currentDegrees).toBe(4);
+    expect(engine.currentDegrees).toBe(5);
     expect(engine.getCurrentDisplayDurationMs()).toBe(400);
 
     tick(1);
     tick(400);
     engine.handleInput({ answers: ['?', '?'] });
 
-    expect(engine.currentDegrees).toBe(4);
+    expect(engine.currentDegrees).toBe(5);
     expect(engine.getCurrentDisplayDurationMs()).toBe(400);
     expect(engine.state.errors).toBe(1);
     tick(1);
     const nextAnswers = engine.getCurrentStimuli().map(item => item.content);
     tick(400);
     engine.handleInput({ answers: nextAnswers });
-    expect(engine.currentDegrees).toBe(5);
+    expect(engine.currentDegrees).toBe(6);
     expect(engine.state.accuracy).toBe(67);
     engine.destroy();
   }));
@@ -51,16 +51,16 @@ describe('VisualExpansionEngine server protocol', () => {
   it('expands before accelerating, avoids consecutive repeats and reports only presented targets', fakeAsync(() => {
     const engine = new VisualExpansionEngine();
     let result: any;
-    engine.initialize({ rounds: 7, startDegrees: 8, targetDegrees: 10,
+    engine.initialize({ rounds: 5, startDegrees: 8, targetDegrees: 10,
       timing: { durationMs: 400, intervalMs: 1 } } as any, {
       onStart() {}, onPause() {}, onResume() {}, onComplete: value => result = value,
       onError() {}, onStateChange() {}, onStepComplete() {}, onAction() {}
     });
     engine.start();
     let previous: string[] = [];
-    for (let round = 0; round < 7; round++) {
+    for (let round = 0; round < 5; round++) {
       tick(1);
-      expect(engine.currentDegrees).toBe(Math.min(10, 8 + Math.floor(round / 2)));
+      expect(engine.currentDegrees).toBe(Math.min(10, 8 + round));
       expect(engine.getCurrentDisplayDurationMs()).toBe(400);
       const answers = engine.getCurrentStimuli().map(item => item.content);
       expect(answers.some(value => previous.includes(value))).toBeFalse();
@@ -87,7 +87,7 @@ describe('VisualExpansionEngine server protocol', () => {
     }
     expect(result.details.targetSummary.targetReached).toBeFalse();
     expect(result.details.targetSummary.targetAccuracy).toBeNull();
-    expect(result.details.maxDegreesReached).toBe(8);
+    expect(result.details.maxDegreesReached).toBe(9);
     engine.destroy();
   }));
 

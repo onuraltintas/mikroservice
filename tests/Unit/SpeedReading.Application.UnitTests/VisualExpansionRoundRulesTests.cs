@@ -6,16 +6,16 @@ namespace SpeedReading.Application.UnitTests;
 public sealed class VisualExpansionRoundRulesTests
 {
     [Fact]
-    public void Two_correct_training_answers_increase_distance_by_one_without_changing_duration()
+    public void Each_correct_training_answer_increases_distance_by_one_without_changing_duration()
     {
         VisualExpansionRoundRules.AdvanceDifficulty(
             currentDegrees: 4,
             targetDegrees: 30,
             currentDisplayDurationMs: 400,
             isCorrect: true)
-            .Should().Be(new VisualExpansionDifficulty(4, 400, 1));
-        VisualExpansionRoundRules.AdvanceDifficulty(4, 30, 400, true, 1)
-            .Should().Be(new VisualExpansionDifficulty(5, 400, 0));
+            .Should().Be(new VisualExpansionDifficulty(5, 400));
+        VisualExpansionRoundRules.AdvanceDifficulty(5, 30, 400, true)
+            .Should().Be(new VisualExpansionDifficulty(6, 400));
     }
 
     [Fact]
@@ -24,9 +24,9 @@ public sealed class VisualExpansionRoundRulesTests
         var first = VisualExpansionRoundRules.AdvanceDifficulty(8, 16, 400, true);
         var wrong = VisualExpansionRoundRules.AdvanceDifficulty(first.Degrees, 16, first.DisplayDurationMs, false, first.ConsecutiveCorrect);
         var next = VisualExpansionRoundRules.AdvanceDifficulty(wrong.Degrees, 16, wrong.DisplayDurationMs, true, wrong.ConsecutiveCorrect);
-        first.Should().Be(new VisualExpansionDifficulty(8, 400, 1));
+        first.Should().Be(new VisualExpansionDifficulty(9, 400));
         wrong.Should().Be(first);
-        next.Should().Be(new VisualExpansionDifficulty(9, 400));
+        next.Should().Be(new VisualExpansionDifficulty(10, 400));
     }
 
     [Fact]

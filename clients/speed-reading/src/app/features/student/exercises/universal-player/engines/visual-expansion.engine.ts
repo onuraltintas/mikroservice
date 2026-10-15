@@ -339,7 +339,7 @@ export class VisualExpansionEngine implements BaseEngine {
             this.correctAnswers++;
             this.successStreak++;
             if (!this.assessmentProtocol && (!this.stagedProgression
-                || this.successStreak >= (this.currentDegrees < this.targetDegrees ? 2 : 3))) {
+                || this.currentDegrees < this.targetDegrees || this.successStreak >= 3)) {
                 if (this.currentDegrees < this.targetDegrees) {
                     this.currentDegrees = Math.min(this.targetDegrees, this.currentDegrees + (this.stagedProgression ? 1 : 2));
                 } else if (this.stagedProgression) {
@@ -353,8 +353,7 @@ export class VisualExpansionEngine implements BaseEngine {
         } else if (!isPractice) {
             // Yanlış cevapta hız/açı düşmez, olduğu yerde kalır
             this.failStreak++;
-            if (!this.stagedProgression || this.currentDegrees >= this.targetDegrees)
-                this.successStreak = 0;
+            this.successStreak = 0;
             this.state.errors++;
         }
 

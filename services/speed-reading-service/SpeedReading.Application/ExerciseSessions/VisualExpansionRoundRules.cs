@@ -80,13 +80,10 @@ public static class VisualExpansionRoundRules
         var target = Math.Clamp(targetDegrees, degrees, 60);
         var duration = Math.Clamp(currentDisplayDurationMs, MinimumDisplayDurationMs, 5_000);
         if (!isCorrect)
-            return new VisualExpansionDifficulty(degrees, duration,
-                staged && degrees < target ? Math.Clamp(consecutiveCorrect, 0, 1) : 0);
+            return new VisualExpansionDifficulty(degrees, duration);
 
         if (staged && degrees < target)
-            return consecutiveCorrect >= 1
-                ? new VisualExpansionDifficulty(Math.Min(target, degrees + 1), duration)
-                : new VisualExpansionDifficulty(degrees, duration, 1);
+            return new VisualExpansionDifficulty(Math.Min(target, degrees + 1), duration);
 
         var streak = Math.Clamp(consecutiveCorrect, 0, 2) + 1;
         if (staged && streak < 3)

@@ -13,7 +13,7 @@ public sealed class VisualExpansionSessionResultsTests
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public async Task Legacy_training_resumes_with_two_correct_steps_and_pinned_assessment_keeps_original_progression(bool assessment)
+    public async Task Legacy_training_resumes_with_each_correct_step_and_pinned_assessment_keeps_original_progression(bool assessment)
     {
         await using var db = new OwnedSpeedReadingDbContext(new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>()
             .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
@@ -58,7 +58,7 @@ public sealed class VisualExpansionSessionResultsTests
             var presentation = await service.ValidateActionAsync(student, started.SessionId,
                 new() { Action = "visual_expansion_present" });
             var data = presentation.FeedbackData!.Value;
-            Assert.Equal(8 + (assessment ? round * 2 : round / 2), data.GetProperty("degrees").GetInt32());
+            Assert.Equal(8 + (assessment ? round * 2 : round), data.GetProperty("degrees").GetInt32());
             Assert.Equal(assessment ? (int)Math.Round(400 * Math.Pow(0.95, round)) : 400, data.GetProperty("displayDurationMs").GetInt32());
             var answers = data.GetProperty("stimuli").EnumerateArray().Select(item => item.GetString()!).ToList();
             session = await db.ExerciseSessions.SingleAsync();
@@ -172,14 +172,14 @@ public sealed class VisualExpansionSessionResultsTests
         var result = await service.CompleteAsync(student, started.SessionId, new() { CustomData = new() { ["maxDegreesReached"] = System.Text.Json.JsonSerializer.SerializeToElement(999) } });
         Assert.Equal(50, result.Accuracy);
         Assert.Null(result.RawWPM); Assert.Null(result.WordsRead);
-        Assert.Equal(10, result.DetailedResults.GetProperty("visualExpansionMaxPresentedDistance").GetInt32());
+        Assert.Equal(11, result.DetailedResults.GetProperty("visualExpansionMaxPresentedDistance").GetInt32());
         Assert.Equal(2, result.DetailedResults.GetProperty("visualExpansionRoundResults").GetArrayLength());
         Assert.Equal(1, await db.ExerciseSessionResults.CountAsync());
     }
 
     [Theory]
     [InlineData(8, 10, 2, false, 0)]
-    [InlineData(8, 10, 5, true, 1)]
+    [InlineData(8, 10, 5, true, 3)]
     [InlineData(8, 8, 5, true, 5)]
     public async Task Reports_only_presented_target_rounds_and_resumes_the_current_distance(
         int start, int target, int rounds, bool reached, int targetRounds)
@@ -207,7 +207,7 @@ public sealed class VisualExpansionSessionResultsTests
             }
             var present = await service.ValidateActionAsync(student, started.SessionId, new() { Action = "visual_expansion_present" });
             var data = present.FeedbackData!.Value;
-            Assert.Equal(Math.Min(target, start + round / 2), data.GetProperty("degrees").GetInt32());
+            Assert.Equal(Math.Min(target, start + round), data.GetProperty("degrees").GetInt32());
             Assert.Equal(start == target && round >= 3 ? 380 : 400, data.GetProperty("displayDurationMs").GetInt32());
             var answers = data.GetProperty("stimuli").EnumerateArray().Select(item => item.GetString()!).ToList();
             if (previous != null) Assert.Empty(answers.Intersect(previous));
