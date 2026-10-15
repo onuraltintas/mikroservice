@@ -69,6 +69,7 @@ test('custom history window keeps the active and next words visible then asks ex
   }
   await expect(page.getByRole('status').filter({ hasText: /Önizleme sonucu.*kaydedilmedi/ })).toBeVisible();
   await expect(page.getByText('Anlama ölçülmedi.', { exact: false })).toBeVisible();
+  await expect(page.locator('.answers-summary .user-answer')).toHaveText(Array(5).fill('Cevabınız: A'));
   expect(writes).toEqual([]); expect(errors).toEqual([]);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
@@ -116,7 +117,7 @@ test('teacher question preview remains unmeasured and never writes answers', asy
   expect(writes).toEqual([]); expect(errors).toEqual([]);
 });
 
-test('student waits for validated answers and completes only once', async ({ page }) => {
+for (const selectedAnswer of ['A', 'B']) test(`student preserves selected ${selectedAnswer} after validation and saving`, async ({ page }) => {
   const { errors } = await prepare(page, 'Student');
   await expect(page.getByRole('button', { name: 'Özel ayarlarla dene' })).toHaveCount(0);
   const actions = []; let answers = 0, completions = 0;
@@ -133,21 +134,26 @@ test('student waits for validated answers and completes only once', async ({ pag
         answers++; expect(action.questionId).toBe(questionId);
         await new Promise(resolve => releaseAnswer = resolve);
       }
-      response = { isValid: true, isCorrect: action.action === 'answer_question', correctAnswer: 'A', isCompleted: action.action === 'answer_question' };
+      response = { isValid: true, isCorrect: action.action === 'answer_question' && selectedAnswer === 'A', correctAnswer: 'A', isCompleted: action.action === 'answer_question' };
     } else if (path.endsWith('/complete')) {
-      completions++; response = { correctCount: 1, incorrectCount: 0, accuracy: 100, score: 100, rawWPM: null,
-        comprehensionScore: 100, measurementStatus: 'Measured', detailedResults: {} };
+      completions++; response = { correctCount: selectedAnswer === 'A' ? 1 : 0, incorrectCount: selectedAnswer === 'A' ? 0 : 1,
+        accuracy: selectedAnswer === 'A' ? 100 : 0, score: selectedAnswer === 'A' ? 100 : 0, rawWPM: null,
+        comprehensionScore: selectedAnswer === 'A' ? 100 : 0, measurementStatus: 'Measured', detailedResults: {} };
     }
     await route.fulfill({ json: response });
   });
   await page.goto(`/student/exercises/universal-player/${exerciseId}`, { waitUntil: 'domcontentloaded' });
   await page.locator('.start-button-large').click();
   await expect(page.locator('.regression-question-container')).toBeVisible();
-  await page.locator('.regression-question-container .option-button').first().click();
+  await page.getByRole('button', { name: selectedAnswer === 'A' ? 'A bir' : 'B iki', exact: true }).click();
   const submit = page.locator('.regression-question-container .submit-answer-btn');
   await submit.click(); await expect.poll(() => answers).toBe(1);
   await expect(submit).toBeDisabled(); expect(completions).toBe(0);
   releaseAnswer(); await expect.poll(() => completions).toBe(1);
+  await expect(page.getByText('Sonuç kaydedildi.', { exact: true })).toBeVisible();
+  await expect(page.locator('.answers-summary .user-answer')).toHaveText(`Cevabınız: ${selectedAnswer}`);
+  await expect(page.locator('.answers-summary .answer-item')).toHaveClass(selectedAnswer === 'A' ? /correct/ : /wrong/);
+  if (selectedAnswer === 'B') await expect(page.locator('.answers-summary .correct-answer')).toHaveText('Doğru: A');
   expect(actions).toEqual(['start_reading', 'finish_reading', 'answer_question']);
   await expect(page.locator('.stat-label').filter({ hasText: /^WPM$|^Okuma hızı$/ })).toHaveCount(0);
   expect(errors).toEqual([]);
