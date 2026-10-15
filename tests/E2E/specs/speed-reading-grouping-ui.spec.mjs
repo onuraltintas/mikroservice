@@ -5,11 +5,12 @@ const exerciseId = '30000000-0000-0000-0000-000000000001';
 const typeId = '30000000-0000-0000-0000-000000000002';
 const textId = '30000000-0000-0000-0000-000000000003';
 
-async function prepare(page, role = 'Admin', timeout = false, realText = 'bir. iki üç dört.\n\nbeş altı.') {
-  const errors = [], writes = [];
+async function prepare(page, role = 'Admin', timeout = false, realText = 'bir. iki üç dört.\n\nbeş altı.', ageAware = false) {
+  const errors = [], writes = [], dailyRequests = [];
   page.on('pageerror', error => errors.push(error.message));
   await page.addInitScript(() => localStorage.setItem('currentUser', JSON.stringify({ id: 'test-user' })));
   const exercise = { id: exerciseId, exerciseTypeId: typeId, title: 'Gruplama testi', difficultyLevel: 3,
+    ...(ageAware ? { targetAgeGroupId: '10000000-0000-0000-0000-000000000004' } : {}),
     exerciseTypeName: 'Chunking', configurationJson: JSON.stringify({ engineType: 'word_highlight', readingTextId: textId,
       engineConfig: { mode: 'chunking', readingPurpose: 'practice', content: { chunkSize: 2, minWordCount: 5, maxWordCount: 8 }, pacer: { speedWpm: 200 },
         visuals: { highlightColor: 'blue' }, timing: timeout ? { timeLimitSec: 1 } : {} } }) };
@@ -22,20 +23,26 @@ async function prepare(page, role = 'Admin', timeout = false, realText = 'bir. i
     } else if (request.method() !== 'GET') {
       writes.push(path);
       const dailyProgress = role === 'Student' && path === '/api/speed-reading/daily-progress/complete-exercise';
+      if (dailyProgress) dailyRequests.push(request.postDataJSON());
       return route.fulfill({ status: dailyProgress ? 200 : 500,
         json: dailyProgress ? {} : { message: 'Unexpected fixture write' } });
     } else if (path.endsWith('/exercise-types')) response = { items: [{ id: typeId, name: 'Chunking', displayName: 'Gruplama', engineType: 'word_highlight', isActive: true }], totalCount: 1 };
     else if (path.endsWith(`/exercises/${exerciseId}`)) response = exercise;
-    else if (path.endsWith('/exercises')) response = { items: [exercise], totalCount: 1 };
+    else if (path.endsWith('/exercises')) {
+      const items = ageAware ? [exercise, { ...exercise, id: 'other-age-exercise', targetAgeGroupId: '10000000-0000-0000-0000-000000000003' },
+        { ...exercise, id: 'own-second-level', difficultyLevel: 4 }] : [exercise];
+      response = { items, totalCount: items.length };
+    }
     else if (path.endsWith(`/reading-texts/${textId}`)) response = { id: textId, title: 'Metin', content: realText,
       difficultyLevel: 3, isActive: true, wordCount: 6, questions: [{ type: 1, correctAnswer: 'A', optionA: 'a', optionB: 'b', optionC: 'c', optionD: 'd' }] };
     else if (path.includes('/profile/status')) response = { hasAgeGroupConfiguration: true };
     else if (path.endsWith('/my-modules')) response = { hasSpeedReading: true };
+    else if (path.endsWith('/profile/settings')) response = { ageGroupConfigurationId: ageAware ? '10000000-0000-0000-0000-000000000004' : null };
     await route.fulfill({ json: response });
   });
   await page.goto('/student/exercises', { waitUntil: 'domcontentloaded' });
   await expect(page.getByRole('heading', { name: 'Gruplama', exact: true })).toBeVisible();
-  return { errors, writes };
+  return { errors, writes, dailyRequests };
 }
 
 async function launch(page) {
@@ -100,8 +107,8 @@ test('student cannot use staff-only custom preview controls', async ({ page }) =
   await expect(page.getByRole('button', { name: 'Özel ayarlarla dene' })).toHaveCount(0);
 });
 
-test('student persists server-acknowledged grouping without a fabricated WPM', async ({ page }) => {
-  const { errors, writes } = await prepare(page, 'Student');
+for (const daily of [false, true]) test(`student persists grouping without fabricated WPM from ${daily ? 'a daily slot' : 'the catalogue'}`, async ({ page }) => {
+  const { errors, writes, dailyRequests } = await prepare(page, 'Student');
   const sessionId = '30000000-0000-0000-0000-000000000004';
   const actions = [];
   let completions = 0;
@@ -131,14 +138,17 @@ test('student persists server-acknowledged grouping without a fabricated WPM', a
     }
     await route.fulfill({ json: response });
   });
-  await page.goto(`/student/exercises/universal-player/${exerciseId}`, { waitUntil: 'domcontentloaded' });
+  const dailyQuery = daily ? '?slotOrder=2&programDay=1&programProgressId=30000000-0000-0000-0000-000000000005' : '';
+  await page.goto(`/student/exercises/universal-player/${exerciseId}${dailyQuery}`, { waitUntil: 'domcontentloaded' });
   await expect(page.locator('.start-button-large')).toBeVisible();
   await page.locator('.start-button-large').click();
   await expect(page.locator('.chunk-group')).toHaveCount(4);
   await expect(page.locator('.word-highlight-container .game-stats')).toContainText('200');
   await expect.poll(() => completions).toBe(1);
   expect(actions).toEqual(['start_reading', 'finish_reading']);
-  await expect.poll(() => writes).toEqual(['/api/speed-reading/daily-progress/complete-exercise']);
+  await expect.poll(() => writes).toEqual(daily ? ['/api/speed-reading/daily-progress/complete-exercise'] : []);
+  if (daily) expect(dailyRequests).toEqual([expect.objectContaining({ sessionId, exerciseId, slotOrder: 2, programDay: 1,
+    programProgressId: '30000000-0000-0000-0000-000000000005' })]);
   expect(completionPayload.rawWPM).toBeUndefined();
   expect(completionPayload.wpm).toBeUndefined();
   expect(completionPayload.accuracy).toBeUndefined();
@@ -146,4 +156,13 @@ test('student persists server-acknowledged grouping without a fabricated WPM', a
   await expect(page.getByText('Önizleme sonucu — kaydedilmedi.', { exact: true })).toHaveCount(0);
   await expect(page.locator('.stat-label').filter({ hasText: /^WPM$|^Okuma hızı$/ })).toHaveCount(0);
   expect(errors).toEqual([]);
+});
+
+test('student catalogue levels follow the profile age while preserving all own levels', async ({ page }) => {
+  const { errors, writes } = await prepare(page, 'Student', false, 'bir iki üç dört beş altı', true);
+  await page.getByRole('button', { name: 'Kayıtlı ayarlarla başlat' }).click();
+  const dialog = page.getByRole('dialog');
+  await expect(dialog.getByRole('button', { name: 'play_circle', exact: true })).toHaveCount(2);
+  await expect(dialog.locator('.age-badge')).toHaveText(['Genç yetişkin', 'Genç yetişkin']);
+  expect(errors).toEqual([]); expect(writes).toEqual([]);
 });
