@@ -78,14 +78,14 @@ import { SpeedReadingAdminService } from '../../../../core/services/speed-readin
                                     @if (service.product === 'speed-reading' && canManageProgression()) {
                                       <div class="mt-4 space-y-2 border-t pt-3">
                                         <label for="user-progression-mode" class="block text-sm font-semibold">Program ilerleme izni</label>
-                                        <select id="user-progression-mode" class="w-full rounded-lg border p-2 dark:bg-gray-800" [value]="progressionMode" (change)="progressionMode = $any($event.target).value" [disabled]="progressionLoading() || progressionSaving() || !progression()">
+                                        <select id="user-progression-mode" class="w-full rounded-lg border p-2 dark:bg-gray-800" [value]="progressionMode" (change)="progressionMode = $any($event.target).value" [disabled]="loading() || accessLoading() !== null || progressionLoading() || progressionSaving() || !progression()">
                                           <option value="inherit">Genel ayarı kullan</option>
                                           <option value="allow">Beklemeden ilerleyebilir</option>
                                           <option value="deny">Ertesi günü beklesin</option>
                                         </select>
                                         @if (progression(); as policy) { <p class="text-xs text-gray-500">Geçerli izin: {{ policy.allowEarlyAdvance ? 'Beklemeden ilerleyebilir' : 'Takvime bağlı' }} · Genel ayar: {{ policy.defaultAllowEarlyAdvance ? 'Açık' : 'Kapalı' }}</p> }
                                         @if (progressionError()) { <p role="alert" class="text-sm text-red-600">{{ progressionError() }}</p> }
-                                        <button type="button" class="rounded-lg border border-indigo-200 px-3 py-2 text-sm font-semibold text-indigo-700 disabled:opacity-50" (click)="saveProgression()" [disabled]="progressionLoading() || progressionSaving() || !progression()">{{ progressionSaving() ? 'Kaydediliyor…' : 'İlerleme iznini kaydet' }}</button>
+                                        <button type="button" class="rounded-lg border border-indigo-200 px-3 py-2 text-sm font-semibold text-indigo-700 disabled:opacity-50" (click)="saveProgression()" [disabled]="loading() || accessLoading() !== null || progressionLoading() || progressionSaving() || !progression()">{{ progressionSaving() ? 'Kaydediliyor…' : 'İlerleme iznini kaydet' }}</button>
                                       </div>
                                     }
                                 </div>
@@ -338,7 +338,7 @@ export class EditUserModalComponent implements OnInit {
 
   saveProgression(): void {
     const user = this.user();
-    if (!user || !this.canManageProgression() || !this.progression() || this.progressionSaving() || this.progressionLoading()) return;
+    if (!user || !this.canManageProgression() || !this.progression() || this.loading() || this.accessLoading() !== null || this.progressionSaving() || this.progressionLoading()) return;
     this.progressionSaving.set(true); this.progressionError.set(null);
     this.progressionService.updateStudentProgression(user.userId, this.progressionMode).subscribe({
       next: value => {
