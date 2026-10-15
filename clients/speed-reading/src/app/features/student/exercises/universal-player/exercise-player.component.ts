@@ -15,6 +15,7 @@ import { canUseStaffTraining } from '../../../../core/guards/staff-training.guar
 import { applyCustomPreviewSettings, getCustomPreviewControls } from './custom-preview-settings';
 import { resolveSchulteSettings } from './schulte-settings';
 import { assessmentRoundLabel } from './engines/assessment-block-protocol';
+import { scrollReadingAhead } from './reading-auto-scroll';
 
 import { EngineFactory, EngineType } from './engines/engine-factory';
 import { shouldForwardExerciseAction } from './exercise-action-policy';
@@ -146,10 +147,6 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
   @ViewChild('textFadeContainer') textFadeContainer?: ElementRef<HTMLDivElement>;
   @ViewChild('regressionContainer') regressionContainer?: ElementRef<HTMLDivElement>;
   @ViewChild('subvocDisplayArea') subvocDisplayArea?: ElementRef<HTMLDivElement>;
-  private shouldScrollWord = false;
-  private shouldScrollFade = false;
-  private shouldScrollRegression = false;
-  private shouldScrollSubvoc = false;
 
   @HostListener('document:mouseleave', ['$event'])
   onMouseLeave(event: MouseEvent): void {
@@ -516,24 +513,15 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
       this.shouldFocusInput = false;
     }
 
-    if (this.shouldScrollWord) {
-      this.handleWordHighlightScroll();
-      this.shouldScrollWord = false;
-    }
+  }
 
-    if (this.shouldScrollFade) {
-      this.handleTextFadeScroll();
-      this.shouldScrollFade = false;
-    }
-
-    if (this.shouldScrollRegression) {
-      this.handleRegressionScroll();
-      this.shouldScrollRegression = false;
-    }
-
-    if (this.shouldScrollSubvoc) {
-      this.handleSubvocScroll();
-      this.shouldScrollSubvoc = false;
+  private scrollActiveReading(): void {
+    if (!this.engineState.isRunning || this.engineState.isPaused) return;
+    switch (this.engine?.engineType) {
+      case 'word_highlight': this.handleWordHighlightScroll(); break;
+      case 'text_fade': this.handleTextFadeScroll(); break;
+      case 'regression_reduction': this.handleRegressionScroll(); break;
+      case 'subvocalization_reduction': this.handleSubvocScroll(); break;
     }
   }
 
@@ -542,30 +530,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     if (!this.wordHighlightContainer?.nativeElement) return;
 
     const container = this.wordHighlightContainer.nativeElement;
-    const highlightedElement = container.querySelector('.chunk-group.highlight') as HTMLElement;
-
-    if (highlightedElement) {
-      // Calculate scroll position to center the highlighted element within the container only
-      const containerRect = container.getBoundingClientRect();
-      const elementRect = highlightedElement.getBoundingClientRect();
-
-      // Calculate the element's position relative to container's scroll position
-      const elementTopRelativeToContainer = elementRect.top - containerRect.top + container.scrollTop;
-
-      // Calculate the scroll position that would center the element
-      const scrollTarget = elementTopRelativeToContainer - (container.clientHeight / 2) + (elementRect.height / 2);
-
-      // Only scroll if element is outside the middle third of the visible area
-      const visibleTop = container.scrollTop + (container.clientHeight * 0.33);
-      const visibleBottom = container.scrollTop + (container.clientHeight * 0.66);
-
-      if (elementTopRelativeToContainer < visibleTop || elementTopRelativeToContainer > visibleBottom) {
-        container.scrollTo({
-          top: Math.max(0, scrollTarget),
-          behavior: 'smooth'
-        });
-      }
-    }
+    scrollReadingAhead(container, '.chunk-group.highlight');
   }
 
 
@@ -573,51 +538,14 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     if (!this.textFadeContainer?.nativeElement) return;
 
     const container = this.textFadeContainer.nativeElement;
-    const activeElement = container.querySelector('.fading-word-item.active') as HTMLElement;
-
-    if (activeElement) {
-      const containerRect = container.getBoundingClientRect();
-      const elementRect = activeElement.getBoundingClientRect();
-
-      const elementTopRelativeToContainer = elementRect.top - containerRect.top + container.scrollTop;
-      const scrollTarget = elementTopRelativeToContainer - (container.clientHeight / 2) + (elementRect.height / 2);
-
-      const visibleTop = container.scrollTop + (container.clientHeight * 0.3);
-      const visibleBottom = container.scrollTop + (container.clientHeight * 0.6);
-
-      if (elementTopRelativeToContainer < visibleTop || elementTopRelativeToContainer > visibleBottom) {
-        container.scrollTo({
-          top: Math.max(0, scrollTarget),
-          behavior: 'smooth'
-        });
-      }
-    }
+    scrollReadingAhead(container, '.fading-word-item.active');
   }
 
   private handleRegressionScroll(): void {
     if (!this.regressionContainer?.nativeElement) return;
 
     const container = this.regressionContainer.nativeElement;
-    const activeElement = container.querySelector('.regression-word.active') as HTMLElement;
-
-    if (activeElement) {
-      const containerRect = container.getBoundingClientRect();
-      const elementRect = activeElement.getBoundingClientRect();
-
-      const elementTopRelativeToContainer = elementRect.top - containerRect.top + container.scrollTop;
-      const scrollTarget = elementTopRelativeToContainer - (container.clientHeight / 2) + (elementRect.height / 2);
-
-      // Sadece kelime orta alanın (üst/alt %30) dışındaysa kaydır
-      const visibleTop = container.scrollTop + (container.clientHeight * 0.3);
-      const visibleBottom = container.scrollTop + (container.clientHeight * 0.7);
-
-      if (elementTopRelativeToContainer < visibleTop || elementTopRelativeToContainer > visibleBottom) {
-        container.scrollTo({
-          top: Math.max(0, scrollTarget),
-          behavior: 'smooth'
-        });
-      }
-    }
+    scrollReadingAhead(container, '.regression-word.active');
   }
 
   private handleSubvocScroll(): void {
@@ -627,25 +555,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
     if (this.getSubvocDisplayMode() !== 'highlight') return;
 
     const container = this.subvocDisplayArea.nativeElement;
-    const activeElement = container.querySelector('.subvoc-word.active') as HTMLElement;
-
-    if (activeElement) {
-      const containerRect = container.getBoundingClientRect();
-      const elementRect = activeElement.getBoundingClientRect();
-
-      const elementTopRelativeToContainer = elementRect.top - containerRect.top + container.scrollTop;
-      const scrollTarget = elementTopRelativeToContainer - (container.clientHeight / 2) + (elementRect.height / 2);
-
-      const visibleTop = container.scrollTop + (container.clientHeight * 0.25);
-      const visibleBottom = container.scrollTop + (container.clientHeight * 0.75);
-
-      if (elementTopRelativeToContainer < visibleTop || elementTopRelativeToContainer > visibleBottom) {
-        container.scrollTo({
-          top: Math.max(0, scrollTarget),
-          behavior: 'smooth'
-        });
-      }
-    }
+    scrollReadingAhead(container, '.subvoc-word.active');
   }
 
   ngOnDestroy(): void {
@@ -1524,19 +1434,8 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy, AfterViewChec
             }
           }
 
-          if (this.engine?.engineType === 'word_highlight') {
-            this.shouldScrollWord = true;
-          }
-          if (this.engine?.engineType === 'text_fade') {
-            this.shouldScrollFade = true;
-          }
-          if (this.engine?.engineType === 'regression_reduction') {
-            this.shouldScrollRegression = true;
-          }
-          if (this.engine?.engineType === 'subvocalization_reduction') {
-            this.shouldScrollSubvoc = true;
-          }
           this.cdr.detectChanges();
+          this.scrollActiveReading();
         },
         onStepComplete: (step, correct) => {
           if (this.isTachistoscopeMode() && !this.isAssessmentMode) this.refreshTachistoscopeFeedback();

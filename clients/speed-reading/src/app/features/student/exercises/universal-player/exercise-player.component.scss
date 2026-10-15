@@ -4752,6 +4752,7 @@ h1 {
         .subvoc-display-area {
             padding: 40px 20px;
             min-height: 300px;
+
         }
 
         .rsvp-display .rsvp-word {
@@ -8259,4 +8260,56 @@ h1 {
   .result-card-new .speed-reading-results { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .schulte-summary__heading { flex-direction: column; gap: 8px; }
   .schulte-summary__heading h2 { font-size: 21px; }
+}
+
+// Keep timed reading inside the screen; only its text pane should shrink.
+.game-container:is(.word-highlight-container, .text-fade-container, .regression-reduction-container),
+.game-container.subvoc-reduction-container:has(> .subvoc-display-area.highlight-mode) {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100dvh - 72px);
+
+  > * { flex-shrink: 0; }
+
+  > :is(.highlight-display-area, .text-display-area, .regression-text-area, .subvoc-display-area.highlight-mode) {
+    min-height: 0;
+    flex-shrink: 1;
+  }
+
+  @media (max-height: 760px), (max-width: 600px) {
+    padding: 12px;
+    gap: 8px;
+
+    > .game-header {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) 44px 44px;
+      margin-bottom: 8px;
+      padding-bottom: 8px;
+
+      > .timer { grid-column: 1; grid-row: 1; min-width: 0; padding: 8px; font-size: 16px; }
+      > :is(.progress-info, .wpm-badge) { grid-column: 2; grid-row: 1; min-width: 0; }
+      > .wpm-badge { padding: 4px 8px; font-size: 12px; white-space: normal; }
+      > button:nth-last-child(2) { grid-column: 3; grid-row: 1; }
+      > button:last-child { grid-column: 4; grid-row: 1; }
+      > .regression-badge { grid-column: 1 / -1; grid-row: 2; justify-self: start; }
+      > .subvoc-pulse-rhythm {
+        grid-column: 1 / 4; grid-row: 2; justify-self: start;
+        min-width: 0; padding: 6px; gap: 6px;
+        .rhythm-dot { width: 28px; height: 28px; flex-shrink: 0; font-size: 14px; }
+      }
+      > .visual-metronome-indicator { grid-column: 4; grid-row: 2; }
+    }
+
+    > :is(.highlight-display-area, .text-display-area, .regression-text-area, .subvoc-display-area.highlight-mode) {
+      margin: 8px 0;
+      padding: 12px;
+    }
+
+    .text-content, .regression-text-content { padding: 0; }
+    > .game-stats { padding: 8px; }
+    > .regression-footer { padding: 8px; gap: 4px; }
+    > .regression-footer > div { font-size: 12px; line-height: 1.4; }
+    > .subvoc-footer { margin-top: 8px; gap: 4px; }
+    > .subvoc-footer > div { padding: 6px; gap: 6px; font-size: 12px; }
+  }
 }

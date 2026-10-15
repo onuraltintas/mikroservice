@@ -118,9 +118,8 @@ test('native smooth scrolling follows timer updates without any extra click', as
   expect(errors).toEqual([]); expect(writes).toEqual([]);
 });
 
-test('highlight metronome fits narrow mobile headers', async ({ page }, testInfo) => {
+for (const width of [320, 360]) test(`highlight metronome fits narrow mobile headers at ${width}px`, async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'mobile', 'Narrow mobile layout');
-  for (const width of [320, 360]) {
     await page.setViewportSize({ width, height: 727 });
     await prepare(page, { ...variants[4], config: { ...variants[4].config, metronomeEnabled: true, visualMetronome: true } });
     await page.clock.install(); await page.clock.pauseAt(new Date());
@@ -131,5 +130,4 @@ test('highlight metronome fits narrow mobile headers', async ({ page }, testInfo
     const rhythmBox = await rhythm.boundingBox(), indicatorBox = await indicator.boundingBox();
     expect(rhythmBox.x + rhythmBox.width).toBeLessThanOrEqual(indicatorBox.x);
     expect(indicatorBox.x + indicatorBox.width).toBeLessThanOrEqual(width - 8);
-  }
 });
