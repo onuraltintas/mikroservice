@@ -4,6 +4,18 @@ import { fakeAsync, tick } from '@angular/core/testing';
 import { VisualExpansionEngine } from './engines/visual-expansion.engine';
 
 describe('visual expansion answer UI', () => {
+  it('shows practice labels only for actual assessment sessions', () => {
+    const value = Object.create(ExercisePlayerComponent.prototype) as any;
+    value.parsedConfig = { engineConfig: { assessmentProtocol: {
+      version: 2, practiceRounds: 3, roundsPerBlock: 6, blockValues: [8, 12, 16]
+    } } };
+    value.engine = { engineType: 'visual_expansion' };
+    value.engineState = { currentStep: 0 };
+    value.isAssessmentMode = false;
+    expect(value.getAssessmentRoundLabel()).toBeNull();
+    value.isAssessmentMode = true;
+    expect(value.getAssessmentRoundLabel()).toBe('Alıştırma 1/3 — puana dahil değil');
+  });
   for (const serverAuthoritative of [false, true]) {
     it(`counts training answers from the first round despite catalog assessment metadata (server=${serverAuthoritative})`, fakeAsync(() => {
       const engine = new VisualExpansionEngine();
