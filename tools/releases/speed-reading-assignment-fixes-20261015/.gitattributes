@@ -1,0 +1,2 @@
+# Preserve the exact bytes used by the release payload hash manifest.
+* -text whitespace=cr-at-eol
