@@ -14,7 +14,8 @@ public sealed class UserAccessManagementMetadataTests
         nameof(UserController.GetSessions),
         nameof(UserController.RevokeSession),
         nameof(UserController.RevokeAllSessions),
-        nameof(UserController.ResetMfa)
+        nameof(UserController.ResetMfa),
+        nameof(UserController.SetProductAccess)
     };
 
     [Theory]

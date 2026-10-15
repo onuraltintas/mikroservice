@@ -16,8 +16,10 @@ namespace Identity.API.IntegrationTests;
 
 public sealed class ProductScopedRoleAssignmentTests
 {
-    [Fact]
-    public async Task AssignRoleForProduct_ShouldGrantRoleAndOnlyTheSelectedProductAccess()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task AssignRoleForProduct_ShouldRespectExplicitlyRevokedAccess(bool accessWasRevoked)
     {
         var options = new DbContextOptionsBuilder<IdentityDbContext>()
             .UseInMemoryDatabase(Guid.NewGuid().ToString())
@@ -26,6 +28,11 @@ public sealed class ProductScopedRoleAssignmentTests
         var role = Role.Create("Teacher", "Teacher");
         var user = User.Create(userId, "teacher@example.test");
         user.AddRole(new Identity.Domain.Entities.UserRole(userId, role.Id, PlatformProduct.Coaching));
+        if (accessWasRevoked)
+        {
+            user.GrantProductAccess(PlatformProduct.SpeedReading, UserProductAccessSource.Admin, null, DateTimeOffset.UtcNow);
+            user.RevokeProductAccess(PlatformProduct.SpeedReading, DateTimeOffset.UtcNow);
+        }
 
         await using var context = new IdentityDbContext(options);
         context.Users.Add(user);
@@ -60,7 +67,7 @@ public sealed class ProductScopedRoleAssignmentTests
             .Include(candidate => candidate.Roles).ThenInclude(userRole => userRole.Role)
             .SingleAsync(candidate => candidate.Id == userId);
         savedUser.Should().NotBeNull();
-        savedUser!.HasProductAccess(PlatformProduct.SpeedReading).Should().BeTrue();
+        savedUser!.HasProductAccess(PlatformProduct.SpeedReading).Should().Be(!accessWasRevoked);
         savedUser.HasProductAccess(PlatformProduct.Coaching).Should().BeFalse();
         savedUser.Roles.Should().HaveCount(2);
         savedUser.Roles.Should().ContainSingle(userRole =>

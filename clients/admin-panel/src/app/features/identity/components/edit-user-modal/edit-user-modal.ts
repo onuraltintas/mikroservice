@@ -5,6 +5,9 @@ import { IdentityService, UserProfileDto, UpdateUserProfileRequest } from '../..
 import { InstitutionDto, InstitutionService } from '../../../../core/services/institution.service';
 import { ToasterService } from '../../../../core/services/toaster.service';
 import { getAdminErrorMessage } from '../../../../core/auth/admin-error-message';
+import { AuthService, hasRequiredAccess } from '../../../../core/auth/auth.service';
+import { ADMIN_PERMISSIONS } from '../../../../core/auth/permissions';
+import { RoleProduct, userProductRoles } from '../../../../core/services/user-product-roles';
 
 @Component({
   selector: 'app-edit-user-modal',
@@ -32,13 +35,13 @@ import { getAdminErrorMessage } from '../../../../core/auth/admin-error-message'
                                 </svg>
                             </div>
                             <div>
-                                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Kullanıcı Düzenle</h3>
+                                <h3 id="modal-title" class="text-lg font-semibold text-gray-900 dark:text-white">Kullanıcı Düzenle</h3>
                                 <div class="mt-1 flex items-center gap-2">
                                      <span class="inline-flex items-center rounded-md bg-gray-50 px-2 py-1 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10 dark:bg-gray-800 dark:text-gray-300 dark:ring-gray-400/20">{{ user()?.email }}</span>
                                 </div>
                             </div>
                         </div>
-                        <button (click)="closeModal()" class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300">
+                        <button (click)="closeModal()" [disabled]="loading() || accessLoading() !== null" class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300">
                             <span class="sr-only">Kapat</span>
                             <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -49,6 +52,37 @@ import { getAdminErrorMessage } from '../../../../core/auth/admin-error-message'
 
                 <!-- Body -->
                 <div class="p-6 space-y-5">
+                    <section aria-labelledby="edit-user-services" class="space-y-3">
+                        <h4 id="edit-user-services" class="font-semibold text-gray-900 dark:text-white">Servis erişimleri</h4>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Her servis ayrı yönetilir. Erişim değişikliği hemen kaydedilir; roller, abonelikler ve kurum bağlantıları korunur.</p>
+                        @if (isGlobalAdministrator()) {
+                            <p class="text-sm text-gray-600 dark:text-gray-300">SystemAdmin tüm servislerde genel yetkilidir; servis erişimiyle kısıtlanamaz.</p>
+                        } @else {
+                            @for (service of services; track service.product) {
+                                <div class="rounded-xl border border-gray-200 p-3 dark:border-gray-700" [attr.data-service]="service.product">
+                                    <div class="flex items-center justify-between gap-3">
+                                        <div>
+                                            <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ service.label }}</p>
+                                            <p class="mt-1 text-xs" [class.text-green-700]="hasProductAccess(service.product)" [class.text-gray-500]="!hasProductAccess(service.product)">{{ hasProductAccess(service.product) ? 'Erişim açık' : 'Erişim kapalı' }}</p>
+                                        </div>
+                                        @if (canManageProductAccess()) {
+                                            <button type="button" (click)="setProductAccess(service.product, !hasProductAccess(service.product))" [disabled]="loading() || accessLoading() !== null"
+                                                [attr.aria-label]="service.label + (hasProductAccess(service.product) ? ' erişimini kapat' : ' erişimini aç')"
+                                                class="shrink-0 rounded-lg border border-indigo-200 px-3 py-2 text-xs font-semibold text-indigo-700 hover:bg-indigo-50 disabled:opacity-50 dark:border-indigo-700 dark:text-indigo-300 dark:hover:bg-indigo-900/20">
+                                                {{ accessLoading() === service.product ? 'Kaydediliyor…' : hasProductAccess(service.product) ? 'Erişimi kapat' : 'Erişim aç' }}
+                                            </button>
+                                        }
+                                    </div>
+                                    <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">Roller: {{ rolesForProduct(service.product) || 'Atanmamış — Roller bölümünden ayrıca tanımlayın.' }}</p>
+                                </div>
+                            }
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Erişim kapatılınca yeni giriş ve oturum yenileme durur. Açık oturumun mevcut erişim süresi sona erene kadar devam etmesi mümkündür.</p>
+                            @if (hasProductAccessPermission() && !auth.userProfile()?.mfaVerified) {
+                                <p class="text-sm text-amber-700 dark:text-amber-300">Servis erişimlerini değiştirmek için MFA doğrulaması gerekiyor.</p>
+                            }
+                        }
+                        @if (accessError()) { <p role="alert" class="text-sm text-red-600 dark:text-red-300">{{ accessError() }}</p> }
+                    </section>
                     <form [formGroup]="form">
                         <div class="space-y-4">
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -152,11 +186,11 @@ import { getAdminErrorMessage } from '../../../../core/auth/admin-error-message'
 
                 <!-- Footer -->
                 <div class="bg-gray-50 dark:bg-gray-800/50 px-6 py-4 border-t border-gray-100 dark:border-gray-700 flex justify-end gap-3">
-                    <button type="button" (click)="closeModal()"
+                    <button type="button" (click)="closeModal()" [disabled]="loading() || accessLoading() !== null"
                         class="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
-                        İptal
+                        Kapat
                     </button>
-                    <button type="button" (click)="save()" [disabled]="loading() || !form.dirty"
+                    <button type="button" (click)="save()" [disabled]="loading() || accessLoading() !== null || !form.dirty"
                         class="rounded-lg px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors inline-flex items-center">
                         @if(loading()) {
                             <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -186,6 +220,14 @@ export class EditUserModalComponent implements OnInit {
   private identityService = inject(IdentityService);
   private toaster = inject(ToasterService);
   private institutionService = inject(InstitutionService);
+  readonly auth = inject(AuthService);
+  readonly services: { product: RoleProduct; label: string }[] = [
+    { product: 'coaching', label: 'Koçluk' },
+    { product: 'speed-reading', label: 'Hızlı Okuma' }
+  ];
+  readonly accessLoading = signal<RoleProduct | null>(null);
+  readonly accessError = signal<string | null>(null);
+  private accessChanged = false;
 
   user = signal<UserProfileDto | null>(null);
   institutions = signal<InstitutionDto[]>([]);
@@ -250,13 +292,41 @@ export class EditUserModalComponent implements OnInit {
   isStudent() { return this.user()?.roles?.includes('Student') ?? false; }
   isProfileUser() { return this.isTeacher() || this.isStudent(); }
 
+  isGlobalAdministrator() { return this.user()?.roles.includes('SystemAdmin') ?? false; }
+  hasProductAccess(product: RoleProduct) { return this.user()?.productAccesses?.some(access => access.product === product && access.isActive) ?? false; }
+  rolesForProduct(product: RoleProduct) { return userProductRoles(this.user()).filter(assignment => assignment.product === product).map(assignment => assignment.role).join(', '); }
+  hasProductAccessPermission() { return hasRequiredAccess(this.auth.userProfile(), ADMIN_PERMISSIONS.usersEdit, 'SystemAdmin'); }
+  canManageProductAccess() { return this.hasProductAccessPermission() && this.auth.userProfile()?.mfaVerified === true && !this.isGlobalAdministrator(); }
+
+  setProductAccess(product: RoleProduct, isActive: boolean) {
+    const user = this.user();
+    if (!user || !this.canManageProductAccess() || this.loading() || this.accessLoading() !== null) return;
+    this.accessLoading.set(product);
+    this.accessError.set(null);
+    this.identityService.setProductAccess(user.userId, product, isActive).subscribe({
+      next: () => {
+        this.user.update(current => current ? { ...current, productAccesses: [
+          ...(current.productAccesses ?? []).filter(access => access.product !== product), { product, isActive }
+        ] } : current);
+        this.accessChanged = true;
+        this.accessLoading.set(null);
+        this.toaster.success(`${this.services.find(service => service.product === product)!.label} erişimi ${isActive ? 'açıldı' : 'kapatıldı'}.`);
+      },
+      error: err => {
+        this.accessLoading.set(null);
+        this.accessError.set(getAdminErrorMessage(err, 'Servis erişimi güncellenemedi. Lütfen yeniden deneyin.', true));
+      }
+    });
+  }
+
   closeModal(saved: boolean = false) {
-    this.close.emit(saved);
+    if (this.loading() || this.accessLoading() !== null) return;
+    this.close.emit(saved || this.accessChanged);
   }
 
   save() {
     const currentUser = this.user();
-    if (!currentUser) return;
+    if (!currentUser || this.loading() || this.accessLoading() !== null) return;
 
     if (this.form.invalid) {
       this.form.markAllAsTouched();

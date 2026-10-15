@@ -542,6 +542,31 @@ public class UserController : ControllerBase
     
     public record RoleRequest(string RoleName);
 
+    public record ProductAccessRequest(bool? IsActive);
+
+    [HttpPut("{id:guid}/products/{product:regex(coaching|speed-reading)}/access")]
+    [HasPermission(Permissions.Users.Edit)]
+    [Authorize(Roles = "SystemAdmin")]
+    [Authorize(Policy = "MfaRequired")]
+    [MfaCategory(MfaOperationCategories.Users)]
+    public async Task<IActionResult> SetProductAccess(
+        Guid id,
+        string product,
+        [FromBody] ProductAccessRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (_currentUserService.UserId is not { } actorId)
+            return Unauthorized();
+        if (!PlatformProductExtensions.TryParseRouteValue(product, out var parsedProduct) || request.IsActive is null)
+            return BadRequest(new Error("Auth.InvalidProductAccess", "Servis ve erişim durumu açıkça belirtilmelidir."));
+
+        var result = await _accessManagement.SetProductAccessAsync(
+            id, parsedProduct, request.IsActive.Value, actorId,
+            HttpContext.Connection.RemoteIpAddress?.ToString(), cancellationToken);
+        if (result.IsSuccess) return NoContent();
+        return result.Error.Code == "User.NotFound" ? NotFound(new { Error = result.Error }) : BadRequest(new { Error = result.Error });
+    }
+
     [HttpGet("{id:guid}/sessions")]
     [HasPermission(Permissions.Users.Edit)]
     [Authorize(Roles = "SystemAdmin")]

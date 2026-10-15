@@ -73,7 +73,7 @@ import { getAdminErrorMessage } from '../../../../core/auth/admin-error-message'
                 <option value="coaching">Koçluk</option>
                 <option value="speed-reading">Hızlı Okuma</option>
               </select>
-              <p class="text-xs text-gray-500 mb-3">Ekleme ve kaldırma yalnızca belirtilen servisin rolünü değiştirir. Abonelik ve kurum bağlantıları ayrı yönetilir. SystemAdmin tüm servislerde geçerli genel roldür; bu listeden atanmaz.</p>
+              <p class="text-xs text-gray-500 mb-3">Ekleme ve kaldırma yalnızca belirtilen servisin rolünü değiştirir. Kapatılmış servis erişimi rol eklenince açılmaz; Kullanıcı Düzenle ekranından açabilirsiniz. Abonelik ve kurum bağlantıları ayrı yönetilir. SystemAdmin tüm servislerde geçerli genel roldür; bu listeden atanmaz.</p>
               @if (refreshFailed()) {
                 <p role="alert" class="text-sm text-red-600 mb-2">Rol değişti ancak güncel liste alınamadı. Devam etmek için listeyi yeniden yükleyin.</p>
                 <button (click)="refreshUser()" [disabled]="actionLoading() !== null" class="text-sm text-indigo-600 underline mb-3">Listeyi yeniden yükle</button>

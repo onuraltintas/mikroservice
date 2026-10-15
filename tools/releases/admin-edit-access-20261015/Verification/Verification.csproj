@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework><OutputType>Exe</OutputType><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings>
+    <VerificationSourceRoot Condition="'$(VerificationSourceRoot)' == ''">$(MSBuildThisFileDirectory)../../../../</VerificationSourceRoot>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="$(VerificationSourceRoot)services/identity-service/Identity.Infrastructure/Identity.Infrastructure.csproj" />
+    <PackageReference Include="MassTransit.RabbitMQ" Version="8.3.6" />
+  </ItemGroup>
+</Project>

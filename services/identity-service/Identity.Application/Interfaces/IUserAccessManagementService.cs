@@ -1,4 +1,5 @@
 using EduPlatform.Shared.Kernel.Results;
+using Identity.Domain.Enums;
 
 namespace Identity.Application.Interfaces;
 
@@ -12,6 +13,14 @@ public sealed record UserSessionDto(
 
 public interface IUserAccessManagementService
 {
+    Task<Result> SetProductAccessAsync(
+        Guid userId,
+        PlatformProduct product,
+        bool isActive,
+        Guid grantedByUserId,
+        string? revokedByIp,
+        CancellationToken cancellationToken);
+
     Task<Result<IReadOnlyList<UserSessionDto>>> GetActiveSessionsAsync(
         Guid userId,
         CancellationToken cancellationToken);

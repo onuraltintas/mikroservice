@@ -61,6 +61,17 @@ describe('IdentityService user access management', () => {
     request.flush(null);
   });
 
+  it.each(['coaching', 'speed-reading'] as const)('sets %s access without role or subscription changes', product => {
+    const service = TestBed.inject(IdentityService);
+    for (const isActive of [false, true]) {
+      service.setProductAccess('user-1', product, isActive).subscribe();
+      const request = http.expectOne(`/api/users/user-1/products/${product}/access`);
+      expect(request.request.method).toBe('PUT');
+      expect(request.request.body).toEqual({ isActive });
+      request.flush(null);
+    }
+  });
+
   it.each(['coaching', 'speed-reading'] as const)('assigns roles only within the selected %s service', (product) => {
     const service = TestBed.inject(IdentityService);
 

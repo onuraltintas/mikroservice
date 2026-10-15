@@ -228,7 +228,9 @@ public class LocalIdentityService : IIdentityService
                     ? null
                     : product;
             user.AddRole(new Identity.Domain.Entities.UserRole(userId, role.Id, roleProduct));
-            if (product is { } accessProduct)
+            if (product is { } accessProduct
+                && (accessSource != UserProductAccessSource.Admin
+                    || !user.ProductAccesses.Any(access => access.Product == accessProduct && !access.IsActive)))
             {
                 if (user.GrantProductAccess(
                     accessProduct,

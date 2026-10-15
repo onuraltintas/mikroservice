@@ -436,6 +436,10 @@ export class IdentityService {
         return this.http.put(`${this.baseUrl}/${userId}/profile`, user);
     }
 
+    setProductAccess(userId: string, product: RoleProduct, isActive: boolean) {
+        return this.http.put<void>(`${this.baseUrl}/${userId}/products/${product}/access`, { isActive });
+    }
+
     changePassword(userId: string, password: string) {
         return this.http.post(`${this.baseUrl}/${userId}/change-password`, { password });
     }
