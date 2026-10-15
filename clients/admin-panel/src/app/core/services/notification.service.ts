@@ -20,7 +20,8 @@ export interface Notification {
 export class NotificationHubConnectionFactory {
     create(hubUrl: string, accessTokenFactory: () => string): signalR.HubConnection {
         return new signalR.HubConnectionBuilder()
-            .withUrl(hubUrl, { accessTokenFactory })
+            // The public TLS edge buffers WebSocket upgrades; HTTP transports work through it.
+            .withUrl(hubUrl, { accessTokenFactory, transport: signalR.HttpTransportType.ServerSentEvents | signalR.HttpTransportType.LongPolling })
             .withAutomaticReconnect()
             .configureLogging(signalR.LogLevel.Error)
             .build();

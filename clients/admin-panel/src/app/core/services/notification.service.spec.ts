@@ -3,6 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { vi } from 'vitest';
+import * as signalR from '@microsoft/signalr';
 import { AuthService, UserProfile } from '../auth/auth.service';
 import {
   NotificationHubConnectionFactory,
@@ -10,6 +11,17 @@ import {
 } from './notification.service';
 
 describe('NotificationService session isolation', () => {
+  it('uses supported HTTP transports and preserves authenticated reconnects', () => {
+    const withUrl = vi.spyOn(signalR.HubConnectionBuilder.prototype, 'withUrl');
+    const tokenFactory = () => 'test-token';
+    try {
+      new NotificationHubConnectionFactory().create('/hubs/notifications', tokenFactory);
+      expect(withUrl).toHaveBeenCalledWith('/hubs/notifications', {
+        accessTokenFactory: tokenFactory,
+        transport: signalR.HttpTransportType.ServerSentEvents | signalR.HttpTransportType.LongPolling
+      });
+    } finally { withUrl.mockRestore(); }
+  });
   const userA: UserProfile = {
     id: 'user-a', email: 'a@example.test', firstName: 'A', lastName: 'User',
     username: 'a', roles: ['SystemAdmin'], role: 'SystemAdmin', permissions: []

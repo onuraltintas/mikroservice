@@ -41,6 +41,9 @@ app.use(
     maxAge: '1y',
     index: false,
     redirect: false,
+    setHeaders: (res, path) => {
+      if (path.endsWith('.html')) res.setHeader('Cache-Control', 'no-store');
+    },
   }),
 );
 
@@ -48,6 +51,12 @@ app.use(
  * Handle all other requests by rendering the Angular application.
  */
 app.use((req, res, next) => {
+  if (/\.(?:js|css|map|woff2?|ttf|ico|png|jpe?g|svg|webp)$/i.test(req.path)) {
+    res.status(404).setHeader('Cache-Control', 'no-store');
+    res.type('text/plain').send('Not found');
+    return;
+  }
+  res.setHeader('Cache-Control', 'no-store');
   angularApp
     .handle(req)
     .then((response) =>
