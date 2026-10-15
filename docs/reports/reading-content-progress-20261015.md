@@ -53,6 +53,8 @@ Günlük ikinci görev Takistoskop 30 yanıtla normal UI üzerinden tamamlandı.
 
 Regresyon sonuç ekranındaki soru ayrıntıları, doğru yanıt ve 5/5 sonucu korunmasına rağmen seçilen cevabı “Cüre Doldu” etiketiyle gösteriyor. Canlı ekran kaydı `live-assignment-completed.txt` içindedir; şablonda `answer.selectedAnswer || 'Cüre Doldu'` bulunur. Bunun veri eşleme nedeni bu yayında değiştirilmedi; düzeltildi olarak raporlanmaz. Toplam puan, anlama, ödev tamamlanması ve üç panel karşılaştırması yukarıdaki gibi doğrulandı.
 
+Sonraki yayın: Bu görüntüleme bulgusu 15.10.2026 22:51:15'te [Regresyon cevap gösterimi düzeltmesiyle](regression-answer-label-20261015.md) giderildi; doğru ve yanlış seçimler yeni sürümde canlı doğrulandı.
+
 ## Yayın sonrası izleme
 
 `19:18:59Z–19:34:13Z` aralığında **15 dakika 14 saniye** izlendi. Son ölçümde 179 API isteği, **0 sunucu 5xx**, ortalama 54,38 ms, en yüksek 749,87 ms; dış öğrenci sayfası HTTP 200 / 72 ms. İki servis beklenen imajlarda çalışıyor, yeniden başlama sayısı 0. CAPTCHA açık ve eşik 0,5 olarak doğrulandı. Son salt okunur kanıt `artifacts/reading-content-progress-20261015/live-health-final.log`.
