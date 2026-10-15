@@ -1,0 +1,31 @@
+import assert from 'node:assert/strict';
+import { mkdir, writeFile } from 'node:fs/promises';
+const origin = process.env.ADMIN_STATIC_ORIGIN ?? 'https://eduivme.com';
+assert.ok(['https://eduivme.com', 'http://127.0.0.1:4203'].includes(origin));
+const html = await fetch(origin + '/auth/login');
+assert.equal(html.status, 200);
+assert.equal(html.headers.get('cache-control'), 'no-store');
+const source = await html.text();
+const scripts = [...source.matchAll(/<script[^>]+src="([^"]+\.js)"/g)].map(match => new URL(match[1], origin));
+const queue = ['/chunk-U6CFYNLY.js', '/chunk-FDZP6X4B.js', ...scripts.filter(url => url.origin === origin).map(url => url.pathname)];
+const checked = new Set();
+while (queue.length) {
+  const path = queue.pop();
+  if (checked.has(path)) continue;
+  assert.ok(checked.size < 400, 'Unexpected module graph size');
+  checked.add(path);
+  const response = await fetch(origin + path);
+  assert.equal(response.status, 200, path);
+  assert.match(response.headers.get('content-type') ?? '', /javascript/, path);
+  const module = await response.text();
+  assert.ok(!module.trimStart().startsWith('<'), path + ' returned HTML');
+  for (const match of module.matchAll(/["']\.\/(chunk-[A-Z0-9]+\.js)["']/g)) queue.push('/' + match[1]);
+}
+const missing = await fetch(origin + '/chunk-missing-regression-probe.js');
+assert.equal(missing.status, 404);
+assert.equal(missing.headers.get('cache-control'), 'no-store');
+assert.ok(!(missing.headers.get('content-type') ?? '').includes('html'));
+const output = 'artifacts/admin-login-recovery-' + (origin.startsWith('https:') ? 'live' : 'local');
+await mkdir(output, { recursive: true });
+await writeFile(output + '/static-results.json', JSON.stringify({ passed: true, modules: checked.size, checked: [...checked], htmlNoStore: true, missingAsset404: true }, null, 2));
+console.log(JSON.stringify({ passed: true, modules: checked.size, output }));

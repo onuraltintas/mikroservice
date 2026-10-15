@@ -15,8 +15,8 @@ describe('NotificationService session isolation', () => {
     const withUrl = vi.spyOn(signalR.HubConnectionBuilder.prototype, 'withUrl');
     const tokenFactory = () => 'test-token';
     try {
-      new NotificationHubConnectionFactory().create('/hubs/notifications', tokenFactory);
-      expect(withUrl).toHaveBeenCalledWith('/hubs/notifications', {
+      new NotificationHubConnectionFactory().create('https://eduivme.com/hubs/notifications', tokenFactory);
+      expect(withUrl).toHaveBeenCalledWith('https://eduivme.com/hubs/notifications', {
         accessTokenFactory: tokenFactory,
         transport: signalR.HttpTransportType.ServerSentEvents | signalR.HttpTransportType.LongPolling
       });
