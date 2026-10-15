@@ -24,6 +24,11 @@ public class CreateUserCommandValidator : AbstractValidator<CreateUserCommand>
             .WithMessage("Rol seçimi zorunludur.")
             .MaximumLength(50).WithMessage("Rol en fazla 50 karakter olabilir.");
 
+        RuleFor(x => x.Product)
+            .Must(product => product is Identity.Domain.Enums.PlatformProduct.Coaching or Identity.Domain.Enums.PlatformProduct.SpeedReading)
+            .When(x => !string.Equals(x.Role?.Trim(), "SystemAdmin", StringComparison.OrdinalIgnoreCase))
+            .WithMessage("Koçluk veya Hızlı Okuma servisi seçilmelidir.");
+
         // Telefon numarası opsiyoneldir, ancak girildiyse formatı kontrol edilir.
         // Basit Regex: + ile başlayabilir, en az 8 hane.
         RuleFor(x => x.PhoneNumber)

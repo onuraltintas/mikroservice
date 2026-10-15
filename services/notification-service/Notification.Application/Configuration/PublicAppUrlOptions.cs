@@ -56,9 +56,19 @@ public sealed class PublicAppUrlOptions
     public static bool IsSpeedReadingRole(string? role) =>
         !string.IsNullOrWhiteSpace(role) && SpeedReadingRoles.Contains(role.Trim());
 
-    public string ResolveBaseUrl(string? role = null)
+    private static bool IsSpeedReadingProduct(string? role, string? product) => product?.ToLowerInvariant() switch
     {
-        var candidate = IsSpeedReadingRole(role) && IsValidBaseUrl(SpeedReadingBaseUrl)
+        null => IsSpeedReadingRole(role),
+        "coaching" => false,
+        "speed-reading" => true,
+        _ => throw new InvalidOperationException("Unknown notification product.")
+    };
+
+    public string ResolveBaseUrl(string? role = null) => ResolveBaseUrl(role, null);
+
+    public string ResolveBaseUrl(string? role, string? product)
+    {
+        var candidate = IsSpeedReadingProduct(role, product) && IsValidBaseUrl(SpeedReadingBaseUrl)
             ? SpeedReadingBaseUrl
             : BaseUrl;
 
@@ -76,26 +86,37 @@ public sealed class PublicAppUrlOptions
         return $"{baseUrl}/auth/verify-email?token={Uri.EscapeDataString(token)}&userId={Uri.EscapeDataString(userId.ToString())}";
     }
 
-    public string BuildPasswordResetLink(string token, string email, string? role = null)
+    public string BuildPasswordResetLink(string token, string email, string? role = null) =>
+        BuildPasswordResetLink(token, email, role, null);
+
+    public string BuildPasswordResetLink(string token, string email, string? role, string? product)
     {
-        var baseUrl = ResolveBaseUrl(role);
+        var baseUrl = ResolveBaseUrl(role, product);
         return $"{baseUrl}/auth/reset-password?token={Uri.EscapeDataString(token)}&email={Uri.EscapeDataString(email)}";
     }
 
     public string BuildLoginLink(string? role = null) => $"{ResolveBaseUrl(role)}/auth/login";
 
     public static string GetApplicationName(string? role) =>
-        IsSpeedReadingRole(role) ? "Master Hızlı Okuma" : "Eduİvme";
+        GetApplicationName(role, null);
+
+    public static string GetApplicationName(string? role, string? product) =>
+        IsSpeedReadingProduct(role, product) ? "Master Hızlı Okuma" : "Eduİvme";
 
     public static string GetCompanyName(string? role) =>
         IsSpeedReadingRole(role) ? "ONAL Yazılım ve Otomasyon" : "Eduİvme";
 
     public static string GetTemplateName(string baseName, string? role) =>
-        IsSpeedReadingRole(role) ? $"SpeedReading_{baseName}" : baseName;
+        GetTemplateName(baseName, role, null);
 
-    public static string ApplySpeedReadingBranding(string value, string? role)
+    public static string GetTemplateName(string baseName, string? role, string? product) =>
+        IsSpeedReadingProduct(role, product) ? $"SpeedReading_{baseName}" : baseName;
+
+    public static string ApplySpeedReadingBranding(string value, string? role) => ApplySpeedReadingBranding(value, role, null);
+
+    public static string ApplySpeedReadingBranding(string value, string? role, string? product)
     {
-        if (!IsSpeedReadingRole(role))
+        if (!IsSpeedReadingProduct(role, product))
         {
             return value;
         }

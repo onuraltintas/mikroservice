@@ -30,18 +30,20 @@ public class UserCreatedConsumer : IConsumer<UserCreatedEvent>
     {
         var message = context.Message;
         var email = message.Email ?? throw new InvalidOperationException("UserCreatedEvent.Email is required.");
+        var templateName = PublicAppUrlOptions.GetTemplateName("Auth_DirectCreate", message.Role, message.Product);
         
         // 1. Retrieve Template dynamically from Database
         var template = await _dbContext.EmailTemplates
             .AsNoTracking() // Performans için
-            .FirstOrDefaultAsync(t => t.TemplateName == PublicAppUrlOptions.GetTemplateName("Auth_DirectCreate", message.Role) && t.IsActive);
+            .FirstOrDefaultAsync(t => t.TemplateName == templateName && t.IsActive);
 
         string subject;
         string body;
         var passwordSetupUrl = _publicAppUrlOptions.BuildPasswordResetLink(
             message.PasswordSetupToken,
             email,
-            message.Role);
+            message.Role,
+            message.Product);
 
         if (template != null)
         {
@@ -57,13 +59,13 @@ public class UserCreatedConsumer : IConsumer<UserCreatedEvent>
                 .Replace("{{PasswordSetupUrl}}", passwordSetupUrl)
                 .Replace("{{PasswordSetupTokenExpiresAt}}", message.PasswordSetupTokenExpiresAt.ToString("O"))
                 .Replace("{{Email}}", message.Email ?? "");
-            subject = PublicAppUrlOptions.ApplySpeedReadingBranding(subject, message.Role);
-            body = PublicAppUrlOptions.ApplySpeedReadingBranding(body, message.Role);
+            subject = PublicAppUrlOptions.ApplySpeedReadingBranding(subject, message.Role, message.Product);
+            body = PublicAppUrlOptions.ApplySpeedReadingBranding(body, message.Role, message.Product);
         }
         else
         {
             // Fallback (Safe Mode)
-            var appName = PublicAppUrlOptions.GetApplicationName(message.Role);
+            var appName = PublicAppUrlOptions.GetApplicationName(message.Role, message.Product);
             subject = $"{appName} hesabınız hazır, {message.FirstName}!";
             body = $"<h1>{appName}</h1><p>Merhaba {message.FirstName}, hesabınız hazır.</p><p><a href=\"{passwordSetupUrl}\">Şifrenizi belirleyin</a></p><p>Bu bağlantının son geçerlilik zamanı: {message.PasswordSetupTokenExpiresAt:O}.</p>";
         }
@@ -79,7 +81,7 @@ public class UserCreatedConsumer : IConsumer<UserCreatedEvent>
             context.CancellationToken);
         await _notificationService.SendNotificationAsync(
             message.UserId, 
-            $"{PublicAppUrlOptions.GetApplicationName(message.Role)} hesabınız oluşturuldu",
+            $"{PublicAppUrlOptions.GetApplicationName(message.Role, message.Product)} hesabınız oluşturuldu",
             "Hesabınız başarıyla oluşturuldu.",
             "Account",
             sourceMessageId: messageId);

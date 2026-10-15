@@ -12,4 +12,7 @@ public record CreateUserCommand(
     string Email,
     string? PhoneNumber,
     string Role
-) : IRequest<Result<CreateUserResponse>>;
+) : IRequest<Result<CreateUserResponse>>
+{
+    public PlatformProduct? Product { get; init; } = PlatformProduct.Coaching;
+}

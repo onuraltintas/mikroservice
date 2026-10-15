@@ -117,6 +117,7 @@ export interface CreateUserRequest {
     email: string;
     role: string;
     phoneNumber?: string;
+    product: 1 | 2 | null;
 }
 
 export interface CreateUserResponse {

@@ -14,8 +14,19 @@ namespace Identity.API.IntegrationTests;
 
 public sealed class UserCreatedConsumerTests
 {
-    [Fact]
-    public async Task UserCreatedConsumer_ShouldQueueASetupLinkWithoutAPlaintextPassword()
+    [Theory]
+    [InlineData("Student", "coaching", false)]
+    [InlineData("Teacher", "coaching", false)]
+    [InlineData("InstitutionAdmin", "coaching", false)]
+    [InlineData("InstitutionOwner", "coaching", false)]
+    [InlineData("Student", "speed-reading", true)]
+    [InlineData("Teacher", "speed-reading", true)]
+    [InlineData("InstitutionAdmin", "speed-reading", true)]
+    [InlineData("InstitutionOwner", "speed-reading", true)]
+    [InlineData("ContentReviewer", "speed-reading", true)]
+    [InlineData("Student", null, true)]
+    [InlineData("SystemAdmin", null, false)]
+    public async Task UserCreatedConsumer_ShouldQueueAProductSetupLinkWithoutAPlaintextPassword(string role, string? product, bool speedReading)
     {
         var queue = new RecordingEmailQueue();
         var notificationService = new NoopNotificationService();
@@ -28,7 +39,10 @@ public sealed class UserCreatedConsumerTests
         services.AddSingleton<IEmailDeliveryQueue>(queue);
         services.AddSingleton<INotificationService>(notificationService);
         services.Configure<Notification.Application.Configuration.PublicAppUrlOptions>(options =>
-            options.BaseUrl = "https://app.example.test");
+        {
+            options.BaseUrl = "https://app.example.test";
+            options.SpeedReadingBaseUrl = "https://speed.example.test";
+        });
         services.AddMassTransitTestHarness(configurator =>
         {
             configurator.AddConsumer<UserCreatedConsumer>();
@@ -42,8 +56,11 @@ public sealed class UserCreatedConsumerTests
             db.EmailTemplates.Add(EmailTemplate.Create(
                 "Auth_DirectCreate",
                 "Auth",
-                "Hesabınız hazır",
-                "Merhaba {{FirstName}}, <a href=\"{{PasswordSetupUrl}}\">Parolanızı belirleyin</a>"));
+                "Eduİvme hesabınız hazır",
+                "Eduİvme: Merhaba {{FirstName}}, <a href=\"{{PasswordSetupUrl}}\">Parolanızı belirleyin</a>"));
+            db.EmailTemplates.Add(EmailTemplate.Create(
+                "SpeedReading_Auth_DirectCreate", "Auth", "Eduİvme hesabınız hazır",
+                "Eduİvme: Merhaba {{FirstName}}, <a href=\"{{PasswordSetupUrl}}\">Parolanızı belirleyin</a>"));
             await db.SaveChangesAsync();
         }
 
@@ -57,10 +74,10 @@ public sealed class UserCreatedConsumerTests
                 "student@example.test",
                 "Ada",
                 "Lovelace",
-                "Student",
+                role,
                 "one-time-setup-token",
                 DateTime.UtcNow.AddHours(2),
-                DateTime.UtcNow));
+                DateTime.UtcNow) { Product = product });
 
             (await harness.Consumed.Any<UserCreatedEvent>()).Should().BeTrue();
             await WaitUntilAsync(() => queue.Messages.Count == 1);
@@ -69,6 +86,9 @@ public sealed class UserCreatedConsumerTests
             body.Should().Contain("/auth/reset-password?");
             body.Should().Contain("token=one-time-setup-token");
             body.Should().Contain("email=student%40example.test");
+            body.Should().Contain(speedReading ? "https://speed.example.test/auth/" : "https://app.example.test/auth/");
+            body.Should().Contain(speedReading ? "Master Hızlı Okuma" : "Eduİvme");
+            queue.Messages.Single().Subject.Should().Contain(speedReading ? "Master Hızlı Okuma" : "Eduİvme");
             body.Should().NotContain("TemporaryPassword");
             body.Should().NotContain("Pass:");
         }

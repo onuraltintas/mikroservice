@@ -62,6 +62,12 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, Resul
         if (hasBuiltInRole)
             roleName = parsedRole.ToString();
 
+        var product = userRole == UserRoleType.SystemAdmin ? null : request.Product;
+        if (userRole != UserRoleType.SystemAdmin && product is not (PlatformProduct.Coaching or PlatformProduct.SpeedReading))
+        {
+            return Result.Failure<CreateUserResponse>(new Error("Auth.InvalidProduct", "Koçluk veya Hızlı Okuma servisi seçilmelidir."));
+        }
+
         if (userRole == UserRoleType.SystemAdmin
             && !_currentUserService.Roles.Any(role =>
                 string.Equals(role, Identity.Domain.Enums.UserRole.SystemAdmin.ToString(), StringComparison.OrdinalIgnoreCase)))
@@ -81,7 +87,7 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, Resul
             request.FirstName,
             request.LastName,
             roleName,
-            userRole == UserRoleType.SystemAdmin ? null : PlatformProduct.Coaching,
+            product,
             request.PhoneNumber,
             cancellationToken);
 
@@ -94,7 +100,7 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, Resul
         // 4. Create Profile based on Role
         try 
         {
-            if (userRole != UserRoleType.SystemAdmin)
+            if (product is { } selectedProduct)
             {
                 var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
                 if (user is null)
@@ -103,16 +109,16 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, Resul
                 }
 
                 if (user.GrantProductAccess(
-                    PlatformProduct.Coaching,
+                    selectedProduct,
                     UserProductAccessSource.Admin,
                     _currentUserService.UserId,
                     DateTimeOffset.UtcNow))
                 {
-                    _userRepository.TrackProductAccessIfNew(user, PlatformProduct.Coaching);
+                    _userRepository.TrackProductAccessIfNew(user, selectedProduct);
                 }
             }
 
-            switch (userRole)
+            switch (product == PlatformProduct.Coaching ? userRole : null)
             {
                 case Identity.Domain.Enums.UserRole.Student:
                     var student = StudentProfile.Create(userId, request.FirstName, request.LastName);
@@ -137,7 +143,7 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, Resul
                 provisionedUser.PasswordSetupToken,
                 provisionedUser.PasswordSetupTokenExpiresAt,
                 DateTime.UtcNow
-            ), cancellationToken);
+            ) { Product = product?.ToRouteValue() }, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             return Result.Success(new CreateUserResponse(userId));

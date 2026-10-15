@@ -26,6 +26,8 @@ public class UserCreatedConsumer : IConsumer<UserCreatedEvent>
     public async Task Consume(ConsumeContext<UserCreatedEvent> context)
     {
         var message = context.Message;
+        if (message.Product is not null && !string.Equals(message.Product, "coaching", StringComparison.OrdinalIgnoreCase))
+            return;
         _logger.LogInformation("UserCreatedEvent received for User: {Email} ({Role})", message.Email, message.Role);
 
         // Eğer yeni kullanıcı bir Öğrenci ise, ona otomatik bir "Hoşgeldin Hedefi" ata.

@@ -4,6 +4,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { IdentityService } from '../../../../core/services/identity.service';
 import { ToasterService } from '../../../../core/services/toaster.service';
 import { getAdminErrorMessage } from '../../../../core/auth/admin-error-message';
+import { productRoleLabel } from '../../../../core/services/user-product-roles';
 
 @Component({
   selector: 'app-create-user-modal',
@@ -31,7 +32,7 @@ import { getAdminErrorMessage } from '../../../../core/auth/admin-error-message'
                                 </svg>
                             </div>
                             <div>
-                                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                                <h3 id="modal-title" class="text-lg font-semibold text-gray-900 dark:text-white">
                                     {{ createdUser() ? 'Kullanıcı Oluşturuldu' : 'Yeni Kullanıcı' }}
                                 </h3>
                                 @if (!createdUser()) {
@@ -39,7 +40,7 @@ import { getAdminErrorMessage } from '../../../../core/auth/admin-error-message'
                                 }
                             </div>
                         </div>
-                        <button (click)="closeModal()" class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300">
+                        <button (click)="closeModal()" [disabled]="loading()" class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300">
                             <span class="sr-only">Kapat</span>
                             <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -109,9 +110,9 @@ import { getAdminErrorMessage } from '../../../../core/auth/admin-error-message'
                                 </div>
 
                                 <div class="group">
-                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5 ml-0.5">Kullanıcı Rolü</label>
+                                    <label for="new-user-role" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5 ml-0.5">Kullanıcı Rolü</label>
                                     <div class="relative">
-                                        <select formControlName="role" 
+                                        <select id="new-user-role" formControlName="role"
                                             [class.border-red-500]="f['role'].invalid && f['role'].touched"
                                             class="block w-full appearance-none rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2.5 pl-4 dark:bg-gray-800 dark:border-gray-600 dark:text-white cursor-pointer transition-colors">
                                             @for (role of roleOptions(); track role.value) {
@@ -126,6 +127,22 @@ import { getAdminErrorMessage } from '../../../../core/auth/admin-error-message'
                                         <p class="mt-1 text-xs text-red-500 ml-0.5">Lütfen bir rol seçin.</p>
                                     }
                                 </div>
+                                @if (f.role.value === 'SystemAdmin') {
+                                    <p class="text-sm text-gray-600 dark:text-gray-300">Sistem yöneticisi tüm servislerde geçerli genel bir roldür. Bu işlem ayrıca servis erişimi veya abonelik oluşturmaz.</p>
+                                } @else {
+                                    <div class="group">
+                                        <label for="new-user-product" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Servis</label>
+                                        <select id="new-user-product" formControlName="product" aria-required="true" [class.border-red-500]="form.hasError('productRequired') && f.product.touched" class="block w-full rounded-lg border-gray-300 shadow-sm p-2.5 dark:bg-gray-800 dark:border-gray-600 dark:text-white">
+                                            <option [ngValue]="null">Servis seçin</option>
+                                            <option [ngValue]="1">Koçluk</option>
+                                            <option [ngValue]="2">Hızlı Okuma</option>
+                                        </select>
+                                        @if (form.hasError('productRequired') && f.product.touched) {
+                                            <p role="alert" class="mt-1 text-xs text-red-500">Lütfen Koçluk veya Hızlı Okuma servisini seçin.</p>
+                                        }
+                                        <p class="mt-2 text-xs text-gray-500">Hesap yalnızca seçilen serviste yetkilendirilir. Abonelik ve kurum bağlantısı ayrıca yönetilir.</p>
+                                    </div>
+                                }
                             </div>
                         </form>
                     } @else {
@@ -136,7 +153,8 @@ import { getAdminErrorMessage } from '../../../../core/auth/admin-error-message'
                                 </svg>
                             </div>
                             <h4 class="text-lg font-bold text-gray-900 dark:text-white mb-2">İşlem Başarılı!</h4>
-                            <p class="text-sm text-gray-600 dark:text-gray-300 mb-6">Kullanıcı hesabı oluşturuldu ve güvenli parola kurulum daveti <strong>{{ form.value.email }}</strong> adresine gönderildi.</p>
+                            <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">{{ createdUser()?.scope }}</p>
+                            <p class="text-sm text-gray-600 dark:text-gray-300 mb-6">Kullanıcı hesabı oluşturuldu ve güvenli parola kurulum daveti <strong>{{ createdUser()?.email }}</strong> adresine gönderildi.</p>
                             
                             <div class="bg-white dark:bg-gray-800 rounded-lg border border-green-200 dark:border-green-800 shadow-sm overflow-hidden">
                                 <div class="px-4 py-2 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
@@ -163,7 +181,7 @@ import { getAdminErrorMessage } from '../../../../core/auth/admin-error-message'
                 <!-- Footer -->
                 <div class="bg-gray-50 dark:bg-gray-800/50 px-6 py-4 border-t border-gray-100 dark:border-gray-700 flex justify-end gap-3">
                     @if (!createdUser()) {
-                        <button type="button" (click)="closeModal()" class="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                        <button type="button" (click)="closeModal()" [disabled]="loading()" class="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
                             İptal
                         </button>
                         <button type="button" (click)="save()" [disabled]="loading()" 
@@ -212,15 +230,17 @@ export class CreateUserModalComponent implements OnInit {
     lastName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50)]],
     email: ['', [Validators.required, Validators.email]],
     phoneNumber: ['', [Validators.pattern('^[+]*[(]{0,1}[0-9]{1,4}[)]{0,1}[-\\s\\./0-9]*$')]],
-    role: ['Student', Validators.required]
-  });
+    role: ['Student', Validators.required],
+    product: this.fb.control<1 | 2 | null>(null)
+  }, { validators: form => form.get('role')?.value === 'SystemAdmin' || [1, 2].includes(form.get('product')?.value)
+      ? null : { productRequired: true } });
 
   // Getter for easy template access
   get f() { return this.form.controls; }
 
   loading = signal(false);
   error = signal<string | null>(null);
-  createdUser = signal<{ email: string, invitationSent: boolean } | null>(null);
+  createdUser = signal<{ email: string, invitationSent: boolean, scope: string } | null>(null);
 
   ngOnInit(): void {
     this.identityService.getRoles().subscribe({
@@ -239,10 +259,12 @@ export class CreateUserModalComponent implements OnInit {
   }
 
   closeModal(saved: boolean = false) {
+    if (this.loading()) return;
     this.close.emit(saved || !!this.createdUser());
   }
 
   save() {
+    if (this.loading() || this.createdUser()) return;
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
@@ -252,19 +274,23 @@ export class CreateUserModalComponent implements OnInit {
     this.error.set(null);
 
     const val = this.form.value;
+    const product = val.role === 'SystemAdmin' ? null : val.product!;
+    const scope = productRoleLabel({ role: val.role!, product: product === 1 ? 'coaching' : product === 2 ? 'speed-reading' : null });
 
     this.identityService.createUser({
       firstName: val.firstName!,
       lastName: val.lastName!,
       email: val.email!,
       phoneNumber: val.phoneNumber!,
-      role: val.role!
+      role: val.role!,
+      product
     }).subscribe({
       next: () => {
         this.loading.set(false);
         this.createdUser.set({
           email: val.email!,
-          invitationSent: true
+          invitationSent: true,
+          scope
         });
         this.toaster.success('Kullanıcı başarıyla oluşturuldu.');
       },

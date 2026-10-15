@@ -9,4 +9,7 @@ public record UserCreatedEvent(
     string PasswordSetupToken,
     DateTime PasswordSetupTokenExpiresAt,
     DateTime CreatedAt
-);
+)
+{
+    public string? Product { get; init; }
+}
