@@ -1,12 +1,13 @@
 import { ExercisePlayerComponent } from './exercise-player.component';
 import { EngineFactory } from './engines/engine-factory';
+import { scrollReadingAhead } from './reading-auto-scroll';
 
 describe('reading player three-line auto-scroll', () => {
   const modes = [
-    ['word_highlight', 'wordHighlightContainer', 'handleWordHighlightScroll', 'chunk-group highlight', 'shouldScrollWord'],
-    ['text_fade', 'textFadeContainer', 'handleTextFadeScroll', 'fading-word-item active', 'shouldScrollFade'],
-    ['regression_reduction', 'regressionContainer', 'handleRegressionScroll', 'regression-word active', 'shouldScrollRegression'],
-    ['subvocalization_reduction', 'subvocDisplayArea', 'handleSubvocScroll', 'subvoc-word active', 'shouldScrollSubvoc']
+    ['word_highlight', 'wordHighlightContainer', 'handleWordHighlightScroll', 'chunk-group highlight'],
+    ['text_fade', 'textFadeContainer', 'handleTextFadeScroll', 'fading-word-item active'],
+    ['regression_reduction', 'regressionContainer', 'handleRegressionScroll', 'regression-word active'],
+    ['subvocalization_reduction', 'subvocDisplayArea', 'handleSubvocScroll', 'subvoc-word active']
   ];
   let container: HTMLDivElement;
   let active: HTMLSpanElement;
@@ -66,6 +67,9 @@ describe('reading player three-line auto-scroll', () => {
       player.initializeEngine();
       callbacks.onStateChange({ isRunning: true, isPaused: false, currentStep: 1 });
       expect(order).toEqual(['render', 'scroll']);
+      scroll.calls.reset();
+      callbacks.onStateChange({ isRunning: true, isPaused: true, currentStep: 1 });
+      expect(scroll).not.toHaveBeenCalled();
     });
 
     it(`${mode[0]} waits until three lines remain, then scrolls a block`, () => {
@@ -115,11 +119,47 @@ describe('reading player three-line auto-scroll', () => {
       expect(scroll).not.toHaveBeenCalled();
       contentHeight = 1600;
       player.engineState.isPaused = true;
-      player[mode[4]] = true;
-      player.ngAfterViewChecked();
+      player.scrollActiveReading();
       expect(scroll).not.toHaveBeenCalled();
     });
   }
+
+  it('retries an interrupted smooth scroll instead of keeping an unreachable target forever', () => {
+    const player = playerFor(modes[0]);
+    const now = spyOn(Date, 'now').and.returnValue(1000);
+    player.handleWordHighlightScroll();
+    now.and.returnValue(2001);
+    activeTop = 600;
+    player.handleWordHighlightScroll();
+    expect(scroll).toHaveBeenCalledTimes(2);
+    expect(scroll).toHaveBeenCalledWith({ top: 580, behavior: 'smooth' });
+  });
+
+  it('clamps the final block and does not scroll past the end', () => {
+    const player = playerFor(modes[0]);
+    contentHeight = 650;
+    player.handleWordHighlightScroll();
+    expect(scroll).toHaveBeenCalledOnceWith({ top: 250, behavior: 'smooth' });
+    container.scrollTop = 250;
+    activeTop = 620;
+    player.handleWordHighlightScroll();
+    expect(scroll).toHaveBeenCalledTimes(1);
+  });
+
+  it('honors reduced motion for the block transition', () => {
+    const player = playerFor(modes[0]);
+    (window.matchMedia as jasmine.Spy).and.returnValue({ matches: true });
+    player.handleWordHighlightScroll();
+    expect(scroll).toHaveBeenCalledOnceWith({ top: 300, behavior: 'instant' });
+  });
+
+  it('ignores hidden panels and missing active text', () => {
+    playerFor(modes[0]);
+    scrollReadingAhead(container, '.not-active');
+    Object.defineProperty(window, 'innerHeight', { configurable: true, value: 50 });
+    scrollReadingAhead(container, '.highlight');
+    expect(scroll).not.toHaveBeenCalled();
+  });
 
   it('respects an explicitly disabled pacer and non-highlight subvocalization', () => {
     const wordPlayer = playerFor(modes[0]);
