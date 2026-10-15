@@ -96,7 +96,13 @@
           <div class="de-celebration">
             <span class="material-icons de-celebration__icon" aria-hidden="true">celebration</span>
             <h2 class="de-celebration__title">Harika İş!</h2>
-            <p class="de-celebration__desc">{{ staffTraining ? 'Günün tüm egzersizlerini tamamladın. Sonraki eğitim günü hemen açılır; program bittiyse yeni bir program seçebilirsin.' : 'Bugünün tüm egzersizlerini başarıyla tamamladın. Sonraki program günü takvim günü geldiğinde açılacak.' }}</p>
+            <p class="de-celebration__desc">{{ staffTraining ? 'Günün tüm egzersizlerini tamamladın. Sonraki eğitim günü hemen açılır; program bittiyse yeni bir program seçebilirsin.' : advanceState()?.canAdvance ? 'Günün tüm egzersizlerini tamamladın. Hazırsan sonraki program gününe geçebilirsin.' : 'Bugünün tüm egzersizlerini başarıyla tamamladın. Sonraki program günü takvim günü geldiğinde açılacak.' }}</p>
+            @if (!staffTraining && advanceState()?.canAdvance) {
+              <button type="button" class="de-advance-button" (click)="advanceDay()" [disabled]="advancing()">
+                {{ advancing() ? 'Sonraki gün açılıyor…' : 'Sonraki güne geç' }}
+                <span class="material-icons" aria-hidden="true">arrow_forward</span>
+              </button>
+            }
             @if (progress()?.currentStreak) {
               <div class="de-celebration__streak">
                 <span class="material-icons" aria-hidden="true">local_fire_department</span>

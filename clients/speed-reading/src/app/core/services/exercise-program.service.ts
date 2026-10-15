@@ -109,6 +109,14 @@ export interface StudentProgressSummary {
   totalExercisesCompleted: number;
 }
 
+export interface ProgramDayAdvanceState {
+  programProgressId: string | null;
+  completedProgramDay: number;
+  nextProgramDay: number;
+  allowEarlyAdvance: boolean;
+  canAdvance: boolean;
+}
+
 /**
  * Exercise Program Service
  * 
@@ -122,6 +130,14 @@ export class ExerciseProgramService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = `${environment.speedReadingApiUrl}/daily-progress`;
   private readonly speedReadingApiUrl = environment.speedReadingApiUrl;
+
+  getDayAdvance(): Observable<ProgramDayAdvanceState> {
+    return this.http.get<ProgramDayAdvanceState>(`${this.baseUrl}/day-advance`);
+  }
+
+  advanceDay(programProgressId: string, completedProgramDay: number): Observable<ProgramDayAdvanceState> {
+    return this.http.post<ProgramDayAdvanceState>(`${this.baseUrl}/advance-day`, { programProgressId, completedProgramDay });
+  }
 
   /**
    * Bugünün egzersizlerini getir

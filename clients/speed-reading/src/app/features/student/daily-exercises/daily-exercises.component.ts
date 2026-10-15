@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute, RouterModule } from '@angular/router';
-import { ExerciseProgramService, DailyExercise, StudentProgressSummary } from '../../../core/services/exercise-program.service';
+import { ExerciseProgramService, DailyExercise, StudentProgressSummary, ProgramDayAdvanceState } from '../../../core/services/exercise-program.service';
 import { BaseComponent } from '../../../core/components/base.component';
 import { ExerciseTypeService } from '../../../core/services/exercise-type.service';
 import { AuthService } from '../../../core/services/auth.service';
@@ -31,6 +31,8 @@ export class DailyExercisesComponent extends BaseComponent implements OnInit {
   // Signals for reactive state
   exercises = signal<DailyExercise[]>([]);
   progress = signal<StudentProgressSummary | null>(null);
+  advanceState = signal<ProgramDayAdvanceState | null>(null);
+  advancing = signal(false);
   // loading inherited from BaseComponent
   error = signal<string | null>(null);
 
@@ -69,6 +71,11 @@ export class DailyExercisesComponent extends BaseComponent implements OnInit {
   loadData(): void {
     this.loading.set(true);
     this.error.set(null);
+    this.advanceState.set(null);
+    if (!this.staffTraining) this.exerciseService.getDayAdvance().subscribe({
+      next: state => this.advanceState.set(state),
+      error: () => this.advanceState.set(null)
+    });
 
     // Progress bilgisini yükle, ardından egzersizleri getir
     this.exerciseService.getMyProgress().subscribe({
@@ -95,6 +102,25 @@ export class DailyExercisesComponent extends BaseComponent implements OnInit {
       error: (err) => {
         console.error('Progress yüklenemedi:', err);
         this.loading.set(false);
+      }
+    });
+  }
+
+  advanceDay(): void {
+    const state = this.advanceState();
+    if (!state?.canAdvance || !state.programProgressId || this.advancing()
+      || this.exercises().length === 0 || !this.exercises().every(exercise => exercise.isCompleted)) return;
+    this.advancing.set(true);
+    this.exerciseService.advanceDay(state.programProgressId, state.completedProgramDay).subscribe({
+      next: () => {
+        this.advancing.set(false);
+        this.toaster.success('Sonraki program günü açıldı.');
+        this.loadData();
+      },
+      error: error => {
+        this.advancing.set(false);
+        this.advanceState.set(null);
+        this.toaster.error(error?.error?.detail || error?.error?.message || 'Sonraki gün açılamadı. Sayfayı yenileyip tekrar deneyin.');
       }
     });
   }
