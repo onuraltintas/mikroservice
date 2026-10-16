@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { Component, DestroyRef, HostListener, Input, OnInit, inject, signal } from '@angular/core';
+import { Component, DestroyRef, HostListener, Input, OnInit, inject, signal, output } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
@@ -39,6 +39,7 @@ interface Invitation { id: string; inviterEmail: string; type: string; message?:
               @if (s.educationStatus === 'student') {
                 <label>Sınıf <input name="gradeLevel" type="number" min="1" max="12" required [(ngModel)]="s.gradeLevel" (ngModelChange)="dirty = true"></label>
               }
+              @if (!setupMode) {
               @if (s.educationStatus === 'graduate') {
                 <label>Mezuniyet yılı (isteğe bağlı) <input name="graduationYear" type="number" min="1900" [max]="year" [(ngModel)]="s.graduationYear" (ngModelChange)="dirty = true"></label>
               }
@@ -50,6 +51,7 @@ interface Invitation { id: string; inviterEmail: string; type: string; message?:
               <label>Doğum tarihi (isteğe bağlı) <input name="birthDate" type="date" [max]="today" [(ngModel)]="s.birthDate" (ngModelChange)="dirty = true"></label>
               <label>Hakkımda (isteğe bağlı) <textarea name="studentBio" maxlength="2000" [(ngModel)]="s.bio" (ngModelChange)="dirty = true"></textarea></label>
               <label class="check"><input name="shareProgress" type="checkbox" [(ngModel)]="s.shareProgressWithTeachers" (ngModelChange)="dirty = true"> Çalışma ilerlememi yetkili öğretmenlerle paylaş</label>
+              }
             }
             @if (role === 'Teacher' && teacher; as t) {
               <label>Unvan (isteğe bağlı) <input name="title" maxlength="100" [(ngModel)]="t.title" (ngModelChange)="dirty = true"></label>
@@ -63,7 +65,7 @@ interface Invitation { id: string; inviterEmail: string; type: string; message?:
       }
       <button type="button" [disabled]="loading() || working()" (click)="reload()">Profili yeniden yükle</button>
     </section>
-    <section class="profile-card" aria-labelledby="coaching-invitations-title">
+    @if (!setupMode) { <section class="profile-card" aria-labelledby="coaching-invitations-title">
       <h2 id="coaching-invitations-title">Koçluk davetlerim</h2>
       @if (invitationError()) { <p role="alert" class="error">{{ invitationError() }}</p> }
       @if (invitationLoading()) { <p role="status">Davetler yükleniyor…</p> }
@@ -77,12 +79,14 @@ interface Invitation { id: string; inviterEmail: string; type: string; message?:
         </article>
       }
       <button type="button" [disabled]="working() || invitationLoading()" (click)="loadInvitations()">Davetleri yenile</button>
-    </section>`,
+    </section> }`,
   styles: [`:host{display:block;color:inherit}.profile-card{padding:1.5rem;margin-bottom:1rem;border:1px solid #d6deea;border-radius:1rem;background:var(--surface,#fff);color:#16243c}h2{margin-top:0}fieldset{border:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:1rem}label{display:grid;gap:.4rem}input,textarea,select,button{font:inherit;padding:.6rem;border:1px solid #bcc8da;border-radius:.5rem;max-width:100%;box-sizing:border-box}button{cursor:pointer;background:#edf3fb;margin:.4rem .4rem .4rem 0}button:disabled{opacity:.55;cursor:default}.check{display:flex;align-items:center}.error{color:#a21825}article{border-top:1px solid #d6deea;padding-top:1rem}input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible{outline:3px solid #3972c6;outline-offset:2px}`]
 })
 export class CoachingProfileComponent implements OnInit {
   @Input({ required: true }) apiUrl = '';
   @Input() role: 'Student' | 'Teacher' = 'Student';
+  @Input() setupMode = false;
+  readonly saved = output<void>();
   private readonly http = inject(HttpClient);
   private readonly destroy = inject(DestroyRef);
   readonly loading = signal(false); readonly working = signal(false); readonly ready = signal(false);
@@ -91,7 +95,7 @@ export class CoachingProfileComponent implements OnInit {
   student: StudentProfile | null = null; teacher: TeacherProfile | null = null; subjects = ''; dirty = false;
   readonly year = new Date().getFullYear(); readonly today = new Date().toISOString().slice(0, 10);
   private get base() { return `${this.apiUrl}/coaching`; }
-  ngOnInit() { this.loadProfile(); this.loadInvitations(); }
+  ngOnInit() { this.loadProfile(); if (!this.setupMode) this.loadInvitations(); }
 
   private loadProfile() {
     this.loading.set(true); this.ready.set(false); this.error.set(null);
@@ -128,7 +132,7 @@ export class CoachingProfileComponent implements OnInit {
     this.http.put<{ data: StudentProfile | TeacherProfile }>(`${this.base}/profiles/me/${this.role.toLowerCase()}`, payload)
       .pipe(takeUntilDestroyed(this.destroy), finalize(() => this.working.set(false))).subscribe({ next: response => {
         this.apply({ student: this.role === 'Student' ? response.data as StudentProfile : this.student,
-          teacher: this.role === 'Teacher' ? response.data as TeacherProfile : this.teacher }); this.success.set('Koçluk profiliniz kaydedildi.');
+          teacher: this.role === 'Teacher' ? response.data as TeacherProfile : this.teacher }); this.success.set('Koçluk profiliniz kaydedildi.'); this.saved.emit();
       }, error: e => this.error.set(this.message(e, 'Profil kaydedilemedi. Bilgilerinizi kontrol edin.')) });
   }
   loadInvitations() {

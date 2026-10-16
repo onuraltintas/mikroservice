@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, HostListener, OnInit, inject, signal } from '@angular/core';
+import { Component, DestroyRef, HostListener, OnInit, inject, signal, output } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
@@ -15,6 +15,7 @@ interface AvailabilityRow { day: StudyDay; start: string; end: string; endOfDay:
   styleUrl: './student-study-plans.component.scss'
 })
 export class StudentStudyAvailabilityComponent implements OnInit {
+  readonly saved = output<void>();
   private readonly service = inject(CoachingStudyPlanningService);
   private readonly destroyRef = inject(DestroyRef);
   private lastSaved: StudyAvailability | null = null;
@@ -96,7 +97,7 @@ export class StudentStudyAvailabilityComponent implements OnInit {
     this.success.set(null);
     this.service.saveAvailability({ expectedVersion: this.version, timeZoneId: this.timeZoneId.trim(), windows })
       .pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.saving.set(false)))
-      .subscribe({ next: preferences => { this.apply(preferences); this.success.set('Çalışma saatlerin kaydedildi. Aktif planın değişmedi.'); },
+      .subscribe({ next: preferences => { this.apply(preferences); this.success.set('Çalışma saatlerin kaydedildi. Aktif planın değişmedi.'); this.saved.emit(); },
         error: error => this.showError(error, 'Çalışma saatleri kaydedilemedi. Değişikliklerin ekranda korundu.') });
   }
 

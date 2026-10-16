@@ -1,10 +1,11 @@
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, HostListener, OnInit, inject, signal } from '@angular/core';
+import { Component, DestroyRef, HostListener, OnInit, inject, signal, Input } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { finalize } from 'rxjs';
+import { finalize, map } from 'rxjs';
 import { AutomaticStudyPreview, CoachingStudyPlanningService, StudyAvailability, StudyPlan, StudyTopic, TargetPage } from '../../../core/services/coaching-study-planning.service';
+import { CoachingLearningSetupService, LearningLesson } from '../../../core/services/coaching-learning-setup.service';
 
 @Component({
   selector: 'app-student-automatic-plan', standalone: true,
@@ -13,6 +14,10 @@ import { AutomaticStudyPreview, CoachingStudyPlanningService, StudyAvailability,
   styleUrl: './student-study-plans.component.scss'
 })
 export class StudentAutomaticPlanComponent implements OnInit {
+  @Input() learningContextVersion: number | null = null;
+  private readonly setupService = inject(CoachingLearningSetupService);
+  readonly contextLessons = signal<LearningLesson[]>([]);
+  contextLessonId = '';
   private readonly service = inject(CoachingStudyPlanningService);
   private readonly destroyRef = inject(DestroyRef);
   readonly availability = signal<StudyAvailability | null>(null);
@@ -35,7 +40,15 @@ export class StudentAutomaticPlanComponent implements OnInit {
   saveConfirmed = false;
   dirty = false;
 
-  ngOnInit() { this.loadHours(); }
+  ngOnInit() {
+    this.loadHours();
+    if (this.learningContextVersion !== null) this.setupService.get().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: setup => this.setupService.catalog().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+        next: catalog => this.contextLessons.set(catalog.lessons.filter(l => setup.context?.coursePreferences.some(c => c.lessonId === l.id))),
+        error: () => this.error.set('Dersler yüklenemedi. Kurulumu yeniden yükleyin.') }),
+      error: () => this.error.set('Eğitim bağlamı yüklenemedi. Kurulumu yeniden yükleyin.')
+    });
+  }
   busy() { return this.loading() || this.searching() || this.generating() || this.saving(); }
   locked() { return this.busy() || this.savedPlan() !== null; }
   loadHours() {
@@ -48,7 +61,10 @@ export class StudentAutomaticPlanComponent implements OnInit {
   searchTopics(pageNumber = 1) {
     if (this.locked()) return;
     this.searching.set(true); this.error.set(null); this.results.set(null);
-    this.service.searchTopics(this.query, this.gradeNumber, this.examCode, pageNumber)
+    const request = this.learningContextVersion !== null
+      ? this.setupService.catalog(this.contextLessonId || null, pageNumber).pipe(map(c => c.topics))
+      : this.service.searchTopics(this.query, this.gradeNumber, this.examCode, pageNumber);
+    request
       .pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.searching.set(false)))
       .subscribe({ next: result => this.results.set(result), error: () => this.error.set('Konular yüklenemedi. Filtreleri kontrol edip tekrar deneyin.') });
   }
@@ -80,7 +96,8 @@ export class StudentAutomaticPlanComponent implements OnInit {
     this.saveConfirmed = false;
     this.generating.set(true); this.preview.set(null); this.error.set(null);
     this.service.previewAutomatic({ startDate: this.startDate, days: this.days, expectedAvailabilityVersion: hours.version,
-      topics: this.selected.map(x => ({ topicId: x.topic.id, requiredMinutes: x.minutes })) })
+      topics: this.selected.map(x => ({ topicId: x.topic.id, requiredMinutes: x.minutes })),
+      ...(this.learningContextVersion !== null ? { expectedLearningContextVersion: this.learningContextVersion } : {}) })
       .pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.generating.set(false)))
       .subscribe({ next: preview => this.preview.set(preview), error: error => {
         if (error?.status === 409) { this.stale.set(true); this.error.set('Çalışma saatleri değişti. Saatleri yeniden yükleyip tekrar önizleyin.'); }
@@ -94,7 +111,8 @@ export class StudentAutomaticPlanComponent implements OnInit {
     this.saving.set(true); this.error.set(null);
     this.service.saveAutomaticDraft({ title: this.title.trim(),
       preview: { startDate: this.startDate, days: this.days, expectedAvailabilityVersion: preview.availabilityVersion,
-        topics: this.selected.map(x => ({ topicId: x.topic.id, requiredMinutes: x.minutes })) },
+        topics: this.selected.map(x => ({ topicId: x.topic.id, requiredMinutes: x.minutes })),
+        ...(this.learningContextVersion !== null ? { expectedLearningContextVersion: this.learningContextVersion } : {}) },
       expectedActiveRevisionId: preview.activeRevisionId, expectedActiveRevisionVersion: preview.activeRevisionVersion })
       .pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.saving.set(false)))
       .subscribe({ next: plan => { this.savedPlan.set(plan); this.dirty = false; this.saveConfirmed = false; },
