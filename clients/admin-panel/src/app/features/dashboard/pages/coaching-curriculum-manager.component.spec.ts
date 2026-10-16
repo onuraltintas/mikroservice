@@ -14,11 +14,14 @@ describe('Coaching curriculum manager', () => {
     http.expectOne(r => r.url.endsWith('/curriculum-management/children')).flush({ data: { items: [], totalCount: 0, pageNumber: 1, pageSize: 25 } });
     return { fixture, http, c: fixture.componentInstance };
   }
-  it('shows a readable empty hierarchy and an accessible create action', () => {
+  it('shows separate catalog tabs with a direct exam create action and no lesson groups', () => {
     const { fixture, http } = setup(); fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('Ders ve Müfredat Yönetimi');
     expect(fixture.nativeElement.textContent).toContain('Henüz kayıt yok');
-    expect(fixture.nativeElement.querySelector('button[aria-label="Ders grubu ekle"]')).not.toBeNull(); http.verify();
+    expect(fixture.nativeElement.querySelector('[role="tablist"]')).not.toBeNull();
+    expect(fixture.nativeElement.querySelectorAll('[role="tab"]').length).toBeGreaterThanOrEqual(7);
+    expect(fixture.nativeElement.querySelector('button[aria-label="Sınav türü ekle"]')).not.toBeNull();
+    expect(fixture.nativeElement.textContent).not.toContain('Ders grupları'); http.verify();
   });
   it('shows usage blockers and forbids deletion of a used topic', () => {
     const { fixture, http, c } = setup(); c.select({ ...topic } as never);
