@@ -226,11 +226,25 @@ public sealed class VocabularyPersistenceTests
     }
 
     [Theory]
-    [InlineData("learning")]
-    [InlineData("quiz")]
-    public async Task Persisted_reviews_are_owned_complete_and_never_reading_speed(string mode)
+    [InlineData("learning", false)]
+    [InlineData("learning", true)]
+    [InlineData("quiz", false)]
+    [InlineData("quiz", true)]
+    public async Task Persisted_reviews_are_owned_complete_and_never_reading_speed(string mode, bool existingPoints)
     {
         await using var db = Context(); var student = Guid.NewGuid(); var exercise = await Seed(db, student, mode);
+        if (existingPoints)
+        {
+            var previous = SpeedReading.Domain.Gamification.UserGamification.CreateDefault(Guid.NewGuid(), student, DateTime.UtcNow, student.ToString());
+            previous.RecordVerifiedExerciseCompletion("SpeedReading", DateTime.UtcNow.AddDays(-1), 120, 240, 85, true, 400, student, DateTime.UtcNow);
+            db.UserGamifications.Add(previous);
+        }
+        db.Achievements.Add(SpeedReading.Domain.Gamification.Achievement.Create(
+            Guid.NewGuid(), "Kelime kutusu", "İkinci kutuya ulaş", "vocabulary", "bronze", null, "",
+            "vocabulary_box", """{"box":2}""", null, null, false, 25, true, 0, student, DateTime.UtcNow));
+        await db.SaveChangesAsync();
+        var originalStats = await db.UserGamifications.AsNoTracking().SingleOrDefaultAsync();
+        var originalJson = JsonSerializer.Serialize(originalStats);
         var service = Service(db); var started = await service.StartAsync(student, new() { ExerciseId = exercise });
         await Assert.ThrowsAsync<KeyNotFoundException>(() => service.ValidateActionAsync(Guid.NewGuid(), started.SessionId, new() { Action = "vocabulary_review" }));
         foreach (var word in started.InitialData.GetProperty("vocabularyWords").EnumerateArray()) {
@@ -249,6 +263,27 @@ public sealed class VocabularyPersistenceTests
         var result = await service.CompleteAsync(student, started.SessionId, new());
         Assert.Null(result.RawWPM); Assert.Null(result.WordsRead); Assert.Equal(100m, result.Accuracy);
         Assert.Equal(4, await db.UserVocabularyProgresses.CountAsync());
+        if (mode == "quiz")
+        {
+            var stats = Assert.Single(await db.UserGamifications.ToListAsync());
+            Assert.Equal(4, stats.TotalVocabularyQuestionsAnswered);
+            Assert.Single(await db.UserAchievements.ToListAsync());
+            Assert.Equal((originalStats?.TotalXP ?? 0) + 25L + result.XpGained, stats.TotalXP);
+            Assert.Equal((originalStats?.TotalExercisesCompleted ?? 0) + 1, stats.TotalExercisesCompleted);
+            Assert.Equal(originalStats?.TotalReadingSessionsCompleted ?? 0, stats.TotalReadingSessionsCompleted);
+            Assert.Equal(originalStats?.MaxWPM ?? 0, stats.MaxWPM);
+            if (originalStats is not null) Assert.Equal(originalStats.Id, stats.Id);
+            await service.CompleteAsync(student, started.SessionId, new());
+            Assert.Equal(4, stats.TotalVocabularyQuestionsAnswered);
+            Assert.Equal((originalStats?.TotalXP ?? 0) + 25L + result.XpGained, stats.TotalXP);
+            Assert.Equal((originalStats?.TotalExercisesCompleted ?? 0) + 1, stats.TotalExercisesCompleted);
+            Assert.Single(await db.UserAchievements.ToListAsync());
+        }
+        else
+        {
+            Assert.Equal(originalJson, JsonSerializer.Serialize(await db.UserGamifications.AsNoTracking().SingleOrDefaultAsync()));
+            Assert.Empty(await db.UserAchievements.ToListAsync());
+        }
     }
 
     private static OwnedSpeedReadingDbContext Context() => new(new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>().UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
