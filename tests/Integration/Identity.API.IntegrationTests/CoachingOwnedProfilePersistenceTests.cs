@@ -15,6 +15,21 @@ namespace Identity.API.IntegrationTests;
 public sealed class CoachingOwnedProfilePersistenceTests
 {
     [Fact]
+    public async Task InstitutionReportsRespectProgressSharingUnlessViewerIsGlobalAdministrator()
+    {
+        await using var f = new Fixture();
+        var institution = Guid.NewGuid(); f.Accounts.Institutions.Add(institution);
+        var admin = f.AddAccount("InstitutionAdmin"); f.Accounts.Admins[admin] = new(false, institution);
+        var global = f.AddAccount("SystemAdmin"); f.Accounts.Admins[global] = new(true, null);
+        var student = f.AddAccount("Student");
+        await f.Store.SetMembershipAsync(admin, institution, student, CoachingMemberRole.Student, true, default);
+        var profile = await f.Db.CoachingStudentProfiles.SingleAsync();
+        profile.UpdatePersonal(null, null, null, false); await f.Db.SaveChangesAsync();
+        Assert.Empty(await f.Scope.GetActiveStudentIdsAsync(admin, institution, null, default));
+        Assert.Empty((await f.Scope.GetActiveStudentPageAsync(admin, institution, null, 1, 25, default)).StudentUserIds);
+        Assert.Contains(student, await f.Scope.GetActiveStudentIdsAsync(global, institution, null, default));
+    }
+    [Fact]
     public async Task Provisioning_IsIdempotentProductScopedAndReadDoesNotCreate()
     {
         await using var fixture = new Fixture();
