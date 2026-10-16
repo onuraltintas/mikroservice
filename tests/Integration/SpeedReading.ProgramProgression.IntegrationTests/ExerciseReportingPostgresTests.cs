@@ -20,6 +20,8 @@ public sealed class ExerciseReportingPostgresTests(PostgresFixture postgres) : I
     [InlineData("boundary")]
     [InlineData("calendar")]
     [InlineData("success")]
+    [InlineData("series-log")]
+    [InlineData("series-fallback")]
     public async Task Report_average_audit_preserves_history_periods_calendar_and_real_zero(string mode)
     {
         await using var db = Open(); await Reset(db);

@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using EduPlatform.Shared.Contracts.Reporting;
 using SpeedReading.Domain.Catalog;
 using SpeedReading.Domain.Sessions;
+using SpeedReading.Domain.Programs;
 using SpeedReading.Infrastructure.Persistence;
 
 namespace SpeedReading.ProgramProgression.IntegrationTests;
@@ -11,6 +12,7 @@ internal static class ReportAverageAuditScenario
 {
     internal static async Task Run(OwnedSpeedReadingDbContext db, string mode)
     {
+        if (mode.StartsWith("series")) { await Series(db, mode == "series-log"); return; }
         var user = Guid.NewGuid(); var start = new DateTime(2040, 1, 1, 0, 0, 0, DateTimeKind.Utc);
         var text = ReadingText.Create(Guid.NewGuid(), user.ToString(), "Metin", difficultyLevel: 1);
         db.ReadingTexts.Add(text);
@@ -80,6 +82,28 @@ internal static class ReportAverageAuditScenario
 
         void Row(Guid textId, decimal score, int wpm, DateTime date) => db.ReadingSessions.Add(ReadingSession.Import(
             Guid.NewGuid(), user, textId, 60, wpm, 1, 4, score, 0, date, date, null, null, null, true));
+    }
+
+    private static async Task Series(OwnedSpeedReadingDbContext db, bool dailyLog)
+    {
+        var user = Guid.NewGuid(); var date = new DateTime(2040, 1, 1, 21, 30, 0, DateTimeKind.Utc);
+        var template = ProgramTemplate.Import(Guid.NewGuid(), user.ToString(), "", Guid.NewGuid(), 0, 100,
+            "{}", 1, 2, 5, 1, 1, true, 1, 0, null, false, date, null, null, null);
+        var progress = StudentProgramProgress.Start(Guid.NewGuid(), user, template, 0, 0, user, date);
+        progress.ApplyExerciseCompletion(100, false, 1, 1, template, user, date);
+        db.ProgramTemplates.Add(template); db.StudentProgramProgresses.Add(progress);
+        if (dailyLog)
+        {
+            var type = ExerciseType.Create(Guid.NewGuid(), "Audit", "Audit", "focus");
+            var exercise = Exercise.Create("Audit", "focus", "{}", 1, user, type.Id);
+            db.ExerciseTypes.Add(type); db.Exercises.Add(exercise);
+            db.DailyExerciseLogs.Add(ExerciseReportingScenario.Log(user, progress.Id, exercise, date, null));
+        }
+        await db.SaveChangesAsync();
+        var before = JsonSerializer.Serialize(progress);
+        var series = await ExerciseReportingScenario.Analytics(db).GetStudentSeriesAsync(user, date.AddDays(-1), date.AddDays(1));
+        Require(series.CompletionTimeline.Single().Date == new DateOnly(2040, 1, 2), "Program timeline must use the same Istanbul day as reading reports");
+        Require(before == JsonSerializer.Serialize(progress), "Program timeline changed progress");
     }
     private static void Require(bool condition, string message) { if (!condition) throw new InvalidOperationException(message); }
 }
