@@ -19,6 +19,7 @@ export interface StudyTask extends StudyTaskInput {
   actualMinutes: number | null;
   actualQuestions?: number | null;
   completedAt: string | null;
+  outcomes?: { outcomeId: string; code: string; name: string; estimateId: string; estimateNumber: number; allocatedMinutes: number; origin: string }[];
 }
 export interface StudyPlanSummary { id: string; version: number; title: string; status: StudyPlanStatus }
 export interface StudyPlan extends StudyPlanSummary { tasks: StudyTask[] }

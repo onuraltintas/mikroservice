@@ -67,6 +67,9 @@
         @for (task of plan.tasks; track task.id) {
           <article class="task" [class.completed]="task.isCompleted">
             <h3>{{ task.title }}</h3><p>{{ task.plannedDate | date:'dd.MM.yyyy' }} · {{ task.plannedMinutes }} dk @if (task.isPinned) { · Sabit }</p>
+            @for (outcome of task.outcomes || []; track outcome.outcomeId) {
+              <p>{{ outcome.code }} — {{ outcome.name }} · {{ outcome.allocatedMinutes }} dk · süre sürümü {{ outcome.estimateNumber }} @if (outcome.origin === 'StudentOverride') { · Öğrencinin süre seçimi }</p>
+            }
             @if (task.sourceName) { <p>Kaynak: {{ task.sourceName }}</p> }
             <p>Planlanan soru: {{ task.plannedQuestions ?? 'Kayıt yok' }}</p>
             @if (task.isCompleted) {
