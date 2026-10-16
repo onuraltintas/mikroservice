@@ -35,10 +35,11 @@ public sealed class DynamicCurriculumTests
     public async Task ExamLookupReturnsDatabaseEntriesRatherThanAFixedList()
     {
         await using var f=new CurriculumManagementTests.Fixture();
-        await f.Service.SaveAsync("exams",null,new("KPSS Genel Yetenek","Sınav türü ekle",Code:"KPSS"),default);
+        await f.Service.SaveAsync("exams",null,new("KPSS Genel Yetenek","Sınav türü ekle",Code:"KPSS",ExamDate:new(2027,6,20)),default);
         var result=Assert.IsType<OkObjectResult>(await new CoachingCatalogLookupsController(f.Db).Exams(default));
         using var json=JsonDocument.Parse(JsonSerializer.Serialize(result.Value));
-        Assert.Contains(json.RootElement.GetProperty("data").EnumerateArray(),x=>x.GetProperty("Code").GetString()=="KPSS");
+        var exam=Assert.Single(json.RootElement.GetProperty("data").EnumerateArray(),x=>x.GetProperty("Code").GetString()=="KPSS");
+        Assert.Equal("2027-06-20",exam.GetProperty("ExamDate").GetString());
     }
 
     [Fact]

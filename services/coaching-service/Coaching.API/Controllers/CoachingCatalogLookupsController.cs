@@ -13,5 +13,5 @@ public sealed class CoachingCatalogLookupsController(CoachingDbContext db) : Con
 {
     [HttpGet]
     public async Task<IActionResult> Exams(CancellationToken ct) => Ok(new { success=true, data=await db.Set<StudyCatalogExam>().AsNoTracking()
-        .OrderBy(x => x.DisplayOrder).ThenBy(x => x.Name).Select(x => new { x.Id,x.Code,x.Name,x.IsActive }).ToArrayAsync(ct) });
+        .OrderBy(x => x.DisplayOrder).ThenBy(x => x.Name).Select(x => new { x.Id,x.Code,x.Name,x.IsActive,x.ExamDate }).ToArrayAsync(ct) });
 }

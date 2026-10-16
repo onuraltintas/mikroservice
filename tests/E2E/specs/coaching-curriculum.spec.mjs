@@ -86,6 +86,23 @@ test('exam tabs support dynamic exam creation, edit, lesson attachment and autom
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
 });
 
+test('exam date can be created, reopened, changed and cleared as an optional calendar date',async({context,page})=>{
+  const f=await catalog(context);await page.goto('/dashboard/coaching/curriculum');
+  await create(page,'Sınav türü','Tarihli sınav');await page.getByLabel('Sınav kodu',{exact:true}).fill('DATE');
+  await page.getByLabel('Sınav tarihi',{exact:true}).fill('2027-06-20');await save(page);
+  expect(f.nodes.find(x=>x.code==='DATE').examDate).toBe('2027-06-20');
+  await page.getByRole('button',{name:'Kapat',exact:true}).click();
+  await page.getByRole('button',{name:'Tarihli sınav düzenle',exact:true}).click();
+  await expect(page.getByLabel('Sınav tarihi',{exact:true})).toHaveValue('2027-06-20');
+  await page.getByLabel('Sınav tarihi',{exact:true}).fill('2027-06-27');await page.getByLabel('İşlem gerekçesi',{exact:true}).fill('Sınav tarihini güncelle');
+  await page.getByRole('button',{name:'Değişiklikleri kaydet',exact:true}).click();await expect(page.getByText('Kayıt kaydedildi.',{exact:true})).toBeVisible();
+  await expect(page.getByRole('button',{name:'Tarihli sınav düzenle',exact:true})).toContainText('27.06.2027');
+  await page.getByLabel('Sınav tarihi',{exact:true}).fill('');await page.getByLabel('İşlem gerekçesi',{exact:true}).fill('Tarihi daha sonra belirle');
+  await page.getByRole('button',{name:'Değişiklikleri kaydet',exact:true}).click();await expect(page.getByText('Kayıt kaydedildi.',{exact:true})).toBeVisible();
+  expect(f.nodes.find(x=>x.code==='DATE').examDate).toBeNull();
+  await expect(page.getByRole('button',{name:'Tarihli sınav düzenle',exact:true})).toContainText('Tarih belirtilmedi');
+});
+
 test('subtopic edit move and safe deletion keep old usage visible',async({context,page})=>{
   const f=await catalog(context);await page.goto('/dashboard/coaching/curriculum');await tab(page,'Alt konular');
   await page.getByRole('button',{name:'EBOB ve EKOK düzenle',exact:true}).click();await page.getByLabel('Konu çalışma süresi (dk)',{exact:true}).fill('75');

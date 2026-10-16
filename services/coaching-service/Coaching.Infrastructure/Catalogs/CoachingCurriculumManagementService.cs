@@ -18,7 +18,7 @@ public sealed record CurriculumSaveRequest(string Name, string Reason, string? F
     int? GradeNumber = null, string? ExamCode = null, int? DisplayOrder = null, int? EstimatedMinutes = null,
     string? Code = null, Guid? OfficialTopicId = null, int? SourcePage = null, string? Notes = null, bool MoveParentOutcomes = false,
     int? AcademicYearStart = null, int? AcademicYearEnd = null, string? SourceUrl = null, string? DocumentSha256 = null,
-    string? ScopeEvidenceUrl = null, int? OutcomeCount = null, int? LessonPeriods = null, Guid? CurriculumVersionId = null);
+    string? ScopeEvidenceUrl = null, int? OutcomeCount = null, int? LessonPeriods = null, Guid? CurriculumVersionId = null, DateOnly? ExamDate = null);
 public sealed record CurriculumMoveRequest(Guid? DestinationId, string Fingerprint, string Reason, Guid? SourceTopicId = null);
 public sealed record CurriculumDeleteRequest(string Fingerprint, string Reason, Guid ConfirmId);
 public sealed record CurriculumStatusRequest(string Fingerprint, string Reason, bool IsActive);
@@ -43,6 +43,7 @@ public sealed record CurriculumNode(string Kind, Guid Id, string Name, Guid? Par
     public int? OutcomeCount { get; init; }
     public int? LessonPeriods { get; init; }
     public Guid? CurriculumVersionId { get; init; }
+    public DateOnly? ExamDate { get; init; }
 }
 public sealed record CurriculumMapping(Guid TopicId, string Path, bool IsApproved, string Evidence);
 
@@ -58,7 +59,7 @@ public sealed class CoachingCurriculumManagementService(CoachingDbContext db, IC
         switch (kind)
         {
             case "exams":
-                query = db.Set<StudyCatalogExam>().AsNoTracking().Select(x => new CurriculumNode { Kind=kind,Id=x.Id,Name=x.Name,Code=x.Code,IsActive=x.IsActive,DisplayOrder=x.DisplayOrder }); break;
+                query = db.Set<StudyCatalogExam>().AsNoTracking().Select(x => new CurriculumNode { Kind=kind,Id=x.Id,Name=x.Name,Code=x.Code,IsActive=x.IsActive,DisplayOrder=x.DisplayOrder,ExamDate=x.ExamDate }); break;
             case "programs":
                 query = db.Set<OfficialCurriculumEdition>().AsNoTracking().Select(x => new CurriculumNode { Kind=kind,Id=x.Id,Name=x.SubjectName,Code=x.Code,ExamCode=x.ExamCode,GradeNumber=x.GradeNumber,IsActive=true,DisplayOrder=null,AcademicYearStart=x.AcademicYearStart,AcademicYearEnd=x.AcademicYearEnd }); break;
             case "programTopics":
@@ -109,7 +110,7 @@ public sealed class CoachingCurriculumManagementService(CoachingDbContext db, IC
                 {
                     case StudyCatalogExam exam:
                         if (StudyCatalogExam.NormalizeCode(r.Code!) != exam.Code) throw new ArgumentException("Sınav kodu tarihsel bağlantıları korumak için değiştirilemez. Yeni sınav türü ekleyin.");
-                        exam.Edit(r.Name,r.DisplayOrder ?? 0); break;
+                        exam.Edit(r.Name,r.DisplayOrder ?? 0,r.ExamDate); break;
                     case OfficialCurriculumEdition edition:
                         await EditProgram(edition,r,ct); break;
                     case OfficialCurriculumTopic officialTopic:
@@ -135,7 +136,7 @@ public sealed class CoachingCurriculumManagementService(CoachingDbContext db, IC
                 case "exams":
                     var code = StudyCatalogExam.NormalizeCode(r.Code!);
                     if (await db.Set<StudyCatalogExam>().AnyAsync(x => x.Code == code,ct)) throw new ArgumentException("Bu sınav kodu zaten var.");
-                    return Add(StudyCatalogExam.Create(code,r.Name,r.DisplayOrder ?? 0));
+                    return Add(StudyCatalogExam.Create(code,r.Name,r.DisplayOrder ?? 0,r.ExamDate));
                 case "programs":
                     await ValidateExam(r.ExamCode,ct);
                     if (await db.Set<OfficialCurriculumEdition>().AnyAsync(x => x.Code == r.Code,ct)) throw new ArgumentException("Program kodu zaten var.");
@@ -344,7 +345,7 @@ public sealed class CoachingCurriculumManagementService(CoachingDbContext db, IC
     {
         CurriculumNode node = entity switch
         {
-            StudyCatalogExam e => new("exams",e.Id,e.Name,null,null,e.IsActive,e.DisplayOrder,Code:e.Code),
+            StudyCatalogExam e => new("exams",e.Id,e.Name,null,null,e.IsActive,e.DisplayOrder,Code:e.Code) { ExamDate=e.ExamDate },
             OfficialCurriculumEdition p => new("programs",p.Id,p.SubjectName,null,null,true,GradeNumber:p.GradeNumber,ExamCode:p.ExamCode,Code:p.Code)
                 { AcademicYearStart=p.AcademicYearStart,AcademicYearEnd=p.AcademicYearEnd,SourceUrl=p.SourceUrl,DocumentSha256=p.DocumentSha256,ScopeEvidenceUrl=p.ScopeEvidenceUrl },
             OfficialCurriculumTopic t => new("programTopics",t.Id,t.Name,t.EditionId,"programs",true,Code:t.Code) { OutcomeCount=t.OutcomeCount,LessonPeriods=t.LessonPeriods },

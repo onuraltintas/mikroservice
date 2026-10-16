@@ -30,8 +30,8 @@ describe('Coaching curriculum manager', () => {
     const button = Array.from(fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>).find(x => x.textContent?.trim() === 'Kalıcı sil');
     expect(button?.disabled).toBe(true); c.remove(); http.expectNone(r => r.method === 'DELETE'); http.verify();
   });
-  it('offers an optional exam date and sends it as a calendar date without a time zone', () => {
-    const {fixture,http,c}=setup();c.create('exams');fixture.detectChanges();
+  it('offers an optional exam date and sends it as a calendar date without a time zone', async () => {
+    const {fixture,http,c}=setup();c.create('exams');fixture.detectChanges();await fixture.whenStable();
     const date=fixture.nativeElement.querySelector('input[name="examDate"]') as HTMLInputElement | null;
     expect(date).not.toBeNull();expect(date?.type).toBe('date');
     if (date) {date.value='2027-06-20';date.dispatchEvent(new Event('input'));}
