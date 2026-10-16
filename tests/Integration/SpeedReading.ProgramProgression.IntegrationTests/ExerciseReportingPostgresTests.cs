@@ -15,6 +15,17 @@ public sealed class ExerciseReportingPostgresTests(PostgresFixture postgres) : I
     private OwnedSpeedReadingDbContext Open() => new(new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>()
         .UseNpgsql(postgres.ConnectionString, b => b.MigrationsHistoryTable("__ef_migrations_history", "speed_reading")).Options);
 
+    [Theory]
+    [InlineData("archived")]
+    [InlineData("boundary")]
+    [InlineData("calendar")]
+    [InlineData("success")]
+    public async Task Report_average_audit_preserves_history_periods_calendar_and_real_zero(string mode)
+    {
+        await using var db = Open(); await Reset(db);
+        await ReportAverageAuditScenario.Run(db, mode);
+    }
+
     [Fact]
     public async Task Institution_benchmark_uses_active_student_memberships_and_matches_overview()
     {

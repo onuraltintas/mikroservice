@@ -56,6 +56,14 @@ describe('reports without measured speed', () => {
     expect(fixture.componentInstance.statsDataSource()).toEqual([]);
   });
 
+  it('plots the same period as summary cards instead of a capped history page', () => {
+    const fixture = TestBed.createComponent(StudentDashboardReportComponent);
+    fixture.componentInstance.report.set({ wpmProgress: [{ name: '2026-10-16', series: [{ value: 150 }] }],
+      comprehensionTrend: [{ name: '2026-10-16', series: [{ value: 0 }] }] } as any);
+    expect(fixture.componentInstance.wpmProgressData().length).toBe(1);
+    expect(fixture.componentInstance.comprehensionTrendData().length).toBe(1);
+  });
+
   it('keeps real speed measurements visible', () => {
     const fixture = TestBed.createComponent(StudentReadingSpeedReportComponent);
     fixture.componentInstance.loading.set(false);
