@@ -80,6 +80,21 @@ describe('StudentStudyPlansComponent', () => {
     expect(task.querySelector('[role="alert"]').textContent).toContain('0–100000');
     expect(service.complete).not.toHaveBeenCalled();
   });
+  it('keeps other unsaved task inputs after completing one task and on a failed save', () => {
+    const { component, service } = setup('plan');
+    const second = { ...active.tasks[0], id: 'second' };
+    const plan = { ...active, tasks: [active.tasks[0], second] };
+    service.get.mockReturnValue(of(plan)); component.open('plan');
+    component.actualMinutes['second'] = 19; component.actualQuestions['second'] = 0;
+    service.complete.mockReturnValue(of({ ...plan, version: 5, tasks: [{ ...active.tasks[0], isCompleted: true, actualMinutes: 17, actualQuestions: 8 }, second] }));
+    component.complete(active.tasks[0], 17, 8);
+    expect(component.actualMinutes['second']).toBe(19);
+    expect(component.actualQuestions['second']).toBe(0);
+    service.complete.mockReturnValue(throwError(() => ({ status: 503 })));
+    component.complete(second, 19, 0);
+    expect(component.actualMinutes['second']).toBe(19);
+    expect(component.actualQuestions['second']).toBe(0);
+  });
   it('lists plans, opens detail and offers active task controls', () => {
     const { fixture, component, service } = setup();
     component.open('plan');
