@@ -56,6 +56,10 @@ public sealed class CoachingOwnedInvitationTests
         await service.AcceptAsync(student, invitation.Id, default);
         Assert.Empty(f.Db.CoachingInstitutionMemberships);
         Assert.Null((await f.Db.CoachingTeacherStudentAssignments.SingleAsync()).InstitutionId);
+        await f.Store.EndAssignmentAsync(student, teacher, student, studentInitiated: true, default);
+        Assert.False((await f.Db.CoachingTeacherStudentAssignments.SingleAsync()).IsActive);
+        await service.AcceptAsync(student, invitation.Id, default);
+        Assert.False((await f.Db.CoachingTeacherStudentAssignments.SingleAsync()).IsActive);
         await Assert.ThrowsAsync<BusinessRuleException>(() => service.CancelAsync(student, invitation.Id, default));
     }
     private sealed class Events : Coaching.Application.Interfaces.ICoachingEventPublisher
