@@ -60,10 +60,11 @@
     } @placeholder {
       <p class="section-loading" role="status">Sınavlar hazırlanıyor…</p>
     }
+  } @else if (activeSection() === 'profile') {
+    <edu-coaching-profile [apiUrl]="apiUrl" role="Teacher" />
   } @else if (activeSection() === 'finance') {
     <app-coaching-finance mode="staff" [cashView]="true" />
   } @else {
     <staff-coaching-teacher-subscription />
   }
-  @if (activeSection() === 'profile') { <edu-coaching-profile [apiUrl]="apiUrl" role="Teacher" /> }
 </section>

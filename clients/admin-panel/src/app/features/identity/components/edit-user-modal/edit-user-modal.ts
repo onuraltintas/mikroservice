@@ -1,8 +1,7 @@
 import { Component, EventEmitter, Input, Output, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { IdentityService, UserProfileDto, UpdateUserProfileRequest } from '../../../../core/services/identity.service';
-import { InstitutionDto, InstitutionService } from '../../../../core/services/institution.service';
+import { IdentityService, UserProfileDto } from '../../../../core/services/identity.service';
 import { ToasterService } from '../../../../core/services/toaster.service';
 import { getAdminErrorMessage } from '../../../../core/auth/admin-error-message';
 import { AuthService, hasRequiredAccess } from '../../../../core/auth/auth.service';
@@ -137,55 +136,8 @@ import { SpeedReadingAdminService } from '../../../../core/services/speed-readin
                                 }
                             </div>
 
-                            @if (isTeacher()) {
-                                <div class="grid grid-cols-1 gap-4 rounded-lg border border-indigo-100 bg-indigo-50/50 p-4 dark:border-indigo-900 dark:bg-indigo-900/10 sm:grid-cols-2">
-                                    <label class="text-sm font-medium text-gray-700 dark:text-gray-200">Ünvan
-                                        <input type="text" formControlName="teacherTitle" maxlength="100" class="mt-1 block w-full rounded-lg border-gray-300 p-2.5 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white">
-                                    </label>
-                                    <label class="text-sm font-medium text-gray-700 dark:text-gray-200">Deneyim (yıl)
-                                        <input type="number" formControlName="teacherExperienceYears" min="0" max="80" class="mt-1 block w-full rounded-lg border-gray-300 p-2.5 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white">
-                                    </label>
-                                    <label class="text-sm font-medium text-gray-700 dark:text-gray-200 sm:col-span-2">Uzmanlık alanları
-                                        <input type="text" formControlName="teacherSubjects" placeholder="Matematik, Türkçe" maxlength="2000" class="mt-1 block w-full rounded-lg border-gray-300 p-2.5 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white">
-                                    </label>
-                                </div>
-                            }
-
-                            @if (isStudent()) {
-                                <div class="grid grid-cols-1 gap-4 rounded-lg border border-emerald-100 bg-emerald-50/50 p-4 dark:border-emerald-900 dark:bg-emerald-900/10 sm:grid-cols-2">
-                                    <label class="text-sm font-medium text-gray-700 dark:text-gray-200">Sınıf seviyesi
-                                        <input type="number" formControlName="studentGradeLevel" min="1" max="12" class="mt-1 block w-full rounded-lg border-gray-300 p-2.5 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white">
-                                    </label>
-                                    <label class="text-sm font-medium text-gray-700 dark:text-gray-200">Doğum tarihi
-                                        <input type="date" formControlName="studentBirthDate" class="mt-1 block w-full rounded-lg border-gray-300 p-2.5 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white">
-                                    </label>
-                                    <label class="text-sm font-medium text-gray-700 dark:text-gray-200 sm:col-span-2">Öğrenme stili
-                                        <select formControlName="studentLearningStyle" class="mt-1 block w-full rounded-lg border-gray-300 p-2.5 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white">
-                                            <option value="">Belirtilmemiş</option>
-                                            <option value="Visual">Görsel</option>
-                                            <option value="Auditory">İşitsel</option>
-                                            <option value="Kinesthetic">Kinestetik</option>
-                                            <option value="ReadingWriting">Okuma/Yazma</option>
-                                        </select>
-                                    </label>
-                                </div>
-                            }
-
-                            @if (isProfileUser()) {
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Kurum
-                                    <select formControlName="institutionId" class="mt-1 block w-full rounded-lg border-gray-300 p-2.5 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white">
-                                        <option [ngValue]="null">Bağımsız / kurumsuz</option>
-                                        @for (institution of institutions(); track institution.id) {
-                                            <option [ngValue]="institution.id">{{ institution.name }}{{ institution.city ? ' · ' + institution.city : '' }}</option>
-                                        }
-                                    </select>
-                                </label>
-                            }
-
-                            @if (isProfileUser()) {
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">Biyografi
-                                    <textarea formControlName="bio" rows="3" maxlength="500" class="mt-1 block w-full rounded-lg border-gray-300 p-2.5 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-white"></textarea>
-                                </label>
+                            @if (isTeacher() || isStudent()) {
+                                <p class="text-sm text-gray-600 dark:text-gray-300">Eğitim profili ve kurum ilişkileri ilgili ürünün koçluk veya hızlı okuma panelinden yönetilir.</p>
                             }
                         </div>
                     </form>
@@ -233,7 +185,6 @@ export class EditUserModalComponent implements OnInit {
   private fb = inject(FormBuilder);
   private identityService = inject(IdentityService);
   private toaster = inject(ToasterService);
-  private institutionService = inject(InstitutionService);
   private readonly progressionService = inject(SpeedReadingAdminService);
   readonly progression = signal<{ mode: 'inherit' | 'allow' | 'deny'; allowEarlyAdvance: boolean; defaultAllowEarlyAdvance: boolean } | null>(null);
   readonly progressionLoading = signal(false);
@@ -250,22 +201,13 @@ export class EditUserModalComponent implements OnInit {
   private accessChanged = false;
 
   user = signal<UserProfileDto | null>(null);
-  institutions = signal<InstitutionDto[]>([]);
   loading = signal(false);
   error = signal<string | null>(null);
 
   form = this.fb.group({
     firstName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50)]],
     lastName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50)]],
-    phoneNumber: ['', [Validators.pattern('^[+]*[(]{0,1}[0-9]{1,4}[)]{0,1}[-\\s\\./0-9]*$')]],
-    bio: ['', [Validators.maxLength(500)]],
-    teacherTitle: ['', [Validators.maxLength(100)]],
-    teacherExperienceYears: [null as number | null],
-    teacherSubjects: [''],
-    studentGradeLevel: [null as number | null],
-    studentBirthDate: [''],
-    studentLearningStyle: [''],
-    institutionId: [null as string | null]
+    phoneNumber: ['', [Validators.pattern('^[+]*[(]{0,1}[0-9]{1,4}[)]{0,1}[-\\s\\./0-9]*$')]]
   });
 
   get f() { return this.form.controls; }
@@ -273,12 +215,7 @@ export class EditUserModalComponent implements OnInit {
   ngOnInit() {
     this.initForm();
     this.loadProgression();
-    if (this.isProfileUser()) {
-      this.institutionService.getAll(1, 100, '', true).subscribe({
-        next: response => this.institutions.set(response.items),
-        error: () => this.toaster.error('Kurum listesi yüklenemedi.')
-      });
-    }
+
   }
 
   loadProgression(): void {
@@ -302,27 +239,16 @@ export class EditUserModalComponent implements OnInit {
       const lastName = names.length > 1 ? names[names.length - 1] : '';
 
       const profile = currentUser as UserProfileDto;
-      const teacher = profile.teacherDetails;
-      const student = profile.studentDetails;
       this.form.patchValue({
         firstName: profile.firstName || firstName,
         lastName: profile.lastName || lastName,
-        phoneNumber: currentUser.phoneNumber || '',
-        bio: teacher?.bio ?? student?.bio ?? '',
-        teacherTitle: teacher?.title ?? '',
-        teacherExperienceYears: teacher?.experienceYears ?? null,
-        teacherSubjects: teacher?.subjects?.join(', ') ?? '',
-        studentGradeLevel: student?.gradeLevel ?? null,
-        studentBirthDate: student?.birthDate ? student.birthDate.slice(0, 10) : '',
-        studentLearningStyle: student?.learningStyle ?? '',
-        institutionId: teacher?.institutionId ?? student?.institutionId ?? null
+        phoneNumber: currentUser.phoneNumber || ''
       });
     }
   }
 
   isTeacher() { return this.user()?.roles?.includes('Teacher') ?? false; }
   isStudent() { return this.user()?.roles?.includes('Student') ?? false; }
-  isProfileUser() { return this.isTeacher() || this.isStudent(); }
 
   isGlobalAdministrator() { return this.user()?.roles.includes('SystemAdmin') ?? false; }
   hasProductAccess(product: RoleProduct) { return this.user()?.productAccesses?.some(access => access.product === product && access.isActive) ?? false; }
@@ -389,31 +315,12 @@ export class EditUserModalComponent implements OnInit {
     this.error.set(null);
 
     const val = this.form.value;
-    const request: UpdateUserProfileRequest = {
+    const request = {
       firstName: val.firstName!,
       lastName: val.lastName!,
-      phoneNumber: val.phoneNumber || undefined,
-      bio: this.isProfileUser() ? (val.bio?.trim() || '') : undefined,
-      institutionId: this.isProfileUser() ? (val.institutionId || null) : undefined,
-      teacherTitle: this.isTeacher() ? (val.teacherTitle?.trim() || '') : undefined,
-      teacherExperienceYears: this.isTeacher() && val.teacherExperienceYears !== null
-        ? Number(val.teacherExperienceYears)
-        : undefined,
-      teacherSubjects: this.isTeacher()
-        ? (val.teacherSubjects ?? '').split(',').map(subject => subject.trim()).filter(Boolean)
-        : undefined,
-      studentGradeLevel: this.isStudent() && val.studentGradeLevel !== null
-        ? Number(val.studentGradeLevel)
-        : undefined,
-      studentBirthDate: this.isStudent() && val.studentBirthDate ? val.studentBirthDate : undefined,
-      studentLearningStyle: this.isStudent() && val.studentLearningStyle
-        ? val.studentLearningStyle as UpdateUserProfileRequest['studentLearningStyle']
-        : undefined
+      phoneNumber: val.phoneNumber || undefined
     };
-
-    const updateRequest = this.isProfileUser()
-      ? this.identityService.updateUserProfile(currentUser.userId, request)
-      : this.identityService.updateUser(currentUser.userId, request);
+    const updateRequest = this.identityService.updateUser(currentUser.userId, request);
 
     updateRequest.subscribe({
       next: () => {
