@@ -206,8 +206,16 @@ public sealed class CurriculumManagementTests
         Assert.Equal(25,first.Items.Count);Assert.Single(second.Items);Assert.Equal(26,first.TotalCount);
         Assert.Single((await f.Service.ChildrenAsync("groups",null,"Grup 25",1,default)).Items);
         await Assert.ThrowsAsync<ArgumentException>(()=>f.Service.SaveAsync("groups",null,new("Bozuk","kısa"),default));
-        await Assert.ThrowsAsync<ArgumentException>(()=>f.Service.SaveAsync("lessons",null,new("Bozuk","Ders oluştur",GradeNumber:13),default));
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(()=>f.Service.SaveAsync("lessons",null,new("Bozuk","Ders oluştur",GradeNumber:13),default));
         await Assert.ThrowsAsync<KeyNotFoundException>(()=>f.Service.GetAsync("groups",Guid.NewGuid(),default));
+    }
+
+    [Fact]
+    public async Task UnauthenticatedPrincipalCannotReadOrWriteEvenIfScopeResolverReturnsGlobal()
+    {
+        await using var f=new Fixture();f.User.IsAuthenticated=false;
+        await Assert.ThrowsAsync<BusinessRuleException>(()=>f.Service.ChildrenAsync("groups",null,null,1,default));
+        await Assert.ThrowsAsync<BusinessRuleException>(()=>f.Service.SaveAsync("groups",null,new("Grup","Grup oluştur"),default));
     }
 
     internal sealed class Fixture : IAsyncDisposable
@@ -236,7 +244,7 @@ public sealed class CurriculumManagementTests
     internal sealed class Scope : ICoachingAdminScopeAuthorization
     { public bool Global = true; public Task<CoachingAdminScope> RequireReadScopeAsync(CancellationToken ct) => Task.FromResult(Global ? CoachingAdminScope.Global : new CoachingAdminScope(false,Guid.NewGuid())); }
     internal sealed class Actor : ICurrentUserService
-    { public Guid? UserId { get; set; } = Guid.NewGuid(); public IEnumerable<string> Roles { get; set; } = ["SystemAdmin"]; public string? Email => null; public string? FullName => "Test"; public bool IsAuthenticated => true; public ClaimsPrincipal? User => null; }
+    { public Guid? UserId { get; set; } = Guid.NewGuid(); public IEnumerable<string> Roles { get; set; } = ["SystemAdmin"]; public string? Email => null; public string? FullName => "Test"; public bool IsAuthenticated { get; set; } = true; public ClaimsPrincipal? User => null; }
     internal sealed class NoopPublisher : ICoachingEventPublisher
     { public Task PublishAsync<T>(T message, CancellationToken ct = default) where T : class => Task.CompletedTask; }
 }
