@@ -1819,6 +1819,72 @@ namespace Coaching.Infrastructure.Data.Migrations
                     b.ToTable("subscription_settings", "coaching");
                 });
 
+            modelBuilder.Entity("Coaching.Domain.Entities.CurriculumVersion", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsPublished")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<string>("SourceUrl")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<int>("ValidFromYear")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ValidToYear")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer");
+
+                    b.Property<string>("VersionLabel")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.ToTable("curriculum_versions", "coaching", t =>
+                        {
+                            t.HasCheckConstraint("ck_curriculum_years", "\"ValidFromYear\" BETWEEN 2000 AND 2200 AND \"ValidToYear\" BETWEEN \"ValidFromYear\" AND 2200");
+                        });
+                });
+
             modelBuilder.Entity("Coaching.Domain.Entities.Exam", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2093,6 +2159,140 @@ namespace Coaching.Infrastructure.Data.Migrations
                     b.ToTable("session_attendances", "coaching");
                 });
 
+            modelBuilder.Entity("Coaching.Domain.Entities.StudentCoursePreference", b =>
+                {
+                    b.Property<Guid>("ContextId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("LessonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsIncluded")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("Priority")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("SelfReportedDifficulty")
+                        .HasColumnType("integer");
+
+                    b.HasKey("ContextId", "LessonId");
+
+                    b.HasIndex("LessonId");
+
+                    b.ToTable("student_course_preferences", "coaching", t =>
+                        {
+                            t.HasCheckConstraint("ck_course_priority", "\"Priority\" BETWEEN 1 AND 5 AND (\"SelfReportedDifficulty\" IS NULL OR \"SelfReportedDifficulty\" BETWEEN 1 AND 5)");
+                        });
+                });
+
+            modelBuilder.Entity("Coaching.Domain.Entities.StudentLearningContext", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("AcademicYearStart")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("CurriculumVersionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("EducationStatus")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ForeignLanguage")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<int?>("GradeLevel")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("LastCompletedStep")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("PrimaryScoreType")
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<int>("Purpose")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("SetupVersion")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("StartingStatusReviewed")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("StudentUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int?>("TargetExamYear")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CurriculumVersionId");
+
+                    b.HasIndex("StudentUserId")
+                        .IsUnique();
+
+                    b.ToTable("student_learning_contexts", "coaching", t =>
+                        {
+                            t.HasCheckConstraint("ck_learning_purpose", "\"Purpose\" BETWEEN 0 AND 4");
+
+                            t.HasCheckConstraint("ck_learning_year", "\"AcademicYearStart\" BETWEEN 2000 AND 2200");
+                        });
+                });
+
+            modelBuilder.Entity("Coaching.Domain.Entities.StudentTopicState", b =>
+                {
+                    b.Property<Guid>("ContextId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TopicId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("DeclaredStatus")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UpdatedBy")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("ContextId", "TopicId");
+
+                    b.HasIndex("TopicId");
+
+                    b.ToTable("student_topic_states", "coaching", t =>
+                        {
+                            t.HasCheckConstraint("ck_topic_declaration", "\"DeclaredStatus\" BETWEEN 0 AND 2");
+                        });
+                });
+
             modelBuilder.Entity("Coaching.Domain.Entities.StudyAvailability", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2144,6 +2344,10 @@ namespace Coaching.Infrastructure.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("CurriculumVersionId")
+                        .IsConcurrencyToken()
+                        .HasColumnType("uuid");
+
                     b.Property<string>("ExamCode")
                         .HasMaxLength(10)
                         .HasColumnType("character varying(10)");
@@ -2170,6 +2374,8 @@ namespace Coaching.Infrastructure.Data.Migrations
                         .HasColumnType("character varying(100)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CurriculumVersionId");
 
                     b.HasIndex("Source", "SourceId")
                         .IsUnique();
@@ -3233,6 +3439,59 @@ namespace Coaching.Infrastructure.Data.Migrations
                     b.Navigation("Session");
                 });
 
+            modelBuilder.Entity("Coaching.Domain.Entities.StudentCoursePreference", b =>
+                {
+                    b.HasOne("Coaching.Domain.Entities.StudentLearningContext", null)
+                        .WithMany("CoursePreferences")
+                        .HasForeignKey("ContextId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Coaching.Domain.Entities.StudyCatalogLesson", null)
+                        .WithMany()
+                        .HasForeignKey("LessonId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Coaching.Domain.Entities.StudentLearningContext", b =>
+                {
+                    b.HasOne("Coaching.Domain.Entities.CurriculumVersion", null)
+                        .WithMany()
+                        .HasForeignKey("CurriculumVersionId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Coaching.Domain.Profiles.CoachingStudentProfile", null)
+                        .WithMany()
+                        .HasForeignKey("StudentUserId")
+                        .HasPrincipalKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Coaching.Domain.Entities.StudentTopicState", b =>
+                {
+                    b.HasOne("Coaching.Domain.Entities.StudentLearningContext", null)
+                        .WithMany("TopicStates")
+                        .HasForeignKey("ContextId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Coaching.Domain.Entities.StudyCatalogTopic", null)
+                        .WithMany()
+                        .HasForeignKey("TopicId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Coaching.Domain.Entities.StudyCatalogLesson", b =>
+                {
+                    b.HasOne("Coaching.Domain.Entities.CurriculumVersion", null)
+                        .WithMany()
+                        .HasForeignKey("CurriculumVersionId")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
             modelBuilder.Entity("Coaching.Domain.Entities.StudyCatalogTopic", b =>
                 {
                     b.HasOne("Coaching.Domain.Entities.StudyCatalogUnit", null)
@@ -3327,6 +3586,13 @@ namespace Coaching.Infrastructure.Data.Migrations
             modelBuilder.Entity("Coaching.Domain.Entities.Exam", b =>
                 {
                     b.Navigation("Results");
+                });
+
+            modelBuilder.Entity("Coaching.Domain.Entities.StudentLearningContext", b =>
+                {
+                    b.Navigation("CoursePreferences");
+
+                    b.Navigation("TopicStates");
                 });
 #pragma warning restore 612, 618
         }

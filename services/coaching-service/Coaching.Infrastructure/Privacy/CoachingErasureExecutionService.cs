@@ -102,10 +102,12 @@ public sealed class CoachingErasureExecutionService(
         var ownedAssignments = await context.CoachingTeacherStudentAssignments.Where(x => x.StudentUserId == message.SubjectUserId || x.TeacherUserId == message.SubjectUserId).ToListAsync(cancellationToken);
         var ownedMembers = await context.CoachingInstitutionMemberships.Where(x => x.UserId == message.SubjectUserId).ToListAsync(cancellationToken);
         var ownedStudents = await context.CoachingStudentProfiles.Where(x => x.UserId == message.SubjectUserId).ToListAsync(cancellationToken);
+        var learningContexts = await context.StudentLearningContexts.Include(x => x.CoursePreferences).Include(x => x.TopicStates)
+            .Where(x => x.StudentUserId == message.SubjectUserId).ToListAsync(cancellationToken);
         var ownedTeachers = await context.CoachingTeacherProfiles.Where(x => x.UserId == message.SubjectUserId).ToListAsync(cancellationToken);
         var ownedInvites = await context.CoachingInvitations.Where(x => x.InviterUserId == message.SubjectUserId || x.TeacherUserId == message.SubjectUserId || x.AcceptedByUserId == message.SubjectUserId).ToListAsync(cancellationToken);
 
-        var deletedRecordCount = ownedAssignments.Count + ownedMembers.Count + ownedStudents.Count + ownedTeachers.Count + ownedInvites.Count + attachments.Count
+        var deletedRecordCount = learningContexts.Sum(x => 1 + x.CoursePreferences.Count + x.TopicStates.Count) + ownedAssignments.Count + ownedMembers.Count + ownedStudents.Count + ownedTeachers.Count + ownedInvites.Count + attachments.Count
             + assignmentStudents.Count
             + examResults.Count
             + studentExams.Count + studyTasks.Count + studyPlans.Count + studyAvailability.Count + studyMessages.Count + reminders.Count + financeCount
@@ -117,6 +119,7 @@ public sealed class CoachingErasureExecutionService(
 
         context.CoachingTeacherStudentAssignments.RemoveRange(ownedAssignments);
         context.CoachingInstitutionMemberships.RemoveRange(ownedMembers);
+        context.StudentLearningContexts.RemoveRange(learningContexts);
         context.CoachingStudentProfiles.RemoveRange(ownedStudents);
         context.CoachingTeacherProfiles.RemoveRange(ownedTeachers);
         context.CoachingInvitations.RemoveRange(ownedInvites);

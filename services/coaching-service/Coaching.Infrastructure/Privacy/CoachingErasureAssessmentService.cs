@@ -41,7 +41,11 @@ public sealed class CoachingErasureAssessmentService(
             row => row.StudentId == message.SubjectUserId, cancellationToken);
         var agreementCount = await context.CoachingAgreementAcknowledgements.CountAsync(
             row => row.SubjectStudentId == message.SubjectUserId, cancellationToken);
-        var planningCount = await context.CoachingStudentProfiles.CountAsync(x => x.UserId == message.SubjectUserId, cancellationToken)
+        var learningIds = context.StudentLearningContexts.Where(x => x.StudentUserId == message.SubjectUserId).Select(x => x.Id);
+        var planningCount = await context.StudentLearningContexts.CountAsync(x => x.StudentUserId == message.SubjectUserId, cancellationToken)
+            + await context.StudentCoursePreferences.CountAsync(x => learningIds.Contains(x.ContextId), cancellationToken)
+            + await context.StudentTopicStates.CountAsync(x => learningIds.Contains(x.ContextId), cancellationToken)
+            + await context.CoachingStudentProfiles.CountAsync(x => x.UserId == message.SubjectUserId, cancellationToken)
             + await context.CoachingTeacherProfiles.CountAsync(x => x.UserId == message.SubjectUserId, cancellationToken)
             + await context.CoachingInstitutionMemberships.CountAsync(x => x.UserId == message.SubjectUserId, cancellationToken)
             + await context.CoachingTeacherStudentAssignments.CountAsync(x => x.StudentUserId == message.SubjectUserId || x.TeacherUserId == message.SubjectUserId, cancellationToken)

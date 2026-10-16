@@ -69,7 +69,8 @@ export class StudentLearningSetupComponent implements OnInit {
       this.error.set('Eğitim yılını ve seçtiğiniz amaca ait sınav bilgilerini tamamlayın.'); return;
     }
     const previous = this.state()?.context;
-    const sameScope = previous && previous.academicYearStart === this.academicYearStart && previous.purpose === this.purpose
+    const sameScope = previous && !this.state()?.missingFields.some(x => x === 'Purpose' || x === 'Catalog')
+      && previous.academicYearStart === this.academicYearStart && previous.purpose === this.purpose
       && previous.primaryScoreType === (this.purpose === 'Yks' ? this.primaryScoreType : null)
       && previous.foreignLanguage === (this.purpose === 'Yks' && this.primaryScoreType === 'DIL' ? this.foreignLanguage : null);
     this.persist(this.request(sameScope ? this.courses : [], sameScope ? this.topics : [], !!sameScope && this.startingStatusReviewed), 'Availability');
