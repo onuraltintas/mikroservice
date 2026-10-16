@@ -37,7 +37,8 @@ export class CoachingPortalLayoutComponent {
       { label: 'Çalışma planlarım', path: '/coaching-portal/study-plans', icon: 'plan' },
       { label: 'Ödevlerim', path: '/coaching-portal/assignments', icon: 'book' },
       { label: 'Çalışma saatlerim', path: '/coaching-portal/study-availability', icon: 'clock' },
-      { label: 'Otomatik plan', path: '/coaching-portal/automatic-plan', icon: 'spark' }
+      { label: 'Otomatik plan', path: '/coaching-portal/automatic-plan', icon: 'spark' },
+      { label: 'Haftalık programım', path: '/coaching-portal/weekly-plan', icon: 'calendar' }
     ] },
     { label: 'Gelişimim', links: [
       { label: 'İlerlemem', path: '/coaching-portal/progress', icon: 'chart' },

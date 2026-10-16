@@ -101,6 +101,7 @@ public sealed class CoachingDataExportRepository(CoachingDbContext context)
         var hours = await context.StudyAvailability.AsNoTracking().SingleOrDefaultAsync(x => x.StudentId == studentId, cancellationToken);
         var availability = hours is null ? null : new Coaching.Application.StudyPlanning.StudyAvailabilityView(hours.Version, hours.TimeZoneId,
             hours.Windows.Select(x => new Coaching.Application.StudyPlanning.StudyWindowInput(x.Day, x.StartMinute, x.EndMinute)).ToArray());
+        var weeklyDraft = await context.Set<Coaching.Domain.Entities.WeeklyStudyDraft>().AsNoTracking().SingleOrDefaultAsync(x => x.StudentId == studentId, cancellationToken);
         var reminders = await context.CoachingReminderReceipts.AsNoTracking().Where(x => x.RecipientUserId == studentId)
             .OrderBy(x => x.CreatedAt).ThenBy(x => x.Id)
             .Select(x => new CoachingDataReminderDto(x.Id, x.SourceId, x.Kind, x.DueAt, x.CreatedAt)).ToListAsync(cancellationToken);
@@ -120,6 +121,7 @@ public sealed class CoachingDataExportRepository(CoachingDbContext context)
         return new CoachingDataExportDto(
             "1.5", studentId, exportedAt, assignments, exams, goals, sessions, agreements, plans, availability, reminders, fees, profile, profileAssignments,
             await context.StudentLearningContexts.AsNoTracking().Include(x => x.CoursePreferences).Include(x => x.TopicStates)
-                .SingleOrDefaultAsync(x => x.StudentUserId == studentId, cancellationToken));
+                .SingleOrDefaultAsync(x => x.StudentUserId == studentId, cancellationToken),
+            weeklyDraft is null ? null : Coaching.Infrastructure.StudyPlanning.CoachingWeeklyStudyDraftService.View(weeklyDraft));
     }
 }

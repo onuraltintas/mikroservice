@@ -83,6 +83,7 @@ public sealed class CoachingErasureExecutionService(
         var studyTasks = await context.StudyPlanTasks.Where(x => x.StudentId == message.SubjectUserId).ToListAsync(cancellationToken);
         var studyPlans = await context.StudyPlanRevisions.Where(x => x.StudentId == message.SubjectUserId).ToListAsync(cancellationToken);
         var studyAvailability = await context.StudyAvailability.Where(x => x.StudentId == message.SubjectUserId).ToListAsync(cancellationToken);
+        var weeklyDrafts = await context.Set<WeeklyStudyDraft>().Where(x => x.StudentId == message.SubjectUserId).ToListAsync(cancellationToken);
         var studyMessages = await CoachingStudyPlanErasureMessages.ForStudent(context, message.SubjectUserId).ToListAsync(cancellationToken);
         var reminders = await context.CoachingReminderReceipts.Where(x => x.RecipientUserId == message.SubjectUserId).ToListAsync(cancellationToken);
         var fees = await context.CoachingFeeAgreements.Where(x => x.StudentId == message.SubjectUserId).ToListAsync(cancellationToken);
@@ -110,7 +111,7 @@ public sealed class CoachingErasureExecutionService(
         var deletedRecordCount = learningContexts.Sum(x => 1 + x.CoursePreferences.Count + x.TopicStates.Count) + ownedAssignments.Count + ownedMembers.Count + ownedStudents.Count + ownedTeachers.Count + ownedInvites.Count + attachments.Count
             + assignmentStudents.Count
             + examResults.Count
-            + studentExams.Count + studyTasks.Count + studyPlans.Count + studyAvailability.Count + studyMessages.Count + reminders.Count + financeCount
+            + studentExams.Count + studyTasks.Count + studyPlans.Count + studyAvailability.Count + weeklyDrafts.Count + studyMessages.Count + reminders.Count + financeCount
             + goals.Count
             + attendances.Count
             + acknowledgements.Count;
@@ -130,6 +131,7 @@ public sealed class CoachingErasureExecutionService(
         context.StudyPlanTasks.RemoveRange(studyTasks);
         context.StudyPlanRevisions.RemoveRange(studyPlans);
         context.StudyAvailability.RemoveRange(studyAvailability);
+        context.RemoveRange(weeklyDrafts);
         context.RemoveRange(studyMessages);
         context.CoachingReminderReceipts.RemoveRange(reminders);
         context.CoachingFeeAgreements.RemoveRange(fees);

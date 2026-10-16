@@ -1,0 +1,67 @@
+<section class="weekly-page" aria-labelledby="weekly-title">
+  <header class="page-heading"><div><p class="eyebrow">KENDİ ÇALIŞMA RİTMİN</p><h1 id="weekly-title">Haftalık programım</h1><p>Derslerini haftaya yerleştir. Konuları planlamadan önce sana uygun düzeni hazırla.</p></div><a routerLink="/coaching-portal/study-plans">Mevcut planlarım ↗</a></header>
+  <div class="draft-strip"><span class="draft-badge">Haftalık taslak</span><span>Bu düzen her hafta tekrar eder. Mevcut planın ve çalışma kayıtların korunur.</span><strong>{{ weeklyMinutes() }} dk / hafta</strong></div>
+  @if(error()){<div role="alert" class="notice error">{{ error() }}</div>}
+  @if(message()){<p role="status" class="notice success">{{ message() }}</p>}
+  @if(loading()){<p role="status">Haftalık taslak yükleniyor…</p>}
+  @if(!ready()&&!loading()){<button type="button" (click)="load()">Yeniden dene</button>}
+  @if(ready()){
+    <div class="calendar-toolbar">
+      <div class="date-controls"><button type="button" aria-label="Önceki dönem" (click)="navigate(-1)">‹</button><button type="button" (click)="today()">Bugün</button><button type="button" aria-label="Sonraki dönem" (click)="navigate(1)">›</button><h2>{{ title() }}</h2></div>
+      <div class="view-switch" role="group" aria-label="Takvim görünümü">@for(v of views;track v.id){<button type="button" [attr.aria-pressed]="view()===v.id" (click)="changeView(v.id)">{{ v.label }}</button>}</div>
+      <div class="toolbar-actions"><button type="button" (click)="add()" [disabled]="busy()||!lessons().length">+ Ders ekle</button><button type="button" class="primary" (click)="save()" [disabled]="busy()||!dirty()||conflict()||!!form">{{ saving()?'Kaydediliyor…':'Taslağı kaydet' }}</button></div>
+    </div>
+    <div class="calendar-help"><span>Boş saate sağ tıkla veya dokun. Kartı taşı; üst ve alt tutamaçlarla 30 / 60 dk olarak ayarla.</span><span aria-live="polite">{{ dirty()?'Kaydedilmemiş değişiklikler':'Kaydedilen düzen' }}</span></div>
+    @if(!lessons().length){<p class="notice">Takvime ders eklemek için <a routerLink="/coaching-portal/setup">çalışma düzeninden derslerini seç</a>. Kaydedilmiş kartların burada korunur.</p>}
+    @if(preview()){<p role="status" class="gesture-status" [class.invalid]="!!previewError()">{{ previewError()||preview()!.lessonName+' · '+clock(preview()!.startMinute)+'–'+clock(preview()!.startMinute+preview()!.durationMinutes) }}</p>}
+    @if(view()==='month'){
+      <div class="month-grid" aria-label="Aylık haftalık düzen önizlemesi">
+        @for(day of weekDays;track day.value){<div class="month-heading">{{ day.label.slice(0,3) }}</div>}
+        @for(date of days();track date.getTime()){
+          <div class="month-day" [class.other-month]="date.getMonth()!==anchor().getMonth()" (contextmenu)="openMenu($event,date,1080)">
+            <button type="button" class="month-date" [attr.aria-label]="dayTitle(date)+' günlük görünüm'" (click)="monthDay(date)">{{ date.getDate() }}</button>
+            @for(slot of rows(date);track slot.id){<button type="button" class="month-slot color-{{ color(slot) }}" [attr.aria-label]="dayTitle(date)+' '+slot.lessonName+' düzenle'" (click)="edit(slot)"><span>{{ clock(slot.startMinute) }}</span> {{ slot.lessonName }}</button>}
+          </div>
+        }
+      </div>
+      <p class="muted">Aynı haftalık düzenin aya yayılmış önizlemesi. Bir güne tıklayarak saatleri düzenleyebilirsin.</p>
+    }@else{
+      <div class="time-scroller" #scroller>
+        <div class="time-grid" [style.grid-template-columns]="gridColumns()">
+          <div class="time-heading">Saat</div>
+          @for(date of days();track date.getTime()){<button type="button" class="day-heading" (click)="monthDay(date)">{{ dayTitle(date) }}</button>}
+          <div class="time-labels">@for(minute of minutes;track minute){<div>{{ minute%60===0?clock(minute):'' }}</div>}</div>
+          @for(date of days();track date.getTime()){
+            <div class="day-track" [attr.data-day]="weekday(date)">
+              @for(minute of minutes;track minute){<button type="button" class="time-cell" [class.hour-line]="minute%60===0" [attr.data-testid]="'cell-'+weekday(date)+'-'+minute" [attr.aria-label]="dayTitle(date)+' '+clock(minute)+' ders ekle'" [disabled]="busy()||!lessons().length" (click)="add(date,minute)" (contextmenu)="openMenu($event,date,minute)"></button>}
+              @for(slot of rows(date);track slot.id){
+                <div class="slot-card color-{{ color(slot) }}" [class.unavailable]="!available(slot)" [class.invalid]="preview()?.id===slot.id&&!!previewError()" [attr.data-testid]="'slot-'+slot.id" [attr.data-slot-id]="slot.id" [style.top.px]="slot.startMinute/30*36" [style.height.px]="slot.durationMinutes/30*36">
+                  <button type="button" class="resize top" [attr.aria-label]="slot.lessonName+' başlangıcını ayarla'" [disabled]="busy()" (pointerdown)="begin($event,slot,'top')" (click)="edit(slot)"><span></span></button>
+                  <button type="button" class="slot-content" [disabled]="busy()" [attr.aria-label]="slot.lessonName+' '+clock(slot.startMinute)+' '+slot.durationMinutes+' dakika düzenle'" (pointerdown)="begin($event,slot,'move')" (click)="edit(slot)"><strong>{{ slot.lessonName }}</strong><span>{{ clock(slot.startMinute) }}–{{ clock(slot.startMinute+slot.durationMinutes) }} · {{ slot.durationMinutes }} dk</span>@if(!available(slot)){<span>Ders artık seçilemiyor</span>}</button>
+                  <button type="button" class="resize bottom" [attr.aria-label]="slot.lessonName+' bitişini ayarla'" [disabled]="busy()" (pointerdown)="begin($event,slot,'bottom')" (click)="edit(slot)"><span></span></button>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </div>
+    }
+    <footer class="calendar-footer"><label>Saat dilimi<input aria-label="Saat dilimi" [(ngModel)]="timeZoneId" maxlength="100" [disabled]="busy()"></label><button type="button" (click)="load(true)" [disabled]="busy()">Kaydedileni yeniden yükle</button></footer>
+  }
+</section>
+@if(menu;as target){
+  <div class="context-menu" role="menu" aria-label="Takvime ders ekle" [style.left.px]="target.x" [style.top.px]="target.y" cdkTrapFocus [cdkTrapFocusAutoCapture]="true"><small>{{ dayTitle(target.date) }} · {{ clock(target.minute) }}</small><button type="button" role="menuitem" (click)="add(target.date,target.minute)" [disabled]="!lessons().length">+ Ders ekle</button><button type="button" role="menuitem" (click)="menu=null">Kapat</button></div>
+}
+@if(form;as f){
+  <div class="dialog-backdrop" (click)="form=null"><section class="slot-dialog" role="dialog" aria-modal="true" aria-labelledby="slot-title" cdkTrapFocus [cdkTrapFocusAutoCapture]="true" (click)="$event.stopPropagation()">
+    <header><div><p class="eyebrow">HAFTALIK DÜZEN</p><h2 id="slot-title">{{ hasSlot()?'Dersi düzenle':'Ders ekle' }}</h2></div><button type="button" aria-label="Ders formunu kapat" (click)="form=null">×</button></header>
+    <form #slotForm="ngForm" (ngSubmit)="apply()">
+      <label>Ders<select aria-label="Ders" name="lesson" [(ngModel)]="f.lessonId" required><option value="" disabled>Ders seç</option>@for(lesson of lessons();track lesson.id){<option [value]="lesson.id">{{ lesson.name }}{{ lesson.examCode?' · '+lesson.examCode:'' }}</option>}</select></label>
+      <div class="form-grid"><label>Gün<select aria-label="Gün" name="day" [(ngModel)]="f.day" required>@for(d of weekDays;track d.value){<option [value]="d.value">{{ d.label }}</option>}</select></label><label>Başlangıç<input aria-label="Başlangıç" type="time" name="start" step="1800" min="00:00" max="23:30" [(ngModel)]="f.start" required></label></div>
+      <label>Süre<select aria-label="Süre" name="duration" [(ngModel)]="f.duration"><option [ngValue]="30">30 dakika</option><option [ngValue]="60">1 saat (60 dakika)</option></select></label>
+      <p class="muted">Bu değişiklik haftalık şablona uygulanır. Mevcut çalışma planın değişmez.</p>
+      @if(formError){<p role="alert" class="notice error">{{ formError }}</p>}
+      <div class="dialog-actions">@if(hasSlot()){<button type="button" class="remove" (click)="remove()">Dersi kaldır</button>}<button type="button" (click)="form=null">Vazgeç</button><button type="submit" class="primary" [disabled]="slotForm.invalid||!lessons().length">{{ hasSlot()?'Değişikliği uygula':'Dersi ekle' }}</button></div>
+    </form>
+  </section></div>
+}
