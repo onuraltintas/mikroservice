@@ -19,6 +19,26 @@ namespace Identity.API.IntegrationTests;
 public sealed class SystemAdminMfaLoginTests
 {
     [Theory]
+    [InlineData(PlatformProduct.Coaching)]
+    [InlineData(PlatformProduct.SpeedReading)]
+    public async Task FreshGoogleRegistrationProvisionsOnlyTheRequestedProductProfile(PlatformProduct product)
+    {
+        var user = CreateUserWithRole("Student", product);
+        var repository = new StubUserRepository(user, null, new User?[] { null });
+        var publisher = System.Reflection.DispatchProxy.Create<MassTransit.IPublishEndpoint, ProductRegistrationProfileOwnershipTests.PublishEndpointProxy>();
+        var handler = new GoogleLoginCommandHandler(new StubGoogleAuthService(user.Email), repository, new IssuingTokenService(),
+            new StubUnitOfWork(), new RejectingIdentityService(Result.Success(user.Id), allowRefreshToken: true),
+            new RejectingStudentRepository(), new StubConfigurationService(allowRegistration: "true"), new StubMfaService(user.Id),
+            NullLogger<GoogleLoginCommandHandler>.Instance, new AcceptingLegalConsentService(), publisher);
+        var result = await handler.Handle(new GoogleLoginCommand("google-token", "127.0.0.1", product), default);
+        result.IsSuccess.Should().BeTrue();
+        var messages = ((ProductRegistrationProfileOwnershipTests.PublishEndpointProxy)(object)publisher).Messages
+            .OfType<EduPlatform.Shared.Contracts.Coaching.CoachingProfileProvisioningRequested>();
+        if (product == PlatformProduct.Coaching) Assert.Equal(user.Id, Assert.Single(messages).UserId);
+        else Assert.Empty(messages);
+        user.HasProductAccess(product).Should().BeTrue();
+    }
+    [Theory]
     [InlineData(null)]
     [InlineData(PlatformProduct.SpeedReading)]
     public async Task PasswordLogin_WhenProductScopeIsMissingOrDifferent_ShouldRejectBeforeIssuingTokens(
@@ -1074,7 +1094,7 @@ public sealed class SystemAdminMfaLoginTests
         }
 
         public Task AddAsync(User value, CancellationToken cancellationToken) => throw new NotSupportedException();
-        public void TrackProductAccessIfNew(User value, PlatformProduct product) => throw new NotSupportedException();
+        public void TrackProductAccessIfNew(User value, PlatformProduct product) { }
         public Task<User?> GetByIdAsync(Guid id, CancellationToken cancellationToken) => Task.FromResult<User?>(user);
         public Task<IReadOnlyList<SpeedReadingUserDirectoryItem>> GetSpeedReadingDirectoryAsync(
             IReadOnlyCollection<Guid> userIds,
@@ -1308,7 +1328,8 @@ public sealed class SystemAdminMfaLoginTests
         public Task<Result> DeactivateUserAsync(Guid userId, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<Result> ActivateUserAsync(Guid userId, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<Result> AssignRoleAsync(Guid userId, string roleName, CancellationToken cancellationToken) => throw new NotSupportedException();
-        public Task<Result> AssignRoleForProductAsync(Guid userId, string roleName, PlatformProduct product, CancellationToken cancellationToken, Identity.Domain.Enums.UserProductAccessSource accessSource = Identity.Domain.Enums.UserProductAccessSource.Admin) => throw new NotSupportedException();
+        public Task<Result> AssignRoleForProductAsync(Guid userId, string roleName, PlatformProduct product, CancellationToken cancellationToken, Identity.Domain.Enums.UserProductAccessSource accessSource = Identity.Domain.Enums.UserProductAccessSource.Admin) =>
+            registerResult?.IsSuccess == true ? Task.FromResult(Result.Success()) : throw new NotSupportedException();
         public Task<Result<ProvisionedUser>> RegisterUserWithPasswordSetupAsync(string email, string firstName, string lastName, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<Result<ProvisionedUser>> RegisterUserWithRoleAsync(string email, string firstName, string lastName, string roleName, PlatformProduct? product, string? phoneNumber, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<Result> ResetPasswordAsync(Guid userId, string newPassword, CancellationToken cancellationToken) => throw new NotSupportedException();
