@@ -13,7 +13,7 @@ interface TrainingTemplate { id: string; name: string; description: string; tota
   template: `
     <section>
       <header class="training-header"><span class="eyebrow">KENDİ HIZINIZDA EĞİTİM</span><h1>Eğitim Programları</h1>
-      <p>Admin ve öğretmen eğitimi: günün tüm egzersizlerini bitirince sonraki gün hemen açılır.
+      <p>Personel eğitimi: günün tüm egzersizlerini bitirince sonraki gün hemen açılır.
         Aktif programı tamamladıktan sonra istediğiniz programı yeniden veya ilk kez başlatabilirsiniz.</p></header>
       @if (loading()) { <p role="status">Programlar yükleniyor…</p> }
       @if (error()) { <p role="alert">{{ error() }}</p><button type="button" (click)="load()">Yeniden dene</button> }

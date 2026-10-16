@@ -16,7 +16,7 @@ export const studentRoutes: Routes = [
       {
         path: 'attention-preview',
         canActivate: [authGuard],
-        data: { role: ['Admin', 'SystemAdmin', 'Teacher'] },
+        data: { role: ['Admin', 'SystemAdmin', 'Teacher', 'Editor'] },
         loadComponent: () => import('./exercises/attention-preview/attention-preview.component').then(m => m.AttentionPreviewComponent)
       },
       {

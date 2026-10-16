@@ -9,7 +9,7 @@ namespace SpeedReading.API.Controllers;
 
 [ApiController]
 [Route("api/speed-reading/staff-training")]
-[Authorize(Roles = "Admin,SystemAdmin,Teacher")]
+[Authorize(Roles = "Admin,SystemAdmin,Teacher,Editor")]
 public sealed class StaffTrainingController(ISpeedReadingStudentProgram programs, ILegacySpeedReadingPrograms catalog) : ControllerBase
 {
     [HttpGet("programs")]

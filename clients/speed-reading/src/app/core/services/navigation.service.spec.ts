@@ -11,11 +11,15 @@ describe('student program navigation', () => {
     expect(routes).toContain('/student/reviews');
     expect(routes).toContain('/student/learning-path');
   });
-  it('shows staff training separately without personal student reports', () => {
+  for (const staffRole of ['Admin', 'SystemAdmin', 'Teacher', 'Editor']) {
+  it(`shows ${staffRole} training separately without personal student reports`, () => {
     const service = new NavigationService({} as Router,
-      { currentUserValue: { roles: ['Teacher'] }, hasRole: (role: string) => role === 'Teacher' } as unknown as AuthService);
+      { currentUserValue: { roles: [staffRole] }, hasRole: (role: string) => role === staffRole } as unknown as AuthService);
     const routes = service.getStudentMenuItems().map(item => item.route);
     expect(routes).toContain('/student/training-programs');
+    expect(routes).toContain('/student/daily-exercises');
+    expect(routes).toContain('/student/exercises');
     expect(routes).not.toContain('/student/reports');
   });
+  }
 });
