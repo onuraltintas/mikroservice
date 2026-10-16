@@ -126,7 +126,7 @@ describe('CoachingPortalProgressComponent', () => {
     const fixture = TestBed.createComponent(CoachingPortalProgressComponent); fixture.detectChanges();
     expect(fixture.componentInstance.averageScore()).toBeNull();
     expect(fixture.nativeElement.querySelectorAll('.text-3xl')[1].textContent.trim()).toBe('—');
-    expect(fixture.nativeElement.textContent).toContain('Henüz sınav sonucu yok');
+    expect(fixture.nativeElement.textContent).toContain('Henüz öğretmen sınavı sonucu yok');
     fixture.componentInstance.summary.set({ totalExams: 1, averageExamPercentage: 0 } as any);
     fixture.detectChanges();
     expect(fixture.componentInstance.averageScore()).toBe(0);
