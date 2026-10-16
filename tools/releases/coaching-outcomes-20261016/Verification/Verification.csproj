@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net10.0</TargetFramework><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable></PropertyGroup>
+  <ItemGroup><FrameworkReference Include="Microsoft.AspNetCore.App" /><PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.2" /><PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.2" /></ItemGroup>
+  <ItemGroup>
+    <Reference Include="Coaching.Domain"><HintPath>../../../../artifacts/coaching-outcomes-live-20261016-r2/publish/coaching/Coaching.Domain.dll</HintPath></Reference>
+    <Reference Include="Coaching.Application"><HintPath>../../../../artifacts/coaching-outcomes-live-20261016-r2/publish/coaching/Coaching.Application.dll</HintPath></Reference>
+    <Reference Include="Coaching.Infrastructure"><HintPath>../../../../artifacts/coaching-outcomes-live-20261016-r2/publish/coaching/Coaching.Infrastructure.dll</HintPath></Reference>
+    <Reference Include="EduPlatform.Shared.Kernel"><HintPath>../../../../artifacts/coaching-outcomes-live-20261016-r2/publish/coaching/EduPlatform.Shared.Kernel.dll</HintPath></Reference>
+    <Reference Include="EduPlatform.Shared.Contracts"><HintPath>../../../../artifacts/coaching-outcomes-live-20261016-r2/publish/coaching/EduPlatform.Shared.Contracts.dll</HintPath></Reference>
+    <Reference Include="EduPlatform.Shared.Security"><HintPath>../../../../artifacts/coaching-outcomes-live-20261016-r2/publish/coaching/EduPlatform.Shared.Security.dll</HintPath></Reference>
+  </ItemGroup>
+</Project>

@@ -1,6 +1,6 @@
 # LGS Matematik kazanım ve süre pilotu
 
-Tarih: 16 Ekim 2026. Durum: geliştirme ortamında uygulanmış, canlıya alınmamıştır.
+Tarih: 16 Ekim 2026. Durum: geliştirme tamamlandı; aynı gün 21:34:33 Türkiye saatiyle canlıya alındı. Kullanıcının açık yayın talimatıyla 58 eşleştirme onaylandı ve 52 süre yayınlandı; katalogda taslak süre kalmadı. Aşağıdaki geliştirme notları ilk taslak paketini anlatır. Güncel canlı sonuçları ve yayın dayanağı için [canlı yayın raporuna](coaching-outcomes-live-release-20261016.md) bakın.
 
 ## Kapsam
 
@@ -141,11 +141,11 @@ npx playwright test --config playwright.coaching-outcomes.config.mjs
 
 Tarayıcı senaryoları derlenmiş gerçek arayüzü kontrollü API yanıtlarıyla sınar; canlı API veya üretim hesabında işlem yapmaz. Gerçek kalıcılık ve migration ayrı PostgreSQL testlerinde doğrulanır.
 
-## Canlıya alma öncesi
+## İlk geliştirme sonunda kalan işler ve sonraki yayın
 
-Bu görev canlı dağıtım yapmadı. Sonraki dağıtımda mevcut migration çalıştırıcısı ile yeni migration uygulanmalı; doğrulanmış yedek ve hesap/plan/çalışma sayımları karşılaştırılmalı. Migration katalog verisi seed etmez. Ardından paket yönetici ekranından **taslak** olarak aktarılır. Konu eşleştirmeleri ve bireysel süreler içerik incelemesinden geçmeden topluca yayınlanmamalıdır.
+İlk geliştirme aşaması canlı dağıtım içermiyordu. Sonraki açık kullanıcı talimatıyla migration, yedekten prova, hesap/plan/çalışma parmak izi karşılaştırması ve canlı yayın tamamlandı. Migration katalog verisi seed etmez; kontrollü yayın aracı paketi aktardı, açık kullanıcı onayını kaydetti ve süreleri yayınladı. İşlem ayrıntıları [canlı yayın raporundadır](coaching-outcomes-live-release-20261016.md).
 
-Canlı kullanım için kalan içerik işi: 52 süre önerisinin ve özellikle Doğrusal Denklemler 1/2 kapsamlarının öğretmen tarafından incelenmesi. Sonraki geliştirme paketi diğer beş LGS dersinin resmî programları ve konu eşleştirmeleridir.
+Yayın, bireysel sürelerin öğretmen tarafından ölçüldüğü anlamına gelmez: başlangıç tahminleri düşük güvenli olarak tutuldu. Doğrusal Denklemler 1/2 için onay ortak resmî konu kapsamınadır; video bölüm kapsamı doğrulanmış sayılmaz. Öğretmen gözlemiyle sürelerin iyileştirilmesi ve diğer beş LGS dersinin resmî programlarının eşleştirilmesi sonraki içerik işleridir.
 
 ## Doğrulama sonuçları
 
