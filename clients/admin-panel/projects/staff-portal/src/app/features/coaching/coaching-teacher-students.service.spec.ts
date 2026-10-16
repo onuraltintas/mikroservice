@@ -20,7 +20,7 @@ describe('CoachingTeacherStudentsService', () => {
 
   it('sends a Coaching student invitation through the authenticated teacher endpoint', async () => {
     const response = firstValueFrom(service.inviteStudent('  student@example.test  '));
-    const request = http.expectOne('/api/teachers/invite-student');
+    const request = http.expectOne('/api/coaching/teachers/invite-student');
     expect(request.request.method).toBe('POST');
     expect(request.request.body).toEqual({ studentEmail: 'student@example.test', message: null });
     request.flush({ invitationId: 'coaching-invitation-1' });
@@ -30,7 +30,7 @@ describe('CoachingTeacherStudentsService', () => {
 
   it('requests a teacher-scoped page and trims the optional search term', async () => {
     const response = firstValueFrom(service.getMyStudents(2, 10, '  Ayşe  '));
-    const request = http.expectOne('/api/teachers/me/students?pageNumber=2&pageSize=10&searchTerm=Ay%C5%9Fe');
+    const request = http.expectOne('/api/coaching/teachers/me/students?pageNumber=2&pageSize=10&searchTerm=Ay%C5%9Fe');
     expect(request.request.method).toBe('GET');
     request.flush({ items: [], pageNumber: 2, pageSize: 10, totalCount: 0, totalPages: 1 });
 
@@ -39,7 +39,7 @@ describe('CoachingTeacherStudentsService', () => {
 
   it('filters the teacher roster by grade level', async () => {
     const response = firstValueFrom(service.getMyStudents(1, 25, undefined, undefined, 8));
-    const request = http.expectOne('/api/teachers/me/students?pageNumber=1&pageSize=25&gradeLevel=8');
+    const request = http.expectOne('/api/coaching/teachers/me/students?pageNumber=1&pageSize=25&gradeLevel=8');
     request.flush({ items: [], pageNumber: 1, pageSize: 25, totalCount: 0, totalPages: 1 });
 
     await response;
@@ -47,7 +47,7 @@ describe('CoachingTeacherStudentsService', () => {
 
   it('omits a blank search term and clamps invalid pagination', async () => {
     const response = firstValueFrom(service.getMyStudents(0, 1000, '   '));
-    const request = http.expectOne('/api/teachers/me/students?pageNumber=1&pageSize=100');
+    const request = http.expectOne('/api/coaching/teachers/me/students?pageNumber=1&pageSize=100');
     request.flush({ items: [], pageNumber: 1, pageSize: 100, totalCount: 0, totalPages: 1 });
 
     await response;
@@ -85,7 +85,7 @@ describe('CoachingTeacherStudentsService', () => {
   it('looks up only the selected students through the current teacher scope', async () => {
     const response = firstValueFrom(service.getMyStudents(1, 2, undefined, ['student-1', 'student-2']));
     const request = http.expectOne(candidate =>
-      candidate.url === '/api/teachers/me/students'
+      candidate.url === '/api/coaching/teachers/me/students'
         && candidate.params.get('pageNumber') === '1'
         && candidate.params.get('pageSize') === '2'
         && candidate.params.getAll('studentUserIds')?.join(',') === 'student-1,student-2');

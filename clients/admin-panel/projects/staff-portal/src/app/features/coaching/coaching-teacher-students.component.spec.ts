@@ -19,7 +19,7 @@ describe('CoachingTeacherStudentsComponent', () => {
   it('lets a Coaching teacher invite a student and reports the product-specific result', () => {
     const fixture = TestBed.createComponent(CoachingTeacherStudentsComponent);
     fixture.detectChanges();
-    http.expectOne('/api/teachers/me/students?pageNumber=1&pageSize=25').flush({
+    http.expectOne('/api/coaching/teachers/me/students?pageNumber=1&pageSize=25').flush({
       items: [], pageNumber: 1, pageSize: 25, totalCount: 0, totalPages: 1
     });
     fixture.detectChanges();
@@ -27,13 +27,13 @@ describe('CoachingTeacherStudentsComponent', () => {
 
     fixture.nativeElement.querySelector('[data-testid="toggle-pending-invitations"]').click();
     fixture.detectChanges();
-    http.expectOne('/api/invitations/sent-pending').flush([]);
+    http.expectOne('/api/coaching/invitations/sent-pending').flush([]);
 
     fixture.componentInstance.studentInviteEmail = 'student@example.test';
     fixture.componentInstance.sendStudentInvitation();
-    http.expectOne('/api/teachers/invite-student').flush({ invitationId: 'coaching-invitation-1' });
+    http.expectOne('/api/coaching/teachers/invite-student').flush({ invitationId: 'coaching-invitation-1' });
     fixture.detectChanges();
-    http.expectOne('/api/invitations/sent-pending').flush([{
+    http.expectOne('/api/coaching/invitations/sent-pending').flush([{
       invitationId: 'coaching-invitation-1',
       email: 'student@example.test',
       role: 'StudentToTeacher',
@@ -49,7 +49,7 @@ describe('CoachingTeacherStudentsComponent', () => {
   it('shows the teacher-scoped roster with grade and institution context', () => {
     const fixture = TestBed.createComponent(CoachingTeacherStudentsComponent);
     fixture.detectChanges();
-    http.expectOne('/api/teachers/me/students?pageNumber=1&pageSize=25').flush({
+    http.expectOne('/api/coaching/teachers/me/students?pageNumber=1&pageSize=25').flush({
       items: [{
         userId: 'student-1',
         firstName: 'Ayşe',
@@ -76,7 +76,7 @@ describe('CoachingTeacherStudentsComponent', () => {
   it('retries a failed roster request from the visible error state', () => {
     const fixture = TestBed.createComponent(CoachingTeacherStudentsComponent);
     fixture.detectChanges();
-    http.expectOne('/api/teachers/me/students?pageNumber=1&pageSize=25').flush({}, {
+    http.expectOne('/api/coaching/teachers/me/students?pageNumber=1&pageSize=25').flush({}, {
       status: 500,
       statusText: 'Server Error'
     });
@@ -86,7 +86,7 @@ describe('CoachingTeacherStudentsComponent', () => {
     const retryButton = fixture.nativeElement.querySelector('button[data-testid="retry-roster"]') as HTMLButtonElement;
     retryButton.click();
     fixture.detectChanges();
-    http.expectOne('/api/teachers/me/students?pageNumber=1&pageSize=25').flush({
+    http.expectOne('/api/coaching/teachers/me/students?pageNumber=1&pageSize=25').flush({
       items: [], pageNumber: 1, pageSize: 25, totalCount: 0, totalPages: 1
     });
     fixture.detectChanges();
@@ -97,7 +97,7 @@ describe('CoachingTeacherStudentsComponent', () => {
   it('refreshes the teacher roster after an invited student accepts', () => {
     const fixture = TestBed.createComponent(CoachingTeacherStudentsComponent);
     fixture.detectChanges();
-    http.expectOne('/api/teachers/me/students?pageNumber=1&pageSize=25').flush({
+    http.expectOne('/api/coaching/teachers/me/students?pageNumber=1&pageSize=25').flush({
       items: [], pageNumber: 1, pageSize: 25, totalCount: 0, totalPages: 1
     });
     fixture.detectChanges();
@@ -107,7 +107,7 @@ describe('CoachingTeacherStudentsComponent', () => {
     if (!refreshButton) return;
     refreshButton.click();
     fixture.detectChanges();
-    http.expectOne('/api/teachers/me/students?pageNumber=1&pageSize=25').flush({
+    http.expectOne('/api/coaching/teachers/me/students?pageNumber=1&pageSize=25').flush({
       items: [{
         userId: 'accepted-student',
         firstName: 'Deniz',
@@ -125,16 +125,16 @@ describe('CoachingTeacherStudentsComponent', () => {
   it('pages through the roster and resets to the first page when searching', () => {
     const fixture = TestBed.createComponent(CoachingTeacherStudentsComponent);
     fixture.detectChanges();
-    http.expectOne('/api/teachers/me/students?pageNumber=1&pageSize=25').flush({
+    http.expectOne('/api/coaching/teachers/me/students?pageNumber=1&pageSize=25').flush({
       items: [], pageNumber: 1, pageSize: 25, totalCount: 30, totalPages: 2
     });
 
     fixture.componentInstance.nextPage();
-    http.expectOne('/api/teachers/me/students?pageNumber=2&pageSize=25').flush({
+    http.expectOne('/api/coaching/teachers/me/students?pageNumber=2&pageSize=25').flush({
       items: [], pageNumber: 2, pageSize: 25, totalCount: 30, totalPages: 2
     });
     fixture.componentInstance.setSearchTerm('  Ayşe  ');
-    const searchRequest = http.expectOne('/api/teachers/me/students?pageNumber=1&pageSize=25&searchTerm=Ay%C5%9Fe');
+    const searchRequest = http.expectOne('/api/coaching/teachers/me/students?pageNumber=1&pageSize=25&searchTerm=Ay%C5%9Fe');
     searchRequest.flush({
       items: [{
         userId: 'student-2',
@@ -157,17 +157,17 @@ describe('CoachingTeacherStudentsComponent', () => {
   it('filters students by grade and returns to the first page', () => {
     const fixture = TestBed.createComponent(CoachingTeacherStudentsComponent);
     fixture.detectChanges();
-    http.expectOne('/api/teachers/me/students?pageNumber=1&pageSize=25').flush({
+    http.expectOne('/api/coaching/teachers/me/students?pageNumber=1&pageSize=25').flush({
       items: [], pageNumber: 1, pageSize: 25, totalCount: 30, totalPages: 2
     });
 
     fixture.componentInstance.nextPage();
-    http.expectOne('/api/teachers/me/students?pageNumber=2&pageSize=25').flush({
+    http.expectOne('/api/coaching/teachers/me/students?pageNumber=2&pageSize=25').flush({
       items: [], pageNumber: 2, pageSize: 25, totalCount: 30, totalPages: 2
     });
 
     fixture.componentInstance.setGradeLevel(8);
-    const gradeRequest = http.expectOne('/api/teachers/me/students?pageNumber=1&pageSize=25&gradeLevel=8');
+    const gradeRequest = http.expectOne('/api/coaching/teachers/me/students?pageNumber=1&pageSize=25&gradeLevel=8');
     gradeRequest.flush({ items: [], pageNumber: 1, pageSize: 25, totalCount: 0, totalPages: 1 });
     fixture.detectChanges();
 
@@ -178,9 +178,9 @@ describe('CoachingTeacherStudentsComponent', () => {
   it('ignores an older request when a newer search response arrives first', () => {
     const fixture = TestBed.createComponent(CoachingTeacherStudentsComponent);
     fixture.detectChanges();
-    const initialRequest = http.expectOne('/api/teachers/me/students?pageNumber=1&pageSize=25');
+    const initialRequest = http.expectOne('/api/coaching/teachers/me/students?pageNumber=1&pageSize=25');
     fixture.componentInstance.setSearchTerm('Ayşe');
-    const searchRequest = http.expectOne('/api/teachers/me/students?pageNumber=1&pageSize=25&searchTerm=Ay%C5%9Fe');
+    const searchRequest = http.expectOne('/api/coaching/teachers/me/students?pageNumber=1&pageSize=25&searchTerm=Ay%C5%9Fe');
     searchRequest.flush({
       items: [{
         userId: 'new-result',
@@ -210,7 +210,7 @@ describe('CoachingTeacherStudentsComponent', () => {
   it('opens the selected student report and returns to the same roster', () => {
     const fixture = TestBed.createComponent(CoachingTeacherStudentsComponent);
     fixture.detectChanges();
-    http.expectOne('/api/teachers/me/students?pageNumber=1&pageSize=25').flush({
+    http.expectOne('/api/coaching/teachers/me/students?pageNumber=1&pageSize=25').flush({
       items: [{
         userId: 'student-1',
         firstName: 'Ayşe',

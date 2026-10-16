@@ -17,10 +17,10 @@ describe('StaffInvitationsService', () => {
 
   it('keeps Coaching invitation list and cancellation requests in Identity', () => {
     service.getPending('coaching').subscribe();
-    http.expectOne('/api/invitations/sent-pending').flush([]);
+    http.expectOne('/api/coaching/invitations/sent-pending').flush([]);
 
     service.cancel('coaching', 'invite-1').subscribe();
-    const request = http.expectOne('/api/invitations/invite-1/cancel');
+    const request = http.expectOne('/api/coaching/invitations/invite-1/cancel');
     expect(request.request.method).toBe('POST');
     request.flush(null, { status: 204, statusText: 'No Content' });
   });

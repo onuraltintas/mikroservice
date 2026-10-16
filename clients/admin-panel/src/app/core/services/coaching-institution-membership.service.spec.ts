@@ -19,17 +19,17 @@ describe('CoachingInstitutionMembershipService', () => {
 
   it('targets the selected coaching institution for system admin operations', () => {
     service.inviteTeacher({ teacherEmail: 'teacher@example.com' }, 'school-1').subscribe();
-    http.expectOne('/api/institutions/school-1/coaching/invite-teacher').flush({ invitationId: 'invite' });
+    http.expectOne('/api/coaching/institutions/school-1/invite-teacher').flush({ invitationId: 'invite' });
     service.updateStudent('student-1', { gradeLevel: 8, teacherUserId: null }, 'school-1').subscribe();
-    http.expectOne('/api/institutions/school-1/coaching/students/student-1').flush(null);
+    http.expectOne('/api/coaching/institutions/school-1/students/student-1').flush(null);
     service.removeTeacher('teacher-1', 'school-1').subscribe();
-    http.expectOne('/api/institutions/school-1/coaching/teachers/teacher-1').flush(null);
+    http.expectOne('/api/coaching/institutions/school-1/teachers/teacher-1').flush(null);
   });
 
   it('invites coaching teachers through the authenticated institution endpoint', () => {
     service.inviteTeacher({ teacherEmail: 'teacher@example.com', message: 'Hoş geldiniz' }).subscribe();
 
-    const request = http.expectOne('/api/institution/invite-teacher');
+    const request = http.expectOne('/api/coaching/institution/invite-teacher');
     expect(request.request.method).toBe('POST');
     expect(request.request.body).toEqual({ teacherEmail: 'teacher@example.com', message: 'Hoş geldiniz' });
     request.flush({ invitationId: 'invitation-1' });
@@ -38,7 +38,7 @@ describe('CoachingInstitutionMembershipService', () => {
   it('invites a coaching student with an optional institution teacher assignment', () => {
     service.inviteStudent({ studentEmail: 'student@example.com', teacherUserId: 'teacher-1' }).subscribe();
 
-    const request = http.expectOne('/api/institution/invite-student');
+    const request = http.expectOne('/api/coaching/institution/invite-student');
     expect(request.request.method).toBe('POST');
     expect(request.request.body).toEqual({ studentEmail: 'student@example.com', teacherUserId: 'teacher-1' });
     request.flush({ invitationId: 'invitation-2' });
@@ -49,7 +49,7 @@ describe('CoachingInstitutionMembershipService', () => {
       gradeLevel: 8, teacherUserId: 'teacher-1'
     }).subscribe();
 
-    const request = http.expectOne('/api/institution/students/student%2F1');
+    const request = http.expectOne('/api/coaching/institution/students/student%2F1');
     expect(request.request.method).toBe('PUT');
     expect(request.request.body).toEqual({ gradeLevel: 8, teacherUserId: 'teacher-1' });
     request.flush(null);
@@ -57,9 +57,9 @@ describe('CoachingInstitutionMembershipService', () => {
 
   it('removes only the institution membership for the selected coaching teacher or student', () => {
     service.removeTeacher('teacher-1').subscribe();
-    http.expectOne('/api/institution/teachers/teacher-1').flush(null);
+    http.expectOne('/api/coaching/institution/teachers/teacher-1').flush(null);
 
     service.removeStudent('student-1').subscribe();
-    http.expectOne('/api/institution/students/student-1').flush(null);
+    http.expectOne('/api/coaching/institution/students/student-1').flush(null);
   });
 });

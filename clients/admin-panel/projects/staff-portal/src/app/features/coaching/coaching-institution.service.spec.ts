@@ -13,19 +13,19 @@ describe('CoachingInstitutionService', () => {
   });
   it('updates teacher assignment and grade through the current institution scope', () => {
     service.updateStudent('student/1', 8, 'teacher-1').subscribe();
-    const update = http.expectOne('/api/institution/students/student%2F1');
+    const update = http.expectOne('/api/coaching/institution/students/student%2F1');
     expect(update.request.method).toBe('PUT'); expect(update.request.body).toEqual({ gradeLevel: 8, teacherUserId: 'teacher-1' });
     update.flush(null);
     service.updateStudent('student/1', 8, null).subscribe();
-    const unassign = http.expectOne('/api/institution/students/student%2F1');
+    const unassign = http.expectOne('/api/coaching/institution/students/student%2F1');
     expect(unassign.request.body).toEqual({ gradeLevel: 8, teacherUserId: null }); unassign.flush(null);
   });
 
   it('removes current institution members through role-scoped endpoints', () => {
     service.removeStudent('student').subscribe();
-    const student = http.expectOne('/api/institution/students/student'); expect(student.request.method).toBe('DELETE'); student.flush(null);
+    const student = http.expectOne('/api/coaching/institution/students/student'); expect(student.request.method).toBe('DELETE'); student.flush(null);
     service.removeTeacher('teacher').subscribe();
-    const teacher = http.expectOne('/api/institution/teachers/teacher'); expect(teacher.request.method).toBe('DELETE'); teacher.flush(null);
+    const teacher = http.expectOne('/api/coaching/institution/teachers/teacher'); expect(teacher.request.method).toBe('DELETE'); teacher.flush(null);
   });
   let http: HttpTestingController;
   let service: CoachingInstitutionService;
@@ -54,13 +54,13 @@ describe('CoachingInstitutionService', () => {
 
   it('sends Coaching institution invitations through the authenticated institution endpoints', () => {
     service.inviteTeacher('teacher@example.test').subscribe();
-    const teacherRequest = http.expectOne('/api/institution/invite-teacher');
+    const teacherRequest = http.expectOne('/api/coaching/institution/invite-teacher');
     expect(teacherRequest.request.method).toBe('POST');
     expect(teacherRequest.request.body).toEqual({ teacherEmail: 'teacher@example.test' });
     teacherRequest.flush({ invitationId: 'teacher-invitation-1' });
 
     service.inviteStudent('student@example.test', 'teacher-1').subscribe();
-    const studentRequest = http.expectOne('/api/institution/invite-student');
+    const studentRequest = http.expectOne('/api/coaching/institution/invite-student');
     expect(studentRequest.request.method).toBe('POST');
     expect(studentRequest.request.body).toEqual({
       studentEmail: 'student@example.test',

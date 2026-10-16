@@ -233,7 +233,7 @@ describe('CoachingInstitutionWorkspaceComponent', () => {
     (fixture.nativeElement.querySelector('[data-testid="toggle-pending-invitations"]') as HTMLButtonElement).click();
     fixture.detectChanges();
 
-    TestBed.inject(HttpTestingController).expectOne('/api/invitations/sent-pending').flush([{
+    TestBed.inject(HttpTestingController).expectOne('/api/coaching/invitations/sent-pending').flush([{
       invitationId: 'teacher-invitation-1',
       email: 'teacher@example.test',
       role: 'TeacherToInstitution',

@@ -20,7 +20,7 @@ describe('StaffPendingInvitationsComponent', () => {
     const fixture = TestBed.createComponent(StaffPendingInvitationsComponent);
     fixture.componentInstance.product = 'coaching';
     fixture.detectChanges();
-    http.expectOne('/api/invitations/sent-pending').flush([{
+    http.expectOne('/api/coaching/invitations/sent-pending').flush([{
       invitationId: 'coaching-invite-1',
       email: 'student@example.test',
       role: 'StudentToTeacher',
@@ -39,7 +39,7 @@ describe('StaffPendingInvitationsComponent', () => {
     const confirmCancel = fixture.nativeElement.querySelector('[data-testid="confirm-cancel-invitation"]') as HTMLButtonElement;
     confirmCancel.click();
     fixture.detectChanges();
-    http.expectOne('/api/invitations/coaching-invite-1/cancel').flush(null, { status: 204, statusText: 'No Content' });
+    http.expectOne('/api/coaching/invitations/coaching-invite-1/cancel').flush(null, { status: 204, statusText: 'No Content' });
     fixture.detectChanges();
 
     expect(fixture.nativeElement.textContent).toContain('Davet iptal edildi');
@@ -63,7 +63,7 @@ describe('StaffPendingInvitationsComponent', () => {
     const fixture = TestBed.createComponent(StaffPendingInvitationsComponent);
     fixture.componentInstance.product = 'coaching';
     fixture.detectChanges();
-    http.expectOne('/api/invitations/sent-pending').flush({}, { status: 500, statusText: 'Server Error' });
+    http.expectOne('/api/coaching/invitations/sent-pending').flush({}, { status: 500, statusText: 'Server Error' });
     fixture.detectChanges();
 
     expect(fixture.nativeElement.textContent).toContain('Bekleyen davetler yüklenemedi');
@@ -74,7 +74,7 @@ describe('StaffPendingInvitationsComponent', () => {
     const fixture = TestBed.createComponent(StaffPendingInvitationsComponent);
     fixture.componentInstance.product = 'coaching';
     fixture.detectChanges();
-    http.expectOne('/api/invitations/sent-pending').flush([{
+    http.expectOne('/api/coaching/invitations/sent-pending').flush([{
       invitationId: 'coaching-invite-2',
       email: 'teacher@example.test',
       role: 'TeacherToInstitution',
@@ -87,7 +87,7 @@ describe('StaffPendingInvitationsComponent', () => {
     (fixture.nativeElement.querySelector('[data-testid="confirm-cancel-invitation"]') as HTMLButtonElement).click();
     fixture.detectChanges();
 
-    http.expectOne('/api/invitations/coaching-invite-2/cancel').flush({}, { status: 409, statusText: 'Conflict' });
+    http.expectOne('/api/coaching/invitations/coaching-invite-2/cancel').flush({}, { status: 409, statusText: 'Conflict' });
     fixture.detectChanges();
 
     expect(fixture.nativeElement.textContent).toContain('Davet artık beklemede değil');
