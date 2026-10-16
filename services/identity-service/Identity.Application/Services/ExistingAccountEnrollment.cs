@@ -10,7 +10,7 @@ using Identity.Domain.Enums;
 namespace Identity.Application.Services;
 
 public sealed class ExistingAccountEnrollment(
-    IUserRepository users, IStudentRepository students, ITeacherRepository teachers,
+    IUserRepository users,
     IInstitutionRepository institutions, IRoleRepository roles, IPasswordHasher passwords,
     IMultiFactorService multiFactor, IUnitOfWork unitOfWork,
     IRegistrationLegalConsentService legalConsent, TimeProvider timeProvider, IAuthenticationLock authenticationLock, IPublishEndpoint publisher)
@@ -124,7 +124,5 @@ public sealed class ExistingAccountEnrollment(
         return Result.Success(user.Id);
     }
 
-    private async Task<bool> IsActiveInstitution(Guid id, CancellationToken ct) =>
-        (await institutions.GetByIdAsync(id, ct)) is { IsActive: true };
     private static Result<Guid> Failure(string code, string description) => Result.Failure<Guid>(new Error(code, description));
 }

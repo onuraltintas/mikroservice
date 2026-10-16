@@ -17,7 +17,6 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
     private readonly ITokenService _tokenService;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IIdentityService _identityService;
-    private readonly IStudentRepository _studentRepository;
     private readonly IConfigurationService _configurationService;
     private readonly IMultiFactorService _multiFactorService;
     private readonly IRegistrationLegalConsentService _registrationLegalConsentService;
@@ -40,7 +39,6 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
         _tokenService = tokenService;
         _unitOfWork = unitOfWork;
         _identityService = identityService;
-        _studentRepository = studentRepository;
         _configurationService = configurationService;
         _multiFactorService = multiFactorService;
         _registrationLegalConsentService = registrationLegalConsentService;
@@ -272,27 +270,8 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
                         return Result.Failure<LoginResponse>(roleResult.Error);
                     }
                     
-                    // Coaching profiles belong to Identity; Speed Reading creates its
-                    // own profile in the Speed Reading database during onboarding.
-                    if (request.Product == PlatformProduct.Coaching)
-                    {
-                        try
-                        {
-                            var student = StudentProfile.Create(userId, googleUser.FirstName, googleUser.LastName);
-                            if (!string.IsNullOrEmpty(googleUser.PictureUrl)) student.SetAvatar(googleUser.PictureUrl);
+                    // Coaching provisions its own profile during product onboarding.
 
-                            await _studentRepository.AddAsync(student, cancellationToken);
-                            await _unitOfWork.SaveChangesAsync(cancellationToken);
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.LogError(ex, "Google login could not create the Student profile for {UserId}.", userId);
-                            await CompensateProvisionedUserAsync(userId);
-                            return Result.Failure<LoginResponse>(new Error(
-                                "Auth.UserProvisioningFailed",
-                                "Google hesabı için öğrenci profili oluşturulamadı."));
-                        }
-                    }
                 }
             }
         } 

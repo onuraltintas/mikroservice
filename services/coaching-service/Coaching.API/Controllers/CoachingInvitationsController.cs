@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Coaching.API.Controllers;
 
+[Coaching.API.Security.CoachingProfileExceptionFilter]
 [ApiController]
 [ApiVersion(1.0)]
 [Authorize(Roles = "Student,Teacher,InstitutionAdmin,InstitutionOwner,SystemAdmin")]
@@ -50,6 +51,6 @@ public sealed class CoachingInvitationsController(CoachingDbContext db, Coaching
         var id = actor.UserId ?? Guid.Empty;
         var user = (await accounts.GetAccountsAsync([id], ct)).SingleOrDefault(x => x.UserId == id);
         return user is not null && user.IsActive && (user.HasCoachingAccess || user.IsSystemAdministrator)
-            ? user : throw new BusinessRuleException("Authorization.Forbidden", "Aktif Koçluk hesabı gereklidir.");
+            ? user : throw new BusinessRuleException("Authorization.Forbidden", "Aktif KoÃ§luk hesabÄ± gereklidir.");
     }
 }

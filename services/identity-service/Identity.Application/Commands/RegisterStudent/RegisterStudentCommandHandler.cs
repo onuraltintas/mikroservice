@@ -15,7 +15,6 @@ public class RegisterStudentCommandHandler : IRequestHandler<RegisterStudentComm
 {
     private readonly IIdentityService _identityService;
     private readonly IUserRepository _userRepository;
-    private readonly IStudentRepository _studentRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IPublishEndpoint _publishEndpoint;
     private readonly IConfigurationService _configurationService;
@@ -34,7 +33,6 @@ public class RegisterStudentCommandHandler : IRequestHandler<RegisterStudentComm
     {
         _identityService = identityService;
         _userRepository = userRepository;
-        _studentRepository = studentRepository;
         _unitOfWork = unitOfWork;
         _publishEndpoint = publishEndpoint;
         _configurationService = configurationService;

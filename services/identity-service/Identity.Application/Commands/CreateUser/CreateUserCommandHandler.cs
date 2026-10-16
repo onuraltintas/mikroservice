@@ -16,8 +16,6 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, Resul
 {
     private readonly IIdentityService _identityService;
     private readonly IUserRepository _userRepository;
-    private readonly IStudentRepository _studentRepository;
-    private readonly ITeacherRepository _teacherRepository;
     private readonly IInstitutionRepository _institutionRepository; 
     private readonly IUnitOfWork _unitOfWork;
     private readonly IPublishEndpoint _publishEndpoint;
@@ -37,8 +35,6 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, Resul
     {
         _identityService = identityService;
         _userRepository = userRepository;
-        _studentRepository = studentRepository;
-        _teacherRepository = teacherRepository;
         _institutionRepository = institutionRepository;
         _unitOfWork = unitOfWork;
         _publishEndpoint = publishEndpoint;
@@ -128,21 +124,12 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, Resul
                 }
             }
 
-            switch (product == PlatformProduct.Coaching ? userRole : null)
-            {
-                case Identity.Domain.Enums.UserRole.Student:
-                    var student = StudentProfile.Create(userId, request.FirstName, request.LastName);
-                    await _studentRepository.AddAsync(student, cancellationToken);
-                    break;
-
-                case Identity.Domain.Enums.UserRole.Teacher:
-                    var teacher = TeacherProfile.Create(userId, request.FirstName, request.LastName);
-                    await _teacherRepository.AddAsync(teacher, cancellationToken);
-                    break; 
-            }
+            if (products.Contains(PlatformProduct.Coaching) && userRole is UserRoleType.Student or UserRoleType.Teacher)
+                await _publishEndpoint.Publish(new EduPlatform.Shared.Contracts.Coaching.CoachingProfileProvisioningRequested(
+                    userId, roleName, DateTime.UtcNow), cancellationToken);
 
             // 6. Queue the event in the EF bus outbox before the single commit.
-            // If the database is unavailable, neither the profile nor the event
+            // If the database is unavailable, neither the access grant nor the event
             // is reported as successfully created.
             await _publishEndpoint.Publish(new UserCreatedEvent(
                 userId,

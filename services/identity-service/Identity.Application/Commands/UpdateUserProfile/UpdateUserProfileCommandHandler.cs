@@ -10,8 +10,6 @@ namespace Identity.Application.Commands.UpdateUserProfile;
 public class UpdateUserProfileCommandHandler : IRequestHandler<UpdateUserProfileCommand, Result>
 {
     private readonly IUserRepository _userRepository;
-    private readonly ITeacherRepository _teacherRepository;
-    private readonly IStudentRepository _studentRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICurrentUserService _currentUserService;
 
@@ -23,8 +21,6 @@ public class UpdateUserProfileCommandHandler : IRequestHandler<UpdateUserProfile
         ICurrentUserService currentUserService)
     {
         _userRepository = userRepository;
-        _teacherRepository = teacherRepository;
-        _studentRepository = studentRepository;
         _unitOfWork = unitOfWork;
         _currentUserService = currentUserService;
     }
@@ -44,6 +40,11 @@ public class UpdateUserProfileCommandHandler : IRequestHandler<UpdateUserProfile
             return Result.Failure(new Error("User.NotFound", "User not found"));
         }
 
+        if (request.Product is null or PlatformProduct.Coaching &&
+            (request.Bio is not null || request.AvatarUrl is not null || request.Title is not null || request.Subjects is not null
+             || request.GradeLevel.HasValue || request.BirthDate.HasValue || request.LearningStyle.HasValue || request.ShareProgressWithTeachers.HasValue))
+            return Result.Failure(new Error("Profiles.OwnedByCoaching", "Eğitim profilini Koçluk profil ekranından güncelleyin."));
+
         // 1. Update Core User Info
         if (!string.IsNullOrWhiteSpace(request.FirstName) || !string.IsNullOrWhiteSpace(request.LastName))
         {
@@ -56,64 +57,6 @@ public class UpdateUserProfileCommandHandler : IRequestHandler<UpdateUserProfile
         if (request.PhoneNumber != null)
         {
             user.SetPhoneNumber(request.PhoneNumber);
-        }
-
-        // 2. Update Profile Specifics
-        var userRoles = (request.Product == PlatformProduct.Coaching
-                ? user.GetRolesForProductScope(request.Product)
-                : [])
-            .Select(userRole => userRole.Role.Name)
-            .ToList();
-
-        if (userRoles.Contains(Identity.Domain.Enums.UserRole.Teacher.ToString()))
-        {
-            var teacher = await _teacherRepository.GetByUserIdAsync(userId, cancellationToken);
-            if (teacher != null)
-            {
-                teacher.UpdatePersonalInfo(
-                    request.FirstName, 
-                    request.LastName, 
-                    title: request.Title
-                );
-
-                if (request.Bio != null) teacher.SetBio(request.Bio);
-                if (request.AvatarUrl != null) teacher.SetAvatar(request.AvatarUrl);
-
-                if (request.Subjects != null)
-                {
-                    teacher.SetSubjects(request.Subjects);
-                }
-            }
-        }
-        else if (userRoles.Contains(Identity.Domain.Enums.UserRole.Student.ToString()))
-        {
-            var student = await _studentRepository.GetByUserIdAsync(userId, cancellationToken);
-            if (student != null)
-            {
-                student.UpdatePersonalInfo(
-                    request.FirstName, 
-                    request.LastName,
-                    birthDate: request.BirthDate
-                );
-                
-                 if (request.LearningStyle.HasValue)
-                 {
-                     student.SetLearningPreferences(style: request.LearningStyle);
-                 }
-
-                 if (request.ShareProgressWithTeachers.HasValue)
-                 {
-                     student.SetProgressSharing(request.ShareProgressWithTeachers.Value);
-                 }
-
-                 if (request.GradeLevel.HasValue)
-                 {
-                     student.UpdateEducationInfo(gradeLevel: request.GradeLevel);
-                 }
-
-                 if (request.Bio != null) student.SetBio(request.Bio);
-                 if (request.AvatarUrl != null) student.SetAvatar(request.AvatarUrl);
-            }
         }
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);

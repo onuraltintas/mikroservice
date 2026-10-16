@@ -192,8 +192,6 @@ public sealed class CrossProductEnrollmentTests
             SourceAdmins.Add(InstitutionAdmin.Create(User.Id, Institution.Id, InstitutionAdminRole.Manager, Source));
             enrollment = new ExistingAccountEnrollment(
                 Stub<IUserRepository>((m, _) => m.Name == "GetByEmailAsync" ? Task.FromResult<User?>(User) : null),
-                Stub<IStudentRepository>((m, _) => m.Name == "GetExistingForRegistrationAsync" ? Task.FromResult<StudentProfile?>(Student) : AddProfile()),
-                Stub<ITeacherRepository>((m, _) => m.Name == "GetExistingForRegistrationAsync" ? Task.FromResult<TeacherProfile?>(Teacher) : AddProfile()),
                 Stub<IInstitutionRepository>((m, args) => m.Name switch {
                     "GetByIdAsync" => Task.FromResult<Institution?>(Institutions.SingleOrDefault(item => item.Id == (Guid)args![0]!)),
                     "GetAdminsForRegistrationAsync" => Task.FromResult<IReadOnlyList<InstitutionAdmin>>(SourceAdmins),

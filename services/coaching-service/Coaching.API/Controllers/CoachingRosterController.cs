@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Coaching.API.Controllers;
 
+[Coaching.API.Security.CoachingProfileExceptionFilter]
 [ApiController]
 [ApiVersion(1.0)]
 [Authorize(Roles = "Teacher")]

@@ -507,31 +507,6 @@ public class UserRepository : IUserRepository
             .ThenInclude(ur => ur.Role)
             .ToListAsync(cancellationToken);
 
-        var userIds = users.Select(user => user.Id).ToArray();
-        var teacherProfiles = await _context.TeacherProfiles
-            .AsNoTracking()
-            .Where(profile => Enumerable.Contains(userIds, profile.UserId) && profile.IsActive)
-            .Include(profile => profile.Institution)
-            .ToDictionaryAsync(profile => profile.UserId, cancellationToken);
-        var studentProfiles = await _context.StudentProfiles
-            .AsNoTracking()
-            .Where(profile => Enumerable.Contains(userIds, profile.UserId) && profile.IsActive)
-            .Include(profile => profile.Institution)
-            .ToDictionaryAsync(profile => profile.UserId, cancellationToken);
-        var teacherUserIds = teacherProfiles.Keys.ToArray();
-        var teacherStudentCounts = await (
-            from assignment in _context.TeacherStudentAssignments.AsNoTracking()
-            join teacher in _context.TeacherProfiles.AsNoTracking()
-                on assignment.TeacherId equals teacher.Id
-            where Enumerable.Contains(teacherUserIds, teacher.UserId)
-                && assignment.IsActive
-                && assignment.InstitutionId == teacher.InstitutionId
-                && assignment.Student.IsActive
-                && assignment.Student.User.IsActive
-            group assignment by teacher.UserId into grouped
-            select new { TeacherUserId = grouped.Key, StudentCount = grouped.Count() })
-            .ToDictionaryAsync(row => row.TeacherUserId, row => row.StudentCount, cancellationToken);
-
         var dtos = users.Select(u => new UserProfileDto
         {
             UserId = u.Id,
@@ -548,7 +523,6 @@ public class UserRepository : IUserRepository
             PhoneNumber = u.PhoneNumber,
             LastLoginAt = u.LastLoginAt,
             CreatedAt = u.CreatedAt,
-            StudentCount = teacherStudentCounts.TryGetValue(u.Id, out var studentCount) ? studentCount : null,
             Roles = GetVisibleRoles(u, product).Select(userRole => userRole.Role.Name).ToList(),
             ProductRoles = GetVisibleRoles(u, product)
                 .Select(userRole => new UserProductRoleDto(
@@ -557,29 +531,7 @@ public class UserRepository : IUserRepository
                 .ToList(),
             ProductAccesses = u.ProductAccesses
                 .Select(access => new UserProductAccessDto(access.Product.ToRouteValue(), access.IsActive))
-                .ToList(),
-            TeacherDetails = teacherProfiles.TryGetValue(u.Id, out var teacher)
-                ? new TeacherDetailsDto
-                {
-                    Title = teacher.Title,
-                    Subjects = teacher.Subjects.ToArray(),
-                    ExperienceYears = teacher.ExperienceYears,
-                    Bio = teacher.Bio,
-                    InstitutionId = teacher.InstitutionId,
-                    InstitutionName = teacher.Institution?.Name
-                }
-                : null,
-            StudentDetails = studentProfiles.TryGetValue(u.Id, out var student)
-                ? new StudentDetailsDto
-                {
-                    GradeLevel = student.GradeLevel,
-                    Bio = student.Bio,
-                    InstitutionId = student.InstitutionId,
-                    InstitutionName = student.Institution?.Name,
-                    BirthDate = student.BirthDate,
-                    LearningStyle = student.LearningStyle?.ToString()
-                }
-                : null
+                .ToList()
         }).ToList();
 
         return new PagedList<UserProfileDto>(dtos, totalCount, page, pageSize);

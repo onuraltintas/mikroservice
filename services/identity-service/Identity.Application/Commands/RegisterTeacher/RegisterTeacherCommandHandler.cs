@@ -16,7 +16,6 @@ public class RegisterTeacherCommandHandler : IRequestHandler<RegisterTeacherComm
 {
     private readonly IIdentityService _identityService;
     private readonly IUserRepository _userRepository;
-    private readonly ITeacherRepository _teacherRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IPublishEndpoint _publishEndpoint;
     private readonly IConfigurationService _configurationService;
@@ -35,7 +34,6 @@ public class RegisterTeacherCommandHandler : IRequestHandler<RegisterTeacherComm
     {
         _identityService = identityService;
         _userRepository = userRepository;
-        _teacherRepository = teacherRepository;
         _unitOfWork = unitOfWork;
         _publishEndpoint = publishEndpoint;
         _configurationService = configurationService;

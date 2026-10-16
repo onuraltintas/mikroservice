@@ -12,8 +12,6 @@ namespace Identity.Application.Queries.GetUserProfile;
 public class GetUserProfileQueryHandler : IRequestHandler<GetUserProfileQuery, Result<UserProfileDto>>
 {
     private readonly IUserRepository _userRepository;
-    private readonly ITeacherRepository _teacherRepository;
-    private readonly IStudentRepository _studentRepository;
     private readonly IInstitutionRepository _institutionRepository;
     private readonly ICurrentUserService _currentUserService;
 
@@ -25,8 +23,6 @@ public class GetUserProfileQueryHandler : IRequestHandler<GetUserProfileQuery, R
         ICurrentUserService currentUserService)
     {
         _userRepository = userRepository;
-        _teacherRepository = teacherRepository;
-        _studentRepository = studentRepository;
         _institutionRepository = institutionRepository;
         _currentUserService = currentUserService;
     }
@@ -93,7 +89,6 @@ public class GetUserProfileQueryHandler : IRequestHandler<GetUserProfileQuery, R
         var visibleRoles = isSystemAdmin && request.Product is null
             ? user.Roles.ToArray()
             : user.GetRolesForProductScope(request.Product).ToArray();
-        var coachingProfileVisible = request.Product is null or PlatformProduct.Coaching;
 
         var profile = new UserProfileDto
         {
@@ -133,56 +128,6 @@ public class GetUserProfileQueryHandler : IRequestHandler<GetUserProfileQuery, R
                 .Distinct()
                 .ToList()
         };
-
-        // Determine Role and Fetch Details
-        var userRoles = visibleRoles
-            .Select(r => r.Role.Name)
-            .ToList();
-
-        if (coachingProfileVisible && userRoles.Contains(Identity.Domain.Enums.UserRole.Teacher.ToString()))
-        {
-            var teacher = await _teacherRepository.GetByUserIdAsync(
-                request.UserId,
-                institutionScope,
-                cancellationToken);
-            if (teacher != null)
-            {
-                profile.FullName = teacher.FullName; // Use profile name as it might be fresher
-                profile.AvatarUrl = teacher.AvatarUrl;
-                profile.TeacherDetails = new TeacherDetailsDto
-                {
-                    Title = teacher.Title,
-                    Subjects = teacher.Subjects.ToArray(),
-                    ExperienceYears = teacher.ExperienceYears,
-                    Bio = teacher.Bio,
-                    InstitutionId = teacher.InstitutionId,
-                    InstitutionName = teacher.Institution?.Name
-                };
-            }
-        }
-        if (coachingProfileVisible && userRoles.Contains(Identity.Domain.Enums.UserRole.Student.ToString()))
-        {
-            var student = await _studentRepository.GetByUserIdAsync(
-                request.UserId,
-                institutionScope,
-                cancellationToken);
-            if (student != null)
-            {
-                profile.FullName = student.FullName;
-                profile.AvatarUrl = student.AvatarUrl;
-                profile.StudentDetails = new StudentDetailsDto
-                {
-                    GradeLevel = student.GradeLevel,
-                    StudentNumber = null, // Not persisted yet
-                    Bio = student.Bio,
-                    InstitutionId = student.InstitutionId,
-                    InstitutionName = student.Institution?.Name,
-                    BirthDate = student.BirthDate,
-                    LearningStyle = student.LearningStyle.ToString(),
-                    ShareProgressWithTeachers = student.ShareProgressWithTeachers
-                };
-            }
-        }
 
         return Result.Success(profile);
     }

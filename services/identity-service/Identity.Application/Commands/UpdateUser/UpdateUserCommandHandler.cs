@@ -9,8 +9,6 @@ public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, Resul
 {
     private readonly IUserRepository _userRepository;
     private readonly IUnitOfWork _unitOfWork;
-    private readonly IStudentRepository _studentRepository;
-    private readonly ITeacherRepository _teacherRepository;
     private readonly IInstitutionRepository _institutionRepository;
 
     public UpdateUserCommandHandler(
@@ -22,8 +20,6 @@ public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, Resul
     {
         _userRepository = userRepository;
         _unitOfWork = unitOfWork;
-        _studentRepository = studentRepository;
-        _teacherRepository = teacherRepository;
         _institutionRepository = institutionRepository;
     }
 
@@ -36,78 +32,14 @@ public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, Resul
             return Result.Failure(new Error("User.NotFound", "User not found"));
         }
 
+        if (request.UpdateRoleProfile && request.Product is null or Identity.Domain.Enums.PlatformProduct.Coaching)
+            return Result.Failure(new Error("Profiles.OwnedByCoaching", "Eğitim ve kurum ilişkilerini Koçluk panelinden güncelleyin."));
+
         // 1. Update Database
         user.UpdateName(request.FirstName, request.LastName);
         if (request.PhoneNumber != null)
         {
             user.SetPhoneNumber(request.PhoneNumber);
-        }
-
-        if (request.UpdateRoleProfile)
-        {
-            var institution = request.InstitutionId.HasValue
-                ? await _institutionRepository.GetByIdAsync(request.InstitutionId.Value, cancellationToken)
-                : null;
-
-            if (request.InstitutionId.HasValue && (institution is null || !institution.IsActive))
-            {
-                return Result.Failure(new Error("Institution.NotFound", "Aktif kurum bulunamadı."));
-            }
-
-            var roles = (request.Product == Identity.Domain.Enums.PlatformProduct.Coaching
-                    ? user.GetRolesForProductScope(request.Product)
-                    : [])
-                .Where(userRole => userRole.Role is not null && !userRole.Role.IsDeleted)
-                .Select(userRole => userRole.Role.Name);
-
-            if (roles.Any(role => string.Equals(role, "Teacher", StringComparison.OrdinalIgnoreCase)))
-            {
-                var teacher = await _teacherRepository.GetByUserIdAsync(request.UserId, cancellationToken);
-                if (teacher is null)
-                {
-                    teacher = TeacherProfile.Create(
-                        request.UserId,
-                        request.FirstName,
-                        request.LastName,
-                        request.InstitutionId);
-                    await _teacherRepository.AddAsync(teacher, cancellationToken);
-                }
-
-                teacher.UpdatePersonalInfo(
-                    request.FirstName,
-                    request.LastName,
-                    request.TeacherTitle,
-                    request.TeacherExperienceYears);
-                if (request.TeacherSubjects is not null) teacher.SetSubjects(request.TeacherSubjects);
-                if (request.Bio is not null) teacher.SetBio(request.Bio);
-                if (request.AvatarUrl is not null) teacher.SetAvatar(request.AvatarUrl);
-                if (request.InstitutionId.HasValue) teacher.AssignToInstitution(request.InstitutionId.Value);
-                else teacher.RemoveFromInstitution();
-            }
-            else if (roles.Any(role => string.Equals(role, "Student", StringComparison.OrdinalIgnoreCase)))
-            {
-                var student = await _studentRepository.GetByUserIdAsync(request.UserId, cancellationToken);
-                if (student is null)
-                {
-                    student = StudentProfile.Create(
-                        request.UserId,
-                        request.FirstName,
-                        request.LastName,
-                        request.InstitutionId);
-                    await _studentRepository.AddAsync(student, cancellationToken);
-                }
-
-                student.UpdatePersonalInfo(
-                    request.FirstName,
-                    request.LastName,
-                    request.StudentBirthDate);
-                student.UpdateEducationInfo(request.StudentGradeLevel);
-                student.SetLearningPreferences(request.StudentLearningStyle);
-                if (request.Bio is not null) student.SetBio(request.Bio);
-                if (request.AvatarUrl is not null) student.SetAvatar(request.AvatarUrl);
-                if (request.InstitutionId.HasValue) student.AssignToInstitution(request.InstitutionId.Value);
-                else student.RemoveFromInstitution();
-            }
         }
 
         // 2. Save Changes

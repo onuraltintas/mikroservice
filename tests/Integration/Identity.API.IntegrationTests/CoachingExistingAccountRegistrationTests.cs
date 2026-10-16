@@ -175,8 +175,6 @@ public sealed class CoachingExistingAccountRegistrationTests
 
         private ExistingAccountEnrollment CreateEnrollment(PasswordHasher hasher) => new(
             Stub<IUserRepository>((method, _) => method.Name == nameof(IUserRepository.GetByEmailAsync) ? Task.FromResult<User?>(User) : null),
-            Stub<IStudentRepository>((method, _) => method.Name == nameof(IStudentRepository.GetExistingForRegistrationAsync) ? Task.FromResult(ExistingProfile) : AddProfile()),
-            Stub<ITeacherRepository>((method, _) => throw new NotSupportedException(method.Name)),
             Stub<IInstitutionRepository>((method, _) => throw new NotSupportedException(method.Name)),
             Stub<IRoleRepository>((_, _) => Task.FromResult(StudentRole)), hasher,
             Stub<IMultiFactorService>((method, _) => throw new NotSupportedException(method.Name)),

@@ -138,7 +138,7 @@ builder.Services.AddApplication();
 
 // Add Controllers
 // Add Controllers
-builder.Services.AddControllers()
+builder.Services.AddControllers(options => options.Filters.Add<Identity.API.CoachingOwnershipFilter>())
     .AddEduPlatformApiConventions()
     .AddJsonOptions(options =>
     {

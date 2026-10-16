@@ -99,7 +99,13 @@ public sealed class CoachingErasureExecutionService(
             .Where(row => row.SubjectStudentId == message.SubjectUserId)
             .ToListAsync(cancellationToken);
 
-        var deletedRecordCount = attachments.Count
+        var ownedAssignments = await context.CoachingTeacherStudentAssignments.Where(x => x.StudentUserId == message.SubjectUserId || x.TeacherUserId == message.SubjectUserId).ToListAsync(cancellationToken);
+        var ownedMembers = await context.CoachingInstitutionMemberships.Where(x => x.UserId == message.SubjectUserId).ToListAsync(cancellationToken);
+        var ownedStudents = await context.CoachingStudentProfiles.Where(x => x.UserId == message.SubjectUserId).ToListAsync(cancellationToken);
+        var ownedTeachers = await context.CoachingTeacherProfiles.Where(x => x.UserId == message.SubjectUserId).ToListAsync(cancellationToken);
+        var ownedInvites = await context.CoachingInvitations.Where(x => x.InviterUserId == message.SubjectUserId || x.TeacherUserId == message.SubjectUserId || x.AcceptedByUserId == message.SubjectUserId).ToListAsync(cancellationToken);
+
+        var deletedRecordCount = ownedAssignments.Count + ownedMembers.Count + ownedStudents.Count + ownedTeachers.Count + ownedInvites.Count + attachments.Count
             + assignmentStudents.Count
             + examResults.Count
             + studentExams.Count + studyTasks.Count + studyPlans.Count + studyAvailability.Count + studyMessages.Count + reminders.Count + financeCount
@@ -109,6 +115,11 @@ public sealed class CoachingErasureExecutionService(
         var execution = CoachingErasureExecution.Complete(
             message.RequestId, deletedRecordCount, completedAt);
 
+        context.CoachingTeacherStudentAssignments.RemoveRange(ownedAssignments);
+        context.CoachingInstitutionMemberships.RemoveRange(ownedMembers);
+        context.CoachingStudentProfiles.RemoveRange(ownedStudents);
+        context.CoachingTeacherProfiles.RemoveRange(ownedTeachers);
+        context.CoachingInvitations.RemoveRange(ownedInvites);
         context.AssignmentSubmissionAttachments.RemoveRange(attachments);
         context.AssignmentStudents.RemoveRange(assignmentStudents);
         context.ExamResults.RemoveRange(examResults);

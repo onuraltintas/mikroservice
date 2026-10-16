@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Coaching.API.Controllers;
 
+[Coaching.API.Security.CoachingProfileExceptionFilter]
 [ApiController]
 [ApiVersion(1.0)]
 [Authorize(Roles = "SystemAdmin,InstitutionAdmin,InstitutionOwner")]
@@ -61,12 +62,12 @@ public sealed class CoachingMembershipsController(CoachingProfileStore profiles,
         return NoContent();
     }
 
-    private Guid UserId => actor.UserId ?? throw new BusinessRuleException("Authorization.Forbidden", "Oturum açın.");
+    private Guid UserId => actor.UserId ?? throw new BusinessRuleException("Authorization.Forbidden", "Oturum aÃ§Ä±n.");
     private async Task<Guid> Resolve(Guid? institutionId, CancellationToken ct)
     {
         var scope = await accounts.AuthorizeAdminAsync(UserId, ct);
         if (scope is null) throw new BusinessRuleException("Authorization.Forbidden", "Kurum yetkisi gereklidir.");
-        var id = institutionId ?? scope.InstitutionId ?? throw new ArgumentException("Kurum seçin.");
+        var id = institutionId ?? scope.InstitutionId ?? throw new ArgumentException("Kurum seÃ§in.");
         await profiles.RequireInstitutionAdminAsync(UserId, id, ct);
         return id;
     }
