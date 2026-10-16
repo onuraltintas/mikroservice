@@ -132,7 +132,7 @@ public sealed class CoachingOutcomeCatalogService(CoachingDbContext db, ICoachin
             join edition in db.Set<OfficialCurriculumEdition>() on outcome.EditionId equals edition.Id
             where topic.LessonId == lessonId
             select new { edition.SubjectName,edition.GradeNumber,edition.ExamCode }).Distinct().ToArrayAsync(ct);
-        if (editions.Any(x => x.SubjectName != name.Trim() || x.ExamCode != exam?.Trim().ToUpperInvariant() || (grade.HasValue && grade != x.GradeNumber)))
+        if (editions.Any(x => x.SubjectName != name.Trim() || x.ExamCode != exam?.Trim().ToUpperInvariant() || (grade.HasValue && x.GradeNumber.HasValue && grade != x.GradeNumber)))
             throw new ArgumentException("Ders adı, sınıfı veya sınavı bağlı kazanımların program kapsamıyla uyuşmuyor. Farklı kapsam için yeni ders ve program kaydı oluşturun.");
     }
 
@@ -153,7 +153,7 @@ public sealed class CoachingOutcomeCatalogService(CoachingDbContext db, ICoachin
             join estimate in db.Set<OutcomeDurationEstimate>() on outcome.Id equals estimate.OutcomeId
             where map.TopicId == topicId && map.IsApproved && !outcome.IsArchived && topic.IsActive && unit.IsActive && lesson.IsActive
                 && lesson.ExamCode == edition.ExamCode && lesson.Name == edition.SubjectName
-                && (lesson.GradeNumber == null || lesson.GradeNumber == edition.GradeNumber)
+                && (lesson.GradeNumber == null || edition.GradeNumber == null || lesson.GradeNumber == edition.GradeNumber)
                 && !db.StudyCatalogTopics.Any(x => x.ParentId == topic.Id)
                 && (topic.ParentId == null || db.StudyCatalogTopics.Any(x => x.Id == topic.ParentId && x.IsActive))
                 && edition.AcademicYearStart <= academicYear && edition.AcademicYearEnd >= academicYear && estimate.IsPublished
@@ -170,7 +170,7 @@ public sealed class CoachingOutcomeCatalogService(CoachingDbContext db, ICoachin
         var ids = p.Mappings.Select(x => x.TopicSourceId).ToArray();
         return await (from topic in db.StudyCatalogTopics.AsNoTracking() join lesson in db.StudyCatalogLessons on topic.LessonId equals lesson.Id
             where topic.Source == CatalogSource && Enumerable.Contains(ids, topic.SourceId) && lesson.ExamCode == p.ExamCode
-                && lesson.Name == p.SubjectName && (lesson.GradeNumber == null || lesson.GradeNumber == p.GradeNumber)
+                && lesson.Name == p.SubjectName && (lesson.GradeNumber == null || p.GradeNumber == null || lesson.GradeNumber == p.GradeNumber)
                 && !db.StudyCatalogTopics.Any(x => x.ParentId == topic.Id) select topic).ToDictionaryAsync(x => x.SourceId, ct);
     }
 

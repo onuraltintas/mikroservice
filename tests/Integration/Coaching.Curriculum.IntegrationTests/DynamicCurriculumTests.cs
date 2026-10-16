@@ -2,6 +2,8 @@ using System.Text.Json;
 using Coaching.Infrastructure.Catalogs;
 using Coaching.Domain.Entities;
 using Coaching.Infrastructure.StudyPlanning;
+using Coaching.API.Controllers;
+using Microsoft.AspNetCore.Mvc;
 using EduPlatform.Shared.Kernel.Exceptions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -11,6 +13,52 @@ namespace Coaching.Curriculum.IntegrationTests;
 
 public sealed class DynamicCurriculumTests
 {
+    [Fact]
+    public async Task ExamLookupReturnsDatabaseEntriesRatherThanAFixedList()
+    {
+        await using var f=new CurriculumManagementTests.Fixture();
+        await f.Service.SaveAsync("exams",null,new("KPSS Genel Yetenek","Sınav türü ekle",Code:"KPSS"),default);
+        var result=Assert.IsType<OkObjectResult>(await new CoachingCatalogLookupsController(f.Db).Exams(default));
+        using var json=JsonDocument.Parse(JsonSerializer.Serialize(result.Value));
+        Assert.Contains(json.RootElement.GetProperty("data").EnumerateArray(),x=>x.GetProperty("Code").GetString()=="KPSS");
+    }
+
+    [Fact]
+    public async Task ExamStatusControlsLessonActivation_AndLessonCanMoveToAnotherExamBeforeOutcomesExist()
+    {
+        await using var f=new CurriculumManagementTests.Fixture();
+        var exam=await f.Service.SaveAsync("exams",null,new("KPSS","Sınav türü ekle",Code:"KPSS"),default);
+        exam=await f.Service.SetActiveAsync("exams",exam.Id,new(exam.Fingerprint,"Sınavı pasife al",false),default);
+        var lesson=await f.Service.SaveAsync("lessons",null,new("Türkçe","Ders ekle",ParentId:exam.Id,ExamCode:"KPSS"),default);
+        await Assert.ThrowsAsync<ArgumentException>(()=>f.Service.SetActiveAsync("lessons",lesson.Id,new(lesson.Fingerprint,"Dersi etkinleştir",true),default));
+        exam=await f.Service.GetAsync("exams",exam.Id,default);
+        await f.Service.SetActiveAsync("exams",exam.Id,new(exam.Fingerprint,"Sınavı etkinleştir",true),default);
+        lesson=await f.Service.GetAsync("lessons",lesson.Id,default);
+        lesson=await f.Service.SetActiveAsync("lessons",lesson.Id,new(lesson.Fingerprint,"Dersi etkinleştir",true),default);
+        exam=await f.Service.GetAsync("exams",exam.Id,default);
+        await Assert.ThrowsAsync<ArgumentException>(()=>f.Service.SetActiveAsync("exams",exam.Id,new(exam.Fingerprint,"Sınavı pasife al",false),default));
+        var target=await f.Db.Set<StudyCatalogExam>().SingleAsync(x=>x.Code=="LGS");
+        lesson=await f.Service.GetAsync("lessons",lesson.Id,default);
+        var moved=await f.Service.MoveAsync("lessons",lesson.Id,new(target.Id,lesson.Fingerprint,"Dersin sınavını değiştir"),default);
+        Assert.Equal(lesson.Id,moved.Id);Assert.Equal("LGS",moved.ExamCode);
+    }
+
+    [Fact]
+    public async Task ReferencedProgramScopeCannotChange_AndUnusedSourceRecordsCanBeEditedAndDeleted()
+    {
+        await using var f=new CurriculumManagementTests.Fixture();await f.Seed();
+        var original=await f.Db.Set<OfficialCurriculumEdition>().SingleAsync();var doc=await f.Service.GetAsync("programs",original.Id,default);
+        await Assert.ThrowsAsync<BusinessRuleException>(()=>f.Service.SaveAsync("programs",original.Id,Request(new {Name="Farklı ders",Reason="Programı değiştir",Fingerprint=doc.Fingerprint,original.Code,original.ExamCode,original.GradeNumber,original.AcademicYearStart,original.AcademicYearEnd,original.SourceUrl,original.DocumentSha256,original.ScopeEvidenceUrl}),default));
+        var program=await f.Service.SaveAsync("programs",null,Request(new {Name="Türkçe",Reason="Yeni program ekle",Code="new-program",ExamCode="LGS",GradeNumber=8,AcademicYearStart=2026,AcademicYearEnd=2026,SourceUrl="https://meb.gov.tr/program",DocumentSha256=new string('a',64),ScopeEvidenceUrl="https://meb.gov.tr/kapsam"}),default);
+        program=await f.Service.SaveAsync("programs",program.Id,Request(new {Name="Türkçe",Reason="Geçerlilik yılını düzelt",Fingerprint=program.Fingerprint,Code="new-program",ExamCode="LGS",GradeNumber=8,AcademicYearStart=2026,AcademicYearEnd=2027,SourceUrl="https://meb.gov.tr/program",DocumentSha256=new string('a',64),ScopeEvidenceUrl="https://meb.gov.tr/kapsam"}),default);
+        Assert.Equal(2027,program.AcademicYearEnd);
+        var topic=await f.Service.SaveAsync("programTopics",null,Request(new {Name="Sözcük",Reason="Kaynak konu ekle",ParentId=program.Id,Code="SOZ",OutcomeCount=2,LessonPeriods=5}),default);
+        await f.Service.DeleteAsync("programTopics",topic.Id,new(topic.Fingerprint,"Kullanılmayan konuyu sil",topic.Id),default);
+        program=await f.Service.GetAsync("programs",program.Id,default);
+        await f.Service.DeleteAsync("programs",program.Id,new(program.Fingerprint,"Kullanılmayan programı sil",program.Id),default);
+        Assert.Single(await f.Db.Set<OfficialCurriculumEdition>().ToArrayAsync());
+    }
+
     [CurriculumPostgresTests.LocalPostgresFact]
     public async Task MigrationBackfillsEveryLegacyExamCode_AndPreservesPlansOnRepeatedUpgrade()
     {
@@ -37,8 +85,13 @@ public sealed class DynamicCurriculumTests
         var topic=await f.Service.SaveAsync("topics",null,new("Sayı problemleri","Konu ekle",ParentId:unit.Id,EstimatedMinutes:45),default);
         await f.Service.SetActiveAsync("topics",topic.Id,new(topic.Fingerprint,"Konuyu etkinleştir",true),default);
         Assert.Equal(topic.Id,Assert.Single((await new CoachingTopicSearchService(f.Db).SearchAsync("problemleri",12,"ALES",1,20)).Items).Id);
-        var program=await f.Service.SaveAsync("programs",null,Request(new {Name="Matematik",Reason="Kaynak program ekle",Code="ales-mat",ExamCode="ALES",GradeNumber=12,AcademicYearStart=2026,AcademicYearEnd=2026,SourceUrl="https://meb.gov.tr/program",DocumentSha256=new string('a',64),ScopeEvidenceUrl="https://meb.gov.tr/kapsam"}),default);
-        Assert.Equal("ALES",program.ExamCode);
+        var program=await f.Service.SaveAsync("programs",null,Request(new {Name="Matematik",Reason="Kaynak program ekle",Code="ales-mat",ExamCode="ALES",AcademicYearStart=2026,AcademicYearEnd=2026,SourceUrl="https://meb.gov.tr/program",DocumentSha256=new string('a',64),ScopeEvidenceUrl="https://meb.gov.tr/kapsam"}),default);
+        Assert.Equal("ALES",program.ExamCode);Assert.Null(program.GradeNumber);
+        Assert.Equal(program.Id,Assert.Single((await f.Service.ChildrenAsync("programs",null,null,1,default,true)).Items).Id);
+        var source=await f.Service.SaveAsync("programTopics",null,Request(new {Name="Sayılar",Reason="Program konu grubu ekle",ParentId=program.Id,Code="SAY",OutcomeCount=1,LessonPeriods=5}),default);
+        Assert.Equal(source.Id,Assert.Single((await f.Service.ChildrenAsync("programTopics",program.Id,null,1,default,true)).Items).Id);
+        await Assert.ThrowsAsync<Npgsql.PostgresException>(()=>f.Db.GetService<IMigrator>().MigrateAsync("20261016195911_DynamicCurriculumExams"));
+        Assert.True(await f.Db.Set<OfficialCurriculumEdition>().AnyAsync(x=>x.Id==program.Id&&x.GradeNumber==null));
         await Assert.ThrowsAsync<ArgumentException>(()=>new CoachingTopicSearchService(f.Db).SearchAsync(null,null,"UNKNOWN",1,20));
         var invalid=StudyCatalogLesson.Create("test","bad-exam","Bilinmeyen",null,"BAD");f.Db.Add(invalid);
         await Assert.ThrowsAsync<DbUpdateException>(()=>f.Db.SaveChangesAsync());

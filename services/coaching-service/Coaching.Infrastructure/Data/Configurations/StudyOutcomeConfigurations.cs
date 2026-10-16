@@ -8,7 +8,7 @@ public sealed class OfficialCurriculumEditionConfiguration : IEntityTypeConfigur
 {
     public void Configure(EntityTypeBuilder<OfficialCurriculumEdition> b)
     {
-        b.ToTable("official_curriculum_editions", t => t.HasCheckConstraint("ck_outcome_edition_scope", "\"GradeNumber\" BETWEEN 1 AND 12 AND \"AcademicYearStart\" BETWEEN 2000 AND 2200 AND \"AcademicYearEnd\" BETWEEN \"AcademicYearStart\" AND 2200"));
+        b.ToTable("official_curriculum_editions", t => t.HasCheckConstraint("ck_outcome_edition_scope", "(\"GradeNumber\" IS NULL OR \"GradeNumber\" BETWEEN 1 AND 12) AND \"AcademicYearStart\" BETWEEN 2000 AND 2200 AND \"AcademicYearEnd\" BETWEEN \"AcademicYearStart\" AND 2200"));
         b.HasOne<StudyCatalogExam>().WithMany().HasForeignKey(x => x.ExamCode).HasPrincipalKey(x => x.Code).OnDelete(DeleteBehavior.Restrict);
         b.HasKey(x => x.Id); b.HasIndex(x => x.Code).IsUnique();
         b.Property(x => x.Code).HasMaxLength(100); b.Property(x => x.ExamCode).HasMaxLength(10); b.Property(x => x.SubjectName).HasMaxLength(300);

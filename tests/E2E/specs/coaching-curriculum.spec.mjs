@@ -79,8 +79,9 @@ test('exam tabs support dynamic exam creation, edit, lesson attachment and autom
   await page.getByLabel('Ad',{exact:true}).fill('Akademik Personel ve Lisansüstü Eğitimi Giriş Sınavı');await page.getByLabel('İşlem gerekçesi',{exact:true}).fill('Sınavın açık adını düzenle');
   await page.getByRole('button',{name:'Değişiklikleri kaydet',exact:true}).click();await expect(page.getByText('Kayıt kaydedildi.',{exact:true})).toBeVisible();
   await tab(page,'Dersler');await page.getByLabel('Sınav türü ile filtrele',{exact:true}).selectOption(exam.id);
-  await create(page,'Ders','Matematik',exam.id);await page.getByLabel('Sınıf',{exact:true}).selectOption('12');await page.getByLabel('Ders programı',{exact:true}).selectOption('curriculum');await save(page);
+  await create(page,'Ders','Matematik',exam.id);await page.getByLabel('Sınıf',{exact:true}).selectOption({label:'12. sınıf'});await page.getByLabel('Ders programı',{exact:true}).selectOption('curriculum');await save(page);
   const lesson=f.nodes.find(x=>x.kind==='lessons'&&x.parentId===exam.id);expect(lesson.examCode).toBe('ALES');expect(lesson.isActive).toBe(true);expect(lesson.curriculumVersionId).toBe('curriculum');
+  await page.locator('main').first().evaluate(el=>el.scrollTo({top:0,behavior:'instant'}));
   await page.screenshot({path:`../../artifacts/coaching-dynamic/lessons-${test.info().project.name}.png`,fullPage:true});
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
 });

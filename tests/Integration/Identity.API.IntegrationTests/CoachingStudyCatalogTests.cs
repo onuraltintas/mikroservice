@@ -58,6 +58,9 @@ public sealed class CoachingStudyCatalogTests
         Assert.Contains("CREATE TABLE coaching.study_catalog_lessons", script);
         Assert.Contains("CREATE TABLE coaching.study_catalog_units", script);
         Assert.Contains("CREATE TABLE coaching.study_catalog_topics", script);
-        Assert.DoesNotContain("INSERT INTO coaching.study_catalog", script);
+        Assert.DoesNotContain("INSERT INTO coaching.study_catalog_lessons", script);
+        Assert.DoesNotContain("INSERT INTO coaching.study_catalog_units", script);
+        Assert.DoesNotContain("INSERT INTO coaching.study_catalog_topics", script);
+        Assert.Contains("INSERT INTO coaching.study_catalog_exams", script);
     }
 }

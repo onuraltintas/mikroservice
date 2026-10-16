@@ -139,7 +139,7 @@ public sealed class CoachingCurriculumManagementService(CoachingDbContext db, IC
                 case "programs":
                     await ValidateExam(r.ExamCode,ct);
                     if (await db.Set<OfficialCurriculumEdition>().AnyAsync(x => x.Code == r.Code,ct)) throw new ArgumentException("Program kodu zaten var.");
-                    return Add(OfficialCurriculumEdition.Create(r.Code!,r.ExamCode!,r.GradeNumber ?? 0,r.Name,r.AcademicYearStart ?? 0,r.AcademicYearEnd ?? 0,r.SourceUrl!,r.DocumentSha256!,r.ScopeEvidenceUrl!));
+                    return Add(OfficialCurriculumEdition.Create(r.Code!,r.ExamCode!,r.GradeNumber,r.Name,r.AcademicYearStart ?? 0,r.AcademicYearEnd ?? 0,r.SourceUrl!,r.DocumentSha256!,r.ScopeEvidenceUrl!));
                 case "programTopics":
                     await Load("programs",Required(r.ParentId),ct);
                     if (await db.Set<OfficialCurriculumTopic>().AnyAsync(x => x.EditionId == r.ParentId && x.Code == r.Code,ct)) throw new ArgumentException("Program konu kodu zaten var.");
@@ -466,7 +466,7 @@ public sealed class CoachingCurriculumManagementService(CoachingDbContext db, IC
     {
         var lesson = (StudyCatalogLesson)await Load("lessons",topic.LessonId,ct);
         var edition = await db.Set<OfficialCurriculumEdition>().SingleAsync(x => x.Id == editionId,ct);
-        if (lesson.Name != edition.SubjectName || lesson.ExamCode != edition.ExamCode || (lesson.GradeNumber.HasValue && lesson.GradeNumber != edition.GradeNumber))
+        if (lesson.Name != edition.SubjectName || lesson.ExamCode != edition.ExamCode || (lesson.GradeNumber.HasValue && edition.GradeNumber.HasValue && lesson.GradeNumber != edition.GradeNumber))
             throw new ArgumentException("Kazanım programı hedef ders, sınav ve sınıf kapsamıyla uyuşmuyor.");
     }
     private async Task<StudyCatalogTopic> CopyTopic(StudyCatalogTopic old,Guid lesson,Guid unit,Guid? parent,StudyCatalogTopic[] descendants,CancellationToken ct)
@@ -524,7 +524,7 @@ public sealed class CoachingCurriculumManagementService(CoachingDbContext db, IC
             || r.DocumentSha256 != edition.DocumentSha256 || r.ScopeEvidenceUrl != edition.ScopeEvidenceUrl;
         if (changedScope && await db.Set<StudyCatalogOutcome>().AnyAsync(x => x.EditionId == edition.Id,ct))
             throw new BusinessRuleException("Catalog.InUse","Kazanımı olan programın kaynak ve kapsamı değiştirilemez. Yeni program ekleyin; mevcut planlar korunur.");
-        edition.Edit(r.Code!,r.ExamCode!,r.GradeNumber ?? 0,r.Name,r.AcademicYearStart ?? 0,r.AcademicYearEnd ?? 0,r.SourceUrl!,r.DocumentSha256!,r.ScopeEvidenceUrl!);
+        edition.Edit(r.Code!,r.ExamCode!,r.GradeNumber,r.Name,r.AcademicYearStart ?? 0,r.AcademicYearEnd ?? 0,r.SourceUrl!,r.DocumentSha256!,r.ScopeEvidenceUrl!);
     }
     private T Add<T>(T entity) where T : class { db.Add(entity); return entity; }
     private static Guid Required(Guid? id) => id.HasValue && id != Guid.Empty ? id.Value : throw new ArgumentException("Üst kayıt seçin.");

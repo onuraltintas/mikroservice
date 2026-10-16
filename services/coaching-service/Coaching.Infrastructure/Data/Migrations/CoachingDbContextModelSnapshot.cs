@@ -2125,7 +2125,7 @@ namespace Coaching.Infrastructure.Data.Migrations
                         .HasMaxLength(10)
                         .HasColumnType("character varying(10)");
 
-                    b.Property<int>("GradeNumber")
+                    b.Property<int?>("GradeNumber")
                         .HasColumnType("integer");
 
                     b.Property<string>("PackageSha256")
@@ -2157,7 +2157,7 @@ namespace Coaching.Infrastructure.Data.Migrations
 
                     b.ToTable("official_curriculum_editions", "coaching", t =>
                         {
-                            t.HasCheckConstraint("ck_outcome_edition_scope", "\"GradeNumber\" BETWEEN 1 AND 12 AND \"AcademicYearStart\" BETWEEN 2000 AND 2200 AND \"AcademicYearEnd\" BETWEEN \"AcademicYearStart\" AND 2200");
+                            t.HasCheckConstraint("ck_outcome_edition_scope", "(\"GradeNumber\" IS NULL OR \"GradeNumber\" BETWEEN 1 AND 12) AND \"AcademicYearStart\" BETWEEN 2000 AND 2200 AND \"AcademicYearEnd\" BETWEEN \"AcademicYearStart\" AND 2200");
                         });
                 });
 

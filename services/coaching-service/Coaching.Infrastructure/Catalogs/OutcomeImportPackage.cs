@@ -1,6 +1,6 @@
 namespace Coaching.Infrastructure.Catalogs;
 
-public sealed record OutcomeImportPackage(string Code, string ExamCode, int GradeNumber, string SubjectName,
+public sealed record OutcomeImportPackage(string Code, string ExamCode, int? GradeNumber, string SubjectName,
     int AcademicYearStart, int AcademicYearEnd, string SourceUrl, string DocumentSha256, string ScopeEvidenceUrl,
     IReadOnlyList<OfficialTopicImport> OfficialTopics, IReadOnlyList<OutcomeImport> Outcomes, IReadOnlyList<TopicOutcomeImport> Mappings);
 public sealed record OfficialTopicImport(string Code, string Name, int OutcomeCount, int LessonPeriods);

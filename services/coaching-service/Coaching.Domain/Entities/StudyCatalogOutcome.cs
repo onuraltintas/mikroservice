@@ -5,7 +5,7 @@ public sealed class OfficialCurriculumEdition
     public Guid Id { get; private set; } = Guid.NewGuid();
     public string Code { get; private set; } = "";
     public string ExamCode { get; private set; } = "";
-    public int GradeNumber { get; private set; }
+    public int? GradeNumber { get; private set; }
     public string SubjectName { get; private set; } = "";
     public int AcademicYearStart { get; private set; }
     public int AcademicYearEnd { get; private set; }
@@ -14,7 +14,7 @@ public sealed class OfficialCurriculumEdition
     public string ScopeEvidenceUrl { get; private set; } = "";
     public string PackageSha256 { get; private set; } = "";
     private OfficialCurriculumEdition() { }
-    public static OfficialCurriculumEdition Create(string code, string exam, int grade, string subject, int from, int to,
+    public static OfficialCurriculumEdition Create(string code, string exam, int? grade, string subject, int from, int to,
         string url, string hash, string scopeUrl, string? packageHash = null)
     {
         exam = StudyCatalogExam.NormalizeCode(exam);
@@ -28,7 +28,7 @@ public sealed class OfficialCurriculumEdition
             SubjectName = StudyCatalogText.Require(subject, 300), AcademicYearStart = from, AcademicYearEnd = to,
             SourceUrl = url, DocumentSha256 = hash.ToLowerInvariant(), ScopeEvidenceUrl = scopeUrl, PackageSha256 = packageHash ?? hash.ToLowerInvariant() };
     }
-    public void Edit(string code, string exam, int grade, string subject, int from, int to, string url, string hash, string scopeUrl)
+    public void Edit(string code, string exam, int? grade, string subject, int from, int to, string url, string hash, string scopeUrl)
     {
         var valid = Create(code, exam, grade, subject, from, to, url, hash, scopeUrl);
         Code=valid.Code; ExamCode=valid.ExamCode; GradeNumber=valid.GradeNumber; SubjectName=valid.SubjectName;

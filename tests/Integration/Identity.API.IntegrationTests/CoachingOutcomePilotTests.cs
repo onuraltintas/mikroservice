@@ -105,7 +105,7 @@ public sealed class CoachingOutcomePilotTests
             var lesson = StudyCatalogLesson.Create("approved-catalog", "math-lgs", "Matematik", null, "LGS"); lesson.SetActive(true);
             var unit = StudyCatalogUnit.Create("approved-catalog", "math-unit", lesson.Id, "Matematik (LGS)", 1); unit.SetActive(true);
             f.Topic = StudyCatalogTopic.Create("approved-catalog", "topic:factors", lesson.Id, unit.Id, "Çarpanlar ve Katlar", null, 1); f.Topic.SetActive(true);
-            f.Db.AddRange(lesson, unit, f.Topic); await f.Db.SaveChangesAsync();
+            f.Db.AddRange(StudyCatalogExam.Create("LGS","Liselere Geçiş Sistemi"), lesson, unit, f.Topic); await f.Db.SaveChangesAsync();
             f.Package = new("meb-2018-lgs-math-test", "LGS", 8, "Matematik", 2026, 2026,
                 "https://mufredat.meb.gov.tr/program.pdf", new string('a', 64), "https://tegm.meb.gov.tr/scope",
                 [new("M.8.1.1", "Çarpanlar ve Katlar", 2, 10)],
