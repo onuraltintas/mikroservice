@@ -218,6 +218,15 @@ public sealed class CurriculumManagementTests
         await Assert.ThrowsAsync<BusinessRuleException>(()=>f.Service.SaveAsync("groups",null,new("Grup","Grup oluştur"),default));
     }
 
+    [Fact]
+    public async Task LessonScopeEditCannotSilentlyHideItsExistingPublishedOutcomes()
+    {
+        await using var f=new Fixture();await f.Seed();var lesson=await f.Db.StudyCatalogLessons.SingleAsync();
+        var doc=await f.Service.GetAsync("lessons",lesson.Id,default);
+        await Assert.ThrowsAsync<ArgumentException>(()=>f.Service.SaveAsync("lessons",lesson.Id,new("Fizik","Ders kapsamını değiştir",Fingerprint:doc.Fingerprint,GradeNumber:8,ExamCode:"LGS"),default));
+        Assert.Equal("Matematik",(await f.Db.StudyCatalogLessons.SingleAsync()).Name);
+    }
+
     internal sealed class Fixture : IAsyncDisposable
     {
         public CoachingDbContext Db { get; }
