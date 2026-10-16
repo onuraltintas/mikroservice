@@ -27,6 +27,7 @@ public sealed class WeeklyStudyDraftTests
         Assert.IsType<OkObjectResult>(await controller.Get(default));
         var lesson=(await f.Db.StudyCatalogLessons.SingleAsync()).Id;
         Assert.IsType<BadRequestObjectResult>(await controller.Save(new(null,"Europe/Istanbul",[Slot(lesson,1080,45)]),default));
+        Assert.IsType<BadRequestObjectResult>(await controller.Save(new(null,"Invalid/Zone",[]),default));
         Assert.IsType<OkObjectResult>(await controller.Save(new(null,"Europe/Istanbul",[Slot(lesson,1080,30)]),default));
         Assert.IsType<ConflictObjectResult>(await controller.Save(new(null,"Europe/Istanbul",[]),default));
         f.User.Roles=["Teacher"];Assert.Equal(403,Assert.IsType<ObjectResult>(await controller.Get(default)).StatusCode);
@@ -86,7 +87,7 @@ public sealed class WeeklyStudyDraftTests
     }
 
     [Theory]
-    [InlineData(1080,45)] [InlineData(1085,30)] [InlineData(1410,60)] [InlineData(-30,30)] [InlineData(1080,0)]
+    [InlineData(1080,45)] [InlineData(1085,30)] [InlineData(1410,60)] [InlineData(-30,30)] [InlineData(1080,0)] [InlineData(2147483640,60)]
     public async Task InvalidTimeOrDurationIsRejected(int start,int duration)
     {
         await using var f=new CurriculumManagementTests.Fixture();await f.Seed();f.User.Roles=["Student"];
