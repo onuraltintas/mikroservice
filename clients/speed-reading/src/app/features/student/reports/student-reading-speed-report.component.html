@@ -3,7 +3,7 @@
     <div class="loading-container" role="status" aria-live="polite">
       <div class="rp-spinner"></div><span>Okuma hızı raporu yükleniyor...</span>
     </div>
-  } @else if (report()) {
+  } @else if (report() && report()!.statistics.totalReadings > 0) {
     <div class="report-grid">
       <div class="rp-card gauge-card">
         <div class="rp-card__header">
@@ -74,6 +74,6 @@
       </div>
     </div>
   } @else {
-    <div class="empty-state">Henüz okuma hızı verisi bulunmuyor.</div>
+    <div class="empty-state">Veri yok · Bu dönemde ölçülmüş okuma hızı bulunmuyor.</div>
   }
 </div>

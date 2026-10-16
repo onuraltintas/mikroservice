@@ -39,7 +39,7 @@
       <article class="metric-card">
         <span>Ortalama okuma hızı</span
         ><strong>{{
-          data.summary.readingSessions ? formatNumber(data.summary.averageWpm) + ' WPM' : 'Veri yok'
+          data.readingSpeed.averageWpm > 0 ? formatNumber(data.readingSpeed.averageWpm) + ' WPM' : 'Veri yok'
         }}</strong>
       </article>
       <article class="metric-card">
@@ -77,7 +77,7 @@
             <p class="workspace-eyebrow">OKUMA AKICILIĞI</p>
             <h4 id="reading-speed-report-title">Hız gelişimi</h4>
           </div>
-          @if (data.summary.readingSessions > 0) {
+          @if (data.readingSpeed.averageWpm > 0) {
             <span class="change-pill"
               >{{ data.readingSpeed.improvementRate > 0 ? '+' : ''
               }}{{ formatNumber(data.readingSpeed.improvementRate, 1) }}%</span
@@ -86,17 +86,17 @@
             <span class="no-data-pill">Veri yok</span>
           }
         </div>
-        @if (data.summary.readingSessions > 0) {
+        @if (data.readingSpeed.averageWpm > 0) {
           <p class="benchmark-line">
             {{ teacherScoped ? 'Karşılaştırma ortalaması' : 'Kurum ortalaması' }}
-            <strong>{{ formatNumber(data.readingSpeed.benchmark.institutionAverage) }} WPM</strong>
+            <strong>{{ data.readingSpeed.benchmark.institutionAverage > 0 ? formatNumber(data.readingSpeed.benchmark.institutionAverage) + ' WPM' : 'Veri yok' }}</strong>
             · Öğrenci <strong>{{ formatNumber(data.readingSpeed.averageWpm) }} WPM</strong>
           </p>
           <p class="performance-level">{{ data.readingSpeed.benchmark.performanceLevel }}</p>
         } @else {
-          <p class="empty-state">Bu dönemde hız gelişimini karşılaştıracak okuma oturumu yok.</p>
+          <p class="empty-state">Veri yok · Bu dönemde ölçülmüş okuma hızı bulunmuyor.</p>
         }
-        @if (data.readingSpeed.recommendations.length > 0) {
+        @if (data.readingSpeed.averageWpm > 0 && data.readingSpeed.recommendations.length > 0) {
           <div class="report-list-block">
             <h5>Öneriler</h5>
             <ul>

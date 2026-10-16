@@ -30,7 +30,7 @@
                     <span class="material-icons">trending_up</span>
                 </div>
                 <div class="metric-content">
-                    <div class="metric-value">{{ (report()?.averageComprehension || 0).toFixed(1) }}%</div>
+                    <div class="metric-value">{{ report()?.comprehensionDataAvailable ? (report()?.averageComprehension || 0).toFixed(1) + '%' : 'Veri yok' }}</div>
                     <div class="metric-label">Ortalama Kavrama</div>
                     <div class="metric-trend">Genel skor</div>
                 </div>
@@ -67,7 +67,7 @@
                 <span class="material-icons stat-icon speed">speed</span>
                 <span class="stat-title">Okuma Hızı</span>
             </div>
-            <div class="stat-value">{{ report()?.currentWPM || 0 }}</div>
+            <div class="stat-value">{{ (report()?.currentWPM || 0) > 0 ? report()?.currentWPM : 'Veri yok' }}</div>
             <div class="stat-footer">
                 <span class="stat-change">Kelime/Dakika</span>
             </div>
@@ -78,7 +78,7 @@
                 <span class="material-icons stat-icon comprehension">school</span>
                 <span class="stat-title">Anlama Oranı</span>
             </div>
-            <div class="stat-value">%{{ (report()?.averageComprehension || 0).toFixed(0) }}</div>
+            <div class="stat-value">{{ report()?.comprehensionDataAvailable ? '%' + (report()?.averageComprehension || 0).toFixed(0) : 'Veri yok' }}</div>
             <div class="stat-footer">
                 <span class="stat-change">Genel Başarı</span>
             </div>

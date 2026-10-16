@@ -326,7 +326,7 @@ export class ReportsService {
         { label: 'Öğrenci ortalaması', value: value.benchmark.studentValue },
         { label: 'Kurum ortalaması', value: value.benchmark.institutionAverage },
         { label: 'Platform ortalaması', value: value.benchmark.platformAverage }
-      ],
+      ].filter(item => item.value > 0),
       wpmTrendChart: {
         data: trend.map(point => ({ name: point.date, value: point.value })),
         labels: trend.map(point => point.date)
@@ -356,6 +356,7 @@ export class ReportsService {
     return {
       metadata: this.toReportMetadata('student-comprehension', value.dateFrom, value.dateTo),
       overallComprehension: value.averageComprehension,
+      dataAvailable: value.totalQuestionsAttempted > 0,
       comprehensionBenchmarks: [
         { label: 'Öğrenci ortalaması', value: value.benchmark.studentValue },
         { label: 'Kurum ortalaması', value: value.benchmark.institutionAverage },
@@ -782,7 +783,7 @@ export class ReportsService {
       name: point.date,
       series: [{ name: 'Aktivite', value: point.readingSessions + point.exerciseCount }]
     }));
-    const wpmProgress = daily.map(point => ({
+    const wpmProgress = daily.filter(point => point.averageWpm > 0).map(point => ({
       name: point.date,
       series: [{ name: 'WPM', value: point.averageWpm }]
     }));
@@ -807,6 +808,7 @@ export class ReportsService {
       exercisesPassed: summary.exercisesPassed,
       currentWPM: summary.latestWpm,
       averageComprehension: summary.averageComprehension,
+      comprehensionDataAvailable: summary.comprehensionDataAvailable ?? summary.averageComprehension > 0,
       currentLevel: summary.currentLevel,
       daysActive: daily.filter(point => point.readingSessions > 0 || point.exerciseCount > 0).length,
       dailyGoalMinutes: summary.dailyGoalMinutes,
@@ -863,6 +865,7 @@ export class ReportsService {
 }
 
 interface StudentAnalyticsSummary {
+  comprehensionDataAvailable?: boolean;
   dateFrom: string;
   dateTo: string;
   readingSessions: number;

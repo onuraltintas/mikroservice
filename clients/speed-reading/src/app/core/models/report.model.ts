@@ -45,6 +45,7 @@ export interface StudentDashboardReport {
   totalReadingTime: number;
   currentWPM: number;
   averageComprehension: number;
+  comprehensionDataAvailable?: boolean;
   currentLevel: number;
   daysActive: number;
   dailyGoalMinutes: number;
@@ -128,6 +129,7 @@ export interface ReadingSpeedStatistics {
 
 // 3. Student Comprehension Report
 export interface StudentComprehensionReport {
+  dataAvailable?: boolean;
   metadata: ReportMetadata;
   overallComprehension: number;
   comprehensionBenchmarks: ComprehensionBenchmark[];

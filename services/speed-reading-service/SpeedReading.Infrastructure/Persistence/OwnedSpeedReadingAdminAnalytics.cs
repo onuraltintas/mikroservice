@@ -109,7 +109,8 @@ internal sealed class OwnedSpeedReadingAdminAnalytics(
                 AverageMeasuredWpm(group, item => item.IsMeasured, item => item.CalculatedWpm), AverageComprehension(group, item => item.TotalQuestions, item => item.ComprehensionRate))).ToList();
         var readingAnalysis = readingRows.GroupBy(item => item.DifficultyLevel).OrderBy(group => group.Key)
             .Select(group => new AdminReadingLevelAnalysis(group.Key, group.Count(),
-                AverageMeasuredWpm(group, item => item.IsMeasured, item => item.CalculatedWpm), AverageComprehension(group, item => item.TotalQuestions, item => item.ComprehensionRate))).ToList();
+                AverageMeasuredWpm(group, item => item.IsMeasured, item => item.CalculatedWpm), AverageComprehension(group, item => item.TotalQuestions, item => item.ComprehensionRate))
+                { ComprehensionDataAvailable = group.Any(item => item.TotalQuestions > 0) }).ToList();
         var exerciseAnalysis = exerciseRows.GroupBy(item => new { item.Name, item.DisplayName }).OrderByDescending(group => group.Count())
             .Select(group => new AdminExerciseTypeAnalysis(
                 string.IsNullOrWhiteSpace(group.Key.DisplayName) ? group.Key.Name : group.Key.DisplayName,

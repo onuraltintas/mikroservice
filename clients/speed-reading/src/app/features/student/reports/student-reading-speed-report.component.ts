@@ -66,7 +66,7 @@ export class StudentReadingSpeedReportComponent implements OnInit {
 
   statsDataSource = computed(() => {
     const stats = this.report()?.statistics;
-    if (!stats) return [];
+    if (!stats || stats.totalReadings === 0) return [];
 
     return [
       { metric: 'Average WPM', value: stats.averageWPM.toFixed(0) },

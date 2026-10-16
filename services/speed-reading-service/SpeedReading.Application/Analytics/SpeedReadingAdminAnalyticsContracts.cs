@@ -54,7 +54,10 @@ public sealed record AdminReadingLevelAnalysis(
     int DifficultyLevel,
     int TotalReads,
     decimal AverageWpm,
-    decimal AverageComprehension);
+    decimal AverageComprehension)
+{
+    public bool ComprehensionDataAvailable { get; init; }
+}
 
 public sealed record AdminExerciseTypeAnalysis(
     string ExerciseTypeName,

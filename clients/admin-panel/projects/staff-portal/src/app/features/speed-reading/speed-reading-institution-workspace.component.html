@@ -345,8 +345,8 @@
                         <tr>
                           <td>{{ item.difficultyLevel }}</td>
                           <td>{{ formatNumber(item.totalReads) }}</td>
-                          <td>{{ formatReportNumber(item.averageWpm) }}</td>
-                          <td>{{ formatReportNumber(item.averageComprehension) }}%</td>
+                          <td>{{ item.averageWpm > 0 ? formatReportNumber(item.averageWpm) : 'Veri yok' }}</td>
+                          <td>{{ (item.comprehensionDataAvailable ?? item.averageComprehension > 0) ? formatReportNumber(item.averageComprehension) + '%' : 'Veri yok' }}</td>
                         </tr>
                       } @empty {
                         <tr>

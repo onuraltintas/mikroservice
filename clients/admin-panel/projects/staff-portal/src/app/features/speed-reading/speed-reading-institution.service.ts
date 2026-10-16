@@ -194,6 +194,7 @@ export interface SpeedReadingInstitutionContentReport {
   }[];
   exerciseFrequencyChart: SpeedReadingInstitutionChartRow[];
   readingAnalysis: {
+    comprehensionDataAvailable?: boolean;
     difficultyLevel: number;
     totalReads: number;
     averageWpm: number;

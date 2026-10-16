@@ -366,19 +366,23 @@ internal sealed class OwnedSpeedReadingTeacherReports(
                     .Average() ?? 0,
                 group.Where(item => item.TotalQuestions > 0)
                     .Select(item => (decimal?)item.ComprehensionRate)
-                    .Average() ?? 0))
+                    .Average() ?? 0)
+                { ComprehensionDataAvailable = group.Any(item => item.TotalQuestions > 0) })
             .ToList();
         var readingPerformance = readingRows
             .GroupBy(item => item.CompletedAt.Date)
             .OrderBy(group => group.Key)
-            .Select(group => new AdminAnalyticsChartData(
-                group.Key.ToString("yyyy-MM-dd"),
-                [
-                    new AdminAnalyticsChartSeries("WPM", group.Where(item => item.IsMeasured && item.CalculatedWpm > 0)
-                        .Select(item => (decimal?)item.CalculatedWpm).Average() ?? 0),
-                    new AdminAnalyticsChartSeries("Anlama", group.Where(item => item.TotalQuestions > 0)
-                        .Select(item => (decimal?)item.ComprehensionRate).Average() ?? 0)
-                ]))
+            .Select(group => {
+                var series = new List<AdminAnalyticsChartSeries>();
+                if (group.Any(item => item.IsMeasured && item.CalculatedWpm > 0))
+                    series.Add(new("WPM", group.Where(item => item.IsMeasured && item.CalculatedWpm > 0)
+                        .Average(item => (decimal)item.CalculatedWpm)));
+                if (group.Any(item => item.TotalQuestions > 0))
+                    series.Add(new("Anlama", group.Where(item => item.TotalQuestions > 0)
+                        .Average(item => item.ComprehensionRate)));
+                return new AdminAnalyticsChartData(group.Key.ToString("yyyy-MM-dd"), series);
+            })
+            .Where(item => item.Series.Count > 0)
             .ToList();
 
         return new TeacherContentAnalysisAnalytics(start, end, exerciseAnalysis, exerciseFrequency, readingAnalysis, readingPerformance);

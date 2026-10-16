@@ -133,7 +133,8 @@ export class StudentDashboardReportComponent implements OnInit {
     const sessions = this.historyData();
     if (!sessions || sessions.length === 0) return [];
 
-    const recentSessions = sessions.slice(-20);
+    const recentSessions = sessions.filter(s => s.isMeasured !== false && s.calculatedWPM > 0).slice(-20);
+    if (recentSessions.length === 0) return [];
     return [{
       name: 'WPM',
       series: recentSessions

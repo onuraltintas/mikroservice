@@ -288,7 +288,10 @@ public sealed record StudentAnalyticsSummary(
     decimal GoalCompletionRate,
     StudentProgramState? ProgramState,
     IReadOnlyList<StudentAnalyticsMilestone> RecentMilestones,
-    IReadOnlyList<StudentAnalyticsDailyPoint> Daily);
+    IReadOnlyList<StudentAnalyticsDailyPoint> Daily)
+{
+    public bool ComprehensionDataAvailable { get; init; }
+}
 
 public interface ILegacySpeedReadingAnalytics
 {

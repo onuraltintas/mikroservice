@@ -1,19 +1,22 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { provideCharts, withDefaultRegisterables } from 'ng2-charts';
 import { ReportsService } from '../../../core/services/reports.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { StudentReadingService } from '../../../core/services/student-reading.service';
 import { StudentDashboardReportComponent } from './student-dashboard-report.component';
 import { StudentReadingSpeedReportComponent } from './student-reading-speed-report.component';
+import { StudentComprehensionReportComponent } from './student-comprehension-report.component';
 
 describe('reports without measured speed', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [StudentDashboardReportComponent, StudentReadingSpeedReportComponent],
-      providers: [provideRouter([]), ...[ReportsService, AuthService, StudentReadingService].map(provide => ({ provide, useValue: {} }))]
+      imports: [StudentDashboardReportComponent, StudentReadingSpeedReportComponent, StudentComprehensionReportComponent],
+      providers: [provideRouter([]), provideCharts(withDefaultRegisterables()), ...[ReportsService, AuthService, StudentReadingService].map(provide => ({ provide, useValue: {} }))]
     });
     spyOn(StudentDashboardReportComponent.prototype, 'ngOnInit');
     spyOn(StudentReadingSpeedReportComponent.prototype, 'ngOnInit');
+    spyOn(StudentComprehensionReportComponent.prototype, 'ngOnInit');
   });
 
   it('shows no data instead of a zero speed gauge, benchmarks or statistics', () => {
@@ -55,4 +58,17 @@ describe('reports without measured speed', () => {
     expect(card.querySelector('.stat-value')?.textContent).toContain('Veri yok');
     expect(fixture.componentInstance.wpmProgressData()).toEqual([]);
   });
+
+  for (const available of [false, true]) {
+    it(`distinguishes missing comprehension from a measured zero (available=${available})`, () => {
+      const fixture = TestBed.createComponent(StudentComprehensionReportComponent);
+      fixture.componentInstance.loading.set(false);
+      fixture.componentInstance.report.set({ dataAvailable: available, overallComprehension: 0,
+        comprehensionBenchmarks: [], questionTypeChart: { data: [] }, bloomLevelChart: { data: [] },
+        categoryComprehensionChart: { data: [] }, categoryBreakdown: [], improvementAreas: [] } as any);
+      fixture.detectChanges();
+      expect(!!fixture.nativeElement.querySelector('app-number-card')).toBe(available);
+      if (!available) expect(fixture.nativeElement.textContent).toContain('Veri yok');
+    });
+  }
 });

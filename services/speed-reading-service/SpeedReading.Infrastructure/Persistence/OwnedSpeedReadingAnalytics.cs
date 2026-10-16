@@ -225,7 +225,8 @@ internal sealed class OwnedSpeedReadingAnalytics(
                 item.ReadingMinutes,
                 item.AverageWpm,
                 item.AverageComprehension,
-                item.AverageSuccessRate)).ToList());
+                item.AverageSuccessRate)).ToList())
+        { ComprehensionDataAvailable = latestMeasuredComprehension.HasValue };
     }
 
     public async Task<StudentReadingSpeedAnalytics> GetStudentReadingSpeedAsync(
@@ -252,7 +253,7 @@ internal sealed class OwnedSpeedReadingAnalytics(
         var average = aggregate?.Average ?? 0;
         var previousAverage = await AverageWpmAsync(
             ReadingSessionsFor(userId, start.AddDays(-(end - start).TotalDays), start), cancellationToken);
-        var improvementRate = CalculateImprovement(average, previousAverage);
+        var improvementRate = aggregate is null ? 0 : CalculateImprovement(average, previousAverage);
         var trend = (await query.GroupBy(item => item.CompletedAt.Date).OrderBy(group => group.Key)
             .Select(group => new { Date = group.Key, Value = group.Average(item => (decimal)item.CalculatedWpm) })
             .ToListAsync(cancellationToken))
@@ -275,14 +276,16 @@ internal sealed class OwnedSpeedReadingAnalytics(
             : 0;
         var latest = await query.OrderByDescending(item => item.CompletedAt)
             .Select(item => (decimal?)item.CalculatedWpm).FirstOrDefaultAsync(cancellationToken);
-        var benchmark = await GetBenchmarkAsync(userId, start, end, average, useComprehension: false, cancellationToken);
+        var benchmark = aggregate is null
+            ? new StudentAnalyticsBenchmark(0, 0, 0, "Veri yok")
+            : await GetBenchmarkAsync(userId, start, end, average, useComprehension: false, cancellationToken);
 
         return new StudentReadingSpeedAnalytics(
             userId, start, end, latest ?? average, average, median,
             aggregate?.Minimum ?? 0, aggregate?.Maximum ?? 0, standardDeviation,
             improvementRate, trend, categories, benchmark,
             aggregate?.Below200 ?? 0, aggregate?.Between200And400 ?? 0, aggregate?.Above400 ?? 0,
-            BuildWpmRecommendations(average, improvementRate));
+            aggregate is null ? [] : BuildWpmRecommendations(average, improvementRate));
     }
 
     public async Task<StudentComprehensionAnalytics> GetStudentComprehensionAsync(
@@ -307,7 +310,7 @@ internal sealed class OwnedSpeedReadingAnalytics(
         var average = aggregate?.Average ?? 0;
         var previousAverage = await AverageComprehensionAsync(
             ReadingSessionsFor(userId, start.AddDays(-(end - start).TotalDays), start), cancellationToken);
-        var improvementRate = CalculateImprovement(average, previousAverage);
+        var improvementRate = aggregate is null ? 0 : CalculateImprovement(average, previousAverage);
         var trend = (await query.GroupBy(item => item.CompletedAt.Date).OrderBy(group => group.Key)
             .Select(group => new { Date = group.Key, Value = group.Average(item => item.ComprehensionRate) })
             .ToListAsync(cancellationToken))
@@ -371,7 +374,9 @@ internal sealed class OwnedSpeedReadingAnalytics(
         var successRate = aggregate?.TotalQuestions > 0
             ? Math.Round((decimal)aggregate.CorrectAnswers / aggregate.TotalQuestions * 100, 2)
             : 0;
-        var benchmark = await GetBenchmarkAsync(userId, start, end, average, useComprehension: true, cancellationToken);
+        var benchmark = aggregate is null
+            ? new StudentAnalyticsBenchmark(0, 0, 0, "Veri yok")
+            : await GetBenchmarkAsync(userId, start, end, average, useComprehension: true, cancellationToken);
 
         return new StudentComprehensionAnalytics(
             userId, start, end, latest ?? average, average, aggregate?.Maximum ?? 0,

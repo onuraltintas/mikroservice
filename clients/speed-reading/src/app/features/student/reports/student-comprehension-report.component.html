@@ -1,7 +1,7 @@
 <div class="comprehension-report sp-page-enter">
     @if (loading()) {
     <div class="loading-container" role="status" aria-live="polite"><div class="rp-spinner"></div><span>Anlama raporu yükleniyor...</span></div>
-    } @else if (report()) {
+    } @else if (report()?.dataAvailable) {
     <div class="report-grid">
         <div class="rp-card">
             <div class="rp-card__header"><h3 class="rp-card__title">Genel anlama</h3></div>
@@ -108,6 +108,6 @@
         </div>
     </div>
     } @else {
-    <div class="empty-state">Henüz anlama verisi bulunmuyor.</div>
+    <div class="empty-state">Veri yok · Bu dönemde anlama ölçümü bulunmuyor.</div>
     }
 </div>
