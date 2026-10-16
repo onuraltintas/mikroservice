@@ -87,6 +87,16 @@ public sealed class CurriculumPostgresTests
         Assert.Equal("Diğer yöneticinin değişikliği",(await f.Db.StudyCatalogTopics.AsNoTracking().SingleAsync()).Name);
     }
 
+    [LocalPostgresFact]
+    public async Task LongValidOutcomeTextAndTurkishReasonFitAuditWithoutLosingCatalogText()
+    {
+        await using var f=await Pg.Create();await f.Data.Seed();var outcome=await f.Db.Set<StudyCatalogOutcome>().SingleAsync();
+        var doc=await f.Service.GetAsync("outcomes",outcome.Id,default);var text=new string('ç',2000);var reason=new string('ş',500);
+        await f.Service.SaveAsync("outcomes",outcome.Id,new(text,reason,Fingerprint:doc.Fingerprint,Code:outcome.Code),default);
+        Assert.Equal(text,(await f.Db.Set<StudyCatalogOutcome>().SingleAsync()).Name);
+        var audit=await f.Db.AdminAuditRecords.SingleAsync();Assert.True(audit.ChangedFieldsJson!.Length<=2000);Assert.Contains(reason,audit.ChangedFieldsJson);
+    }
+
     internal sealed class LocalPostgresFactAttribute : FactAttribute
     { public LocalPostgresFactAttribute() { if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("COACHING_CURRICULUM_TEST_POSTGRES"))) Skip = "Set localhost-only COACHING_CURRICULUM_TEST_POSTGRES to run migration tests."; } }
     private sealed class Pg : IAsyncDisposable

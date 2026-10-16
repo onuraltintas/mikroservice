@@ -7,6 +7,19 @@ import { LayoutService } from '../../services/layout.service';
 import { SidebarComponent } from './sidebar';
 
 describe('SidebarComponent', () => {
+  it('offers curriculum management only to global content managers', () => {
+    const profile = signal({roles:['SystemAdmin'],permissions:[ADMIN_PERMISSIONS.coachingView,ADMIN_PERMISSIONS.coachingContentManage] as string[]});
+    TestBed.configureTestingModule({imports:[SidebarComponent],providers:[
+      {provide:AuthService,useValue:{userProfile:profile,hasPermission:(p:string)=>profile().permissions.includes(p)}},
+      {provide:ToasterService,useValue:{confirm:vi.fn()}},
+      {provide:LayoutService,useValue:{isSidebarCollapsed:signal(false),toggleSidebar:vi.fn()}}
+    ]});
+    const component=TestBed.createComponent(SidebarComponent).componentInstance;
+    const visible=()=>component.menuItems().some(x=>x.children?.some((child:{route?:string})=>child.route==='/dashboard/coaching/curriculum'));
+    expect(visible()).toBe(true);
+    profile.set({roles:['InstitutionAdmin'],permissions:[ADMIN_PERMISSIONS.coachingView,ADMIN_PERMISSIONS.coachingContentManage]});expect(visible()).toBe(false);
+    profile.set({roles:['SystemAdmin'],permissions:[ADMIN_PERMISSIONS.coachingView]});expect(visible()).toBe(false);
+  });
   afterEach(() => TestBed.resetTestingModule());
 
   it('shows the shared coaching catalog only to a permitted global admin', () => {
