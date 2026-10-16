@@ -14,6 +14,10 @@ public sealed class CoachingAccountDirectoryClient(HttpClient http, IConfigurati
     private readonly string baseUrl = (configuration["Services:IdentityService"] ?? "http://localhost:5001").TrimEnd('/');
     private readonly string? key = configuration["INTERNAL_SERVICE_API_KEY"] ?? configuration["Internal:ServiceApiKey"];
 
+    public async Task<CoachingLegacySnapshot> GetLegacySnapshotAsync(CancellationToken ct) =>
+        await SendAsync<CoachingLegacySnapshot>(HttpMethod.Get, "legacy-profile-snapshot", null, ct)
+        ?? throw new InvalidOperationException("Legacy profile snapshot is unavailable.");
+
     public async Task<IReadOnlyList<CoachingAccount>> GetAccountsAsync(IReadOnlyCollection<Guid> userIds, CancellationToken ct)
     {
         var result = new List<CoachingAccount>();

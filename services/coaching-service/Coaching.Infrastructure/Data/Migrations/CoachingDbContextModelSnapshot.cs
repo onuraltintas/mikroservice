@@ -983,6 +983,9 @@ namespace Coaching.Infrastructure.Data.Migrations
                     b.Property<int>("ExamResultCount")
                         .HasColumnType("integer");
 
+                    b.Property<int>("FinanceRecordCount")
+                        .HasColumnType("integer");
+
                     b.Property<int>("GoalCount")
                         .HasColumnType("integer");
 
@@ -996,9 +999,6 @@ namespace Coaching.Infrastructure.Data.Migrations
                         .HasColumnType("integer");
 
                     b.Property<int>("StudyPlanningRecordCount")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("FinanceRecordCount")
                         .HasColumnType("integer");
 
                     b.Property<Guid>("SubjectUserId")
@@ -2562,6 +2562,264 @@ namespace Coaching.Infrastructure.Data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Coaching.Domain.Profiles.CoachingInstitutionMembership", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("InstitutionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("Role")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "Role")
+                        .IsUnique()
+                        .HasFilter("\"IsActive\"");
+
+                    b.HasIndex("InstitutionId", "Role", "IsActive");
+
+                    b.HasIndex("InstitutionId", "UserId", "Role")
+                        .IsUnique();
+
+                    b.ToTable("institution_memberships", "coaching", t =>
+                        {
+                            t.HasCheckConstraint("ck_coaching_member_role", "\"Role\" IN (1, 2)");
+                        });
+                });
+
+            modelBuilder.Entity("Coaching.Domain.Profiles.CoachingStudentProfile", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AvatarUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("Bio")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<DateOnly?>("BirthDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("ClassBranch")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<int>("EducationStatus")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("GradeLevel")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("GraduationYear")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("SchoolCity")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("SchoolDistrict")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("SchoolName")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("SchoolType")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<bool>("ShareProgressWithTeachers")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasAlternateKey("UserId")
+                        .HasName("ak_coaching_student_profile_user");
+
+                    b.HasIndex("IsActive", "GradeLevel");
+
+                    b.ToTable("student_profiles", "coaching", t =>
+                        {
+                            t.HasCheckConstraint("ck_coaching_student_education", "\"EducationStatus\" BETWEEN 0 AND 2 AND ((\"EducationStatus\" = 1 AND \"GradeLevel\" BETWEEN 1 AND 12 AND \"GradeLevel\" IS NOT NULL) OR (\"EducationStatus\" <> 1 AND \"GradeLevel\" IS NULL))");
+
+                            t.HasCheckConstraint("ck_coaching_student_graduation", "\"GraduationYear\" IS NULL OR (\"EducationStatus\" = 2 AND \"GraduationYear\" BETWEEN 1900 AND 9999)");
+                        });
+                });
+
+            modelBuilder.Entity("Coaching.Domain.Profiles.CoachingTeacherProfile", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AvatarUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("Bio")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<bool>("CanViewAllInstitutionStudents")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<int?>("ExperienceYears")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("SubjectsJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("Title")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasAlternateKey("UserId")
+                        .HasName("ak_coaching_teacher_profile_user");
+
+                    b.ToTable("teacher_profiles", "coaching");
+                });
+
+            modelBuilder.Entity("Coaching.Domain.Profiles.CoachingTeacherStudentAssignment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("EndDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("InstitutionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("StudentUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Subject")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<Guid>("TeacherUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("InstitutionId", "IsActive");
+
+                    b.HasIndex("StudentUserId", "IsActive");
+
+                    b.HasIndex("TeacherUserId", "StudentUserId", "InstitutionId", "Subject")
+                        .IsUnique();
+
+                    NpgsqlIndexBuilderExtensions.AreNullsDistinct(b.HasIndex("TeacherUserId", "StudentUserId", "InstitutionId", "Subject"), false);
+
+                    b.ToTable("teacher_student_assignments", "coaching", t =>
+                        {
+                            t.HasCheckConstraint("ck_coaching_assignment_end", "(\"IsActive\" AND \"EndDate\" IS NULL) OR (NOT \"IsActive\" AND \"EndDate\" IS NOT NULL)");
+
+                            t.HasCheckConstraint("ck_coaching_assignment_users", "\"TeacherUserId\" <> \"StudentUserId\"");
+                        });
+                });
+
             modelBuilder.Entity("EduPlatform.Shared.Infrastructure.Middleware.AdminAuditRecord", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2939,6 +3197,23 @@ namespace Coaching.Infrastructure.Data.Migrations
                         .WithMany()
                         .HasForeignKey("RevisionId", "StudentId")
                         .HasPrincipalKey("Id", "StudentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Coaching.Domain.Profiles.CoachingTeacherStudentAssignment", b =>
+                {
+                    b.HasOne("Coaching.Domain.Profiles.CoachingStudentProfile", null)
+                        .WithMany()
+                        .HasForeignKey("StudentUserId")
+                        .HasPrincipalKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Coaching.Domain.Profiles.CoachingTeacherProfile", null)
+                        .WithMany()
+                        .HasForeignKey("TeacherUserId")
+                        .HasPrincipalKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

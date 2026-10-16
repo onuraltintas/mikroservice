@@ -10,6 +10,12 @@ namespace Identity.API.Controllers;
 [Route("api/internal/coaching")]
 public sealed class InternalCoachingController : ControllerBase
 {
+    [HttpGet("legacy-profile-snapshot")]
+    [AllowAnonymous]
+    [InternalServiceKey]
+    public async Task<IActionResult> LegacyProfileSnapshot(
+        [FromServices] Identity.Infrastructure.Services.CoachingLegacyProfileReader reader, CancellationToken ct) => Ok(await reader.ReadAsync(ct));
+
     [HttpPost("accounts")]
     [AllowAnonymous]
     [InternalServiceKey]

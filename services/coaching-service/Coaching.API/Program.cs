@@ -28,11 +28,12 @@ if (File.Exists(envPath))
 var builder = WebApplication.CreateBuilder(args);
 var migrationOnly = args.Any(argument =>
     string.Equals(argument, "--migrate-only", StringComparison.OrdinalIgnoreCase));
+var profileImportOnly = args.Any(argument => string.Equals(argument, "--import-identity-profiles", StringComparison.OrdinalIgnoreCase));
 
 // Production deployments run migrations in a dedicated one-shot container.
 // Keeping this mode separate from the web host avoids every replica racing to
 // migrate the database during a rolling deployment.
-if (migrationOnly)
+if (migrationOnly || profileImportOnly)
 {
     var migrationConnectionString = builder.Configuration.GetConnectionString("DefaultConnection");
     if (string.IsNullOrEmpty(migrationConnectionString))
@@ -51,10 +52,24 @@ if (migrationOnly)
         options.UseNpgsql(migrationConnectionString, npgsqlOptions =>
             npgsqlOptions.MigrationsHistoryTable("__ef_migrations_history", "coaching")));
 
+    builder.Services.AddHttpClient<Coaching.Application.Interfaces.ICoachingAgreementRepresentativeAuthorizationClient,
+        Coaching.Infrastructure.ExternalServices.IdentityAuthorizationClient>(client => client.Timeout = TimeSpan.FromSeconds(30));
+    builder.Services.AddHttpClient<Coaching.Infrastructure.ExternalServices.CoachingAccountDirectoryClient>(client => client.Timeout = TimeSpan.FromSeconds(30));
+    builder.Services.AddScoped<Coaching.Application.Profiles.ICoachingAccountDirectory>(sp =>
+        sp.GetRequiredService<Coaching.Infrastructure.ExternalServices.CoachingAccountDirectoryClient>());
+    builder.Services.AddScoped<Coaching.Infrastructure.Profiles.CoachingProfileImporter>();
     await using var migrationApp = builder.Build();
     await using var migrationScope = migrationApp.Services.CreateAsyncScope();
     var migrationDb = migrationScope.ServiceProvider.GetRequiredService<CoachingDbContext>();
-    await migrationDb.Database.MigrateAsync();
+    if (migrationOnly) await migrationDb.Database.MigrateAsync();
+    else
+    {
+        var snapshot = await migrationScope.ServiceProvider.GetRequiredService<Coaching.Infrastructure.ExternalServices.CoachingAccountDirectoryClient>()
+            .GetLegacySnapshotAsync(CancellationToken.None);
+        var report = await migrationScope.ServiceProvider.GetRequiredService<Coaching.Infrastructure.Profiles.CoachingProfileImporter>()
+            .ImportAsync(snapshot, args.Contains("--apply", StringComparer.OrdinalIgnoreCase), CancellationToken.None);
+        Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(report));
+    }
     return;
 }
 
