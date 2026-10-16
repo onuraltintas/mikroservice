@@ -4,6 +4,7 @@ using Coaching.Domain.Entities;
 using Coaching.Infrastructure.Data;
 using EduPlatform.Shared.Kernel.Exceptions;
 using Microsoft.EntityFrameworkCore;
+using Coaching.Infrastructure.Catalogs;
 
 namespace Coaching.Infrastructure.StudyPlanning;
 
@@ -20,6 +21,11 @@ public sealed class CoachingAutomaticStudyPlanPreviewService(CoachingDbContext d
             || request.Topics.Any(x => x is null || x.TopicId == Guid.Empty || x.RequiredMinutes is < 1 or > 1440)
             || request.Topics.Select(x => x.TopicId).Distinct().Count() != request.Topics.Count)
             throw new ArgumentException("Geçerli tarih, konu ve çalışma süreleri seçin.");
+        if (request.Topics.Any(t => t.Outcomes is not null && (t.RequiredMinutes.HasValue || t.Outcomes.Count is < 1 or > 100
+            || t.Outcomes.Any(o => o is null || o.OutcomeId == Guid.Empty || o.EstimateId == Guid.Empty || o.RequiredMinutes is < 1 or > 1440)
+            || t.Outcomes.Select(o => o.OutcomeId).Distinct().Count() != t.Outcomes.Count))
+            || request.Topics.Sum(t => t.Outcomes?.Count ?? 0) > 500)
+            throw new ArgumentException("Konu süresi veya en fazla 500 sürümlü kazanım seçin; ikisini aynı anda göndermeyin.");
     }
 
     public async Task<AutomaticStudyPreview> PreviewAsync(AutomaticStudyPreviewRequest request,
@@ -56,9 +62,30 @@ public sealed class CoachingAutomaticStudyPlanPreviewService(CoachingDbContext d
                              select topic).ToDictionaryAsync(x => x.Id, cancellationToken);
         if (catalog.Count != ids.Length)
             throw new ArgumentException("Seçilen konulardan biri artık kullanılamıyor.");
-        var topics = request.Topics.Select(x => new AutomaticStudyTopic(x.TopicId,
-            x.RequiredMinutes ?? catalog[x.TopicId].EstimatedMinutes
-            ?? throw new ArgumentException("Süresi tanımlanmamış konu için çalışma süresi belirtin."))).ToArray();
+        var selectedOutcomes = new List<ResolvedStudyOutcome>();
+        var academicYear = request.Topics.Any(x => x.Outcomes is not null)
+            ? await CoachingOutcomeCatalogService.AcademicYearAsync(db, studentId, cancellationToken) : 0;
+        foreach (var selection in request.Topics.Where(x => x.Outcomes is not null))
+        {
+            var published = await CoachingOutcomeCatalogService.ReadPublishedAsync(db, selection.TopicId, academicYear, cancellationToken);
+            foreach (var chosen in selection.Outcomes!)
+            {
+                var outcome = published.SingleOrDefault(x => x.OutcomeId == chosen.OutcomeId && x.EstimateId == chosen.EstimateId)
+                    ?? throw new ArgumentException("Kazanım eşleştirmesi veya süre sürümü değişti. Kazanımları yeniden yükleyin.");
+                selectedOutcomes.Add(new(selection.TopicId, outcome.OutcomeId, outcome.EstimateId, chosen.RequiredMinutes ?? outcome.TotalMinutes,
+                    chosen.RequiredMinutes.HasValue && chosen.RequiredMinutes != outcome.TotalMinutes ? "StudentOverride" : "Catalog"));
+            }
+        }
+        var resolved = StudyOutcomeAllocation.Deduplicate(selectedOutcomes);
+        var topics = new List<AutomaticStudyTopic>();
+        foreach (var selection in request.Topics)
+        {
+            var minutes = selection.Outcomes is not null ? resolved.Where(x => x.TopicId == selection.TopicId).Sum(x => x.Minutes)
+                : selection.RequiredMinutes ?? catalog[selection.TopicId].EstimatedMinutes
+                    ?? throw new ArgumentException("Süresi tanımlanmamış konu için çalışma süresi belirtin.");
+            if (minutes > 1440) throw new ArgumentException("Bir konu için toplam süre 1440 dakikayı geçemez; kazanım seçimini azaltın.");
+            if (minutes > 0) topics.Add(new(selection.TopicId, minutes));
+        }
         var revision = await db.StudyPlanRevisions.AsNoTracking()
             .SingleOrDefaultAsync(x => x.StudentId == studentId && x.Status == StudyPlanStatus.Active, cancellationToken);
         var endDate = request.StartDate.AddDays(request.Days - 1);
@@ -75,6 +102,6 @@ public sealed class CoachingAutomaticStudyPlanPreviewService(CoachingDbContext d
         if (pinnedCount + schedule.Tasks.Count > 500)
             throw new ArgumentException("Korunan sabit çalışmalar dahil en fazla 500 çalışma planlanabilir. Konu sayısını azaltın.");
         // Advisory preview only: saving later must revalidate both returned versions.
-        return new(availability.Version, availability.TimeZoneId, revision?.Id, revision?.Version, protectedTasks, schedule);
+        return new(availability.Version, availability.TimeZoneId, revision?.Id, revision?.Version, protectedTasks, schedule, resolved);
     }
 }

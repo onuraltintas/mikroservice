@@ -1,0 +1,911 @@
+{
+  "code": "meb-2018-lgs-matematik-2026-pilot-v1",
+  "examCode": "LGS",
+  "gradeNumber": 8,
+  "subjectName": "Matematik",
+  "academicYearStart": 2026,
+  "academicYearEnd": 2026,
+  "sourceUrl": "https://mufredat.meb.gov.tr/Dosyalar/201813017165445-MATEMAT%C4%B0K%20%C3%96%C4%9ERET%C4%B0M%20PROGRAMI%202018v.pdf",
+  "documentSha256": "ca94096da33478c822772425b1384bacdbe40548b0813302257fec7e8c9f9c8b",
+  "scopeEvidenceUrl": "https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316",
+  "officialTopics": [
+    {
+      "code": "M.8.1.1",
+      "name": "Çarpanlar ve Katlar",
+      "outcomeCount": 3,
+      "lessonPeriods": 10
+    },
+    {
+      "code": "M.8.1.2",
+      "name": "Üslü İfadeler",
+      "outcomeCount": 5,
+      "lessonPeriods": 15
+    },
+    {
+      "code": "M.8.1.3",
+      "name": "Kareköklü İfadeler",
+      "outcomeCount": 8,
+      "lessonPeriods": 25
+    },
+    {
+      "code": "M.8.4.1",
+      "name": "Veri Analizi",
+      "outcomeCount": 2,
+      "lessonPeriods": 12
+    },
+    {
+      "code": "M.8.5.1",
+      "name": "Basit Olayların Olma Olasılığı",
+      "outcomeCount": 5,
+      "lessonPeriods": 12
+    },
+    {
+      "code": "M.8.2.1",
+      "name": "Cebirsel İfadeler ve Özdeşlikler",
+      "outcomeCount": 4,
+      "lessonPeriods": 15
+    },
+    {
+      "code": "M.8.2.2",
+      "name": "Doğrusal Denklemler",
+      "outcomeCount": 6,
+      "lessonPeriods": 30
+    },
+    {
+      "code": "M.8.2.3",
+      "name": "Eşitsizlikler",
+      "outcomeCount": 3,
+      "lessonPeriods": 10
+    },
+    {
+      "code": "M.8.3.1",
+      "name": "Üçgenler",
+      "outcomeCount": 5,
+      "lessonPeriods": 18
+    },
+    {
+      "code": "M.8.3.3",
+      "name": "Eşlik ve Benzerlik",
+      "outcomeCount": 2,
+      "lessonPeriods": 8
+    },
+    {
+      "code": "M.8.3.2",
+      "name": "Dönüşüm Geometrisi",
+      "outcomeCount": 3,
+      "lessonPeriods": 10
+    },
+    {
+      "code": "M.8.3.4",
+      "name": "Geometrik Cisimler",
+      "outcomeCount": 6,
+      "lessonPeriods": 15
+    }
+  ],
+  "outcomes": [
+    {
+      "code": "M.8.1.1.1",
+      "name": "Verilen pozitif tam sayıların pozitif tam sayı çarpanlarını bulur, pozitif tam sayıların pozitif tam sayı çarpanlarını üslü ifadelerin çarpımı şeklinde yazar.",
+      "notes": "Açıklamalar ve kapsam sınırlamaları için kaynak belgedeki sayfayı inceleyin.",
+      "officialTopicCode": "M.8.1.1",
+      "sourcePage": 73,
+      "displayOrder": 1,
+      "learningMinutes": 55,
+      "practiceMinutes": 65,
+      "checkMinutes": 15,
+      "durationEvidence": "Taslak referans: resmi M.8.1.1 konu bütçesi 10 ders saati / 3 kazanım. Model varsayımı: ders saati başına 40 dakika, eşit dağılım, 5 dakikaya yuvarlama; %40 öğrenme, yaklaşık %50 alıştırma, %10 kontrol. Bireysel öğrenme süresi MEB tarafından verilmemiştir. Mola/video süresi yoktur. Öğretmen incelemesi olmadan yayınlanamaz.",
+      "sources": [
+        {
+          "source": "MEBI",
+          "sourceId": "6106e9d7-906c-4e89-67ae-08dc0d117274"
+        }
+      ]
+    },
+    {
+      "code": "M.8.1.1.2",
+      "name": "İki doğal sayının en büyük ortak bölenini (EBOB) ve en küçük ortak katını (EKOK) hesaplar, ilgili problemleri çözer.",
+      "notes": "Açıklamalar ve kapsam sınırlamaları için kaynak belgedeki sayfayı inceleyin.",
+      "officialTopicCode": "M.8.1.1",
+      "sourcePage": 73,
+      "displayOrder": 2,
+      "learningMinutes": 55,
+      "practiceMinutes": 65,
+      "checkMinutes": 15,
+      "durationEvidence": "Taslak referans: resmi M.8.1.1 konu bütçesi 10 ders saati / 3 kazanım. Model varsayımı: ders saati başına 40 dakika, eşit dağılım, 5 dakikaya yuvarlama; %40 öğrenme, yaklaşık %50 alıştırma, %10 kontrol. Bireysel öğrenme süresi MEB tarafından verilmemiştir. Mola/video süresi yoktur. Öğretmen incelemesi olmadan yayınlanamaz.",
+      "sources": [
+        {
+          "source": "MEBI",
+          "sourceId": "730d66e8-d13b-4bf9-67af-08dc0d117274"
+        }
+      ]
+    },
+    {
+      "code": "M.8.1.1.3",
+      "name": "Verilen iki doğal sayının aralarında asal olup olmadığını belirler.",
+      "notes": "Açıklamalar ve kapsam sınırlamaları için kaynak belgedeki sayfayı inceleyin.",
+      "officialTopicCode": "M.8.1.1",
+      "sourcePage": 73,
+      "displayOrder": 3,
+      "learningMinutes": 55,
+      "practiceMinutes": 65,
+      "checkMinutes": 15,
+      "durationEvidence": "Taslak referans: resmi M.8.1.1 konu bütçesi 10 ders saati / 3 kazanım. Model varsayımı: ders saati başına 40 dakika, eşit dağılım, 5 dakikaya yuvarlama; %40 öğrenme, yaklaşık %50 alıştırma, %10 kontrol. Bireysel öğrenme süresi MEB tarafından verilmemiştir. Mola/video süresi yoktur. Öğretmen incelemesi olmadan yayınlanamaz.",
+      "sources": []
+    },
+    {
+      "code": "M.8.1.2.1",
+      "name": "Tam sayıların, tam sayı kuvvetlerini hesaplar.",
+      "notes": "Açıklamalar ve kapsam sınırlamaları için kaynak belgedeki sayfayı inceleyin.",
+      "officialTopicCode": "M.8.1.2",
+      "sourcePage": 73,
+      "displayOrder": 4,
+      "learningMinutes": 50,
+      "practiceMinutes": 60,
+      "checkMinutes": 10,
+      "durationEvidence": "Taslak referans: resmi M.8.1.2 konu bütçesi 15 ders saati / 5 kazanım. Model varsayımı: ders saati başına 40 dakika, eşit dağılım, 5 dakikaya yuvarlama; %40 öğrenme, yaklaşık %50 alıştırma, %10 kontrol. Bireysel öğrenme süresi MEB tarafından verilmemiştir. Mola/video süresi yoktur. Öğretmen incelemesi olmadan yayınlanamaz.",
+      "sources": []
+    },
+    {
+      "code": "M.8.1.2.2",
+      "name": "Üslü ifadelerle ilgili temel kuralları anlar, birbirine denk ifadeler oluşturur.",
+      "notes": "Açıklamalar ve kapsam sınırlamaları için kaynak belgedeki sayfayı inceleyin.",
+      "officialTopicCode": "M.8.1.2",
+      "sourcePage": 73,
+      "displayOrder": 5,
+      "learningMinutes": 50,
+      "practiceMinutes": 60,
+      "checkMinutes": 10,
+      "durationEvidence": "Taslak referans: resmi M.8.1.2 konu bütçesi 15 ders saati / 5 kazanım. Model varsayımı: ders saati başına 40 dakika, eşit dağılım, 5 dakikaya yuvarlama; %40 öğrenme, yaklaşık %50 alıştırma, %10 kontrol. Bireysel öğrenme süresi MEB tarafından verilmemiştir. Mola/video süresi yoktur. Öğretmen incelemesi olmadan yayınlanamaz.",
+      "sources": []
+    },
+    {
+      "code": "M.8.1.2.3",
+      "name": "Sayıların ondalık gösterimlerini 10’un tam sayı kuvvetlerini kullanarak çözümler.",
+      "notes": "Açıklamalar ve kapsam sınırlamaları için kaynak belgedeki sayfayı inceleyin.",
+      "officialTopicCode": "M.8.1.2",
+      "sourcePage": 73,
+      "displayOrder": 6,
+      "learningMinutes": 50,
+      "practiceMinutes": 60,
+      "checkMinutes": 10,
+      "durationEvidence": "Taslak referans: resmi M.8.1.2 konu bütçesi 15 ders saati / 5 kazanım. Model varsayımı: ders saati başına 40 dakika, eşit dağılım, 5 dakikaya yuvarlama; %40 öğrenme, yaklaşık %50 alıştırma, %10 kontrol. Bireysel öğrenme süresi MEB tarafından verilmemiştir. Mola/video süresi yoktur. Öğretmen incelemesi olmadan yayınlanamaz.",
+      "sources": []
+    },
+    {
+      "code": "M.8.1.2.4",
+      "name": "Verilen bir sayıyı 10’un farklı tam sayı kuvvetlerini kullanarak ifade eder.",
+      "notes": "Açıklamalar ve kapsam sınırlamaları için kaynak belgedeki sayfayı inceleyin.",
+      "officialTopicCode": "M.8.1.2",
+      "sourcePage": 73,
+      "displayOrder": 7,
+      "learningMinutes": 50,
+      "practiceMinutes": 60,
+      "checkMinutes": 10,
+      "durationEvidence": "Taslak referans: resmi M.8.1.2 konu bütçesi 15 ders saati / 5 kazanım. Model varsayımı: ders saati başına 40 dakika, eşit dağılım, 5 dakikaya yuvarlama; %40 öğrenme, yaklaşık %50 alıştırma, %10 kontrol. Bireysel öğrenme süresi MEB tarafından verilmemiştir. Mola/video süresi yoktur. Öğretmen incelemesi olmadan yayınlanamaz.",
+      "sources": []
+    },
+    {
+      "code": "M.8.1.2.5",
+      "name": "Çok büyük ve çok küçük sayıları bilimsel gösterimle ifade eder ve karşılaştırır.",
+      "notes": "Açıklamalar ve kapsam sınırlamaları için kaynak belgedeki sayfayı inceleyin.",
+      "officialTopicCode": "M.8.1.2",
+      "sourcePage": 73,
+      "displayOrder": 8,
+      "learningMinutes": 50,
+      "practiceMinutes": 60,
+      "checkMinutes": 10,
+      "durationEvidence": "Taslak referans: resmi M.8.1.2 konu bütçesi 15 ders saati / 5 kazanım. Model varsayımı: ders saati başına 40 dakika, eşit dağılım, 5 dakikaya yuvarlama; %40 öğrenme, yaklaşık %50 alıştırma, %10 kontrol. Bireysel öğrenme süresi MEB tarafından verilmemiştir. Mola/video süresi yoktur. Öğretmen incelemesi olmadan yayınlanamaz.",
+      "sources": []
+    },
+    {
+      "code": "M.8.1.3.1",
+      "name": "Tam kare pozitif tam sayılarla bu sayıların karekökleri arasındaki ilişkiyi belirler.",
+      "notes": "Açıklamalar ve kapsam sınırlamaları için kaynak belgedeki sayfayı inceleyin.",
+      "officialTopicCode": "M.8.1.3",
+      "sourcePage": 73,
+      "displayOrder": 9,
+      "learningMinutes": 50,
+      "practiceMinutes": 60,
+      "checkMinutes": 15,
+      "durationEvidence": "Taslak referans: resmi M.8.1.3 konu bütçesi 25 ders saati / 8 kazanım. Model varsayımı: ders saati başına 40 dakika, eşit dağılım, 5 dakikaya yuvarlama; %40 öğrenme, yaklaşık %50 alıştırma, %10 kontrol. Bireysel öğrenme süresi MEB tarafından verilmemiştir. Mola/video süresi yoktur. Öğretmen incelemesi olmadan yayınlanamaz.",
+      "sources": []
+    },
+    {
+      "code": "M.8.1.3.2",
+      "name": "Tam kare olmayan kareköklü bir sayının hangi iki doğal sayı arasında olduğunu belirler.",
+      "notes": "Açıklamalar ve kapsam sınırlamaları için kaynak belgedeki sayfayı inceleyin.",
+      "officialTopicCode": "M.8.1.3",
+      "sourcePage": 74,
+      "displayOrder": 10,
+      "learningMinutes": 50,
+      "practiceMinutes": 60,
+      "checkMinutes": 15,
+      "durationEvidence": "Taslak referans: resmi M.8.1.3 konu bütçesi 25 ders saati / 8 kazanım. Model varsayımı: ders saati başına 40 dakika, eşit dağılım, 5 dakikaya yuvarlama; %40 öğrenme, yaklaşık %50 alıştırma, %10 kontrol. Bireysel öğrenme süresi MEB tarafından verilmemiştir. Mola/video süresi yoktur. Öğretmen incelemesi olmadan yayınlanamaz.",
+      "sources": []
+    },
+    {
+      "code": "M.8.1.3.3",
+      "name": "Kareköklü bir ifadeyi a√b şeklinde yazar ve a√b şeklindeki ifadede katsayıyı kök içine alır.",
+      "notes": "Açıklamalar ve kapsam sınırlamaları için kaynak belgedeki sayfayı inceleyin.",
+      "officialTopicCode": "M.8.1.3",
+      "sourcePage": 74,
+      "displayOrder": 11,
+      "learningMinutes": 50,
+      "practiceMinutes": 60,
+      "checkMinutes": 15,
+      "durationEvidence": "Taslak referans: resmi M.8.1.3 konu bütçesi 25 ders saati / 8 kazanım. Model varsayımı: ders saati başına 40 dakika, eşit dağılım, 5 dakikaya yuvarlama; %40 öğrenme, yaklaşık %50 alıştırma, %10 kontrol. Bireysel öğrenme süresi MEB tarafından verilmemiştir. Mola/video süresi yoktur. Öğretmen incelemesi olmadan yayınlanamaz.",
+      "sources": []
+    },
+    {
+      "code": "M.8.1.3.4",
+      "name": "Kareköklü ifadelerde çarpma ve bölme işlemlerini yapar.",
+      "notes": "Açıklamalar ve kapsam sınırlamaları için kaynak belgedeki sayfayı inceleyin.",
+      "officialTopicCode": "M.8.1.3",
+      "sourcePage": 74,
+      "displayOrder": 12,
+      "learningMinutes": 50,
+      "practiceMinutes": 60,
+      "checkMinutes": 15,
+      "durationEvidence": "Taslak referans: resmi M.8.1.3 konu bütçesi 25 ders saati / 8 kazanım. Model varsayımı: ders saati başına 40 dakika, eşit dağılım, 5 dakikaya yuvarlama; %40 öğrenme, yaklaşık %50 alıştırma, %10 kontrol. Bireysel öğrenme süresi MEB tarafından verilmemiştir. Mola/video süresi yoktur. Öğretmen incelemesi olmadan yayınlanamaz.",
+      "sources": []
+    },
+    {
+      "code": "M.8.1.3.5",
+      "name": "Kareköklü ifadelerde toplama ve çıkarma işlemlerini yapar.",
+      "notes": "Açıklamalar ve kapsam sınırlamaları için kaynak belgedeki sayfayı inceleyin.",
+      "officialTopicCode": "M.8.1.3",
+      "sourcePage": 74,
+      "displayOrder": 13,
+      "learningMinutes": 50,
+      "practiceMinutes": 60,
+      "checkMinutes": 15,
+      "durationEvidence": "Taslak referans: resmi M.8.1.3 konu bütçesi 25 ders saati / 8 kazanım. Model varsayımı: ders saati başına 40 dakika, eşit dağılım, 5 dakikaya yuvarlama; %40 öğrenme, yaklaşık %50 alıştırma, %10 kontrol. Bireysel öğrenme süresi MEB tarafından verilmemiştir. Mola/video süresi yoktur. Öğretmen incelemesi olmadan yayınlanamaz.",
+      "sources": []
+    },
+    {
+      "code": "M.8.1.3.6",
+      "name": "Kareköklü bir ifade ile çarpıldığında, sonucu bir doğal sayı yapan çarpanlara örnek verir.",
+      "notes": "Açıklamalar ve kapsam sınırlamaları için kaynak belgedeki sayfayı inceleyin.",
+      "officialTopicCode": "M.8.1.3",
+      "sourcePage": 74,
+      "displayOrder": 14,
+      "learningMinutes": 50,
+      "practiceMinutes": 60,
+      "checkMinutes": 15,
+      "durationEvidence": "Taslak referans: resmi M.8.1.3 konu bütçesi 25 ders saati / 8 kazanım. Model varsayımı: ders saati başına 40 dakika, eşit dağılım, 5 dakikaya yuvarlama; %40 öğrenme, yaklaşık %50 alıştırma, %10 kontrol. Bireysel öğrenme süresi MEB tarafından verilmemiştir. Mola/video süresi yoktur. Öğretmen incelemesi olmadan yayınlanamaz.",
+      "sources": []
+    },
+    {
+      "code": "M.8.1.3.7",
+      "name": "Ondalık ifadelerin kareköklerini belirler.",
+      "notes": "Açıklamalar ve kapsam sınırlamaları için kaynak belgedeki sayfayı inceleyin.",
+      "officialTopicCode": "M.8.1.3",
+      "sourcePage": 74,
+      "displayOrder": 15,
+      "learningMinutes": 50,
+      "practiceMinutes": 60,
+      "checkMinutes": 15,
+      "durationEvidence": "Taslak referans: resmi M.8.1.3 konu bütçesi 25 ders saati / 8 kazanım. Model varsayımı: ders saati başına 40 dakika, eşit dağılım, 5 dakikaya yuvarlama; %40 öğrenme, yaklaşık %50 alıştırma, %10 kontrol. Bireysel öğrenme süresi MEB tarafından verilmemiştir. Mola/video süresi yoktur. Öğretmen incelemesi olmadan yayınlanamaz.",
+      "sources": []
+    },
+    {
+      "code": "M.8.1.3.8",
+      "name": "Gerçek sayıları tanır, rasyonel ve irrasyonel sayılarla ilişkilendirir.",
+      "notes": "Açıklamalar ve kapsam sınırlamaları için kaynak belgedeki sayfayı inceleyin.",
+      "officialTopicCode": "M.8.1.3",
+      "sourcePage": 74,
+      "displayOrder": 16,
+      "learningMinutes": 50,
+      "practiceMinutes": 60,
+      "checkMinutes": 15,
+      "durationEvidence": "Taslak referans: resmi M.8.1.3 konu bütçesi 25 ders saati / 8 kazanım. Model varsayımı: ders saati başına 40 dakika, eşit dağılım, 5 dakikaya yuvarlama; %40 öğrenme, yaklaşık %50 alıştırma, %10 kontrol. Bireysel öğrenme süresi MEB tarafından verilmemiştir. Mola/video süresi yoktur. Öğretmen incelemesi olmadan yayınlanamaz.",
+      "sources": []
+    },
+    {
+      "code": "M.8.4.1.1",
+      "name": "En fazla üç veri grubuna ait çizgi ve sütun grafiklerini yorumlar.",
+      "notes": "Açıklamalar ve kapsam sınırlamaları için kaynak belgedeki sayfayı inceleyin.",
+      "officialTopicCode": "M.8.4.1",
+      "sourcePage": 78,
+      "displayOrder": 17,
+      "learningMinutes": 95,
+      "practiceMinutes": 120,
+      "checkMinutes": 25,
+      "durationEvidence": "Taslak referans: resmi M.8.4.1 konu bütçesi 12 ders saati / 2 kazanım. Model varsayımı: ders saati başına 40 dakika, eşit dağılım, 5 dakikaya yuvarlama; %40 öğrenme, yaklaşık %50 alıştırma, %10 kontrol. Bireysel öğrenme süresi MEB tarafından verilmemiştir. Mola/video süresi yoktur. Öğretmen incelemesi olmadan yayınlanamaz.",
+      "sources": []
+    },
+    {
+      "code": "M.8.4.1.2",
+      "name": "Verileri sütun, daire veya çizgi grafiği ile gösterir ve bu gösterimler arasında uygun olan dönüşümleri yapar.",
+      "notes": "Açıklamalar ve kapsam sınırlamaları için kaynak belgedeki sayfayı inceleyin.",
+      "officialTopicCode": "M.8.4.1",
+      "sourcePage": 78,
+      "displayOrder": 18,
+      "learningMinutes": 95,
+      "practiceMinutes": 120,
+      "checkMinutes": 25,
+      "durationEvidence": "Taslak referans: resmi M.8.4.1 konu bütçesi 12 ders saati / 2 kazanım. Model varsayımı: ders saati başına 40 dakika, eşit dağılım, 5 dakikaya yuvarlama; %40 öğrenme, yaklaşık %50 alıştırma, %10 kontrol. Bireysel öğrenme süresi MEB tarafından verilmemiştir. Mola/video süresi yoktur. Öğretmen incelemesi olmadan yayınlanamaz.",
+      "sources": []
+    },
+    {
+      "code": "M.8.5.1.1",
+      "name": "Bir olaya ait olası durumları belirler.",
+      "notes": "Açıklamalar ve kapsam sınırlamaları için kaynak belgedeki sayfayı inceleyin.",
+      "officialTopicCode": "M.8.5.1",
+      "sourcePage": 78,
+      "displayOrder": 19,
+      "learningMinutes": 40,
+      "practiceMinutes": 45,
+      "checkMinutes": 10,
+      "durationEvidence": "Taslak referans: resmi M.8.5.1 konu bütçesi 12 ders saati / 5 kazanım. Model varsayımı: ders saati başına 40 dakika, eşit dağılım, 5 dakikaya yuvarlama; %40 öğrenme, yaklaşık %50 alıştırma, %10 kontrol. Bireysel öğrenme süresi MEB tarafından verilmemiştir. Mola/video süresi yoktur. Öğretmen incelemesi olmadan yayınlanamaz.",
+      "sources": []
+    },
+    {
+      "code": "M.8.5.1.2",
+      "name": "“Daha fazla”, “eşit”, “daha az” olasılıklı olayları ayırt eder, örnek verir.",
+      "notes": "Açıklamalar ve kapsam sınırlamaları için kaynak belgedeki sayfayı inceleyin.",
+      "officialTopicCode": "M.8.5.1",
+      "sourcePage": 78,
+      "displayOrder": 20,
+      "learningMinutes": 40,
+      "practiceMinutes": 45,
+      "checkMinutes": 10,
+      "durationEvidence": "Taslak referans: resmi M.8.5.1 konu bütçesi 12 ders saati / 5 kazanım. Model varsayımı: ders saati başına 40 dakika, eşit dağılım, 5 dakikaya yuvarlama; %40 öğrenme, yaklaşık %50 alıştırma, %10 kontrol. Bireysel öğrenme süresi MEB tarafından verilmemiştir. Mola/video süresi yoktur. Öğretmen incelemesi olmadan yayınlanamaz.",
+      "sources": []
+    },
+    {
+      "code": "M.8.5.1.3",
+      "name": "Eşit şansa sahip olan olaylarda her bir çıktının olasılık değerinin eşit olduğunu ve bu değerin 1/n olduğunu açıklar.",
+      "notes": "Açıklamalar ve kapsam sınırlamaları için kaynak belgedeki sayfayı inceleyin.",
+      "officialTopicCode": "M.8.5.1",
+      "sourcePage": 78,
+      "displayOrder": 21,
+      "learningMinutes": 40,
+      "practiceMinutes": 45,
+      "checkMinutes": 10,
+      "durationEvidence": "Taslak referans: resmi M.8.5.1 konu bütçesi 12 ders saati / 5 kazanım. Model varsayımı: ders saati başına 40 dakika, eşit dağılım, 5 dakikaya yuvarlama; %40 öğrenme, yaklaşık %50 alıştırma, %10 kontrol. Bireysel öğrenme süresi MEB tarafından verilmemiştir. Mola/video süresi yoktur. Öğretmen incelemesi olmadan yayınlanamaz.",
+      "sources": []
+    },
+    {
+      "code": "M.8.5.1.4",
+      "name": "Olasılık değerinin 0 ile 1 arasında (0 ve 1 dâhil) olduğunu anlar.",
+      "notes": "Açıklamalar ve kapsam sınırlamaları için kaynak belgedeki sayfayı inceleyin.",
+      "officialTopicCode": "M.8.5.1",
+      "sourcePage": 78,
+      "displayOrder": 22,
+      "learningMinutes": 40,
+      "practiceMinutes": 45,
+      "checkMinutes": 10,
+      "durationEvidence": "Taslak referans: resmi M.8.5.1 konu bütçesi 12 ders saati / 5 kazanım. Model varsayımı: ders saati başına 40 dakika, eşit dağılım, 5 dakikaya yuvarlama; %40 öğrenme, yaklaşık %50 alıştırma, %10 kontrol. Bireysel öğrenme süresi MEB tarafından verilmemiştir. Mola/video süresi yoktur. Öğretmen incelemesi olmadan yayınlanamaz.",
+      "sources": []
+    },
+    {
+      "code": "M.8.5.1.5",
+      "name": "Basit bir olayın olma olasılığını hesaplar.",
+      "notes": "Açıklamalar ve kapsam sınırlamaları için kaynak belgedeki sayfayı inceleyin.",
+      "officialTopicCode": "M.8.5.1",
+      "sourcePage": 78,
+      "displayOrder": 23,
+      "learningMinutes": 40,
+      "practiceMinutes": 45,
+      "checkMinutes": 10,
+      "durationEvidence": "Taslak referans: resmi M.8.5.1 konu bütçesi 12 ders saati / 5 kazanım. Model varsayımı: ders saati başına 40 dakika, eşit dağılım, 5 dakikaya yuvarlama; %40 öğrenme, yaklaşık %50 alıştırma, %10 kontrol. Bireysel öğrenme süresi MEB tarafından verilmemiştir. Mola/video süresi yoktur. Öğretmen incelemesi olmadan yayınlanamaz.",
+      "sources": []
+    },
+    {
+      "code": "M.8.2.1.1",
+      "name": "Basit cebirsel ifadeleri anlar ve farklı biçimlerde yazar.",
+      "notes": "Açıklamalar ve kapsam sınırlamaları için kaynak belgedeki sayfayı inceleyin.",
+      "officialTopicCode": "M.8.2.1",
+      "sourcePage": 74,
+      "displayOrder": 24,
+      "learningMinutes": 60,
+      "practiceMinutes": 75,
+      "checkMinutes": 15,
+      "durationEvidence": "Taslak referans: resmi M.8.2.1 konu bütçesi 15 ders saati / 4 kazanım. Model varsayımı: ders saati başına 40 dakika, eşit dağılım, 5 dakikaya yuvarlama; %40 öğrenme, yaklaşık %50 alıştırma, %10 kontrol. Bireysel öğrenme süresi MEB tarafından verilmemiştir. Mola/video süresi yoktur. Öğretmen incelemesi olmadan yayınlanamaz.",
+      "sources": []
+    },
+    {
+      "code": "M.8.2.1.2",
+      "name": "Cebirsel ifadelerin çarpımını yapar.",
+      "notes": "Açıklamalar ve kapsam sınırlamaları için kaynak belgedeki sayfayı inceleyin.",
+      "officialTopicCode": "M.8.2.1",
+      "sourcePage": 74,
+      "displayOrder": 25,
+      "learningMinutes": 60,
+      "practiceMinutes": 75,
+      "checkMinutes": 15,
+      "durationEvidence": "Taslak referans: resmi M.8.2.1 konu bütçesi 15 ders saati / 4 kazanım. Model varsayımı: ders saati başına 40 dakika, eşit dağılım, 5 dakikaya yuvarlama; %40 öğrenme, yaklaşık %50 alıştırma, %10 kontrol. Bireysel öğrenme süresi MEB tarafından verilmemiştir. Mola/video süresi yoktur. Öğretmen incelemesi olmadan yayınlanamaz.",
+      "sources": []
+    },
+    {
+      "code": "M.8.2.1.3",
+      "name": "Özdeşlikleri modellerle açıklar.",
+      "notes": "Açıklamalar ve kapsam sınırlamaları için kaynak belgedeki sayfayı inceleyin.",
+      "officialTopicCode": "M.8.2.1",
+      "sourcePage": 74,
+      "displayOrder": 26,
+      "learningMinutes": 60,
+      "practiceMinutes": 75,
+      "checkMinutes": 15,
+      "durationEvidence": "Taslak referans: resmi M.8.2.1 konu bütçesi 15 ders saati / 4 kazanım. Model varsayımı: ders saati başına 40 dakika, eşit dağılım, 5 dakikaya yuvarlama; %40 öğrenme, yaklaşık %50 alıştırma, %10 kontrol. Bireysel öğrenme süresi MEB tarafından verilmemiştir. Mola/video süresi yoktur. Öğretmen incelemesi olmadan yayınlanamaz.",
+      "sources": []
+    },
+    {
+      "code": "M.8.2.1.4",
+      "name": "Cebirsel ifadeleri çarpanlara ayırır.",
+      "notes": "Açıklamalar ve kapsam sınırlamaları için kaynak belgedeki sayfayı inceleyin.",
+      "officialTopicCode": "M.8.2.1",
+      "sourcePage": 74,
+      "displayOrder": 27,
+      "learningMinutes": 60,
+      "practiceMinutes": 75,
+      "checkMinutes": 15,
+      "durationEvidence": "Taslak referans: resmi M.8.2.1 konu bütçesi 15 ders saati / 4 kazanım. Model varsayımı: ders saati başına 40 dakika, eşit dağılım, 5 dakikaya yuvarlama; %40 öğrenme, yaklaşık %50 alıştırma, %10 kontrol. Bireysel öğrenme süresi MEB tarafından verilmemiştir. Mola/video süresi yoktur. Öğretmen incelemesi olmadan yayınlanamaz.",
+      "sources": []
+    },
+    {
+      "code": "M.8.2.2.1",
+      "name": "Birinci dereceden bir bilinmeyenli denklemleri çözer.",
+      "notes": "Açıklamalar ve kapsam sınırlamaları için kaynak belgedeki sayfayı inceleyin.",
+      "officialTopicCode": "M.8.2.2",
+      "sourcePage": 75,
+      "displayOrder": 28,
+      "learningMinutes": 80,
+      "practiceMinutes": 100,
+      "checkMinutes": 20,
+      "durationEvidence": "Taslak referans: resmi M.8.2.2 konu bütçesi 30 ders saati / 6 kazanım. Model varsayımı: ders saati başına 40 dakika, eşit dağılım, 5 dakikaya yuvarlama; %40 öğrenme, yaklaşık %50 alıştırma, %10 kontrol. Bireysel öğrenme süresi MEB tarafından verilmemiştir. Mola/video süresi yoktur. Öğretmen incelemesi olmadan yayınlanamaz.",
+      "sources": []
+    },
+    {
+      "code": "M.8.2.2.2",
+      "name": "Koordinat sistemini özellikleriyle tanır ve sıralı ikilileri gösterir.",
+      "notes": "Açıklamalar ve kapsam sınırlamaları için kaynak belgedeki sayfayı inceleyin.",
+      "officialTopicCode": "M.8.2.2",
+      "sourcePage": 75,
+      "displayOrder": 29,
+      "learningMinutes": 80,
+      "practiceMinutes": 100,
+      "checkMinutes": 20,
+      "durationEvidence": "Taslak referans: resmi M.8.2.2 konu bütçesi 30 ders saati / 6 kazanım. Model varsayımı: ders saati başına 40 dakika, eşit dağılım, 5 dakikaya yuvarlama; %40 öğrenme, yaklaşık %50 alıştırma, %10 kontrol. Bireysel öğrenme süresi MEB tarafından verilmemiştir. Mola/video süresi yoktur. Öğretmen incelemesi olmadan yayınlanamaz.",
+      "sources": []
+    },
+    {
+      "code": "M.8.2.2.3",
+      "name": "Aralarında doğrusal ilişki bulunan iki değişkenden birinin diğerine bağlı olarak nasıl değiştiğini tablo ve denklem ile ifade eder.",
+      "notes": "Açıklamalar ve kapsam sınırlamaları için kaynak belgedeki sayfayı inceleyin.",
+      "officialTopicCode": "M.8.2.2",
+      "sourcePage": 75,
+      "displayOrder": 30,
+      "learningMinutes": 80,
+      "practiceMinutes": 100,
+      "checkMinutes": 20,
+      "durationEvidence": "Taslak referans: resmi M.8.2.2 konu bütçesi 30 ders saati / 6 kazanım. Model varsayımı: ders saati başına 40 dakika, eşit dağılım, 5 dakikaya yuvarlama; %40 öğrenme, yaklaşık %50 alıştırma, %10 kontrol. Bireysel öğrenme süresi MEB tarafından verilmemiştir. Mola/video süresi yoktur. Öğretmen incelemesi olmadan yayınlanamaz.",
+      "sources": []
+    },
+    {
+      "code": "M.8.2.2.4",
+      "name": "Doğrusal denklemlerin grafiğini çizer.",
+      "notes": "Açıklamalar ve kapsam sınırlamaları için kaynak belgedeki sayfayı inceleyin.",
+      "officialTopicCode": "M.8.2.2",
+      "sourcePage": 75,
+      "displayOrder": 31,
+      "learningMinutes": 80,
+      "practiceMinutes": 100,
+      "checkMinutes": 20,
+      "durationEvidence": "Taslak referans: resmi M.8.2.2 konu bütçesi 30 ders saati / 6 kazanım. Model varsayımı: ders saati başına 40 dakika, eşit dağılım, 5 dakikaya yuvarlama; %40 öğrenme, yaklaşık %50 alıştırma, %10 kontrol. Bireysel öğrenme süresi MEB tarafından verilmemiştir. Mola/video süresi yoktur. Öğretmen incelemesi olmadan yayınlanamaz.",
+      "sources": []
+    },
+    {
+      "code": "M.8.2.2.5",
+      "name": "Doğrusal ilişki içeren gerçek hayat durumlarına ait denklem, tablo ve grafiği oluşturur ve yorumlar.",
+      "notes": "Açıklamalar ve kapsam sınırlamaları için kaynak belgedeki sayfayı inceleyin.",
+      "officialTopicCode": "M.8.2.2",
+      "sourcePage": 75,
+      "displayOrder": 32,
+      "learningMinutes": 80,
+      "practiceMinutes": 100,
+      "checkMinutes": 20,
+      "durationEvidence": "Taslak referans: resmi M.8.2.2 konu bütçesi 30 ders saati / 6 kazanım. Model varsayımı: ders saati başına 40 dakika, eşit dağılım, 5 dakikaya yuvarlama; %40 öğrenme, yaklaşık %50 alıştırma, %10 kontrol. Bireysel öğrenme süresi MEB tarafından verilmemiştir. Mola/video süresi yoktur. Öğretmen incelemesi olmadan yayınlanamaz.",
+      "sources": []
+    },
+    {
+      "code": "M.8.2.2.6",
+      "name": "Doğrunun eğimini modellerle açıklar, doğrusal denklemleri ve grafiklerini eğimle ilişkilendirir.",
+      "notes": "Açıklamalar ve kapsam sınırlamaları için kaynak belgedeki sayfayı inceleyin.",
+      "officialTopicCode": "M.8.2.2",
+      "sourcePage": 75,
+      "displayOrder": 33,
+      "learningMinutes": 80,
+      "practiceMinutes": 100,
+      "checkMinutes": 20,
+      "durationEvidence": "Taslak referans: resmi M.8.2.2 konu bütçesi 30 ders saati / 6 kazanım. Model varsayımı: ders saati başına 40 dakika, eşit dağılım, 5 dakikaya yuvarlama; %40 öğrenme, yaklaşık %50 alıştırma, %10 kontrol. Bireysel öğrenme süresi MEB tarafından verilmemiştir. Mola/video süresi yoktur. Öğretmen incelemesi olmadan yayınlanamaz.",
+      "sources": []
+    },
+    {
+      "code": "M.8.2.3.1",
+      "name": "Birinci dereceden bir bilinmeyenli eşitsizlik içeren günlük hayat durumlarına uygun matematik cümleleri yazar.",
+      "notes": "Açıklamalar ve kapsam sınırlamaları için kaynak belgedeki sayfayı inceleyin.",
+      "officialTopicCode": "M.8.2.3",
+      "sourcePage": 75,
+      "displayOrder": 34,
+      "learningMinutes": 55,
+      "practiceMinutes": 65,
+      "checkMinutes": 15,
+      "durationEvidence": "Taslak referans: resmi M.8.2.3 konu bütçesi 10 ders saati / 3 kazanım. Model varsayımı: ders saati başına 40 dakika, eşit dağılım, 5 dakikaya yuvarlama; %40 öğrenme, yaklaşık %50 alıştırma, %10 kontrol. Bireysel öğrenme süresi MEB tarafından verilmemiştir. Mola/video süresi yoktur. Öğretmen incelemesi olmadan yayınlanamaz.",
+      "sources": []
+    },
+    {
+      "code": "M.8.2.3.2",
+      "name": "Birinci dereceden bir bilinmeyenli eşitsizlikleri sayı doğrusunda gösterir.",
+      "notes": "Açıklamalar ve kapsam sınırlamaları için kaynak belgedeki sayfayı inceleyin.",
+      "officialTopicCode": "M.8.2.3",
+      "sourcePage": 75,
+      "displayOrder": 35,
+      "learningMinutes": 55,
+      "practiceMinutes": 65,
+      "checkMinutes": 15,
+      "durationEvidence": "Taslak referans: resmi M.8.2.3 konu bütçesi 10 ders saati / 3 kazanım. Model varsayımı: ders saati başına 40 dakika, eşit dağılım, 5 dakikaya yuvarlama; %40 öğrenme, yaklaşık %50 alıştırma, %10 kontrol. Bireysel öğrenme süresi MEB tarafından verilmemiştir. Mola/video süresi yoktur. Öğretmen incelemesi olmadan yayınlanamaz.",
+      "sources": []
+    },
+    {
+      "code": "M.8.2.3.3",
+      "name": "Birinci dereceden bir bilinmeyenli eşitsizlikleri çözer.",
+      "notes": "Açıklamalar ve kapsam sınırlamaları için kaynak belgedeki sayfayı inceleyin.",
+      "officialTopicCode": "M.8.2.3",
+      "sourcePage": 75,
+      "displayOrder": 36,
+      "learningMinutes": 55,
+      "practiceMinutes": 65,
+      "checkMinutes": 15,
+      "durationEvidence": "Taslak referans: resmi M.8.2.3 konu bütçesi 10 ders saati / 3 kazanım. Model varsayımı: ders saati başına 40 dakika, eşit dağılım, 5 dakikaya yuvarlama; %40 öğrenme, yaklaşık %50 alıştırma, %10 kontrol. Bireysel öğrenme süresi MEB tarafından verilmemiştir. Mola/video süresi yoktur. Öğretmen incelemesi olmadan yayınlanamaz.",
+      "sources": []
+    },
+    {
+      "code": "M.8.3.1.1",
+      "name": "Üçgende kenarortay, açıortay ve yüksekliği inşa eder.",
+      "notes": "Açıklamalar ve kapsam sınırlamaları için kaynak belgedeki sayfayı inceleyin.",
+      "officialTopicCode": "M.8.3.1",
+      "sourcePage": 76,
+      "displayOrder": 37,
+      "learningMinutes": 60,
+      "practiceMinutes": 70,
+      "checkMinutes": 15,
+      "durationEvidence": "Taslak referans: resmi M.8.3.1 konu bütçesi 18 ders saati / 5 kazanım. Model varsayımı: ders saati başına 40 dakika, eşit dağılım, 5 dakikaya yuvarlama; %40 öğrenme, yaklaşık %50 alıştırma, %10 kontrol. Bireysel öğrenme süresi MEB tarafından verilmemiştir. Mola/video süresi yoktur. Öğretmen incelemesi olmadan yayınlanamaz.",
+      "sources": []
+    },
+    {
+      "code": "M.8.3.1.2",
+      "name": "Üçgenin iki kenar uzunluğunun toplamı veya farkı ile üçüncü kenarının uzunluğunu ilişkilendirir.",
+      "notes": "Açıklamalar ve kapsam sınırlamaları için kaynak belgedeki sayfayı inceleyin.",
+      "officialTopicCode": "M.8.3.1",
+      "sourcePage": 76,
+      "displayOrder": 38,
+      "learningMinutes": 60,
+      "practiceMinutes": 70,
+      "checkMinutes": 15,
+      "durationEvidence": "Taslak referans: resmi M.8.3.1 konu bütçesi 18 ders saati / 5 kazanım. Model varsayımı: ders saati başına 40 dakika, eşit dağılım, 5 dakikaya yuvarlama; %40 öğrenme, yaklaşık %50 alıştırma, %10 kontrol. Bireysel öğrenme süresi MEB tarafından verilmemiştir. Mola/video süresi yoktur. Öğretmen incelemesi olmadan yayınlanamaz.",
+      "sources": []
+    },
+    {
+      "code": "M.8.3.1.3",
+      "name": "Üçgenin kenar uzunlukları ile bu kenarların karşısındaki açıların ölçülerini ilişkilendirir.",
+      "notes": "Açıklamalar ve kapsam sınırlamaları için kaynak belgedeki sayfayı inceleyin.",
+      "officialTopicCode": "M.8.3.1",
+      "sourcePage": 76,
+      "displayOrder": 39,
+      "learningMinutes": 60,
+      "practiceMinutes": 70,
+      "checkMinutes": 15,
+      "durationEvidence": "Taslak referans: resmi M.8.3.1 konu bütçesi 18 ders saati / 5 kazanım. Model varsayımı: ders saati başına 40 dakika, eşit dağılım, 5 dakikaya yuvarlama; %40 öğrenme, yaklaşık %50 alıştırma, %10 kontrol. Bireysel öğrenme süresi MEB tarafından verilmemiştir. Mola/video süresi yoktur. Öğretmen incelemesi olmadan yayınlanamaz.",
+      "sources": []
+    },
+    {
+      "code": "M.8.3.1.4",
+      "name": "Yeterli sayıda elemanının ölçüleri verilen bir üçgeni çizer.",
+      "notes": "Açıklamalar ve kapsam sınırlamaları için kaynak belgedeki sayfayı inceleyin.",
+      "officialTopicCode": "M.8.3.1",
+      "sourcePage": 76,
+      "displayOrder": 40,
+      "learningMinutes": 60,
+      "practiceMinutes": 70,
+      "checkMinutes": 15,
+      "durationEvidence": "Taslak referans: resmi M.8.3.1 konu bütçesi 18 ders saati / 5 kazanım. Model varsayımı: ders saati başına 40 dakika, eşit dağılım, 5 dakikaya yuvarlama; %40 öğrenme, yaklaşık %50 alıştırma, %10 kontrol. Bireysel öğrenme süresi MEB tarafından verilmemiştir. Mola/video süresi yoktur. Öğretmen incelemesi olmadan yayınlanamaz.",
+      "sources": []
+    },
+    {
+      "code": "M.8.3.1.5",
+      "name": "Pisagor bağıntısını oluşturur, ilgili problemleri çözer.",
+      "notes": "Açıklamalar ve kapsam sınırlamaları için kaynak belgedeki sayfayı inceleyin.",
+      "officialTopicCode": "M.8.3.1",
+      "sourcePage": 76,
+      "displayOrder": 41,
+      "learningMinutes": 60,
+      "practiceMinutes": 70,
+      "checkMinutes": 15,
+      "durationEvidence": "Taslak referans: resmi M.8.3.1 konu bütçesi 18 ders saati / 5 kazanım. Model varsayımı: ders saati başına 40 dakika, eşit dağılım, 5 dakikaya yuvarlama; %40 öğrenme, yaklaşık %50 alıştırma, %10 kontrol. Bireysel öğrenme süresi MEB tarafından verilmemiştir. Mola/video süresi yoktur. Öğretmen incelemesi olmadan yayınlanamaz.",
+      "sources": []
+    },
+    {
+      "code": "M.8.3.3.1",
+      "name": "Eşlik ve benzerliği ilişkilendirir, eş ve benzer şekillerin kenar ve açı ilişkilerini belirler.",
+      "notes": "Açıklamalar ve kapsam sınırlamaları için kaynak belgedeki sayfayı inceleyin.",
+      "officialTopicCode": "M.8.3.3",
+      "sourcePage": 77,
+      "displayOrder": 42,
+      "learningMinutes": 65,
+      "practiceMinutes": 80,
+      "checkMinutes": 15,
+      "durationEvidence": "Taslak referans: resmi M.8.3.3 konu bütçesi 8 ders saati / 2 kazanım. Model varsayımı: ders saati başına 40 dakika, eşit dağılım, 5 dakikaya yuvarlama; %40 öğrenme, yaklaşık %50 alıştırma, %10 kontrol. Bireysel öğrenme süresi MEB tarafından verilmemiştir. Mola/video süresi yoktur. Öğretmen incelemesi olmadan yayınlanamaz.",
+      "sources": []
+    },
+    {
+      "code": "M.8.3.3.2",
+      "name": "Benzer çokgenlerin benzerlik oranını belirler, bir çokgene eş ve benzer çokgenler oluşturur.",
+      "notes": "Açıklamalar ve kapsam sınırlamaları için kaynak belgedeki sayfayı inceleyin.",
+      "officialTopicCode": "M.8.3.3",
+      "sourcePage": 77,
+      "displayOrder": 43,
+      "learningMinutes": 65,
+      "practiceMinutes": 80,
+      "checkMinutes": 15,
+      "durationEvidence": "Taslak referans: resmi M.8.3.3 konu bütçesi 8 ders saati / 2 kazanım. Model varsayımı: ders saati başına 40 dakika, eşit dağılım, 5 dakikaya yuvarlama; %40 öğrenme, yaklaşık %50 alıştırma, %10 kontrol. Bireysel öğrenme süresi MEB tarafından verilmemiştir. Mola/video süresi yoktur. Öğretmen incelemesi olmadan yayınlanamaz.",
+      "sources": []
+    },
+    {
+      "code": "M.8.3.2.1",
+      "name": "Nokta, doğru parçası ve diğer şekillerin öteleme sonucundaki görüntülerini çizer.",
+      "notes": "Açıklamalar ve kapsam sınırlamaları için kaynak belgedeki sayfayı inceleyin.",
+      "officialTopicCode": "M.8.3.2",
+      "sourcePage": 76,
+      "displayOrder": 44,
+      "learningMinutes": 55,
+      "practiceMinutes": 65,
+      "checkMinutes": 15,
+      "durationEvidence": "Taslak referans: resmi M.8.3.2 konu bütçesi 10 ders saati / 3 kazanım. Model varsayımı: ders saati başına 40 dakika, eşit dağılım, 5 dakikaya yuvarlama; %40 öğrenme, yaklaşık %50 alıştırma, %10 kontrol. Bireysel öğrenme süresi MEB tarafından verilmemiştir. Mola/video süresi yoktur. Öğretmen incelemesi olmadan yayınlanamaz.",
+      "sources": []
+    },
+    {
+      "code": "M.8.3.2.2",
+      "name": "Nokta, doğru parçası ve diğer şekillerin yansıma sonucu oluşan görüntüsünü oluşturur.",
+      "notes": "Açıklamalar ve kapsam sınırlamaları için kaynak belgedeki sayfayı inceleyin.",
+      "officialTopicCode": "M.8.3.2",
+      "sourcePage": 76,
+      "displayOrder": 45,
+      "learningMinutes": 55,
+      "practiceMinutes": 65,
+      "checkMinutes": 15,
+      "durationEvidence": "Taslak referans: resmi M.8.3.2 konu bütçesi 10 ders saati / 3 kazanım. Model varsayımı: ders saati başına 40 dakika, eşit dağılım, 5 dakikaya yuvarlama; %40 öğrenme, yaklaşık %50 alıştırma, %10 kontrol. Bireysel öğrenme süresi MEB tarafından verilmemiştir. Mola/video süresi yoktur. Öğretmen incelemesi olmadan yayınlanamaz.",
+      "sources": []
+    },
+    {
+      "code": "M.8.3.2.3",
+      "name": "Çokgenlerin öteleme ve yansımalar sonucunda ortaya çıkan görüntüsünü oluşturur.",
+      "notes": "Açıklamalar ve kapsam sınırlamaları için kaynak belgedeki sayfayı inceleyin.",
+      "officialTopicCode": "M.8.3.2",
+      "sourcePage": 77,
+      "displayOrder": 46,
+      "learningMinutes": 55,
+      "practiceMinutes": 65,
+      "checkMinutes": 15,
+      "durationEvidence": "Taslak referans: resmi M.8.3.2 konu bütçesi 10 ders saati / 3 kazanım. Model varsayımı: ders saati başına 40 dakika, eşit dağılım, 5 dakikaya yuvarlama; %40 öğrenme, yaklaşık %50 alıştırma, %10 kontrol. Bireysel öğrenme süresi MEB tarafından verilmemiştir. Mola/video süresi yoktur. Öğretmen incelemesi olmadan yayınlanamaz.",
+      "sources": []
+    },
+    {
+      "code": "M.8.3.4.1",
+      "name": "Dik prizmaları tanır, temel elemanlarını belirler, inşa eder ve açınımını çizer.",
+      "notes": "Açıklamalar ve kapsam sınırlamaları için kaynak belgedeki sayfayı inceleyin.",
+      "officialTopicCode": "M.8.3.4",
+      "sourcePage": 77,
+      "displayOrder": 47,
+      "learningMinutes": 40,
+      "practiceMinutes": 50,
+      "checkMinutes": 10,
+      "durationEvidence": "Taslak referans: resmi M.8.3.4 konu bütçesi 15 ders saati / 6 kazanım. Model varsayımı: ders saati başına 40 dakika, eşit dağılım, 5 dakikaya yuvarlama; %40 öğrenme, yaklaşık %50 alıştırma, %10 kontrol. Bireysel öğrenme süresi MEB tarafından verilmemiştir. Mola/video süresi yoktur. Öğretmen incelemesi olmadan yayınlanamaz.",
+      "sources": []
+    },
+    {
+      "code": "M.8.3.4.2",
+      "name": "Dik dairesel silindirin temel elemanlarını belirler, inşa eder ve açınımını çizer.",
+      "notes": "Açıklamalar ve kapsam sınırlamaları için kaynak belgedeki sayfayı inceleyin.",
+      "officialTopicCode": "M.8.3.4",
+      "sourcePage": 77,
+      "displayOrder": 48,
+      "learningMinutes": 40,
+      "practiceMinutes": 50,
+      "checkMinutes": 10,
+      "durationEvidence": "Taslak referans: resmi M.8.3.4 konu bütçesi 15 ders saati / 6 kazanım. Model varsayımı: ders saati başına 40 dakika, eşit dağılım, 5 dakikaya yuvarlama; %40 öğrenme, yaklaşık %50 alıştırma, %10 kontrol. Bireysel öğrenme süresi MEB tarafından verilmemiştir. Mola/video süresi yoktur. Öğretmen incelemesi olmadan yayınlanamaz.",
+      "sources": []
+    },
+    {
+      "code": "M.8.3.4.3",
+      "name": "Dik dairesel silindirin yüzey alanı bağıntısını oluşturur, ilgili problemleri çözer.",
+      "notes": "Açıklamalar ve kapsam sınırlamaları için kaynak belgedeki sayfayı inceleyin.",
+      "officialTopicCode": "M.8.3.4",
+      "sourcePage": 77,
+      "displayOrder": 49,
+      "learningMinutes": 40,
+      "practiceMinutes": 50,
+      "checkMinutes": 10,
+      "durationEvidence": "Taslak referans: resmi M.8.3.4 konu bütçesi 15 ders saati / 6 kazanım. Model varsayımı: ders saati başına 40 dakika, eşit dağılım, 5 dakikaya yuvarlama; %40 öğrenme, yaklaşık %50 alıştırma, %10 kontrol. Bireysel öğrenme süresi MEB tarafından verilmemiştir. Mola/video süresi yoktur. Öğretmen incelemesi olmadan yayınlanamaz.",
+      "sources": []
+    },
+    {
+      "code": "M.8.3.4.4",
+      "name": "Dik dairesel silindirin hacim bağıntısını oluşturur; ilgili problemleri çözer.",
+      "notes": "Açıklamalar ve kapsam sınırlamaları için kaynak belgedeki sayfayı inceleyin.",
+      "officialTopicCode": "M.8.3.4",
+      "sourcePage": 77,
+      "displayOrder": 50,
+      "learningMinutes": 40,
+      "practiceMinutes": 50,
+      "checkMinutes": 10,
+      "durationEvidence": "Taslak referans: resmi M.8.3.4 konu bütçesi 15 ders saati / 6 kazanım. Model varsayımı: ders saati başına 40 dakika, eşit dağılım, 5 dakikaya yuvarlama; %40 öğrenme, yaklaşık %50 alıştırma, %10 kontrol. Bireysel öğrenme süresi MEB tarafından verilmemiştir. Mola/video süresi yoktur. Öğretmen incelemesi olmadan yayınlanamaz.",
+      "sources": []
+    },
+    {
+      "code": "M.8.3.4.5",
+      "name": "Dik piramidi tanır, temel elemanlarını belirler, inşa eder ve açınımını çizer.",
+      "notes": "Açıklamalar ve kapsam sınırlamaları için kaynak belgedeki sayfayı inceleyin.",
+      "officialTopicCode": "M.8.3.4",
+      "sourcePage": 78,
+      "displayOrder": 51,
+      "learningMinutes": 40,
+      "practiceMinutes": 50,
+      "checkMinutes": 10,
+      "durationEvidence": "Taslak referans: resmi M.8.3.4 konu bütçesi 15 ders saati / 6 kazanım. Model varsayımı: ders saati başına 40 dakika, eşit dağılım, 5 dakikaya yuvarlama; %40 öğrenme, yaklaşık %50 alıştırma, %10 kontrol. Bireysel öğrenme süresi MEB tarafından verilmemiştir. Mola/video süresi yoktur. Öğretmen incelemesi olmadan yayınlanamaz.",
+      "sources": []
+    },
+    {
+      "code": "M.8.3.4.6",
+      "name": "Dik koniyi tanır, temel elemanlarını belirler, inşa eder ve açınımını çizer.",
+      "notes": "Açıklamalar ve kapsam sınırlamaları için kaynak belgedeki sayfayı inceleyin.",
+      "officialTopicCode": "M.8.3.4",
+      "sourcePage": 78,
+      "displayOrder": 52,
+      "learningMinutes": 40,
+      "practiceMinutes": 50,
+      "checkMinutes": 10,
+      "durationEvidence": "Taslak referans: resmi M.8.3.4 konu bütçesi 15 ders saati / 6 kazanım. Model varsayımı: ders saati başına 40 dakika, eşit dağılım, 5 dakikaya yuvarlama; %40 öğrenme, yaklaşık %50 alıştırma, %10 kontrol. Bireysel öğrenme süresi MEB tarafından verilmemiştir. Mola/video süresi yoktur. Öğretmen incelemesi olmadan yayınlanamaz.",
+      "sources": []
+    }
+  ],
+  "mappings": [
+    {
+      "topicSourceId": "topic:ad650afa-ca7c-4716-91ce-08dd3ad55a15",
+      "outcomeCodes": [
+        "M.8.1.1.1",
+        "M.8.1.1.2",
+        "M.8.1.1.3"
+      ],
+      "evidence": "Konu adı ve resmi kapsamdan aday eşleştirme; içerik bazında inceleme gereklidir."
+    },
+    {
+      "topicSourceId": "topic:78f3c2ce-8ffb-4328-fc43-08dd54a00709",
+      "outcomeCodes": [
+        "M.8.1.2.1",
+        "M.8.1.2.2",
+        "M.8.1.2.3",
+        "M.8.1.2.4",
+        "M.8.1.2.5"
+      ],
+      "evidence": "Konu adı ve resmi kapsamdan aday eşleştirme; içerik bazında inceleme gereklidir."
+    },
+    {
+      "topicSourceId": "topic:6eb3d293-90df-48cc-26b4-08dd7688daf4",
+      "outcomeCodes": [
+        "M.8.1.3.1",
+        "M.8.1.3.2",
+        "M.8.1.3.3",
+        "M.8.1.3.4",
+        "M.8.1.3.5",
+        "M.8.1.3.6",
+        "M.8.1.3.7",
+        "M.8.1.3.8"
+      ],
+      "evidence": "Konu adı ve resmi kapsamdan aday eşleştirme; içerik bazında inceleme gereklidir."
+    },
+    {
+      "topicSourceId": "topic:2db1a5c6-ecf8-4c70-26b3-08dd7688daf4",
+      "outcomeCodes": [
+        "M.8.4.1.1",
+        "M.8.4.1.2"
+      ],
+      "evidence": "Konu adı ve resmi kapsamdan aday eşleştirme; içerik bazında inceleme gereklidir."
+    },
+    {
+      "topicSourceId": "topic:3f134b87-660b-493c-26d7-08dd7688daf4",
+      "outcomeCodes": [
+        "M.8.5.1.1",
+        "M.8.5.1.2",
+        "M.8.5.1.3",
+        "M.8.5.1.4",
+        "M.8.5.1.5"
+      ],
+      "evidence": "Konu adı ve resmi kapsamdan aday eşleştirme; içerik bazında inceleme gereklidir."
+    },
+    {
+      "topicSourceId": "topic:25c4abd5-c087-4826-26d9-08dd7688daf4",
+      "outcomeCodes": [
+        "M.8.2.1.1",
+        "M.8.2.1.2",
+        "M.8.2.1.3",
+        "M.8.2.1.4"
+      ],
+      "evidence": "Konu adı ve resmi kapsamdan aday eşleştirme; içerik bazında inceleme gereklidir."
+    },
+    {
+      "topicSourceId": "topic:226d9b02-ede1-401f-7499-08de07173e11",
+      "outcomeCodes": [
+        "M.8.2.2.1",
+        "M.8.2.2.2",
+        "M.8.2.2.3",
+        "M.8.2.2.4",
+        "M.8.2.2.5",
+        "M.8.2.2.6"
+      ],
+      "evidence": "Konu adı ve resmi kapsamdan aday eşleştirme; içerik bazında inceleme gereklidir. Doğrusal Denklemler 1/2 kapsam ayrımı doğrulanmadı; iki adayın tümünü onaylamayın."
+    },
+    {
+      "topicSourceId": "topic:498052bd-05cf-4efe-bbbc-08de1c4bdb1f",
+      "outcomeCodes": [
+        "M.8.2.2.1",
+        "M.8.2.2.2",
+        "M.8.2.2.3",
+        "M.8.2.2.4",
+        "M.8.2.2.5",
+        "M.8.2.2.6"
+      ],
+      "evidence": "Konu adı ve resmi kapsamdan aday eşleştirme; içerik bazında inceleme gereklidir. Doğrusal Denklemler 1/2 kapsam ayrımı doğrulanmadı; iki adayın tümünü onaylamayın."
+    },
+    {
+      "topicSourceId": "topic:153a76d9-652b-48d2-749a-08de07173e11",
+      "outcomeCodes": [
+        "M.8.2.3.1",
+        "M.8.2.3.2",
+        "M.8.2.3.3"
+      ],
+      "evidence": "Konu adı ve resmi kapsamdan aday eşleştirme; içerik bazında inceleme gereklidir."
+    },
+    {
+      "topicSourceId": "topic:def1071a-ac6f-4b55-749b-08de07173e11",
+      "outcomeCodes": [
+        "M.8.3.1.1",
+        "M.8.3.1.2",
+        "M.8.3.1.3",
+        "M.8.3.1.4",
+        "M.8.3.1.5"
+      ],
+      "evidence": "Konu adı ve resmi kapsamdan aday eşleştirme; içerik bazında inceleme gereklidir."
+    },
+    {
+      "topicSourceId": "topic:0698637b-2694-4c91-749c-08de07173e11",
+      "outcomeCodes": [
+        "M.8.3.3.1",
+        "M.8.3.3.2"
+      ],
+      "evidence": "Konu adı ve resmi kapsamdan aday eşleştirme; içerik bazında inceleme gereklidir."
+    },
+    {
+      "topicSourceId": "topic:760ce8d8-db61-4953-749d-08de07173e11",
+      "outcomeCodes": [
+        "M.8.3.2.1",
+        "M.8.3.2.2",
+        "M.8.3.2.3"
+      ],
+      "evidence": "Konu adı ve resmi kapsamdan aday eşleştirme; içerik bazında inceleme gereklidir."
+    },
+    {
+      "topicSourceId": "topic:6585229c-e9d6-41fa-749e-08de07173e11",
+      "outcomeCodes": [
+        "M.8.3.4.1",
+        "M.8.3.4.2",
+        "M.8.3.4.3",
+        "M.8.3.4.4",
+        "M.8.3.4.5",
+        "M.8.3.4.6"
+      ],
+      "evidence": "Konu adı ve resmi kapsamdan aday eşleştirme; içerik bazında inceleme gereklidir."
+    }
+  ]
+}

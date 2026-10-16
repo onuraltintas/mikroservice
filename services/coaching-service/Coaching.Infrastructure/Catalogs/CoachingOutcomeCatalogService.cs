@@ -120,7 +120,14 @@ public sealed class CoachingOutcomeCatalogService(CoachingDbContext db, ICoachin
             estimate.Publish(); Audit("OutcomePublish", estimate.Id.ToString(), reason); await db.SaveChangesAsync(ct); return estimate;
         }, ct);
 
-    public async Task<IReadOnlyList<PublishedStudyOutcome>> GetPublishedAsync(Guid topicId, int academicYear, CancellationToken ct)
+    public Task<IReadOnlyList<PublishedStudyOutcome>> GetPublishedAsync(Guid topicId, int academicYear, CancellationToken ct)
+        => ReadPublishedAsync(db, topicId, academicYear, ct);
+
+    public static async Task<int> AcademicYearAsync(CoachingDbContext db, Guid student, CancellationToken ct)
+        => await db.StudentLearningContexts.Where(x => x.StudentUserId == student).Select(x => (int?)x.AcademicYearStart).SingleOrDefaultAsync(ct)
+            ?? (DateTime.UtcNow.Month >= 9 ? DateTime.UtcNow.Year : DateTime.UtcNow.Year - 1);
+
+    public static async Task<IReadOnlyList<PublishedStudyOutcome>> ReadPublishedAsync(CoachingDbContext db, Guid topicId, int academicYear, CancellationToken ct)
     {
         if (academicYear is < 2000 or > 2200) throw new ArgumentException("Geçerli eğitim yılı seçin.");
         var rows = await (from map in db.Set<StudyCatalogTopicOutcome>().AsNoTracking()

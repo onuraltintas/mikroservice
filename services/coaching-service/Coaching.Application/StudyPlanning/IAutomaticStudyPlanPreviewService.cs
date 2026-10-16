@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace Coaching.Application.StudyPlanning;
 
-public sealed record StudyTopicSelection(Guid TopicId, int? RequiredMinutes);
+public sealed record StudyTopicSelection(Guid TopicId, int? RequiredMinutes, IReadOnlyList<StudyOutcomeSelection>? Outcomes = null);
 public sealed record AutomaticStudyPreviewRequest(DateOnly StartDate, int Days,
     [property: JsonRequired] [Range(0, int.MaxValue)] int ExpectedAvailabilityVersion,
     [Required] IReadOnlyList<StudyTopicSelection> Topics, int? ExpectedLearningContextVersion = null);
@@ -11,7 +11,7 @@ public sealed record ProtectedStudyTask(Guid TaskId, DateOnly PlannedDate, strin
     int PlannedMinutes, bool IsPinned, bool IsCompleted);
 public sealed record AutomaticStudyPreview(int AvailabilityVersion, string TimeZoneId,
     Guid? ActiveRevisionId, int? ActiveRevisionVersion,
-    IReadOnlyList<ProtectedStudyTask> ProtectedTasks, StudyDraftSchedule Schedule);
+    IReadOnlyList<ProtectedStudyTask> ProtectedTasks, StudyDraftSchedule Schedule, IReadOnlyList<ResolvedStudyOutcome>? Outcomes = null);
 
 public interface IAutomaticStudyPlanPreviewService
 {
