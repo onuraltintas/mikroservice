@@ -23,6 +23,7 @@ public sealed record CurriculumNode(string Kind, Guid Id, string Name, Guid? Par
     int? DisplayOrder = null, int? EstimatedMinutes = null, int? GradeNumber = null, string? ExamCode = null,
     string? Code = null, Guid? OfficialTopicId = null, int? SourcePage = null, string? Notes = null)
 {
+    public CurriculumNode() : this("",Guid.Empty,"",null,null,false) { }
     public string Path { get; init; } = "";
     public string Fingerprint { get; init; } = "";
     public bool CanDelete { get; init; }
@@ -44,22 +45,26 @@ public sealed class CoachingCurriculumManagementService(CoachingDbContext db, IC
         switch (kind)
         {
             case "groups":
-                query = db.Set<StudyCatalogLessonGroup>().AsNoTracking().Select(x => new CurriculumNode(kind,x.Id,x.Name,null,null,x.IsActive,x.DisplayOrder,null,null,null,null,null,null,null)); break;
+                query = db.Set<StudyCatalogLessonGroup>().AsNoTracking().Select(x => new CurriculumNode { Kind=kind,Id=x.Id,Name=x.Name,IsActive=x.IsActive,DisplayOrder=x.DisplayOrder }); break;
             case "lessons":
-                query = db.StudyCatalogLessons.AsNoTracking().Where(x => all || x.GroupId == parent).Select(x => new CurriculumNode(kind,x.Id,x.Name,x.GroupId,"groups",x.IsActive,null,null,x.GradeNumber,x.ExamCode,null,null,null,null)); break;
+                query = db.StudyCatalogLessons.AsNoTracking().Where(x => all || x.GroupId == parent).Select(x => new CurriculumNode { Kind=kind,Id=x.Id,Name=x.Name,ParentId=x.GroupId,ParentKind="groups",IsActive=x.IsActive,DisplayOrder=null,GradeNumber=x.GradeNumber,ExamCode=x.ExamCode }); break;
             case "units":
-                query = db.StudyCatalogUnits.AsNoTracking().Where(x => all || x.LessonId == parent).Select(x => new CurriculumNode(kind,x.Id,x.Name,x.LessonId,"lessons",x.IsActive,x.DisplayOrder,null,null,null,null,null,null,null)); break;
+                query = db.StudyCatalogUnits.AsNoTracking().Where(x => all || x.LessonId == parent).Select(x => new CurriculumNode { Kind=kind,Id=x.Id,Name=x.Name,ParentId=x.LessonId,ParentKind="lessons",IsActive=x.IsActive,DisplayOrder=x.DisplayOrder }); break;
             case "topics":
                 var isUnit = await db.StudyCatalogUnits.AnyAsync(x => x.Id == parent, ct);
                 query = db.StudyCatalogTopics.AsNoTracking().Where(x => all || (isUnit ? x.UnitId == parent && x.ParentId == null : x.ParentId == parent))
-                    .Select(x => new CurriculumNode(kind,x.Id,x.Name,x.ParentId ?? x.UnitId,x.ParentId == null ? "units" : "topics",x.IsActive,x.DisplayOrder,x.EstimatedMinutes,null,null,null,null,null,null)); break;
+                    .Select(x => new CurriculumNode { Kind=kind,Id=x.Id,Name=x.Name,ParentId=x.ParentId ?? x.UnitId,ParentKind=x.ParentId == null ? "units" : "topics",IsActive=x.IsActive,DisplayOrder=x.DisplayOrder,EstimatedMinutes=x.EstimatedMinutes }); break;
             default:
                 query = db.Set<StudyCatalogOutcome>().AsNoTracking()
                     .Where(x => parent == null ? !db.Set<StudyCatalogTopicOutcome>().Any(m => m.OutcomeId == x.Id) : db.Set<StudyCatalogTopicOutcome>().Any(m => m.OutcomeId == x.Id && m.TopicId == parent))
-                    .Select(x => new CurriculumNode(kind,x.Id,x.Name,parent,"topics",!x.IsArchived,x.DisplayOrder,null,null,null,x.Code,x.OfficialTopicId,x.SourcePage,x.Notes)); break;
+                    .Select(x => new CurriculumNode { Kind=kind,Id=x.Id,Name=x.Name,ParentId=parent,ParentKind="topics",IsActive=!x.IsArchived,DisplayOrder=x.DisplayOrder,Code=x.Code,OfficialTopicId=x.OfficialTopicId,SourcePage=x.SourcePage,Notes=x.Notes }); break;
         }
         // Filter after the bounded parent scope; Contains is parameterized by EF, not interpolated SQL.
-        if (!string.IsNullOrWhiteSpace(search)) { var term = search.Trim(); query = query.Where(x => x.Name.Contains(term) || (x.Code != null && x.Code.Contains(term))); }
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var term = search.Trim();
+            query = kind == "outcomes" ? query.Where(x => x.Name.Contains(term) || (x.Code != null && x.Code.Contains(term))) : query.Where(x => x.Name.Contains(term));
+        }
         var count = await query.CountAsync(ct);
         var items = await query.OrderBy(x => x.DisplayOrder ?? 0).ThenBy(x => x.Name).ThenBy(x => x.Id).Skip((page-1)*25).Take(25).ToArrayAsync(ct);
         if (all) for (var i = 0; i < items.Length; i++) items[i] = items[i] with { Path = await Path(items[i].Kind,items[i].Id,ct) };
@@ -213,8 +218,12 @@ public sealed class CoachingCurriculumManagementService(CoachingDbContext db, IC
                         IN SHARE ROW EXCLUSIVE MODE
                         """,ct);
                 }
-                if (id.HasValue && (string.IsNullOrEmpty(fingerprint) || (await Describe(await Load(kind,id.Value,ct),ct)).Fingerprint != fingerprint))
-                    throw new BusinessRuleException("Catalog.Stale","Kayıt veya bağlantıları değişmiş. Güncel kaydı yeniden açın.");
+                if (id.HasValue)
+                {
+                    var current = await Load(kind,id.Value,ct); await db.Entry(current).ReloadAsync(ct);
+                    if (string.IsNullOrEmpty(fingerprint) || (await Describe(current,ct)).Fingerprint != fingerprint)
+                        throw new BusinessRuleException("Catalog.Stale","Kayıt veya bağlantıları değişmiş. Güncel kaydı yeniden açın.");
+                }
                 var entity = await operation();
                 result = await Describe(entity,ct);
                 db.AdminAuditRecords.Add(new AdminAuditRecord(auditId,DateTimeOffset.UtcNow,"Coaching",user.UserId!.Value.ToString(),"SystemAdmin",null,
