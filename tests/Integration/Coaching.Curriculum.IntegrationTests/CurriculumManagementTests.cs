@@ -27,6 +27,7 @@ public sealed class CurriculumManagementTests
         var topic = await f.Service.SaveAsync("topics", null, new("Çarpanlar", "Konu ekle", ParentId: unit.Id, EstimatedMinutes: 45), default);
         var child = await f.Service.SaveAsync("topics", null, new("EBOB", "Alt konu ekle", ParentId: topic.Id), default);
         Assert.Contains("Matematik", child.Path); Assert.Contains("Çarpanlar", child.Path);
+        Assert.Contains("8. sınıf",child.Path); Assert.Contains("LGS",child.Path);
         var children = await f.Service.ChildrenAsync("topics", topic.Id, null, 1, default);
         Assert.Equal(child.Id, Assert.Single(children.Items).Id);
         var other = await f.Service.SaveAsync("groups", null, new("Diğer", "Grup ekle"), default);
