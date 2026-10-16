@@ -56,6 +56,15 @@ public sealed class DynamicCurriculumTests
     }
 
     [Fact]
+    public async Task ExamIndependentOfSchoolGradeCanHaveItsOwnSourceProgram()
+    {
+        await using var f=new CurriculumManagementTests.Fixture();
+        await f.Service.SaveAsync("exams",null,new("KPSS","Sınav türü ekle",Code:"KPSS"),default);
+        var program=await f.Service.SaveAsync("programs",null,Request(new {Name="Türkçe",Reason="Sınıftan bağımsız kaynak ekle",Code="kpss-turkce",ExamCode="KPSS",AcademicYearStart=2026,AcademicYearEnd=2026,SourceUrl="https://osym.gov.tr/program",DocumentSha256=new string('a',64),ScopeEvidenceUrl="https://osym.gov.tr/kapsam"}),default);
+        Assert.Null(program.GradeNumber);
+    }
+
+    [Fact]
     public async Task NewExamCanOwnLesson_UnknownExamRejected_ReferencedExamCannotBeDeleted()
     {
         await using var f = new CurriculumManagementTests.Fixture();
