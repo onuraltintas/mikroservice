@@ -14,6 +14,24 @@ namespace Coaching.Curriculum.IntegrationTests;
 public sealed class DynamicCurriculumTests
 {
     [Fact]
+    public async Task ExamDateIsOptionalAndCanBeSetChangedAndClearedWithoutChangingExamCode()
+    {
+        await using var f=new CurriculumManagementTests.Fixture();
+        var exam=await f.Service.SaveAsync("exams",null,Request(new {Name="Tarihli sınav",Reason="Sınav tarihi ekle",Code="DATE",ExamDate="2027-06-20"}),default);
+        Assert.Equal("2027-06-20",Date(exam));
+        exam=await f.Service.SaveAsync("exams",exam.Id,Request(new {Name=exam.Name,Reason="Sınav tarihini güncelle",exam.Fingerprint,Code="DATE",ExamDate="2027-06-27"}),default);
+        Assert.Equal("2027-06-27",Date(await f.Service.GetAsync("exams",exam.Id,default)));
+        Assert.Equal("2027-06-27",Date(Assert.Single((await f.Service.ChildrenAsync("exams",null,"Tarihli",1,default)).Items)));
+        exam=await f.Service.SaveAsync("exams",exam.Id,new(exam.Name,"Tarihi daha sonra belirle",Fingerprint:exam.Fingerprint,Code:"DATE"),default);
+        Assert.Null(Date(exam));Assert.Equal("DATE",exam.Code);
+    }
+    private static string? Date(CurriculumNode node)
+    {
+        using var json=JsonDocument.Parse(JsonSerializer.Serialize(node));
+        return json.RootElement.GetProperty("ExamDate").GetString();
+    }
+
+    [Fact]
     public async Task ExamLookupReturnsDatabaseEntriesRatherThanAFixedList()
     {
         await using var f=new CurriculumManagementTests.Fixture();
