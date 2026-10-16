@@ -138,7 +138,7 @@ public sealed class CoachingOutcomeCatalogService(CoachingDbContext db, ICoachin
             join officialTopic in db.Set<OfficialCurriculumTopic>() on outcome.OfficialTopicId equals officialTopic.Id
             join edition in db.Set<OfficialCurriculumEdition>() on outcome.EditionId equals edition.Id
             join estimate in db.Set<OutcomeDurationEstimate>() on outcome.Id equals estimate.OutcomeId
-            where map.TopicId == topicId && map.IsApproved && topic.IsActive && unit.IsActive && lesson.IsActive
+            where map.TopicId == topicId && map.IsApproved && !outcome.IsArchived && topic.IsActive && unit.IsActive && lesson.IsActive
                 && lesson.ExamCode == edition.ExamCode && lesson.Name == edition.SubjectName
                 && (lesson.GradeNumber == null || lesson.GradeNumber == edition.GradeNumber)
                 && !db.StudyCatalogTopics.Any(x => x.ParentId == topic.Id)

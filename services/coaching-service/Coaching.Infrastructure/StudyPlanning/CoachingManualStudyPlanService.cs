@@ -61,7 +61,11 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
                 {
                     var copied = StudyPlanTask.Create(revision, prior.PlannedDate, prior.Title, prior.PlannedMinutes, prior.TopicId, true, prior.SourceName, prior.PlannedQuestions);
                     tasks.Add(copied);
-                    db.AddRange(links.Where(x => x.TaskId == prior.Id).Select(x => StudyPlanTaskOutcome.Create(copied.Id, x.OutcomeId, x.EstimateId, x.AllocatedMinutes, x.Origin)));
+                    db.AddRange(links.Where(x => x.TaskId == prior.Id).Select(x => {
+                        var link = StudyPlanTaskOutcome.Create(copied.Id, x.OutcomeId, x.EstimateId, x.AllocatedMinutes, x.Origin);
+                        if (x.CodeSnapshot is not null && x.NameSnapshot is not null) link.CaptureText(x.CodeSnapshot, x.NameSnapshot);
+                        return link;
+                    }));
                 }
             }
             if (tasks.Count is < 1 or > 500) throw new ArgumentException("Taslak 1-500 çalışma içermelidir; konuları azaltın veya süreyi değiştirin.");

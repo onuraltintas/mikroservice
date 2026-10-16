@@ -3,7 +3,8 @@ using Coaching.Domain.Entities;
 namespace Coaching.Application.StudyPlanning;
 
 public sealed record StudyOutcomeSelection(Guid OutcomeId, Guid EstimateId, int? RequiredMinutes = null);
-public sealed record ResolvedStudyOutcome(Guid TopicId, Guid OutcomeId, Guid EstimateId, int Minutes, string Origin);
+public sealed record ResolvedStudyOutcome(Guid TopicId, Guid OutcomeId, Guid EstimateId, int Minutes, string Origin,
+    string? Code = null, string? Name = null);
 
 public static class StudyOutcomeAllocation
 {
@@ -32,7 +33,9 @@ public static class StudyOutcomeAllocation
                 while (capacity > 0 && index < remaining.Length)
                 {
                     var (value, minutes) = remaining[index]; var assigned = Math.Min(capacity, minutes);
-                    result.Add(StudyPlanTaskOutcome.Create(task.Id, value.OutcomeId, value.EstimateId, assigned, value.Origin));
+                    var link = StudyPlanTaskOutcome.Create(task.Id, value.OutcomeId, value.EstimateId, assigned, value.Origin);
+                    if (value.Code is not null && value.Name is not null) link.CaptureText(value.Code, value.Name);
+                    result.Add(link);
                     capacity -= assigned; remaining[index].Minutes -= assigned;
                     if (remaining[index].Minutes == 0) index++;
                 }

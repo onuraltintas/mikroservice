@@ -74,6 +74,7 @@ public sealed class StudyPlanTaskOutcomeConfiguration : IEntityTypeConfiguration
     {
         b.ToTable("study_plan_task_outcomes", t => t.HasCheckConstraint("ck_task_outcome_minutes", "\"AllocatedMinutes\" BETWEEN 1 AND 1440 AND \"Origin\" IN ('Catalog','StudentOverride')"));
         b.HasKey(x => new { x.TaskId, x.OutcomeId }); b.Property(x => x.Origin).HasMaxLength(30);
+        b.Property(x => x.CodeSnapshot).HasMaxLength(100); b.Property(x => x.NameSnapshot).HasMaxLength(2000);
         b.HasOne<StudyPlanTask>().WithMany().HasForeignKey(x => x.TaskId).OnDelete(DeleteBehavior.Cascade);
         b.HasOne<OutcomeDurationEstimate>().WithMany().HasForeignKey(x => new { x.EstimateId, x.OutcomeId })
             .HasPrincipalKey(x => new { x.Id, x.OutcomeId }).OnDelete(DeleteBehavior.Restrict);

@@ -4,6 +4,15 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Coaching.Infrastructure.Data.Configurations;
 
+public sealed class StudyCatalogLessonGroupConfiguration : IEntityTypeConfiguration<StudyCatalogLessonGroup>
+{
+    public void Configure(EntityTypeBuilder<StudyCatalogLessonGroup> builder)
+    {
+        builder.ToTable("study_catalog_lesson_groups", t => t.HasCheckConstraint("ck_lesson_group_order", "\"DisplayOrder\" >= 0"));
+        builder.HasKey(x => x.Id); builder.Property(x => x.Name).HasMaxLength(300).IsRequired();
+    }
+}
+
 public sealed class StudyCatalogLessonConfiguration : IEntityTypeConfiguration<StudyCatalogLesson>
 {
     public void Configure(EntityTypeBuilder<StudyCatalogLesson> builder)
@@ -15,6 +24,7 @@ public sealed class StudyCatalogLessonConfiguration : IEntityTypeConfiguration<S
         builder.Property(x => x.Name).HasMaxLength(300).IsRequired();
         builder.Property(x => x.ExamCode).HasMaxLength(10);
         builder.Property(x => x.CurriculumVersionId).IsConcurrencyToken();
+        builder.HasOne<StudyCatalogLessonGroup>().WithMany().HasForeignKey(x => x.GroupId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne<CurriculumVersion>().WithMany().HasForeignKey(x => x.CurriculumVersionId).OnDelete(DeleteBehavior.Restrict);
         builder.HasIndex(x => new { x.Source, x.SourceId }).IsUnique();
         builder.HasIndex(x => new { x.IsActive, x.GradeNumber, x.ExamCode });

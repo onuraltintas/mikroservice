@@ -7,9 +7,11 @@ using Coaching.Domain.Entities;
 using Coaching.Infrastructure.Catalogs;
 using Coaching.Infrastructure.Data;
 using Coaching.Infrastructure.StudyPlanning;
+using Coaching.Infrastructure.Repositories;
 using EduPlatform.Shared.Kernel.Exceptions;
 using EduPlatform.Shared.Security.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace Coaching.Curriculum.IntegrationTests;
 
@@ -28,6 +30,7 @@ public sealed class CurriculumManagementTests
         var children = await f.Service.ChildrenAsync("topics", topic.Id, null, 1, default);
         Assert.Equal(child.Id, Assert.Single(children.Items).Id);
         var other = await f.Service.SaveAsync("groups", null, new("Diğer", "Grup ekle"), default);
+        lesson = await f.Service.GetAsync("lessons", lesson.Id, default);
         var moved = await f.Service.MoveAsync("lessons", lesson.Id, new(other.Id, lesson.Fingerprint, "Grubu değiştir"), default);
         Assert.Equal(lesson.Id, moved.Id); Assert.Equal(other.Id, moved.ParentId);
         Assert.Equal(45, topic.EstimatedMinutes);
@@ -72,8 +75,8 @@ public sealed class CurriculumManagementTests
         await f.Service.SaveAsync("outcomes", outcome.Id, new("Düzeltilmiş kazanım", "Yazım düzeltmesi", Fingerprint: doc.Fingerprint,
             Code: outcome.Code, OfficialTopicId: outcome.OfficialTopicId, SourcePage: 73, DisplayOrder: 1), default);
         var task = await f.Db.StudyPlanTasks.SingleAsync(); var actor = new Actor { UserId = task.StudentId, Roles = ["Student"] };
-        var plans = new CoachingManualStudyPlanService(f.Db, new CoachingAccessPolicy(actor), new CoachingAutomaticStudyPlanPreviewService(f.Db, new CoachingAccessPolicy(actor)), new NoopPublisher());
-        var plan = (await plans.GetAsync(task.RevisionId))!;
+        var export = await new CoachingDataExportRepository(f.Db).ExportStudentDataAsync(task.StudentId,DateTimeOffset.UtcNow,default);
+        var plan = Assert.Single(export.StudyPlans!);
         Assert.Equal("İlk kazanım metni", Assert.Single(plan.Tasks.Single().Outcomes!).Name);
         Assert.Equal(30, plan.Tasks.Single().Outcomes![0].AllocatedMinutes);
         var service = new CoachingOutcomeCatalogService(f.Db, f.Scope, f.User);
@@ -112,7 +115,7 @@ public sealed class CurriculumManagementTests
 
     internal sealed class Fixture : IAsyncDisposable
     {
-        public CoachingDbContext Db { get; } = new(new DbContextOptionsBuilder<CoachingDbContext>().UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
+        public CoachingDbContext Db { get; } = new(new DbContextOptionsBuilder<CoachingDbContext>().UseInMemoryDatabase(Guid.NewGuid().ToString()).ConfigureWarnings(x => x.Ignore(InMemoryEventId.TransactionIgnoredWarning)).Options);
         public Scope Scope { get; } = new(); public Actor User { get; } = new();
         public CoachingCurriculumManagementService Service => new(Db, Scope, User);
         public async Task<StudyCatalogTopic> Seed()

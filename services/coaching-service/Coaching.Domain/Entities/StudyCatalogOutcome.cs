@@ -55,7 +55,14 @@ public sealed class StudyCatalogOutcome
     public string Notes { get; private set; } = "";
     public int SourcePage { get; private set; }
     public int DisplayOrder { get; private set; }
+    public bool IsArchived { get; private set; }
     private StudyCatalogOutcome() { }
+    public void Edit(string code, string name, string notes, int page, int order)
+    {
+        var valid = Create(EditionId, OfficialTopicId, code, name, notes, page, order);
+        Code = valid.Code; Name = valid.Name; Notes = valid.Notes; SourcePage = valid.SourcePage; DisplayOrder = valid.DisplayOrder;
+    }
+    public void Archive(bool archived) => IsArchived = archived;
     public static StudyCatalogOutcome Create(Guid edition, Guid group, string code, string name, string notes, int page, int order)
     {
         if (edition == Guid.Empty || group == Guid.Empty || page < 1 || order < 1 || notes is null || notes.Length > 8000)
@@ -142,6 +149,14 @@ public sealed class StudyPlanTaskOutcome
     public Guid EstimateId { get; private set; }
     public int AllocatedMinutes { get; private set; }
     public string Origin { get; private set; } = "";
+    public string? CodeSnapshot { get; private set; }
+    public string? NameSnapshot { get; private set; }
+    public void CaptureText(string code, string name)
+    {
+        if (CodeSnapshot is not null && NameSnapshot is not null) return;
+        var validCode = StudyCatalogText.Require(code, 100); var validName = StudyCatalogText.Require(name, 2000);
+        CodeSnapshot = validCode; NameSnapshot = validName;
+    }
     private StudyPlanTaskOutcome() { }
     public static StudyPlanTaskOutcome Create(Guid task, Guid outcome, Guid estimate, int minutes, string origin)
     {

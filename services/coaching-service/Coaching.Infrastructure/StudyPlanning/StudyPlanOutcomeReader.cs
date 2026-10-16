@@ -14,7 +14,7 @@ internal static class StudyPlanOutcomeReader
             join estimate in db.Set<OutcomeDurationEstimate>() on link.EstimateId equals estimate.Id
             where Enumerable.Contains(taskIds, link.TaskId)
             orderby outcome.DisplayOrder
-            select new { link.TaskId, View = new StudyTaskOutcomeView(outcome.Id, outcome.Code, outcome.Name, estimate.Id,
+            select new { link.TaskId, View = new StudyTaskOutcomeView(outcome.Id, link.CodeSnapshot ?? outcome.Code, link.NameSnapshot ?? outcome.Name, estimate.Id,
                 estimate.Number, link.AllocatedMinutes, link.Origin) }).ToArrayAsync(ct);
         return rows.ToLookup(x => x.TaskId, x => x.View);
     }

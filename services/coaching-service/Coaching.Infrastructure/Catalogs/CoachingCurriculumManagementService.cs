@@ -1,0 +1,370 @@
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
+using Coaching.Application.Authorization;
+using Coaching.Application.CatalogAdministration;
+using Coaching.Application.StudyPlanning;
+using Coaching.Domain.Entities;
+using Coaching.Infrastructure.Data;
+using EduPlatform.Shared.Infrastructure.Middleware;
+using EduPlatform.Shared.Kernel.Exceptions;
+using EduPlatform.Shared.Security.Interfaces;
+using Microsoft.EntityFrameworkCore;
+
+namespace Coaching.Infrastructure.Catalogs;
+
+public sealed record CurriculumSaveRequest(string Name, string Reason, string? Fingerprint = null, Guid? ParentId = null,
+    int? GradeNumber = null, string? ExamCode = null, int? DisplayOrder = null, int? EstimatedMinutes = null,
+    string? Code = null, Guid? OfficialTopicId = null, int? SourcePage = null, string? Notes = null);
+public sealed record CurriculumMoveRequest(Guid? DestinationId, string Fingerprint, string Reason, Guid? SourceTopicId = null);
+public sealed record CurriculumDeleteRequest(string Fingerprint, string Reason, Guid ConfirmId);
+public sealed record CurriculumStatusRequest(string Fingerprint, string Reason, bool IsActive);
+public sealed record CurriculumNode(string Kind, Guid Id, string Name, Guid? ParentId, string? ParentKind, bool IsActive,
+    int? DisplayOrder = null, int? EstimatedMinutes = null, int? GradeNumber = null, string? ExamCode = null,
+    string? Code = null, Guid? OfficialTopicId = null, int? SourcePage = null, string? Notes = null)
+{
+    public string Path { get; init; } = "";
+    public string Fingerprint { get; init; } = "";
+    public bool CanDelete { get; init; }
+    public IReadOnlyList<string> Blockers { get; init; } = [];
+    public IReadOnlyList<OutcomeDurationEstimate> Estimates { get; init; } = [];
+    public IReadOnlyList<CurriculumMapping> Mappings { get; init; } = [];
+}
+public sealed record CurriculumMapping(Guid TopicId, string Path, bool IsApproved, string Evidence);
+
+public sealed class CoachingCurriculumManagementService(CoachingDbContext db, ICoachingAdminScopeAuthorization scope, ICurrentUserService user)
+{
+    private static readonly string[] Kinds = ["groups", "lessons", "units", "topics", "outcomes"];
+
+    public async Task<TargetSearchPage<CurriculumNode>> ChildrenAsync(string kind, Guid? parent, string? search, int page, CancellationToken ct, bool all = false)
+    {
+        await Require(ct); Kind(kind);
+        if (page is < 1 or > 10000 || search?.Length > 200 || parent == Guid.Empty) throw new ArgumentException("Arama ve sayfayı kontrol edin.");
+        IQueryable<CurriculumNode> query;
+        switch (kind)
+        {
+            case "groups":
+                query = db.Set<StudyCatalogLessonGroup>().AsNoTracking().Select(x => new CurriculumNode(kind,x.Id,x.Name,null,null,x.IsActive,x.DisplayOrder,null,null,null,null,null,null,null)); break;
+            case "lessons":
+                query = db.StudyCatalogLessons.AsNoTracking().Where(x => all || x.GroupId == parent).Select(x => new CurriculumNode(kind,x.Id,x.Name,x.GroupId,"groups",x.IsActive,null,null,x.GradeNumber,x.ExamCode,null,null,null,null)); break;
+            case "units":
+                query = db.StudyCatalogUnits.AsNoTracking().Where(x => all || x.LessonId == parent).Select(x => new CurriculumNode(kind,x.Id,x.Name,x.LessonId,"lessons",x.IsActive,x.DisplayOrder,null,null,null,null,null,null,null)); break;
+            case "topics":
+                var isUnit = await db.StudyCatalogUnits.AnyAsync(x => x.Id == parent, ct);
+                query = db.StudyCatalogTopics.AsNoTracking().Where(x => all || (isUnit ? x.UnitId == parent && x.ParentId == null : x.ParentId == parent))
+                    .Select(x => new CurriculumNode(kind,x.Id,x.Name,x.ParentId ?? x.UnitId,x.ParentId == null ? "units" : "topics",x.IsActive,x.DisplayOrder,x.EstimatedMinutes,null,null,null,null,null,null)); break;
+            default:
+                query = db.Set<StudyCatalogOutcome>().AsNoTracking()
+                    .Where(x => parent == null ? !db.Set<StudyCatalogTopicOutcome>().Any(m => m.OutcomeId == x.Id) : db.Set<StudyCatalogTopicOutcome>().Any(m => m.OutcomeId == x.Id && m.TopicId == parent))
+                    .Select(x => new CurriculumNode(kind,x.Id,x.Name,parent,"topics",!x.IsArchived,x.DisplayOrder,null,null,null,x.Code,x.OfficialTopicId,x.SourcePage,x.Notes)); break;
+        }
+        // Filter after the bounded parent scope; Contains is parameterized by EF, not interpolated SQL.
+        if (!string.IsNullOrWhiteSpace(search)) { var term = search.Trim(); query = query.Where(x => x.Name.Contains(term) || (x.Code != null && x.Code.Contains(term))); }
+        var count = await query.CountAsync(ct);
+        var items = await query.OrderBy(x => x.DisplayOrder ?? 0).ThenBy(x => x.Name).ThenBy(x => x.Id).Skip((page-1)*25).Take(25).ToArrayAsync(ct);
+        if (all) for (var i = 0; i < items.Length; i++) items[i] = items[i] with { Path = await Path(items[i].Kind,items[i].Id,ct) };
+        return new(items,count,page,25);
+    }
+
+    public async Task<CurriculumNode> GetAsync(string kind, Guid id, CancellationToken ct)
+    {
+        await Require(ct); var entity = await Load(kind,id,ct); return await Describe(entity,ct);
+    }
+
+    public Task<CurriculumNode> SaveAsync(string kind, Guid? id, CurriculumSaveRequest r, CancellationToken ct)
+        => Write(kind,id,r.Fingerprint,r.Reason,"CurriculumEdit", async () =>
+        {
+            if (id.HasValue)
+            {
+                var entity = await Load(kind,id.Value,ct);
+                switch (entity)
+                {
+                    case StudyCatalogLessonGroup g: g.Edit(r.Name,r.DisplayOrder ?? 0); break;
+                    case StudyCatalogLesson l: l.Edit(r.Name,r.GradeNumber,r.ExamCode); break;
+                    case StudyCatalogUnit u: u.Edit(r.Name,r.DisplayOrder); break;
+                    case StudyCatalogTopic t: t.Edit(r.Name,r.DisplayOrder,r.EstimatedMinutes); break;
+                    case StudyCatalogOutcome o:
+                        await Snapshot(o,ct);
+                        if (r.OfficialTopicId.HasValue && r.OfficialTopicId != o.OfficialTopicId) throw new ArgumentException("Resmî program bağlantısını değiştirmek için yeni kazanım oluşturun.");
+                        await UniqueOutcome(o.EditionId,r.Code,o.Id,ct);
+                        o.Edit(r.Code!,r.Name,r.Notes ?? "",r.SourcePage ?? o.SourcePage,r.DisplayOrder ?? o.DisplayOrder); break;
+                }
+                return entity;
+            }
+            switch (kind)
+            {
+                case "groups": return Add(StudyCatalogLessonGroup.Create(r.Name,r.DisplayOrder ?? 0));
+                case "lessons":
+                    if (r.ParentId.HasValue) await Load("groups",r.ParentId.Value,ct);
+                    var lesson = StudyCatalogLesson.Create("admin-manual",Guid.NewGuid().ToString("N"),r.Name,r.GradeNumber,r.ExamCode);
+                    lesson.AssignGroup(r.ParentId); return Add(lesson);
+                case "units":
+                    var owner = (StudyCatalogLesson)await Load("lessons",Required(r.ParentId),ct);
+                    return Add(StudyCatalogUnit.Create("admin-manual",Guid.NewGuid().ToString("N"),owner.Id,r.Name,r.DisplayOrder));
+                case "topics":
+                    var parent = await TopicParent(Required(r.ParentId),ct);
+                    return Add(StudyCatalogTopic.Create("admin-manual",Guid.NewGuid().ToString("N"),parent.LessonId,parent.UnitId,r.Name,parent.ParentId,r.DisplayOrder,r.EstimatedMinutes));
+                default:
+                    var topic = (StudyCatalogTopic)await Load("topics",Required(r.ParentId),ct);
+                    await Leaf(topic,ct);
+                    var official = await db.Set<OfficialCurriculumTopic>().SingleOrDefaultAsync(x => x.Id == r.OfficialTopicId,ct) ?? throw new ArgumentException("Kazanımın program konu grubunu seçin.");
+                    await OutcomeScope(topic,official.EditionId,ct); await UniqueOutcome(official.EditionId,r.Code,null,ct);
+                    var outcome = Add(StudyCatalogOutcome.Create(official.EditionId,official.Id,r.Code!,r.Name,r.Notes ?? "",r.SourcePage ?? 1,r.DisplayOrder ?? 1));
+                    db.Add(StudyCatalogTopicOutcome.Create(topic.Id,outcome.Id,r.Reason)); return outcome;
+            }
+        },ct);
+
+    public Task<CurriculumNode> MoveAsync(string kind, Guid id, CurriculumMoveRequest r, CancellationToken ct)
+        => Write(kind,id,r.Fingerprint,r.Reason,"CurriculumMove",async () =>
+        {
+            var entity = await Load(kind,id,ct);
+            if (entity is StudyCatalogLesson lesson)
+            {
+                if (r.DestinationId.HasValue) await Load("groups",r.DestinationId.Value,ct);
+                lesson.AssignGroup(r.DestinationId); return lesson;
+            }
+            if (entity is StudyCatalogOutcome outcome)
+            {
+                var target = (StudyCatalogTopic)await Load("topics",Required(r.DestinationId),ct); await Leaf(target,ct); await OutcomeScope(target,outcome.EditionId,ct);
+                if (!r.SourceTopicId.HasValue || r.SourceTopicId == target.Id) throw new ArgumentException("Kaynak ve farklı hedef konu seçin.");
+                var old = await db.Set<StudyCatalogTopicOutcome>().SingleOrDefaultAsync(x => x.TopicId == r.SourceTopicId && x.OutcomeId == id,ct) ?? throw new ArgumentException("Kaynak konu bağlantısı değişmiş.");
+                if (await db.Set<StudyCatalogTopicOutcome>().AnyAsync(x => x.TopicId == target.Id && x.OutcomeId == id,ct)) throw new ArgumentException("Kazanım hedef konuda zaten var.");
+                db.Add(StudyCatalogTopicOutcome.Create(target.Id,id,"Taşıma sonrası kapsamı yeniden onaylayın. " + r.Reason)); db.Remove(old); return outcome;
+            }
+            if (entity is StudyCatalogUnit unit)
+            {
+                var target = (StudyCatalogLesson)await Load("lessons",Required(r.DestinationId),ct);
+                if (target.Id == unit.LessonId) throw new ArgumentException("Farklı hedef ders seçin.");
+                await Compatible(unit.LessonId,target.Id,ct);
+                var copy = Add(StudyCatalogUnit.Create("admin-manual",Guid.NewGuid().ToString("N"),target.Id,unit.Name,unit.DisplayOrder)); copy.SetActive(unit.IsActive && target.IsActive);
+                var all = await db.StudyCatalogTopics.Where(x => x.UnitId == unit.Id).ToArrayAsync(ct);
+                foreach (var root in all.Where(x => x.ParentId == null)) await CopyTopic(root,target.Id,copy.Id,null,all,ct);
+                unit.SetActive(false); return copy;
+            }
+            if (entity is StudyCatalogTopic source)
+            {
+                var parent = await TopicParent(Required(r.DestinationId),ct);
+                if (r.DestinationId == source.Id || await db.StudyCatalogTopics.AnyAsync(x => x.Id == r.DestinationId && x.ParentId == source.Id,ct)) throw new ArgumentException("Konu kendisine veya alt konusuna taşınamaz.");
+                if (parent.UnitId == source.UnitId && parent.ParentId == source.ParentId) throw new ArgumentException("Farklı hedef konum seçin.");
+                var descendants = await db.StudyCatalogTopics.Where(x => x.ParentId == source.Id).ToArrayAsync(ct);
+                if (parent.ParentId.HasValue && descendants.Length > 0) throw new ArgumentException("Alt konuları olan konu yalnız üniteye taşınabilir.");
+                await Compatible(source.LessonId,parent.LessonId,ct);
+                return await CopyTopic(source,parent.LessonId,parent.UnitId,parent.ParentId,descendants,ct);
+            }
+            throw new ArgumentException("Ders grubu kök kayıttır; taşınmaz.");
+        },ct);
+
+    public Task<CurriculumNode> SetActiveAsync(string kind, Guid id, CurriculumStatusRequest r, CancellationToken ct)
+        => Write(kind,id,r.Fingerprint,r.Reason,"CurriculumStatus",async () =>
+        {
+            var entity = await Load(kind,id,ct);
+            if (r.IsActive) await ActiveParent(entity,ct);
+            else if (await ActiveChildren(entity,ct)) throw new ArgumentException("Önce aktif alt kayıtları pasife alın.");
+            switch (entity)
+            {
+                case StudyCatalogLessonGroup g: g.SetActive(r.IsActive); break;
+                case StudyCatalogLesson l: l.SetActive(r.IsActive); break;
+                case StudyCatalogUnit u: u.SetActive(r.IsActive); break;
+                case StudyCatalogTopic t: t.SetActive(r.IsActive); break;
+                case StudyCatalogOutcome o: o.Archive(!r.IsActive); break;
+            }
+            return entity;
+        },ct);
+
+    public async Task DeleteAsync(string kind, Guid id, CurriculumDeleteRequest r, CancellationToken ct)
+    {
+        if (r.ConfirmId != id) throw new ArgumentException("Silinecek kayıt kimliğini doğrulayın.");
+        await Write(kind,id,r.Fingerprint,r.Reason,"CurriculumDelete",async () =>
+        {
+            var entity = await Load(kind,id,ct); var doc = await Describe(entity,ct);
+            if (!doc.CanDelete) throw new BusinessRuleException("Catalog.InUse","Kayıt kullanımda; silinemez. " + string.Join(" · ",doc.Blockers));
+            if (entity is StudyCatalogOutcome o)
+            {
+                db.RemoveRange(await db.Set<StudyCatalogTopicOutcome>().Where(x => x.OutcomeId == id).ToArrayAsync(ct));
+                db.RemoveRange(await db.Set<StudyCatalogOutcomeSource>().Where(x => x.OutcomeId == id).ToArrayAsync(ct));
+                db.RemoveRange(await db.Set<OutcomeDurationEstimate>().Where(x => x.OutcomeId == id).ToArrayAsync(ct));
+            }
+            db.Remove(entity); return entity;
+        },ct);
+    }
+
+    private async Task<CurriculumNode> Write(string kind,Guid? id,string? fingerprint,string reason,string action,Func<Task<object>> operation,CancellationToken ct)
+    {
+        await Require(ct); Kind(kind); Reason(reason);
+        var auditId = Guid.NewGuid(); CurriculumNode? result = null;
+        await db.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
+        {
+            // Preserve retry idempotency when commit succeeded but its acknowledgement was lost.
+            var previous = await db.AdminAuditRecords.AsNoTracking().SingleOrDefaultAsync(x => x.Id == auditId,ct);
+            if (previous is not null) return;
+            await using var tx = db.Database.IsRelational() ? await db.Database.BeginTransactionAsync(ct) : null;
+            try
+            {
+                if (db.Database.IsRelational())
+                {
+                    await db.Database.ExecuteSqlRawAsync("SET LOCAL lock_timeout = '3s'",ct);
+                    await db.Database.ExecuteSqlRawAsync("SELECT pg_advisory_xact_lock(4188, 100)",ct);
+                    await db.Database.ExecuteSqlRawAsync("""
+                        LOCK TABLE coaching.academic_goals, coaching.exam_results, coaching.study_catalog_lessons,
+                          coaching.study_catalog_topics, coaching.study_catalog_units, coaching.study_plan_tasks,
+                          coaching.target_schools, coaching.target_university_programs, coaching.student_course_preferences,
+                          coaching.student_topic_states, coaching.study_catalog_topic_outcomes, coaching.study_catalog_outcomes,
+                          coaching.outcome_duration_estimates, coaching.study_plan_task_outcomes, coaching.study_catalog_lesson_groups
+                        IN SHARE ROW EXCLUSIVE MODE
+                        """,ct);
+                }
+                if (id.HasValue && (string.IsNullOrEmpty(fingerprint) || (await Describe(await Load(kind,id.Value,ct),ct)).Fingerprint != fingerprint))
+                    throw new BusinessRuleException("Catalog.Stale","Kayıt veya bağlantıları değişmiş. Güncel kaydı yeniden açın.");
+                var entity = await operation();
+                result = await Describe(entity,ct);
+                db.AdminAuditRecords.Add(new AdminAuditRecord(auditId,DateTimeOffset.UtcNow,"Coaching",user.UserId!.Value.ToString(),"SystemAdmin",null,
+                    "COMMAND","/api/coaching-admin/curriculum-management",200,Guid.NewGuid().ToString(),null,null,action,kind,result.Id.ToString(),
+                    JsonSerializer.Serialize(new { reason, before = fingerprint, after = result.Fingerprint, result.Name })));
+                var deleted = db.Entry(entity).State == EntityState.Deleted;
+                await db.SaveChangesAsync(ct);
+                if (!deleted) result = await Describe(entity,ct);
+                if (tx is not null) await tx.CommitAsync(ct);
+            }
+            catch { db.ChangeTracker.Clear(); throw; }
+        });
+        return result!;
+    }
+
+    private async Task<CurriculumNode> Describe(object entity,CancellationToken ct)
+    {
+        CurriculumNode node = entity switch
+        {
+            StudyCatalogLessonGroup g => new("groups",g.Id,g.Name,null,null,g.IsActive,g.DisplayOrder),
+            StudyCatalogLesson l => new("lessons",l.Id,l.Name,l.GroupId,"groups",l.IsActive,GradeNumber:l.GradeNumber,ExamCode:l.ExamCode),
+            StudyCatalogUnit u => new("units",u.Id,u.Name,u.LessonId,"lessons",u.IsActive,u.DisplayOrder),
+            StudyCatalogTopic t => new("topics",t.Id,t.Name,t.ParentId ?? t.UnitId,t.ParentId.HasValue ? "topics" : "units",t.IsActive,t.DisplayOrder,t.EstimatedMinutes),
+            StudyCatalogOutcome o => new("outcomes",o.Id,o.Name,null,"topics",!o.IsArchived,o.DisplayOrder,Code:o.Code,OfficialTopicId:o.OfficialTopicId,SourcePage:o.SourcePage,Notes:o.Notes),
+            _ => throw new ArgumentException("Geçersiz katalog kaydı.")
+        };
+        var blockers = new List<string>();
+        if (entity is StudyCatalogLessonGroup group)
+        { var count = await db.StudyCatalogLessons.CountAsync(x => x.GroupId == group.Id,ct); if (count > 0) blockers.Add($"{count} bağlı ders"); }
+        else if (entity is StudyCatalogOutcome outcome)
+        {
+            var count = await db.Set<StudyPlanTaskOutcome>().CountAsync(x => x.OutcomeId == outcome.Id,ct); if (count > 0) blockers.Add($"{count} çalışma kaydı");
+            var mappings = await db.Set<StudyCatalogTopicOutcome>().AsNoTracking().Where(x => x.OutcomeId == outcome.Id).OrderBy(x => x.TopicId).ToArrayAsync(ct);
+            var paths = new List<CurriculumMapping>();
+            foreach (var m in mappings) paths.Add(new(m.TopicId,await Path("topics",m.TopicId,ct),m.IsApproved,m.Evidence));
+            node = node with { Estimates = await db.Set<OutcomeDurationEstimate>().AsNoTracking().Where(x => x.OutcomeId == outcome.Id).OrderByDescending(x => x.Number).ToArrayAsync(ct), Mappings = paths };
+        }
+        else
+        {
+            var catalogKind = node.Kind switch { "lessons" => CatalogKind.Lessons, "units" => CatalogKind.Units, _ => CatalogKind.Topics };
+            // Newly added records have no persisted references yet.
+            if (db.Entry(entity).State != EntityState.Added)
+            {
+                var usage = db.Database.IsRelational()
+                    ? await new CoachingCatalogDeletionService(db,scope,user).GetUsageAsync(catalogKind,node.Id,ct)
+                    : await MemoryUsage(catalogKind,node.Id,ct);
+                if (usage.CatalogReferences > 0) blockers.Add($"{usage.CatalogReferences} katalog / öğrenci bağlantısı");
+                if (usage.PlanReferences > 0) blockers.Add($"{usage.PlanReferences} çalışma kaydı");
+                if (usage.ExamReferences > 0) blockers.Add($"{usage.ExamReferences} sınav kaydı");
+            }
+        }
+        var payload = new { entity, mappings = node.Mappings, estimates = node.Estimates.Select(x => new { x.Id,x.Number,x.IsPublished }), blockers };
+        var fingerprint = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(payload))));
+        var path = node.ParentId.HasValue ? await Path(node.ParentKind!,node.ParentId.Value,ct) + " / " + node.Name : node.Name;
+        return node with { Path = path,Fingerprint = fingerprint,CanDelete = blockers.Count == 0,Blockers = blockers };
+    }
+
+    private async Task<string> Path(string kind,Guid id,CancellationToken ct)
+    {
+        var entity = await Load(kind,id,ct);
+        return entity switch
+        {
+            StudyCatalogLessonGroup g => g.Name,
+            StudyCatalogLesson l => (l.GroupId.HasValue ? await Path("groups",l.GroupId.Value,ct) + " / " : "") + l.Name,
+            StudyCatalogUnit u => await Path("lessons",u.LessonId,ct) + " / " + u.Name,
+            StudyCatalogTopic t => await Path(t.ParentId.HasValue ? "topics" : "units",t.ParentId ?? t.UnitId,ct) + " / " + t.Name,
+            _ => ""
+        };
+    }
+    private async Task<CatalogUsage> MemoryUsage(CatalogKind kind,Guid id,CancellationToken ct)
+    {
+        var catalog = kind switch
+        {
+            CatalogKind.Lessons => await db.StudyCatalogUnits.CountAsync(x => x.LessonId == id,ct) + await db.StudentCoursePreferences.CountAsync(x => x.LessonId == id,ct),
+            CatalogKind.Units => await db.StudyCatalogTopics.CountAsync(x => x.UnitId == id,ct),
+            _ => await db.StudyCatalogTopics.CountAsync(x => x.ParentId == id,ct) + await db.Set<StudyCatalogTopicOutcome>().CountAsync(x => x.TopicId == id,ct) + await db.StudentTopicStates.CountAsync(x => x.TopicId == id,ct)
+        };
+        return new(id,"","",catalog,kind == CatalogKind.Topics ? await db.StudyPlanTasks.CountAsync(x => x.TopicId == id,ct) : 0,0,0);
+    }
+    private async Task<object> Load(string kind,Guid id,CancellationToken ct)
+    {
+        Kind(kind); object? entity = kind switch
+        {
+            "groups" => await db.Set<StudyCatalogLessonGroup>().FindAsync([id],ct),
+            "lessons" => await db.StudyCatalogLessons.FindAsync([id],ct),
+            "units" => await db.StudyCatalogUnits.FindAsync([id],ct),
+            "topics" => await db.StudyCatalogTopics.FindAsync([id],ct),
+            _ => await db.Set<StudyCatalogOutcome>().FindAsync([id],ct)
+        };
+        return entity ?? throw new KeyNotFoundException("Katalog kaydı bulunamadı.");
+    }
+    private async Task<(Guid LessonId,Guid UnitId,Guid? ParentId)> TopicParent(Guid id,CancellationToken ct)
+    {
+        var unit = await db.StudyCatalogUnits.FindAsync([id],ct); if (unit is not null) return (unit.LessonId,unit.Id,null);
+        var parent = (StudyCatalogTopic)await Load("topics",id,ct);
+        if (parent.ParentId.HasValue) throw new ArgumentException("Hiyerarşi konu ve alt konu olmak üzere iki düzeylidir.");
+        if (await db.Set<StudyCatalogTopicOutcome>().AnyAsync(x => x.TopicId == id,ct)) throw new ArgumentException("Kazanım bağlı konuya alt konu eklemeden önce kazanımları alt konuya taşıyın.");
+        return (parent.LessonId,parent.UnitId,parent.Id);
+    }
+    private async Task Leaf(StudyCatalogTopic topic,CancellationToken ct)
+    { if (await db.StudyCatalogTopics.AnyAsync(x => x.ParentId == topic.Id,ct)) throw new ArgumentException("Kazanımı en alt düzeydeki konuya bağlayın."); }
+    private async Task Compatible(Guid from,Guid to,CancellationToken ct)
+    {
+        var a = (StudyCatalogLesson)await Load("lessons",from,ct); var b = (StudyCatalogLesson)await Load("lessons",to,ct);
+        if (a.CurriculumVersionId != b.CurriculumVersionId || a.ExamCode != b.ExamCode || a.GradeNumber != b.GradeNumber || a.Name != b.Name)
+            throw new ArgumentException("Taşıma aynı ders, sınıf, sınav ve program sürümü kapsamındaki kayıtlar arasında yapılabilir.");
+    }
+    private async Task OutcomeScope(StudyCatalogTopic topic,Guid editionId,CancellationToken ct)
+    {
+        var lesson = (StudyCatalogLesson)await Load("lessons",topic.LessonId,ct);
+        var edition = await db.Set<OfficialCurriculumEdition>().SingleAsync(x => x.Id == editionId,ct);
+        if (lesson.Name != edition.SubjectName || lesson.ExamCode != edition.ExamCode || (lesson.GradeNumber.HasValue && lesson.GradeNumber != edition.GradeNumber))
+            throw new ArgumentException("Kazanım programı hedef ders, sınav ve sınıf kapsamıyla uyuşmuyor.");
+    }
+    private async Task<StudyCatalogTopic> CopyTopic(StudyCatalogTopic old,Guid lesson,Guid unit,Guid? parent,StudyCatalogTopic[] descendants,CancellationToken ct)
+    {
+        var copy = Add(StudyCatalogTopic.Create("admin-manual",Guid.NewGuid().ToString("N"),lesson,unit,old.Name,parent,old.DisplayOrder,old.EstimatedMinutes));
+        copy.SetActive(old.IsActive); old.SetActive(false);
+        foreach (var m in await db.Set<StudyCatalogTopicOutcome>().Where(x => x.TopicId == old.Id).ToArrayAsync(ct))
+        { var link = StudyCatalogTopicOutcome.Create(copy.Id,m.OutcomeId,m.Evidence); if (m.IsApproved) link.Review(true,m.Evidence,user.UserId!.Value); db.Add(link); }
+        foreach (var child in descendants.Where(x => x.ParentId == old.Id)) await CopyTopic(child,lesson,unit,copy.Id,[],ct);
+        return copy;
+    }
+    private async Task Snapshot(StudyCatalogOutcome outcome,CancellationToken ct)
+    { foreach (var link in await db.Set<StudyPlanTaskOutcome>().Where(x => x.OutcomeId == outcome.Id).ToArrayAsync(ct)) link.CaptureText(outcome.Code,outcome.Name); }
+    private async Task UniqueOutcome(Guid edition,string? code,Guid? id,CancellationToken ct)
+    { if (string.IsNullOrWhiteSpace(code) || await db.Set<StudyCatalogOutcome>().AnyAsync(x => x.EditionId == edition && x.Code == code.Trim() && x.Id != id,ct)) throw new ArgumentException("Program içinde benzersiz kazanım kodu girin."); }
+    private async Task<bool> ActiveChildren(object e,CancellationToken ct) => e switch
+    {
+        StudyCatalogLessonGroup g => await db.StudyCatalogLessons.AnyAsync(x => x.GroupId == g.Id && x.IsActive,ct),
+        StudyCatalogLesson l => await db.StudyCatalogUnits.AnyAsync(x => x.LessonId == l.Id && x.IsActive,ct),
+        StudyCatalogUnit u => await db.StudyCatalogTopics.AnyAsync(x => x.UnitId == u.Id && x.IsActive,ct),
+        StudyCatalogTopic t => await db.StudyCatalogTopics.AnyAsync(x => x.ParentId == t.Id && x.IsActive,ct),
+        _ => false
+    };
+    private async Task ActiveParent(object e,CancellationToken ct)
+    {
+        var active = e switch
+        {
+            StudyCatalogLesson l when l.GroupId.HasValue => ((StudyCatalogLessonGroup)await Load("groups",l.GroupId.Value,ct)).IsActive,
+            StudyCatalogUnit u => ((StudyCatalogLesson)await Load("lessons",u.LessonId,ct)).IsActive,
+            StudyCatalogTopic t => ((StudyCatalogUnit)await Load("units",t.UnitId,ct)).IsActive && (t.ParentId == null || ((StudyCatalogTopic)await Load("topics",t.ParentId.Value,ct)).IsActive),
+            _ => true
+        };
+        if (!active) throw new ArgumentException("Önce üst kaydı etkinleştirin.");
+    }
+    private T Add<T>(T entity) where T : class { db.Add(entity); return entity; }
+    private static Guid Required(Guid? id) => id.HasValue && id != Guid.Empty ? id.Value : throw new ArgumentException("Üst kayıt seçin.");
+    private static void Kind(string kind) { if (!Kinds.Contains(kind)) throw new ArgumentException("Geçersiz katalog türü."); }
+    private static void Reason(string? reason) { if (string.IsNullOrWhiteSpace(reason) || reason.Trim().Length is < 5 or > 500) throw new ArgumentException("5–500 karakterlik işlem gerekçesi girin."); }
+    private async Task Require(CancellationToken ct)
+    { if (!(await scope.RequireReadScopeAsync(ct)).IsGlobal || !user.UserId.HasValue) throw new BusinessRuleException("Authorization.Forbidden","Müfredat yönetimi yalnız global yöneticiye açıktır."); }
+}
