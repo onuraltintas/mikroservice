@@ -39,7 +39,7 @@ internal sealed class OwnedSpeedReadingTeacherReports(
                 group.Count(item => item.TotalQuestions > 0),
                 group.Sum(item => item.ReadingTimeSeconds)))
             .ToListAsync(cancellationToken);
-        var exercises = await db.DailyExerciseLogs.AsNoTracking()
+        var exercises = await OwnedSpeedReadingReportExercises.WithoutReadingDuplicates(db)
             .Where(item => studentIds.Contains(item.UserId) && item.CompletedDate >= start && item.CompletedDate <= end)
             .GroupBy(item => item.UserId)
             .Select(group => new StudentMetrics(
@@ -47,7 +47,7 @@ internal sealed class OwnedSpeedReadingTeacherReports(
                 group.Count(),
                 0,
                 0,
-                group.Average(item => item.SuccessRate),
+                group.Where(item => item.IsMeasured).Select(item => (decimal?)item.SuccessRate).Average() ?? 0,
                 0,
                 group.Sum(item => item.TimeSpentSeconds)))
             .ToListAsync(cancellationToken);
@@ -326,21 +326,20 @@ internal sealed class OwnedSpeedReadingTeacherReports(
         var (start, end) = NormalizeRange(dateFrom, dateTo);
         var studentIds = await ScopedStudentIdsAsync(scope, cancellationToken);
         var exerciseRows = await (
-            from log in db.DailyExerciseLogs.AsNoTracking()
-            join type in db.ExerciseTypes.AsNoTracking() on log.ExerciseTypeId equals type.Id
-            where studentIds.Contains(log.UserId) && type.IsActive && !type.IsDeleted
+            from log in OwnedSpeedReadingReportExercises.All(db)
+            where studentIds.Contains(log.UserId)
                 && log.CompletedDate >= start && log.CompletedDate <= end
-            select new { log.UserId, log.CompletedDate, log.SuccessRate, type.Name, type.DisplayName })
+            select new { log.UserId, log.CompletedDate, Score = log.IsMeasured ? (decimal?)log.SuccessRate : null, log.TypeName })
             .ToListAsync(cancellationToken);
         var exerciseAnalysis = exerciseRows
-            .GroupBy(item => new { item.Name, item.DisplayName })
+            .GroupBy(item => item.TypeName)
             .OrderByDescending(group => group.Count())
             .Select(group => new AdminExerciseTypeAnalysis(
-                string.IsNullOrWhiteSpace(group.Key.DisplayName) ? group.Key.Name : group.Key.DisplayName,
+                group.Key,
                 group.Count(),
                 group.Select(item => item.UserId).Distinct().Count(),
-                group.Average(item => item.SuccessRate),
-                PerformanceLevel(group.Average(item => item.SuccessRate))))
+                group.Average(item => item.Score) ?? 0,
+                group.Any(item => item.Score.HasValue) ? PerformanceLevel(group.Average(item => item.Score) ?? 0) : "not-measured"))
             .ToList();
         var exerciseFrequency = exerciseRows
             .GroupBy(item => item.CompletedDate.Date)
@@ -404,7 +403,7 @@ internal sealed class OwnedSpeedReadingTeacherReports(
                 IsReading: true,
                 HasComprehension: item.TotalQuestions > 0))
             .ToListAsync(cancellationToken);
-        var exercise = await db.DailyExerciseLogs.AsNoTracking()
+        var exercise = await OwnedSpeedReadingReportExercises.WithoutReadingDuplicates(db)
             .Where(item => studentIds.Contains(item.UserId) && item.CompletedDate >= start && item.CompletedDate <= end)
             .Select(item => new ActivityRow(
                 item.UserId,
@@ -413,7 +412,7 @@ internal sealed class OwnedSpeedReadingTeacherReports(
                 item.TimeSpentSeconds,
                 item.SuccessRate,
                 IsReading: false,
-                HasComprehension: false))
+                HasComprehension: item.IsMeasured))
             .ToListAsync(cancellationToken);
         var daily = reading.Concat(exercise).ToList();
         var weekly = daily.GroupBy(item => StartOfWeek(item.Date)).OrderBy(group => group.Key)
@@ -429,7 +428,7 @@ internal sealed class OwnedSpeedReadingTeacherReports(
 
         var midpoint = start + (end - start) / 2;
         var progress = TeacherAnalyticsRules.CalculateProgress(
-            daily.Where(item => !item.IsReading || item.HasComprehension)
+            daily.Where(item => item.HasComprehension)
                 .Select(item => new TeacherProgressSample(
                 item.StudentId, item.Date, item.Score, item.IsReading)), midpoint);
         var names = await GetNamesAsync(progress.Select(item => item.StudentId), cancellationToken);

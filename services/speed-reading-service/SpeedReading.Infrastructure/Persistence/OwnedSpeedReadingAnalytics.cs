@@ -64,7 +64,7 @@ internal sealed class OwnedSpeedReadingAnalytics(
             .Select(item => (decimal?)item.ComprehensionRate)
             .FirstOrDefaultAsync(cancellationToken);
 
-        var exerciseQuery = db.DailyExerciseLogs.AsNoTracking()
+        var exerciseQuery = OwnedSpeedReadingReportExercises.WithoutReadingDuplicates(db)
             .Where(item => item.UserId == userId && item.CompletedDate >= start && item.CompletedDate <= end);
         var exerciseAggregate = await exerciseQuery
             .GroupBy(_ => 1)
@@ -398,14 +398,14 @@ internal sealed class OwnedSpeedReadingAnalytics(
                 item.CompletedDate, item.AverageSuccessRate, item.CurrentStreak))
             .ToListAsync(cancellationToken);
         var templateIds = progressRows.Select(item => item.ProgramTemplateId).Distinct().ToArray();
-        var templates = await db.ProgramTemplates.AsNoTracking().Where(item => templateIds.Contains(item.Id))
+        var templates = await db.ProgramTemplates.AsNoTracking().Where(item => Enumerable.Contains(templateIds, item.Id))
             .Select(item => new { item.Id, item.Name, item.TotalDays })
             .ToDictionaryAsync(item => item.Id, item => new ProgramTemplateInfo(item.Name, item.TotalDays), cancellationToken);
         var progressIds = progressRows.Select(item => item.Id).ToArray();
         var dailyProgressRows = progressIds.Length == 0
             ? []
             : await db.DailyExerciseLogs.AsNoTracking()
-                .Where(item => progressIds.Contains(item.StudentProgramProgressId)
+                .Where(item => Enumerable.Contains(progressIds, item.StudentProgramProgressId)
                     && item.CompletedDate >= start && item.CompletedDate <= end)
                 .Select(item => new StudentSeriesLogRow(item.StudentProgramProgressId, item.CompletedDate, item.DayNumber))
                 .ToListAsync(cancellationToken);
@@ -476,7 +476,7 @@ internal sealed class OwnedSpeedReadingAnalytics(
     {
         var (start, end) = NormalizeRange(dateFrom, dateTo);
         var readingQuery = ReadingSessionsFor(userId, start, end);
-        var exerciseQuery = db.DailyExerciseLogs.AsNoTracking()
+        var exerciseQuery = OwnedSpeedReadingReportExercises.WithoutReadingDuplicates(db)
             .Where(item => item.UserId == userId && item.CompletedDate >= start && item.CompletedDate <= end);
         var readingAggregate = await readingQuery.GroupBy(_ => 1).Select(group => new
         {
@@ -570,17 +570,17 @@ internal sealed class OwnedSpeedReadingAnalytics(
         var readingTextTitles = readingTextIds.Length == 0
             ? new Dictionary<Guid, string>()
             : await db.ReadingTexts.AsNoTracking()
-                .Where(item => readingTextIds.Contains(item.Id))
+                .Where(item => Enumerable.Contains(readingTextIds, item.Id))
                 .ToDictionaryAsync(item => item.Id, item => item.Title, cancellationToken);
         var exerciseTitles = exerciseIds.Length == 0
             ? new Dictionary<Guid, string>()
             : await db.Exercises.AsNoTracking()
-                .Where(item => exerciseIds.Contains(item.Id))
+                .Where(item => Enumerable.Contains(exerciseIds, item.Id))
                 .ToDictionaryAsync(item => item.Id, item => item.Title, cancellationToken);
         var exerciseTypeNames = exerciseTypeIds.Length == 0
             ? new Dictionary<Guid, string>()
             : await db.ExerciseTypes.AsNoTracking()
-                .Where(item => exerciseTypeIds.Contains(item.Id))
+                .Where(item => Enumerable.Contains(exerciseTypeIds, item.Id))
                 .ToDictionaryAsync(item => item.Id,
                     item => string.IsNullOrWhiteSpace(item.DisplayName) ? item.Name : item.DisplayName,
                     cancellationToken);
@@ -596,8 +596,8 @@ internal sealed class OwnedSpeedReadingAnalytics(
                 item.Wpm,
                 item.Comprehension,
                 null,
-                item.IsMeasured,
-                item.TotalQuestions > 0))
+                item.IsMeasured || item.TotalQuestions > 0,
+                item.TotalQuestions > 0 ? item.Comprehension >= 60 : item.IsMeasured))
             .Concat(recentExerciseRows.Select(item => new StudentActivityDetail(
                 NormalizeUtc(item.CompletedAt),
                 "exercise",
@@ -608,7 +608,7 @@ internal sealed class OwnedSpeedReadingAnalytics(
                 item.DurationSeconds,
                 item.Wpm,
                 item.Comprehension,
-                item.SuccessRate,
+                item.IsMeasured ? item.SuccessRate : null,
                 item.IsMeasured,
                 item.IsPassed)))
             .OrderByDescending(item => item.CompletedAt)

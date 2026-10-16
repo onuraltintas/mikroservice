@@ -193,6 +193,7 @@
                   <th>Etkinlik</th>
                   <th>Hız</th>
                   <th>Anlama</th>
+                  <th>Başarı puanı</th>
                   <th>Süre</th>
                   <th>Sonuç</th>
                 </tr>
@@ -213,10 +214,11 @@
                           : formatNumber(activity.comprehension) + '%'
                       }}
                     </td>
+                    <td>{{ activity.successRate === null ? '—' : formatNumber(activity.successRate) + '%' }}</td>
                     <td>{{ formatDuration(activity.durationSeconds) }}</td>
                     <td>
-                      <span class="status" [class.inactive]="!activity.isPassed">{{
-                        activity.isPassed ? 'Başarılı' : 'Tekrar gerekli'
+                      <span class="status" [class.inactive]="activity.isMeasured && !activity.isPassed">{{
+                        !activity.isMeasured ? 'Tamamlandı · Ölçülmedi' : activity.isPassed ? 'Başarılı' : 'Tekrar gerekli'
                       }}</span>
                     </td>
                   </tr>

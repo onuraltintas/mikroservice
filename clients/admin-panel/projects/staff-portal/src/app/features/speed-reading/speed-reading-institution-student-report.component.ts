@@ -112,6 +112,9 @@ export class SpeedReadingStudentReportComponent implements OnChanges, OnDestroy 
   }
 
   private getErrorMessage(error: unknown): string {
+    if (error instanceof HttpErrorResponse && error.status >= 500) {
+      return 'Öğrenci raporu yüklenemedi; sunucu hatası oluştu. Lütfen tekrar deneyin.';
+    }
     if (error instanceof HttpErrorResponse && error.error && typeof error.error === 'object') {
       const body = error.error as { message?: unknown; description?: unknown };
       if (typeof body.message === 'string') return body.message;

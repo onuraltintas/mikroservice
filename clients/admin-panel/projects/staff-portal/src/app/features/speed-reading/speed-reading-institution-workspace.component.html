@@ -316,8 +316,8 @@
                           <td>{{ item.exerciseTypeName }}</td>
                           <td>{{ formatNumber(item.totalCompletions) }}</td>
                           <td>{{ formatNumber(item.activeStudents) }}</td>
-                          <td>{{ formatReportNumber(item.averageScore) }}%</td>
-                          <td>{{ item.performanceLevel }}</td>
+                          <td>{{ item.performanceLevel === 'not-measured' ? '—' : formatReportNumber(item.averageScore) + '%' }}</td>
+                          <td>{{ item.performanceLevel === 'not-measured' ? 'Ölçülmedi' : item.performanceLevel }}</td>
                         </tr>
                       } @empty {
                         <tr>

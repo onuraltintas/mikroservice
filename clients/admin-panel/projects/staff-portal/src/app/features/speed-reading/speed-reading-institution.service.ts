@@ -1,6 +1,6 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { forkJoin, Observable } from 'rxjs';
+import { forkJoin, map, Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { SpeedReadingTeacherClassOverview } from './speed-reading-teacher.service';
 
@@ -277,7 +277,16 @@ export class SpeedReadingInstitutionService {
     return this.http.get<SpeedReadingInstitutionMemberPage>(
       `${this.speedReadingUrl}/institutions/${encodeURIComponent(institutionId)}/members`,
       { params },
-    );
+    ).pipe(map(page => ({
+      ...page,
+      items: page.items.map(member => {
+        const rawRole: unknown = member.role;
+        const normalizedRole: SpeedReadingInstitutionMemberRole | null = rawRole === 1 || rawRole === 'Student'
+          ? 'Student' : rawRole === 2 || rawRole === 'Teacher' ? 'Teacher' : null;
+        if (!normalizedRole) throw new Error('Kurum üyeliğinde geçersiz rol bilgisi alındı.');
+        return { ...member, role: normalizedRole };
+      }),
+    })));
   }
 
   getClassOverview(
