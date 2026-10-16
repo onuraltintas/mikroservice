@@ -43,6 +43,9 @@ public sealed class CoachingOutcomePostgresTests
             await service.ImportAsync(new(f.Package, review.Fingerprint, "İlk pilot aktarımı"), default);
             await service.ImportAsync(new(f.Package, (await service.PreviewAsync(f.Package, default)).Fingerprint, "Tekrarlı aktarım"), default);
             Assert.Equal(2, await db.Set<StudyCatalogOutcome>().CountAsync());
+            var usage = await new CoachingCatalogDeletionService(db, f.Scope, f.Inner.Actor)
+                .GetUsageAsync(Coaching.Application.CatalogAdministration.CatalogKind.Topics, topic.Id, default);
+            Assert.False(usage.CanDelete);
             var outcome = await db.Set<StudyCatalogOutcome>().OrderBy(x => x.Code).FirstAsync();
             await service.ReviewMappingAsync(topic.Id, outcome.Id, new(true, "Konu kapsamı incelendi"), default);
             var estimate = await service.EstimateAsync(outcome.Id, new(20, 30, 10, "Öğretmen tarafından pilot süre incelemesi", "Medium", "Süre incelemesi"), default);
