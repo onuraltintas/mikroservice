@@ -15,7 +15,8 @@ describe('CoachingPortalLayoutComponent multi-role view', () => {
     const fixture = TestBed.createComponent(CoachingPortalLayoutComponent);
     fixture.detectChanges();
     const links = [...fixture.nativeElement.querySelectorAll('.coaching-navigation a')] as HTMLAnchorElement[];
-    expect(links).toHaveLength(11);
+    expect(links).toHaveLength(12);
+    expect(links.some(link => link.getAttribute('href') === '/coaching-portal/profile')).toBe(true);
     expect(links.some(link => link.getAttribute('href') === '/coaching-portal/subscription')).toBe(true);
     fixture.componentInstance.menuOpen.set(true); fixture.detectChanges();
     const toggle = fixture.nativeElement.querySelector('.coaching-menu-toggle') as HTMLButtonElement;

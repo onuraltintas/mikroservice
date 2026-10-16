@@ -2,7 +2,7 @@ namespace Coaching.Application.Interfaces;
 
 /// <summary>
 /// Supplies the active, tenant-scoped student roster for administrative reports.
-/// Identity remains the source of truth for institution and grade membership.
+/// Coaching owns profiles, grade membership and assignments; Identity supplies shared account facts.
 /// </summary>
 public interface ICoachingIdentityReportClient
 {

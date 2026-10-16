@@ -104,9 +104,10 @@ public sealed class OwnedCoachingDirectory(CoachingDbContext db, ICoachingAccoun
     public async Task<IReadOnlyCollection<Guid>> GetActiveStudentIdsAsync(Guid viewerUserId, Guid institutionId,
         int? gradeLevel, CancellationToken ct)
     {
-        await RequireReportScopeAsync(viewerUserId, institutionId, ct);
+        var scope = await RequireReportScopeAsync(viewerUserId, institutionId, ct);
         if (gradeLevel is < 1 or > 12) throw new ArgumentException("Geçersiz sınıf.");
-        var ids = await StudentIdsAsync(institutionId, gradeLevel).ToArrayAsync(ct);
+        var visible = db.CoachingStudentProfiles.Where(x => scope.IsGlobal || x.ShareProgressWithTeachers).Select(x => x.UserId);
+        var ids = await StudentIdsAsync(institutionId, gradeLevel).Where(id => visible.Contains(id)).ToArrayAsync(ct);
         return (await accounts.GetAccountsAsync(ids, ct)).Where(x => x.IsEligible("Student")).Select(x => x.UserId).ToArray();
     }
 
@@ -131,7 +132,8 @@ public sealed class OwnedCoachingDirectory(CoachingDbContext db, ICoachingAccoun
             && x.InstitutionId == institutionId && x.IsActive).OrderByDescending(x => x.StartDate).ThenBy(x => x.Id).ToArrayAsync(ct);
         var teacherIds = assignments.Select(x => x.TeacherUserId).Distinct().ToArray();
         var teachers = (await accounts.GetAccountsAsync(teacherIds, ct)).Where(x => x.IsEligible("Teacher")).ToDictionary(x => x.UserId);
-        var activeTeachers = await db.CoachingTeacherProfiles.AsNoTracking().Where(x => Enumerable.Contains(teacherIds, x.UserId) && x.IsActive)
+        var activeTeachers = await db.CoachingTeacherProfiles.AsNoTracking().Where(x => Enumerable.Contains(teacherIds, x.UserId) && x.IsActive
+                && db.CoachingInstitutionMemberships.Any(member => member.UserId == x.UserId && member.Role == CoachingMemberRole.Teacher && member.InstitutionId == institutionId && member.IsActive))
             .Select(x => x.UserId).ToArrayAsync(ct);
         var items = selected.Select(user =>
         {
@@ -202,11 +204,12 @@ public sealed class OwnedCoachingDirectory(CoachingDbContext db, ICoachingAccoun
         db.CoachingInstitutionMemberships.AsNoTracking().Where(x => x.UserId == userId && x.Role == role && x.IsActive)
             .Select(x => (Guid?)x.InstitutionId).SingleOrDefaultAsync(ct);
 
-    private async Task RequireReportScopeAsync(Guid viewerUserId, Guid institutionId, CancellationToken ct)
+    private async Task<CoachingAdminAccessScope> RequireReportScopeAsync(Guid viewerUserId, Guid institutionId, CancellationToken ct)
     {
         var scope = await accounts.AuthorizeAdminAsync(viewerUserId, ct);
         if (scope is null || institutionId == Guid.Empty || !scope.IsGlobal && scope.InstitutionId != institutionId
             || !await accounts.IsActiveInstitutionAsync(institutionId, ct)) throw CoachingProfileStore.Forbidden();
+        return scope;
     }
 
     private static bool Matches(CoachingAccount user, string? search) => string.IsNullOrWhiteSpace(search)

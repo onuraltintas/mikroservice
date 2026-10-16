@@ -1,7 +1,10 @@
 {
   "files": [
     "src/app/features/coaching-portal/pages/coaching-profile.component.spec.ts",
-    "src/app/features/identity/components/edit-user-modal/edit-user-modal.spec.ts"
+    "src/app/features/identity/components/edit-user-modal/edit-user-modal.spec.ts",
+    "src/app/core/services/coaching-institution-membership.service.spec.ts",
+    "src/app/core/services/coaching-portal.service.spec.ts",
+    "src/app/features/coaching-portal/layout/coaching-portal-layout.component.spec.ts"
   ],
   "include": [],
   "extends": "./tsconfig.spec.json"
