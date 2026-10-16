@@ -22,6 +22,10 @@ public class CoachingDbContext : DbContext
     }
 
     // DbSets
+    public DbSet<CurriculumVersion> CurriculumVersions => Set<CurriculumVersion>();
+    public DbSet<StudentLearningContext> StudentLearningContexts => Set<StudentLearningContext>();
+    public DbSet<StudentCoursePreference> StudentCoursePreferences => Set<StudentCoursePreference>();
+    public DbSet<StudentTopicState> StudentTopicStates => Set<StudentTopicState>();
     public DbSet<CoachingStudentProfile> CoachingStudentProfiles => Set<CoachingStudentProfile>();
     public DbSet<CoachingTeacherProfile> CoachingTeacherProfiles => Set<CoachingTeacherProfile>();
     public DbSet<CoachingInstitutionMembership> CoachingInstitutionMemberships => Set<CoachingInstitutionMembership>();

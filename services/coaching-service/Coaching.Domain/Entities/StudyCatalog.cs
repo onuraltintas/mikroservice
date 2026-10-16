@@ -8,10 +8,18 @@ public sealed class StudyCatalogLesson
     public string Name { get; private set; } = string.Empty;
     public int? GradeNumber { get; private set; }
     public string? ExamCode { get; private set; }
+    public Guid? CurriculumVersionId { get; private set; }
     public bool IsActive { get; private set; }
     private StudyCatalogLesson() { }
 
     public void SetActive(bool active) => IsActive = active;
+
+    public void AssignCurriculum(Guid versionId)
+    {
+        if (versionId == Guid.Empty || CurriculumVersionId.HasValue && CurriculumVersionId != versionId)
+            throw new ArgumentException("Dersin program sürümü değiştirilemez; yeni ders kaydı oluşturun.");
+        CurriculumVersionId = versionId;
+    }
 
     public void Edit(string name, int? gradeNumber, string? examCode)
     {
