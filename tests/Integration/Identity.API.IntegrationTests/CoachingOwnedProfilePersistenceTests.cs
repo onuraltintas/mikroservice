@@ -15,6 +15,72 @@ namespace Identity.API.IntegrationTests;
 public sealed class CoachingOwnedProfilePersistenceTests
 {
     [Fact]
+    public async Task ProvisioningConsumerRequiresCorrectProductAndFreshAccountEligibility()
+    {
+        await using var f = new Fixture(); var student = f.AddAccount("Student");
+        var consumer = new CoachingProfileProvisioningConsumer(f.Store);
+        var message = new CoachingProfileProvisioningRequested(student, "Student", DateTime.UtcNow);
+        MassTransit.ConsumeContext<CoachingProfileProvisioningRequested> Context(CoachingProfileProvisioningRequested value)
+        {
+            var context = System.Reflection.DispatchProxy.Create<MassTransit.ConsumeContext<CoachingProfileProvisioningRequested>, ProvisionContext>();
+            ((ProvisionContext)(object)context).Message = value; return context;
+        }
+        await consumer.Consume(Context(message)); await consumer.Consume(Context(message));
+        Assert.Single(f.Db.CoachingStudentProfiles);
+        await Assert.ThrowsAsync<ArgumentException>(() => consumer.Consume(Context(message with { Product = "speed-reading" })));
+        await Assert.ThrowsAsync<ArgumentException>(() => consumer.Consume(Context(message with { SchemaVersion = 2 })));
+        f.Accounts.Users[student] = f.Accounts.Users[student] with { HasCoachingAccess = false };
+        await Assert.ThrowsAsync<BusinessRuleException>(() => consumer.Consume(Context(message)));
+    }
+
+    public class ProvisionContext : System.Reflection.DispatchProxy
+    {
+        public CoachingProfileProvisioningRequested Message = null!;
+        protected override object? Invoke(System.Reflection.MethodInfo? method, object?[]? args) => method?.Name switch
+        {
+            "get_Message" => Message,
+            "get_CancellationToken" => CancellationToken.None,
+            _ => throw new NotSupportedException(method?.Name)
+        };
+    }
+    [Fact]
+    public async Task RostersAndReportsCombineCoreNamesWithOwnedGradesAndAssignments()
+    {
+        await using var f = new Fixture();
+        var inst = Guid.NewGuid(); f.Accounts.Institutions.Add(inst);
+        var admin = f.AddAccount("InstitutionAdmin"); f.Accounts.Admins[admin] = new(false, inst);
+        var teacher = f.AddAccount("Teacher"); var student = f.AddAccount("Student");
+        await f.Store.SetMembershipAsync(admin, inst, teacher, CoachingMemberRole.Teacher, true, default);
+        await f.Store.SetMembershipAsync(admin, inst, student, CoachingMemberRole.Student, true, default);
+        await f.Store.UpdateInstitutionStudentAsync(admin, inst, student, 10, teacher, default);
+        var roster = await f.Scope.GetTeacherRosterAsync(teacher, 1, 25, "Test", 10, true, [student], default);
+        Assert.Equal(student, Assert.Single(roster.Items).UserId);
+        Assert.Equal(10, roster.Items[0].GradeLevel);
+        Assert.Empty((await f.Scope.GetTeacherRosterAsync(teacher, 1, 25, "missing", null, true, null, default)).Items);
+        var report = await f.Scope.GetActiveStudentPageAsync(admin, inst, 10, 1, 25, default, teacherUserId: teacher);
+        Assert.Equal(teacher, Assert.Single(report.Students!).TeacherUserId);
+        Assert.Equal("Test Teacher", report.Students!.Single().TeacherName);
+        Assert.Equal(teacher, Assert.Single((await f.Scope.GetActiveTeacherPageAsync(admin, inst, 1, 25, null, default)).Teachers).UserId);
+        await f.Store.UpdateInstitutionStudentAsync(admin, inst, student, 11, null, default);
+        Assert.False((await f.Db.CoachingTeacherStudentAssignments.SingleAsync()).IsActive);
+        Assert.Empty((await f.Scope.GetTeacherRosterAsync(teacher, 1, 25, null, null, true, null, default)).Items);
+    }
+
+    [Fact]
+    public async Task TeacherProfileUpdatesProtectVersionAndDoNotGrantInstitutionWideAccess()
+    {
+        await using var f = new Fixture(); var teacher = f.AddAccount("Teacher");
+        await f.Store.ProvisionAsync(teacher, "Teacher", default);
+        var before = await f.Store.GetTeacherAsync(teacher, default);
+        var request = new UpdateCoachingTeacherProfile(before!.Version, "Coach", ["Matematik"], 5, "Bio", null);
+        var saved = await f.Store.UpdateTeacherAsync(teacher, request, default);
+        Assert.Equal("Coach", saved.Title); Assert.Equal("Matematik", Assert.Single(saved.Subjects));
+        Assert.False(saved.CanViewAllInstitutionStudents);
+        await Assert.ThrowsAsync<BusinessRuleException>(() => f.Store.UpdateTeacherAsync(teacher, request, default));
+        saved.SetActive(false, teacher); await f.Db.SaveChangesAsync();
+        await Assert.ThrowsAsync<KeyNotFoundException>(() => f.Store.UpdateTeacherAsync(teacher, request with { ExpectedVersion = saved.Version }, default));
+    }
+    [Fact]
     public async Task InstitutionReportsRespectProgressSharingUnlessViewerIsGlobalAdministrator()
     {
         await using var f = new Fixture();

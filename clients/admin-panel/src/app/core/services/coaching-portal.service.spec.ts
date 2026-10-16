@@ -95,7 +95,7 @@ describe('CoachingPortalService', () => {
 
     service.getTeacherStudents(5000, 999, '  Ada  ').subscribe();
 
-    const request = http.expectOne(candidate => candidate.url.endsWith('/teachers/me/students'));
+    const request = http.expectOne(candidate => candidate.url.endsWith('/coaching/teachers/me/students'));
     expect(request.request.method).toBe('GET');
     expect(request.request.params.get('pageNumber')).toBe('1000');
     expect(request.request.params.get('pageSize')).toBe('100');
@@ -110,7 +110,7 @@ describe('CoachingPortalService', () => {
 
     service.getTeacherStudents(1, 2, undefined, studentIds).subscribe();
 
-    const request = http.expectOne(candidate => candidate.url.endsWith('/teachers/me/students'));
+    const request = http.expectOne(candidate => candidate.url.endsWith('/coaching/teachers/me/students'));
     expect(request.request.params.getAll('studentUserIds')).toEqual(studentIds);
     expect(request.request.params.get('pageSize')).toBe('2');
     request.flush({ items: [], pageNumber: 1, pageSize: 2, totalCount: 0, totalPages: 0 });

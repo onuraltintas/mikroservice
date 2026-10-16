@@ -8,6 +8,22 @@ namespace Identity.API.IntegrationTests;
 public sealed class CoachingOwnedInvitationTests
 {
     [Fact]
+    public async Task RecipientCanRejectAndOwnerCanCancelWithoutCreatingRelationships()
+    {
+        await using var f = new CoachingOwnedProfilePersistenceTests.Fixture();
+        var teacher = f.AddAccount("Teacher"); var student = f.AddAccount("Student");
+        await f.Store.ProvisionAsync(teacher, "Teacher", default);
+        var service = new CoachingInvitationStore(f.Db, f.Accounts, f.Store, TimeProvider.System, new Events(), new Microsoft.Extensions.Configuration.ConfigurationBuilder().Build());
+        var invitation = await service.SendTeacherAsync(teacher, f.Accounts.Users[student].Email, null, default);
+        await Assert.ThrowsAsync<BusinessRuleException>(() => service.SendTeacherAsync(teacher, f.Accounts.Users[student].Email, null, default));
+        await service.RejectAsync(student, invitation.Id, default);
+        await Assert.ThrowsAsync<BusinessRuleException>(() => service.AcceptAsync(student, invitation.Id, default));
+        var replacement = await service.SendTeacherAsync(teacher, f.Accounts.Users[student].Email, null, default);
+        await service.CancelAsync(teacher, replacement.Id, default);
+        await Assert.ThrowsAsync<BusinessRuleException>(() => service.AcceptAsync(student, replacement.Id, default));
+        Assert.Empty(f.Db.CoachingTeacherStudentAssignments); Assert.Empty(f.Db.CoachingStudentProfiles);
+    }
+    [Fact]
     public async Task InstitutionInvitationAcceptsOnlyRecipientAndCreatesUserIdRelationsOnce()
     {
         await using var f = new CoachingOwnedProfilePersistenceTests.Fixture();
