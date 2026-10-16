@@ -8,7 +8,7 @@ describe('Student outcome based plan', () => {
   function setup() {
     const outcome = { outcomeId: 'o1', code: 'M.8.1.1.1', name: 'Çarpanları bulur', estimateId: 'e2', estimateNumber: 2, learningMinutes: 20, practiceMinutes: 30, checkMinutes: 10, totalMinutes: 60, editionCode: 'meb-2018', officialLessonPeriods: 10 };
     const service = { getAvailability: vi.fn(() => of({ version: 0, timeZoneId: 'Europe/Istanbul', windows: [] })),
-      getTopicOutcomes: vi.fn(() => of([outcome])), previewAutomatic: vi.fn(() => of({})), saveAutomaticDraft: vi.fn(), searchTopics: vi.fn() };
+      getTopicOutcomes: vi.fn(() => of([outcome])), previewAutomatic: vi.fn((_: any) => of({})), saveAutomaticDraft: vi.fn(), searchTopics: vi.fn() };
     TestBed.configureTestingModule({ imports: [StudentAutomaticPlanComponent], providers: [provideRouter([]), { provide: CoachingStudyPlanningService, useValue: service }] });
     const f = TestBed.createComponent(StudentAutomaticPlanComponent); f.detectChanges(); const c = f.componentInstance;
     c.results.set({ items: [{ id: 't1', name: 'Çarpanlar', lessonName: 'Matematik', unitName: 'LGS', examCode: 'LGS', gradeNumber: null, estimatedMinutes: null }], totalCount: 1, pageNumber: 1, pageSize: 20 }); c.addTopic('t1');

@@ -10,12 +10,13 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CoachingCatalogEditorComponent } from './coaching-catalog-editor';
 import { CoachingCatalogImportComponent } from './coaching-catalog-import';
 import { CoachingCurriculumComponent } from './coaching-curriculum.component';
+import { CoachingOutcomesComponent } from './coaching-outcomes.component';
 import { DistrictOption, LocationService, ProvinceOption } from '../../../core/services/location.service';
 
 @Component({
   selector: 'app-coaching-catalog',
   standalone: true,
-  imports: [FormsModule, DecimalPipe, CoachingCatalogEditorComponent, CoachingCatalogImportComponent, CoachingCurriculumComponent],
+  imports: [FormsModule, DecimalPipe, CoachingCatalogEditorComponent, CoachingCatalogImportComponent, CoachingCurriculumComponent, CoachingOutcomesComponent],
   template: `
     <main class="space-y-6" aria-labelledby="coaching-catalog-title">
       <header>
@@ -26,6 +27,7 @@ import { DistrictOption, LocationService, ProvinceOption } from '../../../core/s
       </header>
       @if (canDelete()) { <details class="rounded-xl border p-4"><summary class="cursor-pointer font-medium">Toplu katalog aktarımı ve yayın</summary><app-coaching-catalog-import /></details> }
       @if (canDelete()) { <details class="rounded-xl border p-4" (toggle)="curriculumOpen = $any($event.target).open"><summary class="cursor-pointer font-medium">Müfredat ve program sürümleri</summary>@if (curriculumOpen) { <app-coaching-curriculum /> }</details> }
+      @if (canDelete()) { <details class="rounded-xl border p-4" (toggle)="outcomesOpen = $any($event.target).open"><summary class="cursor-pointer font-medium">LGS kazanımları ve süre incelemesi</summary>@if (outcomesOpen) { <app-coaching-outcomes /> }</details> }
       <form (ngSubmit)="load()" class="grid gap-4 rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-900 sm:grid-cols-2 lg:grid-cols-4">
         <div><label for="catalog-kind" class="block text-sm font-medium">Katalog</label>
           <select id="catalog-kind" [disabled]="editorOpen() || deleting()" [ngModel]="kind" (ngModelChange)="changeKind($event)" name="kind" class="mt-1 w-full rounded-lg border p-2 dark:bg-gray-800">
@@ -109,6 +111,7 @@ import { DistrictOption, LocationService, ProvinceOption } from '../../../core/s
 })
 export class CoachingCatalogComponent implements OnInit {
   curriculumOpen = false;
+  outcomesOpen = false;
   private readonly service = inject(CoachingCatalogService);
   private readonly locations = inject(LocationService);
   private locationRequest?: Subscription;

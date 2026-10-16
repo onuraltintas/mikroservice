@@ -32,11 +32,22 @@
         <span>{{ page.totalCount }} konu · Sayfa {{ page.pageNumber }}</span>
         <button type="button" [disabled]="busy() || page.pageNumber * page.pageSize >= page.totalCount" (click)="searchTopics(page.pageNumber + 1)">Sonraki</button></div>
     }
-    <h3>Seçilen konular ({{ selected.length }}/500)</h3><p class="muted">Süre tahmin değil, planına ayırmak istediğin toplam dakikadır. Bir konu birden fazla güne bölünebilir.</p>
+    <h3>Seçilen konular ({{ selected.length }}/500)</h3><p class="muted">Konu için kendi süreni girebilir veya yayınlanmış kazanım önerilerini kullanabilirsin. Dakikalar net çalışma içindir; molalar dahil değildir.</p>
     <fieldset [disabled]="locked()">
       @for (selection of selected; track selection.topic.id) {
-        <div class="task fields"><label>{{ $index + 1 }}. {{ selection.topic.name }} — dakika
+        <div class="task"><strong>{{ $index + 1 }}. {{ selection.topic.name }}</strong>
+          @if (!selection.outcomes) { <label>Çalışma süresi — dakika
           <input type="number" min="1" max="1440" step="1" [(ngModel)]="selection.minutes" (ngModelChange)="changed()" [attr.aria-label]="selection.topic.name + ' çalışma süresi'"></label>
+            @if (selection.topic.examCode === 'LGS') { <button type="button" class="secondary" (click)="loadOutcomes(selection.topic.id)">Kazanım önerilerini yükle</button> }
+          } @else {
+            <p>İlk öğrenme için önerilen süreleri kendi planında değiştirebilirsin. Aynı kazanım birden fazla konuda seçilirse bir kez sayılır.</p>
+            @for (outcome of selection.outcomes; track outcome.outcomeId) {
+              <label class="check"><input type="checkbox" [(ngModel)]="outcome.included" (ngModelChange)="changed()">{{ outcome.code }} — {{ outcome.name }}</label>
+              <p>{{ outcome.learningMinutes }} dk öğrenme + {{ outcome.practiceMinutes }} dk alıştırma + {{ outcome.checkMinutes }} dk kontrol · sürüm {{ outcome.estimateNumber }}</p>
+              <label>Bu kazanıma ayıracağım dakika<input type="number" min="1" max="1440" [(ngModel)]="outcome.minutes" (ngModelChange)="changed()" [disabled]="!outcome.included"></label>
+            }
+            <button type="button" class="secondary" (click)="useTopicMinutes(selection.topic.id)">Konu süresi girmeye dön</button>
+          }
           <button type="button" class="secondary" (click)="removeTopic(selection.topic.id)">Çıkar</button></div>
       } @empty { <p>Henüz konu seçmedin.</p> }
     </fieldset>

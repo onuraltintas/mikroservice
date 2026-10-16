@@ -34,7 +34,8 @@ export interface UniversityTarget { id: string; name: string; universityName: st
 export interface TargetPage<T> { items: T[]; totalCount: number; pageNumber: number; pageSize: number }
 export interface GoalTarget { goalId: string; version: number; targetSchoolId: string | null; targetUniversityProgramId: string | null; canEdit: boolean; catalogTarget?: { name: string; detail: string; isActive: boolean } | null; scoreTarget?: { targetScore: number | null; maxScore: number | null; examType: string | null; subject: string | null } | null }
 export interface StudyTopic { id: string; lessonId?: string; name: string; lessonName: string; unitName: string; gradeNumber: number | null; examCode: string | null; estimatedMinutes: number | null }
-export interface AutomaticStudyRequest { startDate: string; days: number; expectedAvailabilityVersion: number; topics: { topicId: string; requiredMinutes: number | null }[]; expectedLearningContextVersion?: number }
+export interface PublishedStudyOutcome { outcomeId: string; code: string; name: string; estimateId: string; estimateNumber: number; learningMinutes: number; practiceMinutes: number; checkMinutes: number; totalMinutes: number; editionCode: string; officialLessonPeriods: number }
+export interface AutomaticStudyRequest { startDate: string; days: number; expectedAvailabilityVersion: number; topics: { topicId: string; requiredMinutes: number | null; outcomes?: { outcomeId: string; estimateId: string; requiredMinutes: number | null }[] }[]; expectedLearningContextVersion?: number }
 export interface AutomaticStudyDraftRequest { title: string; preview: AutomaticStudyRequest; expectedActiveRevisionId: string | null; expectedActiveRevisionVersion: number | null }
 export interface AutomaticStudyPreview {
   availabilityVersion: number; timeZoneId: string; activeRevisionId: string | null; activeRevisionVersion: number | null;
@@ -56,6 +57,9 @@ export class CoachingStudyPlanningService {
     if (gradeNumber !== null) params = params.set('gradeNumber', gradeNumber);
     if (examCode.trim()) params = params.set('examCode', examCode.trim());
     return this.http.get<ApiResult<TargetPage<StudyTopic>>>(`${environment.apiUrl}/coaching/study-planning/topics`, { params }).pipe(map(result => result.data));
+  }
+  getTopicOutcomes(topicId: string) {
+    return this.http.get<ApiResult<PublishedStudyOutcome[]>>(`${environment.apiUrl}/coaching/study-planning/topics/${encodeURIComponent(topicId)}/outcomes`).pipe(map(r => r.data));
   }
   previewAutomatic(request: AutomaticStudyRequest) {
     return this.http.post<ApiResult<AutomaticStudyPreview>>(`${environment.apiUrl}/coaching/study-planning/automatic-preview`, request).pipe(map(result => result.data));

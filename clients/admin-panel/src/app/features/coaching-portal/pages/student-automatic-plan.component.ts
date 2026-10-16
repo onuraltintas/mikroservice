@@ -4,7 +4,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { finalize, map } from 'rxjs';
-import { AutomaticStudyPreview, CoachingStudyPlanningService, StudyAvailability, StudyPlan, StudyTopic, TargetPage } from '../../../core/services/coaching-study-planning.service';
+import { AutomaticStudyPreview, CoachingStudyPlanningService, StudyAvailability, StudyPlan, StudyTopic, TargetPage, PublishedStudyOutcome } from '../../../core/services/coaching-study-planning.service';
 import { CoachingLearningSetupService, LearningLesson } from '../../../core/services/coaching-learning-setup.service';
 
 @Component({
@@ -31,7 +31,8 @@ export class StudentAutomaticPlanComponent implements OnInit {
   readonly savedPlan = signal<StudyPlan | null>(null);
   readonly stale = signal(false);
   readonly error = signal<string | null>(null);
-  selected: { topic: StudyTopic; minutes: number | null }[] = [];
+  selected: { topic: StudyTopic; minutes: number | null; outcomes?: (PublishedStudyOutcome & { included: boolean; minutes: number | null })[] }[] = [];
+  readonly loadingOutcomes = signal(false);
   query = '';
   gradeNumber: number | null = null;
   examCode = '';
@@ -50,7 +51,7 @@ export class StudentAutomaticPlanComponent implements OnInit {
       error: () => this.error.set('Eğitim bağlamı yüklenemedi. Kurulumu yeniden yükleyin.')
     });
   }
-  busy() { return this.loading() || this.searching() || this.generating() || this.saving(); }
+  busy() { return this.loading() || this.searching() || this.generating() || this.saving() || this.loadingOutcomes(); }
   locked() { return this.busy() || this.savedPlan() !== null; }
   loadHours() {
     if (this.locked()) return;
@@ -81,6 +82,21 @@ export class StudentAutomaticPlanComponent implements OnInit {
     if (this.locked()) return;
     this.selected = this.selected.filter(x => x.topic.id !== id); this.changed();
   }
+  loadOutcomes(topicId: string) {
+    if (this.locked()) return;
+    const selection = this.selected.find(x => x.topic.id === topicId); if (!selection) return;
+    this.changed(); this.loadingOutcomes.set(true); this.error.set(null);
+    this.service.getTopicOutcomes(topicId).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.loadingOutcomes.set(false))).subscribe({
+      next: outcomes => {
+        if (!outcomes.length) { this.error.set('Bu konu için henüz incelenmiş kazanım süresi yayınlanmadı. Konu süresini kendin belirleyebilirsin.'); return; }
+        selection.outcomes = outcomes.map(x => ({ ...x, included: true, minutes: x.totalMinutes }));
+      }, error: () => this.error.set('Kazanımlar yüklenemedi. Seçimlerin korundu; tekrar deneyebilirsin.')
+    });
+  }
+  useTopicMinutes(topicId: string) { if (this.locked()) return; const selection = this.selected.find(x => x.topic.id === topicId); if (selection) { delete selection.outcomes; this.changed(); } }
+  private topicRequests() { return this.selected.map(x => x.outcomes ? { topicId: x.topic.id, requiredMinutes: null,
+    outcomes: x.outcomes.filter(o => o.included).map(o => ({ outcomeId: o.outcomeId, estimateId: o.estimateId, requiredMinutes: o.minutes })) }
+    : { topicId: x.topic.id, requiredMinutes: x.minutes }); }
   changed() { if (this.locked()) return; this.preview.set(null); this.saveConfirmed = false; this.dirty = true; }
   topicName(id: string) { return this.selected.find(x => x.topic.id === id)?.topic.name ?? 'Konu'; }
   generate() {
@@ -91,13 +107,16 @@ export class StudentAutomaticPlanComponent implements OnInit {
     if (!Number.isFinite(date.getTime()) || date.toISOString().slice(0, 10) !== this.startDate || this.startDate < '0001-01-01'
       || !Number.isInteger(this.days) || this.days < 1 || this.days > 90 || lastDate.getUTCFullYear() > 9999
       || this.selected.length < 1 || this.selected.length > 500
-      || this.selected.some(x => !Number.isInteger(x.minutes) || x.minutes! < 1 || x.minutes! > 1440)) {
+      || this.selected.some(x => x.outcomes ? !x.outcomes.some(o => o.included)
+        || x.outcomes.filter(o => o.included).some(o => !Number.isInteger(o.minutes) || o.minutes! < 1 || o.minutes! > 1440)
+        || x.outcomes.filter(o => o.included).reduce((sum, o) => sum + (o.minutes ?? 0), 0) > 1440
+        : !Number.isInteger(x.minutes) || x.minutes! < 1 || x.minutes! > 1440)) {
       this.error.set('Geçerli bir başlangıç tarihi, 1-90 gün ve her konu için 1-1440 dakika belirtin.'); return;
     }
     this.saveConfirmed = false;
     this.generating.set(true); this.preview.set(null); this.error.set(null);
     this.service.previewAutomatic({ startDate: this.startDate, days: this.days, expectedAvailabilityVersion: hours.version,
-      topics: this.selected.map(x => ({ topicId: x.topic.id, requiredMinutes: x.minutes })),
+      topics: this.topicRequests(),
       ...(this.learningContextVersion !== null ? { expectedLearningContextVersion: this.learningContextVersion } : {}) })
       .pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.generating.set(false)))
       .subscribe({ next: preview => this.preview.set(preview), error: error => {
@@ -112,7 +131,7 @@ export class StudentAutomaticPlanComponent implements OnInit {
     this.saving.set(true); this.error.set(null);
     this.service.saveAutomaticDraft({ title: this.title.trim(),
       preview: { startDate: this.startDate, days: this.days, expectedAvailabilityVersion: preview.availabilityVersion,
-        topics: this.selected.map(x => ({ topicId: x.topic.id, requiredMinutes: x.minutes })),
+        topics: this.topicRequests(),
         ...(this.learningContextVersion !== null ? { expectedLearningContextVersion: this.learningContextVersion } : {}) },
       expectedActiveRevisionId: preview.activeRevisionId, expectedActiveRevisionVersion: preview.activeRevisionVersion })
       .pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.saving.set(false)))
