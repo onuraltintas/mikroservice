@@ -108,7 +108,7 @@ Elle yapılan kapsam incelemesinde tarih alanının oluşturma, listeleme, detay
 
 Canlı ekran kanıtları `artifacts/coaching-exam-date-live-20261016/proof/` altındadır: `exam-date-saved.png`, `exam-date-final.png`, `student-archived-plan.png`. İlk dağıtımdaki katalog metni değişirken eski planın özgün metnini koruduğunu gösteren kanıt `artifacts/coaching-curriculum-live-20261016/proof/student-snapshot-preserved.png` dosyasıdır.
 
-İlk müfredat sürümü 20:37:19–20:52:29 UTC arasında 31 sağlık örneğiyle gözlemlendi: iki servis çalışır durumda, yeniden başlama 0; giriş, yönetici müfredat ve öğrenci plan sayfaları HTTP 200. Tarih sürümünün 15 dakikalık gözlemi sürüyor; tamamlanma kaydı ayrıca bu rapora eklenecek.
+İlk müfredat sürümü 20:37:19–20:52:29 UTC arasında 31 sağlık örneğiyle gözlemlendi: iki servis çalışır durumda, yeniden başlama 0; giriş, yönetici müfredat ve öğrenci plan sayfaları HTTP 200. Tarih sürümünün 15 dakikalık gözlemi de **16.10.2026 21:09:00 UTC** (Türkiye saatiyle 17.10.2026 00:09:00) tamamlandı: 31 örnek başarılı, iki serviste yeniden başlama 0, üç sayfada HTTP 200. Son kayıt `artifacts/coaching-exam-date-live-20261016/live-final.log`; gözlem sonundaki hata ve yetkilendirme kontrolü `diagnostics-final.log` dosyasındadır.
 
 ## Geri dönüş ve yedekler
 
