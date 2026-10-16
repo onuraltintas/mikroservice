@@ -5,11 +5,50 @@ using Coaching.Domain.Entities;
 using Coaching.Infrastructure.StudyPlanning;
 using EduPlatform.Shared.Kernel.Exceptions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Coaching.Infrastructure.Repositories;
+using Coaching.Infrastructure.Privacy;
+using EduPlatform.Shared.Contracts.Events.Privacy;
+using Coaching.Application.Attachments;
 
 namespace Coaching.Curriculum.IntegrationTests;
 
 public sealed class WeeklyStudyDraftTests
 {
+    [Fact]
+    public async Task WeeklyDraftIsExportedAndIncludedInOwnedAccountErasure()
+    {
+        await using var f=new CurriculumManagementTests.Fixture();await f.Seed();f.User.Roles=["Student"];
+        var student=f.User.UserId!.Value;var lesson=(await f.Db.StudyCatalogLessons.SingleAsync()).Id;
+        await Service(f,new(f.Db)).SaveAsync(new(null,"Europe/Istanbul",[Slot(lesson,1080,60)]),default);
+        var other=WeeklyStudyDraft.Create(Guid.NewGuid());other.Replace("Europe/Istanbul",[]);f.Db.Add(other);await f.Db.SaveChangesAsync();
+        var export=await new CoachingDataExportRepository(f.Db).ExportStudentDataAsync(student,DateTimeOffset.UtcNow,default);
+        using var json=JsonDocument.Parse(JsonSerializer.Serialize(export));Assert.Single(json.RootElement.GetProperty("WeeklyDraft").GetProperty("Slots").EnumerateArray());
+        var id=Guid.NewGuid();var eventId=Guid.NewGuid();var now=DateTime.UtcNow;
+        var assessment=await new CoachingErasureAssessmentService(f.Db,TimeProvider.System).AssessAsync(new(eventId,id,student,now,true,PersonalDataScope.Coaching),default);
+        Assert.Equal(1,assessment.StudyPlanningRecordCount);
+        await new CoachingErasureExecutionService(f.Db,new NoAttachments(),TimeProvider.System).ExecuteAsync(new(eventId,id,student,now,PersonalDataScope.Coaching),default);
+        Assert.False(await f.Db.Set<WeeklyStudyDraft>().AnyAsync(x=>x.StudentId==student));Assert.True(await f.Db.Set<WeeklyStudyDraft>().AnyAsync(x=>x.Id==other.Id));
+    }
+
+    [CurriculumPostgresTests.LocalPostgresFact]
+    public async Task MigrationRoundTripAndConcurrentEditsPreserveExistingWork()
+    {
+        await using var f=await CurriculumPostgresTests.Pg.Create();await f.Data.Seed();f.Data.User.Roles=["Student"];
+        var before=JsonSerializer.Serialize(await f.Db.StudyPlanTasks.AsNoTracking().ToArrayAsync());
+        await f.Db.GetService<Microsoft.EntityFrameworkCore.Migrations.IMigrator>().MigrateAsync("20261016204727_ExamScheduledDate");
+        await f.Db.Database.MigrateAsync();await f.Db.Database.MigrateAsync();
+        var lesson=(await f.Db.StudyCatalogLessons.SingleAsync()).Id;var svc=Service(f.Data,new(f.Db));
+        var draft=await svc.SaveAsync(new(null,"Europe/Istanbul",[Slot(lesson,1080,30),Slot(lesson,1110,30)]),default);
+        await using(var second=new Coaching.Infrastructure.Data.CoachingDbContext(f.Options))
+        {
+            var writer=new CoachingWeeklyStudyDraftService(second,new CoachingAccessPolicy(f.Data.User),new Catalog(second));
+            await writer.SaveAsync(new(draft.Version,"Europe/Istanbul",[Slot(lesson,1200,60)]),default);
+        }
+        await Assert.ThrowsAsync<BusinessRuleException>(()=>svc.SaveAsync(new(draft.Version,"Europe/Istanbul",[]),default));
+        var restored=(await svc.GetAsync(default)).Draft!;Assert.Equal(1200,Assert.Single(restored.Slots).StartMinute);
+        Assert.Equal(before,JsonSerializer.Serialize(await f.Db.StudyPlanTasks.AsNoTracking().ToArrayAsync()));
+    }
     [Fact]
     public async Task ReadDoesNotCreateDraft_SaveReopensHalfHourLessonsAndPreservesPlansAndHours()
     {
@@ -74,5 +113,12 @@ public sealed class WeeklyStudyDraftTests
         public Task<LearningSetupView> SaveAsync(LearningSetupUpdate r,CancellationToken ct)=>throw new NotSupportedException();
         public async Task<LearningCatalogView> GetCatalogAsync(Guid? lessonId,int pageNumber,CancellationToken ct)=>new(null,
             Empty ? [] : await db.StudyCatalogLessons.Where(x=>x.IsActive).Select(x=>new LearningLessonView(x.Id,x.Name,x.GradeNumber,x.ExamCode,0,0)).ToArrayAsync(ct),new([],0,1,50),0,[]);
+    }
+    private sealed class NoAttachments:IAssignmentAttachmentStorage
+    {
+        public Task<AssignmentAttachmentUploadTicket> CreateUploadTicketAsync(Guid a,Guid s,Guid id,CancellationToken ct=default)=>throw new NotSupportedException();
+        public Task<StoredAssignmentAttachment> StoreAsync(string key,Stream content,string type,long size,string hash,CancellationToken ct=default)=>throw new NotSupportedException();
+        public Task<Stream> OpenReadAsync(string key,CancellationToken ct=default)=>throw new NotSupportedException();
+        public Task DeleteAsync(string key,CancellationToken ct=default)=>throw new NotSupportedException();
     }
 }
