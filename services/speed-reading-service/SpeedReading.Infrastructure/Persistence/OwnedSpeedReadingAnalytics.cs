@@ -443,7 +443,7 @@ internal sealed class OwnedSpeedReadingAnalytics(
             })
             .OrderByDescending(item => item.LastActivityAt ?? item.StartedAt).ToList();
 
-        var timeline = dailyProgressRows.GroupBy(item => DateOnly.FromDateTime(NormalizeUtc(item.CompletedDate)))
+        var timeline = dailyProgressRows.GroupBy(item => SpeedReadingReportCalendar.LocalDate(item.CompletedDate))
             .OrderBy(group => group.Key)
             .Select(group => new StudentAnalyticsTrendPoint(group.Key, Math.Round(group
                 .Select(item => GetProgramProgress(item.DayNumber, item.ProgressId, progressRows, templates))
@@ -456,7 +456,7 @@ internal sealed class OwnedSpeedReadingAnalytics(
                 Progress = GetProgramProgress(item.DaysCompleted, item.ProgramTemplateId, templates)
             })
             .Where(item => item.Date.HasValue && item.Date >= start && item.Date <= end)
-            .GroupBy(item => DateOnly.FromDateTime(NormalizeUtc(item.Date!.Value)))
+            .GroupBy(item => SpeedReadingReportCalendar.LocalDate(item.Date!.Value))
             .OrderBy(group => group.Key)
             .Select(group => new StudentAnalyticsTrendPoint(group.Key, Math.Round(group.Average(item => item.Progress), 2)))
             .ToList();
