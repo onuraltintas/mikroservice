@@ -48,13 +48,21 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
                 .ToDictionaryAsync(x => x.Id, x => x.Name, cancellationToken);
             var tasks = preview.Schedule.Tasks.Select(x => StudyPlanTask.Create(revision, x.PlannedDate,
                 names[x.TopicId], x.PlannedMinutes, x.TopicId)).ToList();
+            db.AddRange(StudyOutcomeAllocation.Allocate(tasks, preview.Outcomes ?? []));
             // Preserve pending pinned work, including work outside the generated horizon.
             // Completed work remains in its original revision; actual results are never duplicated.
             if (preview.ActiveRevisionId is { } activeId)
             {
                 var pinned = await db.StudyPlanTasks.AsNoTracking().Where(x => x.StudentId == student
                     && x.RevisionId == activeId && x.IsPinned && !x.IsCompleted).ToListAsync(cancellationToken);
-                tasks.AddRange(pinned.Select(x => StudyPlanTask.Create(revision, x.PlannedDate, x.Title, x.PlannedMinutes, x.TopicId, true, x.SourceName, x.PlannedQuestions)));
+                var pinnedIds = pinned.Select(x => x.Id).ToArray();
+                var links = await db.Set<StudyPlanTaskOutcome>().AsNoTracking().Where(x => Enumerable.Contains(pinnedIds, x.TaskId)).ToArrayAsync(cancellationToken);
+                foreach (var prior in pinned)
+                {
+                    var copied = StudyPlanTask.Create(revision, prior.PlannedDate, prior.Title, prior.PlannedMinutes, prior.TopicId, true, prior.SourceName, prior.PlannedQuestions);
+                    tasks.Add(copied);
+                    db.AddRange(links.Where(x => x.TaskId == prior.Id).Select(x => StudyPlanTaskOutcome.Create(copied.Id, x.OutcomeId, x.EstimateId, x.AllocatedMinutes, x.Origin)));
+                }
             }
             if (tasks.Count is < 1 or > 500) throw new ArgumentException("Taslak 1-500 çalışma içermelidir; konuları azaltın veya süreyi değiştirin.");
             revision.SetAutomaticSource(preview.AvailabilityVersion, preview.ActiveRevisionId, preview.ActiveRevisionVersion);
@@ -227,7 +235,8 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
             .OrderBy(x => x.PlannedDate).ThenBy(x => x.Id)
             .Select(x => new ManualStudyTaskView(x.Id, x.PlannedDate, x.Title, x.PlannedMinutes, x.TopicId, x.IsPinned, x.IsCompleted, x.ActualMinutes, x.CompletedAt, x.SourceName, x.PlannedQuestions, x.ActualQuestions))
             .ToListAsync(cancellationToken);
-        return new(revision.Id, revision.Version, revision.Title, revision.Status, tasks);
+        var outcomes = await StudyPlanOutcomeReader.ReadAsync(db, tasks.Select(x => x.Id).ToArray(), cancellationToken);
+        return new(revision.Id, revision.Version, revision.Title, revision.Status, tasks.Select(x => x with { Outcomes = outcomes[x.Id].ToArray() }).ToArray());
     }
 
     private async Task<T> LockedAsync<T>(Func<Guid, Task<T>> action, CancellationToken cancellationToken,
@@ -265,7 +274,7 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
             finally
             {
                 // Rolled-back versions/tasks must not survive a retry or another call in this scope.
-                foreach (var entry in db.ChangeTracker.Entries().Where(x => x.Entity is StudyPlanRevision or StudyPlanTask).ToArray())
+                foreach (var entry in db.ChangeTracker.Entries().Where(x => x.Entity is StudyPlanRevision or StudyPlanTask or StudyPlanTaskOutcome).ToArray())
                     entry.State = EntityState.Detached;
                 if (!transactionCommitted)
                 {

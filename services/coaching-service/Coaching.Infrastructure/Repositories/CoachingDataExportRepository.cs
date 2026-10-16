@@ -93,10 +93,11 @@ public sealed class CoachingDataExportRepository(CoachingDbContext context)
             .OrderBy(x => x.CreatedAt).ThenBy(x => x.Id).ToListAsync(cancellationToken);
         var taskRows = await context.StudyPlanTasks.AsNoTracking().Where(x => x.StudentId == studentId)
             .OrderBy(x => x.PlannedDate).ThenBy(x => x.Id).ToListAsync(cancellationToken);
+        var outcomeRows = await Coaching.Infrastructure.StudyPlanning.StudyPlanOutcomeReader.ReadAsync(context, taskRows.Select(x => x.Id).ToArray(), cancellationToken);
         var plans = planRows.Select(x => new CoachingDataStudyPlanDto(x.Id, x.PlanId, x.RevisionNumber, x.Version,
             x.Title, x.Status.ToString(), x.AutomaticAvailabilityVersion, x.AutomaticSourceRevisionId, x.AutomaticSourceRevisionVersion,
             taskRows.Where(t => t.RevisionId == x.Id).Select(t => new Coaching.Application.StudyPlanning.ManualStudyTaskView(
-                t.Id, t.PlannedDate, t.Title, t.PlannedMinutes, t.TopicId, t.IsPinned, t.IsCompleted, t.ActualMinutes, t.CompletedAt, t.SourceName, t.PlannedQuestions, t.ActualQuestions)).ToArray())).ToArray();
+                t.Id, t.PlannedDate, t.Title, t.PlannedMinutes, t.TopicId, t.IsPinned, t.IsCompleted, t.ActualMinutes, t.CompletedAt, t.SourceName, t.PlannedQuestions, t.ActualQuestions, outcomeRows[t.Id].ToArray())).ToArray())).ToArray();
         var hours = await context.StudyAvailability.AsNoTracking().SingleOrDefaultAsync(x => x.StudentId == studentId, cancellationToken);
         var availability = hours is null ? null : new Coaching.Application.StudyPlanning.StudyAvailabilityView(hours.Version, hours.TimeZoneId,
             hours.Windows.Select(x => new Coaching.Application.StudyPlanning.StudyWindowInput(x.Day, x.StartMinute, x.EndMinute)).ToArray());

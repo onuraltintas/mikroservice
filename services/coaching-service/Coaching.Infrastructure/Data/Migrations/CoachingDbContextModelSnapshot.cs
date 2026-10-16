@@ -2098,6 +2098,161 @@ namespace Coaching.Infrastructure.Data.Migrations
                     b.ToTable("IdempotencyRecords", "coaching");
                 });
 
+            modelBuilder.Entity("Coaching.Domain.Entities.OfficialCurriculumEdition", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("AcademicYearEnd")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("AcademicYearStart")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("DocumentSha256")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("ExamCode")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<int>("GradeNumber")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("PackageSha256")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("ScopeEvidenceUrl")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("SourceUrl")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("SubjectName")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.ToTable("official_curriculum_editions", "coaching", t =>
+                        {
+                            t.HasCheckConstraint("ck_outcome_edition_scope", "\"ExamCode\" = 'LGS' AND \"GradeNumber\" = 8 AND \"AcademicYearStart\" BETWEEN 2000 AND 2200 AND \"AcademicYearEnd\" BETWEEN \"AcademicYearStart\" AND 2200");
+                        });
+                });
+
+            modelBuilder.Entity("Coaching.Domain.Entities.OfficialCurriculumTopic", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<Guid>("EditionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("LessonPeriods")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<int>("OutcomeCount")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EditionId", "Code")
+                        .IsUnique();
+
+                    b.ToTable("official_curriculum_topics", "coaching", t =>
+                        {
+                            t.HasCheckConstraint("ck_official_topic_budget", "\"OutcomeCount\" BETWEEN 1 AND 500 AND \"LessonPeriods\" BETWEEN 1 AND 500");
+                        });
+                });
+
+            modelBuilder.Entity("Coaching.Domain.Entities.OutcomeDurationEstimate", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("CheckMinutes")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Confidence")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("Evidence")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<bool>("IsPublished")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("LearningMinutes")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Method")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<int>("Number")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("OutcomeId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("PracticeMinutes")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("ReviewedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("ReviewedBy")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OutcomeId", "Number")
+                        .IsUnique();
+
+                    b.ToTable("outcome_duration_estimates", "coaching", t =>
+                        {
+                            t.HasCheckConstraint("ck_outcome_minutes", "\"LearningMinutes\" >= 0 AND \"PracticeMinutes\" >= 0 AND \"CheckMinutes\" >= 0 AND (\"LearningMinutes\"::bigint + \"PracticeMinutes\" + \"CheckMinutes\") BETWEEN 1 AND 1440 AND \"Number\" > 0");
+
+                            t.HasCheckConstraint("ck_outcome_review", "\"Method\" IN ('OfficialBudgetDraft','ReviewedStudy') AND \"Confidence\" IN ('Low','Medium','High') AND (\"Method\" <> 'ReviewedStudy' OR (\"ReviewedBy\" IS NOT NULL AND \"ReviewedAt\" IS NOT NULL)) AND (NOT \"IsPublished\" OR \"Method\" = 'ReviewedStudy')");
+                        });
+                });
+
             modelBuilder.Entity("Coaching.Domain.Entities.SessionAttendance", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2388,6 +2543,81 @@ namespace Coaching.Infrastructure.Data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Coaching.Domain.Entities.StudyCatalogOutcome", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("EditionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("Notes")
+                        .IsRequired()
+                        .HasMaxLength(8000)
+                        .HasColumnType("character varying(8000)");
+
+                    b.Property<Guid>("OfficialTopicId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("SourcePage")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EditionId", "Code")
+                        .IsUnique();
+
+                    b.HasIndex("OfficialTopicId", "EditionId");
+
+                    b.ToTable("study_catalog_outcomes", "coaching", t =>
+                        {
+                            t.HasCheckConstraint("ck_outcome_source", "\"SourcePage\" > 0 AND \"DisplayOrder\" > 0");
+                        });
+                });
+
+            modelBuilder.Entity("Coaching.Domain.Entities.StudyCatalogOutcomeSource", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("OutcomeId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("SourceId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OutcomeId");
+
+                    b.HasIndex("Source", "SourceId")
+                        .IsUnique();
+
+                    b.ToTable("study_catalog_outcome_sources", "coaching");
+                });
+
             modelBuilder.Entity("Coaching.Domain.Entities.StudyCatalogTopic", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2446,6 +2676,35 @@ namespace Coaching.Infrastructure.Data.Migrations
 
                             t.HasCheckConstraint("ck_catalog_topic_parent", "\"ParentId\" IS NULL OR \"ParentId\" <> \"Id\"");
                         });
+                });
+
+            modelBuilder.Entity("Coaching.Domain.Entities.StudyCatalogTopicOutcome", b =>
+                {
+                    b.Property<Guid>("TopicId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("OutcomeId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Evidence")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<bool>("IsApproved")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("ReviewedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("ReviewedBy")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("TopicId", "OutcomeId");
+
+                    b.HasIndex("OutcomeId");
+
+                    b.ToTable("study_catalog_topic_outcomes", "coaching");
                 });
 
             modelBuilder.Entity("Coaching.Domain.Entities.StudyCatalogUnit", b =>
@@ -2642,6 +2901,35 @@ namespace Coaching.Infrastructure.Data.Migrations
                             t.HasCheckConstraint("ck_study_task_minutes", "\"PlannedMinutes\" BETWEEN 1 AND 1440 AND (\"ActualMinutes\" IS NULL OR \"ActualMinutes\" BETWEEN 1 AND 1440)");
 
                             t.HasCheckConstraint("ck_study_task_questions", "(\"PlannedQuestions\" IS NULL OR \"PlannedQuestions\" BETWEEN 0 AND 100000) AND (\"ActualQuestions\" IS NULL OR \"ActualQuestions\" BETWEEN 0 AND 100000) AND (\"IsCompleted\" OR \"ActualQuestions\" IS NULL)");
+                        });
+                });
+
+            modelBuilder.Entity("Coaching.Domain.Entities.StudyPlanTaskOutcome", b =>
+                {
+                    b.Property<Guid>("TaskId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("OutcomeId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("AllocatedMinutes")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("EstimateId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Origin")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.HasKey("TaskId", "OutcomeId");
+
+                    b.HasIndex("EstimateId", "OutcomeId");
+
+                    b.ToTable("study_plan_task_outcomes", "coaching", t =>
+                        {
+                            t.HasCheckConstraint("ck_task_outcome_minutes", "\"AllocatedMinutes\" BETWEEN 1 AND 1440 AND \"Origin\" IN ('Catalog','StudentOverride')");
                         });
                 });
 
@@ -3428,6 +3716,24 @@ namespace Coaching.Infrastructure.Data.Migrations
                     b.Navigation("Exam");
                 });
 
+            modelBuilder.Entity("Coaching.Domain.Entities.OfficialCurriculumTopic", b =>
+                {
+                    b.HasOne("Coaching.Domain.Entities.OfficialCurriculumEdition", null)
+                        .WithMany()
+                        .HasForeignKey("EditionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Coaching.Domain.Entities.OutcomeDurationEstimate", b =>
+                {
+                    b.HasOne("Coaching.Domain.Entities.StudyCatalogOutcome", null)
+                        .WithMany()
+                        .HasForeignKey("OutcomeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Coaching.Domain.Entities.SessionAttendance", b =>
                 {
                     b.HasOne("Coaching.Domain.Entities.CoachingSession", "Session")
@@ -3492,6 +3798,25 @@ namespace Coaching.Infrastructure.Data.Migrations
                         .OnDelete(DeleteBehavior.Restrict);
                 });
 
+            modelBuilder.Entity("Coaching.Domain.Entities.StudyCatalogOutcome", b =>
+                {
+                    b.HasOne("Coaching.Domain.Entities.OfficialCurriculumTopic", null)
+                        .WithMany()
+                        .HasForeignKey("OfficialTopicId", "EditionId")
+                        .HasPrincipalKey("Id", "EditionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Coaching.Domain.Entities.StudyCatalogOutcomeSource", b =>
+                {
+                    b.HasOne("Coaching.Domain.Entities.StudyCatalogOutcome", null)
+                        .WithMany()
+                        .HasForeignKey("OutcomeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Coaching.Domain.Entities.StudyCatalogTopic", b =>
                 {
                     b.HasOne("Coaching.Domain.Entities.StudyCatalogUnit", null)
@@ -3506,6 +3831,21 @@ namespace Coaching.Infrastructure.Data.Migrations
                         .HasForeignKey("ParentId", "UnitId", "LessonId")
                         .HasPrincipalKey("Id", "UnitId", "LessonId")
                         .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("Coaching.Domain.Entities.StudyCatalogTopicOutcome", b =>
+                {
+                    b.HasOne("Coaching.Domain.Entities.StudyCatalogOutcome", null)
+                        .WithMany()
+                        .HasForeignKey("OutcomeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Coaching.Domain.Entities.StudyCatalogTopic", null)
+                        .WithMany()
+                        .HasForeignKey("TopicId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Coaching.Domain.Entities.StudyCatalogUnit", b =>
@@ -3528,6 +3868,22 @@ namespace Coaching.Infrastructure.Data.Migrations
                         .WithMany()
                         .HasForeignKey("RevisionId", "StudentId")
                         .HasPrincipalKey("Id", "StudentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Coaching.Domain.Entities.StudyPlanTaskOutcome", b =>
+                {
+                    b.HasOne("Coaching.Domain.Entities.StudyPlanTask", null)
+                        .WithMany()
+                        .HasForeignKey("TaskId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Coaching.Domain.Entities.OutcomeDurationEstimate", null)
+                        .WithMany()
+                        .HasForeignKey("EstimateId", "OutcomeId")
+                        .HasPrincipalKey("Id", "OutcomeId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

@@ -17,7 +17,10 @@ public sealed record StudyTaskRescheduleInput([property: JsonRequired] [Range(0,
     DateOnly PlannedDate);
 public sealed record ManualStudyTaskView(Guid Id, DateOnly PlannedDate, string Title, int PlannedMinutes,
     Guid? TopicId, bool IsPinned, bool IsCompleted, int? ActualMinutes, DateTime? CompletedAt = null,
-    string? SourceName = null, int? PlannedQuestions = null, int? ActualQuestions = null);
+    string? SourceName = null, int? PlannedQuestions = null, int? ActualQuestions = null,
+    IReadOnlyList<StudyTaskOutcomeView>? Outcomes = null);
+public sealed record StudyTaskOutcomeView(Guid OutcomeId, string Code, string Name, Guid EstimateId, int EstimateNumber,
+    int AllocatedMinutes, string Origin);
 public sealed record ManualStudyPlanView(Guid Id, int Version, string Title, StudyPlanStatus Status,
     IReadOnlyList<ManualStudyTaskView> Tasks);
 public sealed record StudyPlanSummary(Guid Id, int Version, string Title, StudyPlanStatus Status);
