@@ -22,6 +22,16 @@ public sealed class ExerciseReportingPostgresTests(PostgresFixture postgres) : I
         await InstitutionBenchmarkScenario.Run(db);
     }
 
+    [Theory]
+    [InlineData("multi")]
+    [InlineData("zero")]
+    [InlineData("absent")]
+    public async Task Institution_benchmarks_preserve_scope_missing_data_and_real_zero(string mode)
+    {
+        await using var db = Open(); await Reset(db);
+        await InstitutionBenchmarkScenario.Boundaries(db, mode);
+    }
+
     [Fact]
     public async Task All_exercise_types_reach_student_teacher_and_institution_without_duplicate_readings()
     {

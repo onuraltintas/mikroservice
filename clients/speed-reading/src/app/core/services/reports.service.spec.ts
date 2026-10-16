@@ -176,6 +176,21 @@ describe('ReportsService', () => {
     expect(report.improvementAreas[0].priority).toBe('high');
   });
 
+  for (const available of [false, true]) {
+    it(`keeps a measured zero and omits an absent institution benchmark (available=${available})`, () => {
+      let report: any;
+      service.getStudentComprehensionReport('student', new Date('2026-10-01'), new Date('2026-10-16')).subscribe(value => report = value);
+      http.expectOne(request => request.url === '/api/speed-reading/analytics/student/comprehension').flush({
+        dateFrom: '2026-10-01T00:00:00Z', dateTo: '2026-10-16T00:00:00Z', averageComprehension: 87,
+        totalQuestionsAttempted: 15, categories: [], questionTypes: [], bloomLevels: [], trend: [], weakAreas: [], strongAreas: [],
+        benchmark: { studentValue: 87, institutionAverage: 0, platformAverage: 0, performanceLevel: 'Average',
+          institutionDataAvailable: available, platformDataAvailable: true }
+      });
+      expect(report.comprehensionBenchmarks.some((item: any) => item.label === 'Kurum ortalaması')).toBe(available);
+      expect(report.comprehensionBenchmarks).toContain(jasmine.objectContaining({ label: 'Platform ortalaması', value: 0 }));
+    });
+  }
+
   it('loads series analytics from the token-scoped endpoint and maps program progress', () => {
     const startDate = new Date('2026-01-01T00:00:00.000Z');
     const endDate = new Date('2026-01-31T00:00:00.000Z');

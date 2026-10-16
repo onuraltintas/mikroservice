@@ -46,5 +46,50 @@ internal static class InstitutionBenchmarkScenario
             text.Id, 60, 0, (int)(score / 20), 5, score, 0, date, date, null, null, null, false);
     }
 
+    internal static async Task Boundaries(OwnedSpeedReadingDbContext db, string mode)
+    {
+        var user = Guid.NewGuid(); var a = Guid.NewGuid(); var b = Guid.NewGuid(); var now = DateTime.UtcNow;
+        var text = ReadingText.Create(Guid.NewGuid(), user.ToString(), "Metin", difficultyLevel: 1);
+        db.ReadingTexts.Add(text);
+        if (mode != "absent") Member(a, user);
+        if (mode == "multi") Member(b, user);
+        db.ReadingSessions.Add(Row(user, mode == "multi" ? 80 : 0, 200));
+        if (mode == "multi")
+        {
+            var peerA = Guid.NewGuid(); var peerB = Guid.NewGuid(); Member(a, peerA); Member(b, peerB);
+            db.ReadingSessions.Add(Row(peerA, 100, 300)); db.ReadingSessions.Add(Row(peerB, 20, 100));
+            // Two readings from peer A: institution averages must weight readings, not students.
+            db.ReadingSessions.Add(Row(peerA, 100, 300));
+        }
+        await db.SaveChangesAsync();
+        var analytics = ExerciseReportingScenario.Analytics(db);
+        var report = await analytics.GetStudentComprehensionAsync(user, now.AddDays(-1), now.AddDays(1));
+        Require(report.Benchmark.InstitutionDataAvailable == (mode == "zero"), "Ambiguous or absent institution must not appear as measured zero");
+        Require(report.Benchmark.PlatformDataAvailable, "A real zero platform average is still a measurement");
+        if (mode != "multi")
+            Require(report.Benchmark.PerformanceLevel == "Average", "A real zero must be compared to the available zero benchmark");
+        else
+        {
+            var reportA = await analytics.GetStudentComprehensionAsync(user, now.AddDays(-1), now.AddDays(1), a, default);
+            var reportB = await analytics.GetStudentComprehensionAsync(user, now.AddDays(-1), now.AddDays(1), b, default);
+            Require(Math.Abs(reportA.Benchmark.InstitutionAverage - 280m / 3) < .001m && reportB.Benchmark.InstitutionAverage == 50,
+                "Selected institutions or their cached benchmarks leaked into each other");
+            var speedA = await analytics.GetStudentReadingSpeedAsync(user, now.AddDays(-1), now.AddDays(1), a, default);
+            var speedB = await analytics.GetStudentReadingSpeedAsync(user, now.AddDays(-1), now.AddDays(1), b, default);
+            Require(Math.Abs(speedA.Benchmark.InstitutionAverage - 800m / 3) < .001m && speedB.Benchmark.InstitutionAverage == 150,
+                "Speed comparison ignored the selected institution");
+        }
+        var unrelated = await analytics.GetStudentComprehensionAsync(user, now.AddDays(-1), now.AddDays(1), Guid.NewGuid(), default);
+        Require(!unrelated.Benchmark.InstitutionDataAvailable, "Non-member must not receive an institution benchmark");
+        var empty = await analytics.GetStudentComprehensionAsync(user, now.AddDays(2), now.AddDays(3));
+        Require(!empty.Benchmark.InstitutionDataAvailable && !empty.Benchmark.PlatformDataAvailable
+            && empty.Benchmark.PerformanceLevel == "Veri yok", "Empty interval must remain unmeasured");
+
+        void Member(Guid institution, Guid owner) => db.InstitutionMemberships.Add(SpeedReadingInstitutionMembership.Create(
+            institution, owner, SpeedReadingInstitutionMemberRole.Student, user, now));
+        ReadingSession Row(Guid owner, decimal score, int wpm) => ReadingSession.Import(Guid.NewGuid(), owner,
+            text.Id, 60, wpm, (int)(score / 20), 5, score, 0, now, now, null, null, null, true);
+    }
+
     private static void Require(bool condition, string message) { if (!condition) throw new InvalidOperationException(message); }
 }

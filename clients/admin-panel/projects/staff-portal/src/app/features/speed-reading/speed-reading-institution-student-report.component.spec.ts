@@ -16,6 +16,21 @@ describe('SpeedReadingStudentReportComponent', () => {
 
   afterEach(() => http.verify());
 
+  it.each([false, true])('distinguishes a missing institution benchmark from a measured zero (available=%s)', available => {
+    const fixture = TestBed.createComponent(SpeedReadingStudentReportComponent);
+    fixture.componentRef.setInput('institutionId', 'institution-1');
+    fixture.componentRef.setInput('student', { userId: 'student-1', firstName: 'Ayşe', lastName: 'Yılmaz' });
+    fixture.detectChanges();
+    flushStudentReport(http);
+    const report = fixture.componentInstance.report()!;
+    fixture.componentInstance.report.set({ ...report, comprehension: { ...report.comprehension,
+      benchmark: Object.assign({}, report.comprehension.benchmark, { institutionAverage: 0, institutionDataAvailable: available }) } });
+    fixture.detectChanges();
+    const line = fixture.nativeElement.querySelector('[aria-labelledby="comprehension-report-title"] .benchmark-line') as HTMLElement;
+    expect(line.textContent).toContain(available ? '0%' : 'Veri yok');
+    if (!available) expect(line.textContent).not.toContain('0%');
+  });
+
   it.each([false, true])('localizes benchmark and category labels in the scoped report (teacher=%s)', teacherScoped => {
     const fixture = TestBed.createComponent(SpeedReadingStudentReportComponent);
     fixture.componentRef.setInput('institutionId', 'institution-1');
