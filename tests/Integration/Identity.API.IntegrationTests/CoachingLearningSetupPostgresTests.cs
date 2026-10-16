@@ -63,6 +63,8 @@ public sealed class CoachingLearningSetupPostgresTests
             var preserved = await second.StudyPlanTasks.SingleAsync(); Assert.Equal(task.Id, preserved.Id); Assert.Equal(25, preserved.ActualMinutes);
             Assert.Equal(StudyPlanStatus.Active, (await second.StudyPlanRevisions.SingleAsync()).Status);
             Assert.Equal("StudentDeclaration", (await second.StudentTopicStates.SingleAsync()).Source);
+            var deletion = new Coaching.Infrastructure.Catalogs.CoachingCatalogDeletionService(second, new GlobalScope(), actor);
+            Assert.False((await deletion.GetUsageAsync(Coaching.Application.CatalogAdministration.CatalogKind.Topics, topic.Id, default)).CanDelete);
             second.StudentLearningContexts.Add(StudentLearningContext.Create(student, 2026, LearningPurpose.General, null, null, null));
             var duplicate = await Assert.ThrowsAsync<DbUpdateException>(() => second.SaveChangesAsync());
             Assert.Equal(PostgresErrorCodes.UniqueViolation, ((PostgresException)duplicate.GetBaseException()).SqlState);
@@ -70,4 +72,6 @@ public sealed class CoachingLearningSetupPostgresTests
         finally
         { await using var drop = new NpgsqlCommand($"DROP DATABASE \"{database}\" WITH (FORCE)", admin); await drop.ExecuteNonQueryAsync(); }
     }
+    private sealed class GlobalScope : ICoachingAdminScopeAuthorization
+    { public Task<CoachingAdminScope> RequireReadScopeAsync(CancellationToken ct) => Task.FromResult(CoachingAdminScope.Global); }
 }
