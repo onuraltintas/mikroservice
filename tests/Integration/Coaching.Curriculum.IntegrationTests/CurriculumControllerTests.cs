@@ -1,5 +1,4 @@
 using System.Reflection;
-using System.Text.Json;
 using Coaching.API.Controllers;
 using Coaching.Infrastructure.Catalogs;
 using EduPlatform.Shared.Contracts.Authorization;
@@ -52,5 +51,6 @@ public sealed class CurriculumControllerTests
         doc=await f.Service.GetAsync("outcomes",outcome.Id,default);
         Assert.IsType<OkObjectResult>(await controller.DeleteEstimate(outcome.Id,unused.Id,new(doc.Fingerprint,"Kullanılmayan sürümü sil",unused.Id),default));
     }
-    private static CurriculumNode Read(IActionResult result)=>JsonSerializer.SerializeToElement(Assert.IsType<OkObjectResult>(result).Value).GetProperty("data").Deserialize<CurriculumNode>()!;
+    private static CurriculumNode Read(IActionResult result)
+    { var value=Assert.IsType<OkObjectResult>(result).Value!;return Assert.IsType<CurriculumNode>(value.GetType().GetProperty("data")!.GetValue(value)); }
 }

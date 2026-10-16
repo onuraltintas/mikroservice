@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Encodings.Web;
 using System.Text.Json;
 using Coaching.Application.Authorization;
 using Coaching.Application.CatalogAdministration;
@@ -264,9 +265,13 @@ public sealed class CoachingCurriculumManagementService(CoachingDbContext db, IC
                 }
                 var entity = await operation();
                 result = await Describe(entity,ct);
+                var auditPayload = JsonSerializer.Serialize(new { reason = reason.Trim(), before = fingerprint, after = result.Fingerprint,
+                    namePreview = result.Name[..Math.Min(80,result.Name.Length)], nameSha256 = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(result.Name))) },
+                    new JsonSerializerOptions { Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping });
+                if (auditPayload.Length > 2000) throw new ArgumentException("İşlem gerekçesi denetim kaydı sınırını aşıyor; kontrol karakterlerini azaltın.");
                 db.AdminAuditRecords.Add(new AdminAuditRecord(auditId,DateTimeOffset.UtcNow,"Coaching",user.UserId!.Value.ToString(),"SystemAdmin",null,
                     "COMMAND","/api/coaching-admin/curriculum-management",200,Guid.NewGuid().ToString(),null,null,action,kind,result.Id.ToString(),
-                    JsonSerializer.Serialize(new { reason, before = fingerprint, after = result.Fingerprint, result.Name })));
+                    auditPayload));
                 var deleted = db.Entry(entity).State == EntityState.Deleted;
                 await db.SaveChangesAsync(ct);
                 if (!deleted) result = await Describe(entity,ct);

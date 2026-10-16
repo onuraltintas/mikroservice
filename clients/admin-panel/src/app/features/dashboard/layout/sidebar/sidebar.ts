@@ -213,6 +213,13 @@ export class SidebarComponent {
             icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 6.75h15m-15 5.25h15m-15 5.25h9" /></svg>'
           },
           {
+            label: 'Ders ve Müfredat Yönetimi',
+            route: '/dashboard/coaching/curriculum',
+            permission: ADMIN_PERMISSIONS.coachingContentManage,
+            role: 'SystemAdmin',
+            icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 6.75h15m-15 5.25h15m-15 5.25h9" /></svg>'
+          },
+          {
             label: 'Ders ve hedef katalogları',
             route: '/dashboard/coaching/catalog',
             permission: ADMIN_PERMISSIONS.coachingView,
@@ -372,6 +379,7 @@ export class SidebarComponent {
       '/dashboard/coaching/operations/new/goal': ADMIN_PERMISSIONS.coachingManage,
       '/dashboard/coaching/cms': ADMIN_PERMISSIONS.coachingContentManage,
       '/dashboard/coaching/catalog': ADMIN_PERMISSIONS.coachingView,
+      '/dashboard/coaching/curriculum': ADMIN_PERMISSIONS.coachingContentManage,
       '/dashboard/coaching/subscriptions': ADMIN_PERMISSIONS.coachingSubscriptionManage,
       '/dashboard/coaching/finance': ADMIN_PERMISSIONS.coachingView,
       '/dashboard/speed-reading': ADMIN_PERMISSIONS.speedReadingView,
