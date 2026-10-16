@@ -311,7 +311,7 @@
                       </tr>
                     </thead>
                     <tbody>
-                      @for (item of report.exerciseAnalysis; track item.exerciseTypeName) {
+                      @for (item of report.exerciseAnalysis; track $index) {
                         <tr>
                           <td>{{ item.exerciseTypeName }}</td>
                           <td>{{ formatNumber(item.totalCompletions) }}</td>

@@ -329,13 +329,13 @@ internal sealed class OwnedSpeedReadingTeacherReports(
             from log in OwnedSpeedReadingReportExercises.All(db)
             where studentIds.Contains(log.UserId)
                 && log.CompletedDate >= start && log.CompletedDate <= end
-            select new { log.UserId, log.CompletedDate, Score = log.IsMeasured ? (decimal?)log.SuccessRate : null, log.TypeName })
+            select new { log.UserId, log.CompletedDate, Score = log.IsMeasured ? (decimal?)log.SuccessRate : null, log.ExerciseTypeId, log.TypeName })
             .ToListAsync(cancellationToken);
         var exerciseAnalysis = exerciseRows
-            .GroupBy(item => item.TypeName)
+            .GroupBy(item => new { item.ExerciseTypeId, item.TypeName })
             .OrderByDescending(group => group.Count())
             .Select(group => new AdminExerciseTypeAnalysis(
-                group.Key,
+                group.Key.TypeName,
                 group.Count(),
                 group.Select(item => item.UserId).Distinct().Count(),
                 group.Average(item => item.Score) ?? 0,

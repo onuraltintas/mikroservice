@@ -105,10 +105,59 @@ internal static class ExerciseReportingScenario
         }
     }
 
-    internal static DailyExerciseLog Log(Guid user, Guid progress, Exercise exercise, DateTime now, Guid? session, bool measured = true) =>
+    internal static async Task LegacyAndAdaptive(OwnedSpeedReadingDbContext db)
+    {
+        var user = Guid.NewGuid(); var now = DateTime.UtcNow; var prefix = user.ToString("N");
+        var type = ExerciseType.Create(Guid.NewGuid(), prefix, "Arşiv", "Vocabulary");
+        var exercise = Exercise.Create(prefix, "Vocabulary", "{}", 1, user, type.Id);
+        db.ExerciseTypes.Add(type); db.Exercises.Add(exercise);
+        var template = ProgramTemplate.Import(Guid.NewGuid(), prefix, "", Guid.NewGuid(), 0, 100,
+            "{}", 1, 2, 5, 1, 3, true, 1, 0, null, false, now, null, null, null);
+        var progress = StudentProgramProgress.Start(Guid.NewGuid(), user, template, 0, 0, user, now);
+        db.ProgramTemplates.Add(template); db.StudentProgramProgresses.Add(progress);
+        // Unlinked old daily records remain; linked legacy records use the canonical result date.
+        db.DailyExerciseLogs.Add(Log(user, progress.Id, exercise, now, null));
+        var slot = 1;
+        foreach (var (date, assessment) in new[] { (now, false), (now.AddDays(-20), false), (now, true) })
+        {
+            var legacy = Guid.NewGuid();
+            db.DailyExerciseLogs.Add(Log(user, progress.Id, exercise, now, legacy, slot: slot++));
+            db.ExerciseSessionResults.Add(ExerciseSessionResult.Import(Guid.NewGuid(), null, user, exercise.Id,
+                null, 0, 60, 0, 0, 0, 100, date, "[]", "[]", legacy, date, null, null, null, isAssessmentMode: assessment));
+        }
+        exercise.Deactivate(); exercise.Delete(user, now); type.Delete(user, now);
+        await db.SaveChangesAsync();
+        var activity = await Analytics(db).GetStudentActivityAsync(user, now.AddDays(-1), now.AddDays(1));
+        Require(activity.StudyTime.TotalSessions == 2, "Legacy dedup/date/assessment rules changed");
+        Require((await Reports(db).GetContentAnalysisAsync(new SpeedReadingTeacherStudentScopeResponse([], [user], 1), now.AddDays(-1), now.AddDays(1))).ExerciseAnalysis.Single().TotalCompletions == 2,
+            "Archived metadata must preserve historical results");
+
+        var adaptiveUser = Guid.NewGuid();
+        var adaptive = Exercise.Create(prefix + "Adaptive", "AdaptiveFluency", "{}", 1, adaptiveUser, type.Id);
+        db.Exercises.Add(adaptive);
+        var session = ExerciseSession.Start(adaptiveUser, adaptive.Id, null, 1, now.AddMinutes(-2), null);
+        session.Complete(now); db.ExerciseSessions.Add(session);
+        db.ExerciseSessionResults.Add(ExerciseSessionResult.Create(Guid.NewGuid(), session.Id, adaptiveUser, adaptive.Id,
+            null, 0, 120, 0, 0, 0, 100, now));
+        foreach (var (id, wpm) in new[] { (session.Id, 240), (Guid.NewGuid(), 300) })
+        {
+            var text = ReadingText.Create(Guid.NewGuid(), prefix + wpm, "Metin", difficultyLevel: 1);
+            db.ReadingTexts.Add(text);
+            db.ReadingSessions.Add(ReadingSession.Import(id, adaptiveUser, text.Id, 60, wpm, 1, 1, 100, wpm, now, now, null, null, null));
+        }
+        await db.SaveChangesAsync();
+        var before = JsonSerializer.Serialize(await db.StudentProgramProgresses.AsNoTracking().SingleAsync(p => p.Id == progress.Id));
+        var summary = await Analytics(db).GetStudentSummaryAsync(adaptiveUser, now.AddDays(-1), now.AddDays(1));
+        Require(summary.ReadingSessions == 2 && summary.ExercisesCompleted == 0 && summary.AverageWpm == 270, "Adaptive must retain both reading measurements without duplicating its result");
+        var content = await Reports(db).GetContentAnalysisAsync(new SpeedReadingTeacherStudentScopeResponse([], [adaptiveUser], 1), now.AddDays(-1), now.AddDays(1));
+        Require(content.ExerciseAnalysis.Single().TotalCompletions == 1, "Adaptive is one completed exercise");
+        Require(before == JsonSerializer.Serialize(await db.StudentProgramProgresses.AsNoTracking().SingleAsync(p => p.Id == progress.Id)), "Reporting changed program progress");
+    }
+
+    internal static DailyExerciseLog Log(Guid user, Guid progress, Exercise exercise, DateTime now, Guid? session, bool measured = true, int? slot = null) =>
         DailyExerciseLog.Import(Guid.NewGuid(), user, progress, exercise.Id, exercise.ExerciseTypeId, 1, 1, 1, now,
             60, measured ? 100 : 0, measured, "{}", 1, false, "verification", 1, 0, 1, null, null, 4, TimeSpan.Zero,
-            0, 0, 0, 0, 0, 0, false, 0, 0, 0, 0, 0, 0, now, null, null, null, isMeasured: measured, sessionId: session);
+            0, 0, 0, 0, 0, 0, false, 0, 0, 0, 0, 0, 0, now, null, null, null, isMeasured: measured, sessionId: session, slotOrder: slot);
     internal static ILegacySpeedReadingAnalytics Analytics(OwnedSpeedReadingDbContext db) =>
         (ILegacySpeedReadingAnalytics)Activator.CreateInstance(typeof(OwnedSpeedReadingDbContext).Assembly
             .GetType("SpeedReading.Infrastructure.Persistence.OwnedSpeedReadingAnalytics")!, db, new MemoryCache(new MemoryCacheOptions()))!;

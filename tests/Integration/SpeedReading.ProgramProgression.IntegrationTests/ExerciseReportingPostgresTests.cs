@@ -55,4 +55,11 @@ public sealed class ExerciseReportingPostgresTests(PostgresFixture postgres) : I
         await using var db = Open(); await Reset(db);
         await ExerciseReportingScenario.Boundaries(db, sameDisplayName);
     }
+
+    [Fact]
+    public async Task Legacy_archived_and_adaptive_results_preserve_history_and_measurements()
+    {
+        await using var db = Open(); await Reset(db);
+        await ExerciseReportingScenario.LegacyAndAdaptive(db);
+    }
 }

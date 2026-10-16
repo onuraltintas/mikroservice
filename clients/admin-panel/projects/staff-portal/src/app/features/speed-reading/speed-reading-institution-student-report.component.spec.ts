@@ -42,6 +42,21 @@ describe('SpeedReadingStudentReportComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Başarıyla sürdürüyor');
     expect(fixture.nativeElement.textContent).toContain('Özet çıkarma çalışmaları önerilir.');
     expect(fixture.nativeElement.textContent).toContain('Akıcı okuma');
+    const report = fixture.componentInstance.report()!;
+    const activity = report.activity!;
+    const original = activity.recentActivities[0];
+    fixture.componentInstance.report.set({ ...report, activity: { ...activity, recentActivities: [
+      { ...original, contentTitle: 'Bağımsız kelime', wpm: null, comprehension: null, successRate: 100 },
+      { ...original, contentTitle: 'Ölçülen sıfır', successRate: 0, isPassed: false },
+      { ...original, contentTitle: 'Ölçülmeyen göz', wpm: null, comprehension: null, successRate: null, isMeasured: false, isPassed: false },
+    ] } });
+    fixture.detectChanges();
+    const rows = Array.from(fixture.nativeElement.querySelectorAll('tr')) as HTMLTableRowElement[];
+    expect(rows.find(row => row.textContent?.includes('Bağımsız kelime'))?.textContent).toContain('100%');
+    expect(rows.find(row => row.textContent?.includes('Ölçülen sıfır'))?.cells[4].textContent?.trim()).toBe('0%');
+    const unmeasured = rows.find(row => row.textContent?.includes('Ölçülmeyen göz'))?.textContent;
+    expect(unmeasured).toContain('Ölçülmedi');
+    expect(unmeasured).not.toContain('0%');
   });
 
   it('reloads analytics when a different student is selected in the same report view', () => {

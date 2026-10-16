@@ -21,7 +21,7 @@ internal static class OwnedSpeedReadingReportExercises
                 DifficultyLevel = exercise == null ? 0 : exercise.DifficultyLevel,
                 CompletedDate = result.CompletedAt, TimeSpentSeconds = result.TimeSpentSeconds,
                 SuccessRate = result.Score, IsMeasured = result.IsMeasured,
-                IsPassed = result.IsMeasured && result.Score >= 60,
+                IsPassed = result.IsMeasured && result.Score >= 70,
                 AverageWPM = result.IsMeasured && result.RawWpm > 0 ? result.RawWpm : null,
                 AverageComprehension = result.IsMeasured && result.ReadingTextId != null && result.QuestionAnswersJson != "[]"
                     ? result.ComprehensionScore : null

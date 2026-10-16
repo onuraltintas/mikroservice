@@ -18,6 +18,15 @@ describe('SpeedReadingInstitutionService', () => {
 
   afterEach(() => http.verify());
 
+  it.each([3, null])('rejects an unknown member role %s rather than granting report actions', async (role) => {
+    const response = firstValueFrom(service.getMembers('institution-1', 'Student'));
+    const rejected = expect(response).rejects.toThrow('geçersiz rol');
+    http.expectOne(request => request.url.endsWith('/institutions/institution-1/members')).flush({
+      items: [{ userId: 'student-1', role }], totalCount: 1, pageNumber: 1, pageSize: 25,
+    });
+    await rejected;
+  });
+
   it.each([[1, 'Student'], [2, 'Teacher'], ['Student', 'Student'], ['Teacher', 'Teacher']])(
     'normalizes the real institution member role %s before report/edit actions', async (role, expected) => {
       const response = firstValueFrom(service.getMembers('institution-1', 'Student'));
