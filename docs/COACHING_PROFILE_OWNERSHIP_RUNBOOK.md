@@ -2,6 +2,8 @@
 
 Tarih: 16 Ekim 2026
 
+Canlı durum: 16 Ekim 2026 19:39:55 TSİ'de eğitim bağlamı paketiyle birlikte uygulandı. [Dağıtım ve veri koruma kanıtları](coaching/coaching-learning-live-release-20261016.md).
+
 Bu aşama Koçluk öğrencisi ve öğretmeninin profilini, kurum üyeliğini, öğretmen–öğrenci atamasını ve davetini Coaching servisine taşır. Ortak hesap Identity'dedir. Hızlı Okuma'nın profil ve ilişki tabloları değiştirilmez.
 
 ## Sahiplik ve kimlik standardı
@@ -82,7 +84,7 @@ Eski Identity davetleri bu geçişte taşınmaz; test davetleri yeni Koçluk pan
 
 ## Ortama geçiş sırası
 
-Bu çalışma yerel geliştirme ve izole test ortamında doğrulanmıştır. Canlıya dağıtım veya canlı veri aktarımı yapılmamıştır.
+Yerel geliştirme ve izole test doğrulamasına ek olarak canlı dağıtım ve veri aktarımı tamamlandı. Üretim kopyası provası, canlı veri karşılaştırması ve öğrenci tarayıcı sonuçları [yayın raporundadır](coaching/coaching-learning-live-release-20261016.md).
 
 1. Koçluk profil, üyelik, atama, davet ve kayıt işlemlerini geçiş boyunca bakım kapsamına alın. İki servisin farklı sahiplik sürümlerini kullanıcı trafiğine birlikte açmayın.
 2. Identity ve Coaching veritabanlarını yedekleyin. Ortak hesap sayısı/kimlikleri ile çalışma planı ve tamamlanmış görev sayıları/sürelerini karşılaştırma için kaydedin.

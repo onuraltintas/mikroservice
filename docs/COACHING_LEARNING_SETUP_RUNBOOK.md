@@ -1,6 +1,6 @@
 # Koçluk eğitim bağlamı, katalog sürümü ve ilk kurulum
 
-Tarih: 16 Ekim 2026. Bu paket, profil sahipliği/UserId temelinden sonraki eğitim bağlamı ve öğrenci kurulumunu uygular. Canlı dağıtım veya canlı veri değişikliği yapılmamıştır.
+Tarih: 16 Ekim 2026. Bu paket, profil sahipliği/UserId temelinden sonraki eğitim bağlamı ve öğrenci kurulumunu uygular. Profil sahipliği geçişiyle birlikte 16 Ekim 2026 19:39:55 TSİ'de canlıya alınmıştır. Geçiş ve canlı doğrulama ayrıntıları: [canlı dağıtım raporu](coaching/coaching-learning-live-release-20261016.md).
 
 ## Öğrenci akışı
 
