@@ -38,6 +38,16 @@ Dört takılma ve yeniden deneme senaryosu ile gerçek HTTP hata zinciri dahil 2
 
 İlk ek yayın `captcha-wait-20261016`, kaynak `84ed5c59`, 13:05:55 TSİ. Son ek yayın `captcha-wait-20261016-r2`, kaynak `578da813`, 13:10:30 TSİ: yalnız öğrenci ön yüzü değişti. R2 operasyon betikleri incelenen ilk betiklerden yalnız yayın kimliği ve bir önceki imaj SHA'sı değiştirilerek üretildi. Önizleme ve tam önceki imaj SHA'sına geri dönüş koruması var. Diğer servislerin konteyner kimlikleri korundu. Son canlı uygulama ana paketi `main-O7CTLJR5.js`.
 
-Editörün gerçek tarayıcı ile üç ekranı kullanma testi henüz tamamlanmadı: CAPTCHA bağlantısı girişte bekliyor. API ve arayüz yetki testlerinin başarısı gerçek canlı oturum testi olarak raporlanmaz. Ek yayının 15 dakikalık izlemesi sürüyor.
+## Gerçek editör oturumuyla canlı doğrulama
+
+Kullanıcının CAPTCHA açıkken normal girişi tamamlamasının ardından `testeditor@eduivme.com` oturumunda üç ekran test edildi:
+
+- Eğitim Programları: 20 program yüklendi; Yetişkin — Seviye 1 programı arayüzden başlatıldı. Veritabanında yalnız bu editör adına `is_staff_training=true` programı oluştu.
+- Aktif Eğitimim: ilk göz takibi 90 saniye çalıştırılıp tamamlandı. “Sonuç kaydedildi” görüldü; günlük ilerleme 1/6 oldu ve ikinci egzersiz açıldı. Sayfa yenilendiğinde ilerleme korundu. Sonuç ölçülmemiş olarak kaydedildi.
+- Egzersiz Önizlemesi: Schulte seviye 1, 16 sayı arayüzden tamamlandı; “Önizleme sonucu — kaydedilmedi” görüldü. Öncesi/sonrası editörün program, oturum, sonuç, günlük kayıt ve puan parmak izleri birebir aynı kaldı.
+
+Katalog tekrar açıldığında aktif program kartı ve devam bağlantısı doğru göründü. Son sayfa yenilemesinden itibaren yakalanan tarayıcı hata kaydı boştu. Eski test öğrencisinin tam veri görüntüsü de bu canlı testlerden sonra ilk görüntüyle eşleşti. Gerçek editör oturumu için bekleyen giriş adımı kalmadı.
+
+Son ek yayının 15 dakikalık izlemesi 13:25:49 TSİ'de tamamlandı; tüm izleme örneklerinde genel giriş adresi HTTP 200 döndü. Canlı editör akışları sonrasındaki kontrolde 44 API isteği, sıfır 5xx ve sıfır uygulama ERR/FTL kaydı vardı. Katalog açık editör sekmesi kullanıcıya bırakıldı.
 
 Kanıtlar: `artifacts/reports-brand-editor-20261016/` altındaki RED/GREEN test günlükleri, `drill-result.json`, `changed-line-coverage.json`, `preservation-result.json`, `source-isolation-changes.json`, `final-health.log`, canlı ve yerel ekran görüntüleri; ek yayın kanıtları `artifacts/captcha-wait-20261016-r2/` altında tutulur. Ana kaynak karşılaştırmasında yalnız bu işe ait 6 API/uygulama/persistence ve 10 öğrenci çalışma dosyası değişmiştir; ilgisiz çalışma alanı değişiklikleri yayına alınmamıştır.
