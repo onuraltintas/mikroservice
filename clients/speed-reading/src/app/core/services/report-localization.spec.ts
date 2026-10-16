@@ -12,6 +12,8 @@ describe('Turkish student report labels', () => {
     for (const [input, expected] of [
       ['Above Average', 'Ortalamanın üzerinde'], ['Average', 'Ortalama'], ['Below Average', 'Ortalamanın altında'],
       ['No benchmark', 'Karşılaştırma verisi yok'],
+      ['grouping', 'Gruplayarak okuma'], ['guided_reading', 'Rehberli okuma'],
+      ['rsvp', 'Seri okuma'], ['subvocalization', 'İç ses azaltma'],
       ['Strong', 'Güçlü'], ['Needs Improvement', 'Geliştirilmeli'], ['high', 'Yüksek'], ['medium', 'Orta'], ['low', 'Düşük'],
       ['not-measured', 'Ölçülmedi'], ['exercise_success', 'Egzersiz başarısı'], ['comprehension', 'Anlama'],
       [' Regression_Reduction ', 'Geriye dönüşü azaltma'], ['vocabulary_builder', 'Kelime hazinesi'],
