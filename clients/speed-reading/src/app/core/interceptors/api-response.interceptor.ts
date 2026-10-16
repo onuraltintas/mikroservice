@@ -24,6 +24,7 @@ export const apiResponseInterceptor: HttpInterceptorFn = (req, next) => {
                 const apiError = error.error as ApiErrorResponse;
                 return throwError(() => ({
                     status: error.status,
+                    error: error.error,
                     message: apiError.message,
                     errors: apiError.errors || [],
                     validationErrors: apiError.validationErrors || []
