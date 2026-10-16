@@ -16,7 +16,7 @@ internal static class VocabularyScoringScenario
         Guid exerciseId; string original; UserGamification? previous;
         await using (var db = open())
         {
-            var type = ExerciseType.Create(Guid.NewGuid(), "Vocabulary", "Vocabulary scoring verification", "vocabulary_builder");
+            var type = ExerciseType.Create(Guid.NewGuid(), "VocabularyVerification" + user.ToString("N"), "Vocabulary scoring verification", "vocabulary_builder");
             var words = Enumerable.Range(0, 4).Select(i => VocabularyItem.Create(Guid.NewGuid(), "Word" + i,
                 "Meaning" + i, null, null, null, "Genel", 2, null, user, now)).ToArray();
             var exercise = Exercise.Create("Vocabulary scoring verification", "vocabulary_builder", JsonSerializer.Serialize(new {
