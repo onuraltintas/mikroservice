@@ -2,8 +2,17 @@ import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ReportsService } from './reports.service';
+import { StudentActivityReportComponent } from '../../features/student/reports/student-activity-report.component';
+import { StudentSeriesReportComponent } from '../../features/student/reports/student-series-report.component';
+import { StudentDashboardReportComponent } from '../../features/student/reports/student-dashboard-report.component';
 
 describe('Turkish student report labels', () => {
+  it('formats report durations and month names in Turkish', () => {
+    expect(StudentActivityReportComponent.prototype.formatMinutes(75)).toBe('1 sa 15 dk');
+    expect(StudentActivityReportComponent.prototype.formatMinutes(5)).toBe('5 dk');
+    expect(StudentSeriesReportComponent.prototype.formatDate('2026-10-16T12:00:00Z')).toBe('16 Eki');
+    expect(StudentDashboardReportComponent.prototype.formatDate('2026-10-16T12:00:00Z')).toBe('16 Eki 2026');
+  });
   it('translates categories, chart labels and improvement areas while retaining scores and category identifiers', () => {
     TestBed.configureTestingModule({ providers: [ReportsService, provideHttpClient(), provideHttpClientTesting()] });
     const http = TestBed.inject(HttpTestingController);

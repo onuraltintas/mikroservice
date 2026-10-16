@@ -16,6 +16,18 @@ describe('SpeedReadingInstitutionWorkspaceComponent', () => {
 
   afterEach(() => http.verify());
 
+  it('localizes content performance levels without changing the measured zero score', () => {
+    const fixture = createLoadedWorkspace();
+    fixture.componentInstance.selectedInstitutionReport.set('content');
+    fixture.componentInstance.contentReport.set({ dateFrom: '', dateTo: '', exerciseAnalysis: [
+      { exerciseTypeName: 'Örnek egzersiz', totalCompletions: 1, uniqueStudents: 1, averageScore: 0, performanceLevel: 'low' }
+    ], exerciseFrequencyChart: [], readingAnalysis: [], readingPerformanceChart: [] } as any);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Düşük');
+    expect(fixture.nativeElement.textContent).not.toContain('low');
+    expect(fixture.nativeElement.textContent).toContain('0%');
+  });
+
   function createLoadedWorkspace() {
     const fixture = TestBed.createComponent(SpeedReadingInstitutionWorkspaceComponent);
     fixture.detectChanges();
