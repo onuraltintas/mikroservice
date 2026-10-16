@@ -2,7 +2,7 @@
 
 Uygulama kontrol noktası: `ddc089ef`.
 
-Durum: Yerel geliştirme ve doğrulama tamamlandı. **Canlıya alınmadı.** Önceki ağaç görünümünün yerine sekmeler kullanılır. Bu rapor, `curriculum-management-20261016.md` belgesindeki ekran ve sabit sınav kapsamı açıklamalarını günceller.
+Durum: **Canlıya alındı.** Sınav tarihi alanı da devam sürümünde eklendi (`dfbb4335`). Dağıtım, veri koruma ve canlı doğrulama sonuçları [canlı sürüm raporundadır](curriculum-live-release-20261016.md). Önceki ağaç görünümünün yerine sekmeler kullanılır. Bu rapor, `curriculum-management-20261016.md` belgesindeki ekran ve sabit sınav kapsamı açıklamalarını günceller.
 
 ## Kullanıcı açısından değişenler
 
@@ -10,7 +10,7 @@ Yönetici yolu: `/dashboard/coaching/curriculum`.
 
 | Sekme | Yönetilen kayıt | Üst kayıt / filtre |
 |---|---|---|
-| Sınav türleri | Kod, ad, sıra, aktiflik | Kök kayıt |
+| Sınav türleri | Kod, ad, isteğe bağlı sınav tarihi, sıra, aktiflik | Kök kayıt |
 | Dersler | Ad, sınıf, sınav türü, ders programı, aktiflik | Sınav türü |
 | Üniteler | Ad, sıra, aktiflik | Ders |
 | Konular | Ad, sıra, önerilen çalışma dakikası, aktiflik | Ünite |
