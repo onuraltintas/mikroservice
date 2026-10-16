@@ -54,7 +54,7 @@ public sealed class ProductScopedProfileUpdateTests
     }
 
     [Fact]
-    public async Task CoachingProfileUpdate_ShouldUpdateCoachingTeacherProfile()
+    public async Task CoachingProfileUpdate_RejectsEducationWritesInIdentity()
     {
         var user = User.Create(Guid.NewGuid(), "teacher@example.test");
         user.AddRole(CreateUserRole(user.Id, "Teacher", PlatformProduct.Coaching));
@@ -87,11 +87,12 @@ public sealed class ProductScopedProfileUpdateTests
                 Product: PlatformProduct.Coaching),
             CancellationToken.None);
 
-        Assert.True(result.IsSuccess);
-        Assert.Equal("New", teacher.FirstName);
-        Assert.Equal("Coach", teacher.Title);
-        Assert.Equal("Coaching bio", teacher.Bio);
-        Assert.Equal(1, ((TeacherRepositoryProxy)(object)teachers).ReadCount);
+        Assert.True(result.IsFailure);
+        Assert.Equal("Profiles.OwnedByCoaching", result.Error.Code);
+        Assert.Equal("Old", teacher.FirstName);
+        Assert.Null(teacher.Title);
+        Assert.Null(teacher.Bio);
+        Assert.Equal(0, ((TeacherRepositoryProxy)(object)teachers).ReadCount);
     }
 
     [Fact]
@@ -135,7 +136,7 @@ public sealed class ProductScopedProfileUpdateTests
     }
 
     [Fact]
-    public async Task CoachingAdminProfileUpdate_ShouldUpdateCoachingTeacherProfile()
+    public async Task CoachingAdminProfileUpdate_RejectsEducationWritesInIdentity()
     {
         var user = User.Create(Guid.NewGuid(), "teacher@example.test");
         user.AddRole(CreateUserRole(user.Id, "Teacher", PlatformProduct.Coaching));
@@ -166,11 +167,12 @@ public sealed class ProductScopedProfileUpdateTests
                 Product: PlatformProduct.Coaching),
             CancellationToken.None);
 
-        Assert.True(result.IsSuccess);
-        Assert.Equal("New", teacher.FirstName);
-        Assert.Equal("Coach", teacher.Title);
-        Assert.Equal("Coaching bio", teacher.Bio);
-        Assert.Equal(1, ((TeacherRepositoryProxy)(object)teachers).ReadCount);
+        Assert.True(result.IsFailure);
+        Assert.Equal("Profiles.OwnedByCoaching", result.Error.Code);
+        Assert.Equal("Old", teacher.FirstName);
+        Assert.Null(teacher.Title);
+        Assert.Null(teacher.Bio);
+        Assert.Equal(0, ((TeacherRepositoryProxy)(object)teachers).ReadCount);
     }
 
     private static Identity.Domain.Entities.UserRole CreateUserRole(

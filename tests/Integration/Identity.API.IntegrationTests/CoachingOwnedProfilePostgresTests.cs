@@ -35,7 +35,7 @@ public sealed class CoachingOwnedProfilePostgresTests
             var options = new DbContextOptionsBuilder<CoachingDbContext>().UseNpgsql(connection.ConnectionString,
                 x => x.MigrationsHistoryTable("__ef_migrations_history", "coaching")).Options;
             await using var db = new CoachingDbContext(options);
-            var baseline = db.Database.GetMigrations().Last(x => !x.Contains("OwnedCoachingProfiles"));
+            var baseline = db.Database.GetMigrations().Last(x => !x.Contains("OwnedCoaching"));
             await db.GetService<IMigrator>().MigrateAsync(baseline);
             var student = Guid.NewGuid(); var teacher = Guid.NewGuid();
             var revision = StudyPlanRevision.Create(student, Guid.NewGuid(), 1, "Existing work"); revision.Activate();

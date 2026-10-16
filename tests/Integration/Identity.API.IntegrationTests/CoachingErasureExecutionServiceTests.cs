@@ -22,6 +22,8 @@ public sealed class CoachingErasureExecutionServiceTests
         assignment.AssignToStudent(subjectId);
         assignment.AssignedStudents.Single().AddSubmissionAttachment(
             "coaching/user-file.pdf", "ödev.pdf", "application/pdf", 128, new string('a', 64));
+        context.Add(Coaching.Domain.Profiles.CoachingStudentProfile.Create(subjectId));
+        context.Add(Coaching.Domain.Profiles.CoachingStudentProfile.Create(otherStudentId));
         context.Assignments.Add(assignment);
         context.AcademicGoals.AddRange(
             AcademicGoal.Create(subjectId, "Silinecek hedef", GoalCategory.SubjectMastery),
@@ -36,7 +38,9 @@ public sealed class CoachingErasureExecutionServiceTests
         var first = await service.ExecuteAsync(request, CancellationToken.None);
         var replay = await service.ExecuteAsync(request, CancellationToken.None);
 
-        first.DeletedRecordCount.Should().Be(3);
+        first.DeletedRecordCount.Should().Be(4);
+        (await context.CoachingStudentProfiles.CountAsync(x => x.UserId == subjectId)).Should().Be(0);
+        (await context.CoachingStudentProfiles.CountAsync(x => x.UserId == otherStudentId)).Should().Be(1);
         replay.Id.Should().Be(first.Id);
         storage.DeletedKeys.Should().Equal("coaching/user-file.pdf");
         (await context.AssignmentStudents.CountAsync(row => row.StudentId == subjectId)).Should().Be(0);
