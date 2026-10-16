@@ -23,7 +23,11 @@ public sealed record StudentAnalyticsBenchmark(
     decimal StudentValue,
     decimal InstitutionAverage,
     decimal PlatformAverage,
-    string PerformanceLevel);
+    string PerformanceLevel)
+{
+    public bool InstitutionDataAvailable { get; init; }
+    public bool PlatformDataAvailable { get; init; }
+}
 
 public sealed record StudentAnalyticsCategoryPoint(
     string CategoryName,
@@ -312,6 +316,14 @@ public interface ILegacySpeedReadingAnalytics
         DateTime? dateFrom,
         DateTime? dateTo,
         CancellationToken cancellationToken = default);
+
+    Task<StudentReadingSpeedAnalytics> GetStudentReadingSpeedAsync(
+        Guid userId, DateTime? dateFrom, DateTime? dateTo, Guid? institutionId,
+        CancellationToken cancellationToken);
+
+    Task<StudentComprehensionAnalytics> GetStudentComprehensionAsync(
+        Guid userId, DateTime? dateFrom, DateTime? dateTo, Guid? institutionId,
+        CancellationToken cancellationToken);
 
     Task<StudentSeriesAnalytics> GetStudentSeriesAsync(
         Guid userId,

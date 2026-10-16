@@ -113,7 +113,7 @@ public sealed class InstitutionAnalyticsController(
         if (!await CanReadStudentAsync(institutionId, studentId, cancellationToken))
             return User.Identity?.IsAuthenticated == true ? Forbid() : Unauthorized();
 
-        return Ok(await analytics.GetStudentReadingSpeedAsync(studentId, dateFrom, dateTo, cancellationToken));
+        return Ok(await analytics.GetStudentReadingSpeedAsync(studentId, dateFrom, dateTo, institutionId, cancellationToken));
     }
 
     [HttpGet("students/{studentId:guid}/comprehension")]
@@ -127,7 +127,7 @@ public sealed class InstitutionAnalyticsController(
         if (!await CanReadStudentAsync(institutionId, studentId, cancellationToken))
             return User.Identity?.IsAuthenticated == true ? Forbid() : Unauthorized();
 
-        return Ok(await analytics.GetStudentComprehensionAsync(studentId, dateFrom, dateTo, cancellationToken));
+        return Ok(await analytics.GetStudentComprehensionAsync(studentId, dateFrom, dateTo, institutionId, cancellationToken));
     }
 
     [HttpGet("students/{studentId:guid}/activity")]

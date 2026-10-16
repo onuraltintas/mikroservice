@@ -131,6 +131,8 @@ public sealed class TeacherAnalyticsControllerTests
 
     private sealed class TestAnalytics : ILegacySpeedReadingAnalytics
     {
+        public Task<StudentReadingSpeedAnalytics> GetStudentReadingSpeedAsync(Guid userId, DateTime? dateFrom, DateTime? dateTo, Guid? institutionId, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<StudentComprehensionAnalytics> GetStudentComprehensionAsync(Guid userId, DateTime? dateFrom, DateTime? dateTo, Guid? institutionId, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<StudentAnalyticsSummary> GetStudentSummaryAsync(
             Guid userId, DateTime? dateFrom, DateTime? dateTo, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task<StudentReadingSpeedAnalytics> GetStudentReadingSpeedAsync(

@@ -360,8 +360,8 @@ export class ReportsService {
       dataAvailable: value.totalQuestionsAttempted > 0,
       comprehensionBenchmarks: [
         { label: 'Öğrenci ortalaması', value: value.benchmark.studentValue },
-        { label: 'Kurum ortalaması', value: value.benchmark.institutionAverage },
-        { label: 'Platform ortalaması', value: value.benchmark.platformAverage }
+        ...(value.benchmark.institutionDataAvailable !== false ? [{ label: 'Kurum ortalaması', value: value.benchmark.institutionAverage }] : []),
+        ...(value.benchmark.platformDataAvailable !== false ? [{ label: 'Platform ortalaması', value: value.benchmark.platformAverage }] : [])
       ],
       questionTypeChart: {
         data: questionTypes.map(item => ({ name: speedReadingReportLabel(item.type), value: item.value })),
@@ -1150,6 +1150,8 @@ interface StudentAnalyticsTrendPoint {
 }
 
 interface StudentAnalyticsBenchmark {
+  institutionDataAvailable?: boolean;
+  platformDataAvailable?: boolean;
   studentValue: number;
   institutionAverage: number;
   platformAverage: number;

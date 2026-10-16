@@ -51,6 +51,8 @@ export interface SpeedReadingInstitutionMemberFilters {
 }
 
 export interface SpeedReadingStudentAnalyticsBenchmark {
+  institutionDataAvailable?: boolean;
+  platformDataAvailable?: boolean;
   studentValue: number;
   institutionAverage: number;
   platformAverage: number;

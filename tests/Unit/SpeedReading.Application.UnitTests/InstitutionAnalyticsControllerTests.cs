@@ -52,9 +52,32 @@ public sealed class InstitutionAnalyticsControllerTests
         teacherAccess.LastStudentId.Should().NotBeEmpty();
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Student_benchmarks_use_the_authorized_report_institution(bool allowed)
+    {
+        var analytics = new StubAnalytics();
+        var controller = CreateController(new StubTeacherAccess { CanReadInstitutionStudent = allowed }, new StubTeacherReports(), analytics);
+        var institution = Guid.NewGuid(); var student = Guid.NewGuid();
+        var speed = await controller.GetStudentReadingSpeed(institution, student, null, null);
+        var comprehension = await controller.GetStudentComprehension(institution, student, null, null);
+        if (allowed)
+        {
+            speed.Result.Should().BeOfType<OkObjectResult>(); comprehension.Result.Should().BeOfType<OkObjectResult>();
+            analytics.Scopes.Should().Equal(institution, institution);
+        }
+        else
+        {
+            speed.Result.Should().BeOfType<ForbidResult>(); comprehension.Result.Should().BeOfType<ForbidResult>();
+            analytics.Scopes.Should().BeEmpty();
+        }
+    }
+
     private static InstitutionAnalyticsController CreateController(
         StubTeacherAccess access,
-        StubTeacherReports reports)
+        StubTeacherReports reports,
+        StubAnalytics? analytics = null)
     {
         var viewerId = Guid.NewGuid();
         var principal = new ClaimsPrincipal(new ClaimsIdentity(
@@ -62,7 +85,7 @@ public sealed class InstitutionAnalyticsControllerTests
             new Claim(ClaimTypes.NameIdentifier, viewerId.ToString()),
             new Claim(ClaimTypes.Role, "InstitutionAdmin")
         ], "Test"));
-        var controller = new InstitutionAnalyticsController(reports, new StubAnalytics(), access)
+        var controller = new InstitutionAnalyticsController(reports, analytics ?? new StubAnalytics(), access)
         {
             ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext { User = principal } }
         };
@@ -160,6 +183,11 @@ public sealed class InstitutionAnalyticsControllerTests
 
     private sealed class StubAnalytics : ILegacySpeedReadingAnalytics
     {
+        public List<Guid?> Scopes { get; } = [];
+        public Task<StudentReadingSpeedAnalytics> GetStudentReadingSpeedAsync(Guid userId, DateTime? dateFrom, DateTime? dateTo, Guid? institutionId, CancellationToken cancellationToken)
+        { Scopes.Add(institutionId); return Task.FromResult<StudentReadingSpeedAnalytics>(null!); }
+        public Task<StudentComprehensionAnalytics> GetStudentComprehensionAsync(Guid userId, DateTime? dateFrom, DateTime? dateTo, Guid? institutionId, CancellationToken cancellationToken)
+        { Scopes.Add(institutionId); return Task.FromResult<StudentComprehensionAnalytics>(null!); }
         public Task<StudentAnalyticsSummary> GetStudentSummaryAsync(Guid userId, DateTime? dateFrom, DateTime? dateTo, CancellationToken cancellationToken = default) => Task.FromResult<StudentAnalyticsSummary>(null!);
         public Task<StudentReadingSpeedAnalytics> GetStudentReadingSpeedAsync(Guid userId, DateTime? dateFrom, DateTime? dateTo, CancellationToken cancellationToken = default) => Task.FromResult<StudentReadingSpeedAnalytics>(null!);
         public Task<StudentComprehensionAnalytics> GetStudentComprehensionAsync(Guid userId, DateTime? dateFrom, DateTime? dateTo, CancellationToken cancellationToken = default) => Task.FromResult<StudentComprehensionAnalytics>(null!);

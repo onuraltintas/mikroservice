@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using SpeedReading.Application.Analytics;
 using SpeedReading.Domain.Sessions;
+using SpeedReading.Domain.Institutions;
 
 namespace SpeedReading.Infrastructure.Persistence;
 
@@ -229,11 +230,16 @@ internal sealed class OwnedSpeedReadingAnalytics(
         { ComprehensionDataAvailable = latestMeasuredComprehension.HasValue };
     }
 
-    public async Task<StudentReadingSpeedAnalytics> GetStudentReadingSpeedAsync(
+    public Task<StudentReadingSpeedAnalytics> GetStudentReadingSpeedAsync(
         Guid userId,
         DateTime? dateFrom,
         DateTime? dateTo,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default) =>
+        GetStudentReadingSpeedAsync(userId, dateFrom, dateTo, null, cancellationToken);
+
+    public async Task<StudentReadingSpeedAnalytics> GetStudentReadingSpeedAsync(
+        Guid userId, DateTime? dateFrom, DateTime? dateTo, Guid? institutionId,
+        CancellationToken cancellationToken)
     {
         var (start, end) = NormalizeRange(dateFrom, dateTo);
         var query = ReadingSessionsFor(userId, start, end)
@@ -278,7 +284,7 @@ internal sealed class OwnedSpeedReadingAnalytics(
             .Select(item => (decimal?)item.CalculatedWpm).FirstOrDefaultAsync(cancellationToken);
         var benchmark = aggregate is null
             ? new StudentAnalyticsBenchmark(0, 0, 0, "Veri yok")
-            : await GetBenchmarkAsync(userId, start, end, average, useComprehension: false, cancellationToken);
+            : await GetBenchmarkAsync(userId, institutionId, start, end, average, useComprehension: false, cancellationToken);
 
         return new StudentReadingSpeedAnalytics(
             userId, start, end, latest ?? average, average, median,
@@ -288,11 +294,16 @@ internal sealed class OwnedSpeedReadingAnalytics(
             aggregate is null ? [] : BuildWpmRecommendations(average, improvementRate));
     }
 
-    public async Task<StudentComprehensionAnalytics> GetStudentComprehensionAsync(
+    public Task<StudentComprehensionAnalytics> GetStudentComprehensionAsync(
         Guid userId,
         DateTime? dateFrom,
         DateTime? dateTo,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default) =>
+        GetStudentComprehensionAsync(userId, dateFrom, dateTo, null, cancellationToken);
+
+    public async Task<StudentComprehensionAnalytics> GetStudentComprehensionAsync(
+        Guid userId, DateTime? dateFrom, DateTime? dateTo, Guid? institutionId,
+        CancellationToken cancellationToken)
     {
         var (start, end) = NormalizeRange(dateFrom, dateTo);
         var query = ReadingSessionsFor(userId, start, end)
@@ -376,7 +387,7 @@ internal sealed class OwnedSpeedReadingAnalytics(
             : 0;
         var benchmark = aggregate is null
             ? new StudentAnalyticsBenchmark(0, 0, 0, "Veri yok")
-            : await GetBenchmarkAsync(userId, start, end, average, useComprehension: true, cancellationToken);
+            : await GetBenchmarkAsync(userId, institutionId, start, end, average, useComprehension: true, cancellationToken);
 
         return new StudentComprehensionAnalytics(
             userId, start, end, latest ?? average, average, aggregate?.Maximum ?? 0,
@@ -644,55 +655,47 @@ internal sealed class OwnedSpeedReadingAnalytics(
 
     private async Task<StudentAnalyticsBenchmark> GetBenchmarkAsync(
         Guid userId,
+        Guid? institutionId,
         DateTime start,
         DateTime end,
         decimal studentValue,
         bool useComprehension,
         CancellationToken cancellationToken)
     {
-        var institutionId = await db.UserProfiles.AsNoTracking()
-            .Where(item => item.UserId == userId && item.IsActive)
-            .Select(item => item.InstitutionId)
-            .SingleOrDefaultAsync(cancellationToken);
+        var institutions = await db.InstitutionMemberships.AsNoTracking()
+            .Where(item => item.UserId == userId && item.IsActive
+                && item.Role == SpeedReadingInstitutionMemberRole.Student
+                && (!institutionId.HasValue || item.InstitutionId == institutionId.Value))
+            .Select(item => item.InstitutionId).Take(2).ToArrayAsync(cancellationToken);
+        // Without an explicit report scope, only an unambiguous current membership is comparable.
+        institutionId = institutions.Length == 1 ? institutions[0] : null;
         var metric = useComprehension ? "comprehension" : "wpm";
-        var rangeKey = $"{start:yyyyMMddHHmm}-{end:yyyyMMddHHmm}";
-        var platformKey = $"speed-reading:benchmark:{metric}:owned:platform:{rangeKey}";
-        if (!cache.TryGetValue<decimal>(platformKey, out var platformAverage))
-        {
-            platformAverage = useComprehension
-                ? await db.ReadingSessions.AsNoTracking().Where(item => item.TotalQuestions > 0
-                        && item.CompletedAt >= start && item.CompletedAt <= end)
-                    .Select(item => (decimal?)item.ComprehensionRate).AverageAsync(cancellationToken) ?? 0
-                : await db.ReadingSessions.AsNoTracking().Where(item => item.IsMeasured && item.CalculatedWpm > 0
-                        && item.CompletedAt >= start && item.CompletedAt <= end)
-                    .Select(item => (decimal?)item.CalculatedWpm).AverageAsync(cancellationToken) ?? 0;
-            cache.Set(platformKey, platformAverage, new MemoryCacheEntryOptions { AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5), Size = 1 });
-        }
-
-        var institutionAverage = 0m;
+        var rangeKey = $"{start.Ticks}-{end.Ticks}";
+        var sessions = db.ReadingSessions.AsNoTracking()
+            .Where(item => item.CompletedAt >= start && item.CompletedAt <= end);
+        var platformAverage = await AverageAsync($"speed-reading:benchmark:v2:{metric}:platform:{rangeKey}", sessions);
+        decimal? institutionAverage = null;
         if (institutionId.HasValue)
         {
-            var institutionKey = $"speed-reading:benchmark:{metric}:owned:institution:{institutionId}:{rangeKey}";
-            if (!cache.TryGetValue<decimal>(institutionKey, out institutionAverage))
-            {
-                var institutionUsers = db.UserProfiles.AsNoTracking()
-                    .Where(item => item.IsActive && item.InstitutionId == institutionId.Value)
-                    .Select(item => item.UserId);
-                institutionAverage = useComprehension
-                    ? await db.ReadingSessions.AsNoTracking().Where(item => item.TotalQuestions > 0
-                        && institutionUsers.Contains(item.UserId)
-                        && item.CompletedAt >= start && item.CompletedAt <= end)
-                        .Select(item => (decimal?)item.ComprehensionRate).AverageAsync(cancellationToken) ?? 0
-                    : await db.ReadingSessions.AsNoTracking().Where(item => item.IsMeasured && item.CalculatedWpm > 0
-                        && institutionUsers.Contains(item.UserId)
-                        && item.CompletedAt >= start && item.CompletedAt <= end)
-                        .Select(item => (decimal?)item.CalculatedWpm).AverageAsync(cancellationToken) ?? 0;
-                cache.Set(institutionKey, institutionAverage, new MemoryCacheEntryOptions { AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5), Size = 1 });
-            }
+            var institutionUsers = db.InstitutionMemberships.AsNoTracking()
+                .Where(item => item.IsActive && item.InstitutionId == institutionId.Value
+                    && item.Role == SpeedReadingInstitutionMemberRole.Student)
+                .Select(item => item.UserId);
+            institutionAverage = await AverageAsync($"speed-reading:benchmark:v2:{metric}:institution:{institutionId}:{rangeKey}",
+                sessions.Where(item => institutionUsers.Contains(item.UserId)));
         }
         return new StudentAnalyticsBenchmark(
-            studentValue, institutionAverage, platformAverage,
-            DeterminePerformanceLevel(studentValue, institutionAverage, platformAverage));
+            studentValue, institutionAverage ?? 0, platformAverage ?? 0,
+            DeterminePerformanceLevel(studentValue, institutionAverage, platformAverage))
+        { InstitutionDataAvailable = institutionAverage.HasValue, PlatformDataAvailable = platformAverage.HasValue };
+
+        Task<decimal?> AverageAsync(string key, IQueryable<ReadingSession> query) => cache.GetOrCreateAsync<decimal?>(key, entry =>
+        {
+            entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5); entry.Size = 1;
+            return useComprehension
+                ? query.Where(item => item.TotalQuestions > 0).Select(item => (decimal?)item.ComprehensionRate).AverageAsync(cancellationToken)
+                : query.Where(item => item.IsMeasured && item.CalculatedWpm > 0).Select(item => (decimal?)item.CalculatedWpm).AverageAsync(cancellationToken);
+        });
     }
 
     private static async Task<decimal> AverageWpmAsync(IQueryable<ReadingSession> query, CancellationToken cancellationToken) =>
@@ -735,10 +738,12 @@ internal sealed class OwnedSpeedReadingAnalytics(
     private static decimal CalculateImprovement(decimal current, decimal previous) => previous > 0
         ? Math.Round((current - previous) / previous * 100, 2) : 0;
 
-    private static string DeterminePerformanceLevel(decimal studentValue, decimal institutionAverage, decimal platformAverage)
+    private static string DeterminePerformanceLevel(decimal studentValue, decimal? institutionAverage, decimal? platformAverage)
     {
-        var benchmark = (institutionAverage + platformAverage) / 2;
-        if (benchmark <= 0) return "No benchmark";
+        var benchmark = institutionAverage.HasValue && platformAverage.HasValue
+            ? (institutionAverage.Value + platformAverage.Value) / 2 : institutionAverage ?? platformAverage;
+        if (!benchmark.HasValue) return "No benchmark";
+        if (benchmark == 0) return studentValue > 0 ? "Above Average" : "Average";
         return studentValue >= benchmark * 1.1m ? "Above Average" : studentValue >= benchmark * 0.9m ? "Average" : "Below Average";
     }
 

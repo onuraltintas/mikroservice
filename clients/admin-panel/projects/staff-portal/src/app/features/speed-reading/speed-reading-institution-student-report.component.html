@@ -126,7 +126,7 @@
         @if (data.comprehension.totalQuestionsAttempted > 0) {
           <p class="benchmark-line">
             {{ teacherScoped ? 'Karşılaştırma ortalaması' : 'Kurum ortalaması' }}
-            <strong>{{ formatNumber(data.comprehension.benchmark.institutionAverage) }}%</strong> ·
+            <strong>{{ data.comprehension.benchmark.institutionDataAvailable !== false ? formatNumber(data.comprehension.benchmark.institutionAverage) + '%' : 'Veri yok' }}</strong> ·
             Öğrenci <strong>{{ formatNumber(data.comprehension.averageComprehension) }}%</strong>
           </p>
           <p class="performance-level">{{ reportLabel(data.comprehension.benchmark.performanceLevel) }}</p>
