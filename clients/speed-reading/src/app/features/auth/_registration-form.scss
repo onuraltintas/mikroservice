@@ -1,30 +1,30 @@
-.register-card { width: 100%; padding: clamp(1.1rem, 2vw, 1.8rem); border: 1px solid #dfe8dc; border-radius: 1.1rem; box-shadow: 0 .5rem 1.5rem #173c3b06; background: #fff; --mat-sys-primary: #145f50; --mat-sys-on-primary: #fff; --mat-sys-on-surface: #173c3b; --mat-sys-on-surface-variant: #5c7063; --mat-sys-surface: #fff; }
+.register-card { width: 100%; padding: clamp(1.1rem, 2vw, 1.8rem); border: 1px solid var(--ui-border); border-radius: 1.1rem; box-shadow: 0 .5rem 1.5rem rgb(15 23 42 / .03); background: var(--ui-surface); --mat-sys-primary: var(--ui-brand); --mat-sys-on-primary: var(--ui-brand-contrast); --mat-sys-on-surface: var(--ui-text); --mat-sys-on-surface-variant: var(--ui-text-muted); --mat-sys-surface: var(--ui-surface); }
 .register-card mat-card-content { padding: 0; }
 form { display: flex; flex-direction: column; gap: .65rem; }
 .form-row, .row { display: flex; gap: .9rem; }
 .form-row > *, .row > *, .half-width { flex: 1; min-width: 0; }
 .full-width { width: 100%; }
-.existing-account { display: flex; align-items: center; justify-content: space-between; gap: .8rem; margin-bottom: 1.5rem; padding: .8rem 1rem; border: 1px solid #dfebd9; border-radius: .75rem; background: #f5f9f1; }
-.existing-account p { margin: 0; color: #526d60; font-size: .8rem; line-height: 1.5; }
-.existing-account button { flex-shrink: 0; font-size: .78rem; min-height: 2.75rem; color: #145f50; border-radius: .6rem; }
-.section-title { display: flex; align-items: center; gap: .5rem; color: #315c4d; font-weight: 750; font-size: .9rem; margin: .5rem 0 1rem; }
-.section-title mat-icon { font-size: 1.15rem; width: 1.15rem; height: 1.15rem; color: #487d63; }
-.password-hint, .consent-hint { margin: 0; color: #64796f; font-size: .75rem; line-height: 1.5; }
-.institution-section { display: flex; align-items: flex-start; gap: .6rem; padding: .9rem; border-radius: .75rem; background: #f0f6ec; color: #526c5d; font-size: .8rem; line-height: 1.6; }
+.existing-account { display: flex; align-items: center; justify-content: space-between; gap: .8rem; margin-bottom: 1.5rem; padding: .8rem 1rem; border: 1px solid var(--ui-border); border-radius: .75rem; background: var(--ui-brand-soft); }
+.existing-account p { margin: 0; color: var(--ui-text-muted); font-size: .8rem; line-height: 1.5; }
+.existing-account button { flex-shrink: 0; font-size: .78rem; min-height: 2.75rem; color: var(--ui-brand); border-radius: .6rem; }
+.section-title { display: flex; align-items: center; gap: .5rem; color: var(--ui-text-muted); font-weight: 750; font-size: .9rem; margin: .5rem 0 1rem; }
+.section-title mat-icon { font-size: 1.15rem; width: 1.15rem; height: 1.15rem; color: var(--ui-brand); }
+.password-hint, .consent-hint { margin: 0; color: var(--ui-text-subtle); font-size: .75rem; line-height: 1.5; }
+.institution-section { display: flex; align-items: flex-start; gap: .6rem; padding: .9rem; border-radius: .75rem; background: var(--ui-brand-soft); color: var(--ui-text-muted); font-size: .8rem; line-height: 1.6; }
 .institution-section mat-icon { flex-shrink: 0; width: 1.15rem; height: 1.15rem; font-size: 1.15rem; margin-top: .1rem; }
-app-registration-legal-consent { display: block; padding: .9rem; border: 1px solid #e1e8dc; border-radius: .75rem; background: #fafbf7; color: #54685f; font-size: .78rem; line-height: 1.6; margin: .4rem 0; }
-.submit-btn { min-height: 3.2rem; border-radius: .75rem; font-weight: 750; font-size: .9rem; background: #145f50 !important; color: #fff !important; box-shadow: none; }
-.submit-btn:hover:not(:disabled) { background: #0c4b3e !important; }
-.submit-btn:disabled { background: #e3e9e0 !important; color: #73806e !important; }
+app-registration-legal-consent { display: block; padding: .9rem; border: 1px solid var(--ui-border); border-radius: .75rem; background: var(--ui-surface); color: var(--ui-text-muted); font-size: .78rem; line-height: 1.6; margin: .4rem 0; }
+.submit-btn { min-height: 3.2rem; border-radius: .75rem; font-weight: 750; font-size: .9rem; background: var(--ui-brand) !important; color: var(--ui-brand-contrast) !important; box-shadow: none; }
+.submit-btn:hover:not(:disabled) { background: var(--ui-brand-hover) !important; }
+.submit-btn:disabled { background: var(--ui-surface-muted) !important; color: var(--ui-text-subtle) !important; }
 .btn-content { display: inline-flex; align-items: center; gap: .6rem; }
-.divider, .divider-text { display: flex; align-items: center; gap: .8rem; margin: .65rem 0; color: #627166; font-size: .7rem; text-align: center; }
-.divider::before, .divider::after, .divider-text::before, .divider-text::after { content: ''; flex: 1; border-top: 1px solid #e1e7dd; }
+.divider, .divider-text { display: flex; align-items: center; gap: .8rem; margin: .65rem 0; color: var(--ui-text-subtle); font-size: .7rem; text-align: center; }
+.divider::before, .divider::after, .divider-text::before, .divider-text::after { content: ''; flex: 1; border-top: 1px solid var(--ui-border); }
 .google-btn-wrapper { min-height: 2.75rem; display: flex; justify-content: center; }
-.login-redirect, .login-link { margin-top: .6rem; text-align: center; font-size: .8rem; color: #56695c; }
-.login-redirect a, .login-link a { font-weight: 750; color: #145f50; text-decoration: underline; text-underline-offset: 3px; }
+.login-redirect, .login-link { margin-top: .6rem; text-align: center; font-size: .8rem; color: var(--ui-text-subtle); }
+.login-redirect a, .login-link a { font-weight: 750; color: var(--ui-brand); text-decoration: underline; text-underline-offset: 3px; }
 .messages-container, .actions-container { display: grid; gap: .6rem; }
 .error-message, .error-msg, .success-msg { display: flex; align-items: flex-start; gap: .5rem; padding: .85rem; border-radius: .75rem; font-size: .82rem; line-height: 1.6; }
-.error-message, .error-msg { color: #9f2d23; background: #fff1ee; }
-.success-msg { color: #27603b; background: #eef9ef; }
-mat-divider { margin: .5rem 0; border-top-color: #dfe7da; }
+.error-message, .error-msg { color: var(--ui-danger); background: var(--ui-danger-soft); }
+.success-msg { color: var(--ui-success); background: var(--ui-success-soft); }
+mat-divider { margin: .5rem 0; border-top-color: var(--ui-border); }
 @media (max-width: 34rem) { .form-row, .row { flex-direction: column; gap: 0; } .existing-account { align-items: flex-start; flex-direction: column; gap: .4rem; } .existing-account button { width: 100%; } }

@@ -29,7 +29,7 @@ internal static class ReportAverageAuditScenario
         { Row(text.Id, 25, 100, start.AddHours(21.5)); Row(text.Id, 75, 300, start.AddDays(1).AddHours(.5)); }
         else
         {
-            var type = ExerciseType.Create(Guid.NewGuid(), "Audit", "Audit", "focus");
+            var type = ExerciseType.Create(Guid.NewGuid(), $"Audit-{user}", "Audit", "focus");
             var exercise = Exercise.Create("Audit", "focus", "{}", 1, user, type.Id);
             db.ExerciseTypes.Add(type); db.Exercises.Add(exercise);
             foreach (var score in new[] { 0m, 100m, 999m })
@@ -94,7 +94,7 @@ internal static class ReportAverageAuditScenario
         db.ProgramTemplates.Add(template); db.StudentProgramProgresses.Add(progress);
         if (dailyLog)
         {
-            var type = ExerciseType.Create(Guid.NewGuid(), "Audit", "Audit", "focus");
+            var type = ExerciseType.Create(Guid.NewGuid(), $"Audit-{user}", "Audit", "focus");
             var exercise = Exercise.Create("Audit", "focus", "{}", 1, user, type.Id);
             db.ExerciseTypes.Add(type); db.Exercises.Add(exercise);
             db.DailyExerciseLogs.Add(ExerciseReportingScenario.Log(user, progress.Id, exercise, date, null));

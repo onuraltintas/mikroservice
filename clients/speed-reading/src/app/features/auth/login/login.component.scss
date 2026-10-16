@@ -3,25 +3,25 @@
 .login-card { margin-top: 1.5rem; }
 app-google-registration-consent { display: block; margin-top: 1.5rem; }
 .remember-forgot-row { display: flex; justify-content: space-between; align-items: center; gap: .6rem; margin: -.2rem 0 .3rem; }
-.forgot-link { color: #145f50; font-size: .8rem; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; min-height: 2.75rem; display: inline-flex; align-items: center; }
-button[type='submit'], .mfa-login-panel > button:first-of-type { min-height: 3.2rem; border-radius: .75rem; font-weight: 750; background: #145f50 !important; color: #fff !important; }
-button[type='submit']:disabled { background: #e3e9e0 !important; color: #73806e !important; }
+.forgot-link { color: var(--ui-brand); font-size: .8rem; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; min-height: 2.75rem; display: inline-flex; align-items: center; }
+button[type='submit'], .mfa-login-panel > button:first-of-type { min-height: 3.2rem; border-radius: .75rem; font-weight: 750; background: var(--ui-brand) !important; color: var(--ui-brand-contrast) !important; }
+button[type='submit']:disabled { background: var(--ui-surface-muted) !important; color: var(--ui-text-subtle) !important; }
 .google-button { display: flex; justify-content: center; min-height: 2.75rem; }
 .register-options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .5rem; margin-top: .5rem; }
-.register-options > p { grid-column: 1 / -1; color: #536c60; font-size: .8rem; line-height: 1.6; margin: 0 0 .4rem; }
-.register-option { display: flex; align-items: center; justify-content: space-between; gap: .3rem; padding: .75rem; border: 1px solid #dfe8dc; border-radius: .75rem; color: #315c4d; text-decoration: none; min-height: 2.75rem; }
+.register-options > p { grid-column: 1 / -1; color: var(--ui-text-muted); font-size: .8rem; line-height: 1.6; margin: 0 0 .4rem; }
+.register-option { display: flex; align-items: center; justify-content: space-between; gap: .3rem; padding: .75rem; border: 1px solid var(--ui-border); border-radius: .75rem; color: var(--ui-text-muted); text-decoration: none; min-height: 2.75rem; }
 .register-option span { display: grid; gap: .35rem; }
 .register-option strong { font-size: .79rem; }
-.register-option small { color: #56695c; font-size: .68rem; line-height: 1.5; }
+.register-option small { color: var(--ui-text-subtle); font-size: .68rem; line-height: 1.5; }
 .register-option mat-icon { width: 1rem; height: 1rem; font-size: 1rem; flex-shrink: 0; }
-.register-option:hover { border-color: #487d63; background: #f0f6ec; }
-a:focus-visible, button:focus-visible { outline: 3px solid #487d63; outline-offset: 3px; }
-.verification-warning { padding: 1rem; border: 1px solid #ead7ab; border-radius: .75rem; background: #fff8e9; color: #755310; font-size: .8rem; line-height: 1.6; }
+.register-option:hover { border-color: var(--ui-brand); background: var(--ui-brand-soft); }
+a:focus-visible, button:focus-visible { outline: 3px solid var(--ui-brand); outline-offset: 3px; }
+.verification-warning { padding: 1rem; border: 1px solid var(--ui-warning); border-radius: .75rem; background: var(--ui-warning-soft); color: var(--ui-warning); font-size: .8rem; line-height: 1.6; }
 .verification-warning p { margin: 0 0 .75rem; }
 .verification-warning button { white-space: normal; height: auto; min-height: 2.75rem; }
 .mfa-login-panel { display: flex; flex-direction: column; gap: 1rem; }
-.mfa-login-panel h2 { margin: 0; color: #173c3b; font-size: 1.2rem; line-height: 1.4; }
-.mfa-login-panel p { margin: 0; color: #536c60; font-size: .9rem; line-height: 1.6; }
-.mfa-recovery-codes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem; padding: 1rem; border-radius: .75rem; background: #f0f6ec; }
-.mfa-recovery-codes code, .mfa-secret { color: #315c4d; font-size: .8rem; overflow-wrap: anywhere; }
+.mfa-login-panel h2 { margin: 0; color: var(--ui-text); font-size: 1.2rem; line-height: 1.4; }
+.mfa-login-panel p { margin: 0; color: var(--ui-text-muted); font-size: .9rem; line-height: 1.6; }
+.mfa-recovery-codes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem; padding: 1rem; border-radius: .75rem; background: var(--ui-brand-soft); }
+.mfa-recovery-codes code, .mfa-secret { color: var(--ui-text-muted); font-size: .8rem; overflow-wrap: anywhere; }
 @media (max-width: 34rem) { .remember-forgot-row { align-items: flex-start; flex-direction: column; gap: 0; } .register-options { grid-template-columns: 1fr; } .register-option span { gap: .15rem; } }

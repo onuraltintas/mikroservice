@@ -22,6 +22,22 @@ describe('ReportsService', () => {
 
   afterEach(() => http.verify());
 
+  it('plots a measured zero comprehension day and excludes unmeasured days', () => {
+    let report: any;
+    service.getStudentDashboardReport('student', new Date('2026-10-01'), new Date('2026-10-16')).subscribe(value => report = value);
+    http.expectOne(request => request.url === '/api/speed-reading/analytics/student/summary').flush({
+      dateFrom: '2026-10-01', dateTo: '2026-10-16',
+      daily: [
+        { date: '2026-10-14', comprehensionDataAvailable: false, averageComprehension: 0, averageWpm: 0 },
+        { date: '2026-10-15', comprehensionDataAvailable: true, averageComprehension: 0, averageWpm: 150 },
+        { date: '2026-10-16', comprehensionDataAvailable: true, averageComprehension: 100, averageWpm: 300 }
+      ]
+    });
+    expect(report.comprehensionTrend.map((point: any) => point.name)).toEqual(['2026-10-15', '2026-10-16']);
+    expect(report.comprehensionTrend[0].series[0].value).toBe(0);
+    expect(report.wpmProgress.map((point: any) => point.series[0].value)).toEqual([150, 300]);
+  });
+
   it('loads the central student analytics and preserves dashboard goals and milestones', () => {
     const startDate = new Date('2020-01-01T00:00:00.000Z');
     const endDate = new Date('2026-08-24T12:00:00.000Z');
