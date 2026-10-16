@@ -20,4 +20,11 @@ describe('Learning setup entry', () => {
     fixture.componentInstance.load(); fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('hazır');
   });
+  it('distinguishes missing provisioning from denied access', () => {
+    const get = vi.fn().mockReturnValueOnce(throwError(() => ({ status: 404 }))).mockReturnValueOnce(throwError(() => ({ status: 403 })));
+    TestBed.configureTestingModule({ imports: [LearningSetupEntryComponent], providers: [provideRouter([]), { provide: CoachingLearningSetupService, useValue: { get } }] });
+    const fixture = TestBed.createComponent(LearningSetupEntryComponent); fixture.detectChanges();
+    expect(fixture.componentInstance.error()).toBeNull();
+    fixture.componentInstance.load(); expect(fixture.componentInstance.error()).toContain('doğrulanamadı');
+  });
 });

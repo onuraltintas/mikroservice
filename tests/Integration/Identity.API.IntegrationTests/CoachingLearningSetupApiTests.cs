@@ -54,4 +54,23 @@ public sealed class CoachingLearningSetupApiTests
         public bool Global { get; set; } = true;
         public Task<CoachingAdminScope> RequireReadScopeAsync(CancellationToken ct) => Task.FromResult(new CoachingAdminScope(Global, Global ? null : Guid.NewGuid()));
     }
+
+    [Fact]
+    public async Task CurriculumControllerMapsScopeValidationMissingAndStalePublication()
+    {
+        await using var f = await CoachingLearningSetupTests.Fixture.Create(); var scope = new Scope();
+        var service = new CoachingCurriculumService(f.Db, scope, f.Actor);
+        var controller = new CoachingCurriculumAdminController(service);
+        Assert.IsType<OkObjectResult>(await controller.List(default));
+        Assert.IsType<NotFoundObjectResult>(await controller.Publish(Guid.NewGuid(), new(0, true, "Yayın gerekçesi"), default));
+        var request = new CurriculumCreateRequest("test", "Test", "v1", 2026, 2026, "Test", null, [], "Gerekçe");
+        Assert.IsType<BadRequestObjectResult>(await controller.Create(request, default));
+        scope.Global = false; Assert.Equal(403, Assert.IsType<ObjectResult>(await controller.List(default)).StatusCode);
+        scope.Global = true;
+        var lesson = StudyCatalogLesson.Create("test", "lesson", "Matematik", 12, null); lesson.SetActive(true); f.Db.Add(lesson); await f.Db.SaveChangesAsync();
+        Assert.IsType<OkObjectResult>(await controller.Create(request with { LessonIds = [lesson.Id] }, default));
+        var version = await f.Db.CurriculumVersions.SingleAsync();
+        Assert.IsType<ConflictObjectResult>(await controller.Publish(version.Id, new(-1, true, "Yayın gerekçesi"), default));
+        Assert.IsType<OkObjectResult>(await controller.Publish(version.Id, new(version.Version, true, "Yayın gerekçesi"), default));
+    }
 }

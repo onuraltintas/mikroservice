@@ -44,7 +44,8 @@ public sealed class CoachingCatalogDeletionService(CoachingDbContext db,
             await db.Database.ExecuteSqlRawAsync("""
                 LOCK TABLE coaching.academic_goals, coaching.exam_results,
                     coaching.study_catalog_lessons, coaching.study_catalog_topics, coaching.study_catalog_units,
-                    coaching.study_plan_tasks, coaching.target_schools, coaching.target_university_programs
+                    coaching.study_plan_tasks, coaching.target_schools, coaching.target_university_programs,
+                    coaching.student_course_preferences, coaching.student_topic_states
                 IN SHARE ROW EXCLUSIVE MODE
                 """, cancellationToken);
             entity = await LoadAsync(kind, id, cancellationToken);
@@ -103,9 +104,11 @@ public sealed class CoachingCatalogDeletionService(CoachingDbContext db,
         var catalog = kind switch
         {
             CatalogKind.Lessons => await db.StudyCatalogUnits.CountAsync(x => x.LessonId == id, cancellationToken)
-                + await db.StudyCatalogTopics.CountAsync(x => x.LessonId == id, cancellationToken),
+                + await db.StudyCatalogTopics.CountAsync(x => x.LessonId == id, cancellationToken)
+                + await db.StudentCoursePreferences.CountAsync(x => x.LessonId == id, cancellationToken),
             CatalogKind.Units => await db.StudyCatalogTopics.CountAsync(x => x.UnitId == id, cancellationToken),
-            CatalogKind.Topics => await db.StudyCatalogTopics.CountAsync(x => x.ParentId == id, cancellationToken),
+            CatalogKind.Topics => await db.StudyCatalogTopics.CountAsync(x => x.ParentId == id, cancellationToken)
+                + await db.StudentTopicStates.CountAsync(x => x.TopicId == id, cancellationToken),
             _ => 0
         };
         var plans = kind == CatalogKind.Topics
