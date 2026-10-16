@@ -22,13 +22,13 @@ export interface HeatmapData {
         </div>
       </div>
       <div class="heatmap-legend">
-        <span>Less</span>
+        <span>Daha az</span>
         <div class="legend-cell level-0"></div>
         <div class="legend-cell level-1"></div>
         <div class="legend-cell level-2"></div>
         <div class="legend-cell level-3"></div>
         <div class="legend-cell level-4"></div>
-        <span>More</span>
+        <span>Daha fazla</span>
       </div>
     </div>
   `,

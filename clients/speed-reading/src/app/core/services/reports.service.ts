@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, forkJoin, map } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { speedReadingReportLabel } from '../../../../../shared/utils/speed-reading-report-labels';
 import {
   StudentDashboardReport,
   ReportMetadata,
@@ -196,8 +197,8 @@ export class ReportsService {
           labels: ['WPM', 'Anlama', 'Aktivite', 'Seri']
         },
         studentReports: { dashboard, readingSpeed, comprehension, series, activity },
-        strengths: value.comprehension.strongAreas ?? [],
-        weaknesses: value.comprehension.weakAreas ?? [],
+        strengths: (value.comprehension.strongAreas ?? []).map(speedReadingReportLabel),
+        weaknesses: (value.comprehension.weakAreas ?? []).map(speedReadingReportLabel),
         recommendations: value.readingSpeed.recommendations ?? []
       } as TeacherStudentDetailReport;
     }));
@@ -333,7 +334,7 @@ export class ReportsService {
       },
       categoryWPMChart: {
         data: value.categories.map(category => ({
-          name: category.categoryName,
+          name: speedReadingReportLabel(category.categoryName),
           series: [{ name: 'WPM', value: category.value }]
         }))
       },
@@ -363,29 +364,29 @@ export class ReportsService {
         { label: 'Platform ortalaması', value: value.benchmark.platformAverage }
       ],
       questionTypeChart: {
-        data: questionTypes.map(item => ({ name: item.type, value: item.value })),
-        labels: questionTypes.map(item => item.type)
+        data: questionTypes.map(item => ({ name: speedReadingReportLabel(item.type), value: item.value })),
+        labels: questionTypes.map(item => speedReadingReportLabel(item.type))
       },
       bloomLevelChart: {
-        data: bloomLevels.map(item => ({ name: item.label, value: item.value })),
-        labels: bloomLevels.map(item => item.label)
+        data: bloomLevels.map(item => ({ name: speedReadingReportLabel(item.label), value: item.value })),
+        labels: bloomLevels.map(item => speedReadingReportLabel(item.label))
       },
       categoryComprehensionChart: {
         data: categories.map(category => ({
-          name: category.categoryName,
+          name: speedReadingReportLabel(category.categoryName),
           series: [{ name: 'Anlama', value: category.value }]
         }))
       },
       categoryBreakdown: categories.map(category => ({
         categoryId: category.categoryName,
-        categoryName: category.categoryName,
+        categoryName: speedReadingReportLabel(category.categoryName),
         comprehensionRate: category.value,
         questionsAnswered: category.questionsAttempted,
         correctAnswers: category.correctAnswers,
         averageTime: 0
       })),
       improvementAreas: (value.weakAreas ?? []).map(area => ({
-        area,
+        area: speedReadingReportLabel(area),
         currentLevel: categories.find(category => category.categoryName === area)?.value ?? 0,
         targetLevel: 80,
         recommendations: ['Bu kategoride daha fazla okuma ve anlama egzersizi yapın'],
@@ -464,13 +465,13 @@ export class ReportsService {
       },
       hourlyDistributionChart: {
         data: (value.hourlyDistribution ?? []).map(point => ({
-          name: point.label,
+          name: speedReadingReportLabel(point.label),
           series: [{ name: 'Aktivite', value: point.value }]
         }))
       },
       dailyDistributionChart: {
         data: (value.dailyDistribution ?? []).map(point => ({
-          name: point.label,
+          name: speedReadingReportLabel(point.label),
           series: [{ name: 'Aktivite', value: point.value }]
         }))
       },
@@ -480,7 +481,7 @@ export class ReportsService {
         averageSessionLength: value.studyTime.averageSessionLength,
         totalSessions: value.studyTime.totalSessions,
         mostActiveHour: value.studyTime.mostActiveHour,
-        mostActiveDay: value.studyTime.mostActiveDay,
+        mostActiveDay: speedReadingReportLabel(value.studyTime.mostActiveDay),
         consistency: value.studyTime.consistency
       }
     };

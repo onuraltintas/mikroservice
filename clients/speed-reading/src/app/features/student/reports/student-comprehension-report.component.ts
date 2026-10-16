@@ -41,6 +41,6 @@ export class StudentComprehensionReportComponent implements OnInit {
   });
 
   overallComprehensionData = computed(() => {
-    return [{ name: 'Comprehension', value: this.report()?.overallComprehension || 0 }];
+    return [{ name: 'Anlama', value: this.report()?.overallComprehension || 0 }];
   });
 }

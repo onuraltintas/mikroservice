@@ -17,6 +17,7 @@ import { SpeedReadingStudentReportComponent } from './speed-reading-institution-
 import { StaffPendingInvitationsComponent } from '../staff-pending-invitations.component';
 import { SpeedReadingAssignmentManagementComponent } from './speed-reading-assignment-management.component';
 import { SpeedReadingInstitutionSettingsComponent } from './speed-reading-institution-settings.component';
+import { speedReadingReportLabel } from '../../../../../../../shared/utils/speed-reading-report-labels';
 
 type MemberStatusFilter = 'all' | 'active' | 'inactive';
 type TeacherOption = { userId: string; displayName: string };
@@ -42,6 +43,7 @@ function utcDateInput(daysAgo: number): string {
   styleUrl: './speed-reading-institution-workspace.component.scss',
 })
 export class SpeedReadingInstitutionWorkspaceComponent implements OnInit {
+  readonly reportLabel = speedReadingReportLabel;
   private readonly service = inject(SpeedReadingInstitutionService);
   private memberRequestVersion = 0;
   private overviewRequestVersion = 0;

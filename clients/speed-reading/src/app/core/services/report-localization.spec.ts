@@ -5,8 +5,22 @@ import { ReportsService } from './reports.service';
 import { StudentActivityReportComponent } from '../../features/student/reports/student-activity-report.component';
 import { StudentSeriesReportComponent } from '../../features/student/reports/student-series-report.component';
 import { StudentDashboardReportComponent } from '../../features/student/reports/student-dashboard-report.component';
+import { speedReadingReportLabel } from '../../../../../shared/utils/speed-reading-report-labels';
 
 describe('Turkish student report labels', () => {
+  it('translates known display codes, preserving Turkish/custom labels and identifiers', () => {
+    for (const [input, expected] of [
+      ['Above Average', 'Ortalamanın üzerinde'], ['Average', 'Ortalama'], ['Below Average', 'Ortalamanın altında'],
+      ['Strong', 'Güçlü'], ['Needs Improvement', 'Geliştirilmeli'], ['high', 'Yüksek'], ['medium', 'Orta'], ['low', 'Düşük'],
+      ['not-measured', 'Ölçülmedi'], ['exercise_success', 'Egzersiz başarısı'], ['comprehension', 'Anlama'],
+      [' Regression_Reduction ', 'Geriye dönüşü azaltma'], ['vocabulary_builder', 'Kelime hazinesi'],
+      ['Monday', 'Pazartesi'], ['Sunday', 'Pazar'], ['science', 'Bilim'],
+      ['Özel kategori', 'Özel kategori'], ['Veri yok', 'Veri yok'], ['constructor', 'constructor'], ['toString', 'toString']
+    ]) expect(speedReadingReportLabel(input)).withContext(input).toBe(expected);
+    expect(speedReadingReportLabel(undefined)).toBe('—');
+    expect(speedReadingReportLabel(null)).toBe('—');
+    expect(speedReadingReportLabel('')).toBe('—');
+  });
   it('formats report durations and month names in Turkish', () => {
     expect(StudentActivityReportComponent.prototype.formatMinutes(75)).toBe('1 sa 15 dk');
     expect(StudentActivityReportComponent.prototype.formatMinutes(5)).toBe('5 dk');

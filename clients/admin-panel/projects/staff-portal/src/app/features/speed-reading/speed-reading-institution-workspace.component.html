@@ -317,7 +317,7 @@
                           <td>{{ formatNumber(item.totalCompletions) }}</td>
                           <td>{{ formatNumber(item.activeStudents) }}</td>
                           <td>{{ item.performanceLevel === 'not-measured' ? '—' : formatReportNumber(item.averageScore) + '%' }}</td>
-                          <td>{{ item.performanceLevel === 'not-measured' ? 'Ölçülmedi' : item.performanceLevel }}</td>
+                          <td>{{ reportLabel(item.performanceLevel) }}</td>
                         </tr>
                       } @empty {
                         <tr>
@@ -520,7 +520,7 @@
                       @for (student of report.improvingStudents; track student.studentId) {
                         <tr>
                           <td>{{ student.studentName }}</td>
-                          <td>{{ student.metric }}</td>
+                          <td>{{ reportLabel(student.metric) }}</td>
                           <td>{{ formatReportNumber(student.previousScore) }}</td>
                           <td>{{ formatReportNumber(student.currentScore) }}</td>
                           <td>{{ formatReportNumber(student.improvement) }}</td>
@@ -551,7 +551,7 @@
                       @for (student of report.decliningStudents; track student.studentId) {
                         <tr>
                           <td>{{ student.studentName }}</td>
-                          <td>{{ student.metric }}</td>
+                          <td>{{ reportLabel(student.metric) }}</td>
                           <td>{{ formatReportNumber(student.previousScore) }}</td>
                           <td>{{ formatReportNumber(student.currentScore) }}</td>
                           <td>{{ formatReportNumber(student.improvement) }}</td>

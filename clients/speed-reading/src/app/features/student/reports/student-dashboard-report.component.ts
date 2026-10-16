@@ -6,6 +6,8 @@ import { StudentReadingService } from '../../../core/services/student-reading.se
 import { StudentDashboardReport } from '../../../core/models/report.model';
 import { ReadingSession } from '../../../core/models/reading-text.model';
 import { format } from 'date-fns';
+import { tr } from 'date-fns/locale';
+import { speedReadingReportLabel } from '../../../../../../shared/utils/speed-reading-report-labels';
 import { LineChartComponent } from '../../../shared/components/charts/line-chart.component';
 import { PieChartComponent } from '../../../shared/components/charts/pie-chart.component';
 
@@ -81,38 +83,10 @@ export class StudentDashboardReportComponent implements OnInit {
 
     // Flatten: take first series value from each item
     return data.map(item => ({
-      name: this.getTurkishExerciseName(item.name),
+      name: speedReadingReportLabel(item.name),
       value: item.series?.[0]?.value || 0
     }));
   });
-
-  private getTurkishExerciseName(englishName: string): string {
-    const translations: Record<string, string> = {
-      'Schulte Table': 'Schulte Tablosu',
-      'Visual Expansion': 'Görsel Genişleme',
-      'Tachistoscope': 'Takistoskop',
-      'Scanning': 'Tarama (Scanning)',
-      'Subvocalization Reduction': 'Alt Seslendirme Azaltma',
-      'Text Fading': 'Metin Solma',
-      'Fixation Exercise': 'Fiksasyon Egzersizi',
-      'Saccade Exercise': 'Sakkad Hareketi',
-      'Regression Reduction': 'Geriye Dönüş Azaltma',
-      'Focus Exercise': 'Odak Egzersizi',
-      'Visualization Exercise': 'Görselleştirme',
-      'Vocabulary Builder': 'Kelime Hazinesi',
-      'Skimming': 'Gözden Geçirme (Skimming)',
-      'Exam Simulation': 'Paragraf Simülasyonu',
-      'Eye Tracking': 'Göz Takibi (Eye Tracking)',
-      'Chunking': 'Bloklama (Chunking)',
-      'Rapid Serial': 'Seri Okuma (RSVP)',
-      'Vertical Reading': 'Dikey Okuma',
-      'Visual Span': 'Görsel Alan',
-      'Word Groups': 'Kelime Grupları',
-      'Speed Reading': 'Hızlı Okuma'
-    };
-
-    return translations[englishName] || englishName;
-  }
 
   // Transform line chart data - line charts need [{name: seriesName, series: [{name: x, value: y}]}]
   activityTrendData = computed(() => {
@@ -140,7 +114,7 @@ export class StudentDashboardReportComponent implements OnInit {
       series: recentSessions
         .filter(s => s.isMeasured !== false && s.completedAt && !isNaN(new Date(s.completedAt).getTime()))
         .map(session => ({
-          name: format(new Date(session.completedAt), 'MMM d'),
+          name: format(new Date(session.completedAt), 'd MMM', { locale: tr }),
           value: session.calculatedWPM
         }))
     }];
@@ -156,7 +130,7 @@ export class StudentDashboardReportComponent implements OnInit {
       series: recentSessions
         .filter(s => s.totalQuestions > 0 && s.completedAt && !isNaN(new Date(s.completedAt).getTime()))
         .map(session => ({
-          name: format(new Date(session.completedAt), 'MMM d'),
+          name: format(new Date(session.completedAt), 'd MMM', { locale: tr }),
           value: Math.round(session.comprehensionRate)
         }))
     }];
@@ -177,6 +151,6 @@ export class StudentDashboardReportComponent implements OnInit {
     if (!date) return '';
     const d = new Date(date);
     if (isNaN(d.getTime())) return '';
-    return format(d, 'MMM d, yyyy');
+    return format(d, 'd MMM yyyy', { locale: tr });
   }
 }

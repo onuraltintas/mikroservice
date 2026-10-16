@@ -19,6 +19,7 @@ import {
 } from './speed-reading-institution.service';
 import { SpeedReadingTeacherService } from './speed-reading-teacher.service';
 import { ProgramRecommendationPanelComponent } from './program-recommendation-panel.component';
+import { speedReadingReportLabel } from '../../../../../../../shared/utils/speed-reading-report-labels';
 
 @Component({
   selector: 'staff-speed-reading-student-report',
@@ -28,6 +29,7 @@ import { ProgramRecommendationPanelComponent } from './program-recommendation-pa
   styleUrl: './speed-reading-institution-student-report.component.scss',
 })
 export class SpeedReadingStudentReportComponent implements OnChanges, OnDestroy {
+  readonly reportLabel = speedReadingReportLabel;
   @Input() institutionId: string | null = null;
   @Input() teacherScoped = false;
   @Input({ required: true }) student!: SpeedReadingReportStudent;

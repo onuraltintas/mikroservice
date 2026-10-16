@@ -5,6 +5,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { StudentSeriesReport } from '../../../core/models/report.model';
 import { LineChartComponent } from '../../../shared/components/charts/line-chart.component';
 import { format } from 'date-fns';
+import { tr } from 'date-fns/locale';
 
 @Component({
   selector: 'app-student-series-report',
@@ -33,6 +34,6 @@ export class StudentSeriesReportComponent implements OnInit {
     if (!date) return '';
     const d = new Date(date);
     if (isNaN(d.getTime())) return '';
-    return format(d, 'MMM d');
+    return format(d, 'd MMM', { locale: tr });
   }
 }

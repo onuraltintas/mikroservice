@@ -69,13 +69,13 @@ export class StudentReadingSpeedReportComponent implements OnInit {
     if (!stats || stats.totalReadings === 0) return [];
 
     return [
-      { metric: 'Average WPM', value: stats.averageWPM.toFixed(0) },
-      { metric: 'Median WPM', value: stats.medianWPM.toFixed(0) },
-      { metric: 'Min WPM', value: stats.minWPM.toFixed(0) },
-      { metric: 'Max WPM', value: stats.maxWPM.toFixed(0) },
-      { metric: 'Standard Deviation', value: stats.standardDeviation.toFixed(2) },
-      { metric: 'Improvement Rate', value: `${stats.improvementRate.toFixed(1)}%` },
-      { metric: 'Total Readings', value: stats.totalReadings.toString() }
+      { metric: 'Ortalama hız', value: stats.averageWPM.toFixed(0) },
+      { metric: 'Ortanca hız', value: stats.medianWPM.toFixed(0) },
+      { metric: 'En düşük hız', value: stats.minWPM.toFixed(0) },
+      { metric: 'En yüksek hız', value: stats.maxWPM.toFixed(0) },
+      { metric: 'Standart sapma', value: stats.standardDeviation.toFixed(2) },
+      { metric: 'Gelişim oranı', value: `${stats.improvementRate.toFixed(1)}%` },
+      { metric: 'Toplam okuma', value: stats.totalReadings.toString() }
     ];
   });
 }

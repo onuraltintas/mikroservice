@@ -92,7 +92,7 @@
             <strong>{{ data.readingSpeed.benchmark.institutionAverage > 0 ? formatNumber(data.readingSpeed.benchmark.institutionAverage) + ' WPM' : 'Veri yok' }}</strong>
             · Öğrenci <strong>{{ formatNumber(data.readingSpeed.averageWpm) }} WPM</strong>
           </p>
-          <p class="performance-level">{{ data.readingSpeed.benchmark.performanceLevel }}</p>
+          <p class="performance-level">{{ reportLabel(data.readingSpeed.benchmark.performanceLevel) }}</p>
         } @else {
           <p class="empty-state">Veri yok · Bu dönemde ölçülmüş okuma hızı bulunmuyor.</p>
         }
@@ -129,13 +129,13 @@
             <strong>{{ formatNumber(data.comprehension.benchmark.institutionAverage) }}%</strong> ·
             Öğrenci <strong>{{ formatNumber(data.comprehension.averageComprehension) }}%</strong>
           </p>
-          <p class="performance-level">{{ data.comprehension.benchmark.performanceLevel }}</p>
+          <p class="performance-level">{{ reportLabel(data.comprehension.benchmark.performanceLevel) }}</p>
           <div class="areas-grid">
             <div class="report-list-block">
               <h5>Güçlü alanlar</h5>
               <ul>
                 @for (area of data.comprehension.strongAreas; track area) {
-                  <li>{{ area }}</li>
+                  <li>{{ reportLabel(area) }}</li>
                 } @empty {
                   <li>Henüz veri yok</li>
                 }
@@ -145,7 +145,7 @@
               <h5>Gelişim alanları</h5>
               <ul>
                 @for (area of data.comprehension.weakAreas; track area) {
-                  <li>{{ area }}</li>
+                  <li>{{ reportLabel(area) }}</li>
                 } @empty {
                   <li>Henüz veri yok</li>
                 }
