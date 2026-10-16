@@ -1,0 +1,7 @@
+{
+  "include": [],
+  "extends": "./tsconfig.spec.json",
+  "files": [
+    "src/app/features/coaching-portal/pages/coaching-profile.component.spec.ts"
+  ]
+}
