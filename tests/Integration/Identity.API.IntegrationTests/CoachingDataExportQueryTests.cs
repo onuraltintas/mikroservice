@@ -65,6 +65,7 @@ public sealed class CoachingDataExportQueryTests
                 .Options);
         var studentId = Guid.NewGuid();
         var otherStudentId = Guid.NewGuid();
+        context.Add(Coaching.Domain.Profiles.CoachingStudentProfile.Create(studentId));
         var ownGoal = AcademicGoal.Create(studentId, "My goal", GoalCategory.SubjectMastery);
         ownGoal.SetScoreTarget(400, 500, ExamType.LGS);
         context.AcademicGoals.AddRange(
@@ -76,6 +77,7 @@ public sealed class CoachingDataExportQueryTests
             .ExportStudentDataAsync(studentId, DateTimeOffset.UtcNow, CancellationToken.None);
 
         export.StudentId.Should().Be(studentId);
+        export.Profile!.Student!.UserId.Should().Be(studentId);
         export.Goals.Should().ContainSingle(goal => goal.Title == "My goal");
         export.Goals.Should().NotContain(goal => goal.Title == "Other student's goal");
         export.Goals.Single().TargetMaxScore.Should().Be(500);
