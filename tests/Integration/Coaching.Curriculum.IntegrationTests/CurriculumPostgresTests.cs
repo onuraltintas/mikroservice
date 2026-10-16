@@ -97,6 +97,21 @@ public sealed class CurriculumPostgresTests
         var audit=await f.Db.AdminAuditRecords.SingleAsync();Assert.True(audit.ChangedFieldsJson!.Length<=2000);Assert.Contains(reason,audit.ChangedFieldsJson);
     }
 
+    [LocalPostgresFact]
+    public async Task StudentCanStillOpenAndCompletePendingTaskAfterItsTopicMoved()
+    {
+        await using var f=await Pg.Create();var topic=await f.Data.Seed();var plan=await f.Db.StudyPlanRevisions.SingleAsync();
+        var pending=StudyPlanTask.Create(plan,new(2026,10,20),"Bekleyen eski çalışma",20,topic.Id,true);f.Db.Add(pending);
+        var target=StudyCatalogUnit.Create("test","target",topic.LessonId,"Yeni ünite",2);target.SetActive(true);f.Db.Add(target);await f.Db.SaveChangesAsync();
+        var doc=await f.Service.GetAsync("topics",topic.Id,default);await f.Service.MoveAsync("topics",topic.Id,new(target.Id,doc.Fingerprint,"Konuyu taşı"),default);
+        f.Data.User.UserId=plan.StudentId;f.Data.User.Roles=["Student"];var access=new CoachingAccessPolicy(f.Data.User);
+        var service=new CoachingManualStudyPlanService(f.Db,access,new CoachingAutomaticStudyPlanPreviewService(f.Db,access),new CurriculumManagementTests.NoopPublisher());
+        var current=(await service.GetAsync(plan.Id))!;Assert.Equal(2,current.Tasks.Count);
+        var completed=await service.CompleteTaskAsync(plan.Id,pending.Id,current.Version,18,6);
+        var work=completed.Tasks.Single(x=>x.Id==pending.Id);Assert.True(work.IsCompleted);Assert.Equal(18,work.ActualMinutes);Assert.Equal(6,work.ActualQuestions);
+        Assert.Equal(topic.Id,work.TopicId);Assert.Equal(25,completed.Tasks.Single(x=>x.Id!=pending.Id).ActualMinutes);
+    }
+
     internal sealed class LocalPostgresFactAttribute : FactAttribute
     { public LocalPostgresFactAttribute() { if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("COACHING_CURRICULUM_TEST_POSTGRES"))) Skip = "Set localhost-only COACHING_CURRICULUM_TEST_POSTGRES to run migration tests."; } }
     private sealed class Pg : IAsyncDisposable

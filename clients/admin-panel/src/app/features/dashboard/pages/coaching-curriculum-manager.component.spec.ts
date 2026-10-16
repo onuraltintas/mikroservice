@@ -54,4 +54,13 @@ describe('Coaching curriculum manager', () => {
     http.expectOne(r=>r.url.endsWith('/curriculum-management/children')).flush({data:{items:[],totalCount:0,pageNumber:1,pageSize:25}});
     expect(c.busy()).toBe(false);http.verify();
   });
+  it('asks before navigating away from an unsaved duration and preserves it when saving outcome text', () => {
+    const {http,c}=setup();const outcome={...topic,kind:'outcomes',id:'outcome',mappings:[],estimates:[]};
+    c.select(outcome as never);http.expectOne(r=>r.url.endsWith('/outcomes/outcome')).flush({data:outcome});c.learningMinutes=15;
+    c.select(topic as never);expect(c.pending()?.id).toBe('topic');http.expectNone(r=>r.url.endsWith('/topics/topic'));c.pending.set(null);
+    c.form.name='Yeni kazanım metni';c.form.reason='Yazım düzeltmesi';c.save();
+    http.expectOne(r=>r.method==='PUT').flush({data:{...outcome,name:'Yeni kazanım metni'}});
+    http.expectOne(r=>r.url.endsWith('/curriculum-management/children')).flush({data:{items:[],totalCount:0,pageNumber:1,pageSize:25}});
+    expect(c.learningMinutes).toBe(15);expect(c.dirty()).toBe(true);http.verify();
+  });
 });
