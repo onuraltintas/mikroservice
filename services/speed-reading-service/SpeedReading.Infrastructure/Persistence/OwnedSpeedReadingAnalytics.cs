@@ -40,12 +40,13 @@ internal sealed class OwnedSpeedReadingAnalytics(
             .SingleOrDefaultAsync(cancellationToken);
 
         var readingDaily = await readingQuery
-            .GroupBy(item => item.CompletedAt.Date)
+            .GroupBy(item => TimeZoneInfo.ConvertTimeBySystemTimeZoneId(item.CompletedAt, SpeedReadingReportCalendar.TimeZoneId).Date)
             .Select(group => new
             {
                 Date = group.Key,
                 ReadingSessions = group.Count(),
                 ReadingSeconds = group.Sum(item => (long)item.ReadingTimeSeconds),
+                HasComprehension = group.Any(item => item.TotalQuestions > 0),
                 AverageWpm = group.Where(item => item.IsMeasured && item.CalculatedWpm > 0)
                     .Select(item => (decimal?)item.CalculatedWpm)
                     .Average() ?? 0,
@@ -81,7 +82,7 @@ internal sealed class OwnedSpeedReadingAnalytics(
             })
             .SingleOrDefaultAsync(cancellationToken);
         var exerciseDaily = await exerciseQuery
-            .GroupBy(item => item.CompletedDate.Date)
+            .GroupBy(item => TimeZoneInfo.ConvertTimeBySystemTimeZoneId(item.CompletedDate, SpeedReadingReportCalendar.TimeZoneId).Date)
             .Select(group => new
             {
                 Date = group.Key,
@@ -102,7 +103,7 @@ internal sealed class OwnedSpeedReadingAnalytics(
                 (int)(item.ReadingSeconds / 60),
                 item.AverageWpm,
                 item.AverageComprehension,
-                0))
+                0) { ComprehensionDataAvailable = item.HasComprehension })
             .ToDictionary(item => item.Date);
         foreach (var item in exerciseDaily)
         {
@@ -226,7 +227,7 @@ internal sealed class OwnedSpeedReadingAnalytics(
                 item.ReadingMinutes,
                 item.AverageWpm,
                 item.AverageComprehension,
-                item.AverageSuccessRate)).ToList())
+                item.AverageSuccessRate) { ComprehensionDataAvailable = item.ComprehensionDataAvailable }).ToList())
         { ComprehensionDataAvailable = latestMeasuredComprehension.HasValue };
     }
 
@@ -258,16 +259,15 @@ internal sealed class OwnedSpeedReadingAnalytics(
 
         var average = aggregate?.Average ?? 0;
         var previousAverage = await AverageWpmAsync(
-            ReadingSessionsFor(userId, start.AddDays(-(end - start).TotalDays), start), cancellationToken);
+            ReadingSessionsFor(userId, start - (end - start), start).Where(item => item.CompletedAt < start), cancellationToken);
         var improvementRate = aggregate is null ? 0 : CalculateImprovement(average, previousAverage);
-        var trend = (await query.GroupBy(item => item.CompletedAt.Date).OrderBy(group => group.Key)
+        var trend = (await query.GroupBy(item => TimeZoneInfo.ConvertTimeBySystemTimeZoneId(item.CompletedAt, SpeedReadingReportCalendar.TimeZoneId).Date).OrderBy(group => group.Key)
             .Select(group => new { Date = group.Key, Value = group.Average(item => (decimal)item.CalculatedWpm) })
             .ToListAsync(cancellationToken))
             .Select(item => new StudentAnalyticsTrendPoint(DateOnly.FromDateTime(item.Date), item.Value)).ToList();
         var categories = await (
             from session in query
             join text in db.ReadingTexts.AsNoTracking() on session.ReadingTextId equals text.Id
-            where !text.IsDeleted && text.IsActive
             group session by text.Category into grouped
             orderby grouped.Key
             select new StudentAnalyticsCategoryPoint(
@@ -320,16 +320,15 @@ internal sealed class OwnedSpeedReadingAnalytics(
 
         var average = aggregate?.Average ?? 0;
         var previousAverage = await AverageComprehensionAsync(
-            ReadingSessionsFor(userId, start.AddDays(-(end - start).TotalDays), start), cancellationToken);
+            ReadingSessionsFor(userId, start - (end - start), start).Where(item => item.CompletedAt < start), cancellationToken);
         var improvementRate = aggregate is null ? 0 : CalculateImprovement(average, previousAverage);
-        var trend = (await query.GroupBy(item => item.CompletedAt.Date).OrderBy(group => group.Key)
+        var trend = (await query.GroupBy(item => TimeZoneInfo.ConvertTimeBySystemTimeZoneId(item.CompletedAt, SpeedReadingReportCalendar.TimeZoneId).Date).OrderBy(group => group.Key)
             .Select(group => new { Date = group.Key, Value = group.Average(item => item.ComprehensionRate) })
             .ToListAsync(cancellationToken))
             .Select(item => new StudentAnalyticsTrendPoint(DateOnly.FromDateTime(item.Date), item.Value)).ToList();
         var categoryRows = await (
             from session in query
             join text in db.ReadingTexts.AsNoTracking() on session.ReadingTextId equals text.Id
-            where !text.IsDeleted && text.IsActive
             group session by text.Category into grouped
             orderby grouped.Key
             select new
@@ -507,17 +506,17 @@ internal sealed class OwnedSpeedReadingAnalytics(
             LastActivity = group.Max(item => (DateTime?)item.CompletedDate)
         }).SingleOrDefaultAsync(cancellationToken);
 
-        var readingDaily = await readingQuery.GroupBy(item => item.CompletedAt.Date)
+        var readingDaily = await readingQuery.GroupBy(item => TimeZoneInfo.ConvertTimeBySystemTimeZoneId(item.CompletedAt, SpeedReadingReportCalendar.TimeZoneId).Date)
             .Select(group => new { Date = group.Key, Count = group.Count() }).ToListAsync(cancellationToken);
-        var exerciseDaily = await exerciseQuery.GroupBy(item => item.CompletedDate.Date)
+        var exerciseDaily = await exerciseQuery.GroupBy(item => TimeZoneInfo.ConvertTimeBySystemTimeZoneId(item.CompletedDate, SpeedReadingReportCalendar.TimeZoneId).Date)
             .Select(group => new { Date = group.Key, Count = group.Count() }).ToListAsync(cancellationToken);
-        var readingHourly = await readingQuery.GroupBy(item => item.CompletedAt.Hour)
+        var readingHourly = await readingQuery.GroupBy(item => TimeZoneInfo.ConvertTimeBySystemTimeZoneId(item.CompletedAt, SpeedReadingReportCalendar.TimeZoneId).Hour)
             .Select(group => new { Hour = group.Key, Count = group.Count() }).ToListAsync(cancellationToken);
-        var exerciseHourly = await exerciseQuery.GroupBy(item => item.CompletedDate.Hour)
+        var exerciseHourly = await exerciseQuery.GroupBy(item => TimeZoneInfo.ConvertTimeBySystemTimeZoneId(item.CompletedDate, SpeedReadingReportCalendar.TimeZoneId).Hour)
             .Select(group => new { Hour = group.Key, Count = group.Count() }).ToListAsync(cancellationToken);
-        var readingWeekdays = await readingQuery.GroupBy(item => item.CompletedAt.DayOfWeek)
+        var readingWeekdays = await readingQuery.GroupBy(item => TimeZoneInfo.ConvertTimeBySystemTimeZoneId(item.CompletedAt, SpeedReadingReportCalendar.TimeZoneId).DayOfWeek)
             .Select(group => new { Day = group.Key, Count = group.Count() }).ToListAsync(cancellationToken);
-        var exerciseWeekdays = await exerciseQuery.GroupBy(item => item.CompletedDate.DayOfWeek)
+        var exerciseWeekdays = await exerciseQuery.GroupBy(item => TimeZoneInfo.ConvertTimeBySystemTimeZoneId(item.CompletedDate, SpeedReadingReportCalendar.TimeZoneId).DayOfWeek)
             .Select(group => new { Day = group.Key, Count = group.Count() }).ToListAsync(cancellationToken);
 
         var dailyCounts = new Dictionary<DateOnly, int>();
@@ -526,8 +525,8 @@ internal sealed class OwnedSpeedReadingAnalytics(
         foreach (var item in exerciseDaily)
             AddDailyActivity(dailyCounts, DateOnly.FromDateTime(NormalizeUtc(item.Date)), item.Count);
 
-        var firstDate = DateOnly.FromDateTime(start);
-        var lastDate = DateOnly.FromDateTime(end);
+        var firstDate = SpeedReadingReportCalendar.LocalDate(start);
+        var lastDate = SpeedReadingReportCalendar.LocalDate(end);
         var heatmap = new List<StudentActivityHeatmapPoint>();
         for (var date = firstDate; date <= lastDate; date = date.AddDays(1))
         {
@@ -551,7 +550,7 @@ internal sealed class OwnedSpeedReadingAnalytics(
             ? MapDayName(weekdayCounts.OrderByDescending(item => item.Value).ThenBy(item => item.Key).First().Key)
             : "—";
         var dataAvailable = totalSessions > 0;
-        var isActive = lastActivity.HasValue && lastActivity.Value.Date >= end.Date.AddDays(-1);
+        var isActive = lastActivity.HasValue && SpeedReadingReportCalendar.LocalDate(lastActivity.Value) >= SpeedReadingReportCalendar.LocalDate(end).AddDays(-1);
 
         var recentReadingRows = await readingQuery
             .OrderByDescending(item => item.CompletedAt)
@@ -842,7 +841,10 @@ internal sealed class OwnedSpeedReadingAnalytics(
         int ReadingMinutes,
         decimal AverageWpm,
         decimal AverageComprehension,
-        decimal AverageSuccessRate);
+        decimal AverageSuccessRate)
+    {
+        public bool ComprehensionDataAvailable { get; init; }
+    }
 
     private sealed record ProgramTemplateInfo(string Name, int TotalDays);
 

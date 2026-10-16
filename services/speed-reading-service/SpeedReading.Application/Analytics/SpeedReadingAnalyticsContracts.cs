@@ -7,7 +7,10 @@ public sealed record StudentAnalyticsDailyPoint(
     int ReadingMinutes,
     decimal AverageWpm,
     decimal AverageComprehension,
-    decimal AverageSuccessRate);
+    decimal AverageSuccessRate)
+{
+    public bool ComprehensionDataAvailable { get; init; }
+}
 
 public sealed record StudentAnalyticsMilestone(
     Guid Id,

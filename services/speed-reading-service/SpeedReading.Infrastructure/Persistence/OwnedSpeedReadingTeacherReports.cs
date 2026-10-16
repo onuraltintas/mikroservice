@@ -342,7 +342,7 @@ internal sealed class OwnedSpeedReadingTeacherReports(
                 group.Any(item => item.Score.HasValue) ? PerformanceLevel(group.Average(item => item.Score) ?? 0) : "not-measured"))
             .ToList();
         var exerciseFrequency = exerciseRows
-            .GroupBy(item => item.CompletedDate.Date)
+            .GroupBy(item => TimeZoneInfo.ConvertTimeBySystemTimeZoneId(item.CompletedDate, SpeedReadingReportCalendar.TimeZoneId).Date)
             .OrderBy(group => group.Key)
             .Select(group => Chart(group.Key, "Egzersiz", group.Count()))
             .ToList();
@@ -351,7 +351,6 @@ internal sealed class OwnedSpeedReadingTeacherReports(
             from session in db.ReadingSessions.AsNoTracking()
             join text in db.ReadingTexts.AsNoTracking() on session.ReadingTextId equals text.Id
             where studentIds.Contains(session.UserId)
-                && text.IsActive && !text.IsDeleted
                 && session.CompletedAt >= start && session.CompletedAt <= end
             select new { session.CompletedAt, session.CalculatedWpm, session.IsMeasured, session.ComprehensionRate, session.TotalQuestions, text.DifficultyLevel })
             .ToListAsync(cancellationToken);
@@ -370,7 +369,7 @@ internal sealed class OwnedSpeedReadingTeacherReports(
                 { ComprehensionDataAvailable = group.Any(item => item.TotalQuestions > 0) })
             .ToList();
         var readingPerformance = readingRows
-            .GroupBy(item => item.CompletedAt.Date)
+            .GroupBy(item => SpeedReadingReportCalendar.LocalTime(item.CompletedAt).Date)
             .OrderBy(group => group.Key)
             .Select(group => {
                 var series = new List<AdminAnalyticsChartSeries>();
@@ -419,15 +418,15 @@ internal sealed class OwnedSpeedReadingTeacherReports(
                 HasComprehension: item.IsMeasured))
             .ToListAsync(cancellationToken);
         var daily = reading.Concat(exercise).ToList();
-        var weekly = daily.GroupBy(item => StartOfWeek(item.Date)).OrderBy(group => group.Key)
+        var weekly = daily.GroupBy(item => StartOfWeek(SpeedReadingReportCalendar.LocalTime(item.Date))).OrderBy(group => group.Key)
             .Select(group => Chart(group.Key, "Aktivite", group.Sum(item => item.ActivityCount))).ToList();
-        var monthly = daily.GroupBy(item => new { item.Date.Year, item.Date.Month })
+        var monthly = daily.GroupBy(item => new { SpeedReadingReportCalendar.LocalTime(item.Date).Year, SpeedReadingReportCalendar.LocalTime(item.Date).Month })
             .OrderBy(group => group.Key.Year).ThenBy(group => group.Key.Month)
             .Select(group => new AdminAnalyticsChartData(
                 $"{group.Key.Year:0000}-{group.Key.Month:00}",
                 [new AdminAnalyticsChartSeries("Aktivite", group.Sum(item => item.ActivityCount))]))
             .ToList();
-        var intensity = daily.GroupBy(item => item.Date.Date).OrderBy(group => group.Key)
+        var intensity = daily.GroupBy(item => SpeedReadingReportCalendar.LocalTime(item.Date).Date).OrderBy(group => group.Key)
             .Select(group => Chart(group.Key, "Dakika", Math.Round(group.Sum(item => (decimal)item.TotalSeconds) / 60, 2))).ToList();
 
         var midpoint = start + (end - start) / 2;

@@ -788,7 +788,7 @@ export class ReportsService {
       name: point.date,
       series: [{ name: 'WPM', value: point.averageWpm }]
     }));
-    const comprehensionTrend = daily.map(point => ({
+    const comprehensionTrend = daily.filter(point => point.comprehensionDataAvailable ?? point.averageComprehension > 0).map(point => ({
       name: point.date,
       series: [{ name: 'Anlama', value: point.averageComprehension }]
     }));
@@ -1320,6 +1320,7 @@ interface StudentActivityStudyTime {
 }
 
 interface StudentAnalyticsDailyPoint {
+  comprehensionDataAvailable?: boolean;
   date: string;
   readingSessions: number;
   exerciseCount: number;

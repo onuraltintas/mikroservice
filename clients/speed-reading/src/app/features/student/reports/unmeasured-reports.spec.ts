@@ -24,7 +24,9 @@ describe('reports without measured speed', () => {
   it('keeps exercise chart names and both trend month labels entirely Turkish', () => {
     const fixture = TestBed.createComponent(StudentDashboardReportComponent);
     fixture.componentInstance.report.set({ activityDistribution: ['Scanning', 'Skimming', 'Eye Tracking', 'Chunking'].map(name => ({ name, series: [{ value: 1 }] })) } as any);
-    fixture.componentInstance.historyData.set([{ isMeasured: true, calculatedWPM: 150, totalQuestions: 1, comprehensionRate: 0, completedAt: '2026-10-16T12:00:00Z' }] as any);
+    fixture.componentInstance.report.update(report => ({ ...report,
+      wpmProgress: [{ name: '2026-10-16', series: [{ value: 150 }] }],
+      comprehensionTrend: [{ name: '2026-10-16', series: [{ value: 0 }] }] } as any));
     expect(fixture.componentInstance.pieChartData().map(item => item.name)).toEqual(['Tarayarak okuma', 'Göz gezdirerek okuma', 'Göz takibi', 'Gruplayarak okuma']);
     expect(fixture.componentInstance.wpmProgressData()[0].series[0].name).toBe('16 Eki');
     expect(fixture.componentInstance.comprehensionTrendData()[0].series[0].name).toBe('16 Eki');
@@ -80,14 +82,10 @@ describe('reports without measured speed', () => {
     expect(fixture.nativeElement.textContent).not.toContain('Average WPM');
   });
 
-  it('does not plot unmeasured or zero-speed history and shows no data in the summary speed card', () => {
+  it('does not plot missing speed and shows no data in the summary speed card', () => {
     const fixture = TestBed.createComponent(StudentDashboardReportComponent);
     fixture.componentInstance.loading.set(false);
     fixture.componentInstance.report.set({ currentWPM: 0 } as any);
-    fixture.componentInstance.historyData.set([
-      { isMeasured: false, calculatedWPM: 999, completedAt: '2026-10-16T08:00:00Z' },
-      { isMeasured: true, calculatedWPM: 0, completedAt: '2026-10-16T09:00:00Z' }
-    ] as any);
     fixture.detectChanges();
     const card = Array.from(fixture.nativeElement.querySelectorAll('.stat-card'))
       .find((item: any) => item.textContent.includes('Okuma Hızı')) as HTMLElement;

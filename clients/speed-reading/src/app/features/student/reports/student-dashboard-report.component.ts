@@ -2,9 +2,7 @@ import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReportsService } from '../../../core/services/reports.service';
 import { AuthService } from '../../../core/services/auth.service';
-import { StudentReadingService } from '../../../core/services/student-reading.service';
 import { StudentDashboardReport } from '../../../core/models/report.model';
-import { ReadingSession } from '../../../core/models/reading-text.model';
 import { format } from 'date-fns';
 import { tr } from 'date-fns/locale';
 import { speedReadingReportLabel } from '../../../../../../shared/utils/speed-reading-report-labels';
@@ -28,10 +26,8 @@ import { RouterModule } from '@angular/router';
 export class StudentDashboardReportComponent implements OnInit {
   private reportsService = inject(ReportsService);
   private authService = inject(AuthService);
-  private readingService = inject(StudentReadingService);
 
   report = signal<StudentDashboardReport | null>(null);
-  historyData = signal<ReadingSession[]>([]);
   loading = signal(true);
 
   ngOnInit(): void {
@@ -63,17 +59,6 @@ export class StudentDashboardReportComponent implements OnInit {
       }
     });
 
-    // Load full history for charts (since progression endpoints are missing)
-    this.readingService.getHistory().subscribe({
-      next: (sessions) => {
-        // Sort by date ascending for charts
-        const sortedSessions = sessions.sort((a, b) =>
-          new Date(a.completedAt).getTime() - new Date(b.completedAt).getTime()
-        );
-        this.historyData.set(sortedSessions);
-      },
-      error: (err) => console.error('Failed to load reading history', err)
-    });
   }
 
   // Transform pie chart data - pie charts need {name, value} format
@@ -104,34 +89,25 @@ export class StudentDashboardReportComponent implements OnInit {
   });
 
   wpmProgressData = computed(() => {
-    const sessions = this.historyData();
-    if (!sessions || sessions.length === 0) return [];
-
-    const recentSessions = sessions.filter(s => s.isMeasured !== false && s.calculatedWPM > 0).slice(-20);
-    if (recentSessions.length === 0) return [];
+    const points = this.report()?.wpmProgress ?? [];
+    if (points.length === 0) return [];
     return [{
       name: 'WPM',
-      series: recentSessions
-        .filter(s => s.isMeasured !== false && s.completedAt && !isNaN(new Date(s.completedAt).getTime()))
-        .map(session => ({
-          name: format(new Date(session.completedAt), 'd MMM', { locale: tr }),
-          value: session.calculatedWPM
+      series: points.map(point => ({
+          name: format(new Date(point.name + 'T00:00:00'), 'd MMM', { locale: tr }),
+          value: point.series[0].value
         }))
     }];
   });
 
   comprehensionTrendData = computed(() => {
-    const sessions = this.historyData();
-    if (!sessions || sessions.length === 0) return [];
-
-    const recentSessions = sessions.slice(-20);
+    const points = this.report()?.comprehensionTrend ?? [];
+    if (points.length === 0) return [];
     return [{
       name: 'Anlama Oranı',
-      series: recentSessions
-        .filter(s => s.totalQuestions > 0 && s.completedAt && !isNaN(new Date(s.completedAt).getTime()))
-        .map(session => ({
-          name: format(new Date(session.completedAt), 'd MMM', { locale: tr }),
-          value: Math.round(session.comprehensionRate)
+      series: points.map(point => ({
+          name: format(new Date(point.name + 'T00:00:00'), 'd MMM', { locale: tr }),
+          value: point.series[0].value
         }))
     }];
   });
