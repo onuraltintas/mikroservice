@@ -33,8 +33,8 @@ test('right click adds a lesson, resizing frees the other half hour and both sav
   const f=await fixture(context);await open(page);await page.getByTestId('cell-Monday-1080').click({button:'right'});await page.getByRole('menuitem',{name:'+ Ders ekle',exact:true}).click();await page.getByRole('dialog').getByRole('button',{name:'Dersi ekle',exact:true}).click();
   await resize(page,'Matematik','bottom',-36);await expect(card(page,'Matematik')).toContainText('30 dk');await add(page,turkish,'18:30','30');
   await page.getByRole('button',{name:'Taslağı kaydet',exact:true}).click();await expect(page.getByRole('status')).toContainText('Haftalık taslak kaydedildi');expect(f.getDraft().slots.map(s=>s.durationMinutes)).toEqual([30,30]);
-  await page.reload();await expect(card(page,'Matematik')).toContainText('18:00–18:30');await expect(card(page,'Türkçe')).toContainText('18:30–19:00');
-  await page.getByRole('button',{name:'Hafta',exact:true}).click();await card(page,'Matematik').scrollIntoViewIfNeeded();await page.locator('main').first().evaluate(el=>el.scrollTo({top:0,behavior:'instant'}));await page.screenshot({path:`../../artifacts/coaching-weekly/calendar-${test.info().project.name}.png`,fullPage:true});
+  await page.reload();await page.getByRole('button',{name:'Hafta',exact:true}).click();await expect(card(page,'Matematik')).toContainText('18:00–18:30');await expect(card(page,'Türkçe')).toContainText('18:30–19:00');
+  await page.locator('main').first().evaluate(el=>el.scrollTo({top:0,behavior:'instant'}));await page.locator('.time-scroller').evaluate(el=>el.scrollTop=17*72);await page.screenshot({path:`../../artifacts/coaching-weekly/calendar-${test.info().project.name}.png`,fullPage:false});
   await page.getByRole('link',{name:'Mevcut planlarım ↗',exact:true}).click();await expect(page.getByRole('heading',{name:'Mevcut çalışma planım',exact:true})).toBeVisible();await expect(page.getByText(/Tamamlandı · 25 dk/)).toBeVisible();expect(f.active.version).toBe(7);expect(f.writes.every(w=>w.path.endsWith('/weekly-draft'))).toBe(true);
 });
 

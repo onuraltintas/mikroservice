@@ -10,11 +10,27 @@ using Coaching.Infrastructure.Repositories;
 using Coaching.Infrastructure.Privacy;
 using EduPlatform.Shared.Contracts.Events.Privacy;
 using Coaching.Application.Attachments;
+using Coaching.API.Controllers;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Coaching.Curriculum.IntegrationTests;
 
 public sealed class WeeklyStudyDraftTests
 {
+    [Fact]
+    public async Task ApiIsStudentOnlyAndReturnsValidationAndConflictWithoutModifyingExistingPlan()
+    {
+        await using var f=new CurriculumManagementTests.Fixture();await f.Seed();f.User.Roles=["Student"];
+        var controller=new WeeklyStudyDraftController(Service(f,new(f.Db)));
+        Assert.Equal("Student",Assert.Single(typeof(WeeklyStudyDraftController).GetCustomAttributes(typeof(AuthorizeAttribute),true).Cast<AuthorizeAttribute>()).Roles);
+        Assert.IsType<OkObjectResult>(await controller.Get(default));
+        var lesson=(await f.Db.StudyCatalogLessons.SingleAsync()).Id;
+        Assert.IsType<BadRequestObjectResult>(await controller.Save(new(null,"Europe/Istanbul",[Slot(lesson,1080,45)]),default));
+        Assert.IsType<OkObjectResult>(await controller.Save(new(null,"Europe/Istanbul",[Slot(lesson,1080,30)]),default));
+        Assert.IsType<ConflictObjectResult>(await controller.Save(new(null,"Europe/Istanbul",[]),default));
+        f.User.Roles=["Teacher"];Assert.Equal(403,Assert.IsType<ObjectResult>(await controller.Get(default)).StatusCode);
+    }
     [Fact]
     public async Task WeeklyDraftIsExportedAndIncludedInOwnedAccountErasure()
     {

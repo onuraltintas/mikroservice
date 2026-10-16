@@ -21,7 +21,10 @@ export class StudentWeeklyCalendarComponent implements OnInit {
   timeZoneId='Europe/Istanbul';version:number|null=null;private initial='';private gesture:Gesture|null=null;private suppressClick=false;
   menu:{x:number;y:number;date:Date;minute:number}|null=null;
   form:{id:string;lessonId:string;day:Weekday;start:string;duration:number}|null=null;formError='';
-  @ViewChild('scroller') set scroller(value:ElementRef<HTMLElement>|undefined){if(value)value.nativeElement.scrollTop=8*72;}
+  private initializedScroller?:HTMLElement;
+  @ViewChild('scroller') set scroller(value:ElementRef<HTMLElement>|undefined){
+    if(value&&value.nativeElement!==this.initializedScroller){this.initializedScroller=value.nativeElement;value.nativeElement.scrollTop=8*72;}
+  }
   ngOnInit(){if(typeof window!=='undefined'&&window.innerWidth<680)this.view.set('day');this.load();}
   private snapshot(){return JSON.stringify({timeZoneId:this.timeZoneId,slots:this.slots()});}
   dirty(){return this.ready()&&this.snapshot()!==this.initial;}
