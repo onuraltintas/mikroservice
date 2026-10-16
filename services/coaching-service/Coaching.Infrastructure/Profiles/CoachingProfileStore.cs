@@ -151,6 +151,21 @@ public sealed class CoachingProfileStore(CoachingDbContext db, ICoachingAccountD
         await db.SaveChangesAsync(ct);
     }
 
+    public async Task EndAssignmentAsync(Guid actorUserId, Guid teacherUserId, Guid studentUserId,
+        bool studentInitiated, CancellationToken ct)
+    {
+        if (actorUserId != (studentInitiated ? studentUserId : teacherUserId)) throw Forbidden();
+        await RequireAccountAsync(actorUserId, studentInitiated ? "Student" : "Teacher", ct);
+        var hasActiveProfile = studentInitiated
+            ? await db.CoachingStudentProfiles.AnyAsync(x => x.UserId == actorUserId && x.IsActive, ct)
+            : await db.CoachingTeacherProfiles.AnyAsync(x => x.UserId == actorUserId && x.IsActive, ct);
+        if (!hasActiveProfile) throw Forbidden();
+        var rows = await db.CoachingTeacherStudentAssignments.Where(x => x.TeacherUserId == teacherUserId && x.StudentUserId == studentUserId).ToListAsync(ct);
+        if (rows.Count == 0) throw new KeyNotFoundException("Koçluk bağlantısı bulunamadı.");
+        foreach (var row in rows.Where(x => x.IsActive)) row.SetActive(false, actorUserId);
+        await db.SaveChangesAsync(ct);
+    }
+
     internal async Task UpsertAssignmentAsync(Guid teacherUserId, Guid studentUserId, Guid? institutionId,
         string? subject, bool active, Guid actorUserId, CancellationToken ct)
     {

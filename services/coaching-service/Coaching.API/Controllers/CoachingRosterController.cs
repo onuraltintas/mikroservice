@@ -12,7 +12,7 @@ namespace Coaching.API.Controllers;
 [Authorize(Roles = "Teacher")]
 [Route("api/coaching/teachers")]
 public sealed class CoachingRosterController(OwnedCoachingDirectory directory, ICurrentUserService actor,
-    CoachingInvitationStore invitations) : ControllerBase
+    CoachingInvitationStore invitations, CoachingProfileStore profiles) : ControllerBase
 {
     [HttpGet("me/students")]
     public async Task<IActionResult> Students([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 25,
@@ -27,6 +27,14 @@ public sealed class CoachingRosterController(OwnedCoachingDirectory directory, I
     {
         var invitation = await invitations.SendTeacherAsync(actor.UserId ?? Guid.Empty, request.StudentEmail, request.Message, ct);
         return Ok(new { invitationId = invitation.Id });
+    }
+
+    [HttpDelete("me/students/{studentUserId:guid}")]
+    public async Task<IActionResult> Unlink(Guid studentUserId, CancellationToken ct)
+    {
+        var teacher = actor.UserId ?? Guid.Empty;
+        await profiles.EndAssignmentAsync(teacher, teacher, studentUserId, false, ct);
+        return NoContent();
     }
 }
 public sealed record CoachingStudentInviteRequest(string StudentEmail, string? Message, Guid? TeacherUserId = null);
