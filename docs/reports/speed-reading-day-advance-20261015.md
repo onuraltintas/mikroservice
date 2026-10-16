@@ -43,3 +43,5 @@ Son durum: genel ayar **kapalı**, `testogrenci@eduivme.com` tercihi **Genel aya
 Canlı görüntüler: [Buton](../../artifacts/day-advance-20261015/live-button.jpg), [Açılan üçüncü gün](../../artifacts/day-advance-20261015/live-day-three.jpg), [Kullanıcı seçenekleri](../../artifacts/day-advance-20261015/live-user-options.jpg). Kayıt karşılaştırması: [JSON](../../artifacts/day-advance-20261015/live-advance-comparison.json).
 
 Kanıt günlükleri `artifacts/day-advance-20261015/` dizinindedir. Kullanım açıklaması: [Program ilerleme](../speed-reading-program-progression.md). Yayın aracı: [Yayın notları](../../tools/releases/day-advance-20261015/README.md).
+
+16 Ekim takip kaydı: yukarıdaki kelime puanlama bulgusu ayrı düzeltmeyle giderildi ve canlıya alındı. Son kaynakta 1317/1317 birim testi, 18/18 PostgreSQL/HTTP testi ve gerçek öğrenci kelime testi geçti; eski XP ve ilerlemeler korundu. Önceki çalıştırma sayıları tarihsel kayıt olarak bırakıldı. [Düzeltme ve yayın kanıtları](speed-reading-vocabulary-scoring-20261016.md).
