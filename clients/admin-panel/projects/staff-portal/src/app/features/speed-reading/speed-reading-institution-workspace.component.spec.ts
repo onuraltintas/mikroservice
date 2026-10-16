@@ -20,12 +20,26 @@ describe('SpeedReadingInstitutionWorkspaceComponent', () => {
     const fixture = createLoadedWorkspace();
     fixture.componentInstance.selectedInstitutionReport.set('content');
     fixture.componentInstance.contentReport.set({ dateFrom: '', dateTo: '', exerciseAnalysis: [
-      { exerciseTypeName: 'Örnek egzersiz', totalCompletions: 1, uniqueStudents: 1, averageScore: 0, performanceLevel: 'low' }
+      { exerciseTypeName: 'Örnek egzersiz', totalCompletions: 1, activeStudents: 1, averageScore: 0, performanceLevel: 'low' }
     ], exerciseFrequencyChart: [], readingAnalysis: [], readingPerformanceChart: [] } as any);
     fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('Düşük');
     expect(fixture.nativeElement.textContent).not.toContain('low');
     expect(fixture.nativeElement.textContent).toContain('0%');
+  });
+
+  it('localizes the indicators in both institution progress lists', () => {
+    const fixture = createLoadedWorkspace();
+    fixture.componentInstance.selectedInstitutionReport.set('progress');
+    fixture.componentInstance.progressReport.set({ dateFrom: '', dateTo: '', weeklyProgressChart: [], monthlyProgressChart: [], activityIntensityChart: [],
+      improvingStudents: [{ studentId: '1', studentName: 'Ayşe', metric: 'comprehension', previousScore: 50, currentScore: 80, improvement: 30 }],
+      decliningStudents: [{ studentId: '2', studentName: 'Ali', metric: 'exercise_success', previousScore: 80, currentScore: 50, improvement: -30 }]
+    } as any);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Anlama');
+    expect(fixture.nativeElement.textContent).toContain('Egzersiz başarısı');
+    expect(fixture.nativeElement.textContent).not.toContain('comprehension');
+    expect(fixture.nativeElement.textContent).not.toContain('exercise_success');
   });
 
   function createLoadedWorkspace() {

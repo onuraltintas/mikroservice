@@ -11,6 +11,7 @@ describe('Turkish student report labels', () => {
   it('translates known display codes, preserving Turkish/custom labels and identifiers', () => {
     for (const [input, expected] of [
       ['Above Average', 'Ortalamanın üzerinde'], ['Average', 'Ortalama'], ['Below Average', 'Ortalamanın altında'],
+      ['No benchmark', 'Karşılaştırma verisi yok'],
       ['Strong', 'Güçlü'], ['Needs Improvement', 'Geliştirilmeli'], ['high', 'Yüksek'], ['medium', 'Orta'], ['low', 'Düşük'],
       ['not-measured', 'Ölçülmedi'], ['exercise_success', 'Egzersiz başarısı'], ['comprehension', 'Anlama'],
       [' Regression_Reduction ', 'Geriye dönüşü azaltma'], ['vocabulary_builder', 'Kelime hazinesi'],
