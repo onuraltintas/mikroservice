@@ -123,7 +123,7 @@ public sealed class CoachingOwnedProfilePersistenceTests
         Assert.Single(fixture.Accounts.Users);
     }
 
-    private sealed class Fixture : IAsyncDisposable
+    internal sealed class Fixture : IAsyncDisposable
     {
         public CoachingDbContext Db { get; } = new(new DbContextOptionsBuilder<CoachingDbContext>().UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
         public FakeAccounts Accounts { get; } = new();
@@ -139,7 +139,7 @@ public sealed class CoachingOwnedProfilePersistenceTests
         public ValueTask DisposeAsync() => Db.DisposeAsync();
     }
 
-    private sealed class FakeAccounts : ICoachingAccountDirectory
+    internal sealed class FakeAccounts : ICoachingAccountDirectory
     {
         public Dictionary<Guid, CoachingAccount> Users { get; } = [];
         public Dictionary<Guid, CoachingAdminAccessScope> Admins { get; } = [];
@@ -156,7 +156,7 @@ public sealed class CoachingOwnedProfilePersistenceTests
             Task.FromResult(Representatives.GetValueOrDefault((viewer, student)));
     }
 
-    private sealed class Actor : ICurrentUserService
+    internal sealed class Actor : ICurrentUserService
     {
         public Guid? UserId { get; set; }
         public IEnumerable<string> Roles { get; set; } = [];
