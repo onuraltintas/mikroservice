@@ -1,0 +1,5 @@
+{
+  "extends": "./tsconfig.spec.json",
+  "files": ["src/app/features/coaching-portal/pages/student-learning-setup.component.spec.ts"],
+  "include": []
+}
