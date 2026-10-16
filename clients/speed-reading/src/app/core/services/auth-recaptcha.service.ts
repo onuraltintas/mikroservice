@@ -1,7 +1,7 @@
 import { DOCUMENT, isPlatformBrowser } from '@angular/common';
 import { HttpBackend, HttpClient } from '@angular/common/http';
 import { Injectable, PLATFORM_ID, inject } from '@angular/core';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, from, timeout } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
 interface AuthRecaptchaConfiguration {
@@ -46,10 +46,10 @@ export class AuthRecaptchaService {
     }
 
     await this.loadScript(configuration.siteKey);
-    const token = await (window as GoogleRecaptchaWindow).grecaptcha?.execute(
+    const token = await firstValueFrom(from((window as GoogleRecaptchaWindow).grecaptcha!.execute(
       configuration.siteKey,
       { action }
-    );
+    )).pipe(timeout(15000)));
     if (!token) throw new Error('Güvenlik doğrulaması tamamlanamadı.');
     return token;
   }
@@ -57,7 +57,7 @@ export class AuthRecaptchaService {
   private loadConfiguration(configurationUrl: string): Promise<AuthRecaptchaConfiguration> {
     return firstValueFrom(this.http.get<AuthRecaptchaConfiguration>(
       configurationUrl
-    ));
+    ).pipe(timeout(15000)));
   }
 
   private async loadScript(siteKey: string): Promise<void> {
@@ -87,7 +87,7 @@ export class AuthRecaptchaService {
     }
 
     try {
-      await this.scriptPromise;
+      await firstValueFrom(from(this.scriptPromise).pipe(timeout(15000)));
     } catch (error) {
       this.scriptPromise = undefined;
       throw error;

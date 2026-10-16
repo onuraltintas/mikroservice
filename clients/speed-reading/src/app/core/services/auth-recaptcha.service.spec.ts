@@ -80,7 +80,7 @@ describe('AuthRecaptchaService', () => {
     expect(execute).not.toHaveBeenCalled();
   });
 
-  for (const stage of ['configuration', 'ready', 'execute']) {
+  for (const stage of ['configuration', 'script', 'ready', 'execute']) {
     it(`stops waiting when CAPTCHA ${stage} never responds and allows a fresh attempt`, fakeAsync(() => {
       backend.body = { enabled: true, siteKey: 'public-key' };
       const execute = jasmine.createSpy('execute').and.returnValue(new Promise<string>(() => {}));
@@ -88,6 +88,10 @@ describe('AuthRecaptchaService', () => {
         ready: callback => { if (stage !== 'ready') callback(); },
         execute
       };
+      if (stage === 'script') {
+        delete (window as GoogleRecaptchaWindow).grecaptcha;
+        spyOn(document.head, 'appendChild').and.callFake(node => node);
+      }
       const handle = spyOn(backend, 'handle').and.callThrough();
       if (stage === 'configuration') handle.and.returnValue(NEVER);
       let rejected = false;
