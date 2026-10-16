@@ -24,7 +24,7 @@ export class CoachingCurriculumManagerComponent implements OnInit {
   private readonly base = `${environment.apiUrl}/coaching-admin/curriculum-management`;
   private readonly outcomeBase = `${environment.apiUrl}/coaching-admin/outcomes`;
   private detailRequest?: Subscription; private destinationRequest?: Subscription; private branchRequests = new Map<string, Subscription>();
-  private initial = ''; private editionRequest?: Subscription;
+  private initial = ''; private initialDuration = ''; private editionRequest?: Subscription;
   readonly branches = signal<Record<string, Branch>>({}); readonly selected = signal<Node | null>(null);
   readonly busy = signal(false); readonly detailLoading = signal(false); readonly error = signal(''); readonly message = signal('');
   readonly editing = signal(false); readonly creating = signal(false); readonly pending = signal<Node | null>(null);
@@ -43,7 +43,9 @@ export class CoachingCurriculumManagerComponent implements OnInit {
   nodeType(n: Node) { return n.parentKind === 'topics' && n.kind === 'topics' ? 'Alt konu' : this.labels[n.kind]; }
   branch(n?: Node): Branch | undefined { return this.branches()[n ? this.key(n) : 'root']; }
   empty(): Form { return { name:'',reason:'',parentId:null,gradeNumber:null,examCode:null,displayOrder:null,estimatedMinutes:null,code:'',officialTopicId:null,sourcePage:1,notes:'',moveParentOutcomes:false }; }
-  dirty() { return this.editing() && JSON.stringify(this.form) !== this.initial; }
+  dirty() { return this.editing() && (JSON.stringify(this.form) !== this.initial || this.durationDirty()); }
+  private durationFields() { return {learningMinutes:this.learningMinutes,practiceMinutes:this.practiceMinutes,checkMinutes:this.checkMinutes,confidence:this.confidence,durationEvidence:this.durationEvidence,publishDuration:this.publishDuration}; }
+  durationDirty() { return this.kind === 'outcomes' && !this.creating() && JSON.stringify(this.durationFields()) !== this.initialDuration; }
   loadRoot(page = 1) { this.fetchBranch('root',this.rootScope,null,page); }
   changeRoot() { if (this.busy()) return; this.rootSearch = ''; this.loadRoot(); }
   expand(n: Node) {
@@ -74,7 +76,8 @@ export class CoachingCurriculumManagerComponent implements OnInit {
       next:r => { this.apply(r.data); this.detailLoading.set(false); },error:e => { this.detailLoading.set(false); this.fail(e); }
     });
   }
-  private apply(n: Node) {
+  private apply(n: Node,preserveDuration = false) {
+    const unsaved = preserveDuration && this.durationDirty() ? this.durationFields() : null;
     this.selected.set(n); this.kind = n.kind; this.creating.set(false); this.editing.set(true);
     this.form = { ...this.empty(),name:n.name,parentId:n.parentId,gradeNumber:n.gradeNumber ?? null,examCode:n.examCode ?? null,displayOrder:n.displayOrder ?? null,estimatedMinutes:n.estimatedMinutes ?? null,
       code:n.code ?? '',officialTopicId:n.officialTopicId ?? null,sourcePage:n.sourcePage ?? 1,notes:n.notes ?? '' };
@@ -83,6 +86,7 @@ export class CoachingCurriculumManagerComponent implements OnInit {
     const estimate = n.estimates?.find(x => x.isPublished) ?? n.estimates?.[0];
     this.learningMinutes = estimate?.learningMinutes ?? 0; this.practiceMinutes = estimate?.practiceMinutes ?? 0; this.checkMinutes = estimate?.checkMinutes ?? 0;
     this.confidence = estimate?.confidence ?? 'Low'; this.durationEvidence = ''; this.publishDuration = false;
+    this.initialDuration = JSON.stringify(this.durationFields()); if (unsaved) Object.assign(this,unsaved);
   }
   create(kind: Kind,parent?: Node) {
     if (this.busy() || this.dirty()) { this.error.set('Önce açık formdaki değişiklikleri kaydedin veya kaydı yeniden açın.'); return; }
@@ -94,7 +98,7 @@ export class CoachingCurriculumManagerComponent implements OnInit {
   save() {
     if (this.busy() || !this.editing() || !this.form.name.trim() || this.form.reason.trim().length < 5) return;
     const n = this.selected(); const r = {...this.form,name:this.form.name.trim(),reason:this.form.reason.trim(),...(!this.creating() && n ? {fingerprint:n.fingerprint} : {})};
-    this.write(this.creating() ? this.http.post<{data:Node}>(`${this.base}/${this.kind}`,r) : this.http.put<{data:Node}>(`${this.base}/${this.kind}/${n!.id}`,r),'Kayıt kaydedildi.');
+    this.write(this.creating() ? this.http.post<{data:Node}>(`${this.base}/${this.kind}`,r) : this.http.put<{data:Node}>(`${this.base}/${this.kind}/${n!.id}`,r),'Kayıt kaydedildi.',true);
   }
   searchDestinations(page = 1) {
     this.destinationRequest?.unsubscribe(); this.destinationPage = page; this.destinationId = ''; this.moveConfirmed = false; this.destinationLoading.set(true);
@@ -104,11 +108,11 @@ export class CoachingCurriculumManagerComponent implements OnInit {
     },error:e => { this.destinationLoading.set(false); this.fail(e); } });
   }
   move() {
-    const n = this.selected(); if (this.creating() || this.busy() || !n || !this.destinationId || !this.moveConfirmed || this.form.reason.trim().length < 5) return;
+    const n = this.selected(); if (this.creating() || this.busy() || !n || !this.destinationId || !this.moveConfirmed || this.form.reason.trim().length < 5 || this.dirtyFields() || this.durationDirty()) return;
     this.write(this.http.post<{data:Node}>(`${this.base}/${n.kind}/${n.id}/move`,{destinationId:this.destinationId,fingerprint:n.fingerprint,reason:this.form.reason.trim(),sourceTopicId:this.sourceTopicId || null}),'Taşıma tamamlandı. Önceki planların bağlantıları korundu.');
   }
   setActive() {
-    const n = this.selected(); if (!n || this.busy() || this.dirtyFields() || !this.statusConfirmed || this.form.reason.trim().length < 5) return;
+    const n = this.selected(); if (!n || this.busy() || this.dirtyFields() || this.durationDirty() || !this.statusConfirmed || this.form.reason.trim().length < 5) return;
     this.write(this.http.put<{data:Node}>(`${this.base}/${n.kind}/${n.id}/status`,{fingerprint:n.fingerprint,reason:this.form.reason.trim(),isActive:!n.isActive}),'Kullanım durumu güncellendi.');
   }
   dirtyFields() { const current = JSON.parse(this.initial || '{}') as Partial<Form>; return JSON.stringify({...this.form,reason:current.reason}) !== this.initial; }
@@ -129,11 +133,13 @@ export class CoachingCurriculumManagerComponent implements OnInit {
   }
   reviewMapping(m: Mapping) {
     const n = this.selected(); if (!n || this.busy() || this.form.reason.trim().length < 5) return;
-    this.write(this.http.put(`${this.outcomeBase}/mappings/${m.topicId}/${n.id}`,{approved:!m.isApproved,evidence:this.form.reason.trim()}).pipe(switchMap(() => this.http.get<{data:Node}>(`${this.base}/outcomes/${n.id}`))),'Konu kapsamı onayı güncellendi.');
+    if (this.dirtyFields()) { this.error.set('Önce kazanım metni ve alan değişikliklerini kaydedin.'); return; }
+    this.write(this.http.put(`${this.outcomeBase}/mappings/${m.topicId}/${n.id}`,{approved:!m.isApproved,evidence:this.form.reason.trim()}).pipe(switchMap(() => this.http.get<{data:Node}>(`${this.base}/outcomes/${n.id}`))),'Konu kapsamı onayı güncellendi.',true);
   }
   saveDuration() {
     const n = this.selected(); const parts = [this.learningMinutes,this.practiceMinutes,this.checkMinutes]; const total = parts.reduce((s,x) => s+x,0);
     if (!n || this.busy() || this.form.reason.trim().length < 5 || this.durationEvidence.trim().length < 5) return;
+    if (this.dirtyFields()) { this.error.set('Önce kazanım metni ve alan değişikliklerini kaydedin. Süre girişleriniz korunacak.'); return; }
     if (parts.some(x => !Number.isInteger(x) || x < 0) || total < 1 || total > 1440) { this.error.set('Toplam süre 1–1440 dakika olmalıdır.'); return; }
     if (this.publishDuration && !n.mappings.some(x => x.isApproved)) { this.error.set('Önce en az bir konu eşleştirmesini onaylayın.'); return; }
     let created = false;
@@ -151,20 +157,23 @@ export class CoachingCurriculumManagerComponent implements OnInit {
   }
   publish(estimate: Estimate) {
     const n = this.selected(); if (!n || this.busy() || this.form.reason.trim().length < 5) return;
-    this.write(this.http.put(`${this.outcomeBase}/estimates/${estimate.id}/publication`,{reason:this.form.reason.trim()}).pipe(switchMap(() => this.http.get<{data:Node}>(`${this.base}/outcomes/${n.id}`))),'Süre sürümü yayınlandı.');
+    if (this.dirtyFields()) { this.error.set('Önce kazanım metni ve alan değişikliklerini kaydedin.'); return; }
+    this.write(this.http.put(`${this.outcomeBase}/estimates/${estimate.id}/publication`,{reason:this.form.reason.trim()}).pipe(switchMap(() => this.http.get<{data:Node}>(`${this.base}/outcomes/${n.id}`))),'Süre sürümü yayınlandı.',true);
   }
   withdrawEstimate(e: Estimate) {
     const n = this.selected(); if (!n || this.busy() || this.estimateConfirmation !== e.id || this.form.reason.trim().length < 5) return;
-    this.write(this.http.put<{data:Node}>(`${this.base}/outcomes/${n.id}/estimates/${e.id}/publication`,{fingerprint:n.fingerprint,reason:this.form.reason.trim(),isActive:false}),'Süre sürümü yayından kaldırıldı. Eski planların süreleri korundu.');
+    if (this.dirtyFields()) { this.error.set('Önce kazanım metni ve alan değişikliklerini kaydedin.'); return; }
+    this.write(this.http.put<{data:Node}>(`${this.base}/outcomes/${n.id}/estimates/${e.id}/publication`,{fingerprint:n.fingerprint,reason:this.form.reason.trim(),isActive:false}),'Süre sürümü yayından kaldırıldı. Eski planların süreleri korundu.',true);
   }
   deleteEstimate(e: Estimate) {
     const n = this.selected(); if (!n || this.busy() || n.usedEstimateIds?.includes(e.id) || this.estimateConfirmation !== e.id || this.deleteConfirmation !== 'SİL' || this.form.reason.trim().length < 5) return;
-    this.write(this.http.delete<{data:Node}>(`${this.base}/outcomes/${n.id}/estimates/${e.id}`,{body:{fingerprint:n.fingerprint,reason:this.form.reason.trim(),confirmId:e.id}}),'Kullanılmamış süre sürümü silindi.');
+    if (this.dirtyFields()) { this.error.set('Önce kazanım metni ve alan değişikliklerini kaydedin.'); return; }
+    this.write(this.http.delete<{data:Node}>(`${this.base}/outcomes/${n.id}/estimates/${e.id}`,{body:{fingerprint:n.fingerprint,reason:this.form.reason.trim(),confirmId:e.id}}),'Kullanılmamış süre sürümü silindi.',true);
   }
   total(estimate: Estimate) { return estimate.learningMinutes + estimate.practiceMinutes + estimate.checkMinutes; }
-  private write(request: Observable<{data:Node}>,message: string) {
+  private write(request: Observable<{data:Node}>,message: string,preserveDuration = false) {
     this.busy.set(true); this.error.set(''); this.message.set('');
-    request.pipe(takeUntilDestroyed(this.destroy),finalize(() => this.busy.set(false))).subscribe({next:r => { this.apply(r.data); this.message.set(message); this.refreshTree(); },error:e => this.fail(e)});
+    request.pipe(takeUntilDestroyed(this.destroy),finalize(() => this.busy.set(false))).subscribe({next:r => { this.apply(r.data,preserveDuration); this.message.set(message); this.refreshTree(); },error:e => this.fail(e)});
   }
   private refreshTree() {
     const previous = this.branches(); const opened = Object.values(previous).flatMap(x => x.rows).filter(n => previous[this.key(n)]?.open);
