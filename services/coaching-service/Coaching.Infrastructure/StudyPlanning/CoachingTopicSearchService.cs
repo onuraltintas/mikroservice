@@ -1,5 +1,6 @@
 using Coaching.Application.StudyPlanning;
 using Coaching.Infrastructure.Data;
+using Coaching.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace Coaching.Infrastructure.StudyPlanning;
@@ -12,12 +13,13 @@ public sealed class CoachingTopicSearchService(CoachingDbContext db) : IStudyTop
         search = search?.Trim();
         examCode = string.IsNullOrWhiteSpace(examCode) ? null : examCode.Trim().ToUpperInvariant();
         if (pageNumber is < 1 or > 10000 || pageSize is < 1 or > 50 || search?.Length > 200
-            || gradeNumber is < 1 or > 12 || examCode is not (null or "LGS" or "TYT" or "AYT" or "YDT" or "TDP"))
+            || gradeNumber is < 1 or > 12 || (examCode != null && !await db.Set<StudyCatalogExam>().AnyAsync(x => x.Code == examCode, cancellationToken)))
             throw new ArgumentException("Arama filtrelerini kontrol edin.");
         var query = from topic in db.StudyCatalogTopics.AsNoTracking()
                     join unit in db.StudyCatalogUnits on topic.UnitId equals unit.Id
                     join lesson in db.StudyCatalogLessons on topic.LessonId equals lesson.Id
                     where topic.IsActive && unit.IsActive && lesson.IsActive && unit.LessonId == lesson.Id
+                        && (lesson.ExamCode == null || db.Set<StudyCatalogExam>().Any(x => x.Code == lesson.ExamCode && x.IsActive))
                         && !db.StudyCatalogTopics.Any(child => child.ParentId == topic.Id)
                         && (topic.ParentId == null || db.StudyCatalogTopics.Any(parent => parent.Id == topic.ParentId
                             && parent.IsActive && parent.UnitId == topic.UnitId && parent.LessonId == topic.LessonId))

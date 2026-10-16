@@ -17,8 +17,9 @@ public sealed class OfficialCurriculumEdition
     public static OfficialCurriculumEdition Create(string code, string exam, int grade, string subject, int from, int to,
         string url, string hash, string scopeUrl, string? packageHash = null)
     {
-        if (exam != "LGS" || grade != 8 || from is < 2000 or > 2200 || to < from || to > 2200)
-            throw new ArgumentException("Pilot yalnız 8. sınıf LGS içindir; geçerlilik yıllarını kontrol edin.");
+        exam = StudyCatalogExam.NormalizeCode(exam);
+        if (grade is < 1 or > 12 || from is < 2000 or > 2200 || to < from || to > 2200)
+            throw new ArgumentException("Programın sınıfını ve geçerlilik yıllarını kontrol edin.");
         foreach (var link in new[] { url, scopeUrl })
             if (!Uri.TryCreate(link, UriKind.Absolute, out var uri) || uri.Scheme != "https" || link.Length > 1000)
                 throw new ArgumentException("Resmi kaynak ve kapsam adresleri HTTPS olmalıdır.");
@@ -26,6 +27,12 @@ public sealed class OfficialCurriculumEdition
         return new() { Code = StudyCatalogText.Require(code, 100), ExamCode = exam, GradeNumber = grade,
             SubjectName = StudyCatalogText.Require(subject, 300), AcademicYearStart = from, AcademicYearEnd = to,
             SourceUrl = url, DocumentSha256 = hash.ToLowerInvariant(), ScopeEvidenceUrl = scopeUrl, PackageSha256 = packageHash ?? hash.ToLowerInvariant() };
+    }
+    public void Edit(string code, string exam, int grade, string subject, int from, int to, string url, string hash, string scopeUrl)
+    {
+        var valid = Create(code, exam, grade, subject, from, to, url, hash, scopeUrl);
+        Code=valid.Code; ExamCode=valid.ExamCode; GradeNumber=valid.GradeNumber; SubjectName=valid.SubjectName;
+        AcademicYearStart=from; AcademicYearEnd=to; SourceUrl=valid.SourceUrl; DocumentSha256=valid.DocumentSha256; ScopeEvidenceUrl=valid.ScopeEvidenceUrl;
     }
 }
 
@@ -38,6 +45,11 @@ public sealed class OfficialCurriculumTopic
     public int OutcomeCount { get; private set; }
     public int LessonPeriods { get; private set; }
     private OfficialCurriculumTopic() { }
+    public void Edit(string code, string name, int count, int periods)
+    {
+        var valid = Create(EditionId, code, name, count, periods);
+        Code=valid.Code; Name=valid.Name; OutcomeCount=count; LessonPeriods=periods;
+    }
     public static OfficialCurriculumTopic Create(Guid edition, string code, string name, int count, int periods)
     {
         if (edition == Guid.Empty || count is < 1 or > 500 || periods is < 1 or > 500) throw new ArgumentException("Resmi konu bütçesi geçersiz.");

@@ -55,7 +55,7 @@ describe('CoachingCatalogComponent', () => {
     expect(component.editorOpen()).toBe(false);
   });
   function create(roles = ['SystemAdmin']) {
-    const service = {
+    const service = { exams: vi.fn(() => of([{code: "KPSS", name: "KPSS Genel Yetenek", isActive: true}])),
       list: vi.fn(() => of<CoachingCatalogPage>({ items: [], totalCount: 0, pageNumber: 1, pageSize: 25 })),
       usage: vi.fn(() => of({ id: 'record', name: 'Math', fingerprint: 'fingerprint', canDelete: true, catalogReferences: 0, planReferences: 0, goalReferences: 0, examReferences: 0 })),
       delete: vi.fn(() => of({ success: true }))

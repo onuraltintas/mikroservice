@@ -231,7 +231,15 @@ public sealed class CurriculumManagementTests
     internal sealed class Fixture : IAsyncDisposable
     {
         public CoachingDbContext Db { get; }
-        public Fixture(CoachingDbContext? database = null) => Db = database ?? new(new DbContextOptionsBuilder<CoachingDbContext>().UseInMemoryDatabase(Guid.NewGuid().ToString()).ConfigureWarnings(x => x.Ignore(InMemoryEventId.TransactionIgnoredWarning)).Options);
+        public Fixture(CoachingDbContext? database = null)
+        {
+            Db = database ?? new(new DbContextOptionsBuilder<CoachingDbContext>().UseInMemoryDatabase(Guid.NewGuid().ToString()).ConfigureWarnings(x => x.Ignore(InMemoryEventId.TransactionIgnoredWarning)).Options);
+            if (database == null)
+            {
+                foreach (var code in new[] { "LGS", "TYT", "AYT", "YDT", "TDP" }) Db.Add(StudyCatalogExam.Create(code,code));
+                Db.SaveChanges();
+            }
+        }
         public Scope Scope { get; } = new(); public Actor User { get; } = new();
         public CoachingCurriculumManagementService Service => new(Db, Scope, User);
         public async Task<StudyCatalogTopic> Seed()

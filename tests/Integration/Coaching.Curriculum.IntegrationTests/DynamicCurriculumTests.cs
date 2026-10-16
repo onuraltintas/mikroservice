@@ -1,12 +1,60 @@
 using System.Text.Json;
 using Coaching.Infrastructure.Catalogs;
+using Coaching.Domain.Entities;
+using Coaching.Infrastructure.StudyPlanning;
 using EduPlatform.Shared.Kernel.Exceptions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace Coaching.Curriculum.IntegrationTests;
 
 public sealed class DynamicCurriculumTests
 {
+    [CurriculumPostgresTests.LocalPostgresFact]
+    public async Task MigrationBackfillsEveryLegacyExamCode_AndPreservesPlansOnRepeatedUpgrade()
+    {
+        await using var f=await CurriculumPostgresTests.Pg.Create(); await f.Data.Seed();
+        var before=JsonSerializer.Serialize(await f.Db.StudyPlanTasks.AsNoTracking().ToArrayAsync());
+        await f.Db.GetService<IMigrator>().MigrateAsync("20261016185534_CurriculumManagementHierarchy");
+        var legacy=StudyCatalogLesson.Create("test","legacy-ales","Matematik",12,"ALES");f.Db.Add(legacy);await f.Db.SaveChangesAsync();
+        await f.Db.Database.MigrateAsync(); await f.Db.Database.MigrateAsync(); f.Db.ChangeTracker.Clear();
+        Assert.True(await f.Db.Set<StudyCatalogExam>().AnyAsync(x=>x.Code=="ALES"));
+        Assert.Equal(before,JsonSerializer.Serialize(await f.Db.StudyPlanTasks.AsNoTracking().ToArrayAsync()));
+        var exam=await f.Db.Set<StudyCatalogExam>().SingleAsync(x=>x.Code=="ALES");
+        Assert.Equal(legacy.Id,Assert.Single((await f.Service.ChildrenAsync("lessons",exam.Id,null,1,default)).Items).Id);
+    }
+
+    [CurriculumPostgresTests.LocalPostgresFact]
+    public async Task DynamicExamTopicSearchAndNonLgsProgramWorkWithRealForeignKeys()
+    {
+        await using var f=await CurriculumPostgresTests.Pg.Create();
+        var exam=await f.Service.SaveAsync("exams",null,new("ALES","Yeni sınav ekle",Code:"ALES"),default);
+        var lesson=await f.Service.SaveAsync("lessons",null,new("Matematik","Ders ekle",ParentId:exam.Id,ExamCode:"ALES",GradeNumber:12),default);
+        lesson=await f.Service.SetActiveAsync("lessons",lesson.Id,new(lesson.Fingerprint,"Dersi etkinleştir",true),default);
+        var unit=await f.Service.SaveAsync("units",null,new("Sayılar","Ünite ekle",ParentId:lesson.Id),default);
+        unit=await f.Service.SetActiveAsync("units",unit.Id,new(unit.Fingerprint,"Üniteyi etkinleştir",true),default);
+        var topic=await f.Service.SaveAsync("topics",null,new("Sayı problemleri","Konu ekle",ParentId:unit.Id,EstimatedMinutes:45),default);
+        await f.Service.SetActiveAsync("topics",topic.Id,new(topic.Fingerprint,"Konuyu etkinleştir",true),default);
+        Assert.Equal(topic.Id,Assert.Single((await new CoachingTopicSearchService(f.Db).SearchAsync("problemleri",12,"ALES",1,20)).Items).Id);
+        var program=await f.Service.SaveAsync("programs",null,Request(new {Name="Matematik",Reason="Kaynak program ekle",Code="ales-mat",ExamCode="ALES",GradeNumber=12,AcademicYearStart=2026,AcademicYearEnd=2026,SourceUrl="https://meb.gov.tr/program",DocumentSha256=new string('a',64),ScopeEvidenceUrl="https://meb.gov.tr/kapsam"}),default);
+        Assert.Equal("ALES",program.ExamCode);
+        await Assert.ThrowsAsync<ArgumentException>(()=>new CoachingTopicSearchService(f.Db).SearchAsync(null,null,"UNKNOWN",1,20));
+        var invalid=StudyCatalogLesson.Create("test","bad-exam","Bilinmeyen",null,"BAD");f.Db.Add(invalid);
+        await Assert.ThrowsAsync<DbUpdateException>(()=>f.Db.SaveChangesAsync());
+    }
+
+    [Fact]
+    public async Task TopicTabsFilterRootSubtopicsAndLeavesIndependently()
+    {
+        await using var f=new CurriculumManagementTests.Fixture();var root=await f.Seed();
+        var child=await f.Service.SaveAsync("topics",null,new("Alt konu","Kazanımı alt konuya aktar",ParentId:root.Id,MoveParentOutcomes:true),default);
+        Assert.Equal(root.Id,Assert.Single((await f.Service.ChildrenAsync("topics",null,null,1,default,true,"root")).Items).Id);
+        Assert.Equal(child.Id,Assert.Single((await f.Service.ChildrenAsync("topics",null,null,1,default,true,"sub")).Items).Id);
+        Assert.Equal(child.Id,Assert.Single((await f.Service.ChildrenAsync("topics",null,null,1,default,true,"leaf")).Items).Id);
+        Assert.Single((await f.Service.ChildrenAsync("outcomes",null,null,1,default,true)).Items);
+    }
+
     [Fact]
     public async Task NewExamCanOwnLesson_UnknownExamRejected_ReferencedExamCannotBeDeleted()
     {
@@ -33,7 +81,7 @@ public sealed class DynamicCurriculumTests
         await Assert.ThrowsAsync<ArgumentException>(() => f.Service.SaveAsync("exams", null, new("Mükerrer", "Aynı kodu dene", Code: "ALES"), default));
         await Assert.ThrowsAsync<BusinessRuleException>(() => f.Service.SaveAsync("exams", exam.Id, new("Yeni ad", "Adını değiştir", Fingerprint: "stale", Code: "ALES"), default));
         await f.Service.DeleteAsync("exams", exam.Id, new(exam.Fingerprint, "Kullanılmayan sınavı sil", exam.Id), default);
-        Assert.Empty((await f.Service.ChildrenAsync("exams", null, null, 1, default)).Items);
+        Assert.DoesNotContain((await f.Service.ChildrenAsync("exams", null, null, 1, default)).Items, x => x.Code == "ALES");
     }
 
     [Fact]

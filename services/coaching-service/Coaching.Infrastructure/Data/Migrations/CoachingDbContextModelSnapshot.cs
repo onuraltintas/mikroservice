@@ -2153,9 +2153,11 @@ namespace Coaching.Infrastructure.Data.Migrations
                     b.HasIndex("Code")
                         .IsUnique();
 
+                    b.HasIndex("ExamCode");
+
                     b.ToTable("official_curriculum_editions", "coaching", t =>
                         {
-                            t.HasCheckConstraint("ck_outcome_edition_scope", "\"ExamCode\" = 'LGS' AND \"GradeNumber\" = 8 AND \"AcademicYearStart\" BETWEEN 2000 AND 2200 AND \"AcademicYearEnd\" BETWEEN \"AcademicYearStart\" AND 2200");
+                            t.HasCheckConstraint("ck_outcome_edition_scope", "\"GradeNumber\" BETWEEN 1 AND 12 AND \"AcademicYearStart\" BETWEEN 2000 AND 2200 AND \"AcademicYearEnd\" BETWEEN \"AcademicYearStart\" AND 2200");
                         });
                 });
 
@@ -2493,6 +2495,78 @@ namespace Coaching.Infrastructure.Data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Coaching.Domain.Entities.StudyCatalogExam", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("study_catalog_exams", "coaching", t =>
+                        {
+                            t.HasCheckConstraint("ck_catalog_exam_order", "\"DisplayOrder\" >= 0");
+                        });
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("f0ca1000-0000-4000-8000-000000000001"),
+                            Code = "LGS",
+                            DisplayOrder = 0,
+                            IsActive = true,
+                            Name = "Liselere Geçiş Sistemi"
+                        },
+                        new
+                        {
+                            Id = new Guid("f0ca1000-0000-4000-8000-000000000002"),
+                            Code = "TYT",
+                            DisplayOrder = 1,
+                            IsActive = true,
+                            Name = "Temel Yeterlilik Testi"
+                        },
+                        new
+                        {
+                            Id = new Guid("f0ca1000-0000-4000-8000-000000000003"),
+                            Code = "AYT",
+                            DisplayOrder = 2,
+                            IsActive = true,
+                            Name = "Alan Yeterlilik Testleri"
+                        },
+                        new
+                        {
+                            Id = new Guid("f0ca1000-0000-4000-8000-000000000004"),
+                            Code = "YDT",
+                            DisplayOrder = 3,
+                            IsActive = true,
+                            Name = "Yabancı Dil Testi"
+                        },
+                        new
+                        {
+                            Id = new Guid("f0ca1000-0000-4000-8000-000000000005"),
+                            Code = "TDP",
+                            DisplayOrder = 4,
+                            IsActive = true,
+                            Name = "Temel Destek Paketleri"
+                        });
+                });
+
             modelBuilder.Entity("Coaching.Domain.Entities.StudyCatalogLesson", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2534,6 +2608,8 @@ namespace Coaching.Infrastructure.Data.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CurriculumVersionId");
+
+                    b.HasIndex("ExamCode");
 
                     b.HasIndex("GroupId");
 
@@ -3757,6 +3833,16 @@ namespace Coaching.Infrastructure.Data.Migrations
                     b.Navigation("Exam");
                 });
 
+            modelBuilder.Entity("Coaching.Domain.Entities.OfficialCurriculumEdition", b =>
+                {
+                    b.HasOne("Coaching.Domain.Entities.StudyCatalogExam", null)
+                        .WithMany()
+                        .HasForeignKey("ExamCode")
+                        .HasPrincipalKey("Code")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Coaching.Domain.Entities.OfficialCurriculumTopic", b =>
                 {
                     b.HasOne("Coaching.Domain.Entities.OfficialCurriculumEdition", null)
@@ -3836,6 +3922,12 @@ namespace Coaching.Infrastructure.Data.Migrations
                     b.HasOne("Coaching.Domain.Entities.CurriculumVersion", null)
                         .WithMany()
                         .HasForeignKey("CurriculumVersionId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Coaching.Domain.Entities.StudyCatalogExam", null)
+                        .WithMany()
+                        .HasForeignKey("ExamCode")
+                        .HasPrincipalKey("Code")
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("Coaching.Domain.Entities.StudyCatalogLessonGroup", null)

@@ -29,7 +29,7 @@ type RelationKind = 'lessons' | 'units' | 'topics';
               <input id="catalog-edit-name" name="name" [(ngModel)]="form.name" required maxlength="300" class="mt-1 w-full rounded-lg border p-2 dark:bg-gray-800" /></div>
             @if (kind === 'lessons') {
               <div><label for="catalog-edit-grade" class="block text-sm font-medium">Sınıf (isteğe bağlı)</label><input id="catalog-edit-grade" name="grade" type="number" min="1" max="12" step="1" [(ngModel)]="form.gradeNumber" class="mt-1 w-full rounded-lg border p-2 dark:bg-gray-800" /></div>
-              <div><label for="catalog-edit-exam" class="block text-sm font-medium">Sınav (isteğe bağlı)</label><select id="catalog-edit-exam" name="exam" [(ngModel)]="form.examCode" class="mt-1 w-full rounded-lg border p-2 dark:bg-gray-800"><option [ngValue]="null">Seçilmedi</option>@for (exam of exams; track exam) { <option [value]="exam">{{ exam }}</option> }</select></div>
+              <div><label for="catalog-edit-exam" class="block text-sm font-medium">Sınav (isteğe bağlı)</label><select id="catalog-edit-exam" name="exam" [(ngModel)]="form.examCode" class="mt-1 w-full rounded-lg border p-2 dark:bg-gray-800"><option [ngValue]="null">Seçilmedi</option>@for (exam of exams(); track exam.code) { <option [value]="exam.code">{{ exam.name }} ({{ exam.code }})</option> }</select></div>
             }
             @if (kind === 'units' || kind === 'topics') {
               @if (recordId) {
@@ -99,7 +99,7 @@ export class CoachingCatalogEditorComponent implements OnInit {
   readonly provinces = signal<ProvinceOption[]>([]);
   readonly districts = signal<DistrictOption[]>([]);
   readonly options = signal<Record<RelationKind, CoachingCatalogRow[]>>({ lessons: [], units: [], topics: [] });
-  readonly exams = ['LGS', 'TYT', 'AYT', 'YDT', 'TDP'];
+  readonly exams = signal<{code:string;name:string;isActive:boolean}[]>([]);
   readonly relationLabels = { lessons: 'Ders', units: 'Ünite', topics: 'Üst konu (isteğe bağlı)' };
   readonly linkFields: Record<RelationKind, 'lessonId' | 'unitId' | 'parentId'> = { lessons: 'lessonId', units: 'unitId', topics: 'parentId' };
   readonly lookupSearch = { lessons: '', units: '', topics: '' };
@@ -111,6 +111,7 @@ export class CoachingCatalogEditorComponent implements OnInit {
   permitted() { return this.auth.userProfile()?.roles?.includes('SystemAdmin') && this.auth.hasPermission(ADMIN_PERMISSIONS.coachingContentManage); }
   ngOnInit() {
     if (!this.permitted()) { this.error.set('Katalog düzenleme yetkiniz bulunmuyor.'); return; }
+    if (this.kind === 'lessons') this.service.exams().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({next:rows => this.exams.set(rows),error:() => this.error.set('Sınav türleri alınamadı. Formu yeniden açın.')});
     if (this.kind === 'schools') this.locations.getProvinces().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({ next: rows => this.provinces.set(rows), error: () => this.error.set('Şehir listesi alınamadı. Formu yeniden açın.') });
     if (this.recordId) {
       this.loading.set(true);

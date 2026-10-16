@@ -48,7 +48,7 @@ public sealed class CurriculumPostgresTests
         var target = await f.Service.SaveAsync("units",null,new("Yeni ünite","Ünite ekle",ParentId:lesson.Id),default);
         target = await f.Service.SetActiveAsync("units",target.Id,new(target.Fingerprint,"Hedef üniteyi etkinleştir",true),default);
         var doc = await f.Service.GetAsync("topics",topic.Id,default);
-        Assert.Contains("Sayısal / Matematik",doc.Path); Assert.False(doc.CanDelete);
+        Assert.Contains("Matematik",doc.Path); Assert.Contains("LGS",doc.Path); Assert.False(doc.CanDelete);
         var taskBefore = JsonSerializer.Serialize(await f.Db.StudyPlanTasks.AsNoTracking().SingleAsync());
         var moved = await f.Service.MoveAsync("topics",topic.Id,new(target.Id,doc.Fingerprint,"Konuyu yeni üniteye taşı"),default);
         Assert.NotEqual(topic.Id,moved.Id); Assert.Single((await f.Service.ChildrenAsync("topics",target.Id,null,1,default)).Items);
@@ -114,7 +114,7 @@ public sealed class CurriculumPostgresTests
 
     internal sealed class LocalPostgresFactAttribute : FactAttribute
     { public LocalPostgresFactAttribute() { if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("COACHING_CURRICULUM_TEST_POSTGRES"))) Skip = "Set localhost-only COACHING_CURRICULUM_TEST_POSTGRES to run migration tests."; } }
-    private sealed class Pg : IAsyncDisposable
+    internal sealed class Pg : IAsyncDisposable
     {
         private readonly NpgsqlConnection admin; private readonly string database;
         public DbContextOptions<CoachingDbContext> Options { get; }

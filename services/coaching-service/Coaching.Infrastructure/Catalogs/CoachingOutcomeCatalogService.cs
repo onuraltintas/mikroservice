@@ -34,6 +34,7 @@ public sealed class CoachingOutcomeCatalogService(CoachingDbContext db, ICoachin
     public async Task<OutcomeImportReview> PreviewAsync(OutcomeImportPackage package, CancellationToken ct)
     {
         await RequireGlobal(ct); Validate(package);
+        if (!await db.Set<StudyCatalogExam>().AnyAsync(x => x.Code == package.ExamCode,ct)) throw new ArgumentException("Önce kaynak programın sınav türünü kaydedin.");
         var topics = await MatchTopics(package, ct);
         var existing = await db.Set<OfficialCurriculumEdition>().AsNoTracking().SingleOrDefaultAsync(x => x.Code == package.Code, ct);
         if (existing is not null && existing.PackageSha256 != Hash(package))

@@ -66,4 +66,40 @@ describe('Coaching curriculum manager', () => {
     http.expectOne(r=>r.url.endsWith('/curriculum-management/children')).flush({data:{items:[],totalCount:0,pageNumber:1,pageSize:25}});
     expect(c.learningMinutes).toBe(15);expect(c.dirty()).toBe(true);http.verify();
   });
+  it('filters the subtopic tab separately and requests a root topic as its parent', () => {
+    const {http,c}=setup();c.chooseTab('subtopics');
+    http.expectOne(r=>r.url.endsWith('/children')&&r.params.get('level')==='sub').flush({data:{items:[],totalCount:0}});
+    const parents=http.expectOne(r=>r.url.endsWith('/children')&&r.params.get('level')==='root');
+    parents.flush({data:{items:[topic],totalCount:1}});
+    expect(c.parentOptions()[0].id).toBe('topic');expect(c.createLabel()).toBe('Alt konu');http.verify();
+  });
+  it('keeps unsaved fields when changing tabs until the user explicitly discards them', () => {
+    const {http,c}=setup();c.select(topic as never);http.expectOne(r=>r.url.endsWith('/topics/topic')).flush({data:topic});
+    c.form.name='Henüz kaydedilmedi';c.chooseTab('units');expect(c.pendingTab).toBe('units');expect(c.tab).toBe('exams');
+    expect(c.form.name).toBe('Henüz kaydedilmedi');c.discardTab();
+    http.match(r=>r.url.endsWith('/children')).forEach(r=>r.flush({data:{items:[],totalCount:0}}));
+    expect(c.tab).toBe('units');expect(c.editing()).toBe(false);http.verify();
+  });
+  it('creates a lesson under a database exam and makes creation plus activation a single busy operation', () => {
+    const {http,c}=setup();const exam={...topic,kind:'exams',id:'exam',code:'KPSS',name:'KPSS'};
+    c.create('lessons',exam as never);
+    http.expectOne(r=>r.url.endsWith('/coaching/catalog/exams')).flush({data:[exam]});http.expectOne(r=>r.url.endsWith('/coaching-admin/curricula')).flush({data:[]});
+    c.form.name='Türkçe';c.form.reason='KPSS için ders ekle';c.save();
+    const request=http.expectOne(r=>r.method==='POST');expect(request.request.body.examCode).toBe('KPSS');expect(request.request.body.parentId).toBe('exam');
+    const lesson={...topic,kind:'lessons',id:'new',name:'Türkçe',examCode:'KPSS',parentId:'exam',parentKind:'exams',isActive:false};request.flush({data:lesson});
+    expect(c.busy()).toBe(true);const activation=http.expectOne(r=>r.url.endsWith('/lessons/new/status'));expect(activation.request.body.isActive).toBe(true);
+    activation.flush({data:{...lesson,isActive:true}});
+    http.expectOne(r=>r.url.endsWith('/coaching/catalog/exams')).flush({data:[exam]});http.expectOne(r=>r.url.endsWith('/coaching-admin/curricula')).flush({data:[]});
+    http.expectOne(r=>r.url.endsWith('/children')).flush({data:{items:[],totalCount:0}});
+    expect(c.busy()).toBe(false);expect(c.selected()?.isActive).toBe(true);http.verify();
+  });
+  it('opens a created passive lesson after activation fails so retry cannot create a duplicate', () => {
+    const {http,c}=setup();c.create('lessons');
+    http.expectOne(r=>r.url.endsWith('/coaching/catalog/exams')).flush({data:[]});http.expectOne(r=>r.url.endsWith('/coaching-admin/curricula')).flush({data:[]});
+    c.form.name='Türkçe';c.form.reason='Ders ekle';c.save();
+    http.expectOne(r=>r.method==='POST').flush({data:{...topic,kind:'lessons',id:'new',name:'Türkçe',isActive:false}});
+    http.expectOne(r=>r.url.endsWith('/lessons/new/status')).flush({message:'Üst kayıt pasif'},{status:400,statusText:'Bad Request'});
+    http.expectOne(r=>r.url.endsWith('/coaching/catalog/exams')).flush({data:[]});http.expectOne(r=>r.url.endsWith('/coaching-admin/curricula')).flush({data:[]});
+    expect(c.creating()).toBe(false);expect(c.selected()?.id).toBe('new');expect(c.error()).toContain('Kayıt oluşturuldu');http.verify();
+  });
 });

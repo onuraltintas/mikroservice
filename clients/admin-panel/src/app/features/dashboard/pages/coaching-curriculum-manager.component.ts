@@ -7,14 +7,16 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Observable, Subscription, catchError, finalize, forkJoin, switchMap, throwError } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
-type Kind = 'groups' | 'lessons' | 'units' | 'topics' | 'outcomes';
+type Kind = 'exams' | 'programs' | 'programTopics' | 'groups' | 'lessons' | 'units' | 'topics' | 'outcomes';
 interface Estimate { id: string; number: number; learningMinutes: number; practiceMinutes: number; checkMinutes: number; confidence: string; evidence: string; isPublished: boolean; method?: string }
 interface Mapping { topicId: string; path: string; isApproved: boolean; evidence: string }
 interface Node { kind: Kind; id: string; name: string; parentId: string | null; parentKind: Kind | null; isActive: boolean; path: string; fingerprint: string; canDelete: boolean; blockers: string[];
-  code?: string; gradeNumber?: number | null; examCode?: string | null; displayOrder?: number | null; estimatedMinutes?: number | null; officialTopicId?: string; sourcePage?: number; notes?: string; estimates: Estimate[]; mappings: Mapping[]; usedEstimateIds?: string[]; topicOutcomeCount?: number }
+  code?: string; gradeNumber?: number | null; examCode?: string | null; displayOrder?: number | null; estimatedMinutes?: number | null; officialTopicId?: string; sourcePage?: number; notes?: string; estimates: Estimate[]; mappings: Mapping[]; usedEstimateIds?: string[]; topicOutcomeCount?: number;
+  academicYearStart?: number; academicYearEnd?: number; sourceUrl?: string; documentSha256?: string; scopeEvidenceUrl?: string; outcomeCount?: number; lessonPeriods?: number; curriculumVersionId?: string | null }
 interface Page { items: Node[]; totalCount: number; pageNumber: number; pageSize: number }
 interface Branch { rows: Node[]; page: number; total: number; loading: boolean; open: boolean; error?: string }
-interface Form { name: string; reason: string; parentId: string | null; gradeNumber: number | null; examCode: string | null; displayOrder: number | null; estimatedMinutes: number | null; code: string; officialTopicId: string | null; sourcePage: number; notes: string; moveParentOutcomes: boolean }
+interface Form { name: string; reason: string; parentId: string | null; gradeNumber: number | null; examCode: string | null; displayOrder: number | null; estimatedMinutes: number | null; code: string; officialTopicId: string | null; sourcePage: number; notes: string; moveParentOutcomes: boolean;
+  academicYearStart: number; academicYearEnd: number; sourceUrl: string; documentSha256: string; scopeEvidenceUrl: string; outcomeCount: number; lessonPeriods: number; curriculumVersionId: string | null }
 interface Edition { id: string; code: string; subjectName: string; academicYearStart: number; academicYearEnd: number }
 
 @Component({ selector: 'app-coaching-curriculum-manager', standalone: true, imports: [CommonModule, FormsModule, RouterLink],
@@ -30,26 +32,85 @@ export class CoachingCurriculumManagerComponent implements OnInit {
   readonly editing = signal(false); readonly creating = signal(false); readonly pending = signal<Node | null>(null);
   readonly destinations = signal<Node[]>([]); readonly destinationTotal = signal(0); readonly destinationLoading = signal(false);
   readonly editions = signal<Edition[]>([]); readonly officialTopics = signal<{ id: string; name: string; lessonPeriods: number }[]>([]);
-  readonly labels: Record<Kind,string> = { groups: 'Ders grubu', lessons: 'Ders', units: 'Ünite', topics: 'Konu', outcomes: 'Kazanım' };
-  readonly exams = ['LGS','TYT','AYT','YDT','TDP'];
-  form: Form = this.empty(); kind: Kind = 'groups'; rootSearch = ''; rootScope: 'groups' | 'lessons' | 'outcomes' = 'groups';
-  destinationKind: Kind = 'groups'; destinationSearch = ''; destinationPage = 1; destinationId = ''; sourceTopicId = '';
+  readonly labels: Record<Kind,string> = { exams:'Sınav türü',programs:'Kaynak program',programTopics:'Program konu grubu',groups: 'Ders grubu', lessons: 'Ders', units: 'Ünite', topics: 'Konu', outcomes: 'Kazanım' };
+  readonly tabs = [{id:'exams',label:'Sınav türleri'},{id:'lessons',label:'Dersler'},{id:'units',label:'Üniteler'},{id:'topics',label:'Konular'},{id:'subtopics',label:'Alt konular'},{id:'outcomes',label:'Kazanımlar'},{id:'programs',label:'Kaynak programlar'},{id:'programTopics',label:'Program konu grupları'}];
+  readonly exams = signal<{id:string;code:string;name:string;isActive:boolean}[]>([]);
+  readonly parentOptions = signal<Node[]>([]); readonly parentLoading = signal(false); readonly parentTotal = signal(0);
+  readonly curricula = signal<{id:string;name:string;versionLabel:string;isPublished:boolean}[]>([]);
+  tab = 'exams'; pendingTab = ''; filterId = ''; parentSearch = ''; parentPage = 1; activateAfterCreate = true;
+  private filterNode: Node | null = null;
+  private parentRequest?: Subscription;
+  form: Form = this.empty(); kind: Kind = 'exams'; rootSearch = ''; rootScope: Kind = 'exams';
+  destinationKind: Kind = 'exams'; destinationSearch = ''; destinationPage = 1; destinationId = ''; sourceTopicId = '';
   moveConfirmed = false; deleteConfirmation = ''; statusConfirmed = false;
   estimateConfirmation = '';
   editionId = ''; learningMinutes = 0; practiceMinutes = 0; checkMinutes = 0; confidence = 'Low'; durationEvidence = ''; publishDuration = false;
 
-  ngOnInit() { this.loadRoot(); this.destroy.onDestroy(() => { this.detailRequest?.unsubscribe(); this.destinationRequest?.unsubscribe(); this.editionRequest?.unsubscribe(); this.branchRequests.forEach(x => x.unsubscribe()); }); }
+  ngOnInit() { this.loadRoot(); this.destroy.onDestroy(() => { this.detailRequest?.unsubscribe(); this.destinationRequest?.unsubscribe(); this.editionRequest?.unsubscribe(); this.parentRequest?.unsubscribe(); this.branchRequests.forEach(x => x.unsubscribe()); }); }
   key(n: Node) { return `${n.kind}:${n.id}`; }
   nodeType(n: Node) {
     if (n.kind === 'lessons') return ['Ders',n.gradeNumber ? `${n.gradeNumber}. sınıf` : null,n.examCode].filter(Boolean).join(' · ');
     return n.parentKind === 'topics' && n.kind === 'topics' ? 'Alt konu' : this.labels[n.kind];
   }
   branch(n?: Node): Branch | undefined { return this.branches()[n ? this.key(n) : 'root']; }
-  empty(): Form { return { name:'',reason:'',parentId:null,gradeNumber:null,examCode:null,displayOrder:null,estimatedMinutes:null,code:'',officialTopicId:null,sourcePage:1,notes:'',moveParentOutcomes:false }; }
+  empty(): Form { return { name:'',reason:'',parentId:null,gradeNumber:null,examCode:null,displayOrder:null,estimatedMinutes:null,code:'',officialTopicId:null,sourcePage:1,notes:'',moveParentOutcomes:false,
+    academicYearStart:new Date().getFullYear(),academicYearEnd:new Date().getFullYear(),sourceUrl:'',documentSha256:'',scopeEvidenceUrl:'',outcomeCount:1,lessonPeriods:1,curriculumVersionId:null }; }
   dirty() { return this.editing() && (JSON.stringify(this.form) !== this.initial || this.durationDirty()); }
   private durationFields() { return {learningMinutes:this.learningMinutes,practiceMinutes:this.practiceMinutes,checkMinutes:this.checkMinutes,confidence:this.confidence,durationEvidence:this.durationEvidence,publishDuration:this.publishDuration}; }
   durationDirty() { return this.kind === 'outcomes' && !this.creating() && JSON.stringify(this.durationFields()) !== this.initialDuration; }
-  loadRoot(page = 1) { this.fetchBranch('root',this.rootScope,null,page); }
+  loadRoot(page = 1) { this.fetchBranch('root',this.rootScope,this.filterId || null,page); }
+  chooseTab(tab: string) {
+    if (this.busy() || !this.tabs.some(x => x.id === tab)) return;
+    if (this.dirty()) { this.pendingTab=tab; return; }
+    this.tab=tab; this.rootScope=tab === 'subtopics' ? 'topics' : tab as Kind;
+    this.filterId=''; this.filterNode=null; this.rootSearch=''; this.parentSearch=''; this.parentOptions.set([]); this.parentRequest?.unsubscribe(); this.parentLoading.set(false); this.cancel();
+    this.loadRoot(); if (this.parentKind()) this.loadParents();
+    if (tab === 'lessons' || tab === 'programs') this.loadExams();
+  }
+  discardTab() { const tab=this.pendingTab; this.pendingTab=''; this.cancel(); this.chooseTab(tab); }
+  navigateTab(event: KeyboardEvent,id: string) {
+    const index=this.tabs.findIndex(x => x.id === id);
+    const next=event.key === 'ArrowRight' ? (index+1)%this.tabs.length : event.key === 'ArrowLeft' ? (index+this.tabs.length-1)%this.tabs.length : event.key === 'Home' ? 0 : event.key === 'End' ? this.tabs.length-1 : -1;
+    if (next < 0) return;
+    event.preventDefault(); this.chooseTab(this.tabs[next].id);
+    (event.currentTarget as HTMLElement).parentElement?.querySelector<HTMLButtonElement>(`#tab-${this.tabs[next].id}`)?.focus();
+  }
+  parentKind(): Kind | null { return ({lessons:'exams',units:'lessons',topics:'units',subtopics:'topics',outcomes:'topics',programTopics:'programs'} as Record<string,Kind>)[this.tab] ?? null; }
+  tabLabel() { return this.tabs.find(x => x.id === this.tab)?.label ?? ''; }
+  createLabel() { return this.tab === 'subtopics' ? 'Alt konu' : this.labels[this.rootScope]; }
+  parentChoices() {
+    const rows=[...this.parentOptions()];
+    for (const n of [this.filterNode,this.creating() ? this.selected() : null]) if (n && !rows.some(x => x.id === n.id)) rows.unshift(n);
+    return rows;
+  }
+  loadParents(page = 1) {
+    const kind=this.parentKind(); if (!kind) return;
+    this.parentRequest?.unsubscribe(); this.parentPage=page; this.parentLoading.set(true);
+    let params=this.params(kind,null,page,this.parentSearch).set('all','true');
+    if (this.tab === 'subtopics') params=params.set('level','root');
+    if (this.tab === 'outcomes') params=params.set('level','leaf');
+    this.parentRequest=this.http.get<{data:Page}>(`${this.base}/children`,{params}).pipe(takeUntilDestroyed(this.destroy)).subscribe({next:r => {
+      this.parentOptions.set(r.data.items); this.parentTotal.set(r.data.totalCount); this.parentLoading.set(false);
+    },error:e => { this.parentLoading.set(false); this.fail(e); }});
+  }
+  changeFilter(id: string) {
+    if (this.busy()) return;
+    if (this.dirty()) { this.error.set('Önce açık formu kaydedin veya kapatın.'); return; }
+    this.filterId=id; this.filterNode=this.parentChoices().find(x => x.id === id) ?? null; this.cancel(); this.loadRoot();
+  }
+  createCurrent() { this.create(this.rootScope,this.parentChoices().find(x => x.id === this.filterId)); }
+  selectFormParent(id: string | null) {
+    this.form.parentId=id;
+    if (this.kind === 'lessons') this.form.examCode=this.exams().find(x => x.id === id)?.code ?? null;
+    const parent=this.parentChoices().find(x => x.id === id);
+    this.selected.set(parent ?? null); this.loadCreationParent(parent);
+  }
+  private loadExams() {
+    this.http.get<{data:{id:string;code:string;name:string;isActive:boolean}[]}>(`${environment.apiUrl}/coaching/catalog/exams`).pipe(takeUntilDestroyed(this.destroy)).subscribe({next:r => this.exams.set(r.data),error:e => this.fail(e)});
+  }
+  private loadCurricula() {
+    this.http.get<{data:{id:string;name:string;versionLabel:string;isPublished:boolean}[]}>(`${environment.apiUrl}/coaching-admin/curricula`).pipe(takeUntilDestroyed(this.destroy)).subscribe({next:r => this.curricula.set(r.data),error:e => this.fail(e)});
+  }
   changeRoot() { if (this.busy()) return; this.rootSearch = ''; this.loadRoot(); }
   expand(n: Node) {
     if (n.kind === 'outcomes') return;
@@ -64,7 +125,12 @@ export class CoachingCurriculumManagerComponent implements OnInit {
   private fetchBranch(key: string,kind: Kind,parent: string | null,page: number,withOutcomes = false) {
     this.branchRequests.get(key)?.unsubscribe();
     this.branches.update(b => ({...b,[key]:{rows:page > 1 ? b[key]?.rows ?? [] : [],page,total:0,loading:true,open:true}}));
-    const query = (k: Kind) => this.http.get<{data:Page}>(`${this.base}/children`,{params:this.params(k,parent,page,key === 'root' ? this.rootSearch : '')});
+    const query = (k: Kind) => {
+      let params=this.params(k,parent,page,key === 'root' ? this.rootSearch : '');
+      if (key === 'root' && !parent) params=params.set('all','true');
+      if (key === 'root' && (this.tab === 'topics' || this.tab === 'subtopics')) params=params.set('level',this.tab === 'topics' ? 'root' : 'sub');
+      return this.http.get<{data:Page}>(`${this.base}/children`,{params});
+    };
     const calls: Observable<{data:Page}>[] = withOutcomes ? [query(kind),query('outcomes')] : [query(kind)];
     const request = forkJoin(calls);
     this.branchRequests.set(key,request.pipe(takeUntilDestroyed(this.destroy)).subscribe({ next: results => {
@@ -83,25 +149,43 @@ export class CoachingCurriculumManagerComponent implements OnInit {
     const unsaved = preserveDuration && this.durationDirty() ? this.durationFields() : null;
     this.selected.set(n); this.kind = n.kind; this.creating.set(false); this.editing.set(true);
     this.form = { ...this.empty(),name:n.name,parentId:n.parentId,gradeNumber:n.gradeNumber ?? null,examCode:n.examCode ?? null,displayOrder:n.displayOrder ?? null,estimatedMinutes:n.estimatedMinutes ?? null,
-      code:n.code ?? '',officialTopicId:n.officialTopicId ?? null,sourcePage:n.sourcePage ?? 1,notes:n.notes ?? '' };
+      code:n.code ?? '',officialTopicId:n.officialTopicId ?? null,sourcePage:n.sourcePage ?? 1,notes:n.notes ?? '',
+      academicYearStart:n.academicYearStart ?? new Date().getFullYear(),academicYearEnd:n.academicYearEnd ?? new Date().getFullYear(),sourceUrl:n.sourceUrl ?? '',documentSha256:n.documentSha256 ?? '',scopeEvidenceUrl:n.scopeEvidenceUrl ?? '',outcomeCount:n.outcomeCount ?? 1,lessonPeriods:n.lessonPeriods ?? 1,curriculumVersionId:n.curriculumVersionId ?? null };
     this.initial = JSON.stringify(this.form); this.moveConfirmed = false; this.statusConfirmed = false; this.deleteConfirmation = ''; this.estimateConfirmation = ''; this.destinationId = ''; this.destinations.set([]);
-    this.sourceTopicId = n.mappings?.[0]?.topicId ?? ''; this.destinationKind = n.kind === 'lessons' ? 'groups' : n.kind === 'units' ? 'lessons' : n.kind === 'outcomes' ? 'topics' : 'units';
+    this.sourceTopicId = n.mappings?.[0]?.topicId ?? ''; this.destinationKind = n.kind === 'lessons' ? 'exams' : n.kind === 'units' ? 'lessons' : n.kind === 'outcomes' ? 'topics' : 'units';
     const estimate = n.estimates?.find(x => x.isPublished) ?? n.estimates?.[0];
     this.learningMinutes = estimate?.learningMinutes ?? 0; this.practiceMinutes = estimate?.practiceMinutes ?? 0; this.checkMinutes = estimate?.checkMinutes ?? 0;
     this.confidence = estimate?.confidence ?? 'Low'; this.durationEvidence = ''; this.publishDuration = false;
     this.initialDuration = JSON.stringify(this.durationFields()); if (unsaved) Object.assign(this,unsaved);
+    if (n.kind === 'lessons') { this.loadExams(); this.loadCurricula(); }
+    if (n.kind === 'programs') this.loadExams();
   }
   create(kind: Kind,parent?: Node) {
     if (this.busy() || this.dirty()) { this.error.set('Önce açık formdaki değişiklikleri kaydedin veya kaydı yeniden açın.'); return; }
     this.detailRequest?.unsubscribe(); this.detailLoading.set(false); this.kind = kind; this.selected.set(parent ?? null); this.creating.set(true); this.editing.set(true);
-    this.form = {...this.empty(),parentId:parent?.id ?? null}; this.initial = JSON.stringify(this.form); this.error.set(''); this.message.set('');
+    this.form = {...this.empty(),parentId:parent?.id ?? null,examCode:kind === 'lessons' && parent?.kind === 'exams' ? parent.code ?? null : null}; this.initial = JSON.stringify(this.form); this.error.set(''); this.message.set(''); this.activateAfterCreate=true;
+    if (kind === 'lessons') { this.loadExams(); this.loadCurricula(); }
+    if (kind === 'programs') this.loadExams();
+    this.loadCreationParent(parent);
     if (kind === 'outcomes') this.loadEditions();
   }
-  cancel() { this.editing.set(false); this.creating.set(false); this.error.set(''); this.pending.set(null); }
+  private loadCreationParent(parent?: Node) {
+    this.detailRequest?.unsubscribe(); this.detailLoading.set(false);
+    if (this.kind !== 'topics' || parent?.kind !== 'topics') return;
+    this.detailLoading.set(true);
+    this.detailRequest=this.http.get<{data:Node}>(`${this.base}/topics/${parent.id}`).pipe(takeUntilDestroyed(this.destroy)).subscribe({next:r => { this.selected.set(r.data); this.detailLoading.set(false); },error:e => { this.detailLoading.set(false); this.fail(e); }});
+  }
+  cancel() { this.detailRequest?.unsubscribe(); this.detailLoading.set(false); this.editing.set(false); this.creating.set(false); this.error.set(''); this.pending.set(null); }
   save() {
     if (this.busy() || !this.editing() || !this.form.name.trim() || this.form.reason.trim().length < 5) return;
     const n = this.selected(); const r = {...this.form,name:this.form.name.trim(),reason:this.form.reason.trim(),...(!this.creating() && n ? {fingerprint:n.fingerprint} : {})};
-    this.write(this.creating() ? this.http.post<{data:Node}>(`${this.base}/${this.kind}`,r) : this.http.put<{data:Node}>(`${this.base}/${this.kind}/${n!.id}`,r),'Kayıt kaydedildi.',true);
+    if (this.creating() && this.parentKind() && !r.parentId) { this.error.set('Önce üst kaydı seçin.'); return; }
+    let request=this.creating() ? this.http.post<{data:Node}>(`${this.base}/${this.kind}`,r) : this.http.put<{data:Node}>(`${this.base}/${this.kind}/${n!.id}`,r);
+    if (this.creating() && this.activateAfterCreate && ['lessons','units','topics'].includes(this.kind)) request=request.pipe(switchMap(created =>
+      this.http.put<{data:Node}>(`${this.base}/${created.data.kind}/${created.data.id}/status`,{fingerprint:created.data.fingerprint,reason:r.reason,isActive:true}).pipe(catchError(() => {
+        this.apply(created.data); return throwError(() => ({error:{message:'Kayıt oluşturuldu; etkinleştirilemedi. Üst kaydın aktifliğini kontrol edip bu kaydı etkinleştirin.'}}));
+      }))));
+    this.write(request,'Kayıt kaydedildi.',true);
   }
   searchDestinations(page = 1) {
     this.destinationRequest?.unsubscribe(); this.destinationPage = page; this.destinationId = ''; this.moveConfirmed = false; this.destinationLoading.set(true);
@@ -179,8 +263,8 @@ export class CoachingCurriculumManagerComponent implements OnInit {
     request.pipe(takeUntilDestroyed(this.destroy),finalize(() => this.busy.set(false))).subscribe({next:r => { this.apply(r.data,preserveDuration); this.message.set(message); this.refreshTree(); },error:e => this.fail(e)});
   }
   private refreshTree() {
-    const previous = this.branches(); const opened = Object.values(previous).flatMap(x => x.rows).filter(n => previous[this.key(n)]?.open);
-    this.loadRoot(); for (const node of opened) this.loadChildren(node);
+    this.loadRoot();
+    if (this.kind === 'exams') this.loadExams();
   }
   private params(kind: Kind,parent: string | null,page: number,search: string) { let p = new HttpParams().set('kind',kind).set('page',page); if (parent) p = p.set('parentId',parent); if (search.trim()) p = p.set('search',search.trim()); return p; }
   private fail(e: {error?:{message?:unknown}}) { this.error.set(typeof e?.error?.message === 'string' ? e.error.message : 'İşlem tamamlanamadı. Girdiğiniz bilgiler korundu. Yeniden deneyin.'); }

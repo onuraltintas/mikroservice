@@ -29,7 +29,7 @@ describe('CoachingCatalogEditorComponent', () => {
   });
   function create(kind = 'lessons', id: string | null = null, permitted = true) {
     const document = { fingerprint: 'hash', data: { id: 'record', name: 'Math', source: 'fixture', sourceId: '1', isActive: false, gradeNumber: 8, examCode: 'LGS' } };
-    const service = { get: vi.fn(() => of(document)), create: vi.fn((_kind: string, _request: unknown) => of(document)), update: vi.fn(() => of(document)), setActive: vi.fn(() => of(document)), list: vi.fn(() => of({ items: [], totalCount: 0, pageNumber: 1, pageSize: 25 })) };
+    const service = { exams: vi.fn(() => of([{code: "KPSS", name: "KPSS Genel Yetenek", isActive: true}])), get: vi.fn(() => of(document)), create: vi.fn((_kind: string, _request: unknown) => of(document)), update: vi.fn(() => of(document)), setActive: vi.fn(() => of(document)), list: vi.fn(() => of({ items: [], totalCount: 0, pageNumber: 1, pageSize: 25 })) };
     const locations = { getProvinces: vi.fn(() => of([{ id: '66', name: 'Yozgat' }])), getDistricts: vi.fn(() => of([{ id: '1', provinceId: '66', name: 'Merkez' }])) };
     const toaster = { success: vi.fn(), error: vi.fn(), confirm: vi.fn(async () => true) };
     TestBed.configureTestingModule({ imports: [CoachingCatalogEditorComponent], providers: [

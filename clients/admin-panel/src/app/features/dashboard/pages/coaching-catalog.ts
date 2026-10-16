@@ -45,7 +45,7 @@ import { RouterLink } from '@angular/router';
           <input id="catalog-source" name="source" [(ngModel)]="source" maxlength="100" class="mt-1 w-full rounded-lg border p-2 dark:bg-gray-800" /></div>
         @if (kind === 'lessons') {
           <div><label for="catalog-grade" class="block text-sm font-medium">Sınıf</label><input id="catalog-grade" type="number" min="1" max="12" name="grade" [(ngModel)]="gradeNumber" class="mt-1 w-full rounded-lg border p-2 dark:bg-gray-800" /></div>
-          <div><label for="catalog-exam" class="block text-sm font-medium">Sınav</label><select id="catalog-exam" name="exam" [(ngModel)]="examCode" class="mt-1 w-full rounded-lg border p-2 dark:bg-gray-800"><option value="">Tümü</option>@for (exam of exams; track exam) {<option [value]="exam">{{ exam }}</option>}</select></div>
+          <div><label for="catalog-exam" class="block text-sm font-medium">Sınav</label><select id="catalog-exam" name="exam" [(ngModel)]="examCode" class="mt-1 w-full rounded-lg border p-2 dark:bg-gray-800"><option value="">Tümü</option>@for (exam of exams(); track exam.code) {<option [value]="exam.code">{{ exam.name }} ({{ exam.code }})</option>}</select></div>
         }
         @if (kind === 'schools' || kind === 'universityPrograms') {
           <div><label for="catalog-year" class="block text-sm font-medium">Puan yılı</label><input id="catalog-year" type="number" min="1900" max="2200" name="year" [(ngModel)]="scoreYear" class="mt-1 w-full rounded-lg border p-2 dark:bg-gray-800" /></div>
@@ -144,7 +144,7 @@ export class CoachingCatalogComponent implements OnInit {
     { value: 'topics', label: 'Konular' }, { value: 'schools', label: 'Okullar' },
     { value: 'universityPrograms', label: 'Üniversite programları' }
   ];
-  readonly exams = ['LGS', 'TYT', 'AYT', 'YDT', 'TDP'];
+  readonly exams = signal<{code:string;name:string;isActive:boolean}[]>([]);
   readonly items = signal<CoachingCatalogRow[]>([]);
   readonly totalCount = signal(0);
   readonly page = signal(1);
@@ -198,7 +198,11 @@ export class CoachingCatalogComponent implements OnInit {
         error: () => { this.deleting.set(false); this.closeUsage(); this.toaster.error('Kayıt silinemedi. Kullanım bilgisi değişmiş olabilir; güncel kaydı yeniden kontrol edin.'); }
       });
   }
-  ngOnInit() { if (isPlatformBrowser(this.platformId)) this.load(); }
+  ngOnInit() {
+    if (!isPlatformBrowser(this.platformId)) return;
+    if (this.auth.userProfile()?.roles?.includes('SystemAdmin')) this.service.exams().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({next:rows => this.exams.set(rows),error:() => this.toaster.error('Sınav türleri alınamadı. Sayfayı yeniden açın.')});
+    this.load();
+  }
   totalPages() { return Math.max(1, Math.ceil(this.totalCount() / 25)); }
   changeKind(kind: CoachingCatalogKind) {
     if (this.editorOpen() || this.deleting()) return;

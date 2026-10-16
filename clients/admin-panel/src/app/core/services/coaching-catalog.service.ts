@@ -71,6 +71,9 @@ export interface CoachingCatalogUsage {
 @Injectable({ providedIn: 'root' })
 export class CoachingCatalogService {
   private readonly http = inject(HttpClient);
+  exams() {
+    return this.http.get<{data:{code:string;name:string;isActive:boolean}[]}>(`${environment.apiUrl}/coaching/catalog/exams`).pipe(map(response => response.data));
+  }
   previewImport(request: CoachingCatalogImportRequest) {
     return this.http.post<{ data: CoachingCatalogImportReview }>(`${environment.apiUrl}/coaching-admin/catalog-imports/preview`, request).pipe(map(response => response.data));
   }

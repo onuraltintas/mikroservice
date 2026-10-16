@@ -4,6 +4,20 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Coaching.Infrastructure.Data.Configurations;
 
+public sealed class StudyCatalogExamConfiguration : IEntityTypeConfiguration<StudyCatalogExam>
+{
+    public void Configure(EntityTypeBuilder<StudyCatalogExam> b)
+    {
+        b.ToTable("study_catalog_exams", t => t.HasCheckConstraint("ck_catalog_exam_order", "\"DisplayOrder\" >= 0"));
+        b.HasKey(x => x.Id); b.HasAlternateKey(x => x.Code);
+        b.Property(x => x.Code).HasMaxLength(10).IsRequired(); b.Property(x => x.Name).HasMaxLength(300).IsRequired();
+        var codes = new[] { "LGS", "TYT", "AYT", "YDT", "TDP" };
+        var names = new[] { "Liselere Geçiş Sistemi", "Temel Yeterlilik Testi", "Alan Yeterlilik Testleri", "Yabancı Dil Testi", "Temel Destek Paketleri" };
+        for (var i = 0; i < codes.Length; i++)
+            b.HasData(new { Id = Guid.Parse($"f0ca1000-0000-4000-8000-{i+1:000000000000}"), Code = codes[i], Name = names[i], DisplayOrder = i, IsActive = true });
+    }
+}
+
 public sealed class StudyCatalogLessonGroupConfiguration : IEntityTypeConfiguration<StudyCatalogLessonGroup>
 {
     public void Configure(EntityTypeBuilder<StudyCatalogLessonGroup> builder)
@@ -23,6 +37,7 @@ public sealed class StudyCatalogLessonConfiguration : IEntityTypeConfiguration<S
         builder.Property(x => x.SourceId).HasMaxLength(100).IsRequired();
         builder.Property(x => x.Name).HasMaxLength(300).IsRequired();
         builder.Property(x => x.ExamCode).HasMaxLength(10);
+        builder.HasOne<StudyCatalogExam>().WithMany().HasForeignKey(x => x.ExamCode).HasPrincipalKey(x => x.Code).OnDelete(DeleteBehavior.Restrict);
         builder.Property(x => x.CurriculumVersionId).IsConcurrencyToken();
         builder.HasOne<StudyCatalogLessonGroup>().WithMany().HasForeignKey(x => x.GroupId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne<CurriculumVersion>().WithMany().HasForeignKey(x => x.CurriculumVersionId).OnDelete(DeleteBehavior.Restrict);

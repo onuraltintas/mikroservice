@@ -58,6 +58,7 @@ public sealed class CoachingCatalogManagementService(CoachingDbContext db, ICoac
             switch (entity)
             {
                 case StudyCatalogLesson lesson:
+                    await ValidateOwnershipAsync(kind,request,ct);
                     await CoachingOutcomeCatalogService.ValidateLessonScopeAsync(db,lesson.Id,request.Name,request.GradeNumber,request.ExamCode,ct);
                     lesson.Edit(request.Name, request.GradeNumber, request.ExamCode); break;
                 case StudyCatalogUnit unit:
@@ -211,6 +212,9 @@ public sealed class CoachingCatalogManagementService(CoachingDbContext db, ICoac
 
     private async Task ValidateOwnershipAsync(CatalogKind kind, CatalogSaveRequest r, CancellationToken ct)
     {
+        if (kind == CatalogKind.Lessons && r.ExamCode != null
+            && !await db.Set<StudyCatalogExam>().AnyAsync(x => x.Code == r.ExamCode.Trim().ToUpperInvariant(), ct))
+            throw new ArgumentException("Kayıtlı bir sınav türü seçin.");
         if (kind is CatalogKind.Units or CatalogKind.Topics && (!r.LessonId.HasValue || !await db.StudyCatalogLessons.AnyAsync(x => x.Id == r.LessonId, ct)))
             throw new ArgumentException("Geçerli bir ders seçin.");
         if (kind == CatalogKind.Topics && (!r.UnitId.HasValue || !await db.StudyCatalogUnits.AnyAsync(x => x.Id == r.UnitId && x.LessonId == r.LessonId, ct)
@@ -222,6 +226,7 @@ public sealed class CoachingCatalogManagementService(CoachingDbContext db, ICoac
     {
         var invalid = entity switch
         {
+            StudyCatalogLesson l when active && l.ExamCode != null => !await db.Set<StudyCatalogExam>().AnyAsync(x => x.Code == l.ExamCode && x.IsActive,ct),
             StudyCatalogLesson l when !active => await db.StudyCatalogUnits.AnyAsync(x => x.LessonId == l.Id && x.IsActive, ct) || await db.StudyCatalogTopics.AnyAsync(x => x.LessonId == l.Id && x.IsActive, ct),
             StudyCatalogUnit u when active => !await db.StudyCatalogLessons.AnyAsync(x => x.Id == u.LessonId && x.IsActive, ct),
             StudyCatalogUnit u => await db.StudyCatalogTopics.AnyAsync(x => x.UnitId == u.Id && x.IsActive, ct),

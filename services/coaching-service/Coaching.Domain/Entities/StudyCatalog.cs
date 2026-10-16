@@ -54,7 +54,7 @@ public sealed class StudyCatalogLesson
     {
         if (gradeNumber is < 1 or > 12) throw new ArgumentOutOfRangeException(nameof(gradeNumber));
         var code = string.IsNullOrWhiteSpace(examCode) ? null : examCode.Trim().ToUpperInvariant();
-        if (code is not (null or "LGS" or "TYT" or "AYT" or "YDT" or "TDP")) throw new ArgumentException("Unknown exam code.", nameof(examCode));
+        if (code is not null) code = StudyCatalogExam.NormalizeCode(code);
         return new StudyCatalogLesson { Source = StudyCatalogText.Require(source, 100),
             SourceId = StudyCatalogText.Require(sourceId, 100), Name = StudyCatalogText.Require(name, 300),
             GradeNumber = gradeNumber, ExamCode = code };
