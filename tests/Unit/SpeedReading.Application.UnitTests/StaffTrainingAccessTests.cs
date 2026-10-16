@@ -16,7 +16,9 @@ public sealed class StaffTrainingAccessTests
     [InlineData("SystemAdmin", true, false, true)]
     [InlineData("Admin", false, false, false)]
     [InlineData("Admin", true, true, false)]
-    [InlineData("Editor", true, false, false)]
+    [InlineData("Editor", true, false, true)]
+    [InlineData("Editor", false, false, false)]
+    [InlineData("Editor", true, true, false)]
     public async Task Preview_guard_allows_only_own_active_staff_training(string role, bool ownTraining, bool student, bool allowed)
     {
         await using var db = new OwnedSpeedReadingDbContext(new DbContextOptionsBuilder<OwnedSpeedReadingDbContext>().UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
@@ -57,12 +59,13 @@ public sealed class StaffTrainingAccessTests
     [InlineData("Admin", false, true)]
     [InlineData("SystemAdmin", false, true)]
     [InlineData("Teacher", false, true)]
-    [InlineData("Editor", false, false)]
+    [InlineData("Editor", false, true)]
+    [InlineData("Editor", true, false)]
     [InlineData("InstitutionAdmin", false, false)]
     [InlineData("Student", false, false)]
     [InlineData("Teacher", true, false)]
     [InlineData("Admin", true, false)]
-    public void Staff_training_is_only_for_non_student_admins_and_teachers(string role, bool student, bool allowed)
+    public void Staff_training_is_only_for_non_student_training_roles(string role, bool student, bool allowed)
     {
         var identity = new ClaimsIdentity([new Claim(ClaimTypes.Role, role)], "test");
         if (student) identity.AddClaim(new Claim(ClaimTypes.Role, "Student"));

@@ -25,6 +25,12 @@ describe('studentPageGuard', () => {
     TestBed.resetTestingModule();
     expect(permits('daily-exercises', ['Teacher'])).toBeTrue();
   });
+
+  for (const page of ['training-programs', 'daily-exercises', 'exercises']) {
+    it(`allows an editor to use ${page}`, () => {
+      expect(permits(page, ['Editor'])).toBeTrue();
+    });
+  }
   it('redirects the teacher student-shell landing to training programs', () => {
     const destination = {};
     const router = { navigate: jasmine.createSpy(), createUrlTree: jasmine.createSpy().and.returnValue(destination) };
