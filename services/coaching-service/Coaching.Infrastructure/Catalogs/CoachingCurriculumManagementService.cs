@@ -323,7 +323,8 @@ public sealed class CoachingCurriculumManagementService(CoachingDbContext db, IC
         }
         var payload = new { entity, mappings = node.Mappings, estimates = node.Estimates.Select(x => new { x.Id,x.Number,x.IsPublished }), blockers };
         var fingerprint = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(payload))));
-        var path = node.ParentId.HasValue ? await Path(node.ParentKind!,node.ParentId.Value,ct) + " / " + node.Name : node.Name;
+        var displayName = entity is StudyCatalogLesson lesson ? LessonLabel(lesson) : node.Name;
+        var path = node.ParentId.HasValue ? await Path(node.ParentKind!,node.ParentId.Value,ct) + " / " + displayName : displayName;
         return node with { Path = path,Fingerprint = fingerprint,CanDelete = blockers.Count == 0,Blockers = blockers,
             TopicOutcomeCount = entity is StudyCatalogTopic ? await db.Set<StudyCatalogTopicOutcome>().CountAsync(x => x.TopicId == node.Id,ct) : 0 };
     }
@@ -334,12 +335,14 @@ public sealed class CoachingCurriculumManagementService(CoachingDbContext db, IC
         return entity switch
         {
             StudyCatalogLessonGroup g => g.Name,
-            StudyCatalogLesson l => (l.GroupId.HasValue ? await Path("groups",l.GroupId.Value,ct) + " / " : "") + l.Name,
+            StudyCatalogLesson l => (l.GroupId.HasValue ? await Path("groups",l.GroupId.Value,ct) + " / " : "") + LessonLabel(l),
             StudyCatalogUnit u => await Path("lessons",u.LessonId,ct) + " / " + u.Name,
             StudyCatalogTopic t => await Path(t.ParentId.HasValue ? "topics" : "units",t.ParentId ?? t.UnitId,ct) + " / " + t.Name,
             _ => ""
         };
     }
+    private static string LessonLabel(StudyCatalogLesson l)
+        => l.Name + (l.GradeNumber.HasValue ? $" · {l.GradeNumber}. sınıf" : "") + (l.ExamCode is null ? "" : " · " + l.ExamCode);
     private async Task<CatalogUsage> MemoryUsage(CatalogKind kind,Guid id,CancellationToken ct)
     {
         var catalog = kind switch

@@ -40,7 +40,10 @@ export class CoachingCurriculumManagerComponent implements OnInit {
 
   ngOnInit() { this.loadRoot(); this.destroy.onDestroy(() => { this.detailRequest?.unsubscribe(); this.destinationRequest?.unsubscribe(); this.editionRequest?.unsubscribe(); this.branchRequests.forEach(x => x.unsubscribe()); }); }
   key(n: Node) { return `${n.kind}:${n.id}`; }
-  nodeType(n: Node) { return n.parentKind === 'topics' && n.kind === 'topics' ? 'Alt konu' : this.labels[n.kind]; }
+  nodeType(n: Node) {
+    if (n.kind === 'lessons') return ['Ders',n.gradeNumber ? `${n.gradeNumber}. sınıf` : null,n.examCode].filter(Boolean).join(' · ');
+    return n.parentKind === 'topics' && n.kind === 'topics' ? 'Alt konu' : this.labels[n.kind];
+  }
   branch(n?: Node): Branch | undefined { return this.branches()[n ? this.key(n) : 'root']; }
   empty(): Form { return { name:'',reason:'',parentId:null,gradeNumber:null,examCode:null,displayOrder:null,estimatedMinutes:null,code:'',officialTopicId:null,sourcePage:1,notes:'',moveParentOutcomes:false }; }
   dirty() { return this.editing() && (JSON.stringify(this.form) !== this.initial || this.durationDirty()); }
