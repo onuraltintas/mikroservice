@@ -16,6 +16,26 @@ describe('SpeedReadingStudentReportComponent', () => {
 
   afterEach(() => http.verify());
 
+  it.each([false, true])('localizes benchmark and category labels in the scoped report (teacher=%s)', teacherScoped => {
+    const fixture = TestBed.createComponent(SpeedReadingStudentReportComponent);
+    fixture.componentRef.setInput('institutionId', 'institution-1');
+    fixture.componentRef.setInput('teacherScoped', teacherScoped);
+    fixture.componentRef.setInput('student', { userId: 'student-1', firstName: 'Ayşe', lastName: 'Yılmaz' });
+    fixture.detectChanges();
+    flushStudentReport(http, 'student-1', teacherScoped);
+    const report = fixture.componentInstance.report()!;
+    fixture.componentInstance.report.set({ ...report,
+      readingSpeed: { ...report.readingSpeed, benchmark: { ...report.readingSpeed.benchmark, performanceLevel: 'Below Average' } },
+      comprehension: { ...report.comprehension, benchmark: { ...report.comprehension.benchmark, performanceLevel: 'Above Average' },
+        strongAreas: ['regression'], weakAreas: ['science', 'Özel kategori'] }
+    });
+    fixture.detectChanges();
+    const text = fixture.nativeElement.textContent;
+    for (const label of ['Ortalamanın altında', 'Ortalamanın üzerinde', 'Geriye dönüşü azaltma', 'Bilim', 'Özel kategori']) expect(text).toContain(label);
+    for (const label of ['Above Average', 'Below Average', 'regression', 'science']) expect(text).not.toContain(label);
+    expect(fixture.componentInstance.report()!.comprehension.strongAreas).toEqual(['regression']);
+  });
+
   it.each([false, true])('shows no speed data for unmeasured reading sessions in teacher scope %s', teacherScoped => {
     const fixture = TestBed.createComponent(SpeedReadingStudentReportComponent);
     fixture.componentRef.setInput('institutionId', 'institution-1');
