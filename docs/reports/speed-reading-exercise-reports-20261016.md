@@ -47,7 +47,7 @@ Kullanıcının **“öğretmen hazır”** yanıtından sonra açık sekmede ge
 
 Önceki rapordaki 20 → 21 değişiminin nedeni: önceki kaynak iki chunking oturumunu günlük ve okuma tablosundan iki kez sayıyor, iki bağımsız göz takibi ile bir bağımsız kelime sonucunu atlıyordu. Yeni toplam **8 okuma + 10 örtüşmeyen günlük/sonuç + 3 eksik bağımsız sonuç = 21**. Kayıt sayısı veya XP artırılmadı.
 
-Ölçülmüş WPM bulunmayan bu hesapta eski ayrıntı hız kartları 0 WPM gösterebiliyor; bu yayında bu mevcut sunum değiştirilmedi. Ölçülmeyen egzersizler için yeni puan üretilmedi.
+Bu yayın sırasında ölçülmüş WPM bulunmayan hesapta eski ayrıntı hız kartlarının 0 WPM göstermesi ayrıca not edilmişti. Ardından [ölçümsüz raporlar yayınıyla](speed-reading-no-measurement-reports-20261016.md) öğrenci, öğretmen ve kurum ekranlarında **Veri yok** gösterimi ve ölçüm olmadan öneri üretmeme tamamlandı. Ölçülmeyen egzersizler için yeni puan üretilmedi.
 
 ## Veri koruma ve yayın
 
