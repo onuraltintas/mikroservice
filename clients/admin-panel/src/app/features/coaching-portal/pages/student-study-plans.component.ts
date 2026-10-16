@@ -185,15 +185,18 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
 
   statusLabel(status: StudyPlanStatus) { return { Draft: 'Taslak', Active: 'Aktif', Archived: 'Arşiv' }[status]; }
 
-  private applyPlan(plan: StudyPlan) {
+  private applyPlan(plan: StudyPlan, preserveInputs = false) {
+    const previous = this.selected();
+    const keepInputs = preserveInputs && previous?.id === plan.id && plan.status === 'Active';
+    const minutes = this.actualMinutes; const questions = this.actualQuestions; const dates = this.targetDates;
     this.selected.set(plan);
     this.editing = plan.status === 'Draft' && !this.readOnly;
     this.editTitle = plan.title;
     this.editTasks = plan.tasks.map(({ plannedDate, title, plannedMinutes, topicId, isPinned, sourceName, plannedQuestions }) =>
       ({ plannedDate, title, plannedMinutes, topicId, isPinned, sourceName: sourceName ?? null, plannedQuestions: plannedQuestions ?? null }));
-    this.actualMinutes = Object.fromEntries(plan.tasks.map(task => [task.id, task.actualMinutes ?? task.plannedMinutes]));
-    this.actualQuestions = Object.fromEntries(plan.tasks.map(task => [task.id, task.actualQuestions ?? null]));
-    this.targetDates = Object.fromEntries(plan.tasks.map(task => [task.id, task.plannedDate]));
+    this.actualMinutes = Object.fromEntries(plan.tasks.map(task => [task.id, keepInputs && !task.isCompleted && Object.hasOwn(minutes, task.id) ? minutes[task.id] : task.actualMinutes ?? task.plannedMinutes]));
+    this.actualQuestions = Object.fromEntries(plan.tasks.map(task => [task.id, keepInputs && !task.isCompleted && Object.hasOwn(questions, task.id) ? questions[task.id] : task.actualQuestions ?? null]));
+    this.targetDates = Object.fromEntries(plan.tasks.map(task => [task.id, keepInputs && !task.isCompleted && dates[task.id] && dates[task.id] !== previous?.tasks.find(old => old.id === task.id)?.plannedDate ? dates[task.id] : task.plannedDate]));
     this.dirty = false;
     this.publishConfirmed = false;
     this.completionError.set(null);
@@ -225,7 +228,7 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
     this.error.set(null);
     this.success.set(null);
     request.pipe(takeUntil(this.scopeChanged), takeUntilDestroyed(this.destroyRef), finalize(() => this.busy.set(false))).subscribe({
-      next: plan => { this.applyPlan(plan); this.success.set(message); this.loadList(this.page().pageNumber); },
+      next: plan => { this.applyPlan(plan, true); this.success.set(message); this.loadList(this.page().pageNumber); },
       error: error => this.showError(error, 'İşlem tamamlanamadı. Lütfen tekrar deneyin.')
     });
   }
