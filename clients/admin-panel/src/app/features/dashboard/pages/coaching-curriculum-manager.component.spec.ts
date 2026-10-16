@@ -44,4 +44,14 @@ describe('Coaching curriculum manager', () => {
     c.select({ ...topic, id: 'other' } as never); http.expectOne(r => r.url.endsWith('/topics/other')).flush({ data: { ...topic, id: 'other', name: 'Üslü ifadeler' } });
     expect(first.cancelled).toBe(true); expect(c.form.name).toBe('Üslü ifadeler'); http.verify();
   });
+  it('keeps the duration transaction busy until its publication finishes', () => {
+    const { http,c }=setup(); const outcome={...topic,kind:'outcomes',id:'outcome',mappings:[{topicId:'topic',path:'Matematik / Çarpanlar',isApproved:true,evidence:'İncelendi'}],estimates:[]};
+    c.select(outcome as never);http.expectOne(r=>r.url.endsWith('/outcomes/outcome')).flush({data:outcome});
+    c.form.reason='Süreyi güncelle';c.learningMinutes=20;c.practiceMinutes=30;c.checkMinutes=10;c.durationEvidence='Öğretmen gözlemi';c.publishDuration=true;c.saveDuration();
+    http.expectOne(r=>r.url.endsWith('/outcomes/outcome/estimates')).flush({data:{id:'new-estimate'}});
+    const publication=http.expectOne(r=>r.url.endsWith('/estimates/new-estimate/publication'));
+    expect(c.busy()).toBe(true);publication.flush({data:{}});http.expectOne(r=>r.url.endsWith('/outcomes/outcome')).flush({data:outcome});
+    http.expectOne(r=>r.url.endsWith('/curriculum-management/children')).flush({data:{items:[],totalCount:0,pageNumber:1,pageSize:25}});
+    expect(c.busy()).toBe(false);http.verify();
+  });
 });

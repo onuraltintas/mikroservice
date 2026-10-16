@@ -113,6 +113,36 @@ public sealed class CurriculumManagementTests
         await Assert.ThrowsAsync<BusinessRuleException>(() => f.Service.SaveAsync("groups", null, new("Yetkisiz", "Grup ekle"), default));
     }
 
+    [Fact]
+    public async Task DurationCanBeWithdrawnAndUnusedVersionDeleted_UsedVersionCannotBeDeleted()
+    {
+        await using var f = new Fixture(); var topic = await f.Seed();
+        var outcome = await f.Db.Set<StudyCatalogOutcome>().SingleAsync(); var estimate = await f.Db.Set<OutcomeDurationEstimate>().SingleAsync();
+        var doc = await f.Service.GetAsync("outcomes",outcome.Id,default);
+        await Assert.ThrowsAsync<BusinessRuleException>(() => f.Service.DeleteEstimateAsync(outcome.Id,estimate.Id,new(doc.Fingerprint,"Kullanılan süreyi sil",estimate.Id),default));
+        doc = await f.Service.SetEstimatePublicationAsync(outcome.Id,estimate.Id,new(doc.Fingerprint,"Süre önerisini yayından kaldır",false),default);
+        Assert.Empty(await new CoachingOutcomeCatalogService(f.Db,f.Scope,f.User).GetPublishedAsync(topic.Id,2026,default));
+        Assert.Single(await f.Db.Set<StudyPlanTaskOutcome>().ToArrayAsync());
+        var next = await new CoachingOutcomeCatalogService(f.Db,f.Scope,f.User).EstimateAsync(outcome.Id,new(10,15,5,"Güncellenen süre dayanağı","Medium","Yeni süre öner"),default);
+        doc = await f.Service.GetAsync("outcomes",outcome.Id,default);
+        await f.Service.DeleteEstimateAsync(outcome.Id,next.Id,new(doc.Fingerprint,"Kullanılmayan süreyi sil",next.Id),default);
+        Assert.Equal(estimate.Id,(await f.Db.Set<OutcomeDurationEstimate>().SingleAsync()).Id);
+    }
+
+    [Theory]
+    [InlineData("units")]
+    [InlineData("topics")]
+    public async Task ActiveBranchesCannotMoveUnderInactiveParents(string kind)
+    {
+        await using var f = new Fixture(); var topic = await f.Seed();
+        Guid destination;
+        if (kind == "units")
+        { var lesson = StudyCatalogLesson.Create("test","inactive","Matematik",8,"LGS"); f.Db.Add(lesson); destination=lesson.Id; }
+        else { var unit = StudyCatalogUnit.Create("test","inactive",topic.LessonId,"Pasif ünite",2); f.Db.Add(unit); destination=unit.Id; }
+        await f.Db.SaveChangesAsync(); var doc=await f.Service.GetAsync(kind,kind == "units" ? topic.UnitId : topic.Id,default);
+        await Assert.ThrowsAsync<ArgumentException>(() => f.Service.MoveAsync(kind,doc.Id,new(destination,doc.Fingerprint,"Pasif üst kayda taşı"),default));
+    }
+
     internal sealed class Fixture : IAsyncDisposable
     {
         public CoachingDbContext Db { get; }
