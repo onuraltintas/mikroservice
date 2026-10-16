@@ -14,11 +14,13 @@
   <div class="panel" style="margin-top: 1rem">
     <h2>2. Konuları ve süreleri seç</h2>
     <form (ngSubmit)="searchTopics()"><fieldset [disabled]="locked()"><div class="fields">
+      @if (learningContextVersion !== null) { <label>Seçtiğim ders<select name="contextLesson" [(ngModel)]="contextLessonId"><option value="">Ders seçin</option>@for (lesson of contextLessons(); track lesson.id) { <option [value]="lesson.id">{{ lesson.name }} {{ lesson.examCode || '' }}</option> }</select></label> } @else {
       <label>Konu, ders veya ünite<input name="query" [(ngModel)]="query" maxlength="200"></label>
       <label>Sınıf<select name="grade" [(ngModel)]="gradeNumber"><option [ngValue]="null">Tümü</option>
         @for (grade of [1,2,3,4,5,6,7,8,9,10,11,12]; track grade) { <option [ngValue]="grade">{{ grade }}</option> }</select></label>
       <label>Sınav<select name="exam" [(ngModel)]="examCode"><option value="">Tümü</option>
         @for (exam of ['LGS','TYT','AYT','YDT','TDP']; track exam) { <option [value]="exam">{{ exam }}</option> }</select></label>
+      }
       <button type="submit">Konuları ara</button></div></fieldset></form>
     @if (searching()) { <p role="status">Konular yükleniyor…</p> }
     @if (results(); as page) {

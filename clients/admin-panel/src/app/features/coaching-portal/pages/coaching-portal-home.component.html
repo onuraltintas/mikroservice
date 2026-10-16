@@ -3,6 +3,7 @@
     <div><p class="home-eyebrow">BUGÜN SENİN GÜNÜN</p><h1>{{ user()?.firstName ? 'Merhaba, ' + user()?.firstName + '.' : 'Tekrar hoş geldin.' }}</h1><p>Hedefine giden yol, bugün atacağın küçük bir adımla başlar.</p></div>
     <a routerLink="/coaching-portal/progress" class="home-progress-link">Gelişimimi gör <app-coaching-icon name="arrow" /></a>
   </header>
+  @if (isStudent()) { <app-learning-setup-entry /> }
   <div class="home-grid" *ngIf="isStudent()">
     <app-student-study-today />
     <aside class="home-next-steps" aria-label="Çalışma kısayolları">

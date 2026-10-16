@@ -8,11 +8,12 @@ import { CoachingPortalService, StudentAssignment } from '../../../core/services
 import { StaffPortalRedirectService } from '../staff-portal-redirect.service';
 import { StudentStudyTodayComponent } from './student-study-today.component';
 import { CoachingIconComponent } from '../coaching-icon.component';
+import { LearningSetupEntryComponent } from './learning-setup-entry.component';
 
 @Component({
   selector: 'app-coaching-portal-home',
   standalone: true,
-  imports: [CommonModule, RouterLink, StudentStudyTodayComponent, CoachingIconComponent],
+  imports: [CommonModule, RouterLink, StudentStudyTodayComponent, CoachingIconComponent, LearningSetupEntryComponent],
   templateUrl: './coaching-portal-home.component.html',
   styleUrl: './coaching-portal-home.component.scss'
 })

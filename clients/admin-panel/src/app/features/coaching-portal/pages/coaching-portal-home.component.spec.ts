@@ -9,6 +9,7 @@ import { CoachingPortalHomeComponent } from './coaching-portal-home.component';
 import { CoachingPortalViewService } from '../coaching-portal-view.service';
 import { StaffPortalRedirectService } from '../staff-portal-redirect.service';
 import { CoachingStudyPlanningService } from '../../../core/services/coaching-study-planning.service';
+import { CoachingLearningSetupService } from '../../../core/services/coaching-learning-setup.service';
 
 describe('CoachingPortalHomeComponent', () => {
   it('loads the own-student summary when a dual-role user selects student view', () => {
@@ -22,6 +23,7 @@ describe('CoachingPortalHomeComponent', () => {
       provideRouter([]),
       { provide: AuthService, useValue: { userProfile: profile } },
       { provide: CoachingPortalService, useValue: service },
+      { provide: CoachingLearningSetupService, useValue: { get: () => of({ context: null, isReady: false }) } },
       { provide: CoachingStudyPlanningService, useValue: { list: () => of({ items: [] }), getAvailability: () => of({ timeZoneId: 'Europe/Istanbul' }) } },
       { provide: StaffPortalRedirectService, useValue: { redirect: vi.fn(), url: () => 'https://onuraltintas.net/staff/?product=coaching' } }
     ] });

@@ -9,12 +9,13 @@ import { ADMIN_PERMISSIONS } from '../../../core/auth/permissions';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CoachingCatalogEditorComponent } from './coaching-catalog-editor';
 import { CoachingCatalogImportComponent } from './coaching-catalog-import';
+import { CoachingCurriculumComponent } from './coaching-curriculum.component';
 import { DistrictOption, LocationService, ProvinceOption } from '../../../core/services/location.service';
 
 @Component({
   selector: 'app-coaching-catalog',
   standalone: true,
-  imports: [FormsModule, DecimalPipe, CoachingCatalogEditorComponent, CoachingCatalogImportComponent],
+  imports: [FormsModule, DecimalPipe, CoachingCatalogEditorComponent, CoachingCatalogImportComponent, CoachingCurriculumComponent],
   template: `
     <main class="space-y-6" aria-labelledby="coaching-catalog-title">
       <header>
@@ -24,6 +25,7 @@ import { DistrictOption, LocationService, ProvinceOption } from '../../../core/s
         @if (canDelete()) { <button type="button" (click)="openEditor(null)" [disabled]="editorOpen() || deleting()" class="mt-3 rounded-lg bg-indigo-600 px-4 py-2 text-white disabled:opacity-40">Yeni kayıt</button> }
       </header>
       @if (canDelete()) { <details class="rounded-xl border p-4"><summary class="cursor-pointer font-medium">Toplu katalog aktarımı ve yayın</summary><app-coaching-catalog-import /></details> }
+      @if (canDelete()) { <details class="rounded-xl border p-4" (toggle)="curriculumOpen = $any($event.target).open"><summary class="cursor-pointer font-medium">Müfredat ve program sürümleri</summary>@if (curriculumOpen) { <app-coaching-curriculum /> }</details> }
       <form (ngSubmit)="load()" class="grid gap-4 rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-900 sm:grid-cols-2 lg:grid-cols-4">
         <div><label for="catalog-kind" class="block text-sm font-medium">Katalog</label>
           <select id="catalog-kind" [disabled]="editorOpen() || deleting()" [ngModel]="kind" (ngModelChange)="changeKind($event)" name="kind" class="mt-1 w-full rounded-lg border p-2 dark:bg-gray-800">
@@ -106,6 +108,7 @@ import { DistrictOption, LocationService, ProvinceOption } from '../../../core/s
   `
 })
 export class CoachingCatalogComponent implements OnInit {
+  curriculumOpen = false;
   private readonly service = inject(CoachingCatalogService);
   private readonly locations = inject(LocationService);
   private locationRequest?: Subscription;

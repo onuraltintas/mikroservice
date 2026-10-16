@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, HostListener, OnInit, inject, signal, Input } from '@angular/core';
+import { Component, DestroyRef, HostListener, OnInit, inject, signal, Input, Injector } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -15,7 +15,8 @@ import { CoachingLearningSetupService, LearningLesson } from '../../../core/serv
 })
 export class StudentAutomaticPlanComponent implements OnInit {
   @Input() learningContextVersion: number | null = null;
-  private readonly setupService = inject(CoachingLearningSetupService);
+  private readonly injector = inject(Injector);
+  private get setupService() { return this.injector.get(CoachingLearningSetupService); }
   readonly contextLessons = signal<LearningLesson[]>([]);
   contextLessonId = '';
   private readonly service = inject(CoachingStudyPlanningService);
@@ -100,7 +101,7 @@ export class StudentAutomaticPlanComponent implements OnInit {
       ...(this.learningContextVersion !== null ? { expectedLearningContextVersion: this.learningContextVersion } : {}) })
       .pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.generating.set(false)))
       .subscribe({ next: preview => this.preview.set(preview), error: error => {
-        if (error?.status === 409) { this.stale.set(true); this.error.set('Çalışma saatleri değişti. Saatleri yeniden yükleyip tekrar önizleyin.'); }
+        if (error?.status === 409) { this.stale.set(true); this.error.set(typeof error?.error?.message === 'string' ? error.error.message : 'Çalışma saatleri veya eğitim bağlamı değişti. Kurulumu ve saatleri yeniden yükleyin.'); }
         else this.error.set(typeof error?.error?.message === 'string' ? error.error.message : 'Önizleme oluşturulamadı. Seçimleriniz korundu; tekrar deneyin.');
       } });
   }

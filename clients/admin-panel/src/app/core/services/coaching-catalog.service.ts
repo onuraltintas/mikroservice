@@ -5,6 +5,7 @@ import { environment } from '../../../environments/environment';
 
 export type CoachingCatalogKind = 'lessons' | 'units' | 'topics' | 'schools' | 'universityPrograms';
 export interface CoachingCatalogRow {
+  curriculumVersionId?: string | null;
   id: string;
   name: string;
   source: string;
