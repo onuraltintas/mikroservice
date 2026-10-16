@@ -14,6 +14,8 @@ describe('Turkish student report labels', () => {
       ['No benchmark', 'Karşılaştırma verisi yok'],
       ['grouping', 'Gruplayarak okuma'], ['guided_reading', 'Rehberli okuma'],
       ['rsvp', 'Seri okuma'], ['subvocalization', 'İç ses azaltma'],
+      ['comprehension', 'Anlama'], ['error-analysis', 'Hata analizi'], ['free-reading', 'Serbest okuma'],
+      ['regression', 'Geriye dönüşü azaltma'], ['scanning', 'Tarayarak okuma'], ['skimming', 'Göz gezdirerek okuma'],
       ['Strong', 'Güçlü'], ['Needs Improvement', 'Geliştirilmeli'], ['high', 'Yüksek'], ['medium', 'Orta'], ['low', 'Düşük'],
       ['not-measured', 'Ölçülmedi'], ['exercise_success', 'Egzersiz başarısı'], ['comprehension', 'Anlama'],
       [' Regression_Reduction ', 'Geriye dönüşü azaltma'], ['vocabulary_builder', 'Kelime hazinesi'],
