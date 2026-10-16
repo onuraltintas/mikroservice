@@ -32,6 +32,12 @@ public sealed class CoachingCurriculumManagementAdminController(CoachingCurricul
     [HttpDelete("{kind}/{id:guid}"), HasPermission(PlatformPermissions.Coaching.ContentManage), RequestSizeLimit(4096)]
     public Task<IActionResult> Delete(string kind,Guid id,CurriculumDeleteRequest request,CancellationToken ct)
         => Execute(async () => { await service.DeleteAsync(kind,id,request,ct); return new { deleted = true }; });
+    [HttpPut("outcomes/{outcome:guid}/estimates/{estimate:guid}/publication"), HasPermission(PlatformPermissions.Coaching.ContentManage), RequestSizeLimit(4096)]
+    public Task<IActionResult> Withdraw(Guid outcome,Guid estimate,CurriculumStatusRequest request,CancellationToken ct)
+        => Execute(async () => await service.SetEstimatePublicationAsync(outcome,estimate,request,ct));
+    [HttpDelete("outcomes/{outcome:guid}/estimates/{estimate:guid}"), HasPermission(PlatformPermissions.Coaching.ContentManage), RequestSizeLimit(4096)]
+    public Task<IActionResult> DeleteEstimate(Guid outcome,Guid estimate,CurriculumDeleteRequest request,CancellationToken ct)
+        => Execute(async () => { await service.DeleteEstimateAsync(outcome,estimate,request,ct); return await service.GetAsync("outcomes",outcome,ct); });
     private async Task<IActionResult> Execute(Func<Task<object>> operation)
     {
         try { return Ok(new { success = true,data = await operation() }); }

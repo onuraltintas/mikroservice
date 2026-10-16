@@ -60,7 +60,21 @@
                 <label class="full">Süre dayanağı<textarea name="evidence" [(ngModel)]="durationEvidence" required minlength="5" maxlength="500" rows="2" placeholder="Öğretmen gözlemi, konu bütçesi veya kullanılan varsayımlar"></textarea></label>
                 <label class="checkbox full"><input name="publishDuration" type="checkbox" [(ngModel)]="publishDuration"> Yeni süre sürümünü inceleyip yayınlamayı onaylıyorum.</label>
               </fieldset><button class="primary" type="submit" [disabled]="busy() || durationForm.invalid || form.reason.trim().length < 5">{{ publishDuration ? 'Yeni süre sürümünü kaydet ve yayınla' : 'Yeni süre sürümünü taslak kaydet' }}</button></form>
-              <div class="duration-history"><h4>Süre geçmişi</h4>@for (e of n.estimates; track e.id) { <article><div><strong>Sürüm {{ e.number }} · {{ total(e) }} dk</strong><span class="badge" [class.passive]="!e.isPublished">{{ e.isPublished ? 'Yayınlanmış' : 'Taslak' }}</span></div><p>{{ e.learningMinutes }} öğrenme + {{ e.practiceMinutes }} alıştırma + {{ e.checkMinutes }} kontrol · Güven: {{ e.confidence === 'Low' ? 'Düşük' : e.confidence === 'Medium' ? 'Orta' : 'Yüksek' }}</p><small>{{ e.evidence }}</small>@if (!e.isPublished) { <button type="button" (click)="publish(e)" [disabled]="busy() || form.reason.trim().length < 5">Bu süre sürümünü yayınla</button> }</article> }@empty { <p>Henüz süre sürümü yok.</p> }</div>
+              <div class="duration-history"><h4>Süre geçmişi</h4>
+                @for (e of n.estimates; track e.id) {
+                  <article><div><strong>Sürüm {{ e.number }} · {{ total(e) }} dk</strong><span class="badge" [class.passive]="!e.isPublished">{{ e.isPublished ? 'Yayınlanmış' : 'Taslak' }}</span></div>
+                    <p>{{ e.learningMinutes }} öğrenme + {{ e.practiceMinutes }} alıştırma + {{ e.checkMinutes }} kontrol · Güven: {{ e.confidence === 'Low' ? 'Düşük' : e.confidence === 'Medium' ? 'Orta' : 'Yüksek' }}</p><small>{{ e.evidence }}</small>
+                    @if (!e.isPublished && e.method === 'ReviewedStudy') { <button type="button" (click)="publish(e)" [disabled]="busy() || form.reason.trim().length < 5">Bu süre sürümünü yayınla</button> }
+                    @if (e.method === 'OfficialBudgetDraft') { <p>İlk bütçe dağılımıdır. İnceleyip yukarıdan yeni süre sürümü oluşturun.</p> }
+                    <details><summary>Bu süre sürümü için işlemler</summary>
+                      <label class="checkbox"><input type="radio" name="estimateConfirmation" [value]="e.id" [(ngModel)]="estimateConfirmation" (ngModelChange)="deleteConfirmation = ''"> Sürüm {{ e.number }} için işlem yapmayı onaylıyorum.</label>
+                      @if (e.isPublished) { <p>Yayından kaldırıldığında varsa önceki yayınlanmış sürüm önerilir. Eski planlar korunur.</p><button type="button" (click)="withdrawEstimate(e)" [disabled]="busy() || estimateConfirmation !== e.id || form.reason.trim().length < 5">Bu süreyi yayından kaldır</button> }
+                      @if (n.usedEstimateIds?.includes(e.id)) { <p>Bu sürüm öğrenci planında kullanılmış; kalıcı silinemez.</p> }
+                      @else { <p>Bu sürüm hiçbir öğrenci planında kullanılmamış. Kalıcı silme geri alınamaz.</p><label>Bu süreyi silmek için SİL yazın<input [(ngModel)]="deleteConfirmation" autocomplete="off"></label><button type="button" class="danger-button" (click)="deleteEstimate(e)" [disabled]="busy() || estimateConfirmation !== e.id || deleteConfirmation !== 'SİL' || form.reason.trim().length < 5">Kullanılmayan süre sürümünü sil</button> }
+                    </details>
+                  </article>
+                } @empty { <p>Henüz süre sürümü yok.</p> }
+              </div>
             </section>
           }
           @if (kind !== 'groups') {

@@ -46,6 +46,7 @@ public sealed class CurriculumPostgresTests
         await f.Service.MoveAsync("lessons",lesson.Id,new(group.Id,lessonDoc.Fingerprint,"Dersi gruba taşı"),default);
         Assert.Equal(lesson.Id,Assert.Single((await f.Service.ChildrenAsync("lessons",group.Id,"Mat",1,default)).Items).Id);
         var target = await f.Service.SaveAsync("units",null,new("Yeni ünite","Ünite ekle",ParentId:lesson.Id),default);
+        target = await f.Service.SetActiveAsync("units",target.Id,new(target.Fingerprint,"Hedef üniteyi etkinleştir",true),default);
         var doc = await f.Service.GetAsync("topics",topic.Id,default);
         Assert.Contains("Sayısal / Matematik",doc.Path); Assert.False(doc.CanDelete);
         var taskBefore = JsonSerializer.Serialize(await f.Db.StudyPlanTasks.AsNoTracking().SingleAsync());

@@ -140,6 +140,7 @@ public sealed class OutcomeDurationEstimate
         if (Method != "ReviewedStudy" || !ReviewedBy.HasValue) throw new ArgumentException("Taslak bütçe tahminini önce inceleyip yeni süre sürümü oluşturun.");
         IsPublished = true;
     }
+    public void Withdraw() => IsPublished = false;
 }
 
 public sealed class StudyPlanTaskOutcome

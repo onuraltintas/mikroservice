@@ -30,6 +30,7 @@ public sealed record CurriculumNode(string Kind, Guid Id, string Name, Guid? Par
     public IReadOnlyList<string> Blockers { get; init; } = [];
     public IReadOnlyList<OutcomeDurationEstimate> Estimates { get; init; } = [];
     public IReadOnlyList<CurriculumMapping> Mappings { get; init; } = [];
+    public IReadOnlyList<Guid> UsedEstimateIds { get; init; } = [];
 }
 public sealed record CurriculumMapping(Guid TopicId, string Path, bool IsApproved, string Evidence);
 
@@ -125,7 +126,8 @@ public sealed class CoachingCurriculumManagementService(CoachingDbContext db, IC
             var entity = await Load(kind,id,ct);
             if (entity is StudyCatalogLesson lesson)
             {
-                if (r.DestinationId.HasValue) await Load("groups",r.DestinationId.Value,ct);
+                if (r.DestinationId.HasValue && !((StudyCatalogLessonGroup)await Load("groups",r.DestinationId.Value,ct)).IsActive && lesson.IsActive)
+                    throw new ArgumentException("Aktif dersi pasif gruba taşıyamazsınız.");
                 lesson.AssignGroup(r.DestinationId); return lesson;
             }
             if (entity is StudyCatalogOutcome outcome)
@@ -139,6 +141,7 @@ public sealed class CoachingCurriculumManagementService(CoachingDbContext db, IC
             if (entity is StudyCatalogUnit unit)
             {
                 var target = (StudyCatalogLesson)await Load("lessons",Required(r.DestinationId),ct);
+                if (unit.IsActive && !target.IsActive) throw new ArgumentException("Aktif üniteyi pasif derse taşıyamazsınız.");
                 if (target.Id == unit.LessonId) throw new ArgumentException("Farklı hedef ders seçin.");
                 await Compatible(unit.LessonId,target.Id,ct);
                 var copy = Add(StudyCatalogUnit.Create("admin-manual",Guid.NewGuid().ToString("N"),target.Id,unit.Name,unit.DisplayOrder)); copy.SetActive(unit.IsActive && target.IsActive);
@@ -149,6 +152,9 @@ public sealed class CoachingCurriculumManagementService(CoachingDbContext db, IC
             if (entity is StudyCatalogTopic source)
             {
                 var parent = await TopicParent(Required(r.DestinationId),ct);
+                if (source.IsActive && (!((StudyCatalogUnit)await Load("units",parent.UnitId,ct)).IsActive
+                    || (parent.ParentId.HasValue && !((StudyCatalogTopic)await Load("topics",parent.ParentId.Value,ct)).IsActive)))
+                    throw new ArgumentException("Aktif konuyu pasif üst kayda taşıyamazsınız.");
                 if (r.DestinationId == source.Id || await db.StudyCatalogTopics.AnyAsync(x => x.Id == r.DestinationId && x.ParentId == source.Id,ct)) throw new ArgumentException("Konu kendisine veya alt konusuna taşınamaz.");
                 if (parent.UnitId == source.UnitId && parent.ParentId == source.ParentId) throw new ArgumentException("Farklı hedef konum seçin.");
                 var descendants = await db.StudyCatalogTopics.Where(x => x.ParentId == source.Id).ToArrayAsync(ct);
@@ -190,6 +196,30 @@ public sealed class CoachingCurriculumManagementService(CoachingDbContext db, IC
                 db.RemoveRange(await db.Set<OutcomeDurationEstimate>().Where(x => x.OutcomeId == id).ToArrayAsync(ct));
             }
             db.Remove(entity); return entity;
+        },ct);
+    }
+
+    public Task<CurriculumNode> SetEstimatePublicationAsync(Guid outcomeId,Guid estimateId,CurriculumStatusRequest r,CancellationToken ct)
+        => Write("outcomes",outcomeId,r.Fingerprint,r.Reason,"CurriculumDurationPublication",async () =>
+        {
+            var outcome = await Load("outcomes",outcomeId,ct);
+            var estimate = await db.Set<OutcomeDurationEstimate>().SingleOrDefaultAsync(x => x.Id == estimateId && x.OutcomeId == outcomeId,ct)
+                ?? throw new KeyNotFoundException("Süre sürümü bu kazanıma ait değil.");
+            if (r.IsActive) throw new ArgumentException("Yayınlama için kazanım süre incelemesi uç noktasını kullanın.");
+            estimate.Withdraw(); return outcome;
+        },ct);
+
+    public async Task DeleteEstimateAsync(Guid outcomeId,Guid estimateId,CurriculumDeleteRequest r,CancellationToken ct)
+    {
+        if (r.ConfirmId != estimateId) throw new ArgumentException("Silinecek süre kimliğini doğrulayın.");
+        await Write("outcomes",outcomeId,r.Fingerprint,r.Reason,"CurriculumDurationDelete",async () =>
+        {
+            var outcome = await Load("outcomes",outcomeId,ct);
+            var estimate = await db.Set<OutcomeDurationEstimate>().SingleOrDefaultAsync(x => x.Id == estimateId && x.OutcomeId == outcomeId,ct)
+                ?? throw new KeyNotFoundException("Süre sürümü bu kazanıma ait değil.");
+            if (await db.Set<StudyPlanTaskOutcome>().AnyAsync(x => x.EstimateId == estimateId,ct))
+                throw new BusinessRuleException("Catalog.InUse","Bu süre sürümü öğrenci planında kullanılmış; silinemez. Yayından kaldırabilirsiniz.");
+            db.Remove(estimate); return outcome;
         },ct);
     }
 
@@ -259,7 +289,8 @@ public sealed class CoachingCurriculumManagementService(CoachingDbContext db, IC
             var mappings = await db.Set<StudyCatalogTopicOutcome>().AsNoTracking().Where(x => x.OutcomeId == outcome.Id).OrderBy(x => x.TopicId).ToArrayAsync(ct);
             var paths = new List<CurriculumMapping>();
             foreach (var m in mappings) paths.Add(new(m.TopicId,await Path("topics",m.TopicId,ct),m.IsApproved,m.Evidence));
-            node = node with { Estimates = await db.Set<OutcomeDurationEstimate>().AsNoTracking().Where(x => x.OutcomeId == outcome.Id).OrderByDescending(x => x.Number).ToArrayAsync(ct), Mappings = paths };
+            node = node with { Estimates = await db.Set<OutcomeDurationEstimate>().AsNoTracking().Where(x => x.OutcomeId == outcome.Id).OrderByDescending(x => x.Number).ToArrayAsync(ct), Mappings = paths,
+                UsedEstimateIds = await db.Set<StudyPlanTaskOutcome>().Where(x => x.OutcomeId == outcome.Id).Select(x => x.EstimateId).Distinct().ToArrayAsync(ct) };
         }
         else
         {

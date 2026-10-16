@@ -4,14 +4,14 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Observable, Subscription, finalize, forkJoin, switchMap } from 'rxjs';
+import { Observable, Subscription, catchError, finalize, forkJoin, switchMap, throwError } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
 type Kind = 'groups' | 'lessons' | 'units' | 'topics' | 'outcomes';
-interface Estimate { id: string; number: number; learningMinutes: number; practiceMinutes: number; checkMinutes: number; confidence: string; evidence: string; isPublished: boolean }
+interface Estimate { id: string; number: number; learningMinutes: number; practiceMinutes: number; checkMinutes: number; confidence: string; evidence: string; isPublished: boolean; method?: string }
 interface Mapping { topicId: string; path: string; isApproved: boolean; evidence: string }
 interface Node { kind: Kind; id: string; name: string; parentId: string | null; parentKind: Kind | null; isActive: boolean; path: string; fingerprint: string; canDelete: boolean; blockers: string[];
-  code?: string; gradeNumber?: number | null; examCode?: string | null; displayOrder?: number | null; estimatedMinutes?: number | null; officialTopicId?: string; sourcePage?: number; notes?: string; estimates: Estimate[]; mappings: Mapping[] }
+  code?: string; gradeNumber?: number | null; examCode?: string | null; displayOrder?: number | null; estimatedMinutes?: number | null; officialTopicId?: string; sourcePage?: number; notes?: string; estimates: Estimate[]; mappings: Mapping[]; usedEstimateIds?: string[] }
 interface Page { items: Node[]; totalCount: number; pageNumber: number; pageSize: number }
 interface Branch { rows: Node[]; page: number; total: number; loading: boolean; open: boolean; error?: string }
 interface Form { name: string; reason: string; parentId: string | null; gradeNumber: number | null; examCode: string | null; displayOrder: number | null; estimatedMinutes: number | null; code: string; officialTopicId: string | null; sourcePage: number; notes: string }
@@ -35,6 +35,7 @@ export class CoachingCurriculumManagerComponent implements OnInit {
   form: Form = this.empty(); kind: Kind = 'groups'; rootSearch = ''; rootScope: 'groups' | 'lessons' | 'outcomes' = 'groups';
   destinationKind: Kind = 'groups'; destinationSearch = ''; destinationPage = 1; destinationId = ''; sourceTopicId = '';
   moveConfirmed = false; deleteConfirmation = ''; statusConfirmed = false;
+  estimateConfirmation = '';
   editionId = ''; learningMinutes = 0; practiceMinutes = 0; checkMinutes = 0; confidence = 'Low'; durationEvidence = ''; publishDuration = false;
 
   ngOnInit() { this.loadRoot(); this.destroy.onDestroy(() => { this.detailRequest?.unsubscribe(); this.destinationRequest?.unsubscribe(); this.editionRequest?.unsubscribe(); this.branchRequests.forEach(x => x.unsubscribe()); }); }
@@ -77,7 +78,7 @@ export class CoachingCurriculumManagerComponent implements OnInit {
     this.selected.set(n); this.kind = n.kind; this.creating.set(false); this.editing.set(true);
     this.form = { ...this.empty(),name:n.name,parentId:n.parentId,gradeNumber:n.gradeNumber ?? null,examCode:n.examCode ?? null,displayOrder:n.displayOrder ?? null,estimatedMinutes:n.estimatedMinutes ?? null,
       code:n.code ?? '',officialTopicId:n.officialTopicId ?? null,sourcePage:n.sourcePage ?? 1,notes:n.notes ?? '' };
-    this.initial = JSON.stringify(this.form); this.moveConfirmed = false; this.statusConfirmed = false; this.deleteConfirmation = ''; this.destinationId = ''; this.destinations.set([]);
+    this.initial = JSON.stringify(this.form); this.moveConfirmed = false; this.statusConfirmed = false; this.deleteConfirmation = ''; this.estimateConfirmation = ''; this.destinationId = ''; this.destinations.set([]);
     this.sourceTopicId = n.mappings?.[0]?.topicId ?? ''; this.destinationKind = n.kind === 'lessons' ? 'groups' : n.kind === 'units' ? 'lessons' : n.kind === 'outcomes' ? 'topics' : 'units';
     const estimate = n.estimates?.find(x => x.isPublished) ?? n.estimates?.[0];
     this.learningMinutes = estimate?.learningMinutes ?? 0; this.practiceMinutes = estimate?.practiceMinutes ?? 0; this.checkMinutes = estimate?.checkMinutes ?? 0;
@@ -135,18 +136,30 @@ export class CoachingCurriculumManagerComponent implements OnInit {
     if (!n || this.busy() || this.form.reason.trim().length < 5 || this.durationEvidence.trim().length < 5) return;
     if (parts.some(x => !Number.isInteger(x) || x < 0) || total < 1 || total > 1440) { this.error.set('Toplam süre 1–1440 dakika olmalıdır.'); return; }
     if (this.publishDuration && !n.mappings.some(x => x.isApproved)) { this.error.set('Önce en az bir konu eşleştirmesini onaylayın.'); return; }
-    this.busy.set(true); this.error.set(''); this.message.set('');
-    this.http.post<{data:Estimate}>(`${this.outcomeBase}/${n.id}/estimates`,{learningMinutes:this.learningMinutes,practiceMinutes:this.practiceMinutes,checkMinutes:this.checkMinutes,
-      confidence:this.confidence,evidence:this.durationEvidence.trim(),reason:this.form.reason.trim()}).pipe(takeUntilDestroyed(this.destroy),finalize(() => this.busy.set(false))).subscribe({
-      next:r => {
-        if (this.publishDuration) this.write(this.http.put(`${this.outcomeBase}/estimates/${r.data.id}/publication`,{reason:this.form.reason.trim()}).pipe(switchMap(() => this.http.get<{data:Node}>(`${this.base}/outcomes/${n.id}`))),'Yeni süre sürümü yayınlandı.');
-        else { this.open(n); this.message.set('Yeni süre sürümü taslak olarak kaydedildi.'); }
-      },error:e => this.fail(e)
-    });
+    let created = false;
+    const request = this.http.post<{data:Estimate}>(`${this.outcomeBase}/${n.id}/estimates`,{learningMinutes:this.learningMinutes,practiceMinutes:this.practiceMinutes,checkMinutes:this.checkMinutes,
+      confidence:this.confidence,evidence:this.durationEvidence.trim(),reason:this.form.reason.trim()}).pipe(switchMap(r => {
+        created = true;
+        return this.publishDuration
+          ? this.http.put(`${this.outcomeBase}/estimates/${r.data.id}/publication`,{reason:this.form.reason.trim()}).pipe(switchMap(() => this.http.get<{data:Node}>(`${this.base}/outcomes/${n.id}`)))
+          : this.http.get<{data:Node}>(`${this.base}/outcomes/${n.id}`);
+      }),catchError(e => {
+        if (created) return throwError(() => ({error:{message:'Süre sürümü oluşturuldu; sonraki işlem tamamlanamadı. Kaydı yeniden açıp süre geçmişini kontrol edin; yeniden sürüm oluşturmayın.'}}));
+        return throwError(() => e);
+      }));
+    this.write(request,this.publishDuration ? 'Yeni süre sürümü yayınlandı.' : 'Yeni süre sürümü taslak olarak kaydedildi.');
   }
   publish(estimate: Estimate) {
     const n = this.selected(); if (!n || this.busy() || this.form.reason.trim().length < 5) return;
     this.write(this.http.put(`${this.outcomeBase}/estimates/${estimate.id}/publication`,{reason:this.form.reason.trim()}).pipe(switchMap(() => this.http.get<{data:Node}>(`${this.base}/outcomes/${n.id}`))),'Süre sürümü yayınlandı.');
+  }
+  withdrawEstimate(e: Estimate) {
+    const n = this.selected(); if (!n || this.busy() || this.estimateConfirmation !== e.id || this.form.reason.trim().length < 5) return;
+    this.write(this.http.put<{data:Node}>(`${this.base}/outcomes/${n.id}/estimates/${e.id}/publication`,{fingerprint:n.fingerprint,reason:this.form.reason.trim(),isActive:false}),'Süre sürümü yayından kaldırıldı. Eski planların süreleri korundu.');
+  }
+  deleteEstimate(e: Estimate) {
+    const n = this.selected(); if (!n || this.busy() || n.usedEstimateIds?.includes(e.id) || this.estimateConfirmation !== e.id || this.deleteConfirmation !== 'SİL' || this.form.reason.trim().length < 5) return;
+    this.write(this.http.delete<{data:Node}>(`${this.base}/outcomes/${n.id}/estimates/${e.id}`,{body:{fingerprint:n.fingerprint,reason:this.form.reason.trim(),confirmId:e.id}}),'Kullanılmamış süre sürümü silindi.');
   }
   total(estimate: Estimate) { return estimate.learningMinutes + estimate.practiceMinutes + estimate.checkMinutes; }
   private write(request: Observable<{data:Node}>,message: string) {
