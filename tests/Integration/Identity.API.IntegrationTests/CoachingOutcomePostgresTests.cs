@@ -15,6 +15,55 @@ namespace Identity.API.IntegrationTests;
 public sealed class CoachingOutcomePostgresTests
 {
     [CoachingProfilePostgresFact]
+    public async Task Full52OutcomePilotImportsInto13LocalTopics_AsReviewOnly_WithOfficial180PeriodBudget()
+    {
+        var connection = new NpgsqlConnectionStringBuilder(Environment.GetEnvironmentVariable("COACHING_PROFILE_TEST_POSTGRES")) { Pooling = false };
+        Assert.Contains(connection.Host, new[] { "127.0.0.1", "localhost" });
+        var database = "test_coaching_full_lgs_" + Guid.NewGuid().ToString("N");
+        await using var admin = new NpgsqlConnection(connection.ConnectionString); await admin.OpenAsync();
+        await using (var create = new NpgsqlCommand($"CREATE DATABASE \"{database}\"", admin)) await create.ExecuteNonQueryAsync();
+        try
+        {
+            connection.Database = database;
+            await using var db = new CoachingDbContext(new DbContextOptionsBuilder<CoachingDbContext>().UseNpgsql(connection.ConnectionString,
+                x => x.MigrationsHistoryTable("__ef_migrations_history", "coaching")).Options);
+            await db.Database.MigrateAsync();
+            var root = new DirectoryInfo(AppContext.BaseDirectory);
+            while (root is not null && !Directory.Exists(Path.Combine(root.FullName, "data", "coaching-outcomes"))) root = root.Parent;
+            Assert.NotNull(root);
+            var package = System.Text.Json.JsonSerializer.Deserialize<OutcomeImportPackage>(File.ReadAllText(Path.Combine(root.FullName,
+                "data", "coaching-outcomes", "lgs-matematik-2026-pilot.json")), new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true })!;
+            var lesson = StudyCatalogLesson.Create("approved-catalog", "00c641eb-c82d-4712-3b41-08dd3944e858", "Matematik", null, "LGS"); lesson.SetActive(true);
+            var unit = StudyCatalogUnit.Create("approved-catalog", "f2805d63-5bec-4773-0062-08dd3b8d6103", lesson.Id, "Matematik (LGS)", 1); unit.SetActive(true);
+            db.AddRange(lesson, unit);
+            foreach (var map in package.Mappings)
+            {
+                var groupCode = package.Outcomes.Single(x => x.Code == map.OutcomeCodes[0]).OfficialTopicCode;
+                var topic = StudyCatalogTopic.Create("approved-catalog", map.TopicSourceId, lesson.Id, unit.Id,
+                    package.OfficialTopics.Single(x => x.Code == groupCode).Name, null, 1); topic.SetActive(true); db.Add(topic);
+            }
+            await db.SaveChangesAsync();
+            await using var f = await CoachingOutcomePilotTests.Fixture.Create();
+            var service = new CoachingOutcomeCatalogService(db, f.Scope, f.Inner.Actor);
+            var preview = await service.PreviewAsync(package, default);
+            Assert.Equal(13, preview.MatchedTopics); Assert.Empty(preview.UnmatchedTopics);
+            await service.ImportAsync(new(package, preview.Fingerprint, "Tam LGS pilot aktarımı"), default);
+            var edition = Assert.Single(await service.ListAsync(default));
+            var detail = await service.GetAsync(edition.Id, default);
+            Assert.Equal(52, detail.Outcomes.Count); Assert.Equal(52, detail.Estimates.Count);
+            Assert.Equal(12, detail.OfficialTopics.Count); Assert.Equal(180, detail.OfficialTopics.Sum(x => x.LessonPeriods));
+            Assert.Equal(58, detail.Mappings.Count); Assert.Equal(13, detail.Topics.Count);
+            Assert.All(detail.Estimates, x => { Assert.False(x.IsPublished); Assert.Equal("OfficialBudgetDraft", x.Method); });
+            Assert.All(detail.Mappings, x => Assert.False(x.IsApproved));
+            Assert.Equal(2, await db.Set<StudyCatalogOutcomeSource>().CountAsync());
+            await service.ImportAsync(new(package, (await service.PreviewAsync(package, default)).Fingerprint, "Tam paketi yeniden aktar"), default);
+            Assert.Equal(52, await db.Set<StudyCatalogOutcome>().CountAsync());
+        }
+        finally
+        { await using var drop = new NpgsqlCommand($"DROP DATABASE \"{database}\" WITH (FORCE)", admin); await drop.ExecuteNonQueryAsync(); }
+    }
+
+    [CoachingProfilePostgresFact]
     public async Task MigrationPreservesWork_ImportAndSnapshotPersist_AndPersonalExportIncludesOnlyOwnAllocations()
     {
         var connection = new NpgsqlConnectionStringBuilder(Environment.GetEnvironmentVariable("COACHING_PROFILE_TEST_POSTGRES")) { Pooling = false };
@@ -70,6 +119,10 @@ public sealed class CoachingOutcomePostgresTests
             {
                 db.Add(StudyPlanTaskOutcome.Create(plan.Tasks[0].Id, Guid.NewGuid(), estimate.Id, 5, "Catalog")); await db.SaveChangesAsync();
             });
+            db.ChangeTracker.Clear();
+            await db.StudyPlanTasks.Where(x => x.RevisionId == plan.Id).ExecuteDeleteAsync();
+            Assert.Empty(await db.Set<StudyPlanTaskOutcome>().ToArrayAsync());
+            Assert.Equal(2, await db.Set<StudyCatalogOutcome>().CountAsync());
         }
         finally
         { await using var drop = new NpgsqlCommand($"DROP DATABASE \"{database}\" WITH (FORCE)", admin); await drop.ExecuteNonQueryAsync(); }
