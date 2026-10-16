@@ -32,6 +32,13 @@ describe('StudentStudyPlansComponent', () => {
     expect(component.selected()?.id).toBe('plan');
     expect(service.get).toHaveBeenCalledTimes(1);
   });
+  it('shows the saved outcome and estimate version to students and staff', () => {
+    const { component, service, fixture } = setup();
+    service.get.mockReturnValue(of({ ...active, tasks: [{ ...active.tasks[0], outcomes: [{ outcomeId: 'o', code: 'M.8.1.1.1', name: 'Çarpanları bulur', estimateId: 'e', estimateNumber: 2, allocatedMinutes: 30, origin: 'Catalog' }] }] } as any));
+    component.open('plan'); fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('M.8.1.1.1');
+    expect(fixture.nativeElement.textContent).toContain('süre sürümü 2');
+  });
   it('keeps the address aligned with the opened and newly saved plan', () => {
     const { component, service, router } = setup('old-plan');
     service.get.mockReturnValue(of({ ...active, id: 'new-plan' }));
