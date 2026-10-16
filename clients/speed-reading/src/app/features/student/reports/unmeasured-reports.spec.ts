@@ -7,16 +7,40 @@ import { StudentReadingService } from '../../../core/services/student-reading.se
 import { StudentDashboardReportComponent } from './student-dashboard-report.component';
 import { StudentReadingSpeedReportComponent } from './student-reading-speed-report.component';
 import { StudentComprehensionReportComponent } from './student-comprehension-report.component';
+import { StudentActivityReportComponent } from './student-activity-report.component';
 
 describe('reports without measured speed', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [StudentDashboardReportComponent, StudentReadingSpeedReportComponent, StudentComprehensionReportComponent],
+      imports: [StudentDashboardReportComponent, StudentReadingSpeedReportComponent, StudentComprehensionReportComponent, StudentActivityReportComponent],
       providers: [provideRouter([]), provideCharts(withDefaultRegisterables()), ...[ReportsService, AuthService, StudentReadingService].map(provide => ({ provide, useValue: {} }))]
     });
     spyOn(StudentDashboardReportComponent.prototype, 'ngOnInit');
     spyOn(StudentReadingSpeedReportComponent.prototype, 'ngOnInit');
     spyOn(StudentComprehensionReportComponent.prototype, 'ngOnInit');
+    spyOn(StudentActivityReportComponent.prototype, 'ngOnInit');
+  });
+
+  it('keeps exercise chart names and both trend month labels entirely Turkish', () => {
+    const fixture = TestBed.createComponent(StudentDashboardReportComponent);
+    fixture.componentInstance.report.set({ activityDistribution: ['Scanning', 'Skimming', 'Eye Tracking', 'Chunking'].map(name => ({ name, series: [{ value: 1 }] })) } as any);
+    fixture.componentInstance.historyData.set([{ isMeasured: true, calculatedWPM: 150, totalQuestions: 1, comprehensionRate: 0, completedAt: '2026-10-16T12:00:00Z' }] as any);
+    expect(fixture.componentInstance.pieChartData().map(item => item.name)).toEqual(['Tarayarak okuma', 'Göz gezdirerek okuma', 'Göz takibi', 'Gruplayarak okuma']);
+    expect(fixture.componentInstance.wpmProgressData()[0].series[0].name).toBe('16 Eki');
+    expect(fixture.componentInstance.comprehensionTrendData()[0].series[0].name).toBe('16 Eki');
+  });
+
+  it('renders Turkish activity empty states and minute units', () => {
+    const fixture = TestBed.createComponent(StudentActivityReportComponent);
+    fixture.componentInstance.loading.set(false);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Etkinlik verisi bulunmuyor');
+    fixture.componentInstance.report.set({ currentStreak: { days: 0, longestStreak: 0 }, activityHeatmap: { data: [] }, hourlyDistributionChart: { data: [] }, dailyDistributionChart: { data: [] }, studyTime: { totalMinutes: 75, averageSessionLength: 15, totalSessions: 5, mostActiveHour: 12 } } as any);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('15 dk');
+    expect(fixture.nativeElement.textContent).not.toContain('min');
+    expect(fixture.nativeElement.textContent).toContain('Daha az');
+    expect(fixture.nativeElement.textContent).toContain('Daha fazla');
   });
 
   it('shows no data instead of a zero speed gauge, benchmarks or statistics', () => {
@@ -73,6 +97,7 @@ describe('reports without measured speed', () => {
       fixture.detectChanges();
       expect(!!fixture.nativeElement.querySelector('app-number-card')).toBe(available);
       if (!available) expect(fixture.nativeElement.textContent).toContain('Veri yok');
+      if (available) expect(fixture.componentInstance.overallComprehensionData()[0].name).toBe('Anlama');
     });
   }
 });
