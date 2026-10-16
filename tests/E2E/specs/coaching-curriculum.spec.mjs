@@ -14,7 +14,7 @@ async function catalog(context){
   const writes=[]; let conflict=false;
   const document=n=>{
     const parent=nodes.find(x=>x.id===n.parentId); const path=parent?document(parent).path+' / '+n.name:n.name;
-    return {...n,path,mappings:n.kind==='outcomes'?[{topicId:'child',path:document(nodes.find(x=>x.id==='child')).path,isApproved:true,evidence:'Konu kapsamı incelendi.'}]:[]};
+    return {...n,path,mappings:n.kind==='outcomes'&&parent?[{topicId:parent.id,path:document(parent).path,isApproved:n.id==='outcome',evidence:'Konu kapsamını inceleyin.'}]:[]};
   };
   await context.route('**/api/**',async route=>{
     const req=route.request(),url=new URL(req.url()),path=url.pathname,method=req.method(),body=method==='GET'?null:req.postDataJSON();
@@ -31,7 +31,7 @@ async function catalog(context){
       let n=nodes.find(x=>x.id===id&&x.kind===kind);
       if(method==='GET')return respond(document(n));
       writes.push({kind,id,action,body});
-      if(method==='POST'&&!id){n=node(kind,'created',body.name,body.parentId||null,kind==='groups'?null:'groups',{canDelete:true,blockers:[]});nodes.push(n);return respond(document(n));}
+      if(method==='POST'&&!id){const owner=nodes.find(x=>x.id===body.parentId);n=node(kind,'created-'+writes.length,body.name,body.parentId||null,owner?.kind||null,{...body,canDelete:true,blockers:[]});nodes.push(n);return respond(document(n));}
       if(method==='DELETE'&&!action){nodes.splice(nodes.indexOf(n),1);return respond({deleted:true});}
       if(method==='POST'&&action==='move'){
         n.isActive=false; const copy={...n,id:'moved',isActive:true,parentId:body.destinationId,parentKind:'units',fingerprint:'moved-version'};nodes.push(copy);return respond(document(copy));
@@ -52,6 +52,8 @@ async function catalog(context){
       const estimate={id:'estimate-2',number:2,...body,method:'ReviewedStudy',isPublished:false};n.estimates.unshift(estimate);return respond(estimate);
     }
     if(path.endsWith('/estimates/estimate-2/publication')){writes.push({action:'publication',body});nodes.find(x=>x.id==='outcome').estimates[0].isPublished=true;return respond({});}
+    if(path.endsWith('/coaching-admin/outcomes'))return respond([{id:'edition',code:'meb-lgs-2026',subjectName:'Matematik',academicYearStart:2026,academicYearEnd:2026}]);
+    if(path.endsWith('/coaching-admin/outcomes/edition'))return respond({officialTopics:[{id:'official',name:'Çarpanlar ve Katlar',lessonPeriods:10}]});
     return respond([]);
   });
   return {nodes,writes,setConflict:value=>conflict=value};
@@ -83,7 +85,7 @@ test('hierarchy supports group creation, topic edit, move and guarded deletion',
   await page.getByRole('button',{name:'Kaydı oluştur',exact:true}).click();await expect(page.getByRole('heading',{name:'Deneme grubu',exact:true})).toBeVisible();
   await page.getByText('Kullanım durumu ve güvenli silme',{exact:true}).click();await page.getByLabel('İşlem gerekçesi',{exact:true}).fill('Kullanılmayan deneme grubunu sil');
   await page.getByLabel('Onaylamak için SİL yazın',{exact:true}).fill('SİL');await page.getByRole('button',{name:'Kalıcı sil',exact:true}).click();
-  await expect(page.getByText('Kullanılmayan kayıt silindi.',{exact:true})).toBeVisible();expect(f.nodes.some(x=>x.id==='created')).toBe(false);
+  await expect(page.getByText('Kullanılmayan kayıt silindi.',{exact:true})).toBeVisible();expect(f.nodes.some(x=>x.name==='Deneme grubu')).toBe(false);
 });
 
 test('outcome text and duration versions are readable, editable and safely withdrawn',async({context,page})=>{
@@ -113,4 +115,19 @@ test('concurrent edit preserves entered values and asks before discarding them',
   await expect(page.getByLabel('Ad',{exact:true})).toHaveValue('Korunacak konu adı');await page.getByRole('button',{name:'Matematik düzenle',exact:true}).click();
   await expect(page.getByText(/Kaydedilmemiş değişiklikler var/)).toBeVisible();await page.getByRole('button',{name:'Düzenlemeye devam et',exact:true}).click();
   await expect(page.getByLabel('Ad',{exact:true})).toHaveValue('Korunacak konu adı');
+});
+
+test('administrator creates unit, topic, subtopic and a sourced outcome through the real forms',async({context,page})=>{
+  const f=await catalog(context);await openBranch(page);await page.getByRole('button',{name:'Matematik düzenle',exact:true}).click();
+  for(const [button,name] of [['+ Ünite','Yeni ünite'],['+ Konu','Yeni konu'],['+ Alt konu','Yeni alt konu']]){
+    await page.getByRole('button',{name:button,exact:true}).click();await page.getByLabel('Ad',{exact:true}).fill(name);
+    await page.getByLabel('İşlem gerekçesi',{exact:true}).fill(name+' kaydı oluştur');await page.getByRole('button',{name:'Kaydı oluştur',exact:true}).click();
+    await expect(page.getByRole('heading',{name,exact:true})).toBeVisible();
+  }
+  await page.getByRole('button',{name:'+ Kazanım',exact:true}).click();await page.getByLabel('Kazanım metni',{exact:true}).fill('Pozitif tam sayıları karşılaştırır.');
+  await page.getByLabel('Kazanım kodu',{exact:true}).fill('M.8.1.1.9');await page.getByLabel('Kaynak program',{exact:true}).selectOption('edition');
+  await page.getByLabel('Programdaki konu grubu',{exact:true}).selectOption('official');await page.getByLabel('Kaynak sayfa',{exact:true}).fill('73');
+  await page.getByLabel('İşlem gerekçesi',{exact:true}).fill('Kaynak program dayanağıyla yeni kazanım oluştur');await page.getByRole('button',{name:'Kaydı oluştur',exact:true}).click();
+  await expect(page.getByRole('heading',{name:'Pozitif tam sayıları karşılaştırır.',exact:true})).toBeVisible();
+  expect(f.writes.at(-1).body.officialTopicId).toBe('official');expect(f.nodes.find(x=>x.name==='Yeni alt konu').parentKind).toBe('topics');
 });
