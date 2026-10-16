@@ -122,12 +122,17 @@ describe('CoachingPortalProgressComponent', () => {
   });
 
   it('shows no-data instead of zero achievement when there are no teacher exam results', () => {
-    service.getStudentProgress.mockReturnValue(of({ totalExams: 0, averageExamPercentage: 0 }));
+    service.getStudentProgress.mockReturnValue(of({ studentId: 'user-1', totalAssignments: 0, submittedAssignments: 0, gradedAssignments: 0,
+      totalExams: 0, averageExamPercentage: 0, totalGoals: 0, completedGoals: 0, averageGoalProgress: 0,
+      totalSessions: 0, upcomingSessions: 0, attendedSessions: 0 }));
+    service.getStudentExamResults.mockReturnValue(of({ items: [{ examId: 'self', examTitle: 'Kendi denemem', examType: 'Mock',
+      examDate: '2026-10-01T00:00:00Z', score: 80, maxScore: 100, source: 'StudentReported' }], pageNumber: 1, pageSize: 25, totalCount: 1, totalPages: 1 }));
     const fixture = TestBed.createComponent(CoachingPortalProgressComponent); fixture.detectChanges();
     expect(fixture.componentInstance.averageScore()).toBeNull();
     expect(fixture.nativeElement.querySelectorAll('.text-3xl')[1].textContent.trim()).toBe('—');
     expect(fixture.nativeElement.textContent).toContain('Henüz öğretmen sınavı sonucu yok');
-    fixture.componentInstance.summary.set({ totalExams: 1, averageExamPercentage: 0 } as any);
+    expect(fixture.nativeElement.textContent).toContain('Kendi denemem');
+    fixture.componentInstance.summary.update(summary => ({ ...summary!, totalExams: 1, averageExamPercentage: 0 }));
     fixture.detectChanges();
     expect(fixture.componentInstance.averageScore()).toBe(0);
     expect(fixture.nativeElement.querySelectorAll('.text-3xl')[1].textContent.trim()).toBe('%0');
