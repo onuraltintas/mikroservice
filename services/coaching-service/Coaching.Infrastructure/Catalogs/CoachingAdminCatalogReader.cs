@@ -22,7 +22,7 @@ public sealed class CoachingAdminCatalogReader(CoachingDbContext db, ICoachingAd
         IQueryable<AdminCatalogRow> query = kind switch
         {
             CatalogKind.Lessons => db.StudyCatalogLessons.AsNoTracking().Select(x => new AdminCatalogRow
-            { Id = x.Id, Name = x.Name, Source = x.Source, SourceId = x.SourceId, IsActive = x.IsActive, GradeNumber = x.GradeNumber, ExamCode = x.ExamCode }),
+            { Id = x.Id, Name = x.Name, Source = x.Source, SourceId = x.SourceId, IsActive = x.IsActive, GradeNumber = x.GradeNumber, ExamCode = x.ExamCode, CurriculumVersionId = x.CurriculumVersionId }),
             CatalogKind.Units => db.StudyCatalogUnits.AsNoTracking().Select(x => new AdminCatalogRow
             { Id = x.Id, Name = x.Name, Source = x.Source, SourceId = x.SourceId, IsActive = x.IsActive, LessonId = x.LessonId, DisplayOrder = x.DisplayOrder }),
             CatalogKind.Topics => db.StudyCatalogTopics.AsNoTracking().Select(x => new AdminCatalogRow

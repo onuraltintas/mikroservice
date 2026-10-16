@@ -117,6 +117,8 @@ public sealed class CoachingDataExportRepository(CoachingDbContext context)
         var profileAssignments = await context.CoachingTeacherStudentAssignments.AsNoTracking()
             .Where(x => x.StudentUserId == studentId || x.TeacherUserId == studentId).ToArrayAsync(cancellationToken);
         return new CoachingDataExportDto(
-            "1.4", studentId, exportedAt, assignments, exams, goals, sessions, agreements, plans, availability, reminders, fees, profile, profileAssignments);
+            "1.5", studentId, exportedAt, assignments, exams, goals, sessions, agreements, plans, availability, reminders, fees, profile, profileAssignments,
+            await context.StudentLearningContexts.AsNoTracking().Include(x => x.CoursePreferences).Include(x => x.TopicStates)
+                .SingleOrDefaultAsync(x => x.StudentUserId == studentId, cancellationToken));
     }
 }

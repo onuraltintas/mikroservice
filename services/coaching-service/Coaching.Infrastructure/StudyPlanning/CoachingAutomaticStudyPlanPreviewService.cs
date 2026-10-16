@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Coaching.Infrastructure.StudyPlanning;
 
-public sealed class CoachingAutomaticStudyPlanPreviewService(CoachingDbContext db, ICoachingAccessPolicy access)
+public sealed class CoachingAutomaticStudyPlanPreviewService(CoachingDbContext db, ICoachingAccessPolicy access, ILearningSetupService? setup = null)
     : IAutomaticStudyPlanPreviewService
 {
     public static void Validate(AutomaticStudyPreviewRequest request)
@@ -28,6 +28,17 @@ public sealed class CoachingAutomaticStudyPlanPreviewService(CoachingDbContext d
         if (access.CurrentUserId is not { } studentId || !access.IsCurrentStudent(studentId))
             throw new BusinessRuleException("Authorization.Forbidden", "Yalnız kendi öğrenci hesabınızla kullanabilirsiniz.");
         Validate(request);
+        if (request.ExpectedLearningContextVersion.HasValue)
+        {
+            var learning = await (setup ?? throw new InvalidOperationException("Learning setup service is required.")).GetAsync(cancellationToken);
+            if (!learning.IsReady || learning.Context?.Version != request.ExpectedLearningContextVersion)
+                throw new BusinessRuleException("StudyPlanning.Conflict", "Eğitim kurulumu eksik veya değişmiş. Kurulum bilgilerini yeniden yükleyin.");
+            var lessons = learning.Context.CoursePreferences.Select(x => x.LessonId).ToArray();
+            var selectedTopics = request.Topics.Select(x => x.TopicId).ToArray();
+            if (await db.StudyCatalogTopics.CountAsync(x => Enumerable.Contains(selectedTopics, x.Id)
+                && Enumerable.Contains(lessons, x.LessonId), cancellationToken) != selectedTopics.Length)
+                throw new ArgumentException("Yalnız kurulumda seçtiğiniz derslerin konularını kullanabilirsiniz.");
+        }
         var availability = await db.StudyAvailability.AsNoTracking()
             .SingleOrDefaultAsync(x => x.StudentId == studentId, cancellationToken)
             ?? throw new KeyNotFoundException("Önce çalışma saatlerinizi belirleyin.");

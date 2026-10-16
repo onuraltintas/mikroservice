@@ -25,6 +25,7 @@ public sealed record AdminCatalogFilter
 
 public sealed record AdminCatalogRow
 {
+    public Guid? CurriculumVersionId { get; init; }
     public Guid Id { get; init; }
     public required string Name { get; init; }
     public required string Source { get; init; }
