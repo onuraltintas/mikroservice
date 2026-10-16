@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Coaching.Domain.Entities;
+using Coaching.Domain.Profiles;
 using MassTransit;
 using System.Reflection;
 using EduPlatform.Shared.Infrastructure.Middleware;
@@ -20,6 +21,10 @@ public class CoachingDbContext : DbContext
     }
 
     // DbSets
+    public DbSet<CoachingStudentProfile> CoachingStudentProfiles => Set<CoachingStudentProfile>();
+    public DbSet<CoachingTeacherProfile> CoachingTeacherProfiles => Set<CoachingTeacherProfile>();
+    public DbSet<CoachingInstitutionMembership> CoachingInstitutionMemberships => Set<CoachingInstitutionMembership>();
+    public DbSet<CoachingTeacherStudentAssignment> CoachingTeacherStudentAssignments => Set<CoachingTeacherStudentAssignment>();
     public DbSet<StudyCatalogLesson> StudyCatalogLessons => Set<StudyCatalogLesson>();
     public DbSet<StudyCatalogUnit> StudyCatalogUnits => Set<StudyCatalogUnit>();
     public DbSet<StudyCatalogTopic> StudyCatalogTopics => Set<StudyCatalogTopic>();
