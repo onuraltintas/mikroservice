@@ -143,6 +143,73 @@ public sealed class CurriculumManagementTests
         await Assert.ThrowsAsync<ArgumentException>(() => f.Service.MoveAsync(kind,doc.Id,new(destination,doc.Fingerprint,"Pasif üst kayda taşı"),default));
     }
 
+    [Fact]
+    public async Task AddingSubtopicCanExplicitlyMoveParentOutcomesWithoutChangingExistingWork()
+    {
+        await using var f=new Fixture();var topic=await f.Seed();
+        var taskBefore=JsonSerializer.Serialize(await f.Db.StudyPlanTasks.AsNoTracking().SingleAsync());
+        await Assert.ThrowsAsync<ArgumentException>(() => f.Service.SaveAsync("topics",null,new("Yeni alt konu","Alt konu oluştur",ParentId:topic.Id),default));
+        var child=await f.Service.SaveAsync("topics",null,new("Yeni alt konu","Kazanımları alt konuya taşı",ParentId:topic.Id,MoveParentOutcomes:true),default);
+        var mapping=await f.Db.Set<StudyCatalogTopicOutcome>().SingleAsync();Assert.Equal(child.Id,mapping.TopicId);Assert.False(mapping.IsApproved);
+        Assert.Equal(taskBefore,JsonSerializer.Serialize(await f.Db.StudyPlanTasks.AsNoTracking().SingleAsync()));
+        Assert.Single(await f.Db.Set<StudyPlanTaskOutcome>().ToArrayAsync());
+    }
+
+    [Fact]
+    public async Task OutcomeMoveChangesOnlySelectedMapping_RequiresNewApproval_AndKeepsSavedAllocation()
+    {
+        await using var f=new Fixture();var topic=await f.Seed();
+        var target=StudyCatalogTopic.Create("test","target",topic.LessonId,topic.UnitId,"Hedef konu",null,2);target.SetActive(true);f.Db.Add(target);await f.Db.SaveChangesAsync();
+        var outcome=await f.Db.Set<StudyCatalogOutcome>().SingleAsync();var doc=await f.Service.GetAsync("outcomes",outcome.Id,default);
+        await Assert.ThrowsAsync<ArgumentException>(()=>f.Service.MoveAsync("outcomes",outcome.Id,new(target.Id,doc.Fingerprint,"Kaynak seçmeden taşı"),default));
+        await f.Service.MoveAsync("outcomes",outcome.Id,new(target.Id,doc.Fingerprint,"Kazanımı yeni konuya taşı",topic.Id),default);
+        var mapping=await f.Db.Set<StudyCatalogTopicOutcome>().SingleAsync();Assert.Equal(target.Id,mapping.TopicId);Assert.False(mapping.IsApproved);
+        Assert.Single(await f.Db.Set<StudyPlanTaskOutcome>().ToArrayAsync());Assert.Equal(topic.Id,(await f.Db.StudyPlanTasks.SingleAsync()).TopicId);
+    }
+
+    [Fact]
+    public async Task GroupsAndUnusedCatalogRecordsSupportEditStatusAndSafeDeletion_AndActiveParentsAreRequired()
+    {
+        await using var f=new Fixture();var group=await f.Service.SaveAsync("groups",null,new("Grup","Grup oluştur"),default);
+        group=await f.Service.SaveAsync("groups",group.Id,new("Yeni grup","Grup adını düzelt",Fingerprint:group.Fingerprint,DisplayOrder:2),default);
+        var lesson=await f.Service.SaveAsync("lessons",null,new("Ders","Ders oluştur",ParentId:group.Id,GradeNumber:8,ExamCode:"LGS"),default);
+        lesson=await f.Service.SetActiveAsync("lessons",lesson.Id,new(lesson.Fingerprint,"Dersi etkinleştir",true),default);
+        group=await f.Service.GetAsync("groups",group.Id,default);
+        await Assert.ThrowsAsync<ArgumentException>(()=>f.Service.SetActiveAsync("groups",group.Id,new(group.Fingerprint,"Grubu pasife al",false),default));
+        await Assert.ThrowsAsync<BusinessRuleException>(()=>f.Service.DeleteAsync("groups",group.Id,new(group.Fingerprint,"Kullanılan grubu sil",group.Id),default));
+        var unit=await f.Service.SaveAsync("units",null,new("Ünite","Ünite oluştur",ParentId:lesson.Id),default);
+        unit=await f.Service.SaveAsync("units",unit.Id,new("Yeni ünite","Ünite adını düzelt",Fingerprint:unit.Fingerprint,DisplayOrder:2),default);
+        unit=await f.Service.SetActiveAsync("units",unit.Id,new(unit.Fingerprint,"Üniteyi etkinleştir",true),default);
+        var topic=await f.Service.SaveAsync("topics",null,new("Konu","Konu oluştur",ParentId:unit.Id,EstimatedMinutes:30),default);
+        topic=await f.Service.SetActiveAsync("topics",topic.Id,new(topic.Fingerprint,"Konuyu etkinleştir",true),default);
+        topic=await f.Service.SetActiveAsync("topics",topic.Id,new(topic.Fingerprint,"Konuyu pasife al",false),default);
+        await Assert.ThrowsAsync<ArgumentException>(()=>f.Service.DeleteAsync("topics",topic.Id,new(topic.Fingerprint,"Yanlış kaydı sil",Guid.NewGuid()),default));
+        await f.Service.DeleteAsync("topics",topic.Id,new(topic.Fingerprint,"Kullanılmayan konuyu sil",topic.Id),default);
+        await f.Service.DeleteAsync("units",unit.Id,new(unit.Fingerprint,"Kullanılmayan üniteyi sil",unit.Id),default);
+        lesson=await f.Service.GetAsync("lessons",lesson.Id,default);await f.Service.DeleteAsync("lessons",lesson.Id,new(lesson.Fingerprint,"Kullanılmayan dersi sil",lesson.Id),default);
+        group=await f.Service.GetAsync("groups",group.Id,default);await f.Service.DeleteAsync("groups",group.Id,new(group.Fingerprint,"Kullanılmayan grubu sil",group.Id),default);
+        Assert.Empty(await f.Db.Set<StudyCatalogLessonGroup>().ToArrayAsync());Assert.NotEmpty(await f.Db.AdminAuditRecords.ToArrayAsync());
+    }
+
+    [Theory]
+    [InlineData("invalid-kind",null,1)]
+    [InlineData("groups",null,0)]
+    [InlineData("groups",null,10001)]
+    public async Task InvalidListRequestsAreRejected(string kind,Guid? parent,int page)
+    { await using var f=new Fixture();await Assert.ThrowsAsync<ArgumentException>(()=>f.Service.ChildrenAsync(kind,parent,null,page,default)); }
+
+    [Fact]
+    public async Task PaginationSearchAndValidationNeverLoadUnboundedCatalogOrWriteInvalidRecords()
+    {
+        await using var f=new Fixture();for(var i=0;i<26;i++)f.Db.Add(StudyCatalogLessonGroup.Create("Grup "+i,i));await f.Db.SaveChangesAsync();
+        var first=await f.Service.ChildrenAsync("groups",null,null,1,default);var second=await f.Service.ChildrenAsync("groups",null,null,2,default);
+        Assert.Equal(25,first.Items.Count);Assert.Single(second.Items);Assert.Equal(26,first.TotalCount);
+        Assert.Single((await f.Service.ChildrenAsync("groups",null,"Grup 25",1,default)).Items);
+        await Assert.ThrowsAsync<ArgumentException>(()=>f.Service.SaveAsync("groups",null,new("Bozuk","kısa"),default));
+        await Assert.ThrowsAsync<ArgumentException>(()=>f.Service.SaveAsync("lessons",null,new("Bozuk","Ders oluştur",GradeNumber:13),default));
+        await Assert.ThrowsAsync<KeyNotFoundException>(()=>f.Service.GetAsync("groups",Guid.NewGuid(),default));
+    }
+
     internal sealed class Fixture : IAsyncDisposable
     {
         public CoachingDbContext Db { get; }
