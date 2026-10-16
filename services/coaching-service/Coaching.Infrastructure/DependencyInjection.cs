@@ -137,6 +137,7 @@ public static class DependencyInjection
         services.AddScoped<ICoachingCms, CoachingCmsService>();
         services.AddScoped<Coaching.Application.StudyPlanning.IStudyAvailabilityService, Coaching.Infrastructure.StudyPlanning.CoachingStudyAvailabilityService>();
         services.AddScoped<Coaching.Application.StudyPlanning.ILearningSetupService, Coaching.Infrastructure.StudyPlanning.CoachingLearningSetupService>();
+        services.AddScoped<Coaching.Infrastructure.Catalogs.CoachingCurriculumService>();
         services.AddScoped<Coaching.Application.StudyPlanning.ITargetSearchService, Coaching.Infrastructure.StudyPlanning.CoachingTargetSearchService>();
         services.AddScoped<Coaching.Infrastructure.StudyPlanning.CoachingGoalTargetService>();
         services.AddScoped<Coaching.Application.StudyPlanning.IGoalTargetService>(sp => sp.GetRequiredService<Coaching.Infrastructure.StudyPlanning.CoachingGoalTargetService>());

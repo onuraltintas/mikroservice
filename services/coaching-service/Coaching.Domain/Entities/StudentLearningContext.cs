@@ -27,6 +27,8 @@ public sealed class CurriculumVersion : AggregateRoot
             Source = StudyCatalogText.Require(source, 300), SourceUrl = sourceUrl is null ? null : StudyCatalogText.Require(sourceUrl, 1000) };
     }
     public void SetPublished(bool published) { IsPublished = published; UpdatedAt = DateTime.UtcNow; }
+    public void RecordActor(Guid actor)
+    { CreatedBy ??= actor.ToString(); UpdatedBy = actor.ToString(); }
 }
 
 public sealed class StudentLearningContext : AggregateRoot

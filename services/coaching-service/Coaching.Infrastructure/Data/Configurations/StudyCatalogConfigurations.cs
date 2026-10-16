@@ -14,6 +14,7 @@ public sealed class StudyCatalogLessonConfiguration : IEntityTypeConfiguration<S
         builder.Property(x => x.SourceId).HasMaxLength(100).IsRequired();
         builder.Property(x => x.Name).HasMaxLength(300).IsRequired();
         builder.Property(x => x.ExamCode).HasMaxLength(10);
+        builder.Property(x => x.CurriculumVersionId).IsConcurrencyToken();
         builder.HasOne<CurriculumVersion>().WithMany().HasForeignKey(x => x.CurriculumVersionId).OnDelete(DeleteBehavior.Restrict);
         builder.HasIndex(x => new { x.Source, x.SourceId }).IsUnique();
         builder.HasIndex(x => new { x.IsActive, x.GradeNumber, x.ExamCode });

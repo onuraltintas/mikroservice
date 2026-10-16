@@ -40,9 +40,11 @@ public sealed class CoachingLearningSetupApiTests
         scope.Global = true;
         var created = await service.CreateAsync(request, default);
         Assert.False(created.IsPublished); Assert.Equal(created.Id, (await f.Db.StudyCatalogLessons.SingleAsync()).CurriculumVersionId);
-        var published = await service.SetPublishedAsync(created.Id, new(created.Version, true, "Yayına hazırlık"), default);
+        lesson.SetActive(true); await f.Db.SaveChangesAsync();
+        var initialVersion = created.Version;
+        var published = await service.SetPublishedAsync(created.Id, new(initialVersion, true, "Yayına hazırlık"), default);
         Assert.True(published.IsPublished);
-        await Assert.ThrowsAsync<BusinessRuleException>(() => service.SetPublishedAsync(created.Id, new(created.Version, false, "Eski sürüm isteği"), default));
+        await Assert.ThrowsAsync<BusinessRuleException>(() => service.SetPublishedAsync(created.Id, new(initialVersion, false, "Eski sürüm isteği"), default));
         await Assert.ThrowsAsync<ArgumentException>(() => service.CreateAsync(request with { Code = "other" }, default));
         Assert.Single(await f.Db.CurriculumVersions.ToListAsync());
     }
