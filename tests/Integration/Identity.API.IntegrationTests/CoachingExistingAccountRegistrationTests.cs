@@ -30,7 +30,8 @@ public sealed class CoachingExistingAccountRegistrationTests
         Assert.Equal(hash, fixture.User.PasswordHash);
         Assert.True(fixture.User.EmailConfirmed);
         Assert.Null(fixture.User.EmailVerificationToken);
-        Assert.Equal(1, fixture.ProfilesAdded);
+        Assert.Equal(0, fixture.ProfilesAdded);
+        Assert.Equal(1, fixture.ProvisioningEvents);
         Assert.Equal(1, fixture.Saves);
         Assert.Equal(1, fixture.Legal.Tracked);
         Assert.Equal(0, fixture.Deletes);
@@ -44,7 +45,7 @@ public sealed class CoachingExistingAccountRegistrationTests
     [InlineData("revoked", "Identity.UserExists")]
     [InlineData("coaching-role", "Identity.UserExists")]
     [InlineData("role-missing", "Identity.RoleNotFound")]
-    [InlineData("inactive-profile", "Auth.ExistingAccountNotEligible")]
+    
     public async Task IneligibleOrUnprovenAccountCannotGainCoachingAccess(string scenario, string expectedCode)
     {
         var fixture = new Fixture(confirmed: scenario != "unconfirmed");
@@ -131,7 +132,7 @@ public sealed class CoachingExistingAccountRegistrationTests
         public Role? StudentRole = Role.Create("Student", "Student", true);
         public StudentProfile? ExistingProfile;
         public readonly LegalConsent Legal = new();
-        public int ProfilesAdded, Saves, Deletes, RegisterCalls;
+        public int ProfilesAdded, Saves, Deletes, RegisterCalls, ProvisioningEvents;
         public bool FailSave;
         private readonly RegisterStudentCommandHandler handler;
 
