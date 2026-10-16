@@ -1156,8 +1156,8 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         DateTime now,
         CancellationToken cancellationToken)
     {
-        var stats = await db.UserGamifications
-            .SingleOrDefaultAsync(item => item.UserId == userId && !item.IsDeleted, cancellationToken);
+        var stats = db.UserGamifications.Local.SingleOrDefault(item => item.UserId == userId && !item.IsDeleted)
+            ?? await db.UserGamifications.SingleOrDefaultAsync(item => item.UserId == userId && !item.IsDeleted, cancellationToken);
         if (stats is not null)
             return stats;
 
