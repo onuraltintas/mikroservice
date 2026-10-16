@@ -1,4 +1,6 @@
 using EduPlatform.Shared.Kernel.Results;
+using EduPlatform.Shared.Contracts.Coaching;
+using MassTransit;
 using EduPlatform.Shared.Security.Interfaces;
 using Identity.Application.Interfaces;
 using Identity.Application.LegalPages;
@@ -11,7 +13,7 @@ public sealed class ExistingAccountEnrollment(
     IUserRepository users, IStudentRepository students, ITeacherRepository teachers,
     IInstitutionRepository institutions, IRoleRepository roles, IPasswordHasher passwords,
     IMultiFactorService multiFactor, IUnitOfWork unitOfWork,
-    IRegistrationLegalConsentService legalConsent, TimeProvider timeProvider, IAuthenticationLock authenticationLock)
+    IRegistrationLegalConsentService legalConsent, TimeProvider timeProvider, IAuthenticationLock authenticationLock, IPublishEndpoint publisher)
 {
     public async Task<Result<Guid>> JoinAsync(string email, string password, PlatformProduct target,
         string account, IReadOnlyList<PlatformLegalPageDto> documents, string? mfaCode,
@@ -44,8 +46,6 @@ public sealed class ExistingAccountEnrollment(
             || !(HasSourceRole(sourceRole) || account == "institution" && HasSourceRole("InstitutionOwner")))
             return Failure("Auth.SourceRoleRequired", "Diğer serviste bu hesap türüne ait aktif yetkiniz bulunmuyor. Yetki değişikliği için yöneticinizle görüşün.");
 
-        StudentProfile? student = null;
-        TeacherProfile? teacher = null;
         InstitutionAdmin? sourceAdmin = null;
         var institutionChoices = new List<InstitutionEnrollmentChoice>();
         var targetRoleNames = new List<string> { sourceRole };
@@ -75,20 +75,6 @@ public sealed class ExistingAccountEnrollment(
                     return Failure("Auth.SourceRoleRequired", "Kurum sahibi yetkisi doğrulanamadı.");
                 targetRoleNames.Add("InstitutionOwner");
             }
-        }
-        else if (account == "student")
-        {
-            student = await students.GetExistingForRegistrationAsync(user.Id, cancellationToken);
-            if (student is not null && (!student.IsActive
-                || student.InstitutionId.HasValue && !await IsActiveInstitution(student.InstitutionId.Value, cancellationToken)))
-                return Failure("Auth.ExistingAccountNotEligible", "Mevcut öğrenci profiliniz ve kurumunuz aktif olmalıdır.");
-        }
-        else
-        {
-            teacher = await teachers.GetExistingForRegistrationAsync(user.Id, cancellationToken);
-            if (teacher is not null && (!teacher.IsActive
-                || teacher.InstitutionId.HasValue && !await IsActiveInstitution(teacher.InstitutionId.Value, cancellationToken)))
-                return Failure("Auth.ExistingAccountNotEligible", "Mevcut öğretmen profiliniz ve kurumunuz aktif olmalıdır.");
         }
 
         var targetRoles = new List<Role>();
@@ -124,11 +110,7 @@ public sealed class ExistingAccountEnrollment(
         if (acceptedMfaStep.HasValue && !user.TryAcceptMfaTimeStep(acceptedMfaStep.Value))
             return Failure("Auth.InvalidMfaCode", "Doğrulama kodu kullanılmış. Yeni kodla tekrar deneyin.");
 
-        // Reuse profiles and institution IDs; enrollment never changes source membership or subscriptions.
-        if (target == PlatformProduct.Coaching && account == "student" && student is null)
-            await students.AddAsync(StudentProfile.Create(user.Id, user.FirstName, user.LastName), cancellationToken);
-        if (target == PlatformProduct.Coaching && account == "teacher" && teacher is null)
-            await teachers.AddAsync(TeacherProfile.Create(user.Id, user.FirstName, user.LastName, null, true), cancellationToken);
+        // Product profiles and memberships are provisioned by their owning service.
         if (sourceAdmin is not null)
             await institutions.AddAdminAsync(InstitutionAdmin.Create(user.Id, sourceAdmin.InstitutionId, sourceAdmin.Role, target), cancellationToken);
         foreach (var role in targetRoles)
@@ -136,6 +118,8 @@ public sealed class ExistingAccountEnrollment(
         if (user.GrantProductAccess(target, UserProductAccessSource.SelfRegistration, user.Id, timeProvider.GetUtcNow()))
             users.TrackProductAccessIfNew(user, target);
         legalConsent.TrackAcceptedDocuments(user.Id, target, documents, "password");
+        if (target == PlatformProduct.Coaching && account is "student" or "teacher")
+            await publisher.Publish(new CoachingProfileProvisioningRequested(user.Id, sourceRole, DateTime.UtcNow), cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
         return Result.Success(user.Id);
     }

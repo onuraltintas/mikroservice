@@ -118,8 +118,8 @@ public sealed class CrossProductEnrollmentTests
     [InlineData("unconfirmed", "Auth.ExistingAccountNotEligible")]
     [InlineData("wrong-role", "Auth.SourceRoleRequired")]
     [InlineData("revoked", "Identity.UserExists")]
-    [InlineData("inactive-profile", "Auth.ExistingAccountNotEligible")]
-    [InlineData("inactive-institution", "Auth.ExistingAccountNotEligible")]
+    
+    
     [InlineData("mfa-missing", "Auth.ExistingAccountMfaRequired")]
     [InlineData("mfa-invalid", "Auth.InvalidMfaCode")]
     public async Task RejectedEnrollmentDoesNotGrantAccess(string scenario, string code)
@@ -202,7 +202,7 @@ public sealed class CrossProductEnrollmentTests
                 Stub<IRoleRepository>((_, args) => Task.FromResult<Role?>(Roles[(string)args![0]!])), hasher,
                 Stub<IMultiFactorService>((_, args) => (string)args![1]! == "123456" ? (long?)100 : null),
                 Stub<IUnitOfWork>((m, _) => m.Name == "SaveChangesAsync" ? Save() : null),
-                Stub<IRegistrationLegalConsentService>((_, _) => { Consents++; return null; }), TimeProvider.System, new TestAuthenticationLock());
+                Stub<IRegistrationLegalConsentService>((_, _) => { Consents++; return null; }), TimeProvider.System, new TestAuthenticationLock(), Stub<MassTransit.IPublishEndpoint>((_, _) => Task.CompletedTask));
         }
         public Task<EduPlatform.Shared.Kernel.Results.Result<Guid>> Join(string password = Password, string? role = null, string? mfaCode = null, Guid? institutionId = null) => enrollment.JoinAsync(User.Email, password, Target, role ?? account, [], mfaCode, CancellationToken.None, institutionId);
         private Task AddProfile() { ProfilesAdded++; return Task.CompletedTask; }

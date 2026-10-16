@@ -72,6 +72,7 @@ public static class DependencyInjection
 
         // Services
         services.AddScoped<IIdentityService, Services.LocalIdentityService>();
+        services.AddScoped<ICoachingAccountReader, Services.CoachingAccountReader>();
         services.AddScoped<ITokenService, Services.TokenService>();
         services.AddScoped<IGoogleAuthService, Services.GoogleAuthService>();
         services.AddScoped<ISystemLogService, Services.Logs.SystemLogService>();

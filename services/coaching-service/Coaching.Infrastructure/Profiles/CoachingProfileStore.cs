@@ -8,7 +8,7 @@ using Npgsql;
 
 namespace Coaching.Infrastructure.Profiles;
 
-public sealed class CoachingProfileStore(CoachingDbContext db, ICoachingAccountDirectory accounts)
+public sealed class CoachingProfileStore(CoachingDbContext db, ICoachingAccountDirectory accounts) : ICoachingProfileProvisioner
 {
     public Task<CoachingStudentProfile?> GetStudentAsync(Guid userId, CancellationToken ct) =>
         db.CoachingStudentProfiles.AsNoTracking().SingleOrDefaultAsync(x => x.UserId == userId, ct);

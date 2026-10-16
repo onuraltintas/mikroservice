@@ -7,6 +7,7 @@ using Identity.Domain.Enums;
 using MediatR;
 using MassTransit;
 using EduPlatform.Shared.Contracts.Events.Identity;
+using EduPlatform.Shared.Contracts.Coaching;
 
 namespace Identity.Application.Commands.RegisterStudent;
 
@@ -143,8 +144,7 @@ public class RegisterStudentCommandHandler : IRequestHandler<RegisterStudentComm
             // await _userRepository.AddAsync(user, cancellationToken); // REMOVED: User already exists
             if (product == PlatformProduct.Coaching)
             {
-                var student = StudentProfile.Create(userId, request.FirstName, request.LastName, null, null);
-                await _studentRepository.AddAsync(student, cancellationToken);
+                await _publishEndpoint.Publish(new CoachingProfileProvisioningRequested(userId, "Student", DateTime.UtcNow), cancellationToken);
             }
 
             // Publish Event for Notification Service (Verification)

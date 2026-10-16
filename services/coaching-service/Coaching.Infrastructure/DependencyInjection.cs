@@ -180,11 +180,12 @@ public static class DependencyInjection
         {
             client.Timeout = TimeSpan.FromSeconds(5);
         }).AddCorrelationIdPropagation();
-        services.AddHttpClient<ICoachingIdentityAuthorizationClient, IdentityAuthorizationClient>(client =>
-        {
-            client.Timeout = TimeSpan.FromSeconds(5);
-        }).AddCorrelationIdPropagation();
-        services.AddHttpClient<ICoachingIdentityReportClient, IdentityAuthorizationClient>(client =>
+        services.AddScoped<Profiles.CoachingProfileStore>();
+        services.AddScoped<Coaching.Application.Profiles.ICoachingProfileProvisioner>(sp => sp.GetRequiredService<Profiles.CoachingProfileStore>());
+        services.AddScoped<Profiles.OwnedCoachingDirectory>();
+        services.AddScoped<ICoachingIdentityAuthorizationClient>(sp => sp.GetRequiredService<Profiles.OwnedCoachingDirectory>());
+        services.AddScoped<ICoachingIdentityReportClient>(sp => sp.GetRequiredService<Profiles.OwnedCoachingDirectory>());
+        services.AddHttpClient<Coaching.Application.Profiles.ICoachingAccountDirectory, CoachingAccountDirectoryClient>(client =>
         {
             client.Timeout = TimeSpan.FromSeconds(5);
         }).AddCorrelationIdPropagation();

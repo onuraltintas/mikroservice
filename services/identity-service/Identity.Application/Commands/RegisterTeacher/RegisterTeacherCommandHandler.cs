@@ -8,6 +8,7 @@ using Identity.Domain.Enums;
 using MediatR;
 using MassTransit;
 using EduPlatform.Shared.Contracts.Events.Identity;
+using EduPlatform.Shared.Contracts.Coaching;
 
 namespace Identity.Application.Commands.RegisterTeacher;
 
@@ -121,8 +122,7 @@ public class RegisterTeacherCommandHandler : IRequestHandler<RegisterTeacherComm
         {
             if (product == PlatformProduct.Coaching)
             {
-                var teacher = TeacherProfile.Create(userId, request.FirstName, request.LastName, null, true);
-                await _teacherRepository.AddAsync(teacher, cancellationToken);
+                await _publishEndpoint.Publish(new CoachingProfileProvisioningRequested(userId, "Teacher", DateTime.UtcNow), cancellationToken);
             }
 
             // Publish Event for Notification Service (Verification)

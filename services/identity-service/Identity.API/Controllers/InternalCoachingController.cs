@@ -10,6 +10,37 @@ namespace Identity.API.Controllers;
 [Route("api/internal/coaching")]
 public sealed class InternalCoachingController : ControllerBase
 {
+    [HttpPost("accounts")]
+    [AllowAnonymous]
+    [InternalServiceKey]
+    [RequestSizeLimit(32_768)]
+    public async Task<IActionResult> Accounts(
+        [FromBody] EduPlatform.Shared.Contracts.Coaching.CoachingAccountRequest request,
+        [FromServices] ICoachingAccountReader accounts, CancellationToken ct)
+    {
+        if (request.UserIds is null || request.UserIds.Count > 500 || request.UserIds.Any(id => id == Guid.Empty)) return BadRequest();
+        return Ok(new EduPlatform.Shared.Contracts.Coaching.CoachingAccountResponse(await accounts.GetAsync(request.UserIds, ct)));
+    }
+
+    [HttpPost("account-by-email")]
+    [AllowAnonymous]
+    [InternalServiceKey]
+    [RequestSizeLimit(4_096)]
+    public async Task<IActionResult> AccountByEmail(
+        [FromBody] EduPlatform.Shared.Contracts.Coaching.CoachingAccountEmailRequest request,
+        [FromServices] ICoachingAccountReader accounts, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(request.Email) || request.Email.Length > 254) return BadRequest();
+        var account = await accounts.FindByEmailAsync(request.Email, ct);
+        return account is null ? NotFound() : Ok(account);
+    }
+
+    [HttpGet("institutions/{institutionId:guid}/active")]
+    [AllowAnonymous]
+    [InternalServiceKey]
+    public async Task<IActionResult> InstitutionActive(Guid institutionId, CancellationToken ct) =>
+        Ok(new { isActive = (await _institutionRepository.GetByIdAsync(institutionId, ct)) is { IsActive: true } });
+
     private const int MaxStudentTargets = 100;
     private const int MaxReportPageSize = 100;
     private const int MaxReportPageNumber = 1000;
