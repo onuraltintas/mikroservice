@@ -1,6 +1,6 @@
 # Hızlı Okuma egzersiz raporları · 16 Ekim 2026
 
-Bu yayın, [önceki canlı kontrolde](speed-reading-vocabulary-panels-live-20261016.md) bulunan üç hatayı giderir: öğretmen etkinlik raporundaki HTTP 500, kurum öğrenci raporunu engelleyen sayı/metin rol sözleşmesi ve bağımsız egzersiz sonuçlarının raporlara dahil edilmemesi. Canlı yayın zamanı **09:26:34 TSİ**. Kurum ve öğrenci gerçek oturum kontrolleri geçti. Öğretmen kapsamı otomatik testlerde geçti; yeni gerçek öğretmen girişi CAPTCHA aşamasında beklediği için öğretmen canlı panel kontrolü tamamlanmış sayılmaz.
+Bu yayın, [önceki canlı kontrolde](speed-reading-vocabulary-panels-live-20261016.md) bulunan üç hatayı giderir: öğretmen etkinlik raporundaki HTTP 500, kurum öğrenci raporunu engelleyen sayı/metin rol sözleşmesi ve bağımsız egzersiz sonuçlarının raporlara dahil edilmemesi. Canlı yayın zamanı **09:26:34 TSİ**. Öğrenci, öğretmen ve kurum gerçek oturum kontrolleri geçti. CAPTCHA nedeniyle bekleyen öğretmen kontrolü, kullanıcının normal girişinden sonra **09:54 TSİ**'de tamamlandı.
 
 ## Davranış
 
@@ -41,7 +41,9 @@ Salt okunur canlı katalog taraması 21 tür buldu. 11 türde toplam 21 normal e
 
 Öğrencinin mevcut raporu da 21 toplam etkinlik gösteriyor. Program görünümü Hafta 1 / Gün 3 ve 0/6 durumunda kaldı; faz ölçümü geçmişi korunuyor. Bu testte yeni egzersiz oynatılmadı, puan veya ilerleme oluşturulmadı.
 
-Önceki öğretmen sekmesi yenilendiğinde, Chrome'un aynı kökendeki ortak oturumundan kurum yöneticisi açıldı; bu kontrol öğretmen başarısı olarak kaydedilmedi. Kurum kontrolleri bu doğrulanmış kurum oturumunda yapıldı. Sonrasında güvenli çıkış ve normal öğretmen girişi denendi; Google CAPTCHA aşaması yanıt vermeden bekledi ve son kontrolde `Could not connect to the reCAPTCHA service` ile `Güvenlik doğrulaması tamamlanamadı` mesajlarını gösterdi. CAPTCHA değiştirilmedi, token kopyalanmadı ve oturum taklit edilmedi. Kullanıcıdan sekmeyi yenileyip test öğretmeniyle normal giriş yapması istendi. Öğretmen ayrıntı ekranının gerçek oturum kontrolü bu girdiyi bekliyor.
+Önceki öğretmen sekmesi yenilendiğinde, Chrome'un aynı kökendeki ortak oturumundan kurum yöneticisi açıldı; bu kontrol öğretmen başarısı olarak kaydedilmedi. Kurum kontrolleri bu doğrulanmış kurum oturumunda yapıldı. Sonrasında normal öğretmen girişi Google CAPTCHA bağlantı hatasında bekledi; kullanıcıdan normal giriş istendi. CAPTCHA değiştirilmedi, token kopyalanmadı ve oturum taklit edilmedi.
+
+Kullanıcının **“öğretmen hazır”** yanıtından sonra açık sekmede gerçek **Öğretmen** rolü doğrulandı ve Hızlı Okuma'ya geçildi. Sınıf özeti **21 etkinlik**, **%87 anlama** ve ölçülmüş WPM için **Veri yok** gösterdi. **Ayrıntılı rapor** açıldı; `summary`, `reading-speed`, `comprehension`, `activity` isteklerinin dördü ve sınıf özeti HTTP **200** döndü. Önceki HTTP 500 yeniden oluşmadı. Mevcut **Kelime Bilgisi Testi 100%**, WPM/anlama `—`, geçmiş **21 oturum** olarak görüldü. Ölçülmeyen kayıtlar `Tamamlandı · Ölçülmedi`, gerçek sıfır puanlar `0%` kaldı. Kanıtlar: `teacher-overview.txt`, `teacher-student-report.txt`, `teacher-http-status.json`, [öğretmen ekranı](../../artifacts/exercise-reports-20261016/teacher-student-report.jpg). Öğretmen canlı doğrulamasında bekleyen adım kalmadı.
 
 Önceki rapordaki 20 → 21 değişiminin nedeni: önceki kaynak iki chunking oturumunu günlük ve okuma tablosundan iki kez sayıyor, iki bağımsız göz takibi ile bir bağımsız kelime sonucunu atlıyordu. Yeni toplam **8 okuma + 10 örtüşmeyen günlük/sonuç + 3 eksik bağımsız sonuç = 21**. Kayıt sayısı veya XP artırılmadı.
 
@@ -52,6 +54,8 @@ Salt okunur canlı katalog taraması 21 tür buldu. 11 türde toplam 21 normal e
 Yayın öncesi gerçek API/Staff imajları sabitlendi, iki yayın kilidi alındı, PostgreSQL yedeği ve geri dönüş compose'u hazırlandı. API yazıcısı kapalıyken, aday oluşturulmadan önce ve oluşturulduktan sonra **86 tablonun tüm satır hash çoklukları birebir eşit** çıktı. Veritabanı migration, güncelleme veya backfill yapılmadı.
 
 Test öğrencisinin başlangıç/bitiş tam JSON'u eşit: **476 XP, 21 sonuç, 12 günlük kayıt, 12 kelime ilerleme kaydı, Gün 3 ve 1 erken geçiş günü**. Bütün program alanları, oturum/sonuç hash'leri, kelime ilerlemesi ve başarımlar korundu. Kanıt: [preservation-result.json](../../artifacts/exercise-reports-20261016/preservation-result.json).
+
+Öğretmen canlı kontrolünden sonra alınan `student-after-teacher.log` da başlangıç tam JSON'uyla eşit çıktı; bu doğrulama sırasında eski sonuçlar ve ilerlemeler değişmedi.
 
 Kaynak yalnız canlı API tabanından alınan 3 Infrastructure dosyası ve canlı Staff tabanından alınan 4 TS/HTML dosyasıyla değişti. API'ye yalnız Infrastructure DLL/PDB eklendi. Öğrenci frontend'i, admin, kimlik servisi ve diğer konteynerler değiştirilmedi. Staff eski hash'li varlıkları açık sekmeler için korur. Önizleme ilk pakette eksik `/staff/` base-href'i canlıya geçmeden reddetti; `/staff/` ile yeniden derlenen paket önizleme ve ana JS erişimi kontrolünden geçti. Geri dönüş hem API hem Staff eski imajlarını ve sağlıklarını doğrular.
 
