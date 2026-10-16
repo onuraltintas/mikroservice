@@ -1,7 +1,7 @@
 import { HttpBackend, HttpEvent, HttpRequest, HttpResponse } from '@angular/common/http';
-import { TestBed } from '@angular/core/testing';
+import { fakeAsync, flushMicrotasks, TestBed, tick } from '@angular/core/testing';
 import { PLATFORM_ID } from '@angular/core';
-import { Observable, of, throwError } from 'rxjs';
+import { NEVER, Observable, of, throwError } from 'rxjs';
 import { AuthRecaptchaService } from './auth-recaptcha.service';
 
 describe('AuthRecaptchaService', () => {
@@ -79,6 +79,36 @@ describe('AuthRecaptchaService', () => {
       .toBeRejectedWithError('identity unavailable');
     expect(execute).not.toHaveBeenCalled();
   });
+
+  for (const stage of ['configuration', 'ready', 'execute']) {
+    it(`stops waiting when CAPTCHA ${stage} never responds and allows a fresh attempt`, fakeAsync(() => {
+      backend.body = { enabled: true, siteKey: 'public-key' };
+      const execute = jasmine.createSpy('execute').and.returnValue(new Promise<string>(() => {}));
+      (window as GoogleRecaptchaWindow).grecaptcha = {
+        ready: callback => { if (stage !== 'ready') callback(); },
+        execute
+      };
+      const handle = spyOn(backend, 'handle').and.callThrough();
+      if (stage === 'configuration') handle.and.returnValue(NEVER);
+      let rejected = false;
+      const service = TestBed.inject(AuthRecaptchaService);
+      void service.createToken('auth_login').catch(() => { rejected = true; });
+      flushMicrotasks();
+      tick(15000);
+      flushMicrotasks();
+      expect(rejected).toBeTrue();
+
+      handle.and.callThrough();
+      (window as GoogleRecaptchaWindow).grecaptcha = {
+        ready: callback => callback(),
+        execute: () => Promise.resolve('fresh-token')
+      };
+      const result: { token: string | null } = { token: null };
+      void service.createToken('auth_login').then(value => result.token = value);
+      flushMicrotasks();
+      expect(result.token).toBe('fresh-token');
+    }));
+  }
 });
 
 interface GoogleRecaptchaWindow {
