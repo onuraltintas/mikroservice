@@ -3395,7 +3395,7 @@ internal sealed partial class OwnedSpeedReadingExerciseSessions(
         }
         if (configuredIds.Length > 0)
         {
-            var items = await query.Where(item => configuredIds.Contains(item.Id))
+            var items = await query.Where(item => Enumerable.Contains(configuredIds, item.Id))
                 .ToListAsync(cancellationToken);
             var byId = items.ToDictionary(item => item.Id);
             var selected = configuredIds
