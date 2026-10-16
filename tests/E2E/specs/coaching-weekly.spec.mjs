@@ -26,12 +26,19 @@ async function add(page,lesson=math,start='18:00',duration='60'){
 const card=(page,name)=>page.locator('.slot-card').filter({hasText:name}).first();
 async function resize(page,name,edge,delta){
   const handle=card(page,name).getByRole('button',{name:name+(edge==='bottom'?' bitişini ayarla':' başlangıcını ayarla'),exact:true});await handle.scrollIntoViewIfNeeded();const b=await handle.boundingBox();
+  if(test.info().project.name==='mobile'){
+    const session=await page.context().newCDPSession(page),point={x:b.x+b.width/2,y:b.y+b.height/2};
+    await session.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[point]});
+    for(let step=1;step<=8;step++)await session.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{...point,y:point.y+delta*step/8}]});
+    await session.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});await session.detach();return;
+  }
   await page.mouse.move(b.x+b.width/2,b.y+b.height/2);await page.mouse.down();await page.mouse.move(b.x+b.width/2,b.y+b.height/2+delta,{steps:8});await page.mouse.up();
 }
 
 test('right click adds a lesson, resizing frees the other half hour and both save and reopen',async({context,page})=>{
   const f=await fixture(context);await open(page);await page.getByTestId('cell-Monday-1080').click({button:'right'});await page.getByRole('menuitem',{name:'+ Ders ekle',exact:true}).click();await page.getByRole('dialog').getByRole('button',{name:'Dersi ekle',exact:true}).click();
   await resize(page,'Matematik','bottom',-36);await expect(card(page,'Matematik')).toContainText('30 dk');await add(page,turkish,'18:30','30');
+  expect((await card(page,'Matematik').boundingBox()).height).toBeCloseTo((await page.getByTestId('cell-Monday-1080').boundingBox()).height,0);
   await page.getByRole('button',{name:'Taslağı kaydet',exact:true}).click();await expect(page.getByRole('status')).toContainText('Haftalık taslak kaydedildi');expect(f.getDraft().slots.map(s=>s.durationMinutes)).toEqual([30,30]);
   await page.reload();await page.getByRole('button',{name:'Hafta',exact:true}).click();await expect(card(page,'Matematik')).toContainText('18:00–18:30');await expect(card(page,'Türkçe')).toContainText('18:30–19:00');
   await page.locator('main').first().evaluate(el=>el.scrollTo({top:0,behavior:'instant'}));await page.locator('.time-scroller').evaluate(el=>el.scrollTop=17*72);await page.screenshot({path:`../../artifacts/coaching-weekly/calendar-${test.info().project.name}.png`,fullPage:false});
@@ -54,6 +61,7 @@ test('overlapping resize is reverted, form remains editable and cancelled drag d
   await fixture(context);await open(page);await add(page,math,'18:00','30');await add(page,turkish,'18:30','30');
   await resize(page,'Matematik','bottom',36);await expect(page.getByRole('alert')).toContainText('çakış');await expect(card(page,'Matematik')).toContainText('18:00–18:30');
   await card(page,'Türkçe').getByRole('button',{name:'Türkçe 18:30 30 dakika düzenle',exact:true}).click();await page.getByRole('dialog').getByLabel('Başlangıç',{exact:true}).fill('18:00');await page.getByRole('button',{name:'Değişikliği uygula',exact:true}).click();await expect(page.getByRole('dialog').getByRole('alert')).toContainText('çakış');await page.getByRole('button',{name:'Vazgeç',exact:true}).click();
+  const handle=card(page,'Türkçe').getByRole('button',{name:'Türkçe bitişini ayarla',exact:true});await handle.scrollIntoViewIfNeeded();const b=await handle.boundingBox();await page.mouse.move(b.x+b.width/2,b.y+b.height/2);await page.mouse.down();await page.mouse.move(b.x+b.width/2,b.y+b.height/2+36,{steps:6});await page.keyboard.press('Escape');await page.mouse.up();await expect(card(page,'Türkçe')).toContainText('18:30–19:00');
 });
 
 test('month and day share the weekly draft and conflict leaves local edits intact',async({context,page})=>{
