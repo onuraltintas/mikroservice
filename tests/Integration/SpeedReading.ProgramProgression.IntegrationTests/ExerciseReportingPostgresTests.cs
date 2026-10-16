@@ -16,6 +16,13 @@ public sealed class ExerciseReportingPostgresTests(PostgresFixture postgres) : I
         .UseNpgsql(postgres.ConnectionString, b => b.MigrationsHistoryTable("__ef_migrations_history", "speed_reading")).Options);
 
     [Fact]
+    public async Task Institution_benchmark_uses_active_student_memberships_and_matches_overview()
+    {
+        await using var db = Open(); await Reset(db);
+        await InstitutionBenchmarkScenario.Run(db);
+    }
+
+    [Fact]
     public async Task All_exercise_types_reach_student_teacher_and_institution_without_duplicate_readings()
     {
         await using var db = Open(); await Reset(db);
