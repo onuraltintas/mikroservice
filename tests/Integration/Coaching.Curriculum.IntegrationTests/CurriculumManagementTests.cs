@@ -115,7 +115,8 @@ public sealed class CurriculumManagementTests
 
     internal sealed class Fixture : IAsyncDisposable
     {
-        public CoachingDbContext Db { get; } = new(new DbContextOptionsBuilder<CoachingDbContext>().UseInMemoryDatabase(Guid.NewGuid().ToString()).ConfigureWarnings(x => x.Ignore(InMemoryEventId.TransactionIgnoredWarning)).Options);
+        public CoachingDbContext Db { get; }
+        public Fixture(CoachingDbContext? database = null) => Db = database ?? new(new DbContextOptionsBuilder<CoachingDbContext>().UseInMemoryDatabase(Guid.NewGuid().ToString()).ConfigureWarnings(x => x.Ignore(InMemoryEventId.TransactionIgnoredWarning)).Options);
         public Scope Scope { get; } = new(); public Actor User { get; } = new();
         public CoachingCurriculumManagementService Service => new(Db, Scope, User);
         public async Task<StudyCatalogTopic> Seed()
