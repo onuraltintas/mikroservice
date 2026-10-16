@@ -12,6 +12,14 @@ import { RoleProduct } from '../../../../core/services/user-product-roles';
 import { EditUserModalComponent } from './edit-user-modal';
 
 describe('EditUserModalComponent service access', () => {
+  it('saves only common account fields through Identity for a Coaching student', () => {
+    const { component, http, fixture } = setup('Student');
+    expect(fixture.nativeElement.querySelector('[formControlName="studentGradeLevel"]')).toBeNull();
+    component.save();
+    const request = http.expectOne('/api/users/user-1');
+    expect(request.request.body).toEqual({ firstName: 'Test', lastName: 'User', phoneNumber: undefined });
+    request.flush(null);
+  });
   const administrator: UserProfile = { id: 'admin', email: 'admin@example.test', firstName: 'System', lastName: 'Admin',
     username: 'admin', role: 'SystemAdmin', roles: ['SystemAdmin'], permissions: ['Permissions.Users.Edit'], mfaVerified: true };
   const auth = { userProfile: signal<UserProfile | null>(administrator) };
