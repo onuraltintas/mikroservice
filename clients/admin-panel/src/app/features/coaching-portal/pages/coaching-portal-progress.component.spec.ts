@@ -115,10 +115,22 @@ describe('CoachingPortalProgressComponent', () => {
     component.ngOnInit();
     expect(component.averageScore()).toBeNull();
     expect(component.summaryError()).toBeTruthy();
-    service.getStudentProgress.mockReturnValue(of({ averageExamPercentage: 60 }));
+    service.getStudentProgress.mockReturnValue(of({ totalExams: 1, averageExamPercentage: 60 }));
     component.retrySummary();
     expect(component.averageScore()).toBe(60);
     expect(component.summaryError()).toBeNull();
+  });
+
+  it('shows no-data instead of zero achievement when there are no teacher exam results', () => {
+    service.getStudentProgress.mockReturnValue(of({ totalExams: 0, averageExamPercentage: 0 }));
+    const fixture = TestBed.createComponent(CoachingPortalProgressComponent); fixture.detectChanges();
+    expect(fixture.componentInstance.averageScore()).toBeNull();
+    expect(fixture.nativeElement.querySelectorAll('.text-3xl')[1].textContent.trim()).toBe('—');
+    expect(fixture.nativeElement.textContent).toContain('Henüz sınav sonucu yok');
+    fixture.componentInstance.summary.set({ totalExams: 1, averageExamPercentage: 0 } as any);
+    fixture.detectChanges();
+    expect(fixture.componentInstance.averageScore()).toBe(0);
+    expect(fixture.nativeElement.querySelectorAll('.text-3xl')[1].textContent.trim()).toBe('%0');
   });
 
   it('does not label loaded-page counts as global totals after summary failure', () => {

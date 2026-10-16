@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { ActivatedRoute, convertToParamMap } from '@angular/router';
+import { ActivatedRoute, convertToParamMap, Router } from '@angular/router';
 import { of, Subject, throwError } from 'rxjs';
 import { CoachingStudyPlanningService, StudyPlan } from '../../../core/services/coaching-study-planning.service';
 import { StudentStudyPlansComponent } from './student-study-plans.component';
@@ -17,14 +17,69 @@ describe('StudentStudyPlansComponent', () => {
       complete: vi.fn(() => of({ ...active, version: 5 })), reschedule: vi.fn(() => of({ ...active, version: 5 })),
       archive: vi.fn(() => of({ ...active, status: 'Archived' as const, version: 5 }))
     };
+    const router = { navigate: vi.fn(() => Promise.resolve(true)) };
     TestBed.configureTestingModule({ imports: [StudentStudyPlansComponent], providers: [
+      { provide: Router, useValue: router },
       { provide: CoachingStudyPlanningService, useValue: service },
       { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: convertToParamMap(requestedPlanId ? { plan: requestedPlanId } : {}) } } }
     ] });
     const fixture = TestBed.createComponent(StudentStudyPlansComponent);
     fixture.detectChanges();
-    return { fixture, component: fixture.componentInstance, service };
+    return { fixture, component: fixture.componentInstance, service, router };
   }
+  it('opens the active plan when entering without a plan link', () => {
+    const { component, service } = setup();
+    expect(component.selected()?.id).toBe('plan');
+    expect(service.get).toHaveBeenCalledTimes(1);
+  });
+  it('keeps the address aligned with the opened and newly saved plan', () => {
+    const { component, service, router } = setup('old-plan');
+    service.get.mockReturnValue(of({ ...active, id: 'new-plan' }));
+    component.open('new-plan');
+    expect(router.navigate).toHaveBeenLastCalledWith([], expect.objectContaining({ queryParams: { plan: 'new-plan' }, queryParamsHandling: 'merge', replaceUrl: true }));
+    service.create.mockReturnValue(of({ ...active, id: 'draft-plan', status: 'Draft' }));
+    component.newDraft(); component.editTitle = 'Yeni plan';
+    component.editTasks[0].title = 'Test'; component.saveDraft();
+    expect(router.navigate).toHaveBeenLastCalledWith([], expect.objectContaining({ queryParams: { plan: 'draft-plan' } }));
+  });
+  it('protects unsaved completion inputs on navigation, refresh and plan switching', () => {
+    const { component, service } = setup('plan');
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    component.actualMinutes['task'] = 17; component.actualQuestions['task'] = 8;
+    expect(component.canLeavePage()).toBe(false);
+    const event = new Event('beforeunload', { cancelable: true });
+    component.beforeUnload(event as BeforeUnloadEvent);
+    expect(event.defaultPrevented).toBe(true);
+    service.get.mockClear(); component.open('another-plan');
+    expect(service.get).not.toHaveBeenCalled();
+    expect(component.actualMinutes['task']).toBe(17);
+    expect(component.actualQuestions['task']).toBe(8);
+    confirm.mockReturnValue(true);
+    expect(component.canLeavePage()).toBe(true);
+    confirm.mockRestore();
+  });
+  it('does not warn when completion fields are unchanged and preserves explicit zero changes', () => {
+    const { component } = setup('plan');
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    expect(component.canLeavePage()).toBe(true);
+    expect(confirm).not.toHaveBeenCalled();
+    component.actualQuestions['task'] = 0;
+    expect(component.canLeavePage()).toBe(false);
+    confirm.mockRestore();
+  });
+  it('shows validation beside the task and associates it with the invalid input', () => {
+    const { component, fixture, service } = setup('plan');
+    component.complete(active.tasks[0], 0); fixture.detectChanges();
+    const task = fixture.nativeElement.querySelector('article.task');
+    const alert = task.querySelector('[role="alert"]');
+    expect(alert?.textContent).toContain('1–1440');
+    const minutes = task.querySelector('input[type="number"]');
+    expect(minutes.getAttribute('aria-invalid')).toBe('true');
+    expect(minutes.getAttribute('aria-describedby')).toBe(alert.id);
+    component.complete(active.tasks[0], 17, -1); fixture.detectChanges();
+    expect(task.querySelector('[role="alert"]').textContent).toContain('0–100000');
+    expect(service.complete).not.toHaveBeenCalled();
+  });
   it('lists plans, opens detail and offers active task controls', () => {
     const { fixture, component, service } = setup();
     component.open('plan');
@@ -115,6 +170,7 @@ describe('StudentStudyPlansComponent', () => {
     const { component, service } = setup();
     component.newDraft();
     component.dirty = true;
+    service.get.mockClear();
     component.open('plan');
     expect(service.get).not.toHaveBeenCalled();
     expect(component.error()).toContain('kaydedin');
