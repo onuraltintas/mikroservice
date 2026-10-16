@@ -23,6 +23,7 @@
 
   <ItemGroup>
     <Using Include="Xunit" />
+    <Compile Include="../Coaching.Curriculum.IntegrationTests/*.cs" Link="CoachingCurriculum/%(Filename)%(Extension)" />
   </ItemGroup>
 
   <ItemGroup>
