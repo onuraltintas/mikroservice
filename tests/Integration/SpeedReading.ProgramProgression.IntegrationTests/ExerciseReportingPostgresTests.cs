@@ -48,6 +48,18 @@ public sealed class ExerciseReportingPostgresTests(PostgresFixture postgres) : I
     }
 
     [Theory]
+    [InlineData("empty")]
+    [InlineData("unmeasured")]
+    [InlineData("zero")]
+    [InlineData("measured")]
+    [InlineData("comprehension-only")]
+    public async Task Missing_measurements_do_not_generate_performance_labels_or_advice(string mode)
+    {
+        await using var db = Open(); await Reset(db);
+        await UnmeasuredReportScenario.Run(db, mode);
+    }
+
+    [Theory]
     [InlineData(false)]
     [InlineData(true)]
     public async Task Exercise_pass_threshold_and_type_identity_are_preserved(bool sameDisplayName)

@@ -16,6 +16,28 @@ describe('SpeedReadingStudentReportComponent', () => {
 
   afterEach(() => http.verify());
 
+  it.each([false, true])('shows no speed data for unmeasured reading sessions in teacher scope %s', teacherScoped => {
+    const fixture = TestBed.createComponent(SpeedReadingStudentReportComponent);
+    fixture.componentRef.setInput('institutionId', 'institution-1');
+    fixture.componentRef.setInput('teacherScoped', teacherScoped);
+    fixture.componentRef.setInput('student', { userId: 'student-1', firstName: 'Ayşe', lastName: 'Yılmaz' });
+    fixture.detectChanges();
+    flushStudentReport(http, 'student-1', teacherScoped);
+    const report = fixture.componentInstance.report()!;
+    fixture.componentInstance.report.set({ ...report,
+      summary: { ...report.summary, readingSessions: 8, averageWpm: 0 },
+      readingSpeed: { ...report.readingSpeed, averageWpm: 0, recommendations: ['Ölçümsüz öneri'],
+        benchmark: { studentValue: 0, institutionAverage: 300, platformAverage: 300, performanceLevel: 'Below Average' } },
+    });
+    fixture.detectChanges();
+    const speedCard = fixture.nativeElement.querySelector('[aria-labelledby="reading-speed-report-title"]') as HTMLElement;
+    expect(speedCard.textContent).toContain('Veri yok');
+    expect(speedCard.textContent).not.toContain('Below Average');
+    expect(speedCard.textContent).not.toContain('WPM');
+    expect(speedCard.textContent).not.toContain('Ölçümsüz öneri');
+    expect(fixture.nativeElement.querySelector('.summary-grid .metric-card strong').textContent).toContain('Veri yok');
+  });
+
   it('shows speed, comprehension, activity and recommendation details for a selected student', () => {
     const fixture = TestBed.createComponent(SpeedReadingStudentReportComponent);
     fixture.componentRef.setInput('institutionId', 'institution-1');
@@ -176,18 +198,18 @@ describe('SpeedReadingStudentReportComponent', () => {
   });
 });
 
-function expectStudentReportRequests(http: HttpTestingController, studentId = 'student-1') {
+function expectStudentReportRequests(http: HttpTestingController, studentId = 'student-1', teacherScoped = false) {
   return ['summary', 'reading-speed', 'comprehension', 'activity'].map((path) =>
     http.expectOne(
       (request) =>
         request.url ===
-        `/api/speed-reading/analytics/institutions/institution-1/students/${studentId}/${path}`,
+        `/api/speed-reading/analytics/${teacherScoped ? 'teacher' : 'institutions/institution-1'}/students/${studentId}/${path}`,
     ),
   );
 }
 
-function flushStudentReport(http: HttpTestingController, studentId = 'student-1'): void {
-  expectStudentReportRequests(http, studentId).forEach((request, index) => {
+function flushStudentReport(http: HttpTestingController, studentId = 'student-1', teacherScoped = false): void {
+  expectStudentReportRequests(http, studentId, teacherScoped).forEach((request, index) => {
     request.flush(
       [
         {
