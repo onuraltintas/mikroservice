@@ -48,7 +48,9 @@ internal static class InstitutionBenchmarkScenario
 
     internal static async Task Boundaries(OwnedSpeedReadingDbContext db, string mode)
     {
-        var user = Guid.NewGuid(); var a = Guid.NewGuid(); var b = Guid.NewGuid(); var now = DateTime.UtcNow;
+        // Keep each synthetic platform cohort separate when replayed on a copy of the live database.
+        var now = DateTime.UtcNow.AddYears(10).AddDays(mode == "multi" ? 0 : mode == "zero" ? 7 : 14);
+        var user = Guid.NewGuid(); var a = Guid.NewGuid(); var b = Guid.NewGuid();
         var text = ReadingText.Create(Guid.NewGuid(), user.ToString(), "Metin", difficultyLevel: 1);
         db.ReadingTexts.Add(text);
         if (mode != "absent") Member(a, user);
