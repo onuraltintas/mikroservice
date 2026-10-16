@@ -512,7 +512,7 @@ export class CoachingPortalService {
     }
 
     return this.http.get<PagedResponse<TeacherStudent>>(
-      `${environment.apiUrl}/teachers/me/students`,
+      `${environment.apiUrl}/coaching/teachers/me/students`,
       { params }
     );
   }

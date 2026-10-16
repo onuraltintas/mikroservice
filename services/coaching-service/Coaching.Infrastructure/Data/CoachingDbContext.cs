@@ -16,6 +16,7 @@ namespace Coaching.Infrastructure.Data;
 /// </summary>
 public class CoachingDbContext : DbContext
 {
+    public DbSet<CoachingInvitation> CoachingInvitations => Set<CoachingInvitation>();
     public CoachingDbContext(DbContextOptions<CoachingDbContext> options) : base(options)
     {
     }

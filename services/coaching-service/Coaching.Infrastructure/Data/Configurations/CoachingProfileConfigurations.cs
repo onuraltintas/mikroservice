@@ -4,6 +4,23 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Coaching.Infrastructure.Data.Configurations;
 
+public sealed class CoachingInvitationConfiguration : IEntityTypeConfiguration<CoachingInvitation>
+{
+    public void Configure(EntityTypeBuilder<CoachingInvitation> builder)
+    {
+        builder.ToTable("invitations");
+        builder.HasKey(x => x.Id); builder.Property(x => x.Version).IsConcurrencyToken();
+        builder.Ignore(x => x.Type);
+        builder.Property(x => x.RecipientEmail).HasMaxLength(254);
+        builder.Property(x => x.Role).HasMaxLength(20);
+        builder.Property(x => x.Message).HasMaxLength(2000);
+        builder.HasIndex(x => new { x.RecipientEmail, x.Status, x.ExpiresAt });
+        builder.HasIndex(x => new { x.InviterUserId, x.Status });
+        builder.HasIndex(x => new { x.RecipientEmail, x.Role, x.InstitutionId, x.TeacherUserId, x.IsInstitutionInvitation })
+            .IsUnique().AreNullsDistinct(false).HasFilter("\"Status\" = 0");
+    }
+}
+
 public sealed class CoachingStudentProfileConfiguration : IEntityTypeConfiguration<CoachingStudentProfile>
 {
     public void Configure(EntityTypeBuilder<CoachingStudentProfile> builder)

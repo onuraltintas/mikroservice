@@ -29,7 +29,7 @@ export class StaffInvitationsService {
   }
 
   private getUrl(product: StaffInvitationProduct): string {
-    const prefix = product === 'speed-reading' ? '/speed-reading' : '';
+    const prefix = product === 'speed-reading' ? '/speed-reading' : '/coaching';
     return `${environment.apiUrl}${prefix}/invitations`;
   }
 }

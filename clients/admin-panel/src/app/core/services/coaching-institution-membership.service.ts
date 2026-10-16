@@ -21,10 +21,10 @@ export interface CoachingInstitutionStudentUpdate {
 @Injectable({ providedIn: 'root' })
 export class CoachingInstitutionMembershipService {
   private readonly http = inject(HttpClient);
-  private readonly url = `${environment.apiUrl}/institution`;
+  private readonly url = `${environment.apiUrl}/coaching/institution`;
 
   private endpoint(institutionId?: string) {
-    return institutionId ? `${environment.apiUrl}/institutions/${encodeURIComponent(institutionId)}/coaching` : this.url;
+    return institutionId ? `${environment.apiUrl}/coaching/institutions/${encodeURIComponent(institutionId)}` : this.url;
   }
 
   inviteTeacher(request: CoachingTeacherInvitation, institutionId?: string) {

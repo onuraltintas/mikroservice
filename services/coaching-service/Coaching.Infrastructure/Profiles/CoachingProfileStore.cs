@@ -132,6 +132,25 @@ public sealed class CoachingProfileStore(CoachingDbContext db, ICoachingAccountD
             throw Forbidden();
     }
 
+    public async Task UpdateInstitutionStudentAsync(Guid actorUserId, Guid institutionId, Guid studentUserId,
+        int gradeLevel, Guid? teacherUserId, CancellationToken ct)
+    {
+        await RequireInstitutionAdminAsync(actorUserId, institutionId, ct);
+        await RequireAccountAsync(studentUserId, "Student", ct);
+        if (gradeLevel is < 1 or > 12) throw new ArgumentException("Sınıf 1–12 arasında olmalıdır.");
+        if (!await HasMembershipAsync(studentUserId, institutionId, CoachingMemberRole.Student, ct)) throw Forbidden();
+        var profile = await db.CoachingStudentProfiles.SingleOrDefaultAsync(x => x.UserId == studentUserId && x.IsActive, ct)
+            ?? throw Forbidden();
+        if (teacherUserId.HasValue) await RequireAssignmentAccountsAsync(teacherUserId.Value, studentUserId, institutionId, ct);
+        var assignments = await db.CoachingTeacherStudentAssignments.Where(x => x.StudentUserId == studentUserId
+            && x.InstitutionId == institutionId && x.IsActive).ToListAsync(ct);
+        profile.UpdateEducation(CoachingEducationStatus.Student, gradeLevel, profile.SchoolName, profile.SchoolCity,
+            profile.SchoolDistrict, profile.SchoolType, profile.ClassBranch, null);
+        foreach (var assignment in assignments.Where(x => x.TeacherUserId != teacherUserId)) assignment.SetActive(false, actorUserId);
+        if (teacherUserId.HasValue) await UpsertAssignmentAsync(teacherUserId.Value, studentUserId, institutionId, null, true, actorUserId, ct);
+        await db.SaveChangesAsync(ct);
+    }
+
     internal async Task UpsertAssignmentAsync(Guid teacherUserId, Guid studentUserId, Guid? institutionId,
         string? subject, bool active, Guid actorUserId, CancellationToken ct)
     {

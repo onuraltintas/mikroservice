@@ -181,6 +181,7 @@ public static class DependencyInjection
             client.Timeout = TimeSpan.FromSeconds(5);
         }).AddCorrelationIdPropagation();
         services.AddScoped<Profiles.CoachingProfileStore>();
+        services.AddScoped<Profiles.CoachingInvitationStore>();
         services.AddScoped<Coaching.Application.Profiles.ICoachingProfileProvisioner>(sp => sp.GetRequiredService<Profiles.CoachingProfileStore>());
         services.AddScoped<Profiles.OwnedCoachingDirectory>();
         services.AddScoped<ICoachingIdentityAuthorizationClient>(sp => sp.GetRequiredService<Profiles.OwnedCoachingDirectory>());

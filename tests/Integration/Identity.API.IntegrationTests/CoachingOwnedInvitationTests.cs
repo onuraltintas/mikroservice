@@ -15,7 +15,7 @@ public sealed class CoachingOwnedInvitationTests
         var admin = f.AddAccount("InstitutionAdmin"); f.Accounts.Admins[admin] = new(false, inst);
         var teacher = f.AddAccount("Teacher"); var student = f.AddAccount("Student"); var stranger = f.AddAccount("Student");
         await f.Store.SetMembershipAsync(admin, inst, teacher, CoachingMemberRole.Teacher, true, default);
-        var service = new CoachingInvitationStore(f.Db, f.Accounts, f.Store, TimeProvider.System);
+        var service = new CoachingInvitationStore(f.Db, f.Accounts, f.Store, TimeProvider.System, new Events(), new Microsoft.Extensions.Configuration.ConfigurationBuilder().Build());
         var invitation = await service.SendInstitutionAsync(admin, inst, f.Accounts.Users[student].Email, "Student", teacher, null, default);
         await Assert.ThrowsAsync<BusinessRuleException>(() => service.AcceptAsync(stranger, invitation.Id, default));
         await service.AcceptAsync(student, invitation.Id, default);
@@ -34,7 +34,7 @@ public sealed class CoachingOwnedInvitationTests
         var inst = Guid.NewGuid(); f.Accounts.Institutions.Add(inst);
         var admin = f.AddAccount("InstitutionAdmin"); f.Accounts.Admins[admin] = new(false, inst);
         var student = f.AddAccount("Student");
-        var service = new CoachingInvitationStore(f.Db, f.Accounts, f.Store, TimeProvider.System);
+        var service = new CoachingInvitationStore(f.Db, f.Accounts, f.Store, TimeProvider.System, new Events(), new Microsoft.Extensions.Configuration.ConfigurationBuilder().Build());
         var invitation = await service.SendInstitutionAsync(admin, inst, f.Accounts.Users[student].Email, "Student", null, null, default);
         f.Accounts.Admins.Clear();
         await Assert.ThrowsAsync<BusinessRuleException>(() => service.AcceptAsync(student, invitation.Id, default));
@@ -51,11 +51,16 @@ public sealed class CoachingOwnedInvitationTests
         await using var f = new CoachingOwnedProfilePersistenceTests.Fixture();
         var teacher = f.AddAccount("Teacher"); var student = f.AddAccount("Student");
         await f.Store.ProvisionAsync(teacher, "Teacher", default);
-        var service = new CoachingInvitationStore(f.Db, f.Accounts, f.Store, TimeProvider.System);
+        var service = new CoachingInvitationStore(f.Db, f.Accounts, f.Store, TimeProvider.System, new Events(), new Microsoft.Extensions.Configuration.ConfigurationBuilder().Build());
         var invitation = await service.SendTeacherAsync(teacher, f.Accounts.Users[student].Email, null, default);
         await service.AcceptAsync(student, invitation.Id, default);
         Assert.Empty(f.Db.CoachingInstitutionMemberships);
         Assert.Null((await f.Db.CoachingTeacherStudentAssignments.SingleAsync()).InstitutionId);
         await Assert.ThrowsAsync<BusinessRuleException>(() => service.CancelAsync(student, invitation.Id, default));
     }
+    private sealed class Events : Coaching.Application.Interfaces.ICoachingEventPublisher
+    {
+        public Task PublishAsync<T>(T message, CancellationToken cancellationToken = default) where T : class => Task.CompletedTask;
+    }
+
 }

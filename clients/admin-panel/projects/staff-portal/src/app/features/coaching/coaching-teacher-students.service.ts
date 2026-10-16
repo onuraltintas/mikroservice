@@ -63,7 +63,7 @@ export interface CoachingStudentHistoryFilter {
 @Injectable({ providedIn: 'root' })
 export class CoachingTeacherStudentsService {
   private readonly http = inject(HttpClient);
-  private readonly url = `${environment.apiUrl}/teachers/me/students`;
+  private readonly url = `${environment.apiUrl}/coaching/teachers/me/students`;
 
   getMyStudents(
     pageNumber = 1,
@@ -86,7 +86,7 @@ export class CoachingTeacherStudentsService {
   }
 
   inviteStudent(email: string): Observable<{ invitationId: string }> {
-    return this.http.post<{ invitationId: string }>(`${environment.apiUrl}/teachers/invite-student`, {
+    return this.http.post<{ invitationId: string }>(`${environment.apiUrl}/coaching/teachers/invite-student`, {
       studentEmail: email.trim(),
       message: null
     });

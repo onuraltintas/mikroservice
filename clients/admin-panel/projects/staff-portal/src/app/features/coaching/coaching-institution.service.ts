@@ -148,15 +148,15 @@ export class CoachingInstitutionService {
     return this.http.put<void>(`${environment.apiUrl}/coaching/institution-subscription/${encodeURIComponent(subscriptionId)}/students/${encodeURIComponent(studentId)}`, { isSuspended });
   }
   updateStudent(studentId: string, gradeLevel: number, teacherUserId: string | null): Observable<void> {
-    return this.http.put<void>(`${environment.apiUrl}/institution/students/${encodeURIComponent(studentId)}`, { gradeLevel, teacherUserId });
+    return this.http.put<void>(`${environment.apiUrl}/coaching/institution/students/${encodeURIComponent(studentId)}`, { gradeLevel, teacherUserId });
   }
 
   removeStudent(studentId: string): Observable<void> {
-    return this.http.delete<void>(`${environment.apiUrl}/institution/students/${encodeURIComponent(studentId)}`);
+    return this.http.delete<void>(`${environment.apiUrl}/coaching/institution/students/${encodeURIComponent(studentId)}`);
   }
 
   removeTeacher(teacherId: string): Observable<void> {
-    return this.http.delete<void>(`${environment.apiUrl}/institution/teachers/${encodeURIComponent(teacherId)}`);
+    return this.http.delete<void>(`${environment.apiUrl}/coaching/institution/teachers/${encodeURIComponent(teacherId)}`);
   }
   private readonly http = inject(HttpClient);
   private readonly url = `${environment.apiUrl}/coaching-admin`;
@@ -166,13 +166,13 @@ export class CoachingInstitutionService {
   }
 
   inviteTeacher(email: string): Observable<CoachingInvitationResponse> {
-    return this.http.post<CoachingInvitationResponse>(`${environment.apiUrl}/institution/invite-teacher`, {
+    return this.http.post<CoachingInvitationResponse>(`${environment.apiUrl}/coaching/institution/invite-teacher`, {
       teacherEmail: email.trim()
     });
   }
 
   inviteStudent(email: string, teacherUserId?: string): Observable<CoachingInvitationResponse> {
-    return this.http.post<CoachingInvitationResponse>(`${environment.apiUrl}/institution/invite-student`, {
+    return this.http.post<CoachingInvitationResponse>(`${environment.apiUrl}/coaching/institution/invite-student`, {
       studentEmail: email.trim(),
       ...(teacherUserId ? { teacherUserId } : {})
     });
