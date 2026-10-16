@@ -123,6 +123,18 @@ public sealed class CoachingOutcomeCatalogService(CoachingDbContext db, ICoachin
     public Task<IReadOnlyList<PublishedStudyOutcome>> GetPublishedAsync(Guid topicId, int academicYear, CancellationToken ct)
         => ReadPublishedAsync(db, topicId, academicYear, ct);
 
+    internal static async Task ValidateLessonScopeAsync(CoachingDbContext db,Guid lessonId,string name,int? grade,string? exam,CancellationToken ct)
+    {
+        var editions = await (from topic in db.StudyCatalogTopics
+            join map in db.Set<StudyCatalogTopicOutcome>() on topic.Id equals map.TopicId
+            join outcome in db.Set<StudyCatalogOutcome>() on map.OutcomeId equals outcome.Id
+            join edition in db.Set<OfficialCurriculumEdition>() on outcome.EditionId equals edition.Id
+            where topic.LessonId == lessonId
+            select new { edition.SubjectName,edition.GradeNumber,edition.ExamCode }).Distinct().ToArrayAsync(ct);
+        if (editions.Any(x => x.SubjectName != name.Trim() || x.ExamCode != exam?.Trim().ToUpperInvariant() || (grade.HasValue && grade != x.GradeNumber)))
+            throw new ArgumentException("Ders adı, sınıfı veya sınavı bağlı kazanımların program kapsamıyla uyuşmuyor. Farklı kapsam için yeni ders ve program kaydı oluşturun.");
+    }
+
     public static async Task<int> AcademicYearAsync(CoachingDbContext db, Guid student, CancellationToken ct)
         => await db.StudentLearningContexts.Where(x => x.StudentUserId == student).Select(x => (int?)x.AcademicYearStart).SingleOrDefaultAsync(ct)
             ?? (DateTime.UtcNow.Month >= 9 ? DateTime.UtcNow.Year : DateTime.UtcNow.Year - 1);

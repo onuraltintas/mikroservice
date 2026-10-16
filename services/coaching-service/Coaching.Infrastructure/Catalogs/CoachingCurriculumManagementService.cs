@@ -88,7 +88,9 @@ public sealed class CoachingCurriculumManagementService(CoachingDbContext db, IC
                 switch (entity)
                 {
                     case StudyCatalogLessonGroup g: g.Edit(r.Name,r.DisplayOrder ?? 0); break;
-                    case StudyCatalogLesson l: l.Edit(r.Name,r.GradeNumber,r.ExamCode); break;
+                    case StudyCatalogLesson l:
+                        await CoachingOutcomeCatalogService.ValidateLessonScopeAsync(db,l.Id,r.Name,r.GradeNumber,r.ExamCode,ct);
+                        l.Edit(r.Name,r.GradeNumber,r.ExamCode); break;
                     case StudyCatalogUnit u: u.Edit(r.Name,r.DisplayOrder); break;
                     case StudyCatalogTopic t: t.Edit(r.Name,r.DisplayOrder,r.EstimatedMinutes); break;
                     case StudyCatalogOutcome o:

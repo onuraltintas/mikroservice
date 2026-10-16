@@ -57,7 +57,9 @@ public sealed class CoachingCatalogManagementService(CoachingDbContext db, ICoac
             var entity = await LoadAsync(kind, id, ct);
             switch (entity)
             {
-                case StudyCatalogLesson lesson: lesson.Edit(request.Name, request.GradeNumber, request.ExamCode); break;
+                case StudyCatalogLesson lesson:
+                    await CoachingOutcomeCatalogService.ValidateLessonScopeAsync(db,lesson.Id,request.Name,request.GradeNumber,request.ExamCode,ct);
+                    lesson.Edit(request.Name, request.GradeNumber, request.ExamCode); break;
                 case StudyCatalogUnit unit:
                     if (request.LessonId != unit.LessonId) throw new ArgumentException("Ünitenin ders bağlantısı değiştirilemez; yeni kayıt oluşturun.");
                     unit.Edit(request.Name, request.DisplayOrder); break;
