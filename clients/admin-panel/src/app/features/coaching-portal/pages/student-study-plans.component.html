@@ -75,10 +75,13 @@
             } @else if (plan.status === 'Active' && !readOnly) {
               @if (!staffStudentId) {
               <div class="fields">
-                <label>Gerçek süre (dk)<input type="number" [(ngModel)]="actualMinutes[task.id]" min="1" max="1440" step="1" [disabled]="busy()"></label>
-                <label>Gerçek soru (isteğe bağlı)<input type="number" [(ngModel)]="actualQuestions[task.id]" min="0" max="100000" step="1" [disabled]="busy()"></label>
+                <label>Gerçek süre (dk)<input type="number" [(ngModel)]="actualMinutes[task.id]" (ngModelChange)="completionError.set(null)" min="1" max="1440" step="1" [disabled]="busy()" [attr.aria-invalid]="completionError()?.taskId === task.id && completionError()?.field === 'minutes' ? 'true' : null" [attr.aria-describedby]="completionError()?.taskId === task.id && completionError()?.field === 'minutes' ? 'completion-error-' + task.id : null"></label>
+                <label>Gerçek soru (isteğe bağlı)<input type="number" [(ngModel)]="actualQuestions[task.id]" (ngModelChange)="completionError.set(null)" min="0" max="100000" step="1" [disabled]="busy()" [attr.aria-invalid]="completionError()?.taskId === task.id && completionError()?.field === 'questions' ? 'true' : null" [attr.aria-describedby]="completionError()?.taskId === task.id && completionError()?.field === 'questions' ? 'completion-error-' + task.id : null"></label>
                 <button type="button" (click)="complete(task, actualMinutes[task.id], actualQuestions[task.id])" [disabled]="busy()">Tamamla</button>
               </div>
+              @if (completionError()?.taskId === task.id) {
+                <p role="alert" class="notice error" [id]="'completion-error-' + task.id">{{ completionError()?.message }}</p>
+              }
               } @else { <p class="muted">Öğrencinin çalışma kaydı bekleniyor.</p> }
               <div class="fields">
                 <label>Yeni tarih<input type="date" [(ngModel)]="targetDates[task.id]" [disabled]="busy()"></label>

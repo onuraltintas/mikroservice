@@ -182,7 +182,7 @@ export class CoachingPortalProgressComponent implements OnInit {
 
   averageScore() {
     const summary = this.summary();
-    if (summary?.averageExamPercentage !== undefined) return Math.round(summary.averageExamPercentage);
+    if (summary && summary.totalExams > 0 && summary.averageExamPercentage != null) return Math.round(summary.averageExamPercentage);
     return null;
   }
 

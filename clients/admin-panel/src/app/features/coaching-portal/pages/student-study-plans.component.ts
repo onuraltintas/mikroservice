@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, HostListener, Input, OnChanges, OnInit, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Observable, Subject, finalize, takeUntil } from 'rxjs';
 import { CoachingStudyPlanningService, StudyPlan, StudyPlanPage, StudyPlanStatus, StudyTask, StudyTaskInput } from '../../../core/services/coaching-study-planning.service';
 
@@ -21,12 +21,15 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
   private get studentArgument(): [string] | [] { return this.staffStudentId ? [this.staffStudentId] : []; }
   private readonly service = inject(CoachingStudyPlanningService);
   private readonly destroyRef = inject(DestroyRef);
-  private requestedPlanId = inject(ActivatedRoute, { optional: true })?.snapshot.queryParamMap.get('plan') ?? null;
+  private readonly route = inject(ActivatedRoute, { optional: true });
+  private readonly router = inject(Router, { optional: true });
+  private requestedPlanId = this.route?.snapshot.queryParamMap.get('plan') ?? null;
   readonly page = signal<StudyPlanPage>({ items: [], totalCount: 0, pageNumber: 1, pageSize: 20 });
   readonly selected = signal<StudyPlan | null>(null);
   readonly busy = signal(false);
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
+  readonly completionError = signal<{ taskId: string; field: 'minutes' | 'questions'; message: string } | null>(null);
   readonly success = signal<string | null>(null);
   readonly knownDraftId = signal<string | null>(null);
   editing = false;
@@ -51,12 +54,12 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
 
   canLeavePage() {
     if (this.busy()) { this.error.set('İşlem sürüyor. Tamamlanmasını bekleyin.'); return false; }
-    return !this.dirty || (typeof window !== 'undefined' && window.confirm('Kaydedilmemiş taslağınız var. Değişikliklerden vazgeçerek ayrılmak istiyor musunuz?'));
+    return !(this.dirty || this.hasUnsavedTaskInputs()) || (typeof window !== 'undefined' && window.confirm('Kaydedilmemiş değişiklikleriniz var. Değişikliklerden vazgeçerek ayrılmak istiyor musunuz?'));
   }
 
   @HostListener('window:beforeunload', ['$event'])
   beforeUnload(event: BeforeUnloadEvent) {
-    if (this.dirty || this.busy()) { event.preventDefault(); event.returnValue = ''; }
+    if (this.dirty || this.hasUnsavedTaskInputs() || this.busy()) { event.preventDefault(); event.returnValue = ''; }
   }
 
   loadList(pageNumber = 1) {
@@ -69,6 +72,12 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
       this.page.set(page);
       if (!this.staffStudentId && this.requestedPlanId) {
         const id = this.requestedPlanId; this.requestedPlanId = null; this.open(id);
+      } else if (!this.staffStudentId && !this.selected() && !this.editing && !this.filter) {
+        const active = page.items.find(plan => plan.status === 'Active');
+        if (active) this.open(active.id);
+        else this.service.list(1, 'Active').pipe(takeUntil(this.scopeChanged), takeUntilDestroyed(this.destroyRef))
+          .subscribe({ next: plans => { if (plans.items.length && !this.selected() && !this.editing) this.open(plans.items[0].id); },
+            error: error => this.showError(error, 'Aktif plan yüklenemedi. Lütfen tekrar deneyin.') });
       }
       if (pageNumber === 1 && (!this.filter || this.filter === 'Draft')) {
         this.knownDraftId.set(page.items.find(plan => plan.status === 'Draft')?.id ?? null);
@@ -156,12 +165,13 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
     const plan = this.selected();
     if (!plan || plan.status !== 'Active' || task.isCompleted || this.busy()) return;
     if (!Number.isInteger(actualMinutes) || actualMinutes < 1 || actualMinutes > 1440) {
-      this.error.set('Gerçek çalışma süresini 1–1440 dakika arasında girin.');
+      this.completionError.set({ taskId: task.id, field: 'minutes', message: 'Gerçek çalışma süresini 1–1440 dakika arasında girin.' });
       return;
     }
     if (actualQuestions != null && (!Number.isInteger(actualQuestions) || actualQuestions < 0 || actualQuestions > 100000)) {
-      this.error.set('Gerçek soru sayısını 0–100000 arasında tam sayı olarak girin.'); return;
+      this.completionError.set({ taskId: task.id, field: 'questions', message: 'Gerçek soru sayısını 0–100000 arasında tam sayı olarak girin.' }); return;
     }
+    this.completionError.set(null);
     this.mutate(this.service.complete(plan.id, task.id, plan.version, actualMinutes, actualQuestions), 'Çalışma tamamlandı.');
   }
 
@@ -186,13 +196,26 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
     this.targetDates = Object.fromEntries(plan.tasks.map(task => [task.id, task.plannedDate]));
     this.dirty = false;
     this.publishConfirmed = false;
+    this.completionError.set(null);
     if (plan.status === 'Draft') this.knownDraftId.set(plan.id);
     else if (this.knownDraftId() === plan.id) this.knownDraftId.set(null);
+    if (!this.staffStudentId && this.route && this.router) {
+      void this.router.navigate([], { relativeTo: this.route, queryParams: { plan: plan.id }, queryParamsHandling: 'merge', replaceUrl: true });
+    }
+  }
+
+  private hasUnsavedTaskInputs() {
+    const plan = this.selected();
+    return !this.staffStudentId && !this.readOnly && plan?.status === 'Active' && plan.tasks.some(task => !task.isCompleted && (
+      this.actualMinutes[task.id] !== (task.actualMinutes ?? task.plannedMinutes)
+      || (this.actualQuestions[task.id] ?? null) !== (task.actualQuestions ?? null)
+      || this.targetDates[task.id] !== task.plannedDate));
   }
 
   private canLeaveEditor() {
     if (this.busy()) return false;
     if (this.dirty) { this.error.set('Önce taslağınızı kaydedin veya değişikliklerden vazgeçin.'); return false; }
+    if (this.hasUnsavedTaskInputs() && (typeof window === 'undefined' || !window.confirm('Kaydedilmemiş çalışma bilgileriniz var. Değişikliklerden vazgeçmek istiyor musunuz?'))) return false;
     this.success.set(null);
     return true;
   }
