@@ -1,0 +1,93 @@
+<main class="curriculum-workspace">
+  <header class="page-header">
+    <div><p class="eyebrow">KOÇLUK / İÇERİK YÖNETİMİ</p><h1>Ders ve Müfredat Yönetimi</h1><p>Ders grubundan kazanıma kadar içerikleri ve çalışma sürelerini tek yerden yönetin.</p></div>
+    <a routerLink="/dashboard/coaching/catalog">Katalog aktarımı ve programlar ↗</a>
+  </header>
+  <div class="preservation-note"><span aria-hidden="true">✓</span> Kaydedilmiş planların görevleri, gerçekleşen çalışmalar ve kullandıkları süre sürümleri korunur.</div>
+  @if (error()) { <p class="notice danger" role="alert">{{ error() }}</p> }
+  @if (message()) { <p class="notice success" role="status">{{ message() }}</p> }
+  @if (pending()) { <div class="notice warning" role="alert"><p>Kaydedilmemiş değişiklikler var. Başka kayda geçilsin mi?</p><button type="button" (click)="discard()">Değişiklikleri bırak ve geç</button><button type="button" (click)="pending.set(null)">Düzenlemeye devam et</button></div> }
+  <div class="workspace-grid">
+    <aside class="hierarchy" aria-label="Ders ve müfredat hiyerarşisi">
+      <div class="pane-header"><h2>İçerik ağacı</h2><button type="button" aria-label="Ders grubu ekle" (click)="create('groups')" [disabled]="busy()">+ Grup</button></div>
+      <label for="curriculum-root">Görünüm</label><select id="curriculum-root" [(ngModel)]="rootScope" (ngModelChange)="changeRoot()" [disabled]="busy()"><option value="groups">Ders grupları</option><option value="lessons">Gruba bağlanmamış dersler</option><option value="outcomes">Konuya bağlanmamış kazanımlar</option></select>
+      <form class="tree-search" (ngSubmit)="loadRoot()"><label class="sr-only" for="curriculum-tree-search">Bu düzeyde ara</label><input id="curriculum-tree-search" [(ngModel)]="rootSearch" name="rootSearch" placeholder="Bu düzeyde ara…" maxlength="200"><button type="submit" [disabled]="busy()">Ara</button></form>
+      @if (rootScope === 'lessons') { <button type="button" (click)="create('lessons')" [disabled]="busy()">+ Grupsuz ders ekle</button> }
+      <p class="tree-help">Oku açarak alt kayıtları görüntüleyin. Bir kaydı seçerek sağda düzenleyin.</p>
+      <div class="tree-list" role="group" aria-label="Katalog kayıtları"><ng-container *ngTemplateOutlet="tree; context: { rows: branch()?.rows || [], depth: 0 }" /></div>
+      @if (branch()?.loading) { <p role="status">Kayıtlar yükleniyor…</p> }
+      @if (branch()?.error) { <p role="alert">{{ branch()?.error }}</p><button type="button" (click)="loadRoot()">Yeniden dene</button> }
+      @if (!branch()?.loading && !branch()?.error && !branch()?.rows?.length) { <p class="empty">Henüz kayıt yok. Yeni bir kayıt ekleyebilir veya görünümü değiştirebilirsiniz.</p> }
+      @if ((branch()?.page || 1) * 25 < (branch()?.total || 0)) { <button type="button" (click)="loadRoot((branch()?.page || 1) + 1)">Daha fazla kayıt</button> }
+    </aside>
+    <section class="editor-pane" aria-label="Seçilen kaydı düzenle">
+      @if (detailLoading()) { <p role="status">Güncel kayıt yükleniyor…</p> }
+      @else if (editing()) {
+        <header class="editor-header"><div><p class="eyebrow">{{ labels[kind] }}</p><h2>{{ creating() ? 'Yeni ' + labels[kind].toLocaleLowerCase('tr') : selected()?.name }}</h2><p class="path">{{ selected()?.path || 'İçerik ağacına yeni kayıt' }}</p></div><button type="button" (click)="cancel()" [disabled]="busy()">Kapat</button></header>
+        @if (creating() && kind !== 'groups' && kind !== 'outcomes') { <p class="notice">Yeni kayıt pasif oluşturulur. Kaydettikten sonra etkinleştirin.</p> }
+        <form #editForm="ngForm" (ngSubmit)="save()">
+          <fieldset [disabled]="busy()" class="edit-fields">
+            <label class="full">{{ kind === 'outcomes' ? 'Kazanım metni' : 'Ad' }}<textarea *ngIf="kind === 'outcomes'; else nameInput" name="name" [(ngModel)]="form.name" required maxlength="2000" rows="3"></textarea><ng-template #nameInput><input name="name" [(ngModel)]="form.name" required maxlength="300"></ng-template></label>
+            @if (kind === 'lessons') {
+              <label>Sınıf<select name="grade" [(ngModel)]="form.gradeNumber"><option [ngValue]="null">Belirtilmedi</option>@for (grade of [1,2,3,4,5,6,7,8,9,10,11,12]; track grade) { <option [ngValue]="grade">{{ grade }}. sınıf</option> }</select></label>
+              <label>Sınav<select name="exam" [(ngModel)]="form.examCode"><option [ngValue]="null">Belirtilmedi</option>@for (exam of exams; track exam) { <option [value]="exam">{{ exam }}</option> }</select></label>
+            }
+            @if (kind !== 'lessons') { <label>Görüntüleme sırası<input name="order" type="number" [min]="kind === 'outcomes' ? 1 : 0" step="1" [(ngModel)]="form.displayOrder"></label> }
+            @if (kind === 'topics') { <label>Konu çalışma süresi (dk)<input name="minutes" type="number" min="1" step="1" [(ngModel)]="form.estimatedMinutes"><small>Kazanım seçilmeden yapılan planlamanın önerisi. Boş bırakılabilir.</small></label> }
+            @if (kind === 'outcomes') {
+              <label>Kazanım kodu<input name="code" [(ngModel)]="form.code" required maxlength="100"></label>
+              <label>Kaynak sayfa<input name="sourcePage" [(ngModel)]="form.sourcePage" required min="1" step="1" type="number"></label>
+              <label class="full">Açıklama / kaynak notu<textarea name="notes" [(ngModel)]="form.notes" maxlength="8000" rows="2"></textarea></label>
+              @if (creating()) {
+                <label class="full">Kaynak program<select name="edition" [(ngModel)]="editionId" (ngModelChange)="selectEdition()" required><option value="">Program seçin</option>@for (edition of editions(); track edition.id) { <option [value]="edition.id">{{ edition.subjectName }} · {{ edition.code }} · {{ edition.academicYearStart }}–{{ edition.academicYearEnd }}</option> }</select></label>
+                <label class="full">Programdaki konu grubu<select name="officialTopic" [(ngModel)]="form.officialTopicId" required><option [ngValue]="null">Konu grubu seçin</option>@for (topic of officialTopics(); track topic.id) { <option [value]="topic.id">{{ topic.name }} · {{ topic.lessonPeriods }} resmî ders saati</option> }</select><small>Program dayanağı seçilir; yönetici girişi resmî doğrulama yerine geçmez.</small></label>
+              }
+            }
+            <label class="full">İşlem gerekçesi<textarea name="reason" [(ngModel)]="form.reason" required minlength="5" maxlength="500" rows="2" placeholder="Ne değiştiriliyor ve neden? Bu açıklama işlem geçmişine kaydedilir."></textarea></label>
+          </fieldset>
+          <div class="action-bar"><button class="primary" type="submit" [disabled]="busy() || editForm.invalid">{{ busy() ? 'İşleniyor…' : creating() ? 'Kaydı oluştur' : 'Değişiklikleri kaydet' }}</button>@if (!creating()) { <span class="badge" [class.passive]="!selected()?.isActive">{{ selected()?.isActive ? 'Aktif' : 'Pasif / arşiv' }}</span> }</div>
+        </form>
+        @if (!creating() && selected(); as n) {
+          @if (kind !== 'outcomes') {
+            <div class="child-actions"><h3>Alt kayıt ekle</h3>@if (kind === 'groups') { <button type="button" (click)="create('lessons',n)" [disabled]="busy()">+ Ders</button> }@if (kind === 'lessons') { <button type="button" (click)="create('units',n)" [disabled]="busy()">+ Ünite</button> }@if (kind === 'units') { <button type="button" (click)="create('topics',n)" [disabled]="busy()">+ Konu</button> }@if (kind === 'topics') { <button type="button" (click)="create('topics',n)" [disabled]="busy()">+ Alt konu</button><button type="button" (click)="create('outcomes',n)" [disabled]="busy()">+ Kazanım</button> }</div>
+          }
+          @if (kind === 'outcomes') {
+            <section class="section-block"><h3>Konu bağlantıları</h3><p>Kapsam onayı için yukarıdaki işlem gerekçesini doldurun.</p>@for (m of n.mappings; track m.topicId) { <div class="mapping"><p class="path">{{ m.path }}</p><span class="badge" [class.passive]="!m.isApproved">{{ m.isApproved ? 'Onaylı' : 'İnceleme bekliyor' }}</span><button type="button" [disabled]="busy() || form.reason.trim().length < 5" (click)="reviewMapping(m)">{{ m.isApproved ? 'Kapsam onayını kaldır' : 'Eşleştirmeyi onayla' }}</button><small>{{ m.evidence }}</small></div> }</section>
+            <section class="section-block"><h3>Kazanım çalışma süresi</h3><p>Net bireysel çalışma dakikasıdır. Resmî ders saati ve video süresi ayrı kavramlardır. Önceki süreler ve planlar korunur.</p>
+              <form #durationForm="ngForm" (ngSubmit)="saveDuration()"><fieldset [disabled]="busy()" class="edit-fields three">
+                <label>Öğrenme (dk)<input name="learning" type="number" min="0" max="1440" step="1" [(ngModel)]="learningMinutes" required></label><label>Alıştırma (dk)<input name="practice" type="number" min="0" max="1440" step="1" [(ngModel)]="practiceMinutes" required></label><label>Kısa kontrol (dk)<input name="check" type="number" min="0" max="1440" step="1" [(ngModel)]="checkMinutes" required></label>
+                <label>Güven düzeyi<select name="confidence" [(ngModel)]="confidence"><option value="Low">Düşük</option><option value="Medium">Orta</option><option value="High">Yüksek</option></select></label><p class="duration-total">Toplam <strong>{{ learningMinutes + practiceMinutes + checkMinutes }} dk</strong></p>
+                <label class="full">Süre dayanağı<textarea name="evidence" [(ngModel)]="durationEvidence" required minlength="5" maxlength="500" rows="2" placeholder="Öğretmen gözlemi, konu bütçesi veya kullanılan varsayımlar"></textarea></label>
+                <label class="checkbox full"><input name="publishDuration" type="checkbox" [(ngModel)]="publishDuration"> Yeni süre sürümünü inceleyip yayınlamayı onaylıyorum.</label>
+              </fieldset><button class="primary" type="submit" [disabled]="busy() || durationForm.invalid || form.reason.trim().length < 5">{{ publishDuration ? 'Yeni süre sürümünü kaydet ve yayınla' : 'Yeni süre sürümünü taslak kaydet' }}</button></form>
+              <div class="duration-history"><h4>Süre geçmişi</h4>@for (e of n.estimates; track e.id) { <article><div><strong>Sürüm {{ e.number }} · {{ total(e) }} dk</strong><span class="badge" [class.passive]="!e.isPublished">{{ e.isPublished ? 'Yayınlanmış' : 'Taslak' }}</span></div><p>{{ e.learningMinutes }} öğrenme + {{ e.practiceMinutes }} alıştırma + {{ e.checkMinutes }} kontrol · Güven: {{ e.confidence === 'Low' ? 'Düşük' : e.confidence === 'Medium' ? 'Orta' : 'Yüksek' }}</p><small>{{ e.evidence }}</small>@if (!e.isPublished) { <button type="button" (click)="publish(e)" [disabled]="busy() || form.reason.trim().length < 5">Bu süre sürümünü yayınla</button> }</article> }@empty { <p>Henüz süre sürümü yok.</p> }</div>
+            </section>
+          }
+          @if (kind !== 'groups') {
+            <details class="section-block"><summary>Başka konuma taşı</summary><p>Ders grubu değişikliği ders kimliğini korur. Ünite ve konu taşınırken yeni konumda kopya oluşturulur, önceki kayıtlar pasife alınır; eski planlar önceki bağlantılarıyla kalır. Sınav, sınıf ve program kapsamı korunur.</p>
+              @if (kind === 'outcomes') { <label>Taşınacak konu bağlantısı<select [(ngModel)]="sourceTopicId">@for (m of n.mappings; track m.topicId) { <option [value]="m.topicId">{{ m.path }}</option> }</select></label><p>Kazanımın diğer konu bağlantıları korunur. Yeni bağlantı kapsam onayı bekler.</p> }
+              @if (kind === 'topics') { <label>Hedef türü<select [(ngModel)]="destinationKind" (ngModelChange)="searchDestinations()"><option value="units">Ünite (ana konu olarak)</option><option value="topics">Konu (alt konu olarak)</option></select></label> }
+              <div class="tree-search"><label class="sr-only" for="destination-search">Hedef konum ara</label><input id="destination-search" [(ngModel)]="destinationSearch" maxlength="200" placeholder="Hedef adını ara"><button type="button" (click)="searchDestinations()" [disabled]="busy() || destinationLoading()">Hedefleri ara</button></div>
+              <label>Hedef konum<select [(ngModel)]="destinationId" (ngModelChange)="moveConfirmed = false"><option value="">Hedef seçin</option>@for (d of destinations(); track d.id) { <option [value]="d.id">{{ d.path || d.name }}{{ d.isActive ? '' : ' (pasif)' }}</option> }</select></label>
+              <div class="pager"><button type="button" (click)="searchDestinations(destinationPage - 1)" [disabled]="destinationPage <= 1 || destinationLoading()">Önceki</button><span>{{ destinationPage }}. sayfa</span><button type="button" (click)="searchDestinations(destinationPage + 1)" [disabled]="destinationPage * 25 >= destinationTotal() || destinationLoading()">Sonraki</button></div>
+              <label class="checkbox"><input type="checkbox" [(ngModel)]="moveConfirmed"> Hedefi ve geçmiş planların korunacağını kontrol ettim.</label><button type="button" class="primary" (click)="move()" [disabled]="busy() || !destinationId || !moveConfirmed || form.reason.trim().length < 5 || dirtyFields()">Seçilen konuma taşı</button>
+            </details>
+          }
+          <details class="section-block"><summary>Kullanım durumu ve güvenli silme</summary><p>Aktif alt kayıtlar varsa önce onları pasife alın. Kayıt silinmeden önce güncel kullanım yeniden kontrol edilir.</p>
+            <label class="checkbox"><input type="checkbox" [(ngModel)]="statusConfirmed"> {{ n.isActive ? 'Gelecek seçimler için pasife almayı' : 'Yeniden etkinleştirmeyi' }} onaylıyorum.</label><button type="button" (click)="setActive()" [disabled]="busy() || !statusConfirmed || form.reason.trim().length < 5 || dirtyFields()">{{ n.isActive ? 'Pasife al' : 'Etkinleştir' }}</button>
+            <div class="deletion"><h4>Kalıcı silme</h4>@if (!n.canDelete) { <p>Bu kayıt kullanımda. Geçmişi korumak için silinemez.</p><ul>@for (blocker of n.blockers; track blocker) { <li>{{ blocker }}</li> }</ul> }@else { <p>Bağlı çalışma veya alt kayıt bulunmuyor. Kalıcı silme geri alınamaz.</p><label>Onaylamak için SİL yazın<input [(ngModel)]="deleteConfirmation" autocomplete="off"></label> }<button type="button" class="danger-button" (click)="remove()" [disabled]="busy() || !n.canDelete || deleteConfirmation !== 'SİL' || form.reason.trim().length < 5">Kalıcı sil</button></div>
+          </details>
+        }
+      } @else { <div class="editor-empty"><span aria-hidden="true">≡</span><h2>Müfredatın tamamı, düzenli bir yapı içinde</h2><p>Soldan bir kayıt seçin veya ders grubu ekleyerek başlayın. Mevcut dersler “Gruba bağlanmamış dersler” görünümünde bulunur.</p><ol><li>Ders grubu ve dersleri düzenleyin.</li><li>Ünite, konu ve alt konuları yerleştirin.</li><li>Kazanımları ve çalışma sürelerini inceleyin.</li></ol></div> }
+    </section>
+  </div>
+</main>
+<ng-template #tree let-rows="rows" let-depth="depth">
+  @for (n of rows; track n.kind + n.id) {
+    <div class="tree-row" [class.selected]="selected()?.id === n.id" [style.--depth]="depth">
+      @if (n.kind !== 'outcomes') { <button class="expand" type="button" [attr.aria-label]="n.name + ' alt kayıtları'" [attr.aria-expanded]="!!branch(n)?.open" (click)="expand(n)" [disabled]="busy()">{{ branch(n)?.open ? '⌄' : '›' }}</button> }@else { <span class="outcome-dot" aria-hidden="true">•</span> }
+      <button type="button" class="node-label" (click)="select(n)" [disabled]="busy()" [attr.aria-label]="n.name + ' düzenle'"><small>{{ nodeType(n) }}{{ n.code ? ' · ' + n.code : '' }}</small><span>{{ n.name }}</span></button><span class="status-dot" [class.passive]="!n.isActive" [attr.aria-label]="n.isActive ? 'Aktif' : 'Pasif'"></span>
+    </div>
+    @if (branch(n); as b) { @if (b.open) { <ng-container *ngTemplateOutlet="tree; context:{ rows:b.rows, depth:depth + 1 }" />@if (b.loading) { <p class="tree-help" role="status">Alt kayıtlar yükleniyor…</p> }@if (b.error) { <p role="alert">{{ b.error }}</p><button type="button" (click)="loadChildren(n)">Yeniden dene</button> }@if (!b.loading && !b.error && !b.rows.length) { <p class="tree-help">Alt kayıt yok. Kaydı seçerek ekleyebilirsiniz.</p> }@if (b.page * 25 < b.total) { <button class="more" type="button" (click)="loadChildren(n,b.page + 1)">Daha fazla alt kayıt</button> } } }
+  }
+</ng-template>

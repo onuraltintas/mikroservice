@@ -10,6 +10,12 @@ export const DASHBOARD_ROUTES: Routes = [
         loadComponent: () => import('../course-management/course-management-admin.component').then(m => m.CourseManagementAdminComponent)
     },
     {
+        path: 'coaching/curriculum',
+        canActivate: [permissionGuard],
+        data: { permission: ADMIN_PERMISSIONS.coachingContentManage, role: 'SystemAdmin' },
+        loadComponent: () => import('./pages/coaching-curriculum-manager.component').then(m => m.CoachingCurriculumManagerComponent)
+    },
+    {
         path: 'coaching/catalog',
         canActivate: [permissionGuard],
         data: { permission: ADMIN_PERMISSIONS.coachingView, role: 'SystemAdmin' },

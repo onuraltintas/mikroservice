@@ -12,16 +12,18 @@ import { CoachingCatalogImportComponent } from './coaching-catalog-import';
 import { CoachingCurriculumComponent } from './coaching-curriculum.component';
 import { CoachingOutcomesComponent } from './coaching-outcomes.component';
 import { DistrictOption, LocationService, ProvinceOption } from '../../../core/services/location.service';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-coaching-catalog',
   standalone: true,
-  imports: [FormsModule, DecimalPipe, CoachingCatalogEditorComponent, CoachingCatalogImportComponent, CoachingCurriculumComponent, CoachingOutcomesComponent],
+  imports: [FormsModule, RouterLink, DecimalPipe, CoachingCatalogEditorComponent, CoachingCatalogImportComponent, CoachingCurriculumComponent, CoachingOutcomesComponent],
   template: `
     <main class="space-y-6" aria-labelledby="coaching-catalog-title">
       <header>
         <p class="text-sm font-semibold text-indigo-600">Koçluk / Ortak katalog</p>
         <h1 id="coaching-catalog-title" class="mt-1 text-2xl font-bold text-gray-900 dark:text-white">Dersler ve hedef katalogları</h1>
+        @if (canDelete()) { <a routerLink="/dashboard/coaching/curriculum" class="mt-3 inline-block rounded-lg border px-4 py-2 font-medium">Ders ve Müfredat Yönetimini aç →</a> }
         <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">Katalog kayıtlarını ve kullanımını yönetin. Oluşturma, düzenleme ve yayın değişiklikleri gerekçeyle kaydedilir; yalnız kullanılmayan kayıtlar kalıcı silinebilir.</p>
         @if (canDelete()) { <button type="button" (click)="openEditor(null)" [disabled]="editorOpen() || deleting()" class="mt-3 rounded-lg bg-indigo-600 px-4 py-2 text-white disabled:opacity-40">Yeni kayıt</button> }
       </header>
