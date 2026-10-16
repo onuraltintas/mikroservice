@@ -18,6 +18,16 @@ describe('SpeedReadingInstitutionService', () => {
 
   afterEach(() => http.verify());
 
+  it.each([[1, 'Student'], [2, 'Teacher'], ['Student', 'Student'], ['Teacher', 'Teacher']])(
+    'normalizes the real institution member role %s before report/edit actions', async (role, expected) => {
+      const response = firstValueFrom(service.getMembers('institution-1', 'Student'));
+      http.expectOne(request => request.url.endsWith('/institutions/institution-1/members')).flush({
+        items: [{ userId: 'student-1', role }], totalCount: 1, pageNumber: 1, pageSize: 25,
+      });
+      expect((await response).items[0].role).toBe(expected);
+    },
+  );
+
   it('resolves the current institution through the Identity route without accepting a client institution id', async () => {
     const response = firstValueFrom(service.getMyInstitution());
     const request = http.expectOne('/api/institution/speed-reading/me');

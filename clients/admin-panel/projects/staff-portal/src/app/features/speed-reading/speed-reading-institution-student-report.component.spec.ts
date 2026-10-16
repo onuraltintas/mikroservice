@@ -98,6 +98,9 @@ describe('SpeedReadingStudentReportComponent', () => {
     fixture.detectChanges();
 
     expect(fixture.nativeElement.textContent).toContain('Öğrenci raporu yüklenemedi');
+    expect(fixture.nativeElement.textContent).not.toContain('bağlantısını kontrol');
+    expect(fixture.nativeElement.textContent).not.toContain('Kurum kapsamını kontrol');
+    expect(fixture.nativeElement.textContent).toContain('sunucu');
     fixture.nativeElement.querySelector('[data-testid="retry-student-report"]').click();
     flushStudentReport(http);
     fixture.detectChanges();
