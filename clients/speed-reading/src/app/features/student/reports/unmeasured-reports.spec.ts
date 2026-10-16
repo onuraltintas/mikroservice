@@ -42,6 +42,10 @@ describe('reports without measured speed', () => {
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('app-gauge-chart')).not.toBeNull();
     expect(fixture.componentInstance.statsDataSource()[0].value).toBe('150');
+    for (const label of ['Ortalama hız', 'Ortanca hız', 'En düşük hız', 'En yüksek hız', 'Standart sapma', 'Gelişim oranı', 'Toplam okuma']) {
+      expect(fixture.nativeElement.textContent).toContain(label);
+    }
+    expect(fixture.nativeElement.textContent).not.toContain('Average WPM');
   });
 
   it('does not plot unmeasured or zero-speed history and shows no data in the summary speed card', () => {
