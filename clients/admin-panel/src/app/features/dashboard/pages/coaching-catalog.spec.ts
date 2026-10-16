@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { PLATFORM_ID } from '@angular/core';
+import { provideRouter } from '@angular/router';
 import { of, Subject, throwError } from 'rxjs';
 import { vi } from 'vitest';
 import { AuthService } from '../../../core/auth/auth.service';
@@ -63,6 +64,7 @@ describe('CoachingCatalogComponent', () => {
     TestBed.configureTestingModule({
       imports: [CoachingCatalogComponent],
       providers: [
+        provideRouter([]),
         { provide: PLATFORM_ID, useValue: 'browser' },
         { provide: AuthService, useValue: { userProfile: () => ({ roles }), hasPermission: () => true } },
         { provide: ToasterService, useValue: toaster },

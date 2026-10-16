@@ -77,7 +77,7 @@ public sealed class CoachingOutcomePostgresTests
             var options = new DbContextOptionsBuilder<CoachingDbContext>().UseNpgsql(connection.ConnectionString,
                 x => x.MigrationsHistoryTable("__ef_migrations_history", "coaching")).Options;
             await using var db = new CoachingDbContext(options);
-            await db.GetService<IMigrator>().MigrateAsync("20261016144923_StudentLearningSetup");
+            await db.Database.MigrateAsync();
             var student = Guid.NewGuid();
             var oldPlan = StudyPlanRevision.Create(student, Guid.NewGuid(), 1, "Eski plan"); oldPlan.Activate();
             var oldWork = StudyPlanTask.Create(oldPlan, new(2026, 10, 19), "Tamamlanan çalışma", 30); oldWork.Complete(25, 8);
@@ -85,6 +85,8 @@ public sealed class CoachingOutcomePostgresTests
             var unit = StudyCatalogUnit.Create("approved-catalog", "math-unit", lesson.Id, "Matematik (LGS)", 1); unit.SetActive(true);
             var topic = StudyCatalogTopic.Create("approved-catalog", "topic:factors", lesson.Id, unit.Id, "Çarpanlar ve Katlar", null, 1); topic.SetActive(true);
             db.AddRange(oldPlan, oldWork, lesson, unit, topic); await db.SaveChangesAsync(); db.ChangeTracker.Clear();
+            // Seed with the current model, then restore the old schema before exercising the upgrade.
+            await db.GetService<IMigrator>().MigrateAsync("20261016144923_StudentLearningSetup");
             await db.Database.MigrateAsync(); await db.Database.MigrateAsync();
             await using var f = await CoachingOutcomePilotTests.Fixture.Create();
             var service = new CoachingOutcomeCatalogService(db, f.Scope, f.Inner.Actor);

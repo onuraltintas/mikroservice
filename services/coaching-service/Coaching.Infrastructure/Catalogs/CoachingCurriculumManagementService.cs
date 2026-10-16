@@ -15,7 +15,7 @@ namespace Coaching.Infrastructure.Catalogs;
 
 public sealed record CurriculumSaveRequest(string Name, string Reason, string? Fingerprint = null, Guid? ParentId = null,
     int? GradeNumber = null, string? ExamCode = null, int? DisplayOrder = null, int? EstimatedMinutes = null,
-    string? Code = null, Guid? OfficialTopicId = null, int? SourcePage = null, string? Notes = null);
+    string? Code = null, Guid? OfficialTopicId = null, int? SourcePage = null, string? Notes = null, bool MoveParentOutcomes = false);
 public sealed record CurriculumMoveRequest(Guid? DestinationId, string Fingerprint, string Reason, Guid? SourceTopicId = null);
 public sealed record CurriculumDeleteRequest(string Fingerprint, string Reason, Guid ConfirmId);
 public sealed record CurriculumStatusRequest(string Fingerprint, string Reason, bool IsActive);
@@ -31,6 +31,7 @@ public sealed record CurriculumNode(string Kind, Guid Id, string Name, Guid? Par
     public IReadOnlyList<OutcomeDurationEstimate> Estimates { get; init; } = [];
     public IReadOnlyList<CurriculumMapping> Mappings { get; init; } = [];
     public IReadOnlyList<Guid> UsedEstimateIds { get; init; } = [];
+    public int TopicOutcomeCount { get; init; }
 }
 public sealed record CurriculumMapping(Guid TopicId, string Path, bool IsApproved, string Evidence);
 
@@ -108,8 +109,15 @@ public sealed class CoachingCurriculumManagementService(CoachingDbContext db, IC
                     var owner = (StudyCatalogLesson)await Load("lessons",Required(r.ParentId),ct);
                     return Add(StudyCatalogUnit.Create("admin-manual",Guid.NewGuid().ToString("N"),owner.Id,r.Name,r.DisplayOrder));
                 case "topics":
-                    var parent = await TopicParent(Required(r.ParentId),ct);
-                    return Add(StudyCatalogTopic.Create("admin-manual",Guid.NewGuid().ToString("N"),parent.LessonId,parent.UnitId,r.Name,parent.ParentId,r.DisplayOrder,r.EstimatedMinutes));
+                    var parent = await TopicParent(Required(r.ParentId),ct,r.MoveParentOutcomes);
+                    var added = Add(StudyCatalogTopic.Create("admin-manual",Guid.NewGuid().ToString("N"),parent.LessonId,parent.UnitId,r.Name,parent.ParentId,r.DisplayOrder,r.EstimatedMinutes));
+                    if (parent.ParentId.HasValue && r.MoveParentOutcomes)
+                    {
+                        var mappings = await db.Set<StudyCatalogTopicOutcome>().Where(x => x.TopicId == parent.ParentId).ToArrayAsync(ct);
+                        foreach (var mapping in mappings)
+                        { db.Add(StudyCatalogTopicOutcome.Create(added.Id,mapping.OutcomeId,"Üst konudan alt konuya aktarıldı; kapsamı yeniden inceleyin. " + r.Reason)); db.Remove(mapping); }
+                    }
+                    return added;
                 default:
                     var topic = (StudyCatalogTopic)await Load("topics",Required(r.ParentId),ct);
                     await Leaf(topic,ct);
@@ -309,7 +317,8 @@ public sealed class CoachingCurriculumManagementService(CoachingDbContext db, IC
         var payload = new { entity, mappings = node.Mappings, estimates = node.Estimates.Select(x => new { x.Id,x.Number,x.IsPublished }), blockers };
         var fingerprint = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(payload))));
         var path = node.ParentId.HasValue ? await Path(node.ParentKind!,node.ParentId.Value,ct) + " / " + node.Name : node.Name;
-        return node with { Path = path,Fingerprint = fingerprint,CanDelete = blockers.Count == 0,Blockers = blockers };
+        return node with { Path = path,Fingerprint = fingerprint,CanDelete = blockers.Count == 0,Blockers = blockers,
+            TopicOutcomeCount = entity is StudyCatalogTopic ? await db.Set<StudyCatalogTopicOutcome>().CountAsync(x => x.TopicId == node.Id,ct) : 0 };
     }
 
     private async Task<string> Path(string kind,Guid id,CancellationToken ct)
@@ -346,12 +355,12 @@ public sealed class CoachingCurriculumManagementService(CoachingDbContext db, IC
         };
         return entity ?? throw new KeyNotFoundException("Katalog kaydı bulunamadı.");
     }
-    private async Task<(Guid LessonId,Guid UnitId,Guid? ParentId)> TopicParent(Guid id,CancellationToken ct)
+    private async Task<(Guid LessonId,Guid UnitId,Guid? ParentId)> TopicParent(Guid id,CancellationToken ct,bool allowOutcomes = false)
     {
         var unit = await db.StudyCatalogUnits.FindAsync([id],ct); if (unit is not null) return (unit.LessonId,unit.Id,null);
         var parent = (StudyCatalogTopic)await Load("topics",id,ct);
         if (parent.ParentId.HasValue) throw new ArgumentException("Hiyerarşi konu ve alt konu olmak üzere iki düzeylidir.");
-        if (await db.Set<StudyCatalogTopicOutcome>().AnyAsync(x => x.TopicId == id,ct)) throw new ArgumentException("Kazanım bağlı konuya alt konu eklemeden önce kazanımları alt konuya taşıyın.");
+        if (!allowOutcomes && await db.Set<StudyCatalogTopicOutcome>().AnyAsync(x => x.TopicId == id,ct)) throw new ArgumentException("Üst konudaki kazanımları yeni alt konuya aktarmayı açıkça onaylayın.");
         return (parent.LessonId,parent.UnitId,parent.Id);
     }
     private async Task Leaf(StudyCatalogTopic topic,CancellationToken ct)
@@ -406,5 +415,5 @@ public sealed class CoachingCurriculumManagementService(CoachingDbContext db, IC
     private static void Kind(string kind) { if (!Kinds.Contains(kind)) throw new ArgumentException("Geçersiz katalog türü."); }
     private static void Reason(string? reason) { if (string.IsNullOrWhiteSpace(reason) || reason.Trim().Length is < 5 or > 500) throw new ArgumentException("5–500 karakterlik işlem gerekçesi girin."); }
     private async Task Require(CancellationToken ct)
-    { if (!(await scope.RequireReadScopeAsync(ct)).IsGlobal || !user.UserId.HasValue) throw new BusinessRuleException("Authorization.Forbidden","Müfredat yönetimi yalnız global yöneticiye açıktır."); }
+    { if (!user.IsAuthenticated || !(await scope.RequireReadScopeAsync(ct)).IsGlobal || !user.UserId.HasValue) throw new BusinessRuleException("Authorization.Forbidden","Müfredat yönetimi yalnız global yöneticiye açıktır."); }
 }

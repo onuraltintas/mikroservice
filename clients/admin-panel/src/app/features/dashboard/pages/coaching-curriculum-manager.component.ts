@@ -11,10 +11,10 @@ type Kind = 'groups' | 'lessons' | 'units' | 'topics' | 'outcomes';
 interface Estimate { id: string; number: number; learningMinutes: number; practiceMinutes: number; checkMinutes: number; confidence: string; evidence: string; isPublished: boolean; method?: string }
 interface Mapping { topicId: string; path: string; isApproved: boolean; evidence: string }
 interface Node { kind: Kind; id: string; name: string; parentId: string | null; parentKind: Kind | null; isActive: boolean; path: string; fingerprint: string; canDelete: boolean; blockers: string[];
-  code?: string; gradeNumber?: number | null; examCode?: string | null; displayOrder?: number | null; estimatedMinutes?: number | null; officialTopicId?: string; sourcePage?: number; notes?: string; estimates: Estimate[]; mappings: Mapping[]; usedEstimateIds?: string[] }
+  code?: string; gradeNumber?: number | null; examCode?: string | null; displayOrder?: number | null; estimatedMinutes?: number | null; officialTopicId?: string; sourcePage?: number; notes?: string; estimates: Estimate[]; mappings: Mapping[]; usedEstimateIds?: string[]; topicOutcomeCount?: number }
 interface Page { items: Node[]; totalCount: number; pageNumber: number; pageSize: number }
 interface Branch { rows: Node[]; page: number; total: number; loading: boolean; open: boolean; error?: string }
-interface Form { name: string; reason: string; parentId: string | null; gradeNumber: number | null; examCode: string | null; displayOrder: number | null; estimatedMinutes: number | null; code: string; officialTopicId: string | null; sourcePage: number; notes: string }
+interface Form { name: string; reason: string; parentId: string | null; gradeNumber: number | null; examCode: string | null; displayOrder: number | null; estimatedMinutes: number | null; code: string; officialTopicId: string | null; sourcePage: number; notes: string; moveParentOutcomes: boolean }
 interface Edition { id: string; code: string; subjectName: string; academicYearStart: number; academicYearEnd: number }
 
 @Component({ selector: 'app-coaching-curriculum-manager', standalone: true, imports: [CommonModule, FormsModule, RouterLink],
@@ -42,7 +42,7 @@ export class CoachingCurriculumManagerComponent implements OnInit {
   key(n: Node) { return `${n.kind}:${n.id}`; }
   nodeType(n: Node) { return n.parentKind === 'topics' && n.kind === 'topics' ? 'Alt konu' : this.labels[n.kind]; }
   branch(n?: Node): Branch | undefined { return this.branches()[n ? this.key(n) : 'root']; }
-  empty(): Form { return { name:'',reason:'',parentId:null,gradeNumber:null,examCode:null,displayOrder:null,estimatedMinutes:null,code:'',officialTopicId:null,sourcePage:1,notes:'' }; }
+  empty(): Form { return { name:'',reason:'',parentId:null,gradeNumber:null,examCode:null,displayOrder:null,estimatedMinutes:null,code:'',officialTopicId:null,sourcePage:1,notes:'',moveParentOutcomes:false }; }
   dirty() { return this.editing() && JSON.stringify(this.form) !== this.initial; }
   loadRoot(page = 1) { this.fetchBranch('root',this.rootScope,null,page); }
   changeRoot() { if (this.busy()) return; this.rootSearch = ''; this.loadRoot(); }
