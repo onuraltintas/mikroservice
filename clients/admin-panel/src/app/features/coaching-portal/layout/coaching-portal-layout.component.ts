@@ -45,6 +45,7 @@ export class CoachingPortalLayoutComponent {
       { label: 'Seanslar', path: '/coaching-portal/sessions', icon: 'calendar' }
     ] },
     { label: 'Hesabım', links: [
+      { label: 'Koçluk profilim', path: '/coaching-portal/profile', icon: 'book' },
       { label: 'Bildirimler', path: '/coaching-portal/notifications', icon: 'bell' },
       { label: 'Ücretlerim', path: '/coaching-portal/finance', icon: 'wallet' },
       { label: 'Abonelik ve ödeme', path: '/coaching-portal/subscription', icon: 'card' }

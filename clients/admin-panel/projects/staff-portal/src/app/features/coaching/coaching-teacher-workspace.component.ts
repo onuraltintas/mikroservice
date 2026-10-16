@@ -6,21 +6,25 @@ import { CoachingTeacherStudentsComponent } from './coaching-teacher-students.co
 import { CoachingTeacherExamsComponent } from './coaching-teacher-exams.component';
 import { CoachingTeacherSubscriptionComponent } from './coaching-teacher-subscription.component';
 import { CoachingFinanceComponent } from '../../../../../../src/app/features/coaching-portal/pages/coaching-finance.component';
+import { CoachingProfileComponent } from '../../../../../../shared/coaching-profile.component';
+import { environment } from '../../../environments/environment';
 
-type CoachingTeacherSection = 'students' | 'assignments' | 'sessions' | 'goals' | 'exams' | 'subscription' | 'finance';
+type CoachingTeacherSection = 'students' | 'assignments' | 'sessions' | 'goals' | 'exams' | 'subscription' | 'finance' | 'profile';
 
 @Component({
   selector: 'staff-coaching-teacher-workspace',
   standalone: true,
-  imports: [CoachingTeacherStudentsComponent, CoachingTeacherAssignmentsComponent, CoachingTeacherSessionsComponent, CoachingTeacherGoalsComponent, CoachingTeacherExamsComponent, CoachingTeacherSubscriptionComponent, CoachingFinanceComponent],
+  imports: [CoachingTeacherStudentsComponent, CoachingTeacherAssignmentsComponent, CoachingTeacherSessionsComponent, CoachingTeacherGoalsComponent, CoachingTeacherExamsComponent, CoachingTeacherSubscriptionComponent, CoachingFinanceComponent, CoachingProfileComponent],
   templateUrl: './coaching-teacher-workspace.component.html',
   styleUrl: './coaching-teacher-workspace.component.scss'
 })
 export class CoachingTeacherWorkspaceComponent {
+  readonly apiUrl = environment.apiUrl;
+  @ViewChild(CoachingProfileComponent) private profile?: CoachingProfileComponent;
   @ViewChild(CoachingTeacherStudentsComponent) private students?: CoachingTeacherStudentsComponent;
   @ViewChild(CoachingTeacherGoalsComponent) private goals?: CoachingTeacherGoalsComponent;
   @ViewChild(CoachingFinanceComponent) financePanel?: Pick<CoachingFinanceComponent, 'canLeavePage'>;
-  canLeavePage(): boolean { return (this.financePanel?.canLeavePage() ?? true) && (this.students?.canLeavePage() ?? true) && (this.goals?.canLeavePage() ?? true); }
+  canLeavePage(): boolean { return (this.profile?.canLeavePage() ?? true) && (this.financePanel?.canLeavePage() ?? true) && (this.students?.canLeavePage() ?? true) && (this.goals?.canLeavePage() ?? true); }
   readonly activeSection = signal<CoachingTeacherSection>('students');
 
   selectSection(section: CoachingTeacherSection): void {

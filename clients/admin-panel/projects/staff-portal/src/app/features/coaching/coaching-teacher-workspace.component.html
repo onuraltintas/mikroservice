@@ -8,6 +8,7 @@
   </div>
 
   <nav class="workspace-tabs" aria-label="Koçluk öğretmen işlemleri">
+    <button type="button" data-testid="teacher-profile-tab" [attr.aria-pressed]="activeSection() === 'profile'" [class.active]="activeSection() === 'profile'" (click)="selectSection('profile')">Koçluk profilim ve davetlerim</button>
     <button type="button" data-testid="teacher-finance-tab" [attr.aria-pressed]="activeSection() === 'finance'" [class.active]="activeSection() === 'finance'" (click)="selectSection('finance')">Tahsilat hareketleri</button>
     <button type="button" data-testid="students-tab"
       [attr.aria-pressed]="activeSection() === 'students'"
@@ -64,4 +65,5 @@
   } @else {
     <staff-coaching-teacher-subscription />
   }
+  @if (activeSection() === 'profile') { <edu-coaching-profile [apiUrl]="apiUrl" role="Teacher" /> }
 </section>
