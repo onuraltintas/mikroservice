@@ -56,4 +56,6 @@ Test öğrencisinin tam başlangıç/bitiş JSON'u, kurum canlı testinden sonra
 
 Operasyon kaynakları [yayın dizininde](../../tools/releases/no-measurement-reports-20261016); yedek ve ortam dosyaları yalnız sunucuda tutulur.
 
+Sonraki [Türkçe raporlar yayını](speed-reading-report-localization-20261016.md), bu sürümde gerçek anlama ölçümü yanında İngilizce kalan `Above Average` ve `regression` etiketlerini de Türkçeleştirdi; puan ve ölçüm hesapları değişmedi.
+
 Son gözlem **10:33:43 TSİ**, yayından **15 dakika 39 saniye** sonra: 69 API isteğinde **0 sunucu 5xx**, uygulamada **0 ERR/FTL**; öğrenci/personel dış sayfaları HTTP 200. Üç hedef konteyner çalışıyor, yeniden başlama sayıları 0. Yeni imajlar ve diğer servislerin konteyner kimlikleri doğrulandı. Otomatik gözlem `10:33:30 TSİ` tamamlanma işaretini üretti. İzlem sonrasında alınan `student-final.log` başlangıç tam JSON'uyla yine eşit çıktı. Kanıtlar `monitoring.log`, `monitoring-complete.txt`, `final-health.log`, `student-final.log`; kaynak ve sunucu operasyon dosyalarının hash eşleşmesi `operations-source.sha256` içinde kayıtlı.
