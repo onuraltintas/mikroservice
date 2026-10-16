@@ -46,4 +46,13 @@ public sealed class ExerciseReportingPostgresTests(PostgresFixture postgres) : I
         await db.Database.EnsureDeletedAsync(); await db.Database.MigrateAsync();
         Assert.False(db.Database.HasPendingModelChanges());
     }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Exercise_pass_threshold_and_type_identity_are_preserved(bool sameDisplayName)
+    {
+        await using var db = Open(); await Reset(db);
+        await ExerciseReportingScenario.Boundaries(db, sameDisplayName);
+    }
 }

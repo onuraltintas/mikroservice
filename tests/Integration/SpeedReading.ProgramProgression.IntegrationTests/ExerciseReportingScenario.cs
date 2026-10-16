@@ -78,7 +78,34 @@ internal static class ExerciseReportingScenario
         Require(before == JsonSerializer.Serialize(await db.ExerciseSessionResults.AsNoTracking().OrderBy(r => r.Id).ToListAsync()), "Reporting changed saved results");
     }
 
-    internal static DailyExerciseLog Log(Guid user, Guid progress, Exercise exercise, DateTime now, Guid session, bool measured = true) =>
+    internal static async Task Boundaries(OwnedSpeedReadingDbContext db, bool sameDisplayName)
+    {
+        var user = Guid.NewGuid(); var now = DateTime.UtcNow; var prefix = user.ToString("N");
+        foreach (var (suffix, score) in new[] { ("A", 65m), ("B", 0m) })
+        {
+            var type = ExerciseType.Create(Guid.NewGuid(), prefix + suffix, sameDisplayName ? "Aynı ad" : suffix, suffix);
+            var exercise = Exercise.Create(prefix + suffix, suffix, "{}", 1, user, type.Id);
+            db.ExerciseTypes.Add(type); db.Exercises.Add(exercise);
+            var session = ExerciseSession.Start(user, exercise.Id, null, 1, now.AddMinutes(-1), null);
+            session.Complete(now); db.ExerciseSessions.Add(session);
+            db.ExerciseSessionResults.Add(ExerciseSessionResult.Create(Guid.NewGuid(), session.Id, user, exercise.Id,
+                null, 0, 60, 0, 0, 0, score, now));
+        }
+        await db.SaveChangesAsync();
+        if (sameDisplayName)
+        {
+            var content = await Reports(db).GetContentAnalysisAsync(new SpeedReadingTeacherStudentScopeResponse([], [user], 1), now.AddDays(-1), now.AddDays(1));
+            Require(content.ExerciseAnalysis.Count == 2 && content.ExerciseAnalysis.All(t => t.TotalCompletions == 1), "Different type IDs must not merge when display names match");
+        }
+        else
+        {
+            var activity = await Analytics(db).GetStudentActivityAsync(user, now.AddDays(-1), now.AddDays(1));
+            Require(activity.RecentActivities.All(a => !a.IsPassed), "Exercise scores below 70 must not be reported as passed");
+            Require(activity.RecentActivities.Single(a => a.ContentTitle == prefix + "B").SuccessRate == 0, "Measured zero must remain zero");
+        }
+    }
+
+    internal static DailyExerciseLog Log(Guid user, Guid progress, Exercise exercise, DateTime now, Guid? session, bool measured = true) =>
         DailyExerciseLog.Import(Guid.NewGuid(), user, progress, exercise.Id, exercise.ExerciseTypeId, 1, 1, 1, now,
             60, measured ? 100 : 0, measured, "{}", 1, false, "verification", 1, 0, 1, null, null, 4, TimeSpan.Zero,
             0, 0, 0, 0, 0, 0, false, 0, 0, 0, 0, 0, 0, now, null, null, null, isMeasured: measured, sessionId: session);
