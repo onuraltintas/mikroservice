@@ -9,6 +9,7 @@ using Identity.Application.LegalPages;
 using Identity.Domain.Entities;
 using Identity.Domain.Enums;
 using MassTransit;
+using EduPlatform.Shared.Contracts.Coaching;
 
 namespace Identity.API.IntegrationTests;
 
@@ -40,56 +41,78 @@ public sealed class ProductRegistrationProfileOwnershipTests
         Assert.Equal(0, identityProxy.AssignRoleCount);
     }
 
-    [Fact]
-    public async Task SpeedReadingStudentRegistration_DoesNotCreateCoachingStudentProfile()
+    [Theory]
+    [InlineData(PlatformProduct.SpeedReading)]
+    [InlineData(PlatformProduct.Coaching)]
+    public async Task StudentRegistration_ProfileIsOwnedByProduct(PlatformProduct product)
     {
         var userId = Guid.NewGuid();
         var user = User.Create(userId, "student@example.test");
         var users = CreateUserRepository(user);
         var students = DispatchProxy.Create<IStudentRepository, StudentRepositoryProxy>();
+        var publisher = DispatchProxy.Create<IPublishEndpoint, PublishEndpointProxy>();
         var handler = new RegisterStudentCommandHandler(
             CreateIdentityService(userId),
             users,
             students,
             DispatchProxy.Create<IUnitOfWork, UnitOfWorkProxy>(),
-            DispatchProxy.Create<IPublishEndpoint, PublishEndpointProxy>(),
+            publisher,
             DispatchProxy.Create<IConfigurationService, ConfigurationServiceProxy>(),
             new AcceptingLegalConsentService(), null!);
 
         var result = await handler.Handle(
             new RegisterStudentCommand(
-                "student@example.test", "StrongPassword1!", "Test", "Student", null, PlatformProduct.SpeedReading),
+                "student@example.test", "StrongPassword1!", "Test", "Student", null, product),
             CancellationToken.None);
 
         Assert.True(result.IsSuccess);
         Assert.Equal(0, ((StudentRepositoryProxy)(object)students).AddCount);
-        Assert.True(user.HasProductAccess(PlatformProduct.SpeedReading));
+        Assert.True(user.HasProductAccess(product));
+        var events = ((PublishEndpointProxy)(object)publisher).Messages.OfType<CoachingProfileProvisioningRequested>();
+        if (product == PlatformProduct.Coaching)
+        {
+            var message = Assert.Single(events);
+            Assert.Equal(userId, message.UserId);
+            Assert.Equal("Student", message.Role);
+        }
+        else Assert.Empty(events);
     }
 
-    [Fact]
-    public async Task SpeedReadingTeacherRegistration_DoesNotCreateCoachingTeacherProfile()
+    [Theory]
+    [InlineData(PlatformProduct.SpeedReading)]
+    [InlineData(PlatformProduct.Coaching)]
+    public async Task TeacherRegistration_ProfileIsOwnedByProduct(PlatformProduct product)
     {
         var userId = Guid.NewGuid();
         var user = User.Create(userId, "teacher@example.test");
         var users = CreateUserRepository(user);
         var teachers = DispatchProxy.Create<ITeacherRepository, TeacherRepositoryProxy>();
+        var publisher = DispatchProxy.Create<IPublishEndpoint, PublishEndpointProxy>();
         var handler = new RegisterTeacherCommandHandler(
             CreateIdentityService(userId),
             users,
             teachers,
             DispatchProxy.Create<IUnitOfWork, UnitOfWorkProxy>(),
-            DispatchProxy.Create<IPublishEndpoint, PublishEndpointProxy>(),
+            publisher,
             DispatchProxy.Create<IConfigurationService, ConfigurationServiceProxy>(),
             new AcceptingLegalConsentService(), null!);
 
         var result = await handler.Handle(
             new RegisterTeacherCommand(
-                "teacher@example.test", "StrongPassword1!", "Test", "Teacher", null, PlatformProduct.SpeedReading),
+                "teacher@example.test", "StrongPassword1!", "Test", "Teacher", null, product),
             CancellationToken.None);
 
         Assert.True(result.IsSuccess);
         Assert.Equal(0, ((TeacherRepositoryProxy)(object)teachers).AddCount);
-        Assert.True(user.HasProductAccess(PlatformProduct.SpeedReading));
+        Assert.True(user.HasProductAccess(product));
+        var events = ((PublishEndpointProxy)(object)publisher).Messages.OfType<CoachingProfileProvisioningRequested>();
+        if (product == PlatformProduct.Coaching)
+        {
+            var message = Assert.Single(events);
+            Assert.Equal(userId, message.UserId);
+            Assert.Equal("Teacher", message.Role);
+        }
+        else Assert.Empty(events);
     }
 
     private static IIdentityService CreateIdentityService(Guid userId)
@@ -192,7 +215,12 @@ public sealed class ProductRegistrationProfileOwnershipTests
 
     public class PublishEndpointProxy : DispatchProxy
     {
-        protected override object? Invoke(MethodInfo? targetMethod, object?[]? args) => Task.CompletedTask;
+        public List<object> Messages { get; } = [];
+        protected override object? Invoke(MethodInfo? targetMethod, object?[]? args)
+        {
+            if (args?[0] is { } message) Messages.Add(message);
+            return Task.CompletedTask;
+        }
     }
 
     public class ConfigurationServiceProxy : DispatchProxy
