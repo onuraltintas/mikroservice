@@ -6,6 +6,8 @@ using Identity.Application.LegalPages;
 using Identity.Domain.Entities;
 using Identity.Domain.Enums;
 using MediatR;
+using MassTransit;
+using EduPlatform.Shared.Contracts.Coaching;
 using Microsoft.Extensions.Logging;
 
 namespace Identity.Application.Commands.GoogleLogin;
@@ -17,6 +19,7 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
     private readonly ITokenService _tokenService;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IIdentityService _identityService;
+    private readonly IPublishEndpoint _profileEvents;
     private readonly IConfigurationService _configurationService;
     private readonly IMultiFactorService _multiFactorService;
     private readonly IRegistrationLegalConsentService _registrationLegalConsentService;
@@ -32,13 +35,15 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
         IConfigurationService configurationService,
         IMultiFactorService multiFactorService,
         ILogger<GoogleLoginCommandHandler> logger,
-        IRegistrationLegalConsentService registrationLegalConsentService)
+        IRegistrationLegalConsentService registrationLegalConsentService,
+        IPublishEndpoint profileEvents)
     {
         _googleAuthService = googleAuthService;
         _userRepository = userRepository;
         _tokenService = tokenService;
         _unitOfWork = unitOfWork;
         _identityService = identityService;
+        _profileEvents = profileEvents;
         _configurationService = configurationService;
         _multiFactorService = multiFactorService;
         _registrationLegalConsentService = registrationLegalConsentService;
@@ -270,7 +275,11 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
                         return Result.Failure<LoginResponse>(roleResult.Error);
                     }
                     
-                    // Coaching provisions its own profile during product onboarding.
+                    if (request.Product == PlatformProduct.Coaching)
+                    {
+                        await _profileEvents.Publish(new CoachingProfileProvisioningRequested(userId, "Student", DateTime.UtcNow), cancellationToken);
+                        await _unitOfWork.SaveChangesAsync(cancellationToken);
+                    }
 
                 }
             }

@@ -110,7 +110,13 @@ public sealed class CoachingDataExportRepository(CoachingDbContext context)
             x.Installments.OrderBy(i => i.Sequence).Select(i => new CoachingDataFeeInstallmentDto(i.Id, i.Sequence, i.DueOn, i.Amount)).ToArray(),
             x.Payments.OrderBy(p => p.CreatedAt).ThenBy(p => p.Id).Select(p => new Coaching.Application.Finance.CoachingFeePaymentView(p.Id,
                 x.Id, x.StudentId, p.RecordedByUserId, p.ReversalOfPaymentId, p.Method, p.Amount, p.ReceivedOn, p.Reference, p.CreatedAt)).ToArray())).ToArray();
+        var profile = new Coaching.Application.Profiles.CoachingOwnProfile(
+            await context.CoachingStudentProfiles.AsNoTracking().SingleOrDefaultAsync(x => x.UserId == studentId, cancellationToken),
+            await context.CoachingTeacherProfiles.AsNoTracking().SingleOrDefaultAsync(x => x.UserId == studentId, cancellationToken),
+            await context.CoachingInstitutionMemberships.AsNoTracking().Where(x => x.UserId == studentId).ToArrayAsync(cancellationToken));
+        var profileAssignments = await context.CoachingTeacherStudentAssignments.AsNoTracking()
+            .Where(x => x.StudentUserId == studentId || x.TeacherUserId == studentId).ToArrayAsync(cancellationToken);
         return new CoachingDataExportDto(
-            "1.3", studentId, exportedAt, assignments, exams, goals, sessions, agreements, plans, availability, reminders, fees);
+            "1.4", studentId, exportedAt, assignments, exams, goals, sessions, agreements, plans, availability, reminders, fees, profile, profileAssignments);
     }
 }

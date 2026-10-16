@@ -20,7 +20,9 @@ public sealed record CoachingDataExportDto(
     IReadOnlyList<CoachingDataStudyPlanDto>? StudyPlans = null,
     Coaching.Application.StudyPlanning.StudyAvailabilityView? StudyAvailability = null,
     IReadOnlyList<CoachingDataReminderDto>? Reminders = null,
-    IReadOnlyList<CoachingDataFeeDto>? Fees = null)
+    IReadOnlyList<CoachingDataFeeDto>? Fees = null,
+    Coaching.Application.Profiles.CoachingOwnProfile? Profile = null,
+    IReadOnlyList<Coaching.Domain.Profiles.CoachingTeacherStudentAssignment>? ProfileAssignments = null)
 {
     public static CoachingDataExportDto Empty(Guid studentId, DateTimeOffset exportedAt) =>
         new("1.0", studentId, exportedAt, [], [], [], [], []);
