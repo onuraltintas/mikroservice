@@ -18,6 +18,23 @@ describe('weekly draft calendar',()=>{
     expect(fixture.nativeElement.querySelector('a[href="/coaching-portal/study-plans"]')).not.toBeNull();
     c.changeView('month');fixture.detectChanges();expect(fixture.nativeElement.querySelector('.month-grid')).not.toBeNull();expect(c.dirty()).toBe(false);
   });
+  it('opens saved evening cards instead of empty morning hours and preserves scroll while editing',()=>{
+    const{fixture,c}=setup({version:0,timeZoneId:'Europe/Istanbul',slots:[slot]});
+    const scroller=fixture.nativeElement.querySelector('.time-scroller') as HTMLElement;
+    expect(scroller.scrollTop).toBe(17.5*72);
+    scroller.scrollTop=1200;c.edit(slot);c.form!.duration=30;c.apply();fixture.detectChanges();
+    expect(scroller.scrollTop).toBe(1200);
+  });
+  it('opens the next occupied day on mobile without changing the explicit Today action',()=>{
+    const width=vi.spyOn(window,'innerWidth','get').mockReturnValue(390);
+    try{
+      const{fixture,c}=setup({version:0,timeZoneId:'Europe/Istanbul',slots:[slot]});
+      expect(c.view()).toBe('day');expect(c.rows(c.anchor())).toHaveLength(1);
+      expect((fixture.nativeElement.querySelector('.time-scroller') as HTMLElement).scrollTop).toBe(17.5*72);
+      c.today();const today=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Istanbul'}).format(new Date());
+      expect(new Intl.DateTimeFormat('en-CA').format(c.anchor())).toBe(today);
+    }finally{width.mockRestore();}
+  });
   it('allows plan generation only from the saved nonempty weekly draft',()=>{
     const{c,fixture}=setup({version:0,timeZoneId:'Europe/Istanbul',slots:[slot]});
     const button=()=>fixture.nativeElement.querySelector('[data-testid="weekly-preview-link"]') as HTMLButtonElement;
