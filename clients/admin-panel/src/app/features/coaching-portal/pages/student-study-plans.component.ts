@@ -3,7 +3,7 @@ import { Component, DestroyRef, ElementRef, HostListener, Injector, Input, OnCha
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Observable, Subject, finalize, takeUntil } from 'rxjs';
+import { Observable, Subject, finalize, takeUntil, switchMap } from 'rxjs';
 import { CoachingStudyPlanningService, StudyPlan, StudyPlanPage, StudyPlanStatus, StudyTask, StudyTaskInput } from '../../../core/services/coaching-study-planning.service';
 import {clock} from './weekly-calendar';
 import {StudyPlanCalendarComponent} from './study-plan-calendar.component';
@@ -57,6 +57,9 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
   editTitle = '';
   editTasks: StudyTaskInput[] = [];
   publishConfirmed = false;
+  restoreConfirmed=false;
+  restore(){const plan=this.selected();if(!plan||plan.status!=='Archived'||!this.restoreConfirmed||this.readOnly||this.busy())return;
+    this.mutate(this.service.list(1,'Active',...this.studentArgument).pipe(switchMap(page=>this.service.restore(plan.id,plan.version,page.items[0]??null,...this.studentArgument))),'Plan yeniden etkinleştirildi. Önceki aktif plan ve çalışmalar arşivde korundu.');}
   actualMinutes: Record<string, number> = {};
   actualQuestions: Record<string, number | null> = {};
   moveCalendar(move:CalendarMove){const plan=this.selected();if(!plan||this.readOnly||this.busy()||plan.status==='Archived')return;
@@ -228,6 +231,7 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
     this.dirty = false;
     this.publishConfirmed = false;
     this.completionError.set(null);
+    this.restoreConfirmed=false;
     if (plan.status === 'Draft') this.knownDraftId.set(plan.id);
     else if (this.knownDraftId() === plan.id) this.knownDraftId.set(null);
     if (!this.staffStudentId && this.route && this.router) {

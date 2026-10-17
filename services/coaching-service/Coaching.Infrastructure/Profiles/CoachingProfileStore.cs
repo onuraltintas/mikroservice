@@ -65,6 +65,22 @@ public sealed class CoachingProfileStore(CoachingDbContext db, ICoachingAccountD
         profile.UpdatePersonal(request.BirthDate, request.Bio, request.AvatarUrl, request.ShareProgressWithTeachers);
     }
 
+    public async Task<CoachingStudentProfile> UpdateTeacherStudentDetailsAsync(Guid student,Guid actor,TeacherStudentProfileUpdate request,CancellationToken ct)
+    {
+        await RequireAccountAsync(student,"Student",ct);
+        var profile=await db.CoachingStudentProfiles.SingleOrDefaultAsync(x=>x.UserId==student&&x.IsActive,ct)
+            ?? throw new KeyNotFoundException();
+        if(profile.Version!=request.ExpectedVersion)throw Conflict("Profil değişti. Yeniden yükleyin.");
+        void ApplyDetails(CoachingStudentProfile target)
+        {
+            target.UpdateEducation(profile.EducationStatus,profile.GradeLevel,request.SchoolName,request.SchoolCity,request.SchoolDistrict,request.SchoolType,request.ClassBranch,profile.GraduationYear);
+            target.UpdatePersonal(request.BirthDate,request.Bio,profile.AvatarUrl,profile.ShareProgressWithTeachers);
+        }
+        ApplyDetails(CoachingStudentProfile.Create(student));ApplyDetails(profile);
+        db.Entry(profile).Property(x=>x.UpdatedBy).CurrentValue=actor.ToString();
+        await db.SaveChangesAsync(ct);return profile;
+    }
+
     public async Task<CoachingTeacherProfile> UpdateTeacherAsync(Guid userId, UpdateCoachingTeacherProfile request, CancellationToken ct)
     {
         await RequireAccountAsync(userId, "Teacher", ct);

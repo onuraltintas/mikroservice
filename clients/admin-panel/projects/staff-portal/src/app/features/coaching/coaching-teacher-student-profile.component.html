@@ -1,0 +1,26 @@
+<section aria-label="Öğrencinin Koçluk profili">
+ <h3>Öğrenci profili</h3>
+ @if(error()){<p role="alert">{{ error() }}</p>}
+ @if(success()){<p role="status">{{ success() }}</p>}
+ @if(busy()){<p role="status">Profil işlemi sürüyor…</p>}
+ @if(form;as p){
+  <p>Eğitim durumu: {{ p.educationStatus==='Graduate'||p.educationStatus===2?'Mezun':p.educationStatus==='Student'||p.educationStatus===1?'Öğrenci':'Belirtilmedi' }} · Sınıf: {{ p.gradeLevel??'Belirtilmedi' }} @if(p.graduationYear){ · Mezuniyet: {{ p.graduationYear }} }</p>
+  <p>Sınıf ve eğitim durumu öğrencinin eğitim kurulumundan yönetilir.</p>
+  @if(!editing){
+   <dl><div><dt>Okul</dt><dd>{{ p.schoolName||'Belirtilmedi' }}</dd></div><div><dt>Şehir / ilçe</dt><dd>{{ p.schoolCity||'Belirtilmedi' }} / {{ p.schoolDistrict||'Belirtilmedi' }}</dd></div><div><dt>Okul türü / şube</dt><dd>{{ p.schoolType||'Belirtilmedi' }} / {{ p.classBranch||'Belirtilmedi' }}</dd></div><div><dt>Doğum tarihi</dt><dd>{{ p.birthDate ? (p.birthDate|date:'dd.MM.yyyy') : 'Belirtilmedi' }}</dd></div><div><dt>Öğrenci notu</dt><dd class="bio">{{ p.bio||'Belirtilmedi' }}</dd></div></dl>
+   <button type="button" (click)="editing=true" [disabled]="busy()">Profili düzenle</button>
+  }@else{
+   <form #profileForm="ngForm" (ngSubmit)="save()"><fieldset [disabled]="busy()" (input)="dirty=true">
+    <label>Okul adı<input name="school" [(ngModel)]="p.schoolName" maxlength="255"></label>
+    <label>Şehir<input name="city" [(ngModel)]="p.schoolCity" maxlength="100"></label>
+    <label>İlçe<input name="district" [(ngModel)]="p.schoolDistrict" maxlength="100"></label>
+    <label>Okul türü<input name="schoolType" [(ngModel)]="p.schoolType" maxlength="100"></label>
+    <label>Şube<input name="branch" [(ngModel)]="p.classBranch" maxlength="30"></label>
+    <label>Doğum tarihi<input name="birthDate" type="date" [(ngModel)]="p.birthDate"></label>
+    <label>Öğrenci notu<textarea name="bio" [(ngModel)]="p.bio" maxlength="2000" rows="3"></textarea></label>
+    <button type="submit" [disabled]="profileForm.invalid">Profili kaydet</button>
+   </fieldset></form>
+  }
+ }
+ <button type="button" (click)="load()" [disabled]="busy()">Profili yeniden yükle</button>
+</section>

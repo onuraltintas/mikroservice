@@ -33,7 +33,7 @@ public sealed class TeacherCalendarTests
         var updated=Assert.IsType<CoachingStudentProfile>(Assert.IsType<OkObjectResult>(response).Value);
         Assert.Equal("Yeni okul",updated.SchoolName);Assert.Equal(8,updated.GradeLevel);Assert.Equal(original.ShareProgressWithTeachers,updated.ShareProgressWithTeachers);
         Assert.Equal(teacher.ToString(),updated.UpdatedBy);
-        Assert.Equal(409,Assert.IsType<ObjectResult>(await api.Update(student,new(original.Version,"Stale",null,null,null,null,null,null),default)).StatusCode);
+        Assert.Equal(409,Assert.IsAssignableFrom<ObjectResult>(await api.Update(student,new(original.Version,"Stale",null,null,null,null,null,null),default)).StatusCode);
         Assert.Equal(403,Assert.IsType<ObjectResult>(await api.Get(Guid.NewGuid(),default)).StatusCode);
         var assignment=await f.Db.CoachingTeacherStudentAssignments.SingleAsync();assignment.SetActive(false,teacher);await f.Db.SaveChangesAsync();
         Assert.Equal(403,Assert.IsType<ObjectResult>(await api.Get(student,default)).StatusCode);

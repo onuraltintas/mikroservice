@@ -79,6 +79,10 @@ public sealed class CoachingStaffStudyController(CoachingManualStudyPlanService 
     public Task<IActionResult> Archive(Guid studentId, Guid id, StudyPlanPublishInput request, CancellationToken ct) => Respond(async () =>
         Ok(new { success = true, data = await plans.ArchiveForStudentAsync(studentId, id, request.ExpectedVersion, ct) }));
 
+    [HttpPost("plans/{id:guid}/restore"), Authorize(Roles="Teacher"), RequestSizeLimit(1024), EnableRateLimiting("study-planning-write")]
+    public Task<IActionResult> Restore(Guid studentId,Guid id,StudyPlanRestoreInput request,CancellationToken ct)=>Respond(async()=>
+        Ok(new {success=true,data=await plans.RestoreForStudentAsync(studentId,id,request,ct)}));
+
     [HttpPut("plans/{id:guid}/tasks/{taskId:guid}/schedule"), Authorize(Roles = "Teacher"), RequestSizeLimit(1024), EnableRateLimiting("study-planning-write")]
     public Task<IActionResult> Reschedule(Guid studentId, Guid id, Guid taskId, StudyTaskRescheduleInput request, CancellationToken ct) => Respond(async () =>
         Ok(new { success = true, data = await plans.RescheduleForStudentAsync(studentId, id, taskId, request.ExpectedVersion, request.PlannedDate, ct) }));

@@ -3,7 +3,7 @@ import {of,throwError} from 'rxjs';
 import {StudentStudyPlansComponent} from './student-study-plans.component';
 import {CoachingStudyPlanningService,StudyPlan} from '../../../core/services/coaching-study-planning.service';
 describe('restore archived study plan',()=>{
- const archived:StudyPlan={id:'old',version:11,title:'Yıllık',status:'Archived',tasks:[{id:'done',plannedDate:'2027-01-01',title:'Matematik',plannedMinutes:30,topicId:null,isPinned:false,isCompleted:true,actualMinutes:17}]};
+ const archived:StudyPlan={id:'old',version:11,title:'Yıllık',status:'Archived',tasks:[{id:'done',plannedDate:'2027-01-01',title:'Matematik',plannedMinutes:30,topicId:null,isPinned:false,isCompleted:true,actualMinutes:17,completedAt:'2027-01-01T18:00:00Z'}]};
  async function setup(){const api={list:vi.fn(()=>of({items:[{id:'test',version:2,title:'Test',status:'Active'}],totalCount:1,pageNumber:1,pageSize:20})),get:vi.fn(()=>of(archived)),restore:vi.fn(()=>of({...archived,status:'Active'}))};TestBed.configureTestingModule({imports:[StudentStudyPlansComponent],providers:[{provide:CoachingStudyPlanningService,useValue:api}]});const f=TestBed.createComponent(StudentStudyPlansComponent),c=f.componentInstance;f.detectChanges();c.open('old');f.detectChanges();await f.whenStable();return{f,c,api};}
  it('requires confirmation and sends both current versions without copying completed work',async()=>{
   const {f,c,api}=await setup();expect(f.nativeElement.textContent).toContain('Planı yeniden aktif et');c.restore();expect(api.restore).not.toHaveBeenCalled();

@@ -26,6 +26,8 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
     public Task<ManualStudyPlanView> ReplaceDraftAsync(Guid id, int version, ManualStudyPlanInput request, CancellationToken ct = default) => ReplaceCoreAsync(id, version, request, ct);
     public Task<ManualStudyPlanView> ReplaceForStudentAsync(Guid student, Guid id, int version, ManualStudyPlanInput request, CancellationToken ct = default) => ReplaceCoreAsync(id, version, request, ct, student);
     public Task<ManualStudyPlanView> PublishAsync(Guid id, int version, CancellationToken ct = default) => PublishCoreAsync(id, version, ct);
+    public Task<ManualStudyPlanView> RestoreArchivedAsync(Guid id,StudyPlanRestoreInput request,CancellationToken ct=default)=>RestoreCoreAsync(id,request,ct);
+    public Task<ManualStudyPlanView> RestoreForStudentAsync(Guid student,Guid id,StudyPlanRestoreInput request,CancellationToken ct=default)=>RestoreCoreAsync(id,request,ct,student);
     public Task<ManualStudyPlanView> PublishForStudentAsync(Guid student, Guid id, int version, CancellationToken ct = default) => PublishCoreAsync(id, version, ct, student);
     public Task<ManualStudyPlanView> ArchiveDraftAsync(Guid id, int version, CancellationToken ct = default) => ArchiveCoreAsync(id, version, ct);
     public Task<ManualStudyPlanView> ArchiveForStudentAsync(Guid student, Guid id, int version, CancellationToken ct = default) => ArchiveCoreAsync(id, version, ct, student);
@@ -207,6 +209,22 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
             await db.SaveChangesAsync(cancellationToken);
             return await ViewAsync(revision, cancellationToken);
         }, cancellationToken, targetStudent, true);
+
+    private Task<ManualStudyPlanView> RestoreCoreAsync(Guid id,StudyPlanRestoreInput request,CancellationToken ct,Guid? targetStudent=null)
+        => LockedAsync(async student=>
+        {
+            ArgumentNullException.ThrowIfNull(request);
+            if(request.ExpectedActiveRevisionId==Guid.Empty||request.ExpectedActiveRevisionId.HasValue!=request.ExpectedActiveRevisionVersion.HasValue||request.ExpectedActiveRevisionVersion<0)
+                throw new ArgumentException("Geçerli aktif plan sürümü gereklidir.");
+            var revision=await OwnedAsync(id,student,request.ExpectedVersion,ct);
+            if(revision.Status!=StudyPlanStatus.Archived)throw Conflict("Yalnız arşiv plan yeniden etkinleştirilebilir.");
+            if(!await db.StudyPlanTasks.AnyAsync(x=>x.RevisionId==id&&x.StudentId==student,ct))throw Conflict("Boş plan etkinleştirilemez.");
+            var active=await db.StudyPlanRevisions.SingleOrDefaultAsync(x=>x.StudentId==student&&x.IsActive,ct);
+            if(active?.Id!=request.ExpectedActiveRevisionId||active?.Version!=request.ExpectedActiveRevisionVersion)throw Conflict("Aktif plan değişti. Sayfayı yenileyip tekrar deneyin.");
+            if(active is not null){active.Archive();await db.SaveChangesAsync(ct);}
+            revision.RestoreArchived();await events.PublishAsync(new StudyPlanPublishedEvent(revision.Id,student),ct);
+            await db.SaveChangesAsync(ct);return await ViewAsync(revision,ct);
+        },ct,targetStudent,true);
 
     private async Task<StudyPlanRevision> OwnedAsync(Guid id, Guid student, int version, CancellationToken cancellationToken)
     {

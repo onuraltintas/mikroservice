@@ -4,6 +4,7 @@ import { Component, DestroyRef, EventEmitter, Input, OnInit, Output, ViewChild, 
 import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CoachingStaffStudyComponent } from './coaching-staff-study.component';
+import {CoachingTeacherStudentProfileComponent} from './coaching-teacher-student-profile.component';
 import { CoachingFinanceComponent } from '../../../../../../src/app/features/coaching-portal/pages/coaching-finance.component';
 import { finalize } from 'rxjs';
 import {
@@ -25,7 +26,7 @@ import {
 @Component({
   selector: 'staff-coaching-teacher-student-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, CoachingStaffStudyComponent, CoachingFinanceComponent],
+  imports: [CommonModule, FormsModule, CoachingStaffStudyComponent, CoachingFinanceComponent,CoachingTeacherStudentProfileComponent],
   templateUrl: './coaching-teacher-student-detail.component.html',
   styleUrl: './coaching-teacher-student-detail.component.scss'
 })
@@ -40,7 +41,10 @@ export class CoachingTeacherStudentDetailComponent implements OnInit {
   @ViewChild(CoachingStaffStudyComponent) private study?: CoachingStaffStudyComponent;
   @ViewChild(CoachingFinanceComponent) financePanel?: Pick<CoachingFinanceComponent, 'canLeavePage'>;
   readonly financeVisible = signal(false);
-  canLeavePage(): boolean { return (this.financePanel?.canLeavePage() ?? true) && (this.study?.canLeavePage() ?? true); }
+  @ViewChild(CoachingTeacherStudentProfileComponent) private profile?:CoachingTeacherStudentProfileComponent;
+  readonly profileVisible=signal(false);
+  toggleProfile(){if(this.profileVisible()&&!(this.profile?.canLeavePage()??true))return;this.profileVisible.update(v=>!v);}
+  canLeavePage(): boolean { return (this.profile?.canLeavePage()??true) && (this.financePanel?.canLeavePage() ?? true) && (this.study?.canLeavePage() ?? true); }
   toggleFinance(): void {
     if (this.financeVisible() && !(this.financePanel?.canLeavePage() ?? true)) return;
     this.financeVisible.set(!this.financeVisible());

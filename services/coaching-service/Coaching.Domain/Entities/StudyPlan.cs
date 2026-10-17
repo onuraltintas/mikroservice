@@ -78,6 +78,14 @@ public sealed class StudyPlanRevision : AggregateRoot
         UpdatedAt = DateTime.UtcNow;
     }
 
+    public void RestoreArchived()
+    {
+        if (Status != StudyPlanStatus.Archived) throw new InvalidOperationException("Only archived plans can be restored.");
+        Status = StudyPlanStatus.Active;
+        IsActive = true;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     public void RecordScheduleChange()
     {
         if (Status == StudyPlanStatus.Archived) throw new InvalidOperationException("Archived plans cannot be changed.");

@@ -11,6 +11,8 @@ public sealed record ManualStudyPlanInput([Required] string Title,
     [Required] IReadOnlyList<ManualStudyTaskInput> Tasks);
 public sealed record ManualStudyPlanUpdate([property: JsonRequired] [Range(0, int.MaxValue)] int ExpectedVersion, [Required] ManualStudyPlanInput Plan);
 public sealed record StudyPlanPublishInput([property: JsonRequired] [Range(0, int.MaxValue)] int ExpectedVersion);
+public sealed record StudyPlanRestoreInput([property:JsonRequired] [Range(0,int.MaxValue)] int ExpectedVersion,
+    [property:JsonRequired] Guid? ExpectedActiveRevisionId, [property:JsonRequired] [Range(0,int.MaxValue)] int? ExpectedActiveRevisionVersion);
 public sealed record StudyTaskCompleteInput([property: JsonRequired] [Range(0, int.MaxValue)] int ExpectedVersion,
     [Range(1, 1440)] int ActualMinutes, [Range(0, 100000)] int? ActualQuestions = null);
 public sealed record StudyTaskRescheduleInput([property: JsonRequired] [Range(0, int.MaxValue)] int ExpectedVersion,
@@ -36,6 +38,7 @@ public interface IManualStudyPlanService
     Task<ManualStudyPlanView> CreateDraftAsync(ManualStudyPlanInput request, CancellationToken cancellationToken = default);
     Task<ManualStudyPlanView> ReplaceDraftAsync(Guid id, int expectedVersion, ManualStudyPlanInput request, CancellationToken cancellationToken = default);
     Task<ManualStudyPlanView> PublishAsync(Guid id, int expectedVersion, CancellationToken cancellationToken = default);
+    Task<ManualStudyPlanView> RestoreArchivedAsync(Guid id, StudyPlanRestoreInput request, CancellationToken cancellationToken = default);
     Task<ManualStudyPlanView> ArchiveDraftAsync(Guid id, int expectedVersion, CancellationToken cancellationToken = default);
     Task<ManualStudyPlanView> CompleteTaskAsync(Guid id, Guid taskId, int expectedVersion, int actualMinutes, CancellationToken cancellationToken = default);
     Task<ManualStudyPlanView> CompleteTaskAsync(Guid id, Guid taskId, int expectedVersion, int actualMinutes, int? actualQuestions, CancellationToken cancellationToken = default);

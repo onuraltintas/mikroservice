@@ -131,6 +131,9 @@ export class CoachingStudyPlanningService {
   archive(id: string, expectedVersion: number, studentId: string | null = null) {
     return this.http.post<ApiResult<StudyPlan>>(`${this.plansUrl(studentId)}/${encodeURIComponent(id)}/archive`, { expectedVersion }).pipe(map(result => result.data));
   }
+  restore(id:string,expectedVersion:number,active:{id:string;version:number}|null,studentId:string|null=null){
+    return this.http.post<ApiResult<StudyPlan>>(`${this.plansUrl(studentId)}/${encodeURIComponent(id)}/restore`,{expectedVersion,expectedActiveRevisionId:active?.id??null,expectedActiveRevisionVersion:active?.version??null}).pipe(map(r=>r.data));
+  }
   complete(id: string, taskId: string, expectedVersion: number, actualMinutes: number, actualQuestions: number | null = null) {
     return this.http.put<ApiResult<StudyPlan>>(`${this.url}/${encodeURIComponent(id)}/tasks/${encodeURIComponent(taskId)}/completion`,
       { expectedVersion, actualMinutes, actualQuestions }).pipe(map(result => result.data));

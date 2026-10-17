@@ -21,6 +21,9 @@ public sealed record UpdateCoachingStudentProfile(int ExpectedVersion, CoachingE
 public sealed record UpdateCoachingTeacherProfile(int ExpectedVersion, string? Title,
     IReadOnlyList<string> Subjects, int? ExperienceYears, string? Bio, string? AvatarUrl);
 
+public sealed record TeacherStudentProfileUpdate([property:System.Text.Json.Serialization.JsonRequired] [System.ComponentModel.DataAnnotations.Range(0,int.MaxValue)] int ExpectedVersion,
+    string? SchoolName,string? SchoolCity,string? SchoolDistrict,string? SchoolType,string? ClassBranch,DateOnly? BirthDate,string? Bio);
+
 public sealed record CoachingOwnProfile(CoachingStudentProfile? Student, CoachingTeacherProfile? Teacher,
     IReadOnlyList<CoachingInstitutionMembership> Memberships);
 
