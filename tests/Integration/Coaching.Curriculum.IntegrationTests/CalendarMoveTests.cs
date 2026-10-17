@@ -5,11 +5,23 @@ using Coaching.Domain.Entities;
 using Coaching.Infrastructure.StudyPlanning;
 using EduPlatform.Shared.Kernel.Exceptions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace Coaching.Curriculum.IntegrationTests;
 
 public sealed class CalendarMoveTests
 {
+    [CurriculumPostgresTests.LocalPostgresFact]
+    public async Task TimedManualMigrationPreservesOldCompletedRecordsAndCanBeAppliedTwice()
+    {
+        await using var pg=await CurriculumPostgresTests.Pg.Create();var f=pg.Data;await f.Seed();
+        await f.Db.GetService<IMigrator>().MigrateAsync("20261017061920_WeeklyOutcomePlans");f.Db.ChangeTracker.Clear();
+        var before=JsonSerializer.Serialize(await f.Db.StudyPlanTasks.AsNoTracking().ToArrayAsync());
+        await f.Db.Database.MigrateAsync();await f.Db.Database.MigrateAsync();f.Db.ChangeTracker.Clear();
+        Assert.Equal(before,JsonSerializer.Serialize(await f.Db.StudyPlanTasks.AsNoTracking().ToArrayAsync()));
+        Assert.Empty(await f.Db.Database.GetPendingMigrationsAsync());
+    }
     [CurriculumPostgresTests.LocalPostgresFact]
     public async Task MoveIsAtomicVersionedAndKeepsOutcomeLinksAndCompletedHistory()
     {
