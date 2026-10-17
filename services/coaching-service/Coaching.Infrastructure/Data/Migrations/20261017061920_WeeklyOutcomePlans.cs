@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -44,7 +44,7 @@ namespace Coaching.Infrastructure.Data.Migrations
                 name: "ck_study_task_weekly_time",
                 schema: "coaching",
                 table: "study_plan_tasks",
-                sql: "(\"PlannedStartMinute\" IS NULL AND \"WeeklyLessonId\" IS NULL AND \"LessonNameSnapshot\" IS NULL) OR (\"PlannedStartMinute\" BETWEEN 0 AND 1439 AND \"PlannedStartMinute\"+\"PlannedMinutes\"<=1440 AND \"WeeklyLessonId\" IS NOT NULL AND \"LessonNameSnapshot\" IS NOT NULL)");
+                sql: "(\"PlannedStartMinute\" IS NULL AND \"WeeklyLessonId\" IS NULL AND \"LessonNameSnapshot\" IS NULL) OR (\"PlannedStartMinute\" IS NOT NULL AND \"PlannedStartMinute\" BETWEEN 0 AND 1439 AND \"PlannedStartMinute\"+\"PlannedMinutes\"<=1440 AND \"WeeklyLessonId\" IS NOT NULL AND \"LessonNameSnapshot\" IS NOT NULL)");
         }
 
         /// <inheritdoc />

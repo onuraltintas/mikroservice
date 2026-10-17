@@ -155,4 +155,4 @@ public sealed class StudyPlanTask : AggregateRoot
 }
 
 public sealed record WeeklyPlanSource(int DraftVersion,int? LearningContextVersion,DateOnly StartDate,DateOnly EndDate,bool ReuseFreedSlots,
-    string Fingerprint,Guid? ActiveRevisionId,int? ActiveRevisionVersion);
+    string Fingerprint,Guid? ActiveRevisionId,int? ActiveRevisionVersion,string TimeZoneId="Europe/Istanbul");

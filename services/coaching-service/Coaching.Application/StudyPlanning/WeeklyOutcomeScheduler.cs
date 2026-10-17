@@ -22,8 +22,9 @@ public static class WeeklyOutcomeScheduler
         var queues=lessons.Select(x=>new WorkQueue(x,slots.Where(s=>s.LessonId==x.LessonId).Sum(s=>s.DurationMinutes))).ToArray();
         var byLesson=queues.ToDictionary(x=>x.Work.LessonId);var blocked=protectedWork.ToLookup(x=>x.Date);
         var tasks=new List<WeeklyOutcomeSlice>();var free=0;var horizon=start.AddDays(730);
-        for(var date=start;date<=horizon;date=date.AddDays(1))
+        for(var day=0;day<=horizon.DayNumber-start.DayNumber;day++)
         {
+            var date=start.AddDays(day);
             if(date>end&&queues.All(x=>x.Remaining==0))break;
             var daySlots=slots.Where(s=>s.Day==date.DayOfWeek).OrderBy(s=>s.StartMinute).ThenBy(s=>s.Id).ToArray();
             var untimed=blocked[date].Where(x=>x.StartMinute is null).Sum(x=>x.Minutes);

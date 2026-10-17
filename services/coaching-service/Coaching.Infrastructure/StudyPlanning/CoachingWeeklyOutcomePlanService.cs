@@ -96,7 +96,7 @@ public sealed class CoachingWeeklyOutcomePlanService(CoachingDbContext db,ICoach
             Protected=protectedTasks.Select(x=>new{x.Id,x.Version,x.PlannedDate,x.PlannedStartMinute,x.PlannedMinutes,x.IsCompleted,x.IsPinned})})));
         var canCreate=issues.Count==0&&schedule.Tasks.Count+pending.Count>0&&schedule.Lessons.All(x=>x.RemainingMinutes==0)&&schedule.Tasks.Count+pending.Count<=10000;
         return new(new(request,draft.TimeZoneId,fingerprint,schedule,issues,canCreate,pending.Count,pending.Values.OrderBy(x=>x.PlannedDate).ThenBy(x=>x.PlannedStartMinute).ThenBy(x=>x.Id).Select(x=>new WeeklyProtectedTask(x.PlannedDate,x.PlannedStartMinute,x.Title,x.PlannedMinutes)).ToArray()),
-            new(draft.Version,context?.Version,request.StartDate,request.EndDate,request.ReuseFreedSlots,fingerprint,active?.Id,active?.Version),protectedTasks);
+            new(draft.Version,context?.Version,request.StartDate,request.EndDate,request.ReuseFreedSlots,fingerprint,active?.Id,active?.Version,draft.TimeZoneId),protectedTasks);
     }
 
     public Task<WeeklyOutcomePlanCreated> CreateAsync(WeeklyOutcomePlanSave request,CancellationToken ct)
