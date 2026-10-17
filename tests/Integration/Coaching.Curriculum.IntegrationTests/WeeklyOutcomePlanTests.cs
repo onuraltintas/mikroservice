@@ -67,4 +67,29 @@ public sealed class WeeklyOutcomePlanTests
         await Assert.ThrowsAsync<BusinessRuleException>(()=>manual.PublishAsync(created.Id,created.Version));
         Assert.NotEqual(created.Id,(await f.Db.StudyPlanRevisions.SingleAsync(x=>x.IsActive)).Id);
     }
+    [CurriculumPostgresTests.LocalPostgresFact]
+    public async Task PublishPreservesCompletedHistory_AndPinnedWorkReservesItsExactTime()
+    {
+        await using var pg=await CurriculumPostgresTests.Pg.Create();var f=pg.Data;var service=await Seed(f);
+        var old=await f.Db.StudyPlanRevisions.SingleAsync(x=>x.IsActive);var topic=await f.Db.StudyCatalogTopics.SingleAsync();
+        var pinned=StudyPlanTask.Create(old,Input.StartDate,"Sabit görev",15,topic.Id,true);pinned.SetWeeklyPlacement(topic.LessonId,"Matematik",1080);f.Db.Add(pinned);await f.Db.SaveChangesAsync();
+        var before=JsonSerializer.Serialize(await f.Db.StudyPlanTasks.AsNoTracking().Where(x=>x.IsCompleted).ToArrayAsync());
+        var preview=await service.PreviewAsync(Input with {EndDate=new(2027,6,7)},default);Assert.True(preview.CanCreate);Assert.Equal(1095,preview.Schedule.Tasks[0].StartMinute);Assert.Equal(1,preview.ProtectedTaskCount);
+        var created=await service.CreateAsync(new("Korumalı plan",preview.Request,preview.Fingerprint),default);var access=new CoachingAccessPolicy(f.User);
+        var manual=new CoachingManualStudyPlanService(f.Db,access,new CoachingAutomaticStudyPlanPreviewService(f.Db,access),new CurriculumManagementTests.NoopPublisher());
+        var published=await manual.PublishAsync(created.Id,created.Version);Assert.Equal(StudyPlanStatus.Active,published.Status);Assert.NotNull(published.WeeklySource);
+        Assert.Equal(before,JsonSerializer.Serialize(await f.Db.StudyPlanTasks.AsNoTracking().Where(x=>x.IsCompleted).ToArrayAsync()));
+        var copied=Assert.Single(published.Tasks.Where(x=>x.IsPinned));Assert.False(copied.IsCompleted);Assert.Equal(1080,copied.PlannedStartMinute);
+        Assert.Equal(StudyPlanStatus.Archived,(await f.Db.StudyPlanRevisions.AsNoTracking().SingleAsync(x=>x.Id==old.Id)).Status);
+    }
+    [Fact]
+    public async Task PinnedOutcomeMinutesAreNotPlannedTwice()
+    {
+        await using var f=new CurriculumManagementTests.Fixture();var service=await Seed(f);var old=await f.Db.StudyPlanRevisions.SingleAsync(x=>x.IsActive);
+        var outcome=await f.Db.Set<StudyCatalogOutcome>().SingleAsync();var estimate=await f.Db.Set<OutcomeDurationEstimate>().SingleAsync();var topic=await f.Db.StudyCatalogTopics.SingleAsync();
+        var pinned=StudyPlanTask.Create(old,Input.StartDate,"Sabit kazanım",15,topic.Id,true);pinned.SetWeeklyPlacement(topic.LessonId,"Matematik",1080);f.Db.Add(pinned);f.Db.Add(StudyPlanTaskOutcome.Create(pinned.Id,outcome.Id,estimate.Id,15,"Catalog"));await f.Db.SaveChangesAsync();
+        var preview=await service.PreviewAsync(Input,default);Assert.True(preview.CanCreate);Assert.Equal(45,preview.Schedule.Tasks.Sum(x=>x.Minutes));Assert.Equal(60,preview.Schedule.Lessons[0].ScheduledMinutes);
+        var created=await service.CreateAsync(new("Tekrarsız plan",Input,preview.Fingerprint),default);var ids=await f.Db.StudyPlanTasks.Where(x=>x.RevisionId==created.Id).Select(x=>x.Id).ToArrayAsync();
+        Assert.Equal(60,await f.Db.Set<StudyPlanTaskOutcome>().Where(x=>Enumerable.Contains(ids,x.TaskId)).SumAsync(x=>x.AllocatedMinutes));
+    }
 }
