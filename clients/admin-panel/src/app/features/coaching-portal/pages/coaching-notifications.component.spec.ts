@@ -7,6 +7,14 @@ import { NotificationService } from '../../../core/services/notification.service
 import { CoachingNotificationsComponent } from './coaching-notifications.component';
 
 describe('CoachingNotificationsComponent', () => {
+  it('renders a new study-plan change with its lesson details in the student inbox', () => {
+    const notifications=signal<Notification[]>([]);
+    const service={notifications:notifications.asReadonly(),unreadCount:signal(1).asReadonly(),fetchNotifications:vi.fn()};
+    TestBed.configureTestingModule({imports:[CoachingNotificationsComponent],providers:[{provide:NotificationService,useValue:service}]});
+    const fixture=TestBed.createComponent(CoachingNotificationsComponent);fixture.detectChanges();
+    notifications.set([{...notification('updated',false),type:'StudyPlanUpdated',title:'Çalışma planın güncellendi',message:'Matematik: 06.01.2027 18:30'}]);fixture.detectChanges();
+    const article=fixture.nativeElement.querySelector('article');expect(article.textContent).toContain('Çalışma planın güncellendi');expect(article.textContent).toContain('Matematik: 06.01.2027 18:30');
+  });
   for (const action of ['markAsRead', 'markAllAsRead', 'deleteNotification'] as const) {
     it(`allows retrying ${action} after an API error`, () => {
       const pending = new Subject<void>();

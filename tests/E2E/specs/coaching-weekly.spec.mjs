@@ -64,6 +64,8 @@ test('cards move across days and top edge resizing preserves the end time',async
   }else{
     await card(page,'Matematik').getByRole('button',{name:'Matematik 18:00 60 dakika düzenle',exact:true}).click();await page.getByRole('dialog').getByLabel('Gün',{exact:true}).selectOption('Wednesday');await page.getByRole('button',{name:'Değişikliği uygula',exact:true}).click();
   }
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await expect(page.locator('.day-track[data-day="Wednesday"] .slot-card')).toHaveCount(1);
   await resize(page,'Matematik','top',36);await expect(card(page,'Matematik')).toContainText('18:30–19:00');
 });
 
