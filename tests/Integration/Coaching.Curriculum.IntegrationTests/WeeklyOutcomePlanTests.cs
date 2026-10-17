@@ -10,6 +10,20 @@ namespace Coaching.Curriculum.IntegrationTests;
 
 public sealed class WeeklyOutcomePlanTests
 {
+    [Fact]
+    public async Task ApiRequiresStudentAndReturnsOptionsValidationConflictAndOwnedNotFound()
+    {
+        await using var f=new CurriculumManagementTests.Fixture();var service=await Seed(f);var api=new Coaching.API.Controllers.WeeklyOutcomePlansController(service);
+        var options=await service.OptionsAsync(default);Assert.Equal(WeeklyOutcomeScheduler.DefaultEnd(options.StartDate),options.EndDate);
+        Assert.Equal("Student",Assert.Single(typeof(Coaching.API.Controllers.WeeklyOutcomePlansController).GetCustomAttributes(typeof(Microsoft.AspNetCore.Authorization.AuthorizeAttribute),true).Cast<Microsoft.AspNetCore.Authorization.AuthorizeAttribute>()).Roles);
+        Assert.IsType<Microsoft.AspNetCore.Mvc.OkObjectResult>(await api.Options(default));Assert.IsType<Microsoft.AspNetCore.Mvc.OkObjectResult>(await api.Preview(Input,default));
+        Assert.IsType<Microsoft.AspNetCore.Mvc.BadRequestObjectResult>(await api.Preview(Input with {EndDate=Input.StartDate.AddDays(-1)},default));
+        Assert.IsType<Microsoft.AspNetCore.Mvc.BadRequestObjectResult>(await api.Create(new("Plan",Input,"bad"),default));
+        var p=await service.PreviewAsync(Input,default);Assert.IsType<Microsoft.AspNetCore.Mvc.CreatedAtActionResult>(await api.Create(new("Plan",Input,p.Fingerprint),default));
+        Assert.IsType<Microsoft.AspNetCore.Mvc.ConflictObjectResult>(await api.Create(new("Plan",Input,p.Fingerprint),default));
+        f.User.Roles=["Teacher"];Assert.Equal(403,Assert.IsType<Microsoft.AspNetCore.Mvc.ObjectResult>(await api.Options(default)).StatusCode);
+        f.User.Roles=["Student"];f.User.UserId=Guid.NewGuid();Assert.IsType<Microsoft.AspNetCore.Mvc.NotFoundObjectResult>(await api.Options(default));
+    }
     private static readonly WeeklyOutcomePlanRequest Input=new(new(2027,5,24),new(2027,6,1),0,false);
     internal static async Task<CoachingWeeklyOutcomePlanService> Seed(CurriculumManagementTests.Fixture f)
     {
@@ -91,5 +105,18 @@ public sealed class WeeklyOutcomePlanTests
         var preview=await service.PreviewAsync(Input,default);Assert.True(preview.CanCreate);Assert.Equal(45,preview.Schedule.Tasks.Sum(x=>x.Minutes));Assert.Equal(60,preview.Schedule.Lessons[0].ScheduledMinutes);
         var created=await service.CreateAsync(new("Tekrarsız plan",Input,preview.Fingerprint),default);var ids=await f.Db.StudyPlanTasks.Where(x=>x.RevisionId==created.Id).Select(x=>x.Id).ToArrayAsync();
         Assert.Equal(60,await f.Db.Set<StudyPlanTaskOutcome>().Where(x=>Enumerable.Contains(ids,x.TaskId)).SumAsync(x=>x.AllocatedMinutes));
+    }
+    [Fact]
+    public async Task SavedPlanKeepsItsTimezoneEvenIfTheWeeklyDraftLaterChanges()
+    {
+        await using var f=new CurriculumManagementTests.Fixture();var service=await Seed(f);var weekly=await f.Db.Set<WeeklyStudyDraft>().SingleAsync();weekly.Replace("UTC",weekly.Slots);await f.Db.SaveChangesAsync();
+        var input=Input with {ExpectedWeeklyDraftVersion=weekly.Version};var preview=await service.PreviewAsync(input,default);var created=await service.CreateAsync(new("Saat dilimi",input,preview.Fingerprint),default);
+        Assert.Equal("UTC",(await f.Db.StudyPlanRevisions.SingleAsync(x=>x.Id==created.Id)).WeeklySource!.TimeZoneId);
+    }
+    [CurriculumPostgresTests.LocalPostgresFact]
+    public async Task DatabaseRejectsPartialWeeklyPlacement()
+    {
+        await using var pg=await CurriculumPostgresTests.Pg.Create();await pg.Data.Seed();var task=await pg.Db.StudyPlanTasks.SingleAsync();var lesson=Guid.NewGuid();
+        await Assert.ThrowsAsync<Npgsql.PostgresException>(()=>pg.Db.Database.ExecuteSqlInterpolatedAsync($"UPDATE coaching.study_plan_tasks SET \"WeeklyLessonId\"={lesson} WHERE \"Id\"={task.Id}"));
     }
 }

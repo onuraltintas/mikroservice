@@ -56,4 +56,7 @@ public sealed class WeeklyOutcomeSchedulerTests
     [Theory]
     [InlineData(2026,10,19,2027)] [InlineData(2027,5,31,2027)] [InlineData(2027,6,1,2027)] [InlineData(2027,6,2,2028)]
     public void DefaultDeadlineIsNextJuneFirst(int y,int m,int d,int targetYear)=>Assert.Equal(new DateOnly(targetYear,6,1),WeeklyOutcomeScheduler.DefaultEnd(new(y,m,d)));
+    [Fact]
+    public void ProjectionDoesNotOverflowTheLastCalendarDate()
+    {var start=DateOnly.MaxValue.AddDays(-730);var result=WeeklyOutcomeScheduler.Build(start,start,[],[Work(Math,30)],false,[]);Assert.Equal(30,result.Lessons[0].RemainingMinutes);}
 }

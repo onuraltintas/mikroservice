@@ -23,4 +23,7 @@ describe('weekly outcome plan preview',()=>{
   it('invalidates the preview when dates change and retains it read-only after conflict',()=>{
     const{c,service}=setup();service.preview.mockReturnValue(of({...short,canCreate:true}) as any);c.generatePreview();c.confirmed=true;service.create.mockReturnValue(throwError(()=>({status:409,error:{message:'Kaynak değişti'}})));c.save();expect(c.stale()).toBe(true);expect(c.error()).toBe('Kaynak değişti');expect(c.preview()).not.toBeNull();c.changed();expect(c.preview()).toBeNull();expect(c.confirmed).toBe(false);
   });
+  it('includes preserved pinned work in preview totals',()=>{
+    const{c,service}=setup();service.preview.mockReturnValue(of({...short,protectedTaskCount:1,protectedTasks:[{date:'2027-05-24',startMinute:1080,title:'Sabit görev',minutes:15}]}) as any);c.generatePreview();expect(c.totalMinutes()).toBe(15);
+  });
 });
