@@ -32,6 +32,10 @@ describe('StudentStudyPlansComponent', () => {
     expect(component.selected()?.id).toBe('plan');
     expect(service.get).toHaveBeenCalledTimes(1);
   });
+  it('shows generated weekly drafts with their times and publish controls without a manual editor',()=>{
+    const{component,service,fixture}=setup();service.get.mockReturnValue(of({...active,status:'Draft',weeklySource:{startDate:'2027-05-24',endDate:'2027-06-01'},tasks:[{...active.tasks[0],plannedStartMinute:1080,lessonName:'Matematik'}]} as any));
+    component.open('plan');fixture.detectChanges();expect(component.editing).toBe(false);expect(fixture.nativeElement.textContent).toContain('18:00');expect(fixture.nativeElement.textContent).toContain('Planı yayımla');expect(fixture.nativeElement.querySelector('input[name="planTitle"]')).toBeNull();
+  });
   it('shows the saved outcome and estimate version to students and staff', () => {
     const { component, service, fixture } = setup();
     service.get.mockReturnValue(of({ ...active, tasks: [{ ...active.tasks[0], outcomes: [{ outcomeId: 'o', code: 'M.8.1.1.1', name: 'Çarpanları bulur', estimateId: 'e', estimateNumber: 2, allocatedMinutes: 30, origin: 'Catalog' }] }] } as any));

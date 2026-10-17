@@ -18,6 +18,11 @@ describe('weekly draft calendar',()=>{
     expect(fixture.nativeElement.querySelector('a[href="/coaching-portal/study-plans"]')).not.toBeNull();
     c.changeView('month');fixture.detectChanges();expect(fixture.nativeElement.querySelector('.month-grid')).not.toBeNull();expect(c.dirty()).toBe(false);
   });
+  it('allows plan generation only from the saved nonempty weekly draft',()=>{
+    const{c,fixture}=setup({version:0,timeZoneId:'Europe/Istanbul',slots:[slot]});
+    const button=()=>fixture.nativeElement.querySelector('[data-testid="weekly-preview-link"]') as HTMLButtonElement;
+    expect(button()).not.toBeNull();expect(button().disabled).toBe(false);c.edit(slot);c.form!.duration=30;c.apply();fixture.detectChanges();expect(button().disabled).toBe(true);c.save();fixture.detectChanges();expect(button().disabled).toBe(false);
+  });
   it('adds a half hour, keeps the other half free and rejects overlapping edits',()=>{
     const{c}=setup();c.add(new Date(2026,9,19),1080);c.form!.duration=30;c.apply();expect(c.slots()[0].durationMinutes).toBe(30);
     c.add(new Date(2026,9,19),1110);c.form!.duration=30;c.apply();expect(c.slots()).toHaveLength(2);
