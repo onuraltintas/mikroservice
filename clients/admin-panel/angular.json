@@ -125,6 +125,7 @@
                   "with": "projects/staff-portal/src/environments/environment.production.ts"
                 }
               ],
+              "baseHref": "/staff/",
               "budgets": [
                 {
                   "type": "initial",
