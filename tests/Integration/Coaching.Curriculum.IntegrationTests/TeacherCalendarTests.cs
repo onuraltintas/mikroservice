@@ -20,6 +20,25 @@ namespace Coaching.Curriculum.IntegrationTests;
 public sealed class TeacherCalendarTests
 {
     [CurriculumPostgresTests.LocalPostgresFact]
+    public async Task TeacherReadsAndEditsOnlyAssignedStudentProfileWithoutChangingEducationOrConsent()
+    {
+        await using var pg=await CurriculumPostgresTests.Pg.Create();var f=pg.Data;var teacher=Guid.NewGuid();var student=Guid.NewGuid();
+        f.User.UserId=teacher;f.User.Roles=["Teacher"];var accounts=new Accounts(teacher,student);
+        var profile=CoachingStudentProfile.Create(student);profile.UpdateEducation(CoachingEducationStatus.Student,8,"Eski okul","Ankara",null,null,"A",null);
+        f.Db.AddRange(profile,CoachingTeacherProfile.Create(teacher),CoachingTeacherStudentAssignment.Create(teacher,student,null,null,teacher));await f.Db.SaveChangesAsync();
+        var directory=new OwnedCoachingDirectory(f.Db,accounts,f.User);var scope=new CoachingStudyPlanAccess(new CoachingAccessPolicy(f.User),directory,new DenyAdmin());
+        var api=new CoachingTeacherStudentProfileController(scope,new CoachingProfileStore(f.Db,accounts),f.User);
+        var original=Assert.IsType<CoachingStudentProfile>(Assert.IsType<OkObjectResult>(await api.Get(student,default)).Value);
+        var response=await api.Update(student,new(original.Version,"Yeni okul","İzmir","Konak","Ortaokul","B",new(2012,1,1),"Öğrenci notu"),default);
+        var updated=Assert.IsType<CoachingStudentProfile>(Assert.IsType<OkObjectResult>(response).Value);
+        Assert.Equal("Yeni okul",updated.SchoolName);Assert.Equal(8,updated.GradeLevel);Assert.Equal(original.ShareProgressWithTeachers,updated.ShareProgressWithTeachers);
+        Assert.Equal(teacher.ToString(),updated.UpdatedBy);
+        Assert.Equal(409,Assert.IsType<ObjectResult>(await api.Update(student,new(original.Version,"Stale",null,null,null,null,null,null),default)).StatusCode);
+        Assert.Equal(403,Assert.IsType<ObjectResult>(await api.Get(Guid.NewGuid(),default)).StatusCode);
+        var assignment=await f.Db.CoachingTeacherStudentAssignments.SingleAsync();assignment.SetActive(false,teacher);await f.Db.SaveChangesAsync();
+        Assert.Equal(403,Assert.IsType<ObjectResult>(await api.Get(student,default)).StatusCode);
+    }
+    [CurriculumPostgresTests.LocalPostgresFact]
     public async Task PublishingBetweenReportQueriesUsesTheNewPlansTimezoneWithoutLosingWork()
     {
         await using var pg=await CurriculumPostgresTests.Pg.Create();var f=pg.Data;await f.Seed();var old=await f.Db.StudyPlanRevisions.SingleAsync();
