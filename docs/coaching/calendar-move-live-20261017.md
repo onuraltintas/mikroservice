@@ -2,6 +2,8 @@
 
 17 Ekim 2026. Coaching ve iki portal canlıya alındı. Öğrenci taşıma/çakışma/tamamlama işaretleri,
 öğretmen toplu takibi ve öğretmenden öğrenciye taslak oluşturma canlıda doğrulandı.
+Sonraki kullanıcı talebiyle öğretmenden yayın → öğrenciden tamamlama → öğretmenin toplu
+takibine yansıma zinciri de canlıda tamamlandı; son bölümde ayrıntıları yer alır.
 Son arayüz paketinin 15 dakikalık izlemesi 17:55:12 Türkiye saatinde 31 başarılı örnekle tamamlandı.
 Üç serviste yeniden başlama ve uygulama hata kaydı yok.
 
@@ -50,7 +52,7 @@ Bu karşılaştırma dersin özgün yerine döndüğünü de doğruladı.
 Öğretmen testi sonrasında yalnız aşağıdaki kesin kimlikli 1 taslak ve 1 çalışma karşılaştırmadan
 ayrıldı; yeni satırlar ayrıca içerikleriyle doğrulandı. Son toplam **7 plan / 339 çalışma**;
 özgün **6 plan / 338 çalışma**, tamamlanmış **5 kayıt / 103 dakika** korunuyor.
-Yıllık plan aktif ve sürüm 10. Sürüm artışı, öğrenci/öğretmenin toplam 8 başarılı taşıma işlemi;
+İlk dağıtım testinin sonunda yıllık plan aktif ve sürüm 10'du. Sürüm artışı, öğrenci/öğretmenin toplam 8 başarılı taşıma işlemi;
 üç parçanın tarih, başlangıç ve süreleri özgün haline döndü. Yeni taslak aktif planı değiştirmedi.
 
 Yedekler ve gizli bağlantı bilgileri sunucunun özel sürüm klasörlerinde kalıyor;
@@ -101,10 +103,9 @@ Taslak kimliği: `b5536157-dd00-4f63-b522-9f250c77b33b`.
 Sahiplik `StudentId = öğrenci UserId` ile saklandı; saat `PlannedStartMinute = 1020`, süre 30.
 Taslak `Draft / IsActive=false`, mevcut yıllık plan `Active / IsActive=true` kaldı.
 
-**Yayın kapsamı:** mevcut yıllık planı aktif tutmak için bu canlı test taslağı yayımlanmadı.
-Taslak kaydı ve öğrencide görünmesi doğrulandı. Öğretmenden yayımlama → öğrencinin tamamlama
-→ öğretmenin yenilemeyle görmesi zinciri yerel gerçek servis/veritabanı ve tarayıcı testlerinde
-kapsanıyor; bu yeni taslak üzerinde canlı yayın/tamamlama yapıldığı iddia edilmiyor.
+**İlk testin yayın kapsamı:** mevcut yıllık planı aktif tutmak için taslak ilk dağıtım
+kontrolünde yayımlanmadı. Sonraki açık kullanıcı talebiyle aşağıdaki ek canlı testte yayımlandı
+ve öğrenci tamamlaması öğretmenin toplu listesinde de doğrulandı.
 
 İzlenebilirlik notu: mevcut ortak taslak oluşturma servisinde `CreatedBy` boş kalıyor.
 Sahiplik/yetki UserId ve mevcut atamayla doğru; oluşturan öğretmeni ayrı audit alanında saklamak
@@ -156,3 +157,36 @@ Hazırlanmış rollback compose dosyaları yalnız ilgili servisleri eski imajla
 Yeni manuel saatli kayıtlar oluşturulmuşsa eski CHECK kuralına zorla dönülmez;
 uygulama geri dönüşü yapılır, genişletilmiş şema ve geçmiş kayıtlar korunur.
 Canlı veritabanı otomatik olarak eski yedeğe çevrilmez.
+
+## Ek canlı test: öğretmen yayını ve öğrenci tamamlaması
+
+17 Ekim 2026, öğrenci tamamlaması 19:21 Türkiye saati. Yeni kod veya veritabanı geçişi yapılmadı.
+Kullanıcı öğretmenin oluşturduğu taslağın yayımlanmasını açıkça istedi.
+
+- İşlem öncesi Identity ve Coaching için taze özel yedek alındı; 7 plan / 339 çalışma /
+  5 tamamlanmış kayıt / 103 dakika başlangıcı kaydedildi.
+- Öğretmen, `b5536157-dd00-4f63-b522-9f250c77b33b` taslağını açıp yayın onayını verdi.
+  Ekranda **Plan yayımlandı. Önceki planın geçmişi korundu.** sonucu görüldü.
+- Bu plan `Active` oldu. Önceki yıllık `2f7e2d07-e044-471d-aedc-dfe004df7e2e`, sürüm 11 ile
+  `Archived` oldu; ayrı öğrenci sekmesinden arşiv planının açıldığı da doğrulandı.
+- Öğrenci listesi yenilenip yeni aktif plan açıldı. `afbc9fea-ae32-4bb5-bc65-00395d3755f7`
+  çalışması **12 gerçek dakika / 0 soru** ile tamamlandı. Planlanan 18 Ekim 17:00–17:30,
+  30 dakika bilgisi değişmedi. Takvim kartı **1/1 tamamlandı** gösterdi.
+- Öğretmen planı yenileyince aynı **Tamamlandı · 12 dk · 17.10.2026 19:21** ve **0 soru**
+  kaydını gördü. Toplu takipte **6 tamamlanan / 0 bekleyen / 0 geciken / 115 gerçek dakika**
+  doğrulandı. Tamamlananlar ortak listesinde yeni çalışmanın başlığı, 18 Ekim 17:00 saati,
+  planlanan 30 ve gerçekleşen 12 dakikası birlikte görüldü.
+- Arşivdeki eski tamamlanmış çalışmalar toplamda kaldı. Yıllık planın arşivdeki bekleyen
+  çalışmaları aktif bekleyen olarak sayılmadı; bu nedenle yeni özette bekleyen sayısı 0.
+
+Son veritabanı karşılaştırması: **7 plan / 339 çalışma** değişmedi; tamamlanan kayıt yalnız
+**5 → 6**, gerçekleşen dakika yalnız **103 → 115** arttı. İki planın yayın/arşiv durum ve
+sürüm/zaman alanları ile yalnız yeni çalışmanın tamamlama alanları izinli değişiklikti.
+Diğer bütün koçluk iş satırları, mevcut tamamlamalar, haftalık taslak, kazanım bağlantıları,
+öğretmen–öğrenci ilişkileri ve hesap/rol/ürün erişimleri başlangıçla birebir aynı bulundu.
+Planların sahiplik, başlık, kaynak ve çalışma tarih/süre alanları istisna tutulmadı.
+
+Kontrol: `tools/releases/coaching-teacher-publish-20261017/verify.sh`.
+Özet/karşılaştırma kanıtları: `artifacts/coaching-teacher-publish-live-20261017/live/`.
+Ekranlar: `artifacts/coaching-teacher-publish-live-20261017/student-completed.jpg`,
+`artifacts/coaching-teacher-publish-live-20261017/teacher-completed.jpg`.

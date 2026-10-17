@@ -125,5 +125,7 @@ Temiz kaynak paketleriyle **Coaching, admin-panel ve staff-portal** güncellendi
 yedeklendi, CHECK geçişi canlı kopyada prova edildi ve özgün iş satırları karşılaştırıldı.
 Öğrenci taşıma ve tamamlanma işaretleri, öğretmenin toplu/geciken takibi, takvim düzeltmesi ve
 öğrenciye yeni taslak oluşturması canlıda doğrulandı. Son 15 dakikalık sağlık izlemesi başarılı.
-Yeni test taslağı mevcut yıllık planı aktif tutmak için yayımlanmadı; ayrıntılı kapsam ve
+Sonraki açık kullanıcı talebiyle yeni test taslağı öğretmenden yayımlandı; öğrencinin 12 dakika /
+0 soruyla tamamlaması ve öğretmenin toplu listesinde görünmesi de canlıda doğrulandı.
+Önceki yıllık plan bütün çalışma geçmişiyle arşivde korunuyor. Ayrıntılı kapsam ve
 kanıtlar [canlı dağıtım raporunda](calendar-move-live-20261017.md) tutulur.
