@@ -40,7 +40,11 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
         {
             var revision=await OwnedAsync(id,owner,version,ct);var task=await ActiveTaskAsync(revision,taskId,ct);
             if(task.IsCompleted)throw Conflict("Tamamlanan çalışmanın bilgileri değiştirilemez.");
+            ArgumentException.ThrowIfNullOrWhiteSpace(title);
+            if(task.Title==title.Trim())return await ViewAsync(revision,ct);
+            var previous=task.Title;
             task.CorrectPlanning(title,task.PlannedDate,task.PlannedMinutes);revision.RecordTaskChange();
+            await NotifyPlanChangedAsync(revision,$"Çalışma başlığı değişti: {previous} → {task.Title}.",ct);
             await db.SaveChangesAsync(ct);return await ViewAsync(revision,ct);
         },ct,student,true);
 
@@ -72,9 +76,13 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
                 throw Conflict("Bu saat başka bir çalışmayla çakışıyor. Boş bir saat seçin.");
             if(await others.SumAsync(x=>x.PlannedMinutes,ct)+minutes>1440) throw Conflict("Bir güne 24 saatten fazla çalışma eklenemez.");
             if(first.PlannedDate==request.PlannedDate&&first.PlannedStartMinute==request.StartMinute) return await ViewAsync(revision,ct);
+            var previousDate=first.PlannedDate;var previousStart=first.PlannedStartMinute!.Value;
             var start=request.StartMinute;
             foreach(var task in tasks){task.Schedule(request.PlannedDate,start);start+=task.PlannedMinutes;}
-            revision.RecordScheduleChange();await db.SaveChangesAsync(ct);
+            revision.RecordScheduleChange();
+            if(targetStudent.HasValue&&revision.Status==StudyPlanStatus.Active)
+                await NotifyPlanChangedAsync(revision,FormattableString.Invariant($"{first.LessonNameSnapshot??first.Title}: {previousDate:dd.MM.yyyy} {previousStart/60:00}:{previousStart%60:00} → {request.PlannedDate:dd.MM.yyyy} {request.StartMinute/60:00}:{request.StartMinute%60:00}."),ct);
+            await db.SaveChangesAsync(ct);
             return await ViewAsync(revision,ct);
         },ct,targetStudent,true);
 
@@ -279,11 +287,17 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
             var dailyMinutes = await db.StudyPlanTasks.Where(x => x.RevisionId == id && x.StudentId == student
                 && x.Id != taskId && x.PlannedDate == plannedDate).SumAsync(x => x.PlannedMinutes, cancellationToken);
             if (dailyMinutes + task.PlannedMinutes > 1440) throw new ArgumentException("Bir güne 24 saatten fazla çalışma eklenemez.");
+            var previousDate=task.PlannedDate;
             task.Reschedule(plannedDate);
             revision.RecordTaskChange();
+            if(targetStudent.HasValue)
+                await NotifyPlanChangedAsync(revision,FormattableString.Invariant($"{task.Title}: {previousDate:dd.MM.yyyy} → {plannedDate:dd.MM.yyyy}."),cancellationToken);
             await db.SaveChangesAsync(cancellationToken);
             return await ViewAsync(revision, cancellationToken);
         }, cancellationToken, targetStudent, true);
+
+    private Task NotifyPlanChangedAsync(StudyPlanRevision revision,string description,CancellationToken ct)
+        => events.PublishAsync(new StudyPlanUpdatedEvent(revision.Id,revision.StudentId,description),ct);
 
     private async Task<StudyPlanTask> ActiveTaskAsync(StudyPlanRevision revision, Guid taskId, CancellationToken cancellationToken)
     {

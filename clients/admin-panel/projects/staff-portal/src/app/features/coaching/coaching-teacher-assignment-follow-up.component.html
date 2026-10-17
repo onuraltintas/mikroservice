@@ -1,0 +1,19 @@
+<section aria-label="Ödev toplu takibi" class="follow-up">
+ <header><div><p class="eyebrow">KOÇLUK · ÖĞRETMEN</p><h2>Geciken ve teslim edilmeyen ödevler</h2><p>Bir öğrenciye verilen her ödev ayrı satırdır. Teslim edilen, değerlendirilen ve iptal edilen ödevler burada gösterilmez.</p></div><button type="button" (click)="close.emit()">Ödev listesine dön</button></header>
+ <div class="totals" aria-label="Aktif ödevlerde teslim özeti"><p><strong>{{ pendingCount() }}</strong> teslim bekleniyor</p><p><strong>{{ overdueCount() }}</strong> geciken teslim</p></div>
+ <p>Özetler erişiminizdeki tüm aktif ödevleri kapsar. Başlık araması aşağıdaki listeyi filtreler.</p>
+ <form (ngSubmit)="applySearch()" class="toolbar">
+  <label>Göster<select name="mode" [ngModel]="mode()" (ngModelChange)="setMode($event)" [disabled]="loading()"><option value="overdue">Gecikenler</option><option value="pending">Teslim edilmeyenlerin tümü</option></select></label>
+  <label>Ödev başlığında ara<input name="search" [(ngModel)]="search" maxlength="150" type="search"></label>
+  <button type="submit" [disabled]="loading()">Ara</button><button type="button" (click)="load()" [disabled]="loading()">Yenile</button>
+ </form>
+ @if(error()){<div role="alert"><p>{{ error() }}</p><button type="button" (click)="load()">Tekrar dene</button></div>}
+ @if(loading()){<p role="status">Ödev takibi yükleniyor…</p>}
+ @else if(!error()){
+  @if(items().length===0){<p>Kayıt bulunamadı. Seçilen filtrede teslim bekleyen ödev yok.</p>}
+  @else{<div class="table-scroll"><table><caption>{{ mode()==='overdue'?'Son teslim tarihi geçen':'Teslim edilmeyen' }} öğrenci–ödev kayıtları</caption><thead><tr><th>Öğrenci</th><th>Ödev</th><th>Son tarih (Türkiye)</th><th>Durum</th><th>Gecikme</th><th>İşlem</th></tr></thead><tbody>
+   @for(item of items();track item.assignmentId+':'+item.studentId){<tr><td>{{ item.studentName }}</td><td><strong>{{ item.title }}</strong>@if(item.subject){<small>{{ item.subject }}</small>}</td><td>{{ item.dueDate|date:'dd.MM.yyyy HH:mm':'+0300' }}</td><td>{{ item.status==='InProgress'?'Devam ediyor':'Atandı' }}</td><td [class.overdue]="item.isOverdue">{{ item.isOverdue?delay(item.overdueMinutes):'Süresi dolmadı' }}</td><td><button type="button" (click)="openAssignment.emit(item.assignmentId)" [attr.aria-label]="item.studentName+' · '+item.title+' teslimlerini aç'">Teslimleri aç</button></td></tr>}
+  </tbody></table></div>}
+  <nav aria-label="Ödev takip sayfaları"><button type="button" (click)="previousPage()" [disabled]="page()<=1">Önceki</button><span>{{ total() }} kayıt · {{ page() }}. sayfa</span><button type="button" (click)="nextPage()" [disabled]="page()*25>=total()">Sonraki</button></nav>
+ }
+</section>

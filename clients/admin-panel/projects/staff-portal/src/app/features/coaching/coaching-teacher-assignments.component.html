@@ -4,6 +4,8 @@
   <staff-coaching-teacher-assignment-form
     [assignmentId]="mode.kind === 'edit' ? mode.id : null"
     (close)="closeEditor()" (saved)="onFormSaved($event)" />
+} @else if(followUpVisible()) {
+  <staff-coaching-assignment-follow-up (close)="followUpVisible.set(false);load()" (openAssignment)="reviewAssignment($event)" />
 } @else {
 <section class="assignments" aria-labelledby="assignments-title">
   <div class="assignments-heading">
@@ -13,6 +15,7 @@
       <p class="assignments-description">Öğrencilere verdiğiniz çalışmaları ve teslim durumlarını takip edin.</p>
     </div>
     <div class="assignments-heading-actions">
+      <button type="button" class="review-button" (click)="followUpVisible.set(true)">Geciken ve teslim edilmeyenler</button>
       <span class="assignments-count">{{ totalCount() }} ödev</span>
       <button type="button" class="create-assignment-button" data-testid="create-assignment" (click)="createAssignment()">Yeni ödev</button>
     </div>

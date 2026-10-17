@@ -14,6 +14,12 @@ export interface CoachingTeacherAssignment {
   createdAt: string;
 }
 
+export interface CoachingAssignmentFollowUpItem {
+  assignmentId:string;studentId:string;studentName:string;title:string;subject:string|null;
+  dueDate:string;status:string;isOverdue:boolean;overdueMinutes:number;
+}
+export interface CoachingAssignmentFollowUpPage extends PagedCoachingAssignments<CoachingAssignmentFollowUpItem> {pendingCount:number;overdueCount:number}
+
 export interface PagedCoachingAssignments<T> {
   items: T[];
   pageNumber: number;
@@ -114,6 +120,12 @@ export type CoachingAssignmentStatus = 'Active' | 'Completed' | 'Cancelled';
 export class CoachingTeacherAssignmentsService {
   private readonly http = inject(HttpClient);
   private readonly url = `${environment.apiUrl}/assignments`;
+
+  getFollowUp(mode:'overdue'|'pending',pageNumber=1,pageSize=25,search=''):Observable<CoachingAssignmentFollowUpPage> {
+    let params=new HttpParams().set('mode',mode).set('pageNumber',pageNumber).set('pageSize',pageSize);
+    if(search.trim())params=params.set('search',search.trim());
+    return this.http.get<CoachingAssignmentFollowUpPage>(`${environment.apiUrl}/coaching/teachers/me/assignment-follow-up`,{params});
+  }
 
   getTeacherAssignments(
     teacherId: string,

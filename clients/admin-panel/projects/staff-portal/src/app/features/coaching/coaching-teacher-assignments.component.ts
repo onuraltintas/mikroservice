@@ -10,6 +10,7 @@ import {
 } from './coaching-teacher-assignments.service';
 import { CoachingTeacherAssignmentFormComponent } from './coaching-teacher-assignment-form.component';
 import { CoachingTeacherAssignmentDetailComponent } from './coaching-teacher-assignment-detail.component';
+import {CoachingTeacherAssignmentFollowUpComponent} from './coaching-teacher-assignment-follow-up.component';
 
 type AssignmentStatusFilter = 'all' | CoachingAssignmentStatus;
 type AssignmentFormMode = { kind: 'new' } | { kind: 'edit'; id: string };
@@ -17,7 +18,7 @@ type AssignmentFormMode = { kind: 'new' } | { kind: 'edit'; id: string };
 @Component({
   selector: 'staff-coaching-teacher-assignments',
   standalone: true,
-  imports: [CommonModule, FormsModule, CoachingTeacherAssignmentFormComponent, CoachingTeacherAssignmentDetailComponent],
+  imports: [CommonModule, FormsModule, CoachingTeacherAssignmentFormComponent, CoachingTeacherAssignmentDetailComponent,CoachingTeacherAssignmentFollowUpComponent],
   templateUrl: './coaching-teacher-assignments.component.html',
   styleUrl: './coaching-teacher-assignments.component.scss'
 })
@@ -38,6 +39,7 @@ export class CoachingTeacherAssignmentsComponent implements OnInit {
   readonly isCancelling = signal(false);
   readonly formMode = signal<AssignmentFormMode | null>(null);
   readonly detailAssignmentId = signal<string | null>(null);
+  readonly followUpVisible=signal(false);
 
   ngOnInit(): void {
     this.load();
