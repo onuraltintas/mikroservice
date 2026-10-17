@@ -115,6 +115,7 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
             ArgumentNullException.ThrowIfNull(request);
             var revision = await OwnedAsync(id, student, expectedVersion, cancellationToken);
             if (revision.Status != StudyPlanStatus.Draft) throw Conflict("Yalnız taslak plan düzenlenebilir.");
+            if(revision.WeeklySource is not null)throw Conflict("Bu plan haftalık takvimden üretildi. Saat ve kazanımları korumak için taslağı arşivleyip önizlemeden yeniden oluşturun.");
             // Validate all replacements before changing any persisted task or title.
             _ = StudyPlanRevision.Create(student, revision.PlanId, revision.RevisionNumber, request.Title);
             var tasks = await ValidateTasksAsync(revision, request, cancellationToken);
@@ -135,6 +136,13 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
             if (!await db.StudyPlanTasks.AnyAsync(x => x.RevisionId == id && x.StudentId == student, cancellationToken))
                 throw Conflict("Yayımlamadan önce en az bir çalışma ekleyin.");
             var previous = await db.StudyPlanRevisions.SingleOrDefaultAsync(x => x.StudentId == student && x.IsActive, cancellationToken);
+            if(revision.WeeklySource is {} weeklySource)
+            {
+                var weekly=await db.Set<WeeklyStudyDraft>().FromSqlInterpolated($"SELECT * FROM coaching.study_weekly_drafts WHERE \"StudentId\"={student} FOR UPDATE").AsNoTracking().SingleOrDefaultAsync(cancellationToken);
+                var contextVersion=await db.StudentLearningContexts.Where(x=>x.StudentUserId==student).Select(x=>(int?)x.Version).SingleOrDefaultAsync(cancellationToken);
+                if(weekly?.Version!=weeklySource.DraftVersion||contextVersion!=weeklySource.LearningContextVersion||previous?.Id!=weeklySource.ActiveRevisionId||previous?.Version!=weeklySource.ActiveRevisionVersion)
+                    throw Conflict("Haftalık takvim, eğitim bağlamı veya aktif çalışmalar değişti. Taslağı arşivleyip güncel önizlemeden yeniden oluşturun.");
+            }
             if (revision.AutomaticAvailabilityVersion is { } availabilityVersion)
             {
                 // Lock the hours row so a concurrent preference update cannot pass this check then commit first.
@@ -203,6 +211,9 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
             if (task.IsCompleted) throw Conflict("Tamamlanan çalışma başka güne taşınamaz.");
             if (plannedDate == default) throw new ArgumentException("Geçerli çalışma tarihi seçin.");
             if (task.PlannedDate == plannedDate) return await ViewAsync(revision, cancellationToken);
+            if(task.PlannedStartMinute is {} start&&await db.StudyPlanTasks.AnyAsync(x=>x.RevisionId==id&&x.StudentId==student&&x.Id!=taskId&&x.PlannedDate==plannedDate
+                &&x.PlannedStartMinute<start+task.PlannedMinutes&&x.PlannedStartMinute+x.PlannedMinutes>start,cancellationToken))
+                throw Conflict("Yeni tarihte aynı saatte başka çalışma var. Farklı bir gün seçin.");
             var dailyMinutes = await db.StudyPlanTasks.Where(x => x.RevisionId == id && x.StudentId == student
                 && x.Id != taskId && x.PlannedDate == plannedDate).SumAsync(x => x.PlannedMinutes, cancellationToken);
             if (dailyMinutes + task.PlannedMinutes > 1440) throw new ArgumentException("Bir güne 24 saatten fazla çalışma eklenemez.");

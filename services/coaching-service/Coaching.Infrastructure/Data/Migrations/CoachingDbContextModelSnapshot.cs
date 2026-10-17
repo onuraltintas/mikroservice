@@ -2913,6 +2913,9 @@ namespace Coaching.Infrastructure.Data.Migrations
                         .IsConcurrencyToken()
                         .HasColumnType("integer");
 
+                    b.Property<string>("WeeklySource")
+                        .HasColumnType("jsonb");
+
                     b.HasKey("Id");
 
                     b.HasIndex("StudentId", "PlanId", "RevisionNumber")
@@ -2961,6 +2964,10 @@ namespace Coaching.Infrastructure.Data.Migrations
                     b.Property<bool>("IsPinned")
                         .HasColumnType("boolean");
 
+                    b.Property<string>("LessonNameSnapshot")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
                     b.Property<DateOnly>("PlannedDate")
                         .HasColumnType("date");
 
@@ -2968,6 +2975,9 @@ namespace Coaching.Infrastructure.Data.Migrations
                         .HasColumnType("integer");
 
                     b.Property<int?>("PlannedQuestions")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("PlannedStartMinute")
                         .HasColumnType("integer");
 
                     b.Property<Guid>("RevisionId")
@@ -2998,6 +3008,9 @@ namespace Coaching.Infrastructure.Data.Migrations
                         .IsConcurrencyToken()
                         .HasColumnType("integer");
 
+                    b.Property<Guid?>("WeeklyLessonId")
+                        .HasColumnType("uuid");
+
                     b.HasKey("Id");
 
                     b.HasIndex("TopicId");
@@ -3013,6 +3026,8 @@ namespace Coaching.Infrastructure.Data.Migrations
                             t.HasCheckConstraint("ck_study_task_minutes", "\"PlannedMinutes\" BETWEEN 1 AND 1440 AND (\"ActualMinutes\" IS NULL OR \"ActualMinutes\" BETWEEN 1 AND 1440)");
 
                             t.HasCheckConstraint("ck_study_task_questions", "(\"PlannedQuestions\" IS NULL OR \"PlannedQuestions\" BETWEEN 0 AND 100000) AND (\"ActualQuestions\" IS NULL OR \"ActualQuestions\" BETWEEN 0 AND 100000) AND (\"IsCompleted\" OR \"ActualQuestions\" IS NULL)");
+
+                            t.HasCheckConstraint("ck_study_task_weekly_time", "(\"PlannedStartMinute\" IS NULL AND \"WeeklyLessonId\" IS NULL AND \"LessonNameSnapshot\" IS NULL) OR (\"PlannedStartMinute\" BETWEEN 0 AND 1439 AND \"PlannedStartMinute\"+\"PlannedMinutes\"<=1440 AND \"WeeklyLessonId\" IS NOT NULL AND \"LessonNameSnapshot\" IS NOT NULL)");
                         });
                 });
 
