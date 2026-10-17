@@ -50,6 +50,7 @@ export interface CoachingAssignmentDetail extends CoachingTeacherAssignment {
     studentId: string;
     status: string;
     submittedAt?: string;
+    studentNote?: string;
     score?: number;
     teacherFeedback?: string;
     attachments?: CoachingAssignmentAttachment[];

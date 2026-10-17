@@ -47,7 +47,8 @@ public record AssignedStudentDto(
     decimal? Score,
     string? TeacherFeedback,
     string Status,
-    IReadOnlyList<AssignmentAttachmentDto>? Attachments = null
+    IReadOnlyList<AssignmentAttachmentDto>? Attachments = null,
+    string? StudentNote = null
 );
 
 public record AssignmentAttachmentDto(

@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, OnInit, Output, inject, signal } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
 import {
@@ -30,6 +30,7 @@ export class CoachingTeacherAssignmentDetailComponent implements OnInit {
   @Output() close = new EventEmitter<void>();
 
   readonly assignment = signal<CoachingAssignmentDetail | null>(null);
+  readonly submittedCount = computed(() => this.assignment()?.assignedStudents.filter(student => student.status === 'Submitted' || student.status === 'Graded').length ?? 0);
   readonly isLoading = signal(true);
   readonly isLoadingNames = signal(false);
   readonly errorMessage = signal<string | null>(null);

@@ -88,7 +88,8 @@ public class GetAssignmentQueryHandler : IRequestHandler<GetAssignmentQuery, Ass
                     attachment.SizeBytes,
                     attachment.Status.ToString(),
                     attachment.UploadedAt,
-                    attachment.ScannedAt)).ToList()
+                    attachment.ScannedAt)).ToList(),
+                StudentNote: s.StudentNote
             )).ToList(),
             CreatedAt: assignment.CreatedAt
         );

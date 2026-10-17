@@ -17,6 +17,24 @@ namespace Identity.API.IntegrationTests;
 public sealed class CoachingTeacherAssignmentFilterTests
 {
     [Fact]
+    public async Task AssignmentDetail_ShouldReturnSavedStudentSubmissionNote()
+    {
+        var studentId = Guid.NewGuid();
+        await using var context = new CoachingDbContext(new DbContextOptionsBuilder<CoachingDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
+        var assignment = Assignment.Create(Guid.NewGuid(), "Notlu teslim", DateTime.UtcNow.AddDays(1));
+        assignment.AssignToStudent(studentId);
+        assignment.SubmitAssignment(studentId, "Kitaptaki soruları tamamladım.");
+        context.Assignments.Add(assignment);
+        await context.SaveChangesAsync();
+        var handler = new Coaching.Application.Queries.GetAssignment.GetAssignmentQueryHandler(
+            new AssignmentRepository(context), new StudentPolicy(studentId), new AllowStudentReadClient());
+        var result = await handler.Handle(new Coaching.Application.Queries.GetAssignment.GetAssignmentQuery(assignment.Id), CancellationToken.None);
+        var json = System.Text.Json.JsonSerializer.SerializeToElement(result);
+        json.GetProperty("AssignedStudents")[0].GetProperty("StudentNote").GetString().Should().Be("Kitaptaki soruları tamamladım.");
+    }
+
+    [Fact]
     public async Task TeacherAssignmentFilter_ShouldApplyBeforeCountAndPaging()
     {
         var teacherId = Guid.NewGuid();

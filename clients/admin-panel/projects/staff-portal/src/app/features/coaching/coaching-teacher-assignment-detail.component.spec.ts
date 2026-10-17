@@ -16,6 +16,8 @@ describe('CoachingTeacherAssignmentDetailComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Teslim edildi');
     expect(fixture.nativeElement.textContent).toContain('İyi çalışma');
     expect(fixture.nativeElement.textContent).toContain('ödev-foto.png');
+    expect(fixture.nativeElement.textContent).toContain('Kitaptaki soruları tamamladım.');
+    expect(fixture.nativeElement.querySelector('.assignment-facts').textContent).toContain('1 / 1');
   });
 
   it('rejects a negative score or a score above the assignment maximum', () => {
@@ -28,6 +30,19 @@ describe('CoachingTeacherAssignmentDetailComponent', () => {
 
     expect(assignments.gradeAssignment).not.toHaveBeenCalled();
     expect(component.errorMessage()).toContain('0 ile 100');
+  });
+
+  it('counts submitted and graded students, leaving pending students out', () => {
+    const fixture = createFixture(assignmentService());
+    fixture.detectChanges();
+    const component = fixture.componentInstance;
+    component.assignment.update(item => ({...item!, assignedStudents: [
+      {studentId:'one',status:'Submitted'}, {studentId:'two',status:'Graded'},
+      {studentId:'three',status:'Assigned'}, {studentId:'four',status:'InProgress'}
+    ]}));
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.assignment-facts').textContent).toContain('2 / 4');
+    expect(fixture.nativeElement.textContent).not.toContain('Öğrencinin notu');
   });
 
   it('saves a valid grade and reloads the server-authoritative assignment state', () => {
@@ -93,10 +108,10 @@ function createFixture(assignments = assignmentService()) {
 function assignmentService() {
   const detail: CoachingAssignmentDetail = {
     id: 'assignment-1', teacherId: 'teacher-1', title: 'Haftalık tekrar', type: 'Individual', source: 'Digital',
-    dueDate: '2030-01-02T10:00:00Z', status: 'Active', totalStudents: 1, submittedCount: 1,
+    dueDate: '2030-01-02T10:00:00Z', status: 'Active', totalStudents: undefined!, submittedCount: undefined!,
     createdAt: '2029-12-01T10:00:00Z', maxScore: 100,
     assignedStudents: [{
-      studentId: 'student-1', status: 'Submitted', score: 80, teacherFeedback: 'İyi çalışma',
+      studentId: 'student-1', status: 'Submitted', score: 80, teacherFeedback: 'İyi çalışma', studentNote: 'Kitaptaki soruları tamamladım.',
       attachments: [
         { id: 'attachment-pending', originalFileName: 'bekliyor.png', contentType: 'image/png', sizeBytes: 1024, status: 'Pending' },
         { id: 'attachment-clean', originalFileName: 'ödev-foto.png', contentType: 'image/png', sizeBytes: 2048, status: 'Clean' }

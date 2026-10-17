@@ -26,7 +26,7 @@
     @if (item.description) { <p class="assignment-description">{{ item.description }}</p> }
     <dl class="assignment-facts">
       <div><dt>Son tarih</dt><dd>{{ item.dueDate | date:'d MMM y, HH:mm' }}</dd></div>
-      <div><dt>Teslim</dt><dd>{{ item.submittedCount }} / {{ item.totalStudents }}</dd></div>
+      <div><dt>Teslim</dt><dd>{{ submittedCount() }} / {{ item.assignedStudents.length }}</dd></div>
       <div><dt>Maksimum puan</dt><dd>{{ item.maxScore ?? 'Belirtilmedi' }}</dd></div>
     </dl>
 
@@ -51,6 +51,10 @@
               </div>
               <span class="submission-status" [attr.data-status]="student.status">{{ studentStatusLabel(student.status) }}</span>
             </header>
+
+            @if (student.studentNote) {
+              <div class="saved-feedback"><span>Öğrencinin notu</span><p>{{ student.studentNote }}</p></div>
+            }
 
             <div class="grade-summary">
               <span>Mevcut puan</span>
