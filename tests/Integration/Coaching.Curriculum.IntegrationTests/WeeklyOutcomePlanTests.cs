@@ -11,6 +11,32 @@ namespace Coaching.Curriculum.IntegrationTests;
 public sealed class WeeklyOutcomePlanTests
 {
     [CurriculumPostgresTests.LocalPostgresFact]
+    public async Task FreedLessonHoursAreReassignedOnlyWhenChosen_AndSavedWithExactOutcomeLinks()
+    {
+        await using var pg=await CurriculumPostgresTests.Pg.Create();var f=pg.Data;var service=await Seed(f);
+        var math=await f.Db.StudyCatalogLessons.SingleAsync();var mathOutcome=await f.Db.Set<StudyCatalogOutcome>().SingleAsync();
+        var mathEstimate=OutcomeDurationEstimate.Create(mathOutcome.Id,2,30,30,30,"ReviewedStudy","Medium","Aktarım test süresi",f.User.UserId);mathEstimate.Publish();
+        var lesson=StudyCatalogLesson.Create("test","turkish-reuse","Türkçe",8,"LGS");lesson.SetActive(true);
+        var unit=StudyCatalogUnit.Create("test","turkish-unit",lesson.Id,"Türkçe",1);unit.SetActive(true);
+        var topic=StudyCatalogTopic.Create("test","turkish-topic",lesson.Id,unit.Id,"Test konusu",null,1);topic.SetActive(true);
+        var edition=OfficialCurriculumEdition.Create("test-reuse-2026","LGS",8,"Türkçe",2026,2026,"https://meb.gov.tr/test",new string('b',64),"https://meb.gov.tr/test");
+        var official=OfficialCurriculumTopic.Create(edition.Id,"T.TEST","Test konusu",1,1);
+        var outcome=StudyCatalogOutcome.Create(edition.Id,official.Id,"T.TEST.1","Yerel aktarım testi","",1,1);
+        var estimate=OutcomeDurationEstimate.Create(outcome.Id,1,10,10,10,"ReviewedStudy","Medium","Aktarım test süresi",f.User.UserId);estimate.Publish();
+        var mapping=StudyCatalogTopicOutcome.Create(topic.Id,outcome.Id,"Test eşleştirmesi");mapping.Review(true,"Test eşleştirmesi",f.User.UserId!.Value);
+        f.Db.AddRange(mathEstimate,lesson,unit,topic,edition,official,outcome,estimate,mapping);
+        var weekly=await f.Db.Set<WeeklyStudyDraft>().SingleAsync();weekly.Replace(weekly.TimeZoneId,[..weekly.Slots,new(Guid.NewGuid(),lesson.Id,lesson.Name,"LGS",DayOfWeek.Tuesday,1080,30)]);await f.Db.SaveChangesAsync();
+        var input=Input with {ExpectedWeeklyDraftVersion=weekly.Version};var normal=await service.PreviewAsync(input,default);
+        Assert.False(normal.CanCreate);Assert.Equal(30,normal.Schedule.Lessons.Single(x=>x.LessonId==math.Id).RemainingMinutes);
+        var reused=await service.PreviewAsync(input with {ReuseFreedSlots=true},default);Assert.True(reused.CanCreate);
+        var transferred=Assert.Single(reused.Schedule.Tasks.Where(x=>x.ReusedSlot));Assert.Equal(math.Id,transferred.LessonId);Assert.Equal(new DateOnly(2027,6,1),transferred.Date);Assert.Equal(1080,transferred.StartMinute);
+        var created=await service.CreateAsync(new("Aktarım testi",reused.Request,reused.Fingerprint),default);
+        Assert.True((await f.Db.StudyPlanRevisions.SingleAsync(x=>x.Id==created.Id)).WeeklySource!.ReuseFreedSlots);
+        var taskIds=await f.Db.StudyPlanTasks.Where(x=>x.RevisionId==created.Id).Select(x=>x.Id).ToArrayAsync();
+        Assert.Equal(120,await f.Db.Set<StudyPlanTaskOutcome>().Where(x=>Enumerable.Contains(taskIds,x.TaskId)).SumAsync(x=>x.AllocatedMinutes));
+        Assert.Equal(25,(await f.Db.StudyPlanTasks.SingleAsync(x=>x.IsCompleted)).ActualMinutes);
+    }
+    [CurriculumPostgresTests.LocalPostgresFact]
     public async Task TopicSequenceRespectsParentOrderBeforeChildOrder()
     {
         await using var pg=await CurriculumPostgresTests.Pg.Create();var f=pg.Data;var service=await Seed(f);

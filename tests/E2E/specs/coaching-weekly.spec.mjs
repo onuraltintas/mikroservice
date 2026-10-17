@@ -17,7 +17,7 @@ async function fixture(context){
     if(path.endsWith('/plans'))return ok({items:[active],totalCount:1,pageNumber:1,pageSize:20});
     if(req.method()!=='GET')writes.push({path});return ok([]);
   });
-  return{writes,getDraft:()=>draft,setConflict:value=>conflict=value,active};
+  return{writes,getDraft:()=>draft,setDraft:value=>draft=value,setConflict:value=>conflict=value,active};
 }
 async function open(page){await page.goto('/coaching-portal/weekly-plan');await expect(page.getByRole('heading',{name:'Haftalık programım',exact:true})).toBeVisible();await page.getByRole('button',{name:'Hafta',exact:true}).click();}
 async function add(page,lesson=math,start='18:00',duration='60'){
@@ -43,6 +43,16 @@ test('right click adds a lesson, resizing frees the other half hour and both sav
   await page.reload();await page.getByRole('button',{name:'Hafta',exact:true}).click();await expect(card(page,'Matematik')).toContainText('18:00–18:30');await expect(card(page,'Türkçe')).toContainText('18:30–19:00');
   await page.locator('main').first().evaluate(el=>el.scrollTo({top:0,behavior:'instant'}));await page.locator('.time-scroller').evaluate(el=>el.scrollTop=17*72);await page.screenshot({path:`../../artifacts/coaching-weekly/calendar-${test.info().project.name}.png`,fullPage:false});
   await page.getByRole('link',{name:'Mevcut planlarım ↗',exact:true}).click();await expect(page.getByRole('heading',{name:'Mevcut çalışma planım',exact:true})).toBeVisible();await expect(page.getByText(/Tamamlandı · 25 dk/)).toBeVisible();expect(f.active.version).toBe(7);expect(f.writes.every(w=>w.path.endsWith('/weekly-draft'))).toBe(true);
+});
+
+test('saved evening cards open in the visible time range without manual scrolling',async({context,page})=>{
+  const f=await fixture(context);f.setDraft({version:0,timeZoneId:'Europe/Istanbul',slots:[{id:'saved',lessonId:math,lessonName:'Matematik',examCode:'LGS',day:'Monday',startMinute:1080,durationMinutes:60}]});
+  await page.goto('/coaching-portal/weekly-plan');await expect(card(page,'Matematik')).toHaveCount(1);
+  await expect.poll(()=>page.locator('.time-scroller').evaluate(el=>Math.abs(el.scrollTop-17.5*72))).toBeLessThanOrEqual(10);
+  const bounds=await card(page,'Matematik').boundingBox(),viewport=await page.locator('.time-scroller').boundingBox();
+  expect(bounds.y).toBeGreaterThanOrEqual(viewport.y);expect(bounds.y+bounds.height).toBeLessThanOrEqual(viewport.y+viewport.height);
+  if(test.info().project.name==='mobile')await expect(page.getByRole('button',{name:'Gün',exact:true})).toHaveAttribute('aria-pressed','true');
+  expect(f.writes).toHaveLength(0);
 });
 
 test('cards move across days and top edge resizing preserves the end time',async({context,page})=>{
