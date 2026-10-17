@@ -11,12 +11,12 @@ namespace Coaching.Curriculum.IntegrationTests;
 public sealed class WeeklyOutcomePlanTests
 {
     private static readonly WeeklyOutcomePlanRequest Input=new(new(2027,5,24),new(2027,6,1),0,false);
-    private static async Task<CoachingWeeklyOutcomePlanService> Seed(CurriculumManagementTests.Fixture f)
+    internal static async Task<CoachingWeeklyOutcomePlanService> Seed(CurriculumManagementTests.Fixture f)
     {
         await f.Seed();f.User.Roles=["Student"];f.User.UserId=(await f.Db.StudyPlanTasks.SingleAsync()).StudentId;
         var lesson=await f.Db.StudyCatalogLessons.SingleAsync();var weekly=WeeklyStudyDraft.Create(f.User.UserId.Value);
         weekly.Replace("Europe/Istanbul",[new(Guid.NewGuid(),lesson.Id,lesson.Name,"LGS",DayOfWeek.Monday,1080,30)]);
-        f.Db.Add(weekly);f.Db.Add(StudentLearningContext.Create(f.User.UserId.Value,2026,LearningPurpose.Lgs,2027,null,null));await f.Db.SaveChangesAsync();
+        f.Db.Add(weekly);f.Db.Add(Coaching.Domain.Profiles.CoachingStudentProfile.Create(f.User.UserId.Value));f.Db.Add(StudentLearningContext.Create(f.User.UserId.Value,2026,LearningPurpose.Lgs,2027,null,null));await f.Db.SaveChangesAsync();
         return new(f.Db,new CoachingAccessPolicy(f.User),new WeeklyStudyDraftTests.Catalog(f.Db),TimeProvider.System);
     }
     [Fact]
@@ -54,5 +54,17 @@ public sealed class WeeklyOutcomePlanTests
         await Assert.ThrowsAsync<ArgumentException>(()=>service.CreateAsync(new("Eksik plan",shortRequest,preview.Fingerprint),default));
         var extended=await service.PreviewAsync(shortRequest with {EndDate=preview.Schedule.RecommendedEndDate!.Value},default);Assert.True(extended.CanCreate);
         f.User.Roles=["Teacher"];await Assert.ThrowsAsync<BusinessRuleException>(()=>service.PreviewAsync(Input,default));
+    }
+    [CurriculumPostgresTests.LocalPostgresFact]
+    public async Task ChangedCalendarCannotBePublished_AndWeeklyPlanCannotBeFlattenedByManualReplacement()
+    {
+        await using var pg=await CurriculumPostgresTests.Pg.Create();var f=pg.Data;var service=await Seed(f);var preview=await service.PreviewAsync(Input,default);
+        var created=await service.CreateAsync(new("Yıllık plan",Input,preview.Fingerprint),default);
+        var access=new CoachingAccessPolicy(f.User);var manual=new CoachingManualStudyPlanService(f.Db,access,new CoachingAutomaticStudyPlanPreviewService(f.Db,access),new CurriculumManagementTests.NoopPublisher());
+        var read=(await manual.GetAsync(created.Id))!;Assert.Equal(1080,read.Tasks[0].PlannedStartMinute);
+        await Assert.ThrowsAsync<BusinessRuleException>(()=>manual.ReplaceDraftAsync(created.Id,created.Version,new("Elle değiştir",[new(Input.StartDate,"Yeni",30,null,false)])));
+        var weekly=await f.Db.Set<WeeklyStudyDraft>().SingleAsync();weekly.Replace(weekly.TimeZoneId,weekly.Slots.Select(x=>x with {DurationMinutes=60}).ToArray());await f.Db.SaveChangesAsync();
+        await Assert.ThrowsAsync<BusinessRuleException>(()=>manual.PublishAsync(created.Id,created.Version));
+        Assert.NotEqual(created.Id,(await f.Db.StudyPlanRevisions.SingleAsync(x=>x.IsActive)).Id);
     }
 }
