@@ -9,6 +9,7 @@ export interface WeeklyOutcomeTask {date:string;startMinute:number;lessonId:stri
 export interface WeeklyOutcomePreview {
   request:WeeklyOutcomeRequest;timeZoneId:string;fingerprint:string;canCreate:boolean;protectedTaskCount:number;
   issues:{lessonId:string;lessonName:string;message:string}[];
+  protectedTasks?:{date:string;startMinute:number|null;title:string;minutes:number}[];
   schedule:{tasks:WeeklyOutcomeTask[];freeMinutes:number;recommendedEndDate:string|null;lessons:{lessonId:string;lessonName:string;outcomeCount:number;weeklyMinutes:number;requiredMinutes:number;scheduledMinutes:number;remainingMinutes:number;finishDate:string|null;extraWeeklyMinutes:number}[]};
 }
 @Injectable({providedIn:'root'})

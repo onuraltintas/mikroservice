@@ -15,7 +15,7 @@ export class StudentWeeklyOutcomePlanComponent {
   readonly filteredTasks=computed(()=>this.preview()?.schedule.tasks.filter(x=>!this.lessonFilter()||x.lessonId===this.lessonFilter())??[]);
   readonly visibleTasks=computed(()=>this.filteredTasks().slice((this.page()-1)*this.pageSize,this.page()*this.pageSize));
   readonly remaining=computed(()=>this.preview()?.schedule.lessons.reduce((sum,x)=>sum+x.remainingMinutes,0)??0);
-  readonly totalMinutes=computed(()=>this.preview()?.schedule.tasks.reduce((sum,x)=>sum+x.minutes,0)??0);
+  readonly totalMinutes=computed(()=>(this.preview()?.schedule.tasks.reduce((sum,x)=>sum+x.minutes,0)??0)+(this.preview()?.protectedTasks?.reduce((sum,x)=>sum+x.minutes,0)??0));
   startDate='';endDate='';reuseFreedSlots=false;title='Haftalık derslerimden çalışma planım';confirmed=false;private defaultEnd=true;
   constructor(){this.load();}
   busy(){return this.loading()||this.generating()||this.saving();}

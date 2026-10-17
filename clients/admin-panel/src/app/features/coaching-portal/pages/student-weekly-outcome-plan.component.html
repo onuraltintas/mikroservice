@@ -1,5 +1,5 @@
 <section class="outcome-page" aria-labelledby="outcome-plan-title">
-  <header><div><p class="eyebrow">HAFTALIK RİTMİNDEN YILLIK PLANA</p><h1 id="outcome-plan-title">Çalışma planını önizle</h1><p>Kazanımları kaydettiğin ders saatlerine yerleştir, bitişleri karşılaştır ve sonra taslağını oluştur.</p></div><a routerLink="/coaching-portal/weekly-plan">← Haftalık takvimim</a></header>
+  <header><div><p class="eyebrow">HAFTALIK RİTMİNDEN YILLIK PLANA</p><h1 id="outcome-plan-title">Çalışma planını önizle</h1><p>Kazanımları kaydettiğin ders saatlerine yerleştir, bitişleri karşılaştır ve sonra taslağını oluştur.</p></div><a routerLink="/coaching-portal/weekly-plan">← Haftalık takvimim</a><a routerLink="/coaching-portal/study-plans">Mevcut planlarım →</a></header>
   @if(error()){<p role="alert" class="notice error">{{ error() }}</p>}
   @if(loading()){<p role="status">Kayıtlı haftan yükleniyor…</p>}
   @if(!options()&&!loading()){<button type="button" (click)="load()">Yeniden dene</button>}
@@ -17,6 +17,7 @@
       <section class="panel"><h2>Dersler ne zaman bitecek?</h2><p class="muted">Tahmini bitişler, bu haftalık düzen kesintisiz sürdürülürse geçerlidir. Erken biten dersin saati, aktarımı seçmediysen boş kalır.</p>
         <div class="table-scroll"><table><thead><tr><th>Ders</th><th>Haftalık saat</th><th>Kazanım</th><th>Gereken / yerleşen</th><th>Tahmini bitiş</th><th>Hedefte kalan</th></tr></thead><tbody>@for(lesson of p.schedule.lessons;track lesson.lessonId){<tr [class.late]="lesson.remainingMinutes>0"><th>{{ lesson.lessonName }}</th><td>{{ lesson.weeklyMinutes }} dk/hafta</td><td>{{ lesson.outcomeCount }}</td><td>{{ lesson.requiredMinutes }} / {{ lesson.scheduledMinutes }} dk</td><td>@if(lesson.finishDate){ {{ lesson.finishDate | date:'dd.MM.yyyy' }} }@else{ Hesaplanamadı }</td><td>{{ lesson.remainingMinutes }} dk</td></tr>}</tbody></table></div>
         @if(p.protectedTaskCount){<p class="notice">Mevcut planındaki {{ p.protectedTaskCount }} tamamlanmamış sabit çalışma korunur. Tarihli/saatli korunmuş çalışmalar için gerekli kapasite ayrıldı.</p>}
+        @if(p.protectedTasks?.length){<details><summary>Korunan sabit çalışmaları göster</summary>@for(task of p.protectedTasks;track $index){<p>{{ task.date | date:'dd.MM.yyyy' }} @if(task.startMinute!=null){ · {{ clock(task.startMinute) }} } — {{ task.title }} · {{ task.minutes }} dk</p>}</details>}
       </section>
       @if(p.issues.length){<section class="panel issues"><h2>Önce bu katalog eksiklerini giderelim</h2><p>Bu dersler boş veya bitmiş kabul edilmedi. Eksikler giderilmeden plan taslağı oluşturulamaz.</p><ul>@for(issue of p.issues;track $index){<li><strong>{{ issue.lessonName }}</strong> — {{ issue.message }}</li>}</ul></section>}
       @if(remaining()>0){<section class="panel decisions"><p class="eyebrow">HEDEF TARİHİNE SIĞMAYAN DERSLER VAR</p><h2>Nasıl devam etmek istersin?</h2>
