@@ -1,6 +1,8 @@
 # Yıllık takvimde taşıma ve öğretmen çalışma takibi
 
-Tarih: 17 Ekim 2026. Durum: geliştirme ve yerel doğrulama tamamlandı. **Canlıya dağıtılmadı.**
+Tarih: 17 Ekim 2026. Geliştirme ve yerel doğrulama tamamlandı; Coaching, öğrenci ve öğretmen
+arayüzleri canlıya dağıtıldı. Canlı kontrol durumu ve kanıtlar:
+[canlı dağıtım raporu](calendar-move-live-20261017.md).
 
 ## Öğrenci akışı
 
@@ -104,7 +106,7 @@ Mevcut uygulamanın tamamı için %100 kapsam iddiası yoktur.
 
 Tarayıcı testleri yerel üretim derlemeleri ve taklit API ile çalışır; gerçek veritabanı,
 sahiplik/yetki, sürüm, atomiklik, migration ve eşzamanlı rapor kontrolleri PostgreSQL
-testlerinde ayrıca yapılır. Canlı hesaplarda bu geliştirme için işlem yapılmadı.
+testlerinde ayrıca yapılır. Sonraki canlı testler, dağıtım raporunda ayrıca belirtilmiştir.
 
 Ara testler, sürükleme mesajının takvimi iterek 30 dakika kaymaya yol açtığını yakaladı;
 mesaj alanı sabitlenerek giderildi. Son testler gerçek fare hareketiyle saat ve ay görünümünde
@@ -119,7 +121,9 @@ hata seviyesinde değildir; derlemeler başarılıdır.
 
 ## Canlıya alma kapsamı
 
-Bu istek geliştirme/test kapsamındadır. Canlıya alırken temiz kaynak paketiyle **Coaching,
-admin-panel ve staff-portal birlikte** güncellenmeli, önce veritabanları yedeklenmeli ve yeni
-CHECK geçişi prova edilmelidir. Mevcut plan/kazanım/çalışma satırları önce/sonra karşılaştırılmalı;
-öğrenci taşıma/tamamlama ve öğretmen toplu takip/plan oluşturma akışı canlıda ayrıca doğrulanmalıdır.
+Temiz kaynak paketleriyle **Coaching, admin-panel ve staff-portal** güncellendi. Veritabanları
+yedeklendi, CHECK geçişi canlı kopyada prova edildi ve özgün iş satırları karşılaştırıldı.
+Öğrenci taşıma ve tamamlanma işaretleri, öğretmenin toplu/geciken takibi, takvim düzeltmesi ve
+öğrenciye yeni taslak oluşturması canlıda doğrulandı. Son 15 dakikalık sağlık izlemesi başarılı.
+Yeni test taslağı mevcut yıllık planı aktif tutmak için yayımlanmadı; ayrıntılı kapsam ve
+kanıtlar [canlı dağıtım raporunda](calendar-move-live-20261017.md) tutulur.

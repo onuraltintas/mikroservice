@@ -1,0 +1,21 @@
+import {cpSync,mkdirSync,readFileSync,writeFileSync,readdirSync,statSync,existsSync} from 'node:fs';
+import {execFileSync} from 'node:child_process';
+import {resolve,relative} from 'node:path';
+import {createHash} from 'node:crypto';
+import assert from 'node:assert/strict';
+const root=process.cwd(),release=resolve(root,'artifacts/coaching-calendar-move-live-20261017-r2'),pack=resolve(release,'package');
+assert.ok(!existsSync(pack));mkdirSync(pack,{recursive:true});
+const sha=file=>createHash('sha256').update(readFileSync(file)).digest('hex');
+cpSync(resolve(release,'admin-source/clients/admin-panel/dist/admin-panel'),resolve(pack,'payload/admin'),{recursive:true});
+cpSync(resolve(release,'staff-source/clients/admin-panel/dist/staff-portal/browser'),resolve(pack,'payload/staff'),{recursive:true});
+for(const service of ['admin-panel','staff-portal'])writeFileSync(resolve(pack,service+'.Dockerfile'),
+  readFileSync(resolve(root,'tools/releases/coaching-learning-20261016',service+'.Dockerfile'),'utf8').replaceAll('coaching-learning-20261016','coaching-calendar-move-20261017-r2').replaceAll('\r\n','\n'));
+writeFileSync(resolve(pack,'deploy.sh'),readFileSync(resolve(root,'tools/releases/coaching-calendar-move-20261017-r2/deploy.sh'),'utf8').replaceAll('\r\n','\n'));
+cpSync(resolve(release,'source-provenance.json'),resolve(pack,'source-provenance.json'));
+writeFileSync(resolve(pack,'source-revision.txt'),JSON.parse(readFileSync(resolve(release,'source-provenance.json'))).revision+'\n');
+function files(dir){return readdirSync(dir).flatMap(n=>statSync(resolve(dir,n)).isDirectory()?files(resolve(dir,n)):[resolve(dir,n)]);}
+assert.ok(files(pack).every(f=>!relative(pack,f).split(/[\\/]/).some(n=>n==='.env'||n.startsWith('.env.'))));
+writeFileSync(resolve(pack,'payload.sha256'),files(pack).map(f=>sha(f)+'  '+relative(pack,f).replaceAll('\\','/')).join('\n')+'\n');
+const archive=resolve(release,'release.tar.gz');execFileSync('tar',['-czf',archive,'-C',pack,'.']);
+writeFileSync(resolve(release,'archive.sha256'),sha(archive)+'\n');
+console.log(JSON.stringify({archive,sha256:sha(archive),files:files(pack).length}));
