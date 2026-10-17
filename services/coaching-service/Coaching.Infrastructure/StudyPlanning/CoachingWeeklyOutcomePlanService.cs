@@ -70,12 +70,32 @@ public sealed class CoachingWeeklyOutcomePlanService(CoachingDbContext db,ICoach
         }
         var active=await db.StudyPlanRevisions.AsNoTracking().SingleOrDefaultAsync(x=>x.StudentId==student&&x.IsActive,ct);
         var protectedTasks=active is null?[]:await db.StudyPlanTasks.AsNoTracking().Where(x=>x.StudentId==student&&x.RevisionId==active.Id&&(x.IsCompleted||x.IsPinned)).OrderBy(x=>x.Id).ToArrayAsync(ct);
+        var pending=protectedTasks.Where(x=>!x.IsCompleted).ToDictionary(x=>x.Id);
+        var pendingIds=pending.Keys.ToArray();var pinnedLinks=await db.Set<StudyPlanTaskOutcome>().AsNoTracking().Where(x=>Enumerable.Contains(pendingIds,x.TaskId)).OrderBy(x=>x.TaskId).ThenBy(x=>x.OutcomeId).ToArrayAsync(ct);
+        var originalWork=work.ToArray();var credits=new List<(Guid LessonId,DateOnly Date,int Minutes)>();
+        work=originalWork.Select(lesson=>lesson with {Outcomes=lesson.Outcomes.Select(outcome=>{
+            var left=outcome.Minutes;
+            foreach(var link in pinnedLinks.Where(x=>x.OutcomeId==outcome.OutcomeId).OrderBy(x=>pending[x.TaskId].PlannedDate).ThenBy(x=>x.TaskId))
+            {var minutes=Math.Min(left,link.AllocatedMinutes);if(minutes>0)credits.Add((lesson.LessonId,pending[link.TaskId].PlannedDate,minutes));left-=minutes;}
+            return outcome with {Minutes=left};
+        }).Where(x=>x.Minutes>0).ToArray()}).ToList();
+        foreach(var prior in pending.Values.Where(x=>x.PlannedDate<request.StartDate||x.PlannedDate.DayNumber-request.StartDate.DayNumber>730))
+            issues.Add(new(prior.WeeklyLessonId??Guid.Empty,prior.LessonNameSnapshot??"Sabit çalışma",prior.Title+": tarihi yeni plan aralığı için uygun değil. Mevcut plandaki tarihini güncelleyin."));
         var schedule=WeeklyOutcomeScheduler.Build(request.StartDate,request.EndDate,draft.Slots,work,request.ReuseFreedSlots,
             protectedTasks.Select(x=>new WeeklyBlockedTime(x.PlannedDate,x.PlannedStartMinute,x.PlannedMinutes)).ToArray());
-        var fingerprint=Convert.ToHexStringLower(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(new{request,draft.Version,draft.TimeZoneId,Slots=draft.Slots,work,issues,ContextVersion=context?.Version,ActiveId=active?.Id,ActiveVersion=active?.Version,
+        var summaries=schedule.Lessons.Select(summary=>{
+            var original=originalWork.Single(x=>x.LessonId==summary.LessonId);var ownCredits=credits.Where(x=>x.LessonId==summary.LessonId).ToArray();
+            var required=original.Outcomes.Sum(x=>x.Minutes);var scheduled=summary.ScheduledMinutes+ownCredits.Where(x=>x.Date<=request.EndDate).Sum(x=>x.Minutes);
+            var lastCredit=ownCredits.Length==0?(DateOnly?)null:ownCredits.Max(x=>x.Date);var finish=summary.RequiredMinutes==0?lastCredit:summary.FinishDate;
+            if(finish.HasValue&&lastCredit>finish)finish=lastCredit;
+            var weeks=Math.Max(1,(int)Math.Ceiling((request.EndDate.DayNumber-request.StartDate.DayNumber+1)/7d));
+            return summary with {OutcomeCount=original.Outcomes.Count,RequiredMinutes=required,ScheduledMinutes=scheduled,RemainingMinutes=required-scheduled,FinishDate=finish,ExtraWeeklyMinutes=(int)Math.Ceiling((required-scheduled)/(weeks*30d))*30};
+        }).ToArray();
+        schedule=schedule with {Lessons=summaries,RecommendedEndDate=summaries.All(x=>x.FinishDate.HasValue)?summaries.Max(x=>x.FinishDate):null};
+        var fingerprint=Convert.ToHexStringLower(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(new{request,draft.Version,draft.TimeZoneId,Slots=draft.Slots,originalWork,work,issues,ContextVersion=context?.Version,ActiveId=active?.Id,ActiveVersion=active?.Version,pinnedLinks,
             Protected=protectedTasks.Select(x=>new{x.Id,x.Version,x.PlannedDate,x.PlannedStartMinute,x.PlannedMinutes,x.IsCompleted,x.IsPinned})})));
-        var canCreate=issues.Count==0&&schedule.Tasks.Count>0&&schedule.Lessons.All(x=>x.RemainingMinutes==0)&&schedule.Tasks.Count+protectedTasks.Count(x=>!x.IsCompleted)<=10000;
-        return new(new(request,draft.TimeZoneId,fingerprint,schedule,issues,canCreate,protectedTasks.Count(x=>!x.IsCompleted)),
+        var canCreate=issues.Count==0&&schedule.Tasks.Count+pending.Count>0&&schedule.Lessons.All(x=>x.RemainingMinutes==0)&&schedule.Tasks.Count+pending.Count<=10000;
+        return new(new(request,draft.TimeZoneId,fingerprint,schedule,issues,canCreate,pending.Count,pending.Values.OrderBy(x=>x.PlannedDate).ThenBy(x=>x.PlannedStartMinute).ThenBy(x=>x.Id).Select(x=>new WeeklyProtectedTask(x.PlannedDate,x.PlannedStartMinute,x.Title,x.PlannedMinutes)).ToArray()),
             new(draft.Version,context?.Version,request.StartDate,request.EndDate,request.ReuseFreedSlots,fingerprint,active?.Id,active?.Version),protectedTasks);
     }
 

@@ -8,7 +8,8 @@ public sealed record WeeklyOutcomePlanSave([Required,MaxLength(200)] string Titl
 public sealed record WeeklyLessonIssue(Guid LessonId,string LessonName,string Message);
 public sealed record WeeklyExamReference(string Name,DateOnly? Date);
 public sealed record WeeklyOutcomePlanOptions(DateOnly StartDate,DateOnly EndDate,int WeeklyDraftVersion,string TimeZoneId,IReadOnlyList<WeeklyExamReference> Exams);
-public sealed record WeeklyOutcomePlanPreview(WeeklyOutcomePlanRequest Request,string TimeZoneId,string Fingerprint,WeeklyOutcomeSchedule Schedule,IReadOnlyList<WeeklyLessonIssue> Issues,bool CanCreate,int ProtectedTaskCount);
+public sealed record WeeklyProtectedTask(DateOnly Date,int? StartMinute,string Title,int Minutes);
+public sealed record WeeklyOutcomePlanPreview(WeeklyOutcomePlanRequest Request,string TimeZoneId,string Fingerprint,WeeklyOutcomeSchedule Schedule,IReadOnlyList<WeeklyLessonIssue> Issues,bool CanCreate,int ProtectedTaskCount,IReadOnlyList<WeeklyProtectedTask>? ProtectedTasks=null);
 public sealed record WeeklyOutcomePlanCreated(Guid Id,int Version);
 public interface IWeeklyOutcomePlanService
 {
