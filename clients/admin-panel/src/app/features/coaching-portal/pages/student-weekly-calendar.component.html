@@ -46,7 +46,8 @@
         </div>
       </div>
     }
-    <footer class="calendar-footer"><label>Saat dilimi<input aria-label="Saat dilimi" [(ngModel)]="timeZoneId" maxlength="100" [disabled]="busy()"></label><button type="button" (click)="load(true)" [disabled]="busy()">Kaydedileni yeniden yükle</button></footer>
+    <footer class="calendar-footer"><label>Saat dilimi<input aria-label="Saat dilimi" [(ngModel)]="timeZoneId" maxlength="100" [disabled]="busy()"></label><button type="button" (click)="load(true)" [disabled]="busy()">Kaydedileni yeniden yükle</button><button type="button" data-testid="weekly-preview-link" class="primary" routerLink="/coaching-portal/weekly-plan-preview" [disabled]="busy()||dirty()||version===null||!slots().length||!!form">Çalışma planı oluştur →</button></footer>
+    <p class="muted">Önce haftalık taslağını kaydet. Sonra kazanımların ders saatlerine ve hedef tarihine nasıl yerleşeceğini önizleyebilirsin.</p>
   }
 </section>
 @if(menu;as target){

@@ -20,9 +20,11 @@ export interface StudyTask extends StudyTaskInput {
   actualQuestions?: number | null;
   completedAt: string | null;
   outcomes?: { outcomeId: string; code: string; name: string; estimateId: string; estimateNumber: number; allocatedMinutes: number; origin: string }[];
+  plannedStartMinute?:number|null;weeklyLessonId?:string|null;lessonName?:string|null;
 }
 export interface StudyPlanSummary { id: string; version: number; title: string; status: StudyPlanStatus }
-export interface StudyPlan extends StudyPlanSummary { tasks: StudyTask[] }
+export interface WeeklyPlanSource {draftVersion:number;learningContextVersion:number|null;startDate:string;endDate:string;reuseFreedSlots:boolean;fingerprint:string;activeRevisionId:string|null;activeRevisionVersion:number|null;timeZoneId?:string}
+export interface StudyPlan extends StudyPlanSummary { tasks: StudyTask[];weeklySource?:WeeklyPlanSource|null }
 export interface StudyPlanInput { title: string; tasks: StudyTaskInput[] }
 export interface StudyPlanPage { items: StudyPlanSummary[]; totalCount: number; pageNumber: number; pageSize: number }
 export type StudyDay = 'Sunday' | 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday';

@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Observable, Subject, finalize, takeUntil } from 'rxjs';
 import { CoachingStudyPlanningService, StudyPlan, StudyPlanPage, StudyPlanStatus, StudyTask, StudyTaskInput } from '../../../core/services/coaching-study-planning.service';
+import {clock} from './weekly-calendar';
 
 @Component({
   selector: 'app-student-study-plans',
@@ -14,6 +15,8 @@ import { CoachingStudyPlanningService, StudyPlan, StudyPlanPage, StudyPlanStatus
   styleUrl: './student-study-plans.component.scss'
 })
 export class StudentStudyPlansComponent implements OnInit, OnChanges {
+  readonly clock=clock;taskPage=1;
+  visibleTasks(){const plan=this.selected();return plan?.weeklySource?plan.tasks.slice((this.taskPage-1)*50,this.taskPage*50):plan?.tasks??[];}
   @Input() staffStudentId: string | null = null;
   @Input() readOnly = false;
   private readonly scopeChanged = new Subject<void>();
@@ -190,7 +193,8 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
     const keepInputs = preserveInputs && previous?.id === plan.id && plan.status === 'Active';
     const minutes = this.actualMinutes; const questions = this.actualQuestions; const dates = this.targetDates;
     this.selected.set(plan);
-    this.editing = plan.status === 'Draft' && !this.readOnly;
+    this.editing = plan.status === 'Draft' && !this.readOnly && !plan.weeklySource;
+    this.taskPage=1;
     this.editTitle = plan.title;
     this.editTasks = plan.tasks.map(({ plannedDate, title, plannedMinutes, topicId, isPinned, sourceName, plannedQuestions }) =>
       ({ plannedDate, title, plannedMinutes, topicId, isPinned, sourceName: sourceName ?? null, plannedQuestions: plannedQuestions ?? null }));
