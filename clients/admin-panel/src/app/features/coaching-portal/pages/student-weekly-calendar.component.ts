@@ -23,7 +23,11 @@ export class StudentWeeklyCalendarComponent implements OnInit {
   form:{id:string;lessonId:string;day:Weekday;start:string;duration:number}|null=null;formError='';
   private initializedScroller?:HTMLElement;
   @ViewChild('scroller') set scroller(value:ElementRef<HTMLElement>|undefined){
-    if(value&&value.nativeElement!==this.initializedScroller){this.initializedScroller=value.nativeElement;value.nativeElement.scrollTop=8*72;}
+    if(value&&value.nativeElement!==this.initializedScroller){
+      this.initializedScroller=value.nativeElement;
+      const visibleDays=new Set(this.days().map(weekday)),starts=this.slots().filter(s=>visibleDays.has(s.day)).map(s=>s.startMinute);
+      value.nativeElement.scrollTop=(starts.length?Math.max(0,Math.min(...starts)-30):480)*72/60;
+    }
   }
   ngOnInit(){if(typeof window!=='undefined'&&window.innerWidth<680)this.view.set('day');this.load();}
   private snapshot(){return JSON.stringify({timeZoneId:this.timeZoneId,slots:this.slots()});}
@@ -36,6 +40,10 @@ export class StudentWeeklyCalendarComponent implements OnInit {
     this.service.get().pipe(takeUntilDestroyed(this.destroy)).subscribe({next:r=>{
       this.lessons.set(r.lessons);this.slots.set(r.draft?.slots??[]);this.version=r.draft?.version??null;this.timeZoneId=r.draft?.timeZoneId??'Europe/Istanbul';
       this.initial=this.snapshot();this.ready.set(true);this.conflict.set(false);this.loading.set(false);this.today();
+      if(this.view()==='day'&&this.slots().length&&!this.rows(this.anchor()).length){
+        const current=this.anchor();
+        for(let offset=1;offset<7;offset++){const date=new Date(current.getFullYear(),current.getMonth(),current.getDate()+offset);if(this.rows(date).length){this.anchor.set(date);break;}}
+      }
     },error:e=>{this.loading.set(false);this.fail(e,'Haftalık taslak yüklenemedi. Yeniden deneyebilirsin.');}});
   }
   save(){
