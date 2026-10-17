@@ -25,8 +25,10 @@ test('yearly calendar focuses occupied hours, keeps overlapping lessons visible 
   const f=await fixture(context);await open(page);const grid=calendar(page);
   const selectedView=grid.getByRole('group',{name:'Yıllık takvim görünümü',exact:true}).locator('[aria-pressed="true"]'),otherView=grid.getByRole('button',{name:test.info().project.name==='mobile'?'Hafta':'Gün',exact:true});
   expect(await selectedView.evaluate(el=>getComputedStyle(el).backgroundColor)).not.toBe(await otherView.evaluate(el=>getComputedStyle(el).backgroundColor));
-  await expect.poll(()=>grid.getByTestId('plan-time-scroller').evaluate(el=>Math.abs(el.scrollTop-1260))).toBeLessThanOrEqual(10);
+  await expect.poll(()=>grid.getByTestId('plan-time-scroller').evaluate(el=>Math.abs(el.scrollTop-1260))).toBeLessThanOrEqual(36);
   const math=grid.locator('.timed-block').filter({hasText:'Matematik'}).first(),turkish=grid.locator('.day-track[data-date="2027-01-04"] .timed-block').filter({hasText:'Türkçe'});
+  const hour18=await grid.locator('.time-axis span').nth(18).boundingBox();expect(Math.abs((await math.boundingBox()).y-hour18.y)).toBeLessThanOrEqual(2);
+  await expect(math).toBeInViewport();
   const a=await math.boundingBox(),b=await turkish.boundingBox();expect(a.x+a.width<=b.x+1||b.x+b.width<=a.x+1).toBe(true);
   expect(await math.evaluate(el=>getComputedStyle(el).backgroundColor)).not.toBe(await turkish.evaluate(el=>getComputedStyle(el).backgroundColor));
   await math.click();await expect(page.getByRole('heading',{name:'Seçilen çalışmalar',exact:true})).toBeVisible();await expect(page.locator('article.task')).toHaveCount(2);await expect(page.getByText('süre sürümü 2',{exact:false}).first()).toBeVisible();

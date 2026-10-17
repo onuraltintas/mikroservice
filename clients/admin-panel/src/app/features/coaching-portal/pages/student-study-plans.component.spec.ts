@@ -47,6 +47,11 @@ describe('StudentStudyPlansComponent', () => {
     component.complete(generated.tasks[0],25,0);fixture.detectChanges();expect(component.planView()).toBe('calendar');expect(component.actualMinutes['second']).toBe(17);expect(component.actualQuestions['second']).toBe(0);expect(component.selectedTaskIds()).toEqual(['task','second']);
     expect(service.complete).toHaveBeenCalledWith('plan','task',4,25,0);expect(component.selected()?.tasks[0].isCompleted).toBe(true);expect(service.replace).not.toHaveBeenCalled();
   });
+  it('focuses the details again when another calendar card is selected',async()=>{
+    const{component,fixture}=setup();component.planView.set('calendar');component.selectCalendarTasks(['task']);fixture.detectChanges();await fixture.whenStable();
+    const detail=fixture.nativeElement.querySelector('.calendar-task-detail') as HTMLElement;expect(document.activeElement).toBe(detail);detail.blur();
+    component.selectCalendarTasks(['task']);fixture.detectChanges();await fixture.whenStable();expect(document.activeElement).toBe(detail);
+  });
   it('shows generated weekly drafts with their times and publish controls without a manual editor',()=>{
     const{component,service,fixture}=setup();service.get.mockReturnValue(of({...active,status:'Draft',weeklySource:{startDate:'2027-05-24',endDate:'2027-06-01'},tasks:[{...active.tasks[0],plannedStartMinute:1080,lessonName:'Matematik'}]} as any));
     component.open('plan');fixture.detectChanges();expect(component.editing).toBe(false);expect(fixture.nativeElement.textContent).toContain('18:00');expect(fixture.nativeElement.textContent).toContain('Planı yayımla');expect(fixture.nativeElement.querySelector('input[name="planTitle"]')).toBeNull();
