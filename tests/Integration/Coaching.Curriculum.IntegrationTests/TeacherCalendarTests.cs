@@ -34,6 +34,9 @@ public sealed class TeacherCalendarTests
         var result=Assert.IsType<OkObjectResult>(await api.Overview(new(2027,1,4),new(2027,1,6),1,25,null,default));
         var data=Assert.IsType<TeacherStudyOverview>(result.Value);var row=Assert.Single(data.Items);
         Assert.Equal(student,row.StudentId);Assert.Equal(1,row.CompletedTasks);Assert.Equal(3,row.PendingTasks);Assert.Equal(2,row.OverdueTasks);Assert.Equal(12,row.ActualMinutes);
+        Assert.Equal(4,row.Tasks!.Count);Assert.Equal(2,row.Tasks.Count(t=>t.IsOverdue));Assert.Contains(row.Tasks,t=>t.TaskId==done.Id&&t.ActualMinutes==12);
+        Assert.IsType<BadRequestObjectResult>(await api.Overview(new(2027,2,4),new(2027,1,6),1,25,null,default));
+        Assert.IsType<BadRequestObjectResult>(await api.Overview(new(2027,1,4),new(2027,1,6),0,25,null,default));
         var current=(await plans.GetForStudentAsync(student,original.Id))!;
         var corrected=await plans.CorrectTitleForStudentAsync(student,original.Id,past.Id,current.Version,"Düzeltilen başlık");
         Assert.Equal("Düzeltilen başlık",corrected.Tasks.Single(t=>t.Id==past.Id).Title);
@@ -57,7 +60,7 @@ public sealed class TeacherCalendarTests
     private sealed class Accounts(Guid teacher,Guid student):ICoachingAccountDirectory
     {
         public Task<IReadOnlyList<CoachingAccount>> GetAccountsAsync(IReadOnlyCollection<Guid> ids,CancellationToken ct)=>Task.FromResult<IReadOnlyList<CoachingAccount>>(
-            ids.Select(id=>new CoachingAccount(id,id==teacher?"Koç":"Öğrenci","Test","test@example.test",true,true,[id==teacher?"Teacher":"Student"],null)).ToArray());
+            ids.Select(id=>new CoachingAccount(id,id==teacher?"Koç":id==student?"Öğrenci":"Yabancı","Test","test@example.test",true,true,[id==teacher?"Teacher":"Student"],null)).ToArray());
         public Task<CoachingAccount?> FindByEmailAsync(string email,CancellationToken ct)=>throw new NotSupportedException();
         public Task<CoachingAdminAccessScope?> AuthorizeAdminAsync(Guid id,CancellationToken ct)=>throw new NotSupportedException();
         public Task<bool> IsActiveInstitutionAsync(Guid id,CancellationToken ct)=>Task.FromResult(true);
