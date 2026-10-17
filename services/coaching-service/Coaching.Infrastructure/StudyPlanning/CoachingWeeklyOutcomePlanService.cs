@@ -39,7 +39,8 @@ public sealed class CoachingWeeklyOutcomePlanService(CoachingDbContext db,ICoach
             where Enumerable.Contains(lessonIds,t.LessonId)&&t.IsActive&&u.IsActive&&u.LessonId==t.LessonId
                 &&!db.StudyCatalogTopics.Any(c=>c.ParentId==t.Id)
                 &&(t.ParentId==null||db.StudyCatalogTopics.Any(p=>p.Id==t.ParentId&&p.IsActive))
-            orderby u.DisplayOrder,t.DisplayOrder,t.Id select new {Topic=t,UnitOrder=u.DisplayOrder}).ToArrayAsync(ct);
+            orderby u.DisplayOrder,t.ParentId==null?t.DisplayOrder:db.StudyCatalogTopics.Where(p=>p.Id==t.ParentId).Select(p=>p.DisplayOrder).First(),t.DisplayOrder,t.Id
+            select new {Topic=t,UnitOrder=u.DisplayOrder}).ToArrayAsync(ct);
         var topicIds=topics.Select(x=>x.Topic.Id).ToArray();
         var rows=await (from m in db.Set<StudyCatalogTopicOutcome>().AsNoTracking()
             join t in db.StudyCatalogTopics on m.TopicId equals t.Id
