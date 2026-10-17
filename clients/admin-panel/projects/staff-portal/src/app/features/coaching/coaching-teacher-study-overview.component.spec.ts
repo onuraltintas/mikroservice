@@ -4,6 +4,16 @@ import {provideHttpClientTesting,HttpTestingController} from '@angular/common/ht
 import {CoachingTeacherStudyOverviewComponent} from './coaching-teacher-study-overview.component';
 
 describe('teacher study overview',()=>{
+  it('validates dates, preserves a dirty plan on back, and refreshes after leaving',async()=>{
+    TestBed.configureTestingModule({imports:[CoachingTeacherStudyOverviewComponent],providers:[provideHttpClient(),provideHttpClientTesting()]});
+    const f=TestBed.createComponent(CoachingTeacherStudyOverviewComponent),http=TestBed.inject(HttpTestingController);f.detectChanges();
+    const data={items:[{studentId:'s',fullName:'Öğrenci Test',hasActivePlan:false,hasDraft:false,completedTasks:0,pendingTasks:0,overdueTasks:0,actualMinutes:0}],totalCount:1,pageNumber:1,pageSize:25};
+    http.expectOne(r=>r.url.endsWith('/study-overview')).flush(data);f.detectChanges();
+    const c=f.componentInstance;c.open(data.items[0],'overdue');f.detectChanges();http.expectOne(r=>r.url.includes('/study/plans')).flush({data:{items:[],totalCount:0,pageNumber:1,pageSize:20}});http.expectOne(r=>r.params.get('status')==='Active').flush({data:{items:[],totalCount:0,pageNumber:1,pageSize:20}});f.detectChanges();
+    (f.nativeElement.querySelector('app-student-study-plans .page-heading button') as HTMLButtonElement).click();f.detectChanges();
+    const confirm=vi.spyOn(window,'confirm').mockReturnValue(false);c.back();expect(c.detail()).not.toBeNull();confirm.mockReturnValue(true);c.back();expect(c.detail()).toBeNull();
+    http.expectOne(r=>r.url.endsWith('/study-overview')).flush(data);confirm.mockRestore();c.fromDate='2030-01-02';c.toDate='2030-01-01';c.load();expect(c.error()).toContain('tarih');http.verify();
+  });
   it('shows scoped bulk totals, exposes student plan management and recovers on retry',async()=>{
     TestBed.configureTestingModule({imports:[CoachingTeacherStudyOverviewComponent],providers:[provideHttpClient(),provideHttpClientTesting()]});
     const f=TestBed.createComponent(CoachingTeacherStudyOverviewComponent),http=TestBed.inject(HttpTestingController);f.detectChanges();
