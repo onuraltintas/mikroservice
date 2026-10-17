@@ -42,7 +42,7 @@ public sealed record CoachingDataExamDto(
 
 public sealed record CoachingDataStudyPlanDto(Guid Id, Guid PlanId, int RevisionNumber, int Version, string Title,
     string Status, int? AutomaticAvailabilityVersion, Guid? AutomaticSourceRevisionId, int? AutomaticSourceRevisionVersion,
-    IReadOnlyList<Coaching.Application.StudyPlanning.ManualStudyTaskView> Tasks);
+    IReadOnlyList<Coaching.Application.StudyPlanning.ManualStudyTaskView> Tasks,Coaching.Domain.Entities.WeeklyPlanSource? WeeklySource=null);
 
 public sealed record CoachingDataGoalDto(
     Guid GoalId, string Title, string? Description, string Category, int CurrentProgress,

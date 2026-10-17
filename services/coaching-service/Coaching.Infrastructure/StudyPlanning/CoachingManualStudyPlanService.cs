@@ -236,11 +236,11 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
     private async Task<ManualStudyPlanView> ViewAsync(StudyPlanRevision revision, CancellationToken cancellationToken)
     {
         var tasks = await db.StudyPlanTasks.AsNoTracking().Where(x => x.RevisionId == revision.Id && x.StudentId == revision.StudentId)
-            .OrderBy(x => x.PlannedDate).ThenBy(x => x.Id)
-            .Select(x => new ManualStudyTaskView(x.Id, x.PlannedDate, x.Title, x.PlannedMinutes, x.TopicId, x.IsPinned, x.IsCompleted, x.ActualMinutes, x.CompletedAt, x.SourceName, x.PlannedQuestions, x.ActualQuestions))
+            .OrderBy(x => x.PlannedDate).ThenBy(x=>x.PlannedStartMinute).ThenBy(x => x.Id)
+            .Select(x => new ManualStudyTaskView(x.Id, x.PlannedDate, x.Title, x.PlannedMinutes, x.TopicId, x.IsPinned, x.IsCompleted, x.ActualMinutes, x.CompletedAt, x.SourceName, x.PlannedQuestions, x.ActualQuestions,null,x.PlannedStartMinute,x.WeeklyLessonId,x.LessonNameSnapshot))
             .ToListAsync(cancellationToken);
         var outcomes = await StudyPlanOutcomeReader.ReadAsync(db, tasks.Select(x => x.Id).ToArray(), cancellationToken);
-        return new(revision.Id, revision.Version, revision.Title, revision.Status, tasks.Select(x => x with { Outcomes = outcomes[x.Id].ToArray() }).ToArray());
+        return new(revision.Id, revision.Version, revision.Title, revision.Status, tasks.Select(x => x with { Outcomes = outcomes[x.Id].ToArray() }).ToArray(),revision.WeeklySource);
     }
 
     private async Task<T> LockedAsync<T>(Func<Guid, Task<T>> action, CancellationToken cancellationToken,

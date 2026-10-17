@@ -97,7 +97,7 @@ public sealed class CoachingDataExportRepository(CoachingDbContext context)
         var plans = planRows.Select(x => new CoachingDataStudyPlanDto(x.Id, x.PlanId, x.RevisionNumber, x.Version,
             x.Title, x.Status.ToString(), x.AutomaticAvailabilityVersion, x.AutomaticSourceRevisionId, x.AutomaticSourceRevisionVersion,
             taskRows.Where(t => t.RevisionId == x.Id).Select(t => new Coaching.Application.StudyPlanning.ManualStudyTaskView(
-                t.Id, t.PlannedDate, t.Title, t.PlannedMinutes, t.TopicId, t.IsPinned, t.IsCompleted, t.ActualMinutes, t.CompletedAt, t.SourceName, t.PlannedQuestions, t.ActualQuestions, outcomeRows[t.Id].ToArray())).ToArray())).ToArray();
+                t.Id, t.PlannedDate, t.Title, t.PlannedMinutes, t.TopicId, t.IsPinned, t.IsCompleted, t.ActualMinutes, t.CompletedAt, t.SourceName, t.PlannedQuestions, t.ActualQuestions, outcomeRows[t.Id].ToArray(),t.PlannedStartMinute,t.WeeklyLessonId,t.LessonNameSnapshot)).ToArray(),x.WeeklySource)).ToArray();
         var hours = await context.StudyAvailability.AsNoTracking().SingleOrDefaultAsync(x => x.StudentId == studentId, cancellationToken);
         var availability = hours is null ? null : new Coaching.Application.StudyPlanning.StudyAvailabilityView(hours.Version, hours.TimeZoneId,
             hours.Windows.Select(x => new Coaching.Application.StudyPlanning.StudyWindowInput(x.Day, x.StartMinute, x.EndMinute)).ToArray());
