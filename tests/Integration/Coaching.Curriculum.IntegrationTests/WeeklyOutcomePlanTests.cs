@@ -95,6 +95,8 @@ public sealed class WeeklyOutcomePlanTests
         Assert.Equal(before,JsonSerializer.Serialize(await f.Db.StudyPlanTasks.AsNoTracking().Where(x=>x.IsCompleted).ToArrayAsync()));
         var copied=Assert.Single(published.Tasks.Where(x=>x.IsPinned));Assert.False(copied.IsCompleted);Assert.Equal(1080,copied.PlannedStartMinute);
         Assert.Equal(StudyPlanStatus.Archived,(await f.Db.StudyPlanRevisions.AsNoTracking().SingleAsync(x=>x.Id==old.Id)).Status);
+        var later=published.Tasks.First(x=>!x.IsPinned&&x.PlannedDate>Input.StartDate);
+        await Assert.ThrowsAsync<BusinessRuleException>(()=>manual.RescheduleTaskAsync(created.Id,later.Id,published.Version,Input.StartDate));
     }
     [Fact]
     public async Task PinnedOutcomeMinutesAreNotPlannedTwice()

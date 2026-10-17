@@ -40,7 +40,7 @@ public sealed class CoachingOwnedProfilePostgresTests
             var student = Guid.NewGuid(); var teacher = Guid.NewGuid();
             var revision = StudyPlanRevision.Create(student, Guid.NewGuid(), 1, "Existing work"); revision.Activate();
             var task = StudyPlanTask.Create(revision, new(2026, 10, 16), "Completed", 30, plannedQuestions: 10);
-            task.Complete(25, 8); db.AddRange(revision, task); await db.SaveChangesAsync(); db.ChangeTracker.Clear();
+            task.Complete(25, 8); await CoachingLegacyPlanSeed.InsertAsync(db,revision,task); db.ChangeTracker.Clear();
             await db.Database.MigrateAsync();
             var identitySourceBuilder = new NpgsqlDataSourceBuilder(connection.ConnectionString);
             identitySourceBuilder.EnableDynamicJson();

@@ -24,7 +24,7 @@ public sealed class CoachingWeeklyOutcomePlanService(CoachingDbContext db,ICoach
     }
     public async Task<WeeklyOutcomePlanPreview> PreviewAsync(WeeklyOutcomePlanRequest request,CancellationToken ct)=>(await Prepare(request,Student(),ct)).Preview;
 
-    private sealed record Prepared(WeeklyOutcomePlanPreview Preview,WeeklyPlanSource Source,StudyPlanTask[] Protected);
+    private sealed record Prepared(WeeklyOutcomePlanPreview Preview,WeeklyPlanSource Source,StudyPlanTask[] Protected,StudyPlanTaskOutcome[] PinnedLinks);
     private async Task<Prepared> Prepare(WeeklyOutcomePlanRequest request,Guid student,CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(request);
@@ -96,7 +96,7 @@ public sealed class CoachingWeeklyOutcomePlanService(CoachingDbContext db,ICoach
             Protected=protectedTasks.Select(x=>new{x.Id,x.Version,x.PlannedDate,x.PlannedStartMinute,x.PlannedMinutes,x.IsCompleted,x.IsPinned})})));
         var canCreate=issues.Count==0&&schedule.Tasks.Count+pending.Count>0&&schedule.Lessons.All(x=>x.RemainingMinutes==0)&&schedule.Tasks.Count+pending.Count<=10000;
         return new(new(request,draft.TimeZoneId,fingerprint,schedule,issues,canCreate,pending.Count,pending.Values.OrderBy(x=>x.PlannedDate).ThenBy(x=>x.PlannedStartMinute).ThenBy(x=>x.Id).Select(x=>new WeeklyProtectedTask(x.PlannedDate,x.PlannedStartMinute,x.Title,x.PlannedMinutes)).ToArray()),
-            new(draft.Version,context?.Version,request.StartDate,request.EndDate,request.ReuseFreedSlots,fingerprint,active?.Id,active?.Version,draft.TimeZoneId),protectedTasks);
+            new(draft.Version,context?.Version,request.StartDate,request.EndDate,request.ReuseFreedSlots,fingerprint,active?.Id,active?.Version,draft.TimeZoneId),protectedTasks,pinnedLinks);
     }
 
     public Task<WeeklyOutcomePlanCreated> CreateAsync(WeeklyOutcomePlanSave request,CancellationToken ct)
@@ -124,8 +124,7 @@ public sealed class CoachingWeeklyOutcomePlanService(CoachingDbContext db,ICoach
                 var copy=StudyPlanTask.Create(revision,prior.PlannedDate,prior.Title,prior.PlannedMinutes,prior.TopicId,true,prior.SourceName,prior.PlannedQuestions);
                 if(prior.PlannedStartMinute.HasValue)copy.SetWeeklyPlacement(prior.WeeklyLessonId!.Value,prior.LessonNameSnapshot!,prior.PlannedStartMinute.Value);
                 tasks.Add(copy);
-                var oldLinks=await db.Set<StudyPlanTaskOutcome>().AsNoTracking().Where(x=>x.TaskId==prior.Id).ToArrayAsync(ct);
-                foreach(var old in oldLinks){var link=StudyPlanTaskOutcome.Create(copy.Id,old.OutcomeId,old.EstimateId,old.AllocatedMinutes,old.Origin);if(old.CodeSnapshot is not null&&old.NameSnapshot is not null)link.CaptureText(old.CodeSnapshot,old.NameSnapshot);links.Add(link);}
+                foreach(var old in prepared.PinnedLinks.Where(x=>x.TaskId==prior.Id)){var link=StudyPlanTaskOutcome.Create(copy.Id,old.OutcomeId,old.EstimateId,old.AllocatedMinutes,old.Origin);if(old.CodeSnapshot is not null&&old.NameSnapshot is not null)link.CaptureText(old.CodeSnapshot,old.NameSnapshot);links.Add(link);}
             }
             db.Add(revision);db.AddRange(tasks);db.AddRange(links);await db.SaveChangesAsync(ct);return new(revision.Id,revision.Version);
         }

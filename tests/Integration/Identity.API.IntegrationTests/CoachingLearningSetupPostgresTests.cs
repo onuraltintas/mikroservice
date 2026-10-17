@@ -33,7 +33,7 @@ public sealed class CoachingLearningSetupPostgresTests
             var plan = StudyPlanRevision.Create(student, Guid.NewGuid(), 1, "Mevcut plan"); plan.Activate();
             var task = StudyPlanTask.Create(plan, new(2026, 10, 19), "Tamamlandı", 30); task.Complete(25);
             // The pre-upgrade catalog has no curriculum column yet.
-            db.AddRange(profile, plan, task); await db.SaveChangesAsync(); db.ChangeTracker.Clear();
+            db.Add(profile); await db.SaveChangesAsync(); await CoachingLegacyPlanSeed.InsertAsync(db,plan,task); db.ChangeTracker.Clear();
             await db.Database.MigrateAsync();
             var curriculum = CurriculumVersion.Create("test-2026", "Test", "v1", 2026, 2026, "Test", null); curriculum.SetPublished(true);
             var lesson = StudyCatalogLesson.Create("test", "math", "Matematik", 12, null); lesson.AssignCurriculum(curriculum.Id); lesson.SetActive(true);
