@@ -48,6 +48,10 @@ describe('annual calendar movement',()=>{
     c.beginMove(e(0,5),block);c.endMove(e(0,5));expect(emit).toHaveBeenCalledTimes(1);
     c.changeView('month');f.detectChanges();const day=f.nativeElement.querySelector('.month-day[data-date="2027-01-06"]');vi.mocked(document.elementFromPoint).mockReturnValue(day);
     c.beginMove(e(0,5),block);c.movePointer(e(50,60));c.endMove(e(50,60));expect(emit).toHaveBeenLastCalledWith({taskIds:['a','b'],plannedDate:'2027-01-06',startMinute:1080});
+    // A release can disable the dragged card before its synthetic click arrives.
+    // The next real press on a locked completed card must still open its details.
+    const completed={...block,tasks:block.tasks.map(t=>({...t,isCompleted:true}))};
+    c.beginMove(e(0,5),completed);c.select(completed);expect(select).toHaveBeenCalledTimes(2);
   });
   it('rejects invalid dates and excessive daily totals without assigning hours to legacy work',()=>{
     const b=calendarBlocks([task('a',1080)])[0];
