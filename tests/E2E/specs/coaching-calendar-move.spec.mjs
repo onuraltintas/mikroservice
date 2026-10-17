@@ -27,6 +27,7 @@ async function fixture(browser,empty=false){
   return{context,writes,get:()=>plan,close:async()=>{for(const c of contexts)await c.close();}};
 }
 async function dragTo(page,card,date,minute){
+  await card.scrollIntoViewIfNeeded();
   const box=await card.boundingBox(),track=await calendar(page).locator(`.day-track[data-date="${date}"]`).boundingBox();
   const offset=5;await page.mouse.move(box.x+box.width/2,box.y+offset);await page.mouse.down();await page.mouse.move(track.x+track.width/2,track.y+minute+offset,{steps:12});await page.mouse.up();
 }
