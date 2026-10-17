@@ -36,7 +36,13 @@ public sealed class CoachingTeacherAssignmentFollowUpController(CoachingDbContex
    var now=(clock??TimeProvider.System).GetUtcNow().UtcDateTime;
    var pendingCount=await waiting.CountAsync(ct);var overdueCount=await waiting.CountAsync(s=>s.Assignment.DueDate<now,ct);
    if(mode=="overdue")waiting=waiting.Where(s=>s.Assignment.DueDate<now);
-   if(!string.IsNullOrWhiteSpace(search)){var term=search.Trim().ToLowerInvariant();waiting=waiting.Where(s=>s.Assignment.Title.ToLower().Contains(term));}
+   if(!string.IsNullOrWhiteSpace(search))
+   {
+    var term=search.Trim().ToLowerInvariant().Replace('İ','i').Replace('ı','i');
+    // Keep Turkish title search consistent even in databases using the C collation.
+    waiting=waiting.Where(s=>s.Assignment.Title.Replace("İ","I").ToLower().Replace("ı","i")
+        .Replace("Ş","ş").Replace("Ğ","ğ").Replace("Ü","ü").Replace("Ö","ö").Replace("Ç","ç").Contains(term));
+   }
    var total=await waiting.CountAsync(ct);
    var rows=await waiting.OrderBy(s=>s.Assignment.DueDate).ThenBy(s=>s.AssignmentId).ThenBy(s=>s.StudentId)
        .Skip((pageNumber-1)*pageSize).Take(pageSize)
