@@ -9,13 +9,13 @@ describe('saved study plan calendar',()=>{
   beforeEach(()=>{vi.useFakeTimers({toFake:['Date']});vi.setSystemTime(new Date('2026-10-17T12:00:00Z'));});
   afterEach(()=>vi.useRealTimers());
   it('opens the next occupied week and its evening hours, merges adjacent outcome pieces and emits their IDs',async()=>{
-    const {f,c}=await setup();expect(c.dateKey(c.anchor())).toBe('2027-01-04');expect(f.nativeElement.querySelector('.time-scroller').scrollTop).toBe(1260);
+    const {f,c}=await setup();expect(c.dateKey(c.anchor())).toBe('2027-01-04');expect(f.nativeElement.querySelector('.time-scroller').scrollTop).toBe(1050);
     expect(f.nativeElement.querySelectorAll('.timed-block')).toHaveLength(1);const emit=vi.spyOn(c.taskSelected,'emit');
     (f.nativeElement.querySelector('.timed-block') as HTMLButtonElement).click();expect(emit).toHaveBeenCalledWith(['a','b']);expect(plan.version).toBe(0);expect(plan.tasks[0].isCompleted).toBe(false);
   });
   it('shows exact month dates rather than repeating a weekly template and opens a selected day',async()=>{
     const {f,c}=await setup();c.changeView('month');f.detectChanges();await f.whenStable();expect(f.nativeElement.querySelectorAll('.month-block')).toHaveLength(1);
-    c.openDay(new Date(2027,2,8));f.detectChanges();await f.whenStable();expect(c.view()).toBe('day');expect(f.nativeElement.querySelector('.time-scroller').scrollTop).toBe(1404);
+    c.openDay(new Date(2027,2,8));f.detectChanges();await f.whenStable();expect(c.view()).toBe('day');expect(f.nativeElement.querySelector('.time-scroller').scrollTop).toBe(1170);
     expect(f.nativeElement.textContent).toContain('20:00');expect(f.nativeElement.querySelectorAll('.timed-block')).toHaveLength(1);
   });
   it('skips empty dates with occupied-day navigation while Today and a chosen empty date stay explicit',async()=>{
@@ -31,7 +31,7 @@ describe('saved study plan calendar',()=>{
   it('preserves position after completing work in the same plan but refocuses when switching plans',async()=>{
     const {f,c}=await setup();const scroller=f.nativeElement.querySelector('.time-scroller');scroller.scrollTop=900;c.goToDate('2027-01-05');f.detectChanges();await f.whenStable();scroller.scrollTop=950;
     f.componentRef.setInput('plan',{...plan,version:1,tasks:plan.tasks.map(t=>({...t,isCompleted:true,actualMinutes:20}))});f.detectChanges();await f.whenStable();expect(c.dateKey(c.anchor())).toBe('2027-01-05');expect(scroller.scrollTop).toBe(950);
-    f.componentRef.setInput('plan',{...plan,id:'second',tasks:[task('new','2027-05-03',600)]});f.detectChanges();await f.whenStable();expect(c.dateKey(c.anchor())).toBe('2027-05-03');expect(f.nativeElement.querySelector('.time-scroller').scrollTop).toBe(684);
+    f.componentRef.setInput('plan',{...plan,id:'second',tasks:[task('new','2027-05-03',600)]});f.detectChanges();await f.whenStable();expect(c.dateKey(c.anchor())).toBe('2027-05-03');expect(f.nativeElement.querySelector('.time-scroller').scrollTop).toBe(570);
   });
   it('supports mobile day view, empty plans, disabled controls and bounded month navigation',async()=>{
     const width=vi.spyOn(window,'innerWidth','get').mockReturnValue(390);

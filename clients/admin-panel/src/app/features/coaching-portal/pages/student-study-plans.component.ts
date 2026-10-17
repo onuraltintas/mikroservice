@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, ElementRef, HostListener, Input, OnChanges, OnInit, ViewChild, inject, signal } from '@angular/core';
+import { Component, DestroyRef, ElementRef, HostListener, Injector, Input, OnChanges, OnInit, ViewChild, afterNextRender, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -18,8 +18,9 @@ import {StudyPlanCalendarComponent} from './study-plan-calendar.component';
 export class StudentStudyPlansComponent implements OnInit, OnChanges {
   readonly clock=clock;taskPage=1;
   readonly planView=signal<'calendar'|'list'>('list');readonly selectedTaskIds=signal<string[]>([]);
-  @ViewChild('calendarTaskDetail') set calendarTaskDetail(value:ElementRef<HTMLElement>|undefined){value?.nativeElement.focus();}
-  selectCalendarTasks(ids:string[]){this.selectedTaskIds.set(ids);}
+  private readonly injector=inject(Injector);
+  @ViewChild('calendarTaskDetail') private calendarTaskDetail?:ElementRef<HTMLElement>;
+  selectCalendarTasks(ids:string[]){this.selectedTaskIds.set(ids);afterNextRender(()=>this.calendarTaskDetail?.nativeElement.focus(),{injector:this.injector});}
   visibleTasks(){const plan=this.selected();if(this.planView()==='calendar')return plan?.tasks.filter(t=>this.selectedTaskIds().includes(t.id))??[];return plan?.weeklySource?plan.tasks.slice((this.taskPage-1)*50,this.taskPage*50):plan?.tasks??[];}
   @Input() staffStudentId: string | null = null;
   @Input() readOnly = false;

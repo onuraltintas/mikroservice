@@ -27,7 +27,7 @@
     @if(hasTimed()){
       <div class="time-scroller" #scroller data-testid="plan-time-scroller" tabindex="0" aria-label="Planın saatli çalışmaları">
         <div class="day-headers" [style.grid-template-columns]="columns()"><span>Saat</span>@for(day of days();track dateKey(day)){<button type="button" class="secondary" (click)="openDay(day)" [disabled]="disabled">{{ shortDay(day) }}</button>}</div>
-        <div class="time-body" [style.grid-template-columns]="columns()"><div class="time-axis">@for(hour of hours;track hour){<span [style.top.px]="hour*72">{{ clock(hour*60) }}</span>}</div>
+        <div class="time-body" [style.grid-template-columns]="columns()"><div class="time-axis">@for(hour of hours;track hour){<span [style.top.px]="hour*60">{{ clock(hour*60) }}</span>}</div>
           @for(day of days();track dateKey(day)){<div class="day-track" [attr.data-date]="dateKey(day)">
             @for(block of timed(day);track block.id){<button type="button" [class]="'secondary timed-block color-'+color(block)" [class.completed]="done(block)===block.tasks.length" [class.short]="block.minutes<30" [style.grid-row]="((block.startMinute??0)+1)+' / '+((block.startMinute??0)+block.minutes+1)" [attr.aria-label]="label(block)" [title]="label(block)" (click)="select(block)" [disabled]="disabled"><strong>{{ block.lesson }}</strong><span>{{ range(block) }}</span>@if(block.tasks.length>1){<span>{{ block.tasks.length }} çalışma</span>}@if(done(block)){<span>{{ done(block) }}/{{ block.tasks.length }} tamamlandı</span>}</button>}
           </div>}

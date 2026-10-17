@@ -25,7 +25,9 @@ test('yearly calendar focuses occupied hours, keeps overlapping lessons visible 
   const f=await fixture(context);await open(page);const grid=calendar(page);
   const selectedView=grid.getByRole('group',{name:'Yıllık takvim görünümü',exact:true}).locator('[aria-pressed="true"]'),otherView=grid.getByRole('button',{name:test.info().project.name==='mobile'?'Hafta':'Gün',exact:true});
   expect(await selectedView.evaluate(el=>getComputedStyle(el).backgroundColor)).not.toBe(await otherView.evaluate(el=>getComputedStyle(el).backgroundColor));
-  await expect.poll(()=>grid.getByTestId('plan-time-scroller').evaluate(el=>Math.abs(el.scrollTop-1260))).toBeLessThanOrEqual(36);
+  await expect.poll(()=>grid.getByTestId('plan-time-scroller').evaluate(el=>{
+    const target=Math.min(1050,el.scrollHeight-el.clientHeight);return Math.abs(el.scrollTop-target);
+  })).toBeLessThanOrEqual(1);
   const math=grid.locator('.timed-block').filter({hasText:'Matematik'}).first(),turkish=grid.locator('.day-track[data-date="2027-01-04"] .timed-block').filter({hasText:'Türkçe'});
   const hour18=await grid.locator('.time-axis span').nth(18).boundingBox();expect(Math.abs((await math.boundingBox()).y-hour18.y)).toBeLessThanOrEqual(2);
   await expect(math).toBeInViewport();
@@ -41,7 +43,7 @@ test('month and day navigate real occupied dates and never repeat the weekly tem
   expect(await grid.locator('.month-date').first().evaluate(el=>parseFloat(getComputedStyle(el).minHeight))).toBeLessThan(30);
   await grid.getByLabel('Tarihe git',{exact:true}).fill('2027-03-08');await expect(grid.locator('.month-block')).toHaveCount(1);await grid.getByRole('button',{name:'Sonraki dönem',exact:true}).click();await expect(grid.locator('.month-block')).toHaveCount(0);await expect(grid.getByRole('status')).toContainText('Bu aralıkta çalışma yok');
   await grid.getByLabel('Tarihe git',{exact:true}).fill('2027-03-08');await grid.getByRole('button',{name:'8 Mart 2027 Pazartesi gününü aç',exact:true}).click();await expect(grid.getByRole('button',{name:'Gün',exact:true})).toHaveAttribute('aria-pressed','true');
-  await expect.poll(()=>grid.getByTestId('plan-time-scroller').evaluate(el=>Math.abs(el.scrollTop-648))).toBeLessThanOrEqual(10);await expect(grid.locator('.timed-block')).toHaveCount(1);
+  await expect.poll(()=>grid.getByTestId('plan-time-scroller').evaluate(el=>Math.abs(el.scrollTop-540))).toBeLessThanOrEqual(10);await expect(grid.locator('.timed-block')).toHaveCount(1);
   await grid.getByRole('button',{name:'Sonraki dolu gün',exact:true}).click();await expect(grid.getByLabel('Tarihe git',{exact:true})).toHaveValue('2027-06-01');
   await grid.getByRole('button',{name:'Ay',exact:true}).click();await grid.getByRole('heading').click();await page.screenshot({path:`../../artifacts/yearly-calendar-month-${test.info().project.name}.png`,fullPage:false});
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);expect(f.writes).toHaveLength(0);

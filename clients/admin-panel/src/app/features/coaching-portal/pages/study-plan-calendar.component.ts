@@ -10,7 +10,7 @@ export class StudyPlanCalendarComponent implements OnChanges {
   @Input({required:true}) plan!:StudyPlan;
   @Input() disabled=false;
   @Output() taskSelected=new EventEmitter<string[]>();
-  private readonly injector=inject(Injector);private currentId:string|null=null;private scrollerElement?:HTMLElement;
+  private readonly injector=inject(Injector);private readonly host=inject<ElementRef<HTMLElement>>(ElementRef);private currentId:string|null=null;private scrollerElement?:HTMLElement;private focusPage=false;
   private blocks:PlanCalendarBlock[]=[];private byDate=new Map<string,PlanCalendarBlock[]>();
   readonly view=signal<CalendarView>(typeof window!=='undefined'&&window.innerWidth<680?'day':'week');readonly anchor=signal(new Date());
   readonly days=computed(()=>calendarDays(this.anchor(),this.view()));readonly clock=clock;readonly dateKey=dateKey;
@@ -22,7 +22,7 @@ export class StudyPlanCalendarComponent implements OnChanges {
     if(!changes['plan'])return;
     this.blocks=calendarBlocks(this.plan.tasks);this.byDate=new Map();
     for(const block of this.blocks){const list=this.byDate.get(block.date)??[];list.push(block);this.byDate.set(block.date,list);}
-    if(this.currentId!==this.plan.id){this.currentId=this.plan.id;this.focusWork();}
+    if(this.currentId!==this.plan.id){this.currentId=this.plan.id;this.focusPage=true;this.focusWork();}
   }
   rows(day:Date){return this.byDate.get(dateKey(day))??[];}
   timed(day:Date){return this.rows(day).filter(b=>b.startMinute!==null);}
@@ -55,6 +55,7 @@ export class StudyPlanCalendarComponent implements OnChanges {
   showDay(){this.taskSelected.emit(this.rows(this.anchor()).flatMap(b=>b.tasks.map(t=>t.id)));}
   private focusHours(){afterNextRender(()=>{
     const starts=this.days().flatMap(d=>this.timed(d).map(b=>b.startMinute!));
-    if(this.scrollerElement)this.scrollerElement.scrollTop=(starts.length?Math.max(0,Math.min(...starts)-30):480)*1.2;
+    if(this.scrollerElement)this.scrollerElement.scrollTop=starts.length?Math.max(0,Math.min(...starts)-30):480;
+    if(this.focusPage){this.focusPage=false;this.host.nativeElement.scrollIntoView?.({block:'start'});}
   },{injector:this.injector});}
 }
