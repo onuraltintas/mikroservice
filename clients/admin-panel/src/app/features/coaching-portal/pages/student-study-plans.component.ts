@@ -7,6 +7,7 @@ import { Observable, Subject, finalize, takeUntil } from 'rxjs';
 import { CoachingStudyPlanningService, StudyPlan, StudyPlanPage, StudyPlanStatus, StudyTask, StudyTaskInput } from '../../../core/services/coaching-study-planning.service';
 import {clock} from './weekly-calendar';
 import {StudyPlanCalendarComponent} from './study-plan-calendar.component';
+import {CalendarMove} from './study-plan-calendar';
 
 @Component({
   selector: 'app-student-study-plans',
@@ -48,6 +49,9 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
   publishConfirmed = false;
   actualMinutes: Record<string, number> = {};
   actualQuestions: Record<string, number | null> = {};
+  moveCalendar(move:CalendarMove){const plan=this.selected();if(!plan||this.readOnly||this.busy()||plan.status==='Archived')return;
+    this.mutate(this.service.move(plan.id,plan.version,move.taskIds,move.plannedDate,move.startMinute,...this.studentArgument),'Dersin günü ve saati güncellendi. Kazanımlar korundu.');}
+  setDraftTime(task:StudyTaskInput,value:string){task.plannedStartMinute=value?Number(value.slice(0,2))*60+Number(value.slice(3)):null;this.dirty=true;}
   targetDates: Record<string, string> = {};
 
   ngOnInit() { this.initialized = true; this.loadList(); }
@@ -146,6 +150,7 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
     if (!this.editTitle.trim() || this.editTitle.length > 200 || this.editTasks.some(task =>
       !task.title.trim() || task.title.length > 200 || !task.plannedDate || !Number.isInteger(task.plannedMinutes)
       || task.plannedMinutes < 1 || task.plannedMinutes > 1440 || (task.sourceName?.trim().length ?? 0) > 300
+      || (task.plannedStartMinute!=null&&(!Number.isInteger(task.plannedStartMinute)||task.plannedStartMinute<0||task.plannedStartMinute+task.plannedMinutes>1440))
       || (task.plannedQuestions != null && (!Number.isInteger(task.plannedQuestions) || task.plannedQuestions < 0 || task.plannedQuestions > 100000)))) {
       this.error.set('Başlık, tarih, süre, kaynak ve soru sayılarını kontrol edin. Süre 1–1440 dakika, soru sayısı 0–100000 olmalıdır.');
       return;
@@ -202,8 +207,8 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
     this.editing = plan.status === 'Draft' && !this.readOnly && !plan.weeklySource;
     this.taskPage=1;
     this.editTitle = plan.title;
-    this.editTasks = plan.tasks.map(({ plannedDate, title, plannedMinutes, topicId, isPinned, sourceName, plannedQuestions }) =>
-      ({ plannedDate, title, plannedMinutes, topicId, isPinned, sourceName: sourceName ?? null, plannedQuestions: plannedQuestions ?? null }));
+    this.editTasks = plan.tasks.map(({ plannedDate, title, plannedMinutes, topicId, isPinned, sourceName, plannedQuestions,plannedStartMinute }) =>
+      ({ plannedDate, title, plannedMinutes, topicId, isPinned, sourceName: sourceName ?? null, plannedQuestions: plannedQuestions ?? null,plannedStartMinute:plannedStartMinute??null }));
     this.actualMinutes = Object.fromEntries(plan.tasks.map(task => [task.id, keepInputs && !task.isCompleted && Object.hasOwn(minutes, task.id) ? minutes[task.id] : task.actualMinutes ?? task.plannedMinutes]));
     this.actualQuestions = Object.fromEntries(plan.tasks.map(task => [task.id, keepInputs && !task.isCompleted && Object.hasOwn(questions, task.id) ? questions[task.id] : task.actualQuestions ?? null]));
     this.targetDates = Object.fromEntries(plan.tasks.map(task => [task.id, keepInputs && !task.isCompleted && dates[task.id] && dates[task.id] !== previous?.tasks.find(old => old.id === task.id)?.plannedDate ? dates[task.id] : task.plannedDate]));

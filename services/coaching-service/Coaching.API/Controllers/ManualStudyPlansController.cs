@@ -79,6 +79,10 @@ public sealed class ManualStudyPlansController(IManualStudyPlanService plans) : 
     public Task<IActionResult> Reschedule(Guid id, Guid taskId, [FromBody] StudyTaskRescheduleInput request, CancellationToken cancellationToken = default)
         => Respond(async () => Ok(new { success = true, data = await plans.RescheduleTaskAsync(id, taskId, request.ExpectedVersion, request.PlannedDate, cancellationToken) }));
 
+    [HttpPut("{id:guid}/calendar-move"), RequestSizeLimit(32768), EnableRateLimiting("study-planning-write")]
+    public Task<IActionResult> Move(Guid id, StudyTasksMoveInput request, CancellationToken ct)
+        => Respond(async()=>Ok(new {success=true,data=await plans.MoveTasksAsync(id,request,ct)}));
+
     private async Task<IActionResult> Respond(Func<Task<IActionResult>> action)
     {
         try { return await action(); }

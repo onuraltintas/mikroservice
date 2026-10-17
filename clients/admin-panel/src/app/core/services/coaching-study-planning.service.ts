@@ -12,6 +12,7 @@ export interface StudyTaskInput {
   isPinned: boolean;
   sourceName?: string | null;
   plannedQuestions?: number | null;
+  plannedStartMinute?:number|null;
 }
 export interface StudyTask extends StudyTaskInput {
   id: string;
@@ -134,5 +135,9 @@ export class CoachingStudyPlanningService {
   reschedule(id: string, taskId: string, expectedVersion: number, plannedDate: string, studentId: string | null = null) {
     return this.http.put<ApiResult<StudyPlan>>(`${this.plansUrl(studentId)}/${encodeURIComponent(id)}/tasks/${encodeURIComponent(taskId)}/schedule`,
       { expectedVersion, plannedDate }).pipe(map(result => result.data));
+  }
+  move(id:string,expectedVersion:number,taskIds:string[],plannedDate:string,startMinute:number,studentId:string|null=null){
+    return this.http.put<ApiResult<StudyPlan>>(`${this.plansUrl(studentId)}/${encodeURIComponent(id)}/calendar-move`,
+      {expectedVersion,taskIds,plannedDate,startMinute}).pipe(map(r=>r.data));
   }
 }

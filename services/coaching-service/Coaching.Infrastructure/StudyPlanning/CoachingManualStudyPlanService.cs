@@ -31,6 +31,42 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
     public Task<ManualStudyPlanView> ArchiveForStudentAsync(Guid student, Guid id, int version, CancellationToken ct = default) => ArchiveCoreAsync(id, version, ct, student);
     public Task<ManualStudyPlanView> RescheduleTaskAsync(Guid id, Guid task, int version, DateOnly date, CancellationToken ct = default) => RescheduleCoreAsync(id, task, version, date, ct);
     public Task<ManualStudyPlanView> RescheduleForStudentAsync(Guid student, Guid id, Guid task, int version, DateOnly date, CancellationToken ct = default) => RescheduleCoreAsync(id, task, version, date, ct, student);
+    public Task<ManualStudyPlanView> MoveTasksAsync(Guid id, StudyTasksMoveInput request, CancellationToken ct = default) => MoveCoreAsync(id, request, ct);
+    public Task<ManualStudyPlanView> MoveForStudentAsync(Guid student, Guid id, StudyTasksMoveInput request, CancellationToken ct = default) => MoveCoreAsync(id, request, ct, student);
+
+    private Task<ManualStudyPlanView> MoveCoreAsync(Guid id, StudyTasksMoveInput request, CancellationToken ct, Guid? targetStudent=null)
+        => LockedAsync(async student =>
+        {
+            ArgumentNullException.ThrowIfNull(request);
+            if(request.TaskIds is null || request.TaskIds.Count is <1 or >500 || request.TaskIds.Any(x=>x==Guid.Empty)
+                || request.TaskIds.Distinct().Count()!=request.TaskIds.Count) throw Conflict("Taşınacak çalışmaların kimlikleri geçerli ve benzersiz olmalıdır.");
+            var revision=await OwnedAsync(id,student,request.ExpectedVersion,ct);
+            if(revision.Status==StudyPlanStatus.Archived) throw Conflict("Arşivlenmiş plan taşınamaz.");
+            var ids=request.TaskIds.ToArray();
+            var tasks=await db.StudyPlanTasks.Where(x=>x.RevisionId==id&&x.StudentId==student&&Enumerable.Contains(ids,x.Id)).OrderBy(x=>x.PlannedStartMinute).ThenBy(x=>x.Id).ToArrayAsync(ct);
+            if(tasks.Length!=ids.Length) throw new BusinessRuleException("StudyPlanning.NotFound","Taşınacak çalışma bulunamadı.");
+            if(tasks.Any(x=>x.IsCompleted)) throw Conflict("Tamamlanmış çalışmalar taşınamaz.");
+            var first=tasks[0];var cursor=first.PlannedStartMinute;
+            foreach(var task in tasks)
+            {
+                if(cursor is null || task.PlannedDate!=first.PlannedDate || task.PlannedStartMinute!=cursor
+                    || task.WeeklyLessonId!=first.WeeklyLessonId || (task.LessonNameSnapshot??task.Title)!=(first.LessonNameSnapshot??first.Title))
+                    throw Conflict("Aynı günün bitişik ders parçalarını birlikte taşıyın.");
+                cursor+=task.PlannedMinutes;
+            }
+            var minutes=tasks.Sum(x=>x.PlannedMinutes);
+            if(request.PlannedDate==default || request.StartMinute<0 || request.StartMinute+minutes>1440)
+                throw new ArgumentException("Dersin tamamı aynı günün içinde kalmalıdır.");
+            var others=db.StudyPlanTasks.Where(x=>x.RevisionId==id&&x.StudentId==student&&x.PlannedDate==request.PlannedDate&&!Enumerable.Contains(ids,x.Id));
+            if(await others.AnyAsync(x=>x.PlannedStartMinute<request.StartMinute+minutes&&x.PlannedStartMinute+x.PlannedMinutes>request.StartMinute,ct))
+                throw Conflict("Bu saat başka bir çalışmayla çakışıyor. Boş bir saat seçin.");
+            if(await others.SumAsync(x=>x.PlannedMinutes,ct)+minutes>1440) throw Conflict("Bir güne 24 saatten fazla çalışma eklenemez.");
+            if(first.PlannedDate==request.PlannedDate&&first.PlannedStartMinute==request.StartMinute) return await ViewAsync(revision,ct);
+            var start=request.StartMinute;
+            foreach(var task in tasks){task.Schedule(request.PlannedDate,start);start+=task.PlannedMinutes;}
+            revision.RecordScheduleChange();await db.SaveChangesAsync(ct);
+            return await ViewAsync(revision,ct);
+        },ct,targetStudent,true);
 
     public Task<ManualStudyPlanView> CreateAutomaticDraftAsync(AutomaticStudyDraftRequest request, CancellationToken cancellationToken = default)
         => LockedAsync(async student =>
@@ -236,6 +272,13 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
         if (request.Tasks is null || request.Tasks.Count > 500 || request.Tasks.Any(x => x is null))
             throw new ArgumentException("Plan en fazla 500 çalışma içerebilir.");
         var tasks = request.Tasks.Select(x => StudyPlanTask.Create(revision, x.PlannedDate, x.Title, x.PlannedMinutes, x.TopicId, x.IsPinned, x.SourceName, x.PlannedQuestions)).ToArray();
+        for(var i=0;i<tasks.Length;i++) if(request.Tasks[i].PlannedStartMinute is {} start) tasks[i].Schedule(tasks[i].PlannedDate,start);
+        foreach(var day in tasks.GroupBy(x=>x.PlannedDate))
+        {
+            var timed=day.Where(x=>x.PlannedStartMinute.HasValue).OrderBy(x=>x.PlannedStartMinute).ToArray();
+            for(var i=1;i<timed.Length;i++) if(timed[i].PlannedStartMinute<timed[i-1].PlannedStartMinute+timed[i-1].PlannedMinutes)
+                throw Conflict("Çalışma saatleri çakışıyor. Boş bir saat seçin.");
+        }
         if (tasks.GroupBy(x => x.PlannedDate).Any(day => day.Sum(x => x.PlannedMinutes) > 1440))
             throw new ArgumentException("Bir güne 24 saatten fazla çalışma eklenemez.");
         var topics = tasks.Where(x => x.TopicId.HasValue).Select(x => x.TopicId!.Value).Distinct().ToArray();

@@ -77,6 +77,12 @@ public sealed class StudyPlanRevision : AggregateRoot
         if (Status != StudyPlanStatus.Active) throw new InvalidOperationException("Only active plan tasks can be changed.");
         UpdatedAt = DateTime.UtcNow;
     }
+
+    public void RecordScheduleChange()
+    {
+        if (Status == StudyPlanStatus.Archived) throw new InvalidOperationException("Archived plans cannot be changed.");
+        UpdatedAt = DateTime.UtcNow;
+    }
 }
 
 public sealed class StudyPlanTask : AggregateRoot
@@ -142,6 +148,14 @@ public sealed class StudyPlanTask : AggregateRoot
         if (plannedDate == default) throw new ArgumentException("Valid task date is required.");
         PlannedDate = plannedDate;
         UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void Schedule(DateOnly plannedDate, int? startMinute)
+    {
+        if (IsCompleted) throw new InvalidOperationException("Completed work cannot be rescheduled.");
+        if (plannedDate == default || startMinute is <0 or >1439 || startMinute+PlannedMinutes>1440)
+            throw new ArgumentException("Çalışmanın tarihi ve saat aralığı geçerli olmalıdır.");
+        PlannedDate=plannedDate; PlannedStartMinute=startMinute; UpdatedAt=DateTime.UtcNow;
     }
 
     public void CorrectPlanning(string title, DateOnly plannedDate, int plannedMinutes)

@@ -41,6 +41,7 @@
                 <label>Kaynak / sayfa (isteğe bağlı)<input [name]="'source-' + i" [(ngModel)]="task.sourceName" (ngModelChange)="dirty = true" maxlength="300"></label>
                 <div class="fields">
                   <label>Tarih<input type="date" [name]="'date-' + i" [(ngModel)]="task.plannedDate" (ngModelChange)="dirty = true" required></label>
+                  <label>Başlangıç saati (isteğe bağlı)<input type="time" step="1800" [name]="'start-' + i" [ngModel]="task.plannedStartMinute==null?'':clock(task.plannedStartMinute)" (ngModelChange)="setDraftTime(task,$event)"></label>
                   <label>Süre (dk)<input type="number" [name]="'minutes-' + i" [(ngModel)]="task.plannedMinutes" (ngModelChange)="dirty = true" min="1" max="1440" step="1" required></label>
                   <label>Planlanan soru (isteğe bağlı)<input type="number" [name]="'questions-' + i" [(ngModel)]="task.plannedQuestions" (ngModelChange)="dirty = true" min="0" max="100000" step="1"></label>
                 </div>
@@ -70,7 +71,7 @@
         @if (plan.status === 'Archived') { <p class="muted">Geçmiş plan. Çalışma kayıtların korunur; bu plan üzerinde değişiklik yapılamaz.</p> }
         <div class="plan-view-switch" role="group" aria-label="Plan görünümü"><button type="button" class="secondary" [attr.aria-pressed]="planView()==='calendar'" (click)="planView.set('calendar')" [disabled]="busy()">Takvim</button><button type="button" class="secondary" [attr.aria-pressed]="planView()==='list'" (click)="planView.set('list')" [disabled]="busy()">Liste</button></div>
         @if(planView()==='calendar'){
-          <app-study-plan-calendar [plan]="plan" [disabled]="busy()" (taskSelected)="selectCalendarTasks($event)" />
+          <app-study-plan-calendar [plan]="plan" [disabled]="busy()" [editable]="!readOnly" (taskSelected)="selectCalendarTasks($event)" (tasksMoved)="moveCalendar($event)" />
           @if(selectedTaskIds().length){<div #calendarTaskDetail class="calendar-task-detail" tabindex="-1"><h3>Seçilen çalışmalar</h3><button type="button" class="secondary" (click)="selectedTaskIds.set([])" [disabled]="busy()">Ayrıntıları kapat</button></div>}
         }
         @for (task of visibleTasks(); track task.id) {
