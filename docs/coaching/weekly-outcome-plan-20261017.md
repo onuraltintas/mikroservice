@@ -139,7 +139,10 @@ Ekran kanıtları: `artifacts/weekly-outcome-preview-desktop.png`,
 `weekly-outcome-preview-mobile.png`, `weekly-outcome-decisions-desktop.png` ve
 `weekly-outcome-decisions-mobile.png`.
 
-Canlı yayın ayrı aşamadır: önce yedek ve üretim kopyası geçiş provası, sonra Coaching
+17.10.2026 tarihinde canlı yayın ve doğrulama tamamlandı; konu hiyerarşisi ve dolu saat
+odağı da düzeltildi. Ayrıntılar: [canlı doğrulama raporu](weekly-outcome-live-20261017.md).
+
+Canlı yayın yöntemi: önce yedek ve üretim kopyası geçiş provası, sonra Coaching
 API ile öğrenci arayüzü birlikte güncellenmelidir. Eski kayıt parmak izleri karşılaştırılırken
 yalnız yeni dört nullable alan dışarıda bırakılarak önceki sütunların aynılığı ölçülmelidir.
 Otomatik Down veya eski veriyi geri yükleme uygulanmamalıdır.
