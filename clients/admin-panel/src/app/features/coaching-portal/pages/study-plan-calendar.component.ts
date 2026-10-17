@@ -74,8 +74,9 @@ export class StudyPlanCalendarComponent implements OnChanges {
     this.moveForm=null;this.tasksMoved.emit({taskIds:block.tasks.map(t=>t.id),plannedDate:date,startMinute:start});
   }
   beginMove(e:PointerEvent,block:PlanCalendarBlock){
+    this.suppressClick=false;
     if(!this.canMove(block)||e.button!==0||!e.isPrimary)return;
-    const card=(e.currentTarget as HTMLElement);this.suppressClick=false;
+    const card=(e.currentTarget as HTMLElement);
     this.gesture={pointer:e.pointerId,block,x:e.clientX,y:e.clientY,offset:this.view()==='month'?0:e.clientY-card.getBoundingClientRect().top,moved:false};
   }
   @HostListener('document:pointermove',['$event']) movePointer(e:PointerEvent){
