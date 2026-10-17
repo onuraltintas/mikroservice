@@ -1,0 +1,15 @@
+import {cpSync,mkdirSync,writeFileSync,readFileSync,readdirSync,statSync} from 'node:fs';
+import {resolve,relative} from 'node:path';
+import {createHash} from 'node:crypto';
+import {execFileSync} from 'node:child_process';
+const out=resolve('artifacts/coaching-submission-live-20261017'),pack=resolve(out,'package');
+mkdirSync(resolve(pack,'payload/coaching'),{recursive:true});
+for(const name of ['Coaching.API','Coaching.Application','Coaching.Domain','Coaching.Infrastructure'])for(const ext of ['dll','pdb'])cpSync(resolve(out,'publish',`${name}.${ext}`),resolve(pack,'payload/coaching',`${name}.${ext}`));
+cpSync('artifacts/coaching-followup-check-20261017/staff-source/clients/admin-panel/dist/staff-portal/browser',resolve(pack,'payload/staff'),{recursive:true});
+writeFileSync(resolve(pack,'coaching-service.Dockerfile'),'ARG BASE_IMAGE\nFROM ${BASE_IMAGE}\nARG SOURCE_REVISION\nCOPY payload/coaching/ /app/\nLABEL org.opencontainers.image.revision="${SOURCE_REVISION}" org.opencontainers.image.release="coaching-submission-20261017"\n');
+writeFileSync(resolve(pack,'staff-portal.Dockerfile'),readFileSync('tools/releases/coaching-learning-20261016/staff-portal.Dockerfile','utf8').replaceAll('coaching-learning-20261016','coaching-submission-20261017'));
+const files=p=>readdirSync(p).flatMap(n=>statSync(resolve(p,n)).isDirectory()?files(resolve(p,n)):[resolve(p,n)]);
+const hash=p=>createHash('sha256').update(readFileSync(p)).digest('hex');
+writeFileSync(resolve(pack,'payload.sha256'),files(pack).filter(p=>p!==resolve(pack,'payload.sha256')).map(p=>`${hash(p)}  ${relative(pack,p).replaceAll('\\','/')}`).join('\n')+'\n');
+execFileSync('tar',['-czf',resolve(out,'release.tar.gz'),'-C',pack,'.']);
+console.log(hash(resolve(out,'release.tar.gz')));
