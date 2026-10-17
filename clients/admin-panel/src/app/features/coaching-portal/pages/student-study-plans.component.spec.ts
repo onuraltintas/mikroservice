@@ -32,6 +32,14 @@ describe('StudentStudyPlansComponent', () => {
     expect(component.selected()?.id).toBe('plan');
     expect(service.get).toHaveBeenCalledTimes(1);
   });
+  it('opens generated yearly plans in a calendar without changing saved work',()=>{
+    const {component,service,fixture}=setup();
+    const generated:StudyPlan={...active,weeklySource:{draftVersion:1,learningContextVersion:2,startDate:'2026-10-01',endDate:'2027-06-01',reuseFreedSlots:false,fingerprint:'saved',activeRevisionId:null,activeRevisionVersion:null,timeZoneId:'Europe/Istanbul'},tasks:[{...active.tasks[0],plannedStartMinute:1080,weeklyLessonId:'math',lessonName:'Matematik'}]};
+    const before=JSON.stringify(generated);service.get.mockReturnValue(of(generated));component.open('plan');fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('app-study-plan-calendar')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('[aria-label="Plan görünümü"]')).not.toBeNull();
+    expect(JSON.stringify(generated)).toBe(before);expect(service.replace).not.toHaveBeenCalled();expect(service.complete).not.toHaveBeenCalled();
+  });
   it('shows generated weekly drafts with their times and publish controls without a manual editor',()=>{
     const{component,service,fixture}=setup();service.get.mockReturnValue(of({...active,status:'Draft',weeklySource:{startDate:'2027-05-24',endDate:'2027-06-01'},tasks:[{...active.tasks[0],plannedStartMinute:1080,lessonName:'Matematik'}]} as any));
     component.open('plan');fixture.detectChanges();expect(component.editing).toBe(false);expect(fixture.nativeElement.textContent).toContain('18:00');expect(fixture.nativeElement.textContent).toContain('Planı yayımla');expect(fixture.nativeElement.querySelector('input[name="planTitle"]')).toBeNull();
