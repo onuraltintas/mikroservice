@@ -10,6 +10,27 @@ namespace Coaching.Curriculum.IntegrationTests;
 
 public sealed class WeeklyOutcomePlanTests
 {
+    [CurriculumPostgresTests.LocalPostgresFact]
+    public async Task TopicSequenceRespectsParentOrderBeforeChildOrder()
+    {
+        await using var pg=await CurriculumPostgresTests.Pg.Create();var f=pg.Data;var service=await Seed(f);
+        var old=await f.Db.StudyCatalogTopics.SingleAsync();
+        var early=StudyCatalogTopic.Create("test","early-parent",old.LessonId,old.UnitId,"İlk üst konu",null,1);early.SetActive(true);
+        var late=StudyCatalogTopic.Create("test","late-parent",old.LessonId,old.UnitId,"İkinci üst konu",null,2);late.SetActive(true);
+        var child=StudyCatalogTopic.Create("test","early-child",old.LessonId,old.UnitId,"İlk konunun ikinci alt konusu",early.Id,2);child.SetActive(true);
+        f.Db.Entry(old).Property(x=>x.ParentId).CurrentValue=late.Id;
+        var existing=await f.Db.Set<StudyCatalogOutcome>().SingleAsync();
+        var outcome=StudyCatalogOutcome.Create(existing.EditionId,existing.OfficialTopicId,"M.TEST.2","Sıra doğrulama","",73,2);
+        var estimate=OutcomeDurationEstimate.Create(outcome.Id,1,10,10,10,"ReviewedStudy","Medium","Test dayanağı",f.User.UserId);estimate.Publish();
+        var mapping=StudyCatalogTopicOutcome.Create(child.Id,outcome.Id,"Sıra testi");mapping.Review(true,"Sıra testi",f.User.UserId!.Value);
+        f.Db.AddRange(early,late,child,outcome,estimate,mapping);await f.Db.SaveChangesAsync();
+        var preview=await service.PreviewAsync(Input with {EndDate=new(2027,6,14)},default);
+        Assert.True(preview.CanCreate);Assert.Equal(child.Id,preview.Schedule.Tasks[0].Outcome.TopicId);
+        Assert.Equal(old.Id,preview.Schedule.Tasks[1].Outcome.TopicId);
+        early.Edit(early.Name,3,null);await f.Db.SaveChangesAsync();
+        var reordered=await service.PreviewAsync(Input with {EndDate=new(2027,6,14)},default);
+        Assert.Equal(old.Id,reordered.Schedule.Tasks[0].Outcome.TopicId);
+    }
     [Fact]
     public async Task ApiRequiresStudentAndReturnsOptionsValidationConflictAndOwnedNotFound()
     {
