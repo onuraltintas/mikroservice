@@ -2,7 +2,9 @@
 
 Öğrenci paneline **Haftalık programım** ekranı eklendi: `/coaching-portal/weekly-plan`.
 Bu aşama haftalık ders şablonunu oluşturur ve kaydeder. Kazanımları 1 Haziran'a kadar
-dağıtan yıllık plan üretimi sonraki aşamadır. Bu çalışma canlıya dağıtılmadı.
+dağıtan yıllık plan üretimi sonraki aşamadır. Özellik 17 Ekim 2026'da canlıya alındı;
+gerçek öğrenci akışının ve veri koruma kontrollerinin sonuçları
+[canlı yayın raporunda](weekly-calendar-live-release-20261017.md) bulunur.
 
 ## Kullanım
 
@@ -63,7 +65,7 @@ eski ekranı açmaya devam eder. Bu taslak sonraki aşamada yıllık üretimin g
 
 Dağıtımda önce veritabanı yedeği alınmalı, ardından Coaching geçişi, API ve öğrenci
 arayüzü birlikte yayımlanmalıdır. Uygulama geri alınırken taslak tablosunu korumak gerekir;
-`Down` geçişi yeni taslakları siler. Bu çalışma sırasında yalnız yerel geçici test
+`Down` geçişi yeni taslakları siler. İlk geliştirme doğrulamasında yerel geçici test
 veritabanlarında geçiş ve geri geçiş provası yapıldı.
 
 ## Doğrulama
