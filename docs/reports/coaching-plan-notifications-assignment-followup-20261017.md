@@ -1,6 +1,6 @@
 # Plan değişikliği bildirimi ve toplu ödev takibi
 
-Tarih: 17.10.2026. Uygulama kayıtları: `037c8ed4`, `baa5f54c`. Bu çalışma geliştirme ve test kapsamındadır; **canlıya dağıtım yapılmadı**. Canlıdaki yıllık plan ve hesaplar değiştirilmedi.
+Tarih: 17.10.2026. Uygulama kayıtları: `037c8ed4`, `baa5f54c`. Geliştirme ve test aşaması tamamlandı. **17.10.2026 20:59:42 Türkiye saatinde canlıya alındı**; veri koruma ve canlı arayüz sonuçları [dağıtım raporunda](coaching-followup-live-20261017.md).
 
 ## Öğrenciye plan değişikliği bildirimi
 
