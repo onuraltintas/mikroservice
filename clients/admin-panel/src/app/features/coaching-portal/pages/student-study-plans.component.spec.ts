@@ -40,6 +40,13 @@ describe('StudentStudyPlansComponent', () => {
     expect(fixture.nativeElement.querySelector('[aria-label="Plan görünümü"]')).not.toBeNull();
     expect(JSON.stringify(generated)).toBe(before);expect(service.replace).not.toHaveBeenCalled();expect(service.complete).not.toHaveBeenCalled();
   });
+  it('uses existing completion inputs from calendar details and preserves unrelated unsaved work on updates',()=>{
+    const{component,service,fixture}=setup();const generated:StudyPlan={...active,weeklySource:{draftVersion:1,learningContextVersion:2,startDate:'2026-10-01',endDate:'2027-06-01',reuseFreedSlots:false,fingerprint:'saved',activeRevisionId:null,activeRevisionVersion:null},tasks:[active.tasks[0],{...active.tasks[0],id:'second'}]};
+    service.get.mockReturnValue(of(generated));component.open('plan');component.selectCalendarTasks(['task','second']);fixture.detectChanges();expect(fixture.nativeElement.querySelectorAll('article.task')).toHaveLength(2);
+    component.actualMinutes['second']=17;component.actualQuestions['second']=0;service.complete.mockReturnValue(of({...generated,version:5,tasks:generated.tasks.map(t=>t.id==='task'?{...t,isCompleted:true,actualMinutes:25}:t)}));
+    component.complete(generated.tasks[0],25,0);fixture.detectChanges();expect(component.planView()).toBe('calendar');expect(component.actualMinutes['second']).toBe(17);expect(component.actualQuestions['second']).toBe(0);expect(component.selectedTaskIds()).toEqual(['task','second']);
+    expect(service.complete).toHaveBeenCalledWith('plan','task',4,25,0);expect(component.selected()?.tasks[0].isCompleted).toBe(true);expect(service.replace).not.toHaveBeenCalled();
+  });
   it('shows generated weekly drafts with their times and publish controls without a manual editor',()=>{
     const{component,service,fixture}=setup();service.get.mockReturnValue(of({...active,status:'Draft',weeklySource:{startDate:'2027-05-24',endDate:'2027-06-01'},tasks:[{...active.tasks[0],plannedStartMinute:1080,lessonName:'Matematik'}]} as any));
     component.open('plan');fixture.detectChanges();expect(component.editing).toBe(false);expect(fixture.nativeElement.textContent).toContain('18:00');expect(fixture.nativeElement.textContent).toContain('Planı yayımla');expect(fixture.nativeElement.querySelector('input[name="planTitle"]')).toBeNull();

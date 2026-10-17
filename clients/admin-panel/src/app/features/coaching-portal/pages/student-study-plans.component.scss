@@ -35,4 +35,5 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
 .success { color: #047857; border-color: #6ee7b7; }
 .empty { padding: 3rem 1rem; text-align: center; }
 fieldset { border: 0; padding: 0; min-width: 0; }
+.plan-view-switch{display:flex;gap:6px;margin:18px 0}.plan-view-switch button[aria-pressed=true]{background:#356c60;color:white;border-color:#356c60}.calendar-task-detail{margin-top:18px;display:flex;align-items:center;justify-content:space-between;gap:8px;scroll-margin-top:20px}.calendar-task-detail:focus{outline:2px solid #527f6e;outline-offset:5px}
 @media (max-width: 760px) { .workspace { grid-template-columns: 1fr; } .panel { padding: 1rem; } }

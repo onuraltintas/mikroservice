@@ -68,6 +68,11 @@
           @if(plan.status==='Draft'&&!readOnly){<div class="publish-box"><h3>Planını yayımla</h3><p>Bu taslak aktif planın olacak. Önceki plan arşivlenecek; çalışma geçmişin silinmeyecek.</p><label class="check"><input type="checkbox" [(ngModel)]="publishConfirmed" [disabled]="busy()">Planımı kontrol ettim, yayımlamayı onaylıyorum.</label><button type="button" (click)="publish()" [disabled]="busy()||!publishConfirmed">Planı yayımla</button><button type="button" class="secondary" (click)="archiveDraft()" [disabled]="busy()">Taslağı arşivle</button></div>}
         }
         @if (plan.status === 'Archived') { <p class="muted">Geçmiş plan. Çalışma kayıtların korunur; bu plan üzerinde değişiklik yapılamaz.</p> }
+        <div class="plan-view-switch" role="group" aria-label="Plan görünümü"><button type="button" class="secondary" [attr.aria-pressed]="planView()==='calendar'" (click)="planView.set('calendar')" [disabled]="busy()">Takvim</button><button type="button" class="secondary" [attr.aria-pressed]="planView()==='list'" (click)="planView.set('list')" [disabled]="busy()">Liste</button></div>
+        @if(planView()==='calendar'){
+          <app-study-plan-calendar [plan]="plan" [disabled]="busy()" (taskSelected)="selectCalendarTasks($event)" />
+          @if(selectedTaskIds().length){<div #calendarTaskDetail class="calendar-task-detail" tabindex="-1"><h3>Seçilen çalışmalar</h3><button type="button" class="secondary" (click)="selectedTaskIds.set([])" [disabled]="busy()">Ayrıntıları kapat</button></div>}
+        }
         @for (task of visibleTasks(); track task.id) {
           <article class="task" [class.completed]="task.isCompleted">
             <h3>{{ task.title }}</h3><p>{{ task.plannedDate | date:'dd.MM.yyyy' }} · {{ task.plannedMinutes }} dk @if (task.isPinned) { · Sabit }</p>
@@ -98,7 +103,7 @@
             }
           </article>
         }
-        @if(plan.weeklySource&&plan.tasks.length>50){<div class="pagination"><button type="button" class="secondary" (click)="taskPage=taskPage-1" [disabled]="taskPage===1||busy()">Önceki çalışmalar</button><span>{{ taskPage }} · {{ plan.tasks.length }} çalışma</span><button type="button" class="secondary" (click)="taskPage=taskPage+1" [disabled]="taskPage*50>=plan.tasks.length||busy()">Sonraki çalışmalar</button></div>}
+        @if(planView()==='list'&&plan.weeklySource&&plan.tasks.length>50){<div class="pagination"><button type="button" class="secondary" (click)="taskPage=taskPage-1" [disabled]="taskPage===1||busy()">Önceki çalışmalar</button><span>{{ taskPage }} · {{ plan.tasks.length }} çalışma</span><button type="button" class="secondary" (click)="taskPage=taskPage+1" [disabled]="taskPage*50>=plan.tasks.length||busy()">Sonraki çalışmalar</button></div>}
       } @else { <div class="empty"><h2>Planına buradan devam et</h2><p>Listeden bir plan seç veya yeni bir taslak oluştur.</p></div> }
       @if (busy()) { <p role="status">İşlem sürüyor…</p> }
     </div>

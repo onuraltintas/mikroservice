@@ -1,22 +1,26 @@
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, HostListener, Input, OnChanges, OnInit, inject, signal } from '@angular/core';
+import { Component, DestroyRef, ElementRef, HostListener, Input, OnChanges, OnInit, ViewChild, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Observable, Subject, finalize, takeUntil } from 'rxjs';
 import { CoachingStudyPlanningService, StudyPlan, StudyPlanPage, StudyPlanStatus, StudyTask, StudyTaskInput } from '../../../core/services/coaching-study-planning.service';
 import {clock} from './weekly-calendar';
+import {StudyPlanCalendarComponent} from './study-plan-calendar.component';
 
 @Component({
   selector: 'app-student-study-plans',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, StudyPlanCalendarComponent],
   templateUrl: './student-study-plans.component.html',
   styleUrl: './student-study-plans.component.scss'
 })
 export class StudentStudyPlansComponent implements OnInit, OnChanges {
   readonly clock=clock;taskPage=1;
-  visibleTasks(){const plan=this.selected();return plan?.weeklySource?plan.tasks.slice((this.taskPage-1)*50,this.taskPage*50):plan?.tasks??[];}
+  readonly planView=signal<'calendar'|'list'>('list');readonly selectedTaskIds=signal<string[]>([]);
+  @ViewChild('calendarTaskDetail') set calendarTaskDetail(value:ElementRef<HTMLElement>|undefined){value?.nativeElement.focus();}
+  selectCalendarTasks(ids:string[]){this.selectedTaskIds.set(ids);}
+  visibleTasks(){const plan=this.selected();if(this.planView()==='calendar')return plan?.tasks.filter(t=>this.selectedTaskIds().includes(t.id))??[];return plan?.weeklySource?plan.tasks.slice((this.taskPage-1)*50,this.taskPage*50):plan?.tasks??[];}
   @Input() staffStudentId: string | null = null;
   @Input() readOnly = false;
   private readonly scopeChanged = new Subject<void>();
@@ -190,6 +194,7 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
 
   private applyPlan(plan: StudyPlan, preserveInputs = false) {
     const previous = this.selected();
+    if(previous?.id!==plan.id||!!previous?.weeklySource!==!!plan.weeklySource){this.planView.set(plan.weeklySource?'calendar':'list');this.selectedTaskIds.set([]);}
     const keepInputs = preserveInputs && previous?.id === plan.id && plan.status === 'Active';
     const minutes = this.actualMinutes; const questions = this.actualQuestions; const dates = this.targetDates;
     this.selected.set(plan);
