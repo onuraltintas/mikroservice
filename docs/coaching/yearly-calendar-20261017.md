@@ -1,6 +1,6 @@
 # Kayıtlı yıllık çalışma planı takvimi
 
-Tarih: 17 Ekim 2026. Durum: geliştirme ve yerel doğrulama tamamlandı; bu değişiklik henüz canlıya alınmadı.
+Tarih: 17 Ekim 2026. Durum: geliştirme ve yerel doğrulama tamamlandı; **16:21 Türkiye saatiyle canlıya alındı**. Ayrıntılar: [canlı dağıtım ve veri koruma raporu](yearly-calendar-live-20261017.md).
 
 ## Kullanım
 
@@ -99,7 +99,8 @@ Bu görsellerdeki veriler yerel test örnekleridir.
 
 ## Canlıya alma sınırı
 
-Bu istek geliştirme ve test kapsamındaydı; canlı uygulama ve mevcut canlı kayıtlar
-değiştirilmedi. Canlıya alınırken yalnız ilgili arayüz değişiklikleri mevcut canlı
-kaynağa uygulanmalı; migration gerekmez. Kayıtlı yıllık taslak, eski aktif/arşiv planları,
-takvim odağı ve çalışma ayrıntıları öğrenci oturumunda ayrıca doğrulanmalıdır.
+İlk geliştirme aşaması canlı verileri değiştirmedi. Sonraki canlıya alma isteğiyle yalnız
+ilgili 7 arayüz dosyası mevcut canlı kaynağa uygulandı; migration yapılmadı.
+Takvim odağı, kazanım ayrıntıları, eski planlara erişim ve test planında çalışma kaydetme
+canlı öğrenci oturumunda doğrulandı. Testin plan durumuna ve eklenen 17 dakikalık sentetik
+kayda etkisi [canlı raporda](yearly-calendar-live-20261017.md) açıklanmıştır.
