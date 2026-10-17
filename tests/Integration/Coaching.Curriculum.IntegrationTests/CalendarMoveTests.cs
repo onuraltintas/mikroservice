@@ -26,6 +26,11 @@ public sealed class CalendarMoveTests
         f.Db.AddRange(a,b,other,link);await f.Db.SaveChangesAsync();f.Db.ChangeTracker.Clear();
         var policy=new CoachingAccessPolicy(f.User);var service=new CoachingManualStudyPlanService(f.Db,policy,new CoachingAutomaticStudyPlanPreviewService(f.Db,policy),new CurriculumManagementTests.NoopPublisher());
         var plan=(await service.GetAsync(revision.Id))!;
+        await Assert.ThrowsAsync<ArgumentNullException>(()=>service.MoveTasksAsync(plan.Id,null!));
+        await Assert.ThrowsAsync<BusinessRuleException>(()=>service.MoveTasksAsync(plan.Id,new(plan.Version,[],new(2027,1,5),600)));
+        await Assert.ThrowsAsync<BusinessRuleException>(()=>service.MoveTasksAsync(plan.Id,new(plan.Version,[Guid.Empty],new(2027,1,5),600)));
+        await Assert.ThrowsAsync<BusinessRuleException>(()=>service.MoveTasksAsync(plan.Id,new(plan.Version,[a.Id,other.Id],new(2027,1,5),600)));
+        Assert.Equal(plan.Version,(await service.MoveTasksAsync(plan.Id,new(plan.Version,[a.Id,b.Id],new(2027,1,4),1080))).Version);
         var conflict=await Assert.ThrowsAsync<BusinessRuleException>(()=>service.MoveTasksAsync(plan.Id,new(plan.Version,[a.Id,b.Id],new(2027,1,5),540)));
         Assert.Equal("StudyPlanning.Conflict",conflict.Code);
         Assert.Equal(new DateOnly(2027,1,4),(await service.GetAsync(plan.Id))!.Tasks.Single(x=>x.Id==a.Id).PlannedDate);
@@ -33,6 +38,8 @@ public sealed class CalendarMoveTests
         Assert.Equal(600,moved.Tasks.Single(x=>x.Id==a.Id).PlannedStartMinute);Assert.Equal(615,moved.Tasks.Single(x=>x.Id==b.Id).PlannedStartMinute);
         Assert.Equal("Korunan kazanım",moved.Tasks.Single(x=>x.Id==a.Id).Outcomes!.Single().Name);
         Assert.Equal(lesson,moved.Tasks.Single(x=>x.Id==a.Id).WeeklyLessonId);
+        var full=StudyPlanTask.Create(revision,new(2027,1,7),"Saati olmayan dolu gün",1440);f.Db.Add(full);await f.Db.SaveChangesAsync();f.Db.ChangeTracker.Clear();
+        await Assert.ThrowsAsync<BusinessRuleException>(()=>service.MoveTasksAsync(plan.Id,new(moved.Version,[a.Id,b.Id],new(2027,1,7),600)));
         await Assert.ThrowsAsync<BusinessRuleException>(()=>service.MoveTasksAsync(plan.Id,new(plan.Version,[a.Id,b.Id],new(2027,1,6),600)));
         await Assert.ThrowsAsync<BusinessRuleException>(()=>service.MoveTasksAsync(plan.Id,new(moved.Version,[a.Id,Guid.NewGuid()],new(2027,1,6),600)));
         await Assert.ThrowsAsync<ArgumentException>(()=>service.MoveTasksAsync(plan.Id,new(moved.Version,[a.Id,b.Id],new(2027,1,6),1430)));
@@ -56,5 +63,10 @@ public sealed class CalendarMoveTests
         var moved=await service.MoveTasksAsync(plan.Id,new(plan.Version,[plan.Tasks[0].Id],new(2027,1,5),600));
         Assert.Equal(StudyPlanStatus.Draft,moved.Status);Assert.True(moved.Version>plan.Version);
         var active=await service.PublishAsync(plan.Id,moved.Version);Assert.Equal(StudyPlanStatus.Active,active.Status);
+        var api=new Coaching.API.Controllers.ManualStudyPlansController(service);
+        Assert.IsType<Microsoft.AspNetCore.Mvc.BadRequestObjectResult>(await api.Move(plan.Id,new(active.Version,[plan.Tasks[0].Id],default,-1),default));
+        Assert.IsType<Microsoft.AspNetCore.Mvc.ConflictObjectResult>(await api.Move(plan.Id,new(-1,[plan.Tasks[0].Id],new(2027,1,5),600),default));
+        f.User.Roles=["Teacher"];
+        Assert.Equal(403,Assert.IsType<Microsoft.AspNetCore.Mvc.ObjectResult>(await api.Move(plan.Id,new(active.Version,[plan.Tasks[0].Id],new(2027,1,5),600),default)).StatusCode);
     }
 }

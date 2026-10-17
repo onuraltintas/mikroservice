@@ -28,7 +28,8 @@ export interface WeeklyPlanSource {draftVersion:number;learningContextVersion:nu
 export interface StudyPlan extends StudyPlanSummary { tasks: StudyTask[];weeklySource?:WeeklyPlanSource|null }
 export interface StudyPlanInput { title: string; tasks: StudyTaskInput[] }
 export interface StudyPlanPage { items: StudyPlanSummary[]; totalCount: number; pageNumber: number; pageSize: number }
-export interface TeacherStudyStudent {studentId:string;fullName:string;hasActivePlan:boolean;hasDraft:boolean;completedTasks:number;pendingTasks:number;overdueTasks:number;actualMinutes:number}
+export interface TeacherStudyWork {taskId:string;planId:string;title:string;plannedDate:string;plannedStartMinute:number|null;plannedMinutes:number;isCompleted:boolean;isOverdue:boolean;actualMinutes:number|null}
+export interface TeacherStudyStudent {studentId:string;fullName:string;hasActivePlan:boolean;hasDraft:boolean;completedTasks:number;pendingTasks:number;overdueTasks:number;actualMinutes:number;tasks?:TeacherStudyWork[]}
 export interface TeacherStudyOverview {items:TeacherStudyStudent[];totalCount:number;pageNumber:number;pageSize:number}
 export type StudyDay = 'Sunday' | 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday';
 export interface StudyWindow { day: StudyDay; startMinute: number; endMinute: number }

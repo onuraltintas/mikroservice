@@ -11,8 +11,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Coaching.API.Controllers;
 
+public sealed record TeacherStudyWork(Guid TaskId,Guid PlanId,string Title,DateOnly PlannedDate,int? PlannedStartMinute,int PlannedMinutes,bool IsCompleted,bool IsOverdue,int? ActualMinutes);
 public sealed record TeacherStudyStudent(Guid StudentId,string FullName,bool HasActivePlan,bool HasDraft,
-    int CompletedTasks,int PendingTasks,int OverdueTasks,int ActualMinutes);
+    int CompletedTasks,int PendingTasks,int OverdueTasks,int ActualMinutes,IReadOnlyList<TeacherStudyWork>? Tasks=null);
 public sealed record TeacherStudyOverview(IReadOnlyList<TeacherStudyStudent> Items,int TotalCount,int PageNumber,int PageSize);
 
 [ApiController,ApiVersion(1.0),Authorize(Roles="Teacher")]
@@ -34,14 +35,14 @@ public sealed class CoachingTeacherStudyController(CoachingDbContext db,OwnedCoa
             var rows=await (from task in db.StudyPlanTasks.AsNoTracking() join plan in db.StudyPlanRevisions.AsNoTracking() on task.RevisionId equals plan.Id
                 where Enumerable.Contains(ids,task.StudentId)&&plan.StudentId==task.StudentId&&task.PlannedDate>=fromDate&&task.PlannedDate<=toDate
                     &&(plan.Status==StudyPlanStatus.Active||plan.Status==StudyPlanStatus.Archived&&task.IsCompleted)
-                select new{task.StudentId,task.RevisionId,task.PlannedDate,task.PlannedStartMinute,task.PlannedMinutes,task.IsCompleted,task.ActualMinutes}).Take(10001).ToArrayAsync(ct);
+                select new{task.Id,task.Title,task.StudentId,task.RevisionId,task.PlannedDate,task.PlannedStartMinute,task.PlannedMinutes,task.IsCompleted,task.ActualMinutes}).Take(10001).ToArrayAsync(ct);
             if(rows.Length>10000)return UnprocessableEntity(new{message="Dönem çok fazla çalışma içeriyor. Daha kısa bir tarih aralığı seçin."});
             var now=(clock??TimeProvider.System).GetUtcNow();
             var localTimes=plans.ToDictionary(p=>p.Id,p=>TimeZoneInfo.ConvertTime(now,TimeZoneInfo.FindSystemTimeZoneById(p.WeeklySource?.TimeZoneId??"Europe/Istanbul")));
             var grouped=rows.ToLookup(x=>x.StudentId);
-            var items=students.Select(student=>{var work=grouped[student.UserId].ToArray();return new TeacherStudyStudent(student.UserId,student.FullName,
+            var items=students.Select(student=>{var work=grouped[student.UserId].Select(t=>new TeacherStudyWork(t.Id,t.RevisionId,t.Title,t.PlannedDate,t.PlannedStartMinute,t.PlannedMinutes,t.IsCompleted,!t.IsCompleted&&IsOverdue(t.PlannedDate,t.PlannedStartMinute,t.PlannedMinutes,localTimes[t.RevisionId]),t.ActualMinutes)).ToArray();return new TeacherStudyStudent(student.UserId,student.FullName,
                 plans.Any(p=>p.StudentId==student.UserId&&p.Status==StudyPlanStatus.Active),plans.Any(p=>p.StudentId==student.UserId&&p.Status==StudyPlanStatus.Draft),
-                work.Count(t=>t.IsCompleted),work.Count(t=>!t.IsCompleted),work.Count(t=>!t.IsCompleted&&IsOverdue(t.PlannedDate,t.PlannedStartMinute,t.PlannedMinutes,localTimes[t.RevisionId])),work.Sum(t=>t.ActualMinutes??0));}).ToArray();
+                work.Count(t=>t.IsCompleted),work.Count(t=>!t.IsCompleted),work.Count(t=>t.IsOverdue),work.Sum(t=>t.ActualMinutes??0),work);}).ToArray();
             return Ok(new TeacherStudyOverview(items,roster.TotalCount,pageNumber,pageSize));
         }
         catch(BusinessRuleException ex) when(ex.Code.StartsWith("Authorization.",StringComparison.Ordinal)){return StatusCode(403,new{message=ex.Message});}

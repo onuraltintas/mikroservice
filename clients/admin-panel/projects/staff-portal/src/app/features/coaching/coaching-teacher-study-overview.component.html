@@ -1,14 +1,21 @@
 <section class="study-overview" aria-label="Öğrencilerin çalışma takibi">
   @if(detail();as selected){
     <button type="button" (click)="back()">Toplu takibe dön</button><h3>{{ selected.student.fullName }} · Çalışma planı</h3>
-    <app-student-study-plans [staffStudentId]="selected.student.studentId" [autoOpenActive]="true" [taskFilter]="selected.filter" />
+    <app-student-study-plans [staffStudentId]="selected.student.studentId" [autoOpenActive]="true" [initialPlanId]="selected.planId??null" [taskFilter]="selected.filter" />
   }@else{
     <h3>Çalışma takibi</h3><p>Atanmış öğrencilerinizin tamamlanan, bekleyen ve geciken çalışmalarını seçilen dönem için birlikte izleyin. Güncel kayıtlar için listeyi yenileyin.</p>
     <form (ngSubmit)="load()" class="filters"><label>Başlangıç<input type="date" name="from" [(ngModel)]="fromDate" required></label><label>Bitiş<input type="date" name="to" [(ngModel)]="toDate" required></label><label>Öğrenci ara<input name="search" [(ngModel)]="search" maxlength="200"></label><button type="submit" [disabled]="loading()">Listeyi yenile</button></form>
+    <label>Göster<select [(ngModel)]="display" (ngModelChange)="workPage=1"><option value="summary">Öğrenci özeti</option><option value="overdue">Geciken çalışmalar</option><option value="pending">Bekleyen çalışmalar</option><option value="completed">Tamamlanan çalışmalar</option></select></label>
     @if(error()){<p role="alert">{{ error() }}</p><button type="button" (click)="load()">Tekrar dene</button>}
     @if(loading()){<p role="status">Çalışmalar yükleniyor…</p>}
     @else if(!error()&&!data().items.length){<p>Bu filtrelerde öğrenci bulunamadı.</p>}
-    @else{<div class="table-wrap"><table><thead><tr><th>Öğrenci</th><th>Plan</th><th>Tamamlanan</th><th>Bekleyen</th><th>Geciken</th><th>Gerçek dakika</th><th>İşlem</th></tr></thead><tbody>
+    @else if(display!=='summary'){
+      <div class="table-wrap"><table><thead><tr><th>Öğrenci</th><th>Tarih / saat</th><th>Çalışma</th><th>Durum</th><th>Süre</th><th>İşlem</th></tr></thead><tbody>
+        @for(row of workItems().slice((workPage-1)*50,workPage*50);track row.task.taskId){<tr><td>{{ row.student.fullName }}</td><td>{{ row.task.plannedDate | date:'dd.MM.yyyy' }} · {{ row.task.plannedStartMinute==null?'Saati belirtilmemiş':clock(row.task.plannedStartMinute) }}</td><td>{{ row.task.title }}</td><td>{{ row.task.isCompleted?'Tamamlandı':row.task.isOverdue?'Gecikmiş':'Bekliyor' }}</td><td>{{ row.task.plannedMinutes }} dk @if(row.task.isCompleted){ · Gerçek {{ row.task.actualMinutes }} dk }</td><td><button type="button" (click)="openWork(row)">İlgili planı aç</button></td></tr>}
+      </tbody></table></div>
+      @if(!workItems().length){<p>Seçilen dönemde bu durumda çalışma yok.</p>}
+      <div class="pagination"><button type="button" (click)="workPage=workPage-1" [disabled]="workPage<=1">Önceki çalışmalar</button><span>{{ workPage }} · {{ workItems().length }} çalışma · bu öğrenci sayfası</span><button type="button" (click)="workPage=workPage+1" [disabled]="workPage*50>=workItems().length">Sonraki çalışmalar</button></div>
+    }@else{<div class="table-wrap"><table><thead><tr><th>Öğrenci</th><th>Plan</th><th>Tamamlanan</th><th>Bekleyen</th><th>Geciken</th><th>Gerçek dakika</th><th>İşlem</th></tr></thead><tbody>
       @for(student of data().items;track student.studentId){<tr><th>{{ student.fullName }}</th><td>{{ student.hasActivePlan?'Aktif':student.hasDraft?'Taslak var':'Plan yok' }}</td><td><button type="button" (click)="open(student,'completed')">{{ student.completedTasks }} tamamlanan</button></td><td><button type="button" (click)="open(student,'pending')">{{ student.pendingTasks }} bekleyen</button></td><td><button type="button" [class.overdue]="student.overdueTasks>0" (click)="open(student,'overdue')">{{ student.overdueTasks }} geciken</button></td><td>{{ student.actualMinutes }}</td><td><button type="button" (click)="open(student)">{{ student.hasActivePlan||student.hasDraft?'Planı yönet':'Plan oluştur' }}</button></td></tr>}
     </tbody></table></div><p class="note">Geciken sayısı bekleyenlerin içindedir. Saatli çalışma bitiş saatinde, saatsiz çalışma ertesi gün gecikmiş sayılır. Arşivdeki tamamlanan çalışmalar dönem toplamına dahildir; plan ayrıntısında ilgili arşiv planından açılır.</p>}
     <div class="pagination"><button type="button" [disabled]="loading()||data().pageNumber<=1" (click)="load(data().pageNumber-1)">Önceki öğrenciler</button><span>{{ data().pageNumber }} · {{ data().totalCount }} öğrenci</span><button type="button" [disabled]="loading()||data().pageNumber*data().pageSize>=data().totalCount" (click)="load(data().pageNumber+1)">Sonraki öğrenciler</button></div>

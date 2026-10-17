@@ -24,6 +24,7 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
   selectCalendarTasks(ids:string[]){this.selectedTaskIds.set(ids);afterNextRender(()=>this.calendarTaskDetail?.nativeElement.focus(),{injector:this.injector});}
   visibleTasks(){const plan=this.selected();if(this.planView()==='calendar')return plan?.tasks.filter(t=>this.selectedTaskIds().includes(t.id))??[];const tasks=this.filteredTasks();return plan?.weeklySource?tasks.slice((this.taskPage-1)*50,this.taskPage*50):tasks;}
   @Input() autoOpenActive=false;
+  @Input() initialPlanId:string|null=null;
   @Input() taskFilter:'all'|'pending'|'completed'|'overdue'='all';
   filteredTasks(){return this.selected()?.tasks.filter(t=>this.taskFilter==='all'||this.taskFilter==='completed'&&t.isCompleted||this.taskFilter==='pending'&&!t.isCompleted||this.taskFilter==='overdue'&&this.isOverdue(t))??[];}
   isOverdue(task:StudyTask){return this.selected()?.status==='Active'&&calendarTaskOverdue(task,this.selected()?.weeklySource?.timeZoneId);}
@@ -91,7 +92,8 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
       takeUntil(this.scopeChanged), takeUntilDestroyed(this.destroyRef), finalize(() => this.loading.set(false))
     ).subscribe({ next: page => {
       this.page.set(page);
-      if (!this.staffStudentId && this.requestedPlanId) {
+      if(this.staffStudentId&&this.initialPlanId&&!this.selected()&&!this.editing){this.open(this.initialPlanId);}
+      else if (!this.staffStudentId && this.requestedPlanId) {
         const id = this.requestedPlanId; this.requestedPlanId = null; this.open(id);
       } else if ((!this.staffStudentId||this.autoOpenActive) && !this.selected() && !this.editing && !this.filter) {
         const active = page.items.find(plan => plan.status === 'Active');
