@@ -17,6 +17,7 @@ public sealed record StudyTaskRescheduleInput([property: JsonRequired] [Range(0,
     DateOnly PlannedDate);
 public sealed record StudyTasksMoveInput([property: JsonRequired] [Range(0,int.MaxValue)] int ExpectedVersion,
     [Required] IReadOnlyList<Guid> TaskIds, DateOnly PlannedDate, [Range(0,1439)] int StartMinute);
+public sealed record StudyTaskTitleInput([property:JsonRequired] [Range(0,int.MaxValue)] int ExpectedVersion,[Required,MaxLength(200)] string Title);
 public sealed record ManualStudyTaskView(Guid Id, DateOnly PlannedDate, string Title, int PlannedMinutes,
     Guid? TopicId, bool IsPinned, bool IsCompleted, int? ActualMinutes, DateTime? CompletedAt = null,
     string? SourceName = null, int? PlannedQuestions = null, int? ActualQuestions = null,

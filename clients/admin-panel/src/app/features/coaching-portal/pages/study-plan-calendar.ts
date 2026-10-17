@@ -2,6 +2,15 @@ import {StudyTask} from '../../../core/services/coaching-study-planning.service'
 
 export interface PlanCalendarBlock {id:string;date:string;startMinute:number|null;minutes:number;lesson:string;lessonKey:string;tasks:StudyTask[]}
 export interface CalendarMove {taskIds:string[];plannedDate:string;startMinute:number}
+export function calendarTaskOverdue(task:StudyTask,zone='Europe/Istanbul',now=new Date()):boolean{
+  if(task.isCompleted)return false;
+  const today=calendarToday(zone,now);
+  if(task.plannedDate!==today)return task.plannedDate<today;
+  if(task.plannedStartMinute==null)return false;
+  const parts=new Intl.DateTimeFormat('en-GB',{timeZone:zone,hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(now);
+  const value=(type:string)=>Number(parts.find(p=>p.type===type)?.value);
+  return task.plannedStartMinute+task.plannedMinutes<=value('hour')*60+value('minute');
+}
 export function calendarMoveError(block:PlanCalendarBlock,date:string,start:number,tasks:StudyTask[]):string{
   if(block.tasks.some(t=>t.isCompleted))return 'Tamamlanmış çalışma içeren ders taşınamaz.';
   if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||dateKey(calendarDate(date))!==date||!Number.isInteger(start)||start<0||start+block.minutes>1440)return 'Dersin tamamı geçerli bir günün içinde kalmalıdır.';

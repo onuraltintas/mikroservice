@@ -87,6 +87,10 @@ public sealed class CoachingStaffStudyController(CoachingManualStudyPlanService 
     public Task<IActionResult> Move(Guid studentId, Guid id, StudyTasksMoveInput request, CancellationToken ct) => Respond(async()=>
         Ok(new {success=true,data=await plans.MoveForStudentAsync(studentId,id,request,ct)}));
 
+    [HttpPut("plans/{id:guid}/tasks/{taskId:guid}/title"), Authorize(Roles="Teacher"), RequestSizeLimit(2048), EnableRateLimiting("study-planning-write")]
+    public Task<IActionResult> CorrectTitle(Guid studentId,Guid id,Guid taskId,StudyTaskTitleInput request,CancellationToken ct)=>Respond(async()=>
+        Ok(new{success=true,data=await plans.CorrectTitleForStudentAsync(studentId,id,taskId,request.ExpectedVersion,request.Title,ct)}));
+
     private async Task<IActionResult> Respond(Func<Task<IActionResult>> action)
     {
         try { return await action(); }

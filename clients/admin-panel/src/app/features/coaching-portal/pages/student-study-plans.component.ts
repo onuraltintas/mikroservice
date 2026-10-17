@@ -7,7 +7,7 @@ import { Observable, Subject, finalize, takeUntil } from 'rxjs';
 import { CoachingStudyPlanningService, StudyPlan, StudyPlanPage, StudyPlanStatus, StudyTask, StudyTaskInput } from '../../../core/services/coaching-study-planning.service';
 import {clock} from './weekly-calendar';
 import {StudyPlanCalendarComponent} from './study-plan-calendar.component';
-import {CalendarMove} from './study-plan-calendar';
+import {CalendarMove,calendarTaskOverdue} from './study-plan-calendar';
 
 @Component({
   selector: 'app-student-study-plans',
@@ -22,7 +22,16 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
   private readonly injector=inject(Injector);
   @ViewChild('calendarTaskDetail') private calendarTaskDetail?:ElementRef<HTMLElement>;
   selectCalendarTasks(ids:string[]){this.selectedTaskIds.set(ids);afterNextRender(()=>this.calendarTaskDetail?.nativeElement.focus(),{injector:this.injector});}
-  visibleTasks(){const plan=this.selected();if(this.planView()==='calendar')return plan?.tasks.filter(t=>this.selectedTaskIds().includes(t.id))??[];return plan?.weeklySource?plan.tasks.slice((this.taskPage-1)*50,this.taskPage*50):plan?.tasks??[];}
+  visibleTasks(){const plan=this.selected();if(this.planView()==='calendar')return plan?.tasks.filter(t=>this.selectedTaskIds().includes(t.id))??[];const tasks=this.filteredTasks();return plan?.weeklySource?tasks.slice((this.taskPage-1)*50,this.taskPage*50):tasks;}
+  @Input() autoOpenActive=false;
+  @Input() taskFilter:'all'|'pending'|'completed'|'overdue'='all';
+  filteredTasks(){return this.selected()?.tasks.filter(t=>this.taskFilter==='all'||this.taskFilter==='completed'&&t.isCompleted||this.taskFilter==='pending'&&!t.isCompleted||this.taskFilter==='overdue'&&this.isOverdue(t))??[];}
+  isOverdue(task:StudyTask){return this.selected()?.status==='Active'&&calendarTaskOverdue(task,this.selected()?.weeklySource?.timeZoneId);}
+  changeTaskFilter(){this.taskPage=1;this.planView.set('list');this.selectedTaskIds.set([]);}
+  taskTitles:Record<string,string>={};
+  correctTitle(task:StudyTask){const p=this.selected();if(!this.staffStudentId||this.readOnly||this.busy()||p?.status!=='Active'||task.isCompleted)return;
+    const title=this.taskTitles[task.id]?.trim();if(!title||title.length>200){this.error.set('Çalışma başlığı 1–200 karakter olmalıdır.');return;}
+    this.mutate(this.service.correctTitle(p.id,task.id,p.version,title,this.staffStudentId),'Çalışma başlığı düzeltildi. Kayıtlar korundu.');}
   @Input() staffStudentId: string | null = null;
   @Input() readOnly = false;
   private readonly scopeChanged = new Subject<void>();
@@ -84,10 +93,10 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
       this.page.set(page);
       if (!this.staffStudentId && this.requestedPlanId) {
         const id = this.requestedPlanId; this.requestedPlanId = null; this.open(id);
-      } else if (!this.staffStudentId && !this.selected() && !this.editing && !this.filter) {
+      } else if ((!this.staffStudentId||this.autoOpenActive) && !this.selected() && !this.editing && !this.filter) {
         const active = page.items.find(plan => plan.status === 'Active');
         if (active) this.open(active.id);
-        else this.service.list(1, 'Active').pipe(takeUntil(this.scopeChanged), takeUntilDestroyed(this.destroyRef))
+        else this.service.list(1, 'Active',...this.studentArgument).pipe(takeUntil(this.scopeChanged), takeUntilDestroyed(this.destroyRef))
           .subscribe({ next: plans => { if (plans.items.length && !this.selected() && !this.editing) this.open(plans.items[0].id); },
             error: error => this.showError(error, 'Aktif plan yüklenemedi. Lütfen tekrar deneyin.') });
       }
@@ -200,9 +209,10 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
 
   private applyPlan(plan: StudyPlan, preserveInputs = false) {
     const previous = this.selected();
-    if(previous?.id!==plan.id||!!previous?.weeklySource!==!!plan.weeklySource){this.planView.set(plan.weeklySource?'calendar':'list');this.selectedTaskIds.set([]);}
+    if(previous?.id!==plan.id||!!previous?.weeklySource!==!!plan.weeklySource){this.planView.set(this.taskFilter!=='all'?'list':plan.weeklySource?'calendar':'list');this.selectedTaskIds.set([]);}
     const keepInputs = preserveInputs && previous?.id === plan.id && plan.status === 'Active';
     const minutes = this.actualMinutes; const questions = this.actualQuestions; const dates = this.targetDates;
+    const titles=this.taskTitles;
     this.selected.set(plan);
     this.editing = plan.status === 'Draft' && !this.readOnly && !plan.weeklySource;
     this.taskPage=1;
@@ -212,6 +222,7 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
     this.actualMinutes = Object.fromEntries(plan.tasks.map(task => [task.id, keepInputs && !task.isCompleted && Object.hasOwn(minutes, task.id) ? minutes[task.id] : task.actualMinutes ?? task.plannedMinutes]));
     this.actualQuestions = Object.fromEntries(plan.tasks.map(task => [task.id, keepInputs && !task.isCompleted && Object.hasOwn(questions, task.id) ? questions[task.id] : task.actualQuestions ?? null]));
     this.targetDates = Object.fromEntries(plan.tasks.map(task => [task.id, keepInputs && !task.isCompleted && dates[task.id] && dates[task.id] !== previous?.tasks.find(old => old.id === task.id)?.plannedDate ? dates[task.id] : task.plannedDate]));
+    this.taskTitles=Object.fromEntries(plan.tasks.map(t=>[t.id,keepInputs&&!t.isCompleted&&titles[t.id]&&titles[t.id]!==previous?.tasks.find(old=>old.id===t.id)?.title?titles[t.id]:t.title]));
     this.dirty = false;
     this.publishConfirmed = false;
     this.completionError.set(null);
@@ -224,10 +235,10 @@ export class StudentStudyPlansComponent implements OnInit, OnChanges {
 
   private hasUnsavedTaskInputs() {
     const plan = this.selected();
-    return !this.staffStudentId && !this.readOnly && plan?.status === 'Active' && plan.tasks.some(task => !task.isCompleted && (
+    return !this.readOnly && plan?.status === 'Active' && plan.tasks.some(task => !task.isCompleted && (
       this.actualMinutes[task.id] !== (task.actualMinutes ?? task.plannedMinutes)
       || (this.actualQuestions[task.id] ?? null) !== (task.actualQuestions ?? null)
-      || this.targetDates[task.id] !== task.plannedDate));
+      || this.targetDates[task.id] !== task.plannedDate || !!this.staffStudentId&&this.taskTitles[task.id]!==task.title));
   }
 
   private canLeaveEditor() {

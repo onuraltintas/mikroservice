@@ -1,0 +1,16 @@
+<section class="study-overview" aria-label="Öğrencilerin çalışma takibi">
+  @if(detail();as selected){
+    <button type="button" (click)="back()">Toplu takibe dön</button><h3>{{ selected.student.fullName }} · Çalışma planı</h3>
+    <app-student-study-plans [staffStudentId]="selected.student.studentId" [autoOpenActive]="true" [taskFilter]="selected.filter" />
+  }@else{
+    <h3>Çalışma takibi</h3><p>Atanmış öğrencilerinizin tamamlanan, bekleyen ve geciken çalışmalarını seçilen dönem için birlikte izleyin. Güncel kayıtlar için listeyi yenileyin.</p>
+    <form (ngSubmit)="load()" class="filters"><label>Başlangıç<input type="date" name="from" [(ngModel)]="fromDate" required></label><label>Bitiş<input type="date" name="to" [(ngModel)]="toDate" required></label><label>Öğrenci ara<input name="search" [(ngModel)]="search" maxlength="200"></label><button type="submit" [disabled]="loading()">Listeyi yenile</button></form>
+    @if(error()){<p role="alert">{{ error() }}</p><button type="button" (click)="load()">Tekrar dene</button>}
+    @if(loading()){<p role="status">Çalışmalar yükleniyor…</p>}
+    @else if(!error()&&!data().items.length){<p>Bu filtrelerde öğrenci bulunamadı.</p>}
+    @else{<div class="table-wrap"><table><thead><tr><th>Öğrenci</th><th>Plan</th><th>Tamamlanan</th><th>Bekleyen</th><th>Geciken</th><th>Gerçek dakika</th><th>İşlem</th></tr></thead><tbody>
+      @for(student of data().items;track student.studentId){<tr><th>{{ student.fullName }}</th><td>{{ student.hasActivePlan?'Aktif':student.hasDraft?'Taslak var':'Plan yok' }}</td><td><button type="button" (click)="open(student,'completed')">{{ student.completedTasks }} tamamlanan</button></td><td><button type="button" (click)="open(student,'pending')">{{ student.pendingTasks }} bekleyen</button></td><td><button type="button" [class.overdue]="student.overdueTasks>0" (click)="open(student,'overdue')">{{ student.overdueTasks }} geciken</button></td><td>{{ student.actualMinutes }}</td><td><button type="button" (click)="open(student)">{{ student.hasActivePlan||student.hasDraft?'Planı yönet':'Plan oluştur' }}</button></td></tr>}
+    </tbody></table></div><p class="note">Geciken sayısı bekleyenlerin içindedir. Saatli çalışma bitiş saatinde, saatsiz çalışma ertesi gün gecikmiş sayılır. Arşivdeki tamamlanan çalışmalar dönem toplamına dahildir; plan ayrıntısında ilgili arşiv planından açılır.</p>}
+    <div class="pagination"><button type="button" [disabled]="loading()||data().pageNumber<=1" (click)="load(data().pageNumber-1)">Önceki öğrenciler</button><span>{{ data().pageNumber }} · {{ data().totalCount }} öğrenci</span><button type="button" [disabled]="loading()||data().pageNumber*data().pageSize>=data().totalCount" (click)="load(data().pageNumber+1)">Sonraki öğrenciler</button></div>
+  }
+</section>

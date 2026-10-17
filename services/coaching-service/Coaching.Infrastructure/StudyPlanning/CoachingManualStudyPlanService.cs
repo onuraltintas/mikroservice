@@ -33,6 +33,14 @@ public sealed class CoachingManualStudyPlanService(CoachingDbContext db, ICoachi
     public Task<ManualStudyPlanView> RescheduleForStudentAsync(Guid student, Guid id, Guid task, int version, DateOnly date, CancellationToken ct = default) => RescheduleCoreAsync(id, task, version, date, ct, student);
     public Task<ManualStudyPlanView> MoveTasksAsync(Guid id, StudyTasksMoveInput request, CancellationToken ct = default) => MoveCoreAsync(id, request, ct);
     public Task<ManualStudyPlanView> MoveForStudentAsync(Guid student, Guid id, StudyTasksMoveInput request, CancellationToken ct = default) => MoveCoreAsync(id, request, ct, student);
+    public Task<ManualStudyPlanView> CorrectTitleForStudentAsync(Guid student,Guid id,Guid taskId,int version,string title,CancellationToken ct=default)
+        => LockedAsync(async owner=>
+        {
+            var revision=await OwnedAsync(id,owner,version,ct);var task=await ActiveTaskAsync(revision,taskId,ct);
+            if(task.IsCompleted)throw Conflict("Tamamlanan çalışmanın bilgileri değiştirilemez.");
+            task.CorrectPlanning(title,task.PlannedDate,task.PlannedMinutes);revision.RecordTaskChange();
+            await db.SaveChangesAsync(ct);return await ViewAsync(revision,ct);
+        },ct,student,true);
 
     private Task<ManualStudyPlanView> MoveCoreAsync(Guid id, StudyTasksMoveInput request, CancellationToken ct, Guid? targetStudent=null)
         => LockedAsync(async student =>

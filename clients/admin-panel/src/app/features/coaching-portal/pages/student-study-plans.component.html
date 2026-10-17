@@ -70,6 +70,7 @@
         }
         @if (plan.status === 'Archived') { <p class="muted">Geçmiş plan. Çalışma kayıtların korunur; bu plan üzerinde değişiklik yapılamaz.</p> }
         <div class="plan-view-switch" role="group" aria-label="Plan görünümü"><button type="button" class="secondary" [attr.aria-pressed]="planView()==='calendar'" (click)="planView.set('calendar')" [disabled]="busy()">Takvim</button><button type="button" class="secondary" [attr.aria-pressed]="planView()==='list'" (click)="planView.set('list')" [disabled]="busy()">Liste</button></div>
+        <label>Çalışma durumu<select [(ngModel)]="taskFilter" (ngModelChange)="changeTaskFilter()" [disabled]="busy()"><option value="all">Tüm çalışmalar</option><option value="pending">Bekleyen</option><option value="completed">Tamamlanan</option><option value="overdue">Geciken</option></select></label>
         @if(planView()==='calendar'){
           <app-study-plan-calendar [plan]="plan" [disabled]="busy()" [editable]="!readOnly" (taskSelected)="selectCalendarTasks($event)" (tasksMoved)="moveCalendar($event)" />
           @if(selectedTaskIds().length){<div #calendarTaskDetail class="calendar-task-detail" tabindex="-1"><h3>Seçilen çalışmalar</h3><button type="button" class="secondary" (click)="selectedTaskIds.set([])" [disabled]="busy()">Ayrıntıları kapat</button></div>}
@@ -77,6 +78,7 @@
         @for (task of visibleTasks(); track task.id) {
           <article class="task" [class.completed]="task.isCompleted">
             <h3>{{ task.title }}</h3><p>{{ task.plannedDate | date:'dd.MM.yyyy' }} · {{ task.plannedMinutes }} dk @if (task.isPinned) { · Sabit }</p>
+            @if(isOverdue(task)){<p class="notice error">Gecikmiş çalışma</p>}
             @if(task.plannedStartMinute!=null){<p>{{ task.lessonName }} · {{ clock(task.plannedStartMinute) }}–{{ clock(task.plannedStartMinute+task.plannedMinutes) }}</p>}
             @for (outcome of task.outcomes || []; track outcome.outcomeId) {
               <p>{{ outcome.code }} — {{ outcome.name }} · {{ outcome.allocatedMinutes }} dk · süre sürümü {{ outcome.estimateNumber }} @if (outcome.origin === 'StudentOverride') { · Öğrencinin süre seçimi }</p>
@@ -87,6 +89,7 @@
               <p class="completion">Tamamlandı · {{ task.actualMinutes }} dk · {{ task.completedAt | date:'dd.MM.yyyy HH:mm' }}</p>
               <p>Kaydedilen soru: {{ task.actualQuestions ?? 'Kayıt yok' }}</p>
             } @else if (plan.status === 'Active' && !readOnly) {
+              @if(staffStudentId){<div class="fields"><label>Çalışma başlığını düzelt<input [(ngModel)]="taskTitles[task.id]" maxlength="200" [disabled]="busy()"></label><button type="button" (click)="correctTitle(task)" [disabled]="busy()">Başlığı kaydet</button></div>}
               @if (!staffStudentId) {
               <div class="fields">
                 <label>Gerçek süre (dk)<input type="number" [(ngModel)]="actualMinutes[task.id]" (ngModelChange)="completionError.set(null)" min="1" max="1440" step="1" [disabled]="busy()" [attr.aria-invalid]="completionError()?.taskId === task.id && completionError()?.field === 'minutes' ? 'true' : null" [attr.aria-describedby]="completionError()?.taskId === task.id && completionError()?.field === 'minutes' ? 'completion-error-' + task.id : null"></label>
@@ -104,7 +107,7 @@
             }
           </article>
         }
-        @if(planView()==='list'&&plan.weeklySource&&plan.tasks.length>50){<div class="pagination"><button type="button" class="secondary" (click)="taskPage=taskPage-1" [disabled]="taskPage===1||busy()">Önceki çalışmalar</button><span>{{ taskPage }} · {{ plan.tasks.length }} çalışma</span><button type="button" class="secondary" (click)="taskPage=taskPage+1" [disabled]="taskPage*50>=plan.tasks.length||busy()">Sonraki çalışmalar</button></div>}
+        @if(planView()==='list'&&plan.weeklySource&&filteredTasks().length>50){<div class="pagination"><button type="button" class="secondary" (click)="taskPage=taskPage-1" [disabled]="taskPage===1||busy()">Önceki çalışmalar</button><span>{{ taskPage }} · {{ filteredTasks().length }} çalışma</span><button type="button" class="secondary" (click)="taskPage=taskPage+1" [disabled]="taskPage*50>=filteredTasks().length||busy()">Sonraki çalışmalar</button></div>}
       } @else { <div class="empty"><h2>Planına buradan devam et</h2><p>Listeden bir plan seç veya yeni bir taslak oluştur.</p></div> }
       @if (busy()) { <p role="status">İşlem sürüyor…</p> }
     </div>

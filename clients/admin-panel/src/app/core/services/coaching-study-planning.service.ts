@@ -28,6 +28,8 @@ export interface WeeklyPlanSource {draftVersion:number;learningContextVersion:nu
 export interface StudyPlan extends StudyPlanSummary { tasks: StudyTask[];weeklySource?:WeeklyPlanSource|null }
 export interface StudyPlanInput { title: string; tasks: StudyTaskInput[] }
 export interface StudyPlanPage { items: StudyPlanSummary[]; totalCount: number; pageNumber: number; pageSize: number }
+export interface TeacherStudyStudent {studentId:string;fullName:string;hasActivePlan:boolean;hasDraft:boolean;completedTasks:number;pendingTasks:number;overdueTasks:number;actualMinutes:number}
+export interface TeacherStudyOverview {items:TeacherStudyStudent[];totalCount:number;pageNumber:number;pageSize:number}
 export type StudyDay = 'Sunday' | 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday';
 export interface StudyWindow { day: StudyDay; startMinute: number; endMinute: number }
 export interface StudyAvailability { version: number; timeZoneId: string; windows: StudyWindow[] }
@@ -139,5 +141,12 @@ export class CoachingStudyPlanningService {
   move(id:string,expectedVersion:number,taskIds:string[],plannedDate:string,startMinute:number,studentId:string|null=null){
     return this.http.put<ApiResult<StudyPlan>>(`${this.plansUrl(studentId)}/${encodeURIComponent(id)}/calendar-move`,
       {expectedVersion,taskIds,plannedDate,startMinute}).pipe(map(r=>r.data));
+  }
+  correctTitle(id:string,taskId:string,expectedVersion:number,title:string,studentId:string){
+    return this.http.put<ApiResult<StudyPlan>>(`${this.plansUrl(studentId)}/${encodeURIComponent(id)}/tasks/${encodeURIComponent(taskId)}/title`,{expectedVersion,title}).pipe(map(r=>r.data));
+  }
+  teacherOverview(fromDate:string,toDate:string,pageNumber=1,search=''){
+    const params=new HttpParams().set('fromDate',fromDate).set('toDate',toDate).set('pageNumber',pageNumber).set('pageSize',25).set('search',search.trim());
+    return this.http.get<TeacherStudyOverview>(`${environment.apiUrl}/coaching/teachers/me/study-overview`,{params});
   }
 }
