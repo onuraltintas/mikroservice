@@ -53,6 +53,10 @@ test('legacy completed work remains available in list and untimed calendar with 
   await page.getByRole('group',{name:'Plan görünümü',exact:true}).getByRole('button',{name:'Takvim',exact:true}).click();const grid=calendar(page);await expect(grid.getByText('Saati belirtilmemiş',{exact:true})).toBeVisible();await expect(grid.getByTestId('plan-time-scroller')).toHaveCount(0);
   await grid.locator('.untimed-block').click();await expect(page.locator('article.task')).toContainText('Kaydedilen soru: 0');expect(f.old.tasks[0].actualMinutes).toBe(25);expect(f.old.version).toBe(7);expect(f.writes).toHaveLength(0);
 });
+test('a first lesson on Sunday stays horizontally visible in a narrow week',async({context,page})=>{
+  const f=await fixture(context),tasks=f.getAnnual().tasks;f.getAnnual().tasks=[...tasks.slice(0,2).map(t=>({...t,plannedDate:'2027-01-10'})),{...tasks[0],id:'done',plannedDate:'2027-01-04',plannedStartMinute:480,isCompleted:true,actualMinutes:25,actualQuestions:0,completedAt:'2026-10-16T10:00:00Z'}];await open(page);
+  await expect(calendar(page).locator('.day-track[data-date="2027-01-10"] .timed-block').first()).toBeInViewport({ratio:.95});expect(f.writes).toHaveLength(0);
+});
 test('calendar details reuse completion and rescheduling endpoints and preserve other unsaved inputs',async({context,page})=>{
   const f=await fixture(context,'Active');await open(page);await calendar(page).locator('.timed-block').filter({hasText:'Matematik'}).first().click();const first=page.locator('article.task').filter({has:page.getByRole('heading',{name:'Konu a',exact:true})}),second=page.locator('article.task').filter({has:page.getByRole('heading',{name:'Konu b',exact:true})});
   await second.getByLabel('Gerçek süre (dk)',{exact:true}).fill('32');await second.getByLabel('Gerçek soru (isteğe bağlı)',{exact:true}).fill('2');await first.getByLabel('Gerçek süre (dk)',{exact:true}).fill('17');await first.getByLabel('Gerçek soru (isteğe bağlı)',{exact:true}).fill('0');await first.getByRole('button',{name:'Tamamla',exact:true}).click();

@@ -18,6 +18,10 @@ describe('saved study plan calendar',()=>{
     c.openDay(new Date(2027,2,8));f.detectChanges();await f.whenStable();expect(c.view()).toBe('day');expect(f.nativeElement.querySelector('.time-scroller').scrollTop).toBe(1170);
     expect(f.nativeElement.textContent).toContain('20:00');expect(f.nativeElement.querySelectorAll('.timed-block')).toHaveLength(1);
   });
+  it('focuses the occupied anchor day instead of an earlier completed lesson elsewhere in the week',async()=>{
+    const {f,c}=await setup({...plan,tasks:[{...task('done','2027-01-04',480),isCompleted:true,actualMinutes:25,completedAt:'2026-10-16T10:00:00Z'},task('next','2027-01-10',1200)]});
+    expect(c.dateKey(c.anchor())).toBe('2027-01-10');expect(f.nativeElement.querySelector('.time-scroller').scrollTop).toBe(1170);
+  });
   it('skips empty dates with occupied-day navigation while Today and a chosen empty date stay explicit',async()=>{
     const {f,c}=await setup();c.occupied(1);f.detectChanges();await f.whenStable();expect(c.dateKey(c.anchor())).toBe('2027-03-08');c.occupied(-1);expect(c.dateKey(c.anchor())).toBe('2027-01-04');
     c.changeView('day');c.today();f.detectChanges();await f.whenStable();expect(c.dateKey(c.anchor())).toBe('2026-10-17');expect(f.nativeElement.textContent).toContain('Bu aralıkta çalışma yok');
