@@ -32,6 +32,8 @@ public sealed class WeeklyOutcomePlanTests
         Assert.Equal(60,tasks.Sum(x=>x.PlannedMinutes));Assert.Equal(2,await f.Db.Set<StudyPlanTaskOutcome>().CountAsync(x=>tasks.Select(t=>t.Id).Contains(x.TaskId)));
         Assert.Equal(before,JsonSerializer.Serialize(await f.Db.StudyPlanTasks.AsNoTracking().Where(x=>x.RevisionId!=created.Id).ToArrayAsync()));
         Assert.Single(await f.Db.StudyPlanRevisions.Where(x=>x.IsActive).ToArrayAsync());
+        var export=await new Coaching.Infrastructure.Repositories.CoachingDataExportRepository(f.Db).ExportStudentDataAsync(f.User.UserId!.Value,DateTimeOffset.UtcNow,default);
+        var exported=export.StudyPlans!.Single(x=>x.Id==created.Id);Assert.NotNull(exported.WeeklySource);Assert.All(exported.Tasks,x=>Assert.Equal(1080,x.PlannedStartMinute));
     }
     [Fact]
     public async Task ChangedWeeklyDraftOrEstimateRejectsOldPreview_AndIncompleteCurriculumBlocksSaving()
