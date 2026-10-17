@@ -1,4 +1,5 @@
 import {test,expect} from '@playwright/test';
+test.beforeEach(async({page})=>{await page.clock.setFixedTime(new Date('2026-10-17T12:00:00Z'));});
 const token=()=>{const e=x=>Buffer.from(JSON.stringify(x)).toString('base64url');return`${e({alg:'HS256'})}.${e({sub:'b8a09753-f3ea-44d8-a444-cf49577b4a01',role:'Student',platform_product:'coaching',exp:Math.floor(Date.now()/1000)+900})}.fixture`;};
 async function fixture(context,status='Draft'){
   const task=(id,date,start,minutes,lesson='Matematik')=>({id,title:'Konu '+id,plannedDate:date,plannedStartMinute:start,plannedMinutes:minutes,weeklyLessonId:lesson,lessonName:lesson,topicId:null,isPinned:false,isCompleted:false,actualMinutes:null,actualQuestions:null,completedAt:null,outcomes:[{outcomeId:id,code:'TEST.'+id,name:'Örnek kazanım '+id,estimateId:'estimate',estimateNumber:2,allocatedMinutes:minutes,origin:'Catalog'}]});

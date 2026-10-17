@@ -54,8 +54,15 @@ export class StudyPlanCalendarComponent implements OnChanges {
   select(block:PlanCalendarBlock){this.taskSelected.emit(block.tasks.map(t=>t.id));}
   showDay(){this.taskSelected.emit(this.rows(this.anchor()).flatMap(b=>b.tasks.map(t=>t.id)));}
   private focusHours(){afterNextRender(()=>{
-    const starts=this.days().flatMap(d=>this.timed(d).map(b=>b.startMinute!));
+    const anchorStarts=this.timed(this.anchor()).map(b=>b.startMinute!);
+    const starts=anchorStarts.length?anchorStarts:this.days().flatMap(d=>this.timed(d).map(b=>b.startMinute!));
     if(this.scrollerElement)this.scrollerElement.scrollTop=starts.length?Math.max(0,Math.min(...starts)-30):480;
+    for(const element of this.host.nativeElement.querySelectorAll<HTMLElement>('.time-scroller,.untimed-wrap')){
+      const timed=element.classList.contains('time-scroller'),dates=this.days().filter(d=>(timed?this.timed(d):this.untimed(d)).length);
+      const day=dates.find(d=>dateKey(d)===dateKey(this.anchor()))??dates[0];
+      const column=day?element.querySelector<HTMLElement>(`[data-date="${dateKey(day)}"]`):null;
+      if(column)element.scrollLeft=Math.max(0,element.scrollLeft+column.getBoundingClientRect().left-element.getBoundingClientRect().left-44);
+    }
     if(this.focusPage){this.focusPage=false;this.host.nativeElement.scrollIntoView?.({block:'start'});}
   },{injector:this.injector});}
 }

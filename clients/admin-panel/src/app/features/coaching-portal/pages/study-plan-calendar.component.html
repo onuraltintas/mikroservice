@@ -22,7 +22,7 @@
   }@else{
     @if(view()==='day'&&hasWork()){<button type="button" class="secondary day-detail" (click)="showDay()" [disabled]="disabled">Bu günün çalışmalarını aç</button>}
     @if(hasUntimed()){
-      <div class="untimed-wrap"><div class="untimed-grid" [style.grid-template-columns]="columns()"><span>Saati belirtilmemiş</span>@for(day of days();track dateKey(day)){<div class="untimed-day">@for(block of untimed(day);track block.id){<button type="button" class="secondary untimed-block" [attr.aria-label]="label(block)" (click)="select(block)" [disabled]="disabled"><strong>{{ block.lesson }}</strong><span>{{ day | date:'dd.MM.yyyy' }} · {{ block.minutes }} dk</span>@if(done(block)===block.tasks.length){<span>Tamamlandı</span>}</button>}</div>}</div></div>
+      <div class="untimed-wrap"><div class="untimed-grid" [style.grid-template-columns]="columns()"><span>Saati belirtilmemiş</span>@for(day of days();track dateKey(day)){<div class="untimed-day" [attr.data-date]="dateKey(day)">@for(block of untimed(day);track block.id){<button type="button" class="secondary untimed-block" [attr.aria-label]="label(block)" (click)="select(block)" [disabled]="disabled"><strong>{{ block.lesson }}</strong><span>{{ day | date:'dd.MM.yyyy' }} · {{ block.minutes }} dk</span>@if(done(block)===block.tasks.length){<span>Tamamlandı</span>}</button>}</div>}</div></div>
     }
     @if(hasTimed()){
       <div class="time-scroller" #scroller data-testid="plan-time-scroller" tabindex="0" aria-label="Planın saatli çalışmaları">
