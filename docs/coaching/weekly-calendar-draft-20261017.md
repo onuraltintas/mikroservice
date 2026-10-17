@@ -2,7 +2,8 @@
 
 Öğrenci paneline **Haftalık programım** ekranı eklendi: `/coaching-portal/weekly-plan`.
 Bu aşama haftalık ders şablonunu oluşturur ve kaydeder. Kazanımları 1 Haziran'a kadar
-dağıtan yıllık plan üretimi sonraki aşamadır. Özellik 17 Ekim 2026'da canlıya alındı;
+dağıtan yıllık plan üretimi [ayrı geliştirmede tamamlandı](weekly-outcome-plan-20261017.md),
+ancak henüz canlıya alınmadı. Haftalık takvim özelliği 17 Ekim 2026'da canlıya alındı;
 gerçek öğrenci akışının ve veri koruma kontrollerinin sonuçları
 [canlı yayın raporunda](weekly-calendar-live-release-20261017.md) bulunur.
 
