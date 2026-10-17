@@ -1,10 +1,10 @@
 <section class="plan-calendar" aria-label="Kayıtlı çalışma planı takvimi">
   <div class="calendar-toolbar">
-    <div class="period-controls"><button type="button" aria-label="Önceki dönem" (click)="navigate(-1)" [disabled]="disabled">‹</button><button type="button" (click)="today()" [disabled]="disabled">Bugün</button><button type="button" aria-label="Sonraki dönem" (click)="navigate(1)" [disabled]="disabled">›</button></div>
-    <div class="view-switch" role="group" aria-label="Yıllık takvim görünümü">@for(option of views;track option.id){<button type="button" [attr.aria-pressed]="view()===option.id" (click)="changeView(option.id)" [disabled]="disabled">{{ option.label }}</button>}</div>
+    <div class="period-controls"><button type="button" class="secondary" aria-label="Önceki dönem" (click)="navigate(-1)" [disabled]="disabled">‹</button><button type="button" class="secondary" (click)="today()" [disabled]="disabled">Bugün</button><button type="button" class="secondary" aria-label="Sonraki dönem" (click)="navigate(1)" [disabled]="disabled">›</button></div>
+    <div class="view-switch" role="group" aria-label="Yıllık takvim görünümü">@for(option of views;track option.id){<button type="button" class="secondary" [attr.aria-pressed]="view()===option.id" (click)="changeView(option.id)" [disabled]="disabled">{{ option.label }}</button>}</div>
   </div>
   <h3 class="period-title" aria-live="polite">{{ title() }}</h3>
-  <div class="date-tools"><label>Tarihe git<input type="date" [ngModel]="dateKey(anchor())" (ngModelChange)="goToDate($event)" [disabled]="disabled"></label><button type="button" (click)="focusWork()" [disabled]="disabled||!hasAny()">Yakın çalışmaya git</button><button type="button" (click)="occupied(-1)" [disabled]="disabled||!adjacent(-1)">Önceki dolu gün</button><button type="button" (click)="occupied(1)" [disabled]="disabled||!adjacent(1)">Sonraki dolu gün</button></div>
+  <div class="date-tools"><label>Tarihe git<input type="date" [ngModel]="dateKey(anchor())" (ngModelChange)="goToDate($event)" [disabled]="disabled"></label><button type="button" class="secondary" (click)="focusWork()" [disabled]="disabled||!hasAny()">Yakın çalışmaya git</button><button type="button" class="secondary" (click)="occupied(-1)" [disabled]="disabled||!adjacent(-1)">Önceki dolu gün</button><button type="button" class="secondary" (click)="occupied(1)" [disabled]="disabled||!adjacent(1)">Sonraki dolu gün</button></div>
   <p class="calendar-note">Bu takvim seçtiğin planın kayıtlı çalışmalarını gösterir. Saat dilimi: {{ zone }}. Ders kartını seçerek kazanımları ve çalışma ayrıntılarını açabilirsin.</p>
   @if(!hasAny()){<p class="empty-period" role="status">Bu planda çalışma bulunmuyor.</p>}
   @else if(!hasWork()){<p class="empty-period" role="status">Bu aralıkta çalışma yok. Yakın çalışmaya veya başka bir dolu güne geçebilirsin.</p>}
@@ -13,23 +13,23 @@
       @for(label of weekLabels;track label){<div class="month-heading">{{ label }}</div>}
       @for(day of days();track dateKey(day)){
         <div class="month-day" [class.other-month]="day.getMonth()!==anchor().getMonth()" [attr.data-date]="dateKey(day)">
-          <button type="button" class="month-date" [attr.aria-label]="dayTitle(day)+' gününü aç'" (click)="openDay(day)" [disabled]="disabled">{{ day.getDate() }}</button>
-          @for(block of rows(day).slice(0,3);track block.id){<button type="button" [class]="'month-block color-'+color(block)" [class.completed]="done(block)===block.tasks.length" [attr.aria-label]="label(block)" [title]="label(block)" (click)="select(block)" [disabled]="disabled"><strong>{{ block.lesson }}</strong><span>{{ range(block) }}</span>@if(done(block)===block.tasks.length){<span>Tamamlandı</span>}</button>}
-          @if(rows(day).length>3){<button type="button" class="more-day" (click)="openDay(day)" [disabled]="disabled">+{{ rows(day).length-3 }} ders</button>}
+          <button type="button" class="secondary month-date" [attr.aria-label]="dayTitle(day)+' gününü aç'" (click)="openDay(day)" [disabled]="disabled">{{ day.getDate() }}</button>
+          @for(block of rows(day).slice(0,3);track block.id){<button type="button" [class]="'secondary month-block color-'+color(block)" [class.completed]="done(block)===block.tasks.length" [attr.aria-label]="label(block)" [title]="label(block)" (click)="select(block)" [disabled]="disabled"><strong>{{ block.lesson }}</strong><span>{{ range(block) }}</span>@if(done(block)===block.tasks.length){<span>Tamamlandı</span>}</button>}
+          @if(rows(day).length>3){<button type="button" class="secondary more-day" (click)="openDay(day)" [disabled]="disabled">+{{ rows(day).length-3 }} ders</button>}
         </div>
       }
     </div>
   }@else{
-    @if(view()==='day'&&hasWork()){<button type="button" class="day-detail" (click)="showDay()" [disabled]="disabled">Bu günün çalışmalarını aç</button>}
+    @if(view()==='day'&&hasWork()){<button type="button" class="secondary day-detail" (click)="showDay()" [disabled]="disabled">Bu günün çalışmalarını aç</button>}
     @if(hasUntimed()){
-      <div class="untimed-wrap"><div class="untimed-grid" [style.grid-template-columns]="columns()"><span>Saati belirtilmemiş</span>@for(day of days();track dateKey(day)){<div class="untimed-day">@for(block of untimed(day);track block.id){<button type="button" class="untimed-block" [attr.aria-label]="label(block)" (click)="select(block)" [disabled]="disabled"><strong>{{ block.lesson }}</strong><span>{{ day | date:'dd.MM.yyyy' }} · {{ block.minutes }} dk</span>@if(done(block)===block.tasks.length){<span>Tamamlandı</span>}</button>}</div>}</div></div>
+      <div class="untimed-wrap"><div class="untimed-grid" [style.grid-template-columns]="columns()"><span>Saati belirtilmemiş</span>@for(day of days();track dateKey(day)){<div class="untimed-day">@for(block of untimed(day);track block.id){<button type="button" class="secondary untimed-block" [attr.aria-label]="label(block)" (click)="select(block)" [disabled]="disabled"><strong>{{ block.lesson }}</strong><span>{{ day | date:'dd.MM.yyyy' }} · {{ block.minutes }} dk</span>@if(done(block)===block.tasks.length){<span>Tamamlandı</span>}</button>}</div>}</div></div>
     }
     @if(hasTimed()){
       <div class="time-scroller" #scroller data-testid="plan-time-scroller" tabindex="0" aria-label="Planın saatli çalışmaları">
-        <div class="day-headers" [style.grid-template-columns]="columns()"><span>Saat</span>@for(day of days();track dateKey(day)){<button type="button" (click)="openDay(day)" [disabled]="disabled">{{ shortDay(day) }}</button>}</div>
+        <div class="day-headers" [style.grid-template-columns]="columns()"><span>Saat</span>@for(day of days();track dateKey(day)){<button type="button" class="secondary" (click)="openDay(day)" [disabled]="disabled">{{ shortDay(day) }}</button>}</div>
         <div class="time-body" [style.grid-template-columns]="columns()"><div class="time-axis">@for(hour of hours;track hour){<span [style.top.px]="hour*72">{{ clock(hour*60) }}</span>}</div>
           @for(day of days();track dateKey(day)){<div class="day-track" [attr.data-date]="dateKey(day)">
-            @for(block of timed(day);track block.id){<button type="button" [class]="'timed-block color-'+color(block)" [class.completed]="done(block)===block.tasks.length" [class.short]="block.minutes<30" [style.grid-row]="((block.startMinute??0)+1)+' / '+((block.startMinute??0)+block.minutes+1)" [attr.aria-label]="label(block)" [title]="label(block)" (click)="select(block)" [disabled]="disabled"><strong>{{ block.lesson }}</strong><span>{{ range(block) }}</span>@if(block.tasks.length>1){<span>{{ block.tasks.length }} çalışma</span>}@if(done(block)){<span>{{ done(block) }}/{{ block.tasks.length }} tamamlandı</span>}</button>}
+            @for(block of timed(day);track block.id){<button type="button" [class]="'secondary timed-block color-'+color(block)" [class.completed]="done(block)===block.tasks.length" [class.short]="block.minutes<30" [style.grid-row]="((block.startMinute??0)+1)+' / '+((block.startMinute??0)+block.minutes+1)" [attr.aria-label]="label(block)" [title]="label(block)" (click)="select(block)" [disabled]="disabled"><strong>{{ block.lesson }}</strong><span>{{ range(block) }}</span>@if(block.tasks.length>1){<span>{{ block.tasks.length }} çalışma</span>}@if(done(block)){<span>{{ done(block) }}/{{ block.tasks.length }} tamamlandı</span>}</button>}
           </div>}
         </div>
       </div>
