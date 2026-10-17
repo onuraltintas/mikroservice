@@ -15,6 +15,7 @@ public sealed class StudyPlanRevision : AggregateRoot
     public int? AutomaticAvailabilityVersion { get; private set; }
     public Guid? AutomaticSourceRevisionId { get; private set; }
     public int? AutomaticSourceRevisionVersion { get; private set; }
+    public WeeklyPlanSource? WeeklySource { get; private set; }
     private StudyPlanRevision() { }
 
     public static StudyPlanRevision Create(Guid studentId, Guid planId, int revisionNumber, string title)
@@ -41,6 +42,13 @@ public sealed class StudyPlanRevision : AggregateRoot
         AutomaticAvailabilityVersion = availabilityVersion;
         AutomaticSourceRevisionId = revisionId;
         AutomaticSourceRevisionVersion = revisionVersion;
+    }
+
+    public void SetWeeklySource(WeeklyPlanSource source)
+    {
+        if(Status!=StudyPlanStatus.Draft||source.DraftVersion<0||source.EndDate<source.StartDate||string.IsNullOrEmpty(source.Fingerprint))
+            throw new ArgumentException("Geçerli haftalık plan kaynağı gereklidir.");
+        WeeklySource=source;
     }
 
     public void RenameDraft(string title)
@@ -86,6 +94,9 @@ public sealed class StudyPlanTask : AggregateRoot
     public bool IsPinned { get; private set; }
     public bool IsCompleted { get; private set; }
     public DateTime? CompletedAt { get; private set; }
+    public int? PlannedStartMinute { get; private set; }
+    public Guid? WeeklyLessonId { get; private set; }
+    public string? LessonNameSnapshot { get; private set; }
     private StudyPlanTask() { }
 
     public static StudyPlanTask Create(StudyPlanRevision revision, DateOnly plannedDate, string title,
@@ -118,6 +129,13 @@ public sealed class StudyPlanTask : AggregateRoot
         UpdatedAt = CompletedAt;
     }
 
+    public void SetWeeklyPlacement(Guid lesson,string lessonName,int startMinute)
+    {
+        if(lesson==Guid.Empty||startMinute is <0 or >1439||startMinute+PlannedMinutes>1440)
+            throw new ArgumentException("Dersin başlangıcı ve süresi günün içinde olmalıdır.");
+        WeeklyLessonId=lesson;LessonNameSnapshot=StudyCatalogText.Require(lessonName,300);PlannedStartMinute=startMinute;
+    }
+
     public void Reschedule(DateOnly plannedDate)
     {
         if (IsCompleted) throw new InvalidOperationException("Completed work cannot be rescheduled.");
@@ -130,8 +148,11 @@ public sealed class StudyPlanTask : AggregateRoot
     {
         if (IsCompleted) throw new InvalidOperationException("Completed work cannot be corrected.");
         var validatedTitle = StudyCatalogText.Require(title, 200);
-        if (plannedDate == default || plannedMinutes is < 1 or > 1440) throw new ArgumentException("Valid planning date and minutes are required.");
+        if (plannedDate == default || plannedMinutes is < 1 or > 1440 || PlannedStartMinute+plannedMinutes>1440) throw new ArgumentException("Valid planning date and minutes are required.");
         Title = validatedTitle; PlannedDate = plannedDate; PlannedMinutes = plannedMinutes;
         UpdatedAt = DateTime.UtcNow;
     }
 }
+
+public sealed record WeeklyPlanSource(int DraftVersion,int? LearningContextVersion,DateOnly StartDate,DateOnly EndDate,bool ReuseFreedSlots,
+    string Fingerprint,Guid? ActiveRevisionId,int? ActiveRevisionVersion);
