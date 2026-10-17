@@ -58,6 +58,9 @@ public sealed class CoachingFollowUpTests
   Assert.Equal(3,overdue.PendingCount);Assert.Equal(1,overdue.OverdueCount);Assert.Equal(1,overdue.TotalCount);Assert.Equal(late.Id,Assert.Single(overdue.Items).AssignmentId);Assert.Equal(90,overdue.Items[0].OverdueMinutes);Assert.Equal("Öğrenci Test",overdue.Items[0].StudentName);
   var pending=Assert.IsType<TeacherAssignmentFollowUpPage>(Assert.IsType<OkObjectResult>(await api.Get("pending",2,1,null,default)).Value);Assert.Equal(3,pending.TotalCount);Assert.Single(pending.Items);Assert.False(pending.Items[0].IsOverdue);
   var search=Assert.IsType<TeacherAssignmentFollowUpPage>(Assert.IsType<OkObjectResult>(await api.Get("pending",1,25,"Gelecek",default)).Value);Assert.Equal(future.Id,Assert.Single(search.Items).AssignmentId);
+  var changing=await f.Db.Assignments.SingleAsync(x=>x.Id==future.Id);changing.UpdateDetails(title:"İngilizce % tekrar");await f.Db.SaveChangesAsync();
+  var turkish=Assert.IsType<TeacherAssignmentFollowUpPage>(Assert.IsType<OkObjectResult>(await api.Get("pending",1,25,"İNGİLİZCE",default)).Value);Assert.Equal(future.Id,Assert.Single(turkish.Items).AssignmentId);
+  var literal=Assert.IsType<TeacherAssignmentFollowUpPage>(Assert.IsType<OkObjectResult>(await api.Get("pending",1,25,"%",default)).Value);Assert.Equal(future.Id,Assert.Single(literal.Items).AssignmentId);
   Assert.IsType<BadRequestObjectResult>(await api.Get("bad",1,25,null,default));Assert.IsType<BadRequestObjectResult>(await api.Get("pending",0,25,null,default));
   var profile=await f.Db.CoachingStudentProfiles.SingleAsync(x=>x.UserId==student);profile.UpdatePersonal(null,null,null,false);await f.Db.SaveChangesAsync();
   var privatePage=Assert.IsType<TeacherAssignmentFollowUpPage>(Assert.IsType<OkObjectResult>(await api.Get("pending",1,25,null,default)).Value);Assert.Empty(privatePage.Items);
