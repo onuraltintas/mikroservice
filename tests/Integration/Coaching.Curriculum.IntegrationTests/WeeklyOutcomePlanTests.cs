@@ -117,6 +117,6 @@ public sealed class WeeklyOutcomePlanTests
     public async Task DatabaseRejectsPartialWeeklyPlacement()
     {
         await using var pg=await CurriculumPostgresTests.Pg.Create();await pg.Data.Seed();var task=await pg.Db.StudyPlanTasks.SingleAsync();var lesson=Guid.NewGuid();
-        await Assert.ThrowsAsync<Npgsql.PostgresException>(()=>pg.Db.Database.ExecuteSqlInterpolatedAsync($"UPDATE coaching.study_plan_tasks SET \"WeeklyLessonId\"={lesson} WHERE \"Id\"={task.Id}"));
+        await Assert.ThrowsAsync<Npgsql.PostgresException>(()=>pg.Db.Database.ExecuteSqlInterpolatedAsync($"UPDATE coaching.study_plan_tasks SET \"WeeklyLessonId\"={lesson},\"LessonNameSnapshot\"='Matematik' WHERE \"Id\"={task.Id}"));
     }
 }
