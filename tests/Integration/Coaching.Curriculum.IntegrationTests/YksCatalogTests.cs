@@ -108,15 +108,21 @@ public sealed class YksCatalogTests
     public async Task CanonicalOutcomeCanServeExplicitlyBoundTytAndAytLessonsWithoutDuplicatingItsIdentity()
     {
         await using var f=new CurriculumManagementTests.Fixture();var old=await f.Seed();
-        var outcome=await f.Db.Set<StudyCatalogOutcome>().SingleAsync();
+        var edition=OfficialCurriculumEdition.Create("yks-canonical","TYT",null,"Matematik — sınav hazırlık kapsamı",2026,2026,"https://ttkb.meb.gov.tr/source.pdf",new string('a',64),"https://ogmmateryal.eba.gov.tr/mebi");
+        var group=OfficialCurriculumTopic.Create(edition.Id,"9.3.1","Sayı kümeleri",1,null);
+        var outcome=StudyCatalogOutcome.Create(edition.Id,group.Id,"9.3.1.1","Sayı kümelerini kullanır.","",125,1);
+        var estimate=OutcomeDurationEstimate.Create(outcome.Id,1,10,15,5,"ReviewedStudy","Low","İlk çalışma turu tahmini",f.User.UserId);estimate.Publish();
         var lesson=StudyCatalogLesson.Create("test","yks-math","Matematik (TYT)",null,"TYT");lesson.SetActive(true);
         var unit=StudyCatalogUnit.Create("test","yks-unit",lesson.Id,"Sayılar",1);unit.SetActive(true);
         var topic=StudyCatalogTopic.Create("test","yks-topic",lesson.Id,unit.Id,"Ortak kapsam",null,1);topic.SetActive(true);
         var mapping=StudyCatalogTopicOutcome.Create(topic.Id,outcome.Id,"Açık program ders bağlantısı");mapping.Review(true,"İncelenen bağlantı",f.User.UserId!.Value);
-        f.Db.AddRange(lesson,unit,topic,mapping,OfficialCurriculumLessonBinding.Create(outcome.EditionId,lesson.Id));
+        f.Db.AddRange(edition,group,outcome,estimate,lesson,unit,topic,mapping,OfficialCurriculumLessonBinding.Create(outcome.EditionId,lesson.Id));
         await f.Db.SaveChangesAsync();
         var published=await new CoachingOutcomeCatalogService(f.Db,f.Scope,f.User).GetPublishedAsync(topic.Id,2026,default);
         Assert.Equal(outcome.Id,Assert.Single(published).OutcomeId);
+        var document=await f.Service.GetAsync("lessons",lesson.Id,default);
+        var saved=await f.Service.SaveAsync("lessons",lesson.Id,new(lesson.Name,"Ders kapsamını koruyarak kaydet",Fingerprint:document.Fingerprint,ExamCode:lesson.ExamCode),default);
+        Assert.Equal(lesson.Name,saved.Name);
         Assert.Equal(25,(await f.Db.StudyPlanTasks.SingleAsync()).ActualMinutes);
         Assert.Equal(old.Id,(await f.Db.StudyPlanTasks.SingleAsync()).TopicId);
     }
