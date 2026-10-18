@@ -141,7 +141,7 @@ public sealed class CoachingCurriculumManagementService(CoachingDbContext db, IC
                 case "programTopics":
                     await Load("programs",Required(r.ParentId),ct);
                     if (await db.Set<OfficialCurriculumTopic>().AnyAsync(x => x.EditionId == r.ParentId && x.Code == r.Code,ct)) throw new ArgumentException("Program konu kodu zaten var.");
-                    return Add(OfficialCurriculumTopic.Create(r.ParentId!.Value,r.Code!,r.Name,r.OutcomeCount ?? 0,r.LessonPeriods ?? 0));
+                    return Add(OfficialCurriculumTopic.Create(r.ParentId!.Value,r.Code!,r.Name,r.OutcomeCount ?? 0,r.LessonPeriods));
                 case "lessons":
                     var parentExam = r.ParentId.HasValue ? await db.Set<StudyCatalogExam>().SingleOrDefaultAsync(x => x.Id == r.ParentId,ct) : null;
                     if (parentExam != null && parentExam.Code != r.ExamCode?.Trim().ToUpperInvariant()) throw new ArgumentException("Dersin sınavı seçilen üst kayıtla aynı olmalıdır.");

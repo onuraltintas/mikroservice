@@ -9,6 +9,14 @@ public sealed class StudyCatalogYksScope
     public string TestCode { get; private set; } = "";
     public string? ForeignLanguage { get; private set; }
     public string Evidence { get; private set; } = "";
+    public Guid[] ExcludedOutcomeIds { get; private set; } = [];
+
+    public void ExcludeOutcomes(IEnumerable<Guid> outcomes)
+    {
+        var ids=outcomes.Distinct().Order().ToArray();
+        if(ids.Any(x=>x==Guid.Empty))throw new ArgumentException("Geçerli kapsam dışı kazanım kimlikleri belirtin.");
+        ExcludedOutcomeIds=ids;
+    }
 
     public static StudyCatalogYksScope Create(Guid topic,string exam,string score,string test,string? language,string evidence)
     {
