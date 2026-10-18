@@ -12,6 +12,13 @@ namespace Coaching.Curriculum.IntegrationTests;
 
 public sealed class YksCatalogTests
 {
+    [Fact]
+    public void ExamPreparationSkillsNeverClaimAnOfficialCodeOrInventAPdfPage()
+    {
+        var skill=StudyCatalogOutcome.Create(Guid.NewGuid(),Guid.NewGuid(),"YDT.EN.1","Subject Pronouns","MEBİ sınav hazırlık becerisi; resmî kazanım kodu değildir.",null,1,"ExamSkill","https://ogmmateryal.eba.gov.tr/mebi");
+        Assert.Equal("ExamSkill",skill.SourceKind);Assert.Null(skill.SourcePage);
+        Assert.Throws<ArgumentException>(()=>StudyCatalogOutcome.Create(Guid.NewGuid(),Guid.NewGuid(),"9.1.1.1","Resmî kazanım","",null,1));
+    }
     [Theory]
     [InlineData("SAY",null,"math")]
     [InlineData("EA",null,"math")]
