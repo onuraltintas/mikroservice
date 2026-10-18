@@ -16,7 +16,7 @@ public sealed record OutcomeTopicShareRequest(Guid TopicId, int LearningMinutes,
 public sealed record OutcomeMappingReview(bool Approved, string Evidence);
 public sealed record PublishedStudyOutcome(Guid OutcomeId, string Code, string Name, Guid EstimateId, int EstimateNumber,
     int LearningMinutes, int PracticeMinutes, int CheckMinutes, int TotalMinutes, string EditionCode, int? OfficialLessonPeriods,
-    bool IsTopicShare = false, string? ScopeDescription = null);
+    bool IsTopicShare = false, string? ScopeDescription = null,string SourceKind="Official");
 public sealed record OutcomeCatalogView(Coaching.Domain.Entities.OfficialCurriculumEdition Edition,
     IReadOnlyList<Coaching.Domain.Entities.OfficialCurriculumTopic> OfficialTopics, IReadOnlyList<Coaching.Domain.Entities.StudyCatalogOutcome> Outcomes,
     IReadOnlyList<Coaching.Domain.Entities.OutcomeDurationEstimate> Estimates, IReadOnlyList<Coaching.Domain.Entities.StudyCatalogTopicOutcome> Mappings,

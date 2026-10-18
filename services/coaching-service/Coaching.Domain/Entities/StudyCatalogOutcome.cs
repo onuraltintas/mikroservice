@@ -65,22 +65,28 @@ public sealed class StudyCatalogOutcome
     public string Code { get; private set; } = "";
     public string Name { get; private set; } = "";
     public string Notes { get; private set; } = "";
-    public int SourcePage { get; private set; }
+    public int? SourcePage { get; private set; }
+    public string SourceKind { get; private set; } = "Official";
+    public string? SourceUrl { get; private set; }
     public int DisplayOrder { get; private set; }
     public bool IsArchived { get; private set; }
     private StudyCatalogOutcome() { }
-    public void Edit(string code, string name, string notes, int page, int order)
+    public void Edit(string code, string name, string notes, int? page, int order)
     {
-        var valid = Create(EditionId, OfficialTopicId, code, name, notes, page, order);
+        var valid = Create(EditionId, OfficialTopicId, code, name, notes, page, order,SourceKind,SourceUrl);
         Code = valid.Code; Name = valid.Name; Notes = valid.Notes; SourcePage = valid.SourcePage; DisplayOrder = valid.DisplayOrder;
     }
     public void Archive(bool archived) => IsArchived = archived;
-    public static StudyCatalogOutcome Create(Guid edition, Guid group, string code, string name, string notes, int page, int order)
+    public static StudyCatalogOutcome Create(Guid edition, Guid group, string code, string name, string notes, int? page, int order,
+        string sourceKind="Official",string? sourceUrl=null)
     {
-        if (edition == Guid.Empty || group == Guid.Empty || page < 1 || order < 1 || notes is null || notes.Length > 8000)
+        if (edition == Guid.Empty || group == Guid.Empty || page is < 1 || order < 1 || notes is null || notes.Length > 8000
+            || sourceKind is not ("Official" or "ExamSkill") || sourceKind=="Official" && !page.HasValue
+            || sourceKind=="ExamSkill" && sourceUrl is null
+            || sourceUrl is not null && (!Uri.TryCreate(sourceUrl,UriKind.Absolute,out var uri)||uri.Scheme!="https"||sourceUrl.Length>1000))
             throw new ArgumentException("Kazanım kaynağı ve sırasını kontrol edin.");
         return new() { EditionId = edition, OfficialTopicId = group, Code = StudyCatalogText.Require(code, 100),
-            Name = StudyCatalogText.Require(name, 2000), Notes = notes, SourcePage = page, DisplayOrder = order };
+            Name = StudyCatalogText.Require(name, 2000), Notes = notes, SourcePage = page, DisplayOrder = order,SourceKind=sourceKind,SourceUrl=sourceUrl };
     }
 }
 

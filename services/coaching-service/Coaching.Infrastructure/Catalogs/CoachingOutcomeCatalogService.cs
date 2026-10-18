@@ -195,7 +195,7 @@ public sealed class CoachingOutcomeCatalogService(CoachingDbContext db, ICoachin
                 share == null ? estimate.PracticeMinutes : share.PracticeMinutes,
                 share == null ? estimate.CheckMinutes : share.CheckMinutes,
                 share == null ? estimate.LearningMinutes + estimate.PracticeMinutes + estimate.CheckMinutes : share.LearningMinutes + share.PracticeMinutes + share.CheckMinutes,
-                edition.Code, officialTopic.LessonPeriods, share != null, share == null ? null : share.ScopeDescription)).ToArrayAsync(ct);
+                edition.Code, officialTopic.LessonPeriods, share != null, share == null ? null : share.ScopeDescription,outcome.SourceKind)).ToArrayAsync(ct);
         return rows;
     }
 

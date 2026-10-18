@@ -30,9 +30,10 @@ public sealed class StudyCatalogOutcomeConfiguration : IEntityTypeConfiguration<
 {
     public void Configure(EntityTypeBuilder<StudyCatalogOutcome> b)
     {
-        b.ToTable("study_catalog_outcomes", t => t.HasCheckConstraint("ck_outcome_source", "\"SourcePage\" > 0 AND \"DisplayOrder\" > 0"));
+        b.ToTable("study_catalog_outcomes", t => t.HasCheckConstraint("ck_outcome_source", "(\"SourcePage\" IS NULL OR \"SourcePage\" > 0) AND \"DisplayOrder\" > 0 AND \"SourceKind\" IN ('Official','ExamSkill') AND (\"SourceKind\" <> 'Official' OR \"SourcePage\" IS NOT NULL) AND (\"SourceKind\" <> 'ExamSkill' OR \"SourceUrl\" IS NOT NULL)"));
         b.HasKey(x => x.Id); b.HasIndex(x => new { x.EditionId, x.Code }).IsUnique();
         b.Property(x => x.Code).HasMaxLength(100); b.Property(x => x.Name).HasMaxLength(2000); b.Property(x => x.Notes).HasMaxLength(8000);
+        b.Property(x=>x.SourceKind).HasMaxLength(20).HasDefaultValue("Official");b.Property(x=>x.SourceUrl).HasMaxLength(1000);
         b.HasOne<OfficialCurriculumTopic>().WithMany().HasForeignKey(x => new { x.OfficialTopicId, x.EditionId })
             .HasPrincipalKey(x => new { x.Id, x.EditionId }).OnDelete(DeleteBehavior.Restrict);
     }
