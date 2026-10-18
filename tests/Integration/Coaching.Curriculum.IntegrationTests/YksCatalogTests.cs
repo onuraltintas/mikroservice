@@ -96,6 +96,10 @@ public sealed class YksCatalogTests
         Assert.Equal(first,repeat);Assert.Equal(2,await f.Db.Set<StudyCatalogOutcome>().CountAsync());
         Assert.True((await f.Db.Set<OutcomeDurationEstimate>().OrderByDescending(x=>x.ReviewedAt).FirstAsync()).IsPublished);
         Assert.Equal(30,(await f.Db.StudyCatalogTopics.SingleAsync(x=>x.Id==topic.Id)).EstimatedMinutes);
+        var importedOutcome=await f.Db.Set<StudyCatalogOutcome>().SingleAsync(x=>x.SourceKind=="ExamSkill");
+        var document=await f.Service.GetAsync("outcomes",importedOutcome.Id,default);
+        Assert.False(document.CanDelete);
+        Assert.Contains(document.Blockers,b=>b.Contains("kapsam"));
         Assert.Equal(before,System.Text.Json.JsonSerializer.Serialize(await f.Db.StudyPlanTasks.AsNoTracking().ToArrayAsync()));
         Assert.Equal(25,(await f.Db.StudyPlanTasks.SingleAsync()).ActualMinutes);
     }
