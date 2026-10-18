@@ -1,23 +1,5 @@
 namespace Coaching.Domain.Entities;
 
-public sealed class StudyCatalogLessonGroup
-{
-    public Guid Id { get; private set; } = Guid.NewGuid();
-    public string Name { get; private set; } = "";
-    public int DisplayOrder { get; private set; }
-    public bool IsActive { get; private set; } = true;
-    private StudyCatalogLessonGroup() { }
-    public static StudyCatalogLessonGroup Create(string name, int order = 0)
-    { var group = new StudyCatalogLessonGroup(); group.Edit(name, order); return group; }
-    public void Edit(string name, int order)
-    {
-        var validated = StudyCatalogText.Require(name, 300);
-        if (order < 0) throw new ArgumentOutOfRangeException(nameof(order));
-        Name = validated; DisplayOrder = order;
-    }
-    public void SetActive(bool active) => IsActive = active;
-}
-
 public sealed class StudyCatalogLesson
 {
     public Guid Id { get; private set; } = Guid.NewGuid();
@@ -27,13 +9,10 @@ public sealed class StudyCatalogLesson
     public int? GradeNumber { get; private set; }
     public string? ExamCode { get; private set; }
     public Guid? CurriculumVersionId { get; private set; }
-    public Guid? GroupId { get; private set; }
     public bool IsActive { get; private set; }
     private StudyCatalogLesson() { }
 
     public void SetActive(bool active) => IsActive = active;
-    public void AssignGroup(Guid? id)
-    { if (id == Guid.Empty) throw new ArgumentException("Geçerli ders grubu seçin."); GroupId = id; }
 
     public void AssignCurriculum(Guid versionId)
     {

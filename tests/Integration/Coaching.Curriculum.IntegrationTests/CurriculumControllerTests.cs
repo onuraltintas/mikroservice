@@ -26,15 +26,15 @@ public sealed class CurriculumControllerTests
     public async Task ControllerCrudReturnsDocumentsAndSafeErrors_WithoutLeakingDatabaseDetails()
     {
         await using var f=new CurriculumManagementTests.Fixture();var controller=new CoachingCurriculumManagementAdminController(f.Service);
-        var created=Read(await controller.Create("groups",new("Grup","Grup oluştur"),default));
-        Assert.IsType<OkObjectResult>(await controller.Children(ct:default));Assert.IsType<OkObjectResult>(await controller.Get("groups",created.Id,default));
-        var changed=Read(await controller.Edit("groups",created.Id,new("Yeni ad","Grubu düzelt",Fingerprint:created.Fingerprint),default));
-        Assert.Equal(409,Assert.IsAssignableFrom<ObjectResult>(await controller.Edit("groups",changed.Id,new("Eski form","Eski form kaydet",Fingerprint:created.Fingerprint),default)).StatusCode);
-        changed=Read(await controller.Status("groups",changed.Id,new(changed.Fingerprint,"Grubu pasife al",false),default));
-        Assert.IsType<BadRequestObjectResult>(await controller.Move("groups",changed.Id,new(null,changed.Fingerprint,"Grubu taşımayı dene"),default));
-        Assert.IsType<BadRequestObjectResult>(await controller.Delete("groups",changed.Id,new(changed.Fingerprint,"Grubu silmeyi dene",Guid.NewGuid()),default));
-        Assert.IsType<OkObjectResult>(await controller.Delete("groups",changed.Id,new(changed.Fingerprint,"Kullanılmayan grubu sil",changed.Id),default));
-        Assert.IsType<NotFoundObjectResult>(await controller.Get("groups",changed.Id,default));
+        var created=Read(await controller.Create("exams",new("Sınav","Sınav oluştur",Code:"TEST"),default));
+        Assert.IsType<OkObjectResult>(await controller.Children(ct:default));Assert.IsType<OkObjectResult>(await controller.Get("exams",created.Id,default));
+        var changed=Read(await controller.Edit("exams",created.Id,new("Yeni ad","Grubu düzelt",Fingerprint:created.Fingerprint,Code:"TEST"),default));
+        Assert.Equal(409,Assert.IsAssignableFrom<ObjectResult>(await controller.Edit("exams",changed.Id,new("Eski form","Eski form kaydet",Fingerprint:created.Fingerprint,Code:"TEST"),default)).StatusCode);
+        changed=Read(await controller.Status("exams",changed.Id,new(changed.Fingerprint,"Grubu pasife al",false),default));
+        Assert.IsType<BadRequestObjectResult>(await controller.Move("exams",changed.Id,new(null,changed.Fingerprint,"Grubu taşımayı dene"),default));
+        Assert.IsType<BadRequestObjectResult>(await controller.Delete("exams",changed.Id,new(changed.Fingerprint,"Grubu silmeyi dene",Guid.NewGuid()),default));
+        Assert.IsType<OkObjectResult>(await controller.Delete("exams",changed.Id,new(changed.Fingerprint,"Kullanılmayan grubu sil",changed.Id),default));
+        Assert.IsType<NotFoundObjectResult>(await controller.Get("exams",changed.Id,default));
         f.Scope.Global=false;var denied=Assert.IsType<ObjectResult>(await controller.Children(ct:default));Assert.Equal(403,denied.StatusCode);
     }
 

@@ -2587,9 +2587,6 @@ namespace Coaching.Infrastructure.Data.Migrations
                     b.Property<int?>("GradeNumber")
                         .HasColumnType("integer");
 
-                    b.Property<Guid?>("GroupId")
-                        .HasColumnType("uuid");
-
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
@@ -2614,8 +2611,6 @@ namespace Coaching.Infrastructure.Data.Migrations
 
                     b.HasIndex("ExamCode");
 
-                    b.HasIndex("GroupId");
-
                     b.HasIndex("Source", "SourceId")
                         .IsUnique();
 
@@ -2624,31 +2619,6 @@ namespace Coaching.Infrastructure.Data.Migrations
                     b.ToTable("study_catalog_lessons", "coaching", t =>
                         {
                             t.HasCheckConstraint("ck_catalog_lesson_grade", "\"GradeNumber\" IS NULL OR \"GradeNumber\" BETWEEN 1 AND 12");
-                        });
-                });
-
-            modelBuilder.Entity("Coaching.Domain.Entities.StudyCatalogLessonGroup", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("DisplayOrder")
-                        .HasColumnType("integer");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(300)
-                        .HasColumnType("character varying(300)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("study_catalog_lesson_groups", "coaching", t =>
-                        {
-                            t.HasCheckConstraint("ck_lesson_group_order", "\"DisplayOrder\" >= 0");
                         });
                 });
 
@@ -4026,11 +3996,6 @@ namespace Coaching.Infrastructure.Data.Migrations
                         .WithMany()
                         .HasForeignKey("ExamCode")
                         .HasPrincipalKey("Code")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("Coaching.Domain.Entities.StudyCatalogLessonGroup", null)
-                        .WithMany()
-                        .HasForeignKey("GroupId")
                         .OnDelete(DeleteBehavior.Restrict);
                 });
 

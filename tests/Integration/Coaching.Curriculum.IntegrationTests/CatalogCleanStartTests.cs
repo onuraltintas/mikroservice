@@ -1,10 +1,25 @@
 using Coaching.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
+using Npgsql;
 
 namespace Coaching.Curriculum.IntegrationTests;
 
 public sealed class CatalogCleanStartTests
 {
+    [CurriculumPostgresTests.LocalPostgresFact]
+    public async Task MigrationRefusesToDiscardAnyRemainingGroupData()
+    {
+        await using var pg=await CurriculumPostgresTests.Pg.Create();
+        var migrator=pg.Db.GetService<IMigrator>();
+        await migrator.MigrateAsync("20261018203437_TopicOutcomeScopeShares");
+        var id=Guid.NewGuid();
+        await pg.Db.Database.ExecuteSqlInterpolatedAsync($"INSERT INTO coaching.study_catalog_lesson_groups (\"Id\",\"Name\",\"DisplayOrder\",\"IsActive\") VALUES ({id},'Korunacak grup',0,true)");
+        await Assert.ThrowsAsync<PostgresException>(()=>migrator.MigrateAsync());
+        Assert.Equal(1,await pg.Db.Database.SqlQuery<int>($"SELECT count(*)::int AS \"Value\" FROM coaching.study_catalog_lesson_groups WHERE \"Id\"={id}").SingleAsync());
+    }
+
     [Fact]
     public async Task ModelAndApiNoLongerExposeLegacyLessonGroups()
     {

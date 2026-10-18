@@ -62,9 +62,9 @@ public sealed class CurriculumPostgresTests
     {
         await using var f = await Pg.Create(); var topic = await f.Data.Seed();
         var lesson = await f.Db.StudyCatalogLessons.SingleAsync();
-        var group = await f.Service.SaveAsync("groups",null,new("Sayısal","Grup ekle"),default);
+        var group = await f.Service.GetAsync("exams",(await f.Db.Set<StudyCatalogExam>().SingleAsync(x=>x.Code=="LGS")).Id,default);
         var lessonDoc = await f.Service.GetAsync("lessons",lesson.Id,default);
-        await f.Service.MoveAsync("lessons",lesson.Id,new(group.Id,lessonDoc.Fingerprint,"Dersi gruba taşı"),default);
+        await Assert.ThrowsAsync<ArgumentException>(async ()=>await f.Service.MoveAsync("lessons",lesson.Id,new((await f.Db.Set<StudyCatalogExam>().SingleAsync(x=>x.Code=="TYT")).Id,lessonDoc.Fingerprint,"Kapsamı farklı sınava taşı"),default));
         Assert.Equal(lesson.Id,Assert.Single((await f.Service.ChildrenAsync("lessons",group.Id,"Mat",1,default)).Items).Id);
         var target = await f.Service.SaveAsync("units",null,new("Yeni ünite","Ünite ekle",ParentId:lesson.Id),default);
         target = await f.Service.SetActiveAsync("units",target.Id,new(target.Fingerprint,"Hedef üniteyi etkinleştir",true),default);
