@@ -67,6 +67,29 @@ public sealed class YksCatalogTests
         Assert.Throws<ArgumentException>(()=>scope.ExcludeOutcomes([Guid.Empty]));
     }
 
+    [Fact]
+    public async Task ApprovedImportIsAtomicIdempotentAndPreservesExistingLgsWork()
+    {
+        await using var f=new CurriculumManagementTests.Fixture();await f.Seed();
+        var before=System.Text.Json.JsonSerializer.Serialize(await f.Db.StudyPlanTasks.AsNoTracking().ToArrayAsync());
+        var curriculum=CurriculumVersion.Create("yks-import-test","YKS","v1",2026,2026,"Test",null);curriculum.SetPublished(true);
+        var lesson=StudyCatalogLesson.Create("approved-catalog","yks-import-math","Matematik (TYT)",null,"TYT");lesson.AssignCurriculum(curriculum.Id);lesson.SetActive(true);
+        var unit=StudyCatalogUnit.Create("approved-catalog","yks-import-unit",lesson.Id,"Sayılar",1);unit.SetActive(true);
+        var topic=StudyCatalogTopic.Create("approved-catalog","topic:yks-import",lesson.Id,unit.Id,"Sayılar",null,1);topic.SetActive(true);f.Db.AddRange(curriculum,lesson,unit,topic);await f.Db.SaveChangesAsync();
+        var package=new YksDataPackage("yks-test-v1",2026,2026,"https://ttkb.meb.gov.tr/source.pdf",new string('a',64),"https://ogmmateryal.eba.gov.tr/mebi",
+            [new("MAT","yks-test-math","Matematik","TYT",[lesson.SourceId])],
+            [new("skill:1","MAT","PREP.MAT.1","Sayı kümeleri","ExamSkill",null,"https://ogmmateryal.eba.gov.tr/mebi","Resmî kod olmayan çalışma becerisi",["source:1"],[],10,15,5,"Öğrenme ve uygulama ilk tur tahmini",[new(topic.SourceId,10,15,5,"Sayılar kapsamı")])],
+            [new(topic.SourceId,lesson.SourceId,topic.Name,"TYT",["skill:1"],[new("TYT","SAY","TYT.MAT",null,[])])],[]);
+        var importer=new CoachingYksCatalogImportService(f.Db,f.Scope,f.User);
+        var first=await importer.ImportAsync(package,"Onaylı YKS kataloğunu aktar",default);
+        var repeat=await importer.ImportAsync(package,"Aynı paketi tekrar doğrula",default);
+        Assert.Equal(first,repeat);Assert.Equal(2,await f.Db.Set<StudyCatalogOutcome>().CountAsync());
+        Assert.True((await f.Db.Set<OutcomeDurationEstimate>().OrderByDescending(x=>x.ReviewedAt).FirstAsync()).IsPublished);
+        Assert.Equal(30,(await f.Db.StudyCatalogTopics.SingleAsync(x=>x.Id==topic.Id)).EstimatedMinutes);
+        Assert.Equal(before,System.Text.Json.JsonSerializer.Serialize(await f.Db.StudyPlanTasks.AsNoTracking().ToArrayAsync()));
+        Assert.Equal(25,(await f.Db.StudyPlanTasks.SingleAsync()).ActualMinutes);
+    }
+
     [Theory]
     [InlineData("TYT","SAY","TYT.MAT",null)]
     [InlineData("AYT","EA","AYT.MAT",null)]
