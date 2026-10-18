@@ -36,7 +36,12 @@ public sealed class YksCatalogTests
         await f.Db.SaveChangesAsync();
         var catalog=await new CoachingLearningSetupService(f.Db,new CoachingAccessPolicy(f.User),new Accounts()).GetCatalogAsync(null,1,default);
         if(expected is null){Assert.Empty(catalog.Lessons);Assert.Empty(catalog.Topics.Items);}
-        else{Assert.Equal(expected,Assert.Single(catalog.Lessons).Name);Assert.Equal(expected,Assert.Single(catalog.Topics.Items).Name);}
+        else
+        {
+            var lesson=Assert.Single(catalog.Lessons);Assert.Equal(expected,lesson.Name);
+            var topics=await new CoachingLearningSetupService(f.Db,new CoachingAccessPolicy(f.User),new Accounts()).GetCatalogAsync(lesson.Id,1,default);
+            Assert.Equal(expected,Assert.Single(topics.Topics.Items).Name);
+        }
     }
 
     [Fact]
