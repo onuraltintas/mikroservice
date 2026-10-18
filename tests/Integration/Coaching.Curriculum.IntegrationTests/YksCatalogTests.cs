@@ -25,7 +25,6 @@ public sealed class YksCatalogTests
     [InlineData("EA",null,"math")]
     [InlineData("SOZ",null,"philosophy")]
     [InlineData("DIL","English","english")]
-    [InlineData("DIL","German",null)]
     public async Task CatalogFiltersScoreTypeTopicsAndLanguage(string score,string? language,string? expected)
     {
         await using var f=new CurriculumManagementTests.Fixture();var student=f.User.UserId!.Value;f.User.Roles=["Student"];
@@ -58,6 +57,16 @@ public sealed class YksCatalogTests
         var topic=OfficialCurriculumTopic.Create(Guid.NewGuid(),"9.1","Kaynakta süre yok",1,null);
         Assert.Null(topic.LessonPeriods);
         Assert.Throws<ArgumentException>(()=>OfficialCurriculumTopic.Create(Guid.NewGuid(),"9.1","Geçersiz",1,0));
+    }
+
+    [Theory]
+    [InlineData("Arabic")]
+    [InlineData("German")]
+    [InlineData("French")]
+    [InlineData("Russian")]
+    public void OnlyPreparedEnglishYdtCanBeSelected(string language)
+    {
+        Assert.Throws<ArgumentException>(()=>StudentLearningContext.Create(Guid.NewGuid(),2026,LearningPurpose.Yks,2027,"DIL",language));
     }
 
     [Fact]
