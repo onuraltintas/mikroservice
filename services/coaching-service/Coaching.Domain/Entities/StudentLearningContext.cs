@@ -69,8 +69,8 @@ public sealed class StudentLearningContext : AggregateRoot
         if (purpose == LearningPurpose.Yks && scoreType is not ("TYT" or "SAY" or "EA" or "SOZ" or "DIL"))
             throw new ArgumentException("Birincil puan türünü seçin.");
         if (purpose != LearningPurpose.Yks && scoreType is not null) throw new ArgumentException("Puan türü bu çalışma amacı için kullanılamaz.");
-        if (scoreType == "DIL" && language is not ("English" or "German" or "French" or "Arabic" or "Russian"))
-            throw new ArgumentException("Dil hazırlığı için yabancı dili seçin.");
+        if (scoreType == "DIL" && language != "English")
+            throw new ArgumentException("YDT hazırlığında şu an yalnız İngilizce destekleniyor.");
         if (scoreType != "DIL" && language is not null) throw new ArgumentException("Yabancı dil yalnız dil hazırlığında seçilir.");
         AcademicYearStart = year; Purpose = purpose; TargetExamYear = examYear; PrimaryScoreType = scoreType; ForeignLanguage = language;
         UpdatedAt = DateTime.UtcNow; UpdatedBy = StudentUserId.ToString();
