@@ -1,0 +1,721 @@
+{
+  "code": "meb-lgs-turkce-2026-v1",
+  "examCode": "LGS",
+  "gradeNumber": 8,
+  "subjectName": "Türkçe",
+  "academicYearStart": 2026,
+  "academicYearEnd": 2026,
+  "sourceUrl": "https://mufredat.meb.gov.tr/Dosyalar/20195716392253-02-Türkçe Öğretim Programı 2019.pdf",
+  "documentSha256": "10e55d403a708d35abc192710977a47df933210a0c54a15e86ea7b9d09401633",
+  "scopeEvidenceUrl": "https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf",
+  "officialTopics": [
+    {
+      "code": "T.8",
+      "name": "LGS Türkçe seçili kazanımlar; yıllık genel ders bütçesi referansı",
+      "outcomeCount": 35,
+      "lessonPeriods": 180
+    }
+  ],
+  "outcomes": [
+    {
+      "code": "T.8.3.5",
+      "name": "Bağlamdan yararlanarak bilmediği kelime ve kelime gruplarının anlamını tahmin eder.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 50. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "T.8",
+      "sourcePage": 50,
+      "displayOrder": 1,
+      "learningMinutes": 40,
+      "practiceMinutes": 45,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî T.8 referans bütçesi 180 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 35/76 oranı uygulanarak 3315 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "T.8.3.6",
+      "name": "Deyim, atasözü ve özdeyişlerin metne katkısını belirler.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 50. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "T.8",
+      "sourcePage": 50,
+      "displayOrder": 2,
+      "learningMinutes": 40,
+      "practiceMinutes": 45,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî T.8 referans bütçesi 180 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 35/76 oranı uygulanarak 3315 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "T.8.3.7",
+      "name": "Metindeki söz sanatlarını tespit eder.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 50. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "T.8",
+      "sourcePage": 50,
+      "displayOrder": 3,
+      "learningMinutes": 40,
+      "practiceMinutes": 45,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî T.8 referans bütçesi 180 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 35/76 oranı uygulanarak 3315 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "T.8.3.8",
+      "name": "Metindeki anlatım bozukluklarını belirler.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 50. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "T.8",
+      "sourcePage": 50,
+      "displayOrder": 4,
+      "learningMinutes": 40,
+      "practiceMinutes": 45,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî T.8 referans bütçesi 180 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 35/76 oranı uygulanarak 3315 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "T.8.3.9",
+      "name": "Fiilimsilerin cümledeki işlevlerini kavrar.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 50. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "T.8",
+      "sourcePage": 50,
+      "displayOrder": 5,
+      "learningMinutes": 40,
+      "practiceMinutes": 45,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî T.8 referans bütçesi 180 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 35/76 oranı uygulanarak 3315 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "T.8.3.10",
+      "name": "Geçiş ve bağlantı ifadelerinin metnin anlamına olan katkısını değerlendirir.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 50. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "T.8",
+      "sourcePage": 50,
+      "displayOrder": 6,
+      "learningMinutes": 40,
+      "practiceMinutes": 45,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî T.8 referans bütçesi 180 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 35/76 oranı uygulanarak 3315 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "T.8.3.11",
+      "name": "Metindeki anlatım biçimlerini belirler.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 50. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "T.8",
+      "sourcePage": 50,
+      "displayOrder": 7,
+      "learningMinutes": 40,
+      "practiceMinutes": 45,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî T.8 referans bütçesi 180 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 35/76 oranı uygulanarak 3315 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "T.8.3.12",
+      "name": "Görsel ve başlıktan hareketle okuyacağı metnin konusunu tahmin eder.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 50. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "T.8",
+      "sourcePage": 50,
+      "displayOrder": 8,
+      "learningMinutes": 40,
+      "practiceMinutes": 45,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî T.8 referans bütçesi 180 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 35/76 oranı uygulanarak 3315 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "T.8.3.13",
+      "name": "Okuduklarını özetler.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 50. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "T.8",
+      "sourcePage": 50,
+      "displayOrder": 9,
+      "learningMinutes": 40,
+      "practiceMinutes": 45,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî T.8 referans bütçesi 180 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 35/76 oranı uygulanarak 3315 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "T.8.3.14",
+      "name": "Metinle ilgili soruları cevaplar.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 50. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "T.8",
+      "sourcePage": 50,
+      "displayOrder": 10,
+      "learningMinutes": 40,
+      "practiceMinutes": 45,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî T.8 referans bütçesi 180 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 35/76 oranı uygulanarak 3315 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "T.8.3.15",
+      "name": "Metinle ilgili sorular sorar.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 50. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "T.8",
+      "sourcePage": 50,
+      "displayOrder": 11,
+      "learningMinutes": 40,
+      "practiceMinutes": 45,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî T.8 referans bütçesi 180 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 35/76 oranı uygulanarak 3315 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "T.8.3.16",
+      "name": "Metnin konusunu belirler.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 50. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "T.8",
+      "sourcePage": 50,
+      "displayOrder": 12,
+      "learningMinutes": 40,
+      "practiceMinutes": 45,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî T.8 referans bütçesi 180 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 35/76 oranı uygulanarak 3315 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "T.8.3.17",
+      "name": "Metnin ana fikrini/ana duygusunu belirler.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 50. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "T.8",
+      "sourcePage": 50,
+      "displayOrder": 13,
+      "learningMinutes": 40,
+      "practiceMinutes": 45,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî T.8 referans bütçesi 180 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 35/76 oranı uygulanarak 3315 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "T.8.3.18",
+      "name": "Metindeki yardımcı fikirleri belirler.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 50. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "T.8",
+      "sourcePage": 50,
+      "displayOrder": 14,
+      "learningMinutes": 40,
+      "practiceMinutes": 45,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî T.8 referans bütçesi 180 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 35/76 oranı uygulanarak 3315 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "T.8.3.19",
+      "name": "Metnin içeriğine uygun başlık/başlıklar belirler.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 50. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "T.8",
+      "sourcePage": 50,
+      "displayOrder": 15,
+      "learningMinutes": 40,
+      "practiceMinutes": 45,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî T.8 referans bütçesi 180 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 35/76 oranı uygulanarak 3315 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "T.8.3.20",
+      "name": "Okuduğu metinlerdeki hikâye unsurlarını belirler.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 51. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "T.8",
+      "sourcePage": 51,
+      "displayOrder": 16,
+      "learningMinutes": 40,
+      "practiceMinutes": 45,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî T.8 referans bütçesi 180 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 35/76 oranı uygulanarak 3315 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "T.8.3.21",
+      "name": "Metnin içeriğini yorumlar.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 51. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "T.8",
+      "sourcePage": 51,
+      "displayOrder": 17,
+      "learningMinutes": 40,
+      "practiceMinutes": 45,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî T.8 referans bütçesi 180 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 35/76 oranı uygulanarak 3315 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "T.8.3.22",
+      "name": "Metinde ele alınan sorunlara farklı çözümler üretir.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 51. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "T.8",
+      "sourcePage": 51,
+      "displayOrder": 18,
+      "learningMinutes": 40,
+      "practiceMinutes": 45,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî T.8 referans bütçesi 180 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 35/76 oranı uygulanarak 3315 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "T.8.3.23",
+      "name": "Metinler arasında karşılaştırma yapar.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 51. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "T.8",
+      "sourcePage": 51,
+      "displayOrder": 19,
+      "learningMinutes": 40,
+      "practiceMinutes": 45,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî T.8 referans bütçesi 180 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 35/76 oranı uygulanarak 3315 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "T.8.3.24",
+      "name": "Metindeki gerçek ve kurgusal unsurları ayırt eder.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 51. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "T.8",
+      "sourcePage": 51,
+      "displayOrder": 20,
+      "learningMinutes": 40,
+      "practiceMinutes": 45,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî T.8 referans bütçesi 180 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 35/76 oranı uygulanarak 3315 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "T.8.3.25",
+      "name": "Okudukları ile ilgili çıkarımlarda bulunur.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 51. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "T.8",
+      "sourcePage": 51,
+      "displayOrder": 21,
+      "learningMinutes": 40,
+      "practiceMinutes": 45,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî T.8 referans bütçesi 180 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 35/76 oranı uygulanarak 3315 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "T.8.3.26",
+      "name": "Metin türlerini ayırt eder.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 51. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "T.8",
+      "sourcePage": 51,
+      "displayOrder": 22,
+      "learningMinutes": 40,
+      "practiceMinutes": 45,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî T.8 referans bütçesi 180 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 35/76 oranı uygulanarak 3315 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "T.8.3.27",
+      "name": "Görsellerle ilgili soruları cevaplar.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 51. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "T.8",
+      "sourcePage": 51,
+      "displayOrder": 23,
+      "learningMinutes": 40,
+      "practiceMinutes": 45,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî T.8 referans bütçesi 180 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 35/76 oranı uygulanarak 3315 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "T.8.3.28",
+      "name": "Metinde önemli noktaların vurgulanış biçimlerini kavrar.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 51. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "T.8",
+      "sourcePage": 51,
+      "displayOrder": 24,
+      "learningMinutes": 40,
+      "practiceMinutes": 45,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî T.8 referans bütçesi 180 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 35/76 oranı uygulanarak 3315 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "T.8.3.29",
+      "name": "Medya metinlerini analiz eder.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 51. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "T.8",
+      "sourcePage": 51,
+      "displayOrder": 25,
+      "learningMinutes": 40,
+      "practiceMinutes": 45,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî T.8 referans bütçesi 180 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 35/76 oranı uygulanarak 3315 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "T.8.3.30",
+      "name": "Bilgi kaynaklarını etkili bir şekilde kullanır.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 51. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "T.8",
+      "sourcePage": 51,
+      "displayOrder": 26,
+      "learningMinutes": 40,
+      "practiceMinutes": 45,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî T.8 referans bütçesi 180 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 35/76 oranı uygulanarak 3315 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "T.8.3.31",
+      "name": "Bilgi kaynaklarının güvenilirliğini sorgular.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 51. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "T.8",
+      "sourcePage": 51,
+      "displayOrder": 27,
+      "learningMinutes": 40,
+      "practiceMinutes": 45,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî T.8 referans bütçesi 180 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 35/76 oranı uygulanarak 3315 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "T.8.3.32",
+      "name": "Grafik, tablo ve çizelgeyle sunulan bilgileri yorumlar.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 51. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "T.8",
+      "sourcePage": 51,
+      "displayOrder": 28,
+      "learningMinutes": 40,
+      "practiceMinutes": 45,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî T.8 referans bütçesi 180 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 35/76 oranı uygulanarak 3315 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "T.8.3.33",
+      "name": "Edebî eserin yazılı metni ile medya sunumunu karşılaştırır.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 51. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "T.8",
+      "sourcePage": 51,
+      "displayOrder": 29,
+      "learningMinutes": 40,
+      "practiceMinutes": 45,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî T.8 referans bütçesi 180 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 35/76 oranı uygulanarak 3315 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "T.8.3.34",
+      "name": "Okuduklarında kullanılan düşünceyi geliştirme yollarını belirler.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 51. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "T.8",
+      "sourcePage": 51,
+      "displayOrder": 30,
+      "learningMinutes": 40,
+      "practiceMinutes": 45,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî T.8 referans bütçesi 180 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 35/76 oranı uygulanarak 3315 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "T.8.3.35",
+      "name": "Metindeki iş ve işlem basamaklarını kavrar.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 51. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "T.8",
+      "sourcePage": 51,
+      "displayOrder": 31,
+      "learningMinutes": 40,
+      "practiceMinutes": 45,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî T.8 referans bütçesi 180 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 35/76 oranı uygulanarak 3315 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "T.8.4.16",
+      "name": "Yazdıklarını düzenler.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 52. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "T.8",
+      "sourcePage": 52,
+      "displayOrder": 32,
+      "learningMinutes": 40,
+      "practiceMinutes": 45,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî T.8 referans bütçesi 180 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 35/76 oranı uygulanarak 3315 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "T.8.4.18",
+      "name": "Cümlenin ögelerini ayırt eder.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 52. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "T.8",
+      "sourcePage": 52,
+      "displayOrder": 33,
+      "learningMinutes": 40,
+      "practiceMinutes": 45,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî T.8 referans bütçesi 180 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 35/76 oranı uygulanarak 3315 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "T.8.4.19",
+      "name": "Cümle türlerini tanır.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 52. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "T.8",
+      "sourcePage": 52,
+      "displayOrder": 34,
+      "learningMinutes": 35,
+      "practiceMinutes": 45,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî T.8 referans bütçesi 180 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 35/76 oranı uygulanarak 3315 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "T.8.4.20",
+      "name": "Fiillerin çatı özelliklerinin anlama olan katkısını kavrar.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 52. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "T.8",
+      "sourcePage": 52,
+      "displayOrder": 35,
+      "learningMinutes": 35,
+      "practiceMinutes": 45,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî T.8 referans bütçesi 180 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 35/76 oranı uygulanarak 3315 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    }
+  ],
+  "mappings": [
+    {
+      "topicSourceId": "topic:ce22c54e-0202-4adf-b0d6-08de0656e176",
+      "outcomeCodes": [
+        "T.8.3.8",
+        "T.8.4.16"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:124f5841-30a6-4c03-b0d5-08de0656e176",
+      "outcomeCodes": [
+        "T.8.4.19"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:183413c7-61af-489e-c54c-08dd50151650",
+      "outcomeCodes": [
+        "T.8.3.10",
+        "T.8.3.25"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:6dc87f43-bec8-426b-9f1b-08ddfa7f4f70",
+      "outcomeCodes": [
+        "T.8.4.18"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:09dd0892-5277-494e-c5f2-08ddfba86130",
+      "outcomeCodes": [
+        "T.8.4.20"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:72bde92e-d66e-45c2-26b8-08dd7688daf4",
+      "outcomeCodes": [
+        "T.8.3.9"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:ca0842d0-4a4a-4db6-b0d9-08de0656e176",
+      "outcomeCodes": [
+        "T.8.3.27",
+        "T.8.3.32",
+        "T.8.3.33"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:584c39b4-9c44-49af-b0d7-08de0656e176",
+      "outcomeCodes": [
+        "T.8.3.26"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:35d1c270-a0ab-4c3f-b0c8-08de0656e176",
+      "outcomeCodes": [
+        "T.8.4.16"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:5bdde1f1-b266-4045-26a8-08dd7688daf4",
+      "outcomeCodes": [
+        "T.8.3.11",
+        "T.8.3.12",
+        "T.8.3.13",
+        "T.8.3.14",
+        "T.8.3.15",
+        "T.8.3.16",
+        "T.8.3.17",
+        "T.8.3.18",
+        "T.8.3.19",
+        "T.8.3.20",
+        "T.8.3.21",
+        "T.8.3.22",
+        "T.8.3.23",
+        "T.8.3.24",
+        "T.8.3.28",
+        "T.8.3.29",
+        "T.8.3.30",
+        "T.8.3.31",
+        "T.8.3.33",
+        "T.8.3.34",
+        "T.8.3.35"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:d55fa204-4f64-4311-c5f1-08ddfba86130",
+      "outcomeCodes": [
+        "T.8.3.7"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:3c081c25-503d-44da-91cd-08dd3ad55a15",
+      "outcomeCodes": [
+        "T.8.3.5",
+        "T.8.3.6"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:32c9c8a2-c5f3-41a8-b0d8-08de0656e176",
+      "outcomeCodes": [
+        "T.8.3.14",
+        "T.8.3.25",
+        "T.8.3.35"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:f0da898e-37a0-4ebf-b0cb-08de0656e176",
+      "outcomeCodes": [
+        "T.8.4.16"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:240599b9-d573-4b2e-269f-08dd7688daf4",
+      "outcomeCodes": [
+        "T.8.3.10",
+        "T.8.3.25"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:daeed385-161c-4348-b0c9-08de0656e176",
+      "outcomeCodes": [
+        "T.8.4.16"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:435fbf0a-f067-42ee-26b0-08dd7688daf4",
+      "outcomeCodes": [
+        "T.8.3.11",
+        "T.8.3.12",
+        "T.8.3.13",
+        "T.8.3.14",
+        "T.8.3.15",
+        "T.8.3.16",
+        "T.8.3.17",
+        "T.8.3.18",
+        "T.8.3.19",
+        "T.8.3.20",
+        "T.8.3.21",
+        "T.8.3.22",
+        "T.8.3.23",
+        "T.8.3.24",
+        "T.8.3.28",
+        "T.8.3.29",
+        "T.8.3.30",
+        "T.8.3.31",
+        "T.8.3.33",
+        "T.8.3.34",
+        "T.8.3.35"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:653fdac2-6535-4100-b0cc-08de0656e176",
+      "outcomeCodes": [
+        "T.8.4.16"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:4faa1952-85d6-41f7-26a2-08dd7688daf4",
+      "outcomeCodes": [
+        "T.8.3.10",
+        "T.8.3.25"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:72d7aaf3-6c52-4a6e-b0ca-08de0656e176",
+      "outcomeCodes": [
+        "T.8.4.16"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:b033acb4-c2ea-4cdb-26b1-08dd7688daf4",
+      "outcomeCodes": [
+        "T.8.3.11",
+        "T.8.3.12",
+        "T.8.3.13",
+        "T.8.3.14",
+        "T.8.3.15",
+        "T.8.3.16",
+        "T.8.3.17",
+        "T.8.3.18",
+        "T.8.3.19",
+        "T.8.3.20",
+        "T.8.3.21",
+        "T.8.3.22",
+        "T.8.3.23",
+        "T.8.3.24",
+        "T.8.3.28",
+        "T.8.3.29",
+        "T.8.3.30",
+        "T.8.3.31",
+        "T.8.3.33",
+        "T.8.3.34",
+        "T.8.3.35"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:c7822438-fd78-4229-26b2-08dd7688daf4",
+      "outcomeCodes": [
+        "T.8.3.11",
+        "T.8.3.12",
+        "T.8.3.13",
+        "T.8.3.14",
+        "T.8.3.15",
+        "T.8.3.16",
+        "T.8.3.17",
+        "T.8.3.18",
+        "T.8.3.19",
+        "T.8.3.20",
+        "T.8.3.21",
+        "T.8.3.22",
+        "T.8.3.23",
+        "T.8.3.24",
+        "T.8.3.28",
+        "T.8.3.29",
+        "T.8.3.30",
+        "T.8.3.31",
+        "T.8.3.33",
+        "T.8.3.34",
+        "T.8.3.35"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    }
+  ]
+}

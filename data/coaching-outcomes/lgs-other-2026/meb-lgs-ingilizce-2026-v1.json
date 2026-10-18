@@ -1,0 +1,966 @@
+{
+  "code": "meb-lgs-ingilizce-2026-v1",
+  "examCode": "LGS",
+  "gradeNumber": 8,
+  "subjectName": "İngilizce",
+  "academicYearStart": 2026,
+  "academicYearEnd": 2026,
+  "sourceUrl": "https://mufredat.meb.gov.tr/Dosyalar/201812411191321-İNGİLİZCE ÖĞRETİM PROGRAMI Klasörü.pdf",
+  "documentSha256": "e976ae163c83bb1b3bcf79d7d77ce8cb8308dbdc97a630b941951b9b57653279",
+  "scopeEvidenceUrl": "https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf",
+  "officialTopics": [
+    {
+      "code": "E8",
+      "name": "LGS İngilizce seçili kazanımlar; yıllık genel ders bütçesi referansı",
+      "outcomeCount": 54,
+      "lessonPeriods": 144
+    }
+  ],
+  "outcomes": [
+    {
+      "code": "E8.1.L1",
+      "name": "Students will be able to understand the specific information in short conversations on everyday topics, such as accepting and refusing an offer/invitation, apologizing and making simple inquiries.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 85. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316. LGS uygulaması yazılı metin/diyalog ve çoktan seçmeli soru çalışmasıdır. Resmî beceri etiketi korunmuştur; ayrıca sözlü sınav, poster, proje veya yazı üretme ödevi oluşturulmaz.",
+      "officialTopicCode": "E8",
+      "sourcePage": 85,
+      "displayOrder": 1,
+      "learningMinutes": 35,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî E8 referans bütçesi 144 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 54/70 oranı uygulanarak 4445 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "E8.1.SI1",
+      "name": "Students will be able to interact with reasonable ease in structured situations and short conversations involving accepting and refusing an offer/invitation, apologizing and making simple inquiries.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 85. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316. LGS uygulaması yazılı metin/diyalog ve çoktan seçmeli soru çalışmasıdır. Resmî beceri etiketi korunmuştur; ayrıca sözlü sınav, poster, proje veya yazı üretme ödevi oluşturulmaz.",
+      "officialTopicCode": "E8",
+      "sourcePage": 85,
+      "displayOrder": 2,
+      "learningMinutes": 35,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî E8 referans bütçesi 144 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 54/70 oranı uygulanarak 4445 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "E8.1.SP1",
+      "name": "Students will be able to structure a talk to make simple inquiries, give explanations and reasons.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 85. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316. LGS uygulaması yazılı metin/diyalog ve çoktan seçmeli soru çalışmasıdır. Resmî beceri etiketi korunmuştur; ayrıca sözlü sınav, poster, proje veya yazı üretme ödevi oluşturulmaz.",
+      "officialTopicCode": "E8",
+      "sourcePage": 85,
+      "displayOrder": 3,
+      "learningMinutes": 35,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî E8 referans bütçesi 144 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 54/70 oranı uygulanarak 4445 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "E8.1.R1",
+      "name": "Students will be able to understand short and simple texts about friendship.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 85. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316. LGS uygulaması yazılı metin/diyalog ve çoktan seçmeli soru çalışmasıdır. Resmî beceri etiketi korunmuştur; ayrıca sözlü sınav, poster, proje veya yazı üretme ödevi oluşturulmaz.",
+      "officialTopicCode": "E8",
+      "sourcePage": 85,
+      "displayOrder": 4,
+      "learningMinutes": 35,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî E8 referans bütçesi 144 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 54/70 oranı uygulanarak 4445 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "E8.1.R2",
+      "name": "Students will be able to understand short and simple invitation letters, cards and e-mails.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 85. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316. LGS uygulaması yazılı metin/diyalog ve çoktan seçmeli soru çalışmasıdır. Resmî beceri etiketi korunmuştur; ayrıca sözlü sınav, poster, proje veya yazı üretme ödevi oluşturulmaz.",
+      "officialTopicCode": "E8",
+      "sourcePage": 85,
+      "displayOrder": 5,
+      "learningMinutes": 35,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî E8 referans bütçesi 144 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 54/70 oranı uygulanarak 4445 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "E8.1.W1",
+      "name": "Students will be able to write a short and simple letter apologizing and giving reasons for not attending a party in response to an invitation.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 85. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316. LGS uygulaması yazılı metin/diyalog ve çoktan seçmeli soru çalışmasıdır. Resmî beceri etiketi korunmuştur; ayrıca sözlü sınav, poster, proje veya yazı üretme ödevi oluşturulmaz.",
+      "officialTopicCode": "E8",
+      "sourcePage": 85,
+      "displayOrder": 6,
+      "learningMinutes": 35,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî E8 referans bütçesi 144 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 54/70 oranı uygulanarak 4445 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "E8.2.L1",
+      "name": "Students will be able to understand phrases and expressions about regular activities of teenagers.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 86. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316. LGS uygulaması yazılı metin/diyalog ve çoktan seçmeli soru çalışmasıdır. Resmî beceri etiketi korunmuştur; ayrıca sözlü sınav, poster, proje veya yazı üretme ödevi oluşturulmaz.",
+      "officialTopicCode": "E8",
+      "sourcePage": 86,
+      "displayOrder": 7,
+      "learningMinutes": 35,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî E8 referans bütçesi 144 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 54/70 oranı uygulanarak 4445 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "E8.2.SI1",
+      "name": "Students will be able to talk about regular activities of teenagers.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 86. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316. LGS uygulaması yazılı metin/diyalog ve çoktan seçmeli soru çalışmasıdır. Resmî beceri etiketi korunmuştur; ayrıca sözlü sınav, poster, proje veya yazı üretme ödevi oluşturulmaz.",
+      "officialTopicCode": "E8",
+      "sourcePage": 86,
+      "displayOrder": 8,
+      "learningMinutes": 35,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî E8 referans bütçesi 144 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 54/70 oranı uygulanarak 4445 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "E8.2.SP1",
+      "name": "Students will be able to express what they prefer, like and dislike.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 86. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316. LGS uygulaması yazılı metin/diyalog ve çoktan seçmeli soru çalışmasıdır. Resmî beceri etiketi korunmuştur; ayrıca sözlü sınav, poster, proje veya yazı üretme ödevi oluşturulmaz.",
+      "officialTopicCode": "E8",
+      "sourcePage": 86,
+      "displayOrder": 9,
+      "learningMinutes": 35,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî E8 referans bütçesi 144 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 54/70 oranı uygulanarak 4445 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "E8.2.SP2",
+      "name": "Students will be able to give a simple description of daily activities in a simple way.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 86. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316. LGS uygulaması yazılı metin/diyalog ve çoktan seçmeli soru çalışmasıdır. Resmî beceri etiketi korunmuştur; ayrıca sözlü sınav, poster, proje veya yazı üretme ödevi oluşturulmaz.",
+      "officialTopicCode": "E8",
+      "sourcePage": 86,
+      "displayOrder": 10,
+      "learningMinutes": 35,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî E8 referans bütçesi 144 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 54/70 oranı uygulanarak 4445 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "E8.2.R1",
+      "name": "Students will be able to understand short and simple texts about regular activities of teenagers.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 86. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316. LGS uygulaması yazılı metin/diyalog ve çoktan seçmeli soru çalışmasıdır. Resmî beceri etiketi korunmuştur; ayrıca sözlü sınav, poster, proje veya yazı üretme ödevi oluşturulmaz.",
+      "officialTopicCode": "E8",
+      "sourcePage": 86,
+      "displayOrder": 11,
+      "learningMinutes": 35,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî E8 referans bütçesi 144 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 54/70 oranı uygulanarak 4445 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "E8.2.W1",
+      "name": "Students will be able to write a short and simple paragraph about regular activities of teenagers.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 86. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316. LGS uygulaması yazılı metin/diyalog ve çoktan seçmeli soru çalışmasıdır. Resmî beceri etiketi korunmuştur; ayrıca sözlü sınav, poster, proje veya yazı üretme ödevi oluşturulmaz.",
+      "officialTopicCode": "E8",
+      "sourcePage": 86,
+      "displayOrder": 12,
+      "learningMinutes": 35,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî E8 referans bütçesi 144 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 54/70 oranı uygulanarak 4445 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "E8.3.L1",
+      "name": "Students will be able to get the gist of short, clear, simple descriptions of a process.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 87. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316. LGS uygulaması yazılı metin/diyalog ve çoktan seçmeli soru çalışmasıdır. Resmî beceri etiketi korunmuştur; ayrıca sözlü sınav, poster, proje veya yazı üretme ödevi oluşturulmaz.",
+      "officialTopicCode": "E8",
+      "sourcePage": 87,
+      "displayOrder": 13,
+      "learningMinutes": 35,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî E8 referans bütçesi 144 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 54/70 oranı uygulanarak 4445 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "E8.3.SI1",
+      "name": "Students will be able to ask and answer questions and exchange ideas and information on a topic related to how something is processed.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 87. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316. LGS uygulaması yazılı metin/diyalog ve çoktan seçmeli soru çalışmasıdır. Resmî beceri etiketi korunmuştur; ayrıca sözlü sınav, poster, proje veya yazı üretme ödevi oluşturulmaz.",
+      "officialTopicCode": "E8",
+      "sourcePage": 87,
+      "displayOrder": 14,
+      "learningMinutes": 35,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî E8 referans bütçesi 144 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 54/70 oranı uygulanarak 4445 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "E8.3.SP1",
+      "name": "Students will be able to give a simple description about a process.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 87. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316. LGS uygulaması yazılı metin/diyalog ve çoktan seçmeli soru çalışmasıdır. Resmî beceri etiketi korunmuştur; ayrıca sözlü sınav, poster, proje veya yazı üretme ödevi oluşturulmaz.",
+      "officialTopicCode": "E8",
+      "sourcePage": 87,
+      "displayOrder": 15,
+      "learningMinutes": 35,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî E8 referans bütçesi 144 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 54/70 oranı uygulanarak 4445 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "E8.3.R1",
+      "name": "Students will be able to understand the overall meaning of short texts about a process.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 87. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316. LGS uygulaması yazılı metin/diyalog ve çoktan seçmeli soru çalışmasıdır. Resmî beceri etiketi korunmuştur; ayrıca sözlü sınav, poster, proje veya yazı üretme ödevi oluşturulmaz.",
+      "officialTopicCode": "E8",
+      "sourcePage": 87,
+      "displayOrder": 16,
+      "learningMinutes": 35,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî E8 referans bütçesi 144 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 54/70 oranı uygulanarak 4445 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "E8.3.R2",
+      "name": "Students will be able to guess the meaning of unknown words from the text.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 87. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316. LGS uygulaması yazılı metin/diyalog ve çoktan seçmeli soru çalışmasıdır. Resmî beceri etiketi korunmuştur; ayrıca sözlü sınav, poster, proje veya yazı üretme ödevi oluşturulmaz.",
+      "officialTopicCode": "E8",
+      "sourcePage": 87,
+      "displayOrder": 17,
+      "learningMinutes": 35,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî E8 referans bütçesi 144 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 54/70 oranı uygulanarak 4445 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "E8.3.W1",
+      "name": "Students will be able to write a series of simple phrases and sentences by using linkers to describe a process.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 87. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316. LGS uygulaması yazılı metin/diyalog ve çoktan seçmeli soru çalışmasıdır. Resmî beceri etiketi korunmuştur; ayrıca sözlü sınav, poster, proje veya yazı üretme ödevi oluşturulmaz.",
+      "officialTopicCode": "E8",
+      "sourcePage": 87,
+      "displayOrder": 18,
+      "learningMinutes": 35,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî E8 referans bütçesi 144 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 54/70 oranı uygulanarak 4445 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "E8.4.L1",
+      "name": "Students will be able to understand phrases and related vocabulary items.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 88. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316. LGS uygulaması yazılı metin/diyalog ve çoktan seçmeli soru çalışmasıdır. Resmî beceri etiketi korunmuştur; ayrıca sözlü sınav, poster, proje veya yazı üretme ödevi oluşturulmaz.",
+      "officialTopicCode": "E8",
+      "sourcePage": 88,
+      "displayOrder": 19,
+      "learningMinutes": 35,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî E8 referans bütçesi 144 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 54/70 oranı uygulanarak 4445 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "E8.4.L2",
+      "name": "Students will be able to follow a phone conversation.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 88. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316. LGS uygulaması yazılı metin/diyalog ve çoktan seçmeli soru çalışmasıdır. Resmî beceri etiketi korunmuştur; ayrıca sözlü sınav, poster, proje veya yazı üretme ödevi oluşturulmaz.",
+      "officialTopicCode": "E8",
+      "sourcePage": 88,
+      "displayOrder": 20,
+      "learningMinutes": 35,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî E8 referans bütçesi 144 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 54/70 oranı uygulanarak 4445 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "E8.4.SI1",
+      "name": "Students will be able to make a simple phone call asking and responding to questions.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 88. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316. LGS uygulaması yazılı metin/diyalog ve çoktan seçmeli soru çalışmasıdır. Resmî beceri etiketi korunmuştur; ayrıca sözlü sınav, poster, proje veya yazı üretme ödevi oluşturulmaz.",
+      "officialTopicCode": "E8",
+      "sourcePage": 88,
+      "displayOrder": 21,
+      "learningMinutes": 35,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî E8 referans bütçesi 144 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 54/70 oranı uygulanarak 4445 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "E8.4.SP1",
+      "name": "Students will be able to express their decisions taken at the moment of conversation.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 88. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316. LGS uygulaması yazılı metin/diyalog ve çoktan seçmeli soru çalışmasıdır. Resmî beceri etiketi korunmuştur; ayrıca sözlü sınav, poster, proje veya yazı üretme ödevi oluşturulmaz.",
+      "officialTopicCode": "E8",
+      "sourcePage": 88,
+      "displayOrder": 22,
+      "learningMinutes": 35,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî E8 referans bütçesi 144 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 54/70 oranı uygulanarak 4445 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "E8.4.R1",
+      "name": "Students will be able to understand short and simple texts with related vocabulary.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 88. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316. LGS uygulaması yazılı metin/diyalog ve çoktan seçmeli soru çalışmasıdır. Resmî beceri etiketi korunmuştur; ayrıca sözlü sınav, poster, proje veya yazı üretme ödevi oluşturulmaz.",
+      "officialTopicCode": "E8",
+      "sourcePage": 88,
+      "displayOrder": 23,
+      "learningMinutes": 35,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî E8 referans bütçesi 144 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 54/70 oranı uygulanarak 4445 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "E8.4.W1",
+      "name": "Students will be able to write short and simple conversations.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 88. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316. LGS uygulaması yazılı metin/diyalog ve çoktan seçmeli soru çalışmasıdır. Resmî beceri etiketi korunmuştur; ayrıca sözlü sınav, poster, proje veya yazı üretme ödevi oluşturulmaz.",
+      "officialTopicCode": "E8",
+      "sourcePage": 88,
+      "displayOrder": 24,
+      "learningMinutes": 35,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî E8 referans bütçesi 144 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 54/70 oranı uygulanarak 4445 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "E8.5.L1",
+      "name": "Students will be able to understand the gist of oral texts.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 89. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316. LGS uygulaması yazılı metin/diyalog ve çoktan seçmeli soru çalışmasıdır. Resmî beceri etiketi korunmuştur; ayrıca sözlü sınav, poster, proje veya yazı üretme ödevi oluşturulmaz.",
+      "officialTopicCode": "E8",
+      "sourcePage": 89,
+      "displayOrder": 25,
+      "learningMinutes": 35,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî E8 referans bütçesi 144 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 54/70 oranı uygulanarak 4445 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "E8.5.L2",
+      "name": "Students will be able to comprehend phrases and related vocabulary items.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 89. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316. LGS uygulaması yazılı metin/diyalog ve çoktan seçmeli soru çalışmasıdır. Resmî beceri etiketi korunmuştur; ayrıca sözlü sınav, poster, proje veya yazı üretme ödevi oluşturulmaz.",
+      "officialTopicCode": "E8",
+      "sourcePage": 89,
+      "displayOrder": 26,
+      "learningMinutes": 30,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî E8 referans bütçesi 144 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 54/70 oranı uygulanarak 4445 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "E8.5.SI1",
+      "name": "Students will be able to talk about their Internet habits.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 89. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316. LGS uygulaması yazılı metin/diyalog ve çoktan seçmeli soru çalışmasıdır. Resmî beceri etiketi korunmuştur; ayrıca sözlü sınav, poster, proje veya yazı üretme ödevi oluşturulmaz.",
+      "officialTopicCode": "E8",
+      "sourcePage": 89,
+      "displayOrder": 27,
+      "learningMinutes": 30,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî E8 referans bütçesi 144 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 54/70 oranı uygulanarak 4445 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "E8.5.SI2",
+      "name": "Students will be able to exchange information about the Internet.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 89. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316. LGS uygulaması yazılı metin/diyalog ve çoktan seçmeli soru çalışmasıdır. Resmî beceri etiketi korunmuştur; ayrıca sözlü sınav, poster, proje veya yazı üretme ödevi oluşturulmaz.",
+      "officialTopicCode": "E8",
+      "sourcePage": 89,
+      "displayOrder": 28,
+      "learningMinutes": 30,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî E8 referans bütçesi 144 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 54/70 oranı uygulanarak 4445 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "E8.5.SP1",
+      "name": "Students will be able to make excuses, and to accept and refuse offers by using a series of phrases and simple sentences.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 89. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316. LGS uygulaması yazılı metin/diyalog ve çoktan seçmeli soru çalışmasıdır. Resmî beceri etiketi korunmuştur; ayrıca sözlü sınav, poster, proje veya yazı üretme ödevi oluşturulmaz.",
+      "officialTopicCode": "E8",
+      "sourcePage": 89,
+      "displayOrder": 29,
+      "learningMinutes": 30,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî E8 referans bütçesi 144 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 54/70 oranı uygulanarak 4445 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "E8.5.R1",
+      "name": "Students will be able to identify main ideas in short and simple texts about internet habits.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 89. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316. LGS uygulaması yazılı metin/diyalog ve çoktan seçmeli soru çalışmasıdır. Resmî beceri etiketi korunmuştur; ayrıca sözlü sınav, poster, proje veya yazı üretme ödevi oluşturulmaz.",
+      "officialTopicCode": "E8",
+      "sourcePage": 89,
+      "displayOrder": 30,
+      "learningMinutes": 30,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî E8 referans bütçesi 144 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 54/70 oranı uygulanarak 4445 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "E8.5.R2",
+      "name": "Students will be able to find specific information about the Internet in various texts.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 89. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316. LGS uygulaması yazılı metin/diyalog ve çoktan seçmeli soru çalışmasıdır. Resmî beceri etiketi korunmuştur; ayrıca sözlü sınav, poster, proje veya yazı üretme ödevi oluşturulmaz.",
+      "officialTopicCode": "E8",
+      "sourcePage": 89,
+      "displayOrder": 31,
+      "learningMinutes": 30,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî E8 referans bütçesi 144 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 54/70 oranı uygulanarak 4445 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "E8.5.W1",
+      "name": "Students will be able to write a basic paragraph to describe their internet habits.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 89. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316. LGS uygulaması yazılı metin/diyalog ve çoktan seçmeli soru çalışmasıdır. Resmî beceri etiketi korunmuştur; ayrıca sözlü sınav, poster, proje veya yazı üretme ödevi oluşturulmaz.",
+      "officialTopicCode": "E8",
+      "sourcePage": 89,
+      "displayOrder": 32,
+      "learningMinutes": 30,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî E8 referans bütçesi 144 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 54/70 oranı uygulanarak 4445 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "E8.6.L1",
+      "name": "Students will be able to follow a discussion on adventures.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 90. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316. LGS uygulaması yazılı metin/diyalog ve çoktan seçmeli soru çalışmasıdır. Resmî beceri etiketi korunmuştur; ayrıca sözlü sınav, poster, proje veya yazı üretme ödevi oluşturulmaz.",
+      "officialTopicCode": "E8",
+      "sourcePage": 90,
+      "displayOrder": 33,
+      "learningMinutes": 30,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî E8 referans bütçesi 144 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 54/70 oranı uygulanarak 4445 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "E8.6.SP1",
+      "name": "Students will be able to make comparisons about sports and games by using simple descriptive language.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 90. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316. LGS uygulaması yazılı metin/diyalog ve çoktan seçmeli soru çalışmasıdır. Resmî beceri etiketi korunmuştur; ayrıca sözlü sınav, poster, proje veya yazı üretme ödevi oluşturulmaz.",
+      "officialTopicCode": "E8",
+      "sourcePage": 90,
+      "displayOrder": 34,
+      "learningMinutes": 30,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî E8 referans bütçesi 144 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 54/70 oranı uygulanarak 4445 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "E8.6.R1",
+      "name": "Students will be able to understand short and simple texts to find the main points about adventures.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 90. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316. LGS uygulaması yazılı metin/diyalog ve çoktan seçmeli soru çalışmasıdır. Resmî beceri etiketi korunmuştur; ayrıca sözlü sınav, poster, proje veya yazı üretme ödevi oluşturulmaz.",
+      "officialTopicCode": "E8",
+      "sourcePage": 90,
+      "displayOrder": 35,
+      "learningMinutes": 30,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî E8 referans bütçesi 144 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 54/70 oranı uygulanarak 4445 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "E8.6.W1",
+      "name": "Students will be able to write a short and simple paragraph comparing two objects.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 90. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316. LGS uygulaması yazılı metin/diyalog ve çoktan seçmeli soru çalışmasıdır. Resmî beceri etiketi korunmuştur; ayrıca sözlü sınav, poster, proje veya yazı üretme ödevi oluşturulmaz.",
+      "officialTopicCode": "E8",
+      "sourcePage": 90,
+      "displayOrder": 36,
+      "learningMinutes": 30,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî E8 referans bütçesi 144 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 54/70 oranı uygulanarak 4445 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "E8.7.L1",
+      "name": "Students will be able to understand and extract the specific information from short and simple oral texts.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 91. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316. LGS uygulaması yazılı metin/diyalog ve çoktan seçmeli soru çalışmasıdır. Resmî beceri etiketi korunmuştur; ayrıca sözlü sınav, poster, proje veya yazı üretme ödevi oluşturulmaz.",
+      "officialTopicCode": "E8",
+      "sourcePage": 91,
+      "displayOrder": 37,
+      "learningMinutes": 30,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî E8 referans bütçesi 144 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 54/70 oranı uygulanarak 4445 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "E8.7.SI2",
+      "name": "Students will be able to talk about their favorite tourist attractions by giving details.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 91. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316. LGS uygulaması yazılı metin/diyalog ve çoktan seçmeli soru çalışmasıdır. Resmî beceri etiketi korunmuştur; ayrıca sözlü sınav, poster, proje veya yazı üretme ödevi oluşturulmaz.",
+      "officialTopicCode": "E8",
+      "sourcePage": 91,
+      "displayOrder": 38,
+      "learningMinutes": 30,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî E8 referans bütçesi 144 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 54/70 oranı uygulanarak 4445 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "E8.7.SP3",
+      "name": "Students will be able to express their experiences about places.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 91. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316. LGS uygulaması yazılı metin/diyalog ve çoktan seçmeli soru çalışmasıdır. Resmî beceri etiketi korunmuştur; ayrıca sözlü sınav, poster, proje veya yazı üretme ödevi oluşturulmaz.",
+      "officialTopicCode": "E8",
+      "sourcePage": 91,
+      "displayOrder": 39,
+      "learningMinutes": 30,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî E8 referans bütçesi 144 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 54/70 oranı uygulanarak 4445 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "E8.7.R1",
+      "name": "Students will be able to find specific information from various texts about tourism.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 91. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316. LGS uygulaması yazılı metin/diyalog ve çoktan seçmeli soru çalışmasıdır. Resmî beceri etiketi korunmuştur; ayrıca sözlü sınav, poster, proje veya yazı üretme ödevi oluşturulmaz.",
+      "officialTopicCode": "E8",
+      "sourcePage": 91,
+      "displayOrder": 40,
+      "learningMinutes": 30,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî E8 referans bütçesi 144 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 54/70 oranı uygulanarak 4445 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "E8.7.W1",
+      "name": "Students will be able to design a brochure, advertisement or a postcard about their favorite tourist attraction(s).",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 91. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316. LGS uygulaması yazılı metin/diyalog ve çoktan seçmeli soru çalışmasıdır. Resmî beceri etiketi korunmuştur; ayrıca sözlü sınav, poster, proje veya yazı üretme ödevi oluşturulmaz.",
+      "officialTopicCode": "E8",
+      "sourcePage": 91,
+      "displayOrder": 41,
+      "learningMinutes": 30,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî E8 referans bütçesi 144 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 54/70 oranı uygulanarak 4445 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "E8.8.L2",
+      "name": "Students will be able to understand obligations, likes and dislikes in various oral texts.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 92. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316. LGS uygulaması yazılı metin/diyalog ve çoktan seçmeli soru çalışmasıdır. Resmî beceri etiketi korunmuştur; ayrıca sözlü sınav, poster, proje veya yazı üretme ödevi oluşturulmaz.",
+      "officialTopicCode": "E8",
+      "sourcePage": 92,
+      "displayOrder": 42,
+      "learningMinutes": 30,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî E8 referans bütçesi 144 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 54/70 oranı uygulanarak 4445 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "E8.8.SP1",
+      "name": "Students will be able to express their obligations, likes and dislikes in simple terms.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 92. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316. LGS uygulaması yazılı metin/diyalog ve çoktan seçmeli soru çalışmasıdır. Resmî beceri etiketi korunmuştur; ayrıca sözlü sınav, poster, proje veya yazı üretme ödevi oluşturulmaz.",
+      "officialTopicCode": "E8",
+      "sourcePage": 92,
+      "displayOrder": 43,
+      "learningMinutes": 30,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî E8 referans bütçesi 144 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 54/70 oranı uygulanarak 4445 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "E8.8.R1",
+      "name": "Students will be able to understand various short and simple texts about responsibilities.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 92. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316. LGS uygulaması yazılı metin/diyalog ve çoktan seçmeli soru çalışmasıdır. Resmî beceri etiketi korunmuştur; ayrıca sözlü sınav, poster, proje veya yazı üretme ödevi oluşturulmaz.",
+      "officialTopicCode": "E8",
+      "sourcePage": 92,
+      "displayOrder": 44,
+      "learningMinutes": 30,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî E8 referans bütçesi 144 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 54/70 oranı uygulanarak 4445 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "E8.8.W1",
+      "name": "Students will be able to write short and simple poems/stories about their feelings and responsibilities.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 92. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316. LGS uygulaması yazılı metin/diyalog ve çoktan seçmeli soru çalışmasıdır. Resmî beceri etiketi korunmuştur; ayrıca sözlü sınav, poster, proje veya yazı üretme ödevi oluşturulmaz.",
+      "officialTopicCode": "E8",
+      "sourcePage": 92,
+      "displayOrder": 45,
+      "learningMinutes": 30,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî E8 referans bütçesi 144 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 54/70 oranı uygulanarak 4445 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "E8.9.L1",
+      "name": "Students will be able to recognize main ideas and key information in short oral texts about science.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 93. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316. LGS uygulaması yazılı metin/diyalog ve çoktan seçmeli soru çalışmasıdır. Resmî beceri etiketi korunmuştur; ayrıca sözlü sınav, poster, proje veya yazı üretme ödevi oluşturulmaz.",
+      "officialTopicCode": "E8",
+      "sourcePage": 93,
+      "displayOrder": 46,
+      "learningMinutes": 30,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî E8 referans bütçesi 144 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 54/70 oranı uygulanarak 4445 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "E8.9.SI1",
+      "name": "Students will be able to talk about actions happening currently and in the past.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 93. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316. LGS uygulaması yazılı metin/diyalog ve çoktan seçmeli soru çalışmasıdır. Resmî beceri etiketi korunmuştur; ayrıca sözlü sınav, poster, proje veya yazı üretme ödevi oluşturulmaz.",
+      "officialTopicCode": "E8",
+      "sourcePage": 93,
+      "displayOrder": 47,
+      "learningMinutes": 30,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî E8 referans bütçesi 144 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 54/70 oranı uygulanarak 4445 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "E8.9.SI2",
+      "name": "Students will be able to involve in simple discussions about scientific achievements.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 93. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316. LGS uygulaması yazılı metin/diyalog ve çoktan seçmeli soru çalışmasıdır. Resmî beceri etiketi korunmuştur; ayrıca sözlü sınav, poster, proje veya yazı üretme ödevi oluşturulmaz.",
+      "officialTopicCode": "E8",
+      "sourcePage": 93,
+      "displayOrder": 48,
+      "learningMinutes": 30,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî E8 referans bütçesi 144 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 54/70 oranı uygulanarak 4445 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "E8.9.R1",
+      "name": "Students will be able to understand short and simple texts about actions happening currently and in the past.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 93. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316. LGS uygulaması yazılı metin/diyalog ve çoktan seçmeli soru çalışmasıdır. Resmî beceri etiketi korunmuştur; ayrıca sözlü sınav, poster, proje veya yazı üretme ödevi oluşturulmaz.",
+      "officialTopicCode": "E8",
+      "sourcePage": 93,
+      "displayOrder": 49,
+      "learningMinutes": 30,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî E8 referans bütçesi 144 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 54/70 oranı uygulanarak 4445 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "E8.9.W1",
+      "name": "Students will be able to write simple descriptions of scientific achievements in a short paragraph.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 93. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316. LGS uygulaması yazılı metin/diyalog ve çoktan seçmeli soru çalışmasıdır. Resmî beceri etiketi korunmuştur; ayrıca sözlü sınav, poster, proje veya yazı üretme ödevi oluşturulmaz.",
+      "officialTopicCode": "E8",
+      "sourcePage": 93,
+      "displayOrder": 50,
+      "learningMinutes": 30,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî E8 referans bütçesi 144 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 54/70 oranı uygulanarak 4445 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "E8.10.L1",
+      "name": "Students will be able to identify the main points of TV news about natural forces and disasters.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 94. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316. LGS uygulaması yazılı metin/diyalog ve çoktan seçmeli soru çalışmasıdır. Resmî beceri etiketi korunmuştur; ayrıca sözlü sınav, poster, proje veya yazı üretme ödevi oluşturulmaz.",
+      "officialTopicCode": "E8",
+      "sourcePage": 94,
+      "displayOrder": 51,
+      "learningMinutes": 30,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî E8 referans bütçesi 144 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 54/70 oranı uygulanarak 4445 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "E8.10.SI2",
+      "name": "Students will be able to negotiate reasons and results to support their predictions about natural forces and disasters.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 94. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316. LGS uygulaması yazılı metin/diyalog ve çoktan seçmeli soru çalışmasıdır. Resmî beceri etiketi korunmuştur; ayrıca sözlü sınav, poster, proje veya yazı üretme ödevi oluşturulmaz.",
+      "officialTopicCode": "E8",
+      "sourcePage": 94,
+      "displayOrder": 52,
+      "learningMinutes": 30,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî E8 referans bütçesi 144 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 54/70 oranı uygulanarak 4445 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "E8.10.R1",
+      "name": "Students will be able to identify specific information in simple texts about natural forces and disasters.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 94. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316. LGS uygulaması yazılı metin/diyalog ve çoktan seçmeli soru çalışmasıdır. Resmî beceri etiketi korunmuştur; ayrıca sözlü sınav, poster, proje veya yazı üretme ödevi oluşturulmaz.",
+      "officialTopicCode": "E8",
+      "sourcePage": 94,
+      "displayOrder": 53,
+      "learningMinutes": 30,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî E8 referans bütçesi 144 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 54/70 oranı uygulanarak 4445 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    },
+    {
+      "code": "E8.10.W1",
+      "name": "Students will be able to write a short and simple paragraph about reasons and results of natural forces and disasters.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 94. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316. LGS uygulaması yazılı metin/diyalog ve çoktan seçmeli soru çalışmasıdır. Resmî beceri etiketi korunmuştur; ayrıca sözlü sınav, poster, proje veya yazı üretme ödevi oluşturulmaz.",
+      "officialTopicCode": "E8",
+      "sourcePage": 94,
+      "displayOrder": 54,
+      "learningMinutes": 30,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî E8 referans bütçesi 144 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez. Konu saati değil yıllık genel ders bütçesi: https://dhgm.meb.gov.tr/meb_iys_dosyalar/2025_05/14103336_mayistebligler.pdf PDF 6; 36 hafta model varsayımı. LGS seçili 54/70 oranı uygulanarak 4445 dk ayrıldı. Bu oran resmî LGS süre kararı değildir.",
+      "sources": []
+    }
+  ],
+  "mappings": [
+    {
+      "topicSourceId": "topic:de1713ba-6bc2-4612-91cc-08dd3ad55a15",
+      "outcomeCodes": [
+        "E8.1.L1",
+        "E8.1.R2",
+        "E8.1.SI1",
+        "E8.1.SP1",
+        "E8.1.W1"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:6c37d1bb-08ae-4f87-be58-08dd50ea5822",
+      "outcomeCodes": [
+        "E8.1.L1",
+        "E8.1.R1",
+        "E8.1.SI1",
+        "E8.1.SP1"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:3752ff17-e74d-4c5f-26c3-08dd7688daf4",
+      "outcomeCodes": [
+        "E8.2.L1",
+        "E8.2.R1",
+        "E8.2.SI1",
+        "E8.2.SP1",
+        "E8.2.SP2",
+        "E8.2.W1"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:9726dc9a-6d28-4554-26c4-08dd7688daf4",
+      "outcomeCodes": [
+        "E8.2.L1",
+        "E8.2.R1",
+        "E8.2.SI1",
+        "E8.2.SP1",
+        "E8.2.SP2",
+        "E8.2.W1"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:dda11947-ebae-4ce5-26c5-08dd7688daf4",
+      "outcomeCodes": [
+        "E8.2.L1",
+        "E8.2.R1",
+        "E8.2.SI1",
+        "E8.2.SP1",
+        "E8.2.SP2",
+        "E8.2.W1"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:f79e64a5-2e1e-4574-26c6-08dd7688daf4",
+      "outcomeCodes": [
+        "E8.3.L1",
+        "E8.3.R1",
+        "E8.3.R2",
+        "E8.3.SP1",
+        "E8.3.W1"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:340cfc5a-a3f0-49f0-26c7-08dd7688daf4",
+      "outcomeCodes": [
+        "E8.3.R2"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:3ea0f831-3952-4b7e-26c8-08dd7688daf4",
+      "outcomeCodes": [
+        "E8.3.R2",
+        "E8.3.SI1"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:e596248d-464a-484d-26c9-08dd7688daf4",
+      "outcomeCodes": [
+        "E8.4.L1",
+        "E8.4.L2",
+        "E8.4.R1",
+        "E8.4.SI1",
+        "E8.4.W1"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:5dee5f56-0db4-44f5-26ca-08dd7688daf4",
+      "outcomeCodes": [
+        "E8.4.L1",
+        "E8.4.L2",
+        "E8.4.R1",
+        "E8.4.SI1",
+        "E8.4.SP1",
+        "E8.4.W1"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:3bee0298-8df6-4988-26cb-08dd7688daf4",
+      "outcomeCodes": [
+        "E8.5.L1",
+        "E8.5.L2",
+        "E8.5.R1",
+        "E8.5.R2",
+        "E8.5.SI1",
+        "E8.5.SI2",
+        "E8.5.SP1",
+        "E8.5.W1"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:258297a7-9166-4183-c5f3-08ddfba86130",
+      "outcomeCodes": [
+        "E8.6.L1",
+        "E8.6.R1"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:fb4d1c63-6a3d-4740-c5f4-08ddfba86130",
+      "outcomeCodes": [
+        "E8.6.L1",
+        "E8.6.R1",
+        "E8.6.SP1",
+        "E8.6.W1"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:c5d5d86c-b0cd-45a9-ba0a-08ddff4c5e61",
+      "outcomeCodes": [
+        "E8.7.L1",
+        "E8.7.R1",
+        "E8.7.SI2",
+        "E8.7.W1"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:d163a661-aeb9-4a55-ba0b-08ddff4c5e61",
+      "outcomeCodes": [
+        "E8.7.L1",
+        "E8.7.R1",
+        "E8.7.SI2",
+        "E8.7.W1"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:c8bffe98-c00f-4671-ba0c-08ddff4c5e61",
+      "outcomeCodes": [
+        "E8.7.L1",
+        "E8.7.R1",
+        "E8.7.SI2",
+        "E8.7.W1"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:30a82f91-57fa-4580-ba0d-08ddff4c5e61",
+      "outcomeCodes": [
+        "E8.7.L1",
+        "E8.7.R1",
+        "E8.7.SI2",
+        "E8.7.SP3",
+        "E8.7.W1"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:16ba7e05-3de0-484b-5e88-08de1a46c336",
+      "outcomeCodes": [
+        "E8.8.L2",
+        "E8.8.R1",
+        "E8.8.SP1",
+        "E8.8.W1"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:7bfb50e4-8194-4563-5e89-08de1a46c336",
+      "outcomeCodes": [
+        "E8.8.L2",
+        "E8.8.R1",
+        "E8.8.SP1",
+        "E8.8.W1"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:410c8d39-15e9-4241-5e8a-08de1a46c336",
+      "outcomeCodes": [
+        "E8.8.L2",
+        "E8.8.R1",
+        "E8.8.SP1",
+        "E8.8.W1"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:ca7bd606-7066-4e0b-6230-08de2108d1d1",
+      "outcomeCodes": [
+        "E8.9.L1",
+        "E8.9.R1",
+        "E8.9.SI1",
+        "E8.9.SI2",
+        "E8.9.W1"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:2d7c35ca-f806-462f-6231-08de2108d1d1",
+      "outcomeCodes": [
+        "E8.9.L1",
+        "E8.9.R1",
+        "E8.9.SI1",
+        "E8.9.SI2",
+        "E8.9.W1"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:5e969c69-7469-4e6d-6232-08de2108d1d1",
+      "outcomeCodes": [
+        "E8.10.L1",
+        "E8.10.R1",
+        "E8.10.SI2",
+        "E8.10.W1"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    }
+  ]
+}

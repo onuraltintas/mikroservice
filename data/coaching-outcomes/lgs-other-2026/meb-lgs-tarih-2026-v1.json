@@ -1,0 +1,839 @@
+{
+  "code": "meb-lgs-tarih-2026-v1",
+  "examCode": "LGS",
+  "gradeNumber": 8,
+  "subjectName": "T.C. İnkılap Tarihi ve Atatürkçülük",
+  "academicYearStart": 2026,
+  "academicYearEnd": 2026,
+  "sourceUrl": "https://mufredat.meb.gov.tr/Dosyalar/201812104016155-İNKILAP TARİHİ VE ATATÜRKÇÜLÜK ÖĞRETİM PROGRAMI.pdf",
+  "documentSha256": "38a24b11191f7ebca2fc85831d787e7187eca70e82f0bd36e7de5c81524357d5",
+  "scopeEvidenceUrl": "https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf",
+  "officialTopics": [
+    {
+      "code": "İTA.8.1",
+      "name": "Bir Kahraman Doğuyor",
+      "outcomeCount": 4,
+      "lessonPeriods": 8
+    },
+    {
+      "code": "İTA.8.2",
+      "name": "Millî Uyanış: Bağımsızlık Yolunda Atılan Adımlar",
+      "outcomeCount": 8,
+      "lessonPeriods": 18
+    },
+    {
+      "code": "İTA.8.3",
+      "name": "Millî Bir Destan: Ya İstiklal Ya Ölüm!",
+      "outcomeCount": 7,
+      "lessonPeriods": 14
+    },
+    {
+      "code": "İTA.8.4",
+      "name": "Atatürkçülük ve Çağdaşlaşan Türkiye",
+      "outcomeCount": 9,
+      "lessonPeriods": 12
+    },
+    {
+      "code": "İTA.8.5",
+      "name": "Demokratikleşme Çabaları",
+      "outcomeCount": 3,
+      "lessonPeriods": 6
+    },
+    {
+      "code": "İTA.8.6",
+      "name": "Atatürk Dönemi Türk Dış Politikası",
+      "outcomeCount": 3,
+      "lessonPeriods": 6
+    },
+    {
+      "code": "İTA.8.7",
+      "name": "Atatürk’ün Ölümü ve Sonrası",
+      "outcomeCount": 5,
+      "lessonPeriods": 8
+    }
+  ],
+  "outcomes": [
+    {
+      "code": "İTA.8.1.1",
+      "name": "Avrupa’daki gelişmelerin yansımaları bağlamında Osmanlı Devleti’nin yirminci yüzyılın başlarındaki siyasi ve sosyal durumunu kavrar.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 13. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "İTA.8.1",
+      "sourcePage": 13,
+      "displayOrder": 1,
+      "learningMinutes": 30,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî İTA.8.1 referans bütçesi 8 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "İTA.8.1.2",
+      "name": "Mustafa Kemal’in çocukluk ve öğrenim hayatından hareketle onun kişilik özelliklerinin oluşumu hakkında çıkarımlarda bulunur.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 13. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "İTA.8.1",
+      "sourcePage": 13,
+      "displayOrder": 2,
+      "learningMinutes": 30,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî İTA.8.1 referans bütçesi 8 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "İTA.8.1.3",
+      "name": "Gençlik döneminde Mustafa Kemal’in fikir hayatını etkileyen önemli kişileri ve olayları kavrar.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 13. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "İTA.8.1",
+      "sourcePage": 13,
+      "displayOrder": 3,
+      "learningMinutes": 30,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî İTA.8.1 referans bütçesi 8 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "İTA.8.1.4",
+      "name": "Mustafa Kemal’in askerlik hayatı ile ilgili olayları ve olguları onun kişilik özellikleri ile ilişkilendirir.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 13. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "İTA.8.1",
+      "sourcePage": 13,
+      "displayOrder": 4,
+      "learningMinutes": 30,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî İTA.8.1 referans bütçesi 8 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "İTA.8.2.1",
+      "name": "Birinci Dünya Savaşı’nın sebeplerini ve savaşın başlamasına yol açan gelişmeleri kavrar.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 13. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "İTA.8.2",
+      "sourcePage": 13,
+      "displayOrder": 5,
+      "learningMinutes": 35,
+      "practiceMinutes": 45,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî İTA.8.2 referans bütçesi 18 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "İTA.8.2.2",
+      "name": "Birinci Dünya Savaşı’nda Osmanlı Devleti’nin durumu hakkında çıkarımlarda bulunur.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 13. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "İTA.8.2",
+      "sourcePage": 13,
+      "displayOrder": 6,
+      "learningMinutes": 35,
+      "practiceMinutes": 45,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî İTA.8.2 referans bütçesi 18 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "İTA.8.2.3",
+      "name": "Mondros Ateşkes Antlaşması’nın imzalanması ve uygulanması karşısında Osmanlı yönetiminin, Mustafa Kemal’in ve halkın tutumunu analiz eder.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 13. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "İTA.8.2",
+      "sourcePage": 13,
+      "displayOrder": 7,
+      "learningMinutes": 35,
+      "practiceMinutes": 45,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî İTA.8.2 referans bütçesi 18 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "İTA.8.2.4",
+      "name": "Kuvâ-yı Millîye’nin oluşum sürecini ve sonrasında meydana gelen gelişmeleri kavrar.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 13. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "İTA.8.2",
+      "sourcePage": 13,
+      "displayOrder": 8,
+      "learningMinutes": 35,
+      "practiceMinutes": 45,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî İTA.8.2 referans bütçesi 18 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "İTA.8.2.5",
+      "name": "Millî Mücadele’nin hazırlık döneminde Mustafa Kemal’in yaptığı çalışmaları analiz eder.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 14. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "İTA.8.2",
+      "sourcePage": 14,
+      "displayOrder": 9,
+      "learningMinutes": 35,
+      "practiceMinutes": 45,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî İTA.8.2 referans bütçesi 18 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "İTA.8.2.6",
+      "name": "Misakımilli’nin kabulünü ve Büyük Millet Meclisinin açılışını vatanın bütünlüğü esası ile “ulusal egemenlik” ve “tam bağımsızlık” ilkeleri ile ilişkilendirir.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 14. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "İTA.8.2",
+      "sourcePage": 14,
+      "displayOrder": 10,
+      "learningMinutes": 35,
+      "practiceMinutes": 45,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî İTA.8.2 referans bütçesi 18 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "İTA.8.2.7",
+      "name": "Büyük Millet Meclisine karşı ayaklanmalar ile ayaklanmaların bastırılması için alınan tedbirleri analiz eder.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 14. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "İTA.8.2",
+      "sourcePage": 14,
+      "displayOrder": 11,
+      "learningMinutes": 35,
+      "practiceMinutes": 45,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî İTA.8.2 referans bütçesi 18 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "İTA.8.2.8",
+      "name": "Mustafa Kemal’in ve Türk milletinin Sevr Antlaşması’na karşı tepkilerini değerlendirir.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 14. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "İTA.8.2",
+      "sourcePage": 14,
+      "displayOrder": 12,
+      "learningMinutes": 35,
+      "practiceMinutes": 45,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî İTA.8.2 referans bütçesi 18 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "İTA.8.3.1",
+      "name": "Millî Mücadele Dönemi’nde Doğu Cephesi ve Güney Cephesi’nde meydana gelen gelişmeleri kavrar.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 14. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "İTA.8.3",
+      "sourcePage": 14,
+      "displayOrder": 13,
+      "learningMinutes": 30,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî İTA.8.3 referans bütçesi 14 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "İTA.8.3.2",
+      "name": "Millî Mücadele Dönemi’nde Batı Cephesi’nde meydana gelen gelişmeleri kavrar.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 14. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "İTA.8.3",
+      "sourcePage": 14,
+      "displayOrder": 14,
+      "learningMinutes": 30,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî İTA.8.3 referans bütçesi 14 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "İTA.8.3.3",
+      "name": "Millî Mücadele’nin zor bir döneminde Maarif Kongresi yapan Atatürk’ün, millî ve çağdaş eğitime verdiği önemi kavrar.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 14. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "İTA.8.3",
+      "sourcePage": 14,
+      "displayOrder": 15,
+      "learningMinutes": 30,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî İTA.8.3 referans bütçesi 14 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "İTA.8.3.4",
+      "name": "Türk milletinin millî birlik, beraberlik ve dayanışmasının bir örneği olarak Tekalif-i Millîye Emirleri doğrultusunda yapılan uygulamaları analiz eder.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 14. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "İTA.8.3",
+      "sourcePage": 14,
+      "displayOrder": 16,
+      "learningMinutes": 30,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî İTA.8.3 referans bütçesi 14 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "İTA.8.3.5",
+      "name": "Sakarya Meydan Savaşı’nın kazanılmasında ve Büyük Taarruz’un başarılı olmasında Mustafa Kemal’in rolüne ilişkin çıkarımlarda bulunur.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 14. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "İTA.8.3",
+      "sourcePage": 14,
+      "displayOrder": 17,
+      "learningMinutes": 30,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî İTA.8.3 referans bütçesi 14 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "İTA.8.3.6",
+      "name": "Lozan Antlaşması’nın sağladığı kazanımları analiz eder.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 14. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "İTA.8.3",
+      "sourcePage": 14,
+      "displayOrder": 18,
+      "learningMinutes": 30,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî İTA.8.3 referans bütçesi 14 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "İTA.8.3.7",
+      "name": "Millî Mücadele Dönemi’nin siyasi, sosyal ve kültürel olaylarının sanat ve edebiyat ürünlerine yansımalarına kanıtlar gösterir.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 14. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "İTA.8.3",
+      "sourcePage": 14,
+      "displayOrder": 19,
+      "learningMinutes": 30,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî İTA.8.3 referans bütçesi 14 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "İTA.8.4.1",
+      "name": "Çağdaşlaşan Türkiye’nin temeli olan Atatürk ilkelerini açıklar.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 15. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "İTA.8.4",
+      "sourcePage": 15,
+      "displayOrder": 20,
+      "learningMinutes": 20,
+      "practiceMinutes": 30,
+      "checkMinutes": 5,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî İTA.8.4 referans bütçesi 12 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "İTA.8.4.2",
+      "name": "Siyasi alanda meydana gelen gelişmeleri kavrar.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 15. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "İTA.8.4",
+      "sourcePage": 15,
+      "displayOrder": 21,
+      "learningMinutes": 20,
+      "practiceMinutes": 30,
+      "checkMinutes": 5,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî İTA.8.4 referans bütçesi 12 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "İTA.8.4.3",
+      "name": "Hukuk alanında meydana gelen gelişmelerin toplumsal hayata yansımalarını kavrar.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 15. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "İTA.8.4",
+      "sourcePage": 15,
+      "displayOrder": 22,
+      "learningMinutes": 20,
+      "practiceMinutes": 30,
+      "checkMinutes": 5,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî İTA.8.4 referans bütçesi 12 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "İTA.8.4.4",
+      "name": "Eğitim ve kültür alanında yapılan inkılapları ve gelişmeleri kavrar.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 15. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "İTA.8.4",
+      "sourcePage": 15,
+      "displayOrder": 23,
+      "learningMinutes": 20,
+      "practiceMinutes": 30,
+      "checkMinutes": 5,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî İTA.8.4 referans bütçesi 12 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "İTA.8.4.5",
+      "name": "Toplumsal alanda yapılan inkılapları ve meydana gelen gelişmeleri kavrar.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 15. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "İTA.8.4",
+      "sourcePage": 15,
+      "displayOrder": 24,
+      "learningMinutes": 20,
+      "practiceMinutes": 30,
+      "checkMinutes": 5,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî İTA.8.4 referans bütçesi 12 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "İTA.8.4.6",
+      "name": "Ekonomi alanında meydana gelen gelişmeleri kavrar.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 15. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "İTA.8.4",
+      "sourcePage": 15,
+      "displayOrder": 25,
+      "learningMinutes": 20,
+      "practiceMinutes": 30,
+      "checkMinutes": 5,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî İTA.8.4 referans bütçesi 12 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "İTA.8.4.7",
+      "name": "Atatürk Dönemi’nde sağlık alanında yapılan çalışmaları devletin temel görevleri ile ilişkilendirir.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 15. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "İTA.8.4",
+      "sourcePage": 15,
+      "displayOrder": 26,
+      "learningMinutes": 20,
+      "practiceMinutes": 25,
+      "checkMinutes": 5,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî İTA.8.4 referans bütçesi 12 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "İTA.8.4.8",
+      "name": "Cumhuriyet’in sağladığı kazanımları ve Atatürk’ün Türk milleti için gösterdiği hedefleri analiz eder.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 15. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "İTA.8.4",
+      "sourcePage": 15,
+      "displayOrder": 27,
+      "learningMinutes": 20,
+      "practiceMinutes": 25,
+      "checkMinutes": 5,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî İTA.8.4 referans bütçesi 12 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "İTA.8.4.9",
+      "name": "Atatürk ilke ve inkılaplarını oluşturan temel esasları kavrar.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 15. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "İTA.8.4",
+      "sourcePage": 15,
+      "displayOrder": 28,
+      "learningMinutes": 20,
+      "practiceMinutes": 25,
+      "checkMinutes": 5,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî İTA.8.4 referans bütçesi 12 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "İTA.8.5.1",
+      "name": "Atatürk Dönemi’ndeki demokratikleşme yolunda atılan adımları açıklar.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 16. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "İTA.8.5",
+      "sourcePage": 16,
+      "displayOrder": 29,
+      "learningMinutes": 30,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî İTA.8.5 referans bütçesi 6 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "İTA.8.5.2",
+      "name": "Mustafa Kemal’e suikast girişimini analiz eder.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 16. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "İTA.8.5",
+      "sourcePage": 16,
+      "displayOrder": 30,
+      "learningMinutes": 30,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî İTA.8.5 referans bütçesi 6 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "İTA.8.5.3",
+      "name": "Cumhuriyetin ilk yıllarında Türkiye Cumhuriyetine yönelik tehditleri analiz eder.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 16. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "İTA.8.5",
+      "sourcePage": 16,
+      "displayOrder": 31,
+      "learningMinutes": 30,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî İTA.8.5 referans bütçesi 6 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "İTA.8.6.1",
+      "name": "Atatürk Dönemi Türk dış politikasının temel ilkelerini ve amaçlarını açıklar.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 16. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "İTA.8.6",
+      "sourcePage": 16,
+      "displayOrder": 32,
+      "learningMinutes": 30,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî İTA.8.6 referans bütçesi 6 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "İTA.8.6.2",
+      "name": "Atatürk Dönemi Türk dış politikasında yaşanan gelişmeleri analiz eder.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 16. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "İTA.8.6",
+      "sourcePage": 16,
+      "displayOrder": 33,
+      "learningMinutes": 30,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî İTA.8.6 referans bütçesi 6 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "İTA.8.6.3",
+      "name": "Atatürk’ün Hatay’ı ülkemize katmak konusunda yaptıklarına ve bu uğurda gösterdiği özveriye kanıtlar gösterir.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 16. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "İTA.8.6",
+      "sourcePage": 16,
+      "displayOrder": 34,
+      "learningMinutes": 30,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî İTA.8.6 referans bütçesi 6 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "İTA.8.7.1",
+      "name": "Atatürk’ün ölümüne ilişkin yansıma ve değerlendirmelerden hareketle onun fikir ve eserlerinin evrensel değerine ilişkin çıkarımlarda bulunur.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 16. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "İTA.8.7",
+      "sourcePage": 16,
+      "displayOrder": 35,
+      "learningMinutes": 25,
+      "practiceMinutes": 35,
+      "checkMinutes": 5,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî İTA.8.7 referans bütçesi 8 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "İTA.8.7.2",
+      "name": "Atatürk’ün Türk Milleti’ne bıraktığı eserlerinden örnekler verir.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 16. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "İTA.8.7",
+      "sourcePage": 16,
+      "displayOrder": 36,
+      "learningMinutes": 25,
+      "practiceMinutes": 35,
+      "checkMinutes": 5,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî İTA.8.7 referans bütçesi 8 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "İTA.8.7.3",
+      "name": "Atatürk’ün İkinci Dünya Savaşı öncesi tespitleri ve girişimleri Türkiye’nin savaşta izlediği denge siyaseti ile ilişkilendirilir.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 16. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "İTA.8.7",
+      "sourcePage": 16,
+      "displayOrder": 37,
+      "learningMinutes": 25,
+      "practiceMinutes": 35,
+      "checkMinutes": 5,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî İTA.8.7 referans bütçesi 8 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "İTA.8.7.4",
+      "name": "İkinci Dünya Savaşı’ndaki gelişmelerin ve bu savaşın sonuçlarının Türkiye’ye etkilerini analiz eder.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 16. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "İTA.8.7",
+      "sourcePage": 16,
+      "displayOrder": 38,
+      "learningMinutes": 25,
+      "practiceMinutes": 35,
+      "checkMinutes": 5,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî İTA.8.7 referans bütçesi 8 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "İTA.8.7.5",
+      "name": "Türkiye’de çok partili siyasi hayata geçişi hızlandıran gelişmeleri, demokrasinin gerekleri açısından analiz eder.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 16. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "İTA.8.7",
+      "sourcePage": 16,
+      "displayOrder": 39,
+      "learningMinutes": 25,
+      "practiceMinutes": 30,
+      "checkMinutes": 5,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî İTA.8.7 referans bütçesi 8 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    }
+  ],
+  "mappings": [
+    {
+      "topicSourceId": "topic:e93b43ea-4341-493e-91cf-08dd3ad55a15",
+      "outcomeCodes": [
+        "İTA.8.1.1"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:cf4b6492-2a0d-4c1b-a782-08dd54ac0717",
+      "outcomeCodes": [
+        "İTA.8.1.2"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:6c519fbe-7f79-4ab3-26e4-08dd7688daf4",
+      "outcomeCodes": [
+        "İTA.8.1.3"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:9c0f5507-c5f2-4b31-26e5-08dd7688daf4",
+      "outcomeCodes": [
+        "İTA.8.1.4"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:4fd578fb-880a-460a-26e6-08dd7688daf4",
+      "outcomeCodes": [
+        "İTA.8.2.1"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:077a07f2-dc4a-46d6-99be-08dd781d59a7",
+      "outcomeCodes": [
+        "İTA.8.2.2"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:b3b98acd-5ce7-4f7c-26e7-08dd7688daf4",
+      "outcomeCodes": [
+        "İTA.8.2.3"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:4890035b-4f9c-4ca8-26e8-08dd7688daf4",
+      "outcomeCodes": [
+        "İTA.8.2.4"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:1d74d0a9-384a-40d3-26e9-08dd7688daf4",
+      "outcomeCodes": [
+        "İTA.8.2.5"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:e629ef5f-87f6-42fa-26ea-08dd7688daf4",
+      "outcomeCodes": [
+        "İTA.8.2.6"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:5d88c28d-2983-4b7d-26eb-08dd7688daf4",
+      "outcomeCodes": [
+        "İTA.8.2.7"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:ecf0d33a-0bd6-4f69-26ec-08dd7688daf4",
+      "outcomeCodes": [
+        "İTA.8.2.8"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:4a14f1d6-9e9d-42f1-4d65-08dd7739e4cb",
+      "outcomeCodes": [
+        "İTA.8.3.1"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:9a051f30-d49c-4515-4d66-08dd7739e4cb",
+      "outcomeCodes": [
+        "İTA.8.3.2"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:e2fa6996-d4f6-4461-4d67-08dd7739e4cb",
+      "outcomeCodes": [
+        "İTA.8.3.3"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:c9ac9b49-4f0c-45ea-4d68-08dd7739e4cb",
+      "outcomeCodes": [
+        "İTA.8.3.4"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:8259336b-608b-4c45-4d69-08dd7739e4cb",
+      "outcomeCodes": [
+        "İTA.8.3.5"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:63e2024c-a7a7-4ec8-4d6a-08dd7739e4cb",
+      "outcomeCodes": [
+        "İTA.8.3.6"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:38e74f1a-8f5b-44a7-4d6b-08dd7739e4cb",
+      "outcomeCodes": [
+        "İTA.8.3.7"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:8de52448-8dbf-4fdc-0ee9-08de035c300b",
+      "outcomeCodes": [
+        "İTA.8.4.1"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:a17ff4b7-a792-4712-0eea-08de035c300b",
+      "outcomeCodes": [
+        "İTA.8.4.2"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:d68ab955-f903-451f-0eeb-08de035c300b",
+      "outcomeCodes": [
+        "İTA.8.4.3"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:d055a59f-e7b4-4f0c-0eec-08de035c300b",
+      "outcomeCodes": [
+        "İTA.8.4.4"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:8846a8e1-8abc-4814-0eed-08de035c300b",
+      "outcomeCodes": [
+        "İTA.8.4.5"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:5e928e01-b029-4371-0eee-08de035c300b",
+      "outcomeCodes": [
+        "İTA.8.4.6"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:8ee38226-c230-470d-0eef-08de035c300b",
+      "outcomeCodes": [
+        "İTA.8.4.7"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:670f5a1e-c48e-4819-0ef0-08de035c300b",
+      "outcomeCodes": [
+        "İTA.8.4.8"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:18ff4c29-cbf9-42e3-0ef1-08de035c300b",
+      "outcomeCodes": [
+        "İTA.8.4.9"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:3609e81e-2384-408a-e13b-08de0dce5305",
+      "outcomeCodes": [
+        "İTA.8.5.1"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:345be71d-620b-4278-e13c-08de0dce5305",
+      "outcomeCodes": [
+        "İTA.8.5.2"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:67293836-7e0f-4d92-e13d-08de0dce5305",
+      "outcomeCodes": [
+        "İTA.8.5.3"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:aa515617-f491-45ba-e13e-08de0dce5305",
+      "outcomeCodes": [
+        "İTA.8.6.1"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:7ba978cb-3b35-4adc-e13f-08de0dce5305",
+      "outcomeCodes": [
+        "İTA.8.6.2"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:29d8e1ea-ad61-447f-e140-08de0dce5305",
+      "outcomeCodes": [
+        "İTA.8.6.3"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:8fed18b1-daf3-4584-e141-08de0dce5305",
+      "outcomeCodes": [
+        "İTA.8.7.1"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:e3395188-72ce-4eb7-e142-08de0dce5305",
+      "outcomeCodes": [
+        "İTA.8.7.2"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:5c2d29f7-1b5a-4510-e143-08de0dce5305",
+      "outcomeCodes": [
+        "İTA.8.7.3"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:e93c77e5-d65f-47f3-e144-08de0dce5305",
+      "outcomeCodes": [
+        "İTA.8.7.4"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:6aa339a6-28fb-4696-e145-08de0dce5305",
+      "outcomeCodes": [
+        "İTA.8.7.5"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    }
+  ]
+}

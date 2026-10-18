@@ -1,4 +1,5 @@
 import unittest
+import tempfile
 from pathlib import Path
 from prepare_lgs_other import prepare, allocate_minutes, extract_scope
 
@@ -58,6 +59,13 @@ class LgsImportTests(unittest.TestCase):
         self.assertEqual(1, len(self.additions))
         self.assertIn('Muhammed', self.additions[0]['name'])
         self.assertEqual(54, len(extract_scope(SOURCES / 'lgs-scope-2022.pdf')['english']))
+
+    def test_modified_scope_source_is_rejected(self):
+        with tempfile.TemporaryDirectory(dir=ROOT / 'artifacts/coaching-lgs-other-20261018') as temporary:
+            changed = Path(temporary) / 'scope.pdf'
+            changed.write_bytes(b'unreviewed source')
+            with self.assertRaises(ValueError):
+                extract_scope(changed)
 
 
 if __name__ == '__main__':

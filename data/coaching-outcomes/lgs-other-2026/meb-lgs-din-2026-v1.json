@@ -1,0 +1,595 @@
+{
+  "code": "meb-lgs-din-2026-v1",
+  "examCode": "LGS",
+  "gradeNumber": 8,
+  "subjectName": "Din Kültürü ve Ahlak Bilgisi",
+  "academicYearStart": 2026,
+  "academicYearEnd": 2026,
+  "sourceUrl": "https://mufredat.meb.gov.tr/Dosyalar/20221229134650712-DKAB_(4-8. Sınıf)_DOP_ 2018.pdf",
+  "documentSha256": "baace330fd3b7c5b5dde6061bbd0af3b885382d6eb5e7049095a30db8c075608",
+  "scopeEvidenceUrl": "https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf",
+  "officialTopics": [
+    {
+      "code": "8.1",
+      "name": "Kader İnancı",
+      "outcomeCount": 6,
+      "lessonPeriods": 14
+    },
+    {
+      "code": "8.2",
+      "name": "Zekât ve Sadaka",
+      "outcomeCount": 5,
+      "lessonPeriods": 14
+    },
+    {
+      "code": "8.3",
+      "name": "Din ve Hayat",
+      "outcomeCount": 4,
+      "lessonPeriods": 14
+    },
+    {
+      "code": "8.4",
+      "name": "Hz. Muhammed’in Örnekliği",
+      "outcomeCount": 9,
+      "lessonPeriods": 16
+    },
+    {
+      "code": "8.5",
+      "name": "Kur’an-ı Kerim ve Özellikleri",
+      "outcomeCount": 4,
+      "lessonPeriods": 14
+    }
+  ],
+  "outcomes": [
+    {
+      "code": "8.1.1",
+      "name": "Kader ve kaza inancını ayet ve hadislerle açıklar.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 43. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "8.1",
+      "sourcePage": 43,
+      "displayOrder": 1,
+      "learningMinutes": 40,
+      "practiceMinutes": 45,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî 8.1 referans bütçesi 14 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "8.1.2",
+      "name": "İnsanın ilmi, iradesi, sorumluluğu ile kader arasında ilişki kurar.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 43. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "8.1",
+      "sourcePage": 43,
+      "displayOrder": 2,
+      "learningMinutes": 40,
+      "practiceMinutes": 45,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî 8.1 referans bütçesi 14 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "8.1.3",
+      "name": "Kaza ve kader ile ilgili kavramları analiz eder.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 43. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "8.1",
+      "sourcePage": 43,
+      "displayOrder": 3,
+      "learningMinutes": 40,
+      "practiceMinutes": 45,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî 8.1 referans bütçesi 14 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "8.1.4",
+      "name": "Toplumda kader ve kaza ile ilgili yaygın olan yanlış anlayışları sorgular.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 43. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "8.1",
+      "sourcePage": 43,
+      "displayOrder": 4,
+      "learningMinutes": 40,
+      "practiceMinutes": 45,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî 8.1 referans bütçesi 14 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "8.1.5",
+      "name": "Hz. Musa’nın (a.s.) hayatını ana hatlarıyla tanır.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 43. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "8.1",
+      "sourcePage": 43,
+      "displayOrder": 5,
+      "learningMinutes": 35,
+      "practiceMinutes": 45,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî 8.1 referans bütçesi 14 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "8.1.6",
+      "name": "Ayet el-Kürsi'yi okur, anlamını söyler.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 43. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "8.1",
+      "sourcePage": 43,
+      "displayOrder": 6,
+      "learningMinutes": 35,
+      "practiceMinutes": 45,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî 8.1 referans bütçesi 14 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "8.2.1",
+      "name": "İslam’ın paylaşma ve yardımlaşmaya verdiği önemi ayet ve hadisler ışığında yorumlar.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 44. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "8.2",
+      "sourcePage": 44,
+      "displayOrder": 7,
+      "learningMinutes": 45,
+      "practiceMinutes": 60,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî 8.2 referans bütçesi 14 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "8.2.2",
+      "name": "Zekât ve sadaka ibadetini ayet ve hadislerle açıklar.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 44. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "8.2",
+      "sourcePage": 44,
+      "displayOrder": 8,
+      "learningMinutes": 45,
+      "practiceMinutes": 60,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî 8.2 referans bütçesi 14 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "8.2.3",
+      "name": "Zekât, infak ve sadakanın bireysel ve toplumsal önemini fark eder.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 44. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "8.2",
+      "sourcePage": 44,
+      "displayOrder": 9,
+      "learningMinutes": 45,
+      "practiceMinutes": 55,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî 8.2 referans bütçesi 14 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "8.2.4",
+      "name": "Hz. Şuayb’in (a.s.) hayatını ana hatlarıyla tanır.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 44. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "8.2",
+      "sourcePage": 44,
+      "displayOrder": 10,
+      "learningMinutes": 45,
+      "practiceMinutes": 55,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî 8.2 referans bütçesi 14 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "8.2.5",
+      "name": "Maûn suresini okur, anlamını söyler.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 44. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "8.2",
+      "sourcePage": 44,
+      "displayOrder": 11,
+      "learningMinutes": 45,
+      "practiceMinutes": 55,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî 8.2 referans bütçesi 14 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "8.3.1",
+      "name": "Din, birey ve toplum arasındaki ilişkiyi yorumlar.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 45. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "8.3",
+      "sourcePage": 45,
+      "displayOrder": 12,
+      "learningMinutes": 55,
+      "practiceMinutes": 70,
+      "checkMinutes": 15,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî 8.3 referans bütçesi 14 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "8.3.2",
+      "name": "İslam dininin can, nesil, akıl, mal ve din emniyetiyle ilgili ortaya koyduğu ilke ve hedefleri analiz eder.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 45. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "8.3",
+      "sourcePage": 45,
+      "displayOrder": 13,
+      "learningMinutes": 55,
+      "practiceMinutes": 70,
+      "checkMinutes": 15,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî 8.3 referans bütçesi 14 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "8.3.3",
+      "name": "Hz. Yusuf’un (a.s.) örnek hayatından ilkeler çıkarır.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 45. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "8.3",
+      "sourcePage": 45,
+      "displayOrder": 14,
+      "learningMinutes": 55,
+      "practiceMinutes": 70,
+      "checkMinutes": 15,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî 8.3 referans bütçesi 14 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "8.3.4",
+      "name": "Asr suresini okur, anlamını söyler.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 45. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "8.3",
+      "sourcePage": 45,
+      "displayOrder": 15,
+      "learningMinutes": 55,
+      "practiceMinutes": 70,
+      "checkMinutes": 15,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî 8.3 referans bütçesi 14 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "8.4.1",
+      "name": "Hz. Muhammed’in (s.a.v.) doğruluğu ve güvenilir kişiliği ile peygamberlerin özellikleri arasında ilişki kurar.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 46. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "8.4",
+      "sourcePage": 46,
+      "displayOrder": 16,
+      "learningMinutes": 30,
+      "practiceMinutes": 35,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî 8.4 referans bütçesi 16 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "8.4.2",
+      "name": "Hz. Muhammed’in (s.a.v.) merhametli ve affedici oluşunu davranışlarında yansıtmaya özen gösterir.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 46. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "8.4",
+      "sourcePage": 46,
+      "displayOrder": 17,
+      "learningMinutes": 30,
+      "practiceMinutes": 35,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî 8.4 referans bütçesi 16 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "8.4.3",
+      "name": "Hz. Muhammed’in (s.a.v.) istişareye verdiği önemi ortaya koyan örnek olaylardan hareketle gündelik hayatla ilgili çıkarımlarda bulunur.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 46. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "8.4",
+      "sourcePage": 46,
+      "displayOrder": 18,
+      "learningMinutes": 30,
+      "practiceMinutes": 35,
+      "checkMinutes": 5,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî 8.4 referans bütçesi 16 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "8.4.4",
+      "name": "Hz. Muhammed’in (s.a.v.) cesaret ve kararlılığını örnek olaylarla açıklar.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 46. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "8.4",
+      "sourcePage": 46,
+      "displayOrder": 19,
+      "learningMinutes": 30,
+      "practiceMinutes": 35,
+      "checkMinutes": 5,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî 8.4 referans bütçesi 16 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "8.4.5",
+      "name": "Hz. Muhammed’in (s.a.v.) hakkı gözetmedeki hassasiyetine örnekler verir.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 46. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "8.4",
+      "sourcePage": 46,
+      "displayOrder": 20,
+      "learningMinutes": 30,
+      "practiceMinutes": 35,
+      "checkMinutes": 5,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî 8.4 referans bütçesi 16 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "8.4.6",
+      "name": "Hz. Muhammed’in (s.a.v.) insanlara verdiği değeri örneklerle açıklar.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 46. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "8.4",
+      "sourcePage": 46,
+      "displayOrder": 21,
+      "learningMinutes": 30,
+      "practiceMinutes": 35,
+      "checkMinutes": 5,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî 8.4 referans bütçesi 16 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "8.4.7",
+      "name": "Hz. Muhammed’in (s.a.v.) örnek davranışlarının toplumsal hayattaki önemini değerlendirir.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 46. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "8.4",
+      "sourcePage": 46,
+      "displayOrder": 22,
+      "learningMinutes": 30,
+      "practiceMinutes": 35,
+      "checkMinutes": 5,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî 8.4 referans bütçesi 16 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "8.4.8",
+      "name": "Hz. Muhammed’in (s.a.v.) hikmetli söz ve davranışlarıyla insanları iyiye ve güzele yönlendirdiğini fark eder.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 46. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "8.4",
+      "sourcePage": 46,
+      "displayOrder": 23,
+      "learningMinutes": 30,
+      "practiceMinutes": 35,
+      "checkMinutes": 5,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî 8.4 referans bütçesi 16 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "8.4.9",
+      "name": "Kureyş suresini okur, anlamını söyler.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 46. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "8.4",
+      "sourcePage": 46,
+      "displayOrder": 24,
+      "learningMinutes": 30,
+      "practiceMinutes": 35,
+      "checkMinutes": 5,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî 8.4 referans bütçesi 16 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "8.5.1",
+      "name": "İslam dininin temel kaynaklarını tanır.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 47. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "8.5",
+      "sourcePage": 47,
+      "displayOrder": 25,
+      "learningMinutes": 55,
+      "practiceMinutes": 70,
+      "checkMinutes": 15,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî 8.5 referans bütçesi 14 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "8.5.2",
+      "name": "Ayetlerden hareketle Kur’an’ın ana konularını sınıflandırır.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 47. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "8.5",
+      "sourcePage": 47,
+      "displayOrder": 26,
+      "learningMinutes": 55,
+      "practiceMinutes": 70,
+      "checkMinutes": 15,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî 8.5 referans bütçesi 14 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "8.5.3",
+      "name": "Kur’an-ı Kerim’in temel özelliklerini değerlendirir.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 47. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "8.5",
+      "sourcePage": 47,
+      "displayOrder": 27,
+      "learningMinutes": 55,
+      "practiceMinutes": 70,
+      "checkMinutes": 15,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî 8.5 referans bütçesi 14 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "8.5.4",
+      "name": "Hz. Nuh’un (a.s.) tevhide davetini özetler.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 47. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "8.5",
+      "sourcePage": 47,
+      "displayOrder": 28,
+      "learningMinutes": 55,
+      "practiceMinutes": 70,
+      "checkMinutes": 15,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî 8.5 referans bütçesi 14 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    }
+  ],
+  "mappings": [
+    {
+      "topicSourceId": "topic:024ec748-6a8c-443f-501b-08dd57dee93a",
+      "outcomeCodes": [
+        "8.1.1"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:2fad407d-1a23-4a5e-501c-08dd57dee93a",
+      "outcomeCodes": [
+        "8.1.2"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:7e7f2c3f-39bf-45f0-501d-08dd57dee93a",
+      "outcomeCodes": [
+        "8.1.3",
+        "8.1.4"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:1c13e422-8160-4f01-501e-08dd57dee93a",
+      "outcomeCodes": [
+        "8.1.5"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:0166210e-ed80-43c4-501f-08dd57dee93a",
+      "outcomeCodes": [
+        "8.1.6"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:88c83c82-abb9-46b3-4610-08dd5b22ca3d",
+      "outcomeCodes": [
+        "8.2.1"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:fd23a090-2a45-4061-b724-08dd5b22e3d8",
+      "outcomeCodes": [
+        "8.2.2"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:54e7af80-a53b-4ee2-b725-08dd5b22e3d8",
+      "outcomeCodes": [
+        "8.2.3"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:5f73422a-6e4c-4813-b726-08dd5b22e3d8",
+      "outcomeCodes": [
+        "8.2.4"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:213559d2-8b20-4aed-b727-08dd5b22e3d8",
+      "outcomeCodes": [
+        "8.2.5"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:afd89f78-cddc-4a33-b728-08dd5b22e3d8",
+      "outcomeCodes": [
+        "8.3.1"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:4b09a6a7-0e2f-43d3-b729-08dd5b22e3d8",
+      "outcomeCodes": [
+        "8.3.2"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:dbec69ba-9c68-48a4-b72a-08dd5b22e3d8",
+      "outcomeCodes": [
+        "8.3.3"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:11d05b6b-295b-4789-b72b-08dd5b22e3d8",
+      "outcomeCodes": [
+        "8.3.4"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:4eed71f9-e0a5-4a65-80a9-08dd63bd069f",
+      "outcomeCodes": [
+        "8.4.1"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:bccd2d61-f5a5-4f16-80aa-08dd63bd069f",
+      "outcomeCodes": [
+        "8.4.2"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:80989884-60c4-44ff-80ab-08dd63bd069f",
+      "outcomeCodes": [
+        "8.4.3"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:6ae60f0a-fb4a-4dfc-824a-08dd63be9f6c",
+      "outcomeCodes": [
+        "8.4.4"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:e9a44a73-b12c-4c86-824b-08dd63be9f6c",
+      "outcomeCodes": [
+        "8.4.5"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:60f4c7ea-124c-41d9-824c-08dd63be9f6c",
+      "outcomeCodes": [
+        "8.4.6"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:70446b48-6b25-4d54-824d-08dd63be9f6c",
+      "outcomeCodes": [
+        "8.4.9"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "lgs-2026:din:ornek-davranislar",
+      "outcomeCodes": [
+        "8.4.7",
+        "8.4.8"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:ab4bbfe4-7a5d-4d8c-1b94-08dd63c2eeaa",
+      "outcomeCodes": [
+        "8.5.1"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:94c373af-005b-4dc2-80ae-08dd63c3d57e",
+      "outcomeCodes": [
+        "8.5.2"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:66f168ea-2f7e-48ad-80af-08dd63c3d57e",
+      "outcomeCodes": [
+        "8.5.3"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:98863055-70c9-45c5-80b0-08dd63c3d57e",
+      "outcomeCodes": [
+        "8.5.4"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    }
+  ]
+}

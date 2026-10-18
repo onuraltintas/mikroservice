@@ -1,0 +1,1135 @@
+{
+  "code": "meb-lgs-fen-2026-v1",
+  "examCode": "LGS",
+  "gradeNumber": 8,
+  "subjectName": "Fen Bilimleri",
+  "academicYearStart": 2026,
+  "academicYearEnd": 2026,
+  "sourceUrl": "https://mufredat.meb.gov.tr/Dosyalar/201812312311937-FEN BİLİMLERİ ÖĞRETİM PROGRAMI2018.pdf",
+  "documentSha256": "3a8aa21327083bf15c33b9c404f299ff784b11d26024522a8c24b61387c8c0c1",
+  "scopeEvidenceUrl": "https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf",
+  "officialTopics": [
+    {
+      "code": "F.8.1.1",
+      "name": "Mevsimlerin Oluşumu",
+      "outcomeCount": 1,
+      "lessonPeriods": 8
+    },
+    {
+      "code": "F.8.1.2",
+      "name": "İklim ve Hava Hareketleri",
+      "outcomeCount": 2,
+      "lessonPeriods": 6
+    },
+    {
+      "code": "F.8.2.1",
+      "name": "DNA ve Genetik Kod",
+      "outcomeCount": 3,
+      "lessonPeriods": 4
+    },
+    {
+      "code": "F.8.2.2",
+      "name": "Kalıtım",
+      "outcomeCount": 3,
+      "lessonPeriods": 10
+    },
+    {
+      "code": "F.8.2.3",
+      "name": "Mutasyon ve Modifikasyon",
+      "outcomeCount": 3,
+      "lessonPeriods": 2
+    },
+    {
+      "code": "F.8.2.4",
+      "name": "Adaptasyon (Çevreye Uyum)",
+      "outcomeCount": 1,
+      "lessonPeriods": 2
+    },
+    {
+      "code": "F.8.2.5",
+      "name": "Biyoteknoloji",
+      "outcomeCount": 3,
+      "lessonPeriods": 4
+    },
+    {
+      "code": "F.8.3.1",
+      "name": "Basınç",
+      "outcomeCount": 3,
+      "lessonPeriods": 10
+    },
+    {
+      "code": "F.8.4.1",
+      "name": "Periyodik Sistem",
+      "outcomeCount": 2,
+      "lessonPeriods": 4
+    },
+    {
+      "code": "F.8.4.2",
+      "name": "Fiziksel ve Kimyasal Değişimler",
+      "outcomeCount": 1,
+      "lessonPeriods": 4
+    },
+    {
+      "code": "F.8.4.3",
+      "name": "Kimyasal Tepkimeler",
+      "outcomeCount": 1,
+      "lessonPeriods": 3
+    },
+    {
+      "code": "F.8.4.4",
+      "name": "Asitler ve Bazlar",
+      "outcomeCount": 7,
+      "lessonPeriods": 8
+    },
+    {
+      "code": "F.8.4.5",
+      "name": "Maddenin Isı ile Etkileşimi",
+      "outcomeCount": 4,
+      "lessonPeriods": 5
+    },
+    {
+      "code": "F.8.4.6",
+      "name": "Türkiye’de Kimya Endüstrisi",
+      "outcomeCount": 2,
+      "lessonPeriods": 4
+    },
+    {
+      "code": "F.8.5.1",
+      "name": "Basit Makineler",
+      "outcomeCount": 2,
+      "lessonPeriods": 10
+    },
+    {
+      "code": "F.8.6.1",
+      "name": "Besin Zinciri ve Enerji Akışı",
+      "outcomeCount": 1,
+      "lessonPeriods": 2
+    },
+    {
+      "code": "F.8.6.2",
+      "name": "Enerji Dönüşümleri",
+      "outcomeCount": 3,
+      "lessonPeriods": 8
+    },
+    {
+      "code": "F.8.6.3",
+      "name": "Madde Döngüleri ve Çevre Sorunları",
+      "outcomeCount": 3,
+      "lessonPeriods": 8
+    },
+    {
+      "code": "F.8.6.4",
+      "name": "Sürdürülebilir Kalkınma",
+      "outcomeCount": 5,
+      "lessonPeriods": 6
+    },
+    {
+      "code": "F.8.7.1",
+      "name": "Elektrik Yükleri ve Elektriklenme",
+      "outcomeCount": 3,
+      "lessonPeriods": 6
+    },
+    {
+      "code": "F.8.7.2",
+      "name": "Elektrik Yüklü Cisimler",
+      "outcomeCount": 2,
+      "lessonPeriods": 8
+    },
+    {
+      "code": "F.8.7.3",
+      "name": "Elektrik Enerjisinin Dönüşümü",
+      "outcomeCount": 6,
+      "lessonPeriods": 10
+    }
+  ],
+  "outcomes": [
+    {
+      "code": "F.8.1.1.1",
+      "name": "Mevsimlerin oluşumuna yönelik tahminlerde bulunur.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 49. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "F.8.1.1",
+      "sourcePage": 49,
+      "displayOrder": 1,
+      "learningMinutes": 130,
+      "practiceMinutes": 160,
+      "checkMinutes": 30,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî F.8.1.1 referans bütçesi 8 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "F.8.1.2.1",
+      "name": "İklim ve hava olayları arasındaki farkı açıklar.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 49. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "F.8.1.2",
+      "sourcePage": 49,
+      "displayOrder": 2,
+      "learningMinutes": 50,
+      "practiceMinutes": 60,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî F.8.1.2 referans bütçesi 6 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "F.8.1.2.2",
+      "name": "İklim biliminin (klimatoloji) bir bilim dalı olduğunu ve bu alanda çalışan uzmanlara iklim bilimci (klimatolog) adı verildiğini söyler.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 49. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "F.8.1.2",
+      "sourcePage": 49,
+      "displayOrder": 3,
+      "learningMinutes": 50,
+      "practiceMinutes": 60,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî F.8.1.2 referans bütçesi 6 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "F.8.2.1.1",
+      "name": "Nükleotid, gen, DNA ve kromozom kavramlarını açıklayarak bu kavramlar arasında ilişki kurar.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 50. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "F.8.2.1",
+      "sourcePage": 50,
+      "displayOrder": 4,
+      "learningMinutes": 20,
+      "practiceMinutes": 30,
+      "checkMinutes": 5,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî F.8.2.1 referans bütçesi 4 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "F.8.2.1.2",
+      "name": "DNA’nın yapısını model üzerinde gösterir.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 50. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "F.8.2.1",
+      "sourcePage": 50,
+      "displayOrder": 5,
+      "learningMinutes": 20,
+      "practiceMinutes": 30,
+      "checkMinutes": 5,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî F.8.2.1 referans bütçesi 4 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "F.8.2.1.3",
+      "name": "DNA’nın kendini nasıl eşlediğini ifade eder.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 50. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "F.8.2.1",
+      "sourcePage": 50,
+      "displayOrder": 6,
+      "learningMinutes": 20,
+      "practiceMinutes": 25,
+      "checkMinutes": 5,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî F.8.2.1 referans bütçesi 4 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "F.8.2.2.1",
+      "name": "Kalıtım ile ilgili kavramları tanımlar.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 50. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "F.8.2.2",
+      "sourcePage": 50,
+      "displayOrder": 7,
+      "learningMinutes": 55,
+      "practiceMinutes": 65,
+      "checkMinutes": 15,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî F.8.2.2 referans bütçesi 10 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "F.8.2.2.2",
+      "name": "Tek karakter çaprazlamaları ile ilgili problemler çözerek sonuçlar hakkında yorum yapar.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 50. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "F.8.2.2",
+      "sourcePage": 50,
+      "displayOrder": 8,
+      "learningMinutes": 55,
+      "practiceMinutes": 65,
+      "checkMinutes": 15,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî F.8.2.2 referans bütçesi 10 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "F.8.2.2.3",
+      "name": "Akraba evliliklerinin genetik sonuçlarını tartışır.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 50. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "F.8.2.2",
+      "sourcePage": 50,
+      "displayOrder": 9,
+      "learningMinutes": 50,
+      "practiceMinutes": 65,
+      "checkMinutes": 15,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî F.8.2.2 referans bütçesi 10 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "F.8.2.3.1",
+      "name": "Örneklerden yola çıkarak mutasyonu açıklar.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 50. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "F.8.2.3",
+      "sourcePage": 50,
+      "displayOrder": 10,
+      "learningMinutes": 10,
+      "practiceMinutes": 15,
+      "checkMinutes": 5,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî F.8.2.3 referans bütçesi 2 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "F.8.2.3.2",
+      "name": "Örneklerden yola çıkarak modifikasyonu açıklar.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 50. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "F.8.2.3",
+      "sourcePage": 50,
+      "displayOrder": 11,
+      "learningMinutes": 10,
+      "practiceMinutes": 10,
+      "checkMinutes": 5,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî F.8.2.3 referans bütçesi 2 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "F.8.2.3.3",
+      "name": "Mutasyonla modifikasyon arasındaki farklar ile ilgili çıkarımda bulunur.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 50. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "F.8.2.3",
+      "sourcePage": 50,
+      "displayOrder": 12,
+      "learningMinutes": 10,
+      "practiceMinutes": 10,
+      "checkMinutes": 5,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî F.8.2.3 referans bütçesi 2 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "F.8.2.4.1",
+      "name": "Canlıların yaşadıkları çevreye uyumlarını gözlem yaparak açıklar.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 51. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "F.8.2.4",
+      "sourcePage": 51,
+      "displayOrder": 13,
+      "learningMinutes": 30,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî F.8.2.4 referans bütçesi 2 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "F.8.2.5.1",
+      "name": "Genetik mühendisliğini ve biyoteknolojiyi ilişkilendirir.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 51. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "F.8.2.5",
+      "sourcePage": 51,
+      "displayOrder": 14,
+      "learningMinutes": 20,
+      "practiceMinutes": 30,
+      "checkMinutes": 5,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî F.8.2.5 referans bütçesi 4 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "F.8.2.5.2",
+      "name": "Biyoteknolojik uygulamalar kapsamında oluşturulan ikilemlerle bu uygulamaların insanlık için yararlı ve zararlı yönlerini tartışır.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 51. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "F.8.2.5",
+      "sourcePage": 51,
+      "displayOrder": 15,
+      "learningMinutes": 20,
+      "practiceMinutes": 30,
+      "checkMinutes": 5,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî F.8.2.5 referans bütçesi 4 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "F.8.2.5.3",
+      "name": "Gelecekteki genetik mühendisliği ve biyoteknoloji uygulamalarının neler olabileceği hakkında tahminde bulunur.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 51. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "F.8.2.5",
+      "sourcePage": 51,
+      "displayOrder": 16,
+      "learningMinutes": 20,
+      "practiceMinutes": 25,
+      "checkMinutes": 5,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî F.8.2.5 referans bütçesi 4 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "F.8.3.1.1",
+      "name": "Katı basıncını etkileyen değişkenleri deneyerek keşfeder.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 51. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "F.8.3.1",
+      "sourcePage": 51,
+      "displayOrder": 17,
+      "learningMinutes": 55,
+      "practiceMinutes": 65,
+      "checkMinutes": 15,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî F.8.3.1 referans bütçesi 10 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "F.8.3.1.2",
+      "name": "Sıvı basıncını etkileyen değişkenleri tahmin eder ve tahminlerini test eder.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 51. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "F.8.3.1",
+      "sourcePage": 51,
+      "displayOrder": 18,
+      "learningMinutes": 55,
+      "practiceMinutes": 65,
+      "checkMinutes": 15,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî F.8.3.1 referans bütçesi 10 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "F.8.3.1.3",
+      "name": "Katı, sıvı ve gazların basınç özelliklerinin günlük yaşam ve teknolojideki uygulamalarına örnekler verir.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 51. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "F.8.3.1",
+      "sourcePage": 51,
+      "displayOrder": 19,
+      "learningMinutes": 50,
+      "practiceMinutes": 65,
+      "checkMinutes": 15,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî F.8.3.1 referans bütçesi 10 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "F.8.4.1.1",
+      "name": "Periyodik sistemde, grup ve periyotların nasıl oluşturulduğunu açıklar.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 52. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "F.8.4.1",
+      "sourcePage": 52,
+      "displayOrder": 20,
+      "learningMinutes": 30,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî F.8.4.1 referans bütçesi 4 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "F.8.4.1.2",
+      "name": "Elementleri periyodik tablo üzerinde metal, yarımetal ve ametal olarak sınıflandırır.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 52. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "F.8.4.1",
+      "sourcePage": 52,
+      "displayOrder": 21,
+      "learningMinutes": 30,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî F.8.4.1 referans bütçesi 4 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "F.8.4.2.1",
+      "name": "Fiziksel ve kimyasal değişim arasındaki farkları, çeşitli olayları gözlemleyerek açıklar.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 52. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "F.8.4.2",
+      "sourcePage": 52,
+      "displayOrder": 22,
+      "learningMinutes": 65,
+      "practiceMinutes": 80,
+      "checkMinutes": 15,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî F.8.4.2 referans bütçesi 4 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "F.8.4.3.1",
+      "name": "Bileşiklerin kimyasal tepkime sonucunda oluştuğunu bilir.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 52. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "F.8.4.3",
+      "sourcePage": 52,
+      "displayOrder": 23,
+      "learningMinutes": 50,
+      "practiceMinutes": 60,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî F.8.4.3 referans bütçesi 3 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "F.8.4.4.1",
+      "name": "Asit ve bazların genel özelliklerini ifade eder.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 52. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "F.8.4.4",
+      "sourcePage": 52,
+      "displayOrder": 24,
+      "learningMinutes": 20,
+      "practiceMinutes": 25,
+      "checkMinutes": 5,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî F.8.4.4 referans bütçesi 8 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "F.8.4.4.2",
+      "name": "Asit ve bazlara günlük yaşamdan örnekler verir.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 52. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "F.8.4.4",
+      "sourcePage": 52,
+      "displayOrder": 25,
+      "learningMinutes": 20,
+      "practiceMinutes": 20,
+      "checkMinutes": 5,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî F.8.4.4 referans bütçesi 8 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "F.8.4.4.3",
+      "name": "Günlük hayatta ulaşılabilecek malzemeleri asit-baz ayracı olarak kullanır.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 52. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "F.8.4.4",
+      "sourcePage": 52,
+      "displayOrder": 26,
+      "learningMinutes": 20,
+      "practiceMinutes": 20,
+      "checkMinutes": 5,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî F.8.4.4 referans bütçesi 8 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "F.8.4.4.4",
+      "name": "Maddelerin asitlik ve bazlık durumlarına ilişkin pH değerlerini kullanarak çıkarımda bulunur.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 52. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "F.8.4.4",
+      "sourcePage": 52,
+      "displayOrder": 27,
+      "learningMinutes": 20,
+      "practiceMinutes": 20,
+      "checkMinutes": 5,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî F.8.4.4 referans bütçesi 8 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "F.8.4.4.5",
+      "name": "Asit ve bazların çeşitli maddeler üzerindeki etkilerini gözlemler.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 52. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "F.8.4.4",
+      "sourcePage": 52,
+      "displayOrder": 28,
+      "learningMinutes": 20,
+      "practiceMinutes": 20,
+      "checkMinutes": 5,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî F.8.4.4 referans bütçesi 8 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "F.8.4.4.6",
+      "name": "Asit ve bazların temizlik malzemesi olarak kullanılması esnasında oluşabilecek tehlikelerle ilgili gerekli tedbirleri alır.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 52. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "F.8.4.4",
+      "sourcePage": 52,
+      "displayOrder": 29,
+      "learningMinutes": 20,
+      "practiceMinutes": 20,
+      "checkMinutes": 5,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî F.8.4.4 referans bütçesi 8 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "F.8.4.4.7",
+      "name": "Asit yağmurlarının önlenmesine yönelik çözüm önerileri sunar.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 52. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "F.8.4.4",
+      "sourcePage": 52,
+      "displayOrder": 30,
+      "learningMinutes": 20,
+      "practiceMinutes": 20,
+      "checkMinutes": 5,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî F.8.4.4 referans bütçesi 8 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "F.8.4.5.1",
+      "name": "Isınmanın maddenin cinsine, kütlesine ve/veya sıcaklık değişimine bağlı olduğunu deney yaparak keşfeder.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 53. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "F.8.4.5",
+      "sourcePage": 53,
+      "displayOrder": 31,
+      "learningMinutes": 20,
+      "practiceMinutes": 25,
+      "checkMinutes": 5,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî F.8.4.5 referans bütçesi 5 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "F.8.4.5.2",
+      "name": "Hâl değiştirmek için gerekli ısının maddenin cinsi ve kütlesiyle ilişkili olduğunu deney yaparak keşfeder.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 53. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "F.8.4.5",
+      "sourcePage": 53,
+      "displayOrder": 32,
+      "learningMinutes": 20,
+      "practiceMinutes": 25,
+      "checkMinutes": 5,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî F.8.4.5 referans bütçesi 5 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "F.8.4.5.3",
+      "name": "Maddelerin hâl değişimi ve ısınma grafiğini çizerek yorumlar.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 53. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "F.8.4.5",
+      "sourcePage": 53,
+      "displayOrder": 33,
+      "learningMinutes": 20,
+      "practiceMinutes": 25,
+      "checkMinutes": 5,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî F.8.4.5 referans bütçesi 5 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "F.8.4.5.4",
+      "name": "Günlük yaşamda meydana gelen hâl değişimleri ile ısı alışverişini ilişkilendirir.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 53. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "F.8.4.5",
+      "sourcePage": 53,
+      "displayOrder": 34,
+      "learningMinutes": 20,
+      "practiceMinutes": 25,
+      "checkMinutes": 5,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî F.8.4.5 referans bütçesi 5 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "F.8.4.6.1",
+      "name": "Geçmişten günümüze Türkiye’deki kimya endüstrisinin gelişimini araştırır.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 53. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "F.8.4.6",
+      "sourcePage": 53,
+      "displayOrder": 35,
+      "learningMinutes": 30,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî F.8.4.6 referans bütçesi 4 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "F.8.4.6.2",
+      "name": "Kimya endüstrisinde meslek dallarını araştırır ve gelecekteki yeni meslek alanları hakkında öneriler sunar.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 53. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "F.8.4.6",
+      "sourcePage": 53,
+      "displayOrder": 36,
+      "learningMinutes": 30,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî F.8.4.6 referans bütçesi 4 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "F.8.5.1.1",
+      "name": "Basit makinelerin sağladığı avantajları örnekler üzerinden açıklar.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 53. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "F.8.5.1",
+      "sourcePage": 53,
+      "displayOrder": 37,
+      "learningMinutes": 80,
+      "practiceMinutes": 100,
+      "checkMinutes": 20,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî F.8.5.1 referans bütçesi 10 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "F.8.5.1.2",
+      "name": "Basit makinelerden yararlanarak günlük yaşamda iş kolaylığı sağlayacak bir düzenek tasarlar.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 53. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "F.8.5.1",
+      "sourcePage": 53,
+      "displayOrder": 38,
+      "learningMinutes": 80,
+      "practiceMinutes": 100,
+      "checkMinutes": 20,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî F.8.5.1 referans bütçesi 10 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "F.8.6.1.1",
+      "name": "Besin zincirindeki üretici, tüketici, ayrıştırıcılara örnekler verir.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 54. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "F.8.6.1",
+      "sourcePage": 54,
+      "displayOrder": 39,
+      "learningMinutes": 30,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî F.8.6.1 referans bütçesi 2 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "F.8.6.2.1",
+      "name": "Bitkilerde besin üretiminde fotosentezin önemini fark eder.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 54. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "F.8.6.2",
+      "sourcePage": 54,
+      "displayOrder": 40,
+      "learningMinutes": 45,
+      "practiceMinutes": 55,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî F.8.6.2 referans bütçesi 8 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "F.8.6.2.2",
+      "name": "Fotosentez hızını etkileyen faktörler ile ilgili çıkarımlarda bulunur.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 54. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "F.8.6.2",
+      "sourcePage": 54,
+      "displayOrder": 41,
+      "learningMinutes": 40,
+      "practiceMinutes": 55,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî F.8.6.2 referans bütçesi 8 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "F.8.6.2.3",
+      "name": "Canlılarda solunumun önemini belirtir.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 54. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "F.8.6.2",
+      "sourcePage": 54,
+      "displayOrder": 42,
+      "learningMinutes": 40,
+      "practiceMinutes": 55,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî F.8.6.2 referans bütçesi 8 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "F.8.6.3.1",
+      "name": "Madde döngülerini şema üzerinde göstererek açıklar.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 54. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "F.8.6.3",
+      "sourcePage": 54,
+      "displayOrder": 43,
+      "learningMinutes": 45,
+      "practiceMinutes": 55,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî F.8.6.3 referans bütçesi 8 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "F.8.6.3.2",
+      "name": "Madde döngülerinin yaşam açısından önemini sorgular.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 54. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "F.8.6.3",
+      "sourcePage": 54,
+      "displayOrder": 44,
+      "learningMinutes": 40,
+      "practiceMinutes": 55,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî F.8.6.3 referans bütçesi 8 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "F.8.6.3.3",
+      "name": "Küresel iklim değişikliklerinin nedenlerini ve olası sonuçlarını tartışır.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 54. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "F.8.6.3",
+      "sourcePage": 54,
+      "displayOrder": 45,
+      "learningMinutes": 40,
+      "practiceMinutes": 55,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî F.8.6.3 referans bütçesi 8 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "F.8.6.4.1",
+      "name": "Kaynakların kullanımında tasarruflu davranmaya özen gösterir.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 55. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "F.8.6.4",
+      "sourcePage": 55,
+      "displayOrder": 46,
+      "learningMinutes": 20,
+      "practiceMinutes": 25,
+      "checkMinutes": 5,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî F.8.6.4 referans bütçesi 6 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "F.8.6.4.2",
+      "name": "Kaynakların tasarruflu kullanımına yönelik proje tasarlar.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 55. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "F.8.6.4",
+      "sourcePage": 55,
+      "displayOrder": 47,
+      "learningMinutes": 20,
+      "practiceMinutes": 25,
+      "checkMinutes": 5,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî F.8.6.4 referans bütçesi 6 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "F.8.6.4.3",
+      "name": "Geri dönüşüm için katı atıkların ayrıştırılmasının önemini açıklar.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 55. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "F.8.6.4",
+      "sourcePage": 55,
+      "displayOrder": 48,
+      "learningMinutes": 20,
+      "practiceMinutes": 25,
+      "checkMinutes": 5,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî F.8.6.4 referans bütçesi 6 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "F.8.6.4.4",
+      "name": "Geri dönüşümün ülke ekonomisine katkısına ilişkin araştırma verilerini kullanarak çözüm önerileri sunar.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 55. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "F.8.6.4",
+      "sourcePage": 55,
+      "displayOrder": 49,
+      "learningMinutes": 20,
+      "practiceMinutes": 20,
+      "checkMinutes": 5,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî F.8.6.4 referans bütçesi 6 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "F.8.6.4.5",
+      "name": "Kaynakların tasarruflu kullanılmaması durumunda gelecekte karşılaşılabilecek problemleri belirterek çözüm önerileri sunar.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 55. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "F.8.6.4",
+      "sourcePage": 55,
+      "displayOrder": 50,
+      "learningMinutes": 20,
+      "practiceMinutes": 20,
+      "checkMinutes": 5,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî F.8.6.4 referans bütçesi 6 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "F.8.7.1.1",
+      "name": "Elektriklenmeyi, bazı doğa olayları ve teknolojideki uygulama örnekleri ile açıklar.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 55. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "F.8.7.1",
+      "sourcePage": 55,
+      "displayOrder": 51,
+      "learningMinutes": 30,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî F.8.7.1 referans bütçesi 6 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "F.8.7.1.2",
+      "name": "Elektrik yüklerini sınıflandırarak aynı ve farklı cins elektrik yüklerinin birbirlerine etkisini açıklar.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 55. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "F.8.7.1",
+      "sourcePage": 55,
+      "displayOrder": 52,
+      "learningMinutes": 30,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî F.8.7.1 referans bütçesi 6 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "F.8.7.1.3",
+      "name": "Deneyler yaparak elektriklenme çeşitlerini fark eder.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 55. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "F.8.7.1",
+      "sourcePage": 55,
+      "displayOrder": 53,
+      "learningMinutes": 30,
+      "practiceMinutes": 40,
+      "checkMinutes": 10,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî F.8.7.1 referans bütçesi 6 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "F.8.7.2.1",
+      "name": "Cisimleri, sahip oldukları elektrik yükleri bakımından sınıflandırır.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 55. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "F.8.7.2",
+      "sourcePage": 55,
+      "displayOrder": 54,
+      "learningMinutes": 65,
+      "practiceMinutes": 80,
+      "checkMinutes": 15,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî F.8.7.2 referans bütçesi 8 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "F.8.7.2.2",
+      "name": "Topraklamayı açıklar.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 56. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "F.8.7.2",
+      "sourcePage": 56,
+      "displayOrder": 55,
+      "learningMinutes": 65,
+      "practiceMinutes": 80,
+      "checkMinutes": 15,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî F.8.7.2 referans bütçesi 8 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "F.8.7.3.1",
+      "name": "Elektrik enerjisinin ısı, ışık ve hareket enerjisine dönüştüğü uygulamalara örnekler verir.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 56. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "F.8.7.3",
+      "sourcePage": 56,
+      "displayOrder": 56,
+      "learningMinutes": 30,
+      "practiceMinutes": 35,
+      "checkMinutes": 5,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî F.8.7.3 referans bütçesi 10 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "F.8.7.3.2",
+      "name": "Elektirik enerjisinin ısı, ışık veya hareket enerjisine dönüşümü temel alan bir model tasarlar.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 56. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "F.8.7.3",
+      "sourcePage": 56,
+      "displayOrder": 57,
+      "learningMinutes": 30,
+      "practiceMinutes": 35,
+      "checkMinutes": 5,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî F.8.7.3 referans bütçesi 10 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "F.8.7.3.3",
+      "name": "Güç santrallerinde elektrik enerjisinin nasıl üretildiğini açıklar.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 56. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "F.8.7.3",
+      "sourcePage": 56,
+      "displayOrder": 58,
+      "learningMinutes": 25,
+      "practiceMinutes": 35,
+      "checkMinutes": 5,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî F.8.7.3 referans bütçesi 10 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "F.8.7.3.4",
+      "name": "Güç santrallerinin avantaj ve dezavantajları konusunda fikirler üretir.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 56. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "F.8.7.3",
+      "sourcePage": 56,
+      "displayOrder": 59,
+      "learningMinutes": 25,
+      "practiceMinutes": 35,
+      "checkMinutes": 5,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî F.8.7.3 referans bütçesi 10 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "F.8.7.3.5",
+      "name": "Elektrik enerjisinin bilinçli ve tasarruflu kullanılmasının aile ve ülke ekonomisi bakımından önemini tartışır.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 56. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "F.8.7.3",
+      "sourcePage": 56,
+      "displayOrder": 60,
+      "learningMinutes": 25,
+      "practiceMinutes": 35,
+      "checkMinutes": 5,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî F.8.7.3 referans bütçesi 10 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    },
+    {
+      "code": "F.8.7.3.6",
+      "name": "Evlerde elektriği tasarruflu kullanmaya özen gösterir.",
+      "notes": "Yalnız LGS kapsam seçimi; https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Özgün kazanım metni ve kapsam açıklamaları: kaynak öğretim programı PDF 56. Geçerlilik: https://tegm.meb.gov.tr/www/2026-2027-egitim-ogretim-yili-taslak-cerceve-planlar-yayinlandi/icerik/1316.",
+      "officialTopicCode": "F.8.7.3",
+      "sourcePage": 56,
+      "displayOrder": 61,
+      "learningMinutes": 25,
+      "practiceMinutes": 35,
+      "checkMinutes": 5,
+      "durationEvidence": "LGS kapsamı: https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf. Resmî F.8.7.3 referans bütçesi 10 ders saati. Model: ders saati 40 dakika; seçili kazanımlara eşit dağılım, toplamı koruyan 5 dakika adımları; yaklaşık %40 öğrenme, %50 soru/alıştırma, %10 kontrol. MEB bireysel öğrenme dakikası vermemiştir; düşük güvenli başlangıç tahminidir, video/mola içermez.",
+      "sources": []
+    }
+  ],
+  "mappings": [
+    {
+      "topicSourceId": "topic:c06d0fba-0cb3-430f-e2aa-08ddf1d4df13",
+      "outcomeCodes": [
+        "F.8.1.1.1"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:ef20b03e-f546-424e-e2ab-08ddf1d4df13",
+      "outcomeCodes": [
+        "F.8.1.2.1",
+        "F.8.1.2.2"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:7c70e742-8cac-483f-269a-08dd7688daf4",
+      "outcomeCodes": [
+        "F.8.2.1.1",
+        "F.8.2.1.2",
+        "F.8.2.1.3"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:de2c702d-3138-456a-269b-08dd7688daf4",
+      "outcomeCodes": [
+        "F.8.2.2.1",
+        "F.8.2.2.2",
+        "F.8.2.2.3"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:6fea299a-770d-4b63-269c-08dd7688daf4",
+      "outcomeCodes": [
+        "F.8.2.3.1",
+        "F.8.2.3.2",
+        "F.8.2.3.3"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:1af37516-3aa7-4359-269d-08dd7688daf4",
+      "outcomeCodes": [
+        "F.8.2.4.1"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:939dee91-f954-4a48-269e-08dd7688daf4",
+      "outcomeCodes": [
+        "F.8.2.5.1",
+        "F.8.2.5.2",
+        "F.8.2.5.3"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:d7a4e6e5-09a3-42ee-26a0-08dd7688daf4",
+      "outcomeCodes": [
+        "F.8.3.1.1",
+        "F.8.3.1.2",
+        "F.8.3.1.3"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:59ab3e80-b4bc-44c8-26a1-08dd7688daf4",
+      "outcomeCodes": [
+        "F.8.4.1.1",
+        "F.8.4.1.2"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:303f7686-685d-4f59-26a3-08dd7688daf4",
+      "outcomeCodes": [
+        "F.8.4.2.1"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:92f91c37-a6b5-4a54-26a4-08dd7688daf4",
+      "outcomeCodes": [
+        "F.8.4.3.1"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:35acabc1-4ac3-4eaa-4d7c-08dd7739e4cb",
+      "outcomeCodes": [
+        "F.8.4.4.1",
+        "F.8.4.4.2",
+        "F.8.4.4.3",
+        "F.8.4.4.4",
+        "F.8.4.4.5",
+        "F.8.4.4.6",
+        "F.8.4.4.7"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:7e45440e-dd9c-4e43-26a5-08dd7688daf4",
+      "outcomeCodes": [
+        "F.8.4.5.1",
+        "F.8.4.5.2",
+        "F.8.4.5.3",
+        "F.8.4.5.4"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:c321bcfb-8bf5-4d5a-26a6-08dd7688daf4",
+      "outcomeCodes": [
+        "F.8.4.6.1",
+        "F.8.4.6.2"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:452fe800-373c-4740-b0cd-08de0656e176",
+      "outcomeCodes": [
+        "F.8.5.1.1",
+        "F.8.5.1.2"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:e81ecaf5-ed46-4b3d-b0ce-08de0656e176",
+      "outcomeCodes": [
+        "F.8.6.1.1"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:b1f45b38-a2e6-4921-b0cf-08de0656e176",
+      "outcomeCodes": [
+        "F.8.6.2.1",
+        "F.8.6.2.2",
+        "F.8.6.2.3"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:eef5ef67-111a-4075-b0d0-08de0656e176",
+      "outcomeCodes": [
+        "F.8.6.3.1",
+        "F.8.6.3.2",
+        "F.8.6.3.3"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:790eaa9a-bb44-4512-b0d1-08de0656e176",
+      "outcomeCodes": [
+        "F.8.6.4.1",
+        "F.8.6.4.2",
+        "F.8.6.4.3",
+        "F.8.6.4.4",
+        "F.8.6.4.5"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:4b153822-3306-475f-b0d2-08de0656e176",
+      "outcomeCodes": [
+        "F.8.7.1.1",
+        "F.8.7.1.2",
+        "F.8.7.1.3"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:c684a5e4-5ff0-4e33-b0d3-08de0656e176",
+      "outcomeCodes": [
+        "F.8.7.2.1",
+        "F.8.7.2.2"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    },
+    {
+      "topicSourceId": "topic:62e2c44e-b3b2-4828-b0d4-08de0656e176",
+      "outcomeCodes": [
+        "F.8.7.3.1",
+        "F.8.7.3.2",
+        "F.8.7.3.3",
+        "F.8.7.3.4",
+        "F.8.7.3.5",
+        "F.8.7.3.6"
+      ],
+      "evidence": "Resmî LGS kapsam seçimi ve konu/ünite işlevi karşılaştırıldı. https://ttkb.meb.gov.tr/meb_iys_dosyalar/2022_03/29162211_2022_LGS.pdf Numaralı konu bölümleri ortak resmî kapsamı paylaşır; video bölüm ayrımı iddia edilmez. Aynı kazanım yıllık planda kimliği üzerinden yalnız bir kez sayılır."
+    }
+  ]
+}
