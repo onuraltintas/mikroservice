@@ -42,6 +42,7 @@ public sealed record CurriculumNode(string Kind, Guid Id, string Name, Guid? Par
     public string? ScopeEvidenceUrl { get; init; }
     public int? OutcomeCount { get; init; }
     public int? LessonPeriods { get; init; }
+    public string SourceKind { get; init; } = "Official";
     public Guid? CurriculumVersionId { get; init; }
     public DateOnly? ExamDate { get; init; }
 }
@@ -79,7 +80,7 @@ public sealed class CoachingCurriculumManagementService(CoachingDbContext db, IC
             default:
                 query = db.Set<StudyCatalogOutcome>().AsNoTracking()
                     .Where(x => all || (parent == null ? !db.Set<StudyCatalogTopicOutcome>().Any(m => m.OutcomeId == x.Id) : db.Set<StudyCatalogTopicOutcome>().Any(m => m.OutcomeId == x.Id && m.TopicId == parent)))
-                    .Select(x => new CurriculumNode { Kind=kind,Id=x.Id,Name=x.Name,ParentId=parent,ParentKind="topics",IsActive=!x.IsArchived,DisplayOrder=x.DisplayOrder,Code=x.Code,OfficialTopicId=x.OfficialTopicId,SourcePage=x.SourcePage,Notes=x.Notes }); break;
+                    .Select(x => new CurriculumNode { Kind=kind,Id=x.Id,Name=x.Name,ParentId=parent,ParentKind="topics",IsActive=!x.IsArchived,DisplayOrder=x.DisplayOrder,Code=x.Code,OfficialTopicId=x.OfficialTopicId,SourcePage=x.SourcePage,Notes=x.Notes,SourceKind=x.SourceKind,SourceUrl=x.SourceUrl }); break;
         }
         // Filter after the bounded parent scope; Contains is parameterized by EF, not interpolated SQL.
         if (!string.IsNullOrWhiteSpace(search))
@@ -344,7 +345,7 @@ public sealed class CoachingCurriculumManagementService(CoachingDbContext db, IC
             StudyCatalogLesson l => new("lessons",l.Id,l.Name,null,"exams",l.IsActive,GradeNumber:l.GradeNumber,ExamCode:l.ExamCode) { CurriculumVersionId=l.CurriculumVersionId },
             StudyCatalogUnit u => new("units",u.Id,u.Name,u.LessonId,"lessons",u.IsActive,u.DisplayOrder),
             StudyCatalogTopic t => new("topics",t.Id,t.Name,t.ParentId ?? t.UnitId,t.ParentId.HasValue ? "topics" : "units",t.IsActive,t.DisplayOrder,t.EstimatedMinutes),
-            StudyCatalogOutcome o => new("outcomes",o.Id,o.Name,null,"topics",!o.IsArchived,o.DisplayOrder,Code:o.Code,OfficialTopicId:o.OfficialTopicId,SourcePage:o.SourcePage,Notes:o.Notes),
+            StudyCatalogOutcome o => new("outcomes",o.Id,o.Name,null,"topics",!o.IsArchived,o.DisplayOrder,Code:o.Code,OfficialTopicId:o.OfficialTopicId,SourcePage:o.SourcePage,Notes:o.Notes) {SourceKind=o.SourceKind,SourceUrl=o.SourceUrl},
             _ => throw new ArgumentException("Geçersiz katalog kaydı.")
         };
         if (entity is StudyCatalogLesson lessonEntity && lessonEntity.ExamCode != null)
@@ -366,6 +367,8 @@ public sealed class CoachingCurriculumManagementService(CoachingDbContext db, IC
         else if (entity is StudyCatalogOutcome outcome)
         {
             var count = await db.Set<StudyPlanTaskOutcome>().CountAsync(x => x.OutcomeId == outcome.Id,ct); if (count > 0) blockers.Add($"{count} çalışma kaydı");
+            var shares=await db.Set<StudyCatalogTopicOutcomeShare>().CountAsync(x=>x.OutcomeId==outcome.Id,ct);
+            if(shares>0)blockers.Add($"{shares} onaylı kapsam süre payı; geçmişi korumak için arşivleyebilirsiniz");
             var mappings = await db.Set<StudyCatalogTopicOutcome>().AsNoTracking().Where(x => x.OutcomeId == outcome.Id).OrderBy(x => x.TopicId).ToArrayAsync(ct);
             var paths = new List<CurriculumMapping>();
             foreach (var m in mappings) paths.Add(new(m.TopicId,await Path("topics",m.TopicId,ct),m.IsApproved,m.Evidence));
