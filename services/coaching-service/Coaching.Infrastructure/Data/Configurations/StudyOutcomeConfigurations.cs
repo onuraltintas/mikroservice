@@ -20,7 +20,7 @@ public sealed class OfficialCurriculumTopicConfiguration : IEntityTypeConfigurat
 {
     public void Configure(EntityTypeBuilder<OfficialCurriculumTopic> b)
     {
-        b.ToTable("official_curriculum_topics", t => t.HasCheckConstraint("ck_official_topic_budget", "\"OutcomeCount\" BETWEEN 1 AND 500 AND \"LessonPeriods\" BETWEEN 1 AND 500"));
+        b.ToTable("official_curriculum_topics", t => t.HasCheckConstraint("ck_official_topic_budget", "\"OutcomeCount\" BETWEEN 1 AND 500 AND (\"LessonPeriods\" IS NULL OR \"LessonPeriods\" BETWEEN 1 AND 500)"));
         b.HasKey(x => x.Id); b.HasAlternateKey(x => new { x.Id, x.EditionId }); b.HasIndex(x => new { x.EditionId, x.Code }).IsUnique();
         b.Property(x => x.Code).HasMaxLength(100); b.Property(x => x.Name).HasMaxLength(300);
         b.HasOne<OfficialCurriculumEdition>().WithMany().HasForeignKey(x => x.EditionId).OnDelete(DeleteBehavior.Restrict);

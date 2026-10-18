@@ -181,8 +181,9 @@ public sealed class CoachingOutcomeCatalogService(CoachingDbContext db, ICoachin
                 equals new { portion.TopicId, portion.OutcomeId, portion.EstimateId } into portions
             from share in portions.DefaultIfEmpty()
             where map.TopicId == topicId && map.IsApproved && !outcome.IsArchived && topic.IsActive && unit.IsActive && lesson.IsActive
-                && lesson.ExamCode == edition.ExamCode && lesson.Name == edition.SubjectName
-                && (lesson.GradeNumber == null || edition.GradeNumber == null || lesson.GradeNumber == edition.GradeNumber)
+                && ((lesson.ExamCode == edition.ExamCode && lesson.Name == edition.SubjectName
+                && (lesson.GradeNumber == null || edition.GradeNumber == null || lesson.GradeNumber == edition.GradeNumber))
+                    || db.Set<OfficialCurriculumLessonBinding>().Any(b => b.EditionId == edition.Id && b.LessonId == lesson.Id))
                 && !db.StudyCatalogTopics.Any(x => x.ParentId == topic.Id)
                 && (topic.ParentId == null || db.StudyCatalogTopics.Any(x => x.Id == topic.ParentId && x.IsActive))
                 && edition.AcademicYearStart <= academicYear && edition.AcademicYearEnd >= academicYear && estimate.IsPublished

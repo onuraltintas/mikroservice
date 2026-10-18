@@ -43,14 +43,14 @@ public sealed class OfficialCurriculumTopic
     public string Code { get; private set; } = "";
     public string Name { get; private set; } = "";
     public int OutcomeCount { get; private set; }
-    public int LessonPeriods { get; private set; }
+    public int? LessonPeriods { get; private set; }
     private OfficialCurriculumTopic() { }
-    public void Edit(string code, string name, int count, int periods)
+    public void Edit(string code, string name, int count, int? periods)
     {
         var valid = Create(EditionId, code, name, count, periods);
         Code=valid.Code; Name=valid.Name; OutcomeCount=count; LessonPeriods=periods;
     }
-    public static OfficialCurriculumTopic Create(Guid edition, string code, string name, int count, int periods)
+    public static OfficialCurriculumTopic Create(Guid edition, string code, string name, int count, int? periods)
     {
         if (edition == Guid.Empty || count is < 1 or > 500 || periods is < 1 or > 500) throw new ArgumentException("Resmi konu bütçesi geçersiz.");
         return new() { EditionId = edition, Code = StudyCatalogText.Require(code, 100), Name = StudyCatalogText.Require(name, 300), OutcomeCount = count, LessonPeriods = periods };
