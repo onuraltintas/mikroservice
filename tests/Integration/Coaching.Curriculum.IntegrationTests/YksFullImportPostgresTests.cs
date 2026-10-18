@@ -58,13 +58,18 @@ public sealed class YksFullImportPostgresTests
                 var published=await CoachingOutcomeCatalogService.ReadPublishedAsync(f.Db,page.Topics.Items[0].Id,2026,default,context);Assert.NotEmpty(published);
             }
         }
+        context.SetScope(2026,LearningPurpose.Yks,2027,"SOZ",null);await f.Db.SaveChangesAsync();
+        var soz=await setup.GetCatalogAsync(null,1,default);
+        context.ReplaceSelections(soz.Lessons.Select(l=>StudentCoursePreference.Create(context.Id,l.Id,3,null)),[],true);
+        var weekly=WeeklyStudyDraft.Create(student);weekly.Replace("Europe/Istanbul",Cards(soz.Lessons));f.Db.Add(weekly);await f.Db.SaveChangesAsync();
+        var sozRequest=new WeeklyOutcomePlanRequest(new(2026,10,19),new(2027,6,1),weekly.Version,true);
+        var sozPreview=await new CoachingWeeklyOutcomePlanService(f.Db,access,setup,TimeProvider.System).PreviewAsync(sozRequest,default);
+        var sozOutcome=await (from o in f.Db.Set<StudyCatalogOutcome>() join e in f.Db.Set<OfficialCurriculumEdition>() on o.EditionId equals e.Id where e.SubjectName.StartsWith("Coğrafya")&&o.Code=="11.2.8" select o.Id).SingleAsync();
+        Assert.Contains(sozPreview.Schedule.Tasks,t=>t.Outcome.OutcomeId==sozOutcome);
         context.SetScope(2026,LearningPurpose.Yks,2027,"EA",null);await f.Db.SaveChangesAsync();
         var ea=await setup.GetCatalogAsync(null,1,default);
         context.ReplaceSelections(ea.Lessons.Select(l=>StudentCoursePreference.Create(context.Id,l.Id,3,null)),[],true);
-        var weekly=WeeklyStudyDraft.Create(student);
-        var cards=ea.Lessons.SelectMany((lesson,index)=>Enumerable.Range(0,3).Select(n=>new{lesson,index=index*3+n})).Select(x=>
-            new WeeklyDraftSlot(Guid.NewGuid(),x.lesson.Id,x.lesson.Name,x.lesson.ExamCode,(DayOfWeek)(x.index/8+1),480+x.index%8*60,60)).ToArray();
-        weekly.Replace("Europe/Istanbul",cards);f.Db.Add(weekly);await f.Db.SaveChangesAsync();
+        weekly.Replace("Europe/Istanbul",Cards(ea.Lessons));await f.Db.SaveChangesAsync();
         var request=new WeeklyOutcomePlanRequest(new(2026,10,19),new(2027,6,1),weekly.Version,true);
         var studentService=new CoachingWeeklyOutcomePlanService(f.Db,access,setup,TimeProvider.System);
         var preview=await studentService.PreviewAsync(request,default);Assert.Empty(preview.Issues);Assert.True(preview.CanCreate);
@@ -80,6 +85,9 @@ public sealed class YksFullImportPostgresTests
         Assert.All(await f.Db.StudyPlanTasks.Where(t=>t.RevisionId==created.Id).ToArrayAsync(),t=>Assert.True(t.PlannedStartMinute.HasValue));
         Assert.Equal(history,JsonSerializer.Serialize(await f.Db.StudyPlanTasks.AsNoTracking().Where(t=>t.RevisionId!=created.Id).ToArrayAsync()));
     }
+
+    private static WeeklyDraftSlot[] Cards(IReadOnlyList<LearningLessonView> lessons)=>lessons.SelectMany((lesson,index)=>Enumerable.Range(0,3).Select(n=>new{lesson,index=index*3+n})).Select(x=>
+        new WeeklyDraftSlot(Guid.NewGuid(),x.lesson.Id,x.lesson.Name,x.lesson.ExamCode,(DayOfWeek)(x.index/8+1),480+x.index%8*60,60)).ToArray();
 
     private sealed class Accounts(Guid teacher):ICoachingAccountDirectory
     {

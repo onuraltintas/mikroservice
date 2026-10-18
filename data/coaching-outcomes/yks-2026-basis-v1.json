@@ -124626,6 +124626,13 @@
           "testCode": "AYT.SOS2",
           "language": null,
           "excludedOutcomeKeys": []
+        },
+        {
+          "examCode": "AYT",
+          "scoreType": "SOZ",
+          "testCode": "AYT.EDESOS1",
+          "language": null,
+          "excludedOutcomeKeys": []
         }
       ]
     },
@@ -124650,6 +124657,13 @@
           "examCode": "AYT",
           "scoreType": "SOZ",
           "testCode": "AYT.SOS2",
+          "language": null,
+          "excludedOutcomeKeys": []
+        },
+        {
+          "examCode": "AYT",
+          "scoreType": "SOZ",
+          "testCode": "AYT.EDESOS1",
           "language": null,
           "excludedOutcomeKeys": []
         }
@@ -124680,6 +124694,15 @@
           "testCode": "AYT.SOS2",
           "language": null,
           "excludedOutcomeKeys": []
+        },
+        {
+          "examCode": "AYT",
+          "scoreType": "SOZ",
+          "testCode": "AYT.EDESOS1",
+          "language": null,
+          "excludedOutcomeKeys": [
+            "official:cografya:12.2.1"
+          ]
         }
       ]
     },
@@ -124723,6 +124746,13 @@
           "testCode": "AYT.SOS2",
           "language": null,
           "excludedOutcomeKeys": []
+        },
+        {
+          "examCode": "AYT",
+          "scoreType": "SOZ",
+          "testCode": "AYT.EDESOS1",
+          "language": null,
+          "excludedOutcomeKeys": []
         }
       ]
     },
@@ -124746,6 +124776,13 @@
           "examCode": "AYT",
           "scoreType": "SOZ",
           "testCode": "AYT.SOS2",
+          "language": null,
+          "excludedOutcomeKeys": []
+        },
+        {
+          "examCode": "AYT",
+          "scoreType": "SOZ",
+          "testCode": "AYT.EDESOS1",
           "language": null,
           "excludedOutcomeKeys": []
         }
@@ -124776,6 +124813,15 @@
           "testCode": "AYT.SOS2",
           "language": null,
           "excludedOutcomeKeys": []
+        },
+        {
+          "examCode": "AYT",
+          "scoreType": "SOZ",
+          "testCode": "AYT.EDESOS1",
+          "language": null,
+          "excludedOutcomeKeys": [
+            "official:cografya:11.3.7"
+          ]
         }
       ]
     },
@@ -124820,6 +124866,13 @@
           "testCode": "AYT.SOS2",
           "language": null,
           "excludedOutcomeKeys": []
+        },
+        {
+          "examCode": "AYT",
+          "scoreType": "SOZ",
+          "testCode": "AYT.EDESOS1",
+          "language": null,
+          "excludedOutcomeKeys": []
         }
       ]
     },
@@ -124847,6 +124900,13 @@
           "testCode": "AYT.SOS2",
           "language": null,
           "excludedOutcomeKeys": []
+        },
+        {
+          "examCode": "AYT",
+          "scoreType": "SOZ",
+          "testCode": "AYT.EDESOS1",
+          "language": null,
+          "excludedOutcomeKeys": []
         }
       ]
     },
@@ -124870,6 +124930,13 @@
           "examCode": "AYT",
           "scoreType": "SOZ",
           "testCode": "AYT.SOS2",
+          "language": null,
+          "excludedOutcomeKeys": []
+        },
+        {
+          "examCode": "AYT",
+          "scoreType": "SOZ",
+          "testCode": "AYT.EDESOS1",
           "language": null,
           "excludedOutcomeKeys": []
         }
@@ -124897,6 +124964,13 @@
           "examCode": "AYT",
           "scoreType": "SOZ",
           "testCode": "AYT.SOS2",
+          "language": null,
+          "excludedOutcomeKeys": []
+        },
+        {
+          "examCode": "AYT",
+          "scoreType": "SOZ",
+          "testCode": "AYT.EDESOS1",
           "language": null,
           "excludedOutcomeKeys": []
         }
@@ -124928,6 +125002,15 @@
           "testCode": "AYT.SOS2",
           "language": null,
           "excludedOutcomeKeys": []
+        },
+        {
+          "examCode": "AYT",
+          "scoreType": "SOZ",
+          "testCode": "AYT.EDESOS1",
+          "language": null,
+          "excludedOutcomeKeys": [
+            "official:cografya:11.2.18"
+          ]
         }
       ]
     },
@@ -124959,6 +125042,16 @@
           "testCode": "AYT.SOS2",
           "language": null,
           "excludedOutcomeKeys": []
+        },
+        {
+          "examCode": "AYT",
+          "scoreType": "SOZ",
+          "testCode": "AYT.EDESOS1",
+          "language": null,
+          "excludedOutcomeKeys": [
+            "official:cografya:12.4.1",
+            "official:cografya:12.4.4"
+          ]
         }
       ]
     },
@@ -124989,6 +125082,16 @@
           "testCode": "AYT.SOS2",
           "language": null,
           "excludedOutcomeKeys": []
+        },
+        {
+          "examCode": "AYT",
+          "scoreType": "SOZ",
+          "testCode": "AYT.EDESOS1",
+          "language": null,
+          "excludedOutcomeKeys": [
+            "official:cografya:11.2.8",
+            "official:cografya:11.2.9"
+          ]
         }
       ]
     },
@@ -125017,6 +125120,15 @@
           "testCode": "AYT.SOS2",
           "language": null,
           "excludedOutcomeKeys": []
+        },
+        {
+          "examCode": "AYT",
+          "scoreType": "SOZ",
+          "testCode": "AYT.EDESOS1",
+          "language": null,
+          "excludedOutcomeKeys": [
+            "official:cografya:11.2.12"
+          ]
         }
       ]
     },
@@ -125050,6 +125162,16 @@
           "testCode": "AYT.SOS2",
           "language": null,
           "excludedOutcomeKeys": []
+        },
+        {
+          "examCode": "AYT",
+          "scoreType": "SOZ",
+          "testCode": "AYT.EDESOS1",
+          "language": null,
+          "excludedOutcomeKeys": [
+            "official:cografya:11.1.2",
+            "official:cografya:11.1.4"
+          ]
         }
       ]
     },
@@ -125074,6 +125196,13 @@
           "examCode": "AYT",
           "scoreType": "SOZ",
           "testCode": "AYT.SOS2",
+          "language": null,
+          "excludedOutcomeKeys": []
+        },
+        {
+          "examCode": "AYT",
+          "scoreType": "SOZ",
+          "testCode": "AYT.EDESOS1",
           "language": null,
           "excludedOutcomeKeys": []
         }
@@ -125102,6 +125231,13 @@
           "examCode": "AYT",
           "scoreType": "SOZ",
           "testCode": "AYT.SOS2",
+          "language": null,
+          "excludedOutcomeKeys": []
+        },
+        {
+          "examCode": "AYT",
+          "scoreType": "SOZ",
+          "testCode": "AYT.EDESOS1",
           "language": null,
           "excludedOutcomeKeys": []
         }
@@ -125134,6 +125270,15 @@
           "testCode": "AYT.SOS2",
           "language": null,
           "excludedOutcomeKeys": []
+        },
+        {
+          "examCode": "AYT",
+          "scoreType": "SOZ",
+          "testCode": "AYT.EDESOS1",
+          "language": null,
+          "excludedOutcomeKeys": [
+            "official:cografya:12.2.8"
+          ]
         }
       ]
     },
@@ -125164,6 +125309,15 @@
           "testCode": "AYT.SOS2",
           "language": null,
           "excludedOutcomeKeys": []
+        },
+        {
+          "examCode": "AYT",
+          "scoreType": "SOZ",
+          "testCode": "AYT.EDESOS1",
+          "language": null,
+          "excludedOutcomeKeys": [
+            "official:cografya:12.2.17"
+          ]
         }
       ]
     },
@@ -125187,6 +125341,13 @@
           "examCode": "AYT",
           "scoreType": "SOZ",
           "testCode": "AYT.SOS2",
+          "language": null,
+          "excludedOutcomeKeys": []
+        },
+        {
+          "examCode": "AYT",
+          "scoreType": "SOZ",
+          "testCode": "AYT.EDESOS1",
           "language": null,
           "excludedOutcomeKeys": []
         }
@@ -125218,6 +125379,15 @@
           "testCode": "AYT.SOS2",
           "language": null,
           "excludedOutcomeKeys": []
+        },
+        {
+          "examCode": "AYT",
+          "scoreType": "SOZ",
+          "testCode": "AYT.EDESOS1",
+          "language": null,
+          "excludedOutcomeKeys": [
+            "official:cografya:11.4.5"
+          ]
         }
       ]
     },
@@ -125247,6 +125417,15 @@
           "testCode": "AYT.SOS2",
           "language": null,
           "excludedOutcomeKeys": []
+        },
+        {
+          "examCode": "AYT",
+          "scoreType": "SOZ",
+          "testCode": "AYT.EDESOS1",
+          "language": null,
+          "excludedOutcomeKeys": [
+            "official:cografya:11.4.2"
+          ]
         }
       ]
     },
@@ -125276,6 +125455,15 @@
           "testCode": "AYT.SOS2",
           "language": null,
           "excludedOutcomeKeys": []
+        },
+        {
+          "examCode": "AYT",
+          "scoreType": "SOZ",
+          "testCode": "AYT.EDESOS1",
+          "language": null,
+          "excludedOutcomeKeys": [
+            "official:cografya:11.2.2"
+          ]
         }
       ]
     },
@@ -125304,6 +125492,13 @@
           "testCode": "AYT.SOS2",
           "language": null,
           "excludedOutcomeKeys": []
+        },
+        {
+          "examCode": "AYT",
+          "scoreType": "SOZ",
+          "testCode": "AYT.EDESOS1",
+          "language": null,
+          "excludedOutcomeKeys": []
         }
       ]
     },
@@ -125327,6 +125522,13 @@
           "examCode": "AYT",
           "scoreType": "SOZ",
           "testCode": "AYT.SOS2",
+          "language": null,
+          "excludedOutcomeKeys": []
+        },
+        {
+          "examCode": "AYT",
+          "scoreType": "SOZ",
+          "testCode": "AYT.EDESOS1",
           "language": null,
           "excludedOutcomeKeys": []
         }
@@ -125360,6 +125562,15 @@
           "testCode": "AYT.SOS2",
           "language": null,
           "excludedOutcomeKeys": []
+        },
+        {
+          "examCode": "AYT",
+          "scoreType": "SOZ",
+          "testCode": "AYT.EDESOS1",
+          "language": null,
+          "excludedOutcomeKeys": [
+            "official:cografya:12.3.4"
+          ]
         }
       ]
     },
@@ -125383,6 +125594,13 @@
           "examCode": "AYT",
           "scoreType": "SOZ",
           "testCode": "AYT.SOS2",
+          "language": null,
+          "excludedOutcomeKeys": []
+        },
+        {
+          "examCode": "AYT",
+          "scoreType": "SOZ",
+          "testCode": "AYT.EDESOS1",
           "language": null,
           "excludedOutcomeKeys": []
         }
@@ -125415,6 +125633,15 @@
           "testCode": "AYT.SOS2",
           "language": null,
           "excludedOutcomeKeys": []
+        },
+        {
+          "examCode": "AYT",
+          "scoreType": "SOZ",
+          "testCode": "AYT.EDESOS1",
+          "language": null,
+          "excludedOutcomeKeys": [
+            "official:cografya:12.3.6"
+          ]
         }
       ]
     },
@@ -125438,6 +125665,13 @@
           "examCode": "AYT",
           "scoreType": "SOZ",
           "testCode": "AYT.SOS2",
+          "language": null,
+          "excludedOutcomeKeys": []
+        },
+        {
+          "examCode": "AYT",
+          "scoreType": "SOZ",
+          "testCode": "AYT.EDESOS1",
           "language": null,
           "excludedOutcomeKeys": []
         }
@@ -125483,6 +125717,13 @@
           "testCode": "AYT.SOS2",
           "language": null,
           "excludedOutcomeKeys": []
+        },
+        {
+          "examCode": "AYT",
+          "scoreType": "SOZ",
+          "testCode": "AYT.EDESOS1",
+          "language": null,
+          "excludedOutcomeKeys": []
         }
       ]
     },
@@ -125510,6 +125751,13 @@
           "examCode": "AYT",
           "scoreType": "SOZ",
           "testCode": "AYT.SOS2",
+          "language": null,
+          "excludedOutcomeKeys": []
+        },
+        {
+          "examCode": "AYT",
+          "scoreType": "SOZ",
+          "testCode": "AYT.EDESOS1",
           "language": null,
           "excludedOutcomeKeys": []
         }
@@ -132719,6 +132967,13 @@
           "testCode": "AYT.SOS2",
           "language": null,
           "excludedOutcomeKeys": []
+        },
+        {
+          "examCode": "AYT",
+          "scoreType": "SOZ",
+          "testCode": "AYT.EDESOS1",
+          "language": null,
+          "excludedOutcomeKeys": []
         }
       ]
     },
@@ -132749,6 +133004,13 @@
           "testCode": "AYT.SOS2",
           "language": null,
           "excludedOutcomeKeys": []
+        },
+        {
+          "examCode": "AYT",
+          "scoreType": "SOZ",
+          "testCode": "AYT.EDESOS1",
+          "language": null,
+          "excludedOutcomeKeys": []
         }
       ]
     },
@@ -132775,6 +133037,13 @@
           "examCode": "AYT",
           "scoreType": "SOZ",
           "testCode": "AYT.SOS2",
+          "language": null,
+          "excludedOutcomeKeys": []
+        },
+        {
+          "examCode": "AYT",
+          "scoreType": "SOZ",
+          "testCode": "AYT.EDESOS1",
           "language": null,
           "excludedOutcomeKeys": []
         }
@@ -132805,6 +133074,13 @@
           "testCode": "AYT.SOS2",
           "language": null,
           "excludedOutcomeKeys": []
+        },
+        {
+          "examCode": "AYT",
+          "scoreType": "SOZ",
+          "testCode": "AYT.EDESOS1",
+          "language": null,
+          "excludedOutcomeKeys": []
         }
       ]
     },
@@ -132830,6 +133106,13 @@
           "examCode": "AYT",
           "scoreType": "SOZ",
           "testCode": "AYT.SOS2",
+          "language": null,
+          "excludedOutcomeKeys": []
+        },
+        {
+          "examCode": "AYT",
+          "scoreType": "SOZ",
+          "testCode": "AYT.EDESOS1",
           "language": null,
           "excludedOutcomeKeys": []
         }
@@ -132861,6 +133144,13 @@
           "testCode": "AYT.SOS2",
           "language": null,
           "excludedOutcomeKeys": []
+        },
+        {
+          "examCode": "AYT",
+          "scoreType": "SOZ",
+          "testCode": "AYT.EDESOS1",
+          "language": null,
+          "excludedOutcomeKeys": []
         }
       ]
     },
@@ -132886,6 +133176,13 @@
           "examCode": "AYT",
           "scoreType": "SOZ",
           "testCode": "AYT.SOS2",
+          "language": null,
+          "excludedOutcomeKeys": []
+        },
+        {
+          "examCode": "AYT",
+          "scoreType": "SOZ",
+          "testCode": "AYT.EDESOS1",
           "language": null,
           "excludedOutcomeKeys": []
         }
@@ -132919,6 +133216,13 @@
           "testCode": "AYT.SOS2",
           "language": null,
           "excludedOutcomeKeys": []
+        },
+        {
+          "examCode": "AYT",
+          "scoreType": "SOZ",
+          "testCode": "AYT.EDESOS1",
+          "language": null,
+          "excludedOutcomeKeys": []
         }
       ]
     },
@@ -132948,6 +133252,13 @@
           "testCode": "AYT.SOS2",
           "language": null,
           "excludedOutcomeKeys": []
+        },
+        {
+          "examCode": "AYT",
+          "scoreType": "SOZ",
+          "testCode": "AYT.EDESOS1",
+          "language": null,
+          "excludedOutcomeKeys": []
         }
       ]
     },
@@ -132975,6 +133286,13 @@
           "examCode": "AYT",
           "scoreType": "SOZ",
           "testCode": "AYT.SOS2",
+          "language": null,
+          "excludedOutcomeKeys": []
+        },
+        {
+          "examCode": "AYT",
+          "scoreType": "SOZ",
+          "testCode": "AYT.EDESOS1",
           "language": null,
           "excludedOutcomeKeys": []
         }
@@ -133009,6 +133327,13 @@
           "testCode": "AYT.SOS2",
           "language": null,
           "excludedOutcomeKeys": []
+        },
+        {
+          "examCode": "AYT",
+          "scoreType": "SOZ",
+          "testCode": "AYT.EDESOS1",
+          "language": null,
+          "excludedOutcomeKeys": []
         }
       ]
     },
@@ -133036,6 +133361,13 @@
           "testCode": "AYT.SOS2",
           "language": null,
           "excludedOutcomeKeys": []
+        },
+        {
+          "examCode": "AYT",
+          "scoreType": "SOZ",
+          "testCode": "AYT.EDESOS1",
+          "language": null,
+          "excludedOutcomeKeys": []
         }
       ]
     },
@@ -133060,6 +133392,13 @@
           "examCode": "AYT",
           "scoreType": "SOZ",
           "testCode": "AYT.SOS2",
+          "language": null,
+          "excludedOutcomeKeys": []
+        },
+        {
+          "examCode": "AYT",
+          "scoreType": "SOZ",
+          "testCode": "AYT.EDESOS1",
           "language": null,
           "excludedOutcomeKeys": []
         }
@@ -133092,6 +133431,13 @@
           "testCode": "AYT.SOS2",
           "language": null,
           "excludedOutcomeKeys": []
+        },
+        {
+          "examCode": "AYT",
+          "scoreType": "SOZ",
+          "testCode": "AYT.EDESOS1",
+          "language": null,
+          "excludedOutcomeKeys": []
         }
       ]
     },
@@ -133121,6 +133467,13 @@
           "testCode": "AYT.SOS2",
           "language": null,
           "excludedOutcomeKeys": []
+        },
+        {
+          "examCode": "AYT",
+          "scoreType": "SOZ",
+          "testCode": "AYT.EDESOS1",
+          "language": null,
+          "excludedOutcomeKeys": []
         }
       ]
     },
@@ -133147,6 +133500,13 @@
           "examCode": "AYT",
           "scoreType": "SOZ",
           "testCode": "AYT.SOS2",
+          "language": null,
+          "excludedOutcomeKeys": []
+        },
+        {
+          "examCode": "AYT",
+          "scoreType": "SOZ",
+          "testCode": "AYT.EDESOS1",
           "language": null,
           "excludedOutcomeKeys": []
         }
@@ -133181,6 +133541,13 @@
           "testCode": "AYT.SOS2",
           "language": null,
           "excludedOutcomeKeys": []
+        },
+        {
+          "examCode": "AYT",
+          "scoreType": "SOZ",
+          "testCode": "AYT.EDESOS1",
+          "language": null,
+          "excludedOutcomeKeys": []
         }
       ]
     },
@@ -133206,6 +133573,13 @@
           "examCode": "AYT",
           "scoreType": "SOZ",
           "testCode": "AYT.SOS2",
+          "language": null,
+          "excludedOutcomeKeys": []
+        },
+        {
+          "examCode": "AYT",
+          "scoreType": "SOZ",
+          "testCode": "AYT.EDESOS1",
           "language": null,
           "excludedOutcomeKeys": []
         }
@@ -133238,6 +133612,13 @@
           "testCode": "AYT.SOS2",
           "language": null,
           "excludedOutcomeKeys": []
+        },
+        {
+          "examCode": "AYT",
+          "scoreType": "SOZ",
+          "testCode": "AYT.EDESOS1",
+          "language": null,
+          "excludedOutcomeKeys": []
         }
       ]
     },
@@ -133266,6 +133647,13 @@
           "examCode": "AYT",
           "scoreType": "SOZ",
           "testCode": "AYT.SOS2",
+          "language": null,
+          "excludedOutcomeKeys": []
+        },
+        {
+          "examCode": "AYT",
+          "scoreType": "SOZ",
+          "testCode": "AYT.EDESOS1",
           "language": null,
           "excludedOutcomeKeys": []
         }
@@ -133298,6 +133686,13 @@
           "testCode": "AYT.SOS2",
           "language": null,
           "excludedOutcomeKeys": []
+        },
+        {
+          "examCode": "AYT",
+          "scoreType": "SOZ",
+          "testCode": "AYT.EDESOS1",
+          "language": null,
+          "excludedOutcomeKeys": []
         }
       ]
     },
@@ -133326,6 +133721,13 @@
           "testCode": "AYT.SOS2",
           "language": null,
           "excludedOutcomeKeys": []
+        },
+        {
+          "examCode": "AYT",
+          "scoreType": "SOZ",
+          "testCode": "AYT.EDESOS1",
+          "language": null,
+          "excludedOutcomeKeys": []
         }
       ]
     },
@@ -133350,6 +133752,13 @@
           "examCode": "AYT",
           "scoreType": "SOZ",
           "testCode": "AYT.SOS2",
+          "language": null,
+          "excludedOutcomeKeys": []
+        },
+        {
+          "examCode": "AYT",
+          "scoreType": "SOZ",
+          "testCode": "AYT.EDESOS1",
           "language": null,
           "excludedOutcomeKeys": []
         }
@@ -133377,6 +133786,13 @@
           "examCode": "AYT",
           "scoreType": "SOZ",
           "testCode": "AYT.SOS2",
+          "language": null,
+          "excludedOutcomeKeys": []
+        },
+        {
+          "examCode": "AYT",
+          "scoreType": "SOZ",
+          "testCode": "AYT.EDESOS1",
           "language": null,
           "excludedOutcomeKeys": []
         }
@@ -133407,6 +133823,13 @@
           "testCode": "AYT.SOS2",
           "language": null,
           "excludedOutcomeKeys": []
+        },
+        {
+          "examCode": "AYT",
+          "scoreType": "SOZ",
+          "testCode": "AYT.EDESOS1",
+          "language": null,
+          "excludedOutcomeKeys": []
         }
       ]
     },
@@ -133435,6 +133858,13 @@
           "examCode": "AYT",
           "scoreType": "SOZ",
           "testCode": "AYT.SOS2",
+          "language": null,
+          "excludedOutcomeKeys": []
+        },
+        {
+          "examCode": "AYT",
+          "scoreType": "SOZ",
+          "testCode": "AYT.EDESOS1",
           "language": null,
           "excludedOutcomeKeys": []
         }
