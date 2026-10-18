@@ -2,7 +2,7 @@ using Coaching.Domain.Entities;
 
 namespace Coaching.Application.StudyPlanning;
 
-public sealed record WeeklyOutcomeWork(Guid TopicId,string TopicName,Guid OutcomeId,string Code,string Name,Guid EstimateId,int EstimateNumber,int Minutes);
+public sealed record WeeklyOutcomeWork(Guid TopicId,string TopicName,Guid OutcomeId,string Code,string Name,Guid EstimateId,int EstimateNumber,int Minutes,bool IsTopicShare=false);
 public sealed record WeeklyLessonWork(Guid LessonId,string LessonName,IReadOnlyList<WeeklyOutcomeWork> Outcomes);
 public sealed record WeeklyBlockedTime(DateOnly Date,int? StartMinute,int Minutes);
 public sealed record WeeklyOutcomeSlice(DateOnly Date,int StartMinute,Guid LessonId,string LessonName,WeeklyOutcomeWork Outcome,int Minutes,bool ReusedSlot);
@@ -58,7 +58,7 @@ public static class WeeklyOutcomeScheduler
             }
         }
         var weeks=Math.Max(1,(int)Math.Ceiling((end.DayNumber-start.DayNumber+1)/7d));
-        var summaries=queues.Select(q=>new WeeklyLessonFinish(q.Work.LessonId,q.Work.LessonName,q.Work.Outcomes.Count,q.WeeklyMinutes,q.Required,q.Scheduled,q.Required-q.Scheduled,q.Finish,
+        var summaries=queues.Select(q=>new WeeklyLessonFinish(q.Work.LessonId,q.Work.LessonName,q.Work.Outcomes.Select(x=>x.OutcomeId).Distinct().Count(),q.WeeklyMinutes,q.Required,q.Scheduled,q.Required-q.Scheduled,q.Finish,
             (int)Math.Ceiling((q.Required-q.Scheduled)/(weeks*30d))*30)).ToArray();
         DateOnly? recommended=summaries.Length>0&&summaries.All(x=>x.FinishDate.HasValue)?summaries.Max(x=>x.FinishDate):null;
         return new(tasks,summaries,recommended,free);

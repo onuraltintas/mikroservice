@@ -3,6 +3,7 @@ using System.Text;
 using System.Text.Json;
 using Coaching.Application.Authorization;
 using Coaching.Domain.Entities;
+using Coaching.Application.StudyPlanning;
 using Coaching.Infrastructure.Data;
 using EduPlatform.Shared.Infrastructure.Middleware;
 using EduPlatform.Shared.Kernel.Exceptions;
@@ -28,7 +29,8 @@ public sealed class CoachingOutcomeCatalogService(CoachingDbContext db, ICoachin
         var topicIds = mappings.Select(x => x.TopicId).ToArray();
         return new(edition, await db.Set<OfficialCurriculumTopic>().AsNoTracking().Where(x => x.EditionId == editionId).OrderBy(x => x.Code).ToArrayAsync(ct),
             outcomes, await db.Set<OutcomeDurationEstimate>().AsNoTracking().Where(x => Enumerable.Contains(ids, x.OutcomeId)).OrderBy(x => x.Number).ToArrayAsync(ct), mappings,
-            await db.StudyCatalogTopics.AsNoTracking().Where(x => Enumerable.Contains(topicIds, x.Id)).Select(x => new OutcomeMappedTopic(x.Id, x.Name)).ToArrayAsync(ct));
+            await db.StudyCatalogTopics.AsNoTracking().Where(x => Enumerable.Contains(topicIds, x.Id)).Select(x => new OutcomeMappedTopic(x.Id, x.Name)).ToArrayAsync(ct),
+            await db.Set<StudyCatalogTopicOutcomeShare>().AsNoTracking().Where(x => Enumerable.Contains(ids, x.OutcomeId)).ToArrayAsync(ct));
     }
 
     public async Task<OutcomeImportReview> PreviewAsync(OutcomeImportPackage package, CancellationToken ct)
@@ -100,6 +102,25 @@ public sealed class CoachingOutcomeCatalogService(CoachingDbContext db, ICoachin
             var number = (await db.Set<OutcomeDurationEstimate>().Where(x => x.OutcomeId == outcome).Select(x => (int?)x.Number).MaxAsync(ct) ?? 0) + 1;
             var estimate = OutcomeDurationEstimate.Create(outcome, number, request.LearningMinutes, request.PracticeMinutes, request.CheckMinutes,
                 "ReviewedStudy", request.Confidence, request.Evidence, user.UserId!.Value);
+            IReadOnlyList<StudyCatalogTopicOutcomeShare> shares = [];
+            if (request.TopicShares is not null)
+                shares = request.TopicShares.Select(x => StudyCatalogTopicOutcomeShare.Create(x.TopicId, estimate,
+                    x.LearningMinutes, x.PracticeMinutes, x.CheckMinutes, x.ScopeDescription)).ToArray();
+            else
+            {
+                var previous = await (from share in db.Set<StudyCatalogTopicOutcomeShare>()
+                    join version in db.Set<OutcomeDurationEstimate>() on share.EstimateId equals version.Id
+                    where share.OutcomeId == outcome && version.IsPublished
+                        && !db.Set<OutcomeDurationEstimate>().Any(n => n.OutcomeId == outcome && n.IsPublished && n.Number > version.Number)
+                    select share).ToArrayAsync(ct);
+                if (previous.Length > 0) shares = OutcomeScopeBudget.Rebase(estimate, previous);
+            }
+            if (shares.Count > 0 || request.TopicShares is not null)
+            {
+                var topics = await ApprovedScopeTopics(outcome, ct);
+                OutcomeScopeBudget.Validate(estimate, shares, topics);
+                db.AddRange(shares);
+            }
             db.Add(estimate); Audit("OutcomeEstimate", estimate.Id.ToString(), request.Reason); await db.SaveChangesAsync(ct); return estimate;
         }, ct);
 
@@ -112,6 +133,10 @@ public sealed class CoachingOutcomeCatalogService(CoachingDbContext db, ICoachin
             if (!await db.Set<StudyCatalogTopicOutcome>().AnyAsync(x => x.OutcomeId == estimate.OutcomeId && x.IsApproved, ct))
                 throw new ArgumentException("Yayın için en az bir konu eşleştirmesi onaylanmalıdır.");
             var outcome = await db.Set<StudyCatalogOutcome>().SingleAsync(x => x.Id == estimate.OutcomeId, ct);
+            var shares = await db.Set<StudyCatalogTopicOutcomeShare>().Where(x => x.EstimateId == estimate.Id).ToArrayAsync(ct);
+            if (shares.Length > 0) OutcomeScopeBudget.Validate(estimate, shares, await ApprovedScopeTopics(outcome.Id, ct));
+            else if (await db.Set<StudyCatalogTopicOutcomeShare>().AnyAsync(x => x.OutcomeId == outcome.Id, ct))
+                throw new ArgumentException("Bu kazanım için konu kapsamı süre payları gereklidir.");
             var edition = await db.Set<OfficialCurriculumEdition>().SingleAsync(x => x.Id == outcome.EditionId, ct);
             var overlap = await (from o in db.Set<StudyCatalogOutcome>() join e in db.Set<OfficialCurriculumEdition>() on o.EditionId equals e.Id
                 join d in db.Set<OutcomeDurationEstimate>() on o.Id equals d.OutcomeId
@@ -151,19 +176,31 @@ public sealed class CoachingOutcomeCatalogService(CoachingDbContext db, ICoachin
             join officialTopic in db.Set<OfficialCurriculumTopic>() on outcome.OfficialTopicId equals officialTopic.Id
             join edition in db.Set<OfficialCurriculumEdition>() on outcome.EditionId equals edition.Id
             join estimate in db.Set<OutcomeDurationEstimate>() on outcome.Id equals estimate.OutcomeId
+            join portion in db.Set<StudyCatalogTopicOutcomeShare>()
+                on new { TopicId = map.TopicId, OutcomeId = outcome.Id, EstimateId = estimate.Id }
+                equals new { portion.TopicId, portion.OutcomeId, portion.EstimateId } into portions
+            from share in portions.DefaultIfEmpty()
             where map.TopicId == topicId && map.IsApproved && !outcome.IsArchived && topic.IsActive && unit.IsActive && lesson.IsActive
                 && lesson.ExamCode == edition.ExamCode && lesson.Name == edition.SubjectName
                 && (lesson.GradeNumber == null || edition.GradeNumber == null || lesson.GradeNumber == edition.GradeNumber)
                 && !db.StudyCatalogTopics.Any(x => x.ParentId == topic.Id)
                 && (topic.ParentId == null || db.StudyCatalogTopics.Any(x => x.Id == topic.ParentId && x.IsActive))
                 && edition.AcademicYearStart <= academicYear && edition.AcademicYearEnd >= academicYear && estimate.IsPublished
+                && (share != null || !db.Set<StudyCatalogTopicOutcomeShare>().Any(s => s.EstimateId == estimate.Id))
                 && !db.Set<OutcomeDurationEstimate>().Any(x => x.OutcomeId == outcome.Id && x.IsPublished && x.Number > estimate.Number)
             orderby outcome.DisplayOrder
             select new PublishedStudyOutcome(outcome.Id, outcome.Code, outcome.Name, estimate.Id, estimate.Number,
-                estimate.LearningMinutes, estimate.PracticeMinutes, estimate.CheckMinutes,
-                estimate.LearningMinutes + estimate.PracticeMinutes + estimate.CheckMinutes, edition.Code, officialTopic.LessonPeriods)).ToArrayAsync(ct);
+                share == null ? estimate.LearningMinutes : share.LearningMinutes,
+                share == null ? estimate.PracticeMinutes : share.PracticeMinutes,
+                share == null ? estimate.CheckMinutes : share.CheckMinutes,
+                share == null ? estimate.LearningMinutes + estimate.PracticeMinutes + estimate.CheckMinutes : share.LearningMinutes + share.PracticeMinutes + share.CheckMinutes,
+                edition.Code, officialTopic.LessonPeriods, share != null, share == null ? null : share.ScopeDescription)).ToArrayAsync(ct);
         return rows;
     }
+
+    private async Task<Guid[]> ApprovedScopeTopics(Guid outcome, CancellationToken ct) => await
+        (from map in db.Set<StudyCatalogTopicOutcome>() join topic in db.StudyCatalogTopics on map.TopicId equals topic.Id
+         where map.OutcomeId == outcome && map.IsApproved && topic.IsActive select map.TopicId).ToArrayAsync(ct);
 
     private async Task<Dictionary<string, StudyCatalogTopic>> MatchTopics(OutcomeImportPackage p, CancellationToken ct)
     {

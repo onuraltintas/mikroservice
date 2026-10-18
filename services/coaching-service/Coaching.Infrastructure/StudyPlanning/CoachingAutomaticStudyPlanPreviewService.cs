@@ -73,7 +73,7 @@ public sealed class CoachingAutomaticStudyPlanPreviewService(CoachingDbContext d
                 var outcome = published.SingleOrDefault(x => x.OutcomeId == chosen.OutcomeId && x.EstimateId == chosen.EstimateId)
                     ?? throw new ArgumentException("Kazanım eşleştirmesi veya süre sürümü değişti. Kazanımları yeniden yükleyin.");
                 selectedOutcomes.Add(new(selection.TopicId, outcome.OutcomeId, outcome.EstimateId, chosen.RequiredMinutes ?? outcome.TotalMinutes,
-                    chosen.RequiredMinutes.HasValue && chosen.RequiredMinutes != outcome.TotalMinutes ? "StudentOverride" : "Catalog", outcome.Code, outcome.Name));
+                    chosen.RequiredMinutes.HasValue && chosen.RequiredMinutes != outcome.TotalMinutes ? "StudentOverride" : "Catalog", outcome.Code, outcome.Name, outcome.IsTopicShare));
             }
         }
         var resolved = StudyOutcomeAllocation.Deduplicate(selectedOutcomes);

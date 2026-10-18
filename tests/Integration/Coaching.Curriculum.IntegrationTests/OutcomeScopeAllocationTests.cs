@@ -6,6 +6,41 @@ namespace Coaching.Curriculum.IntegrationTests;
 public sealed class OutcomeScopeAllocationTests
 {
     [Fact]
+    public void SavedLinksKeepTopicEstimateAndTextAcrossSeveralTasksAndOutcomes()
+    {
+        var revision=StudyPlanRevision.Create(Guid.NewGuid(),Guid.NewGuid(),1,"Kapsam testi");
+        var a=Guid.NewGuid();var b=Guid.NewGuid();var outcome=Guid.NewGuid();var other=Guid.NewGuid();var estimate=Guid.NewGuid();
+        var tasks=new[]{StudyPlanTask.Create(revision,new(2027,5,24),"İlk bölüm",30,a),
+            StudyPlanTask.Create(revision,new(2027,5,25),"İkinci bölüm",20,b),
+            StudyPlanTask.Create(revision,new(2027,5,26),"İkinci bölüm devam",20,b)};
+        var links=StudyOutcomeAllocation.Allocate(tasks,[
+            new(a,outcome,estimate,20,"Catalog","T.8.3.17","Ana fikir",true),
+            new(a,other,Guid.NewGuid(),10,"StudentOverride","T.8.3.18","Yardımcı fikir",true),
+            new(b,outcome,estimate,40,"Catalog","T.8.3.17","Ana fikir",true)]);
+        Assert.Equal(70,links.Sum(x=>x.AllocatedMinutes));Assert.Equal(4,links.Count);
+        Assert.Equal(30,links.Where(x=>x.TaskId==tasks[0].Id).Sum(x=>x.AllocatedMinutes));
+        Assert.All(links.Where(x=>x.OutcomeId==outcome),x=>{Assert.Equal(estimate,x.EstimateId);Assert.Equal("T.8.3.17",x.CodeSnapshot);Assert.Equal("Ana fikir",x.NameSnapshot);});
+        Assert.Contains(links,x=>x.OutcomeId==other&&x.Origin=="StudentOverride");
+    }
+
+    [Fact]
+    public void NewDurationVersionRebasesPortionsExactlyWithoutChangingOldValues()
+    {
+        var old=OutcomeDurationEstimate.Create(Guid.NewGuid(),1,20,30,10,"ReviewedStudy","Low","Önceki sürüm kaynağı",Guid.NewGuid());
+        var a=StudyCatalogTopicOutcomeShare.Create(Guid.NewGuid(),old,5,10,0,"Birinci bölüm kapsamı");
+        var b=StudyCatalogTopicOutcomeShare.Create(Guid.NewGuid(),old,15,20,10,"İkinci bölüm kapsamı");
+        var next=OutcomeDurationEstimate.Create(old.OutcomeId,2,7,11,3,"ReviewedStudy","Low","Yeni sürüm kaynağı",Guid.NewGuid());
+        var shares=OutcomeScopeBudget.Rebase(next,[a,b]);
+        OutcomeScopeBudget.Validate(next,shares,[a.TopicId,b.TopicId]);
+        Assert.Equal(21,shares.Sum(x=>x.TotalMinutes));Assert.Equal(15,a.TotalMinutes);Assert.Equal(45,b.TotalMinutes);
+        Assert.All(shares,x=>Assert.Equal(next.Id,x.EstimateId));
+        var tiny=OutcomeDurationEstimate.Create(old.OutcomeId,3,0,2,0,"ReviewedStudy","Low","Sınır değer kaynağı",Guid.NewGuid());
+        Assert.All(OutcomeScopeBudget.Rebase(tiny,[a,b]),x=>Assert.Equal(1,x.TotalMinutes));
+        var tooSmall=OutcomeDurationEstimate.Create(old.OutcomeId,4,0,1,0,"ReviewedStudy","Low","Yetersiz süre kaynağı",Guid.NewGuid());
+        Assert.Throws<ArgumentException>(()=>OutcomeScopeBudget.Rebase(tooSmall,[a,b]));
+    }
+
+    [Fact]
     public void SharedOutcomeRetainsBothTopicPortionsWithoutDoubleCounting()
     {
         var outcome=Guid.NewGuid();var estimate=Guid.NewGuid();var first=Guid.NewGuid();var second=Guid.NewGuid();

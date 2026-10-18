@@ -4,7 +4,7 @@ namespace Coaching.Application.StudyPlanning;
 
 public sealed record StudyOutcomeSelection(Guid OutcomeId, Guid EstimateId, int? RequiredMinutes = null);
 public sealed record ResolvedStudyOutcome(Guid TopicId, Guid OutcomeId, Guid EstimateId, int Minutes, string Origin,
-    string? Code = null, string? Name = null);
+    string? Code = null, string? Name = null, bool IsTopicShare = false);
 
 public static class StudyOutcomeAllocation
 {
@@ -14,6 +14,19 @@ public static class StudyOutcomeAllocation
         foreach (var group in values.GroupBy(x => x.OutcomeId))
         {
             var first = group.First();
+            if (group.Any(x => x.IsTopicShare))
+            {
+                if (group.Any(x => !x.IsTopicShare || x.EstimateId != first.EstimateId))
+                    throw new ArgumentException("Aynı kazanımın kapsam payları aynı süre sürümünden seçilmelidir.");
+                foreach (var topic in group.GroupBy(x => x.TopicId))
+                {
+                    var portion = topic.First();
+                    if (topic.Any(x => x.Minutes != portion.Minutes || x.Origin != portion.Origin))
+                        throw new ArgumentException("Aynı konu kapsamı farklı sürelerle seçilemez.");
+                    result.Add(portion);
+                }
+                continue;
+            }
             if (group.Any(x => x.EstimateId != first.EstimateId || x.Minutes != first.Minutes || x.Origin != first.Origin))
                 throw new ArgumentException("Aynı kazanım farklı sürelerle seçilemez.");
             result.Add(first);

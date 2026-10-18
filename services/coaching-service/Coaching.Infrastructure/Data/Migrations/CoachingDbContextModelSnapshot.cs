@@ -2819,6 +2819,41 @@ namespace Coaching.Infrastructure.Data.Migrations
                     b.ToTable("study_catalog_topic_outcomes", "coaching");
                 });
 
+            modelBuilder.Entity("Coaching.Domain.Entities.StudyCatalogTopicOutcomeShare", b =>
+                {
+                    b.Property<Guid>("TopicId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("OutcomeId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("EstimateId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("CheckMinutes")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("LearningMinutes")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("PracticeMinutes")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ScopeDescription")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.HasKey("TopicId", "OutcomeId", "EstimateId");
+
+                    b.HasIndex("EstimateId", "OutcomeId");
+
+                    b.ToTable("study_catalog_topic_outcome_shares", "coaching", t =>
+                        {
+                            t.HasCheckConstraint("ck_topic_outcome_share_minutes", "\"LearningMinutes\" >= 0 AND \"PracticeMinutes\" >= 0 AND \"CheckMinutes\" >= 0 AND (\"LearningMinutes\"::bigint + \"PracticeMinutes\" + \"CheckMinutes\") BETWEEN 1 AND 1440");
+                        });
+                });
+
             modelBuilder.Entity("Coaching.Domain.Entities.StudyCatalogUnit", b =>
                 {
                     b.Property<Guid>("Id")
@@ -4045,6 +4080,22 @@ namespace Coaching.Infrastructure.Data.Migrations
                     b.HasOne("Coaching.Domain.Entities.StudyCatalogTopic", null)
                         .WithMany()
                         .HasForeignKey("TopicId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Coaching.Domain.Entities.StudyCatalogTopicOutcomeShare", b =>
+                {
+                    b.HasOne("Coaching.Domain.Entities.OutcomeDurationEstimate", null)
+                        .WithMany()
+                        .HasForeignKey("EstimateId", "OutcomeId")
+                        .HasPrincipalKey("Id", "OutcomeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Coaching.Domain.Entities.StudyCatalogTopicOutcome", null)
+                        .WithMany()
+                        .HasForeignKey("TopicId", "OutcomeId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

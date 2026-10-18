@@ -49,10 +49,15 @@ public sealed class CoachingWeeklyOutcomePlanService(CoachingDbContext db,ICoach
             join edition in db.Set<OfficialCurriculumEdition>() on o.EditionId equals edition.Id
             join e in db.Set<OutcomeDurationEstimate>().Where(e=>e.IsPublished&&!db.Set<OutcomeDurationEstimate>().Any(n=>n.OutcomeId==e.OutcomeId&&n.IsPublished&&n.Number>e.Number)) on o.Id equals e.OutcomeId into estimates
             from estimate in estimates.DefaultIfEmpty()
+            join portion in db.Set<StudyCatalogTopicOutcomeShare>()
+                on new { TopicId=t.Id,OutcomeId=o.Id,EstimateId=estimate==null?Guid.Empty:estimate.Id }
+                equals new { portion.TopicId,portion.OutcomeId,portion.EstimateId } into portions
+            from share in portions.DefaultIfEmpty()
             where Enumerable.Contains(topicIds,m.TopicId)&&m.IsApproved&&!o.IsArchived&&edition.AcademicYearStart<=year&&edition.AcademicYearEnd>=year
                 &&edition.ExamCode==l.ExamCode&&edition.SubjectName==l.Name&&(edition.GradeNumber==null||l.GradeNumber==null||edition.GradeNumber==l.GradeNumber)
-            select new {TopicId=t.Id,Outcome=o,Estimate=estimate}).ToArrayAsync(ct);
-        var issues=new List<WeeklyLessonIssue>();var work=new List<WeeklyLessonWork>();var seen=new HashSet<Guid>();
+            select new {TopicId=t.Id,Outcome=o,Estimate=estimate,Share=share,
+                RequiresShare=estimate!=null&&db.Set<StudyCatalogTopicOutcomeShare>().Any(s=>s.EstimateId==estimate.Id)}).ToArrayAsync(ct);
+        var issues=new List<WeeklyLessonIssue>();var work=new List<WeeklyLessonWork>();var seen=new HashSet<(Guid Outcome,Guid Topic)>();
         foreach(var lessonId in lessonIds)
         {
             var lesson=choices[lessonId];var lessonTopics=topics.Where(x=>x.Topic.LessonId==lessonId).ToArray();var outcomes=new List<WeeklyOutcomeWork>();
@@ -64,7 +69,10 @@ public sealed class CoachingWeeklyOutcomePlanService(CoachingDbContext db,ICoach
                 foreach(var row in mapped)
                 {
                     if(row.Estimate is null){issues.Add(new(lessonId,lesson.Name,row.Outcome.Code+": yayımlanmış çalışma süresi yok."));continue;}
-                    if(seen.Add(row.Outcome.Id))outcomes.Add(new(topic.Topic.Id,topic.Topic.Name,row.Outcome.Id,row.Outcome.Code,row.Outcome.Name,row.Estimate.Id,row.Estimate.Number,row.Estimate.TotalMinutes));
+                    if(row.RequiresShare&&row.Share is null){issues.Add(new(lessonId,lesson.Name,topic.Topic.Name+": kapsam süre payı eksik."));continue;}
+                    if(seen.Add((row.Outcome.Id,row.Share is null?Guid.Empty:topic.Topic.Id)))
+                        outcomes.Add(new(topic.Topic.Id,topic.Topic.Name,row.Outcome.Id,row.Outcome.Code,row.Outcome.Name,row.Estimate.Id,row.Estimate.Number,
+                            row.Share?.TotalMinutes??row.Estimate.TotalMinutes,row.Share is not null));
                 }
             }
             work.Add(new(lessonId,lesson.Name,outcomes));
@@ -74,12 +82,24 @@ public sealed class CoachingWeeklyOutcomePlanService(CoachingDbContext db,ICoach
         var pending=protectedTasks.Where(x=>!x.IsCompleted).ToDictionary(x=>x.Id);
         var pendingIds=pending.Keys.ToArray();var pinnedLinks=await db.Set<StudyPlanTaskOutcome>().AsNoTracking().Where(x=>Enumerable.Contains(pendingIds,x.TaskId)).OrderBy(x=>x.TaskId).ThenBy(x=>x.OutcomeId).ToArrayAsync(ct);
         var originalWork=work.ToArray();var credits=new List<(Guid LessonId,DateOnly Date,int Minutes)>();
-        work=originalWork.Select(lesson=>lesson with {Outcomes=lesson.Outcomes.Select(outcome=>{
-            var left=outcome.Minutes;
-            foreach(var link in pinnedLinks.Where(x=>x.OutcomeId==outcome.OutcomeId).OrderBy(x=>pending[x.TaskId].PlannedDate).ThenBy(x=>x.TaskId))
-            {var minutes=Math.Min(left,link.AllocatedMinutes);if(minutes>0)credits.Add((lesson.LessonId,pending[link.TaskId].PlannedDate,minutes));left-=minutes;}
-            return outcome with {Minutes=left};
-        }).Where(x=>x.Minutes>0).ToArray()}).ToList();
+        var pinnedVersions=pinnedLinks.Select(x=>x.EstimateId).Distinct().ToArray();
+        var scopedVersions=(await db.Set<StudyCatalogTopicOutcomeShare>().Where(x=>Enumerable.Contains(pinnedVersions,x.EstimateId))
+            .Select(x=>x.EstimateId).Distinct().ToArrayAsync(ct)).ToHashSet();
+        var remaining=originalWork.SelectMany(x=>x.Outcomes).ToDictionary(x=>(x.TopicId,x.OutcomeId),x=>x.Minutes);
+        foreach(var link in pinnedLinks.OrderBy(x=>pending[x.TaskId].PlannedDate).ThenBy(x=>x.TaskId))
+        {
+            var left=link.AllocatedMinutes;var task=pending[link.TaskId];
+            foreach(var lesson in originalWork)
+                foreach(var outcome in lesson.Outcomes.Where(x=>x.OutcomeId==link.OutcomeId
+                    &&(!scopedVersions.Contains(link.EstimateId)||x.TopicId==task.TopicId)).OrderByDescending(x=>x.TopicId==task.TopicId))
+                {
+                    var key=(outcome.TopicId,outcome.OutcomeId);var minutes=Math.Min(left,remaining[key]);
+                    if(minutes>0)credits.Add((lesson.LessonId,task.PlannedDate,minutes));
+                    remaining[key]-=minutes;left-=minutes;
+                }
+        }
+        work=originalWork.Select(lesson=>lesson with {Outcomes=lesson.Outcomes
+            .Select(outcome=>outcome with {Minutes=remaining[(outcome.TopicId,outcome.OutcomeId)]}).Where(x=>x.Minutes>0).ToArray()}).ToList();
         foreach(var prior in pending.Values.Where(x=>x.PlannedDate<request.StartDate||x.PlannedDate.DayNumber-request.StartDate.DayNumber>730))
             issues.Add(new(prior.WeeklyLessonId??Guid.Empty,prior.LessonNameSnapshot??"Sabit çalışma",prior.Title+": tarihi yeni plan aralığı için uygun değil. Mevcut plandaki tarihini güncelleyin."));
         var schedule=WeeklyOutcomeScheduler.Build(request.StartDate,request.EndDate,draft.Slots,work,request.ReuseFreedSlots,
@@ -90,7 +110,7 @@ public sealed class CoachingWeeklyOutcomePlanService(CoachingDbContext db,ICoach
             var lastCredit=ownCredits.Length==0?(DateOnly?)null:ownCredits.Max(x=>x.Date);var finish=summary.RequiredMinutes==0?lastCredit:summary.FinishDate;
             if(finish.HasValue&&lastCredit>finish)finish=lastCredit;
             var weeks=Math.Max(1,(int)Math.Ceiling((request.EndDate.DayNumber-request.StartDate.DayNumber+1)/7d));
-            return summary with {OutcomeCount=original.Outcomes.Count,RequiredMinutes=required,ScheduledMinutes=scheduled,RemainingMinutes=required-scheduled,FinishDate=finish,ExtraWeeklyMinutes=(int)Math.Ceiling((required-scheduled)/(weeks*30d))*30};
+            return summary with {OutcomeCount=original.Outcomes.Select(x=>x.OutcomeId).Distinct().Count(),RequiredMinutes=required,ScheduledMinutes=scheduled,RemainingMinutes=required-scheduled,FinishDate=finish,ExtraWeeklyMinutes=(int)Math.Ceiling((required-scheduled)/(weeks*30d))*30};
         }).ToArray();
         schedule=schedule with {Lessons=summaries,RecommendedEndDate=summaries.All(x=>x.FinishDate.HasValue)?summaries.Max(x=>x.FinishDate):null};
         var fingerprint=Convert.ToHexStringLower(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(new{request,draft.Version,draft.TimeZoneId,Slots=draft.Slots,originalWork,work,issues,ContextVersion=context?.Version,ActiveId=active?.Id,ActiveVersion=active?.Version,pinnedLinks,
