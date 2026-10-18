@@ -82,7 +82,7 @@ public sealed class StudyCatalogOutcome
     {
         if (edition == Guid.Empty || group == Guid.Empty || page is < 1 || order < 1 || notes is null || notes.Length > 8000
             || sourceKind is not ("Official" or "ExamSkill") || sourceKind=="Official" && !page.HasValue
-            || sourceKind=="ExamSkill" && sourceUrl is null
+            || sourceKind=="ExamSkill" && (sourceUrl is null || page.HasValue)
             || sourceUrl is not null && (!Uri.TryCreate(sourceUrl,UriKind.Absolute,out var uri)||uri.Scheme!="https"||sourceUrl.Length>1000))
             throw new ArgumentException("Kazanım kaynağı ve sırasını kontrol edin.");
         return new() { EditionId = edition, OfficialTopicId = group, Code = StudyCatalogText.Require(code, 100),

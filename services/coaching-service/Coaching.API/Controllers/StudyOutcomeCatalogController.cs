@@ -5,6 +5,7 @@ using Coaching.Infrastructure.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.EntityFrameworkCore;
 
 namespace Coaching.API.Controllers;
 
@@ -18,6 +19,7 @@ public sealed class StudyOutcomeCatalogController(CoachingDbContext db, ICoachin
     {
         if (access.CurrentUserId is not { } student || !access.IsCurrentStudent(student)) return Forbid();
         var year = await CoachingOutcomeCatalogService.AcademicYearAsync(db, student, ct);
-        return Ok(new { success = true, data = await CoachingOutcomeCatalogService.ReadPublishedAsync(db, topic, year, ct) });
+        var context=await db.StudentLearningContexts.AsNoTracking().SingleOrDefaultAsync(x=>x.StudentUserId==student,ct);
+        return Ok(new { success = true, data = await CoachingOutcomeCatalogService.ReadPublishedAsync(db, topic, year, ct,context) });
     }
 }

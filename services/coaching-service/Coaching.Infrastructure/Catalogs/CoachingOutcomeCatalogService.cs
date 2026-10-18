@@ -151,11 +151,18 @@ public sealed class CoachingOutcomeCatalogService(CoachingDbContext db, ICoachin
 
     internal static async Task ValidateLessonScopeAsync(CoachingDbContext db,Guid lessonId,string name,int? grade,string? exam,CancellationToken ct)
     {
+        var bindings=db.Set<OfficialCurriculumLessonBinding>().Where(x=>x.LessonId==lessonId);
+        if(await bindings.AnyAsync(ct))
+        {
+            var current=await db.StudyCatalogLessons.AsNoTracking().SingleAsync(x=>x.Id==lessonId,ct);
+            if(current.Name!=name.Trim()||current.GradeNumber!=grade||current.ExamCode!=exam?.Trim().ToUpperInvariant())
+                throw new ArgumentException("Ortak YKS programına bağlı dersin adı veya sınav kapsamı bu ekrandan değiştirilemez; kapsam bağlantıları birlikte incelenmelidir.");
+        }
         var editions = await (from topic in db.StudyCatalogTopics
             join map in db.Set<StudyCatalogTopicOutcome>() on topic.Id equals map.TopicId
             join outcome in db.Set<StudyCatalogOutcome>() on map.OutcomeId equals outcome.Id
             join edition in db.Set<OfficialCurriculumEdition>() on outcome.EditionId equals edition.Id
-            where topic.LessonId == lessonId
+            where topic.LessonId == lessonId&&!bindings.Any(b=>b.EditionId==edition.Id)
             select new { edition.SubjectName,edition.GradeNumber,edition.ExamCode }).Distinct().ToArrayAsync(ct);
         if (editions.Any(x => x.SubjectName != name.Trim() || x.ExamCode != exam?.Trim().ToUpperInvariant() || (grade.HasValue && x.GradeNumber.HasValue && grade != x.GradeNumber)))
             throw new ArgumentException("Ders adı, sınıfı veya sınavı bağlı kazanımların program kapsamıyla uyuşmuyor. Farklı kapsam için yeni ders ve program kaydı oluşturun.");
@@ -165,7 +172,7 @@ public sealed class CoachingOutcomeCatalogService(CoachingDbContext db, ICoachin
         => await db.StudentLearningContexts.Where(x => x.StudentUserId == student).Select(x => (int?)x.AcademicYearStart).SingleOrDefaultAsync(ct)
             ?? (DateTime.UtcNow.Month >= 9 ? DateTime.UtcNow.Year : DateTime.UtcNow.Year - 1);
 
-    public static async Task<IReadOnlyList<PublishedStudyOutcome>> ReadPublishedAsync(CoachingDbContext db, Guid topicId, int academicYear, CancellationToken ct)
+    public static async Task<IReadOnlyList<PublishedStudyOutcome>> ReadPublishedAsync(CoachingDbContext db, Guid topicId, int academicYear, CancellationToken ct,StudentLearningContext? context=null)
     {
         if (academicYear is < 2000 or > 2200) throw new ArgumentException("Geçerli eğitim yılı seçin.");
         var rows = await (from map in db.Set<StudyCatalogTopicOutcome>().AsNoTracking()
@@ -181,6 +188,8 @@ public sealed class CoachingOutcomeCatalogService(CoachingDbContext db, ICoachin
                 equals new { portion.TopicId, portion.OutcomeId, portion.EstimateId } into portions
             from share in portions.DefaultIfEmpty()
             where map.TopicId == topicId && map.IsApproved && !outcome.IsArchived && topic.IsActive && unit.IsActive && lesson.IsActive
+                &&(context==null||context.Purpose!=LearningPurpose.Yks||db.Set<StudyCatalogYksScope>().Any(s=>s.TopicId==topic.Id&&s.ScoreType==context.PrimaryScoreType
+                    &&(s.ExamCode!="YDT"||s.ForeignLanguage==context.ForeignLanguage)&&!Enumerable.Contains(s.ExcludedOutcomeIds,outcome.Id)))
                 && ((lesson.ExamCode == edition.ExamCode && lesson.Name == edition.SubjectName
                 && (lesson.GradeNumber == null || edition.GradeNumber == null || lesson.GradeNumber == edition.GradeNumber))
                     || db.Set<OfficialCurriculumLessonBinding>().Any(b => b.EditionId == edition.Id && b.LessonId == lesson.Id))

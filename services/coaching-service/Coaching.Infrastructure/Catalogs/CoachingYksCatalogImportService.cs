@@ -20,7 +20,7 @@ public sealed record YksOutcomeImport(string Key,string Owner,string Code,string
 public sealed record YksShareImport(string TopicSourceId,int LearningMinutes,int PracticeMinutes,int CheckMinutes,string ScopeDescription);
 public sealed record YksTopicImport(string SourceId,string LessonSourceId,string Name,string Exam,IReadOnlyList<string> OutcomeKeys,IReadOnlyList<YksScopeImport> Scopes);
 public sealed record YksScopeImport(string ExamCode,string ScoreType,string TestCode,string? Language,IReadOnlyList<string> ExcludedOutcomeKeys);
-public sealed record YksEquivalentTopicImport(string TopicSourceId,string CanonicalTopicSourceId,string Reason);
+public sealed record YksEquivalentTopicImport(string TopicSourceId,string CanonicalTopicSourceId,string LessonSourceId,string Name,string Reason);
 public sealed record YksImportResult(string Fingerprint,int Programs,int Outcomes,int Topics,int Scopes,int Shares);
 
 /// <summary>Used by the reviewed release tool; it has no public HTTP endpoint.</summary>
@@ -86,6 +86,13 @@ public sealed class CoachingYksCatalogImportService(CoachingDbContext db,ICoachi
                 "ÖSYM 2026 kılavuzu, TTKB 2026 kapsamı ve MEBİ konu kataloğu. 2027 resmî kapsam iddiası değildir.");
             row.ExcludeOutcomes(s.ExcludedOutcomeKeys.Select(key=>outcomes[key].Id));return row;
         })).ToArray();
+        var aliases=p.Outcomes.SelectMany(o=>o.SourceIds.Select(id=>StudyCatalogOutcomeSource.Create(outcomes[o.Key].Id,"mebi-yks",id))).ToArray();
+        var sourceIds=aliases.Select(x=>x.SourceId).ToArray();
+        if(await db.Set<StudyCatalogOutcomeSource>().AnyAsync(x=>x.Source=="mebi-yks"&&Enumerable.Contains(sourceIds,x.SourceId),ct))
+            throw new ArgumentException("Kaynak kimlikleri başka bir YKS paketine bağlı.");
+        await using var transaction=await db.Database.BeginTransactionAsync(ct);
+        try
+        {
         foreach(var topic in p.Topics)
         {
             var row=topics[topic.SourceId];var budget=shares.Where(x=>x.TopicId==row.Id).Sum(x=>x.TotalMinutes);
@@ -97,13 +104,6 @@ public sealed class CoachingYksCatalogImportService(CoachingDbContext db,ICoachi
             if(lessons.Values.All(x=>x.Id!=row.LessonId))throw new ArgumentException("Eşdeğer konu YKS kapsamı dışında.");
             row.Edit(row.Name,row.DisplayOrder,canonical.EstimatedMinutes);
         }
-        var aliases=p.Outcomes.SelectMany(o=>o.SourceIds.Select(id=>StudyCatalogOutcomeSource.Create(outcomes[o.Key].Id,"mebi-yks",id))).ToArray();
-        var sourceIds=aliases.Select(x=>x.SourceId).ToArray();
-        if(await db.Set<StudyCatalogOutcomeSource>().AnyAsync(x=>x.Source=="mebi-yks"&&Enumerable.Contains(sourceIds,x.SourceId),ct))
-            throw new ArgumentException("Kaynak kimlikleri başka bir YKS paketine bağlı.");
-        await using var transaction=await db.Database.BeginTransactionAsync(ct);
-        try
-        {
             db.AddRange(editions.Values);db.AddRange(groups.Values);db.AddRange(outcomes.Values);db.AddRange(estimates.Values);
             db.AddRange(mappings);db.AddRange(shares);db.AddRange(scopes);db.AddRange(aliases);
             db.AddRange(p.Subjects.SelectMany(s=>s.LessonSourceIds.Select(id=>OfficialCurriculumLessonBinding.Create(editions[s.Tag].Id,lessons[id].Id))));
@@ -121,6 +121,9 @@ public sealed class CoachingYksCatalogImportService(CoachingDbContext db,ICoachi
             throw new ArgumentException("Geçerli ve yinelenmeyen YKS paketi gerekir.");
         var owners=p.Subjects.Select(x=>x.Tag).ToHashSet();var keys=p.Outcomes.Select(x=>x.Key).ToHashSet();
         var topicIds=p.Topics.Select(x=>x.SourceId).ToHashSet();
+        if(p.EquivalentTopics.Select(x=>x.TopicSourceId).Distinct().Count()!=p.EquivalentTopics.Count
+            ||p.EquivalentTopics.Any(x=>topicIds.Contains(x.TopicSourceId)||!topicIds.Contains(x.CanonicalTopicSourceId)))
+            throw new ArgumentException("Eşdeğer konu kayıtları açık bir ana konuya bağlanmalıdır.");
         if(p.Outcomes.Any(x=>!owners.Contains(x.Owner)||x.Shares.Count==0||x.Shares.Any(s=>!topicIds.Contains(s.TopicSourceId)))
             ||p.Topics.Any(t=>t.OutcomeKeys.Count==0||t.OutcomeKeys.Distinct().Count()!=t.OutcomeKeys.Count||t.OutcomeKeys.Any(k=>!keys.Contains(k))
                 ||t.Scopes.Any(s=>s.ExcludedOutcomeKeys.Any(k=>!t.OutcomeKeys.Contains(k))))
