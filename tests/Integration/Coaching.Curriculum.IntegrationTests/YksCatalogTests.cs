@@ -59,6 +59,14 @@ public sealed class YksCatalogTests
         Assert.Throws<ArgumentException>(()=>OfficialCurriculumTopic.Create(Guid.NewGuid(),"9.1","Geçersiz",1,0));
     }
 
+    [Fact]
+    public void MixedGeographyTopicCanExcludeOnlyTheFourHourProgramOutcomeForEa()
+    {
+        var outcome=Guid.NewGuid();var scope=StudyCatalogYksScope.Create(Guid.NewGuid(),"AYT","EA","AYT.EDESOS1",null,"ÖSYM Coğrafya-1 dipnotu");
+        scope.ExcludeOutcomes([outcome]);Assert.Equal(outcome,Assert.Single(scope.ExcludedOutcomeIds));
+        Assert.Throws<ArgumentException>(()=>scope.ExcludeOutcomes([Guid.Empty]));
+    }
+
     [Theory]
     [InlineData("TYT","SAY","TYT.MAT",null)]
     [InlineData("AYT","EA","AYT.MAT",null)]
