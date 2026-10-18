@@ -5,7 +5,7 @@ namespace Coaching.Curriculum.IntegrationTests;
 
 public sealed class YksPreparedDataTests
 {
-    private static YksDataPackage Read()
+    internal static YksDataPackage Read()
     {
         var root=new DirectoryInfo(AppContext.BaseDirectory);
         while(root is not null&&!File.Exists(Path.Combine(root.FullName,"data/coaching-outcomes/yks-2026-basis-v1.json")))root=root.Parent;
