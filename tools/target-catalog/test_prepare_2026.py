@@ -1,6 +1,6 @@
 import unittest
 from pathlib import Path
-from prepare_2026 import parse_result_sheet, number
+from prepare_2026 import parse_result_sheet, number, merge_source_rows
 
 
 class OfficialResultTests(unittest.TestCase):
@@ -20,6 +20,13 @@ class OfficialResultTests(unittest.TestCase):
     def test_wrong_year_is_rejected(self):
         with self.assertRaises(ValueError):
             parse_result_sheet(Path('data/target-catalog/2026/raw/osym-results-table4.xlsx'), 'Bachelor', expected_year=2027)
+
+    def test_source_disagreement_is_separate_and_rank_is_never_inferred(self):
+        row=parse_result_sheet(Path('data/target-catalog/2026/raw/osym-results-table4.xlsx'),'Bachelor')[0]
+        yok=dict(kilavuzKodu=row['externalCode'],yil=2026,puanTuru=row['scoreType'],kontenjan=row['quota'],gkY=row['placed'],minPuan=999,basariSirasi=None)
+        merged,issues=merge_source_rows([row],[yok])
+        self.assertIn(row['externalCode'],issues)
+        self.assertIsNone(merged[0]['rank'])
 
 
 if __name__ == '__main__':
