@@ -51,6 +51,11 @@ describe('Wizard lesson coverage regression', () => {
       expect(message).toContain('Ders 15');
       expect(message).toContain('Ders 16');
       expect(message).toContain('henüz ders saati yok');
+      component.slots.set(component.proposal());
+      component.startTime.set('10:00');
+      component.createProposal();
+      expect(component.messages().at(-1)!.content).not.toContain('henüz ders saati yok');
+      expect(new Set([...component.slots(), ...component.proposal()].map(slot => slot.lessonId)).size).toBe(16);
       fixture.destroy();
     });
   }
