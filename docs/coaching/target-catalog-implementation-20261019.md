@@ -76,5 +76,6 @@ Yeni API: `GET /api/coaching/study-planning/targets/admissions` ve `/filters`. M
 - Öğrenci/yönetici üretim derlemesi geçti; mevcut stil bütçesi uyarıları sürüyor.
 - Geniş PostgreSQL regresyonu: **131 geçti, 0 başarısız, 0 atlanan**. Yeni migration'ın geri/ileri uygulanması, ikinci kez uygulanması, mevcut çalışma satırının korunması ve filtrelerin gerçek PostgreSQL'de çevrilebilmesi dahil. İlk paralel deneme bu işe özel yerel PostgreSQL'in 20 bağlantı sınırına takıldı; sınır 100'e çıkarılıp testler sırayla tamamlandı. Canlı sunucu ayarı değiştirilmedi.
 - Personel portalı üretim derlemesi de geçti; mevcut paket/stil bütçesi uyarıları sürüyor.
+- Yeni çekirdek model/aktarım/arama kodlarında ölçülen satır kapsamı **%86,5** (173/200). Coverage çalıştırmasında 12 ilgili test geçti; çıktı `artifacts/target-catalog-20261019/coverage/` altında. Bu oran bütün uygulamanın veya yeni HTTP controller'ın uçtan uca kapsam oranı değildir.
 
 Bu turda canlı hesap/plan/çalışma/hedef tablolarına yazılmadı. Ortak modeli ve doğrulanmış YKS paketini canlıya almadan önce yeni migration ve paket aynı yayın içinde korunmalı, katalog manifesti saklanmalı ve canlı koruma sayım/hash karşılaştırmaları yapılmalıdır. LGS kaynak eksikliği sürerken boş 2026 sonuç ekranı “tamamlandı” olarak sunulmamalıdır.

@@ -1,0 +1,7 @@
+<RunSettings>
+  <xUnit><ParallelizeTestCollections>false</ParallelizeTestCollections><MaxParallelThreads>1</MaxParallelThreads></xUnit>
+  <DataCollectionRunSettings><DataCollectors><DataCollector friendlyName="XPlat Code Coverage"><Configuration>
+    <Format>cobertura</Format>
+    <Include>[Coaching.Domain]Coaching.Domain.Entities.TargetAdmission*,[Coaching.Infrastructure]Coaching.Infrastructure.Catalogs.TargetAdmission*,[Coaching.Infrastructure]Coaching.Infrastructure.StudyPlanning.TargetAdmission*</Include>
+  </Configuration></DataCollector></DataCollectors></DataCollectionRunSettings>
+</RunSettings>
