@@ -1,6 +1,6 @@
 import unittest
 from pathlib import Path
-from lgs_followup_2026 import parse_konak_catalog, parse_izmir_results
+from lgs_followup_2026 import build_packages, parse_konak_catalog, parse_izmir_results
 
 RAW = Path('data/target-catalog/2026/raw/lgs-followup-20261019')
 
@@ -31,6 +31,14 @@ class FollowupEvidenceTests(unittest.TestCase):
     def test_wrong_document_stage_is_rejected(self):
         with self.assertRaises(ValueError):
             parse_izmir_results(RAW / 'izmir-main.pdf', 'Transfer2')
+
+    def test_reviewed_packages_preserve_scope_and_exclude_already_imported_main_result(self):
+        packages = build_packages()
+        self.assertEqual([len(p['rows']) for p in packages], [22, 134, 108, 1, 2, 2])
+        self.assertTrue(all(p['year'] == 2026 and p['examCode'] == 'LGS' for p in packages))
+        self.assertTrue(all(len(r['name']) <= 300 for p in packages for r in p['rows']))
+        self.assertFalse(any(r['institution'] == 'Şehit Ahmet Özsoy Fen Lisesi' for r in packages[1]['rows']))
+        self.assertEqual(packages[3]['rows'][0]['quota'], 150)
 
 
 if __name__ == '__main__':

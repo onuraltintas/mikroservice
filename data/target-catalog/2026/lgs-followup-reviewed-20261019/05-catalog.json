@@ -1,0 +1,49 @@
+{
+  "examCode": "LGS",
+  "year": 2026,
+  "stage": "Catalog",
+  "sourceUrl": "https://nurancelalgulsenmtal.meb.k12.tr/icerikler/lgstercihiyapacakogrencilerimizindikkatine_17626643.html",
+  "documentHash": "ceaa2010de6c5b6f9126c40acd262a97c2f1acf85f14da85bfe305ae4c8d6923",
+  "rows": [
+    {
+      "institution": "Nuran ve Celal Gülşen Mesleki ve Teknik Anadolu Lisesi",
+      "name": "Nuran ve Celal Gülşen Mesleki ve Teknik Anadolu Lisesi / ELEKTRİK-ELEKTRONİK TEKNOLOJİSİ",
+      "scoreType": "LGS",
+      "city": "ZONGULDAK",
+      "district": "ÇAYCUMA",
+      "institutionType": "Anadolu Teknik Programı",
+      "degree": null,
+      "language": null,
+      "scholarship": null,
+      "educationType": null,
+      "field": "ELEKTRİK-ELEKTRONİK TEKNOLOJİSİ",
+      "quota": 30,
+      "placed": null,
+      "minimumScore": null,
+      "maximumScore": null,
+      "rank": null,
+      "percentile": null,
+      "externalCode": "reviewed-lgs2026:02b3abb027cb08607be8fcd203da4dee"
+    },
+    {
+      "institution": "Nuran ve Celal Gülşen Mesleki ve Teknik Anadolu Lisesi",
+      "name": "Nuran ve Celal Gülşen Mesleki ve Teknik Anadolu Lisesi / ENDÜSTRİYEL OTOMASYON TEKNOLOJİLERİ",
+      "scoreType": "LGS",
+      "city": "ZONGULDAK",
+      "district": "ÇAYCUMA",
+      "institutionType": "Anadolu Teknik Programı",
+      "degree": null,
+      "language": null,
+      "scholarship": null,
+      "educationType": null,
+      "field": "ENDÜSTRİYEL OTOMASYON TEKNOLOJİLERİ",
+      "quota": 30,
+      "placed": null,
+      "minimumScore": null,
+      "maximumScore": null,
+      "rank": null,
+      "percentile": null,
+      "externalCode": "reviewed-lgs2026:74b8c209fe5131a3e506d66412d4afc8"
+    }
+  ]
+}

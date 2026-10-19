@@ -1,0 +1,3 @@
+# Keep official evidence bytes stable across checkouts.
+*.html -text
+*.pdf -text

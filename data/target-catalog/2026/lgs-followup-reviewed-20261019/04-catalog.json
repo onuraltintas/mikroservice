@@ -1,0 +1,29 @@
+{
+  "examCode": "LGS",
+  "year": 2026,
+  "stage": "Catalog",
+  "sourceUrl": "https://mardinfenlisesi.meb.k12.tr/tema/okulumuz_hakkinda.php",
+  "documentHash": "40a3949f8024c0b6e02a2ddcc82e0352cbb27bc4cd649dce75fba49d1e62f691",
+  "rows": [
+    {
+      "institution": "Mardin Fen Lisesi",
+      "name": "Mardin Fen Lisesi / İngilizce",
+      "scoreType": "LGS",
+      "city": "MARDİN",
+      "district": "ARTUKLU",
+      "institutionType": "Fen Lisesi",
+      "degree": null,
+      "language": "İngilizce",
+      "scholarship": null,
+      "educationType": null,
+      "field": null,
+      "quota": 150,
+      "placed": null,
+      "minimumScore": null,
+      "maximumScore": null,
+      "rank": null,
+      "percentile": null,
+      "externalCode": "reviewed-lgs2026:9dec66163242edaa296cc572b3767f3e"
+    }
+  ]
+}

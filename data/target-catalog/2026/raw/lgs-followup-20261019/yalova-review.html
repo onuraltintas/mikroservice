@@ -1,0 +1,635 @@
+﻿<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="google-site-verification" content="r11a5DA71t5f0VrjgPsavHCLtY0EEGzXCokIbZWWAmQ" />
+	<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+	<meta http-equiv="X-UA-Compatible" content="ie=edge">
+	<meta name="description" content="T.C. MİLLÎ EĞİTİM BAKANLIĞI YALOVA / MERKEZ / Yalova Necmettin Erbakan Sosyal Bilimler Lisesi" />
+	<meta name="Author" content="T.C. MİLLÎ EĞİTİM BAKANLIĞI YALOVA / MERKEZ / Yalova Necmettin Erbakan Sosyal Bilimler Lisesi">
+	<meta name="copyright" content="T.C. MİLLÎ EĞİTİM BAKANLIĞI YALOVA / MERKEZ / Yalova Necmettin Erbakan Sosyal Bilimler Lisesi Copyright 2015">
+	<meta http-equiv="keywords" content="T.C. MİLLÎ EĞİTİM BAKANLIĞI YALOVA / MERKEZ / Yalova Necmettin Erbakan Sosyal Bilimler Lisesi">
+	<meta name="theme-color" content="#E72737" />
+	<meta http-equiv="cache-control" content="no-cache" />
+	<meta http-equiv="Pragma" content="no-cache" />
+	<meta http-equiv="Expires" content="-1" />
+	<meta name="robots" content="ALL" />
+	<meta name="Rating" content="General" />
+	<meta name="Distribution" content="Global " />
+	<meta name="Classification" content="Consumer" />
+	<meta name="twitter:title" content="Okulumuzu Yakından Tanıyın" />
+	<meta name="twitter:card" content="summary_large_image" />
+	<meta name="twitter:site" content="Okulumuzu Yakından Tanıyın" />
+	<meta name="twitter:creator" content="Okulumuzu Yakından Tanıyın" />
+	<meta name="twitter:description" content="Okulumuzu Yakından Tanıyın" />
+	<meta name="twitter:image" content="https://necmettinerbakansblmebk12tr.meb.k12.tr/meb_iys_dosyalar/77/01/758242/resimler/2026_06/k_e56a4b03e6c82f2fa5deccdbf9460ea2.jpg" />
+	<meta property="og:url" content="https://necmettinerbakansblmebk12tr.meb.k12.tr/icerikler/okulumuzuyakindantaniyin_17626745.html" />
+	<meta property="og:type" content="news" />
+	<meta property="og:title" content="Okulumuzu Yakından Tanıyın" />
+	<meta property="og:description" content="Okulumuzu Yakından Tanıyın" />
+	<meta property="og:image" content="https://necmettinerbakansblmebk12tr.meb.k12.tr/meb_iys_dosyalar/77/01/758242/resimler/2026_06/k_e56a4b03e6c82f2fa5deccdbf9460ea2.jpg" />
+	<link rel="icon" type="image/png" href="/tema/favicon.ico" />
+	<title>Okulumuzu Yakından Tanıyın</title>
+	<link rel="shortcut icon" href="/tema/tema/6/assets/images/meb-logo.png" type="image/png" />
+
+	<!-- Site Style -->
+	<link rel="stylesheet" href="/tema/tema/6/assets/css/component/jquery.fancybox.min.css">
+	<link rel="stylesheet" href="/tema/tema/6/assets/css/style.css">
+	<!--[if lt IE 9]>
+			<script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+			<script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
+		<![endif]-->
+	<!-- Jquery 3.3.1 -->
+	<script src="/tema/tema/6/assets/js/jquery-3.3.1.min.js"></script>
+	<!-- Bootstrap with Popover -->
+	<script src="/tema/tema/6/assets/js/bootstrap.bundle.min.js"></script>
+	<script src="/tema/tema/6/assets/js/jquery.fancybox.min.js"></script>
+	<!-- SuperFish Menu-->
+	<script src="/tema/tema/6/assets/js/hoverIntent.js"></script>
+	<script src="/tema/tema/6/assets/js/superfish.min.js"></script>
+	<script src="/tema/tema/6/assets/js/supersubs.js"></script>
+	<!-- Mobil Menu -->
+	<script src="/tema/tema/6/assets/js/jquery.mmenu.js"></script>
+	<!-- Owl Carausel -->
+	<script src="/tema/tema/6/assets/js/owl.carousel.min.js"></script>
+	<script type="text/javascript" src="/tema/tema/6/assets/js/meb_menu.js"></script>
+	<!--<script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-5bd08d7e04e01249"></script>-->
+
+	<script>
+		jQuery(document).ready(function() {
+			jQuery('ul.sf-menu').supersubs({
+				minWidth: 12, // minimum width of submenus in em units
+				maxWidth: 27, // maximum width of submenus in em units
+				extraWidth: 1 // extra width can ensure lines don't sometimes turn over
+				// due to slight rounding differences and font-family
+			}).superfish(); // call supersubs first, then superfish, so that subs are
+
+
+			$('.projeler-slider').owlCarousel({
+				loop: true,
+				margin: 20,
+				nav: false,
+				dots: false,
+				autoplay: true,
+				autoplayTimeout: 3000,
+				autoplayHoverPause: true,
+				responsive: {
+					320: {
+						items: 1
+					},
+					321: {
+						items: 2
+					},
+					600: {
+						items: 3
+					},
+					1000: {
+						items: 6
+					}
+				}
+			})
+
+			/* #Search Start */
+			$('a[href="#search"]').on('click', function(event) {
+				event.preventDefault();
+				$('#search').addClass('open');
+				$('#search > form > input[type="search"]').focus();
+			});
+
+			$('#search, #search button.close').on('click keyup', function(event) {
+				if (event.target == this || event.target.className == 'close' || event.keyCode == 27) {
+					$(this).removeClass('open');
+				}
+			});
+
+			//Do not include! This prevents the form from submitting for DEMO purposes only!
+			$('form#ara').submit(function(event) {
+				event.preventDefault();
+				return false;
+			})
+			/* #Search End */
+
+			$('.vlightbox1, .thickbox').attr("data-fancybox", "gallery").fancybox({
+				lang: 'tr',
+
+				i18n: {
+					'tr': {
+						CLOSE: "Kapat",
+						NEXT: "Sonraki",
+						PREV: "Önceki",
+						ERROR: "İstenilen içerik yüklenemedi. <br/> Lütfen daha sonra tekrar deneyin.",
+						PLAY_START: "Slideshow'u Başlat",
+						PLAY_STOP: "Slideshow'u Duraklat",
+						FULL_SCREEN: "Tam Ekran",
+						THUMBS: "Diğer Fotoğraflar",
+						DOWNLOAD: "İndir",
+						SHARE: "Paylaş",
+						ZOOM: "Yakınlaştır"
+					}
+				}
+			});
+
+		});
+	</script>
+	<!-- Google tag (gtag.js) -->
+	<!-- <script async src="https://www.googletagmanager.com/gtag/js?id="></script> -->
+	<script>
+		// window.dataLayer = window.dataLayer || [];
+
+		// function gtag() {
+		// 	dataLayer.push(arguments);
+		// }
+		// gtag('js', new Date());
+
+		// gtag('config', '');
+	</script>
+</head>
+
+<body>
+	<div id="meb">
+		<div class="header-top">
+			<div class="container">
+				<div class="row">
+					<div class="col-12">
+						<ul>
+							<li><a href="javascript:void(0)"><i class="fas fa-phone"></i> (226) 837 1593</a></li>
+							<li><a href="/tema/iletisim.php"><i class="far fa-envelope"></i> <span>İletişim</span></a></li>
+							<li><a href="#search"><i class="fas fa-search"></i> <span>Arama Yap</span></a></li>
+							<li><a href="/tema/siteharitasi.php"><i class="fas fa-sitemap"></i> <span>Site Haritası</span></a></li>
+							<li><a href="/tema/index.php"><i class="fas fa-home"></i> <span>Anasayfa</span></a></li>
+						</ul>
+					</div>
+				</div>
+			</div>
+		</div>
+		<header class="header">
+			<div class="container">
+				<div class="row">
+					<div class="col-12">
+						<a href="/tema/index.php" target="_self" class="logo">
+							<img src="/tema/tema/6/assets/images/meb-logo.png" alt="Millî Eğitim Bakanlığı" />
+							<span class="meb-baslik">YALOVA / MERKEZ</span>
+							<span class="okul-baslik">Yalova Necmettin Erbakan Sosyal Bilimler Lisesi</span>
+						</a>
+						<a href="#" target="_blank" class="ataturk-kosesi">
+							<img src="/tema/tema/6/assets/images/ataturk.png" alt="Atatürk Köşesi" />
+						</a>
+					</div>
+				</div>
+			</div>
+		</header>
+		<nav class="site-menu">
+			<div class="container">
+				<ul class="sf-menu d-none d-xl-block" id="top-menu"></ul>
+				<a href="#mobile-menu" class="d-xl-none menu-buton"><i class="fas fa-bars"></i></a>
+			</div>
+		</nav>
+		<div id="search">
+			<button type="button" class="close">X</button>
+			<form action="https://www.google.com/custom" method="get" name="form1" target="google_window">
+				<input type="search" id="araTextBox" name="q" placeholder="Arama yapmak için kelime giriniz" />
+				<input type="hidden" name="sitesearch" value="https://necmettinerbakansblmebk12tr.meb.k12.tr" />
+				<input type="hidden" name="client" value="pub-" />
+				<input type="hidden" name="forid" value="1" />
+				<input type="hidden" name="ie" value="ISO-8859-9" />
+				<input type="hidden" name="oe" value="ISO-8859-9" />
+				<input type="hidden" name="domains" value="https://necmettinerbakansblmebk12tr.meb.k12.tr" />
+				<input type="hidden" name="hl" value="tr" />
+				<button type="submit" class="btn btn-danger">Ara</button>
+			</form>
+		</div><div class="ic-sayfa">
+	<div class="container">
+				<div class="row">
+			<div class="col-xl-9 icerik">
+				<nav aria-label="breadcrumb" class="bc">
+					<ol class="breadcrumb">
+						<li class="breadcrumb-item"><a href="/tema/index.php">Anasayfa</a></li>
+						<li class="breadcrumb-item"><a href="icerikler/listele_1045247_Duyurular">Duyurular</a></li>
+					</ol>
+				</nav>
+				<div class="icerik-yazi">
+																		<img src="/meb_iys_dosyalar/77/01/758242/resimler/2026_06/k_e56a4b03e6c82f2fa5deccdbf9460ea2.jpg" alt="Okulumuzu Yakından Tanıyın" class="rounded mx-auto d-block img-fluid"><br>
+																<h1 class="baslik">Okulumuzu Yakından Tanıyın</h1>
+											<p>
+							<p class="MsoNormal" style="margin-left:57.6pt;"><strong><span style="font-size:12pt;color:#ff0000;">SOSYAL BİLİMLER LİSESİNİ KİMLER TERCİH ETMELİDİR?</span></strong><strong></strong></p>
+<p class="MsoNormal"><span style="font-size:12pt;color:#000000;">Sevgili Öğrenciler, nihayet ortaokuldan mezun oldunuz ve hemen ardından yıllarca uğruna emek verdiğiniz LGS’ye girdiniz.Şimdi ise LGS sonucu almış bulunduğunuz sınav puanı ve yüzdelik dilimine göre hangi okulu seçmeniz gerektiğini düşünüyorsunuz. Bu nedenle bizler sizlere bir nebze de olsa tercihleriniz hakkında ışık tutması yönünde bilgilendirmek istiyoruz. Şimdiden eğitim hayatınızda başarılar dileriz<strong>.</strong></span></p>
+<p class="MsoNormal"><span style="font-size:12pt;color:#000000;">Bakanlığımız, sosyal alanda iyi yetişmiş, kültür alanına zenginlik ve ufuk kazandıracak bireyleri yetiştirmek amacıyla Türkiye´de ilk kez, 2003 -2004 eğitim-öğretim sezonunda İstanbul´da sosyal bilimler lisesini açmıştır. Daha sonra değişik illerde de sosyal bilimlerliseleri açılmıştır. Sosyal bilimler lisesinin kuruluş amacı <strong><span style="text-decoration:underline;">sözel alanlarda başarılı</span></strong>,´´<strong><span style="text-decoration:underline;">sosyalzekâsı yüksek</span></strong>´´ öğrencilerin eğitim-öğretim görmesidir. Yanlış bir algıya düşülmemelidir. <strong>Okulun ders programı Türkçe / matematik/sosyal ve dilağırlıklıdır</strong>. Öğrencilerimiz hukuk,siyasalbilgiler,uluslararası ilişkiler,yönetim bilimleri,kamuyönetimi gibi daha birçok alanda yüksek öğretimlerini devam ettirebilir ve ülkenin gelecekteki yönetici kadrosu içerisinde pekala yeralabilirler.</span></p>
+<p class="MsoNormal"><span style="font-size:12pt;color:#000000;">Tüm öğrenci ve velilerimize sağlıklı, mutlu ve başarılı bir tercih dönemi diliyoruz.</span></p>						</p>
+										<div class="ara-bar">
+						<div class="addthis_inline_share_toolbox"></div>
+						<span class="icerik-begen " data-category="like_count17626745" onClick="cwRating(17626745,1,'like_count17626745')"><i class="far fa-thumbs-up"></i> <i class="like-count">0</i> </span>
+						<span class="icerik-tarihi"><i class="far fa-calendar-alt"></i> 10.07.2026 </span>
+						<span class="icerik-saati"><i class="far fa-eye"></i> 629</span>
+					</div>
+					<p>
+						<h1 style="margin-top:1.65pt;text-align:center;color:#ff0000;"><span style="color:#ff0000;"><strong><span style="font-size:16pt;">2025 -2026 E</span></strong><strong><span style="font-size:16pt;">Ğİ</span></strong><strong><span style="font-size:16pt;">T</span></strong><strong><span style="font-size:16pt;">İ</span></strong><strong><span style="font-size:16pt;">M </span></strong><strong><span style="font-size:16pt;">ÖĞ</span></strong><strong><span style="font-size:16pt;">RET</span></strong><strong><span style="font-size:16pt;">İ</span></strong><strong><span style="font-size:16pt;">M YILI YALOVA NECMETT</span></strong><strong><span style="font-size:16pt;">İ</span></strong><strong><span style="font-size:16pt;">N ERBAKAN SOSYAL B</span></strong><strong><span style="font-size:16pt;">İ</span></strong><strong><span style="font-size:16pt;">L</span></strong><strong><span style="font-size:16pt;">İ</span></strong><strong><span style="font-size:16pt;">MLER L</span></strong><strong><span style="font-size:16pt;">İ</span></strong><strong><span style="font-size:16pt;">SES</span></strong><strong><span style="font-size:16pt;">İ</span></strong><strong><span style="font-size:16pt;"> HAKKINDA B</span></strong><strong><span style="font-size:16pt;">İ</span></strong><strong><span style="font-size:16pt;">L</span></strong><strong><span style="font-size:16pt;">İ</span></strong><strong><span style="font-size:16pt;">NMES</span></strong><strong><span style="font-size:16pt;">İ</span></strong><strong><span style="font-size:16pt;"> GEREKENLER</span></strong></span></h1>
+<h1 style="margin-top:1.65pt;color:#ff0000;"><span style="font-size:10pt;color:#ff0000;"> </span></h1>
+<table style="margin-left:55.5pt;border-collapse:collapse;border:none;" border="1" cellspacing="0" cellpadding="0">
+<tbody>
+<tr style="height:16pt;">
+<td style="width:129.9pt;border:solid #DDDDDD 1pt;background:#F2F2F2;padding:0cm 0cm 0cm 0cm;height:16pt;" valign="top">
+<p class="TableParagraph" style="margin-top:0.95pt;"><strong><span style="font-size:12pt;color:#444444;">Kontenjan<span>Sayısı</span></span></strong><strong></strong></p>
+</td>
+<td style="width:105.9pt;background:#F2F2F2;padding:0cm 0cm 0cm 0cm;height:16pt;" valign="top">
+<p class="TableParagraph" style="margin-top:0.95pt;margin-right:0cm;margin-bottom:0.0001pt;margin-left:1.75pt;"><strong><span style="font-size:12pt;color:#ff0000;">90</span></strong><strong></strong></p>
+</td>
+</tr>
+<tr style="height:16.25pt;">
+<td style="width:129.9pt;border:solid #DDDDDD 1pt;background:#FAFAFA;padding:0cm 0cm 0cm 0cm;height:16.25pt;" valign="top">
+<p class="TableParagraph" style="margin-top:0.45pt;"><strong><span style="font-size:12pt;color:#444444;">Kontenjan</span></strong><strong><span style="font-size:12pt;color:#444444;">Türü</span></strong><strong></strong></p>
+</td>
+<td style="width:105.9pt;background:#FAFAFA;padding:0cm 0cm 0cm 0cm;height:16.25pt;" valign="top">
+<p class="TableParagraph" style="margin-top:0.45pt;margin-right:0cm;margin-bottom:0.0001pt;margin-left:1.75pt;"><strong><span style="font-size:12pt;color:#0000ff;">Kız/Erkek</span></strong><strong></strong></p>
+</td>
+</tr>
+<tr style="height:16.25pt;">
+<td style="width:129.9pt;background:#F2F2F2;padding:0cm 0cm 0cm 0cm;height:16.25pt;" valign="top">
+<p class="TableParagraph" style="margin-top:1.2pt;"><strong><span style="font-size:12pt;color:#444444;">Pansiyon</span></strong><strong></strong></p>
+</td>
+<td style="width:105.9pt;background:#F2F2F2;padding:0cm 0cm 0cm 0cm;height:16.25pt;" valign="top">
+<p class="TableParagraph" style="margin-top:1.2pt;margin-right:0cm;margin-bottom:0.0001pt;margin-left:1.75pt;"><strong><span style="font-size:12pt;color:#0000ff;">Kız/Erkek</span></strong><strong></strong></p>
+</td>
+</tr>
+<tr style="height:16.25pt;">
+<td style="width:129.9pt;border:solid #DDDDDD 1pt;background:#FAFAFA;padding:0cm 0cm 0cm 0cm;height:16.25pt;" valign="top">
+<p class="TableParagraph" style="margin-top:0.2pt;"><strong><span style="font-size:12pt;color:#444444;">Eğitim<span>Süresi</span></span></strong><strong></strong></p>
+</td>
+<td style="width:105.9pt;background:#FAFAFA;padding:0cm 0cm 0cm 0cm;height:16.25pt;" valign="top">
+<p class="TableParagraph" style="margin-top:0.2pt;margin-right:0cm;margin-bottom:0.0001pt;margin-left:1.75pt;"><strong><span style="font-size:12pt;color:#0000ff;">4<span>Yıl</span></span></strong><strong></strong></p>
+</td>
+</tr>
+<tr style="height:15.3pt;">
+<td style="width:129.9pt;border:solid #DDDDDD 1pt;background:#F2F2F2;padding:0cm 0cm 0cm 0cm;height:15.3pt;" valign="top">
+<p class="TableParagraph" style="margin-top:0.95pt;line-height:13.35pt;"><strong><span style="font-size:12pt;color:#444444;">Birinci</span></strong><strong><span style="font-size:12pt;color:#444444;">Yabancı<span>Dil</span></span></strong><strong></strong></p>
+</td>
+<td style="width:105.9pt;background:#F2F2F2;padding:0cm 0cm 0cm 0cm;height:15.3pt;" valign="top">
+<p class="TableParagraph" style="margin-top:0.95pt;margin-right:0cm;margin-bottom:0.0001pt;margin-left:1.75pt;line-height:13.35pt;"><strong><span style="font-size:12pt;color:#0000ff;">İngilizce</span></strong><strong></strong></p>
+</td>
+</tr>
+<tr style="height:16.2pt;">
+<td style="width:129.9pt;background:#F2F2F2;padding:0cm 0cm 0cm 0cm;height:16.2pt;" valign="top">
+<p class="TableParagraph" style="margin-top:1.15pt;"><strong><span style="font-size:12pt;color:#444444;">İkinciYabancı<span>Dili</span></span></strong><strong></strong></p>
+</td>
+<td style="width:105.9pt;background:#F2F2F2;padding:0cm 0cm 0cm 0cm;height:16.2pt;" valign="top">
+<p class="TableParagraph" style="margin-top:1.15pt;margin-right:0cm;margin-bottom:0.0001pt;margin-left:1.75pt;"><strong><span style="font-size:12pt;color:#0000ff;">Almanca</span></strong><strong></strong></p>
+</td>
+</tr>
+<tr style="height:14.75pt;">
+<td style="width:129.9pt;border:solid #DDDDDD 1pt;background:#FAFAFA;padding:0cm 0cm 0cm 0cm;height:14.75pt;" valign="top">
+<p class="TableParagraph" style="margin-top:0.2pt;line-height:13.6pt;"><strong><span style="font-size:12pt;color:#444444;">Proje</span></strong><strong><span style="font-size:12pt;color:#444444;">Okulu</span></strong><strong><span style="font-size:12pt;color:#444444;">mu?</span></strong><strong></strong></p>
+</td>
+<td style="width:105.9pt;background:#FAFAFA;padding:0cm 0cm 0cm 0cm;height:14.75pt;" valign="top">
+<p class="TableParagraph" style="margin-top:0.2pt;margin-right:0cm;margin-bottom:0.0001pt;margin-left:1.75pt;line-height:13.6pt;"><strong><span style="font-size:12pt;color:#ff0000;">Hayır</span></strong><strong></strong></p>
+</td>
+</tr>
+<tr style="height:16.7pt;">
+<td style="width:129.9pt;border:solid #DDDDDD 1pt;background:#F2F2F2;padding:0cm 0cm 0cm 0cm;height:16.7pt;" valign="top">
+<p class="TableParagraph" style="margin-top:0.9pt;"><strong><span style="font-size:12pt;color:#444444;">Devlet</span></strong><strong><span style="font-size:12pt;color:#444444;">Okulu</span></strong><strong><span style="font-size:12pt;color:#444444;">mu?</span></strong><strong></strong></p>
+</td>
+<td style="width:105.9pt;background:#F2F2F2;padding:0cm 0cm 0cm 0cm;height:16.7pt;" valign="top">
+<p class="TableParagraph" style="margin-top:0.9pt;margin-right:0cm;margin-bottom:0.0001pt;margin-left:1.75pt;"><strong><span style="font-size:12pt;color:#ff0000;">Evet</span></strong><strong></strong></p>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="MsoBodyText" style="margin-top:2.1pt;"> </p>
+<p class="MsoBodyText"><span style="font-size:10pt;"> </span><span style="text-align:justify;font-size:12pt;">Okulumuz </span><span style="text-align:justify;font-size:12pt;"> 2026-2027 eğitim öğretim yılında 2026 LGS başvuru kılavuzuna göre <strong>Merkezi Sınav Puanı</strong>ile</span><span style="text-align:justify;font-size:12pt;">öğrenci alacaktır.</span><strong><span style="font-size:12pt;">Okulumuzu </span></strong><span style="text-align:justify;font-size:12pt;">tercih edebilmeniz için Milli Eğitim Bakanlığının her yılyapacağı <strong>8.</strong></span><strong><span style="font-size:12pt;">Sınıf LGS Sınavı</span></strong><span style="text-align:justify;font-size:12pt;">na girmeniz gerekiyor. Aşağıdaki tabloda <strong>okulumuzun </strong></span><span style="text-align:justify;font-size:12pt;">son üçyıllık taban puanını ve yüzdelik dilimini inceleyebilirsiniz.</span></p>
+<p class="MsoNormal" style="margin-top:0.1pt;margin-right:0.15pt;margin-bottom:0.0001pt;margin-left:-0.05pt;text-align:justify;"> </p>
+<p class="MsoBodyText" style="margin-top:6.25pt;"><span style="font-size:10pt;"> </span></p>
+<table style="margin-left:55.8pt;border-collapse:collapse;border:none;" border="1" cellspacing="0" cellpadding="0">
+<tbody>
+<tr style="height:53.7pt;">
+<td style="width:288.05pt;border:solid #FAFAFA 1.5pt;background:#FFDE65;padding:0cm 0cm 0cm 0cm;height:53.7pt;" colspan="2" valign="top">
+<p class="TableParagraph" style="margin-top:5.6pt;margin-right:0cm;margin-bottom:0.0001pt;margin-left:0cm;"><span style="font-size:12pt;"> </span></p>
+<p class="TableParagraph" style="margin-top:0cm;margin-right:0cm;margin-bottom:0.0001pt;margin-left:9.4pt;"><strong><span style="font-size:12pt;color:#444444;">SON </span></strong><strong><span style="font-size:12pt;color:#444444;">ÜÇ </span></strong><strong><span style="font-size:12pt;color:#444444;">YILLIK </span></strong><strong><span style="font-size:12pt;color:#444444;">PUAN </span></strong><strong><span style="font-size:12pt;color:#444444;">VE YÜZDELİK DİLİMİ <span>BİLGİSİ</span></span></strong><strong></strong></p>
+</td>
+<td style="width:53pt;background:#FFDE65;padding:0cm 0cm 0cm 0cm;height:53.7pt;" valign="top">
+<p class="TableParagraph" style="margin-top:5.6pt;margin-right:0cm;margin-bottom:0.0001pt;margin-left:0cm;"><span style="font-size:12pt;"> </span></p>
+<p class="TableParagraph" style="margin-top:0cm;margin-right:0cm;margin-bottom:0.0001pt;margin-left:9.35pt;"><strong><span style="font-size:12pt;color:#444444;">Taban</span></strong><strong></strong></p>
+<p class="TableParagraph" style="margin-top:0cm;margin-right:0cm;margin-bottom:0.0001pt;margin-left:11.05pt;"><strong><span style="font-size:12pt;color:#444444;">Puanı</span></strong><strong></strong></p>
+</td>
+<td style="width:52.95pt;border:solid #FAFAFA 1.5pt;background:#FFDE65;padding:0cm 0cm 0cm 0cm;height:53.7pt;" valign="top">
+<p class="TableParagraph" style="margin-top:5.6pt;margin-right:0cm;margin-bottom:0.0001pt;margin-left:0cm;"><span style="font-size:12pt;"> </span></p>
+<p class="TableParagraph" style="margin-top:0cm;margin-right:0cm;margin-bottom:0.0001pt;margin-left:9.8pt;"><strong><span style="font-size:12pt;color:#444444;">Yüzdelik</span></strong><strong><span style="font-size:12pt;color:#444444;">Dilimi</span></strong><strong></strong></p>
+</td>
+</tr>
+<tr style="height:26.1pt;">
+<td style="width:29.8pt;padding:0cm 0cm 0cm 0cm;height:26.1pt;" valign="top">
+<p class="TableParagraph" style="margin-left:1.35pt;text-align:center;"><span style="font-size:12pt;color:#444444;">2026</span></p>
+</td>
+<td style="width:258.25pt;padding:0cm 0cm 0cm 0cm;height:26.1pt;" valign="top">
+<p class="TableParagraph" style="margin-left:1.95pt;"><strong><span style="font-size:12pt;color:#326598;">Yalova Necmettin Erbakan <span> </span>Sosyal Bilimler Lisesi Taban <span>Puanı</span></span></strong><strong></strong></p>
+</td>
+<td style="width:53pt;padding:0cm 0cm 0cm 0cm;height:26.1pt;" valign="top">
+<p class="TableParagraph" style="margin-left:2.3pt;text-align:center;"><span style="font-size:12pt;color:#444444;">?</span></p>
+</td>
+<td style="width:52.95pt;padding:0cm 0cm 0cm 0cm;height:26.1pt;" valign="top">
+<p class="TableParagraph" style="margin-left:0.75pt;text-align:center;"><span style="font-size:12pt;color:#444444;">?</span></p>
+</td>
+</tr>
+<tr style="height:25.1pt;">
+<td style="width:29.8pt;background:#EBF4FE;padding:0cm 0cm 0cm 0cm;height:25.1pt;" valign="top">
+<p class="TableParagraph" style="margin-left:1.35pt;text-align:center;"><span style="font-size:12pt;color:#444444;">2025</span></p>
+</td>
+<td style="width:258.25pt;background:#EBF4FE;padding:0cm 0cm 0cm 0cm;height:25.1pt;" valign="top">
+<p class="TableParagraph" style="margin-left:1.95pt;"><strong><span style="font-size:12pt;color:#326598;">Yalova Necmettin Erbakan <span> </span>Sosyal Bilimler Lisesi Taban <span>Puanı</span></span></strong><strong></strong></p>
+</td>
+<td style="width:53pt;background:#EBF4FE;padding:0cm 0cm 0cm 0cm;height:25.1pt;" valign="top">
+<p class="TableParagraph" style="margin-left:2pt;text-align:center;"><span style="font-size:12pt;color:#444444;">337,419</span></p>
+</td>
+<td style="width:52.95pt;background:#EBF4FE;padding:0cm 0cm 0cm 0cm;height:25.1pt;" valign="top">
+<p class="TableParagraph" style="margin-top:5.5pt;margin-right:0.25pt;margin-bottom:0.0001pt;margin-left:0.75pt;text-align:center;"><span style="font-size:12pt;color:#444444;">19.79</span></p>
+</td>
+</tr>
+<tr style="height:27.3pt;">
+<td style="width:394pt;border:none;background:#FAFAFA;padding:0cm 0cm 0cm 0cm;height:27.3pt;" colspan="4" valign="top">
+<p class="TableParagraph" style="margin-top:6.25pt;margin-right:0cm;margin-bottom:0.0001pt;margin-left:3.1pt;"><span style="font-size:12pt;color:#444444;">2024</span><strong><span style="font-size:12pt;color:#326598;"> Yalova Necmettin Erbakan <span> </span>Sosyal</span></strong></p>
+<p class="TableParagraph" style="margin-top:6.25pt;margin-right:0cm;margin-bottom:0.0001pt;margin-left:3.1pt;"><strong><span style="font-size:12pt;color:#326598;">         Bilimler</span></strong><strong><span style="font-size:12pt;color:#326598;"> Lisesi Taban<span>Puanı</span>                   </span></strong><span style="font-size:12pt;color:#326598;"><span style="color:#000000;">366,808</span></span><strong><span style="font-size:12pt;color:#326598;">  </span></strong><span style="font-size:12pt;color:#326598;"><span style="color:#000000;">     20.49 </span></span><strong><span style="font-size:12pt;color:#326598;">                                                                       </span></strong><span style="font-size:12pt;color:#444444;"> </span></p>
+</td>
+</tr>
+<tr style="height:25.35pt;">
+<td style="width:29.8pt;border-color:#FAFAFA;border-style:solid;background:#EBF4FE;padding:0cm 0cm 0cm 0cm;height:25.35pt;" valign="top">
+<p class="TableParagraph" style="margin-top:4.75pt;margin-right:0cm;margin-bottom:0.0001pt;margin-left:1.35pt;text-align:center;"><span style="font-size:12pt;color:#444444;">2023</span></p>
+</td>
+<td style="width:258.25pt;border:solid #FAFAFA 1.5pt;background:#EBF4FE;padding:0cm 0cm 0cm 0cm;height:25.35pt;" valign="top">
+<p class="TableParagraph" style="margin-top:4.75pt;margin-right:0cm;margin-bottom:0.0001pt;margin-left:1.95pt;"><strong><span style="font-size:12pt;color:#326598;">Yalova Necmettin Erbakan <span> </span>Sosyal Bilimler Lisesi Taban <span>Puanı   </span></span></strong><strong></strong></p>
+</td>
+<td style="width:53pt;background:#EBF4FE;padding:0cm 0cm 0cm 0cm;height:25.35pt;" valign="top">
+<p class="TableParagraph" style="margin-top:4.75pt;margin-right:0cm;margin-bottom:0.0001pt;margin-left:2pt;text-align:center;"><span style="font-size:12pt;color:#444444;">373,384</span></p>
+</td>
+<td style="width:52.95pt;border:solid #FAFAFA 1.5pt;background:#EBF4FE;padding:0cm 0cm 0cm 0cm;height:25.35pt;" valign="top">
+<p class="TableParagraph" style="margin-top:4.75pt;margin-right:0.25pt;margin-bottom:0.0001pt;margin-left:0.75pt;text-align:center;"><span style="font-size:12pt;color:#444444;">15.77</span></p>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="MsoBodyText" style="margin-top:6.25pt;"> </p>
+<div class="WordSection1">
+<h5><span style="color:#ff0000;">                     </span><span style="color:#ff0000;font-size:2em;text-align:justify;"> Sosyal Bilimler Liseleri </span><span style="color:#ff0000;font-size:2em;text-align:justify;">Nedir?</span></h5>
+<p class="MsoBodyText" style="margin-top:0.45pt;margin-right:64pt;margin-bottom:0.0001pt;text-align:justify;">                       </p>
+<p class="MsoBodyText" style="margin-top:0.45pt;margin-right:64pt;margin-bottom:0.0001pt;text-align:justify;">                       Sosyal bilimler lisesinde tüm sınıflarda haftalık 40saat ders vardır. Sınıf mevcutlarının 30 olması esastır.</p>
+<p class="MsoBodyText" style="margin-right:63.65pt;text-align:justify;margin-left:60px;">Okulumuz ilköğretimde Tarihe, Türkçeye, Yabancı dile ve dilsel zekaya yatkın öğrencilere önerebileceğimiz bir lise türüdür. Sosyal bilimler liseleri edebiyat, sosyal bilimler ve yabancı dil alanında yetkin bireyleri yetiştirmeyi hedeflemekte ve bu bireylerin yeteneklerini daha üst noktalara taşımayı amaçlamaktadır. Bu liselerden mezun öğrenciler hukuk,edebiyat,felsefegibisosyalvedilselzekagerektirenüniversitelerderahatlıkla başarılı olabilirler aynı zamanda yüksek puan gerektiren gözde üniversiteleri kazanma şansları da <span>yüksektir.</span></p>
+<p class="MsoBodyText" style="margin-right:63.7pt;text-align:justify;margin-left:60px;">Bu liseye gidecek öğrencilerin sosyal bilimleri ve edebiyatı sevmesi, bu alanlarda başarılı olması, konuşmayı sevmesi, üretken olması, güzel ve etkili konuşabilmesi olmazsa olmaz özellikler arasındadır. Çünkü alanın gerektirdiği mesleklerdetopluluk içinde etkili ve güzel konuşma, iletişim yeteneği esastır. Dilsel ve sosyal zeka gerektiren mesleklerde başarılı olma yüzdeleri büyüktür.</p>
+<div class="WordSection1" style="margin-left:60px;">
+<div style="margin-left:60px;"><span><br /></span></div>
+</div>
+</div>
+<h1 style="margin-top:2.95pt;margin-right:168.5pt;margin-bottom:0.0001pt;margin-left:56.65pt;"><span style="color:#ff0000;">11.sınıfa geçtiğimde Alan/Dal Tercihi yapabiliyor muyum ?</span></h1>
+<p class="MsoBodyText" style="margin-top:7.9pt;margin-right:63.35pt;margin-bottom:0.0001pt;margin-left:56.65pt;text-align:justify;">Bilindiği üzere tüm okullarda 9. ve10. sınıf öğretim programları <span>ve ders çizelgeleri </span>ortak<span>tır</span>.Ancak,<span>okulumuzda10</span>.sınıftansonra sayısalalanageçmek,sözelalanageçmek<span> yada dil alanına geçmek</span>gibi<span> bir </span>seçeneğiniz <span>bulunmamaktadır</span>. Siz tüm arkadaşlarınızla beraber TalimTerbiyeKurulununSBL´leriçin oluşturdu<span>ğu ortak ders çizelgesini takip </span>ederek öğretim hayatınızı tamamlıyorsunuz. Kısaca<span>sı“</span>buokullarda genel  liselerin <strong>TM</strong><span> <strong>ve Sözel </strong></span>alanına yakın birprogramuygulan<span>maktadır” diyebiliriz</span>. O yüzdendir ki, SBL mezunları genellikle hukuk, uluslararası ilişkiler, psikoloji,siyaset bilimi,kamu yönetimigibi tercihlerdebulun<span>maktadırlar</span>.</p>
+<p class="MsoNormal" style="margin-top:14.25pt;margin-right:0cm;margin-bottom:0.0001pt;margin-left:56.65pt;"><strong><span style="font-size:20pt;color:#ff0000;">Matematikdersi var mı?</span></strong></p>
+<p class="MsoBodyText" style="margin-top:7.9pt;margin-right:63.55pt;margin-bottom:0.0001pt;margin-left:56.65pt;text-align:justify;">Sosyal Bilimler Liselerinde matematiğin ne kadar önemli olduğunu sonradan öğrenenler olabiliyor. Hukuk, uluslararası ilişkiler, kamu yönetimi gibi bölümlere eşit ağırlıkla öğrencialındığından hareketle, bu liselerde matematiğinönemli birders olduğunu kestirmekgerekiyor. <span>Okulumuzda </span>anitibariyleher sınıfta yoğun bir şekilde Matematik dersi var<span>dır</span>. Sosyal Bilimler Liselerinde sözel sınıf yok<span>tur</span>.</p>
+<h1 style="margin-top:14.2pt;margin-right:168.5pt;margin-bottom:0.0001pt;margin-left:56.65pt;line-height:132%;"><span style="color:#ff0000;">Ben İngilizceyi çok seviyorum. Okulunuzda Dil Sınıfı var mı?</span></h1>
+<p class="MsoBodyText" style="margin-top:14.1pt;margin-right:63.65pt;margin-bottom:0.0001pt;margin-left:56.65pt;text-align:justify;">Haftalık ders çizelgeleri seçmeli yabancı dil dersi koymaya ve dil sınıfı açmaya elverişli olmadığı için dil bölümü seçimine ilişkin şimdilik birdüzenlemeyoktur.Seçmeli ders hakkı Sosyal Bilimler Liselerinin haftalık ders çizelgeleri doğrultusunda sadece 9.sınıfta vardır. Üniversitede yabancı dil tercihi yapacak öğrencilerimizin 11.sınıftan itibaren alan bölüm seçme haklarına sahip olmadıkları için bu hususu göz önünde bulundurmalarında faydavardır. Ancak, 11.sınıfa gelindiğinde arzu eden öğrencilerimiz Destekleme ve Yetiştirme Kursları ile bu açıklarını gidermiş olabileceklerdir.</p>
+<p class="MsoBodyText" style="margin-top:0.05pt;"> </p>
+<p class="MsoNormal" style="margin-top:0cm;margin-right:59.95pt;margin-bottom:0.0001pt;margin-left:56.65pt;"><strong><span style="font-size:20pt;color:#ff0000;">Sosyal </span></strong><strong><span style="font-size:20pt;color:#ff0000;">projeler,</span></strong><strong><span style="font-size:20pt;color:#ff0000;">Sempozyumlar,</span></strong><strong><span style="font-size:20pt;color:#ff0000;">Paneller,</span></strong><strong><span style="font-size:20pt;color:#ff0000;">Çalıştaylar,</span></strong><strong><span style="font-size:20pt;color:#ff0000;">şiir dinletileri, müzik dinletileri Var mı?</span></strong></p>
+<p class="MsoBodyText" style="margin-top:14.75pt;margin-right:63.75pt;margin-bottom:0.0001pt;margin-left:56.65pt;text-align:justify;">Okulumuzda öğrencilerimizin akademik, sosyal, kültürel ve kişisel gelişimlerini desteklemek amacıyla yıl boyunca çeşitli sempozyumlar, konferanslar, söyleşiler, bilgi yarışmaları, münazaralar, tiyatro gösterileri, müzik dinletileri, sergiler, sportif turnuvalar, bilimsel ve kültürel proje çalışmaları, gezi ve gözlem etkinlikleri ile sosyal sorumluluk faaliyetleri düzenlenmektedir. Ayrıca öğrencilerimiz il ve ilçe düzeyinde gerçekleştirilen akademik, kültürel, sanatsal ve sportif yarışmalara aktif olarak katılmakta ve önemli başarılar elde etmektedir. Üniversiteler, kamu kurumları ve sivil toplum kuruluşlarıyla iş birliği içerisinde gerçekleştirilen etkinliklerle öğrencilerimizin akademik ve kariyer gelişimleri desteklenmektedir.Etkinliklerimizden bazıları şunlardır:</p>
+<ul>
+<li style="margin:0cm 63.75pt 0.0001pt 97px;text-align:justify;">Cemil Meriç Edebiyat Bilgi Yarışması</li>
+<li style="margin:0cm 63.75pt 0.0001pt 97px;text-align:justify;"><span><span><span> </span></span></span>İngilizce Münazara Turnuvası</li>
+<li style="margin:0cm 63.75pt 0.0001pt 97px;text-align:justify;"><span><span><span>  </span></span></span>Yalova Üniversitesi iş birliğiyle gerçekleştirilen konferans ve sempozyumlar</li>
+<li style="margin:0cm 63.75pt 0.0001pt 97px;text-align:justify;"><span><span><span>  </span></span></span>Pi Günü etkinlikleri</li>
+<li style="margin:0cm 63.75pt 0.0001pt 97px;text-align:justify;"><span><span><span> </span></span></span>TÜBİTAK ve proje çalışmaları</li>
+<li style="margin:0cm 63.75pt 0.0001pt 97px;text-align:justify;"><span><span><span> </span></span></span>Tiyatro yarışmaları ve derece başarıları</li>
+<li style="margin:0cm 63.75pt 0.0001pt 97px;text-align:justify;"><span><span><span>  </span></span></span>Müzik dinletileri ve şiir etkinlikleri</li>
+<li style="margin:0cm 63.75pt 0.0001pt 97px;text-align:justify;"><span><span><span>  </span></span></span>Sıfır Atık ve çevre projeleri</li>
+<li style="margin:0cm 63.75pt 0.0001pt 97px;text-align:justify;"><span><span><span> </span></span></span>Kültürel geziler</li>
+<li style="margin:0cm 63.75pt 0.0001pt 97px;text-align:justify;">  Çağdaş meddahlar</li>
+<li style="margin:0cm 63.75pt 0.0001pt 97px;text-align:justify;"><span><span><span>  </span></span></span>Masa tenisi, futsal ve basketbol turnuvaları</li>
+<li style="margin:0cm 63.75pt 0.0001pt 97px;text-align:justify;"><span><span><span>  </span></span></span>Resim sergileri</li>
+</ul>
+<p class="MsoBodyText" style="margin-top:14.75pt;margin-right:63.75pt;margin-bottom:0.0001pt;margin-left:56.65pt;">Okulumuzun web sitesinden haber arşivimizi ve bültenimizi incelediğinizde başarılarımızı görmeniz mümkündür</p>
+<p class="MsoBodyText" style="margin-top:14.75pt;margin-right:63.75pt;margin-bottom:0.0001pt;margin-left:2cm;"><strong><span style="font-size:14pt;"><span>                 </span><span style="color:#ff0000;">Üniversite Yerleştirme Başarısı</span></span></strong></p>
+<p class="MsoBodyText" style="margin-top:14.75pt;margin-right:63.75pt;margin-bottom:0.0001pt;margin-left:2cm;text-align:justify;"><span> </span>Necmettin Erbakan Sosyal Bilimler Lisesi, öğrencilerini akademik başarıya ve yükseköğretime en iyi şekilde hazırlamayı hedeflemektedir. Okulumuzdan mezun olan öğrencilerimiz; başta Boğaziçi, Orta Doğu Teknik, İstanbul, Marmara, Ankara, Hacettepe, Bursa Uludağ, Dokuz Eylül , Kocaeli ve Yalova Üniversiteleri olmak üzere Türkiye'nin köklü ve saygın yükseköğretim kurumlarında eğitim hayatlarına başarıyla devam etmektedir. Hukuk, Psikoloji, PDR, Sosyoloji, Uluslararası İlişkiler, Siyaset Bilimi ve Kamu Yönetimi, Türk Dili ve Edebiyatı  ve benzeri birçok bölümde öğrenim gören mezunlarımız, elde ettikleri başarılarla okulumuzu gururla temsil etmektedir. Akademik takip sistemi, rehberlik hizmetleri ve YKS hazırlık çalışmaları sayesinde öğrencilerimizin üniversiteye yerleşme başarıları her yıl artarak devam etmektedir</p>
+<p class="MsoBodyText" style="margin-top:14.75pt;margin-right:63.75pt;margin-bottom:0.0001pt;margin-left:2cm;text-align:justify;"><strong><span style="font-size:16pt;"><span>             </span><span style="color:#ff0000;">Neden Necmettin Erbakan Sosyal Bilimler Lisesi?</span></span></strong></p>
+<p class="MsoBodyText" style="margin-top:14.75pt;margin-right:63.75pt;margin-bottom:0.0001pt;margin-left:36pt;text-align:justify;"><span>✔</span>Yalova'nın tek Sosyal Bilimler Lisesi</p>
+<p class="MsoBodyText" style="margin-top:14.75pt;margin-right:63.75pt;margin-bottom:0.0001pt;margin-left:36pt;text-align:justify;"><span>✔</span> Güçlü akademik kadro</p>
+<p class="MsoBodyText" style="margin-top:14.75pt;margin-right:63.75pt;margin-bottom:0.0001pt;margin-left:36pt;text-align:justify;"><span>✔</span> Üniversiteye yerleştirmede yüksek başarı</p>
+<p class="MsoBodyText" style="margin-top:14.75pt;margin-right:63.75pt;margin-bottom:0.0001pt;margin-left:36pt;text-align:justify;"><span>✔</span>200 kişilik kız ve erkek pansiyonu</p>
+<p class="MsoBodyText" style="margin-top:14.75pt;margin-right:63.75pt;margin-bottom:0.0001pt;margin-left:36pt;text-align:justify;"><span>✔</span>Zengin sosyal, kültürel ve sportif etkinlikler</p>
+<p class="MsoBodyText" style="margin-top:14.75pt;margin-right:63.75pt;margin-bottom:0.0001pt;margin-left:36pt;text-align:justify;"><span>✔</span> Üniversitelerle iş birlikleri ve akademik çalışmalar</p>
+<p class="MsoBodyText" style="margin-top:14.75pt;margin-right:63.75pt;margin-bottom:0.0001pt;margin-left:36pt;text-align:justify;"><span>✔</span> Güvenli, huzurlu ve öğrenci odaklı eğitim ortamı</p>
+<p class="MsoBodyText" style="margin-top:14.75pt;margin-right:63.75pt;margin-bottom:0.0001pt;margin-left:36pt;text-align:justify;"><span>✔</span>Bireysel rehberlik ve kariyer planlama desteği</p>
+<p class="MsoBodyText" style="margin-top:14.75pt;margin-right:63.75pt;margin-bottom:0.0001pt;margin-left:2cm;text-align:justify;">     <span>    </span></p>
+<h4><strong><span style="color:#ff0000;">SİZİ DE NECMETTİN ERBAKAN SOSYAL BİLİMLER LİSESİ AİLESİNE BEKLİYORUZ</span></strong></h4>
+<p><em>"Geleceğin akademisyenlerini, hukukçularını, diplomatlarını, psikologlarını, öğretmenlerini ve bilim insanlarını birlikte yetiştiriyoruz."</em></p>
+<p class="MsoBodyText" style="margin-top:14.75pt;margin-right:63.75pt;margin-bottom:0.0001pt;margin-left:2cm;text-align:justify;"><span> </span><strong>Adres:</strong> Atatürk Cad. No 66/1Samanlı Köyü / Merkez YALOVA</p>
+<p class="MsoBodyText" style="margin-top:14.75pt;margin-right:63.75pt;margin-bottom:0.0001pt;margin-left:2cm;text-align:justify;"><span>☎</span><strong>Telefon:<span>  </span>(</strong><span>0226) 837 1593 / 0</span>507 8211697</p>
+<p class="MsoBodyText" style="margin-top:14.75pt;margin-right:63.75pt;margin-bottom:0.0001pt;margin-left:2cm;text-align:justify;"><strong>Web Sitesi:</strong> https://necmettinerbakansblmebk12tr.meb.k12.tr/</p>
+<p class="MsoBodyText" style="margin-top:14.75pt;margin-right:63.75pt;margin-bottom:0.0001pt;margin-left:2cm;text-align:justify;"><strong>Instagram:</strong> @necmettinerbakansosyalbilimler</p>
+<p class="MsoBodyText" style="margin-top:14.75pt;margin-right:63.75pt;margin-bottom:0.0001pt;margin-left:2cm;text-align:center;"><strong><em><span style="font-size:14pt;">LGS tercih süreci, pansiyon başvuruları, okul tanıtım günleri ve tüm duyurular için resmî internet sitemizi ve sosyal medya hesaplarımızı takip etmeyi unutmayınız.</span></em></strong><em></em></p>					</p>
+					<p>
+						<small></small>
+					</p>
+				</div>
+			</div>
+			<div class="col-xl-3 sidebar">
+				<div class="guncel-haberler">
+					<div class="haberler">
+						<h1>Güncel Duyurular</h1>
+						
+										<div class="haber">
+										<a href="/icerikler/okul-aile-birliğimizin-yönetim-ve-denetim-kurulları-belirlendi_17753292.html" >
+										<h1>Okul Aile Birliğimizin Yönetim ve Denetim Kurulları Belirlendi</h1>
+										<p>Okulumuzda 10 Ekim 2026 tarihinde gerçekleştirilen Okul Aile Birliği...</p>
+										<span class="icerik-tarihi"><i class="far fa-calendar-alt"></i> 14-10-2026</span>
+										<i class="fas fa-caret-right"></i>
+										</a>
+										</div>
+										
+										<div class="haber">
+										<a href="/icerikler/12-ekim-tarihinden-itibaren-geçerli-olacak-ders-programlarimiz_17738617.html" >
+										<h1>12 EKİM TARİHİNDEN İTİBAREN GEÇERLİ OLACAK DERS PROGRAMLARIMIZ </h1>
+										<p>📚 YENİ DERS PROGRAMIMIZ 12 EKİM’DE BAŞLIYOR!
+ 
+Yalova Necmettin...</p>
+										<span class="icerik-tarihi"><i class="far fa-calendar-alt"></i> 09-10-2026</span>
+										<i class="fas fa-caret-right"></i>
+										</a>
+										</div>
+										
+										<div class="haber">
+										<a href="/icerikler/vakti-kuşanmak-projesi_17734041.html" >
+										<h1>VAKTİ KUŞANMAK PROJESİ </h1>
+										<p>🕌 Vakti Kuşanmak Projesi
+ 
+Din Öğretimi Genel Müdürlüğü...</p>
+										<span class="icerik-tarihi"><i class="far fa-calendar-alt"></i> 07-10-2026</span>
+										<i class="fas fa-caret-right"></i>
+										</a>
+										</div>
+										
+										<div class="haber">
+										<a href="/icerikler/veli-tanişma-toplantilarimiz-devam-ediyor_17731876.html" >
+										<h1>VELİ TANIŞMA TOPLANTILARIMIZ DEVAM EDİYOR...</h1>
+										<p>Sınıf Rehber Öğretmenlerimizle Tanışma ve Birebir Görüşme...</p>
+										<span class="icerik-tarihi"><i class="far fa-calendar-alt"></i> 07-10-2026</span>
+										<i class="fas fa-caret-right"></i>
+										</a>
+										</div>
+										
+										<div class="haber">
+										<a href="/icerikler/28092026-tarihinden-itibaren-geçerli-olacak-ders-programlarimiz_17710913.html" >
+										<h1>28.09.2026 TARİHİNDEN İTİBAREN GEÇERLİ OLACAK DERS PROGRAMLARIMIZ </h1>
+										<p>2026-2027 eğitim öğretim yılına ait ders  28.09.2026 Pazartesi...</p>
+										<span class="icerik-tarihi"><i class="far fa-calendar-alt"></i> 25-09-2026</span>
+										<i class="fas fa-caret-right"></i>
+										</a>
+										</div>
+																							<a href="icerikler/listele_1045247_Duyurular" class="haber-arsivi">İlgili Kategori İçerikleri</a>
+												<div>
+							<div id="etiket"><h5>Etiketler :</h5><a href='etiket_OKULUMUZU_YAKINDAN_TANIYIN_'><span class='badge badge-pill badge-danger'>OKULUMUZU YAKINDAN TANIYIN</span></a></div>						</div>
+						<div class="">
+							<button type="button" class="btn btn-secondary btn-block" data-toggle="modal" data-target="#GeriBildirimModal"><i class="fas fa-comments"></i> Geri Bildirim</button>
+							<div class="modal fade" id="GeriBildirimModal" tabindex="-1" role="dialog" aria-labelledby="GeriBildirimModalLabel" aria-hidden="true">
+								<div class="modal-dialog" role="document">
+									<div class="modal-content">
+										<div class="modal-header">
+											<h5 class="modal-title" id="GeriBildirimModalLabel">Geri Bildirim</h5>
+											<button type="button" class="close" data-dismiss="modal" aria-label="Kapat">
+												<span aria-hidden="true">&times;</span>
+											</button>
+										</div>
+										<div class="modal-body">
+											<p id="GeriBildirimBilgi"></p>
+											<form name="myForm" id="GeriBildirimForm">
+												<div class="radio">
+													<label><input type="radio" value="1" name="secim"> Bu içerikte hata var!</label>
+												</div>
+											</form>
+																					</div>
+										<div class="modal-footer">
+											<button type="button" class="btn btn-secondary" data-dismiss="modal">Kapat</button>
+											<button type="button" class="btn btn-danger btn-xs" id="sikayetbut" data-secilen="" onclick="kontrol();">Gönder</button>
+										</div>
+									</div>
+								</div>
+							</div>
+													</div>
+					</div>
+				</div>
+			</div>
+
+		</div>
+	</div>
+	<script>
+		$(document).ready(function() {
+			$("input[name='secim']").on("click", function() {
+				var secilen = $(this).val();
+				$("#sikayetbut").attr("data-secilen", secilen)
+				if (secilen == 5) {
+					$("#digertxtDiv").show();
+				} else if (secilen == 3) {
+					$("#tekrarlananuyari").html('Bu içeriğin tekrarı olduğunu düşündüğünüz diğer içerik için de bu bildirimi gönderiniz!');
+				} else {
+					$("#digertxtDiv").hide();
+					$("#digertxt").val("");
+					$("#tekrarlananuyari").html('');
+				}
+			})
+			var url = (window.location != window.parent.location) ? $(".sidebar,footer, .header,.header-top, .site-menu,.vlightbox1").hide() : '';
+		})
+		/*Beğen Butonu*/
+		function cwRating(id, type, target) {
+			if (!/^[a-zA-Z0-9_-]+$/.test(target)) return;
+			$.ajax({
+				type: 'POST',
+				url: '/tema/begen.php',
+				data: 'KATEGORINO=' + id + '&CHK=a5ad166c352d54fab324427846735ba8959015f613ac50082b4182a15450248c',
+				success: function(msg) {
+					if (msg != 'flood') {
+						$("[data-category='" + target + "'] .like-count").text(msg);
+						$(".icerik-begen").toggleClass("text-primary", "text-secondary");
+					}
+				}
+			});
+		}
+		/*Geri Bildirim*/
+		function kontrol() {
+			var a = 17626745;
+			if (a == "") {
+				a = "0"
+			}
+			var b = "necmettinerbakansblmebk12tr";
+			if (b == "") {
+				b = "0"
+			}
+			var c = "549b7d8a8bcc89cbc4af1c0ab9576ab2";
+			var d = $("#sikayetbut").attr("data-secilen");
+			if (d == 5 && e == "") {
+				$("#aciklamauyari").html('Diğer seçeneği seçildiğinde açıklama giriniz');
+				return;
+			}
+			$.post("/tema/sikayet_ajax.php", {
+				KNO: a,
+				HOST: b,
+				TIP: d,
+				CHK: c
+			}, function(data) {
+
+				$("#GeriBildirimBilgi").html('Bildiriminiz gönderilmiştir.').removeClass("alert-danger").addClass("alert alert-success");
+				$("#GeriBildirimForm, #sikayetbut").hide();
+
+			});
+		}
+	</script>
+	<footer>
+	<div class="container">
+		<div class="row">
+			<div class="col-lg-6">
+				<h1>İLETİŞİM</h1>
+				<p>
+					<strong>Adres: </strong><br>
+					Atatürk Cad. No 66/1Samanlı Köyü / Merkez  YALOVA				</p>
+				<hr />
+				<p class="float-left">
+					<strong>Telefon</strong><br>
+					(226) 837 1593<br>
+					<br>
+					<br>
+				</p>
+				<a href="https://necmettinerbakansblmebk12tr.meb.k12.tr/tema/eposta/eposta_gonder.php?KeepThis=true&width=50&height=75&TB_iframe=true" data-type="iframe" class="eposta float-right iframe" style="margin-top:12px" title="Eposta Gönder">e-Posta Göndermek İçin Tıklayın </a>
+			</div>
+			<div class="col-lg-6">
+				<a href="/tema/harita.php?R=1">
+					<img src="/tema/tema/6/assets/images/footer-map.png" alt="" class="img-fluid">
+				</a>
+			</div>
+			<hr />
+		</div>
+	</div>
+</footer>
+<div class="footer-info">
+	MEB © - Tüm Hakları Saklıdır. Gizlilik, Kullanım ve Telif Hakları bildiriminde belirtilen kurallar çerçevesinde
+	hizmet sunulmaktadır.
+</div>
+<nav id="mobile-menu">
+	<ul></ul>
+</nav>
+</div>
+</body>
+
+</html>
+<!-- Google tag (gtag.js) --> <script async src="https://www.googletagmanager.com/gtag/js?id=G-4L6K8WNJCW"></script> <script> window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'G-4L6K8WNJCW'); </script> 
+<script>
+	$(function() {
+		//#Menü
+		$.ajax({
+			//url: '/meb_iys_dosyalar/xml/dikmenu.xml',// name of file you want to parse
+			url: window.location.protocol + '//necmettinerbakansblmebk12tr.meb.k12.tr/meb_iys_dosyalar/77/01/758242/xml/dikmenu.xml?1792423498',
+			dataType: "xml",
+			success: mainMenu,
+			error: function() {
+				alert("Error: Ana Menü Yüklenemedi");
+			}
+		});
+		$.ajax({
+			url: window.location.protocol + '//necmettinerbakansblmebk12tr.meb.k12.tr/meb_iys_dosyalar/77/01/758242/xml/diksubmenu.xml?1792423498',
+			dataType: "xml",
+			success: subMenu,
+			error: function() {
+				alert("Error: Alt Menü Yüklenemedi");
+			}
+		});
+	});
+</script>

@@ -1,0 +1,68 @@
+[
+  {
+    "file": "izmir-main.pdf",
+    "url": "https://konakram.meb.k12.tr/meb_iys_dosyalar/35/01/164246/dosyalar/2026_08/6a7445f220e50216414292_S%C4%B1navl%C4%B1_%C4%B0lk_Yerle%C5%9Ftirme_Puanlar_%C4%B0ZM%C4%B0R_2026_LGS_WEB_%C4%B0%C3%87%C4%B0N.pdf",
+    "sha256": "5c5401ed6fe676beb499590a49bcf877e1f820d4f0cbe98690e9a0abf23be821",
+    "bytes": 361821
+  },
+  {
+    "file": "konak-quota.pdf",
+    "url": "https://konakram.meb.k12.tr/meb_iys_dosyalar/35/01/164246/dosyalar/2026_07/6a50e69bd9b25704896225_Rotamaarif_S%C4%B1navl%C4%B1.pdf",
+    "sha256": "c1d1772b88c22c6a6c743ac75c82e8dddb59efdde94bc00d748b5ea4f0f36db0",
+    "bytes": 368949
+  },
+  {
+    "file": "izmir-transfer2.pdf",
+    "url": "https://konakram.meb.k12.tr/meb_iys_dosyalar/35/01/164246/dosyalar/2026_08/6a7ee0b778994160682331_S%C4%B1navl%C4%B1_Yerle%C5%9Ftirme_Puanlar_%C4%B0ZM%C4%B0R_2026_2_Nakil_LGS.pdf",
+    "sha256": "91d23540b50fc188116a5fe9ffdfabb583d07c9caf98221ea8591eea2ec84e0b",
+    "bytes": 420576
+  },
+  {
+    "file": "mardin.html",
+    "url": "https://mardinfenlisesi.meb.k12.tr/tema/okulumuz_hakkinda.php",
+    "sha256": "40a3949f8024c0b6e02a2ddcc82e0352cbb27bc4cd649dce75fba49d1e62f691",
+    "bytes": 18837
+  },
+  {
+    "file": "zonguldak.html",
+    "url": "https://nurancelalgulsenmtal.meb.k12.tr/icerikler/lgstercihiyapacakogrencilerimizindikkatine_17626643.html",
+    "sha256": "ceaa2010de6c5b6f9126c40acd262a97c2f1acf85f14da85bfe305ae4c8d6923",
+    "bytes": 17547
+  },
+  {
+    "file": "nevsehir.html",
+    "url": "https://ahmetyigitogluturizmmtal.meb.k12.tr/icerikler/lgstercihsureciogrencivevelibilgilendirmekilavuzu_17633074.html",
+    "sha256": "dd7f1050bceb5c91dd61f986e8ee596f289fc71a941c8811af93d7f5081df349",
+    "bytes": 16470
+  },
+  {
+    "file": "yalova-review.html",
+    "url": "https://necmettinerbakansblmebk12tr.meb.k12.tr/icerikler/okulumuzuyakindantaniyin_17626745.html",
+    "sha256": "c0907fad83541e504d827ffcde0845b334708442f31180b2f4e35589e0680bf3",
+    "bytes": 49606
+  },
+  {
+    "file": "kadi.html",
+    "url": "https://kadiburhaneddinmtal.meb.k12.tr/",
+    "sha256": "ba1d224a867770779d1443b95b56ed47e4d2d0b53e954ed2a24c676c0b220d0d",
+    "bytes": 21265
+  },
+  {
+    "file": "mimar.html",
+    "url": "https://mimarsinanteml.meb.k12.tr/",
+    "sha256": "420854303fbce3f442b5d661b2ddab6b5077cfff189925f6b47c4badb74043c6",
+    "bytes": 23616
+  },
+  {
+    "file": "seyyid.html",
+    "url": "https://sbeml.meb.k12.tr/",
+    "sha256": "debae17862733ee9656f09a7203d41623fb4fcc2ad8190b93579e33a73e70020",
+    "bytes": 24540
+  },
+  {
+    "file": "ataturk.html",
+    "url": "https://ataturkktml.meb.k12.tr/",
+    "sha256": "e2db3b14d7add7d449e328b594e0e570b15363d7d5968ed93c1520fbceaf13bb",
+    "bytes": 18834
+  }
+]

@@ -1,0 +1,452 @@
+﻿<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="google-site-verification" content="" />
+	<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+	<meta http-equiv="X-UA-Compatible" content="ie=edge">
+	<meta name="description" content="T.C. MİLLÎ EĞİTİM BAKANLIĞI KAYSERİ / KOCASİNAN / Atatürk Kız Mesleki ve Teknik Anadolu Lisesi" />
+	<meta name="Author" content="T.C. MİLLÎ EĞİTİM BAKANLIĞI KAYSERİ / KOCASİNAN / Atatürk Kız Mesleki ve Teknik Anadolu Lisesi">
+	<meta name="copyright" content="T.C. MİLLÎ EĞİTİM BAKANLIĞI KAYSERİ / KOCASİNAN / Atatürk Kız Mesleki ve Teknik Anadolu Lisesi Copyright 2015">
+	<meta http-equiv="keywords" content="T.C. MİLLÎ EĞİTİM BAKANLIĞI KAYSERİ / KOCASİNAN / Atatürk Kız Mesleki ve Teknik Anadolu Lisesi">
+	<meta name="theme-color" content="#E72737" />
+	<meta http-equiv="cache-control" content="no-cache" />
+	<meta http-equiv="Pragma" content="no-cache" />
+	<meta http-equiv="Expires" content="-1" />
+	<meta name="robots" content="ALL" />
+	<meta name="Rating" content="General" />
+	<meta name="Distribution" content="Global " />
+	<meta name="Classification" content="Consumer" />
+	<meta name="twitter:title" content="T.C. MİLLÎ EĞİTİM BAKANLIĞI KAYSERİ / KOCASİNAN / Atatürk Kız Mesleki ve Teknik Anadolu Lisesi" />
+	<meta name="twitter:card" content="summary_large_image" />
+	<meta name="twitter:site" content="T.C. MİLLÎ EĞİTİM BAKANLIĞI KAYSERİ / KOCASİNAN / Atatürk Kız Mesleki ve Teknik Anadolu Lisesi" />
+	<meta name="twitter:creator" content="T.C. MİLLÎ EĞİTİM BAKANLIĞI KAYSERİ / KOCASİNAN / Atatürk Kız Mesleki ve Teknik Anadolu Lisesi" />
+	<meta name="twitter:description" content="KAYSERİ / KOCASİNAN " />
+	<meta name="twitter:image" content="https://ataturkktml.meb.k12.tr/tema/meblogo.png" />
+	<meta property="og:url" content="https://ataturkktml.meb.k12.tr" />
+	<meta property="og:type" content="news" />
+	<meta property="og:title" content="T.C. MİLLÎ EĞİTİM BAKANLIĞI KAYSERİ / KOCASİNAN / Atatürk Kız Mesleki ve Teknik Anadolu Lisesi" />
+	<meta property="og:description" content="KAYSERİ / KOCASİNAN " />
+	<meta property="og:image" content="https://ataturkktml.meb.k12.tr/tema/meblogo.png" />
+	<link rel="icon" type="image/png" href="/tema/favicon.ico" />
+	<title>KAYSERİ / KOCASİNAN </title>
+	<link rel="shortcut icon" href="/tema/tema/6/assets/images/meb-logo.png" type="image/png" />
+
+	<!-- Site Style -->
+	<link rel="stylesheet" href="/tema/tema/6/assets/css/component/jquery.fancybox.min.css">
+	<link rel="stylesheet" href="/tema/tema/6/assets/css/style.css">
+	<!--[if lt IE 9]>
+			<script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+			<script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
+		<![endif]-->
+	<!-- Jquery 3.3.1 -->
+	<script src="/tema/tema/6/assets/js/jquery-3.3.1.min.js"></script>
+	<!-- Bootstrap with Popover -->
+	<script src="/tema/tema/6/assets/js/bootstrap.bundle.min.js"></script>
+	<script src="/tema/tema/6/assets/js/jquery.fancybox.min.js"></script>
+	<!-- SuperFish Menu-->
+	<script src="/tema/tema/6/assets/js/hoverIntent.js"></script>
+	<script src="/tema/tema/6/assets/js/superfish.min.js"></script>
+	<script src="/tema/tema/6/assets/js/supersubs.js"></script>
+	<!-- Mobil Menu -->
+	<script src="/tema/tema/6/assets/js/jquery.mmenu.js"></script>
+	<!-- Owl Carausel -->
+	<script src="/tema/tema/6/assets/js/owl.carousel.min.js"></script>
+	<script type="text/javascript" src="/tema/tema/6/assets/js/meb_menu.js"></script>
+	<!--<script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-5bd08d7e04e01249"></script>-->
+
+	<script>
+		jQuery(document).ready(function() {
+			jQuery('ul.sf-menu').supersubs({
+				minWidth: 12, // minimum width of submenus in em units
+				maxWidth: 27, // maximum width of submenus in em units
+				extraWidth: 1 // extra width can ensure lines don't sometimes turn over
+				// due to slight rounding differences and font-family
+			}).superfish(); // call supersubs first, then superfish, so that subs are
+
+
+			$('.projeler-slider').owlCarousel({
+				loop: true,
+				margin: 20,
+				nav: false,
+				dots: false,
+				autoplay: true,
+				autoplayTimeout: 3000,
+				autoplayHoverPause: true,
+				responsive: {
+					320: {
+						items: 1
+					},
+					321: {
+						items: 2
+					},
+					600: {
+						items: 3
+					},
+					1000: {
+						items: 6
+					}
+				}
+			})
+
+			/* #Search Start */
+			$('a[href="#search"]').on('click', function(event) {
+				event.preventDefault();
+				$('#search').addClass('open');
+				$('#search > form > input[type="search"]').focus();
+			});
+
+			$('#search, #search button.close').on('click keyup', function(event) {
+				if (event.target == this || event.target.className == 'close' || event.keyCode == 27) {
+					$(this).removeClass('open');
+				}
+			});
+
+			//Do not include! This prevents the form from submitting for DEMO purposes only!
+			$('form#ara').submit(function(event) {
+				event.preventDefault();
+				return false;
+			})
+			/* #Search End */
+
+			$('.vlightbox1, .thickbox').attr("data-fancybox", "gallery").fancybox({
+				lang: 'tr',
+
+				i18n: {
+					'tr': {
+						CLOSE: "Kapat",
+						NEXT: "Sonraki",
+						PREV: "Önceki",
+						ERROR: "İstenilen içerik yüklenemedi. <br/> Lütfen daha sonra tekrar deneyin.",
+						PLAY_START: "Slideshow'u Başlat",
+						PLAY_STOP: "Slideshow'u Duraklat",
+						FULL_SCREEN: "Tam Ekran",
+						THUMBS: "Diğer Fotoğraflar",
+						DOWNLOAD: "İndir",
+						SHARE: "Paylaş",
+						ZOOM: "Yakınlaştır"
+					}
+				}
+			});
+
+		});
+	</script>
+	<!-- Google tag (gtag.js) -->
+	<!-- <script async src="https://www.googletagmanager.com/gtag/js?id="></script> -->
+	<script>
+		// window.dataLayer = window.dataLayer || [];
+
+		// function gtag() {
+		// 	dataLayer.push(arguments);
+		// }
+		// gtag('js', new Date());
+
+		// gtag('config', '');
+	</script>
+</head>
+
+<body>
+	<div id="meb">
+		<div class="header-top">
+			<div class="container">
+				<div class="row">
+					<div class="col-12">
+						<ul>
+							<li><a href="javascript:void(0)"><i class="fas fa-phone"></i> (352) 338 1582</a></li>
+							<li><a href="/tema/iletisim.php"><i class="far fa-envelope"></i> <span>İletişim</span></a></li>
+							<li><a href="#search"><i class="fas fa-search"></i> <span>Arama Yap</span></a></li>
+							<li><a href="/tema/siteharitasi.php"><i class="fas fa-sitemap"></i> <span>Site Haritası</span></a></li>
+							<li><a href="/tema/index.php"><i class="fas fa-home"></i> <span>Anasayfa</span></a></li>
+						</ul>
+					</div>
+				</div>
+			</div>
+		</div>
+		<header class="header">
+			<div class="container">
+				<div class="row">
+					<div class="col-12">
+						<a href="/tema/index.php" target="_self" class="logo">
+							<img src="/tema/tema/6/assets/images/meb-logo.png" alt="Millî Eğitim Bakanlığı" />
+							<span class="meb-baslik">KAYSERİ / KOCASİNAN</span>
+							<span class="okul-baslik">Atatürk Kız Mesleki ve Teknik Anadolu Lisesi</span>
+						</a>
+						<a href="#" target="_blank" class="ataturk-kosesi">
+							<img src="/tema/tema/6/assets/images/ataturk.png" alt="Atatürk Köşesi" />
+						</a>
+					</div>
+				</div>
+			</div>
+		</header>
+		<nav class="site-menu">
+			<div class="container">
+				<ul class="sf-menu d-none d-xl-block" id="top-menu"></ul>
+				<a href="#mobile-menu" class="d-xl-none menu-buton"><i class="fas fa-bars"></i></a>
+			</div>
+		</nav>
+		<div id="search">
+			<button type="button" class="close">X</button>
+			<form action="https://www.google.com/custom" method="get" name="form1" target="google_window">
+				<input type="search" id="araTextBox" name="q" placeholder="Arama yapmak için kelime giriniz" />
+				<input type="hidden" name="sitesearch" value="https://ataturkktml.meb.k12.tr" />
+				<input type="hidden" name="client" value="pub-" />
+				<input type="hidden" name="forid" value="1" />
+				<input type="hidden" name="ie" value="ISO-8859-9" />
+				<input type="hidden" name="oe" value="ISO-8859-9" />
+				<input type="hidden" name="domains" value="https://ataturkktml.meb.k12.tr" />
+				<input type="hidden" name="hl" value="tr" />
+				<button type="submit" class="btn btn-danger">Ara</button>
+			</form>
+		</div>
+<h1 style="display:none">KAYSERİ / KOCASİNAN  - Atatürk Kız Mesleki ve Teknik Anadolu Lisesi</h1>
+<section class="slider">
+	<div class="container">
+		<div class="row">
+			<div class="col-xl-8 haber-slider">
+				<div class="owl-carousel owl-theme main-carousel">
+					
+							<div class="item">
+							<a href="/icerikler/herkesin-bir-mesleği-olmali-projesine-ulusal-kalite-etiketi_17765640.html" >
+							<img src="/meb_iys_dosyalar/38/15/169764/resimler/2026_10/k_1ef860f2c79e390765d0f2a73325208f.jpg" alt="HERKESİN BİR MESLEĞİ OLMALI” PROJESİNE ULUSAL KALİTE ETİKETİ">
+							</a>
+							</div>
+							<div class="item">
+							<a href="/icerikler/gençlik-ve-güvenli-gelecek-projesi-bilgilendirme-toplantısı_17741547.html" >
+							<img src="/meb_iys_dosyalar/38/15/169764/resimler/2026_10/k_72a57e69ab2ab9170aef0d0297aa0943.jpg" alt="Gençlik ve Güvenli Gelecek Projesi Bilgilendirme Toplantısı">
+							</a>
+							</div>
+							<div class="item">
+							<a href="/icerikler/tüm-velilerimizin-dikkatine-okul-aile-birliği-toplantısı_17728452.html" >
+							<img src="/meb_iys_dosyalar/38/15/169764/resimler/2025_08/k_29195438_images1.jpg" alt="Tüm Velilerimizin Dikkatine: Okul-Aile Birliği Toplantısı">
+							</a>
+							</div>				</div>
+			</div>
+			<div class="col-xl-4 haberler mt-4 mt-xl-0">
+								<a href="/icerikler/icerikler/listele_111511_Haberler">
+					<h1 class="baslik">HABERLER</h1>
+				</a>
+				<ul>
+
+					
+						<li>
+						<a href="/icerikler/herkesin-bir-mesleği-olmali-projesine-ulusal-kalite-etiketi_17765640.html"  >
+						<img src="/meb_iys_dosyalar/38/15/169764/resimler/2026_10/k_1ef860f2c79e390765d0f2a73325208f.jpg" alt="" class="float-left img-fluid">
+						<p>HERKESİN BİR MESLEĞİ OLMALI” PROJESİNE ULUSAL KALİTE...</p>
+						<span class="tarih"><i class="far fa-calendar-alt"></i> 17-10-2026</span>
+						</a>
+						</li>
+						
+						<li>
+						<a href="/icerikler/gençlik-ve-güvenli-gelecek-projesi-bilgilendirme-toplantısı_17741547.html"  >
+						<img src="/meb_iys_dosyalar/38/15/169764/resimler/2026_10/k_72a57e69ab2ab9170aef0d0297aa0943.jpg" alt="" class="float-left img-fluid">
+						<p>Gençlik ve Güvenli Gelecek Projesi Bilgilendirme Toplantısı</p>
+						<span class="tarih"><i class="far fa-calendar-alt"></i> 09-10-2026</span>
+						</a>
+						</li>
+						
+						<li>
+						<a href="/icerikler/tüm-velilerimizin-dikkatine-okul-aile-birliği-toplantısı_17728452.html"  >
+						<img src="/meb_iys_dosyalar/38/15/169764/resimler/2025_08/k_29195438_images1.jpg" alt="" class="float-left img-fluid">
+						<p>Tüm Velilerimizin Dikkatine: Okul-Aile Birliği Toplantısı</p>
+						<span class="tarih"><i class="far fa-calendar-alt"></i> 05-10-2026</span>
+						</a>
+						</li>
+										</ul>
+			</div>
+		</div>
+	</div>
+</section>
+
+	<div class="container">
+		<div class="row">
+			<div class="col-12"><a href="https://meslegimhayatim.meb.gov.tr/meslegim-gelecegim-ve-kariyerim"><img src="/tema/tema/6/assets/images/meslegim_hayatim.jpg" alt="" class="img-fluid mt-5"></a></div>
+		</div>
+	</div>
+<section class="baglantilar">
+	<div class="container">
+		<div class="row">
+			<div class="col-xl-12">
+				<h1 class="baslik">Bağlantılar</h1>
+			</div>
+			<div class="col-xl-12">
+				<ul>
+											<li class="col-md-4"><a href="https://okulrandevu.meb.gov.tr" title="_blank" class="btn-block"><i class="fas fa-angle-right"></i> Okuldan Randevu Al</a></li>
+						<li class="col-md-4"><a href="/tema/etkinlik.php" class="btn-block"><i class="fas fa-angle-right"></i> Etkinlikler</a></li>
+										<li class="col-md-4"><a href="meb_iys_dosyalar/38/15/169764/dosyalar/2025_09/17191810_okulkiyafetison.pdf" target=&quot;_blank&quot; rel=&quot;noopener noreferrer&quot; class="btn-block"><i class="fas fa-angle-right"></i> Okul Kıyafetleri</a></li><li class="col-md-4"><a href="https://mebbis.meb.gov.tr/"  class="btn-block"><i class="fas fa-angle-right"></i> MEB Bilişim Sistemleri Giriş Ekranı</a></li><li class="col-md-4"><a href="https://e-okul.meb.gov.tr/"  class="btn-block"><i class="fas fa-angle-right"></i> e-Okul Veli Bilgilendirme Sistemi</a></li><li class="col-md-4"><a href="https://www.turkiye.gov.tr/"  class="btn-block"><i class="fas fa-angle-right"></i> e-Devlet Kapısı &gt;&gt; www.turkiye.gov.tr</a></li><li class="col-md-4"><a href="https://www.meb.gov.tr/duyurular/duyurular2012/basinmus/mebim.php"  class="btn-block"><i class="fas fa-angle-right"></i> 444 0 MEB</a></li><li class="col-md-4"><a href="https://sgb.meb.gov.tr/www/resmi-istatistikler/icerik/64"  class="btn-block"><i class="fas fa-angle-right"></i> Milli Eğitim Bakanlığı İstatistiki Bilgileri</a></li><li class="col-md-4"><a href="https://www.cimer.gov.tr/"  class="btn-block"><i class="fas fa-angle-right"></i> Cumhurbaşkanlığı İletişim Merkezi</a></li>									</ul>
+			</div>
+		</div>
+	</div>
+</section>
+<section class="duyurular">
+	<div class="container">
+		<div class="row">
+			<div class="col-xl-6">
+				<div class="col-12 duyuru">
+										<a href="/icerikler/icerikler/listele__Duyurular">
+						<h1>DUYURULAR</h1>
+					</a>
+					<ul>
+											</ul>
+				</div>
+			</div>
+			<div class="col-xl-6 mt-4 mt-xl-0">
+				<div class="col-12 duyuru">
+										<!-- <a href="/icerik.php?KATEGORINO="> -->
+					<a href="/icerikler/icerikler/listele__Haberler">
+						<h1>HABERLER</h1>
+					</a>
+					<ul>
+
+											</ul>
+				</div>
+			</div>
+		</div>
+	</div>
+</section>
+<section class="okulumuz">
+	<div class="container">
+		<div class="row">
+			<div class="col-xl-12">
+				<ul>
+					<li><a href="javascript:void(0)"><img src="/tema/tema/6/assets/images/turkiye-haritasi.png" alt="" class="img-fluid"></a></li>
+					<li><img src="/tema/tema/6/assets/images/icon-derslik.png" alt="">
+						<p class="okulumuz-baslik">Derslik Sayısı</p>
+						<p class="okulumuz-sayi">31</p>
+					</li>
+					<li><img src="/tema/tema/6/assets/images/icon-ogretmen.png" alt="">
+						<p class="okulumuz-baslik">Öğretmen Sayısı</p>
+						<p class="okulumuz-sayi">93</p>
+					</li>
+					<li><img src="/tema/tema/6/assets/images/icon-ogrenci.png" alt="">
+						<p class="okulumuz-baslik">Öğrenci Sayısı</p>
+						<p class="okulumuz-sayi">1044</p>
+					</li>
+				</ul>
+			</div>
+		</div>
+	</div>
+</section>
+<section class="okulumuz">
+	<div class="container">
+		<div class="projeler-slider owl-carousel owl-theme">
+							<div class="item"><a href="https://fatihprojesi.meb.gov.tr/"  title="Fatih Projesi"><img src="https://ataturkktml.meb.k12.tr/www/images/projeler/fatih.png" alt="" /></a></div>
+							<div class="item"><a href="https://www.kdkcocuk.gov.tr/"  title="KDK Çocuk İnternet Sayfası"><img src="https://ataturkktml.meb.k12.tr/tema/proje_img/kdk.png" alt="" /></a></div>
+							<div class="item"><a href="https://www.guvenlicocuk.org.tr/"  title="Güvenli İnternet"><img src="https://ataturkktml.meb.k12.tr/www/images/projeler/guvenliinternet.png" alt="" /></a></div>
+					</div>
+	</div>
+</section>
+<footer>
+	<div class="container">
+		<div class="row">
+			<div class="col-lg-6">
+				<h1>İLETİŞİM</h1>
+				<p>
+					<strong>Adres: </strong><br>
+					SÜMER MAH. KAZIM YEDEKÇİOĞLU SK. ATATÜRK MESLEK VE TEKNİK ANADOLU LİSESİ BLOK  NO 11 KOCASİNAN / KAYSERİ				</p>
+				<hr />
+				<p class="float-left">
+					<strong>Telefon</strong><br>
+					(352) 338 1582<br>
+					<br>
+					<br>
+				</p>
+				<a href="https://ataturkktml.meb.k12.tr/tema/eposta/eposta_gonder.php?KeepThis=true&width=50&height=75&TB_iframe=true" data-type="iframe" class="eposta float-right iframe" style="margin-top:12px" title="Eposta Gönder">e-Posta Göndermek İçin Tıklayın </a>
+			</div>
+			<div class="col-lg-6">
+				<a href="/tema/harita.php?R=1">
+					<img src="/tema/tema/6/assets/images/footer-map.png" alt="" class="img-fluid">
+				</a>
+			</div>
+			<hr />
+		</div>
+	</div>
+</footer>
+<div class="footer-info">
+	MEB © - Tüm Hakları Saklıdır. Gizlilik, Kullanım ve Telif Hakları bildiriminde belirtilen kurallar çerçevesinde
+	hizmet sunulmaktadır.
+</div>
+<nav id="mobile-menu">
+	<ul></ul>
+</nav>
+</div>
+</body>
+
+</html>
+<!-- Google tag (gtag.js) --> <script async src="https://www.googletagmanager.com/gtag/js?id=G-4L6K8WNJCW"></script> <script> window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'G-4L6K8WNJCW'); </script> 
+<script>
+	$(function() {
+		//#Menü
+		$.ajax({
+			//url: '/meb_iys_dosyalar/xml/dikmenu.xml',// name of file you want to parse
+			url: window.location.protocol + '//ataturkktml.meb.k12.tr/meb_iys_dosyalar/38/15/169764/xml/dikmenu.xml?1792248478',
+			dataType: "xml",
+			success: mainMenu,
+			error: function() {
+				alert("Error: Ana Menü Yüklenemedi");
+			}
+		});
+		$.ajax({
+			url: window.location.protocol + '//ataturkktml.meb.k12.tr/meb_iys_dosyalar/38/15/169764/xml/diksubmenu.xml?1792248478',
+			dataType: "xml",
+			success: subMenu,
+			error: function() {
+				alert("Error: Alt Menü Yüklenemedi");
+			}
+		});
+	});
+</script>
+<script>
+	jQuery(document).ready(function() {
+		$('.main-carousel').owlCarousel({
+			loop: true,
+			margin: 10,
+			nav: false,
+			dots: true,
+			autoplay: true,
+			autoplayTimeout: 7000,
+			items: 1,
+		})
+
+		$('.projeler-slider').owlCarousel({
+			loop: true,
+			margin: 20,
+			nav: false,
+			dots: false,
+			autoplay: true,
+			autoplayTimeout: 3000,
+			autoplayHoverPause: true,
+			responsive: {
+				320: {
+					items: 1
+				},
+				321: {
+					items: 2
+				},
+				600: {
+					items: 3
+				},
+				1000: {
+					items: 6
+				}
+			}
+		})
+	});
+</script>
+
+<!-- Popup Start >-->
+	<a id="popup" data-fancybox href="/icerikler/tum-velilerimizin-dikkatine-okul-aile-birligi-toplantisi_17728452.html" data-caption=""></a>
+	<script>
+					$("#popup").fancybox({
+				lang: 'tr',
+									type: 'iframe',
+								i18n: {
+					'tr': {
+						CLOSE: "Kapat",
+						ERROR: "İstenilen içerik yüklenemedi. <br/> Lütfen daha sonra tekrar deneyin.",
+						ZOOM: "Yakınlaştır"
+					}
+				}
+			}).trigger('click');
+			</script>
+<!-- popup Finish -->

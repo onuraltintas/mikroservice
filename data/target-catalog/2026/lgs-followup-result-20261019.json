@@ -1,0 +1,16 @@
+{
+  "date": "2026-10-19",
+  "newSourceRows": 269,
+  "newVerifiedRows": 156,
+  "reviewedExistingMatches": 4,
+  "newAmbiguousRows": 113,
+  "totalQuotaRows": 27,
+  "mainResultRows": 134,
+  "transfer2ResultRows": 108,
+  "newPercentileRows": 0,
+  "newSchools": 15,
+  "sources": "data/target-catalog/2026/raw/lgs-followup-20261019/sources.json",
+  "packages": "data/target-catalog/2026/lgs-followup-reviewed-20261019",
+  "backup": "server-local /var/lib/eduivme/releases/lgs-followup-20261019/coaching-before.dump",
+  "nationalComplete": false
+}
