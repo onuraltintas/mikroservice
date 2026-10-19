@@ -1,0 +1,37 @@
+using Coaching.Domain.Entities;
+using Coaching.Infrastructure.Catalogs;
+using Coaching.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
+
+namespace Coaching.Curriculum.IntegrationTests;
+
+public sealed class TargetAdmissionImportTests
+{
+    private static CoachingDbContext Db()=>new(new DbContextOptionsBuilder<CoachingDbContext>().UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
+    private static TargetAdmissionData Row(string code="123456789")=>new(code,"University","Program","SAY",null,null,"State","Bachelor",null,null,null,null,10,9,400.12345m,450,null,null);
+    private static TargetAdmissionPackage Package(string exam,params TargetAdmissionData[] rows)=>new(exam,2026,"Main","https://cdn.osym.gov.tr/results.xlsx",new string('c',64),rows);
+    [Fact]
+    public async Task ExistingProgramIdentityAndOldScoreArePreservedAndRepeatIsIdempotent()
+    {
+        using var db=Db();var old=TargetUniversityProgram.Create("old","legacy","University","Program","123456789","SAY",390);db.Add(old);await db.SaveChangesAsync();
+        var service=new TargetAdmissionImporter(db);var package=Package("YKS",Row());
+        await service.ImportAsync(package);await service.ImportAsync(package);
+        Assert.Single(db.TargetUniversityPrograms);Assert.Single(db.Set<TargetAdmissionBatch>());Assert.Single(db.Set<TargetAdmissionRecord>());
+        Assert.Equal(old.Id,db.Set<TargetAdmissionRecord>().Single().ProgramId);Assert.Equal(390,old.MinimumScore);Assert.Null(old.ScoreYear);
+    }
+    [Fact]
+    public async Task DuplicateSchoolCandidatesStayUnlinkedAndUnpublishedInSearch()
+    {
+        using var db=Db(); db.AddRange(TargetSchool.Create("old","1","School","ANKARA","CANKAYA",400),TargetSchool.Create("old","2","School","ANKARA","CANKAYA",410));await db.SaveChangesAsync();
+        await new TargetAdmissionImporter(db).ImportAsync(Package("LGS",Row("school-code") with {Institution="School",Name="School - English",City="ANKARA",District="CANKAYA",ScoreType="LGS"}));
+        Assert.Equal(2,db.TargetSchools.Count());var row=db.Set<TargetAdmissionRecord>().Single();Assert.Equal("Ambiguous",row.MatchStatus);Assert.Null(row.SchoolId);
+    }
+    [Fact]
+    public async Task SameHashChangedContentAndDuplicateCodesAreRejectedBeforeWrites()
+    {
+        using var db=Db();var importer=new TargetAdmissionImporter(db);var package=Package("YKS",Row());await importer.ImportAsync(package);
+        await Assert.ThrowsAsync<ArgumentException>(()=>importer.ImportAsync(package with {Rows=[Row() with {MinimumScore=410}]}));
+        await Assert.ThrowsAsync<ArgumentException>(()=>importer.ImportAsync(package with {DocumentHash=new string('d',64),Rows=[Row(),Row()]}));
+        Assert.Single(db.Set<TargetAdmissionRecord>());
+    }
+}
