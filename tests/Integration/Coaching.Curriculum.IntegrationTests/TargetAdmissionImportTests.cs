@@ -10,7 +10,7 @@ public sealed class TargetAdmissionImportTests
     [Fact]
     public async Task ReviewedSchoolAliasPreservesExistingIdentityAndDoesNotRenameLegacySchool()
     {
-        using var db=Db();var old=TargetSchool.Create("old","alias","School MTAL","ISTANBUL","District",300);db.Add(old);await db.SaveChangesAsync();
+        using var db=Db();var old=TargetSchool.Create("old","alias","School MTAL","ISTANBUL","District (MERKEZ)",300);db.Add(old);await db.SaveChangesAsync();
         var row=Row("alias:1") with {Institution="School Technical High School",City="ISTANBUL",District="District",ScoreType="LGS",MinimumScore=null,MaximumScore=null,Rank=null,Percentile=null,Placed=null};
         var package=Package("LGS",row) with {Stage="Catalog",SchoolAliases=new Dictionary<string,string[]>{{"alias:1",["School MTAL"]}}};
         await new TargetAdmissionImporter(db).ImportAsync(package);
