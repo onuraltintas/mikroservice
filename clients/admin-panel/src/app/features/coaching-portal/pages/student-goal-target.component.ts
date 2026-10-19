@@ -4,10 +4,11 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { Observable, Subject, finalize, map, takeUntil } from 'rxjs';
 import { CoachingStudyPlanningService, GoalTarget, TargetPage } from '../../../core/services/coaching-study-planning.service';
+import { TargetAdmissionSearchComponent } from './target-admission-search.component';
 
 interface TargetResult { id: string; label: string; detail: string; minimumScore: number | null; scoreYear: number | null }
 @Component({
-  selector: 'app-student-goal-target', standalone: true, imports: [CommonModule, FormsModule],
+  selector: 'app-student-goal-target', standalone: true, imports: [CommonModule, FormsModule, TargetAdmissionSearchComponent],
   templateUrl: './student-goal-target.component.html',
   styles: [`
     :host-context(staff-coaching-teacher-goals) { display: block; margin-top: 1rem; }
@@ -29,7 +30,7 @@ export class StudentGoalTargetComponent implements OnChanges {
     this.scopeChanged.next(); this.expanded.set(false); this.target.set(null); this.results.set([]);
     this.busy.set(false); this.saving.set(false); this.stale.set(false); this.error.set(''); this.success.set('');
     this.query = ''; this.city = ''; this.district = ''; this.scoreType = ''; this.page = 1; this.total = 0; this.searched = false;
-    this.score = null; this.maxScore = null; this.examType = '';
+    this.score = null; this.maxScore = null; this.examType = ''; this.showVerified = false;
   }
   private get studentArgument(): [] | [string] { return this.staffStudentId ? [this.staffStudentId] : []; }
   private readonly service = inject(CoachingStudyPlanningService);
@@ -43,6 +44,8 @@ export class StudentGoalTargetComponent implements OnChanges {
   readonly success = signal('');
   readonly stale = signal(false);
   kind: 'school' | 'program' = 'school';
+  showVerified = false;
+  chooseVerified(id: string) { this.save(this.kind === 'program' ? id : null, this.kind === 'school' ? id : null); }
   query = ''; city = ''; district = ''; scoreType = '';
   page = 1; total = 0; searched = false;
   score: number | null = null;

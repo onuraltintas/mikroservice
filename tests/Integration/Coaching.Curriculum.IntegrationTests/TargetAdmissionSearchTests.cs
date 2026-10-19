@@ -2,10 +2,24 @@ using Coaching.Domain.Entities;
 using Coaching.Infrastructure.Data;
 using Coaching.Infrastructure.StudyPlanning;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace Coaching.Curriculum.IntegrationTests;
 public sealed class TargetAdmissionSearchTests
 {
+    [CurriculumPostgresTests.LocalPostgresFact]
+    public async Task AdditiveMigrationPreservesWorkAndFiltersTranslateOnPostgres()
+    {
+        await using var fixture=await CurriculumPostgresTests.Pg.Create();await fixture.Data.Seed();
+        var before=System.Text.Json.JsonSerializer.Serialize(await fixture.Db.StudyPlanTasks.AsNoTracking().ToListAsync());
+        await fixture.Db.GetService<IMigrator>().MigrateAsync("20261018222725_YksExamPreparationCatalog");
+        await fixture.Db.Database.MigrateAsync();await fixture.Db.Database.MigrateAsync();
+        Assert.False(fixture.Db.Database.HasPendingModelChanges());
+        Assert.Equal(before,System.Text.Json.JsonSerializer.Serialize(await fixture.Db.StudyPlanTasks.AsNoTracking().ToListAsync()));
+        var rows=await new TargetAdmissionSearchService(fixture.Db).SearchAsync(new("YKS",2026,City:"ANKARA",MaximumRank:100000));
+        Assert.Empty(rows.Items);
+    }
     [Fact]
     public async Task FiltersOnlyReturnPublishedVerifiedMatchingRows_AndPreserveMissingRanks()
     {

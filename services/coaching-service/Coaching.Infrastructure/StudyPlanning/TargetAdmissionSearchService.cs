@@ -10,10 +10,15 @@ public sealed record TargetAdmissionFilter(string ExamCode="YKS",int Year=2026,s
     string? Language=null,string? Scholarship=null,string? EducationType=null,string? Field=null,
     decimal? MinimumScore=null,decimal? MaximumScore=null,int? MaximumRank=null,decimal? MaximumPercentile=null,
     int PageNumber=1,int PageSize=20,string Sort="name");
-public sealed record TargetAdmissionView(Guid Id,Guid TargetId,string Name,string Institution,string ExternalCode,string ScoreType,
-    string? City,string? District,string? InstitutionType,string? Degree,string? Language,string? Scholarship,string? EducationType,
-    string? Field,int? Quota,int? Placed,decimal? MinimumScore,decimal? MaximumScore,int? Rank,decimal? Percentile,
-    int Year,string Stage,string SourceUrl);
+public sealed class TargetAdmissionView
+{
+    public Guid Id {get;init;} public Guid TargetId {get;init;}
+    public string Name {get;init;}="";public string Institution {get;init;}="";public string ExternalCode {get;init;}="";public string ScoreType {get;init;}="";
+    public string? City {get;init;} public string? District {get;init;} public string? InstitutionType {get;init;} public string? Degree {get;init;}
+    public string? Language {get;init;} public string? Scholarship {get;init;} public string? EducationType {get;init;} public string? Field {get;init;}
+    public int? Quota {get;init;}public int? Placed {get;init;}public decimal? MinimumScore {get;init;}public decimal? MaximumScore {get;init;}
+    public int? Rank {get;init;}public decimal? Percentile {get;init;}public int Year {get;init;}public string Stage {get;init;}="";public string SourceUrl {get;init;}="";
+}
 public sealed class TargetAdmissionSearchService(CoachingDbContext db)
 {
     public static void Validate(TargetAdmissionFilter f)
@@ -31,9 +36,11 @@ public sealed class TargetAdmissionSearchService(CoachingDbContext db)
         where b.ExamCode==f.ExamCode && b.Year==f.Year && b.PublishedAt!=null && r.MatchStatus=="Verified"
             && ((r.ProgramId!=null && db.TargetUniversityPrograms.Any(p=>p.Id==r.ProgramId && p.IsActive))
                 || (r.SchoolId!=null && db.TargetSchools.Any(s=>s.Id==r.SchoolId && s.IsActive)))
-        select new TargetAdmissionView(r.Id,r.ProgramId??r.SchoolId!.Value,r.Name,r.Institution,r.ExternalCode,r.ScoreType,
-            r.City,r.District,r.InstitutionType,r.Degree,r.Language,r.Scholarship,r.EducationType,r.Field,r.Quota,r.Placed,
-            r.MinimumScore,r.MaximumScore,r.Rank,r.Percentile,b.Year,b.Stage,b.SourceUrl);
+        select new TargetAdmissionView {Id=r.Id,TargetId=r.ProgramId??r.SchoolId!.Value,Name=r.Name,Institution=r.Institution,
+            ExternalCode=r.ExternalCode,ScoreType=r.ScoreType,City=r.City,District=r.District,InstitutionType=r.InstitutionType,
+            Degree=r.Degree,Language=r.Language,Scholarship=r.Scholarship,EducationType=r.EducationType,Field=r.Field,
+            Quota=r.Quota,Placed=r.Placed,MinimumScore=r.MinimumScore,MaximumScore=r.MaximumScore,Rank=r.Rank,
+            Percentile=r.Percentile,Year=b.Year,Stage=b.Stage,SourceUrl=b.SourceUrl};
     public async Task<TargetSearchPage<TargetAdmissionView>> SearchAsync(TargetAdmissionFilter f,CancellationToken ct=default)
     {
         Validate(f);var q=Base(f);

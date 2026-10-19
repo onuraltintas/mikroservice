@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 namespace Coaching.Infrastructure.Catalogs;
 
 public sealed record TargetAdmissionPackage(string ExamCode,int Year,string Stage,string SourceUrl,string DocumentHash,
-    IReadOnlyList<TargetAdmissionData> Rows);
+    IReadOnlyList<TargetAdmissionData> Rows,IReadOnlyDictionary<string,string>? Issues=null);
 public sealed record TargetAdmissionImportResult(Guid BatchId,int Verified,int Ambiguous,int Conflicts,bool AlreadyImported);
 
 public sealed class TargetAdmissionImporter(CoachingDbContext db)
@@ -38,6 +38,8 @@ public sealed class TargetAdmissionImporter(CoachingDbContext db)
         var otherCycle=await db.Set<TargetAdmissionBatch>().AnyAsync(x=>x.ExamCode==batch.ExamCode && x.Year==batch.Year && x.Stage==batch.Stage,ct);
         foreach(var row in rows)
         {
+            if(package.Issues?.TryGetValue(row.ExternalCode,out var issue)==true)
+            {row.MarkIssue("Conflict",issue);continue;}
             if(otherCycle){row.MarkIssue("Conflict","Another document exists for this cycle; review source correction.");continue;}
             if(package.ExamCode=="YKS")
             {

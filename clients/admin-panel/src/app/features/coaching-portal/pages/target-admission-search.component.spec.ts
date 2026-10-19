@@ -11,7 +11,7 @@ describe('2026 verified target filters',()=>{
   }
   it('loads source-backed facets and sends year and filters without guessing rank',()=>{
     const {component,http}=setup();http.expectOne(r=>r.url.endsWith('/admissions/filters')).flush({success:true,data:{city:['ANKARA'],institutionType:['DEVLET']}});
-    component.filters.city='ANKARA';component.filters.institutionType='DEVLET';component.search();
+    component.filters['city']='ANKARA';component.filters['institutionType']='DEVLET';component.search();
     const request=http.expectOne(r=>r.url.endsWith('/admissions'));expect(request.request.params.get('year')).toBe('2026');expect(request.request.params.get('city')).toBe('ANKARA');
     request.flush({success:true,data:{items:[],totalCount:0,pageNumber:1,pageSize:20}});expect(component.searched()).toBe(true);http.verify();
   });

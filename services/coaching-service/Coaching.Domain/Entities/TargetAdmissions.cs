@@ -18,7 +18,8 @@ public sealed class TargetAdmissionBatch
             || !(uri.Host=="meb.gov.tr" || uri.Host.EndsWith(".meb.gov.tr",StringComparison.Ordinal)
                 || uri.Host=="osym.gov.tr" || uri.Host.EndsWith(".osym.gov.tr",StringComparison.Ordinal)
                 || uri.Host=="yokatlas.yok.gov.tr")
-            || hash.Length!=64 || hash.Any(c=>!Uri.IsHexDigit(c)))
+            || !string.IsNullOrEmpty(uri.UserInfo) || !uri.IsDefaultPort
+            || hash is null || hash.Length!=64 || hash.Any(c=>!Uri.IsHexDigit(c)))
             throw new ArgumentException("A 2026+ year, official HTTPS source and SHA256 are required.");
         return new() {ExamCode=exam,Year=year,Stage=StudyCatalogText.Require(stage,40),SourceUrl=url,DocumentHash=hash.ToLowerInvariant()};
     }

@@ -1,0 +1,14 @@
+{
+  "year": 2026,
+  "status": "AwaitingOfficialAnnualDataset",
+  "legacySchoolCountPreserved": 3010,
+  "annualPlacementSource": "https://e-okul.meb.gov.tr/SinavIslemleri/BasvuruIslemleri/OKSTERCIH/SNV08008.ASPX",
+  "officialAnnouncement": "https://baliseyhiho.meb.k12.tr/icerikler/2026lgsilkyerlestirmesonrasiboskontenjanlarvebasvuruekrani_17644637.html",
+  "annualSourceObservation": "The official 2026 announcement links to SNV08008. It currently redirects to the e-Okul login landing page in a normal browser. No annual rows were returned.",
+  "transferSource": "https://e-okul.meb.gov.tr/OrtaOgretim/OKL/OOK06006.aspx",
+  "transferSourceObservation": "Public form works and exposes school institution codes, types and languages, but results are current transfer vacancies and grade-specific equivalent scores. They are not labeled as the 2026 first-placement dataset and contain no annual percentile field.",
+  "rotaSource": "https://rotamaarif.meb.gov.tr/",
+  "rotaObservation": "Current public detailed search offers preschool, primary and middle-school levels. Anonymous direct school-search API returned 403. No security controls were bypassed.",
+  "excluded": ["2025 and earlier results", "current transfer scores relabeled as first-placement scores", "third-party values without official row-level evidence"],
+  "nextRequiredEvidence": "A publicly accessible official 2026 school/offering placement export or a permitted MEB export with explicit year and placement stage. Existing legacy records remain untouched until exact or reviewed matches are available."
+}

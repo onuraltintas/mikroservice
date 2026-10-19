@@ -30,6 +30,12 @@
         <p *ngIf="!linked.isActive" class="mt-2 text-xs text-amber-700 dark:text-amber-300">Bu katalog kaydı pasif. Mevcut hedef bağlantınız korunur; yeni seçim için aktif kayıtları kullanın.</p>
       </div>
       <p *ngIf="!current.canEdit" class="mt-2 text-sm text-slate-500">Bu hedefi öğretmen oluşturdu. Bağlantıyı yalnız yetkili öğretmen düzenleyebilir.</p>
+      <div *ngIf="current.canEdit" class="mt-3">
+        <label class="text-sm">Resmî katalog türü<select [ngModel]="kind" (ngModelChange)="changeKind($event)" class="ml-2 rounded border p-2"><option value="school">LGS okulları</option><option value="program">YKS programları</option></select></label>
+        <button type="button" (click)="showVerified = !showVerified" class="ml-2 rounded border p-2">2026 resmî katalog filtreleri</button>
+        <app-target-admission-search *ngIf="showVerified" [kind]="kind" [disabled]="busy() || saving() || stale()" (selected)="chooseVerified($event)" />
+      </div>
+      <details class="mt-3"><summary>Eski katalogda ara · puan yılı doğrulanmamış olabilir</summary>
       <form *ngIf="current.canEdit" (ngSubmit)="searchTargets()" class="mt-3">
         <fieldset [disabled]="busy() || saving() || stale()" class="grid gap-3 sm:grid-cols-2">
           <label class="text-sm">Hedef türü<select [ngModel]="kind" (ngModelChange)="changeKind($event)" name="kind" class="mt-1 w-full rounded-lg border bg-transparent p-2"><option value="school">Okul</option><option value="program">Üniversite programı</option></select></label>
@@ -49,6 +55,7 @@
         </li>
       </ul>
       <div *ngIf="searched && total > 20" class="mt-3 flex items-center gap-3 text-sm"><button type="button" (click)="searchTargets(page - 1)" [disabled]="page <= 1 || busy() || saving() || stale()">Önceki</button><span>Sayfa {{ page }} · {{ total }} kayıt</span><button type="button" (click)="searchTargets(page + 1)" [disabled]="page * 20 >= total || busy() || saving() || stale()">Sonraki</button></div>
+      </details>
     </ng-container>
     <p *ngIf="saving()" role="status" class="mt-2 text-sm">Bağlantı kaydediliyor…</p>
   </ng-container>
