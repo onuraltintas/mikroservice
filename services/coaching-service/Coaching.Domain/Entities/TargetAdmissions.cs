@@ -16,6 +16,7 @@ public sealed class TargetAdmissionBatch
         if (exam is not ("LGS" or "YKS") || year < 2026 || year > 2100 || string.IsNullOrWhiteSpace(stage)
             || !Uri.TryCreate(url,UriKind.Absolute,out var uri) || uri.Scheme != "https"
             || !(uri.Host=="meb.gov.tr" || uri.Host.EndsWith(".meb.gov.tr",StringComparison.Ordinal)
+                || uri.Host.EndsWith(".meb.k12.tr",StringComparison.Ordinal)
                 || uri.Host=="osym.gov.tr" || uri.Host.EndsWith(".osym.gov.tr",StringComparison.Ordinal)
                 || uri.Host=="yokatlas.yok.gov.tr")
             || !string.IsNullOrEmpty(uri.UserInfo) || !uri.IsDefaultPort
