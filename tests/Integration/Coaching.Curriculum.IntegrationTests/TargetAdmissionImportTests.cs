@@ -44,6 +44,7 @@ public sealed class TargetAdmissionImportTests
     {
         using var db=Db();var importer=new TargetAdmissionImporter(db);var package=Package("YKS",Row());await importer.ImportAsync(package);
         await Assert.ThrowsAsync<ArgumentException>(()=>importer.ImportAsync(package with {Rows=[Row() with {MinimumScore=410}]}));
+        await Assert.ThrowsAsync<ArgumentException>(()=>importer.ImportAsync(package with {Issues=new Dictionary<string,string>{{"123456789","New identity conflict"}}}));
         await Assert.ThrowsAsync<ArgumentException>(()=>importer.ImportAsync(package with {DocumentHash=new string('d',64),Rows=[Row(),Row()]}));
         Assert.Single(db.Set<TargetAdmissionRecord>());
     }
