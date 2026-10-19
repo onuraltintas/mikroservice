@@ -95,6 +95,14 @@ describe('CoachingPortalProgressComponent', () => {
       expect.any(String)
     );
     expect(component.showGoalForm()).toBe(false);
+    expect(service.getStudentProgress).toHaveBeenCalledTimes(2);
+  });
+
+  it('localizes named goal categories returned by the API and keeps legacy numeric categories readable', () => {
+    const component = TestBed.createComponent(CoachingPortalProgressComponent).componentInstance;
+    expect(component.categoryLabel('ExamPreparation')).toBe('Sınav hazırlığı');
+    expect(component.categoryLabel('SubjectMastery')).toBe('Ders hakimiyeti');
+    expect(component.categoryLabel('1')).toBe('Sınav hazırlığı');
   });
 
   it('unlocks goal progress after a failed update so the student can retry', () => {
