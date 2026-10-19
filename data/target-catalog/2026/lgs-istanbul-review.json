@@ -1,0 +1,110 @@
+[
+  {
+    "externalCode": "ist:768619:c9520e64daef9b7858937256",
+    "rawQuota": "",
+    "reason": "QuotaUnspecified"
+  },
+  {
+    "externalCode": "ist:765992:c7748d6a38db139b25abff45",
+    "rawQuota": "",
+    "reason": "QuotaUnspecified"
+  },
+  {
+    "externalCode": "ist:765992:9ebd4fce029e3624e97f8e2f",
+    "rawQuota": "",
+    "reason": "QuotaUnspecified"
+  },
+  {
+    "externalCode": "ist:967497:9844f01b2a95e44060a77351",
+    "rawQuota": "",
+    "reason": "QuotaUnspecified"
+  },
+  {
+    "externalCode": "ist:763541:d4e1f40ee7f4f53334592762",
+    "rawQuota": "306*",
+    "reason": "SchoolTotalNotAllocated"
+  },
+  {
+    "externalCode": "ist:763541:b171097ac29570bbf4c91dbb",
+    "rawQuota": "306*",
+    "reason": "SchoolTotalNotAllocated"
+  },
+  {
+    "externalCode": "ist:763541:baba6c1b1c83712322570083",
+    "rawQuota": "306*",
+    "reason": "SchoolTotalNotAllocated"
+  },
+  {
+    "externalCode": "ist:162380:2b32dbe75414f766e1d7987f",
+    "rawQuota": "30*",
+    "reason": "SchoolTotalNotAllocated"
+  },
+  {
+    "externalCode": "ist:345007:e50355fc7e840152d0fec34a",
+    "rawQuota": "240*",
+    "reason": "SchoolTotalNotAllocated"
+  },
+  {
+    "externalCode": "ist:162869:a5997b9301d9e04088f42c02",
+    "rawQuota": "",
+    "reason": "QuotaUnspecified"
+  },
+  {
+    "externalCode": "ist:162869:f01ef3524058c9f2659f43d1",
+    "rawQuota": "",
+    "reason": "QuotaUnspecified"
+  },
+  {
+    "externalCode": "ist:307221:cd229183ad1c7f72465542df",
+    "rawQuota": "",
+    "reason": "QuotaUnspecified"
+  },
+  {
+    "externalCode": "ist:307221:ece86697aa98927c686dcab1",
+    "rawQuota": "",
+    "reason": "QuotaUnspecified"
+  },
+  {
+    "externalCode": "ist:307221:635d6d5c057defae2dd34733",
+    "rawQuota": "",
+    "reason": "QuotaUnspecified"
+  },
+  {
+    "externalCode": "ist:162379:ca5477b95b8c4fd5728b5a45",
+    "rawQuota": "",
+    "reason": "QuotaUnspecified"
+  },
+  {
+    "externalCode": "ist:162379:463034c7f24284ae3080a7b2",
+    "rawQuota": "",
+    "reason": "QuotaUnspecified"
+  },
+  {
+    "externalCode": "ist:162379:1e501c536cc4e30bfe13058c",
+    "rawQuota": "",
+    "reason": "QuotaUnspecified"
+  },
+  {
+    "externalCode": "ist:965232:8e43fe7101203b2eb0335051",
+    "rawQuota": "",
+    "reason": "QuotaUnspecified"
+  },
+  {
+    "externalCode": "ist:965232:3d609dcda9dd4d25d30853c3",
+    "rawQuota": "",
+    "reason": "QuotaUnspecified"
+  },
+  {
+    "externalCode": "ist:345007:2a9463e2238675b45eda85c8",
+    "rawQuota": "",
+    "reason": "QuotaUnspecified"
+  },
+  {
+    "externalCode": "ist:966660:870f5086eb654cac39f5892b",
+    "reason": "ConflictingOfficialQuota",
+    "values": [
+      30,
+      90
+    ]
+  }
+]

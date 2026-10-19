@@ -1,0 +1,1856 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Bölüm Analizi - İstanbul İl Millî Eğitim Müdürlüğü - Mesleki ve Teknik Eğitim Portalı</title>
+    <meta name="description" content="İstanbul İl Millî Eğitim Müdürlüğü Mesleki ve Teknik Eğitim Şubesi Resmi Portalı">
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="assets/img/favicon.png" type="image/x-icon">
+    
+    <!-- CSS Dosyaları -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" 
+          integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" 
+          crossorigin="anonymous" referrerpolicy="no-referrer">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="assets/css/site-pages.css">
+</head>
+<body>
+    <!-- Üst Bar -->
+    <div class="top-bar" id="topBar">
+        <div class="container">
+            <div class="top-info">
+                <span>19 October 2026, Monday</span>
+                            </div>
+            <div class="social-icons">
+                                <a href="https://www.facebook.com/istanbulilmem" target="_blank"><i class="fab fa-facebook-f"></i></a>
+                                
+                                <a href="https://x.com/istanbul_MTE" target="_blank"><i class="fab fa-twitter"></i></a>
+                                
+                                <a href="https://www.instagram.com/istanbul.mte" target="_blank"><i class="fab fa-instagram"></i></a>
+                                
+                                <a href="https://www.youtube.com/@istanbulilmem_" target="_blank"><i class="fab fa-youtube"></i></a>
+                                <a href="kurum/login.php" class="admin-login kurum-login" title="Kurum Paneli">Kurum Girişi</a>
+                <a href="admin/login.php" class="admin-login" title="Yönetim Paneli" style="margin-left: 8px;"><i class="fas fa-user-shield"></i></a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Header -->
+    <header id="mainHeader" class="main-header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <a href="index.php">
+                        <img src="assets/img/logo.png" alt="İstanbul MEM Logo">
+                        <div class="logo-text">
+                            <div class="main-title">İstanbul İl Millî Eğitim Müdürlüğü</div>
+                            <div class="sub-title">Mesleki ve Teknik Eğitim Portalı</div>
+                        </div>
+                    </a>
+                </div>
+                <button class="mobile-menu-toggle" aria-label="Menüyü Aç/Kapat">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <nav>
+                    <ul>
+                        <li><a href="index.php" >Ana Sayfa</a></li>
+                        <li><a href="haberler.php" >Haberler</a></li>
+                        <li><a href="duyurular.php" >Duyurular</a></li>
+                        <li><a href="yazarlar.php" >Yazarlar</a></li>
+                        <li><a href="projelerimiz.php" >Projelerimiz</a></li>
+                        <li><a href="okullarimiz.php" >Okullarımız</a></li>
+                        <li><a href="foto-galeri.php" >Fotoğraf Galerisi</a></li>
+                        <li><a href="bilincli-tercih.php"  class="conscious-choice-link">Bilinçli Tercih</a></li>
+                        <li><a href="iletisim.php" >İletişim</a></li>
+                    </ul>
+                </nav>
+
+            </div>
+        </div>
+    </header> 
+    <style>
+    .header-content {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 0;
+        position: relative;
+    }
+    .logo {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .logo img {
+        height: 45px;
+        width: auto;
+    }
+    .logo-text {
+        display: flex;
+        flex-direction: column;
+        line-height: 1.2;
+    }
+    .logo-text .main-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: #1a5276;
+        margin-bottom: 2px;
+    }
+    .logo-text .sub-title {
+        font-size: 11px;
+        font-weight: 500;
+        color: #2980b9;
+    }
+    nav ul {
+        display: flex;
+        gap: 16px;
+        list-style: none;
+        margin: 0;
+        padding: 0;
+    }
+    nav ul li a {
+        color: #1a5276;
+        font-weight: 500;
+        font-size: 14px;
+        padding: 6px 10px;
+        border-radius: 5px;
+        transition: background 0.2s, color 0.2s;
+        text-decoration: none;
+    }
+    nav ul li a.active, nav ul li a:hover {
+        background: #eaf6fb;
+        color: #2980b9;
+    }
+    .conscious-choice-link {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white !important;
+        font-weight: 600;
+        padding: 8px 14px !important;
+        border-radius: 20px !important;
+        box-shadow: 0 3px 12px rgba(102, 126, 234, 0.3);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        font-size: 13px;
+    }
+    .conscious-choice-link::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+        transition: left 0.5s;
+    }
+    .conscious-choice-link:hover::before {
+        left: 100%;
+    }
+    .conscious-choice-link:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
+        background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+    }
+    .conscious-choice-link.active {
+        background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+        box-shadow: 0 3px 12px rgba(102, 126, 234, 0.5);
+    }
+    .mobile-menu-toggle {
+        display: none;
+        background: none;
+        border: none;
+        font-size: 1.8rem;
+        color: #1a5276;
+        margin-left: 16px;
+        cursor: pointer;
+    }
+    @media (max-width: 900px) {
+        .header-content {
+            flex-wrap: wrap;
+            padding: 8px 0;
+        }
+        .logo img {
+            height: 38px;
+        }
+        .logo-text .main-title {
+            font-size: 13px;
+        }
+        .logo-text .sub-title {
+            font-size: 10px;
+        }
+        nav ul {
+            gap: 8px;
+        }
+        nav ul li a {
+            font-size: 13px;
+            padding: 5px 8px;
+        }
+    }
+    @media (max-width: 700px) {
+        .header-content {
+            flex-direction: row;
+            align-items: center;
+        }
+        .logo {
+            flex: 1 1 auto;
+        }
+        .mobile-menu-toggle {
+            display: block;
+        }
+        nav {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            background: #fff;
+            box-shadow: 0 4px 16px rgba(26,82,118,0.08);
+            z-index: 100;
+            display: none;
+        }
+        nav.open {
+            display: block;
+        }
+        nav ul {
+            flex-direction: column;
+            gap: 0;
+        }
+        nav ul li a {
+            display: block;
+            padding: 12px 20px;
+            border-radius: 0;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 14px;
+        }
+    }
+    .kurum-login {
+        opacity: 1 !important;
+        color: white !important;
+        background-color: var(--primary-color) !important;
+        padding: 6px 14px !important;
+        border-radius: 4px !important;
+        margin-left: 10px !important;
+        font-size: 13px !important;
+        font-weight: 600 !important;
+        text-decoration: none !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        transition: background-color 0.3s ease !important;
+        white-space: nowrap !important;
+    }
+    .kurum-login:hover {
+        background-color: var(--secondary-color) !important;
+        color: white !important;
+    }
+    /* Header scroll animasyonu */
+    .main-header {
+        position: fixed;
+        top: var(--top-bar-height, 40px);
+        left: 0;
+        right: 0;
+        z-index: 1000;
+        background: white;
+        transition: transform 0.3s ease-in-out;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .top-bar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 1001;
+        transition: transform 0.3s ease-in-out;
+    }
+    .main-header.header-hidden {
+        transform: translateY(calc(-100% - var(--top-bar-height, 40px)));
+    }
+    .top-bar.header-hidden {
+        transform: translateY(-100%);
+    }
+    </style>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const menuToggle = document.querySelector('.mobile-menu-toggle');
+        const nav = document.querySelector('header nav');
+        menuToggle.addEventListener('click', function() {
+            nav.classList.toggle('open');
+        });
+        // Menü dışına tıklanınca kapat
+        document.addEventListener('click', function(e) {
+            if (!nav.contains(e.target) && !menuToggle.contains(e.target)) {
+                nav.classList.remove('open');
+            }
+        });
+        
+        // Header scroll'da gizle/göster
+        let lastScroll = 0;
+        const header = document.getElementById('mainHeader');
+        const topBar = document.getElementById('topBar');
+        const headerHeight = header ? header.offsetHeight : 0;
+        const topBarHeight = topBar ? topBar.offsetHeight : 0;
+        const totalHeight = headerHeight + topBarHeight;
+        
+        // CSS variable olarak top-bar yüksekliğini ayarla
+        if (topBar) {
+            document.documentElement.style.setProperty('--top-bar-height', topBarHeight + 'px');
+        }
+        
+        // Body'ye padding ekle
+        if (header) {
+            document.body.style.paddingTop = totalHeight + 'px';
+        }
+        
+        window.addEventListener('scroll', function() {
+            const currentScroll = window.pageYOffset || document.documentElement.scrollTop;
+            
+            if (currentScroll <= 0) {
+                // Sayfa en üstte - header'ı göster
+                if (header) header.classList.remove('header-hidden');
+                if (topBar) topBar.classList.remove('header-hidden');
+            } else if (currentScroll > lastScroll && currentScroll > 100) {
+                // Aşağı scroll - header'ı gizle
+                if (header) header.classList.add('header-hidden');
+                if (topBar) topBar.classList.add('header-hidden');
+            }
+            // Yukarı scroll yapıldığında header'ı gösterme, sadece en üstte göster
+            
+            lastScroll = currentScroll;
+        });
+    });
+    </script> 
+<div class="page-header">
+    <div class="container">
+        <div class="page-title">
+            <h1>Bölüm Analizi</h1>
+            <p>2026 bölüm / program verilerini filtreleyerek görüntüleyin</p>
+        </div>
+    </div>
+</div>
+
+<div class="breadcrumbs">
+    <div class="container">
+        <ul>
+            <li><a href="index.php">Ana Sayfa</a></li>
+            <li>Bölüm Analizi</li>
+        </ul>
+    </div>
+</div>
+
+<section class="contact-section" style="padding-top: 20px;">
+    <div class="container">
+        <style>
+            .ba-filters { background: #f8f9fa; border-radius: 10px; padding: 20px; margin-bottom: 24px; border: 1px solid #e9ecef; }
+            .ba-filters-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; align-items: end; }
+            .ba-filters label { display: block; font-weight: 600; margin-bottom: 6px; color: #1a5276; font-size: 13px; }
+            .ba-filters select, .ba-filters input[type="text"] { width: 100%; padding: 10px 12px; border: 2px solid #e0e0e0; border-radius: 6px; font-size: 14px; }
+            .ba-filters .ba-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+            .ba-btn { padding: 10px 20px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; font-size: 14px; }
+            .ba-btn-primary { background: linear-gradient(135deg, #1a5276 0%, #2980b9 100%); color: #fff; }
+            .ba-btn-secondary { background: #6c757d; color: #fff; }
+            .ba-table-wrap { overflow-x: auto; border: 1px solid #dee2e6; border-radius: 8px; margin-top: 16px; }
+            .ba-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+            .ba-table th, .ba-table td { padding: 8px 10px; border: 1px solid #dee2e6; vertical-align: top; }
+            .ba-table th { background: #1a5276; color: #fff; font-weight: 600; white-space: nowrap; }
+            .ba-table tr:nth-child(even) { background: #f8f9fa; }
+            .ba-meta { color: #666; font-size: 14px; margin-bottom: 12px; }
+            .ba-pager { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 16px; }
+            .ba-pager a, .ba-pager span { padding: 8px 12px; border-radius: 6px; text-decoration: none; border: 1px solid #dee2e6; color: #1a5276; }
+            .ba-pager a:hover { background: #eaf6fb; }
+            .ba-pager .current { background: #1a5276; color: #fff; border-color: #1a5276; }
+            .ba-hint { font-size: 12px; color: #666; margin-top: 4px; }
+            .ba-kontenjan-footnote { font-size: 13px; color: #444; margin: 12px 0 0 0; padding: 10px 12px; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px; line-height: 1.45; }
+        </style>
+
+                    
+            <form method="get" action="bolum_analiz.php" class="ba-filters">
+                <div class="ba-filters-grid">
+                    <div>
+                        <label for="f_ilce">İlçe adı</label>
+                                                    <select name="f_ilce" id="f_ilce">
+                                <option value="">Tümü</option>
+                                                                    <option value="ADALAR" >ADALAR</option>
+                                                                    <option value="ARNAVUTKÖY" >ARNAVUTKÖY</option>
+                                                                    <option value="ATAŞEHİR" >ATAŞEHİR</option>
+                                                                    <option value="AVCILAR" >AVCILAR</option>
+                                                                    <option value="BAĞCILAR" >BAĞCILAR</option>
+                                                                    <option value="BAHÇELİEVLER" >BAHÇELİEVLER</option>
+                                                                    <option value="BAKIRKÖY" >BAKIRKÖY</option>
+                                                                    <option value="BAŞAKŞEHİR" >BAŞAKŞEHİR</option>
+                                                                    <option value="BAYRAMPAŞA" >BAYRAMPAŞA</option>
+                                                                    <option value="BEŞİKTAŞ" >BEŞİKTAŞ</option>
+                                                                    <option value="BEYKOZ" >BEYKOZ</option>
+                                                                    <option value="BEYLİKDÜZÜ" >BEYLİKDÜZÜ</option>
+                                                                    <option value="BEYOĞLU" >BEYOĞLU</option>
+                                                                    <option value="BÜYÜKÇEKMECE" >BÜYÜKÇEKMECE</option>
+                                                                    <option value="ÇATALCA" >ÇATALCA</option>
+                                                                    <option value="ÇEKMEKÖY" >ÇEKMEKÖY</option>
+                                                                    <option value="ESENLER" >ESENLER</option>
+                                                                    <option value="ESENYURT" >ESENYURT</option>
+                                                                    <option value="EYÜPSULTAN" >EYÜPSULTAN</option>
+                                                                    <option value="FATİH" >FATİH</option>
+                                                                    <option value="GAZİOSMANPAŞA" >GAZİOSMANPAŞA</option>
+                                                                    <option value="GÜNGÖREN" >GÜNGÖREN</option>
+                                                                    <option value="KADIKÖY" >KADIKÖY</option>
+                                                                    <option value="KAĞITHANE" >KAĞITHANE</option>
+                                                                    <option value="KARTAL" >KARTAL</option>
+                                                                    <option value="KÜÇÜKÇEKMECE" >KÜÇÜKÇEKMECE</option>
+                                                                    <option value="MALTEPE" >MALTEPE</option>
+                                                                    <option value="PENDİK" >PENDİK</option>
+                                                                    <option value="SANCAKTEPE" >SANCAKTEPE</option>
+                                                                    <option value="SARIYER" >SARIYER</option>
+                                                                    <option value="ŞİLE" >ŞİLE</option>
+                                                                    <option value="SİLİVRİ" >SİLİVRİ</option>
+                                                                    <option value="ŞİŞLİ" >ŞİŞLİ</option>
+                                                                    <option value="SULTANBEYLİ" >SULTANBEYLİ</option>
+                                                                    <option value="SULTANGAZİ" >SULTANGAZİ</option>
+                                                                    <option value="TUZLA" >TUZLA</option>
+                                                                    <option value="ÜMRANİYE" >ÜMRANİYE</option>
+                                                                    <option value="ÜSKÜDAR" >ÜSKÜDAR</option>
+                                                                    <option value="ZEYTİNBURNU" >ZEYTİNBURNU</option>
+                                                            </select>
+                                            </div>
+                    <div>
+                        <label for="f_okul">Okul adı</label>
+                                                    <select name="f_okul" id="f_okul">
+                                <option value="">Tümü</option>
+                                                                    <option value="763488" >100.YIL MTAL</option>
+                                                                    <option value="765291" >2.MEHMET ÇOK PROGRAMLI ANADOLU LİSESİ</option>
+                                                                    <option value="964559" >30 AĞUSTOS KIZ MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="763480" >50.YIL CUMHURİYET FERİDUN TÜMER MTAL</option>
+                                                                    <option value="757482" >75. YIL CUMHURİYET TİCARET MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="745873" >75.YIL CUMHURİYET KIZ M.T.A.L.</option>
+                                                                    <option value="382077" >ABDURRAHMAN VE NERMİN BİLİMLİ MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="872234" >AHİ EVRAN TİCARET MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="776851" >AİSİN OTOMOTİV MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="964560" >ALAATTİN NİLÜFER KADAYIFCIOĞLU KIZ MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="763476" >ALİ KUL MTAL</option>
+                                                                    <option value="160069" >ALİBEYKÖY MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="766326" >ALKOP MESLEKİ VE TEKNİK NADOLU LİSESİ</option>
+                                                                    <option value="823821" >ALPARSLAN MTAL</option>
+                                                                    <option value="159545" >ARİF NİHAT ASYA MTAL</option>
+                                                                    <option value="967504" >ARNAVUTKÖY MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="972715" >ASIM KİBAR TURİZM MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="973348" >ATALAR MTAL</option>
+                                                                    <option value="307221" >AVCILAR MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="762954" >AYDOĞAN ÖZTİRYAKİ TİM SANDER DIŞ TİCARET MTAL</option>
+                                                                    <option value="964612" >AYHAN ARI BORSA İSTANBUL MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="776380" >AYŞE EGE M.T.A.L.</option>
+                                                                    <option value="768619" >AZİZ SANCAR ÇOK PROGRAMLI ANADOLU LİSESİ</option>
+                                                                    <option value="974151" >BAĞCILAR AYDIN DOĞAN MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="349772" >BAĞCILAR EDİP İPLİK TİCARET MTAL</option>
+                                                                    <option value="766547" >BAĞCILAR FATİH KIZ MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="308047" >BAĞCILAR MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="973066" >BAĞLARBAŞI PAZARLAMA VE PERAKENDE TİCARET MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="750347" >BAHÇELİEVLER AYDIN DOĞAN 
+TİCARET MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="962986" >BAHÇELİEVLER MTAL</option>
+                                                                    <option value="970131" >BAHÇELIEVLER TÜRK TELEKOM MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="967500" >BAHÇEŞEHİR BORSA İSTANBUL MTAL</option>
+                                                                    <option value="766548" >BAKIRKÖY KIZ MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="967382" >BAKIRKÖY NÜKET ERCAN MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="765287" >BAŞAKŞEHİR ÇOK PROGRAMLI ANAOLU LİSESİ</option>
+                                                                    <option value="877585" >BAYRAMPAŞA KIZ MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="159043" >BEYKOZ BARBAROS HAYRETTİN PAŞA MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="766305" >BEYLİKDÜZÜ BORSA İSTANBUL ÇOK PROGRAMLI ANADOLU LİSESİ</option>
+                                                                    <option value="745882" >BEYLİKDÜZÜ ŞEHİT ŞAFAK EVRAN 
+TİCARET MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="246874" >BOĞAZİÇİ KIZ MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="969903" >BOLLUCA TİCARET MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="758617" >BORSA İSTANBUL BAŞAKŞEHİR MTAL</option>
+                                                                    <option value="163241" >BORSA İSTANBUL KIZ MTAL</option>
+                                                                    <option value="967501" >BORUSAN ASIM KOCABIYIK MTAL</option>
+                                                                    <option value="764386" >BÜYÜKÇEKMECE CELALİYE MÜBECCEL HAYRETTİN GAZİOĞLU MESLEKİ TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="971807" >BÜYÜKÇEKMECE HAYRIYE DURUK MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="972018" >BÜYÜKÇEKMECE MTAL</option>
+                                                                    <option value="769515" >BÜYÜKYALI MTAL</option>
+                                                                    <option value="967718" >CAĞALOĞLU HÜSAMETTİN YİVLİK GELENEKSEL TÜRK SANATLARI MTAL</option>
+                                                                    <option value="967717" >CAĞALOĞLU MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="973943" >ÇATALCA BORSA İSTANBUL KIZ MTAL</option>
+                                                                    <option value="763468" >ÇAVUŞBAŞI MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="752720" >ÇEKMEKÖY TOKİ ÇPAL</option>
+                                                                    <option value="751777" >CEMİL MERİÇ KIZ MTAL</option>
+                                                                    <option value="773797" >CEZERİ MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="774853" >CUMHURİYET MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="752735" >DEĞİRMENKÖY BORSA İSTANBUL ÇOK PROGRAMLI ANADOLU LİSESİ</option>
+                                                                    <option value="769068" >DEMİRÖREN MEDYA VE TEKNOLOJİ MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="969906" >DİLEK SABANCI TİCARET MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="970804" >DOÇ. DR. BURHAN BAHRİYELİ MTAL</option>
+                                                                    <option value="967505" >DR. NUREDDİN ERK - PERİHAN ERK MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="812180" >DR. OKTAY DURAN MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="751617" >DÜNDAR UÇAR MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="769358" >ENERJISA İSTANBUL MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="974283" >ESENLER MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="878674" >ESENLER TUNA TİCARET MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="776859" >ESENYURT FERGANİ MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="973193" >ESENYURT TOKİ ALİ DURAN KIZ MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="158910" >ETİLER TURİZM MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="254303" >EVLİYA ÇELEBİ TİCARET MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="951103" >EYÜPSULTAN BORSA İSTANBUL TİCARET MTAL.</option>
+                                                                    <option value="776386" >FATIH ATATÜRK ÇAĞDAŞ YAŞAM MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="765288" >FATİH SULTAN MEHMET MTAL</option>
+                                                                    <option value="347234" >FATİH SULTAN MEHMET TİCARET MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="749976" >FEHMİ YILMAZ MTAL</option>
+                                                                    <option value="970130" >FİKRİYE NÜZHET BİLGİNCAN MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="751434" >FINDIKLI MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="159305" >GALATA MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="776389" >GAZİ MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="767452" >GAZİOSMANPAŞA FAHRETTİN ÖZÜDOĞRU MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="160596" >GAZİOSMANPAŞA MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="775317" >GENÇOSMAN BİST MTAL</option>
+                                                                    <option value="748419" >GENERAL ALİ RIZA ERSİN MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="752779" >GÜLTEN ÖZAYDIN ÇOK PROGRAMLI ANADOLU LİSESİ</option>
+                                                                    <option value="162379" >GÜLTEPE ŞEHİT CİHAN ERAT MTAL</option>
+                                                                    <option value="745844" >GÜMÜŞPALA MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="307784" >GÜNGÖREN MTAL</option>
+                                                                    <option value="967503" >GÜRPINAR BORSA İSTANBUL MTAL</option>
+                                                                    <option value="774774" >HACI FATMA GÜL MTAL</option>
+                                                                    <option value="758753" >HACI İSMAİL GÜNDOĞDU ÇOK PROGRAMLI ANADOLU LİSESİ</option>
+                                                                    <option value="970805" >HACI RAHİME ULUSOY DENZİCİLİK MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="767384" >HADIMKÖY MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="162894" >HALİDE EDİP KIZ MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="970950" >HALİL KAYA GEDİK MTAL</option>
+                                                                    <option value="973113" >HALIL RIFAT PAŞA MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="774773" >HALKALI BORSA İSTANBUL MTAL</option>
+                                                                    <option value="776391" >HALKALI MEHMET AKİF ERSOY MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="249435" >HALKALI TİCARET MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="962992" >HAMİDİYE ETFAL MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="757407" >HANDAN HAYRETTİN YELKİKANAT MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="751604" >HASAN ŞADOĞLU  MTAL</option>
+                                                                    <option value="346875" >HAYDAR AKÇELİK KIZ MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="353921" >HAYDAR AKIN MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="162869" >HAYDARPAŞA MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="974614" >HEZARFEN MTAL</option>
+                                                                    <option value="869412" >HİKMET NAZİF KURŞUNOĞLU KIZ MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="969908" >HÜSEYİN AVNİ SİPAHİ TİCARET MTAL</option>
+                                                                    <option value="763464" >HÜSEYİN RAHMİ GÜRPINAR MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="759122" >İBNİ SİNA MTAL</option>
+                                                                    <option value="972659" >İBRAHİM MÜTEFERRİKA MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="751785" >İBRAHİM ÖZAYDIN MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="763475" >İBRAHİM TURHAN MTAL</option>
+                                                                    <option value="748401" >İBRAHİM YİRİK MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="758751" >İDMİB MTAL</option>
+                                                                    <option value="357034" >İHKİB AVCLAR KIZ MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="962126" >İHKİB KAĞITHANE MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="385799" >İHKİB YENİBOSNA MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="158539" >İMMİB ERKAN AVCI MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="235280" >İNÖNÜ MESLEKİ VE TEKNİK ANADOLU LİSSESİ</option>
+                                                                    <option value="365565" >İSMET AKTAR MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="965232" >İSOV-DİNÇKÖK MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="768423" >İSTANBUL HAVALİMANI 
+MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="765992" >İSTANBUL TEKNİK ÜNİVERSİTESİ MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="776970" >İSTANBUL TEKSTİL MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="378058" >İSTANBUL TEKSTİL MTAL</option>
+                                                                    <option value="765345" >İSTANBUL TİCARET ODASI 
+BEYLİKDÜZÜ OSB MESLEKİ VE
+ TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="381574" >İSTANBUL TİCARET ODASI MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="753117" >İSTANBUL TİCARET ODASI MTAL</option>
+                                                                    <option value="346432" >İSTANBUL VALİ HAYRİ KOZAKÇIOĞLU TİCARET  MESLEKİ  VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="232513" >İTO MTAL</option>
+                                                                    <option value="751765" >İTOSB MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="159354" >KABATAŞ TİCARET MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="765509" >KADIKÖY ÇOK PROGRAMLI ANADOLU LİSESİ</option>
+                                                                    <option value="161051" >KADIKÖY GÖZTEPE TİCARET MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="161014" >KADIKÖY MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="967497" >KADIRGA MTAL</option>
+                                                                    <option value="763482" >KAĞITHANE  MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="162438" >KAĞITHANE İTO MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="767383" >KAPTANI DERYA MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="745921" >KARDELEN MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="951331" >KARTAL BORSA İSTANBUL MTAL</option>
+                                                                    <option value="973087" >KARTAL KARTAL FATMA ALİYE MT.A.L</option>
+                                                                    <option value="340447" >KARTAL SABİHA GÖKÇEN KIZ MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="763541" >KARTAL ŞEHİT BURAK CANTÜRK MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="819373" >KARTAL ŞEHİT SALİH ALIŞKAN MTAL</option>
+                                                                    <option value="161636" >KARTAL TİCARET MTAL</option>
+                                                                    <option value="775313" >KARTALTEPE MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="760346" >KATİP MUSTAFA ÇELEBİ TURİZM MTAL</option>
+                                                                    <option value="753055" >KEMAL ATAY MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="763477" >KEMERBURGAZ HALİS KUTMANGİL MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="967749" >KIRAÇ BORSA İSTANBUL MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="776383" >KOCASİNAN KIZ MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="365612" >KOCASİNAN ŞEHİT SAMET KIRBAŞ MTAL</option>
+                                                                    <option value="158564" >KÜÇÜKÇEKMECE ATATÜRK KIZ MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="951093" >KÜÇÜKÇEKMECE BORSA İSTANBUL TURİZM MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="973903" >KÜÇÜKÇEKMECE KUYUMCULUK TEKNOLOJİSİ MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="160606" >KÜÇÜKKÖY KIZ MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="342147" >KÜÇÜKYALI MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="964174" >KUMBURGAZ MTAL</option>
+                                                                    <option value="158863" >LEVENT MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="319438" >M. ALİ BÜYÜKHANLI MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="749366" >MADENLER TİCARET MTAL</option>
+                                                                    <option value="751614" >MAHMUTBEY TİCARET MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="307627" >MALTEPE KIZ MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="765289" >MAREŞAL FEVZİ ÇAKMAK ÇOK PROGRAMLI ANADOLU LİSESİ </option>
+                                                                    <option value="768620" >MEDİHA ENGİZER MTAL</option>
+                                                                    <option value="752756" >MEHMET AKİF ERSOY ÇOK PROGRAMLI ANADOLU LİSESİ</option>
+                                                                    <option value="964062" >MEHMET EMİN HOROZ MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="349963" >MEHMET İHSAN MERCERCİ TURİZM MTAL</option>
+                                                                    <option value="758902" >MEHMET RIFAT EVYAP MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="812238" >MEHMET SALİH BAL TİCARET MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="776390" >MELEK AKNİL MTAL</option>
+                                                                    <option value="973091" >MEVLANA KIZ MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="765296" >MİMAR SİNAN MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="162882" >MİTHATPAŞA MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="971815" >MÜNEVVER KEMAL ÖZVER MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="344577" >NAHİT MENTEŞE MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="751610" >NECİP FAZIL KISAKÜREK MTAL</option>
+                                                                    <option value="745893" >NESRİN UÇMAKLIOĞLU MTAL</option>
+                                                                    <option value="162402" >NİŞANTAŞI RÜŞTÜ UZEL KIZ MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="751618" >NURİ CINGILLIOĞLU MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="767165" >NURİ DEMİRAĞ MTAL</option>
+                                                                    <option value="158875" >ORTAKÖY ZÜBEYDE HANIM MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="973064" >OTOCENTER TİCARET MESLEKİ TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="752936" >PAGEV PLASTİK TEKNOLOJİSİ MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="966954" >PENDİK BARBAROS HAYRETTİN PAŞA DENİZCİLİK MTAL</option>
+                                                                    <option value="964611" >PENDİK BORSA İSTANBUL MTAL</option>
+                                                                    <option value="970120" >PENDİK İTO TİCARET MTAL</option>
+                                                                    <option value="960162" >PENDİK MTAL</option>
+                                                                    <option value="964652" >PENDİK NUH KUŞÇULU SERAMİK VE CAM TEKNOLOJİSİ MTAL</option>
+                                                                    <option value="966049" >PENDİK TÜRK TELEKOM ŞEHİT MURAT MTAL</option>
+                                                                    <option value="969777" >PİRİ REİS DENİZCİLİK MTAL</option>
+                                                                    <option value="215954" >PROFİLO  MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="767561" >RAUF DENKTAŞ MTAL</option>
+                                                                    <option value="969904" >REMZİ BAYRAKTAR TİCARET MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="974035" >ROSVİTA-TİMUR İMRAĞ MTAL</option>
+                                                                    <option value="365923" >RÜŞTÜ AKIN MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="972160" >SABİHA GÖKÇEN MTAL</option>
+                                                                    <option value="760540" >SABİT BÜYÜKBAYRAK KIZ MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="750335" >SAİDE ZORLU TİCARET MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="967499" >SAMANDIRA MTAL</option>
+                                                                    <option value="749857" >SANCAKTEPE EYÜP SULTAN MTAL</option>
+                                                                    <option value="751456" >SARIYER HÜSEYİN KALKAVAN MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="161839" >SARIYER M.T.A.L.</option>
+                                                                    <option value="763484" >SARIYER MEHMET ŞAM MTAL</option>
+                                                                    <option value="775329" >ŞEHİT BİNBAŞI BEDİR KARABIYIK MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="969781" >ŞEHİT BÜYÜKELÇİ İSMAİL EREZ MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="765500" >ŞEHİT DEMET SEZEN ÇOK PROGRAMLI ANADOLU LİSESİ</option>
+                                                                    <option value="760287" >ŞEHİT EREN BÜLBÜL MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="776392" >ŞEHİT ERHAN DÜNDAR MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="752722" >ŞEHİT EROL OLÇOK MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="889012" >ŞEHİT MÜMİN DEMİRALP ÇPAL</option>
+                                                                    <option value="159067" >ŞEHİT MURAT AKDEMİR TİCARET MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="161590" >ŞEHİT ÖĞRETMEN HÜSEYİN AĞIRMAN M.T.A.L.</option>
+                                                                    <option value="365673" >ŞEHİT ÖMER HALİSDEMİR MTAL</option>
+                                                                    <option value="318888" >ŞEHİT OSMAN YILDIZ TİCARET MTAL</option>
+                                                                    <option value="962330" >ŞEHİT ÖZCAN ÇİFTÇİ ÇPAL</option>
+                                                                    <option value="967507" >ŞEHİT YÜZBAŞI YUSUF KENAN MTAL</option>
+                                                                    <option value="759844" >SELAHADDİN EYYUBİ TURİZM MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="160415" >SELÇUK KIZ MESLEKİ VE TEKNİK 
+ANADOLU LİSESİ</option>
+                                                                    <option value="965053" >SELİMİYE MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="966660" >SELİMPAŞA BORSA İSTANBUL MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="751458" >ŞENESENEVLER MUALLA SELCANOĞLU TURİZM M.T.A.L</option>
+                                                                    <option value="161960" >ŞERİFE BALDÖKTÜ MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="973114" >ŞEYH ŞAMİL MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="323002" >ŞİLE BORSA İSTANBUL 50.YIL ÇPAL</option>
+                                                                    <option value="966707" >ŞİLE BORSA İSTANBUL MTAL</option>
+                                                                    <option value="973065" >SİLİVRİ NECİP SARIBEKİR MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="342255" >SİLİVRİ YUSUF SARIBEKİR MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="162355" >ŞİŞLİ MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="344624" >SİYAVUŞPAŞA KIZ MTAL</option>
+                                                                    <option value="972051" >SUDİ ÖZKAN MTAL</option>
+                                                                    <option value="365852" >ŞÜKRAN ÜLGEZEN MTAL</option>
+                                                                    <option value="763485" >SULTAN ALPARSLAN MTAL</option>
+                                                                    <option value="160427" >SULTAN SELİM KIZ MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="967496" >SULTANAHMET MTAL</option>
+                                                                    <option value="969399" >SULTANAHMET SUPHİ PAŞA TİCARET MTAL</option>
+                                                                    <option value="765517" >SULTANBEYLİ ÇOK PROGRAMLI ANADOLU LİSESİ</option>
+                                                                    <option value="777026" >SULTANBEYLİ MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="751600" >SULTANGAZİ ATATÜRK M.T.A.L.</option>
+                                                                    <option value="974203" >SULTANGAZİ MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="973431" >SULTANGAZİ NENE HATUN MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="967506" >TAŞDELEN BORSA İSTANBUL MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="888616" >TASEV AYAKKABI VE SARACİYE TEKNOLOJİSİ MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="767393" >TEKNOPARK İSTANBUL MTAL</option>
+                                                                    <option value="767103" >TEPEÖREN MESLEKİ 
+VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="775314" >TERAZİDERE PROF. İBRAHİM VE FETİ PİRLEPELİ MTAL.</option>
+                                                                    <option value="759125" >TEV EZEL GÜLEN KIRAY MESLEKİ VE TEKNİK ANADOLU LİSEİ</option>
+                                                                    <option value="766332" >TEV UĞUZ TARIK DEMİRAĞ MTAL</option>
+                                                                    <option value="761797" >TOKİ HAYME ANA KIZ  MTAL</option>
+                                                                    <option value="974201" >TOKİ KAYAŞEHİR MTAL</option>
+                                                                    <option value="776419" >TOKİ YAHYA KEMAL MTAL</option>
+                                                                    <option value="969395" >TOLGA ÇINAR KIZ MTAL</option>
+                                                                    <option value="966889" >TUNCAY AZAPHAN MTAL</option>
+                                                                    <option value="973166" >TURGUT REİS KIZ MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="377891" >TURHAN FEYZİOĞLU MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="972151" >TÜRKÇİMENTO MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="776382" >TÜRKİYE GAZETESİ MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="772943" >TÜROB 50. YIL  ŞİŞLİ TURİZM MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="951367" >TUZLA BORSA İSTANBUL KIZ MTAL</option>
+                                                                    <option value="974645" >TUZLA CEZERİ MTAL</option>
+                                                                    <option value="345007" >TUZLA MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="385535" >TUZLA SÜLEYMAN DEMİREL TİCARET MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="342196" >ÜMRANİYE ATATÜRK MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="162870" >ÜMRANİYE MTAL</option>
+                                                                    <option value="910133" >ÜSKÜDAR BORSA İSTANBUL KIZ MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="162904" >ÜSKÜDAR TİCARET MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="962990" >ÜSKÜDAR ZEYNEP KAMİL MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="776734" >Vehbi Koç Vakfı Gastronomi Mesleki ve Teknik Anadolu Lisesi</option>
+                                                                    <option value="774850" >VELİBABA KIZ MTAL</option>
+                                                                    <option value="759124" >YAHYA KEMAL BEYATLI KIZ MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="161612" >YAKACIK MTAL</option>
+                                                                    <option value="765299" >YAKACIK YÜKSEL İLHAN ALANYALI ÇOK PROGRAMLI ANADOLU LİSESİ</option>
+                                                                    <option value="765056" >YAVUZ SULTAN SELİM MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="162380" >YILDIZ TEKNİK ÜNİVERSİTESİ MAÇKA MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="865056" >YUNUS EMRE TİCARET MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="775847" >YUNUS EMRE TİCARET MTAL</option>
+                                                                    <option value="363566" >ZEHRA MUSTAFA DALGIÇ TİCARET MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="163216" >ZEYTİNBURNU MTAL</option>
+                                                                    <option value="162367" >ZİNCİRLİKUYU İSOV MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                                    <option value="966950" >ZIYA KALKAVAN MESLEKİ VE TEKNİK ANADOLU LİSESİ</option>
+                                                            </select>
+                                            </div>
+                    <div>
+                        <label for="f_program">Program adı</label>
+                                                    <select name="f_program" id="f_program">
+                                <option value="">Tümü</option>
+                                                                    <option value="ANADOLU MESLEK PROGRAMI" >ANADOLU MESLEK PROGRAMI</option>
+                                                                    <option value="Anadolu Meslek Programı" >Anadolu Meslek Programı</option>
+                                                                    <option value="ANADOLU TEKNİK PROGRAMI" >ANADOLU TEKNİK PROGRAMI</option>
+                                                                    <option value="Anadolu Teknik Programı" >Anadolu Teknik Programı</option>
+                                                                    <option value="Diğer" >Diğer</option>
+                                                            </select>
+                                            </div>
+                    <div>
+                        <label for="f_alan">Alan adı</label>
+                                                    <select name="f_alan" id="f_alan">
+                                <option value="">Tümü</option>
+                                                                    <option value="ADALET" >ADALET</option>
+                                                                    <option value="ADALET ALANI — ZABIT KÂTİPLİĞİ" >ADALET ALANI — ZABIT KÂTİPLİĞİ</option>
+                                                                    <option value="AİLE VE TÜKETİCİ HİZMETLERİ" >AİLE VE TÜKETİCİ HİZMETLERİ</option>
+                                                                    <option value="AYAKKACI VE SARACİYE TEKNOLOJİSİ" >AYAKKACI VE SARACİYE TEKNOLOJİSİ</option>
+                                                                    <option value="BİLİŞİM TEKNOLOJİLERİ" >BİLİŞİM TEKNOLOJİLERİ</option>
+                                                                    <option value="BİLİŞİM TEKNOLOJİLERİ — WEB TASARIMI" >BİLİŞİM TEKNOLOJİLERİ — WEB TASARIMI</option>
+                                                                    <option value="BİLİŞİM TEKNOLOJİLERİ — YAZILIM GELİŞTİRME" >BİLİŞİM TEKNOLOJİLERİ — YAZILIM GELİŞTİRME</option>
+                                                                    <option value="BİLİŞİM TEKNOLOJİLERİ ALANI" >BİLİŞİM TEKNOLOJİLERİ ALANI</option>
+                                                                    <option value="BİLİŞİM TEKNOLOJİLERİ ALANI — DAL YOK" >BİLİŞİM TEKNOLOJİLERİ ALANI — DAL YOK</option>
+                                                                    <option value="BİLİŞİM TEKNOLOJİLERİ ALANI — YAZILIM GELİŞTİRME" >BİLİŞİM TEKNOLOJİLERİ ALANI — YAZILIM GELİŞTİRME</option>
+                                                                    <option value="BİLİŞİM TEKNOLOJİLERİ ALANI (SINAVLI)" >BİLİŞİM TEKNOLOJİLERİ ALANI (SINAVLI)</option>
+                                                                    <option value="BİLİŞİM TEKNOLOJİLERİ ALANI (SINAVLI) — AĞ İŞLETMENLİĞİ" >BİLİŞİM TEKNOLOJİLERİ ALANI (SINAVLI) — AĞ İŞLETMENLİĞİ</option>
+                                                                    <option value="BİLİŞİM TEKNOLOJİLERİ ALANI (SINAVLI) — YAZILIM GELİŞTİRME" >BİLİŞİM TEKNOLOJİLERİ ALANI (SINAVLI) — YAZILIM GELİŞTİRME</option>
+                                                                    <option value="BİLİŞİM TEKNOLOJİLERİ ALANI (SINAVSIZ) — AĞ İŞLETMENLİĞİ" >BİLİŞİM TEKNOLOJİLERİ ALANI (SINAVSIZ) — AĞ İŞLETMENLİĞİ</option>
+                                                                    <option value="BİLİŞİM TEKNOLOJİLERİ ALANI (SINAVSIZ) — DAL YOK" >BİLİŞİM TEKNOLOJİLERİ ALANI (SINAVSIZ) — DAL YOK</option>
+                                                                    <option value="BİLİŞİM TEKNOLOJİLERİ ALANI (SINAVSIZ) — WEB TASARIMI" >BİLİŞİM TEKNOLOJİLERİ ALANI (SINAVSIZ) — WEB TASARIMI</option>
+                                                                    <option value="BİLİŞİM TEKNOLOJİLERİ ALANI (SINAVSIZ) — YAZILIM GELİŞTİRME" >BİLİŞİM TEKNOLOJİLERİ ALANI (SINAVSIZ) — YAZILIM GELİŞTİRME</option>
+                                                                    <option value="BİYOMEDİKAL CİHAZ TEKNOLOJİLERİ" >BİYOMEDİKAL CİHAZ TEKNOLOJİLERİ</option>
+                                                                    <option value="BÜRO YÖNETİMİ VE YÖNETİCİ ASİSTANLIĞI" >BÜRO YÖNETİMİ VE YÖNETİCİ ASİSTANLIĞI</option>
+                                                                    <option value="ÇOCUK GELİŞİMİ VE EĞİTİMİ" >ÇOCUK GELİŞİMİ VE EĞİTİMİ</option>
+                                                                    <option value="ÇOCUK GELİŞİMİ VE EĞİTİMİ — ERKEN ÇOCUKLUK VE ÖZEL EĞİTİM" >ÇOCUK GELİŞİMİ VE EĞİTİMİ — ERKEN ÇOCUKLUK VE ÖZEL EĞİTİM</option>
+                                                                    <option value="ÇOCUK GELİŞİMİ VE EĞİTİMİ ALANI — ERKEN ÇOCUKLUK VE ÖZEL EĞİTİM" >ÇOCUK GELİŞİMİ VE EĞİTİMİ ALANI — ERKEN ÇOCUKLUK VE ÖZEL EĞİTİM</option>
+                                                                    <option value="ÇOCUK GELİŞİMİ VE EĞİTİMİ ALANI (SINAVSIZ) — ERKEN ÇOCUKLUK VE ÖZEL EĞİTİM" >ÇOCUK GELİŞİMİ VE EĞİTİMİ ALANI (SINAVSIZ) — ERKEN ÇOCUKLUK VE ÖZEL EĞİTİM</option>
+                                                                    <option value="DENİZCİLİK" >DENİZCİLİK</option>
+                                                                    <option value="DENİZCİLİK ALANI" >DENİZCİLİK ALANI</option>
+                                                                    <option value="DENİZCİLİK ALANI — DAL YOK" >DENİZCİLİK ALANI — DAL YOK</option>
+                                                                    <option value="EL SANATLARI TEKNOLOJİSİ" >EL SANATLARI TEKNOLOJİSİ</option>
+                                                                    <option value="ELEKTRİK ELEKTRONİK TEKNOLOJİSİ" >ELEKTRİK ELEKTRONİK TEKNOLOJİSİ</option>
+                                                                    <option value="ELEKTRİK-ELEKTRONİK TEKNOLOJİSİ" >ELEKTRİK-ELEKTRONİK TEKNOLOJİSİ</option>
+                                                                    <option value="ELEKTRİK-ELEKTRONİK TEKNOLOJİSİ — ELEKTRONİK VE HABERLEŞME" >ELEKTRİK-ELEKTRONİK TEKNOLOJİSİ — ELEKTRONİK VE HABERLEŞME</option>
+                                                                    <option value="ELEKTRİK-ELEKTRONİK TEKNOLOJİSİ ALANI" >ELEKTRİK-ELEKTRONİK TEKNOLOJİSİ ALANI</option>
+                                                                    <option value="ELEKTRİK-ELEKTRONİK TEKNOLOJİSİ ALANI — DAL YOK" >ELEKTRİK-ELEKTRONİK TEKNOLOJİSİ ALANI — DAL YOK</option>
+                                                                    <option value="ELEKTRİK-ELEKTRONİK TEKNOLOJİSİ ALANI — ELEKTRİK TESİSATLARI VE DAĞITIMI" >ELEKTRİK-ELEKTRONİK TEKNOLOJİSİ ALANI — ELEKTRİK TESİSATLARI VE DAĞITIMI</option>
+                                                                    <option value="ELEKTRİK-ELEKTRONİK TEKNOLOJİSİ ALANI (SINAVLI)" >ELEKTRİK-ELEKTRONİK TEKNOLOJİSİ ALANI (SINAVLI)</option>
+                                                                    <option value="ELEKTRİK-ELEKTRONİK TEKNOLOJİSİ ALANI (SINAVLI) — DAL YOK" >ELEKTRİK-ELEKTRONİK TEKNOLOJİSİ ALANI (SINAVLI) — DAL YOK</option>
+                                                                    <option value="ELEKTRİK-ELEKTRONİK TEKNOLOJİSİ ALANI (SINAVLI) — ELEKTRONİK VE HABERLEŞME" >ELEKTRİK-ELEKTRONİK TEKNOLOJİSİ ALANI (SINAVLI) — ELEKTRONİK VE HABERLEŞME</option>
+                                                                    <option value="ELEKTRİK-ELEKTRONİK TEKNOLOJİSİ ALANI (SINAVLI) — ENDÜSTRİYEL BAKIM ONARIM" >ELEKTRİK-ELEKTRONİK TEKNOLOJİSİ ALANI (SINAVLI) — ENDÜSTRİYEL BAKIM ONARIM</option>
+                                                                    <option value="ELEKTRİK-ELEKTRONİK TEKNOLOJİSİ ALANI (SINAVSIZ) — DAL YOK" >ELEKTRİK-ELEKTRONİK TEKNOLOJİSİ ALANI (SINAVSIZ) — DAL YOK</option>
+                                                                    <option value="ELEKTRİK-ELEKTRONİK TEKNOLOJİSİ ALANI (SINAVSIZ) — ELEKTRİK TESİSATLARI VE DAĞITIMI" >ELEKTRİK-ELEKTRONİK TEKNOLOJİSİ ALANI (SINAVSIZ) — ELEKTRİK TESİSATLARI VE DAĞITIMI</option>
+                                                                    <option value="ELEKTRİK-ELEKTRONİK TEKNOLOJİSİ ALANI (SINAVSIZ) — ELEKTRONİK VE HABERLEŞME" >ELEKTRİK-ELEKTRONİK TEKNOLOJİSİ ALANI (SINAVSIZ) — ELEKTRONİK VE HABERLEŞME</option>
+                                                                    <option value="ELEKTRİK-ELEKTRONİK TEKNOLOJİSİ ALANI (SINAVSIZ) — ENDÜSTRİYEL BAKIM ONARIM" >ELEKTRİK-ELEKTRONİK TEKNOLOJİSİ ALANI (SINAVSIZ) — ENDÜSTRİYEL BAKIM ONARIM</option>
+                                                                    <option value="ENDÜSTRİYEL KALİTE KONTROL" >ENDÜSTRİYEL KALİTE KONTROL</option>
+                                                                    <option value="ENDÜSTRİYEL OTOMASYON TEKNOLOJİLERİ" >ENDÜSTRİYEL OTOMASYON TEKNOLOJİLERİ</option>
+                                                                    <option value="ENDÜSTRİYEL OTOMASYON TEKNOLOJİLERİ ALANI" >ENDÜSTRİYEL OTOMASYON TEKNOLOJİLERİ ALANI</option>
+                                                                    <option value="ENDÜSTRİYEL OTOMASYON TEKNOLOJİLERİ ALANI (SINAVLI)" >ENDÜSTRİYEL OTOMASYON TEKNOLOJİLERİ ALANI (SINAVLI)</option>
+                                                                    <option value="ENDÜSTRİYEL OTOMASYON TEKNOLOJİLERİ ALANI (SINAVLI) — ELEKTRONİK VE HABERLEŞME" >ENDÜSTRİYEL OTOMASYON TEKNOLOJİLERİ ALANI (SINAVLI) — ELEKTRONİK VE HABERLEŞME</option>
+                                                                    <option value="ENDÜSTRİYEL OTOMASYON TEKNOLOJİLERİ ALANI (SINAVSIZ)" >ENDÜSTRİYEL OTOMASYON TEKNOLOJİLERİ ALANI (SINAVSIZ)</option>
+                                                                    <option value="GASTRONOMİ VE MUTFAK SANATLARI" >GASTRONOMİ VE MUTFAK SANATLARI</option>
+                                                                    <option value="GAZETECİLİK" >GAZETECİLİK</option>
+                                                                    <option value="GELENEKSEL TÜRK SANATLARI" >GELENEKSEL TÜRK SANATLARI</option>
+                                                                    <option value="GEMİ YAPIMI" >GEMİ YAPIMI</option>
+                                                                    <option value="GIDA TEKNOLOJİSİ" >GIDA TEKNOLOJİSİ</option>
+                                                                    <option value="GIDA TEKNOLOJİSİ ALANI (SINAVLI)" >GIDA TEKNOLOJİSİ ALANI (SINAVLI)</option>
+                                                                    <option value="GIDA TEKNOLOJİSİ ALANI (SINAVSIZ)" >GIDA TEKNOLOJİSİ ALANI (SINAVSIZ)</option>
+                                                                    <option value="GRAFİK VE FOTOĞRAF" >GRAFİK VE FOTOĞRAF</option>
+                                                                    <option value="GRAFİK VE FOTOĞRAF ALANI" >GRAFİK VE FOTOĞRAF ALANI</option>
+                                                                    <option value="GRAFİK VE FOTOĞRAF ALANI (SINAVSIZ)" >GRAFİK VE FOTOĞRAF ALANI (SINAVSIZ)</option>
+                                                                    <option value="GÜZELLİK HİZMETLERİ" >GÜZELLİK HİZMETLERİ</option>
+                                                                    <option value="GÜZELLİK HİZMETLERİ ALANI (SINAVLI)" >GÜZELLİK HİZMETLERİ ALANI (SINAVLI)</option>
+                                                                    <option value="HALKLA İLİŞKİLER" >HALKLA İLİŞKİLER</option>
+                                                                    <option value="HARİTA-TAPU-KADASTRO" >HARİTA-TAPU-KADASTRO</option>
+                                                                    <option value="HASTA VE YAŞLI HİZMETLERİ" >HASTA VE YAŞLI HİZMETLERİ</option>
+                                                                    <option value="HAYVAN YETİŞTİRİCİLİĞİ VE SAĞLIĞI" >HAYVAN YETİŞTİRİCİLİĞİ VE SAĞLIĞI</option>
+                                                                    <option value="İNŞAAT TEKNOLOJİSİ" >İNŞAAT TEKNOLOJİSİ</option>
+                                                                    <option value="İNŞAAT TEKNOLOJİSİ ALANI — MİMARİ YAPI TEKNİK RESSAMLIĞI" >İNŞAAT TEKNOLOJİSİ ALANI — MİMARİ YAPI TEKNİK RESSAMLIĞI</option>
+                                                                    <option value="İTFAİYECİLİK VE YANGIN GÜVENLİĞİ" >İTFAİYECİLİK VE YANGIN GÜVENLİĞİ</option>
+                                                                    <option value="KİMYA TEKNOLOJİSİ" >KİMYA TEKNOLOJİSİ</option>
+                                                                    <option value="KİMYA TEKNOLOJİSİ — KİMYA LABORATUVARI" >KİMYA TEKNOLOJİSİ — KİMYA LABORATUVARI</option>
+                                                                    <option value="KİMYA TEKNOLOJİSİ ALANI (SINAVLI) — DAL YOK" >KİMYA TEKNOLOJİSİ ALANI (SINAVLI) — DAL YOK</option>
+                                                                    <option value="KİMYA TEKNOLOJİSİ ALANI (SINAVSIZ) — KİMYA LABORATUVARI" >KİMYA TEKNOLOJİSİ ALANI (SINAVSIZ) — KİMYA LABORATUVARI</option>
+                                                                    <option value="KONAKLAMA VE SEYAHAT HİZMETLERİ" >KONAKLAMA VE SEYAHAT HİZMETLERİ</option>
+                                                                    <option value="KONAKLAMA VE SEYAHAT HİZMETLERİ ALANI (SINAVSIZ) — KONAKLAMA HİZMETLERİ" >KONAKLAMA VE SEYAHAT HİZMETLERİ ALANI (SINAVSIZ) — KONAKLAMA HİZMETLERİ</option>
+                                                                    <option value="KUYUMCULUK TEKNOLOJİSİ" >KUYUMCULUK TEKNOLOJİSİ</option>
+                                                                    <option value="LABORATUVAR HİZMETLERİ" >LABORATUVAR HİZMETLERİ</option>
+                                                                    <option value="MAKİNE VE TASARIM TEKNOLOJİSİ" >MAKİNE VE TASARIM TEKNOLOJİSİ</option>
+                                                                    <option value="MAKİNE VE TASARIM TEKNOLOJİSİ — BİLGİSAYAR DESTEKLİ MAKİNE RESSAMLIĞI" >MAKİNE VE TASARIM TEKNOLOJİSİ — BİLGİSAYAR DESTEKLİ MAKİNE RESSAMLIĞI</option>
+                                                                    <option value="MAKİNE VE TASARIM TEKNOLOJİSİ ALANI" >MAKİNE VE TASARIM TEKNOLOJİSİ ALANI</option>
+                                                                    <option value="MAKİNE VE TASARIM TEKNOLOJİSİ ALANI — BİLGİSAYARLI MAKİNE İMALATI" >MAKİNE VE TASARIM TEKNOLOJİSİ ALANI — BİLGİSAYARLI MAKİNE İMALATI</option>
+                                                                    <option value="MAKİNE VE TASARIM TEKNOLOJİSİ ALANI (SINAVLI)" >MAKİNE VE TASARIM TEKNOLOJİSİ ALANI (SINAVLI)</option>
+                                                                    <option value="MAKİNE VE TASARIM TEKNOLOJİSİ ALANI (SINAVLI) — BİLGİSAYAR DESTEKLİ MAKİNE RESSAMLIĞI" >MAKİNE VE TASARIM TEKNOLOJİSİ ALANI (SINAVLI) — BİLGİSAYAR DESTEKLİ MAKİNE RESSAMLIĞI</option>
+                                                                    <option value="MAKİNE VE TASARIM TEKNOLOJİSİ ALANI (SINAVLI) — DAL YOK" >MAKİNE VE TASARIM TEKNOLOJİSİ ALANI (SINAVLI) — DAL YOK</option>
+                                                                    <option value="MAKİNE VE TASARIM TEKNOLOJİSİ ALANI (SINAVLI) — ENDÜSTRİYEL KALIP" >MAKİNE VE TASARIM TEKNOLOJİSİ ALANI (SINAVLI) — ENDÜSTRİYEL KALIP</option>
+                                                                    <option value="MAKİNE VE TASARIM TEKNOLOJİSİ ALANI (SINAVSIZ) — BİLGİSAYAR DESTEKLİ MAKİNE RESSAMLIĞI" >MAKİNE VE TASARIM TEKNOLOJİSİ ALANI (SINAVSIZ) — BİLGİSAYAR DESTEKLİ MAKİNE RESSAMLIĞI</option>
+                                                                    <option value="MAKİNE VE TASARIM TEKNOLOJİSİ ALANI (SINAVSIZ) — BİLGİSAYARLI MAKİNE İMALATI" >MAKİNE VE TASARIM TEKNOLOJİSİ ALANI (SINAVSIZ) — BİLGİSAYARLI MAKİNE İMALATI</option>
+                                                                    <option value="MAKİNE VE TASARIM TEKNOLOJİSİ ALANI (SINAVSIZ) — DAL YOK" >MAKİNE VE TASARIM TEKNOLOJİSİ ALANI (SINAVSIZ) — DAL YOK</option>
+                                                                    <option value="MAKİNE VE TASARIM TEKNOLOJİSİ ALANI (SINAVSIZ) — ENDÜSTRİYEL KALIP" >MAKİNE VE TASARIM TEKNOLOJİSİ ALANI (SINAVSIZ) — ENDÜSTRİYEL KALIP</option>
+                                                                    <option value="MATBAA TEKNOLOJİSİ" >MATBAA TEKNOLOJİSİ</option>
+                                                                    <option value="METAL TEKNOLOJİSİ" >METAL TEKNOLOJİSİ</option>
+                                                                    <option value="METAL TEKNOLOJİSİ ALANI" >METAL TEKNOLOJİSİ ALANI</option>
+                                                                    <option value="METAL TEKNOLOJİSİ ALANI (SINAVLI) — METAL DOĞRAMA" >METAL TEKNOLOJİSİ ALANI (SINAVLI) — METAL DOĞRAMA</option>
+                                                                    <option value="METAL TEKNOLOJİSİ ALANI (SINAVSIZ) — DAL YOK" >METAL TEKNOLOJİSİ ALANI (SINAVSIZ) — DAL YOK</option>
+                                                                    <option value="METAL TEKNOLOJİSİ ALANI (SINAVSIZ) — METAL DOĞRAMA" >METAL TEKNOLOJİSİ ALANI (SINAVSIZ) — METAL DOĞRAMA</option>
+                                                                    <option value="METALÜRJİ TEKNOLOJİSİ" >METALÜRJİ TEKNOLOJİSİ</option>
+                                                                    <option value="MOBİLYA VE İÇ MEKAN TASARIMI" >MOBİLYA VE İÇ MEKAN TASARIMI</option>
+                                                                    <option value="MOBİLYA VE İÇ MEKÂN TASARIMI ALANI" >MOBİLYA VE İÇ MEKÂN TASARIMI ALANI</option>
+                                                                    <option value="MODA TASARIM TEKNOLOJİLERİ" >MODA TASARIM TEKNOLOJİLERİ</option>
+                                                                    <option value="MODA TASARIM TEKNOLOJİLERİ — GİYSİ KALIP TASARIMI VE ÜRETİMİ" >MODA TASARIM TEKNOLOJİLERİ — GİYSİ KALIP TASARIMI VE ÜRETİMİ</option>
+                                                                    <option value="MOTORLU ARAÇLAR TEKNOLOJİSİ" >MOTORLU ARAÇLAR TEKNOLOJİSİ</option>
+                                                                    <option value="MUHASEBE VE FİNANSMAN" >MUHASEBE VE FİNANSMAN</option>
+                                                                    <option value="MUHASEBE VE FİNANSMAN ALANI (SINAVSIZ)" >MUHASEBE VE FİNANSMAN ALANI (SINAVSIZ)</option>
+                                                                    <option value="PAZARLAMA VE PERAKENDE — SATIŞ DANIŞMANLIĞI" >PAZARLAMA VE PERAKENDE — SATIŞ DANIŞMANLIĞI</option>
+                                                                    <option value="PAZARLAMA VE PERAKENDE — SİGORTACILIK" >PAZARLAMA VE PERAKENDE — SİGORTACILIK</option>
+                                                                    <option value="PAZARLAMA VE PERAKENDE ALANI (SINAVSIZ) — SATIŞ DANIŞMANLIĞI" >PAZARLAMA VE PERAKENDE ALANI (SINAVSIZ) — SATIŞ DANIŞMANLIĞI</option>
+                                                                    <option value="PAZARLAMA VE PERAKNEDE" >PAZARLAMA VE PERAKNEDE</option>
+                                                                    <option value="PLASTİK TEKNOLOJİSİ" >PLASTİK TEKNOLOJİSİ</option>
+                                                                    <option value="RADYO VE TELEVİZYON" >RADYO VE TELEVİZYON</option>
+                                                                    <option value="RADYO-TELEVİZYON" >RADYO-TELEVİZYON</option>
+                                                                    <option value="RADYO-TELEVİZYON ALANI" >RADYO-TELEVİZYON ALANI</option>
+                                                                    <option value="RAYLI SİSTEMLER TEKNOLOJİSİ" >RAYLI SİSTEMLER TEKNOLOJİSİ</option>
+                                                                    <option value="SAĞLIK HİZMETLERİ" >SAĞLIK HİZMETLERİ</option>
+                                                                    <option value="SAĞLIK HİZMETLERİ — SAĞLIK BAKIM TEKNİSYENLİĞİ" >SAĞLIK HİZMETLERİ — SAĞLIK BAKIM TEKNİSYENLİĞİ</option>
+                                                                    <option value="SAĞLIK HİZMETLERİ ALANI — HASTA VE YAŞLI BAKIMI" >SAĞLIK HİZMETLERİ ALANI — HASTA VE YAŞLI BAKIMI</option>
+                                                                    <option value="SAĞLIK HİZMETLERİ ALANI — SAĞLIK BAKIM TEKNİSYENLİĞİ" >SAĞLIK HİZMETLERİ ALANI — SAĞLIK BAKIM TEKNİSYENLİĞİ</option>
+                                                                    <option value="SERAMİK VE CAM TEKNOLOJİSİ" >SERAMİK VE CAM TEKNOLOJİSİ</option>
+                                                                    <option value="SİBER GÜVENLİK" >SİBER GÜVENLİK</option>
+                                                                    <option value="TARIM" >TARIM</option>
+                                                                    <option value="TEKSTİL TEKNOLOJİSİ" >TEKSTİL TEKNOLOJİSİ</option>
+                                                                    <option value="TESİSAT TEKNOLOJİSİ VE İKLİMLENDİRME" >TESİSAT TEKNOLOJİSİ VE İKLİMLENDİRME</option>
+                                                                    <option value="TESİSAT TEKNOLOJİSİ VE İKLİMLENDİRME ALANI — DAL YOK" >TESİSAT TEKNOLOJİSİ VE İKLİMLENDİRME ALANI — DAL YOK</option>
+                                                                    <option value="TESİSAT TEKNOLOJİSİ VE İKLİMLENDİRME ALANI — SOĞUTMA VE İKLİMLENDİRME SİSTEMLERİ" >TESİSAT TEKNOLOJİSİ VE İKLİMLENDİRME ALANI — SOĞUTMA VE İKLİMLENDİRME SİSTEMLERİ</option>
+                                                                    <option value="TESİSAT TEKNOLOJİSİ VE İKLİMLENDİRME ALANI — TESİSAT VE ENERJİ SİSTEMLERİ" >TESİSAT TEKNOLOJİSİ VE İKLİMLENDİRME ALANI — TESİSAT VE ENERJİ SİSTEMLERİ</option>
+                                                                    <option value="UÇAK BAKIM" >UÇAK BAKIM</option>
+                                                                    <option value="ULAŞTIRMA HİZMETLERİ" >ULAŞTIRMA HİZMETLERİ</option>
+                                                                    <option value="ULAŞTIRMA HİZMETLERİ ALANI (SINAVSIZ) — LOJİSTİK" >ULAŞTIRMA HİZMETLERİ ALANI (SINAVSIZ) — LOJİSTİK</option>
+                                                                    <option value="YAPAY ZEKA" >YAPAY ZEKA</option>
+                                                                    <option value="YENİLENEBİLİR ENERJİ TEKNOLOJİLERİ" >YENİLENEBİLİR ENERJİ TEKNOLOJİLERİ</option>
+                                                                    <option value="YENİLENEBİLİR ENERJİ TEKNOLOJİLERİ ALANI (SINAVLI)" >YENİLENEBİLİR ENERJİ TEKNOLOJİLERİ ALANI (SINAVLI)</option>
+                                                                    <option value="YİYECEK İÇECEK HİZMETLERİ" >YİYECEK İÇECEK HİZMETLERİ</option>
+                                                                    <option value="YİYECEK İÇECEK HİZMETLERİ ALANI" >YİYECEK İÇECEK HİZMETLERİ ALANI</option>
+                                                                    <option value="YİYECEK İÇECEK HİZMETLERİ ALANI (SINAVLI)" >YİYECEK İÇECEK HİZMETLERİ ALANI (SINAVLI)</option>
+                                                                    <option value="YİYECEK İÇECEK HİZMETLERİ ALANI (SINAVSIZ)" >YİYECEK İÇECEK HİZMETLERİ ALANI (SINAVSIZ)</option>
+                                                            </select>
+                                            </div>
+                    <div>
+                        <label for="f_dil">Yabancı dil</label>
+                                                    <select name="f_dil" id="f_dil">
+                                <option value="">Tümü</option>
+                                                                    <option value="ALMANCA" >ALMANCA</option>
+                                                                    <option value="İNGİLİZCE" >İNGİLİZCE</option>
+                                                                    <option value="İNGİLİZCE - FRANSIZCA - RUSÇA" >İNGİLİZCE - FRANSIZCA - RUSÇA</option>
+                                                                    <option value="İNGİLİZCE + İSPANYOLCA" >İNGİLİZCE + İSPANYOLCA</option>
+                                                                    <option value="İNGİLİZCE-HAZIRLIK" >İNGİLİZCE-HAZIRLIK</option>
+                                                                    <option value="YOK" >YOK</option>
+                                                            </select>
+                                            </div>
+                    <div>
+                        <label for="f_yerlesme">Yerleşme türü</label>
+                                                    <select name="f_yerlesme" id="f_yerlesme">
+                                <option value="">Tümü</option>
+                                                                    <option value="LGS" selected>LGS</option>
+                                                                    <option value="OBP" >OBP</option>
+                                                            </select>
+                                            </div>
+                    <div>
+                        <label for="taban_en_az">Taban Puan En Az</label>
+                                                    <input type="text" name="taban_en_az" id="taban_en_az" inputmode="decimal" placeholder="Örn. 250,5" value="">
+                                            </div>
+                    <div>
+                        <label for="taban_en_fazla">Taban Puan En Fazla</label>
+                                                    <input type="text" name="taban_en_fazla" id="taban_en_fazla" inputmode="decimal" placeholder="Örn. 450,75" value="">
+                                            </div>
+                </div>
+                <div class="ba-actions">
+                    <button type="submit" class="ba-btn ba-btn-primary"><i class="fas fa-filter"></i> Filtrele</button>
+                    <a href="bolum_analiz.php" class="ba-btn ba-btn-secondary" style="display:inline-block;line-height:1.4;">Temizle</a>
+                </div>
+            </form>
+
+            <p class="ba-meta">
+                Toplam <strong>324</strong> kayıt
+                (sayfa 2 / 7, sayfa başına 50)
+            </p>
+
+                            <div class="ba-table-wrap">
+                    <table class="ba-table">
+                        <thead>
+                            <tr>
+                                                                                                            <th><a href="bolum_analiz.php?f_yerlesme=LGS&amp;page=1&amp;f_ilce=&amp;f_okul=&amp;f_program=&amp;f_alan=&amp;f_dil=&amp;taban_en_az=&amp;taban_en_fazla=&amp;sort_col=Kurum+Kodu&amp;sort_dir=asc" title="Sıralama: A→Z veya Z→A" style="color:#fff;text-decoration:none;white-space:nowrap;display:inline-flex;align-items:center;">Kurum Kodu<i class="fas fa-sort" aria-hidden="true" style="margin-left:6px;opacity:0.65;vertical-align:middle;"></i></a></th>
+                                                                                                                                                <th><a href="bolum_analiz.php?f_yerlesme=LGS&amp;page=1&amp;f_ilce=&amp;f_okul=&amp;f_program=&amp;f_alan=&amp;f_dil=&amp;taban_en_az=&amp;taban_en_fazla=&amp;sort_col=%C4%B0l%C3%A7e+Ad%C4%B1&amp;sort_dir=asc" title="Sıralama: A→Z veya Z→A" style="color:#fff;text-decoration:none;white-space:nowrap;display:inline-flex;align-items:center;">İlçe Adı<i class="fas fa-sort" aria-hidden="true" style="margin-left:6px;opacity:0.65;vertical-align:middle;"></i></a></th>
+                                                                                                                                                <th><a href="bolum_analiz.php?f_yerlesme=LGS&amp;page=1&amp;f_ilce=&amp;f_okul=&amp;f_program=&amp;f_alan=&amp;f_dil=&amp;taban_en_az=&amp;taban_en_fazla=&amp;sort_col=Okul+Ad%C4%B1&amp;sort_dir=asc" title="Sıralama: A→Z veya Z→A" style="color:#fff;text-decoration:none;white-space:nowrap;display:inline-flex;align-items:center;">Okul Adı<i class="fas fa-sort" aria-hidden="true" style="margin-left:6px;opacity:0.65;vertical-align:middle;"></i></a></th>
+                                                                                                                                                <th><a href="bolum_analiz.php?f_yerlesme=LGS&amp;page=1&amp;f_ilce=&amp;f_okul=&amp;f_program=&amp;f_alan=&amp;f_dil=&amp;taban_en_az=&amp;taban_en_fazla=&amp;sort_col=Program+Ad%C4%B1&amp;sort_dir=asc" title="Sıralama: A→Z veya Z→A" style="color:#fff;text-decoration:none;white-space:nowrap;display:inline-flex;align-items:center;">Program Adı<i class="fas fa-sort" aria-hidden="true" style="margin-left:6px;opacity:0.65;vertical-align:middle;"></i></a></th>
+                                                                                                                                                <th><a href="bolum_analiz.php?f_yerlesme=LGS&amp;page=1&amp;f_ilce=&amp;f_okul=&amp;f_program=&amp;f_alan=&amp;f_dil=&amp;taban_en_az=&amp;taban_en_fazla=&amp;sort_col=Alan+Ad%C4%B1&amp;sort_dir=asc" title="Sıralama: A→Z veya Z→A" style="color:#fff;text-decoration:none;white-space:nowrap;display:inline-flex;align-items:center;">Alan Adı<i class="fas fa-sort" aria-hidden="true" style="margin-left:6px;opacity:0.65;vertical-align:middle;"></i></a></th>
+                                                                                                                                                <th><a href="bolum_analiz.php?f_yerlesme=LGS&amp;page=1&amp;f_ilce=&amp;f_okul=&amp;f_program=&amp;f_alan=&amp;f_dil=&amp;taban_en_az=&amp;taban_en_fazla=&amp;sort_col=Yabanc%C4%B1+Dil&amp;sort_dir=asc" title="Sıralama: A→Z veya Z→A" style="color:#fff;text-decoration:none;white-space:nowrap;display:inline-flex;align-items:center;">Yabancı Dil<i class="fas fa-sort" aria-hidden="true" style="margin-left:6px;opacity:0.65;vertical-align:middle;"></i></a></th>
+                                                                                                                                                <th><a href="bolum_analiz.php?f_yerlesme=LGS&amp;page=1&amp;f_ilce=&amp;f_okul=&amp;f_program=&amp;f_alan=&amp;f_dil=&amp;taban_en_az=&amp;taban_en_fazla=&amp;sort_col=Yerle%C5%9Fme+T%C3%BCr%C3%BC&amp;sort_dir=asc" title="Sıralama: A→Z veya Z→A" style="color:#fff;text-decoration:none;white-space:nowrap;display:inline-flex;align-items:center;">Yerleşme Türü<i class="fas fa-sort" aria-hidden="true" style="margin-left:6px;opacity:0.65;vertical-align:middle;"></i></a></th>
+                                                                                                                                                <th><a href="bolum_analiz.php?f_yerlesme=LGS&amp;page=1&amp;f_ilce=&amp;f_okul=&amp;f_program=&amp;f_alan=&amp;f_dil=&amp;taban_en_az=&amp;taban_en_fazla=&amp;sort_col=2026+Kontenjan&amp;sort_dir=asc" title="Sıralama: A→Z veya Z→A" style="color:#fff;text-decoration:none;white-space:nowrap;display:inline-flex;align-items:center;">2026 Kontenjan<i class="fas fa-sort" aria-hidden="true" style="margin-left:6px;opacity:0.65;vertical-align:middle;"></i></a></th>
+                                                                                                                                                <th><a href="bolum_analiz.php?f_yerlesme=LGS&amp;page=1&amp;f_ilce=&amp;f_okul=&amp;f_program=&amp;f_alan=&amp;f_dil=&amp;taban_en_az=&amp;taban_en_fazla=&amp;sort_col=2025+Kontenjan&amp;sort_dir=asc" title="Sıralama: A→Z veya Z→A" style="color:#fff;text-decoration:none;white-space:nowrap;display:inline-flex;align-items:center;">2025 Kontenjan<i class="fas fa-sort" aria-hidden="true" style="margin-left:6px;opacity:0.65;vertical-align:middle;"></i></a></th>
+                                                                                                                                                <th><a href="bolum_analiz.php?f_yerlesme=LGS&amp;page=1&amp;f_ilce=&amp;f_okul=&amp;f_program=&amp;f_alan=&amp;f_dil=&amp;taban_en_az=&amp;taban_en_fazla=&amp;sort_col=2025+Taban+Puan&amp;sort_dir=asc" title="Sıralama: düşük→yüksek veya yüksek→düşük (taban puan)" style="color:#fff;text-decoration:none;white-space:nowrap;display:inline-flex;align-items:center;">2025 Taban Puan<i class="fas fa-sort" aria-hidden="true" style="margin-left:6px;opacity:0.65;vertical-align:middle;"></i></a></th>
+                                                                                                                                                <th><a href="bolum_analiz.php?f_yerlesme=LGS&amp;page=1&amp;f_ilce=&amp;f_okul=&amp;f_program=&amp;f_alan=&amp;f_dil=&amp;taban_en_az=&amp;taban_en_fazla=&amp;sort_col=2024+Kontenjan&amp;sort_dir=asc" title="Sıralama: A→Z veya Z→A" style="color:#fff;text-decoration:none;white-space:nowrap;display:inline-flex;align-items:center;">2024 Kontenjan<i class="fas fa-sort" aria-hidden="true" style="margin-left:6px;opacity:0.65;vertical-align:middle;"></i></a></th>
+                                                                                                                                                <th><a href="bolum_analiz.php?f_yerlesme=LGS&amp;page=1&amp;f_ilce=&amp;f_okul=&amp;f_program=&amp;f_alan=&amp;f_dil=&amp;taban_en_az=&amp;taban_en_fazla=&amp;sort_col=2024+Taban+Puan&amp;sort_dir=asc" title="Sıralama: A→Z veya Z→A" style="color:#fff;text-decoration:none;white-space:nowrap;display:inline-flex;align-items:center;">2024 Taban Puan<i class="fas fa-sort" aria-hidden="true" style="margin-left:6px;opacity:0.65;vertical-align:middle;"></i></a></th>
+                                                                                                                                                <th><a href="bolum_analiz.php?f_yerlesme=LGS&amp;page=1&amp;f_ilce=&amp;f_okul=&amp;f_program=&amp;f_alan=&amp;f_dil=&amp;taban_en_az=&amp;taban_en_fazla=&amp;sort_col=2023+Kontenjan&amp;sort_dir=asc" title="Sıralama: A→Z veya Z→A" style="color:#fff;text-decoration:none;white-space:nowrap;display:inline-flex;align-items:center;">2023 Kontenjan<i class="fas fa-sort" aria-hidden="true" style="margin-left:6px;opacity:0.65;vertical-align:middle;"></i></a></th>
+                                                                                                                                                <th><a href="bolum_analiz.php?f_yerlesme=LGS&amp;page=1&amp;f_ilce=&amp;f_okul=&amp;f_program=&amp;f_alan=&amp;f_dil=&amp;taban_en_az=&amp;taban_en_fazla=&amp;sort_col=2023+Taban+Puan&amp;sort_dir=asc" title="Sıralama: A→Z veya Z→A" style="color:#fff;text-decoration:none;white-space:nowrap;display:inline-flex;align-items:center;">2023 Taban Puan<i class="fas fa-sort" aria-hidden="true" style="margin-left:6px;opacity:0.65;vertical-align:middle;"></i></a></th>
+                                                                                                </tr>
+                        </thead>
+                        <tbody>
+                                                            <tr>
+                                                                            <td>969781</td>
+                                                                            <td>BAYRAMPAŞA</td>
+                                                                            <td>ŞEHİT BÜYÜKELÇİ İSMAİL EREZ MESLEKİ VE TEKNİK ANADOLU LİSESİ</td>
+                                                                            <td>ANADOLU TEKNİK PROGRAMI</td>
+                                                                            <td>İTFAİYECİLİK VE YANGIN GÜVENLİĞİ</td>
+                                                                            <td>İNGİLİZCE</td>
+                                                                            <td>LGS</td>
+                                                                            <td>30</td>
+                                                                            <td>30</td>
+                                                                            <td>242,13</td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                    </tr>
+                                                            <tr>
+                                                                            <td>158910</td>
+                                                                            <td>BEŞİKTAŞ</td>
+                                                                            <td>ETİLER TURİZM MESLEKİ VE TEKNİK ANADOLU LİSESİ</td>
+                                                                            <td>ANADOLU MESLEK PROGRAMI</td>
+                                                                            <td>KONAKLAMA VE SEYAHAT HİZMETLERİ</td>
+                                                                            <td>İNGİLİZCE</td>
+                                                                            <td>LGS</td>
+                                                                            <td>60</td>
+                                                                            <td>60</td>
+                                                                            <td>231,73</td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                    </tr>
+                                                            <tr>
+                                                                            <td>158910</td>
+                                                                            <td>BEŞİKTAŞ</td>
+                                                                            <td>ETİLER TURİZM MESLEKİ VE TEKNİK ANADOLU LİSESİ</td>
+                                                                            <td>ANADOLU MESLEK PROGRAMI</td>
+                                                                            <td>YİYECEK İÇECEK HİZMETLERİ</td>
+                                                                            <td>İNGİLİZCE</td>
+                                                                            <td>LGS</td>
+                                                                            <td>90</td>
+                                                                            <td>90</td>
+                                                                            <td>223,95</td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                    </tr>
+                                                            <tr>
+                                                                            <td>966950</td>
+                                                                            <td>BEŞİKTAŞ</td>
+                                                                            <td>ZİYA KALKAVAN DENİZCİLİK MESLEKİ VE TEKNİK ANADOLU LİSESİ</td>
+                                                                            <td>ANADOLU TEKNİK PROGRAMI</td>
+                                                                            <td>DENİZCİLİK</td>
+                                                                            <td>İNGİLİZCE</td>
+                                                                            <td>LGS</td>
+                                                                            <td>120</td>
+                                                                            <td>120</td>
+                                                                            <td>317,17</td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                    </tr>
+                                                            <tr>
+                                                                            <td>765992</td>
+                                                                            <td>BEŞİKTAŞ</td>
+                                                                            <td>İSTANBUL TEKNİK ÜNİVERSİTESİ MESLEKİ VE TEKNİK ANADOLU LİSESİ</td>
+                                                                            <td>ANADOLU TEKNİK PROGRAMI</td>
+                                                                            <td>BİLİŞİM TEKNOLOJİLERİ</td>
+                                                                            <td>İNGİLİZCE</td>
+                                                                            <td>LGS</td>
+                                                                            <td>30</td>
+                                                                            <td>30</td>
+                                                                            <td>436,51</td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                    </tr>
+                                                            <tr>
+                                                                            <td>765992</td>
+                                                                            <td>BEŞİKTAŞ</td>
+                                                                            <td>İSTANBUL TEKNİK ÜNİVERSİTESİ MESLEKİ VE TEKNİK ANADOLU LİSESİ</td>
+                                                                            <td>ANADOLU TEKNİK PROGRAMI</td>
+                                                                            <td>ELEKTRİK ELEKTRONİK TEKNOLOJİSİ</td>
+                                                                            <td>İNGİLİZCE</td>
+                                                                            <td>LGS</td>
+                                                                            <td>30</td>
+                                                                            <td>30</td>
+                                                                            <td>426,42</td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                    </tr>
+                                                            <tr>
+                                                                            <td>765992</td>
+                                                                            <td>BEŞİKTAŞ</td>
+                                                                            <td>İSTANBUL TEKNİK ÜNİVERSİTESİ MESLEKİ VE TEKNİK ANADOLU LİSESİ</td>
+                                                                            <td>ANADOLU TEKNİK PROGRAMI</td>
+                                                                            <td>SİBER GÜVENLİK</td>
+                                                                            <td>İNGİLİZCE</td>
+                                                                            <td>LGS</td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td>YENİ AÇILDI</td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                    </tr>
+                                                            <tr>
+                                                                            <td>765992</td>
+                                                                            <td>BEŞİKTAŞ</td>
+                                                                            <td>İSTANBUL TEKNİK ÜNİVERSİTESİ MESLEKİ VE TEKNİK ANADOLU LİSESİ</td>
+                                                                            <td>ANADOLU TEKNİK PROGRAMI</td>
+                                                                            <td>YAPAY ZEKA</td>
+                                                                            <td>İNGİLİZCE</td>
+                                                                            <td>LGS</td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td>YENİ AÇILDI</td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                    </tr>
+                                                            <tr>
+                                                                            <td>158875</td>
+                                                                            <td>BEŞİKTAŞ</td>
+                                                                            <td>ORTAKÖY ZÜBEYDE HANIM MESLEKİ VE TEKNİK ANADOLU LİSESİ</td>
+                                                                            <td>ANADOLU MESLEK PROGRAMI</td>
+                                                                            <td>ÇOCUK GELİŞİMİ VE EĞİTİMİ</td>
+                                                                            <td>İNGİLİZCE</td>
+                                                                            <td>LGS</td>
+                                                                            <td>30</td>
+                                                                            <td>30</td>
+                                                                            <td>155,59</td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                    </tr>
+                                                            <tr>
+                                                                            <td>158875</td>
+                                                                            <td>BEŞİKTAŞ</td>
+                                                                            <td>ORTAKÖY ZÜBEYDE HANIM MESLEKİ VE TEKNİK ANADOLU LİSESİ</td>
+                                                                            <td>ANADOLU MESLEK PROGRAMI</td>
+                                                                            <td>GRAFİK VE FOTOĞRAF</td>
+                                                                            <td>İNGİLİZCE</td>
+                                                                            <td>LGS</td>
+                                                                            <td>30</td>
+                                                                            <td>30</td>
+                                                                            <td>147,60</td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                    </tr>
+                                                            <tr>
+                                                                            <td>158875</td>
+                                                                            <td>BEŞİKTAŞ</td>
+                                                                            <td>ORTAKÖY ZÜBEYDE HANIM MESLEKİ VE TEKNİK ANADOLU LİSESİ</td>
+                                                                            <td>ANADOLU MESLEK PROGRAMI</td>
+                                                                            <td>RADYO VE TELEVİZYON</td>
+                                                                            <td>İNGİLİZCE</td>
+                                                                            <td>LGS</td>
+                                                                            <td>30</td>
+                                                                            <td>30</td>
+                                                                            <td>169,45</td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                    </tr>
+                                                            <tr>
+                                                                            <td>158875</td>
+                                                                            <td>BEŞİKTAŞ</td>
+                                                                            <td>ORTAKÖY ZÜBEYDE HANIM MESLEKİ VE TEKNİK ANADOLU LİSESİ</td>
+                                                                            <td>ANADOLU MESLEK PROGRAMI</td>
+                                                                            <td>YİYECEK İÇECEK HİZMETLERİ</td>
+                                                                            <td>İNGİLİZCE</td>
+                                                                            <td>LGS</td>
+                                                                            <td>60</td>
+                                                                            <td>60</td>
+                                                                            <td>143,42</td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                    </tr>
+                                                            <tr>
+                                                                            <td>965232</td>
+                                                                            <td>BEŞİKTAŞ</td>
+                                                                            <td>İSOV-DİNÇKÖK MESLEKİ VE TEKNİK ANADOLU LİSESİ</td>
+                                                                            <td>ANADOLU MESLEK PROGRAMI</td>
+                                                                            <td>ELEKTRİK ELEKTRONİK TEKNOLOJİSİ</td>
+                                                                            <td>İNGİLİZCE</td>
+                                                                            <td>LGS</td>
+                                                                            <td>0</td>
+                                                                            <td>60</td>
+                                                                            <td>252,09</td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                    </tr>
+                                                            <tr>
+                                                                            <td>965232</td>
+                                                                            <td>BEŞİKTAŞ</td>
+                                                                            <td>İSOV-DİNÇKÖK MESLEKİ VE TEKNİK ANADOLU LİSESİ</td>
+                                                                            <td>ANADOLU MESLEK PROGRAMI</td>
+                                                                            <td>ENDÜSTRİYEL OTOMASYON TEKNOLOJİLERİ</td>
+                                                                            <td>İNGİLİZCE</td>
+                                                                            <td>LGS</td>
+                                                                            <td>0</td>
+                                                                            <td>30</td>
+                                                                            <td>259,54</td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                    </tr>
+                                                            <tr>
+                                                                            <td>965232</td>
+                                                                            <td>BEŞİKTAŞ</td>
+                                                                            <td>İSOV-DİNÇKÖK MESLEKİ VE TEKNİK ANADOLU LİSESİ</td>
+                                                                            <td>ANADOLU MESLEK PROGRAMI</td>
+                                                                            <td>YENİLENEBİLİR ENERJİ TEKNOLOJİLERİ</td>
+                                                                            <td>İNGİLİZCE</td>
+                                                                            <td>LGS</td>
+                                                                            <td>0</td>
+                                                                            <td>60</td>
+                                                                            <td>178,76</td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                    </tr>
+                                                            <tr>
+                                                                            <td>965232</td>
+                                                                            <td>BEŞİKTAŞ</td>
+                                                                            <td>İSOV-DİNÇKÖK MESLEKİ VE TEKNİK ANADOLU LİSESİ</td>
+                                                                            <td>ANADOLU TEKNİK PROGRAMI</td>
+                                                                            <td>ENDÜSTRİYEL OTOMASYON TEKNOLOJİLERİ</td>
+                                                                            <td>İNGİLİZCE</td>
+                                                                            <td>LGS</td>
+                                                                            <td>0</td>
+                                                                            <td>30</td>
+                                                                            <td>295,82</td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                    </tr>
+                                                            <tr>
+                                                                            <td>365923</td>
+                                                                            <td>BEŞİKTAŞ</td>
+                                                                            <td>RÜŞTÜ AKIN MESLEKİ VE TEKNİK ANADOLU LİSESİ</td>
+                                                                            <td>ANADOLU TEKNİK PROGRAMI</td>
+                                                                            <td>MODA TASARIM TEKNOLOJİLERİ</td>
+                                                                            <td>İNGİLİZCE</td>
+                                                                            <td>LGS</td>
+                                                                            <td>30</td>
+                                                                            <td>30</td>
+                                                                            <td>193,31</td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                    </tr>
+                                                            <tr>
+                                                                            <td>319438</td>
+                                                                            <td>BEŞİKTAŞ</td>
+                                                                            <td>M. ALİ BÜYÜKHANLI MESLEKİ VE TEKNİK ANADOLU LİSESİ</td>
+                                                                            <td>ANADOLU TEKNİK PROGRAMI</td>
+                                                                            <td>MUHASEBE VE FİNANSMAN</td>
+                                                                            <td>İNGİLİZCE</td>
+                                                                            <td>LGS</td>
+                                                                            <td>30</td>
+                                                                            <td>30</td>
+                                                                            <td>196,72</td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                    </tr>
+                                                            <tr>
+                                                                            <td>159043</td>
+                                                                            <td>BEYKOZ</td>
+                                                                            <td>BEYKOZ BARBAROS HAYRETTİN PAŞA MESLEKİ VE TEKNİK ANADOLU LİSESİ</td>
+                                                                            <td>ANADOLU MESLEK PROGRAMI</td>
+                                                                            <td>ELEKTRİK ELEKTRONİK TEKNOLOJİSİ</td>
+                                                                            <td>İNGİLİZCE</td>
+                                                                            <td>LGS</td>
+                                                                            <td>30</td>
+                                                                            <td>30</td>
+                                                                            <td>269,85</td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                    </tr>
+                                                            <tr>
+                                                                            <td>159043</td>
+                                                                            <td>BEYKOZ</td>
+                                                                            <td>BEYKOZ BARBAROS HAYRETTİN PAŞA MESLEKİ VE TEKNİK ANADOLU LİSESİ</td>
+                                                                            <td>ANADOLU MESLEK PROGRAMI</td>
+                                                                            <td>DENİZCİLİK</td>
+                                                                            <td>İNGİLİZCE</td>
+                                                                            <td>LGS</td>
+                                                                            <td>60</td>
+                                                                            <td>60</td>
+                                                                            <td>219,31</td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                    </tr>
+                                                            <tr>
+                                                                            <td>365673</td>
+                                                                            <td>BEYKOZ</td>
+                                                                            <td>ŞEHİT ÖMER HALİSDEMİR MTAL</td>
+                                                                            <td>ANADOLU TEKNİK PROGRAMI</td>
+                                                                            <td>MOTORLU ARAÇLAR TEKNOLOJİSİ</td>
+                                                                            <td>İNGİLİZCE</td>
+                                                                            <td>LGS</td>
+                                                                            <td>30</td>
+                                                                            <td>30</td>
+                                                                            <td>179,41</td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                    </tr>
+                                                            <tr>
+                                                                            <td>765345</td>
+                                                                            <td>BEYLİKDÜZÜ</td>
+                                                                            <td>İSTANBUL TİCARET ODASI 
+BEYLİKDÜZÜ OSB MESLEKİ VE
+ TEKNİK ANADOLU LİSESİ</td>
+                                                                            <td>ANADOLU MESLEK PROGRAMI</td>
+                                                                            <td>ELEKTRİK ELEKTRONİK TEKNOLOJİSİ</td>
+                                                                            <td></td>
+                                                                            <td>LGS</td>
+                                                                            <td>30</td>
+                                                                            <td>30</td>
+                                                                            <td>207,34</td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                    </tr>
+                                                            <tr>
+                                                                            <td>765345</td>
+                                                                            <td>BEYLİKDÜZÜ</td>
+                                                                            <td>İSTANBUL TİCARET ODASI 
+BEYLİKDÜZÜ OSB MESLEKİ VE
+ TEKNİK ANADOLU LİSESİ</td>
+                                                                            <td>ANADOLU MESLEK PROGRAMI</td>
+                                                                            <td>MAKİNE VE TASARIM TEKNOLOJİSİ</td>
+                                                                            <td></td>
+                                                                            <td>LGS</td>
+                                                                            <td>30</td>
+                                                                            <td>30</td>
+                                                                            <td>206,47</td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                    </tr>
+                                                            <tr>
+                                                                            <td>766305</td>
+                                                                            <td>BEYLİKDÜZÜ</td>
+                                                                            <td>BEYLİKDÜZÜ BORSA İSTANBUL ÇOK PROGRAMLI ANADOLU LİSESİ</td>
+                                                                            <td>ANADOLU MESLEK PROGRAMI</td>
+                                                                            <td>MATBAA TEKNOLOJİSİ</td>
+                                                                            <td>İNGİLİZCE</td>
+                                                                            <td>LGS</td>
+                                                                            <td>30</td>
+                                                                            <td>30</td>
+                                                                            <td>160,35</td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                    </tr>
+                                                            <tr>
+                                                                            <td>745882</td>
+                                                                            <td>BEYLİKDÜZÜ</td>
+                                                                            <td>BEYLİKDÜZÜ ŞEHİT ŞAFAK EVRAN 
+TİCARET MESLEKİ VE TEKNİK ANADOLU LİSESİ</td>
+                                                                            <td>ANADOLU MESLEK PROGRAMI</td>
+                                                                            <td>YİYECEK İÇECEK HİZMETLERİ</td>
+                                                                            <td>İNGİLİZCE</td>
+                                                                            <td>LGS</td>
+                                                                            <td>30</td>
+                                                                            <td>30</td>
+                                                                            <td>235,59</td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                    </tr>
+                                                            <tr>
+                                                                            <td>745882</td>
+                                                                            <td>BEYLİKDÜZÜ</td>
+                                                                            <td>BEYLİKDÜZÜ ŞEHİT ŞAFAK EVRAN 
+TİCARET MESLEKİ VE TEKNİK ANADOLU LİSESİ</td>
+                                                                            <td>ANADOLU MESLEK PROGRAMI</td>
+                                                                            <td>KONAKLAMA VE SEYAHAT HİZMETLERİ</td>
+                                                                            <td>İNGİLİZCE</td>
+                                                                            <td>LGS</td>
+                                                                            <td>30</td>
+                                                                            <td>30</td>
+                                                                            <td>214,91</td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                    </tr>
+                                                            <tr>
+                                                                            <td>967503</td>
+                                                                            <td>BEYLİKDÜZÜ</td>
+                                                                            <td>GÜRPINAR BORSA İSTANBUL MTAL</td>
+                                                                            <td>ANADOLU MESLEK PROGRAMI</td>
+                                                                            <td>BİYOMEDİKAL CİHAZ TEKNOLOJİLERİ</td>
+                                                                            <td>İNGİLİZCE</td>
+                                                                            <td>LGS</td>
+                                                                            <td>30</td>
+                                                                            <td>30</td>
+                                                                            <td>241,23</td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                    </tr>
+                                                            <tr>
+                                                                            <td>967503</td>
+                                                                            <td>BEYLİKDÜZÜ</td>
+                                                                            <td>GÜRPINAR BORSA İSTANBUL MTAL</td>
+                                                                            <td>ANADOLU MESLEK PROGRAMI</td>
+                                                                            <td>BİLİŞİM TEKNOLOJİLERİ</td>
+                                                                            <td>İNGİLİZCE</td>
+                                                                            <td>LGS</td>
+                                                                            <td>76</td>
+                                                                            <td>129</td>
+                                                                            <td>İLK DEFA SINAVLI ÖĞRENCİ ALINACAK</td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                    </tr>
+                                                            <tr>
+                                                                            <td>967503</td>
+                                                                            <td>BEYLİKDÜZÜ</td>
+                                                                            <td>GÜRPINAR BORSA İSTANBUL MTAL</td>
+                                                                            <td>ANADOLU MESLEK PROGRAMI</td>
+                                                                            <td>KİMYA TEKNOLOJİSİ</td>
+                                                                            <td>İNGİLİZCE</td>
+                                                                            <td>LGS</td>
+                                                                            <td>114</td>
+                                                                            <td>172</td>
+                                                                            <td>İLK DEFA SINAVLI ÖĞRENCİ ALINACAK</td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                    </tr>
+                                                            <tr>
+                                                                            <td>967503</td>
+                                                                            <td>BEYLİKDÜZÜ</td>
+                                                                            <td>GÜRPINAR BORSA İSTANBUL MTAL</td>
+                                                                            <td>ANADOLU MESLEK PROGRAMI</td>
+                                                                            <td>ELEKTRİK ELEKTRONİK TEKNOLOJİSİ</td>
+                                                                            <td>İNGİLİZCE</td>
+                                                                            <td>LGS</td>
+                                                                            <td>114</td>
+                                                                            <td>129</td>
+                                                                            <td>İLK DEFA SINAVLI ÖĞRENCİ ALINACAK</td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                    </tr>
+                                                            <tr>
+                                                                            <td>381574</td>
+                                                                            <td>BEYOĞLU</td>
+                                                                            <td>İSTANBUL TİCARET ODASI MESLEKİ VE TEKNİK ANADOLU LİSESİ</td>
+                                                                            <td>ANADOLU TEKNİK PROGRAMI</td>
+                                                                            <td>MODA TASARIM TEKNOLOJİLERİ</td>
+                                                                            <td>İNGİLİZCE</td>
+                                                                            <td>LGS</td>
+                                                                            <td>30</td>
+                                                                            <td>30</td>
+                                                                            <td>139,37</td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                    </tr>
+                                                            <tr>
+                                                                            <td>159305</td>
+                                                                            <td>BEYOĞLU</td>
+                                                                            <td>GALATA MESLEKİ VE TEKNİK ANADOLU LİSESİ</td>
+                                                                            <td>ANADOLU MESLEK PROGRAMI</td>
+                                                                            <td>ELEKTRİK ELEKTRONİK TEKNOLOJİSİ</td>
+                                                                            <td>İNGİLİZCE</td>
+                                                                            <td>LGS</td>
+                                                                            <td>30</td>
+                                                                            <td>30</td>
+                                                                            <td>161,80</td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                    </tr>
+                                                            <tr>
+                                                                            <td>159354</td>
+                                                                            <td>BEYOĞLU</td>
+                                                                            <td>KABATAŞ TİCARET MESLEKİ VE TEKNİK ANADOLU LİSESİ</td>
+                                                                            <td>ANADOLU MESLEK PROGRAMI</td>
+                                                                            <td>PAZARLAMA VE PERAKNEDE</td>
+                                                                            <td>İNGİLİZCE</td>
+                                                                            <td>LGS</td>
+                                                                            <td>30</td>
+                                                                            <td>30</td>
+                                                                            <td>203,42</td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                    </tr>
+                                                            <tr>
+                                                                            <td>767383</td>
+                                                                            <td>BÜYÜKÇEKMECE</td>
+                                                                            <td>KAPTANI DERYA MESLEKİ VE TEKNİK ANADOLU LİSESİ</td>
+                                                                            <td>ANADOLU TEKNİK PROGRAMI</td>
+                                                                            <td>DENİZCİLİK</td>
+                                                                            <td>İNGİLİZCE</td>
+                                                                            <td>LGS</td>
+                                                                            <td>30</td>
+                                                                            <td>30</td>
+                                                                            <td>255,55</td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                    </tr>
+                                                            <tr>
+                                                                            <td>972018</td>
+                                                                            <td>BÜYÜKÇEKMECE</td>
+                                                                            <td>BÜYÜKÇEKMECE MTAL</td>
+                                                                            <td>ANADOLU MESLEK PROGRAMI</td>
+                                                                            <td>METAL TEKNOLOJİSİ</td>
+                                                                            <td>İNGİLİZCE</td>
+                                                                            <td>LGS</td>
+                                                                            <td>30</td>
+                                                                            <td>30</td>
+                                                                            <td>179,70</td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                    </tr>
+                                                            <tr>
+                                                                            <td>970804</td>
+                                                                            <td>BÜYÜKÇEKMECE</td>
+                                                                            <td>DOÇ. DR. BURHAN BAHRİYELİ MTAL</td>
+                                                                            <td>ANADOLU MESLEK PROGRAMI</td>
+                                                                            <td>TEKSTİL TEKNOLOJİSİ</td>
+                                                                            <td>İNGİLİZCE</td>
+                                                                            <td>LGS</td>
+                                                                            <td>30</td>
+                                                                            <td>30</td>
+                                                                            <td>160,89</td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                    </tr>
+                                                            <tr>
+                                                                            <td>970804</td>
+                                                                            <td>BÜYÜKÇEKMECE</td>
+                                                                            <td>DOÇ. DR. BURHAN BAHRİYELİ MTAL</td>
+                                                                            <td>ANADOLU MESLEK PROGRAMI</td>
+                                                                            <td>ULAŞTIRMA HİZMETLERİ</td>
+                                                                            <td>İNGİLİZCE</td>
+                                                                            <td>LGS</td>
+                                                                            <td>30</td>
+                                                                            <td>30</td>
+                                                                            <td>174,49</td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                    </tr>
+                                                            <tr>
+                                                                            <td>970804</td>
+                                                                            <td>BÜYÜKÇEKMECE</td>
+                                                                            <td>DOÇ. DR. BURHAN BAHRİYELİ MTAL</td>
+                                                                            <td>ANADOLU MESLEK PROGRAMI</td>
+                                                                            <td>MODA TASARIM TEKNOLOJİLERİ</td>
+                                                                            <td>İNGİLİZCE</td>
+                                                                            <td>LGS</td>
+                                                                            <td>30</td>
+                                                                            <td>30</td>
+                                                                            <td>146,96</td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                    </tr>
+                                                            <tr>
+                                                                            <td>974035</td>
+                                                                            <td>BÜYÜKÇEKMECE</td>
+                                                                            <td>ROSVİTA-TİMUR İMRAĞ MTAL</td>
+                                                                            <td>ANADOLU TEKNİK PROGRAMI</td>
+                                                                            <td>ENDÜSTRİYEL OTOMASYON TEKNOLOJİLERİ</td>
+                                                                            <td>İNGİLİZCE</td>
+                                                                            <td>LGS</td>
+                                                                            <td>30</td>
+                                                                            <td>30</td>
+                                                                            <td>198,14</td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                    </tr>
+                                                            <tr>
+                                                                            <td>974035</td>
+                                                                            <td>BÜYÜKÇEKMECE</td>
+                                                                            <td>ROSVİTA-TİMUR İMRAĞ MTAL</td>
+                                                                            <td>ANADOLU TEKNİK PROGRAMI</td>
+                                                                            <td>MAKİNE VE TASARIM TEKNOLOJİSİ</td>
+                                                                            <td>İNGİLİZCE</td>
+                                                                            <td>LGS</td>
+                                                                            <td>30</td>
+                                                                            <td>30</td>
+                                                                            <td>183,03</td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                    </tr>
+                                                            <tr>
+                                                                            <td>974035</td>
+                                                                            <td>BÜYÜKÇEKMECE</td>
+                                                                            <td>ROSVİTA-TİMUR İMRAĞ MTAL</td>
+                                                                            <td>ANADOLU TEKNİK PROGRAMI</td>
+                                                                            <td>ELEKTRİK ELEKTRONİK TEKNOLOJİSİ</td>
+                                                                            <td>İNGİLİZCE</td>
+                                                                            <td>LGS</td>
+                                                                            <td>30</td>
+                                                                            <td>30</td>
+                                                                            <td>180,30</td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                    </tr>
+                                                            <tr>
+                                                                            <td>159545</td>
+                                                                            <td>ÇATALCA</td>
+                                                                            <td>ARİF NİHAT ASYA MTAL</td>
+                                                                            <td>ANADOLU MESLEK PROGRAMI</td>
+                                                                            <td>MOTORLU ARAÇLAR TEKNOLOJİSİ</td>
+                                                                            <td>İNGİLİZCE</td>
+                                                                            <td>LGS</td>
+                                                                            <td>30</td>
+                                                                            <td>30</td>
+                                                                            <td>183,76</td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                    </tr>
+                                                            <tr>
+                                                                            <td>967506</td>
+                                                                            <td>ÇEKMEKÖY</td>
+                                                                            <td>TAŞDELEN BORSA İSTANBUL MESLEKİ VE TEKNİK ANADOLU LİSESİ</td>
+                                                                            <td>ANADOLU TEKNİK PROGRAMI</td>
+                                                                            <td>BİLİŞİM TEKNOLOJİLERİ</td>
+                                                                            <td>İNGİLİZCE</td>
+                                                                            <td>LGS</td>
+                                                                            <td>30</td>
+                                                                            <td>30</td>
+                                                                            <td>221,97</td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                    </tr>
+                                                            <tr>
+                                                                            <td>967506</td>
+                                                                            <td>ÇEKMEKÖY</td>
+                                                                            <td>TAŞDELEN BORSA İSTANBUL MESLEKİ VE TEKNİK ANADOLU LİSESİ</td>
+                                                                            <td>ANADOLU TEKNİK PROGRAMI</td>
+                                                                            <td>BİLİŞİM TEKNOLOJİLERİ</td>
+                                                                            <td>İNGİLİZCE</td>
+                                                                            <td>LGS</td>
+                                                                            <td>30</td>
+                                                                            <td>30</td>
+                                                                            <td>221,97</td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                    </tr>
+                                                            <tr>
+                                                                            <td>974283</td>
+                                                                            <td>ESENLER</td>
+                                                                            <td>ESENLER MESLEKİ VE TEKNİK ANADOLU LİSESİ</td>
+                                                                            <td>ANADOLU TEKNİK PROGRAMI</td>
+                                                                            <td>ELEKTRİK ELEKTRONİK TEKNOLOJİSİ</td>
+                                                                            <td>İNGİLİZCE</td>
+                                                                            <td>LGS</td>
+                                                                            <td>30</td>
+                                                                            <td>30</td>
+                                                                            <td>208,44</td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                    </tr>
+                                                            <tr>
+                                                                            <td>974283</td>
+                                                                            <td>ESENLER</td>
+                                                                            <td>ESENLER MESLEKİ VE TEKNİK ANADOLU LİSESİ</td>
+                                                                            <td>ANADOLU MESLEK PROGRAMI</td>
+                                                                            <td>TEKSTİL TEKNOLOJİSİ</td>
+                                                                            <td>İNGİLİZCE</td>
+                                                                            <td>LGS</td>
+                                                                            <td>30</td>
+                                                                            <td>30</td>
+                                                                            <td>177,24</td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                    </tr>
+                                                            <tr>
+                                                                            <td>970130</td>
+                                                                            <td>ESENYURT</td>
+                                                                            <td>FİKRİYE NÜZHET BİLGİNCAN MESLEKİ VE TEKNİK ANADOLU LİSESİ</td>
+                                                                            <td>ANADOLU MESLEK PROGRAMI</td>
+                                                                            <td>GIDA TEKNOLOJİSİ</td>
+                                                                            <td>İNGİLİZCE</td>
+                                                                            <td>LGS</td>
+                                                                            <td>30</td>
+                                                                            <td>30</td>
+                                                                            <td>170</td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                    </tr>
+                                                            <tr>
+                                                                            <td>967749</td>
+                                                                            <td>ESENYURT</td>
+                                                                            <td>KIRAÇ BORSA İSTANBUL MESLEKİ VE TEKNİK ANADOLU LİSESİ</td>
+                                                                            <td>ANADOLU MESLEK PROGRAMI</td>
+                                                                            <td>BİLİŞİM TEKNOLOJİLERİ</td>
+                                                                            <td>İNGİLİZCE</td>
+                                                                            <td>LGS</td>
+                                                                            <td>30</td>
+                                                                            <td>30</td>
+                                                                            <td>149,98</td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                    </tr>
+                                                            <tr>
+                                                                            <td>967749</td>
+                                                                            <td>ESENYURT</td>
+                                                                            <td>KIRAÇ BORSA İSTANBUL MESLEKİ VE TEKNİK ANADOLU LİSESİ</td>
+                                                                            <td>ANADOLU MESLEK PROGRAMI</td>
+                                                                            <td>ELEKTRİK ELEKTRONİK TEKNOLOJİSİ</td>
+                                                                            <td>İNGİLİZCE</td>
+                                                                            <td>LGS</td>
+                                                                            <td>30</td>
+                                                                            <td>30</td>
+                                                                            <td>159,08</td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                    </tr>
+                                                            <tr>
+                                                                            <td>967749</td>
+                                                                            <td>ESENYURT</td>
+                                                                            <td>KIRAÇ BORSA İSTANBUL MESLEKİ VE TEKNİK ANADOLU LİSESİ</td>
+                                                                            <td>ANADOLU TEKNİK PROGRAMI</td>
+                                                                            <td>BİLİŞİM TEKNOLOJİLERİ</td>
+                                                                            <td>İNGİLİZCE</td>
+                                                                            <td>LGS</td>
+                                                                            <td>30</td>
+                                                                            <td>30</td>
+                                                                            <td>198,55</td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                            <td></td>
+                                                                    </tr>
+                                                    </tbody>
+                    </table>
+                </div>
+                                    <p class="ba-kontenjan-footnote" role="note">
+                        * (9. sınıf toplam kontenjan sayısıdır. Bu sayı okul idaresi tarafından alanlara dağıtılacaktır.)
+                    </p>
+                            
+                            <nav class="ba-pager" aria-label="Sayfalama">
+                    <a href="bolum_analiz.php?f_yerlesme=LGS&amp;page=1&amp;f_ilce=&amp;f_okul=&amp;f_program=&amp;f_alan=&amp;f_dil=&amp;taban_en_az=&amp;taban_en_fazla=&amp;sort_col=&amp;sort_dir=asc">Önceki</a><a href="bolum_analiz.php?f_yerlesme=LGS&amp;page=1&amp;f_ilce=&amp;f_okul=&amp;f_program=&amp;f_alan=&amp;f_dil=&amp;taban_en_az=&amp;taban_en_fazla=&amp;sort_col=&amp;sort_dir=asc">1</a><span class="current">2</span><a href="bolum_analiz.php?f_yerlesme=LGS&amp;page=3&amp;f_ilce=&amp;f_okul=&amp;f_program=&amp;f_alan=&amp;f_dil=&amp;taban_en_az=&amp;taban_en_fazla=&amp;sort_col=&amp;sort_dir=asc">3</a><a href="bolum_analiz.php?f_yerlesme=LGS&amp;page=4&amp;f_ilce=&amp;f_okul=&amp;f_program=&amp;f_alan=&amp;f_dil=&amp;taban_en_az=&amp;taban_en_fazla=&amp;sort_col=&amp;sort_dir=asc">4</a><a href="bolum_analiz.php?f_yerlesme=LGS&amp;page=5&amp;f_ilce=&amp;f_okul=&amp;f_program=&amp;f_alan=&amp;f_dil=&amp;taban_en_az=&amp;taban_en_fazla=&amp;sort_col=&amp;sort_dir=asc">5</a><a href="bolum_analiz.php?f_yerlesme=LGS&amp;page=6&amp;f_ilce=&amp;f_okul=&amp;f_program=&amp;f_alan=&amp;f_dil=&amp;taban_en_az=&amp;taban_en_fazla=&amp;sort_col=&amp;sort_dir=asc">6</a><a href="bolum_analiz.php?f_yerlesme=LGS&amp;page=7&amp;f_ilce=&amp;f_okul=&amp;f_program=&amp;f_alan=&amp;f_dil=&amp;taban_en_az=&amp;taban_en_fazla=&amp;sort_col=&amp;sort_dir=asc">7</a><a href="bolum_analiz.php?f_yerlesme=LGS&amp;page=3&amp;f_ilce=&amp;f_okul=&amp;f_program=&amp;f_alan=&amp;f_dil=&amp;taban_en_az=&amp;taban_en_fazla=&amp;sort_col=&amp;sort_dir=asc">Sonraki</a>                </nav>
+                        </div>
+</section>
+
+<script>
+(function () {
+    var form = document.querySelector('form.ba-filters');
+    if (!form || String(form.getAttribute('method') || '').toLowerCase() !== 'get') return;
+
+    function clearSelect(id) {
+        var el = document.getElementById(id);
+        if (el && el.tagName === 'SELECT') el.value = '';
+    }
+
+    function submitForm() {
+        form.submit();
+    }
+
+    var ilce = document.getElementById('f_ilce');
+    if (ilce) {
+        ilce.addEventListener('change', function () {
+            clearSelect('f_okul');
+            clearSelect('f_program');
+            clearSelect('f_alan');
+            clearSelect('f_dil');
+            clearSelect('f_yerlesme');
+            submitForm();
+        });
+    }
+
+    var okul = document.getElementById('f_okul');
+    if (okul) {
+        okul.addEventListener('change', function () {
+            clearSelect('f_program');
+            clearSelect('f_alan');
+            clearSelect('f_dil');
+            clearSelect('f_yerlesme');
+            submitForm();
+        });
+    }
+
+    var program = document.getElementById('f_program');
+    if (program) {
+        program.addEventListener('change', function () {
+            clearSelect('f_alan');
+            clearSelect('f_dil');
+            clearSelect('f_yerlesme');
+            submitForm();
+        });
+    }
+
+    var alan = document.getElementById('f_alan');
+    if (alan) {
+        alan.addEventListener('change', function () {
+            clearSelect('f_dil');
+            clearSelect('f_yerlesme');
+            submitForm();
+        });
+    }
+
+    var dil = document.getElementById('f_dil');
+    if (dil) {
+        dil.addEventListener('change', function () {
+            clearSelect('f_yerlesme');
+            submitForm();
+        });
+    }
+
+    var yerlesme = document.getElementById('f_yerlesme');
+    if (yerlesme) {
+        yerlesme.addEventListener('change', submitForm);
+    }
+})();
+</script>
+
+        <!-- Alt Bilgi -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-widget">
+                    <h4>Hakkımızda</h4>
+                    <p>İstanbul İl Millî Eğitim Müdürlüğü Mesleki Eğitim Şubesi, mesleki eğitim alanında faaliyet gösteren tüm kurumları koordine etmekte ve desteklemektedir.</p>
+                </div>
+                
+                <div class="footer-widget">
+                    <h4>Hızlı Erişim</h4>
+                    <ul>
+                        <li><a href="index.php">Ana Sayfa</a></li>
+                        <li><a href="haberler.php">Haberler</a></li>
+                        <li><a href="duyurular.php">Duyurular</a></li>
+                        <li><a href="etkinlikler.php">Etkinlikler</a></li>
+                        <li><a href="iletisim.php">İletişim</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-widget">
+                    <h4>Mesleki Eğitim</h4>
+                    <ul>
+                        <li><a href="https://istanbul.meb.gov.tr/dergi/Guclu_Mesleki_Egitim/E_MTE/mobile/index.html">Okullarımız</a></li>                        
+                        <li><a href="is-birlikleri.php">İş Birlikleri</a></li>
+                        <li><a href="projelerimiz.php">Projeler</a></li>
+                        <li><a href="staj-olanaklari.php">Staj Olanakları</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-widget">
+                    <h4>İletişim Bilgileri</h4>
+                    <div class="contact-info">
+                        <div class="contact-item">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <div>İstanbul İl Millî Eğitim Müdürlüğü, Binbirdirek Mah. İmran Öktem Cad. No:1, Sultanahmet, Fatih, İstanbul</div>
+                        </div>
+                        <div class="contact-item">
+                            <i class="fas fa-phone"></i>
+                            <div>0212 384 34 00</div>
+                        </div>
+                        <div class="contact-item">
+                            <i class="fas fa-envelope"></i>
+                            <div>istanbul.meslekiteknikegitim@meb.gov.tr</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="copyright">
+                © 2026 İstanbul İl Millî Eğitim Müdürlüğü - Mesleki ve Teknik Eğitim Şubesi. Tüm hakları saklıdır.            </div>
+        </div>
+    </footer>

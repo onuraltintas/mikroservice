@@ -1,0 +1,45 @@
+{
+  "year": 2026,
+  "approvedForImport": false,
+  "rule": "No score or percentile is imported without explicit result year AND placement stage. Source publication date is not placement-stage evidence.",
+  "candidates": [
+    {
+      "sourceUrl": "https://menderes.meb.gov.tr/www/menderes-liselerinin-lgs-basari-tablosu-ve-taban-puanlari-belli-oldu/icerik/1720/tr",
+      "institution": "Menderes Fatma-Ramazan Büküşoğlu Anadolu Lisesi",
+      "city": "İZMİR", "district": "MENDERES", "language": "İngilizce",
+      "reportedYear": 2026, "placementStage": null,
+      "reportedScore": "415.685", "reportedPercentile": "8.28",
+      "quota": null, "officialOfferingCode": null,
+      "reason": "PlacementStageMissing; PercentileYearConsistencyReview"
+    },
+    {
+      "sourceUrl": "https://menderes.meb.gov.tr/www/menderes-liselerinin-lgs-basari-tablosu-ve-taban-puanlari-belli-oldu/icerik/1720/tr",
+      "institution": "Şehit Kaymakam Muhammet Fatih Safitürk Anadolu İmam Hatip Lisesi",
+      "city": "İZMİR", "district": "MENDERES", "language": "İngilizce",
+      "reportedYear": 2026, "placementStage": null,
+      "reportedScore": "311.926", "reportedPercentile": "44.31",
+      "quota": null, "officialOfferingCode": null,
+      "reason": "PlacementStageMissing; PercentileYearConsistencyReview"
+    },
+    {
+      "sourceUrl": "https://karacabeyeml.meb.k12.tr/icerikler/2026yilindaokulumuzayerlesenogrencilerintabanvetavanpuanlari_17719793.html",
+      "institution": "Karacabey Mesleki ve Teknik Anadolu Lisesi",
+      "city": "BURSA", "district": "KARACABEY",
+      "field": "Endüstriyel Otomasyon Teknolojileri", "language": null,
+      "reportedYear": 2026, "placementStage": null,
+      "reportedScore": "264.76", "reportedPercentile": "48.43",
+      "quota": 30, "officialOfferingCode": null,
+      "reason": "PlacementStageMissing; OfficialInstitutionAndOfferingIdentityRequired"
+    },
+    {
+      "sourceUrl": "https://karacabeyeml.meb.k12.tr/icerikler/2026yilindaokulumuzayerlesenogrencilerintabanvetavanpuanlari_17719793.html",
+      "institution": "Karacabey Mesleki ve Teknik Anadolu Lisesi",
+      "city": "BURSA", "district": "KARACABEY",
+      "field": "Makine ve Tasarım Teknolojileri", "language": null,
+      "reportedYear": 2026, "placementStage": null,
+      "reportedScore": "219.14", "reportedPercentile": "63.62",
+      "quota": 30, "officialOfferingCode": null,
+      "reason": "PlacementStageMissing; OfficialInstitutionAndOfferingIdentityRequired"
+    }
+  ]
+}

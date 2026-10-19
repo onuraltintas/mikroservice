@@ -1,0 +1,65 @@
+{
+  "year": 2026,
+  "scope": "İstanbul MEM mesleki programlar; Türkiye geneli değildir",
+  "sources": [
+    {
+      "url": "https://istanbul.meb.gov.tr/meslek/bolum_analiz.php?f_yerlesme=LGS&page=1",
+      "path": "data\\target-catalog\\2026\\raw\\lgs-research\\istanbul-lgs-1.html",
+      "sha256": "7b05a82aabf4bf01f3930ee026480916c3ed47080bb6cafbd1186ef54da286e3",
+      "retrievedAt": "2026-10-19T11:09:01.637378+00:00",
+      "rows": 50
+    },
+    {
+      "url": "https://istanbul.meb.gov.tr/meslek/bolum_analiz.php?f_yerlesme=LGS&page=2",
+      "path": "data\\target-catalog\\2026\\raw\\lgs-research\\istanbul-lgs-2.html",
+      "sha256": "dceb12fce0a84fa62e3bb2011f67f476abb7614fa9a0656c7da527c432d20d32",
+      "retrievedAt": "2026-10-19T11:10:54.044864+00:00",
+      "rows": 50
+    },
+    {
+      "url": "https://istanbul.meb.gov.tr/meslek/bolum_analiz.php?f_yerlesme=LGS&page=3",
+      "path": "data\\target-catalog\\2026\\raw\\lgs-research\\istanbul-lgs-3.html",
+      "sha256": "24c80c15256fb7f676c2a18fdeea2473224300afbdb5a194cd4600a4a2390e91",
+      "retrievedAt": "2026-10-19T11:10:54.303082+00:00",
+      "rows": 50
+    },
+    {
+      "url": "https://istanbul.meb.gov.tr/meslek/bolum_analiz.php?f_yerlesme=LGS&page=4",
+      "path": "data\\target-catalog\\2026\\raw\\lgs-research\\istanbul-lgs-4.html",
+      "sha256": "3684af709922a6aa5428de910023f24901dd3e9a989f78d35ebf434015e46319",
+      "retrievedAt": "2026-10-19T11:10:54.610421+00:00",
+      "rows": 50
+    },
+    {
+      "url": "https://istanbul.meb.gov.tr/meslek/bolum_analiz.php?f_yerlesme=LGS&page=5",
+      "path": "data\\target-catalog\\2026\\raw\\lgs-research\\istanbul-lgs-5.html",
+      "sha256": "df7de4af4514ad91ecfafc23b858ce8836b4cafdee4cedfd59e1cd3d81db94af",
+      "retrievedAt": "2026-10-19T11:10:54.916301+00:00",
+      "rows": 50
+    },
+    {
+      "url": "https://istanbul.meb.gov.tr/meslek/bolum_analiz.php?f_yerlesme=LGS&page=6",
+      "path": "data\\target-catalog\\2026\\raw\\lgs-research\\istanbul-lgs-6.html",
+      "sha256": "95b54360ade2391ff5cefc972eb15c6fc8a16be4cf1760c0e36e49831aca562b",
+      "retrievedAt": "2026-10-19T11:10:55.200544+00:00",
+      "rows": 50
+    },
+    {
+      "url": "https://istanbul.meb.gov.tr/meslek/bolum_analiz.php?f_yerlesme=LGS&page=7",
+      "path": "data\\target-catalog\\2026\\raw\\lgs-research\\istanbul-lgs-7.html",
+      "sha256": "6c62a20da6eaf2c7c740fa06ce06bcaca4641c8857055683aef8d10735da0635",
+      "retrievedAt": "2026-10-19T11:10:55.480495+00:00",
+      "rows": 24
+    }
+  ],
+  "offeringKey": "ist:<official institution code>:<sha256 identity prefix>; derived, not official offering code",
+  "rows": 322,
+  "schools": 143,
+  "sourceRows": 324,
+  "duplicateRows": 2,
+  "numericQuotas": 301,
+  "unknownQuotas": 21,
+  "excluded": "All historical scores and quotas; all OBP rows",
+  "scoreRows": 0,
+  "conflicts": 39
+}

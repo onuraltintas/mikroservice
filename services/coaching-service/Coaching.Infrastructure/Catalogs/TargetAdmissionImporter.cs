@@ -17,6 +17,9 @@ public sealed class TargetAdmissionImporter(CoachingDbContext db)
         var batch=TargetAdmissionBatch.Create(package.ExamCode,package.Year,package.Stage,package.SourceUrl,package.DocumentHash);
         if(package.Rows.Count==0 || package.Rows.Select(x=>x.ExternalCode).Distinct(StringComparer.Ordinal).Count()!=package.Rows.Count)
             throw new ArgumentException("An import needs nonempty rows with unique source codes.");
+        if(package.ExamCode=="LGS" && package.Stage is not ("Main" or "Transfer1" or "Transfer2")
+            && package.Rows.Any(x=>x.MinimumScore.HasValue||x.MaximumScore.HasValue||x.Percentile.HasValue||x.Rank.HasValue||x.Placed.HasValue))
+            throw new ArgumentException("LGS results require a verified placement stage; metadata must not carry scores.");
         var rows=package.Rows.Select(x=>TargetAdmissionRecord.Create(batch.Id,x)).ToList();
         if(rows.Any(x=>package.ExamCode=="LGS" ? x.ScoreType!="LGS" : x.ScoreType is not ("TYT" or "SAY" or "EA" or "SOZ" or "DIL")))
             throw new ArgumentException("The score type does not match the package scope.");
@@ -28,12 +31,14 @@ public sealed class TargetAdmissionImporter(CoachingDbContext db)
             if(prior.SourceUrl!=batch.SourceUrl || !saved.OrderBy(x=>x.ExternalCode,StringComparer.Ordinal).Select(x=>x.ToData())
                 .SequenceEqual(rows.OrderBy(x=>x.ExternalCode,StringComparer.Ordinal).Select(x=>x.ToData())))
                 throw new ArgumentException("An existing source hash cannot be reused for changed data.");
+            if(package.Issues?.Any(issue=>!saved.Any(x=>x.ExternalCode==issue.Key && x.MatchStatus=="Conflict" && x.Issue==issue.Value))==true)
+                throw new ArgumentException("Changed review findings require a new reviewed import; existing matches are preserved.");
             return Result(prior.Id,saved,true);
         }
         var programs=await db.TargetUniversityPrograms.ToListAsync(ct);
         var schools=await db.TargetSchools.ToListAsync(ct);
         var programLookup=programs.Where(x=>x.ProgramCode is not null).ToLookup(x=>x.ProgramCode!);
-        var schoolLookup=schools.ToLookup(x=>Key(x.Name,x.City,x.District));
+        var schoolLookup=schools.GroupBy(x=>Key(x.Name,x.City,x.District)).ToDictionary(x=>x.Key,x=>x.ToList());
         // Different source documents for the same cycle need an explicit review, never last-writer-wins.
         var otherCycle=await db.Set<TargetAdmissionBatch>().AnyAsync(x=>x.ExamCode==batch.ExamCode && x.Year==batch.Year && x.Stage==batch.Stage,ct);
         foreach(var row in rows)
@@ -59,13 +64,15 @@ public sealed class TargetAdmissionImporter(CoachingDbContext db)
             {
                 if(string.IsNullOrWhiteSpace(row.City)||string.IsNullOrWhiteSpace(row.District))
                 {row.MarkIssue("Pending","Official province and district are required.");continue;}
-                var candidates=schoolLookup[Key(row.Institution,row.City,row.District)].ToList();
+                var key=Key(row.Institution,row.City,row.District);
+                var candidates=schoolLookup.GetValueOrDefault(key)??[];
                 if(candidates.Count>1){row.MarkIssue("Ambiguous","Multiple legacy school rows; offering evidence needs review.");continue;}
                 var target=candidates.SingleOrDefault();
                 if(target is null)
                 {
                     target=TargetSchool.Create("meb-2026",row.ExternalCode,row.Institution,row.City,row.District,null);
                     target.SetActive(true);db.Add(target);
+                    schoolLookup[key]=[target];
                 }
                 row.Match(target.Id,null,"Verified");
             }

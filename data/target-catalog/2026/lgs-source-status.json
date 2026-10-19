@@ -1,6 +1,6 @@
 {
   "year": 2026,
-  "status": "AwaitingOfficialAnnualDataset",
+  "status": "PartialOfficialMetadataPreparedAndLocallyImported",
   "legacySchoolCountPreserved": 3010,
   "annualPlacementSource": "https://e-okul.meb.gov.tr/SinavIslemleri/BasvuruIslemleri/OKSTERCIH/SNV08008.ASPX",
   "officialAnnouncement": "https://baliseyhiho.meb.k12.tr/icerikler/2026lgsilkyerlestirmesonrasiboskontenjanlarvebasvuruekrani_17644637.html",
@@ -9,6 +9,47 @@
   "transferSourceObservation": "Public form works and exposes school institution codes, types and languages, but results are current transfer vacancies and grade-specific equivalent scores. They are not labeled as the 2026 first-placement dataset and contain no annual percentile field.",
   "rotaSource": "https://rotamaarif.meb.gov.tr/",
   "rotaObservation": "Current public detailed search offers preschool, primary and middle-school levels. Anonymous direct school-search API returned 403. No security controls were bypassed.",
-  "excluded": ["2025 and earlier results", "current transfer scores relabeled as first-placement scores", "third-party values without official row-level evidence"],
-  "nextRequiredEvidence": "A publicly accessible official 2026 school/offering placement export or a permitted MEB export with explicit year and placement stage. Existing legacy records remain untouched until exact or reviewed matches are available."
+  "excluded": [
+    "2025 and earlier results",
+    "current transfer scores relabeled as first-placement scores",
+    "third-party values without official row-level evidence"
+  ],
+  "nextRequiredEvidence": "A publicly accessible official 2026 school/offering placement export or a permitted MEB export with explicit year and placement stage. Existing legacy records remain untouched until exact or reviewed matches are available.",
+  "followupReport": "docs/coaching/lgs-official-source-followup-20261019.md",
+  "localOfficialCandidates": [
+    {
+      "source": "https://menderes.meb.gov.tr/www/menderes-liselerinin-lgs-basari-tablosu-ve-taban-puanlari-belli-oldu/icerik/1720/tr",
+      "rows": 2,
+      "status": "YearConsistencyReview",
+      "note": "The official article explicitly says 2026, but secondary year tables associate its percentile values with 2025. Do not replace official values with unverified secondary alternatives."
+    },
+    {
+      "source": "https://karacabeyeml.meb.k12.tr/icerikler/2026yilindaokulumuzayerlesenogrencilerintabanvetavanpuanlari_17719793.html",
+      "rows": 2,
+      "status": "PlacementStageAndOfferingIdentityRequired"
+    },
+    {
+      "source": "https://istanbul.meb.gov.tr/meslek/bolum_analiz.php",
+      "status": "2026MetadataOnly",
+      "note": "2026 quota is present; published score column is 2025. Mixed LGS/OBP rows require filtering."
+    }
+  ],
+  "rotaLgsDirectLinkObservation": "Published /Home/Lgs link was checked and returned HTTP 404.",
+  "metadataPackage": "data/target-catalog/2026/lgs-istanbul-metadata.json",
+  "metadataCoverage": {
+    "province": "İSTANBUL",
+    "scope": "Official vocational LGS offerings only; not national",
+    "sourceRows": 324,
+    "uniqueOfferings": 322,
+    "officialInstitutionCodes": 143,
+    "numericQuotas": 301,
+    "unknownQuotas": 21,
+    "verifiedMatches": 281,
+    "sourceIdentityConflicts": 39,
+    "legacyAmbiguousMatches": 2,
+    "approvedScoreRows": 0
+  },
+  "implementationReport": "docs/coaching/lgs-2026-metadata-import-20261019.md",
+  "placementReview": "data/target-catalog/2026/lgs-placement-review.json",
+  "liveDatabaseChanged": false
 }
