@@ -7,6 +7,19 @@ namespace Coaching.Curriculum.IntegrationTests;
 
 public sealed class TargetAdmissionImportTests
 {
+    [Fact]
+    public async Task MetadataCannotCarryUnstagedScoresAndNewSchoolOfferingsShareOneIdentity()
+    {
+        using var db=Db();var importer=new TargetAdmissionImporter(db);
+        var row=Row("school:one") with {Institution="School",City="ANKARA",District="CANKAYA",ScoreType="LGS"};
+        var package=Package("LGS",row) with {Stage="Catalog"};
+        await Assert.ThrowsAsync<ArgumentException>(()=>importer.ImportAsync(package));
+        Assert.Empty(db.Set<TargetAdmissionBatch>());
+        row=row with {MinimumScore=null,MaximumScore=null,Rank=null,Percentile=null,Placed=null};
+        await importer.ImportAsync(package with {Rows=[row,row with {ExternalCode="school:two",Field="Other"}]});
+        Assert.Single(db.TargetSchools);
+        Assert.Single(db.Set<TargetAdmissionRecord>().Select(x=>x.SchoolId).Distinct());
+    }
     private static CoachingDbContext Db()=>new(new DbContextOptionsBuilder<CoachingDbContext>().UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
     private static TargetAdmissionData Row(string code="123456789")=>new(code,"University","Program","SAY",null,null,"State","Bachelor",null,null,null,null,10,9,400.12345m,450,null,null);
     private static TargetAdmissionPackage Package(string exam,params TargetAdmissionData[] rows)=>new(exam,2026,"Main","https://cdn.osym.gov.tr/results.xlsx",new string('c',64),rows);
