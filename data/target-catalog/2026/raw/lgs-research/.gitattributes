@@ -1,2 +1,2 @@
 # Preserve official source bytes so manifest SHA256 survives checkout.
-istanbul-lgs-*.html -text
+*.html -text

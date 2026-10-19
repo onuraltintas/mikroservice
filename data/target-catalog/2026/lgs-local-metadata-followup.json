@@ -1,0 +1,43 @@
+{
+  "year": 2026,
+  "status": "MetadataVerified_ResultStageMissing_NotImported",
+  "rows": [
+    {
+      "institution": "Sadullah Gencer Sosyal Bilimler Lisesi",
+      "officialInstitutionCode": "969768",
+      "city": "BİTLİS",
+      "district": "TATVAN",
+      "program": "Hazırlık + 4 yıl",
+      "quota2026": 30,
+      "language": "İngilizce",
+      "minimumScore": null,
+      "percentile": null,
+      "sourceUrl": "https://sadullahgencersosyalbilimler.meb.k12.tr/13/07/969768/okulumuz_hakkinda.html"
+    },
+    {
+      "institution": "Sadullah Gencer Sosyal Bilimler Lisesi",
+      "officialInstitutionCode": "969768",
+      "city": "BİTLİS",
+      "district": "TATVAN",
+      "program": "4 yıl",
+      "quota2026": 60,
+      "language": "İngilizce",
+      "minimumScore": null,
+      "percentile": null,
+      "sourceUrl": "https://sadullahgencersosyalbilimler.meb.k12.tr/13/07/969768/okulumuz_hakkinda.html"
+    },
+    {
+      "institution": "Özay Gönlüm Fen Lisesi",
+      "officialInstitutionCode": null,
+      "city": "DENİZLİ",
+      "district": "TAVAS",
+      "program": null,
+      "quota2026": 60,
+      "language": "İngilizce",
+      "minimumScore": null,
+      "percentile": null,
+      "sourceUrl": "https://ozayfen.meb.k12.tr/tema/okulumuz_hakkinda.php"
+    }
+  ],
+  "note": "Only explicitly 2026/2026-2027 quotas. Bitlis reported percentiles 26.68 and 21.40 excluded because placement stage is missing."
+}

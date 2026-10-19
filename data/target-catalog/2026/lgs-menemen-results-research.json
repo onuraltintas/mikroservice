@@ -1,0 +1,23 @@
+{
+  "year": 2026,
+  "status": "YearAndPlacementStageVerified_NotImported",
+  "officialInstitutionCode": "762133",
+  "institution": "Şehit Ahmet Özsoy Fen Lisesi",
+  "city": "İZMİR",
+  "district": "MENEMEN",
+  "sourceUrl": "https://menemensaofen.meb.k12.tr/icerikler/sehitahmetozsoyfenlisesibasarigrafiginiyukseltmeyedevamediyorlgs1nakilsonuclariaciklandi_17648214.html",
+  "sha256": "163ec404e97b87aa3fbc7bcdefcb46b00576012ff558808f751328257bf03df8",
+  "rows": [
+    {
+      "stage": "Main",
+      "minimumScore": "441.2318",
+      "percentile": "4.08"
+    },
+    {
+      "stage": "Transfer1",
+      "minimumScore": "442.6725",
+      "percentile": "3.88"
+    }
+  ],
+  "note": "Keep placement stages separate. No quota, maximum score or official offering code inferred. Canonical target identity must be linked before import."
+}

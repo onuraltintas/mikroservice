@@ -1,0 +1,174 @@
+{
+  "researchedAt": "2026-10-19",
+  "liveDatabaseChanged": false,
+  "sourceAliasResolutions": [
+    {
+      "officialInstitutionCode": "235280",
+      "canonicalName": "İnönü Mesleki ve Teknik Anadolu Lisesi",
+      "city": "İSTANBUL",
+      "district": "BAYRAMPAŞA",
+      "status": "SourceAliasResolved_NotAppliedToDatabase",
+      "evidenceUrl": "https://mtegm.meb.gov.tr/kurumlar/?kurumkodu=235280&p=kurum",
+      "observedAliases": [
+        "İNÖNÜ MESLEKİ VE TEKNİK ANADOLU LİSESİ",
+        "İNÖNÜ MESLEKİ VE TEKNİK ANADOLU LİSSESİ"
+      ],
+      "affectedExternalCodes": [
+        "ist:235280:2afe74a9a50cbaf08381aae6",
+        "ist:235280:75077677c72b99ffab0462e7",
+        "ist:235280:5a88a6c507081098b0734a55"
+      ]
+    },
+    {
+      "officialInstitutionCode": "966950",
+      "canonicalName": "Ziya Kalkavan Denizcilik Mesleki ve Teknik Anadolu Lisesi",
+      "city": "İSTANBUL",
+      "district": "BEŞİKTAŞ",
+      "status": "SourceAliasResolved_NotAppliedToDatabase",
+      "evidenceUrl": "https://mtegm.meb.gov.tr/kurumlar/?kurumkodu=966950&p=kurum",
+      "observedAliases": [
+        "ZIYA KALKAVAN MESLEKİ VE TEKNİK ANADOLU LİSESİ",
+        "ZİYA KALKAVAN DENİZCİLİK MESLEKİ VE TEKNİK ANADOLU LİSESİ"
+      ],
+      "affectedExternalCodes": [
+        "ist:966950:918650ceab3925b76b2a33a6",
+        "ist:966950:5a865b5cbed0c0b5cfab09b0",
+        "ist:966950:c448e8f0ed9c67cf685f45ac"
+      ]
+    },
+    {
+      "officialInstitutionCode": "965232",
+      "canonicalName": "İSOV Dinçkök YTÜ Mesleki ve Teknik Anadolu Lisesi",
+      "city": "İSTANBUL",
+      "district": "BEŞİKTAŞ",
+      "status": "SourceAliasResolved_NotAppliedToDatabase",
+      "evidenceUrl": "https://mtegm.meb.gov.tr/kurumlar/?kurumkodu=965232&p=kurum",
+      "observedAliases": [
+        "İSOV DİNÇKÖK YTÜ MESLEKİ VE TEKNİK ANADOLU LİSESİ",
+        "İSOV-DINÇKÖK MESLEKİ VE TEKNİK ANADOLU LİSESİ",
+        "İSOV-DİNÇKÖK MESLEKİ VE TEKNİK ANADOLU LİSESİ"
+      ],
+      "affectedExternalCodes": [
+        "ist:965232:ebf2845c6b36d9a5e5b249dd",
+        "ist:965232:37085fe3bf6665f68186ce9c",
+        "ist:965232:8bd9cc8301bff719f2700110",
+        "ist:965232:c33f002dac3fd57822075ba3",
+        "ist:965232:1d08d78717cab3c693439c39",
+        "ist:965232:3ba393ba99132e46f382b47e",
+        "ist:965232:fa0264cc314d2ccc6cb00a04",
+        "ist:965232:225c8e8c4603dd1524ec93a5",
+        "ist:965232:8bd6de82edd976d7dd66c88a",
+        "ist:965232:326a5637bd017963f826bb4a",
+        "ist:965232:a489b093f6599b75a4522847",
+        "ist:965232:b0421ae0c46ba9787cbe4fb3",
+        "ist:965232:8e43fe7101203b2eb0335051",
+        "ist:965232:3d609dcda9dd4d25d30853c3"
+      ]
+    },
+    {
+      "officialInstitutionCode": "972018",
+      "canonicalName": "Büyükçekmece Mesleki ve Teknik Anadolu Lisesi",
+      "city": "İSTANBUL",
+      "district": "BÜYÜKÇEKMECE",
+      "status": "SourceAliasResolved_NotAppliedToDatabase",
+      "evidenceUrl": "https://mtegm.meb.gov.tr/kurumlar/?kurumkodu=972018&p=kurum",
+      "observedAliases": [
+        "BÜYÜKÇEKMECE MESLEKİ VE TEKNİK ANADOLU LİSESİ",
+        "BÜYÜKÇEKMECE MTAL"
+      ],
+      "affectedExternalCodes": [
+        "ist:972018:a4104d6ba3ae0bedbc2bad1d",
+        "ist:972018:16e86e1f354232203f82484d"
+      ]
+    },
+    {
+      "officialInstitutionCode": "763476",
+      "canonicalName": "Ali Kul Mesleki ve Teknik Anadolu Lisesi",
+      "city": "İSTANBUL",
+      "district": "ESENYURT",
+      "status": "SourceAliasResolved_NotAppliedToDatabase",
+      "evidenceUrl": "https://mtegm.meb.gov.tr/kurumlar/?kurumkodu=763476&p=kurum",
+      "observedAliases": [
+        "ALI KUL MESLEKİ VE TEKNİK ANADOLU LİSESİ",
+        "ALİ KUL MTAL"
+      ],
+      "affectedExternalCodes": [
+        "ist:763476:bf6c3a9cdf1c86f8aabf5b4a",
+        "ist:763476:a0aabf0e614e8a75bdd7a2e6",
+        "ist:763476:2e663614c251340d1eb750cb",
+        "ist:763476:5e20ed35734f92d61a2379c4"
+      ]
+    },
+    {
+      "officialInstitutionCode": "162379",
+      "canonicalName": "Gültepe Şehit Cihan Erat Mesleki ve Teknik Anadolu Lisesi",
+      "city": "İSTANBUL",
+      "district": "KAĞITHANE",
+      "status": "SourceAliasResolved_NotAppliedToDatabase",
+      "evidenceUrl": "https://mtegm.meb.gov.tr/kurumlar/?kurumkodu=162379&p=kurum",
+      "observedAliases": [
+        "GÜLTEPE ŞEHİT CİHAN ERAT MESLEKİ VE TEKNİK ANADOLU LİSESİ",
+        "GÜLTEPE ŞEHİT CİHAN ERAT MTAL"
+      ],
+      "affectedExternalCodes": [
+        "ist:162379:7cf9eea6da4ced7d9b2b144f",
+        "ist:162379:36aec22ec34149b27d6a1e73",
+        "ist:162379:09ee65aae2e4e057374ae156",
+        "ist:162379:4443fa7fcb75ffa71a32dc98",
+        "ist:162379:ca5477b95b8c4fd5728b5a45",
+        "ist:162379:463034c7f24284ae3080a7b2",
+        "ist:162379:1e501c536cc4e30bfe13058c",
+        "ist:162379:e01701a3e56789ac3f6d6bdc",
+        "ist:162379:4ad4ee597afc489dbb5dadb7"
+      ]
+    },
+    {
+      "officialInstitutionCode": "966707",
+      "canonicalName": "Şile Borsa İstanbul Turizm Mesleki ve Teknik Anadolu Lisesi",
+      "city": "İSTANBUL",
+      "district": "ŞİLE",
+      "status": "SourceAliasResolved_NotAppliedToDatabase",
+      "evidenceUrl": "https://sileturizm.meb.k12.tr/icerikler/20252026egitimogretimyilistajdosyasi_17152699.html",
+      "observedAliases": [
+        "ŞILE BORSA İSTANBUL MESLEKİ VE TEKNİK ANADOLU LİSESİ",
+        "ŞİLE BORSA İSTANBUL MTAL"
+      ],
+      "affectedExternalCodes": [
+        "ist:966707:d4f4dfb3fc76f92bea1b5a96",
+        "ist:966707:59c66688b8976c5e403e7942"
+      ]
+    },
+    {
+      "officialInstitutionCode": "970805",
+      "canonicalName": "Hacı Rahime Ulusoy Denizcilik Mesleki ve Teknik Anadolu Lisesi",
+      "city": "İSTANBUL",
+      "district": "ÜSKÜDAR",
+      "status": "SourceAliasResolved_NotAppliedToDatabase",
+      "evidenceUrl": "https://hrulusoymtal.meb.k12.tr/meb_iys_dosyalar/34/22/970805/dosyalar/2024_05/03121801_hacirahimeulusoydenizcilikmtal20242028stratejikplani.pdf",
+      "observedAliases": [
+        "HACI RAHİME ULUSOY DENZİCİLİK MESLEKİ VE TEKNİK ANADOLU LİSESİ",
+        "HACI RAHİME ULUSOY DENİZCİLİK MESLEKİ VE TEKNİK ANADOLU LİSESİ"
+      ],
+      "affectedExternalCodes": [
+        "ist:970805:e4ff51efeed579450c8e2974",
+        "ist:970805:5d7bac5b586915d72c973989"
+      ]
+    }
+  ],
+  "sourceCodeCorrections": [
+    {
+      "sourceInstitutionCode": "751600",
+      "sourceInstitution": "Şile Ayet Azer Aran Savunma Sanayi Mesleki ve Teknik Anadolu Lisesi",
+      "verifiedInstitutionCode": "768129",
+      "status": "SourceCodeErrorConfirmed_LegacyMatchStillPending",
+      "evidenceUrl": "https://mtegm.meb.gov.tr/kurumlar/?kurumkodu=768129&p=kurum",
+      "wrongCodeEvidenceUrl": "https://mtegm.meb.gov.tr/kurumlar/?kurumkodu=751600&p=kurum",
+      "wrongCodeInstitution": "Sultangazi Atatürk Mesleki ve Teknik Anadolu Lisesi",
+      "affectedExternalCodes": [
+        "ist:751600:2036f00ba075bf5a90969e62",
+        "ist:751600:1d09de8afd34393d38426ce5"
+      ]
+    }
+  ],
+  "note": "Identity evidence only. MTEGM enrollment counts and boarding capacity are not 2026 annual admission quotas. No legacy IDs merged or changed."
+}

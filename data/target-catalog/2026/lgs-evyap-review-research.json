@@ -1,0 +1,25 @@
+{
+  "year": 2026,
+  "sourceUrl": "https://tuzlaahmetfikretevyapmtal.meb.k12.tr/icerikler/sikcasorulansorular_17627303.html",
+  "officialInstitutionCode": "777238",
+  "institution": "Ahmet Fikret Evyap Mesleki ve Teknik Anadolu Lisesi",
+  "city": "İSTANBUL",
+  "district": "TUZLA",
+  "placementStage": "Main",
+  "status": "YearStageVerified_ProgramGroupAggregate_NotImported",
+  "note": "Ranges refer to all ATP/AMP programs, not each field. Do not duplicate group minimum to individual offerings; total 180 quota must not be assigned to both program groups.",
+  "programGroups": [
+    {
+      "name": "Anadolu Teknik Programları",
+      "reportedMinimum": "279.56",
+      "reportedMaximum": "392"
+    },
+    {
+      "name": "Anadolu Meslek Programları",
+      "reportedMinimum": "246.58",
+      "reportedMaximum": "354"
+    }
+  ],
+  "reportedSchoolTotal": 180,
+  "quotaYearExplicit": false
+}

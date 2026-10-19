@@ -1,0 +1,141 @@
+{
+  "year": 2026,
+  "sourceUrl": "https://sincanram.meb.k12.tr/icerikler/2026lgssincanliselerininmerkeziyerlestirmeveyerelyerlestirmebilgileriyayimlandi_17650928.html",
+  "tableImageUrl": "https://sincanram.meb.k12.tr/meb_iys_dosyalar/06/22/301810/resimler/2026_08/292e3604874bcb836a1eab068c34e49a.jpg",
+  "status": "ResearchOnly_StageMissing_PercentilesEstimated_NotImported",
+  "note": "Table visually read in browser. Central placement does not establish Main/Transfer1/Transfer2. The publisher calls percentiles estimated. Other three images are local OBP tables and excluded.",
+  "rows": [
+    {
+      "institution": "Ankara Elman Ilıcak Fen Lisesi",
+      "field": null,
+      "city": "ANKARA",
+      "district": "SİNCAN",
+      "minimumScore": null,
+      "percentile": null,
+      "quota2026": null,
+      "reportedScore": "483.39",
+      "estimatedPercentile": "0.50",
+      "placementStage": null
+    },
+    {
+      "institution": "Süleyman Demirel Anadolu Lisesi",
+      "field": null,
+      "city": "ANKARA",
+      "district": "SİNCAN",
+      "minimumScore": null,
+      "percentile": null,
+      "quota2026": null,
+      "reportedScore": "426.39",
+      "estimatedPercentile": "5.94",
+      "placementStage": null
+    },
+    {
+      "institution": "Fatih Anadolu Lisesi",
+      "field": null,
+      "city": "ANKARA",
+      "district": "SİNCAN",
+      "minimumScore": null,
+      "percentile": null,
+      "quota2026": null,
+      "reportedScore": "416.74",
+      "estimatedPercentile": "7.33",
+      "placementStage": null
+    },
+    {
+      "institution": "Sincan Anadolu Lisesi",
+      "field": null,
+      "city": "ANKARA",
+      "district": "SİNCAN",
+      "minimumScore": null,
+      "percentile": null,
+      "quota2026": null,
+      "reportedScore": "413.02",
+      "estimatedPercentile": "7.92",
+      "placementStage": null
+    },
+    {
+      "institution": "Erkan Volkan Yiğit AİHL",
+      "field": null,
+      "city": "ANKARA",
+      "district": "SİNCAN",
+      "minimumScore": null,
+      "percentile": null,
+      "quota2026": null,
+      "reportedScore": "400.36",
+      "estimatedPercentile": "10.02",
+      "placementStage": null
+    },
+    {
+      "institution": "Fatih MTAL",
+      "field": "Elektrik-Elektronik Teknolojisi",
+      "city": "ANKARA",
+      "district": "SİNCAN",
+      "minimumScore": null,
+      "percentile": null,
+      "quota2026": null,
+      "reportedScore": "363.93",
+      "estimatedPercentile": "17.31",
+      "placementStage": null
+    },
+    {
+      "institution": "Sincan Anadolu İmam Hatip Lisesi",
+      "field": null,
+      "city": "ANKARA",
+      "district": "SİNCAN",
+      "minimumScore": null,
+      "percentile": null,
+      "quota2026": null,
+      "reportedScore": "317.67",
+      "estimatedPercentile": "29.60",
+      "placementStage": null
+    },
+    {
+      "institution": "Şehit Özgür Can İnce MTAL",
+      "field": "Makine ve Tasarım Teknolojisi",
+      "city": "ANKARA",
+      "district": "SİNCAN",
+      "minimumScore": null,
+      "percentile": null,
+      "quota2026": null,
+      "reportedScore": "310.74",
+      "estimatedPercentile": "31.76",
+      "placementStage": null
+    },
+    {
+      "institution": "Şehit Erdal Koçak MTAL",
+      "field": "Adalet",
+      "city": "ANKARA",
+      "district": "SİNCAN",
+      "minimumScore": null,
+      "percentile": null,
+      "quota2026": null,
+      "reportedScore": "299.14",
+      "estimatedPercentile": "35.53",
+      "placementStage": null
+    },
+    {
+      "institution": "Başkent OSB MTAL",
+      "field": "Makine ve Tasarım Teknolojisi",
+      "city": "ANKARA",
+      "district": "SİNCAN",
+      "minimumScore": null,
+      "percentile": null,
+      "quota2026": null,
+      "reportedScore": "268.72",
+      "estimatedPercentile": "46.76",
+      "placementStage": null
+    },
+    {
+      "institution": "Sincan Ahmet Andiçen Ticaret MTAL",
+      "field": "Muhasebe ve Finansman",
+      "city": "ANKARA",
+      "district": "SİNCAN",
+      "minimumScore": null,
+      "percentile": null,
+      "quota2026": null,
+      "reportedScore": "221.79",
+      "estimatedPercentile": "71.70",
+      "placementStage": null
+    }
+  ]
+}

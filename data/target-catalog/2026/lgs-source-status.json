@@ -51,5 +51,19 @@
   },
   "implementationReport": "docs/coaching/lgs-2026-metadata-import-20261019.md",
   "placementReview": "data/target-catalog/2026/lgs-placement-review.json",
-  "liveDatabaseChanged": false
+  "liveDatabaseChanged": false,
+  "researchFollowup": {
+    "report": "docs/coaching/lgs-national-research-followup-20261019.md",
+    "preparedMetadataRows": 108,
+    "samsunRows": 53,
+    "kayseriRows": 52,
+    "bitlisRows": 2,
+    "denizliRows": 1,
+    "sourceAliasResolutions": 39,
+    "confirmedWrongSourceCodeRows": 2,
+    "yearAndStageVerifiedMenemenResults": 2,
+    "sincanEstimatedStageMissingRows": 11,
+    "newRowsImported": 0,
+    "nationalComplete": false
+  }
 }

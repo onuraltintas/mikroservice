@@ -1,0 +1,197 @@
+{
+  "year": 2026,
+  "stage": "Catalog",
+  "sourceUrl": "https://kocasinanram.meb.k12.tr/meb_iys_dosyalar/38/15/169918/dosyalar/2026_07/6a5b7d3298235591254207_S%C4%B1navla_%C3%96%C4%9Frenci_Alan_MTAL.pdf",
+  "sha256": "9a5a1ca6d548c7f1609ccdbe504daf713796ecb5bcedf512943b701e00a24666",
+  "status": "MetadataResearch_IdentityAndUnspecifiedQuotaReview_NotImported",
+  "note": "2025 result figures deliberately excluded. Unspecified quotas are NULL; historical/other-field quotas are not copied.",
+  "rows": [
+    {
+      "sourcePage": 3,
+      "institution": "Melikgazi Belediyesi Mehmet Altun Havacılık ve Uzay Teknolojileri MTAL",
+      "city": "KAYSERİ",
+      "field": "Havacılık ve Uzay Teknolojisi",
+      "quota2026": 48,
+      "duration": "Hazırlık + 4 yıl",
+      "minimumScore": null,
+      "percentile": null,
+      "officialInstitutionCode": null
+    },
+    {
+      "sourcePage": 4,
+      "institution": "Merkez Mesleki ve Teknik Anadolu Lisesi",
+      "city": "KAYSERİ",
+      "field": "Uçak Bakım",
+      "quota2026": 30,
+      "duration": "4 yıl",
+      "minimumScore": null,
+      "percentile": null,
+      "officialInstitutionCode": null
+    },
+    {
+      "sourcePage": 4,
+      "institution": "Kayseri Kadı Burhaneddin MTAL",
+      "city": "KAYSERİ",
+      "field": "Sağlık Hizmetleri",
+      "quota2026": 30,
+      "duration": "4 yıl",
+      "minimumScore": null,
+      "percentile": null,
+      "officialInstitutionCode": null
+    },
+    {
+      "sourcePage": 5,
+      "institution": "Merkez Mesleki ve Teknik Anadolu Lisesi",
+      "city": "KAYSERİ",
+      "field": "Elektrik-Elektronik Teknolojisi",
+      "quota2026": 30,
+      "duration": null,
+      "minimumScore": null,
+      "percentile": null,
+      "officialInstitutionCode": null
+    },
+    {
+      "sourcePage": 5,
+      "institution": "Talas Atatürk Mesleki ve Teknik Anadolu Lisesi",
+      "city": "KAYSERİ",
+      "field": "Elektrik-Elektronik Teknolojisi",
+      "quota2026": 30,
+      "duration": null,
+      "minimumScore": null,
+      "percentile": null,
+      "officialInstitutionCode": null
+    },
+    {
+      "sourcePage": 5,
+      "institution": "Hürriyet Mesleki ve Teknik Anadolu Lisesi",
+      "city": "KAYSERİ",
+      "field": "Elektrik-Elektronik Teknolojisi",
+      "quota2026": 30,
+      "duration": null,
+      "minimumScore": null,
+      "percentile": null,
+      "officialInstitutionCode": null
+    },
+    {
+      "sourcePage": 5,
+      "institution": "Muammer Kocatürk Mesleki ve Teknik Anadolu Lisesi",
+      "city": "KAYSERİ",
+      "field": "Elektrik-Elektronik Teknolojisi",
+      "quota2026": 30,
+      "duration": null,
+      "minimumScore": null,
+      "percentile": null,
+      "officialInstitutionCode": null
+    },
+    {
+      "sourcePage": 6,
+      "institution": "Merkez MTAL",
+      "city": "KAYSERİ",
+      "field": "Motorlu Araçlar Teknolojisi",
+      "quota2026": 30,
+      "duration": null,
+      "minimumScore": null,
+      "percentile": null,
+      "officialInstitutionCode": null
+    },
+    {
+      "sourcePage": 6,
+      "institution": "Arif Molu MTAL",
+      "city": "KAYSERİ",
+      "field": "Biyomedikal Cihaz Teknolojileri",
+      "quota2026": 30,
+      "duration": null,
+      "minimumScore": null,
+      "percentile": null,
+      "officialInstitutionCode": null
+    },
+    {
+      "sourcePage": 6,
+      "institution": "Arif Molu MTAL",
+      "city": "KAYSERİ",
+      "field": "Makine ve Tasarım Teknolojisi",
+      "quota2026": 30,
+      "duration": null,
+      "minimumScore": null,
+      "percentile": null,
+      "officialInstitutionCode": null
+    },
+    {
+      "sourcePage": 7,
+      "institution": "Hürriyet MTAL",
+      "city": "KAYSERİ",
+      "field": "Bilişim Teknolojileri",
+      "quota2026": null,
+      "duration": null,
+      "minimumScore": null,
+      "percentile": null,
+      "officialInstitutionCode": null
+    },
+    {
+      "sourcePage": 7,
+      "institution": "Türkiye Tekstil Sendikası MTAL",
+      "city": "KAYSERİ",
+      "field": "Endüstriyel Otomasyon",
+      "quota2026": null,
+      "duration": null,
+      "minimumScore": null,
+      "percentile": null,
+      "officialInstitutionCode": null
+    },
+    {
+      "sourcePage": 7,
+      "institution": "Hürriyet MTAL",
+      "city": "KAYSERİ",
+      "field": "Endüstriyel Otomasyon",
+      "quota2026": null,
+      "duration": null,
+      "minimumScore": null,
+      "percentile": null,
+      "officialInstitutionCode": null
+    },
+    {
+      "sourcePage": 7,
+      "institution": "Atatürk Kız MTAL",
+      "city": "KAYSERİ",
+      "field": "Bilişim Teknolojileri",
+      "quota2026": null,
+      "duration": null,
+      "minimumScore": null,
+      "percentile": null,
+      "officialInstitutionCode": null
+    },
+    {
+      "sourcePage": 8,
+      "institution": "Mimar Sinan MTAL",
+      "city": "KAYSERİ",
+      "field": "Harita-Tapu-Kadastro",
+      "quota2026": 30,
+      "duration": null,
+      "minimumScore": null,
+      "percentile": null,
+      "officialInstitutionCode": null
+    },
+    {
+      "sourcePage": 8,
+      "institution": "Türkiye Tekstil Sendikası MTAL",
+      "city": "KAYSERİ",
+      "field": "Tekstil Teknolojisi",
+      "quota2026": null,
+      "duration": null,
+      "minimumScore": null,
+      "percentile": null,
+      "officialInstitutionCode": null
+    },
+    {
+      "sourcePage": 8,
+      "institution": "Seyyid Burhaneddin MTAL",
+      "city": "KAYSERİ",
+      "field": "Mobilya ve İç Mekân Tasarımı",
+      "quota2026": null,
+      "duration": "4 yıl",
+      "minimumScore": null,
+      "percentile": null,
+      "officialInstitutionCode": null
+    }
+  ]
+}
