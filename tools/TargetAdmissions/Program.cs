@@ -10,11 +10,22 @@ using Npgsql;
 
 var connection=Environment.GetEnvironmentVariable("TARGET_ADMISSIONS_CONNECTION")??throw new ArgumentException("Connection must be supplied in the operator environment.");
 var settings=new NpgsqlConnectionStringBuilder(connection);
+if(args.Contains("--rehearsal"))
+{
+    settings.Database="coaching_lgs2026_rehearsal_20261019";
+    connection=settings.ConnectionString;
+}
 if(args.Length<2||args[0]!="--database"||args[1]!=settings.Database)throw new ArgumentException("Explicit database confirmation is required.");
-var local=settings.Database is "coaching_target2026_test" or "coaching_target2026_test_final" && settings.Host=="127.0.0.1";
+var local=settings.Database is "coaching_target2026_test" or "coaching_target2026_test_final" or "coaching_lgs2026_import_test" && settings.Host=="127.0.0.1";
 if(!local && !args.Contains("--apply"))throw new ArgumentException("Live writes require --apply.");
 await using var db=new CoachingDbContext(new DbContextOptionsBuilder<CoachingDbContext>().UseNpgsql(connection,
     o=>o.MigrationsHistoryTable("__ef_migrations_history","coaching")).Options);
+var migrationPath=args.SkipWhile(x=>x!="--migration-script").Skip(1).FirstOrDefault();
+if(migrationPath is not null)
+{
+    await File.WriteAllTextAsync(migrationPath,db.GetService<IMigrator>().GenerateScript("20261018222725_YksExamPreparationCatalog","20261019095937_TargetAdmissions2026"));
+    return;
+}
 if(local)
 {
     await db.Database.EnsureCreatedAsync();
@@ -22,8 +33,13 @@ if(local)
     if(sql.Contains("DROP TABLE")||sql.Contains("ALTER TABLE coaching.academic_goals"))throw new Exception("Migration is not additive.");
     Console.WriteLine("Additive migration SQL verified.");
 }
-else if((await db.Database.GetPendingMigrationsAsync()).Any()||db.Database.HasPendingModelChanges())
-    throw new InvalidOperationException("Run the reviewed additive migration before importing.");
+else
+{
+    var pending=(await db.Database.GetPendingMigrationsAsync()).ToArray();
+    var changed=db.Database.HasPendingModelChanges();
+    if(pending.Length>0||changed)
+        throw new InvalidOperationException($"Reviewed schema required. Pending migrations: {string.Join(',',pending)}; model changes: {changed}.");
+}
 var options=new JsonSerializerOptions{PropertyNameCaseInsensitive=true};
 var legacyPath=args.SkipWhile(x=>x!="--legacy").Skip(1).FirstOrDefault();
 if(legacyPath is not null)
