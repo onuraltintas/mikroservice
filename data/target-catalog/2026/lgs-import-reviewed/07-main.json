@@ -1,0 +1,29 @@
+{
+  "examCode": "LGS",
+  "year": 2026,
+  "stage": "Main",
+  "sourceUrl": "https://menemensaofen.meb.k12.tr/icerikler/sehitahmetozsoyfenlisesibasarigrafiginiyukseltmeyedevamediyorlgs1nakilsonuclariaciklandi_17648214.html",
+  "rows": [
+    {
+      "externalCode": "meb-institution:762133",
+      "institution": "Şehit Ahmet Özsoy Fen Lisesi",
+      "name": "Şehit Ahmet Özsoy Fen Lisesi",
+      "scoreType": "LGS",
+      "city": "İZMİR",
+      "district": "MENEMEN",
+      "institutionType": null,
+      "degree": null,
+      "language": null,
+      "scholarship": null,
+      "educationType": null,
+      "field": null,
+      "quota": null,
+      "placed": null,
+      "minimumScore": 441.2318,
+      "maximumScore": null,
+      "rank": null,
+      "percentile": 4.08
+    }
+  ],
+  "documentHash": "d000fbd1c894f7c30f740ebc7f09d5b8299f2f8dfc0bf06c3c14e4b526bda3b9"
+}

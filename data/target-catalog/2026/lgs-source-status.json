@@ -1,6 +1,6 @@
 {
   "year": 2026,
-  "status": "PartialOfficialMetadataPreparedAndLocallyImported",
+  "status": "PartialOfficialCatalogImportedToProduction",
   "legacySchoolCountPreserved": 3010,
   "annualPlacementSource": "https://e-okul.meb.gov.tr/SinavIslemleri/BasvuruIslemleri/OKSTERCIH/SNV08008.ASPX",
   "officialAnnouncement": "https://baliseyhiho.meb.k12.tr/icerikler/2026lgsilkyerlestirmesonrasiboskontenjanlarvebasvuruekrani_17644637.html",
@@ -51,7 +51,7 @@
   },
   "implementationReport": "docs/coaching/lgs-2026-metadata-import-20261019.md",
   "placementReview": "data/target-catalog/2026/lgs-placement-review.json",
-  "liveDatabaseChanged": false,
+  "liveDatabaseChanged": true,
   "researchFollowup": {
     "report": "docs/coaching/lgs-national-research-followup-20261019.md",
     "preparedMetadataRows": 108,
@@ -64,6 +64,24 @@
     "yearAndStageVerifiedMenemenResults": 2,
     "sincanEstimatedStageMissingRows": 11,
     "newRowsImported": 0,
+    "nationalComplete": false
+  },
+  "liveImport": {
+    "date": "2026-10-19",
+    "batches": 8,
+    "sourceRecords": 432,
+    "verified": 274,
+    "ambiguous": 147,
+    "pending": 9,
+    "conflict": 2,
+    "oldSchoolsPreserved": 3010,
+    "oldProgramsPreserved": 21602,
+    "newSchools": 86,
+    "reviewedAliasesLinked": 9,
+    "reviewedAliasesWithMultipleLegacyCandidates": 30,
+    "approvedResultRows": 2,
+    "catalogRowsWithScores": 0,
+    "report": "docs/coaching/lgs-live-import-20261019.md",
     "nationalComplete": false
   }
 }

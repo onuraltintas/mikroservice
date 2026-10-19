@@ -1,0 +1,18 @@
+{
+  "date": "2026-10-19",
+  "batches": 8,
+  "sourceRecords": 432,
+  "verified": 274,
+  "ambiguous": 147,
+  "pending": 9,
+  "conflict": 2,
+  "oldSchoolsPreserved": 3010,
+  "oldProgramsPreserved": 21602,
+  "newSchools": 86,
+  "reviewedAliasesLinked": 9,
+  "reviewedAliasesWithMultipleLegacyCandidates": 30,
+  "approvedResultRows": 2,
+  "catalogRowsWithScores": 0,
+  "report": "docs/coaching/lgs-live-import-20261019.md",
+  "nationalComplete": false
+}

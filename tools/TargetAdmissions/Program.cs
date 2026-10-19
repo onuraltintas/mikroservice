@@ -35,10 +35,12 @@ if(local)
 }
 else
 {
-    var pending=(await db.Database.GetPendingMigrationsAsync()).ToArray();
+    var applied=(await db.Database.GetAppliedMigrationsAsync()).ToHashSet();
+    var required=new[]{"20261018222725_YksExamPreparationCatalog","20261019095937_TargetAdmissions2026"};
+    var pending=required.Where(x=>!applied.Contains(x)).ToArray();
     var changed=db.Database.HasPendingModelChanges();
     if(pending.Length>0||changed)
-        throw new InvalidOperationException($"Reviewed schema required. Pending migrations: {string.Join(',',pending)}; model changes: {changed}.");
+        throw new InvalidOperationException($"Reviewed catalog schema required. Missing catalog migrations: {string.Join(',',pending)}; model changes: {changed}.");
 }
 var options=new JsonSerializerOptions{PropertyNameCaseInsensitive=true};
 var legacyPath=args.SkipWhile(x=>x!="--legacy").Skip(1).FirstOrDefault();

@@ -1,0 +1,29 @@
+{
+  "examCode": "LGS",
+  "year": 2026,
+  "stage": "Catalog",
+  "sourceUrl": "https://ozayfen.meb.k12.tr/tema/okulumuz_hakkinda.php",
+  "rows": [
+    {
+      "externalCode": "local:ozay-gonlum:1",
+      "institution": "Özay Gönlüm Fen Lisesi",
+      "name": "Özay Gönlüm Fen Lisesi / Fen Lisesi",
+      "scoreType": "LGS",
+      "city": "DENİZLİ",
+      "district": "TAVAS",
+      "institutionType": null,
+      "degree": null,
+      "language": "İngilizce",
+      "scholarship": null,
+      "educationType": null,
+      "field": null,
+      "quota": 60,
+      "placed": null,
+      "minimumScore": null,
+      "maximumScore": null,
+      "rank": null,
+      "percentile": null
+    }
+  ],
+  "documentHash": "e6f6c590bcf5c5ebc406f6d4d570fad2e14e758f295268035a9b4e4feeaf17d5"
+}

@@ -39,7 +39,7 @@ public sealed class TargetAdmissionImporter(CoachingDbContext db)
         var programs=await db.TargetUniversityPrograms.ToListAsync(ct);
         var schools=await db.TargetSchools.ToListAsync(ct);
         var programLookup=programs.Where(x=>x.ProgramCode is not null).ToLookup(x=>x.ProgramCode!);
-        var schoolLookup=schools.GroupBy(x=>Key(x.Name,x.City,x.District)).ToDictionary(x=>x.Key,x=>x.ToList());
+        var schoolLookup=schools.GroupBy(x=>SchoolKey(x.Name,x.City,x.District)).ToDictionary(x=>x.Key,x=>x.ToList());
         // Different source documents for the same cycle need an explicit review, never last-writer-wins.
         var cycleBatches=await db.Set<TargetAdmissionBatch>().Where(x=>x.ExamCode==batch.ExamCode && x.Year==batch.Year && x.Stage==batch.Stage).ToListAsync(ct);
         var otherCycle=cycleBatches.Any(x=>x.SourceUrl==batch.SourceUrl);
@@ -70,9 +70,9 @@ public sealed class TargetAdmissionImporter(CoachingDbContext db)
             {
                 if(string.IsNullOrWhiteSpace(row.City)||string.IsNullOrWhiteSpace(row.District))
                 {row.MarkIssue("Pending","Official province and district are required.");continue;}
-                var key=Key(row.Institution,row.City,row.District);
+                var key=SchoolKey(row.Institution,row.City,row.District);
                 var names=package.SchoolAliases?.GetValueOrDefault(row.ExternalCode)??[];
-                var candidates=names.Append(row.Institution).SelectMany(name=>schoolLookup.GetValueOrDefault(Key(name,row.City,row.District))??[]).DistinctBy(x=>x.Id).ToList();
+                var candidates=names.Append(row.Institution).SelectMany(name=>schoolLookup.GetValueOrDefault(SchoolKey(name,row.City,row.District))??[]).DistinctBy(x=>x.Id).ToList();
                 if(candidates.Count>1){row.MarkIssue("Ambiguous","Multiple legacy school rows; offering evidence needs review.");continue;}
                 var target=candidates.SingleOrDefault();
                 if(target is null)
@@ -92,6 +92,7 @@ public sealed class TargetAdmissionImporter(CoachingDbContext db)
     private static TargetAdmissionImportResult Result(Guid id,IReadOnlyList<TargetAdmissionRecord> rows,bool prior)=>
         new(id,rows.Count(x=>x.MatchStatus=="Verified"),rows.Count(x=>x.MatchStatus=="Ambiguous"),rows.Count(x=>x.MatchStatus is "Conflict" or "Pending"),prior);
     private static string NormalizeScore(string? s)=>s switch {"SÖZ"=>"SOZ","DİL"=>"DIL",_=>s??""};
+    private static string SchoolKey(string name,string city,string district)=>Key(name,city,district.Trim().EndsWith(" (MERKEZ)",StringComparison.OrdinalIgnoreCase)?district.Trim()[..^9]:district);
     private static string OfferingKey(TargetAdmissionRecord row)=>Key(row.Institution,row.City??"",row.District??"",row.Field??"",row.EducationType??"",row.Language??"",row.ScoreType);
     private static string Key(params string[] values)=>string.Join('|',values.Select(x=>string.Join(' ',x.Trim().ToUpper(CultureInfo.GetCultureInfo("tr-TR")).Normalize(NormalizationForm.FormC).Split((char[]?)null,StringSplitOptions.RemoveEmptyEntries))));
 }
