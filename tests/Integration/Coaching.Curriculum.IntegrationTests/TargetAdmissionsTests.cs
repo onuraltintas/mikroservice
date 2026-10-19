@@ -6,6 +6,12 @@ namespace Coaching.Curriculum.IntegrationTests;
 
 public sealed class TargetAdmissionsTests
 {
+    [Fact]
+    public void OfficialSchoolDomainsAreAcceptedWithoutAcceptingLookalikes()
+    {
+        TargetAdmissionBatch.Create("LGS",2026,"Main","https://school.meb.k12.tr/results.html",new string('a',64));
+        Assert.Throws<ArgumentException>(()=>TargetAdmissionBatch.Create("LGS",2026,"Main","https://school.meb.k12.tr.example.com/results",new string('a',64)));
+    }
     private static TargetAdmissionData Data() => new("106510077", "University", "Computer Engineering", "SAY",
         "Ankara", null, "State", "Bachelor", "English", null, "Onsite", null, 80, 80,
         443.22731m, 492.64166m, null, null);

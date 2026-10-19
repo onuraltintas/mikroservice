@@ -8,6 +8,19 @@ namespace Coaching.Curriculum.IntegrationTests;
 public sealed class TargetAdmissionImportTests
 {
     [Fact]
+    public async Task IndependentProvincialSourcesAreAllowedButOverlappingOfferingsNeedReview()
+    {
+        using var db=Db();var importer=new TargetAdmissionImporter(db);
+        var row=Row("istanbul:1") with {Institution="School",City="ISTANBUL",District="District",ScoreType="LGS",MinimumScore=null,MaximumScore=null,Rank=null,Percentile=null,Placed=null};
+        var first=Package("LGS",row) with {Stage="Catalog",SourceUrl="https://istanbul.meb.gov.tr/catalog"};
+        await importer.ImportAsync(first);
+        var second=first with {SourceUrl="https://samsun.meb.gov.tr/catalog",DocumentHash=new string('d',64),Rows=[row with {ExternalCode="samsun:1",City="SAMSUN"}]};
+        Assert.Equal(1,(await importer.ImportAsync(second)).Verified);
+        var overlap=second with {SourceUrl="https://meb.gov.tr/other",DocumentHash=new string('e',64),Rows=[row with {ExternalCode="other-code"}]};
+        Assert.Equal(1,(await importer.ImportAsync(overlap)).Conflicts);
+        Assert.Equal(2,db.TargetSchools.Count());
+    }
+    [Fact]
     public async Task MetadataCannotCarryUnstagedScoresAndNewSchoolOfferingsShareOneIdentity()
     {
         using var db=Db();var importer=new TargetAdmissionImporter(db);
