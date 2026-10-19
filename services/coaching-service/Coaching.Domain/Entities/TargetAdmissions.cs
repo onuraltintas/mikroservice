@@ -58,6 +58,8 @@ public sealed class TargetAdmissionRecord
     public string MatchStatus { get; private set; }="Pending";
     public string? Issue { get; private set; }
     private TargetAdmissionRecord() { }
+    public TargetAdmissionData ToData()=>new(ExternalCode,Institution,Name,ScoreType,City,District,InstitutionType,
+        Degree,Language,Scholarship,EducationType,Field,Quota,Placed,MinimumScore,MaximumScore,Rank,Percentile);
     public static TargetAdmissionRecord Create(Guid batchId,TargetAdmissionData d)
     {
         if(batchId==Guid.Empty || d.Quota<0 || d.Placed<0 || d.MinimumScore<0 || d.MaximumScore<0
