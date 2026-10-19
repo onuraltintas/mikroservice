@@ -1,0 +1,17 @@
+import {cpSync,mkdirSync,readFileSync,writeFileSync,readdirSync,statSync,existsSync} from 'node:fs';
+import {resolve,join,relative} from 'node:path';
+import {createHash} from 'node:crypto';
+import {execFileSync} from 'node:child_process';
+import assert from 'node:assert/strict';
+const name=process.argv[2]??'coaching-targets-20261019-r2';
+assert.ok(['coaching-targets-20261019-r2','coaching-targets-20261019-r3'].includes(name));
+const root=process.cwd(),release=resolve(root,'artifacts',name),pack=join(release,'package');
+assert.ok(!existsSync(pack));mkdirSync(join(pack,'payload'),{recursive:true});
+cpSync(join(release,'admin-tree/clients/admin-panel/dist/admin-panel'),join(pack,'payload/admin'),{recursive:true});
+cpSync(join(release,'deploy.sh'),join(pack,'deploy.sh'));
+cpSync(resolve(root,'artifacts/coaching-targets-20261019/package/admin-panel.Dockerfile'),join(pack,'admin-panel.Dockerfile'));
+const files=dir=>readdirSync(dir).flatMap(n=>statSync(join(dir,n)).isDirectory()?files(join(dir,n)):[join(dir,n)]);
+const sha=f=>createHash('sha256').update(readFileSync(f)).digest('hex');
+writeFileSync(join(pack,'payload.sha256'),files(pack).map(f=>sha(f)+'  '+relative(pack,f).replaceAll('\\','/')).join('\n')+'\n');
+const archive=join(release,'release.tar.gz');execFileSync('tar',['-czf',archive,'-C',pack,'.']);
+writeFileSync(join(release,'package-info.json'),JSON.stringify({archive,sha256:sha(archive)},null,2));console.log(sha(archive));

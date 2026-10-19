@@ -280,7 +280,7 @@ describe('CoachingPortalService', () => {
     expect(request.request.body).toEqual({
       studentId: 'student/1',
       title: 'Matematik neti',
-      category: 1,
+      category: 'ExamPreparation',
       teacherId: null,
       description: 'Haftalık tekrar',
       targetDate: '2030-01-01T23:59:59.000Z',

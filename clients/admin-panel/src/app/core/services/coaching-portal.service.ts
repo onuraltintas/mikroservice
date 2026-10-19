@@ -650,7 +650,7 @@ export class CoachingPortalService {
       {
         studentId,
         title: request.title.trim(),
-        category: request.category,
+        category: ({ 1: 'ExamPreparation', 2: 'SubjectMastery', 3: 'GradeImprovement', 4: 'StudyHabits', 5: 'TimeManagement', 99: 'Other' } as Record<number, string>)[request.category],
         teacherId: null,
         description: request.description?.trim() || null,
         targetDate: request.targetDate || null,

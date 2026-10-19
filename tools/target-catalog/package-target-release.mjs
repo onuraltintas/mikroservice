@@ -1,0 +1,20 @@
+import {cpSync,existsSync,mkdirSync,readFileSync,writeFileSync,readdirSync,statSync} from 'node:fs';
+import {resolve,join,relative} from 'node:path';
+import {createHash} from 'node:crypto';
+import {execFileSync} from 'node:child_process';
+import assert from 'node:assert/strict';
+const root=process.cwd(),release=resolve(root,'artifacts/coaching-targets-20261019'),pack=join(release,'package');
+assert.ok(!existsSync(pack));mkdirSync(join(pack,'payload/coaching'),{recursive:true});
+for(const name of ['Coaching.API','Coaching.Application','Coaching.Domain','Coaching.Infrastructure'])
+ for(const ext of ['dll','pdb'])cpSync(join(release,'publish',name+'.'+ext),join(pack,'payload/coaching',name+'.'+ext));
+cpSync(join(release,'admin-tree/clients/admin-panel/dist/admin-panel'),join(pack,'payload/admin'),{recursive:true});
+cpSync(join(release,'staff-tree/clients/admin-panel/dist/staff-portal/browser'),join(pack,'payload/staff'),{recursive:true});
+for(const name of ['coaching-service','admin-panel','staff-portal'])cpSync(resolve(root,'artifacts/coaching-yks-20261019-r3/package',name+'.Dockerfile'),join(pack,name+'.Dockerfile'));
+cpSync(join(release,'source-provenance.json'),join(pack,'source-provenance.json'));
+writeFileSync(join(pack,'deploy.sh'),readFileSync(resolve(root,'tools/target-catalog/deploy-target-release.sh'),'utf8').replaceAll('\r\n','\n'));
+const files=dir=>readdirSync(dir).flatMap(n=>statSync(join(dir,n)).isDirectory()?files(join(dir,n)):[join(dir,n)]);
+assert.ok(files(pack).every(f=>!relative(pack,f).split(/[\\/]/).some(n=>n==='.env'||n.startsWith('.env.'))));
+const sha=f=>createHash('sha256').update(readFileSync(f)).digest('hex');
+writeFileSync(join(pack,'payload.sha256'),files(pack).map(f=>sha(f)+'  '+relative(pack,f).replaceAll('\\','/')).join('\n')+'\n');
+const archive=join(release,'release.tar.gz');execFileSync('tar',['-czf',archive,'-C',pack,'.']);
+const result={archive,sha256:sha(archive)};writeFileSync(join(release,'package-info.json'),JSON.stringify(result,null,2));console.log(JSON.stringify(result));

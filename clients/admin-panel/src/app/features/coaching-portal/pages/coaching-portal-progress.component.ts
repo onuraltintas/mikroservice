@@ -43,12 +43,12 @@ export class CoachingPortalProgressComponent implements OnInit {
   readonly updatingGoalId = signal<string | null>(null);
   readonly goalFormError = signal<string | null>(null);
   readonly goalCategories = [
-    { value: 1, label: 'Sınav hazırlığı' },
-    { value: 2, label: 'Ders hakimiyeti' },
-    { value: 3, label: 'Not yükseltme' },
-    { value: 4, label: 'Çalışma alışkanlığı' },
-    { value: 5, label: 'Zaman yönetimi' },
-    { value: 99, label: 'Diğer' }
+    { value: 1, apiName: 'ExamPreparation', label: 'Sınav hazırlığı' },
+    { value: 2, apiName: 'SubjectMastery', label: 'Ders hakimiyeti' },
+    { value: 3, apiName: 'GradeImprovement', label: 'Not yükseltme' },
+    { value: 4, apiName: 'StudyHabits', label: 'Çalışma alışkanlığı' },
+    { value: 5, apiName: 'TimeManagement', label: 'Zaman yönetimi' },
+    { value: 99, apiName: 'Other', label: 'Diğer' }
   ];
   readonly minTargetDate = new Date(Date.now() + 86_400_000).toISOString().slice(0, 10);
   readonly goalForm = this.formBuilder.group({
@@ -130,6 +130,7 @@ export class CoachingPortalProgressComponent implements OnInit {
         this.showGoalForm.set(false);
         this.goalForm.reset({ title: '', category: 1, description: '', targetDate: '', targetScore: null });
         this.loadGoals(studentId);
+        this.retrySummary();
       },
       error: () => {
         this.goalFormError.set('Hedef oluşturulamadı. Bilgileri kontrol edip tekrar deneyin.');
@@ -162,7 +163,7 @@ export class CoachingPortalProgressComponent implements OnInit {
   }
 
   categoryLabel(category: string) {
-    return this.goalCategories.find(item => item.value === Number(category))?.label ?? category;
+    return this.goalCategories.find(item => item.value === Number(category) || item.apiName === category)?.label ?? category;
   }
 
   private loadGoals(studentId: string) {
