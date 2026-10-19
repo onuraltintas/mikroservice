@@ -1,5 +1,5 @@
 import unittest
-from lgs_2026 import parse_istanbul
+from lgs_2026 import parse_istanbul, consolidate
 
 
 def page(quota='30', placement='LGS', year='2026'):
@@ -13,6 +13,14 @@ def page(quota='30', placement='LGS', year='2026'):
 
 
 class LgsMetadataTests(unittest.TestCase):
+    def test_duplicate_offerings_do_not_double_quota_and_conflicts_are_unknown(self):
+        row = parse_istanbul(page())[0][0]
+        rows, issues = consolidate([row, dict(row)])
+        self.assertEqual(1, len(rows))
+        self.assertEqual(30, rows[0]['quota'])
+        rows, issues = consolidate([row, dict(row, quota=90)])
+        self.assertIsNone(rows[0]['quota'])
+        self.assertEqual([30, 90], issues[0]['values'])
     def test_only_current_quota_is_read_never_old_scores(self):
         rows, review = parse_istanbul(page())
         self.assertEqual(30, rows[0]['quota'])
