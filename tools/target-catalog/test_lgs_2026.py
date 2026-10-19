@@ -1,5 +1,5 @@
 import unittest
-from lgs_2026 import parse_istanbul, consolidate
+from lgs_2026 import parse_istanbul, consolidate, institution_issues
 
 
 def page(quota='30', placement='LGS', year='2026'):
@@ -13,6 +13,10 @@ def page(quota='30', placement='LGS', year='2026'):
 
 
 class LgsMetadataTests(unittest.TestCase):
+    def test_one_official_code_with_different_school_names_needs_review(self):
+        row = parse_istanbul(page())[0][0]
+        other = dict(row, externalCode=row['externalCode'] + 'x', institution='OTHER SCHOOL')
+        self.assertEqual(2, len(institution_issues([row, other])))
     def test_duplicate_offerings_do_not_double_quota_and_conflicts_are_unknown(self):
         row = parse_istanbul(page())[0][0]
         rows, issues = consolidate([row, dict(row)])
