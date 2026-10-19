@@ -34,4 +34,12 @@ public sealed class TargetAdmissionImportTests
         await Assert.ThrowsAsync<ArgumentException>(()=>importer.ImportAsync(package with {DocumentHash=new string('d',64),Rows=[Row(),Row()]}));
         Assert.Single(db.Set<TargetAdmissionRecord>());
     }
+    [Fact]
+    public async Task DisagreementBetweenOfficialSourcesIsQuarantined()
+    {
+        using var db=Db();await new TargetAdmissionImporter(db).ImportAsync(Package("YKS",Row()) with
+        {Issues=new Dictionary<string,string>{{"123456789","OSYM and YOK scores disagree"}}});
+        Assert.Empty(db.TargetUniversityPrograms);
+        Assert.Equal("Conflict",db.Set<TargetAdmissionRecord>().Single().MatchStatus);
+    }
 }
