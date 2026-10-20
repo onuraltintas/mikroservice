@@ -1,0 +1,17 @@
+:host { display: block; min-width: 0; }
+.daily-agenda { border: 1px solid var(--ui-border); border-top: 3px solid var(--ui-brand); border-radius: 22px; padding: 24px; background: linear-gradient(135deg, var(--coaching-mint-tint), var(--ui-surface) 55%); box-shadow: var(--coaching-card-shadow); color: var(--ui-text); }
+header { display: flex; align-items: start; justify-content: space-between; gap: 16px; h2 { margin: 6px 0; font-size: 25px; font-weight: 750; letter-spacing: -.03em; } p:not(.eyebrow) { color: var(--ui-text-muted); font-size: 14px; line-height: 1.6; } }
+.eyebrow { color: var(--ui-success); font-size: 11px; font-weight: 750; letter-spacing: .08em; }
+button { min-height: 44px; padding: 9px 12px; border: 1px solid var(--ui-border); border-radius: 12px; background: var(--ui-surface); color: var(--ui-text); font: inherit; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; &:disabled { opacity: .55; cursor: default; } }
+:is(a, button):focus-visible { outline: 3px solid var(--coaching-focus); outline-offset: 3px; }
+.agenda-filters { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 22px; button { min-width: 0; font-size: 14px; span { border-radius: 8px; padding: 2px 7px; background: var(--ui-surface-muted); font-variant-numeric: tabular-nums; } &[aria-pressed=true] { border-color: var(--ui-success); background: var(--ui-brand-soft); color: var(--ui-success); } } }
+.period-note, .result-note { color: var(--ui-text-muted); font-size: 12px; line-height: 1.6; margin: 12px 0; }
+.agenda-item { display: flex; align-items: center; gap: 12px; min-height: 84px; border-top: 1px solid var(--ui-border); padding: 16px 0; color: inherit; text-decoration: none; &:hover strong { color: var(--ui-success); } > app-coaching-icon { flex-shrink: 0; color: var(--ui-text-muted); } }
+.kind-icon { display: grid; place-items: center; width: 40px; height: 40px; flex-shrink: 0; border-radius: 13px; background: var(--ui-brand-soft); color: var(--ui-success); &.assignment { background: var(--coaching-blue-tint); color: var(--coaching-lesson-text-1); } &.decision { background: var(--coaching-honey-tint); color: var(--coaching-warning); } }
+.item-copy { min-width: 0; flex: 1; overflow-wrap: anywhere; strong { display: block; margin: 4px 0; font-size: 15px; font-weight: 650; } small, .item-kind { color: var(--ui-text-muted); font-size: 12px; line-height: 1.6; } .zone { display: block; } }
+.is-overdue .item-kind { color: var(--ui-danger); }
+.empty { padding: 26px 12px; text-align: center; color: var(--ui-text-muted); h3 { color: var(--ui-text); margin: 10px 0; font-size: 18px; font-weight: 650; } p { font-size: 14px; line-height: 1.7; } a { display: inline-flex; min-height: 44px; align-items: center; gap: 10px; margin-top: 12px; color: var(--ui-success); font-weight: 650; } }
+.agenda-error { padding: 16px 0; color: var(--ui-danger); p { margin-bottom: 12px; } }
+.pagination { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 12px; font-size: 13px; }
+footer { display: flex; flex-wrap: wrap; gap: 8px 18px; border-top: 1px solid var(--ui-border); margin-top: 12px; padding-top: 12px; a { display: inline-flex; align-items: center; min-height: 44px; font-size: 13px; font-weight: 600; color: var(--ui-success); } }
+@media (max-width: 540px) { .daily-agenda { padding: 18px; } header { flex-wrap: wrap; } .agenda-filters { gap: 5px; button { padding: 8px; gap: 5px; font-size: 13px; } } }

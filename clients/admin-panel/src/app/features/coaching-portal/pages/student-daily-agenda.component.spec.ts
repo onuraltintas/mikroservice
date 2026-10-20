@@ -55,4 +55,13 @@ describe('StudentDailyAgendaComponent', () => {
     const { c, api } = await setup(); c.select('upcoming'); c.load(2); c.refresh();
     expect(api.get).toHaveBeenLastCalledWith('upcoming', 1);
   });
+  it('uses real total-page ceiling and reloads when returning focus without duplicating a pending read', async () => {
+    const { c, api } = await setup();
+    api.get.mockReturnValueOnce(of({ ...sample, mode: 'upcoming', totalCount: 21, pageNumber: 2 }));
+    c.select('upcoming'); expect(c.totalPages()).toBe(2);
+    const pending = new Subject<DailyAgendaPage>(); api.get.mockReturnValueOnce(pending);
+    c.onFocus(); c.onFocus(); expect(api.get).toHaveBeenCalledTimes(3); expect(api.get).toHaveBeenLastCalledWith('upcoming', 2);
+    pending.next({ ...sample, mode: 'upcoming', totalCount: 0, pageNumber: 1 }); pending.complete();
+    c.refresh(); expect(api.get).toHaveBeenLastCalledWith('upcoming', 1);
+  });
 });

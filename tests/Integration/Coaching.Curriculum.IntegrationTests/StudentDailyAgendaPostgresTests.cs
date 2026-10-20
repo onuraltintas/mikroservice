@@ -17,7 +17,9 @@ public sealed class StudentDailyAgendaPostgresTests
     [CurriculumPostgresTests.LocalPostgresFact]
     public async Task CombinesAllKindsWithExactCountsPagingAndLinksWithoutChangingRecords()
     {
-        await using var pg = await CurriculumPostgresTests.Pg.Create(); var f = pg.Data;
+        await using var pg = await CurriculumPostgresTests.Pg.Create(); var f = pg.Data; await f.Seed();
+        var originalTask = await f.Db.StudyPlanTasks.AsNoTracking().SingleAsync();
+        var originalOutcomes = JsonSerializer.Serialize(await f.Db.Set<StudyPlanTaskOutcome>().AsNoTracking().ToArrayAsync());
         var student = Guid.NewGuid(); var teacher = Guid.NewGuid();
         f.User.UserId = student; f.User.Roles = ["Student"];
         f.Db.Add(CoachingStudentProfile.Create(student));
@@ -43,6 +45,8 @@ public sealed class StudentDailyAgendaPostgresTests
         var refreshed = await Page(api); Assert.Equal(24, refreshed.TodayCount);
         Assert.DoesNotContain(refreshed.Items, x => x.RecordId == study.Id || x.RecordId == assignment.Id || x.RecordId == decision.Id);
         Assert.Equal(25, (await f.Db.StudyPlanTasks.AsNoTracking().SingleAsync(x => x.Id == study.Id)).ActualMinutes);
+        Assert.Equal(JsonSerializer.Serialize(originalTask), JsonSerializer.Serialize(await f.Db.StudyPlanTasks.AsNoTracking().SingleAsync(x => x.Id == originalTask.Id)));
+        Assert.Equal(originalOutcomes, JsonSerializer.Serialize(await f.Db.Set<StudyPlanTaskOutcome>().AsNoTracking().ToArrayAsync()));
     }
 
     [CurriculumPostgresTests.LocalPostgresFact]
@@ -71,7 +75,7 @@ public sealed class StudentDailyAgendaPostgresTests
         Assert.Equal(1, upcoming.UpcomingCount);
         Assert.IsType<BadRequestObjectResult>(await api.Get("invalid")); Assert.IsType<BadRequestObjectResult>(await api.Get(pageNumber: 0));
         f.User.Roles = ["Teacher"]; Assert.Equal(403, Assert.IsType<ObjectResult>(await api.Get()).StatusCode);
-        f.User.Roles = ["Student"]; (await f.Db.CoachingStudentProfiles.SingleAsync()).UpdatePersonal(null, null, null, false);
+        f.User.Roles = ["Student"]; (await f.Db.CoachingStudentProfiles.SingleAsync()).SetActive(false, student);
         await f.Db.SaveChangesAsync(); Assert.Equal(403, Assert.IsType<ObjectResult>(await api.Get()).StatusCode);
     }
 
