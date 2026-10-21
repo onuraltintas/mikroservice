@@ -11,12 +11,12 @@ type Kind = 'exams' | 'programs' | 'programTopics' | 'lessons' | 'units' | 'topi
 interface Estimate { id: string; number: number; learningMinutes: number; practiceMinutes: number; checkMinutes: number; confidence: string; evidence: string; isPublished: boolean; method?: string }
 interface Mapping { topicId: string; path: string; isApproved: boolean; evidence: string }
 interface Node { kind: Kind; id: string; name: string; parentId: string | null; parentKind: Kind | null; isActive: boolean; path: string; fingerprint: string; canDelete: boolean; blockers: string[];
-  examDate?: string | null; code?: string; gradeNumber?: number | null; examCode?: string | null; displayOrder?: number | null; estimatedMinutes?: number | null; officialTopicId?: string; sourcePage?: number; notes?: string; estimates: Estimate[]; mappings: Mapping[]; usedEstimateIds?: string[]; topicOutcomeCount?: number;
-  academicYearStart?: number; academicYearEnd?: number; sourceUrl?: string; documentSha256?: string; scopeEvidenceUrl?: string; outcomeCount?: number; lessonPeriods?: number; curriculumVersionId?: string | null }
+  examDate?: string | null; code?: string; gradeNumber?: number | null; examCode?: string | null; displayOrder?: number | null; estimatedMinutes?: number | null; officialTopicId?: string; sourcePage?: number | null; sourceKind?: string; notes?: string; estimates: Estimate[]; mappings: Mapping[]; usedEstimateIds?: string[]; topicOutcomeCount?: number;
+  academicYearStart?: number; academicYearEnd?: number; sourceUrl?: string; documentSha256?: string; scopeEvidenceUrl?: string; outcomeCount?: number; lessonPeriods?: number | null; curriculumVersionId?: string | null }
 interface Page { items: Node[]; totalCount: number; pageNumber: number; pageSize: number }
 interface Listing { rows: Node[]; page: number; total: number; loading: boolean; error?: string }
-interface Form { examDate: string; name: string; reason: string; parentId: string | null; gradeNumber: number | null; examCode: string | null; displayOrder: number | null; estimatedMinutes: number | null; code: string; officialTopicId: string | null; sourcePage: number; notes: string; moveParentOutcomes: boolean;
-  academicYearStart: number; academicYearEnd: number; sourceUrl: string; documentSha256: string; scopeEvidenceUrl: string; outcomeCount: number; lessonPeriods: number; curriculumVersionId: string | null }
+interface Form { examDate: string; name: string; reason: string; parentId: string | null; gradeNumber: number | null; examCode: string | null; displayOrder: number | null; estimatedMinutes: number | null; code: string; officialTopicId: string | null; sourcePage: number | null; notes: string; moveParentOutcomes: boolean;
+  academicYearStart: number; academicYearEnd: number; sourceUrl: string; documentSha256: string; scopeEvidenceUrl: string; outcomeCount: number; lessonPeriods: number | null; curriculumVersionId: string | null }
 interface Edition { id: string; code: string; subjectName: string; academicYearStart: number; academicYearEnd: number }
 
 @Component({ selector: 'app-coaching-curriculum-manager', standalone: true, imports: [CommonModule, FormsModule, RouterLink],
@@ -34,6 +34,7 @@ export class CoachingCurriculumManagerComponent implements OnInit {
   readonly editions = signal<Edition[]>([]); readonly officialTopics = signal<{ id: string; name: string; lessonPeriods: number }[]>([]);
   readonly labels: Record<Kind,string> = { exams:'Sınav türü',programs:'Kaynak program',programTopics:'Program konu grubu',lessons: 'Ders', units: 'Ünite', topics: 'Konu', outcomes: 'Kazanım' };
   readonly tabs = [{id:'exams',label:'Sınav türleri'},{id:'lessons',label:'Dersler'},{id:'units',label:'Üniteler'},{id:'topics',label:'Konular'},{id:'subtopics',label:'Alt konular'},{id:'outcomes',label:'Kazanımlar'},{id:'programs',label:'Kaynak programlar'},{id:'programTopics',label:'Program konu grupları'}];
+  readonly hierarchyLevels = [{id:'exams',label:'Sınav türü'},{id:'lessons',label:'Ders'},{id:'units',label:'Ünite'},{id:'topics',label:'Konu'},{id:'subtopics',label:'Alt konu'},{id:'outcomes',label:'Kazanım'}];
   readonly exams = signal<{id:string;code:string;name:string;isActive:boolean}[]>([]);
   readonly parentOptions = signal<Node[]>([]); readonly parentLoading = signal(false); readonly parentTotal = signal(0);
   readonly curricula = signal<{id:string;name:string;versionLabel:string;isPublished:boolean}[]>([]);
@@ -52,8 +53,8 @@ export class CoachingCurriculumManagerComponent implements OnInit {
     return n.parentKind === 'topics' && n.kind === 'topics' ? 'Alt konu' : this.labels[n.kind];
   }
   branch() { return this.listing(); }
-  empty(): Form { return { examDate:'',name:'',reason:'',parentId:null,gradeNumber:null,examCode:null,displayOrder:null,estimatedMinutes:null,code:'',officialTopicId:null,sourcePage:1,notes:'',moveParentOutcomes:false,
-    academicYearStart:new Date().getFullYear(),academicYearEnd:new Date().getFullYear(),sourceUrl:'',documentSha256:'',scopeEvidenceUrl:'',outcomeCount:1,lessonPeriods:1,curriculumVersionId:null }; }
+  empty(): Form { return { examDate:'',name:'',reason:'',parentId:null,gradeNumber:null,examCode:null,displayOrder:null,estimatedMinutes:null,code:'',officialTopicId:null,sourcePage:null,notes:'',moveParentOutcomes:false,
+    academicYearStart:new Date().getFullYear(),academicYearEnd:new Date().getFullYear(),sourceUrl:'',documentSha256:'',scopeEvidenceUrl:'',outcomeCount:1,lessonPeriods:null,curriculumVersionId:null }; }
   dirty() { return this.editing() && (JSON.stringify(this.form) !== this.initial || this.durationDirty()); }
   private durationFields() { return {learningMinutes:this.learningMinutes,practiceMinutes:this.practiceMinutes,checkMinutes:this.checkMinutes,confidence:this.confidence,durationEvidence:this.durationEvidence,publishDuration:this.publishDuration}; }
   durationDirty() { return this.kind === 'outcomes' && !this.creating() && JSON.stringify(this.durationFields()) !== this.initialDuration; }
@@ -85,6 +86,13 @@ export class CoachingCurriculumManagerComponent implements OnInit {
   }
   parentKind(): Kind | null { return ({lessons:'exams',units:'lessons',topics:'units',subtopics:'topics',outcomes:'topics',programTopics:'programs'} as Record<string,Kind>)[this.tab] ?? null; }
   tabLabel() { return this.tabs.find(x => x.id === this.tab)?.label ?? ''; }
+  hierarchyLevelIndex() { return this.hierarchyLevels.findIndex(x => x.id === this.tab); }
+  hierarchyHelp() {
+    const index = this.hierarchyLevelIndex();
+    if (index < 0) return 'Kaynak programlar ve program konu grupları resmi kaynak eşleştirmelerini yönetir.';
+    return index === 0 ? 'Önce sınav türünü seçin; dersler doğrudan sınava bağlanır.'
+      : `${this.hierarchyLevels[index].label} kayıtları ${this.hierarchyLevels[index - 1].label.toLocaleLowerCase('tr')} altında düzenlenir. Seçili kaydın tam yolu düzenleme panelinde gösterilir.`;
+  }
   createLabel() { return this.tab === 'subtopics' ? 'Alt konu' : this.labels[this.rootScope]; }
   parentChoices() {
     const rows=[...this.parentOptions()];
@@ -131,8 +139,8 @@ export class CoachingCurriculumManagerComponent implements OnInit {
     const unsaved = preserveDuration && this.durationDirty() ? this.durationFields() : null;
     this.selected.set(n); this.kind = n.kind; this.creating.set(false); this.editing.set(true);
     this.form = { ...this.empty(),name:n.name,parentId:n.parentId,gradeNumber:n.gradeNumber ?? null,examCode:n.examCode ?? null,displayOrder:n.displayOrder ?? null,estimatedMinutes:n.estimatedMinutes ?? null,
-      examDate:n.examDate ?? '',code:n.code ?? '',officialTopicId:n.officialTopicId ?? null,sourcePage:n.sourcePage ?? 1,notes:n.notes ?? '',
-      academicYearStart:n.academicYearStart ?? new Date().getFullYear(),academicYearEnd:n.academicYearEnd ?? new Date().getFullYear(),sourceUrl:n.sourceUrl ?? '',documentSha256:n.documentSha256 ?? '',scopeEvidenceUrl:n.scopeEvidenceUrl ?? '',outcomeCount:n.outcomeCount ?? 1,lessonPeriods:n.lessonPeriods ?? 1,curriculumVersionId:n.curriculumVersionId ?? null };
+      examDate:n.examDate ?? '',code:n.code ?? '',officialTopicId:n.officialTopicId ?? null,sourcePage:n.sourceKind === 'ExamSkill' ? null : n.sourcePage ?? 1,notes:n.notes ?? '',
+      academicYearStart:n.academicYearStart ?? new Date().getFullYear(),academicYearEnd:n.academicYearEnd ?? new Date().getFullYear(),sourceUrl:n.sourceUrl ?? '',documentSha256:n.documentSha256 ?? '',scopeEvidenceUrl:n.scopeEvidenceUrl ?? '',outcomeCount:n.outcomeCount ?? 1,lessonPeriods:n.lessonPeriods ?? null,curriculumVersionId:n.curriculumVersionId ?? null };
     this.initial = JSON.stringify(this.form); this.moveConfirmed = false; this.statusConfirmed = false; this.deleteConfirmation = ''; this.estimateConfirmation = ''; this.destinationId = ''; this.destinations.set([]);
     this.sourceTopicId = n.mappings?.[0]?.topicId ?? ''; this.destinationKind = n.kind === 'lessons' ? 'exams' : n.kind === 'units' ? 'lessons' : n.kind === 'outcomes' ? 'topics' : 'units';
     const estimate = n.estimates?.find(x => x.isPublished) ?? n.estimates?.[0];

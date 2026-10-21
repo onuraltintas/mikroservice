@@ -24,7 +24,7 @@
         @if (purpose === 'Lgs' || purpose === 'Yks') { <label>Hedef sınav yılı<input type="number" name="examYear" [min]="academicYearStart" [max]="academicYearStart + 5" required [(ngModel)]="targetExamYear" (ngModelChange)="changed()"></label> }
         @if (purpose === 'Yks') {
           <label>Birincil puan türü<select name="scoreType" [(ngModel)]="primaryScoreType" (ngModelChange)="changed()"><option value="TYT">TYT</option><option value="SAY">Sayısal</option><option value="EA">Eşit ağırlık</option><option value="SOZ">Sözel</option><option value="DIL">Dil</option></select></label>
-          @if (primaryScoreType === 'DIL') { <label>Yabancı dil<select name="language" required [(ngModel)]="foreignLanguage" (ngModelChange)="changed()"><option value="">Seçin</option><option value="English">İngilizce</option><option value="German">Almanca</option><option value="French">Fransızca</option><option value="Arabic">Arapça</option><option value="Russian">Rusça</option></select></label> }
+          @if (primaryScoreType === 'DIL') { <label>Yabancı dil<select name="language" required [(ngModel)]="foreignLanguage" (ngModelChange)="changed()"><option value="">Seçin</option><option value="English">İngilizce</option></select></label> }
         }
       </div><p class="muted">Eğitim kapsamını değiştirirsen ders seçimlerini ve başlangıç durumunu yeniden belirlemen gerekir. Aktif planın korunur.</p>
       <button type="submit" [disabled]="purposeForm.invalid">Kaydet ve devam et</button></fieldset>
@@ -53,8 +53,27 @@
       } @else {
         <p>Konu durumları senin beyanındır; sınav başarısı veya kazanım yeterliliği olarak değerlendirilmez. İstersen konu seçmeden devam edebilirsin.</p>
         <fieldset [disabled]="saving() || catalogLoading()">
-          <label>Ders<select [(ngModel)]="selectedLesson" (ngModelChange)="loadCatalog()"><option value="">Ders seçin</option>@for (lesson of catalog()?.lessons ?? []; track lesson.id) { @if (included(lesson.id)) { <option [value]="lesson.id">{{ lesson.name }}</option> } }</select></label>
-          @for (topic of catalog()?.topics?.items ?? []; track topic.id) { <label>{{ topic.unitName }} / {{ topic.name }}<select [ngModel]="declaration(topic.id)" (ngModelChange)="setDeclaration(topic.id, $event)"><option value="">Belirtmedim</option><option value="NotStudied">Henüz çalışmadım</option><option value="Studied">Çalıştım</option><option value="NeedsReview">Tekrar etmek istiyorum</option></select></label> }
+          <p class="muted">Sınav → ders → ünite → konu. Bu adım yalnızca başlangıç durumunu kaydeder; plan görevlerini veya kazanım yeterliliğini değiştirmez.</p>
+          <label>Ders<select [(ngModel)]="selectedLesson" (ngModelChange)="expandedTopicId.set(null); loadCatalog()"><option value="">Ders seçin</option>@for (lesson of catalog()?.lessons ?? []; track lesson.id) { @if (included(lesson.id)) { <option [value]="lesson.id">{{ lesson.name }} · {{ lesson.examCode || 'Genel' }} · {{ lesson.gradeNumber ? lesson.gradeNumber + '. sınıf' : 'sınıf belirtilmedi' }}</option> } }</select></label>
+          @for (group of topicGroups(); track group.name) {
+            <section class="topic-unit" [attr.aria-label]="group.name + ' ünitesi'">
+              <h3>{{ group.name }}</h3>
+              @for (topic of group.topics; track topic.id) {
+                <article class="topic-entry">
+                  <div class="topic-entry-heading"><strong>{{ topic.name }}</strong><button type="button" class="secondary" (click)="toggleTopicOutcomes(topic.id)" [attr.aria-expanded]="expandedTopicId() === topic.id">{{ expandedTopicId() === topic.id ? 'Kazanımları gizle' : 'Kazanımları gör' }}</button></div>
+                  <div class="topic-entry-fields"><label class="topic-status">Başlangıç durumu<select [ngModel]="declaration(topic.id)" (ngModelChange)="setDeclaration(topic.id, $event)"><option value="">Belirtmedim</option><option value="NotStudied">Henüz çalışmadım</option><option value="Studied">Çalıştım</option><option value="NeedsReview">Tekrar etmek istiyorum</option></select></label><span class="muted">{{ topic.estimatedMinutes ? topic.estimatedMinutes + ' dk öneri' : 'Süre belirtilmemiş' }}</span></div>
+                  @if (expandedTopicId() === topic.id) {
+                    <div class="topic-outcomes" aria-live="polite">
+                      @if (topicOutcomeLoading() === topic.id) { <p role="status">Kazanımlar yükleniyor…</p> }
+                      @else if (topicOutcomeErrors()[topic.id]) { <p class="notice error" role="alert">Kazanımlar yüklenemedi. <button type="button" class="secondary" (click)="retryTopicOutcomes(topic.id)">Yeniden dene</button></p> }
+                      @else if (topicOutcomes()[topic.id]?.length) { <ul>@for (outcome of topicOutcomes()[topic.id]; track outcome.outcomeId) { <li><strong>{{ outcome.code }}</strong> · {{ outcome.name }}<small>{{ outcome.totalMinutes }} dk · {{ outcome.sourceKind === 'ExamSkill' ? 'MEBİ çalışma becerisi' : 'Program kazanımı' }} · süre sürümü {{ outcome.estimateNumber }}</small></li> }</ul> }
+                      @else { <p class="muted">Bu konuya bağlı yayımlanmış kazanım veya süre bulunmuyor.</p> }
+                    </div>
+                  }
+                </article>
+              }
+            </section>
+          }
           <div class="actions"><button type="button" class="secondary" [disabled]="topicPage <= 1" (click)="loadCatalog(topicPage - 1)">Önceki konular</button><button type="button" class="secondary" [disabled]="topicPage * 50 >= (catalog()?.topics?.totalCount ?? 0)" (click)="loadCatalog(topicPage + 1)">Sonraki konular</button></div>
           <a routerLink="/coaching-portal/exam-results">Deneme sonucumu ekle (isteğe bağlı)</a>
           <label class="check"><input type="checkbox" [(ngModel)]="startingStatusReviewed" (ngModelChange)="changed()">Başlangıç bilgilerimi gözden geçirdim.</label>

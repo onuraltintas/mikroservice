@@ -19,6 +19,9 @@ describe('Coaching curriculum manager', () => {
     expect(fixture.nativeElement.textContent).toContain('Ders ve Müfredat Yönetimi');
     expect(fixture.nativeElement.textContent).toContain('Henüz kayıt yok');
     expect(fixture.nativeElement.querySelector('[role="tablist"]')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('[aria-label="Müfredat hiyerarşisi"]')).not.toBeNull();
+    expect(fixture.nativeElement.textContent).toContain('Sınav türü');
+    expect(fixture.nativeElement.textContent).toContain('Kazanım');
     expect(fixture.nativeElement.querySelectorAll('[role="tab"]').length).toBeGreaterThanOrEqual(7);
     expect(fixture.nativeElement.querySelector('button[aria-label="Sınav türü ekle"]')).not.toBeNull();
     expect(fixture.nativeElement.textContent).not.toContain('Ders grupları'); http.verify();

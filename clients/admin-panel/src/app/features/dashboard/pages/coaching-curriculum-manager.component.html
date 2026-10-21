@@ -11,6 +11,15 @@
     @for (t of tabs; track t.id) { <button type="button" role="tab" [attr.tabindex]="tab === t.id ? 0 : -1" (keydown)="navigateTab($event,t.id)" [id]="'tab-' + t.id" aria-controls="catalog-panel" [attr.aria-selected]="tab === t.id" [disabled]="busy()" (click)="chooseTab(t.id)">{{ t.label }}</button> }
   </nav>
   @if (pendingTab) { <div class="notice warning" role="alert"><p>Kaydedilmemiş değişiklikler var. Sekme değiştirilsin mi?</p><button type="button" (click)="discardTab()">Değişiklikleri bırak ve sekmeye geç</button><button type="button" (click)="pendingTab = ''">Düzenlemeye devam et</button></div> }
+  <section class="hierarchy-guide" aria-label="Müfredat hiyerarşisi">
+    <div class="hierarchy-guide-title"><strong>Müfredat yapısı</strong><span>{{ hierarchyHelp() }}</span></div>
+    <nav class="hierarchy-steps" aria-label="Sınav türünden kazanıma hiyerarşi">
+      @for (level of hierarchyLevels; track level.id; let index = $index) {
+        <button type="button" [class.current]="tab === level.id" [class.past]="hierarchyLevelIndex() > index" [attr.aria-current]="tab === level.id ? 'step' : null" [disabled]="busy()" (click)="chooseTab(level.id)"><span>{{ index + 1 }}</span>{{ level.label }}</button>
+      }
+    </nav>
+    @if (selected(); as current) { <p class="hierarchy-current"><strong>Seçili konum:</strong> {{ current.path || current.name }}</p> }
+  </section>
   <div class="workspace-grid" id="catalog-panel" role="tabpanel" [attr.aria-labelledby]="'tab-' + tab">
     <aside class="hierarchy" aria-label="Kayıt listesi">
       <div class="pane-header"><h2>{{ tabLabel() }}</h2><button type="button" class="primary" [attr.aria-label]="createLabel() + ' ekle'" (click)="createCurrent()" [disabled]="busy()">+ {{ createLabel() }} ekle</button></div>
@@ -58,13 +67,14 @@
             @if (kind === 'programTopics') {
               <label>Program konu kodu<input name="sourceTopicCode" [(ngModel)]="form.code" required maxlength="100"></label>
               <label>Kazanım sayısı<input name="count" type="number" min="1" max="500" step="1" [(ngModel)]="form.outcomeCount" required></label>
-              <label>Programdaki ders saati<input aria-label="Programdaki ders saati" name="periods" type="number" min="1" max="500" step="1" [(ngModel)]="form.lessonPeriods" required><small>Bireysel çalışma dakikasından farklıdır. Kazanım sürelerini kendiliğinden değiştirmez.</small></label>
+              <label>Programdaki ders saati (varsa)<input aria-label="Programdaki ders saati" name="periods" type="number" min="1" max="500" step="1" [(ngModel)]="form.lessonPeriods"><small>Kaynakta belirtilmiyorsa boş bırakın. Bireysel çalışma dakikasından farklıdır.</small></label>
             }
             @if (kind === 'topics') { <label>Konu çalışma süresi (dk)<input aria-label="Konu çalışma süresi (dk)" aria-describedby="topic-duration-help" name="minutes" type="number" min="1" step="1" [(ngModel)]="form.estimatedMinutes"><small id="topic-duration-help">Kazanım seçilmeden yapılan planlamanın önerisi. Boş bırakılabilir.</small></label> }
             @if (creating() && kind === 'topics' && selected()?.kind === 'topics' && selected()?.topicOutcomeCount) { <label class="checkbox full"><input type="checkbox" name="inherit" [(ngModel)]="form.moveParentOutcomes" required> Üst konudaki {{ selected()?.topicOutcomeCount }} kazanımı bu alt konuya taşımayı onaylıyorum. Eski planlar korunacak; yeni bağlantılar kapsam onayı bekleyecek.</label> }
             @if (kind === 'outcomes') {
               <label>Kazanım kodu<input name="code" [(ngModel)]="form.code" required maxlength="100"></label>
-              <label>Kaynak sayfa<input name="sourcePage" [(ngModel)]="form.sourcePage" required min="1" step="1" type="number"></label>
+              @if (selected()?.sourceKind === 'ExamSkill' && !creating()) { <p>Sınav hazırlık becerisi · Kaynak: MEBİ. Resmî kazanım kodu veya PDF sayfası değildir.</p> }
+              @else { <label>Kaynak sayfa<input name="sourcePage" [(ngModel)]="form.sourcePage" required min="1" step="1" type="number"></label> }
               <label class="full">Açıklama / kaynak notu<textarea name="notes" [(ngModel)]="form.notes" maxlength="8000" rows="2"></textarea></label>
               @if (creating()) {
                 <label class="full">Kaynak program<select aria-label="Kaynak program" name="edition" [(ngModel)]="editionId" (ngModelChange)="selectEdition()" required><option value="">Program seçin</option>@for (edition of editions(); track edition.id) { <option [value]="edition.id">{{ edition.subjectName }} · {{ edition.code }} · {{ edition.academicYearStart }}–{{ edition.academicYearEnd }}</option> }</select></label>

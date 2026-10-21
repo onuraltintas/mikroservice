@@ -1,5 +1,6 @@
+import { coachingFeedback, coachingToaster } from '../coaching-feedback';
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, HostListener, OnInit, ViewChild, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, ViewChild, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -9,6 +10,7 @@ import { CoachingProfileComponent } from '../../../../../shared/coaching-profile
 import { StudentStudyAvailabilityComponent } from './student-study-availability.component';
 import { StudentAutomaticPlanComponent } from './student-automatic-plan.component';
 import { environment } from '../../../../environments/environment';
+import { CoachingStudyPlanningService, PublishedStudyOutcome, StudyTopic } from '../../../core/services/coaching-study-planning.service';
 
 @Component({
   selector: 'app-student-learning-setup', standalone: true,
@@ -16,7 +18,9 @@ import { environment } from '../../../../environments/environment';
   templateUrl: './student-learning-setup.component.html', styleUrl: './student-study-plans.component.scss'
 })
 export class StudentLearningSetupComponent implements OnInit {
+  private readonly toaster = coachingToaster();
   private readonly service = inject(CoachingLearningSetupService);
+  private readonly planning = inject(CoachingStudyPlanningService);
   private readonly destroyRef = inject(DestroyRef);
   readonly apiUrl = environment.apiUrl;
   readonly state = signal<LearningSetupView | null>(null); readonly step = signal('Purpose');
@@ -33,11 +37,15 @@ export class StudentLearningSetupComponent implements OnInit {
   academicYearStart = new Date().getMonth() >= 8 ? new Date().getFullYear() : new Date().getFullYear() - 1;
   purpose: LearningPurpose = 'Undecided'; targetExamYear: number | null = null; primaryScoreType = 'TYT'; foreignLanguage = '';
   courses: LearningCourse[] = []; topics: LearningTopic[] = []; startingStatusReviewed = false;
+  readonly expandedTopicId = signal<string | null>(null);
+  readonly topicOutcomes = signal<Record<string, PublishedStudyOutcome[]>>({});
+  readonly topicOutcomeLoading = signal<string | null>(null);
+  readonly topicOutcomeErrors = signal<Record<string, boolean>>({});
   selectedLesson = ''; topicPage = 1; dirty = false;
-  ngOnInit() { this.load(); }
-  load() {
+  async ngOnInit() { await this.load(); }
+  async load() {
     if (this.loading() || this.saving()) return;
-    if (this.dirty && !window.confirm('Kaydedilmemiş seçimlerden vazgeçip sunucudaki bilgileri yükleyelim mi?')) return;
+    if (this.dirty && !await this.toaster.confirm('Kaydedilmemiş seçimlerden vazgeçip sunucudaki bilgileri yükleyelim mi?')) return;
     this.loading.set(true); this.ready.set(false); this.error.set(null);
     this.service.get().pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.loading.set(false))).subscribe({
       next: state => { this.apply(state); this.ready.set(true); this.step.set(state.nextStep === 'Catalog' ? 'Courses' : state.nextStep); if (this.step() === 'Courses' || this.step() === 'Starting') this.loadCatalog(); },
@@ -53,9 +61,9 @@ export class StudentLearningSetupComponent implements OnInit {
     }
     this.dirty = false;
   }
-  goTo(step: string) {
+  async goTo(step: string) {
     if (this.saving() || this.loading() || this.catalogLoading()) return;
-    if (!this.canLeaveChildren()) return;
+    if (!await this.canLeaveChildren()) return;
     if (this.dirty) { this.error.set('Adım değiştirmeden önce seçimlerinizi kaydedin veya yeniden yükleyin.'); return; }
     this.step.set(step); this.error.set(null);
     if (step === 'Courses' || step === 'Starting') this.loadCatalog();
@@ -90,8 +98,8 @@ export class StudentLearningSetupComponent implements OnInit {
       error: e => this.error.set(e?.status === 409 ? 'Kurulum başka bir oturumda değişti. Seçimleriniz korundu; güncel bilgileri yeniden yükleyin.' : e?.error?.message ?? 'Kurulum kaydedilemedi. Seçimleriniz ekranda korundu.')
     });
   }
-  afterProfileSaved() { this.load(); }
-  afterHoursSaved() { this.load(); }
+  async afterProfileSaved() { await this.load(); }
+  async afterHoursSaved() { await this.load(); }
   loadCatalog(page = 1) {
     if (this.catalogLoading()) return;
     this.catalogLoading.set(true); this.catalogError.set(null);
@@ -99,6 +107,28 @@ export class StudentLearningSetupComponent implements OnInit {
       next: catalog => { this.catalog.set(catalog); this.topicPage = page; }, error: () => this.catalogError.set('Ders kataloğu yüklenemedi. Tekrar deneyin.')
     });
   }
+  topicGroups() {
+    const groups = new Map<string, StudyTopic[]>();
+    for (const topic of this.catalog()?.topics.items ?? []) {
+      const name = topic.unitName || 'Diğer konular';
+      groups.set(name, [...(groups.get(name) ?? []), topic]);
+    }
+    return [...groups].map(([name, topics]) => ({ name, topics }));
+  }
+  toggleTopicOutcomes(topicId: string) {
+    if (this.expandedTopicId() === topicId) { this.expandedTopicId.set(null); return; }
+    this.expandedTopicId.set(topicId);
+    this.loadTopicOutcomes(topicId);
+  }
+  private loadTopicOutcomes(topicId: string) {
+    if (this.topicOutcomes()[topicId] || this.topicOutcomeLoading() === topicId) return;
+    this.topicOutcomeLoading.set(topicId);
+    this.planning.getTopicOutcomes(topicId).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.topicOutcomeLoading.set(null))).subscribe({
+      next: outcomes => { this.topicOutcomes.update(current => ({ ...current, [topicId]: outcomes })); this.topicOutcomeErrors.update(current => ({ ...current, [topicId]: false })); },
+      error: () => this.topicOutcomeErrors.update(current => ({ ...current, [topicId]: true }))
+    });
+  }
+  retryTopicOutcomes(topicId: string) { this.topicOutcomes.update(current => { const next = { ...current }; delete next[topicId]; return next; }); this.topicOutcomeErrors.update(current => ({ ...current, [topicId]: false })); this.loadTopicOutcomes(topicId); }
   included(id: string) { return this.courses.some(x => x.lessonId === id); }
   lessonName(id: string) { return this.catalog()?.lessons.find(x => x.id === id)?.name ?? 'Ders'; }
   toggleCourse(id: string) {
@@ -115,7 +145,7 @@ export class StudentLearningSetupComponent implements OnInit {
     this.topics = this.topics.filter(x => x.topicId !== id); if (status) this.topics.push({ topicId: id, declaredStatus: status }); this.changed();
   }
   finishStarting() { if (!this.startingStatusReviewed) { this.error.set('Başlangıç bilgilerini gözden geçirdiğinizi onaylayın.'); return; } this.persist(this.request(), 'Preview'); }
-  private canLeaveChildren() { return (this.profile?.canLeavePage() ?? true) && (this.hours?.canLeavePage() ?? true) && (this.preview?.canLeavePage() ?? true); }
-  canLeavePage() { return !this.saving() && this.canLeaveChildren() && (!this.dirty || window.confirm('Kaydedilmemiş kurulum seçimlerinden vazgeçilsin mi?')); }
-  @HostListener('window:beforeunload', ['$event']) beforeUnload(e: BeforeUnloadEvent) { if (this.dirty || this.saving()) { e.preventDefault(); e.returnValue = ''; } }
+  private async canLeaveChildren() { return (await this.profile?.canLeavePage() ?? true) && (await this.hours?.canLeavePage() ?? true) && (await this.preview?.canLeavePage() ?? true); }
+  async canLeavePage() { return !this.saving() && await this.canLeaveChildren() && (!this.dirty || await this.toaster.confirm('Kaydedilmemiş kurulum seçimlerinden vazgeçilsin mi?')); }
+  private readonly feedback = coachingFeedback(undefined, this.error);
 }
