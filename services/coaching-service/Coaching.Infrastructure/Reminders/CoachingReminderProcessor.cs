@@ -17,13 +17,15 @@ public sealed class CoachingReminderProcessor(CoachingDbContext db, ICoachingEve
     {
         var now = clock.GetUtcNow();
         var studyCount = await LockedAsync(() => StudyDaysAsync(now, ct), false, ct);
+        var overdueCount = await LockedAsync(() => StudyDaysAsync(now, ct, true), false, ct);
         var feeCount = await LockedAsync(() => OverdueFeesAsync(now, ct), false, ct);
-        return studyCount + feeCount + await LockedAsync(() => SessionsAsync(now, ct), true, ct);
+        return studyCount + overdueCount + feeCount + await LockedAsync(() => SessionsAsync(now, ct), true, ct);
     }
 
-    private async Task<int> StudyDaysAsync(DateTimeOffset now, CancellationToken ct)
+    private async Task<int> StudyDaysAsync(DateTimeOffset now, CancellationToken ct, bool overdue = false)
     {
         var count = 0;
+        var kind = overdue ? "StudyOverdue" : "StudyDay";
         var zones = (await db.StudyAvailability.AsNoTracking().Select(x => x.TimeZoneId).Distinct().ToListAsync(ct))
             .Append("Europe/Istanbul").Distinct().OrderBy(x => x, StringComparer.Ordinal);
         foreach (var zoneId in zones)
@@ -38,8 +40,8 @@ public sealed class CoachingReminderProcessor(CoachingDbContext db, ICoachingEve
                 from hours in preferences.DefaultIfEmpty()
                 where plan.IsActive && (hours == null ? zoneId == "Europe/Istanbul" : hours.TimeZoneId == zoneId)
                     && db.StudyPlanTasks.Any(task => task.RevisionId == plan.Id && task.StudentId == plan.StudentId
-                        && !task.IsCompleted && task.PlannedDate == date)
-                    && !db.CoachingReminderReceipts.Any(receipt => receipt.Kind == "StudyDay" && receipt.SourceId == plan.Id
+                        && !task.IsCompleted && (overdue ? task.PlannedDate < date : task.PlannedDate == date))
+                    && !db.CoachingReminderReceipts.Any(receipt => receipt.Kind == kind && receipt.SourceId == plan.Id
                         && receipt.RecipientUserId == plan.StudentId && receipt.OccurrenceKey == occurrence)
                 orderby plan.StudentId, plan.Id
                 select new { plan.Id, plan.StudentId })
@@ -49,8 +51,8 @@ public sealed class CoachingReminderProcessor(CoachingDbContext db, ICoachingEve
                 var key = "coaching-study-plan:" + plan.StudentId;
                 await db.Database.ExecuteSqlInterpolatedAsync($"SELECT pg_advisory_xact_lock(hashtextextended({key}, 0))", ct);
                 if (!await db.StudyPlanRevisions.AnyAsync(x => x.Id == plan.Id && x.IsActive, ct)
-                    || !await db.StudyPlanTasks.AnyAsync(x => x.RevisionId == plan.Id && x.StudentId == plan.StudentId && x.PlannedDate == date && !x.IsCompleted, ct)) continue;
-                if (await QueueAsync(CoachingReminderReceipt.Create(plan.StudentId, plan.Id, "StudyDay", occurrence, due, now.UtcDateTime), ct)) count++;
+                    || !await db.StudyPlanTasks.AnyAsync(x => x.RevisionId == plan.Id && x.StudentId == plan.StudentId && (overdue ? x.PlannedDate < date : x.PlannedDate == date) && !x.IsCompleted, ct)) continue;
+                if (await QueueAsync(CoachingReminderReceipt.Create(plan.StudentId, plan.Id, kind, occurrence, due, now.UtcDateTime), ct)) count++;
                 if (count == BatchSize) break;
             }
             if (count == BatchSize) break;

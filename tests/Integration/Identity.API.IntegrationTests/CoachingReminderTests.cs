@@ -219,6 +219,29 @@ public sealed class CoachingReminderTests(PostgresFixture postgres)
         finally { await db.Database.EnsureDeletedAsync(); }
     }
 
+    [Fact]
+    public async Task OverdueWorkProducesOneDailySummaryAndStopsAfterCompletion()
+    {
+        var clock = new Clock { Now = new(new DateTime(2026, 10, 23, 6, 0, 0, DateTimeKind.Utc)) };
+        await using var provider = Services(clock: clock).BuildServiceProvider(); await using var scope = provider.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<CoachingDbContext>();
+        await db.Database.EnsureDeletedAsync(); await db.Database.MigrateAsync();
+        try
+        {
+            var student = Guid.NewGuid(); var plan = StudyPlanRevision.Create(student, Guid.NewGuid(), 1, "Geciken test"); plan.Activate();
+            var task = StudyPlanTask.Create(plan, new(2026, 10, 22), "Bekleyen", 30);
+            db.AddRange(plan, task, StudyAvailability.Create(student, "Europe/Istanbul")); await db.SaveChangesAsync();
+            var processor = scope.ServiceProvider.GetRequiredService<CoachingReminderProcessor>();
+            Assert.Equal(1, await processor.ProcessAsync());
+            Assert.Equal("StudyOverdue", (await db.CoachingReminderReceipts.SingleAsync()).Kind);
+            Assert.Equal(0, await processor.ProcessAsync());
+            task.Complete(25, 8); await db.SaveChangesAsync(); clock.Now = clock.Now.AddDays(1);
+            Assert.Equal(0, await processor.ProcessAsync());
+            Assert.True(task.IsCompleted); Assert.Equal(25, task.ActualMinutes);
+        }
+        finally { await db.Database.EnsureDeletedAsync(); }
+    }
+
     private ServiceCollection Services(ReminderFault? fault = null, ReminderAckFault? ack = null, TimeProvider? clock = null, StudyLockCounter? counter = null)
     {
         var services = new ServiceCollection(); services.AddLogging();
