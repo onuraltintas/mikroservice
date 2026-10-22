@@ -5,9 +5,9 @@
   </div>
   <h3 class="period-title" aria-live="polite">{{ title() }}</h3>
   <div class="date-tools"><label>Tarihe git<input type="date" [ngModel]="dateKey(anchor())" (ngModelChange)="goToDate($event)" [disabled]="disabled"></label><button type="button" class="secondary" (click)="focusWork()" [disabled]="disabled||!hasAny()">Yakın çalışmaya git</button><button type="button" class="secondary" (click)="occupied(-1)" [disabled]="disabled||!adjacent(-1)">Önceki dolu gün</button><button type="button" class="secondary" (click)="occupied(1)" [disabled]="disabled||!adjacent(1)">Sonraki dolu gün</button></div>
-  <p class="calendar-note">Bu takvim seçtiğin planın kayıtlı çalışmalarını gösterir. Saat dilimi: {{ zone }}. Ders kartını seçerek kazanımları ve çalışma ayrıntılarını açabilirsin.</p>
+  <p class="calendar-note">Bu takvim seçtiğin planın kayıtlı çalışmalarını gösterir. Boş saate veya ders kartına sağ tıklayarak işlem yap. Telefonda ⋯ menüsünü, klavyede Shift F10 kullan. Ders kartını seçerek kazanımları açabilirsin.</p>
   @if(editable&&plan.status!=='Archived'){
-    <div class="move-tools"><button type="button" class="secondary" (click)="openMoveForm()" [disabled]="disabled||!movable().length">Gün ve saat değiştir</button><span>Ders kartını boş bir saate sürükle. Saatler 30 dakikalık adımlarla seçilir; kazanım süreleri korunur.</span></div>
+    <div class="move-tools"><button type="button" class="secondary add-study" (click)="calendarAction.emit({kind:'add',taskIds:[],date:dateKey(anchor()),startMinute:540})" [disabled]="disabled">＋ Çalışma ekle</button><button type="button" class="secondary" (click)="openMoveForm()" [disabled]="disabled||!movable().length">Gün ve saat değiştir</button><span>Ders kartını boş bir saate sürükle. Saatler 30 dakikalık adımlarla seçilir; kazanım süreleri korunur.</span></div>
     @if(moveForm;as form){<fieldset class="move-form" [disabled]="disabled"><legend>Dersi taşı</legend><label>Ders<select [ngModel]="form.id" (ngModelChange)="chooseMoveBlock($event)">@for(b of movable();track b.id){<option [value]="b.id">{{ b.lesson }} · {{ b.date }} · {{ range(b) }}</option>}</select></label><label>Yeni gün<input type="date" [(ngModel)]="form.date"></label><label>Yeni saat<input type="time" step="1800" [(ngModel)]="form.time"></label><button type="button" class="secondary" (click)="applyMoveForm()">Taşımayı kaydet</button><button type="button" class="secondary" (click)="moveForm=null">Vazgeç</button></fieldset>}
   }
   @if(editable){<div class="move-feedback">@if(moveError()){<p class="move-error" role="alert">{{ moveError() }}</p>}@else if(preview();as p){<p role="status">{{ p.lesson }} · {{ p.plannedDate }} · {{ clock(p.startMinute) }}–{{ clock(p.startMinute+p.minutes) }}</p>}</div>}
@@ -17,9 +17,9 @@
     <div class="month-grid">
       @for(label of weekLabels;track label){<div class="month-heading">{{ label }}</div>}
       @for(day of days();track dateKey(day)){
-        <div class="month-day" [class.other-month]="day.getMonth()!==anchor().getMonth()" [attr.data-date]="dateKey(day)">
+        <div class="month-day" [class.other-month]="day.getMonth()!==anchor().getMonth()" [attr.data-date]="dateKey(day)" (contextmenu)="context($event,day)" (keydown)="keyboardMenu($event,day)" tabindex="0" [attr.aria-label]="dayTitle(day)+' · Çalışma eklemek için sağ tıkla veya Shift F10'">
           <button type="button" class="secondary month-date" [attr.aria-label]="dayTitle(day)+' gününü aç'" (click)="openDay(day)" [disabled]="disabled">{{ day.getDate() }}</button>
-          @for(block of rows(day).slice(0,3);track block.id){<button type="button" [class]="'secondary month-block color-'+color(block)" [class.completed]="done(block)===block.tasks.length" [attr.aria-label]="label(block)" [title]="label(block)" [class.moveable]="canMove(block)" [style.touch-action]="canMove(block)?'none':null" (pointerdown)="beginMove($event,block)" (click)="select(block)" [disabled]="disabled"><strong>{{ block.lesson }}</strong><span>{{ range(block) }}</span>@if(done(block)===block.tasks.length){<span>Tamamlandı</span>}</button>}
+          @for(block of rows(day).slice(0,3);track block.id){<div class="calendar-event month-event" [style.--lesson-color]="color(block)"><button type="button" [class]="'secondary month-block'" [style.--lesson-color]="color(block)" (contextmenu)="blockMenu($event,block)" (keydown)="keyboardMenu($event,calendarDateFor(block.date),block)" [class.completed]="done(block)===block.tasks.length" [attr.aria-label]="label(block)" [title]="label(block)" [class.moveable]="canMove(block)" [style.touch-action]="canMove(block)?'none':null" (pointerdown)="beginMove($event,block)" (click)="select(block)" [disabled]="disabled"><strong>{{ block.lesson }}</strong><span>{{ range(block) }}</span><span class="ui-status task-status" [ngClass]="statusClass(block)">{{ status(block) }}</span></button><button type="button" class="card-menu-trigger" [disabled]="disabled" aria-label="Çalışma menüsünü aç" (pointerdown)="$event.stopPropagation()" (click)="menuButton($event,block)">⋯</button></div>}
           @if(rows(day).length>3){<button type="button" class="secondary more-day" (click)="openDay(day)" [disabled]="disabled">+{{ rows(day).length-3 }} ders</button>}
         </div>
       }
@@ -27,18 +27,34 @@
   }@else{
     @if(view()==='day'&&hasWork()){<button type="button" class="secondary day-detail" (click)="showDay()" [disabled]="disabled">Bu günün çalışmalarını aç</button>}
     @if(hasUntimed()){
-      <div class="untimed-wrap"><div class="untimed-grid" [style.grid-template-columns]="columns()"><span>Saati belirtilmemiş</span>@for(day of days();track dateKey(day)){<div class="untimed-day" [attr.data-date]="dateKey(day)">@for(block of untimed(day);track block.id){<button type="button" class="secondary untimed-block" [attr.aria-label]="label(block)" (click)="select(block)" [disabled]="disabled"><strong>{{ block.lesson }}</strong><span>{{ day | date:'dd.MM.yyyy' }} · {{ block.minutes }} dk</span>@if(done(block)===block.tasks.length){<span>Tamamlandı</span>}</button>}</div>}</div></div>
+      <div class="untimed-wrap"><div class="untimed-grid" [style.grid-template-columns]="columns()"><span>Saati belirtilmemiş</span>@for(day of days();track dateKey(day)){<div class="untimed-day" [attr.data-date]="dateKey(day)" (contextmenu)="context($event,day)" (keydown)="keyboardMenu($event,day)" tabindex="0" [attr.aria-label]="dayTitle(day)+' · Çalışma eklemek için sağ tıkla veya Shift F10'">@for(block of untimed(day);track block.id){<div class="calendar-event timed-event" [style.--lesson-color]="color(block)"><button type="button" class="secondary untimed-block" [style.--lesson-color]="color(block)" (contextmenu)="blockMenu($event,block)" (keydown)="keyboardMenu($event,calendarDateFor(block.date),block)" [attr.aria-label]="label(block)" (click)="select(block)" [disabled]="disabled"><strong>{{ block.lesson }}</strong><span>{{ day | date:'dd.MM.yyyy' }} · {{ block.minutes }} dk</span><span class="ui-status task-status" [ngClass]="statusClass(block)">{{ status(block) }}</span></button><button type="button" class="card-menu-trigger" [disabled]="disabled" aria-label="Çalışma menüsünü aç" (pointerdown)="$event.stopPropagation()" (click)="menuButton($event,block)">⋯</button></div>}</div>}</div></div>
     }
-    @if(hasTimed()){
+    @if(hasTimed()||writable()){
       <div class="time-scroller" #scroller data-testid="plan-time-scroller" tabindex="0" aria-label="Planın saatli çalışmaları">
         <div class="day-headers" [style.grid-template-columns]="columns()"><span>Saat</span>@for(day of days();track dateKey(day)){<button type="button" class="secondary" (click)="openDay(day)" [disabled]="disabled">{{ shortDay(day) }}</button>}</div>
-        <div class="time-body" [style.grid-template-columns]="columns()"><div class="time-axis">@for(hour of hours;track hour){<span [style.top.px]="hour*60">{{ clock(hour*60) }}</span>}</div>
-          @for(day of days();track dateKey(day)){<div class="day-track" [attr.data-date]="dateKey(day)">
-            @for(block of timed(day);track block.id){<button type="button" [class]="'secondary timed-block color-'+color(block)" [class.completed]="done(block)===block.tasks.length" [class.short]="block.minutes<30" [style.grid-row]="((block.startMinute??0)+1)+' / '+((block.startMinute??0)+block.minutes+1)" [attr.aria-label]="label(block)" [title]="label(block)" [class.moveable]="canMove(block)" [style.touch-action]="canMove(block)?'none':null" (pointerdown)="beginMove($event,block)" (click)="select(block)" [disabled]="disabled"><strong>{{ block.lesson }}</strong><span>{{ range(block) }}</span>@if(block.tasks.length>1){<span>{{ block.tasks.length }} çalışma</span>}@if(done(block)){<span>{{ done(block) }}/{{ block.tasks.length }} tamamlandı</span>}</button>}
-            @if(preview();as p){@if(p.plannedDate===dateKey(day)){<div class="move-preview" [class.invalid]="!!moveError()" [style.top.px]="p.startMinute" [style.height.px]="p.minutes">{{ p.lesson }} · {{ clock(p.startMinute) }}</div>}}
+        <div class="time-body" [style.grid-template-columns]="columns()"><div class="time-axis">@for(hour of hours;track hour){<span [style.top.px]="hour*60*pixelsPerMinute">{{ clock(hour*60) }}</span>}</div>
+          @for(day of days();track dateKey(day)){<div class="day-track" [attr.data-date]="dateKey(day)" (contextmenu)="context($event,day)" (keydown)="keyboardMenu($event,day)" tabindex="0" [attr.aria-label]="dayTitle(day)+' · Çalışma eklemek için sağ tıkla veya Shift F10'">
+            @for(block of timed(day);track block.id){<div class="calendar-event timed-event" [style.grid-row]="((block.startMinute??0)+1)+' / '+((block.startMinute??0)+block.minutes+1)" [style.--lesson-color]="color(block)"><button type="button" [class]="'secondary timed-block'" [style.--lesson-color]="color(block)" (contextmenu)="blockMenu($event,block)" (keydown)="keyboardMenu($event,calendarDateFor(block.date),block)" [class.completed]="done(block)===block.tasks.length" [class.short]="block.minutes<30" [attr.aria-label]="label(block)" [title]="label(block)" [class.moveable]="canMove(block)" [style.touch-action]="canMove(block)?'none':null" (pointerdown)="beginMove($event,block)" (click)="select(block)" [disabled]="disabled"><strong>{{ block.lesson }}</strong><span>{{ range(block) }}</span>@if(block.tasks.length>1&&block.minutes>=45){<span>{{ block.tasks.length }} çalışma</span>}<span class="ui-status task-status" [ngClass]="statusClass(block)">{{ status(block) }}</span></button><button type="button" class="card-menu-trigger" [disabled]="disabled" aria-label="Çalışma menüsünü aç" (pointerdown)="$event.stopPropagation()" (click)="menuButton($event,block)">⋯</button></div>}
+            @if(preview();as p){@if(p.plannedDate===dateKey(day)){<div class="move-preview" [class.invalid]="!!moveError()" [style.top.px]="p.startMinute*pixelsPerMinute" [style.height.px]="p.minutes*pixelsPerMinute">{{ p.lesson }} · {{ clock(p.startMinute) }}</div>}}
           </div>}
         </div>
       </div>
     }
+  }
+  @if(menu;as m){
+    <div class="calendar-context-menu" role="menu" aria-label="Takvim işlemleri" [style.left.px]="m.x" [style.top.px]="m.y" (click)="$event.stopPropagation()" (keydown)="menuKey($event)">
+      <p>{{ m.block?.lesson??'Yeni çalışma' }}<small>{{ m.date | date:'dd.MM.yyyy' }} · {{ clock(m.startMinute) }}</small></p>
+      @if(m.block){<button type="button" role="menuitem" (click)="menuDetails()">Ayrıntıları / kazanımları aç</button>}
+      @if(writable()){
+        <button type="button" role="menuitem" (click)="action('add')">＋ Ders çalışması ekle</button>
+        @if(m.block;as b){
+          <button type="button" role="menuitem" (click)="action('edit')" [disabled]="done(b)===b.tasks.length">Çalışmayı düzenle</button>
+          <button type="button" role="menuitem" (click)="menuMove()" [disabled]="!canMove(b)">Gün ve saati değiştir</button>
+          @if(student&&plan.status==='Active'){<button type="button" role="menuitem" (click)="action('complete')" [disabled]="done(b)===b.tasks.length">✓ Tamamlandı olarak kaydet</button>}
+          <button type="button" role="menuitem" class="danger" (click)="action('delete')" [disabled]="done(b)===b.tasks.length">Çalışmayı sil…</button>
+          @if(done(b)){<small>Tamamlanan çalışmalar korunur.</small>}
+        }
+      }
+    </div>
   }
 </section>

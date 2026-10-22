@@ -1,31 +1,44 @@
+import { coachingFeedback } from '../coaching-feedback';
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit, QueryList, signal, ViewChildren } from '@angular/core';
+import { Component, DestroyRef, inject, OnInit, signal, ViewChild, computed } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { validCoachingId, validWeeklyDate, WeeklyDestination } from '../../../../../shared/coaching-notification-target';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { catchError, finalize, forkJoin, of } from 'rxjs';
 import { AuthService } from '../../../core/auth/auth.service';
 import { CoachingPortalService, ExamResult, Goal, StudentProgressSummary } from '../../../core/services/coaching-portal.service';
-import { StudentGoalTargetComponent } from './student-goal-target.component';
 import { StudentStudyReportComponent } from './student-study-report.component';
+import { PracticeProgressComponent } from './practice-progress.component';
+import { CoachingStudentNavigationService } from '../../../core/services/coaching-student-navigation.service';
 
 @Component({
   selector: 'app-coaching-portal-progress',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, StudentGoalTargetComponent, StudentStudyReportComponent],
+  imports: [CommonModule, ReactiveFormsModule, StudentStudyReportComponent, PracticeProgressComponent],
   templateUrl: './coaching-portal-progress.component.html',
   styleUrl: './coaching-portal-progress.component.scss'
 })
 export class CoachingPortalProgressComponent implements OnInit {
-  @ViewChildren(StudentGoalTargetComponent) private targetPickers?: QueryList<StudentGoalTargetComponent>;
+  readonly navigation = inject(CoachingStudentNavigationService);
+  private readonly route = inject(ActivatedRoute, {optional:true});
+  private readonly destroyRef = inject(DestroyRef);
+  readonly weeklyTarget = signal<WeeklyDestination | null>(null);
+  private weeklyNavigationVersion = 0;
+  @ViewChild(PracticeProgressComponent) private practiceProgress?: PracticeProgressComponent;
   trackGoal(_index: number, goal: Goal) { return goal.id; }
-  canLeavePage() {
-    return !this.isSavingGoal() && !this.updatingGoalId()
-      && (this.targetPickers?.toArray().every(picker => picker.canLeavePage()) ?? true);
+  canUpdateGoals() {
+    return !this.isSavingGoal() && !this.updatingGoalId() && (this.practiceProgress?.canRefresh() ?? true);
+  }
+  async canLeavePage() {
+    return !this.isSavingGoal() && !this.updatingGoalId() && (await this.practiceProgress?.canLeavePage() ?? true);
   }
   private readonly authService = inject(AuthService);
   private readonly coachingService = inject(CoachingPortalService);
   private readonly formBuilder = inject(FormBuilder);
 
   readonly goals = signal<Goal[]>([]);
+  readonly habitGoals = computed(() => this.goals().filter(x => x.category !== 'ExamPreparation' && x.category !== '1'));
   readonly goalPageNumber = signal(1);
   readonly goalTotalPages = signal(1);
   readonly loadingMoreGoals = signal(false);
@@ -43,7 +56,6 @@ export class CoachingPortalProgressComponent implements OnInit {
   readonly updatingGoalId = signal<string | null>(null);
   readonly goalFormError = signal<string | null>(null);
   readonly goalCategories = [
-    { value: 1, apiName: 'ExamPreparation', label: 'Sınav hazırlığı' },
     { value: 2, apiName: 'SubjectMastery', label: 'Ders hakimiyeti' },
     { value: 3, apiName: 'GradeImprovement', label: 'Not yükseltme' },
     { value: 4, apiName: 'StudyHabits', label: 'Çalışma alışkanlığı' },
@@ -53,13 +65,23 @@ export class CoachingPortalProgressComponent implements OnInit {
   readonly minTargetDate = new Date(Date.now() + 86_400_000).toISOString().slice(0, 10);
   readonly goalForm = this.formBuilder.group({
     title: ['', [Validators.required, Validators.maxLength(200)]],
-    category: [1, [Validators.required]],
+    category: [4, [Validators.required]],
     description: ['', [Validators.maxLength(2_000)]],
     targetDate: [''],
     targetScore: [null as number | null, [Validators.min(0), Validators.max(999.99)]]
   });
 
   ngOnInit() {
+    this.route?.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(async params => {
+      const navigationVersion = ++this.weeklyNavigationVersion;
+      const week = params.get('week'); const decision = params.get('decision');
+      if (!week) return;
+      if (!validWeeklyDate(week) || decision !== null && !validCoachingId(decision)) { this.errorMessage.set('Haftalık kayıt bağlantısı geçersiz.'); return; }
+      if (this.weeklyTarget()?.weekStart === week && this.weeklyTarget()?.decisionId === decision) return;
+      if (this.practiceProgress && !await this.canLeavePage()) { this.errorMessage.set('Kaydedilmemiş girdileriniz korunuyor. Haftalık kaydı açmadan önce kaydedin veya düzenlemeyi kapatın.'); return; }
+      if (navigationVersion !== this.weeklyNavigationVersion) return;
+      this.weeklyTarget.set({studentId:this.authService.userProfile()?.id ?? '',weekStart:week,decisionId:decision});
+    });
     const studentId = this.authService.userProfile()?.id;
     if (!studentId) {
       this.isLoading.set(false);
@@ -97,8 +119,8 @@ export class CoachingPortalProgressComponent implements OnInit {
     this.goalFormError.set(null);
   }
 
-  createGoal() {
-    if (!this.canLeavePage()) return;
+  async createGoal() {
+    if (!await this.canLeavePage()) return;
     const studentId = this.authService.userProfile()?.id;
     if (!studentId) {
       this.goalFormError.set('Öğrenci profili bulunamadı.');
@@ -140,9 +162,9 @@ export class CoachingPortalProgressComponent implements OnInit {
     });
   }
 
-  updateProgress(goal: Goal, event: Event) {
+  async updateProgress(goal: Goal, event: Event) {
     const input = event.target as HTMLInputElement;
-    if (!this.canLeavePage()) { input.value = String(goal.progress); return; }
+    if (!await this.canLeavePage()) { input.value = String(goal.progress); return; }
     const progress = Math.min(100, Math.max(0, Number(input.value)));
     if (!Number.isFinite(progress) || progress === goal.progress) return;
 
@@ -163,7 +185,7 @@ export class CoachingPortalProgressComponent implements OnInit {
   }
 
   categoryLabel(category: string) {
-    return this.goalCategories.find(item => item.value === Number(category) || item.apiName === category)?.label ?? category;
+    return this.goalCategories.find(item => item.value === Number(category) || item.apiName === category)?.label ?? (category === 'ExamPreparation' || category === '1' ? 'Sınav hazırlığı' : category);
   }
 
   private loadGoals(studentId: string) {
@@ -230,12 +252,6 @@ export class CoachingPortalProgressComponent implements OnInit {
     return scores ? Object.entries(scores).map(([subject, score]) => `${subject}: ${score}`).join(' · ') : '—';
   }
 
-  examTrend() {
-    return [...this.examResults()]
-      .sort((left, right) => new Date(left.examDate).getTime() - new Date(right.examDate).getTime())
-      .slice(-6);
-  }
-
   loadMoreExams() {
     const studentId = this.authService.userProfile()?.id;
     if (!studentId || this.examPageNumber() >= this.examTotalPages() || this.loadingMoreExams()) return;
@@ -251,4 +267,5 @@ export class CoachingPortalProgressComponent implements OnInit {
       error: () => this.errorMessage.set('Sınav sonuçlarının devamı yüklenemedi.')
     });
   }
+  private readonly feedback = coachingFeedback(undefined, this.errorMessage);
 }

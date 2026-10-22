@@ -1,85 +1,150 @@
+import { coachingFeedback } from '../coaching-feedback';
 import { CommonModule } from '@angular/common';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Component, DestroyRef, EventEmitter, Input, OnChanges, Output, inject, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Subject, finalize, takeUntil } from 'rxjs';
+import { FormsModule } from '@angular/forms';
+import { Subscription, finalize } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
 interface AdmissionItem {
-  id:string; targetId:string; name:string; institution:string; externalCode:string;
-  minimumScore:number|null; rank:number|null; percentile:number|null; year:number; stage:string; sourceUrl:string;
-  city:string|null; language:string|null; scholarship:string|null; quota:number|null;
+  id: string; targetId: string; name: string; institution: string; externalCode: string; scoreType: string;
+  degree: string | null; field: string | null; minimumScore: number | null; rank: number | null;
+  percentile: number | null; year: number | null; stage: string | null; sourceUrl: string; city: string | null;
+  district: string | null; institutionType: string | null; language: string | null; scholarship: string | null; quota: number | null;
 }
-@Component({selector:'app-target-admission-search',standalone:true,imports:[CommonModule,FormsModule],
-  template:`
+
+@Component({ selector: 'app-target-admission-search', standalone: true, imports: [CommonModule, FormsModule], styles: [`
+    :host { display:block; }
+    section { margin-top:1rem; padding:1rem; border:1px solid #d7dfdf; border-radius:.75rem; }
+    h4 { margin:0; font-size:1rem; font-weight:600; }
+    p { margin:.5rem 0; line-height:1.5; }
+    fieldset { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,13rem),1fr)); gap:.8rem; margin:1rem 0; padding:0; border:0; }
+    label { display:flex; flex-direction:column; gap:.35rem; font-size:.9rem; }
+    input, select { box-sizing:border-box; width:100%; min-width:0; min-height:2.6rem; padding:.55rem .65rem; border:1px solid #c6d2d2; border-radius:.4rem; color:inherit; background:transparent; font:inherit; }
+    select:disabled { opacity:.65; }
+    button { min-height:2.5rem; padding:.5rem .8rem; border:1px solid #9cb2af; border-radius:.4rem; font:inherit; cursor:pointer; }
+    button:disabled { opacity:.55; cursor:default; }
+    button[type=submit] { align-self:end; color:#fff; background:#377c73; border-color:#377c73; }
+    ul { margin:.75rem 0; padding:0; list-style:none; }
+    li { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:1rem; margin:.6rem 0; padding:1rem; border:1px solid #d7dfdf; border-radius:.5rem; }
+    li > div { min-width:0; overflow-wrap:anywhere; }
+    li > div:last-child { display:flex; flex-wrap:wrap; align-items:center; gap:.75rem; }
+    a { color:#286f68; text-decoration:underline; }
+  `], template: `
   <section aria-label="Doğrulanmış hedef kataloğu" class="mt-4 rounded-lg border p-3">
-    <h4 class="font-semibold">2026 ve sonrası · Resmî hedef kataloğu</h4>
-    <p class="my-2 text-xs">Yalnız kaynağı ve eşleşmesi doğrulanmış kayıtlar listelenir. Geçmiş yerleştirme sonucu, gelecek yıl için kabul garantisi değildir.</p>
+    <h4 class="font-semibold">{{ kind === 'program' ? 'Üniversite programları · MEBİ kataloğu' : 'LGS okul programları · MEBİ kataloğu' }}</h4>
+    <p class="my-2 text-xs">{{kind === 'school' ? 'MEBİ okul programları ve kaynakta gösterilen taban puanları listelenir. Kaynakta puan yılı, yerleştirme aşaması ve kontenjan belirtilmemiştir.' : 'Güncel MEBİ program kataloğu listelenir. Kaynakta bulunmayan bilgiler boş gösterilir. Geçmiş yerleştirme sonucu, gelecek yıl için kabul garantisi değildir.'}}</p>
     <form (ngSubmit)="search()">
       <fieldset [disabled]="busy() || disabled" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        <label>Veri yılı<input aria-label="Katalog veri yılı" type="number" name="year" [(ngModel)]="year" (change)="yearChanged()" min="2026" max="2100" required class="w-full rounded border p-2"></label>
-        <label>Okul / program ara<input name="search" [(ngModel)]="filters['search']" maxlength="300" class="w-full rounded border p-2"></label>
-        <label *ngFor="let field of fields">{{field.label}}
-          <select [name]="field.key" [(ngModel)]="filters[field.key]" class="w-full rounded border p-2">
-            <option value="">Tümü</option><option *ngFor="let value of facets()[field.key] || []" [value]="value">{{display(value)}}</option>
-          </select>
-        </label>
-        <label>En düşük taban puan<input type="number" name="minimumScore" [(ngModel)]="filters['minimumScore']" min="0" step="0.00001" class="w-full rounded border p-2"></label>
-        <label>En yüksek taban puan<input type="number" name="maximumScore" [(ngModel)]="filters['maximumScore']" min="0" step="0.00001" class="w-full rounded border p-2"></label>
-        <label *ngIf="kind==='program'">En yüksek başarı sırası<input type="number" name="maximumRank" [(ngModel)]="filters['maximumRank']" min="1" step="1" class="w-full rounded border p-2"></label>
-        <label *ngIf="kind==='school'">En yüksek yüzdelik dilim<input type="number" name="maximumPercentile" [(ngModel)]="filters['maximumPercentile']" min="0" max="100" step="0.0001" class="w-full rounded border p-2"></label>
-        <label>Sıralama<select name="sort" [(ngModel)]="filters['sort']" class="w-full rounded border p-2"><option value="name">Ad</option><option value="score-desc">Taban puan: yüksekten düşüğe</option><option value="rank">Başarı sırası</option><option value="percentile">Yüzdelik dilim</option></select></label>
-        <button type="submit" class="rounded bg-indigo-600 p-2 text-white">Resmî katalogda ara</button>
+        <ng-container *ngIf="kind === 'program'; else schoolFilters">
+          <label>Program türü<select name="programType" [(ngModel)]="filters['programType']" (ngModelChange)="filterChanged()" class="w-full rounded border p-2"><option value="">Tümü</option><option *ngFor="let value of facets()['programType'] || []" [value]="value">{{display(value)}}</option></select></label>
+          <label>Üniversite<input name="university" [(ngModel)]="filters['university']" maxlength="300" class="w-full rounded border p-2" placeholder="Üniversite ara"></label>
+          <label>Fakülte<input name="faculty" [(ngModel)]="filters['faculty']" maxlength="300" class="w-full rounded border p-2" placeholder="Fakülte ara"></label>
+          <label>Program<input name="programName" [(ngModel)]="filters['programName']" maxlength="300" class="w-full rounded border p-2" placeholder="Program adı ara"></label>
+          <label>Puan türü<select [disabled]="!!scoreType" name="scoreType" [(ngModel)]="filters['scoreType']" class="w-full rounded border p-2"><option value="">Tümü</option><option *ngFor="let value of facets()['scoreType'] || []" [value]="value">{{display(value)}}</option></select></label>
+        </ng-container>
+        <ng-template #schoolFilters>
+          <label>Okul adı<input name="search" [(ngModel)]="filters['search']" maxlength="300" class="w-full rounded border p-2"></label>
+          <label>İl<select name="city" [(ngModel)]="filters['city']" (ngModelChange)="filterChanged('city')" class="w-full rounded border p-2"><option value="">Tümü</option><option *ngFor="let value of facets()['city'] || []" [value]="value">{{value}}</option></select></label>
+          <label>İlçe<select name="district" [(ngModel)]="filters['district']" (ngModelChange)="filterChanged()" class="w-full rounded border p-2"><option value="">Tümü</option><option *ngFor="let value of facets()['district'] || []" [value]="value">{{value}}</option></select></label>
+          <label>Okul türü<select name="institutionType" [(ngModel)]="filters['institutionType']" (ngModelChange)="filterChanged()" class="w-full rounded border p-2"><option value="">Tümü</option><option *ngFor="let value of facets()['institutionType'] || []" [value]="value">{{display(value)}}</option></select></label>
+          <label>Dil<select name="language" [(ngModel)]="filters['language']" (ngModelChange)="filterChanged()" class="w-full rounded border p-2"><option value="">Tümü</option><option *ngFor="let value of facets()['language'] || []" [value]="value">{{value}}</option></select></label>
+          <label>Alan<select name="field" [(ngModel)]="filters['field']" (ngModelChange)="filterChanged()" [disabled]="!(facets()['field'] || []).length" class="w-full rounded border p-2"><option value="">{{(facets()['field'] || []).length ? 'Tümü' : 'Kaynakta alan bilgisi yok'}}</option><option *ngFor="let value of facets()['field'] || []" [value]="value">{{value}}</option></select></label>
+        </ng-template>
+        <button type="submit" class="rounded bg-indigo-600 p-2 text-white">Ara</button>
       </fieldset>
     </form>
     <p *ngIf="error()" role="alert" class="mt-2 text-red-600">{{error()}}</p>
     <p *ngIf="busy()" role="status">Katalog yükleniyor…</p>
     <p *ngIf="searched() && !busy()" role="status" class="my-2">{{total()}} doğrulanmış kayıt</p>
-    <p *ngIf="searched() && !total()" class="my-2 text-sm">Seçtiğiniz yıl ve filtrelerde doğrulanmış veri bulunamadı. Yılı belirsiz eski puanlar bu sonuçlara karıştırılmaz.</p>
-    <ul class="space-y-2"><li *ngFor="let item of items()" class="rounded border p-3">
-      <strong>{{item.institution}} — {{item.name}}</strong>
-      <p class="text-sm">{{item.externalCode}} · {{item.year}} · {{item.stage==='Main' ? 'Ana yerleştirme' : item.stage}}</p>
-      <p class="text-sm">Taban puan: {{item.minimumScore ?? 'Oluşmadı / yayımlanmadı'}} · Başarı sırası: {{item.rank ?? 'Yayımlanmadı'}} · Yüzdelik: {{item.percentile ?? 'Yayımlanmadı'}}</p>
-      <p class="text-sm">{{item.city}} {{item.language}} {{item.scholarship}} · Kontenjan: {{item.quota ?? 'Bilinmiyor'}}</p>
-      <a [href]="item.sourceUrl" target="_blank" rel="noopener noreferrer" class="underline">Resmî kaynak</a>
-      <button type="button" (click)="choose(item.id)" [disabled]="disabled || busy()" class="ml-3 rounded border px-3 py-2">Bu hedefi bağla</button>
-    </li></ul>
-    <div *ngIf="total()>20" class="mt-3 flex gap-3"><button type="button" (click)="search(page-1)" [disabled]="page<=1 || busy()">Önceki</button><span>Sayfa {{page}}</span><button type="button" (click)="search(page+1)" [disabled]="page*20>=total() || busy()">Sonraki</button></div>
-  </section>`})
+    <p *ngIf="searched() && !total()" class="my-2 text-sm">Bu filtrelerle katalog kaydı bulunamadı.</p>
+    <ul class="space-y-2">
+      <li *ngFor="let item of items()" class="flex flex-wrap items-center justify-between gap-3 rounded border p-3">
+        <div *ngIf="kind === 'program'; else schoolResult">
+          <strong>{{item.name}}</strong><p class="text-sm">{{item.field}}</p>
+          <p class="text-sm">{{item.institution}} · {{display(item.degree || '')}} · {{display(item.scoreType)}}</p>
+          <p class="text-sm">Taban puan: {{item.minimumScore ?? 'Yayımlanmamış'}}</p>
+        </div>
+        <ng-template #schoolResult>
+          <div><strong>{{item.institution}}</strong><p class="text-sm">{{item.city}} / {{item.district}} · {{display(item.institutionType || '')}}</p>
+            <p class="text-sm">Dil: {{item.language ?? '—'}} · Alan: {{item.field ?? '—'}}</p>
+            <p class="text-sm">Taban puan: {{item.minimumScore ?? 'Yayımlanmamış'}} · Yüzdelik: {{item.percentile ?? 'Yayımlanmamış'}} · Kontenjan: {{item.quota ?? 'Bilinmiyor'}}</p></div>
+        </ng-template>
+        <div class="flex items-center gap-3"><a [href]="item.sourceUrl" target="_blank" rel="noopener noreferrer" class="underline">Resmî kaynak</a>
+          <button type="button" (click)="choose(item.id)" [disabled]="disabled || busy()" class="rounded border px-3 py-2">Bu hedefi bağla</button></div>
+      </li>
+    </ul>
+    <div *ngIf="total() > 20" class="mt-3 flex gap-3"><button type="button" (click)="search(page-1)" [disabled]="page<=1 || busy()">Önceki</button><span>Sayfa {{page}} · {{total()}} kayıt</span><button type="button" (click)="search(page+1)" [disabled]="page*20>=total() || busy()">Sonraki</button></div>
+  </section>` })
 export class TargetAdmissionSearchComponent implements OnChanges {
-  @Input() kind:'school'|'program'='program';
-  @Input() disabled=false;
-  @Output() readonly selected=new EventEmitter<string>();
-  private readonly http=inject(HttpClient);
-  private readonly destroyRef=inject(DestroyRef);
-  private readonly scopeChanged=new Subject<void>();
-  private readonly root=`${environment.apiUrl}/coaching/study-planning/targets/admissions`;
-  readonly facets=signal<Record<string,string[]>>({});readonly items=signal<AdmissionItem[]>([]);
-  readonly busy=signal(false);readonly searched=signal(false);readonly error=signal('');readonly total=signal(0);
-  year=2026;page=1;filters:Record<string,string|number>={sort:'name'};
-  readonly fields=[{key:'city',label:'İl'},{key:'district',label:'İlçe'},{key:'institution',label:'Okul / üniversite'},
-    {key:'institutionType',label:'Kurum türü'},{key:'scoreType',label:'Puan türü'},{key:'degree',label:'Öğrenim düzeyi'},
-    {key:'language',label:'Eğitim dili'},{key:'scholarship',label:'Burs / ücret'},{key:'educationType',label:'Öğretim biçimi'},{key:'field',label:'Fakülte / alan'}];
-  display(value:string){return ({Associate:'Ön lisans',Bachelor:'Lisans',SOZ:'Sözel',DIL:'Dil'} as Record<string,string>)[value]??value;}
-  ngOnChanges(changes:import('@angular/core').SimpleChanges){
-    if(!changes['kind'])return;
-    this.scopeChanged.next();this.items.set([]);this.facets.set({});this.total.set(0);this.searched.set(false);this.error.set('');this.filters={sort:'name'};this.loadFacets();
+  @Input() kind: 'school' | 'program' = 'program';
+  @Input() scoreType: string | null = null;
+  @Input() disabled = false;
+  @Output() readonly selected = new EventEmitter<string>();
+  private readonly http = inject(HttpClient);
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly root = `${environment.apiUrl}/coaching/study-planning/targets/admissions`;
+  private facetRequest?: Subscription;
+  private resultRequest?: Subscription;
+  readonly facets = signal<Record<string, string[]>>({});
+  readonly items = signal<AdmissionItem[]>([]);
+  readonly busy = signal(false);
+  readonly searched = signal(false);
+  readonly error = signal('');
+  readonly total = signal(0);
+  readonly year = 2026;
+  page = 1;
+  filters: Record<string, string> = {};
+
+  display(value: string) {
+    return ({ Associate: 'ÖNLİSANS', Bachelor: 'LİSANS', SOZ: 'SÖZ', DIL: 'YDT', 'DİL': 'YDT' } as Record<string, string>)[value] ?? value;
   }
-  private loadFacets(){
-    this.http.get<{data:Record<string,string[]>}>(`${this.root}/filters`,{params:{examCode:this.kind==='school'?'LGS':'YKS',year:this.year}})
-      .pipe(takeUntil(this.scopeChanged),takeUntilDestroyed(this.destroyRef)).subscribe({next:r=>this.facets.set(r.data),error:()=>this.error.set('Katalog filtreleri yüklenemedi.')});
+
+  ngOnChanges(changes: import('@angular/core').SimpleChanges) {
+    if (!changes['kind'] && !changes['scoreType']) return;
+    this.resultRequest?.unsubscribe(); this.busy.set(false);
+    this.page = 1; this.filters = this.scoreType ? {scoreType:this.scoreType} : {}; this.items.set([]); this.facets.set({});
+    this.total.set(0); this.searched.set(false); this.error.set(''); this.loadFacets();
   }
-  yearChanged(){this.scopeChanged.next();this.filters={sort:'name'};this.items.set([]);this.facets.set({});this.searched.set(false);this.total.set(0);if(this.year>=2026&&this.year<=2100)this.loadFacets();}
-  search(page=1){
-    if(this.busy()||this.disabled)return;
-    if(!Number.isInteger(this.year)||this.year<2026||this.year>2100){this.error.set('2026 veya sonrası bir veri yılı seçin.');return;}
-    this.busy.set(true);this.items.set([]);this.error.set('');this.searched.set(false);
-    let params=new HttpParams().set('examCode',this.kind==='school'?'LGS':'YKS').set('year',this.year).set('pageNumber',page);
-    for(const [key,value] of Object.entries(this.filters))if(value!=='' && value!==null && value!==undefined)params=params.set(key,value);
-    this.http.get<{data:{items:AdmissionItem[];totalCount:number;pageNumber:number}}>(this.root,{params})
-      .pipe(takeUntil(this.scopeChanged),takeUntilDestroyed(this.destroyRef),finalize(()=>this.busy.set(false)))
-      .subscribe({next:r=>{this.items.set(r.data.items);this.total.set(r.data.totalCount);this.page=r.data.pageNumber;this.searched.set(true);},error:()=>this.error.set('Arama başarısız. Filtreleri kontrol edin.')});
+
+  filterChanged(field?: string) {
+    if (field === 'city') this.filters['district'] = '';
+    this.resultRequest?.unsubscribe(); this.busy.set(false);
+    this.page = 1; this.items.set([]); this.total.set(0); this.searched.set(false);
+    this.loadFacets();
   }
-  choose(id:string){const item=this.items().find(x=>x.id===id);if(item&&!this.disabled&&!this.busy())this.selected.emit(item.targetId);}
+
+  private params() {
+    const params = new HttpParams().set('examCode', this.kind === 'school' ? 'LGS' : 'YKS').set('year', this.year);
+    return Object.entries(this.filters).reduce((result, [key, value]) => value ? result.set(key, value) : result, params);
+  }
+
+  private loadFacets() {
+    this.facetRequest?.unsubscribe();
+    this.facetRequest = this.http.get<{ data: Record<string, string[]> }>(`${this.root}/filters`, { params: this.params() })
+      .pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+        next: result => this.facets.set(result.data),
+        error: () => this.error.set('Katalog filtreleri yüklenemedi.')
+      });
+  }
+
+  search(page = 1) {
+    if (this.busy() || this.disabled) return;
+    this.resultRequest?.unsubscribe();
+    this.busy.set(true); this.items.set([]); this.error.set(''); this.searched.set(false);
+    const params = this.params().set('pageNumber', page).set('pageSize', 20);
+    this.resultRequest = this.http.get<{ data: { items: AdmissionItem[]; totalCount: number; pageNumber: number } }>(this.root, { params })
+      .pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.busy.set(false)))
+      .subscribe({
+        next: result => { this.items.set(result.data.items); this.total.set(result.data.totalCount); this.page = result.data.pageNumber; this.searched.set(true); },
+        error: () => this.error.set('Arama başarısız. Filtreleri kontrol edin.')
+      });
+  }
+
+  choose(id: string) {
+    const item = this.items().find(result => result.id === id);
+    if (item && !this.disabled && !this.busy()) this.selected.emit(item.targetId);
+  }
+  private readonly feedback = coachingFeedback(undefined, this.error);
 }

@@ -15,7 +15,9 @@ public sealed class CoachingStudentExamMigrationTests(PostgresFixture postgres)
     public async Task Migration_RoundTripsTeacherDataAndRefusesDestructiveStudentRollback()
     {
         await using var db = new CoachingDbContext(new DbContextOptionsBuilder<CoachingDbContext>().UseNpgsql(postgres.ConnectionString).Options);
-        await db.Database.EnsureDeletedAsync(); await db.Database.MigrateAsync();
+        await db.Database.EnsureDeletedAsync();
+        const string ownershipMigration = "20261002113458_AddStudentReportedExamOwnership";
+        await db.GetService<IMigrator>().MigrateAsync(ownershipMigration);
         try
         {
             var teacher = Exam.Create(Guid.NewGuid(), "Teacher", ExamType.Mock, DateTime.UtcNow, 100);
@@ -27,7 +29,7 @@ public sealed class CoachingStudentExamMigrationTests(PostgresFixture postgres)
             Assert.True(await db.Exams.AnyAsync(x => x.Id == student.Id && x.CreatedByTeacherId == null));
             await db.Exams.Where(x => x.Id == student.Id).ExecuteDeleteAsync();
             await migrator.MigrateAsync(previous);
-            await migrator.MigrateAsync();
+            await migrator.MigrateAsync(ownershipMigration);
             Assert.Equal(teacher.CreatedByTeacherId, (await db.Exams.SingleAsync()).CreatedByTeacherId);
         }
         finally { await db.Database.EnsureDeletedAsync(); }

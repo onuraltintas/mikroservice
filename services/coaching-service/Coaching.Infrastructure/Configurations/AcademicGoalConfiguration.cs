@@ -14,9 +14,12 @@ public class AcademicGoalConfiguration : IEntityTypeConfiguration<AcademicGoal>
         builder.ToTable("academic_goals", table =>
         {
             table.HasCheckConstraint("ck_goal_single_catalog_target", "target_university_program_id IS NULL OR target_school_id IS NULL");
+            table.HasCheckConstraint("ck_goal_net_target", "(target_net IS NULL AND target_practice_exam_code IS NULL) OR (target_net IS NOT NULL AND target_practice_exam_code IS NOT NULL AND target_net >= 0 AND target_net <= CASE target_practice_exam_code WHEN 'LGS' THEN 90 WHEN 'TYT' THEN 120 WHEN 'AYT_SAY' THEN 80 WHEN 'AYT_EA' THEN 80 WHEN 'AYT_SOZ' THEN 80 WHEN 'YDT_EN' THEN 80 ELSE -1 END)");
             table.HasCheckConstraint("ck_goal_score_scale", "target_max_score IS NULL OR (target_max_score > 0 AND target_max_score <= 999.99 AND target_score IS NOT NULL AND target_score > 0 AND target_score <= target_max_score AND target_exam_type IS NOT NULL)");
         });
 
+        builder.Property<string>("NetTargetsJson").HasColumnType("jsonb").HasDefaultValue("[]").IsRequired();
+        builder.Ignore(x => x.NetTargets);
         builder.HasKey(x => x.Id);
 
         builder.Property(x => x.Id)
@@ -68,6 +71,8 @@ public class AcademicGoalConfiguration : IEntityTypeConfiguration<AcademicGoal>
             .HasColumnName("target_score")
             .HasPrecision(5, 2);
         builder.Property(x => x.TargetMaxScore).HasColumnName("target_max_score").HasPrecision(5, 2);
+        builder.Property(x => x.TargetPracticeExamCode).HasColumnName("target_practice_exam_code").HasMaxLength(20);
+        builder.Property(x => x.TargetNet).HasColumnName("target_net").HasPrecision(5, 2);
 
         builder.Property(x => x.TargetDate)
             .HasColumnName("target_date");

@@ -1,30 +1,40 @@
 import { Routes } from '@angular/router';
 import { coachingRoleGuard } from '../../core/auth/auth.guard';
 import type { StudentStudyPlansComponent } from './pages/student-study-plans.component';
-import type { StudentStudyAvailabilityComponent } from './pages/student-study-availability.component';
+import type { StudentStudyRoutineComponent } from './pages/student-study-routine.component';
 import type { CoachingPortalProgressComponent } from './pages/coaching-portal-progress.component';
-import type { StudentAutomaticPlanComponent } from './pages/student-automatic-plan.component';
+import type { StudentStudyPlanAssistantComponent } from './pages/student-study-plan-assistant.component';
 import type { StudentExamResultsComponent } from './pages/student-exam-results.component';
 
 export const COACHING_PORTAL_ROUTES: Routes = [
   {
+    path: 'settings', canActivate: [coachingRoleGuard], data: { coachingRoles: ['Student'] },
+    canDeactivate: [async (component: import('./pages/student-settings.component').StudentSettingsComponent) => await component.canLeavePage()],
+    loadComponent: () => import('./pages/student-settings.component').then(m => m.StudentSettingsComponent)
+  },
+  {
+    path: 'goals', canActivate: [coachingRoleGuard], data: { coachingRoles: ['Student'] },
+    canDeactivate: [(component: import('./pages/student-primary-goal.component').StudentPrimaryGoalComponent) => component.canLeavePage()],
+    loadComponent: () => import('./pages/student-primary-goal.component').then(m => m.StudentPrimaryGoalComponent)
+  },
+  {
     path:'weekly-plan-preview',canActivate:[coachingRoleGuard],data:{coachingRoles:['Student']},
-    canDeactivate:[(component:import('./pages/student-weekly-outcome-plan.component').StudentWeeklyOutcomePlanComponent)=>component.canLeavePage()],
+    canDeactivate:[async (component:import('./pages/student-weekly-outcome-plan.component').StudentWeeklyOutcomePlanComponent)=>await component.canLeavePage()],
     loadComponent:()=>import('./pages/student-weekly-outcome-plan.component').then(m=>m.StudentWeeklyOutcomePlanComponent)
   },
   {
     path:'weekly-plan',canActivate:[coachingRoleGuard],data:{coachingRoles:['Student']},
-    canDeactivate:[(component:import('./pages/student-weekly-calendar.component').StudentWeeklyCalendarComponent)=>component.canLeavePage()],
-    loadComponent:()=>import('./pages/student-weekly-calendar.component').then(m=>m.StudentWeeklyCalendarComponent)
+    canDeactivate:[async (component:StudentStudyRoutineComponent)=>await component.canLeavePage()],
+    loadComponent:()=>import('./pages/student-study-routine.component').then(m=>m.StudentStudyRoutineComponent)
   },
   {
     path: 'setup', canActivate: [coachingRoleGuard], data: { coachingRoles: ['Student'] },
-    canDeactivate: [(component: import('./pages/student-learning-setup.component').StudentLearningSetupComponent) => component.canLeavePage()],
+    canDeactivate: [async (component: import('./pages/student-learning-setup.component').StudentLearningSetupComponent) => await component.canLeavePage()],
     loadComponent: () => import('./pages/student-learning-setup.component').then(m => m.StudentLearningSetupComponent)
   },
   {
     path: 'profile', canActivate: [coachingRoleGuard], data: { coachingRoles: ['Student'] },
-    canDeactivate: [(component: import('./pages/student-coaching-profile.component').StudentCoachingProfileComponent) => component.canLeavePage()],
+    canDeactivate: [async (component: import('./pages/student-coaching-profile.component').StudentCoachingProfileComponent) => await component.canLeavePage()],
     loadComponent: () => import('./pages/student-coaching-profile.component').then(m => m.StudentCoachingProfileComponent)
   },
   {
@@ -33,15 +43,19 @@ export const COACHING_PORTAL_ROUTES: Routes = [
   },
   {
     path: 'exam-results', canActivate: [coachingRoleGuard], data: { coachingRoles: ['Student'] },
-    canDeactivate: [(component: StudentExamResultsComponent) => component.canLeavePage()],
+    canDeactivate: [async (component: StudentExamResultsComponent) => await component.canLeavePage()],
     loadComponent: () => import('./pages/student-exam-results.component').then(m => m.StudentExamResultsComponent)
   },
   {
     path: 'automatic-plan',
     canActivate: [coachingRoleGuard],
-    canDeactivate: [(component: StudentAutomaticPlanComponent) => component.canLeavePage()],
+    canDeactivate: [async (component: StudentStudyPlanAssistantComponent) => await component.canLeavePage()],
     data: { coachingRoles: ['Student'] },
-    loadComponent: () => import('./pages/student-automatic-plan.component').then(m => m.StudentAutomaticPlanComponent)
+    loadComponent: () => import('./pages/student-study-plan-assistant.component').then(m => m.StudentStudyPlanAssistantComponent)
+  },
+  {
+    path: 'study-plan-assistant', canActivate: [coachingRoleGuard], data: { coachingRoles: ['Student'] },
+    loadComponent: () => import('./pages/student-study-plan-assistant.component').then(m => m.StudentStudyPlanAssistantComponent)
   },
   {
     path: '',
@@ -63,21 +77,21 @@ export const COACHING_PORTAL_ROUTES: Routes = [
   {
     path: 'study-availability',
     canActivate: [coachingRoleGuard],
-    canDeactivate: [(component: StudentStudyAvailabilityComponent) => component.canLeavePage()],
-    data: { coachingRoles: ['Student'] },
-    loadComponent: () => import('./pages/student-study-availability.component').then(m => m.StudentStudyAvailabilityComponent)
+    canDeactivate: [async (component: StudentStudyRoutineComponent) => await component.canLeavePage()],
+    data: { coachingRoles: ['Student'], initialTab: 'hours' },
+    loadComponent: () => import('./pages/student-study-routine.component').then(m => m.StudentStudyRoutineComponent)
   },
   {
     path: 'study-plans',
     canActivate: [coachingRoleGuard],
-    canDeactivate: [(component: StudentStudyPlansComponent) => component.canLeavePage()],
+    canDeactivate: [async (component: StudentStudyPlansComponent) => await component.canLeavePage()],
     data: { coachingRoles: ['Student'] },
     loadComponent: () => import('./pages/student-study-plans.component').then(m => m.StudentStudyPlansComponent)
   },
   {
     path: 'progress',
     canActivate: [coachingRoleGuard],
-    canDeactivate: [(component: CoachingPortalProgressComponent) => component.canLeavePage()],
+    canDeactivate: [async (component: CoachingPortalProgressComponent) => await component.canLeavePage()],
     data: { coachingRoles: ['Student'] },
     loadComponent: () => import('./pages/coaching-portal-progress.component').then(m => m.CoachingPortalProgressComponent)
   },

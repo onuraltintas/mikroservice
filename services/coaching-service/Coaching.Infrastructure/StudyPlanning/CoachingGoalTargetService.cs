@@ -44,6 +44,21 @@ public sealed class CoachingGoalTargetService(CoachingDbContext db, ICoachingAcc
         if (request.TargetUniversityProgramId is { } programId
             && !await db.TargetUniversityPrograms.AnyAsync(x => x.Id == programId && x.IsActive, cancellationToken))
             throw new ArgumentException("Seçilen üniversite programı artık kullanılamıyor.");
+        if (await db.Set<StudentPrimaryGoal>().AnyAsync(x => x.StudentId == studentId && x.GoalId == goalId, cancellationToken))
+        {
+            var context = await db.StudentLearningContexts.AsNoTracking().SingleOrDefaultAsync(x => x.StudentUserId == studentId, cancellationToken);
+            if (context?.Purpose == LearningPurpose.Lgs && request.TargetUniversityProgramId.HasValue
+                || context?.Purpose == LearningPurpose.Yks && request.TargetSchoolId.HasValue)
+                throw new ArgumentException("Ana hedef profilindeki sınavla eşleşmeli.");
+            if (context?.Purpose == LearningPurpose.Yks && request.TargetUniversityProgramId is { } selectedProgram)
+            {
+                var score = await db.TargetUniversityPrograms.Where(x => x.Id == selectedProgram).Select(x => x.ScoreType).SingleAsync(cancellationToken);
+                if (context.PrimaryScoreType is { } expected && score != expected && score != "TYT")
+                    throw new ArgumentException("Programın puan türü profilindeki alanla eşleşmeli.");
+            }
+        }
+        foreach (var metric in goal.NetTargets)
+            await ValidateNetCatalogAsync(request.TargetSchoolId, request.TargetUniversityProgramId, metric.ExamCode, cancellationToken);
         if (goal.TargetSchoolId == request.TargetSchoolId && goal.TargetUniversityProgramId == request.TargetUniversityProgramId)
             return await ViewAsync(goal, cancellationToken, staffStudentId.HasValue ? true : null);
         goal.SetCatalogTarget(request.TargetUniversityProgramId, request.TargetSchoolId);
@@ -104,10 +119,48 @@ public sealed class CoachingGoalTargetService(CoachingDbContext db, ICoachingAcc
                 .SingleOrDefaultAsync(cancellationToken);
         else if (goal.TargetUniversityProgramId is { } programId)
             target = await db.TargetUniversityPrograms.AsNoTracking().Where(x => x.Id == programId)
-                .Select(x => new GoalCatalogTargetView(x.UniversityName + " — " + x.Name, x.ScoreType ?? "", x.IsActive))
+                .Select(x => new GoalCatalogTargetView(x.UniversityName + " — " + x.Name,
+                    (x.FacultyName ?? "") + " · " + (x.ProgramType ?? "") + " · " + (x.ScoreType ?? ""), x.IsActive, x.ScoreType))
                 .SingleOrDefaultAsync(cancellationToken);
         return new(goal.Id, goal.Version, goal.TargetUniversityProgramId, goal.TargetSchoolId,
             canEdit ?? !goal.SetByTeacherId.HasValue, target,
-            new(goal.TargetScore, goal.TargetMaxScore, goal.TargetExamType, goal.TargetSubject));
+            new(goal.TargetScore, goal.TargetMaxScore, goal.TargetExamType, goal.TargetSubject), new(goal.TargetPracticeExamCode, goal.TargetNet), goal.NetTargets.Select(x => new GoalNetTargetView(x.ExamCode, x.TargetNet)).ToArray());
+    }
+
+    public Task<GoalTargetView> ReplaceNetAsync(Guid goalId, GoalNetTargetUpdate request, CancellationToken ct = default)
+        => ReplaceNetCoreAsync(goalId, request, null, ct);
+    public Task<GoalTargetView> ReplaceNetForStudentAsync(Guid studentId, Guid goalId, GoalNetTargetUpdate request, CancellationToken ct = default)
+        => ReplaceNetCoreAsync(goalId, request, studentId, ct);
+    private async Task<GoalTargetView> ReplaceNetCoreAsync(Guid goalId, GoalNetTargetUpdate request, Guid? staffStudentId, CancellationToken ct)
+    {
+        var student = await RequireAsync(staffStudentId, true, ct); ArgumentNullException.ThrowIfNull(request);
+        var goal = await db.AcademicGoals.SingleOrDefaultAsync(x => x.Id == goalId && x.StudentId == student, ct)
+            ?? throw new KeyNotFoundException("Hedef bulunamadı.");
+        if (staffStudentId.HasValue ? !IsTeacherOwner(goal) : goal.SetByTeacherId.HasValue)
+            throw new BusinessRuleException("Authorization.Forbidden", "Bu hedefi yalnız oluşturan kişi düzenleyebilir.");
+        if (request.ExpectedVersion < 0 || goal.Version != request.ExpectedVersion)
+            throw new BusinessRuleException("StudyPlanning.Conflict", "Hedef değişti. Yeniden yükleyin.");
+        if (request.ExamCode is { } code && await db.Set<StudentPrimaryGoal>().AnyAsync(x => x.StudentId == student && x.GoalId == goalId, ct))
+        {
+            var context = await db.StudentLearningContexts.AsNoTracking().SingleOrDefaultAsync(x => x.StudentUserId == student, ct);
+            var advanced = context?.PrimaryScoreType switch { "SAY" => "AYT_SAY", "EA" => "AYT_EA", "SOZ" => "AYT_SOZ", "YDT" => "YDT_EN", _ => "TYT" };
+            if (context?.Purpose == LearningPurpose.Lgs && code != "LGS" || context?.Purpose == LearningPurpose.Yks && code != "TYT" && code != advanced)
+                throw new ArgumentException("Ana hedefin net kapsamı profilindeki sınavla eşleşmeli.");
+        }
+        await ValidateNetCatalogAsync(goal.TargetSchoolId, goal.TargetUniversityProgramId, request.ExamCode, ct);
+        goal.SetNetTarget(request.ExamCode, request.TargetNet);
+        await events.PublishAsync(new GoalUpdatedEvent(goal.Id, goal.StudentId, goal.SetByTeacherId, goal.Title), ct);
+        await db.SaveChangesAsync(ct); return await ViewAsync(goal, ct, staffStudentId.HasValue ? true : null);
+    }
+    private async Task ValidateNetCatalogAsync(Guid? schoolId, Guid? programId, string? code, CancellationToken ct)
+    {
+        if (code is null) return;
+        if (schoolId.HasValue && code != "LGS") throw new ArgumentException("LGS okul hedefi için LGS net kapsamını seçin.");
+        if (programId is { } id)
+        {
+            var scoreType = await db.TargetUniversityPrograms.Where(x=>x.Id==id).Select(x=>x.ScoreType).SingleAsync(ct);
+            var expected = scoreType switch { "SAY"=>"AYT_SAY", "EA"=>"AYT_EA", "SOZ"=>"AYT_SOZ", "YDT"=>"YDT_EN", _=>"TYT" };
+            if (code != "TYT" && code != expected) throw new ArgumentException("Net kapsamı programın puan türüyle eşleşmeli. Katalog hedefini değiştirirken önce uyumsuz net hedefini kaldırın.");
+        }
     }
 }

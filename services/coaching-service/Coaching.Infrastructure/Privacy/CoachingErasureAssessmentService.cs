@@ -42,7 +42,8 @@ public sealed class CoachingErasureAssessmentService(
         var agreementCount = await context.CoachingAgreementAcknowledgements.CountAsync(
             row => row.SubjectStudentId == message.SubjectUserId, cancellationToken);
         var learningIds = context.StudentLearningContexts.Where(x => x.StudentUserId == message.SubjectUserId).Select(x => x.Id);
-        var planningCount = await context.StudentLearningContexts.CountAsync(x => x.StudentUserId == message.SubjectUserId, cancellationToken)
+        var planningCount = await context.Set<Coaching.Domain.Entities.StudentPrimaryGoal>().CountAsync(x => x.StudentId == message.SubjectUserId, cancellationToken)
+            + await context.StudentLearningContexts.CountAsync(x => x.StudentUserId == message.SubjectUserId, cancellationToken)
             + await context.StudentCoursePreferences.CountAsync(x => learningIds.Contains(x.ContextId), cancellationToken)
             + await context.StudentTopicStates.CountAsync(x => learningIds.Contains(x.ContextId), cancellationToken)
             + await context.CoachingStudentProfiles.CountAsync(x => x.UserId == message.SubjectUserId, cancellationToken)
@@ -55,6 +56,9 @@ public sealed class CoachingErasureAssessmentService(
             + await context.StudyPlanTasks.CountAsync(x => x.StudentId == message.SubjectUserId, cancellationToken)
             + await context.StudyAvailability.CountAsync(x => x.StudentId == message.SubjectUserId, cancellationToken)
             + await context.Set<WeeklyStudyDraft>().CountAsync(x => x.StudentId == message.SubjectUserId, cancellationToken)
+            + await context.Set<WeeklyReflection>().CountAsync(x => x.StudentId == message.SubjectUserId, cancellationToken)
+            + await context.Set<WeeklyDecision>().CountAsync(x => x.StudentId == message.SubjectUserId || x.TeacherId == message.SubjectUserId, cancellationToken)
+            + await CoachingStudyPlanErasureMessages.DecisionWorkRequests(context, message.SubjectUserId).CountAsync(cancellationToken)
             + await CoachingStudyPlanErasureMessages.ForStudent(context, message.SubjectUserId).CountAsync(cancellationToken)
             + await context.CoachingReminderReceipts.CountAsync(x => x.RecipientUserId == message.SubjectUserId, cancellationToken);
 

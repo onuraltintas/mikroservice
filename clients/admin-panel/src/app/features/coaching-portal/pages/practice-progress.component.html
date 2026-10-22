@@ -1,0 +1,90 @@
+  <section aria-label="Deneme gelişimi ve plan önerileri">
+    <h2>Hedefe ilerleme ve plan önerileri</h2>
+    @if (tabbed) {
+      <div class="development-tabs" role="tablist" aria-label="Gelişim bölümleri">
+        @for (tab of tabs(); track tab.id) {
+          <button type="button" role="tab" [id]="tabId(tab.id)" [attr.aria-controls]="panelId(tab.id)"
+            [attr.aria-selected]="activeTab() === tab.id" [tabIndex]="activeTab() === tab.id ? 0 : -1"
+            (click)="activeTab.set(tab.id)" (keydown)="tabKey($event, tab.id)">{{tab.label}}</button>
+        }
+      </div>
+    }
+    <form class="filters" [hidden]="tabbed && (activeTab() === 'analysis' || activeTab() === 'plan')" (ngSubmit)="load()"><label>Başlangıç<input type="date" name="practiceFrom" [(ngModel)]="fromDate" [disabled]="saving()"></label>
+      <label>Bitiş<input type="date" name="practiceTo" [(ngModel)]="toDate" [disabled]="saving()"></label><button [disabled]="busy() || saving()">Raporu yenile</button></form>
+    @if (busy()) { <p role="status">Deneme ve plan bilgileri yükleniyor…</p> }
+    @if (error()) { <p role="alert" class="error">{{error()}}</p> }
+    @if (success()) { <p role="status">{{success()}}</p> }
+
+    <div role="tabpanel" [id]="panelId('goals')" [attr.aria-labelledby]="tabbed ? tabId('goals') : null" [hidden]="tabbed && activeTab() !== 'goals'" tabindex="0">
+      <ng-content select="[developmentGoals]" />
+      @if (report(); as data) {
+      <h3>{{staffStudentId ? 'Öğrencinin net hedefleri' : 'Net hedeflerin'}}</h3>
+      @if (!data.goals.length) { <p>Karşılaştırmaya başlamak için aktif bir hedef oluştur.</p> }
+      @for (goal of data.goals; track goal.goalId + (goal.examCode || '')) {
+        <article><h4>{{goal.title}}</h4>@if (goal.catalogName) {
+          <p>{{goal.catalogName}}</p>
+          <p>@if(goal.minimumScore !== null){Kaynak taban puanı: {{goal.minimumScore}} } @if(goal.rank !== null){ · Başarı sırası: {{goal.rank}} } @if(goal.scoreYear !== null){ · {{goal.scoreYear}} verisi }</p>
+        }
+        @if (goal.targetNet !== null) { <p>{{examName(goal.examCode)}} hedefi: <strong>{{goal.targetNet}} net</strong></p>
+          @for (comparison of goal.comparisons; track comparison.source) { <p>{{source(comparison.source)}} · {{comparison.examDate | date:'dd.MM.yyyy'}}: {{comparison.latestNet | number:'1.2-2'}} net; hedefe kalan {{comparison.remainingNet | number:'1.2-2'}} net.</p> }
+          @if (!goal.comparisons.length) { <p>Seçilen kapsamda bu döneme ait deneme yok.</p> }
+        } @else { <p>Karşılaştırmak için hedef ayrıntılarından sınav kapsamı ve net hedefi belirle.</p> }
+        </article>
+      }
+      <p>Net hedefi, kullanıcının çalışma hedefidir. Okul/program taban puanından net veya yerleşme olasılığı hesaplanmaz; kaydedilmiş hedef ilerleme yüzdesi değişmez.</p>
+
+      }
+    </div>
+    <div role="tabpanel" [id]="panelId('exams')" [attr.aria-labelledby]="tabbed ? tabId('exams') : null" [hidden]="tabbed && activeTab() !== 'exams'" tabindex="0">
+      <ng-content select="[developmentExams]" />
+      @if (report(); as data) {
+<p>{{data.fromDate}} – {{data.toDate}}. Her kapsam ve kayıt kaynağının son altı denemesi ayrı değerlendirilir.</p>
+      @if (!data.trends.length) { <p>Bu dönemde kapsamı belirlenmiş deneme sonucu yok. Deneme sonucu ekleyerek gelişimini izleyebilirsin.</p> }
+      @for (trend of data.trends; track trend.examCode + trend.source) {
+        <article><h3>{{trend.name}} · {{source(trend.source)}}</h3>
+          <div class="points">@for (point of trend.points; track point.examId) { <div><small>{{point.examDate | date:'dd.MM.yyyy'}}</small><span>{{point.title}}</span><p><strong>{{point.net | number:'1.2-2'}} net</strong></p></div> }</div>
+          <p>İlk ve son deneme farkı: {{trend.change === null ? 'En az iki deneme gerekli' : (trend.change | number:'1.2-2') + ' net'}}</p>
+          <details><summary>Ders gelişimi ve tekrar öncelikleri</summary><p>Son denemelerde net/soru oranı %50'nin altında olan testler tekrar önceliğidir; bu bilgi belirli bir konunun öğrenilmediği anlamına gelmez.</p>
+            <div class="table"><table><thead><tr><th>Test</th><th>Ortalama net</th><th>Net/soru</th><th>Öneri</th></tr></thead><tbody>
+              @for (row of trend.sections; track row.code) { <tr><th>{{row.name}}</th><td>{{row.averageNet | number:'1.2-2'}} / {{row.questionCount}}</td><td>%{{row.netPercentage | number:'1.1-1'}}</td><td>{{row.needsReview ? 'Yanlış ve boş soruları incele; haftalık planda tekrar zamanı ayır.' : 'Mevcut çalışmayı sürdür.'}}</td></tr> }
+            </tbody></table></div></details>
+        </article>
+      }
+
+      }
+    </div>
+    <div role="tabpanel" [id]="panelId('analysis')" [attr.aria-labelledby]="tabbed ? tabId('analysis') : null" [hidden]="tabbed && activeTab() !== 'analysis'" tabindex="0">
+      @if (report(); as data) {
+      @defer (when tabbed && activeTab() === 'analysis'; on viewport) {
+        <app-practice-adaptation #adaptation [staffStudentId]="staffStudentId" [readOnly]="readOnly" [today]="data.today" (planChanged)="planChanged.emit(); load()" />
+      } @placeholder { <p>Konu analizi ve tekrar önerileri bu alanda açılır.</p> }
+
+      }
+    </div>
+    <div role="tabpanel" [id]="panelId('work')" [attr.aria-labelledby]="tabbed ? tabId('work') : null" [hidden]="tabbed && activeTab() !== 'work'" tabindex="0">
+      @defer (when !tabbed || activeTab() === 'work') {
+        <app-weekly-review #weekly [staffStudentId]="staffStudentId" [readOnly]="readOnly" [initialWeek]="weeklyTarget?.weekStart ?? null" [decisionId]="weeklyTarget?.decisionId ?? null" />
+      } @placeholder { <p>Haftalık değerlendirme ve kararlar bu alanda açılır.</p> }
+      <ng-content select="[developmentReport]" />
+      @if (report(); as data) {
+      <h3>Çalışma planı</h3><p>Aktif planın seçilen döneminde {{data.completedTasks}} / {{data.scheduledTasks}} çalışma tamamlandı. Aktif planda {{data.overdueTasks}} günü geçmiş çalışma var; {{data.pinnedOverdueTasks}} tanesi sabit.</p>
+      <p>{{reason(data.recoveryReason)}}</p>
+      @for (proposal of data.recovery; track proposal.taskIds[0]) { <article><strong>{{proposal.title}}</strong><p>{{proposal.previousDate}} {{time(proposal.previousStartMinute)}} → {{proposal.plannedDate}} {{time(proposal.startMinute)}} · {{proposal.minutes}} dk</p>
+        @if (!readOnly) { <button type="button" (click)="review(proposal)" [disabled]="saving() || busy()">Öneriyi incele</button> }
+      </article> }
+      @if (selected(); as proposal) {
+        <div class="summary" role="region" aria-label="Plan değişikliği onayı"><h4>Telafi saatini onayla</h4>
+          <p>{{proposal.title}}: {{proposal.previousDate}} {{time(proposal.previousStartMinute)}} yerine {{proposal.plannedDate}} {{time(proposal.startMinute)}}. Süre ve kazanım bağlantıları korunacak.</p>
+          <label><span><input type="checkbox" [(ngModel)]="approved" [disabled]="saving()">Bu tarih ve saat değişikliğini onaylıyorum.</span></label>
+          <div class="actions"><button type="button" (click)="apply()" [disabled]="!approved || saving() || stale()">Onayla ve plana uygula</button><button type="button" (click)="selected.set(null)" [disabled]="saving()">Vazgeç</button></div>
+        </div>
+      }
+
+      }
+    </div>
+    @if (showPlanTab) {
+      <div role="tabpanel" [id]="panelId('plan')" [attr.aria-labelledby]="tabId('plan')" [hidden]="tabbed && activeTab() !== 'plan'" tabindex="0">
+        <ng-content select="[developmentPlan]" />
+      </div>
+    }
+  </section>

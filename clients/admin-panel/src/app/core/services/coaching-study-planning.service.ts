@@ -28,6 +28,7 @@ export interface WeeklyPlanSource {draftVersion:number;learningContextVersion:nu
 export interface StudyPlan extends StudyPlanSummary { tasks: StudyTask[];weeklySource?:WeeklyPlanSource|null }
 export interface StudyPlanInput { title: string; tasks: StudyTaskInput[] }
 export interface StudyPlanPage { items: StudyPlanSummary[]; totalCount: number; pageNumber: number; pageSize: number }
+export interface TargetPage<T> { items: T[]; totalCount: number; pageNumber: number; pageSize: number }
 export interface TeacherStudyWork {taskId:string;planId:string;title:string;plannedDate:string;plannedStartMinute:number|null;plannedMinutes:number;isCompleted:boolean;isOverdue:boolean;actualMinutes:number|null}
 export interface TeacherStudyStudent {studentId:string;fullName:string;hasActivePlan:boolean;hasDraft:boolean;completedTasks:number;pendingTasks:number;overdueTasks:number;actualMinutes:number;tasks?:TeacherStudyWork[]}
 export interface TeacherStudyOverview {items:TeacherStudyStudent[];totalCount:number;pageNumber:number;pageSize:number}
@@ -36,12 +37,9 @@ export interface StudyWindow { day: StudyDay; startMinute: number; endMinute: nu
 export interface StudyAvailability { version: number; timeZoneId: string; windows: StudyWindow[] }
 export interface StudyAvailabilityUpdate { expectedVersion: number | null; timeZoneId: string; windows: StudyWindow[] }
 interface ApiResult<T> { success: boolean; data: T }
-export interface SchoolTarget { id: string; name: string; city: string; district: string; minimumScore: number | null; scoreYear: number | null }
-export interface UniversityTarget { id: string; name: string; universityName: string; programCode: string | null; scoreType: string | null; minimumScore: number | null; scoreYear: number | null }
-export interface TargetPage<T> { items: T[]; totalCount: number; pageNumber: number; pageSize: number }
-export interface GoalTarget { goalId: string; version: number; targetSchoolId: string | null; targetUniversityProgramId: string | null; canEdit: boolean; catalogTarget?: { name: string; detail: string; isActive: boolean } | null; scoreTarget?: { targetScore: number | null; maxScore: number | null; examType: string | null; subject: string | null } | null }
+export interface GoalTarget { goalId: string; version: number; targetSchoolId: string | null; targetUniversityProgramId: string | null; canEdit: boolean; catalogTarget?: { name: string; detail: string; isActive: boolean; scoreType?:string|null } | null; scoreTarget?: { targetScore: number | null; maxScore: number | null; examType: string | null; subject: string | null } | null; netTarget?: {examCode:string|null;targetNet:number|null}|null; netTargets?:{examCode:string|null;targetNet:number|null}[] }
 export interface StudyTopic { id: string; lessonId?: string; name: string; lessonName: string; unitName: string; gradeNumber: number | null; examCode: string | null; estimatedMinutes: number | null }
-export interface PublishedStudyOutcome { outcomeId: string; code: string; name: string; estimateId: string; estimateNumber: number; learningMinutes: number; practiceMinutes: number; checkMinutes: number; totalMinutes: number; editionCode: string; officialLessonPeriods: number }
+export interface PublishedStudyOutcome { outcomeId: string; code: string; name: string; estimateId: string; estimateNumber: number; learningMinutes: number; practiceMinutes: number; checkMinutes: number; totalMinutes: number; editionCode: string; officialLessonPeriods: number | null; sourceKind?: 'Official' | 'ExamSkill' }
 export interface AutomaticStudyRequest { startDate: string; days: number; expectedAvailabilityVersion: number; topics: { topicId: string; requiredMinutes: number | null; outcomes?: { outcomeId: string; estimateId: string; requiredMinutes: number | null }[] }[]; expectedLearningContextVersion?: number }
 export interface AutomaticStudyDraftRequest { title: string; preview: AutomaticStudyRequest; expectedActiveRevisionId: string | null; expectedActiveRevisionVersion: number | null }
 export interface AutomaticStudyPreview {
@@ -52,12 +50,13 @@ export interface AutomaticStudyPreview {
     availableMinutes: number; scheduledMinutes: number; unscheduledMinutes: number; unusedMinutes: number };
 }
 
+export interface CalendarTaskSave {expectedVersion:number;title:string;plannedDate:string;startMinute:number;plannedMinutes:number;lessonId:string|null}
+
 @Injectable({ providedIn: 'root' })
 export class CoachingStudyPlanningService {
   private readonly http = inject(HttpClient);
   private readonly url = `${environment.apiUrl}/coaching/study-planning/plans`;
   private readonly availabilityUrl = `${environment.apiUrl}/coaching/study-planning/availability`;
-  private readonly targetUrl = `${environment.apiUrl}/coaching/study-planning/targets`;
 
   searchTopics(search: string, gradeNumber: number | null, examCode: string, pageNumber = 1) {
     let params = new HttpParams().set('search', search.trim()).set('pageNumber', pageNumber).set('pageSize', 20);
@@ -75,20 +74,18 @@ export class CoachingStudyPlanningService {
     return this.http.post<ApiResult<StudyPlan>>(`${environment.apiUrl}/coaching/study-planning/automatic-drafts`, request).pipe(map(result => result.data));
   }
 
-  searchSchools(search: string, city: string, district: string, pageNumber = 1) {
-    const params = new HttpParams().set('search', search.trim()).set('city', city.trim()).set('district', district.trim()).set('pageNumber', pageNumber).set('pageSize', 20);
-    return this.http.get<ApiResult<TargetPage<SchoolTarget>>>(`${this.targetUrl}/schools`, { params }).pipe(map(result => result.data));
-  }
-  searchPrograms(search: string, scoreType: string, pageNumber = 1) {
-    const params = new HttpParams().set('search', search.trim()).set('scoreType', scoreType.trim()).set('pageNumber', pageNumber).set('pageSize', 20);
-    return this.http.get<ApiResult<TargetPage<UniversityTarget>>>(`${this.targetUrl}/university-programs`, { params }).pipe(map(result => result.data));
-  }
+  getPrimaryGoal() { return this.http.get<ApiResult<{goalId:string|null;version:number|null}>>(`${environment.apiUrl}/coaching/study-planning/primary-goal`).pipe(map(x=>x.data)); }
+  selectPrimaryGoal(goalId:string, expectedVersion:number|null) { return this.http.put<ApiResult<{goalId:string|null;version:number|null}>>(`${environment.apiUrl}/coaching/study-planning/primary-goal`,{goalId,expectedVersion}).pipe(map(x=>x.data)); }
   private goalTargetUrl(goalId: string, studentId?: string) {
     const root = studentId ? `${environment.apiUrl}/coaching/staff/students/${encodeURIComponent(studentId)}/study` : `${environment.apiUrl}/coaching/study-planning`;
     return `${root}/goals/${encodeURIComponent(goalId)}/target`;
   }
   getGoalTarget(goalId: string, studentId?: string) {
     return this.http.get<ApiResult<GoalTarget>>(this.goalTargetUrl(goalId, studentId)).pipe(map(result => result.data));
+  }
+  practiceProfiles() { return this.http.get<import('../models/practice-exam').PracticeExamProfile[]>(`${environment.apiUrl}/exams/profiles`); }
+  saveGoalNetTarget(goalId:string, expectedVersion:number, examCode:string|null, targetNet:number|null, studentId?:string) {
+    return this.http.put<ApiResult<GoalTarget>>(`${this.goalTargetUrl(goalId,studentId)}/net`, {expectedVersion,examCode,targetNet}).pipe(map(x=>x.data));
   }
   saveGoalTarget(goalId: string, expectedVersion: number, targetUniversityProgramId: string | null, targetSchoolId: string | null, studentId?: string) {
     return this.http.put<ApiResult<GoalTarget>>(this.goalTargetUrl(goalId, studentId),
@@ -148,6 +145,13 @@ export class CoachingStudyPlanningService {
   }
   correctTitle(id:string,taskId:string,expectedVersion:number,title:string,studentId:string){
     return this.http.put<ApiResult<StudyPlan>>(`${this.plansUrl(studentId)}/${encodeURIComponent(id)}/tasks/${encodeURIComponent(taskId)}/title`,{expectedVersion,title}).pipe(map(r=>r.data));
+  }
+  saveCalendarTask(id:string,taskId:string|null,request:CalendarTaskSave,studentId:string|null=null){
+    const url=`${this.plansUrl(studentId)}/${encodeURIComponent(id)}/tasks`;
+    return (taskId?this.http.put<ApiResult<StudyPlan>>(`${url}/${encodeURIComponent(taskId)}`,request):this.http.post<ApiResult<StudyPlan>>(url,request)).pipe(map(r=>r.data));
+  }
+  deleteCalendarTask(id:string,taskId:string,expectedVersion:number,studentId:string|null=null){
+    return this.http.delete<ApiResult<StudyPlan>>(`${this.plansUrl(studentId)}/${encodeURIComponent(id)}/tasks/${encodeURIComponent(taskId)}`,{body:{expectedVersion}}).pipe(map(r=>r.data));
   }
   teacherOverview(fromDate:string,toDate:string,pageNumber=1,search=''){
     const params=new HttpParams().set('fromDate',fromDate).set('toDate',toDate).set('pageNumber',pageNumber).set('pageSize',25).set('search',search.trim());

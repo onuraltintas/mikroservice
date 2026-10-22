@@ -9,6 +9,19 @@
     <p *ngIf="error()" role="alert" class="mt-2 text-sm text-red-600 dark:text-red-300">{{ error() }}</p>
     <p *ngIf="success()" role="status" class="mt-2 text-sm text-emerald-700 dark:text-emerald-300">{{ success() }}</p>
     <ng-container *ngIf="target() as current">
+      <section aria-label="Net hedefi" class="my-3 rounded-lg border p-3">
+        <h4>Deneme net hedeflerin</h4>
+        <div class="grid gap-3 sm:grid-cols-2">@for(metric of current.netTargets || [];track metric.examCode){<article class="rounded-xl border border-emerald-200 bg-emerald-50 p-4 shadow-sm dark:border-emerald-800 dark:bg-emerald-950"><strong>{{(metric.examCode || '').replace('AYT_','AYT ').replace('YDT_EN','YDT İngilizce')}}</strong><p class="text-2xl font-bold">{{metric.targetNet}} net</p></article>}</div><p>Gelişim raporunda yalnız aynı sınav kapsamındaki denemelerle karşılaştırılır. Yerleştirme puanı veya kabul garantisi değildir.</p>
+        <p *ngIf="current.netTarget?.examCode">{{current.netTarget?.examCode}} · {{current.netTarget?.targetNet}} net</p>
+        <ng-container *ngIf="current.canEdit">
+          <button type="button" (click)="openNet()" [disabled]="saving() || busy()">Net hedefini düzenle</button>
+          <fieldset *ngIf="netExpanded()" [disabled]="saving() || busy() || stale()">
+            <label>Sınav kapsamı<select [(ngModel)]="netExamCode"><option value="">Seçin</option><option *ngFor="let profile of netProfiles()" [value]="profile.code">{{profile.name}}</option></select></label>
+            <label>Hedef net<input type="number" [(ngModel)]="targetNet" min="0" step="0.01"></label>
+            <button type="button" (click)="saveNet()">Net hedefini kaydet</button><button type="button" (click)="saveNet(true)">Tüm net hedeflerini kaldır</button>
+          </fieldset>
+        </ng-container>
+      </section>
       <section class="my-3 rounded-lg bg-slate-50 p-3 dark:bg-slate-800" aria-label="Puan hedefi">
         <h4 class="text-sm font-semibold">Puan hedefi ve otomatik karşılaştırma</h4>
         <p class="mt-2 text-xs text-slate-500">Aynı sınav türü ve puan ölçeğindeki dönem içi son sonuç kullanılır. Öğrenci beyanı ve öğretmen kaydı ayrı değerlendirilir. Kaydedilen ilerlemeniz değişmez; bu bir yerleşme tahmini değildir.</p>
@@ -31,31 +44,10 @@
       </div>
       <p *ngIf="!current.canEdit" class="mt-2 text-sm text-slate-500">Bu hedefi öğretmen oluşturdu. Bağlantıyı yalnız yetkili öğretmen düzenleyebilir.</p>
       <div *ngIf="current.canEdit" class="mt-3">
-        <label class="text-sm">Resmî katalog türü<select [ngModel]="kind" (ngModelChange)="changeKind($event)" class="ml-2 rounded border p-2"><option value="school">LGS okulları</option><option value="program">YKS programları</option></select></label>
-        <button type="button" (click)="showVerified = !showVerified" class="ml-2 rounded border p-2">2026 resmî katalog filtreleri</button>
-        <app-target-admission-search *ngIf="showVerified" [kind]="kind" [disabled]="busy() || saving() || stale()" (selected)="chooseVerified($event)" />
+        <label *ngIf="!context" class="text-sm">Hedef türü<select [ngModel]="kind" (ngModelChange)="changeKind($event)" class="ml-2 rounded border p-2"><option value="school">LGS okulları</option><option value="program">YKS programları</option></select></label>
+        <button *ngIf="current.targetSchoolId || current.targetUniversityProgramId" type="button" (click)="clear()" [disabled]="busy() || saving() || stale()" class="ml-2 rounded border p-2 text-sm">Hedef bağlantısını kaldır</button>
+        <app-target-admission-search [kind]="kind" [scoreType]="context?.primaryScoreType || null" [disabled]="busy() || saving() || stale()" (selected)="chooseVerified($event)" />
       </div>
-      <details class="mt-3"><summary>Eski katalogda ara · puan yılı doğrulanmamış olabilir</summary>
-      <form *ngIf="current.canEdit" (ngSubmit)="searchTargets()" class="mt-3">
-        <fieldset [disabled]="busy() || saving() || stale()" class="grid gap-3 sm:grid-cols-2">
-          <label class="text-sm">Hedef türü<select [ngModel]="kind" (ngModelChange)="changeKind($event)" name="kind" class="mt-1 w-full rounded-lg border bg-transparent p-2"><option value="school">Okul</option><option value="program">Üniversite programı</option></select></label>
-          <label class="text-sm">{{ kind === 'school' ? 'Okul adı' : 'Üniversite, bölüm veya program kodu' }}<input [(ngModel)]="query" name="query" maxlength="200" class="mt-1 w-full rounded-lg border bg-transparent p-2"></label>
-          <label *ngIf="kind === 'school'" class="text-sm">Şehir (tam adı)<input [(ngModel)]="city" name="city" maxlength="100" class="mt-1 w-full rounded-lg border bg-transparent p-2"></label>
-          <label *ngIf="kind === 'school'" class="text-sm">İlçe (tam adı)<input [(ngModel)]="district" name="district" maxlength="100" class="mt-1 w-full rounded-lg border bg-transparent p-2"></label>
-          <label *ngIf="kind === 'program'" class="text-sm">Puan türü<input [(ngModel)]="scoreType" name="scoreType" maxlength="30" placeholder="Örn. SAY" class="mt-1 w-full rounded-lg border bg-transparent p-2"></label>
-          <div class="flex items-end gap-3"><button type="submit" class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">Ara</button><button *ngIf="current.targetSchoolId || current.targetUniversityProgramId" type="button" (click)="clear()" class="text-sm underline">Bağlantıyı kaldır</button></div>
-        </fieldset>
-      </form>
-      <p *ngIf="searched && !results().length" class="mt-3 text-sm text-slate-500">Aktif kayıt bulunamadı. Filtreleri değiştirebilirsiniz.</p>
-      <p *ngIf="results().length" class="mt-3 text-xs text-slate-500">Taban puanlar yalnız katalog bilgisidir; yerleşme garantisi veya tahmini değildir. Bilinmeyen puan/yıl gösterilmez.</p>
-      <ul class="mt-3 space-y-2">
-        <li *ngFor="let item of results()" class="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-slate-50 p-3 dark:bg-slate-800">
-          <div><p class="text-sm font-medium">{{ item.label }}</p><p class="text-xs text-slate-500">{{ item.detail }}</p><p *ngIf="item.minimumScore !== null" class="text-xs text-slate-500">Taban puan: {{ item.minimumScore }} · Veri yılı: {{ item.scoreYear ?? 'Bilinmiyor' }}</p></div>
-          <button type="button" (click)="choose(item.id)" [disabled]="busy() || saving() || stale()" class="rounded-lg border border-indigo-200 px-3 py-2 text-sm font-semibold text-indigo-700 disabled:opacity-50 dark:text-indigo-300">Bu hedefi bağla</button>
-        </li>
-      </ul>
-      <div *ngIf="searched && total > 20" class="mt-3 flex items-center gap-3 text-sm"><button type="button" (click)="searchTargets(page - 1)" [disabled]="page <= 1 || busy() || saving() || stale()">Önceki</button><span>Sayfa {{ page }} · {{ total }} kayıt</span><button type="button" (click)="searchTargets(page + 1)" [disabled]="page * 20 >= total || busy() || saving() || stale()">Sonraki</button></div>
-      </details>
     </ng-container>
     <p *ngIf="saving()" role="status" class="mt-2 text-sm">Bağlantı kaydediliyor…</p>
   </ng-container>

@@ -7,6 +7,9 @@ export function contextExamCodes(context: LearningContext | null): string[] {
   return ['TYT', ...(advanced[context.primaryScoreType || ''] ? [advanced[context.primaryScoreType!]] : [])];
 }
 export function goalFitsContext(target: GoalTarget, context: LearningContext | null): boolean {
+  const codes = contextExamCodes(context);
+  const metrics = target.netTargets ?? (target.netTarget ? [target.netTarget] : []);
+  if (codes.length && metrics.some(x => x.examCode && !codes.includes(x.examCode))) return false;
   if (context?.purpose === 'Lgs') return !target.targetUniversityProgramId;
   if (context?.purpose === 'Yks') return !target.targetSchoolId && (!target.catalogTarget?.scoreType
     || !context.primaryScoreType || target.catalogTarget.scoreType === context.primaryScoreType || target.catalogTarget.scoreType === 'TYT');

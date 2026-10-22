@@ -38,6 +38,7 @@ public sealed class StudentGoalExperienceTests
         var first = AcademicGoal.Create(student, "İlk", GoalCategory.ExamPreparation);
         var second = AcademicGoal.Create(student, "İkinci", GoalCategory.ExamPreparation);
         var other = AcademicGoal.Create(Guid.NewGuid(), "Başkasının", GoalCategory.ExamPreparation);
+        f.Db.Add(StudentLearningContext.Create(student, 2026, LearningPurpose.Lgs, 2027, null, null));
         f.Db.AddRange(first, second, other); await f.Db.SaveChangesAsync();
         var controller = new Coaching.API.Controllers.StudentPrimaryGoalController(f.Db, new Coaching.Application.Authorization.CoachingAccessPolicy(f.Actor));
         Assert.IsType<Microsoft.AspNetCore.Mvc.NotFoundResult>(await controller.Save(new(other.Id, null), default));

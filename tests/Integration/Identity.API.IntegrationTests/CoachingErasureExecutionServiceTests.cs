@@ -31,6 +31,10 @@ public sealed class CoachingErasureExecutionServiceTests
             AcademicGoal.Create(subjectId, "Silinecek hedef", GoalCategory.SubjectMastery),
             AcademicGoal.Create(otherStudentId, "Korunacak hedef", GoalCategory.SubjectMastery));
         await context.SaveChangesAsync();
+        context.AddRange(
+            StudentPrimaryGoal.Create(subjectId, context.AcademicGoals.Local.Single(x => x.StudentId == subjectId).Id),
+            StudentPrimaryGoal.Create(otherStudentId, context.AcademicGoals.Local.Single(x => x.StudentId == otherStudentId).Id));
+        await context.SaveChangesAsync();
         var request = Request(subjectId);
         await new CoachingErasureAssessmentService(context, TimeProvider.System)
             .AssessAsync(AssessmentRequest(request), CancellationToken.None);
@@ -40,7 +44,9 @@ public sealed class CoachingErasureExecutionServiceTests
         var first = await service.ExecuteAsync(request, CancellationToken.None);
         var replay = await service.ExecuteAsync(request, CancellationToken.None);
 
-        first.DeletedRecordCount.Should().Be(5);
+        first.DeletedRecordCount.Should().Be(6);
+        (await context.Set<StudentPrimaryGoal>().CountAsync(x => x.StudentId == subjectId)).Should().Be(0);
+        (await context.Set<StudentPrimaryGoal>().CountAsync(x => x.StudentId == otherStudentId)).Should().Be(1);
         (await context.StudentLearningContexts.CountAsync(x => x.StudentUserId == subjectId)).Should().Be(0);
         (await context.StudentLearningContexts.CountAsync(x => x.StudentUserId == otherStudentId)).Should().Be(1);
         (await context.CoachingStudentProfiles.CountAsync(x => x.UserId == subjectId)).Should().Be(0);

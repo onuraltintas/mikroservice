@@ -27,7 +27,7 @@ import { coachingFeedback } from '../coaching-feedback';
       <app-student-goal-target [goalId]="goal.id" [context]="context()" [autoOpen]="true" (targetChanged)="targetUpdated($event)" />
      }@else{<p>Henüz bu sınav için ana hedef seçmedin. Var olan hedeflerinden birini seçebilir veya yeni hedef oluşturabilirsin.</p>}
     </div>
-    <details class="panel"><summary>Ana hedefimi değiştir</summary><p>Seçimin hesabına kaydedilir. Önceki hedefler ve çalışma kayıtların korunur.</p>
+    <details class="panel" [open]="!current()"><summary>{{current() ? 'Ana hedefimi değiştir' : 'Ana hedef seç veya oluştur'}}</summary><p>Seçimin hesabına kaydedilir. Önceki hedefler ve çalışma kayıtların korunur.</p>
      @for(goal of choices();track goal.id){<div class="draft-task"><strong>{{goal.target.catalogTarget?.name || goal.title}}</strong><button type="button" [disabled]="saving() || creating() || current()?.id===goal.id" (click)="select(goal.id)">{{current()?.id===goal.id ? 'Ana hedefim' : 'Ana hedef olarak seç'}}</button></div>}
      <button type="button" class="primary" (click)="create()" [disabled]="saving() || creating()">{{creating()?'Hazırlanıyor…':'Yeni okul / program hedefi oluştur'}}</button>
     </details>

@@ -178,6 +178,11 @@ public class GoalsController : ControllerBase
             await _mediator.Send(new DeleteGoalCommand(id), cancellationToken);
             return NoContent();
         }
+        catch (Microsoft.EntityFrameworkCore.DbUpdateException ex) when (ex.InnerException is Npgsql.PostgresException
+            { SqlState: "23503", ConstraintName: "FK_student_primary_goals_academic_goals_GoalId" })
+        {
+            return Conflict(new { message = "Bu hedef ana hedef olarak seçili. Silmeden önce başka bir ana hedef seçin." });
+        }
         catch (InvalidOperationException ex)
         {
             return NotFound(new { error = ex.Message });
