@@ -30,7 +30,7 @@ describe('CoachingPortalHomeComponent', () => {
       { provide: CoachingPortalService, useValue: service },
       { provide: CoachingDailyAgendaService, useValue: agenda },
       { provide: CoachingLearningSetupService, useValue: { get: () => of({ context: null, isReady: false }) } },
-      { provide: CoachingStudyPlanningService, useValue: { list: () => of({ items: [] }), getAvailability: () => of({ timeZoneId: 'Europe/Istanbul' }) } },
+      { provide: CoachingStudyPlanningService, useValue: { list: () => of({ items: [] }), getPrimaryGoal:()=>of({goalId:null,version:null}), getAvailability: () => of({ timeZoneId: 'Europe/Istanbul' }) } },
       { provide: StaffPortalRedirectService, useValue: { redirect: vi.fn(), url: () => 'https://onuraltintas.net/staff/?product=coaching' } }
     ] });
     await TestBed.compileComponents();
