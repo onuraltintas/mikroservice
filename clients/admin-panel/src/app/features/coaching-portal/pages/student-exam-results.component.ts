@@ -1,14 +1,23 @@
+import { CoachingLearningSetupService, LearningContext } from '../../../core/services/coaching-learning-setup.service';
+import { contextExamCodes } from './student-goal-context';
+import { coachingFeedback, coachingToaster } from '../coaching-feedback';
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, HostListener, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { finalize } from 'rxjs';
+import { catchError, finalize, forkJoin, of } from 'rxjs';
 import { CoachingStudentExamsService, LessonAnswers, StudentExam, StudentExamType } from '../../../core/services/coaching-student-exams.service';
 import { CoachingStudyPlanningService, StudyTopic, TargetPage } from '../../../core/services/coaching-study-planning.service';
+import { PracticeExamInput, PracticeExamProfile, practiceTotals } from '../../../core/models/practice-exam';
+import { PracticeExamEditorComponent } from './practice-exam-editor.component';
 
-@Component({ selector: 'app-student-exam-results', standalone: true, imports: [CommonModule, FormsModule],
+@Component({ selector: 'app-student-exam-results', standalone: true, imports: [CommonModule, FormsModule, PracticeExamEditorComponent],
   templateUrl: './student-exam-results.component.html', styleUrl: './student-study-plans.component.scss' })
 export class StudentExamResultsComponent {
+  private readonly learningSetup = inject(CoachingLearningSetupService);
+  readonly learningContext = signal<LearningContext|null>(null);
+  readonly profileWarning = signal('');
+  private readonly toaster = coachingToaster();
   private readonly service = inject(CoachingStudentExamsService);
   private readonly catalog = inject(CoachingStudyPlanningService);
   private readonly destroyRef = inject(DestroyRef);
@@ -22,11 +31,39 @@ export class StudentExamResultsComponent {
   correctAnswers = 0; wrongAnswers = 0; emptyAnswers = 0;
   lessons: LessonAnswers[] = []; search = ''; grade: number | null = null; examCode = '';
   confirmed = false; dirty = false;
+  readonly profiles = signal<PracticeExamProfile[]>([]);
+  practiceExam: PracticeExamInput | null = null;
   readonly examTypes: { value: StudentExamType; label: string }[] = [
     { value: 'Mock', label: 'Deneme' }, { value: 'LGS', label: 'LGS denemesi' }, { value: 'YKS', label: 'YKS denemesi' },
     { value: 'Weekly', label: 'Haftalık' }, { value: 'Monthly', label: 'Aylık' }, { value: 'MidTerm', label: 'Ara sınav' },
     { value: 'Final', label: 'Final' }, { value: 'Quiz', label: 'Kısa sınav' } ];
-  ngOnInit() { this.loadList(); }
+  ngOnInit() {
+    this.loadList();
+    forkJoin({profiles:this.service.profiles(),setup:this.learningSetup.get().pipe(catchError(()=>{
+      this.profileWarning.set('Profil tercihlerin yüklenemedi; deneme kapsamını kendin seçebilirsin.');return of({context:null});
+    }))}).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: ({profiles,setup}) => {this.profiles.set(profiles);this.learningContext.set(setup.context);this.suggestScope();},
+      error: () => this.error.set('Deneme kapsamları yüklenemedi. Sayfayı yenileyip tekrar deneyin.')
+    });
+  }
+  availableProfiles(): PracticeExamProfile[] {
+    if(this.selected)return this.profiles();
+    const codes=contextExamCodes(this.learningContext());return codes.length?this.profiles().filter(x=>codes.includes(x.code)):this.profiles();
+  }
+  private suggestScope(){
+    if(this.selected || this.dirty || this.practiceExam)return;
+    const code=contextExamCodes(this.learningContext())[0];const profile=this.profiles().find(x=>x.code===code);if(!profile)return;
+    this.examType=code==='LGS'?'LGS':'YKS';
+    this.practiceExam={examCode:code,sections:profile.sections.map(x=>({sectionCode:x.code,correct:0,wrong:0,empty:x.questionCount}))};
+  }
+
+  async practiceChanged(value: PracticeExamInput | null) {
+    if (this.busy()) return;
+    if (value && this.lessons.length && !await this.toaster.confirm('Deneme kapsamına geçmek mevcut serbest ders/konu satırlarını kaldıracak. Devam edilsin mi?')) return;
+    this.practiceExam = value;
+    if (value) { this.lessons = []; this.examType = value.examCode === 'LGS' ? 'LGS' : 'YKS'; }
+    this.changed();
+  }
   changed() { if (!this.busy()) { this.dirty = true; this.confirmed = false; this.success.set(null); } }
   loadList(pageNumber = 1) {
     if (this.busy()) return;
@@ -56,14 +93,16 @@ export class StudentExamResultsComponent {
       questionCount: 1, correct: 0, wrong: 0, empty: 1 }); this.changed();
   }
   removeTopic(index: number) { if (!this.busy()) { this.lessons.splice(index, 1); this.changed(); } }
-  newExam() {
-    if (!this.canLeavePage()) return;
+  async newExam() {
+    if (!await this.canLeavePage()) return;
     this.selected = null; this.title = ''; this.examDate = ''; this.score = null; this.maxScore = 100;
     this.examType = 'Mock'; this.correctAnswers = this.wrongAnswers = this.emptyAnswers = 0; this.lessons = [];
+    this.practiceExam = null;
     this.dirty = false; this.confirmed = false; this.stale.set(false); this.error.set(null); this.success.set(null);
+    this.suggestScope();
   }
-  open(id: string) {
-    if (!this.canLeavePage()) return;
+  async open(id: string) {
+    if (!await this.canLeavePage()) return;
     this.busy.set(true);
     this.service.get(id).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.busy.set(false)))
       .subscribe({ next: exam => this.apply(exam), error: () => this.error.set('Sonuç yüklenemedi. Mevcut formunuz korundu.') });
@@ -71,13 +110,17 @@ export class StudentExamResultsComponent {
   private apply(exam: StudentExam) {
     this.selected = exam; this.title = exam.title; this.examType = exam.examType; this.examDate = exam.examDate;
     this.score = exam.score; this.maxScore = exam.maxScore;
+    this.practiceExam = exam.practiceExam ? structuredClone(exam.practiceExam) : null;
     this.correctAnswers = exam.correctAnswers; this.wrongAnswers = exam.wrongAnswers; this.emptyAnswers = exam.emptyAnswers;
     this.lessons = exam.lessons?.map(x => ({ ...x })) ?? []; this.confirmed = false; this.dirty = false; this.stale.set(false);
   }
   save() {
     if (this.busy() || this.stale() || !this.confirmed) return;
+    if (['LGS','YKS'].includes(this.examType) && !this.practiceExam) { this.error.set('Deneme kapsamını ve ders cevaplarını girin.'); return; }
+    const totals = practiceTotals(this.practiceExam, this.profiles());
+    if (this.practiceExam && !totals) { this.error.set('Deneme derslerinin doğru/yanlış/boş sayılarını kontrol edin.'); return; }
     const date = /^\d{4}-\d{2}-\d{2}$/.test(this.examDate) ? new Date(`${this.examDate}T00:00:00Z`) : new Date(NaN);
-    const counts = this.lessons.length ? [this.lessons.reduce((a, x) => a + x.correct, 0), this.lessons.reduce((a, x) => a + x.wrong, 0), this.lessons.reduce((a, x) => a + x.empty, 0)]
+    const counts = totals ? [totals.correct, totals.wrong, totals.empty] : this.lessons.length ? [this.lessons.reduce((a, x) => a + x.correct, 0), this.lessons.reduce((a, x) => a + x.wrong, 0), this.lessons.reduce((a, x) => a + x.empty, 0)]
       : [this.correctAnswers, this.wrongAnswers, this.emptyAnswers];
     if (!this.title.trim() || this.title.trim().length > 200 || !Number.isFinite(date.getTime())
       || date.toISOString().slice(0, 10) !== this.examDate || this.examDate <= '0001-01-01'
@@ -89,7 +132,7 @@ export class StudentExamResultsComponent {
       this.error.set('Başlık, tarih, puan ve doğru/yanlış/boş sayılarını kontrol edin. Ders/konu toplamları soru sayısıyla eşleşmeli.'); return;
     }
     const input = { title: this.title.trim(), examType: this.examType, examDate: this.examDate, score: this.score,
-      maxScore: this.maxScore, correctAnswers: counts[0], wrongAnswers: counts[1], emptyAnswers: counts[2], lessons: this.lessons.map(x => ({ ...x })) };
+      maxScore: this.maxScore, correctAnswers: counts[0], wrongAnswers: counts[1], emptyAnswers: counts[2], lessons: this.lessons.map(x => ({ ...x })), practiceExam: this.practiceExam };
     const isNew = !this.selected;
     const write = this.selected ? this.service.replace(this.selected.id, this.selected.version, input) : this.service.create(input);
     this.busy.set(true); this.error.set(null);
@@ -99,16 +142,14 @@ export class StudentExamResultsComponent {
     }, error: error => { this.confirmed = false; if (error?.status === 409) this.stale.set(true);
       this.error.set(error?.status === 409 ? 'Sonuç değişti. Kaydı yeniden yükle; formun henüz kaydedilmedi.' : 'Sonuç kaydedilemedi. Bilgilerin korundu; kontrol edip yeniden dene.'); } });
   }
-  deleteSelected() {
-    if (this.busy() || this.dirty || !this.selected || !window.confirm('Bu öğrenci beyanını kalıcı olarak silmek istiyor musun?')) return;
+  async deleteSelected() {
+    if (this.busy() || this.dirty || !this.selected || !await this.toaster.confirm('Bu öğrenci beyanını kalıcı olarak silmek istiyor musun?')) return;
     const exam = this.selected; this.busy.set(true);
     this.service.delete(exam.id, exam.version).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.busy.set(false)))
-      .subscribe({ next: () => { this.selected = null; this.lessons = []; this.title = ''; this.score = null; this.confirmed = false;
+      .subscribe({ next: () => { this.selected = null; this.lessons = []; this.practiceExam = null; this.title = ''; this.score = null; this.confirmed = false;
           this.page.update(page => ({ ...page, items: page.items.filter(x => x.id !== exam.id), totalCount: Math.max(0, page.totalCount - 1) })); this.success.set('Sonuç silindi.'); },
         error: error => { if (error?.status === 409) this.stale.set(true); this.error.set('Sonuç silinemedi. Güncel kaydı yükleyip tekrar dene.'); } });
   }
-  canLeavePage() { return !this.busy() && (!this.dirty || window.confirm('Kaydedilmemiş değişiklikleri bırakmak istiyor musun?')); }
-  @HostListener('window:beforeunload', ['$event']) beforeUnload(event: BeforeUnloadEvent) {
-    if (this.busy() || this.dirty) { event.preventDefault(); event.returnValue = ''; }
-  }
+  async canLeavePage() { return !this.busy() && (!this.dirty || await this.toaster.confirm('Kaydedilmemiş değişiklikleri bırakmak istiyor musun?')); }
+  private readonly feedback = coachingFeedback(this.success, this.error);
 }
