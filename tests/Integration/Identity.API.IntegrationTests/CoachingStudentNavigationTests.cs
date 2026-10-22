@@ -50,6 +50,18 @@ public sealed class CoachingStudentNavigationTests
         Assert.True(data.GetProperty("showSessions").GetBoolean());
     }
 
+    [Fact]
+    public async Task HistoricalFeeRemainsAccessibleWithoutTeacher()
+    {
+        await using var f = new CoachingOwnedProfilePersistenceTests.Fixture();
+        var student = f.AddAccount("Student"); f.Actor.UserId = student;
+        var teacher = Guid.NewGuid();
+        f.Db.CoachingFeeAgreements.Add(CoachingFeeAgreement.Create(Guid.NewGuid(), student, null, teacher, teacher, "Geçmiş ücret", 10m,
+            [new(new DateOnly(2026, 10, 23), 10m)], DateTime.UtcNow));
+        await f.Db.SaveChangesAsync();
+        Assert.True((await Read(f)).GetProperty("showFees").GetBoolean());
+    }
+
     private static async Task<JsonElement> Read(CoachingOwnedProfilePersistenceTests.Fixture f)
     {
         var controller = new CoachingProfilesController(f.Db, f.Store, f.Accounts, f.Actor);

@@ -1,3 +1,4 @@
+import { coachingFeedback } from '../coaching-feedback';
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -17,8 +18,8 @@ import {
     <main class="space-y-6" aria-labelledby="coaching-subscription-title">
       <header>
         <p class="text-sm font-medium text-indigo-600 dark:text-indigo-300">Koçluk hesabım</p>
-        <h1 id="coaching-subscription-title" class="mt-1 text-2xl font-bold">Plan ve abonelik</h1>
-        <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">Koçluk planlarını, erişim durumunu ve ödeme bildirimlerini bu Koçluk hesabından takip edebilirsin.</p>
+        <h1 id="coaching-subscription-title" class="mt-1 text-2xl font-bold">Platform aboneliğim</h1>
+        <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">Eduİvme Koçluk erişim paketini ve abonelik ödeme bildirimlerini buradan takip et. Öğretmen veya kurum koçluk ücretlerin ayrı tutulur.</p>
       </header>
 
       @if (error()) { <div role="alert" class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-200">{{ error() }}</div> }
@@ -166,4 +167,5 @@ export class CoachingSubscriptionComponent implements OnInit {
       error: () => this.error.set('Ödeme bildirim geçmişin yüklenemedi.')
     });
   }
+  private readonly feedback = coachingFeedback(this.success, this.error);
 }

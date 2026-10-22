@@ -8,6 +8,8 @@ import { AuthService } from '../../../core/auth/auth.service';
 import { CoachingPortalView, CoachingPortalViewService } from '../coaching-portal-view.service';
 import { StaffPortalRedirectService } from '../staff-portal-redirect.service';
 import { CoachingIcon, CoachingIconComponent } from '../coaching-icon.component';
+import { DarkModeService } from '../../../core/services/dark-mode.service';
+import { CoachingStudentNavigationService } from '../../../core/services/coaching-student-navigation.service';
 
 interface PortalLink { label: string; path: string; icon: CoachingIcon; exact?: boolean }
 
@@ -16,10 +18,12 @@ interface PortalLink { label: string; path: string; icon: CoachingIcon; exact?: 
   standalone: true,
   imports: [CommonModule, RouterLink, RouterLinkActive, RouterOutlet, CoachingIconComponent, CdkTrapFocus],
   templateUrl: './coaching-portal-layout.component.html',
-  styleUrls: ['./coaching-portal-layout.component.scss', './coaching-student-surfaces.scss'],
+  styleUrl: './coaching-portal-layout.component.scss',
   encapsulation: ViewEncapsulation.None
 })
 export class CoachingPortalLayoutComponent {
+  readonly studentNavigation = inject(CoachingStudentNavigationService);
+  readonly theme = inject(DarkModeService);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   private readonly views = inject(CoachingPortalViewService);
@@ -31,34 +35,35 @@ export class CoachingPortalLayoutComponent {
   readonly menuOpen = signal(false);
   readonly pageLabel = signal('Genel Bakış');
   readonly initials = computed(() => (this.user()?.firstName?.charAt(0) || 'Ö') + (this.user()?.lastName?.charAt(0) || ''));
-  readonly navigation: { label: string; links: PortalLink[] }[] = [
+  readonly navigation = computed<{ label: string; links: PortalLink[] }[]>(() => [
     { label: 'Çalışmam', links: [
       { label: 'Genel Bakış', path: '/coaching-portal', icon: 'home', exact: true },
       { label: 'Çalışma planlarım', path: '/coaching-portal/study-plans', icon: 'plan' },
-      { label: 'Ödevlerim', path: '/coaching-portal/assignments', icon: 'book' },
-      { label: 'Çalışma saatlerim', path: '/coaching-portal/study-availability', icon: 'clock' },
+      ...(this.studentNavigation.showAssignments() ? [{ label: 'Ödevlerim', path: '/coaching-portal/assignments', icon: 'book' as const }] : []),
       { label: 'Otomatik plan', path: '/coaching-portal/automatic-plan', icon: 'spark' },
-      { label: 'Haftalık programım', path: '/coaching-portal/weekly-plan', icon: 'calendar' }
+      { label: 'Haftalık düzenim', path: '/coaching-portal/weekly-plan', icon: 'calendar' }
     ] },
     { label: 'Gelişimim', links: [
+      { label: 'Hedefim', path: '/coaching-portal/goals', icon: 'target' },
       { label: 'İlerlemem', path: '/coaching-portal/progress', icon: 'chart' },
       { label: 'Sınav sonuçlarım', path: '/coaching-portal/exam-results', icon: 'target' },
-      { label: 'Seanslar', path: '/coaching-portal/sessions', icon: 'calendar' }
+      ...(this.studentNavigation.showSessions() ? [{ label: 'Seanslar', path: '/coaching-portal/sessions', icon: 'calendar' as const }] : [])
     ] },
     { label: 'Hesabım', links: [
-      { label: 'Koçluk profilim', path: '/coaching-portal/profile', icon: 'book' },
-      { label: 'Çalışma düzenimi kur', path: '/coaching-portal/setup', icon: 'spark' },
+      { label: 'Profil ve tercihlerim', path: '/coaching-portal/setup', icon: 'book' },
+      { label: 'Ayarlar', path: '/coaching-portal/settings', icon: 'clock' },
       { label: 'Bildirimler', path: '/coaching-portal/notifications', icon: 'bell' },
-      { label: 'Ücretlerim', path: '/coaching-portal/finance', icon: 'wallet' },
+      ...((this.studentNavigation.showFees?.() ?? true) ? [{ label: 'Koçluk ücretlerim', path: '/coaching-portal/finance', icon: 'wallet' as const }] : []),
       { label: 'Abonelik ve ödeme', path: '/coaching-portal/subscription', icon: 'card' }
     ] }
-  ];
-  readonly mobileLinks = this.navigation[0].links.slice(0, 3).concat(this.navigation[1].links[0]);
+  ]);
+  readonly mobileLinks = computed(() => [this.navigation()[0].links[0], this.navigation()[0].links[1], this.navigation()[1].links[0]]);
 
   constructor() {
+    this.studentNavigation.refresh(true);
     this.updatePageLabel();
     this.router.events.pipe(filter(event => event instanceof NavigationEnd), takeUntilDestroyed(inject(DestroyRef)))
-      .subscribe(() => { this.closeMenu(); this.updatePageLabel(); });
+      .subscribe(() => { this.closeMenu(); this.updatePageLabel(); this.studentNavigation.refresh(); });
   }
 
   @HostListener('document:keydown.escape')
@@ -69,8 +74,9 @@ export class CoachingPortalLayoutComponent {
   }
 
   private updatePageLabel(): void {
-    const path = this.router.url.split(/[?#]/)[0];
-    const link = this.navigation.flatMap(group => group.links).find(item => item.exact ? path === item.path : path.startsWith(item.path));
+    const currentPath = this.router.url.split(/[?#]/)[0];
+    const path = currentPath === '/coaching-portal/profile' ? '/coaching-portal/setup' : currentPath === '/coaching-portal/study-availability' ? '/coaching-portal/weekly-plan' : currentPath;
+    const link = this.navigation().flatMap(group => group.links).find(item => item.exact ? path === item.path : path.startsWith(item.path));
     this.pageLabel.set(link?.label ?? 'Çalışma alanın');
   }
 

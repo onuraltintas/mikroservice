@@ -1,6 +1,6 @@
 <section class="finance" aria-label="Koçluk ücret takibi">
-  <header><div><h2>{{ cashView ? 'Tahsilat hareketleri' : mode === 'student' ? 'Ücretlerim' : 'Öğrenci ücret hesabı' }}</h2>
-    <p>Koçluk ücretleri ve manuel tahsilat kayıtları. Tutarlar Türk lirasıdır.</p></div>
+  <header><div><h2>{{ cashView ? 'Tahsilat hareketleri' : mode === 'student' ? 'Koçluk ücretlerim' : 'Öğrenci ücret hesabı' }}</h2>
+    <p>Öğretmenin veya kurumunla olan koçluk ücretlerini ve tahsilatlarını gösterir. Platform aboneliği ayrı takip edilir. Tutarlar Türk lirasıdır.</p></div>
     @if (!cashView) { <button type="button" [disabled]="pending() || loading()" (click)="loadAccount(account()?.pageNumber ?? 1)">Yenile</button> }
   </header>
   @if (notice()) { <p role="status" class="success">{{ notice() }}</p> }
