@@ -1,3 +1,4 @@
+using System.Text.Json;
 using EduPlatform.Shared.Kernel.Primitives;
 using Coaching.Domain.Enums;
 
@@ -23,6 +24,12 @@ public class AcademicGoal : AggregateRoot
 
     public decimal? TargetScore { get; private set; }
     public decimal? TargetMaxScore { get; private set; }
+    public string? TargetPracticeExamCode { get; private set; }
+    public decimal? TargetNet { get; private set; }
+    private string NetTargetsJson { get; set; } = "[]";
+    public IReadOnlyList<AcademicNetTarget> NetTargets => Array.AsReadOnly(
+        JsonSerializer.Deserialize<AcademicNetTarget[]>(NetTargetsJson) is { Length: > 0 } targets ? targets
+        : TargetPracticeExamCode is { } code && TargetNet is { } net ? [new(code, net)] : []);
     public DateTime? TargetDate { get; private set; }
 
     public int CurrentProgress { get; private set; } // 0-100%
@@ -161,6 +168,21 @@ public class AcademicGoal : AggregateRoot
         UpdatedAt = DateTime.UtcNow;
     }
 
+    public void SetNetTarget(string? examCode, decimal? net)
+    {
+        if (examCode is not null || net.HasValue)
+        {
+            var profile = PracticeExamRules.Profiles.SingleOrDefault(x => x.Code == examCode);
+            if (profile is null || net is null or < 0 || net > profile.Sections.Sum(x => x.QuestionCount)
+                || decimal.Round(net.Value, 2) != net) throw new ArgumentException("Geçerli sınav kapsamını ve net hedefini birlikte girin.");
+        }
+        var targets = NetTargets.Where(x => x.ExamCode != examCode).ToList();
+        if (examCode is not null && net.HasValue) targets.Add(new(examCode, net.Value));
+        else targets.Clear();
+        NetTargetsJson = JsonSerializer.Serialize(targets.OrderBy(x => x.ExamCode));
+        TargetPracticeExamCode = examCode; TargetNet = net; UpdatedAt = DateTime.UtcNow;
+    }
+
     public void SetCatalogTarget(Guid? universityProgramId, Guid? schoolId)
     {
         if (universityProgramId == Guid.Empty || schoolId == Guid.Empty
@@ -189,3 +211,5 @@ public class AcademicGoal : AggregateRoot
     private static string? NormalizeOptional(string? value) =>
         string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 }
+
+public sealed record AcademicNetTarget(string ExamCode, decimal TargetNet);
