@@ -49,16 +49,16 @@ public class UserCreatedConsumer : IConsumer<UserCreatedEvent>
         {
             // 2. Apply Template (Dynamic)
             subject = template.Subject
-                .Replace("{{FirstName}}", message.FirstName ?? "")
-                .Replace("{{LastName}}", message.LastName ?? "");
+                .Replace("{{FirstName}}", EmailContent.SubjectText(message.FirstName))
+                .Replace("{{LastName}}", EmailContent.SubjectText(message.LastName));
 
             body = template.Body
-                .Replace("{{FirstName}}", message.FirstName ?? "")
-                .Replace("{{LastName}}", message.LastName ?? "")
-                .Replace("{{Role}}", message.Role ?? "")
+                .Replace("{{FirstName}}", EmailContent.Html(message.FirstName))
+                .Replace("{{LastName}}", EmailContent.Html(message.LastName))
+                .Replace("{{Role}}", EmailContent.Html(message.Role))
                 .Replace("{{PasswordSetupUrl}}", passwordSetupUrl)
                 .Replace("{{PasswordSetupTokenExpiresAt}}", message.PasswordSetupTokenExpiresAt.ToString("O"))
-                .Replace("{{Email}}", message.Email ?? "");
+                .Replace("{{Email}}", EmailContent.Html(message.Email));
             subject = PublicAppUrlOptions.ApplySpeedReadingBranding(subject, message.Role, message.Product);
             body = PublicAppUrlOptions.ApplySpeedReadingBranding(body, message.Role, message.Product);
         }
@@ -66,8 +66,8 @@ public class UserCreatedConsumer : IConsumer<UserCreatedEvent>
         {
             // Fallback (Safe Mode)
             var appName = PublicAppUrlOptions.GetApplicationName(message.Role, message.Product);
-            subject = $"{appName} hesabınız hazır, {message.FirstName}!";
-            body = $"<h1>{appName}</h1><p>Merhaba {message.FirstName}, hesabınız hazır.</p><p><a href=\"{passwordSetupUrl}\">Şifrenizi belirleyin</a></p><p>Bu bağlantının son geçerlilik zamanı: {message.PasswordSetupTokenExpiresAt:O}.</p>";
+            subject = $"{appName} hesabınız hazır, {EmailContent.SubjectText(message.FirstName)}!";
+            body = $"<h1>{appName}</h1><p>Merhaba {EmailContent.Html(message.FirstName)}, hesabınız hazır.</p><p><a href=\"{passwordSetupUrl}\">Şifrenizi belirleyin</a></p><p>Bu bağlantının son geçerlilik zamanı: {message.PasswordSetupTokenExpiresAt:O}.</p>";
         }
 
         var messageId = context.MessageId ?? throw new InvalidOperationException("UserCreatedEvent.MessageId is required.");
