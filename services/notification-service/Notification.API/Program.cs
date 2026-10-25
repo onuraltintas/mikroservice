@@ -220,6 +220,9 @@ builder.Services.AddMassTransit(x =>
     {
         o.UsePostgres();
         o.UseBusOutbox();
+        // Read committed: the erased-recipient check runs after the advisory lock and
+        // must see an erasure that committed while the consumer waited for it.
+        o.IsolationLevel = System.Data.IsolationLevel.ReadCommitted;
     });
 
     x.UsingRabbitMq((context, cfg) =>

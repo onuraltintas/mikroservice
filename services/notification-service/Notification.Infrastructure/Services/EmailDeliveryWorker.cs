@@ -17,6 +17,11 @@ public sealed class EmailDeliveryWorker : BackgroundService
     private static readonly TimeSpan CleanupInterval = TimeSpan.FromMinutes(5);
     private static readonly TimeSpan SentBodyRetention = TimeSpan.FromDays(7);
     private static readonly TimeSpan FailedBodyRetention = TimeSpan.FromDays(30);
+    // Rows themselves (recipient, subject, error) and finished support forwards are
+    // deleted after this; the tombstone only has to outlive any message redelivery.
+    public static readonly TimeSpan DeliveryRecordRetention = TimeSpan.FromDays(180);
+    // Read in-app notifications older than this are deleted.
+    public static readonly TimeSpan ReadNotificationRetention = TimeSpan.FromDays(365);
 
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<EmailDeliveryWorker> _logger;
@@ -113,20 +118,23 @@ public sealed class EmailDeliveryWorker : BackgroundService
         var emailService = scope.ServiceProvider.GetRequiredService<IEmailService>();
         var dbContext = scope.ServiceProvider.GetRequiredService<NotificationDbContext>();
 
-        async Task<bool> DeliverOwnedAsync()
+        // Check erasure and lease ownership under the recipient lock, then release it
+        // before talking to SMTP. Holding the lock (and its transaction) for the whole
+        // send blocked that user's consumers and erasure for up to the SMTP timeout.
+        async Task<bool> MaySendAsync()
         {
             if (workItem.SubjectUserId is { } subject && await dbContext.ErasedRecipients.AnyAsync(x => x.UserId == subject, cancellationToken))
                 return false;
-            if (!await dbContext.EmailDeliveries.AnyAsync(x => x.Id == workItem.Id
-                    && x.Status == EmailDeliveryStatus.Processing && x.LeaseToken == workItem.LeaseToken
-                    && x.LeaseUntil > DateTime.UtcNow, cancellationToken)) return false;
-            await DeliverOwnedAsyncCore(workItem, dbContext, emailService, cancellationToken);
-            return true;
+            return await dbContext.EmailDeliveries.AnyAsync(x => x.Id == workItem.Id
+                && x.Status == EmailDeliveryStatus.Processing && x.LeaseToken == workItem.LeaseToken
+                && x.LeaseUntil > DateTime.UtcNow, cancellationToken);
         }
-        if (workItem.SubjectUserId is { } userId)
-            await NotificationRecipientWrites.LockedAsync(dbContext, userId, DeliverOwnedAsync, cancellationToken);
-        else
-            await DeliverOwnedAsync();
+
+        var maySend = workItem.SubjectUserId is { } userId
+            ? await NotificationRecipientWrites.LockedAsync(dbContext, userId, MaySendAsync, cancellationToken)
+            : await MaySendAsync();
+        if (maySend)
+            await DeliverOwnedAsyncCore(workItem, dbContext, emailService, cancellationToken);
     }
 
     private async Task DeliverOwnedAsyncCore(EmailDeliveryWorkItem workItem, NotificationDbContext dbContext,
@@ -234,6 +242,33 @@ public sealed class EmailDeliveryWorker : BackgroundService
         {
             _logger.LogInformation("Cleared protected bodies from {Count} retained email delivery records", cleared);
         }
+
+        var deleted = await PurgeExpiredRecordsAsync(dbContext, now, cancellationToken);
+        if (deleted > 0)
+        {
+            _logger.LogInformation("Deleted {Count} expired delivery and notification records", deleted);
+        }
+    }
+
+    public static async Task<int> PurgeExpiredRecordsAsync(
+        NotificationDbContext dbContext,
+        DateTime now,
+        CancellationToken cancellationToken)
+    {
+        var recordCutoff = now.Subtract(DeliveryRecordRetention);
+        var notificationCutoff = now.Subtract(ReadNotificationRetention);
+        var deliveries = await dbContext.EmailDeliveries
+            .Where(x => (x.Status == EmailDeliveryStatus.Sent || x.Status == EmailDeliveryStatus.Failed)
+                && x.CreatedAt < recordCutoff)
+            .ExecuteDeleteAsync(cancellationToken);
+        var forwards = await dbContext.SupportForwardDeliveries
+            .Where(x => (x.Status == SupportForwardDeliveryStatus.Sent || x.Status == SupportForwardDeliveryStatus.Failed)
+                && x.CreatedAt < recordCutoff)
+            .ExecuteDeleteAsync(cancellationToken);
+        var notifications = await dbContext.Notifications
+            .Where(x => x.IsRead && x.CreatedAt < notificationCutoff)
+            .ExecuteDeleteAsync(cancellationToken);
+        return deliveries + forwards + notifications;
     }
 
     private sealed record EmailDeliveryWorkItem(

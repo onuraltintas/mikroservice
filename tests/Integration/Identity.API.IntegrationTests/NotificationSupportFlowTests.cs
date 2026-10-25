@@ -95,6 +95,54 @@ public sealed class NotificationSupportFlowPostgresTests : IAsyncLifetime
         }
     }
 
+    [Fact]
+    public async Task RetentionPurge_DeletesOnlyFinishedOldRecordsAndOldReadNotifications()
+    {
+        var now = DateTime.UtcNow;
+        var old = now.AddDays(-200);
+        var ancient = now.AddDays(-400);
+        Guid oldSent, recentSent, oldPending, oldForward, oldRead, oldUnread, recentRead;
+        await using (var context = CreateContext())
+        {
+            EmailDelivery Delivery() => EmailDelivery.Create(Guid.NewGuid(), "Test", "a@example.test", "s", "b");
+            var deliveries = new[] { Delivery(), Delivery(), Delivery() };
+            context.EmailDeliveries.AddRange(deliveries);
+            var request = new SupportRequest(Guid.NewGuid(), "A", "B", "a@example.test", "s", "m", "purge");
+            context.SupportRequests.Add(request);
+            var forward = SupportForwardDelivery.Create(request.Id);
+            context.SupportForwardDeliveries.Add(forward);
+            NotificationItem Item(bool read, DateTime created) => new() { Id = Guid.NewGuid(), UserId = Guid.NewGuid(), Title = "t", Message = "m", IsRead = read, CreatedAt = created };
+            var items = new[] { Item(true, ancient), Item(false, ancient), Item(true, now.AddDays(-30)) };
+            context.Notifications.AddRange(items);
+            await context.SaveChangesAsync();
+            (oldSent, recentSent, oldPending) = (deliveries[0].Id, deliveries[1].Id, deliveries[2].Id);
+            (oldForward, oldRead, oldUnread, recentRead) = (forward.Id, items[0].Id, items[1].Id, items[2].Id);
+
+            await context.EmailDeliveries.Where(x => x.Id == oldSent)
+                .ExecuteUpdateAsync(x => x.SetProperty(d => d.Status, EmailDeliveryStatus.Sent).SetProperty(d => d.CreatedAt, old));
+            await context.EmailDeliveries.Where(x => x.Id == recentSent)
+                .ExecuteUpdateAsync(x => x.SetProperty(d => d.Status, EmailDeliveryStatus.Sent));
+            await context.EmailDeliveries.Where(x => x.Id == oldPending)
+                .ExecuteUpdateAsync(x => x.SetProperty(d => d.CreatedAt, old));
+            await context.SupportForwardDeliveries.Where(x => x.Id == oldForward)
+                .ExecuteUpdateAsync(x => x.SetProperty(d => d.Status, SupportForwardDeliveryStatus.Sent).SetProperty(d => d.CreatedAt, old));
+        }
+
+        await using (var context = CreateContext())
+        {
+            (await EmailDeliveryWorker.PurgeExpiredRecordsAsync(context, now, CancellationToken.None)).Should().Be(3);
+        }
+
+        await using (var context = CreateContext())
+        {
+            (await context.EmailDeliveries.Select(x => x.Id).ToListAsync()).Should().BeEquivalentTo([recentSent, oldPending],
+                "pending work is never deleted, however old");
+            (await context.SupportForwardDeliveries.AnyAsync(x => x.Id == oldForward)).Should().BeFalse();
+            (await context.Notifications.Select(x => x.Id).ToListAsync()).Should().BeEquivalentTo([oldUnread, recentRead]);
+            (await context.SupportRequests.AnyAsync()).Should().BeTrue("support requests themselves are kept");
+        }
+    }
+
     private NotificationDbContext CreateContext() => new(
         new DbContextOptionsBuilder<NotificationDbContext>().UseNpgsql(_connectionString).Options);
 
