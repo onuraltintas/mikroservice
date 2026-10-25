@@ -21,6 +21,10 @@ public class ReplyToSupportRequestHandler : IRequestHandler<ReplyToSupportReques
 
     public async Task<Result> Handle(ReplyToSupportRequestCommand request, CancellationToken cancellationToken)
     {
+        // One transaction for the queued reply and the processed state. Without it the
+        // recipient lock opened (and on exit cleared) its own transaction and change
+        // tracker, so the reply e-mail was sent while the request stayed unprocessed.
+        await using var transaction = await _context.BeginTransactionAsync(cancellationToken);
         var supportRequest = await _context.SupportRequests
             .FirstOrDefaultAsync(x => x.Id == request.SupportRequestId, cancellationToken);
 
@@ -72,6 +76,7 @@ public class ReplyToSupportRequestHandler : IRequestHandler<ReplyToSupportReques
         // 2. Mark as Processed
         supportRequest.Process(request.ReplyMessage);
         await _context.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
 
         return Result.Success();
     }

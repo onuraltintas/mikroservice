@@ -60,7 +60,13 @@ public class SubmitSupportRequestHandler : IRequestHandler<SubmitSupportRequestC
             SupportForwardDelivery.Create(supportRequest.Id));
         try
         {
-            await QueueAcknowledgmentEmail(request, supportRequest.Id, cancellationToken);
+            // The form is anonymous and the address is whatever the sender typed, so the
+            // acknowledgement must not become a way to mail arbitrary people repeatedly.
+            if (await IsWithinAcknowledgementLimitAsync(normalizedEmail, cancellationToken))
+            {
+                await QueueAcknowledgmentEmail(request, supportRequest.Id, cancellationToken);
+            }
+
             await _dbContext.SaveChangesAsync(cancellationToken);
             await transaction.CommitAsync(cancellationToken);
         }
@@ -93,6 +99,18 @@ public class SubmitSupportRequestHandler : IRequestHandler<SubmitSupportRequestC
         return Result.Success(supportRequest.Id);
     }
 
+    /// <summary>At most this many acknowledgements per address in 24 hours.</summary>
+    public const int MaxAcknowledgementsPerAddressPerDay = 3;
+
+    private async Task<bool> IsWithinAcknowledgementLimitAsync(string normalizedEmail, CancellationToken cancellationToken)
+    {
+        var since = DateTime.UtcNow.AddDays(-1);
+        var recent = await _dbContext.SupportRequests
+            .AsNoTracking()
+            .CountAsync(x => x.Email == normalizedEmail && x.CreatedAt >= since, cancellationToken);
+        return recent < MaxAcknowledgementsPerAddressPerDay;
+    }
+
     private Task<SupportRequest?> FindExistingAsync(
         string email,
         string idempotencyKey,
@@ -123,9 +141,12 @@ public class SubmitSupportRequestHandler : IRequestHandler<SubmitSupportRequestC
 
         if (template != null)
         {
-            subject = template.Subject
-                .Replace("{{FirstName}}", request.FirstName)
-                .Replace("{{LastName}}", request.LastName);
+            // Sender-typed names stay out of the subject line (the recipient address is not
+            // verified, so the subject must not carry arbitrary text to a stranger).
+            subject = string.Join(' ', template.Subject
+                .Replace("{{FirstName}}", string.Empty)
+                .Replace("{{LastName}}", string.Empty)
+                .Split(' ', StringSplitOptions.RemoveEmptyEntries));
 
             body = template.Body
                 .Replace("{{FirstName}}", firstName)

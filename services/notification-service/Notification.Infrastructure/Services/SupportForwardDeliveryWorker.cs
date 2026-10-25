@@ -119,10 +119,11 @@ public sealed class SupportForwardDeliveryWorker : BackgroundService
 
         try
         {
-            if (await identityService.ForwardSupportRequestAsync(
-                    command,
-                    supportRequest.Id,
-                    cancellationToken))
+            var result = await identityService.ForwardSupportRequestAsync(
+                command,
+                supportRequest.Id,
+                cancellationToken);
+            if (result == SupportForwardResult.Sent)
             {
                 var sentAt = DateTime.UtcNow;
                 var sentRows = await dbContext.SupportForwardDeliveries
@@ -142,10 +143,13 @@ public sealed class SupportForwardDeliveryWorker : BackgroundService
                     return;
             }
 
+            // A refusal is final; transient failures stop after MaxAttempts like exceptions do.
             await MarkFailureAsync(
                 workItem,
-                "Identity service rejected the support forward request.",
-                permanentlyFailed: false,
+                result == SupportForwardResult.Rejected
+                    ? "Identity service rejected the support forward request."
+                    : "Identity service could not be reached for the support forward request.",
+                permanentlyFailed: result == SupportForwardResult.Rejected || workItem.AttemptCount >= MaxAttempts,
                 cancellationToken: cancellationToken);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)

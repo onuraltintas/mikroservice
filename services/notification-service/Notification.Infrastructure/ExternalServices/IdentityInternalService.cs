@@ -23,7 +23,7 @@ public class IdentityInternalService : IIdentityInternalService
         _logger = logger;
     }
 
-    public async Task<bool> ForwardSupportRequestAsync(SubmitSupportRequestCommand request, Guid supportRequestId, CancellationToken cancellationToken = default)
+    public async Task<SupportForwardResult> ForwardSupportRequestAsync(SubmitSupportRequestCommand request, Guid supportRequestId, CancellationToken cancellationToken = default)
     {
         var command = new
         {
@@ -40,7 +40,7 @@ public class IdentityInternalService : IIdentityInternalService
             if (string.IsNullOrWhiteSpace(_serviceApiKey))
             {
                 _logger.LogError("Internal service API key is not configured; support request {SupportRequestId} was not forwarded.", supportRequestId);
-                return false;
+                return SupportForwardResult.Rejected;
             }
 
             using var requestMessage = new HttpRequestMessage(
@@ -52,8 +52,12 @@ public class IdentityInternalService : IIdentityInternalService
             requestMessage.Headers.Add(InternalServiceAuthentication.HeaderName, _serviceApiKey);
 
             using var response = await _httpClient.SendAsync(requestMessage, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
-            response.EnsureSuccessStatusCode();
-            return true;
+            if (response.IsSuccessStatusCode) return SupportForwardResult.Sent;
+            var status = (int)response.StatusCode;
+            _logger.LogWarning("Identity answered {StatusCode} when forwarding support request {SupportRequestId}.", status, supportRequestId);
+            return status is >= 400 and < 500 and not 408 and not 429
+                ? SupportForwardResult.Rejected
+                : SupportForwardResult.Transient;
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -62,7 +66,7 @@ public class IdentityInternalService : IIdentityInternalService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error forwarding support request to Identity Service");
-            return false;
+            return SupportForwardResult.Transient;
         }
     }
 }
