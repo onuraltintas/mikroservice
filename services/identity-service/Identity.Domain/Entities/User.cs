@@ -99,7 +99,7 @@ public class User : AggregateRoot
 
     public void RevokeRefreshToken(string token, string ipAddress, string reason)
     {
-        var refreshToken = _refreshTokens.SingleOrDefault(t => t.Token == token);
+        var refreshToken = _refreshTokens.SingleOrDefault(t => t.Matches(token));
         if (refreshToken != null && refreshToken.IsActive)
         {
             refreshToken.Revoke(ipAddress, reason);
@@ -162,18 +162,32 @@ public class User : AggregateRoot
         UpdatedAt = DateTime.UtcNow;
     }
 
+    /// <summary>
+    /// Issues a single-use reset / password-setup link value and returns it. Only its
+    /// SHA-256 digest is kept (<see cref="PasswordResetToken"/>), so a database copy
+    /// cannot be used to take over accounts with a pending link.
+    /// </summary>
     public string GeneratePasswordResetToken()
     {
         Span<byte> tokenBytes = stackalloc byte[32];
         RandomNumberGenerator.Fill(tokenBytes);
-        PasswordResetToken = Convert.ToBase64String(tokenBytes)
+        var token = Convert.ToBase64String(tokenBytes)
             .TrimEnd('=')
             .Replace('+', '-')
             .Replace('/', '_');
+        PasswordResetToken = RefreshToken.Digest(token);
         PasswordResetTokenExpiresAt = DateTime.UtcNow.AddHours(2); // Short lived
         UpdatedAt = DateTime.UtcNow;
-        return PasswordResetToken;
+        return token;
     }
+
+    /// <summary>Constant-time check of a presented reset link value against the stored digest.</summary>
+    public bool PasswordResetTokenMatches(string? presented) =>
+        PasswordResetToken is { } stored
+        && !string.IsNullOrEmpty(presented)
+        && CryptographicOperations.FixedTimeEquals(
+            System.Text.Encoding.ASCII.GetBytes(RefreshToken.Digest(presented)),
+            System.Text.Encoding.ASCII.GetBytes(stored));
 
     public void ClearPasswordResetToken()
     {

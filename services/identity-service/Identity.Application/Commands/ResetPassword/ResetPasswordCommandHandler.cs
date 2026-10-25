@@ -31,7 +31,7 @@ public class ResetPasswordCommandHandler : IRequestHandler<ResetPasswordCommand,
             return Result.Failure(new Error("ResetPassword.UserNotFound", "Kullanıcı bulunamadı."));
         }
 
-        if (user.PasswordResetToken == null || user.PasswordResetToken != request.Token)
+        if (!user.PasswordResetTokenMatches(request.Token))
         {
             return Result.Failure(new Error("ResetPassword.InvalidToken", "Geçersiz sıfırlama kodu."));
         }

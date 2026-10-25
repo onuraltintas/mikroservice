@@ -14,13 +14,16 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, R
     private readonly ITokenService _tokenService;
     private readonly IConfigurationService _configurationService;
     private readonly ILogger<RefreshTokenCommandHandler> _logger;
+    private readonly SessionLifetimeOptions _sessionLifetime;
 
     public RefreshTokenCommandHandler(
         IUserRepository userRepository,
         ITokenService tokenService,
         IConfigurationService configurationService,
-        ILogger<RefreshTokenCommandHandler> logger)
+        ILogger<RefreshTokenCommandHandler> logger,
+        SessionLifetimeOptions? sessionLifetime = null)
     {
+        _sessionLifetime = sessionLifetime ?? new SessionLifetimeOptions();
         _userRepository = userRepository;
         _tokenService = tokenService;
         _configurationService = configurationService;
@@ -38,9 +41,17 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, R
         var user = await _userRepository.GetByRefreshTokenAsync(request.RefreshToken, cancellationToken);
         
         if (user == null)
-            return Result.Failure<RefreshTokenResponse>(new Error("Auth.InvalidToken", "Geçersiz oturum anahtarı."));
+        {
+            if (!string.IsNullOrEmpty(request.RefreshToken)
+                && await _userRepository.RevokeRefreshTokenFamilyOnReuseAsync(request.RefreshToken, cancellationToken))
+            {
+                _logger.LogWarning("A rotated refresh token was presented again; the whole session was revoked.");
+            }
 
-        var existingRefreshToken = user.RefreshTokens.FirstOrDefault(r => r.Token == request.RefreshToken);
+            return Result.Failure<RefreshTokenResponse>(new Error("Auth.InvalidToken", "Geçersiz oturum anahtarı."));
+        }
+
+        var existingRefreshToken = user.RefreshTokens.FirstOrDefault(r => r.Matches(request.RefreshToken));
 
         if (existingRefreshToken == null || !existingRefreshToken.IsActive)
              return Result.Failure<RefreshTokenResponse>(new Error("Auth.InvalidToken", "Oturum süresi dolmuş veya geçersiz."));
@@ -133,12 +144,14 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, R
             existingRefreshToken.IsPersistent,
             existingRefreshToken.MfaVerifiedAt,
             targetProduct);
-        
+        // Same sign-in, same family; rotation never extends it past the absolute limit.
+        newRefreshToken.ContinueSessionOf(existingRefreshToken, _sessionLifetime.MaxSessionLifetime);
+
         var rotated = await _userRepository.RotateRefreshTokenAsync(
             request.RefreshToken,
             newRefreshToken,
             "0.0.0.0",
-            "Refreshed",
+            Identity.Domain.Entities.RefreshToken.RotatedReason,
             cancellationToken);
         if (!rotated)
         {
@@ -147,7 +160,7 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, R
 
         return Result.Success(new RefreshTokenResponse(
             newAccessToken,
-            newRefreshToken.Token,
+            newRefreshToken.IssuedValue!,
             newRefreshToken.ExpiresAt,
             newRefreshToken.IsPersistent,
             ExpiresInMinutes: await _tokenService.GetAccessTokenLifetimeMinutesAsync()));

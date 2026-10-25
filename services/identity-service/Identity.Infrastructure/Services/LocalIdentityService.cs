@@ -512,8 +512,9 @@ public class LocalIdentityService : IIdentityService
     {
         try
         {
+            var digest = Identity.Domain.Entities.RefreshToken.Digest(token);
             var refreshToken = await _context.RefreshTokens
-                .FirstOrDefaultAsync(rt => rt.Token == token, cancellationToken);
+                .FirstOrDefaultAsync(rt => rt.Token == digest, cancellationToken);
                 
             if (refreshToken == null) return Result.Failure(new Error("Token.NotFound", "Refresh token not found."));
             

@@ -607,7 +607,7 @@ public sealed class SystemAdminMfaLoginTests
             NullLogger<RefreshTokenCommandHandler>.Instance);
 
         var result = await handler.Handle(
-            new RefreshTokenCommand(refreshToken.Token), CancellationToken.None);
+            new RefreshTokenCommand(refreshToken.IssuedValue!), CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
         result.Error.Code.Should().Be("Auth.MfaRequired");
@@ -656,7 +656,7 @@ public sealed class SystemAdminMfaLoginTests
             NullLogger<RefreshTokenCommandHandler>.Instance);
 
         var result = await handler.Handle(
-            new RefreshTokenCommand(refreshToken.Token), CancellationToken.None);
+            new RefreshTokenCommand(refreshToken.IssuedValue!), CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
         result.Value.AccessToken.Should().Be("access-token");
@@ -679,7 +679,7 @@ public sealed class SystemAdminMfaLoginTests
             NullLogger<RefreshTokenCommandHandler>.Instance);
 
         var result = await handler.Handle(
-            new RefreshTokenCommand(refreshToken.Token), CancellationToken.None);
+            new RefreshTokenCommand(refreshToken.IssuedValue!), CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
         result.Value.AccessToken.Should().Be("access-token");
@@ -736,7 +736,7 @@ public sealed class SystemAdminMfaLoginTests
             NullLogger<RefreshTokenCommandHandler>.Instance);
 
         var result = await handler.Handle(
-            new RefreshTokenCommand(refreshToken.Token),
+            new RefreshTokenCommand(refreshToken.IssuedValue!),
             CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
@@ -776,7 +776,7 @@ public sealed class SystemAdminMfaLoginTests
             NullLogger<RefreshTokenCommandHandler>.Instance);
 
         var result = await handler.Handle(
-            new RefreshTokenCommand(refreshToken.Token, PlatformProduct.SpeedReading),
+            new RefreshTokenCommand(refreshToken.IssuedValue!, PlatformProduct.SpeedReading),
             CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
@@ -817,7 +817,7 @@ public sealed class SystemAdminMfaLoginTests
             NullLogger<RefreshTokenCommandHandler>.Instance);
 
         var result = await handler.Handle(
-            new RefreshTokenCommand(refreshToken.Token, PlatformProduct.SpeedReading),
+            new RefreshTokenCommand(refreshToken.IssuedValue!, PlatformProduct.SpeedReading),
             CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
@@ -858,7 +858,7 @@ public sealed class SystemAdminMfaLoginTests
 
         var result = await handler.Handle(
             new RefreshTokenCommand(
-                refreshToken.Token,
+                refreshToken.IssuedValue!,
                 PlatformProduct.CourseManagement,
                 user.Id,
                 AllowCourseManagementStudentSession: true),
@@ -900,7 +900,7 @@ public sealed class SystemAdminMfaLoginTests
             NullLogger<RefreshTokenCommandHandler>.Instance);
 
         var result = await handler.Handle(
-            new RefreshTokenCommand(refreshToken.Token, PlatformProduct.CourseManagement, user.Id),
+            new RefreshTokenCommand(refreshToken.IssuedValue!, PlatformProduct.CourseManagement, user.Id),
             CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
@@ -942,7 +942,7 @@ public sealed class SystemAdminMfaLoginTests
             NullLogger<RefreshTokenCommandHandler>.Instance);
 
         var result = await handler.Handle(
-            new RefreshTokenCommand(refreshToken.Token, PlatformProduct.SpeedReading),
+            new RefreshTokenCommand(refreshToken.IssuedValue!, PlatformProduct.SpeedReading),
             CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
@@ -984,7 +984,7 @@ public sealed class SystemAdminMfaLoginTests
 
         var result = await handler.Handle(
             new RefreshTokenCommand(
-                refreshToken.Token,
+                refreshToken.IssuedValue!,
                 PlatformProduct.SpeedReading,
                 Guid.NewGuid()),
             CancellationToken.None);
@@ -1030,7 +1030,7 @@ public sealed class SystemAdminMfaLoginTests
             NullLogger<RefreshTokenCommandHandler>.Instance);
 
         var result = await handler.Handle(
-            new RefreshTokenCommand(refreshToken.Token),
+            new RefreshTokenCommand(refreshToken.IssuedValue!),
             CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
@@ -1055,7 +1055,7 @@ public sealed class SystemAdminMfaLoginTests
             NullLogger<RefreshTokenCommandHandler>.Instance);
 
         var result = await handler.Handle(
-            new RefreshTokenCommand(refreshToken.Token), CancellationToken.None);
+            new RefreshTokenCommand(refreshToken.IssuedValue!), CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
         result.Error.Code.Should().Be("Auth.InvalidToken");
@@ -1283,7 +1283,7 @@ public sealed class SystemAdminMfaLoginTests
             string reason,
             CancellationToken cancellationToken)
         {
-            var token = user.RefreshTokens.FirstOrDefault(candidate => candidate.Token == refreshToken);
+            var token = user.RefreshTokens.FirstOrDefault(candidate => candidate.Matches(refreshToken));
             token?.Revoke(revokedByIp, reason);
             return Task.FromResult(token is not null);
         }
@@ -1298,7 +1298,7 @@ public sealed class SystemAdminMfaLoginTests
             if (!RotationSucceeds)
                 return Task.FromResult(false);
 
-            var token = user.RefreshTokens.FirstOrDefault(candidate => candidate.Token == refreshToken);
+            var token = user.RefreshTokens.FirstOrDefault(candidate => candidate.Matches(refreshToken));
             if (token is null)
                 return Task.FromResult(false);
 

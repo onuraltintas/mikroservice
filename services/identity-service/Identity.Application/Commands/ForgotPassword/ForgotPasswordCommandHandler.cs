@@ -32,7 +32,7 @@ public class ForgotPasswordCommandHandler : IRequestHandler<ForgotPasswordComman
             return Result.Success();
         }
 
-        user.GeneratePasswordResetToken();
+        var resetToken = user.GeneratePasswordResetToken();
         var primaryRole = user.Roles
             .OrderBy(role => role.Role.Name)
             .Select(role => role.Role.Name)
@@ -44,7 +44,7 @@ public class ForgotPasswordCommandHandler : IRequestHandler<ForgotPasswordComman
             user.Email,
             user.FirstName,
             user.LastName,
-            user.PasswordResetToken!,
+            resetToken,
             primaryRole), cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 

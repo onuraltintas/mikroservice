@@ -181,7 +181,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<LoginRes
 
         return Result.Success(new LoginResponse(
             accessToken,
-            refreshToken.Token,
+            refreshToken.IssuedValue!,
             refreshToken.ExpiresAt,
             refreshToken.IsPersistent,
             ExpiresInMinutes: await _tokenService.GetAccessTokenLifetimeMinutesAsync()));

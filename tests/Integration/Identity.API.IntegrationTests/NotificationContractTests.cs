@@ -23,7 +23,8 @@ public sealed class NotificationContractTests
 
         firstToken.Should().HaveLength(43);
         firstToken.Should().NotBe(secondToken);
-        user.PasswordResetToken.Should().Be(secondToken);
+        user.PasswordResetTokenMatches(secondToken).Should().BeTrue();
+        user.PasswordResetTokenMatches(firstToken).Should().BeFalse("a new link replaces the previous one");
         firstExpiry.Should().BeAfter(DateTime.UtcNow.AddHours(1));
         firstExpiry.Should().BeBefore(DateTime.UtcNow.AddHours(3));
     }

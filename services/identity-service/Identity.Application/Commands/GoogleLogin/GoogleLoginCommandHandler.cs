@@ -430,7 +430,7 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Res
 
         return Result.Success(new LoginResponse(
             accessToken,
-            refreshToken.Token,
+            refreshToken.IssuedValue!,
             refreshToken.ExpiresAt,
             refreshToken.IsPersistent,
             ExpiresInMinutes: await _tokenService.GetAccessTokenLifetimeMinutesAsync()));
