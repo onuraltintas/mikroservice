@@ -31,10 +31,10 @@ dosyaları. Coaching ve Speed Reading kaynakları (korunan ürün sözleşmesi) 
    FROM identity.users GROUP BY 1 HAVING count(*) > 1;
    ```
    `NormalizeUserEmails` migration'ı çakışma varsa hiçbir şeyi değiştirmeden durur.
-2. **Secret dosya izinleri (production):** Identity artık UID 1654 ile çalışır. Host'taki
+2. **Secret dosya izinleri (production):** Identity ve gateway UID 1654 ile çalışır. Host'taki
    PFX ve reCAPTCHA secret dosyaları bu kullanıcı tarafından okunabilmeli:
-   `chgrp 1654 <dosya> && chmod 0640 <dosya>`. `identity-secrets-preflight` okunamıyorsa
-   yayını, çalışan identity değiştirilmeden önce durdurur.
+   `chgrp 1654 <dosya> && chmod 0640 <dosya>`. `runtime-secrets-preflight` okunamıyorsa
+   yayını, çalışan identity ve gateway değiştirilmeden önce durdurur.
 3. Migration'lar (`identity-migrations`): `HashSessionTokens` (mevcut token'ları yerinde
    hash'ler; oturumlar düşmez), `NormalizeUserEmails`. Geri alma: `HashSessionTokens` Down,
    özetler geri çevrilemediği için açık oturumları ve sıfırlama linklerini iptal eder.

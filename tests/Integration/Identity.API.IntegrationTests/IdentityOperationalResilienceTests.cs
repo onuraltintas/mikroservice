@@ -51,7 +51,7 @@ public sealed class IdentityOperationalResilienceTests
         dockerfile.Should().Contain("chown -R \"$APP_UID\" /var/lib/eduplatform");
         compose.Should().Contain("identity-volume-permissions:");
         compose.Should().Contain("/health/ready");
-        production.Should().Contain("identity-secrets-preflight:");
+        production.Should().Contain("runtime-secrets-preflight:");
         production.Should().Contain("user: \"1654:1654\"");
     }
 
