@@ -1,0 +1,45 @@
+rule_files:
+  - ../rules/eduplatform.yml
+
+evaluation_interval: 15s
+
+tests:
+  - interval: 1m
+    input_series:
+      - series: eduplatform_gateway_rate_limit_fallback_total
+        values: '0 0 0 0 0 0 0 0 0 0 0 0'
+    alert_rule_test:
+      - eval_time: 11m
+        alertname: GatewayRateLimitRedisFallback
+        exp_alerts: []
+
+  - interval: 1m
+    input_series:
+      - series: eduplatform_gateway_rate_limit_fallback_total
+        values: '0+10x15'
+    alert_rule_test:
+      - eval_time: 12m
+        alertname: GatewayRateLimitRedisFallback
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              service: EduPlatform.Gateway
+            exp_annotations:
+              summary: "Gateway rate limits are running on the per-instance fallback"
+              description: "Redis has been unavailable to the gateway rate limiter for five minutes; limits are now enforced per gateway instance. Check Redis health."
+
+  - interval: 1m
+    input_series:
+      - series: 'eduplatform_gateway_rate_limit_rejected_total{rule="auth-login"}'
+        values: '0+120x20'
+    alert_rule_test:
+      - eval_time: 18m
+        alertname: GatewayRateLimitRejectionSpike
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              service: EduPlatform.Gateway
+              rule: auth-login
+            exp_annotations:
+              summary: "Gateway rate limit auth-login is rejecting traffic"
+              description: "Rule auth-login rejects more than one request per second; check for abuse or a limit that is too low for real traffic (for example a school behind one address)."

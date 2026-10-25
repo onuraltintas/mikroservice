@@ -4,17 +4,28 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.Configuration;
 using SystemNetIPNetwork = System.Net.IPNetwork;
 
-namespace EduPlatform.Gateway;
+namespace EduPlatform.Shared.Infrastructure.Networking;
 
 /// <summary>
 /// Builds forwarded-header options without trusting client-supplied proxy headers by default.
+/// Only explicitly configured proxy addresses or networks are trusted; an empty configuration
+/// leaves the request untouched so services keep their direct connection address.
 /// </summary>
 public static class TrustedProxyConfiguration
 {
-    private const string SectionName = "ForwardedHeaders";
+    public const string SectionName = "ForwardedHeaders";
     private const int MaxForwardLimit = 10;
 
-    public static ForwardedHeadersOptions Create(IConfiguration configuration)
+    /// <summary>
+    /// Creates options that trust X-Forwarded-For and X-Forwarded-Proto from configured proxies.
+    /// </summary>
+    public static ForwardedHeadersOptions Create(IConfiguration configuration) =>
+        Create(configuration, ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto);
+
+    /// <summary>
+    /// Creates options that trust only <paramref name="trustedHeaders"/> from configured proxies.
+    /// </summary>
+    public static ForwardedHeadersOptions Create(IConfiguration configuration, ForwardedHeaders trustedHeaders)
     {
         ArgumentNullException.ThrowIfNull(configuration);
 
@@ -41,10 +52,23 @@ public static class TrustedProxyConfiguration
 
         if (options.KnownProxies.Count > 0 || options.KnownIPNetworks.Count > 0)
         {
-            options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+            options.ForwardedHeaders = trustedHeaders;
         }
 
         return options;
+    }
+
+    /// <summary>
+    /// Applies <see cref="Create(IConfiguration, ForwardedHeaders)"/> as the first request middleware.
+    /// With no configured trusted proxy this is a no-op.
+    /// </summary>
+    public static WebApplication UseTrustedForwardedHeaders(
+        this WebApplication app,
+        ForwardedHeaders trustedHeaders)
+    {
+        ArgumentNullException.ThrowIfNull(app);
+        app.UseForwardedHeaders(Create(app.Configuration, trustedHeaders));
+        return app;
     }
 
     private static void AddKnownProxies(ForwardedHeadersOptions options, IEnumerable<string> values)

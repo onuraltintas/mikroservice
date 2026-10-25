@@ -96,6 +96,10 @@ services:
       dockerfile: services/identity-service/Dockerfile
     environment:
       - ASPNETCORE_ENVIRONMENT=${ENVIRONMENT:?ENVIRONMENT must be set to Development, Staging or Production}
+      # Trust the gateway hop on the internal network for X-Forwarded-For only (client
+      # address in sessions and audit). Services are never published on the host.
+      - ForwardedHeaders__KnownNetworks=${SERVICE_TRUSTED_PROXY_NETWORKS:-172.16.0.0/12}
+      - ForwardedHeaders__ForwardLimit=1
       - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=${POSTGRES_DB_IDENTITY};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};Maximum Pool Size=${POSTGRES_MAX_POOL_SIZE:-30}
       - RabbitMQ__Host=rabbitmq
       - RabbitMQ__Username=${RABBITMQ_DEFAULT_USER}
@@ -362,6 +366,21 @@ services:
     networks:
       - edu-network
 
+  # One-shot ownership fix for the gateway key-ring volume. The gateway image runs as the
+  # non-root app user (UID 1654); volumes created while older images ran as root keep root
+  # ownership, so this idempotent step must finish before the gateway starts.
+  api-gateway-volume-permissions:
+    image: ${PRODUCTION_IMAGE_REPOSITORY:-eduivme}/api-gateway:${RELEASE_TAG:-dev}
+    build:
+      context: .
+      dockerfile: services/api-gateway/Dockerfile
+    user: "0:0"
+    entrypoint: ["chown", "-R", "1654:1654", "/var/lib/eduplatform/data-protection-keys"]
+    volumes:
+      - gateway_data_protection:/var/lib/eduplatform/data-protection-keys
+    network_mode: none
+    restart: "no"
+
   # API Gateway (YARP)
   api-gateway:
     image: ${PRODUCTION_IMAGE_REPOSITORY:-eduivme}/api-gateway:${RELEASE_TAG:-dev}
@@ -394,6 +413,8 @@ services:
     ports:
       - "${GATEWAY_PORT}:8080"
     depends_on:
+      api-gateway-volume-permissions:
+        condition: service_completed_successfully
       identity-service:
         condition: service_started
       coaching-service:

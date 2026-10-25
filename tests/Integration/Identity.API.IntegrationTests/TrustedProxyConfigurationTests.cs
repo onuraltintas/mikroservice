@@ -1,5 +1,5 @@
 using System.Net;
-using EduPlatform.Gateway;
+using EduPlatform.Shared.Infrastructure.Networking;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -44,6 +44,31 @@ public sealed class TrustedProxyConfigurationTests
         options.KnownIPNetworks.Should().HaveCount(2);
         options.KnownIPNetworks.Should().Contain(network => network.Contains(IPAddress.Parse("10.42.0.7")));
         options.KnownIPNetworks.Should().Contain(network => network.Contains(IPAddress.Parse("172.20.0.7")));
+    }
+
+    [Fact]
+    public void Create_WithExplicitHeaderSet_TrustsOnlyThoseHeaders()
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["ForwardedHeaders:KnownNetworks"] = "172.16.0.0/12"
+            })
+            .Build();
+
+        var options = TrustedProxyConfiguration.Create(configuration, ForwardedHeaders.XForwardedFor);
+
+        options.ForwardedHeaders.Should().Be(ForwardedHeaders.XForwardedFor);
+    }
+
+    [Fact]
+    public void Create_WithExplicitHeaderSetButNoTrustedProxy_StaysDisabled()
+    {
+        var options = TrustedProxyConfiguration.Create(
+            new ConfigurationBuilder().Build(),
+            ForwardedHeaders.XForwardedFor);
+
+        options.ForwardedHeaders.Should().Be(ForwardedHeaders.None);
     }
 
     [Fact]

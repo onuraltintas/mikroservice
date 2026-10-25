@@ -210,8 +210,13 @@ public class ConfigurationService : IConfigurationService
          await _cache.RemoveAsync($"{CacheKeyPrefix}public:{key}", ct);
     }
 
+    // MFA modes and maintenance switches are read by other services straight from the shared
+    // cache (the gateway enforces maintenance). They must not silently expire while the database
+    // still holds the value, so they are cached without expiry and rewritten on every change.
     private static DistributedCacheEntryOptions CacheOptionsFor(string key) =>
         key.StartsWith("security.mfa.", StringComparison.Ordinal)
+        || key.StartsWith("maintenance.", StringComparison.Ordinal)
+        || string.Equals(key, "system.maintenancemode", StringComparison.Ordinal)
             ? new DistributedCacheEntryOptions()
             : new DistributedCacheEntryOptions
             {

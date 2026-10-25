@@ -1,6 +1,9 @@
 using EduPlatform.Shared.Infrastructure.Extensions;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using EduPlatform.Shared.Infrastructure.Logging;
 using EduPlatform.Shared.Infrastructure.Middleware;
+using EduPlatform.Shared.Infrastructure.Networking;
+using Microsoft.AspNetCore.HttpOverrides;
 using EduPlatform.Shared.Infrastructure.Observability;
 using EduPlatform.Shared.Security.Extensions;
 using Identity.Infrastructure;
@@ -207,6 +210,11 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+// Behind the gateway, take the caller address from its X-Forwarded-For when the request
+// comes from a configured internal network (ForwardedHeaders:KnownNetworks). The scheme
+// is left untouched. With no trusted network configured this is a no-op.
+app.UseTrustedForwardedHeaders(ForwardedHeaders.XForwardedFor);
+
 // ============================================
 // Middleware Pipeline
 // ============================================
@@ -243,7 +251,7 @@ app.UseAuthorization();
 // Health Checks
 app.MapHealthChecks("/health").AllowAnonymous();
 app.MapHealthChecks("/health/ready").AllowAnonymous();
-app.MapHealthChecks("/health/live").AllowAnonymous();
+app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = _ => false }).AllowAnonymous();
 
 // Controllers
 app.MapControllers();
