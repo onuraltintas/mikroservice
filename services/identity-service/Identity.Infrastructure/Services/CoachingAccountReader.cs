@@ -17,8 +17,8 @@ public sealed class CoachingAccountReader(IdentityDbContext db) : ICoachingAccou
 
     public Task<CoachingAccount?> FindByEmailAsync(string email, CancellationToken ct)
     {
-        var normalized = email.Trim().ToLowerInvariant();
-        return Query(db.Users.AsNoTracking().Where(user => user.Email.ToLower() == normalized)).SingleOrDefaultAsync(ct);
+        var normalized = Identity.Domain.Entities.User.NormalizeEmail(email);
+        return Query(db.Users.AsNoTracking().Where(user => user.Email == normalized)).SingleOrDefaultAsync(ct);
     }
 
     private static IQueryable<CoachingAccount> Query(IQueryable<Identity.Domain.Entities.User> users) => users.Select(user => new CoachingAccount(

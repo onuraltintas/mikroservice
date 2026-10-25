@@ -10,17 +10,18 @@ using Testcontainers.PostgreSql;
 namespace Identity.API.IntegrationTests;
 
 /// <summary>
-/// Refresh-token storage against real PostgreSQL with the real migrations: digests at
-/// rest, the unique lookup index, family revocation on reuse and the retention purge.
-/// Uses IDENTITY_TEST_POSTGRES when set (any reachable server), otherwise a container.
+/// A migrated, throw-away Identity database on real PostgreSQL. Uses IDENTITY_TEST_POSTGRES
+/// when set (any reachable server), otherwise starts a container.
 /// </summary>
-public sealed class RefreshTokenStoragePostgresTests : IAsyncLifetime
+public sealed class IdentityPostgresDatabase : IAsyncDisposable
 {
     private PostgreSqlContainer? _container;
-    private string _connectionString = string.Empty;
 
-    public async Task InitializeAsync()
+    public string ConnectionString { get; private set; } = string.Empty;
+
+    public static async Task<IdentityPostgresDatabase> CreateAsync()
     {
+        var database = new IdentityPostgresDatabase();
         var external = Environment.GetEnvironmentVariable("IDENTITY_TEST_POSTGRES");
         string server;
         if (!string.IsNullOrWhiteSpace(external))
@@ -29,20 +30,24 @@ public sealed class RefreshTokenStoragePostgresTests : IAsyncLifetime
         }
         else
         {
-            _container = new PostgreSqlBuilder("postgres:16-alpine").WithCleanUp(true).Build();
-            await _container.StartAsync();
-            server = _container.GetConnectionString();
+            database._container = new PostgreSqlBuilder("postgres:16-alpine").WithCleanUp(true).Build();
+            await database._container.StartAsync();
+            server = database._container.GetConnectionString();
         }
 
-        _connectionString = new NpgsqlConnectionStringBuilder(server)
+        database.ConnectionString = new NpgsqlConnectionStringBuilder(server)
         {
-            Database = $"identity_tokens_{Guid.NewGuid():N}"
+            Database = $"identity_test_{Guid.NewGuid():N}"
         }.ConnectionString;
-        await using var context = CreateContext();
+        await using var context = database.CreateContext();
         await context.Database.MigrateAsync();
+        return database;
     }
 
-    public async Task DisposeAsync()
+    public IdentityDbContext CreateContext() => new(
+        new DbContextOptionsBuilder<IdentityDbContext>().UseNpgsql(ConnectionString).Options);
+
+    public async ValueTask DisposeAsync()
     {
         await using (var context = CreateContext())
         {
@@ -54,6 +59,19 @@ public sealed class RefreshTokenStoragePostgresTests : IAsyncLifetime
             await _container.DisposeAsync();
         }
     }
+}
+
+/// <summary>
+/// Refresh-token storage against real PostgreSQL with the real migrations: digests at
+/// rest, the unique lookup index, family revocation on reuse and the retention purge.
+/// </summary>
+public sealed class RefreshTokenStoragePostgresTests : IAsyncLifetime
+{
+    private IdentityPostgresDatabase _database = null!;
+
+    public async Task InitializeAsync() => _database = await IdentityPostgresDatabase.CreateAsync();
+
+    public async Task DisposeAsync() => await _database.DisposeAsync();
 
     [Fact]
     public async Task IssuedValue_IsStoredOnlyAsADigest_AndStillResolvesTheSession()
@@ -147,8 +165,7 @@ public sealed class RefreshTokenStoragePostgresTests : IAsyncLifetime
         }
     }
 
-    private IdentityDbContext CreateContext() => new(
-        new DbContextOptionsBuilder<IdentityDbContext>().UseNpgsql(_connectionString).Options);
+    private IdentityDbContext CreateContext() => _database.CreateContext();
 
     private async Task<User> SeedUserAsync()
     {

@@ -63,9 +63,20 @@ public class LocalIdentityService : IIdentityService
         _passwordHasher.CreatePasswordHash(password, out byte[] hash, out byte[] salt);
         user.SetPassword(hash, salt);
 
-        // 4. Save
+        // 4. Save. The unique index decides a race between two registrations of the
+        // same address; the loser gets the same answer as the pre-check above.
         await _userRepository.AddAsync(user, cancellationToken);
-        await _unitOfWork.SaveChangesAsync(cancellationToken); 
+        try
+        {
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException exception) when (Repositories.UserRepository.IsDuplicateEmailViolation(exception))
+        {
+            _context.Entry(user).State = EntityState.Detached;
+            return Result.Failure<Guid>(new Error(
+                "Identity.UserExists",
+                "Bu e-posta adresiyle zaten kayıtlı bir hesap var. Lütfen giriş yapın veya şifrenizi sıfırlayın."));
+        }
 
         return Result.Success(userId);
     }
@@ -140,9 +151,16 @@ public class LocalIdentityService : IIdentityService
         {
             await _unitOfWork.SaveChangesAsync(cancellationToken);
         }
+        catch (DbUpdateException exception) when (Repositories.UserRepository.IsDuplicateEmailViolation(exception))
+        {
+            _context.Entry(user).State = EntityState.Detached;
+            return Result.Failure<ProvisionedUser>(new Error(
+                "Identity.UserExists",
+                "Bu e-posta adresiyle zaten kayıtlı bir hesap var. Lütfen giriş yapın veya şifrenizi sıfırlayın."));
+        }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Provisioned user creation failed for {Email}.", email);
+            _logger.LogError(ex, "Provisioned user creation failed for {UserId}.", userId);
             return Result.Failure<ProvisionedUser>(new Error("Register.Exception", "Kullanıcı oluşturulamadı. Lütfen daha sonra tekrar deneyin."));
         }
 

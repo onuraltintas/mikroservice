@@ -65,7 +65,7 @@ public class User : AggregateRoot
 
     public User(Guid id, string email, string firstName, string lastName) : base(id)
     {
-        Email = email ?? throw new ArgumentNullException(nameof(email));
+        Email = NormalizeEmail(email ?? throw new ArgumentNullException(nameof(email)));
         FirstName = firstName;
         LastName = lastName;
     }
@@ -76,6 +76,13 @@ public class User : AggregateRoot
         // Domain event can be raised
         return user;
     }
+
+    /// <summary>
+    /// Canonical form of an address: trimmed and lower-case (invariant). Stored this way so
+    /// the unique index on <see cref="Email"/> is case-insensitive in practice and look-ups
+    /// can use it.
+    /// </summary>
+    public static string NormalizeEmail(string email) => email.Trim().ToLowerInvariant();
 
     public void SetPassword(byte[] passwordHash, byte[] passwordSalt)
     {

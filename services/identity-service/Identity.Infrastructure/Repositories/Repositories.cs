@@ -188,13 +188,13 @@ public class UserRepository : IUserRepository
 
     public async Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken)
     {
-        var normalizedEmail = email.ToLowerInvariant();
+        var normalizedEmail = User.NormalizeEmail(email);
         return await _context.Users
             .Include(u => u.ProductAccesses)
             .Include(u => u.Roles)
                 .ThenInclude(ur => ur.Role)
                     .ThenInclude(r => r.Permissions)
-            .FirstOrDefaultAsync(u => u.Email.ToLower() == normalizedEmail, cancellationToken);
+            .FirstOrDefaultAsync(u => u.Email == normalizedEmail, cancellationToken);
     }
 
     public async Task<User?> GetByLoginAsync(
@@ -250,6 +250,12 @@ public class UserRepository : IUserRepository
             postgresException.ConstraintName,
             "IX_UserLogins_LoginProvider_ProviderKey",
             StringComparison.Ordinal);
+
+    /// <summary>A concurrent registration won the race for the same (normalised) address.</summary>
+    public static bool IsDuplicateEmailViolation(DbUpdateException exception) =>
+        exception.InnerException is PostgresException postgresException
+        && postgresException.SqlState == PostgresErrorCodes.UniqueViolation
+        && string.Equals(postgresException.ConstraintName, "IX_users_Email", StringComparison.Ordinal);
 
     public void Delete(User user)
     {
