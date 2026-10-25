@@ -34,6 +34,13 @@ services:
       timeout: 10s
       retries: 10
 
+  # One-shot volume ownership fixes run from the staging images (no extra build or pull).
+  identity-volume-permissions:
+    image: eduivme-staging/identity-service:${STAGING_RELEASE_TAG:-snapshot}
+
+  api-gateway-volume-permissions:
+    image: eduivme-staging/api-gateway:${STAGING_RELEASE_TAG:-snapshot}
+
   identity-service:
     image: eduivme-staging/identity-service:${STAGING_RELEASE_TAG:-snapshot}
     environment:

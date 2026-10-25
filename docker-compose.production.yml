@@ -41,6 +41,27 @@ services:
       timeout: 10s
       retries: 10
 
+  # The identity image runs as UID 1654. File-based secrets keep the host file's mode, so
+  # check before the new container replaces the running one that the runtime user can read
+  # them; when it cannot, the deployment stops here and the current identity keeps serving.
+  # Fix on the host with e.g. `chgrp 1654 <file> && chmod 0640 <file>`.
+  identity-secrets-preflight:
+    image: ${PRODUCTION_IMAGE_REPOSITORY:?PRODUCTION_IMAGE_REPOSITORY must be set for production}/identity-service:${RELEASE_TAG:?RELEASE_TAG must be set for production}
+    user: "1654:1654"
+    entrypoint:
+      - bash
+      - -c
+      - >-
+        for secret in /run/secrets/eduplatform-dataprotection.pfx /run/secrets/auth-recaptcha-secret;
+        do test -r "$$secret" || { echo "$$secret is not readable by UID 1654" >&2; exit 1; }; done
+    secrets:
+      - source: dataprotection_certificate
+        target: eduplatform-dataprotection.pfx
+      - source: auth_recaptcha_secret
+        target: auth-recaptcha-secret
+    network_mode: none
+    restart: "no"
+
   identity-service:
     image: ${PRODUCTION_IMAGE_REPOSITORY:?PRODUCTION_IMAGE_REPOSITORY must be set for production}/identity-service:${RELEASE_TAG:?RELEASE_TAG must be set for production}
     environment:
@@ -55,6 +76,8 @@ services:
       DataProtection__CertificatePath: /run/secrets/eduplatform-dataprotection.pfx
       DataProtection__CertificatePassword: ${DATAPROTECTION_CERTIFICATE_PASSWORD:?DATAPROTECTION_CERTIFICATE_PASSWORD must be set}
     depends_on:
+      identity-secrets-preflight:
+        condition: service_completed_successfully
       identity-migrations:
         condition: service_completed_successfully
       postgres:
