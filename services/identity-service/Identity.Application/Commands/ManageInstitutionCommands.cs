@@ -438,6 +438,19 @@ public sealed class AssignInstitutionAdminCommandHandler : IRequestHandler<Assig
             return Result.Failure(new Error("InstitutionAdmin.Exists", "Kullanıcı zaten bu kurumun yöneticisi."));
         }
 
+        var hierarchy = await _authorization.EnsureCanManageInstitutionAdminAsync(
+            request.InstitutionId,
+            product,
+            request.UserId,
+            existingAdmin?.Role,
+            request.Role,
+            deactivating: false,
+            cancellationToken);
+        if (hierarchy.IsFailure)
+        {
+            return hierarchy;
+        }
+
         if (existingAdmin is not null)
         {
             existingAdmin.ChangeRole(request.Role);
@@ -502,6 +515,19 @@ public sealed class SetInstitutionAdminActiveCommandHandler
         if (admin is null)
         {
             return Result.Failure(new Error("InstitutionAdmin.NotFound", "Kurum yöneticisi bulunamadı."));
+        }
+
+        var hierarchy = await _authorization.EnsureCanManageInstitutionAdminAsync(
+            request.InstitutionId,
+            product,
+            request.UserId,
+            admin.Role,
+            targetNewRole: null,
+            deactivating: !request.IsActive && admin.IsActive,
+            cancellationToken);
+        if (hierarchy.IsFailure)
+        {
+            return hierarchy;
         }
 
         if (request.IsActive) admin.Activate();
